@@ -10,12 +10,14 @@ import {
   ChatBubbleLeftRightIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline'
 
 const navItems = [
   { path: '/', icon: HomeIcon, label: 'Dashboard' },
   { path: '/expeditions', icon: FolderIcon, label: 'Expedientes' },
+  { path: '/requirements', icon: ClipboardDocumentCheckIcon, label: 'Requerimientos' },
   { path: '/classification', icon: TagIcon, label: 'Clasificacion' },
   { path: '/declarations', icon: DocumentTextIcon, label: 'Declaraciones' },
   { path: '/calculator', icon: CalculatorIcon, label: 'Calculadora' },

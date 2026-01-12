@@ -15,6 +15,7 @@ import ClassificationTool from './components/Classification/ClassificationTool'
 import DeclarationGenerator from './components/Declarations/DeclarationGenerator'
 import DutyCalculator from './components/Calculations/DutyCalculator'
 import ChatAssistant from './components/Chat/ChatAssistant'
+import RequirementsList from './components/Requirements/RequirementsList'
 
 // Portal Pages (Client)
 import PortalHome from './components/Portal/PortalHome'
@@ -72,6 +73,7 @@ function App() {
         <Route path="declarations" element={<DeclarationGenerator />} />
         <Route path="calculator" element={<DutyCalculator />} />
         <Route path="assistant" element={<ChatAssistant />} />
+        <Route path="requirements" element={<RequirementsList />} />
       </Route>
 
       {/* Fallback */}

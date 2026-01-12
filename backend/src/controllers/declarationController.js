@@ -4,6 +4,7 @@ const aiService = require('../services/aiService');
 const h1Generator = require('../services/forms/h1Generator');
 const aesGenerator = require('../services/forms/aesGenerator');
 const aeatService = require('../services/aeatService');
+const channelService = require('../services/channelService');
 
 /**
  * Generar declaracion H1 (Importacion)
@@ -386,12 +387,7 @@ const submitDeclaration = async (req, res) => {
     };
     expedition.status = statusByChannel[aeatResponse.channel] || 'declaration_submitted';
 
-    // Si es verde, registrar levante
-    if (aeatResponse.channel === 'green') {
-      expedition.declaration.levanteDate = new Date();
-    }
-
-    // Timeline
+    // Timeline - envio a AEAT
     if (!expedition.timeline) expedition.timeline = [];
     expedition.timeline.push({
       action: 'declaration_submitted',
@@ -408,6 +404,21 @@ const submitDeclaration = async (req, res) => {
 
     await expedition.save();
 
+    // Procesar canal asignado (crear requerimientos automaticos, generar levante, etc.)
+    let channelResult = null;
+    try {
+      channelResult = await channelService.processChannelAssignment(
+        expedition._id,
+        aeatResponse.channel,
+        aeatResponse,
+        req.user
+      );
+      logger.info(`Channel processed: ${aeatResponse.channel}`, channelResult);
+    } catch (channelError) {
+      logger.error('Error processing channel:', channelError);
+      // No interrumpimos el flujo, el canal se puede procesar manualmente
+    }
+
     logger.info(`Declaracion enviada: ${expedition.expeditionId} - MRN: ${aeatResponse.mrn} - Canal: ${aeatResponse.channel}`);
 
     // Mensaje segun canal
@@ -417,21 +428,33 @@ const submitDeclaration = async (req, res) => {
       red: 'CANAL ROJO - Inspeccion fisica requerida. Mercancia retenida.'
     };
 
+    // Recargar expediente para obtener datos actualizados del channelService
+    const updatedExpedition = await Expedition.findById(expedition._id);
+
     res.json({
       success: true,
       data: {
         mrn: aeatResponse.mrn,
-        lrn: expedition.declaration.lrn,
+        lrn: updatedExpedition.declaration.lrn,
         channel: aeatResponse.channel,
         channelDescription: channelMessages[aeatResponse.channel],
-        status: expedition.status,
-        declaration: expedition.declaration,
+        status: updatedExpedition.status,
+        declaration: updatedExpedition.declaration,
         duties: aeatResponse.duties,
         estimatedRelease: aeatResponse.estimatedRelease,
         simulated: aeatResponse.simulated,
         message: aeatResponse.simulated
           ? `[MODO DEMO] ${channelMessages[aeatResponse.channel]}`
-          : channelMessages[aeatResponse.channel]
+          : channelMessages[aeatResponse.channel],
+        // Datos adicionales del procesamiento de canal
+        channelProcessing: channelResult ? {
+          actions: channelResult.actions,
+          requirementId: channelResult.requirementId,
+          requirementNumber: channelResult.requirementNumber,
+          levanteNumber: channelResult.levanteNumber,
+          levanteDate: channelResult.levanteDate,
+          pendingCertificates: channelResult.pendingCertificates
+        } : null
       }
     });
 

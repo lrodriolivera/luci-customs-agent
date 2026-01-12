@@ -122,4 +122,33 @@ export const knowledgeAPI = {
   incotermInfo: (incoterm) => api.get(`/ai/knowledge/incoterm/${incoterm}`)
 }
 
+// Requirements (AEAT/Paraduanero)
+export const requirementsAPI = {
+  list: (params) => api.get('/api/requirements', { params }),
+  get: (id) => api.get(`/api/requirements/${id}`),
+  getByExpedition: (expeditionId) => api.get(`/api/requirements/expedition/${expeditionId}`),
+  getStats: (params) => api.get('/api/requirements/stats', { params }),
+  create: (data) => api.post('/api/requirements', data),
+  update: (id, data) => api.put(`/api/requirements/${id}`, data),
+  addResponse: (id, data) => api.post(`/api/requirements/${id}/response`, data),
+  submitToAEAT: (id, responseIndex) => api.post(`/api/requirements/${id}/submit`, { responseIndex }),
+  markItemProvided: (id, itemId, documentId) =>
+    api.put(`/api/requirements/${id}/items/${itemId}/provided`, { documentId }),
+  scheduleInspection: (id, data) => api.post(`/api/requirements/${id}/inspection/schedule`, data),
+  recordInspectionResult: (id, data) => api.post(`/api/requirements/${id}/inspection/result`, data),
+  resolve: (id, data) => api.post(`/api/requirements/${id}/resolve`, data),
+  generateAIResponse: (id) => api.post(`/api/requirements/${id}/ai-response`)
+}
+
+// Channels (Circuitos de control)
+export const channelsAPI = {
+  getConfig: () => api.get('/api/channels/config'),
+  getStats: (params) => api.get('/api/channels/stats', { params }),
+  getStatus: (expeditionId) => api.get(`/api/channels/${expeditionId}/status`),
+  getLevante: (expeditionId) => api.get(`/api/channels/${expeditionId}/levante`),
+  reevaluate: (expeditionId) => api.post(`/api/channels/${expeditionId}/reevaluate`),
+  processManually: (expeditionId, channel) =>
+    api.post(`/api/channels/${expeditionId}/process`, { channel })
+}
+
 export default api

@@ -14,6 +14,8 @@ import {
   ClipboardDocumentIcon,
   LinkIcon
 } from '@heroicons/react/24/outline'
+import RequirementManager from '../Requirements/RequirementManager'
+import ChannelStatus from '../Channels/ChannelStatus'
 
 export default function ExpeditionDetail() {
   const { id } = useParams()
@@ -597,6 +599,36 @@ export default function ExpeditionDetail() {
                   </p>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Channel Status - Shown when declaration has channel */}
+          {expedition.declaration?.channel && (
+            <ChannelStatus
+              expeditionId={id}
+              channel={expedition.declaration.channel}
+              onStatusChange={() => {
+                expeditionsAPI.get(id).then(resp => {
+                  const data = resp.data?.data || resp.data
+                  setExpedition(data)
+                })
+              }}
+            />
+          )}
+
+          {/* Requirements AEAT - Shown when declaration is submitted */}
+          {expedition.declaration?.mrn && (
+            <div className="card">
+              <RequirementManager
+                expeditionId={id}
+                onRequirementChange={() => {
+                  // Refresh expedition data when requirements change
+                  expeditionsAPI.get(id).then(resp => {
+                    const data = resp.data?.data || resp.data
+                    setExpedition(data)
+                  })
+                }}
+              />
             </div>
           )}
 
