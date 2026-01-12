@@ -8,6 +8,7 @@ const ChatMessage = require('./ChatMessage');
 const TaricCode = require('./TaricCode');
 const Requirement = require('./Requirement');
 const ParaduaneroControl = require('./ParaduaneroControl');
+const H7Declaration = require('./H7Declaration');
 
 module.exports = {
   User,
@@ -15,5 +16,6 @@ module.exports = {
   ChatMessage,
   TaricCode,
   Requirement,
-  ParaduaneroControl
+  ParaduaneroControl,
+  H7Declaration
 };

@@ -1,0 +1,585 @@
+/**
+ * H7Declaration Model
+ * Declaracion simplificada H7 para envios de bajo valor (e-commerce)
+ *
+ * Aplicable a:
+ * - Envios B2C con valor <= 150 EUR
+ * - Importaciones via plataformas e-commerce
+ * - Envios postales y de mensajeria express
+ *
+ * Regimen: IOSS (Import One-Stop Shop) para IVA prepagado
+ */
+const mongoose = require('mongoose');
+
+// Esquema de articulo individual en el envio
+const H7ItemSchema = new mongoose.Schema({
+  // Descripcion del articulo
+  description: {
+    type: String,
+    required: true,
+    maxlength: 512
+  },
+
+  // Codigo TARIC (6-10 digitos)
+  taricCode: {
+    type: String,
+    required: true,
+    match: /^\d{6,10}$/
+  },
+
+  // Cantidad
+  quantity: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+
+  // Unidad de medida
+  unitOfMeasure: {
+    type: String,
+    default: 'PCE', // Pieces
+    enum: ['PCE', 'KGM', 'MTR', 'LTR', 'M2', 'M3', 'PAR', 'SET']
+  },
+
+  // Valor unitario en EUR
+  unitValue: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+
+  // Valor total del articulo
+  totalValue: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+
+  // Peso neto en kg
+  netWeight: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+
+  // Pais de origen (ISO 3166-1 alpha-2)
+  countryOfOrigin: {
+    type: String,
+    required: true,
+    match: /^[A-Z]{2}$/
+  },
+
+  // URL del producto (opcional, para verificacion)
+  productUrl: String,
+
+  // SKU o referencia del vendedor
+  sellerSku: String
+});
+
+// Esquema principal H7
+const H7DeclarationSchema = new mongoose.Schema({
+  // Referencia unica
+  reference: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+
+  // Expediente asociado (opcional)
+  expedition: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Expedition'
+  },
+
+  // Usuario que crea la declaracion
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+
+  // === DATOS DEL ENVIO ===
+
+  // Tipo de operacion
+  operationType: {
+    type: String,
+    enum: ['B2C', 'C2C', 'B2B_LOW_VALUE'],
+    default: 'B2C'
+  },
+
+  // Numero de tracking/AWB
+  trackingNumber: {
+    type: String,
+    required: true,
+    index: true
+  },
+
+  // Transportista
+  carrier: {
+    code: {
+      type: String,
+      required: true,
+      enum: ['CORREOS', 'DHL', 'UPS', 'FEDEX', 'TNT', 'GLS', 'SEUR', 'MRW', 'AMAZON', 'OTHER']
+    },
+    name: String,
+    eori: String
+  },
+
+  // === DATOS IOSS/IVA ===
+
+  // Numero IOSS (Import One-Stop Shop)
+  iossNumber: {
+    type: String,
+    match: /^IM\d{10}$/,  // Formato: IM + 10 digitos
+    sparse: true
+  },
+
+  // Si tiene IOSS, el IVA ya esta pagado
+  vatPrepaid: {
+    type: Boolean,
+    default: false
+  },
+
+  // Plataforma e-commerce (si aplica IOSS)
+  ecommercePlatform: {
+    type: String,
+    enum: ['AMAZON', 'EBAY', 'ALIEXPRESS', 'WISH', 'SHEIN', 'TEMU', 'OTHER', null]
+  },
+
+  // === REMITENTE (Vendedor) ===
+
+  sender: {
+    name: {
+      type: String,
+      required: true
+    },
+    address: {
+      street: String,
+      city: String,
+      postalCode: String,
+      country: {
+        type: String,
+        required: true,
+        match: /^[A-Z]{2}$/
+      }
+    },
+    eori: String,
+    vatNumber: String,
+    email: String,
+    phone: String
+  },
+
+  // === DESTINATARIO (Comprador) ===
+
+  recipient: {
+    name: {
+      type: String,
+      required: true
+    },
+    // NIF/NIE del destinatario (requerido en Espana)
+    taxId: {
+      type: String,
+      required: true
+    },
+    address: {
+      street: {
+        type: String,
+        required: true
+      },
+      city: {
+        type: String,
+        required: true
+      },
+      postalCode: {
+        type: String,
+        required: true
+      },
+      province: String,
+      country: {
+        type: String,
+        default: 'ES',
+        match: /^[A-Z]{2}$/
+      }
+    },
+    email: String,
+    phone: String
+  },
+
+  // === ARTICULOS ===
+
+  items: {
+    type: [H7ItemSchema],
+    required: true,
+    validate: {
+      validator: function(items) {
+        return items && items.length > 0 && items.length <= 99;
+      },
+      message: 'Debe tener entre 1 y 99 articulos'
+    }
+  },
+
+  // === VALORES TOTALES ===
+
+  totals: {
+    // Valor intrinseco de la mercancia (sin transporte ni seguro)
+    intrinsicValue: {
+      type: Number,
+      required: true,
+      max: 150  // Limite H7
+    },
+
+    // Gastos de transporte
+    shippingCost: {
+      type: Number,
+      default: 0
+    },
+
+    // Seguro
+    insuranceCost: {
+      type: Number,
+      default: 0
+    },
+
+    // Valor en aduana (CIF)
+    customsValue: {
+      type: Number,
+      required: true
+    },
+
+    // Moneda original
+    originalCurrency: {
+      type: String,
+      default: 'EUR',
+      match: /^[A-Z]{3}$/
+    },
+
+    // Tipo de cambio aplicado
+    exchangeRate: {
+      type: Number,
+      default: 1
+    },
+
+    // Peso bruto total en kg
+    grossWeight: {
+      type: Number,
+      required: true,
+      min: 0.001
+    },
+
+    // Peso neto total en kg
+    netWeight: {
+      type: Number,
+      required: true,
+      min: 0.001
+    },
+
+    // Numero de bultos
+    packages: {
+      type: Number,
+      default: 1,
+      min: 1
+    }
+  },
+
+  // === LIQUIDACION ===
+
+  duties: {
+    // Arancel (0% para la mayoria de envios B2C bajo 150 EUR)
+    tariff: {
+      rate: { type: Number, default: 0 },
+      amount: { type: Number, default: 0 }
+    },
+
+    // IVA
+    vat: {
+      rate: { type: Number, default: 21 },  // 21% en Espana
+      amount: { type: Number, default: 0 },
+      prepaid: { type: Boolean, default: false }  // Si ya pagado via IOSS
+    },
+
+    // Tasa de gestion postal (si aplica)
+    handlingFee: {
+      type: Number,
+      default: 0
+    },
+
+    // Total a pagar
+    totalDue: {
+      type: Number,
+      default: 0
+    }
+  },
+
+  // === ESTADO Y PROCESO ===
+
+  status: {
+    type: String,
+    enum: [
+      'draft',           // Borrador
+      'validating',      // Validando datos
+      'pending',         // Pendiente de envio
+      'submitted',       // Enviada a aduanas
+      'accepted',        // Aceptada (levante automatico)
+      'held',            // Retenida para revision
+      'rejected',        // Rechazada
+      'released',        // Levante concedido
+      'delivered',       // Entregada al destinatario
+      'returned',        // Devuelta a origen
+      'cancelled'        // Cancelada
+    ],
+    default: 'draft'
+  },
+
+  // MRN asignado por AEAT
+  mrn: {
+    type: String,
+    sparse: true,
+    match: /^\d{2}ES\d{14}H7$/  // Formato H7 espanol
+  },
+
+  // Fecha de presentacion
+  submittedAt: Date,
+
+  // Fecha de levante
+  releasedAt: Date,
+
+  // Respuesta de AEAT
+  aeatResponse: {
+    code: String,
+    message: String,
+    timestamp: Date,
+    errors: [{
+      field: String,
+      code: String,
+      message: String
+    }]
+  },
+
+  // === VALIDACIONES ===
+
+  validations: {
+    // Validacion de IOSS
+    iossValid: {
+      checked: { type: Boolean, default: false },
+      valid: Boolean,
+      checkedAt: Date
+    },
+
+    // Validacion de valor (anti-fraude)
+    valueCheck: {
+      checked: { type: Boolean, default: false },
+      flagged: Boolean,
+      reason: String,
+      checkedAt: Date
+    },
+
+    // Validacion de clasificacion
+    classificationCheck: {
+      checked: { type: Boolean, default: false },
+      flagged: Boolean,
+      reason: String,
+      checkedAt: Date
+    }
+  },
+
+  // === LOTE (para procesamiento masivo) ===
+
+  batch: {
+    id: String,
+    sequence: Number,
+    totalInBatch: Number
+  },
+
+  // === DOCUMENTOS ADJUNTOS ===
+
+  documents: [{
+    type: {
+      type: String,
+      enum: ['INVOICE', 'PACKING_LIST', 'TRACKING_PROOF', 'PAYMENT_PROOF', 'OTHER']
+    },
+    name: String,
+    url: String,
+    uploadedAt: { type: Date, default: Date.now }
+  }],
+
+  // Notas internas
+  notes: [{
+    text: String,
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    createdAt: { type: Date, default: Date.now }
+  }],
+
+  // Historial de cambios de estado
+  statusHistory: [{
+    status: String,
+    timestamp: { type: Date, default: Date.now },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    reason: String
+  }]
+
+}, {
+  timestamps: true
+});
+
+// Indices
+H7DeclarationSchema.index({ trackingNumber: 1 });
+H7DeclarationSchema.index({ mrn: 1 });
+H7DeclarationSchema.index({ status: 1, createdAt: -1 });
+H7DeclarationSchema.index({ 'recipient.taxId': 1 });
+H7DeclarationSchema.index({ iossNumber: 1 });
+H7DeclarationSchema.index({ 'batch.id': 1 });
+H7DeclarationSchema.index({ createdBy: 1, createdAt: -1 });
+
+// Generar referencia automatica
+H7DeclarationSchema.pre('save', async function(next) {
+  if (!this.reference) {
+    const year = new Date().getFullYear();
+    const count = await this.constructor.countDocuments({
+      createdAt: { $gte: new Date(year, 0, 1) }
+    });
+    this.reference = `H7-${year}-${String(count + 1).padStart(6, '0')}`;
+  }
+
+  // Calcular valor en aduana si no existe
+  if (!this.totals.customsValue) {
+    this.totals.customsValue = this.totals.intrinsicValue +
+      (this.totals.shippingCost || 0) +
+      (this.totals.insuranceCost || 0);
+  }
+
+  // Registrar cambio de estado
+  if (this.isModified('status')) {
+    this.statusHistory.push({
+      status: this.status,
+      timestamp: new Date()
+    });
+  }
+
+  next();
+});
+
+// Metodos de instancia
+H7DeclarationSchema.methods.calculateDuties = function() {
+  const customsValue = this.totals.customsValue;
+
+  // Arancel: generalmente 0% para envios B2C bajo 150 EUR
+  // excepto productos especificos (tabaco, alcohol, etc.)
+  const tariffRate = this.duties.tariff.rate || 0;
+  const tariffAmount = customsValue * (tariffRate / 100);
+
+  // IVA: 21% en Espana (si no prepagado via IOSS)
+  let vatAmount = 0;
+  if (!this.vatPrepaid && !this.duties.vat.prepaid) {
+    const vatBase = customsValue + tariffAmount;
+    vatAmount = vatBase * (this.duties.vat.rate / 100);
+  }
+
+  // Tasa de gestion (Correos cobra ~3 EUR, couriers varia)
+  const handlingFee = this.duties.handlingFee || 0;
+
+  this.duties.tariff.amount = Math.round(tariffAmount * 100) / 100;
+  this.duties.vat.amount = Math.round(vatAmount * 100) / 100;
+  this.duties.totalDue = Math.round((tariffAmount + vatAmount + handlingFee) * 100) / 100;
+
+  return this.duties;
+};
+
+// Validar que el envio cumple requisitos H7
+H7DeclarationSchema.methods.validateH7Eligibility = function() {
+  const errors = [];
+
+  // Valor intrinseco <= 150 EUR
+  if (this.totals.intrinsicValue > 150) {
+    errors.push({
+      field: 'totals.intrinsicValue',
+      code: 'H7_VALUE_EXCEEDED',
+      message: `Valor intrinseco ${this.totals.intrinsicValue} EUR excede limite H7 de 150 EUR`
+    });
+  }
+
+  // Debe ser B2C o C2C
+  if (this.operationType === 'B2B_LOW_VALUE' && this.totals.intrinsicValue > 22) {
+    errors.push({
+      field: 'operationType',
+      code: 'H7_B2B_LIMIT',
+      message: 'Envios B2B solo pueden usar H7 si valor <= 22 EUR'
+    });
+  }
+
+  // Productos prohibidos/restringidos no pueden usar H7
+  const restrictedCodes = ['2402', '2403', '2208', '3004'];  // Tabaco, alcohol, medicamentos
+  for (const item of this.items) {
+    const prefix4 = item.taricCode.substring(0, 4);
+    if (restrictedCodes.includes(prefix4)) {
+      errors.push({
+        field: 'items.taricCode',
+        code: 'H7_RESTRICTED_GOODS',
+        message: `Codigo ${item.taricCode} corresponde a mercancia restringida que no puede usar H7`
+      });
+    }
+  }
+
+  // Validar IOSS si presente
+  if (this.iossNumber && !/^IM\d{10}$/.test(this.iossNumber)) {
+    errors.push({
+      field: 'iossNumber',
+      code: 'INVALID_IOSS',
+      message: 'Formato IOSS invalido. Debe ser IM + 10 digitos'
+    });
+  }
+
+  return {
+    eligible: errors.length === 0,
+    errors
+  };
+};
+
+// Metodos estaticos
+H7DeclarationSchema.statics.getStats = async function(filters = {}) {
+  const match = {};
+
+  if (filters.startDate || filters.endDate) {
+    match.createdAt = {};
+    if (filters.startDate) match.createdAt.$gte = new Date(filters.startDate);
+    if (filters.endDate) match.createdAt.$lte = new Date(filters.endDate);
+  }
+
+  if (filters.carrier) match['carrier.code'] = filters.carrier;
+  if (filters.createdBy) match.createdBy = new mongoose.Types.ObjectId(filters.createdBy);
+
+  const stats = await this.aggregate([
+    { $match: match },
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 },
+        totalValue: { $sum: '$totals.customsValue' },
+        totalDuties: { $sum: '$duties.totalDue' }
+      }
+    }
+  ]);
+
+  const byCarrier = await this.aggregate([
+    { $match: match },
+    {
+      $group: {
+        _id: '$carrier.code',
+        count: { $sum: 1 },
+        totalValue: { $sum: '$totals.customsValue' }
+      }
+    },
+    { $sort: { count: -1 } }
+  ]);
+
+  return {
+    byStatus: stats,
+    byCarrier,
+    totals: {
+      declarations: stats.reduce((acc, s) => acc + s.count, 0),
+      value: stats.reduce((acc, s) => acc + s.totalValue, 0),
+      duties: stats.reduce((acc, s) => acc + s.totalDuties, 0)
+    }
+  };
+};
+
+module.exports = mongoose.model('H7Declaration', H7DeclarationSchema);

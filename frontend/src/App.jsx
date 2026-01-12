@@ -17,6 +17,7 @@ import DutyCalculator from './components/Calculations/DutyCalculator'
 import ChatAssistant from './components/Chat/ChatAssistant'
 import RequirementsList from './components/Requirements/RequirementsList'
 import ChannelDashboard from './components/Channels/ChannelDashboard'
+import H7DeclarationList from './components/H7/H7DeclarationList'
 
 // Portal Pages (Client)
 import PortalHome from './components/Portal/PortalHome'
@@ -76,6 +77,7 @@ function App() {
         <Route path="assistant" element={<ChatAssistant />} />
         <Route path="requirements" element={<RequirementsList />} />
         <Route path="channels" element={<ChannelDashboard />} />
+        <Route path="h7" element={<H7DeclarationList />} />
       </Route>
 
       {/* Fallback */}

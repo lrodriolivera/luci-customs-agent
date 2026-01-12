@@ -12,7 +12,8 @@ import {
   Bars3Icon,
   XMarkIcon,
   ClipboardDocumentCheckIcon,
-  SignalIcon
+  SignalIcon,
+  ShoppingCartIcon
 } from '@heroicons/react/24/outline'
 
 const navItems = [
@@ -22,6 +23,7 @@ const navItems = [
   { path: '/requirements', icon: ClipboardDocumentCheckIcon, label: 'Requerimientos' },
   { path: '/classification', icon: TagIcon, label: 'Clasificacion' },
   { path: '/declarations', icon: DocumentTextIcon, label: 'Declaraciones' },
+  { path: '/h7', icon: ShoppingCartIcon, label: 'H7 E-commerce' },
   { path: '/calculator', icon: CalculatorIcon, label: 'Calculadora' },
   { path: '/assistant', icon: ChatBubbleLeftRightIcon, label: 'Asistente LUCI' }
 ]

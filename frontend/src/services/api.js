@@ -76,8 +76,16 @@ export const classificationAPI = {
 
 // Declarations
 export const declarationsAPI = {
+  // H1 - Importacion estandar
   generateH1: (data) => api.post('/api/declarations/h1/generate-direct', data),
+  // AES - Exportacion
   generateAES: (data) => api.post('/api/declarations/aes/generate', data),
+  // H7 - Bajo valor (<= 150 EUR)
+  checkH7Eligibility: (expeditionId) => api.get(`/api/declarations/h7/check-eligibility/${expeditionId}`),
+  generateH7: (data) => api.post('/api/declarations/h7/generate', data),
+  submitH7: (expeditionId) => api.post(`/api/declarations/h7/submit/${expeditionId}`),
+  getH7Stats: (params) => api.get('/api/declarations/h7/stats', { params }),
+  // Comunes
   getXML: (expeditionId) => api.get(`/api/declarations/${expeditionId}/xml`, { responseType: 'text' }),
   exportXML: (expeditionId, type) =>
     api.get(`/api/declarations/${expeditionId}/xml`, {
@@ -165,6 +173,25 @@ export const paraduaneroAPI = {
   recordResult: (id, data) => api.post(`/api/paraduanero/${id}/inspection/result`, data),
   issueCertificate: (id, data) => api.post(`/api/paraduanero/${id}/certificate`, data),
   changeStatus: (id, data) => api.post(`/api/paraduanero/${id}/status`, data)
+}
+
+// H7 Declarations (E-commerce, bajo valor <= 150 EUR)
+export const h7API = {
+  list: (params) => api.get('/api/h7', { params }),
+  getStats: (params) => api.get('/api/h7/stats', { params }),
+  get: (id) => api.get(`/api/h7/${id}`),
+  create: (data) => api.post('/api/h7', data),
+  update: (id, data) => api.put(`/api/h7/${id}`, data),
+  validate: (data) => api.post('/api/h7/validate', data),
+  validateIOSS: (iossNumber) => api.get(`/api/h7/validate-ioss/${iossNumber}`),
+  calculateDuties: (data) => api.post('/api/h7/calculate-duties', data),
+  submit: (id) => api.post(`/api/h7/${id}/submit`),
+  cancel: (id, reason) => api.post(`/api/h7/${id}/cancel`, { reason }),
+  addDocument: (id, data) => api.post(`/api/h7/${id}/document`, data),
+  fraudCheck: (id) => api.get(`/api/h7/${id}/fraud-check`),
+  processBatch: (declarations) => api.post('/api/h7/batch', { declarations }),
+  importCSV: (csv, autoSubmit) => api.post('/api/h7/import-csv', { csv, autoSubmit }),
+  createFromExpedition: (expeditionId) => api.post(`/api/h7/from-expedition/${expeditionId}`)
 }
 
 export default api
