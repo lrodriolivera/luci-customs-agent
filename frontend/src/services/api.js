@@ -194,4 +194,28 @@ export const h7API = {
   createFromExpedition: (expeditionId) => api.post(`/api/h7/from-expedition/${expeditionId}`)
 }
 
+// Guarantees (Garantias aduaneras: CGU, avales, depositos)
+export const guaranteesAPI = {
+  list: (params) => api.get('/api/guarantees', { params }),
+  getStats: () => api.get('/api/guarantees/stats'),
+  getAlerts: () => api.get('/api/guarantees/alerts'),
+  get: (id) => api.get(`/api/guarantees/${id}`),
+  create: (data) => api.post('/api/guarantees', data),
+  update: (id, data) => api.put(`/api/guarantees/${id}`, data),
+  activate: (id, data) => api.post(`/api/guarantees/${id}/activate`, data),
+  renew: (id, data) => api.post(`/api/guarantees/${id}/renew`, data),
+  suspend: (id, data) => api.post(`/api/guarantees/${id}/suspend`, data),
+  cancel: (id, data) => api.post(`/api/guarantees/${id}/cancel`, data),
+  consume: (id, data) => api.post(`/api/guarantees/${id}/consume`, data),
+  release: (id, data) => api.post(`/api/guarantees/${id}/release`, data),
+  linkExpedition: (id, data) => api.post(`/api/guarantees/${id}/link-expedition`, data),
+  releaseExpedition: (id, data) => api.post(`/api/guarantees/${id}/release-expedition`, data),
+  addDocument: (id, data) => api.post(`/api/guarantees/${id}/document`, data),
+  acknowledgeAlert: (id, alertId) => api.post(`/api/guarantees/${id}/alerts/${alertId}/acknowledge`),
+  getMovements: (id, params) => api.get(`/api/guarantees/${id}/movements`, { params }),
+  calculate: (data) => api.post('/api/guarantees/calculate', data),
+  findSuitable: (params) => api.get('/api/guarantees/find-suitable', { params }),
+  getReport: (params) => api.get('/api/guarantees/report', { params })
+}
+
 export default api

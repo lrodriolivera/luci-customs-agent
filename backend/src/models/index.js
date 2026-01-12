@@ -9,6 +9,7 @@ const TaricCode = require('./TaricCode');
 const Requirement = require('./Requirement');
 const ParaduaneroControl = require('./ParaduaneroControl');
 const H7Declaration = require('./H7Declaration');
+const Guarantee = require('./Guarantee');
 
 module.exports = {
   User,
@@ -17,5 +18,6 @@ module.exports = {
   TaricCode,
   Requirement,
   ParaduaneroControl,
-  H7Declaration
+  H7Declaration,
+  Guarantee
 };
