@@ -92,14 +92,14 @@ export default function ChannelDashboard() {
 
       // Cargar estadisticas y expedientes en paralelo
       const [statsResponse, expeditionsResponse] = await Promise.all([
-        channelsAPI.getStats(startDate?.toISOString(), endDate.toISOString()),
-        expeditionsAPI.getAll()
+        channelsAPI.getStats({ startDate: startDate?.toISOString(), endDate: endDate.toISOString() }),
+        expeditionsAPI.list()
       ])
 
       setStats(statsResponse.data?.data || statsResponse.data)
 
       // Filtrar expedientes con canal asignado
-      const allExpeditions = expeditionsResponse.data?.data?.expeditions || []
+      const allExpeditions = expeditionsResponse.data?.data || expeditionsResponse.data?.expeditions || []
       const withChannel = allExpeditions.filter(exp => exp.channel || exp.declaration?.channel)
       setExpeditions(withChannel)
 

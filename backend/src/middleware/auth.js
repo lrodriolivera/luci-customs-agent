@@ -134,6 +134,7 @@ const optionalAuth = async (req, res, next) => {
 
 module.exports = {
   auth,
+  requireAuth: auth,  // Alias para compatibilidad
   requireRole,
   requirePermission,
   optionalAuth
