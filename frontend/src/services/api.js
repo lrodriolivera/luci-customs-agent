@@ -218,4 +218,24 @@ export const guaranteesAPI = {
   getReport: (params) => api.get('/api/guarantees/report', { params })
 }
 
+// Special Regimes (Regimenes especiales: 51, 53, 71, T1/T2)
+export const specialRegimesAPI = {
+  list: (params) => api.get('/api/special-regimes', { params }),
+  getStats: (params) => api.get('/api/special-regimes/stats', { params }),
+  getExpiring: (days) => api.get('/api/special-regimes/expiring', { params: { days } }),
+  calculateDuties: (data) => api.post('/api/special-regimes/calculate-duties', data),
+  get: (id) => api.get(`/api/special-regimes/${id}`),
+  create: (data) => api.post('/api/special-regimes', data),
+  update: (id, data) => api.put(`/api/special-regimes/${id}`, data),
+  delete: (id) => api.delete(`/api/special-regimes/${id}`),
+  authorize: (id, data) => api.post(`/api/special-regimes/${id}/authorize`, data),
+  activate: (id) => api.post(`/api/special-regimes/${id}/activate`),
+  linkGuarantee: (id, guaranteeId) => api.post(`/api/special-regimes/${id}/link-guarantee`, { guaranteeId }),
+  requestExtension: (id, data) => api.post(`/api/special-regimes/${id}/extension`, data),
+  discharge: (id, data) => api.post(`/api/special-regimes/${id}/discharge`, data),
+  addGoods: (id, data) => api.post(`/api/special-regimes/${id}/goods`, data),
+  partialExit: (id, data) => api.post(`/api/special-regimes/${id}/partial-exit`, data),
+  updateTransitStatus: (id, data) => api.put(`/api/special-regimes/${id}/transit-status`, data)
+}
+
 export default api

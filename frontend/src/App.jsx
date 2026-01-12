@@ -19,6 +19,7 @@ import RequirementsList from './components/Requirements/RequirementsList'
 import ChannelDashboard from './components/Channels/ChannelDashboard'
 import H7DeclarationList from './components/H7/H7DeclarationList'
 import GuaranteeManager from './components/Guarantees/GuaranteeManager'
+import SpecialRegimeManager from './components/SpecialRegimes/SpecialRegimeManager'
 
 // Portal Pages (Client)
 import PortalHome from './components/Portal/PortalHome'
@@ -80,6 +81,7 @@ function App() {
         <Route path="channels" element={<ChannelDashboard />} />
         <Route path="h7" element={<H7DeclarationList />} />
         <Route path="guarantees" element={<GuaranteeManager />} />
+        <Route path="special-regimes" element={<SpecialRegimeManager />} />
       </Route>
 
       {/* Fallback */}

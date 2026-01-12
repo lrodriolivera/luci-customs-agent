@@ -10,6 +10,7 @@ const Requirement = require('./Requirement');
 const ParaduaneroControl = require('./ParaduaneroControl');
 const H7Declaration = require('./H7Declaration');
 const Guarantee = require('./Guarantee');
+const SpecialRegime = require('./SpecialRegime');
 
 module.exports = {
   User,
@@ -19,5 +20,6 @@ module.exports = {
   Requirement,
   ParaduaneroControl,
   H7Declaration,
-  Guarantee
+  Guarantee,
+  SpecialRegime
 };

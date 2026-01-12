@@ -14,7 +14,8 @@ import {
   ClipboardDocumentCheckIcon,
   SignalIcon,
   ShoppingCartIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  CubeTransparentIcon
 } from '@heroicons/react/24/outline'
 
 const navItems = [
@@ -26,6 +27,7 @@ const navItems = [
   { path: '/declarations', icon: DocumentTextIcon, label: 'Declaraciones' },
   { path: '/h7', icon: ShoppingCartIcon, label: 'H7 E-commerce' },
   { path: '/guarantees', icon: ShieldCheckIcon, label: 'Garantias' },
+  { path: '/special-regimes', icon: CubeTransparentIcon, label: 'Regimenes Esp.' },
   { path: '/calculator', icon: CalculatorIcon, label: 'Calculadora' },
   { path: '/assistant', icon: ChatBubbleLeftRightIcon, label: 'Asistente LUCI' }
 ]
