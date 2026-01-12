@@ -767,11 +767,13 @@ Por favor genera:
     res.json({
       success: true,
       data: {
-        suggestedResponse: aiResponse.response,
+        suggestedResponse: aiResponse.content,
         suggestedDocuments: aiResponse.documents || [],
         keyPoints: aiResponse.keyPoints || [],
         risks: aiResponse.risks || [],
-        confidence: aiResponse.confidence || 0.8
+        confidence: aiResponse.confidence || 0.8,
+        model: aiResponse.model,
+        tokensUsed: aiResponse.tokensUsed
       }
     });
   } catch (error) {

@@ -433,6 +433,34 @@ Responde en formato JSON.`;
   }
 
   /**
+   * Genera respuesta para requerimientos AEAT
+   * @param {string} prompt - El prompt con el contexto del requerimiento
+   * @param {string} context - Contexto ('aduanas', 'valoracion', etc.)
+   */
+  async generateResponse(prompt, context = 'aduanas') {
+    const systemPrompt = `Eres un experto agente de aduanas español especializado en responder requerimientos de la AEAT.
+Tu objetivo es generar respuestas profesionales, técnicas y completas para requerimientos aduaneros.
+
+Directrices:
+- Usa terminología técnica aduanera correcta
+- Cita normativa aplicable cuando sea relevante (CAU, Ley General Tributaria, etc.)
+- Estructura la respuesta de forma clara y profesional
+- Si faltan documentos, indica cuáles y por qué son necesarios
+- Proporciona argumentación sólida basada en la documentación disponible
+- Mantén un tono formal y respetuoso hacia la administración`;
+
+    try {
+      const response = await this.callClaude(SONNET_MODEL, systemPrompt, prompt, {
+        maxTokens: 2000
+      });
+      return response;
+    } catch (error) {
+      logger.error('Error generando respuesta para requerimiento:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Respuesta mock cuando no hay API key
    */
   mockResponse(message) {
