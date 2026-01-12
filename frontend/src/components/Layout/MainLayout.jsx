@@ -11,12 +11,14 @@ import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
-  ClipboardDocumentCheckIcon
+  ClipboardDocumentCheckIcon,
+  SignalIcon
 } from '@heroicons/react/24/outline'
 
 const navItems = [
   { path: '/', icon: HomeIcon, label: 'Dashboard' },
   { path: '/expeditions', icon: FolderIcon, label: 'Expedientes' },
+  { path: '/channels', icon: SignalIcon, label: 'Circuitos' },
   { path: '/requirements', icon: ClipboardDocumentCheckIcon, label: 'Requerimientos' },
   { path: '/classification', icon: TagIcon, label: 'Clasificacion' },
   { path: '/declarations', icon: DocumentTextIcon, label: 'Declaraciones' },

@@ -10,8 +10,10 @@ import {
   ArrowPathIcon,
   DocumentArrowDownIcon,
   CalendarIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  CalendarDaysIcon
 } from '@heroicons/react/24/outline'
+import InspectionScheduler from './InspectionScheduler'
 
 // Configuracion de canales
 const CHANNEL_CONFIG = {
@@ -57,6 +59,7 @@ export default function ChannelStatus({ expeditionId, channel: propChannel, onSt
   const [status, setStatus] = useState(null)
   const [loading, setLoading] = useState(true)
   const [reevaluating, setReevaluating] = useState(false)
+  const [showInspectionScheduler, setShowInspectionScheduler] = useState(false)
 
   useEffect(() => {
     if (expeditionId) {
@@ -334,6 +337,12 @@ La mercancia puede retirarse del recinto aduanero
                     <span className="text-gray-500">Lugar:</span>{' '}
                     <span className="font-medium">{status.physicalInspection.location?.name}</span>
                   </p>
+                  {status.physicalInspection.inspectorName && (
+                    <p>
+                      <span className="text-gray-500">Inspector:</span>{' '}
+                      <span className="font-medium">{status.physicalInspection.inspectorName}</span>
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-yellow-600 text-sm">
@@ -344,12 +353,35 @@ La mercancia puede retirarse del recinto aduanero
             </div>
           )}
 
-          {status?.requirements?.filter(r => r.type === 'physical').length > 0 && (
-            <p className="text-xs text-red-600 text-center">
-              Gestione la inspeccion desde la seccion de Requerimientos
-            </p>
+          {/* Boton para programar inspeccion */}
+          {status?.requirements?.find(r => r.type === 'physical') && (
+            <button
+              onClick={() => setShowInspectionScheduler(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              <CalendarDaysIcon className="h-5 w-5" />
+              {status?.physicalInspection?.scheduled ? 'Modificar Cita' : 'Programar Inspeccion'}
+            </button>
           )}
+
+          <p className="text-xs text-red-600 text-center">
+            La mercancia no puede retirarse hasta completar la inspeccion
+          </p>
         </div>
+      )}
+
+      {/* Modal de programacion de inspeccion */}
+      {showInspectionScheduler && status?.requirements?.find(r => r.type === 'physical') && (
+        <InspectionScheduler
+          requirementId={status.requirements.find(r => r.type === 'physical').id}
+          currentInspection={status.physicalInspection}
+          onScheduled={() => {
+            setShowInspectionScheduler(false)
+            loadStatus()
+            onStatusChange?.()
+          }}
+          onClose={() => setShowInspectionScheduler(false)}
+        />
       )}
 
       {/* MRN */}
