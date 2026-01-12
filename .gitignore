@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Build outputs
+dist/
+build/
+.vite/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploads (user data)
+uploads/
+*.pdf
+*.jpg
+*.jpeg
+*.png
+
+# Test coverage
+coverage/
+.nyc_output/
+.pytest_cache/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

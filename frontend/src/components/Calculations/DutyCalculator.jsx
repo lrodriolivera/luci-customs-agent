@@ -1,0 +1,356 @@
+import React, { useState, useEffect } from 'react'
+import { calculationsAPI, knowledgeAPI } from '../../services/api'
+import toast from 'react-hot-toast'
+import {
+  CalculatorIcon,
+  InformationCircleIcon,
+  CurrencyEuroIcon
+} from '@heroicons/react/24/outline'
+
+export default function DutyCalculator() {
+  const [formData, setFormData] = useState({
+    taricCode: '',
+    value: '',
+    origin: '',
+    preference: '100',
+    incoterm: 'CIF'
+  })
+  const [calculating, setCalculating] = useState(false)
+  const [result, setResult] = useState(null)
+  const [incotermInfo, setIncotermInfo] = useState(null)
+
+  useEffect(() => {
+    const fetchIncotermInfo = async () => {
+      if (formData.incoterm) {
+        try {
+          const response = await knowledgeAPI.incotermInfo(formData.incoterm)
+          setIncotermInfo(response.data)
+        } catch (error) {
+          console.error('Error fetching incoterm info:', error)
+        }
+      }
+    }
+
+    fetchIncotermInfo()
+  }, [formData.incoterm])
+
+  const handleChange = (field, value) => {
+    setFormData({ ...formData, [field]: value })
+    setResult(null)
+  }
+
+  const handleCalculate = async (e) => {
+    e.preventDefault()
+
+    if (!formData.taricCode || !formData.value || !formData.origin) {
+      toast.error('Complete todos los campos obligatorios')
+      return
+    }
+
+    setCalculating(true)
+    setResult(null)
+
+    try {
+      const response = await calculationsAPI.calculateDuties({
+        taric_code: formData.taricCode,
+        value: parseFloat(formData.value),
+        origin: formData.origin,
+        preference: formData.preference
+      })
+
+      setResult(response.data)
+    } catch (error) {
+      toast.error('Error al calcular derechos')
+    } finally {
+      setCalculating(false)
+    }
+  }
+
+  const incoterms = ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP']
+
+  const preferences = [
+    { code: '100', label: 'MFN (Sin preferencia)' },
+    { code: '200', label: 'SPG (Paises en desarrollo)' },
+    { code: '300', label: 'Preferencial (EUR.1)' },
+    { code: '400', label: 'Union Aduanera (ATR)' }
+  ]
+
+  const commonOrigins = [
+    { code: 'CN', label: 'China' },
+    { code: 'US', label: 'Estados Unidos' },
+    { code: 'JP', label: 'Japon' },
+    { code: 'KR', label: 'Corea del Sur' },
+    { code: 'TR', label: 'Turquia' },
+    { code: 'GB', label: 'Reino Unido' },
+    { code: 'IN', label: 'India' },
+    { code: 'VN', label: 'Vietnam' },
+    { code: 'BD', label: 'Bangladesh' },
+    { code: 'MX', label: 'Mexico' }
+  ]
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Calculadora de Derechos</h1>
+        <p className="text-gray-500 mt-1">
+          Calcule aranceles, IVA y total a pagar por importaciones
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Calculator Form */}
+        <div className="lg:col-span-2">
+          <form onSubmit={handleCalculate} className="card space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="label">Codigo TARIC *</label>
+                <input
+                  type="text"
+                  value={formData.taricCode}
+                  onChange={(e) => handleChange('taricCode', e.target.value)}
+                  className="input font-mono"
+                  placeholder="0000000000"
+                  maxLength={10}
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">10 digitos</p>
+              </div>
+
+              <div>
+                <label className="label">Valor en Aduana (EUR) *</label>
+                <div className="relative">
+                  <CurrencyEuroIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.value}
+                    onChange={(e) => handleChange('value', e.target.value)}
+                    className="input pl-10"
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Pais de Origen *</label>
+                <select
+                  value={formData.origin}
+                  onChange={(e) => handleChange('origin', e.target.value)}
+                  className="input"
+                  required
+                >
+                  <option value="">Seleccione...</option>
+                  {commonOrigins.map(o => (
+                    <option key={o.code} value={o.code}>{o.label} ({o.code})</option>
+                  ))}
+                  <option value="OTHER">Otro (introducir codigo)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="label">Preferencia Arancelaria</label>
+                <select
+                  value={formData.preference}
+                  onChange={(e) => handleChange('preference', e.target.value)}
+                  className="input"
+                >
+                  {preferences.map(p => (
+                    <option key={p.code} value={p.code}>{p.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="label">Incoterm</label>
+                <select
+                  value={formData.incoterm}
+                  onChange={(e) => handleChange('incoterm', e.target.value)}
+                  className="input"
+                >
+                  {incoterms.map(i => (
+                    <option key={i} value={i}>{i}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Afecta al calculo del valor en aduana
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={calculating}
+              className="btn-primary flex items-center justify-center gap-2 w-full md:w-auto"
+            >
+              {calculating ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Calculando...
+                </>
+              ) : (
+                <>
+                  <CalculatorIcon className="w-5 h-5" />
+                  Calcular Derechos
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Results */}
+          {result && (
+            <div className="card mt-6">
+              <h2 className="text-lg font-semibold mb-4">Resultado del Calculo</h2>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="p-4 bg-gray-50 rounded-xl text-center">
+                  <p className="text-sm text-gray-500">Valor Aduanero</p>
+                  <p className="text-xl font-bold text-gray-900">
+                    {result.customs_value?.toFixed(2)} EUR
+                  </p>
+                </div>
+                <div className="p-4 bg-blue-50 rounded-xl text-center">
+                  <p className="text-sm text-gray-500">Arancel</p>
+                  <p className="text-xl font-bold text-blue-600">
+                    {result.duty_amount?.toFixed(2)} EUR
+                  </p>
+                  <p className="text-xs text-gray-500">{result.effective_duty_rate}%</p>
+                </div>
+                <div className="p-4 bg-purple-50 rounded-xl text-center">
+                  <p className="text-sm text-gray-500">IVA</p>
+                  <p className="text-xl font-bold text-purple-600">
+                    {result.vat_amount?.toFixed(2)} EUR
+                  </p>
+                  <p className="text-xs text-gray-500">{result.vat_rate}%</p>
+                </div>
+                <div className="p-4 bg-green-50 rounded-xl text-center">
+                  <p className="text-sm text-gray-500">Total a Pagar</p>
+                  <p className="text-xl font-bold text-green-600">
+                    {result.total_to_pay?.toFixed(2)} EUR
+                  </p>
+                </div>
+              </div>
+
+              {/* Detailed Breakdown */}
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="font-medium text-gray-700 mb-3">Desglose Detallado</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Codigo TARIC</span>
+                    <span className="font-mono">{result.taric_code}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Origen</span>
+                    <span>{result.origin}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Tipo Arancel Base</span>
+                    <span>{result.base_duty_rate}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Tipo Arancel Efectivo</span>
+                    <span>{result.effective_duty_rate}%</span>
+                  </div>
+                  {result.preference_applied && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Preferencia Aplicada</span>
+                      <span>{result.preference_applied}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Base IVA</span>
+                    <span>{result.vat_base?.toFixed(2)} EUR</span>
+                  </div>
+                  <hr className="my-2" />
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Total Impuestos</span>
+                    <span className="font-medium">{result.total_taxes?.toFixed(2)} EUR</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>TOTAL A PAGAR</span>
+                    <span className="text-green-600">{result.total_to_pay?.toFixed(2)} EUR</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Incoterm Info */}
+          {incotermInfo && !incotermInfo.error && (
+            <div className="card">
+              <h3 className="font-semibold text-gray-900 mb-3">
+                {incotermInfo.name} ({formData.incoterm})
+              </h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Punto de entrega: {incotermInfo.delivery_point}
+              </p>
+
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-gray-500 uppercase">
+                  Ajustes al Valor en Aduana
+                </p>
+                <ul className="text-sm text-gray-700 space-y-1">
+                  {incotermInfo.customs_value_adjustments?.map((adj, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="text-luci">-</span>
+                      {adj}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          <div className="card">
+            <h3 className="font-semibold text-gray-900 mb-3">
+              <InformationCircleIcon className="w-5 h-5 inline mr-1 text-luci" />
+              Calculo del Valor en Aduana
+            </h3>
+            <div className="text-sm text-gray-600 space-y-2">
+              <p>El valor en aduana se calcula segun el Incoterm:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li><strong>CIF/CIP:</strong> Ya incluye flete y seguro</li>
+                <li><strong>FOB/FCA:</strong> Anadir flete y seguro hasta frontera UE</li>
+                <li><strong>EXW:</strong> Anadir todos los costes hasta frontera UE</li>
+                <li><strong>DDP:</strong> Restar impuestos incluidos</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="font-semibold text-gray-900 mb-3">
+              Tipos de IVA en Espana
+            </h3>
+            <div className="text-sm text-gray-600 space-y-2">
+              <div className="flex justify-between">
+                <span>General</span>
+                <span className="font-medium">21%</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Reducido</span>
+                <span className="font-medium">10%</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Superreducido</span>
+                <span className="font-medium">4%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="card bg-yellow-50 border-yellow-200">
+            <h3 className="font-semibold text-yellow-800 mb-2">Aviso</h3>
+            <p className="text-sm text-yellow-700">
+              Este calculo es orientativo. El importe definitivo dependera
+              de la clasificacion arancelaria final y de posibles medidas
+              comerciales adicionales (antidumping, salvaguardia, etc.).
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
