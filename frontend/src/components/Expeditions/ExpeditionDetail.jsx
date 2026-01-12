@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline'
 import RequirementManager from '../Requirements/RequirementManager'
 import ChannelStatus from '../Channels/ChannelStatus'
+import ParaduaneroManager from '../Paraduanero/ParaduaneroManager'
 
 export default function ExpeditionDetail() {
   const { id } = useParams()
@@ -631,6 +632,19 @@ export default function ExpeditionDetail() {
               />
             </div>
           )}
+
+          {/* Paraduanero Controls - SOIVRE, MAPA, Sanidad, MITERD */}
+          <div className="card">
+            <ParaduaneroManager
+              expeditionId={id}
+              onControlsChange={() => {
+                expeditionsAPI.get(id).then(resp => {
+                  const data = resp.data?.data || resp.data
+                  setExpedition(data)
+                })
+              }}
+            />
+          </div>
 
           {/* Actions */}
           <div className="card">

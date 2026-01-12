@@ -7,11 +7,13 @@ const Expedition = require('./Expedition');
 const ChatMessage = require('./ChatMessage');
 const TaricCode = require('./TaricCode');
 const Requirement = require('./Requirement');
+const ParaduaneroControl = require('./ParaduaneroControl');
 
 module.exports = {
   User,
   Expedition,
   ChatMessage,
   TaricCode,
-  Requirement
+  Requirement,
+  ParaduaneroControl
 };

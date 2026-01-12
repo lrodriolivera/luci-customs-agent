@@ -151,4 +151,20 @@ export const channelsAPI = {
     api.post(`/api/channels/${expeditionId}/process`, { channel })
 }
 
+// Paraduanero (Controles paraduaneros: SOIVRE, MAPA, Sanidad, MITERD)
+export const paraduaneroAPI = {
+  list: (params) => api.get('/api/paraduanero', { params }),
+  getStats: (params) => api.get('/api/paraduanero/stats', { params }),
+  analyze: (expeditionId) => api.get(`/api/paraduanero/analyze/${expeditionId}`),
+  createControls: (expeditionId) => api.post(`/api/paraduanero/create/${expeditionId}`),
+  getByExpedition: (expeditionId) => api.get(`/api/paraduanero/expedition/${expeditionId}`),
+  get: (id) => api.get(`/api/paraduanero/${id}`),
+  update: (id, data) => api.put(`/api/paraduanero/${id}`, data),
+  provideDocument: (id, code, data) => api.post(`/api/paraduanero/${id}/document/${code}/provide`, data),
+  scheduleInspection: (id, data) => api.post(`/api/paraduanero/${id}/inspection/schedule`, data),
+  recordResult: (id, data) => api.post(`/api/paraduanero/${id}/inspection/result`, data),
+  issueCertificate: (id, data) => api.post(`/api/paraduanero/${id}/certificate`, data),
+  changeStatus: (id, data) => api.post(`/api/paraduanero/${id}/status`, data)
+}
+
 export default api

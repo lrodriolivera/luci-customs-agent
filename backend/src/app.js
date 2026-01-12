@@ -12,7 +12,7 @@ const logger = require('./config/logger');
 // Import routes
 let authRoutes, expeditionRoutes, documentRoutes, declarationRoutes;
 let portalRoutes, chatRoutes, classificationRoutes, calculationRoutes;
-let requirementRoutes, channelRoutes;
+let requirementRoutes, channelRoutes, paraduaneroRoutes;
 
 try {
   authRoutes = require('./routes/auth');
@@ -25,6 +25,7 @@ try {
   calculationRoutes = require('./routes/calculation');
   requirementRoutes = require('./routes/requirements');
   channelRoutes = require('./routes/channels');
+  paraduaneroRoutes = require('./routes/paraduanero');
 } catch (err) {
   console.error('Error loading routes:', err.message);
 }
@@ -84,6 +85,7 @@ if (classificationRoutes) app.use('/api/classification', classificationRoutes);
 if (calculationRoutes) app.use('/api/calculation', calculationRoutes);
 if (requirementRoutes) app.use('/api/requirements', requirementRoutes);
 if (channelRoutes) app.use('/api/channels', channelRoutes);
+if (paraduaneroRoutes) app.use('/api/paraduanero', paraduaneroRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
