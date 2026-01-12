@@ -1,0 +1,260 @@
+# PLAN DE DESARROLLO: LUCI como Agente de Aduanas Completo
+
+**Fecha de creacion**: 2026-01-12
+**Ultima actualizacion**: 2026-01-12
+**Version**: 1.0.0
+**Estado**: En desarrollo
+
+---
+
+## 1. OBJETIVO
+
+Transformar LUCI de un sistema de gestion de expedientes aduaneros a un **agente de aduanas virtual completo** que replique todas las funciones de un representante aduanero humano en Espana.
+
+---
+
+## 2. ESTADO ACTUAL vs OBJETIVO
+
+| Funcion del Agente Humano | Estado Actual | Objetivo |
+|---------------------------|---------------|----------|
+| Presentar declaraciones H1 | Basico (simulado) | Integracion real AEAT |
+| Presentar declaraciones AES | Basico (simulado) | Integracion real AEAT |
+| Presentar H7 (bajo valor) | No existe | Implementar completo |
+| Gestionar transito (NCTS) | No existe | Implementar completo |
+| Seguir circuitos (verde/naranja/rojo) | Simulado | Integracion real |
+| Responder requerimientos AEAT | No existe | Implementar completo |
+| Coordinar SOIVRE | No existe | Implementar completo |
+| Coordinar MAPA/Veterinario | No existe | Implementar completo |
+| Coordinar Sanidad | No existe | Implementar completo |
+| Gestionar garantias/avales | No existe | Implementar completo |
+| Calcular impuestos especiales | No existe | Implementar completo |
+| Gestionar deposito temporal | No existe | Implementar completo |
+| Regimenes especiales (51, 53, 71) | Parcial | Completar |
+| Preferencias arancelarias | Basico | Ampliar |
+| Validar certificados origen | Manual | Automatizar |
+| Gestionar OEA | No existe | Implementar completo |
+| Control de plazos/vencimientos | No existe | Implementar completo |
+| Comunicacion con inspector | No existe | Implementar completo |
+| TRACES NT (trazabilidad) | No existe | Implementar completo |
+
+---
+
+## 3. FASES DE DESARROLLO
+
+### FASE 1: Core de Agente Aduanero (Semanas 1-4)
+**Prioridad**: CRITICA
+
+| # | Funcionalidad | Descripcion | Estado |
+|---|---------------|-------------|--------|
+| 1.1 | Gestion de Requerimientos AEAT | Sistema completo para recibir, gestionar y responder requerimientos | Pendiente |
+| 1.2 | Circuitos Completos | Verde, amarillo, naranja, rojo con flujos reales | Pendiente |
+| 1.3 | Controles Paraduaneros | SOIVRE, MAPA, Sanidad, MITERD | Pendiente |
+| 1.4 | Declaracion H7 | Envios bajo valor (<150 EUR) | Pendiente |
+| 1.5 | Sistema de Garantias | Garantias individuales, globales, avales NRC | Pendiente |
+
+### FASE 2: Regimenes Especiales (Semanas 5-8)
+**Prioridad**: ALTA
+
+| # | Funcionalidad | Descripcion | Estado |
+|---|---------------|-------------|--------|
+| 2.1 | Perfeccionamiento Activo (51) | Importar sin aranceles para transformar y reexportar | Pendiente |
+| 2.2 | Importacion Temporal (53) | Uso temporal sin pago de derechos | Pendiente |
+| 2.3 | Deposito Aduanero (71) | Almacenamiento sin pago de derechos | Pendiente |
+| 2.4 | Transito NCTS | T1/T2 con garantia y control | Pendiente |
+
+### FASE 3: Inteligencia Aduanera (Semanas 9-12)
+**Prioridad**: MEDIA-ALTA
+
+| # | Funcionalidad | Descripcion | Estado |
+|---|---------------|-------------|--------|
+| 3.1 | Motor de Reglas | Determinar automaticamente requisitos por origen+TARIC | Pendiente |
+| 3.2 | Preferencias Arancelarias | EUR.1, Form A, ATR, acumulacion origen | Pendiente |
+| 3.3 | Impuestos Especiales | SILICIE, alcohol, hidrocarburos, tabaco | Pendiente |
+| 3.4 | Gestion de Contingentes | Consulta y solicitud de cupos | Pendiente |
+
+### FASE 4: Operativa Avanzada (Semanas 13-16)
+**Prioridad**: MEDIA
+
+| # | Funcionalidad | Descripcion | Estado |
+|---|---------------|-------------|--------|
+| 4.1 | Gestor de Plazos | Alertas de vencimientos y deadlines | Pendiente |
+| 4.2 | Comunicacion Inspectores | Respuestas, alegaciones, recursos | Pendiente |
+| 4.3 | Coordinacion Inspecciones | Citas, documentacion, actas | Pendiente |
+| 4.4 | Modulo OEA | Beneficios y simplificaciones | Pendiente |
+
+### FASE 5: Integraciones Reales (Semanas 17-24)
+**Prioridad**: CRITICA para produccion
+
+| # | Funcionalidad | Descripcion | Estado |
+|---|---------------|-------------|--------|
+| 5.1 | AEAT Web Services | H1, AES, consultas, firma digital | Pendiente |
+| 5.2 | VUA | Ventanilla Unica Aduanera | Pendiente |
+| 5.3 | TRACES NT | Trazabilidad productos regulados | Pendiente |
+| 5.4 | API TARIC UE | Aranceles en tiempo real | Pendiente |
+| 5.5 | Tipos Cambio BCE | Conversion automatica | Pendiente |
+
+---
+
+## 4. DETALLE DE FUNCIONALIDADES
+
+### 4.1 Sistema de Requerimientos AEAT
+
+**Descripcion**: Cuando AEAT asigna canal naranja o rojo, el sistema debe:
+1. Recibir notificacion del requerimiento
+2. Parsear tipo de requerimiento y documentos solicitados
+3. Notificar al agente y cliente
+4. Permitir preparar respuesta con justificaciones
+5. Adjuntar documentacion adicional
+6. Enviar respuesta a AEAT
+7. Dar seguimiento hasta resolucion (levante o rechazo)
+
+**Tipos de requerimientos**:
+- Documental: Solicitud de facturas, BL, certificados
+- Valoracion: Justificacion del valor declarado
+- Clasificacion: Justificacion del codigo TARIC
+- Origen: Verificacion de origen de la mercancia
+- Fisico: Coordinacion de inspeccion fisica
+
+**Modelo de datos**:
+```javascript
+{
+  expeditionId: ObjectId,
+  mrn: String,
+  requirementType: ['documentary', 'valuation', 'classification', 'origin', 'physical'],
+  status: ['pending', 'in_progress', 'responded', 'resolved', 'rejected'],
+  requestedDocuments: [String],
+  deadline: Date,
+  inspectorNotes: String,
+  responses: [{
+    date: Date,
+    documents: [ObjectId],
+    notes: String,
+    submittedBy: ObjectId
+  }],
+  resolution: {
+    date: Date,
+    result: ['approved', 'rejected', 'partial'],
+    notes: String
+  }
+}
+```
+
+### 4.2 Circuitos de Control Completos
+
+**Canal Verde** (90% de operaciones):
+- Levante automatico
+- Notificacion inmediata al cliente
+- Generacion de justificante de levante
+- Actualizacion de estado del expediente
+
+**Canal Amarillo** (certificados pendientes):
+- Identificar certificados faltantes
+- Notificar al cliente que documentos necesita
+- Permitir subida de certificados
+- Re-evaluar automaticamente
+
+**Canal Naranja** (revision documental):
+- Crear requerimiento asociado
+- Preparar documentacion solicitada
+- Enviar respuesta
+- Seguimiento hasta resolucion
+
+**Canal Rojo** (inspeccion fisica):
+- Coordinar cita con recinto aduanero
+- Preparar expediente fisico
+- Acompanar inspeccion (checklist)
+- Registrar resultado de inspeccion
+- Gestionar incidencias
+
+### 4.3 Controles Paraduaneros
+
+**SOIVRE** (Servicio Oficial de Inspeccion):
+- Productos industriales sensibles (juguetes, electricos, EPI)
+- Generar solicitud de inspeccion
+- Seguimiento de resultado
+- Integracion con Ministerio de Comercio
+
+**MAPA** (Ministerio de Agricultura):
+- Productos de origen animal/vegetal no alimentarios
+- Control veterinario
+- Control fitosanitario
+- Certificados de importacion
+
+**Sanidad Exterior**:
+- Productos para consumo humano
+- Medicamentos y cosmeticos
+- Productos sanitarios
+- Certificado sanitario
+
+**MITERD** (Transicion Ecologica):
+- Residuos y sustancias peligrosas
+- CITES (especies protegidas)
+- Productos quimicos (REACH)
+
+### 4.4 Sistema de Garantias
+
+**Tipos de garantia**:
+- Individual: Por operacion especifica
+- Global: Cubre multiples operaciones
+- Reducida: Para OEA (30%, 50%, 100% exencion)
+
+**Funcionalidades**:
+- Calcular garantia necesaria por operacion
+- Verificar saldo disponible en garantia global
+- Generar aval con NRC para AEAT
+- Controlar consumo de garantia
+- Alertar cuando se agota
+- Gestionar aplazamiento de pago (10/30 dias)
+
+---
+
+## 5. APIs Y ENDPOINTS AEAT
+
+(Ver documento separado: api-references/AEAT_ENDPOINTS.md)
+
+---
+
+## 6. METRICAS DE EXITO
+
+| Metrica | Objetivo |
+|---------|----------|
+| Tiempo medio de despacho | < 4 horas (canal verde) |
+| Tasa de errores en declaraciones | < 2% |
+| Tiempo respuesta a requerimientos | < 24 horas |
+| Satisfaccion del cliente | > 4.5/5 |
+| Automatizacion de procesos | > 80% |
+
+---
+
+## 7. RIESGOS Y MITIGACIONES
+
+| Riesgo | Probabilidad | Impacto | Mitigacion |
+|--------|--------------|---------|------------|
+| Cambios en APIs AEAT | Media | Alto | Arquitectura modular, tests de integracion |
+| Errores en clasificacion TARIC | Media | Alto | Validacion humana, logs de auditoria |
+| Caida de servicios externos | Baja | Alto | Cache local, modo offline, reintentos |
+| Cambios normativos | Alta | Medio | Base de conocimiento actualizable |
+
+---
+
+## 8. EQUIPO Y RECURSOS
+
+- Desarrollo backend: 1 persona
+- Desarrollo frontend: 1 persona
+- Integraciones AEAT: Requiere certificado digital representante
+- Testing: Entorno de pruebas AEAT
+
+---
+
+## 9. REFERENCIAS
+
+- CAU: Reglamento (UE) 952/2013
+- RDCAU: Reglamento Delegado (UE) 2015/2446
+- RECAU: Reglamento de Ejecucion (UE) 2015/2447
+- Manual H1 AEAT: sede.agenciatributaria.gob.es
+- Especificaciones NCTS: ec.europa.eu/taxation_customs
+
+---
+
+**Documento creado por**: Claude Code
+**Proyecto**: LUCI Customs Agent - Stock Logistic

@@ -6,10 +6,12 @@ const User = require('./User');
 const Expedition = require('./Expedition');
 const ChatMessage = require('./ChatMessage');
 const TaricCode = require('./TaricCode');
+const Requirement = require('./Requirement');
 
 module.exports = {
   User,
   Expedition,
   ChatMessage,
-  TaricCode
+  TaricCode,
+  Requirement
 };
