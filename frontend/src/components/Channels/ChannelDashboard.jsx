@@ -99,8 +99,10 @@ export default function ChannelDashboard() {
       setStats(statsResponse.data?.data || statsResponse.data)
 
       // Filtrar expedientes con canal asignado
-      const allExpeditions = expeditionsResponse.data?.data || expeditionsResponse.data?.expeditions || []
-      const withChannel = allExpeditions.filter(exp => exp.channel || exp.declaration?.channel)
+      const allExpeditions = expeditionsResponse.data?.data?.expeditions || expeditionsResponse.data?.expeditions || []
+      const withChannel = Array.isArray(allExpeditions)
+        ? allExpeditions.filter(exp => exp.channel || exp.declaration?.channel)
+        : []
       setExpeditions(withChannel)
 
     } catch (error) {
