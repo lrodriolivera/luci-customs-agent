@@ -15,7 +15,22 @@ import {
   SignalIcon,
   ShoppingCartIcon,
   ShieldCheckIcon,
-  CubeTransparentIcon
+  CubeTransparentIcon,
+  TruckIcon,
+  BeakerIcon,
+  GlobeAltIcon,
+  ChartBarIcon,
+  IdentificationIcon,
+  ClockIcon,
+  MagnifyingGlassIcon,
+  EnvelopeIcon,
+  CloudIcon,
+  KeyIcon,
+  SignalSlashIcon,
+  Cog6ToothIcon,
+  CreditCardIcon,
+  BuildingOfficeIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 
 const navItems = [
@@ -23,12 +38,32 @@ const navItems = [
   { path: '/expeditions', icon: FolderIcon, label: 'Expedientes' },
   { path: '/channels', icon: SignalIcon, label: 'Circuitos' },
   { path: '/requirements', icon: ClipboardDocumentCheckIcon, label: 'Requerimientos' },
+  { path: '/deadlines', icon: ClockIcon, label: 'Plazos' },
+  { path: '/inspections', icon: MagnifyingGlassIcon, label: 'Inspecciones' },
+  { path: '/communications', icon: EnvelopeIcon, label: 'Comunicaciones' },
   { path: '/classification', icon: TagIcon, label: 'Clasificacion' },
   { path: '/declarations', icon: DocumentTextIcon, label: 'Declaraciones' },
   { path: '/h7', icon: ShoppingCartIcon, label: 'H7 E-commerce' },
   { path: '/guarantees', icon: ShieldCheckIcon, label: 'Garantias' },
+  { path: '/oea', icon: IdentificationIcon, label: 'OEA' },
   { path: '/special-regimes', icon: CubeTransparentIcon, label: 'Regimenes Esp.' },
+  { path: '/transit', icon: TruckIcon, label: 'Transitos NCTS' },
   { path: '/calculator', icon: CalculatorIcon, label: 'Calculadora' },
+  { path: '/rules-engine', icon: BeakerIcon, label: 'Motor de Reglas' },
+  { path: '/preferences', icon: GlobeAltIcon, label: 'Preferencias' },
+  { path: '/excise-duties', icon: BeakerIcon, label: 'Imp. Especiales' },
+  { path: '/quotas', icon: ChartBarIcon, label: 'Contingentes' },
+  { path: '/integrations', icon: CloudIcon, label: 'Integraciones' },
+  // AEAT Real Integration (Phase 6.1)
+  { path: '/aeat/certificates', icon: KeyIcon, label: 'Certificados AEAT' },
+  { path: '/aeat/monitor', icon: SignalIcon, label: 'Monitor AEAT' },
+  // Analytics & BI (Phase 6.2)
+  { path: '/analytics', icon: ChartBarIcon, label: 'Analytics' },
+  // Tenant & Multi-Tenancy (Phase 6.3)
+  { path: '/settings', icon: Cog6ToothIcon, label: 'Configuracion' },
+  { path: '/billing', icon: CreditCardIcon, label: 'Facturacion' },
+  // ML Advanced (Phase 6.5)
+  { path: '/ml-insights', icon: SparklesIcon, label: 'ML Insights' },
   { path: '/assistant', icon: ChatBubbleLeftRightIcon, label: 'Asistente LUCI' }
 ]
 

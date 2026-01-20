@@ -218,6 +218,81 @@ export const guaranteesAPI = {
   getReport: (params) => api.get('/api/guarantees/report', { params })
 }
 
+// Dashboard
+export const dashboardAPI = {
+  getAlerts: () => api.get('/api/dashboard/alerts'),
+  getStats: () => api.get('/api/dashboard/stats')
+}
+
+// Transit (NCTS - T1/T2/TIR)
+export const transitAPI = {
+  list: (params) => api.get('/api/transit', { params }),
+  getStats: (params) => api.get('/api/transit/stats', { params }),
+  getOverdue: () => api.get('/api/transit/overdue'),
+  get: (id) => api.get(`/api/transit/${id}`),
+  create: (data) => api.post('/api/transit', data),
+  update: (id, data) => api.put(`/api/transit/${id}`, data),
+  delete: (id) => api.delete(`/api/transit/${id}`),
+  // NCTS Flow
+  submit: (id) => api.post(`/api/transit/${id}/submit`),
+  releaseAtDeparture: (id) => api.post(`/api/transit/${id}/release-departure`),
+  startTransit: (id) => api.post(`/api/transit/${id}/start`),
+  recordTransitOffice: (id, data) => api.post(`/api/transit/${id}/transit-office`, data),
+  notifyArrival: (id, data) => api.post(`/api/transit/${id}/arrival`, data),
+  recordControl: (id, data) => api.post(`/api/transit/${id}/control`, data),
+  releaseGoods: (id) => api.post(`/api/transit/${id}/release-goods`),
+  complete: (id) => api.post(`/api/transit/${id}/complete`),
+  // Special procedures
+  initiateEnquiry: (id, data) => api.post(`/api/transit/${id}/enquiry`, data)
+}
+
+// Preferences (Preferencias Arancelarias)
+export const preferencesAPI = {
+  checkEligibility: (data) => api.post('/api/preferences/eligibility', data),
+  listAgreements: () => api.get('/api/preferences/agreements'),
+  getAgreement: (key) => api.get(`/api/preferences/agreements/${key}`),
+  getByCountry: (code) => api.get(`/api/preferences/country/${code}`),
+  validateCertificate: (data) => api.post('/api/preferences/validate-certificate', data),
+  getRecommendations: (data) => api.post('/api/preferences/optimize', data),
+  getOriginRules: (chapter) => api.get(`/api/preferences/origin-rules/${chapter}`),
+  getInfo: () => api.get('/api/preferences/info')
+}
+
+// OEA (Operador Economico Autorizado)
+export const oeaAPI = {
+  // Information & Catalogs
+  getInfo: () => api.get('/api/oea/info'),
+  getStats: () => api.get('/api/oea/stats'),
+  getExpiring: (days = 90) => api.get('/api/oea/expiring', { params: { days } }),
+  getBenefitsCatalog: () => api.get('/api/oea/benefits'),
+  getSimplifications: () => api.get('/api/oea/simplifications'),
+  getMutualRecognition: () => api.get('/api/oea/mutual-recognition'),
+  // CRUD
+  list: (params) => api.get('/api/oea', { params }),
+  get: (id) => api.get(`/api/oea/${id}`),
+  getByEORI: (eori) => api.get(`/api/oea/eori/${eori}`),
+  getByNIF: (nif) => api.get(`/api/oea/nif/${nif}`),
+  create: (data) => api.post('/api/oea', data),
+  update: (id, data) => api.put(`/api/oea/${id}`, data),
+  // Certification Lifecycle
+  submitForReview: (id) => api.post(`/api/oea/${id}/submit`),
+  approve: (id, data) => api.post(`/api/oea/${id}/approve`, data),
+  suspend: (id, data) => api.post(`/api/oea/${id}/suspend`, data),
+  revoke: (id, data) => api.post(`/api/oea/${id}/revoke`, data),
+  initiateRenewal: (id) => api.post(`/api/oea/${id}/renewal/initiate`),
+  completeRenewal: (id, data) => api.post(`/api/oea/${id}/renewal/complete`, data),
+  // Audits & Compliance
+  addAudit: (id, data) => api.post(`/api/oea/${id}/audits`, data),
+  updateRequirement: (id, requirement, data) => api.put(`/api/oea/${id}/requirements/${requirement}`, data),
+  addComplianceRecord: (id, data) => api.post(`/api/oea/${id}/compliance`, data),
+  // Benefits & Simplifications
+  grantSimplification: (id, data) => api.post(`/api/oea/${id}/simplifications`, data),
+  calculateGuaranteeReduction: (id, data) => api.post(`/api/oea/${id}/guarantee-reduction`, data),
+  // Alerts
+  acknowledgeAlert: (id, alertId, data) => api.post(`/api/oea/${id}/alerts/${alertId}/acknowledge`, data),
+  resolveAlert: (id, alertId) => api.post(`/api/oea/${id}/alerts/${alertId}/resolve`)
+}
+
 // Special Regimes (Regimenes especiales: 51, 53, 71, T1/T2)
 export const specialRegimesAPI = {
   list: (params) => api.get('/api/special-regimes', { params }),
@@ -235,7 +310,394 @@ export const specialRegimesAPI = {
   discharge: (id, data) => api.post(`/api/special-regimes/${id}/discharge`, data),
   addGoods: (id, data) => api.post(`/api/special-regimes/${id}/goods`, data),
   partialExit: (id, data) => api.post(`/api/special-regimes/${id}/partial-exit`, data),
-  updateTransitStatus: (id, data) => api.put(`/api/special-regimes/${id}/transit-status`, data)
+  updateTransitStatus: (id, data) => api.put(`/api/special-regimes/${id}/transit-status`, data),
+  // AI-powered features
+  aiAdvise: (data) => api.post('/ai/special-regimes/advise', data),
+  aiValidateYield: (data) => api.post('/ai/special-regimes/validate-yield', data),
+  aiAnalyzeDeadline: (data) => api.post('/ai/special-regimes/analyze-deadline', data),
+  aiAsk: (question, context) => api.post('/ai/special-regimes/ask', null, { params: { question }, data: context })
+}
+
+// Deadlines (Gestor de Plazos)
+export const deadlinesAPI = {
+  list: (params) => api.get('/api/deadlines', { params }),
+  get: (id) => api.get(`/api/deadlines/${id}`),
+  create: (data) => api.post('/api/deadlines', data),
+  update: (id, data) => api.put(`/api/deadlines/${id}`, data),
+  delete: (id) => api.delete(`/api/deadlines/${id}`),
+  // Queries
+  getPending: (params) => api.get('/api/deadlines/pending', { params }),
+  getOverdue: () => api.get('/api/deadlines/overdue'),
+  getUrgent: (hours) => api.get('/api/deadlines/urgent', { params: { hours } }),
+  getCalendar: (startDate, endDate) => api.get('/api/deadlines/calendar', { params: { startDate, endDate } }),
+  getDashboard: (userId) => api.get('/api/deadlines/dashboard', { params: { userId } }),
+  getStats: (params) => api.get('/api/deadlines/stats', { params }),
+  getTypes: () => api.get('/api/deadlines/types'),
+  getCategories: () => api.get('/api/deadlines/categories'),
+  getInfo: () => api.get('/api/deadlines/info'),
+  // Actions
+  complete: (id, notes) => api.post(`/api/deadlines/${id}/complete`, { notes }),
+  extend: (id, newDate, reason) => api.post(`/api/deadlines/${id}/extend`, { newDate, reason }),
+  cancel: (id, reason) => api.post(`/api/deadlines/${id}/cancel`, { reason }),
+  processAlerts: () => api.post('/api/deadlines/process-alerts'),
+  sync: () => api.post('/api/deadlines/sync')
+}
+
+// Inspections (Coordinacion de Inspecciones)
+export const inspectionsAPI = {
+  list: (params) => api.get('/api/inspections', { params }),
+  get: (id) => api.get(`/api/inspections/${id}`),
+  create: (data) => api.post('/api/inspections', data),
+  // Queries
+  getToday: () => api.get('/api/inspections/today'),
+  getPending: (userId) => api.get('/api/inspections/pending', { params: { userId } }),
+  getCalendar: (startDate, endDate) => api.get('/api/inspections/calendar', { params: { startDate, endDate } }),
+  getDashboard: (userId) => api.get('/api/inspections/dashboard', { params: { userId } }),
+  getStats: (params) => api.get('/api/inspections/stats', { params }),
+  getTypes: () => api.get('/api/inspections/types'),
+  getLocations: () => api.get('/api/inspections/locations'),
+  getResults: () => api.get('/api/inspections/results'),
+  getChecklist: (type) => api.get(`/api/inspections/checklist/${type}`),
+  getInfo: () => api.get('/api/inspections/info'),
+  // Workflow
+  schedule: (id, data) => api.post(`/api/inspections/${id}/schedule`, data),
+  confirm: (id, confirmationNumber) => api.post(`/api/inspections/${id}/confirm`, { confirmationNumber }),
+  start: (id) => api.post(`/api/inspections/${id}/start`),
+  complete: (id, data) => api.post(`/api/inspections/${id}/complete`, data),
+  cancel: (id, reason) => api.post(`/api/inspections/${id}/cancel`, { reason }),
+  reschedule: (id, data) => api.post(`/api/inspections/${id}/reschedule`, data),
+  // Data management
+  addParticipant: (id, data) => api.post(`/api/inspections/${id}/participants`, data),
+  addEvidence: (id, data) => api.post(`/api/inspections/${id}/evidence`, data),
+  addItem: (id, data) => api.post(`/api/inspections/${id}/items`, data),
+  registerFinding: (id, data) => api.post(`/api/inspections/${id}/findings`, data),
+  addSample: (id, data) => api.post(`/api/inspections/${id}/samples`, data),
+  updateSampleResult: (id, sampleId, data) => api.put(`/api/inspections/${id}/samples/${sampleId}`, data),
+  generateReport: (id, data) => api.post(`/api/inspections/${id}/report`, data),
+  addAction: (id, data) => api.post(`/api/inspections/${id}/actions`, data)
+}
+
+// Communications (Comunicaciones con Inspectores)
+export const communicationsAPI = {
+  list: (params) => api.get('/api/communications', { params }),
+  get: (id) => api.get(`/api/communications/${id}`),
+  create: (data) => api.post('/api/communications', data),
+  // Specific creation
+  createAllegation: (data) => api.post('/api/communications/allegation', data),
+  createAdministrativeAppeal: (data) => api.post('/api/communications/administrative-appeal', data),
+  createEconomicAppeal: (data) => api.post('/api/communications/economic-appeal', data),
+  // Queries
+  getPending: (userId) => api.get('/api/communications/pending', { params: { userId } }),
+  getAppeals: (status) => api.get('/api/communications/appeals', { params: { status } }),
+  getOverdue: () => api.get('/api/communications/overdue'),
+  getDashboard: (userId) => api.get('/api/communications/dashboard', { params: { userId } }),
+  getStats: (params) => api.get('/api/communications/stats', { params }),
+  getTypes: () => api.get('/api/communications/types'),
+  getAuthorities: () => api.get('/api/communications/authorities'),
+  getTemplates: () => api.get('/api/communications/templates'),
+  getInfo: () => api.get('/api/communications/info'),
+  // Utilities
+  generateDraft: (communicationType, data) => api.post('/api/communications/draft', { communicationType, ...data }),
+  calculateDeadline: (notificationDate, communicationType) =>
+    api.post('/api/communications/calculate-deadline', { notificationDate, communicationType }),
+  // Workflow
+  addMessage: (id, data) => api.post(`/api/communications/${id}/messages`, data),
+  addArgument: (id, data) => api.post(`/api/communications/${id}/arguments`, data),
+  approve: (id) => api.post(`/api/communications/${id}/approve`),
+  submit: (id) => api.post(`/api/communications/${id}/submit`),
+  markDelivered: (id, confirmationNumber) => api.post(`/api/communications/${id}/delivered`, { confirmationNumber }),
+  receiveResponse: (id, data) => api.post(`/api/communications/${id}/response`, data),
+  resolve: (id, data) => api.post(`/api/communications/${id}/resolve`, data),
+  updateStatus: (id, status, notes) => api.put(`/api/communications/${id}/status`, { status, notes }),
+  archive: (id) => api.post(`/api/communications/${id}/archive`)
+}
+
+// Integrations (VUA, TRACES, NCTS)
+export const integrationsAPI = {
+  // General
+  getStatus: () => api.get('/api/integrations/status'),
+  list: () => api.get('/api/integrations/list'),
+  getInfo: () => api.get('/api/integrations/info'),
+  getConfig: () => api.get('/api/integrations/config'),
+  getStats: () => api.get('/api/integrations/stats'),
+  getServices: () => api.get('/api/integrations/services'),
+  getIntegration: (code) => api.get(`/api/integrations/${code}`),
+  testConnectivity: (code) => api.get(`/api/integrations/${code}/test`),
+  getRequiredControls: (data) => api.post('/api/integrations/controls', data),
+
+  // VUA (Ventanilla Unica Aduanera)
+  vua: {
+    getServices: () => api.get('/api/integrations/vua/services'),
+    getAuthorities: () => api.get('/api/integrations/vua/authorities'),
+    submitDocument: (data) => api.post('/api/integrations/vua/submit', data),
+    queryStatus: (reference) => api.get(`/api/integrations/vua/status/${reference}`)
+  },
+
+  // TRACES (Control Sanitario/Veterinario UE)
+  traces: {
+    getCHEDTypes: () => api.get('/api/integrations/traces/ched-types'),
+    getBCPs: () => api.get('/api/integrations/traces/bcps'),
+    checkCountry: (country, productType) => api.get(`/api/integrations/traces/country/${country}/${productType}`),
+    createCHED: (data) => api.post('/api/integrations/traces/ched', data),
+    getCHED: (reference) => api.get(`/api/integrations/traces/ched/${reference}`),
+    getCHEDStatus: (reference) => api.get(`/api/integrations/traces/ched/${reference}/status`),
+    submitCHED: (reference) => api.post(`/api/integrations/traces/ched/${reference}/submit`)
+  },
+
+  // NCTS (Sistema de Transito UE)
+  ncts: {
+    getTransitTypes: () => api.get('/api/integrations/ncts/transit-types'),
+    getGuaranteeTypes: () => api.get('/api/integrations/ncts/guarantee-types'),
+    getOffices: (type) => api.get('/api/integrations/ncts/offices', { params: { type } }),
+    search: (params) => api.get('/api/integrations/ncts/search', { params }),
+    createDeclaration: (data) => api.post('/api/integrations/ncts/declaration', data),
+    getDeclaration: (mrn) => api.get(`/api/integrations/ncts/declaration/${mrn}`),
+    getDeclarationStatus: (mrn) => api.get(`/api/integrations/ncts/declaration/${mrn}/status`),
+    notifyArrival: (data) => api.post('/api/integrations/ncts/arrival', data),
+    queryGuarantee: (grn, accessCode) => api.get(`/api/integrations/ncts/guarantee/${grn}`, { params: { accessCode } }),
+    calculateGuarantee: (data) => api.post('/api/integrations/ncts/guarantee/calculate', data)
+  }
+}
+
+// AEAT Real Integration (Fase 6.1)
+export const aeatRealAPI = {
+  // Certificates
+  certificates: {
+    list: (includeExpired = false) => api.get('/api/aeat-real/certificates', { params: { includeExpired } }),
+    get: (alias) => api.get(`/api/aeat-real/certificates/${alias}`),
+    import: (data) => api.post('/api/aeat-real/certificates/import', data),
+    verify: (alias) => api.get(`/api/aeat-real/certificates/${alias}/verify`),
+    delete: (alias) => api.delete(`/api/aeat-real/certificates/${alias}`),
+    validateForOperation: (data) => api.post('/api/aeat-real/certificates/validate-for-operation', data)
+  },
+
+  // Signature
+  signature: {
+    sign: (data) => api.post('/api/aeat-real/signature/sign', data),
+    verify: (signedXml) => api.post('/api/aeat-real/signature/verify', { signedXml })
+  },
+
+  // Declarations
+  declarations: {
+    submitH1: (data) => api.post('/api/aeat-real/declarations/h1/submit', data),
+    submitH7: (data) => api.post('/api/aeat-real/declarations/h7/submit', data),
+    submitAES: (data) => api.post('/api/aeat-real/declarations/aes/submit', data),
+    submitNCTS: (data) => api.post('/api/aeat-real/declarations/ncts/submit', data),
+    submitICS2: (data) => api.post('/api/aeat-real/declarations/ics2/submit', data),
+    getStatus: (mrn, certificateAlias, declarationType) =>
+      api.get(`/api/aeat-real/declarations/${mrn}/status`, { params: { certificateAlias, declarationType } }),
+    getInbox: (params) => api.get('/api/aeat-real/inbox', { params })
+  },
+
+  // Monitoring
+  monitoring: {
+    track: (data) => api.post('/api/aeat-real/monitoring/track', data),
+    getTracked: () => api.get('/api/aeat-real/monitoring/tracked'),
+    refresh: (mrn, certificateAlias) => api.post(`/api/aeat-real/monitoring/${mrn}/refresh`, { certificateAlias }),
+    getAlerts: (params) => api.get('/api/aeat-real/monitoring/alerts', { params }),
+    acknowledgeAlert: (alertId) => api.post(`/api/aeat-real/monitoring/alerts/${alertId}/acknowledge`),
+    predictChannel: (data) => api.post('/api/aeat-real/monitoring/predict-channel', data)
+  },
+
+  // Documents
+  documents: {
+    submit: (data) => api.post('/api/aeat-real/documents/submit', data)
+  },
+
+  // Connectivity & System
+  testConnectivity: (certificateAlias, services) =>
+    api.post('/api/aeat-real/connectivity/test', { certificateAlias, services }),
+  getServiceStatus: () => api.get('/api/aeat-real/service-status'),
+  setEnvironment: (environment) => api.post('/api/aeat-real/environment', { environment }),
+
+  // Special taxes (SILICIE/EMCS)
+  emcs: {
+    submitMovement: (data) => api.post('/api/aeat-real/emcs/movement', data)
+  },
+  silicie: {
+    query: (data) => api.post('/api/aeat-real/silicie/query', data)
+  }
+}
+
+// Tenant & Multi-Tenancy (Fase 6.3)
+export const tenantAPI = {
+  // Current tenant
+  getCurrent: () => api.get('/api/tenant'),
+  getSettings: () => api.get('/api/tenant/settings'),
+  updateSettings: (data) => api.put('/api/tenant/settings', data),
+  getUsage: () => api.get('/api/tenant/usage'),
+  getPlans: () => api.get('/api/tenant/plans'),
+  changePlan: (plan, immediate = false) => api.post('/api/tenant/plan', { plan, immediate }),
+
+  // Super Admin - Tenant Management
+  admin: {
+    list: (params) => api.get('/api/tenants', { params }),
+    get: (id) => api.get(`/api/tenants/${id}`),
+    getBySlug: (slug) => api.get(`/api/tenants/slug/${slug}`),
+    create: (data) => api.post('/api/tenants', data),
+    update: (id, data) => api.put(`/api/tenants/${id}`, data),
+    delete: (id) => api.delete(`/api/tenants/${id}`),
+    activate: (id) => api.post(`/api/tenants/${id}/activate`),
+    suspend: (id, reason) => api.post(`/api/tenants/${id}/suspend`, { reason }),
+    cancel: (id, reason) => api.post(`/api/tenants/${id}/cancel`, { reason })
+  },
+
+  // RBAC - Roles
+  roles: {
+    list: () => api.get('/api/tenant/roles'),
+    getBuiltIn: () => api.get('/api/tenant/roles/builtin'),
+    get: (roleId) => api.get(`/api/tenant/roles/${roleId}`),
+    create: (data) => api.post('/api/tenant/roles', data),
+    update: (roleId, data) => api.put(`/api/tenant/roles/${roleId}`, data),
+    delete: (roleId) => api.delete(`/api/tenant/roles/${roleId}`),
+    clone: (roleId, data) => api.post(`/api/tenant/roles/${roleId}/clone`, data)
+  },
+
+  // RBAC - User Roles
+  userRoles: {
+    get: (userId) => api.get(`/api/tenant/users/${userId}/roles`),
+    set: (userId, roles) => api.put(`/api/tenant/users/${userId}/roles`, { roles }),
+    assign: (userId, roleId) => api.post(`/api/tenant/users/${userId}/roles/${roleId}`),
+    remove: (userId, roleId) => api.delete(`/api/tenant/users/${userId}/roles/${roleId}`)
+  },
+
+  // RBAC - Permissions
+  permissions: {
+    getUser: (userId) => api.get(`/api/tenant/users/${userId}/permissions`),
+    check: (userId, resource, action, scope) =>
+      api.get(`/api/tenant/users/${userId}/permissions/check`, { params: { resource, action, scope } }),
+    getInfo: () => api.get('/api/tenant/permissions/info')
+  },
+
+  // Billing - Subscription
+  billing: {
+    getOverview: () => api.get('/api/tenant/billing'),
+    getPricing: () => api.get('/api/tenant/billing/pricing'),
+    getSubscription: () => api.get('/api/tenant/billing/subscription'),
+    updateSubscription: (data) => api.put('/api/tenant/billing/subscription', data),
+    changePlan: (plan, immediate) => api.post('/api/tenant/billing/change-plan', { plan, immediate }),
+    cancel: (immediate = false) => api.post('/api/tenant/billing/cancel', { immediate }),
+    reactivate: () => api.post('/api/tenant/billing/reactivate')
+  },
+
+  // Billing - Invoices
+  invoices: {
+    list: (params) => api.get('/api/tenant/billing/invoices', { params }),
+    get: (invoiceId) => api.get(`/api/tenant/billing/invoices/${invoiceId}`)
+  },
+
+  // Billing - Payment Methods
+  paymentMethods: {
+    list: () => api.get('/api/tenant/billing/payment-methods'),
+    add: (data) => api.post('/api/tenant/billing/payment-methods', data),
+    remove: (methodId) => api.delete(`/api/tenant/billing/payment-methods/${methodId}`),
+    setDefault: (methodId) => api.put(`/api/tenant/billing/payment-methods/${methodId}/default`)
+  },
+
+  // Billing - Usage
+  usage: {
+    getSummary: (period) => api.get('/api/tenant/billing/usage', { params: { period } }),
+    getStatement: (period) => api.get('/api/tenant/billing/statement', { params: { period } })
+  }
+}
+
+// Analytics & BI (Fase 6.2)
+export const analyticsAPI = {
+  // Dashboard & Metrics
+  getDashboard: (period) => api.get('/api/analytics/dashboard', { params: { period } }),
+  getRealTime: () => api.get('/api/analytics/realtime'),
+  getDeclarations: (period) => api.get('/api/analytics/declarations', { params: { period } }),
+  getFinancial: (period) => api.get('/api/analytics/financial', { params: { period } }),
+  getCompliance: (period) => api.get('/api/analytics/compliance', { params: { period } }),
+  getPerformance: (period) => api.get('/api/analytics/performance', { params: { period } }),
+  compare: (period1, period2) => api.get('/api/analytics/compare', { params: { period1, period2 } }),
+  query: (queryData) => api.post('/api/analytics/query', queryData),
+
+  // Reports
+  reports: {
+    getTypes: () => api.get('/api/analytics/reports/types'),
+    generate: (data) => api.post('/api/analytics/reports/generate', data),
+    preview: (data) => api.post('/api/analytics/reports/preview', data),
+    schedule: (data) => api.post('/api/analytics/reports/schedule', data),
+    list: (params) => api.get('/api/analytics/reports', { params }),
+    get: (id) => api.get(`/api/analytics/reports/${id}`),
+    download: (id, format) => api.get(`/api/analytics/reports/${id}/download`, {
+      params: { format },
+      responseType: 'blob'
+    }),
+    delete: (id) => api.delete(`/api/analytics/reports/${id}`)
+  },
+
+  // KPIs
+  kpis: {
+    getDashboard: () => api.get('/api/analytics/kpis/dashboard'),
+    getAll: () => api.get('/api/analytics/kpis'),
+    getDefinitions: (category) => api.get('/api/analytics/kpis/definitions', { params: { category } }),
+    calculate: (id) => api.get(`/api/analytics/kpis/${id}`),
+    getHistory: (id, period) => api.get(`/api/analytics/kpis/${id}/history`, { params: { period } }),
+    setTarget: (id, target) => api.put(`/api/analytics/kpis/${id}/target`, { target }),
+    compare: (period1, period2) => api.get('/api/analytics/kpis/compare', { params: { period1, period2 } }),
+    getAlerts: (filters) => api.get('/api/analytics/kpis/alerts', { params: filters }),
+    acknowledgeAlert: (id) => api.post(`/api/analytics/kpis/alerts/${id}/acknowledge`),
+    dismissAlert: (id) => api.delete(`/api/analytics/kpis/alerts/${id}`)
+  },
+
+  // Predictions
+  predictions: {
+    getModels: () => api.get('/api/analytics/predictions/models'),
+    predictVolume: (data) => api.post('/api/analytics/predictions/volume', data),
+    predictChannel: (data) => api.post('/api/analytics/predictions/channel', data),
+    predictInspection: (data) => api.post('/api/analytics/predictions/inspection', data),
+    predictProcessingTime: (data) => api.post('/api/analytics/predictions/processing-time', data),
+    predictDuties: (data) => api.post('/api/analytics/predictions/duties', data),
+    detectAnomalies: (data) => api.post('/api/analytics/predictions/anomalies', data),
+    analyzeTrends: (data) => api.post('/api/analytics/predictions/trends', data)
+  }
+}
+
+// ML Advanced Services (Fase 6.5)
+export const mlAPI = {
+  // Overall stats
+  getStats: () => api.get('/api/ml/stats'),
+
+  // Classification
+  classify: (data) => api.post('/api/ml/classify', data),
+  classifyFeedback: (data) => api.post('/api/ml/classify/feedback', data),
+  getClassificationStats: () => api.get('/api/ml/classify/stats'),
+  getClassificationPatterns: () => api.get('/api/ml/classify/patterns'),
+
+  // Channel Prediction
+  channel: {
+    predict: (data) => api.post('/api/ml/predict-channel', data),
+    batchPredict: (declarations) => api.post('/api/ml/predict-channel/batch', { declarations }),
+    feedback: (data) => api.post('/api/ml/predict-channel/feedback', data),
+    getStats: () => api.get('/api/ml/predict-channel/stats')
+  },
+
+  // Fraud Detection
+  fraud: {
+    analyze: (data) => api.post('/api/ml/fraud/analyze', data),
+    quickCheck: (data) => api.post('/api/ml/fraud/quick-check', data),
+    feedback: (data) => api.post('/api/ml/fraud/feedback', data),
+    getStats: () => api.get('/api/ml/fraud/stats')
+  },
+
+  // Recommendations
+  recommendations: {
+    generate: (data) => api.post('/api/ml/recommendations', data),
+    quick: (params) => api.get('/api/ml/recommendations/quick', { params }),
+    feedback: (data) => api.post('/api/ml/recommendations/feedback', data),
+    getStats: () => api.get('/api/ml/recommendations/stats')
+  },
+
+  // Auto-Response
+  autoResponse: {
+    generate: (data) => api.post('/api/ml/auto-response', data),
+    preview: (data) => api.post('/api/ml/auto-response/preview', data),
+    listTemplates: () => api.get('/api/ml/auto-response/templates'),
+    feedback: (data) => api.post('/api/ml/auto-response/feedback', data),
+    getStats: () => api.get('/api/ml/auto-response/stats')
+  }
 }
 
 export default api

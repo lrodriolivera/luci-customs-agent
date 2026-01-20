@@ -17,6 +17,7 @@ from services.claude_service import ClaudeService
 from services.document_service import DocumentService
 from services.classification_service import ClassificationService
 from services.knowledge_service import KnowledgeService
+from services.special_regime_service import SpecialRegimeService
 
 # Load environment variables
 load_dotenv()
@@ -33,6 +34,7 @@ claude_service = ClaudeService()
 document_service = DocumentService()
 classification_service = ClassificationService()
 knowledge_service = KnowledgeService()
+special_regime_service = SpecialRegimeService()
 
 
 @asynccontextmanager
@@ -117,6 +119,50 @@ class H1GenerationResponse(BaseModel):
     declaration_data: Dict[str, Any]
     warnings: List[str] = []
     recommendations: List[str] = []
+
+
+class RegimeAdvisorRequest(BaseModel):
+    operation_type: str  # 'transformation', 'temporary_use', 'storage', 'transit'
+    description: str
+    goods_description: str
+    taric_code: Optional[str] = None
+    estimated_value: float = 0
+    origin_country: Optional[str] = None
+    objective: Optional[str] = None
+    expected_duration: Optional[int] = None  # months
+    will_reexport: bool = False
+    destination_country: Optional[str] = None
+    transformation_process: Optional[str] = None
+    final_product: Optional[str] = None
+    additional_info: Optional[str] = None
+
+
+class YieldValidationRequest(BaseModel):
+    input_goods: List[Dict[str, Any]]
+    output_goods: List[Dict[str, Any]]
+    process_type: str
+    process_description: Optional[str] = None
+    proposed_yield_rate: float
+    estimated_waste: float = 0
+    industry_sector: Optional[str] = None
+    calculation_method: str = "calculated"
+
+
+class DeadlineAnalysisRequest(BaseModel):
+    regime_code: str
+    regime_type: str
+    start_date: str
+    deadline_date: str
+    status: str
+    customs_value: float = 0
+    suspended_duties: float = 0
+    suspended_vat: float = 0
+    guarantee_type: Optional[str] = None
+    guarantee_amount: float = 0
+    guarantee_expiry: Optional[str] = None
+    pending_quantity: Optional[float] = None
+    discharge_percentage: float = 0
+    extensions: List[Dict[str, Any]] = []
 
 
 # ============== Health Check ==============
@@ -383,6 +429,65 @@ async def list_training_documents():
     List available FIGAD training documents
     """
     return knowledge_service.list_available_documents()
+
+
+# ============== Special Regimes AI ==============
+
+@app.post("/special-regimes/advise")
+async def advise_regime(request: RegimeAdvisorRequest):
+    """
+    AI-powered regime advisor
+    Analyzes operation and recommends the best special regime (51, 53, 71, T1/T2)
+    Uses Claude Opus for complex analysis
+    """
+    try:
+        response = await special_regime_service.advise_regime(request.model_dump())
+        return response
+    except Exception as e:
+        logger.error(f"Regime advisor error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/special-regimes/validate-yield")
+async def validate_yield_rate(request: YieldValidationRequest):
+    """
+    Validate yield rate for inward processing (regime 51)
+    Checks if proposed yield rate is realistic for the transformation process
+    """
+    try:
+        response = await special_regime_service.validate_yield_rate(request.model_dump())
+        return response
+    except Exception as e:
+        logger.error(f"Yield validation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/special-regimes/analyze-deadline")
+async def analyze_deadline(request: DeadlineAnalysisRequest):
+    """
+    Analyze deadline compliance for a special regime
+    Provides recommendations for extension or discharge options
+    """
+    try:
+        response = await special_regime_service.analyze_deadline(request.model_dump())
+        return response
+    except Exception as e:
+        logger.error(f"Deadline analysis error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/special-regimes/ask")
+async def ask_about_regimes(question: str, context: Optional[Dict[str, Any]] = None):
+    """
+    Ask LUCI about special regimes
+    General Q&A about regimes 51, 53, 71, T1/T2
+    """
+    try:
+        response = await special_regime_service.generate_response(question, context)
+        return response
+    except Exception as e:
+        logger.error(f"Regime Q&A error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============== Run Server ==============

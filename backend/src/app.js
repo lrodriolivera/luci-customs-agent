@@ -13,7 +13,9 @@ const logger = require('./config/logger');
 let authRoutes, expeditionRoutes, documentRoutes, declarationRoutes;
 let portalRoutes, chatRoutes, classificationRoutes, calculationRoutes;
 let requirementRoutes, channelRoutes, paraduaneroRoutes, h7Routes, guaranteeRoutes;
-let specialRegimeRoutes;
+let specialRegimeRoutes, dashboardRoutes, transitRoutes, rulesEngineRoutes, exciseDutiesRoutes, quotaRoutes, preferencesRoutes, oeaRoutes;
+let deadlineRoutes, inspectionRoutes, communicationRoutes, integrationRoutes;
+let aeatRealRoutes, analyticsRoutes, tenantRoutes, mlRoutes;
 
 try {
   authRoutes = require('./routes/auth');
@@ -30,6 +32,21 @@ try {
   h7Routes = require('./routes/h7');
   guaranteeRoutes = require('./routes/guarantees');
   specialRegimeRoutes = require('./routes/specialRegimes');
+  dashboardRoutes = require('./routes/dashboard');
+  transitRoutes = require('./routes/transit');
+  rulesEngineRoutes = require('./routes/rulesEngine');
+  exciseDutiesRoutes = require('./routes/exciseDuties');
+  quotaRoutes = require('./routes/quotas');
+  preferencesRoutes = require('./routes/preferences');
+  oeaRoutes = require('./routes/oea');
+  deadlineRoutes = require('./routes/deadlines');
+  inspectionRoutes = require('./routes/inspections');
+  communicationRoutes = require('./routes/communications');
+  integrationRoutes = require('./routes/integrations');
+  aeatRealRoutes = require('./routes/aeatReal');
+  analyticsRoutes = require('./routes/analytics');
+  tenantRoutes = require('./routes/tenant');
+  mlRoutes = require('./routes/ml');
 } catch (err) {
   console.error('Error loading routes:', err.message);
 }
@@ -47,7 +64,7 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3001',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Tenant-Slug']
 }));
 
 // Rate limiting
@@ -93,6 +110,21 @@ if (paraduaneroRoutes) app.use('/api/paraduanero', paraduaneroRoutes);
 if (h7Routes) app.use('/api/h7', h7Routes);
 if (guaranteeRoutes) app.use('/api/guarantees', guaranteeRoutes);
 if (specialRegimeRoutes) app.use('/api/special-regimes', specialRegimeRoutes);
+if (dashboardRoutes) app.use('/api/dashboard', dashboardRoutes);
+if (transitRoutes) app.use('/api/transit', transitRoutes);
+if (rulesEngineRoutes) app.use('/api/rules', rulesEngineRoutes);
+if (exciseDutiesRoutes) app.use('/api/excise', exciseDutiesRoutes);
+if (quotaRoutes) app.use('/api/quotas', quotaRoutes);
+if (preferencesRoutes) app.use('/api/preferences', preferencesRoutes);
+if (oeaRoutes) app.use('/api/oea', oeaRoutes);
+if (deadlineRoutes) app.use('/api/deadlines', deadlineRoutes);
+if (inspectionRoutes) app.use('/api/inspections', inspectionRoutes);
+if (communicationRoutes) app.use('/api/communications', communicationRoutes);
+if (integrationRoutes) app.use('/api/integrations', integrationRoutes);
+if (aeatRealRoutes) app.use('/api/aeat-real', aeatRealRoutes);
+if (analyticsRoutes) app.use('/api/analytics', analyticsRoutes);
+if (tenantRoutes) app.use('/api', tenantRoutes);
+if (mlRoutes) app.use('/api/ml', mlRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -46,7 +46,12 @@ const UserSchema = new mongoose.Schema({
     canDeleteExpeditions: { type: Boolean, default: false },
     canApproveDeclarations: { type: Boolean, default: false },
     canManageUsers: { type: Boolean, default: false },
-    canAccessReports: { type: Boolean, default: true }
+    canAccessReports: { type: Boolean, default: true },
+    // Fase 6.1: Permisos AEAT Real
+    canManageCertificates: { type: Boolean, default: false },
+    canSignDeclarations: { type: Boolean, default: false },
+    canUploadDocuments: { type: Boolean, default: true },
+    canConfigureSystem: { type: Boolean, default: false }
   },
 
   // Notificaciones

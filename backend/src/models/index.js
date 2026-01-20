@@ -11,6 +11,11 @@ const ParaduaneroControl = require('./ParaduaneroControl');
 const H7Declaration = require('./H7Declaration');
 const Guarantee = require('./Guarantee');
 const SpecialRegime = require('./SpecialRegime');
+const Transit = require('./Transit');
+const OEA = require('./OEA');
+const Deadline = require('./Deadline');
+const Inspection = require('./Inspection');
+const InspectorCommunication = require('./InspectorCommunication');
 
 module.exports = {
   User,
@@ -21,5 +26,10 @@ module.exports = {
   ParaduaneroControl,
   H7Declaration,
   Guarantee,
-  SpecialRegime
+  SpecialRegime,
+  Transit,
+  OEA,
+  Deadline,
+  Inspection,
+  InspectorCommunication
 };

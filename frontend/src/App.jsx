@@ -20,6 +20,28 @@ import ChannelDashboard from './components/Channels/ChannelDashboard'
 import H7DeclarationList from './components/H7/H7DeclarationList'
 import GuaranteeManager from './components/Guarantees/GuaranteeManager'
 import SpecialRegimeManager from './components/SpecialRegimes/SpecialRegimeManager'
+import TransitManager from './components/Transit/TransitManager'
+import RulesEngineAnalyzer from './components/RulesEngine/RulesEngineAnalyzer'
+import PreferencesCalculator from './components/RulesEngine/PreferencesCalculator'
+import ExciseDutiesCalculator from './components/RulesEngine/ExciseDutiesCalculator'
+import QuotaManager from './components/RulesEngine/QuotaManager'
+import OEAManager from './components/OEA/OEAManager'
+import DeadlineManager from './components/Deadlines/DeadlineManager'
+import InspectionManager from './components/Inspections/InspectionManager'
+import CommunicationsManager from './components/Communications/CommunicationsManager'
+import IntegrationsManager from './components/Integrations/IntegrationsManager'
+
+// AEAT Real Integration (Phase 6.1)
+import { CertificateManager, AEATStatusMonitor } from './components/AEATReal'
+
+// Analytics & BI (Phase 6.2)
+import { AnalyticsDashboard, ReportsManager } from './components/Analytics'
+
+// Tenant & Multi-Tenancy (Phase 6.3)
+import { TenantSettings, BillingDashboard } from './components/Tenant'
+
+// ML Advanced (Phase 6.5)
+import { MLInsights } from './components/ML'
 
 // Portal Pages (Client)
 import PortalHome from './components/Portal/PortalHome'
@@ -82,6 +104,31 @@ function App() {
         <Route path="h7" element={<H7DeclarationList />} />
         <Route path="guarantees" element={<GuaranteeManager />} />
         <Route path="special-regimes" element={<SpecialRegimeManager />} />
+        <Route path="transit" element={<TransitManager />} />
+        <Route path="rules-engine" element={<RulesEngineAnalyzer />} />
+        <Route path="preferences" element={<PreferencesCalculator />} />
+        <Route path="excise-duties" element={<ExciseDutiesCalculator />} />
+        <Route path="quotas" element={<QuotaManager />} />
+        <Route path="oea" element={<OEAManager />} />
+        <Route path="deadlines" element={<DeadlineManager />} />
+        <Route path="inspections" element={<InspectionManager />} />
+        <Route path="communications" element={<CommunicationsManager />} />
+        <Route path="integrations" element={<IntegrationsManager />} />
+
+        {/* AEAT Real Integration (Phase 6.1) */}
+        <Route path="aeat/certificates" element={<CertificateManager />} />
+        <Route path="aeat/monitor" element={<AEATStatusMonitor />} />
+
+        {/* Analytics & BI (Phase 6.2) */}
+        <Route path="analytics" element={<AnalyticsDashboard />} />
+        <Route path="analytics/reports" element={<ReportsManager />} />
+
+        {/* Tenant & Multi-Tenancy (Phase 6.3) */}
+        <Route path="settings" element={<TenantSettings />} />
+        <Route path="billing" element={<BillingDashboard />} />
+
+        {/* ML Advanced (Phase 6.5) */}
+        <Route path="ml-insights" element={<MLInsights />} />
       </Route>
 
       {/* Fallback */}

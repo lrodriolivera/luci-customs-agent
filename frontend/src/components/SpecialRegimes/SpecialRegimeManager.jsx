@@ -16,8 +16,12 @@ import {
   CogIcon,
   CalendarDaysIcon,
   BanknotesIcon,
-  XMarkIcon
+  XMarkIcon,
+  SparklesIcon,
+  BeakerIcon
 } from '@heroicons/react/24/outline'
+import RegimeAdvisor from './RegimeAdvisor'
+import YieldValidator from './YieldValidator'
 
 // Configuracion de tipos de regimen
 const REGIME_CONFIG = {
@@ -92,6 +96,9 @@ export default function SpecialRegimeManager() {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({ regimeCode: '', status: '' })
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showAdvisor, setShowAdvisor] = useState(false)
+  const [showYieldValidator, setShowYieldValidator] = useState(false)
+  const [selectedRegimeForYield, setSelectedRegimeForYield] = useState(null)
   const [guarantees, setGuarantees] = useState([])
 
   useEffect(() => {
@@ -174,6 +181,14 @@ export default function SpecialRegimeManager() {
             title="Actualizar"
           >
             <ArrowPathIcon className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => setShowAdvisor(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all"
+            title="Asistente IA"
+          >
+            <SparklesIcon className="h-5 w-5" />
+            Asistente IA
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -450,6 +465,19 @@ export default function SpecialRegimeManager() {
                               Activar
                             </button>
                           )}
+                          {regime.regimeCode === '51' && (
+                            <button
+                              onClick={() => {
+                                setSelectedRegimeForYield(regime)
+                                setShowYieldValidator(true)
+                              }}
+                              className="text-xs text-purple-600 hover:text-purple-700 flex items-center gap-1"
+                              title="Validar tasa de rendimiento"
+                            >
+                              <BeakerIcon className="h-3 w-3" />
+                              Rendimiento
+                            </button>
+                          )}
                           <Link
                             to={`/special-regimes/${regime._id}`}
                             className="text-xs text-gray-600 hover:text-gray-700"
@@ -499,6 +527,30 @@ export default function SpecialRegimeManager() {
           onClose={() => setShowCreateModal(false)}
           onCreate={handleCreateRegime}
           guarantees={guarantees}
+        />
+      )}
+
+      {/* Asistente IA de Regimenes */}
+      {showAdvisor && (
+        <RegimeAdvisor
+          onClose={() => setShowAdvisor(false)}
+          onSelectRegime={(regimeCode, recommendation) => {
+            setShowAdvisor(false)
+            setShowCreateModal(true)
+            // Pre-fill the form with recommended regime
+            toast.success(`Regimen ${regimeCode} seleccionado`)
+          }}
+        />
+      )}
+
+      {/* Validador de Tasa de Rendimiento */}
+      {showYieldValidator && selectedRegimeForYield && (
+        <YieldValidator
+          onClose={() => {
+            setShowYieldValidator(false)
+            setSelectedRegimeForYield(null)
+          }}
+          regimeData={selectedRegimeForYield}
         />
       )}
     </div>
