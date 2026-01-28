@@ -519,7 +519,67 @@ class IntegrationManager {
       });
     }
 
+    // PUE controls (ROHS, COM, ECO, CAL)
+    const pueControls = this._determinePUEControls(goods);
+    for (const pueControl of pueControls) {
+      required.push({
+        code: 'VUA',
+        operation: 'submitPUERequest',
+        pueType: pueControl.type,
+        priority: 2,
+        reason: pueControl.reason
+      });
+    }
+
     return required.sort((a, b) => a.priority - b.priority);
+  }
+
+  /**
+   * Determinar controles PUE requeridos basados en codigos TARIC
+   */
+  _determinePUEControls(goods) {
+    const pueControls = [];
+
+    // TARIC codes that require PUE controls
+    const PUE_TARIC_MAP = {
+      ROHS: [
+        '8415', '8418', '8421', '8443', '8450', '8451', '8467', '8470', '8471', '8472',
+        '8501', '8504', '8508', '8509', '8510', '8513', '8516', '8517', '8518', '8519',
+        '8521', '8523', '8525', '8526', '8527', '8528', '8531', '8539', '8541', '8543',
+        '9001', '9002', '9005', '9006', '9018', '9027', '9028', '9030', '9031', '9032',
+        '9101', '9102', '9103', '9104', '9105', '9504'
+      ],
+      COM: ['9503', '3926', '4015', '4203', '6210', '6211', '6216', '6307', '6506', '9004',
+            '8536', '8537', '8544', '8425', '8426', '8427', '8428', '8429', '8430',
+            '7321', '8419', '3601', '3602', '3603', '3604'],
+      ECO: ['07', '08', '09', '10', '11', '12', '2204', '2205', '1509', '1510',
+            '50', '51', '52', '53', '54', '55', '56', '57', '58', '59', '60', '61', '62', '63',
+            '3303', '3304', '3305', '3306', '3307'],
+      CAL: ['50', '51', '52', '53', '54', '55', '56', '57', '58', '59', '60', '61', '62', '63',
+            '64', '69', '70', '94']
+    };
+
+    const controlsFound = new Set();
+
+    for (const item of goods || []) {
+      const taric = item.taricCode || '';
+
+      for (const [pueType, codes] of Object.entries(PUE_TARIC_MAP)) {
+        if (!controlsFound.has(pueType)) {
+          const matches = codes.some(code => taric.startsWith(code));
+          if (matches) {
+            controlsFound.add(pueType);
+            pueControls.push({
+              type: pueType,
+              reason: `TARIC ${taric} requiere control PUE ${pueType}`,
+              taricCode: taric
+            });
+          }
+        }
+      }
+    }
+
+    return pueControls;
   }
 
   /**

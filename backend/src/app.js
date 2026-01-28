@@ -15,7 +15,9 @@ let portalRoutes, chatRoutes, classificationRoutes, calculationRoutes;
 let requirementRoutes, channelRoutes, paraduaneroRoutes, h7Routes, guaranteeRoutes;
 let specialRegimeRoutes, dashboardRoutes, transitRoutes, rulesEngineRoutes, exciseDutiesRoutes, quotaRoutes, preferencesRoutes, oeaRoutes;
 let deadlineRoutes, inspectionRoutes, communicationRoutes, integrationRoutes;
-let aeatRealRoutes, analyticsRoutes, tenantRoutes, mlRoutes;
+let aeatRealRoutes, analyticsRoutes, tenantRoutes, mlRoutes, workflowRoutes;
+let publicApiRoutes, paymentRoutes, regulationRoutes, adminRoutes;
+let ensRoutes, queryRoutes, pueRoutes;
 
 try {
   authRoutes = require('./routes/auth');
@@ -47,11 +49,22 @@ try {
   analyticsRoutes = require('./routes/analytics');
   tenantRoutes = require('./routes/tenant');
   mlRoutes = require('./routes/ml');
+  workflowRoutes = require('./routes/workflows');
+  publicApiRoutes = require('./routes/publicApi');
+  paymentRoutes = require('./routes/payments');
+  regulationRoutes = require('./routes/regulations');
+  adminRoutes = require('./routes/admin');
+  ensRoutes = require('./routes/ens');
+  queryRoutes = require('./routes/queries');
+  pueRoutes = require('./routes/pue');
 } catch (err) {
   console.error('Error loading routes:', err.message);
 }
 
 const app = express();
+
+// Trust proxy (needed for rate limiter behind Nginx)
+app.set('trust proxy', 1);
 
 // Connect to MongoDB
 connectDB();
@@ -125,6 +138,20 @@ if (aeatRealRoutes) app.use('/api/aeat-real', aeatRealRoutes);
 if (analyticsRoutes) app.use('/api/analytics', analyticsRoutes);
 if (tenantRoutes) app.use('/api', tenantRoutes);
 if (mlRoutes) app.use('/api/ml', mlRoutes);
+if (workflowRoutes) app.use('/api/workflows', workflowRoutes);
+if (publicApiRoutes) app.use('/api/v1', publicApiRoutes);
+if (paymentRoutes) app.use('/api/payments', paymentRoutes);
+if (regulationRoutes) app.use('/api/regulations', regulationRoutes);
+if (adminRoutes) app.use('/api/admin', adminRoutes);
+if (ensRoutes) app.use('/api/ens', ensRoutes);
+if (queryRoutes) app.use('/api/queries', queryRoutes);
+if (pueRoutes) app.use('/api/pue', pueRoutes);
+
+// Initialize workflow service
+const workflowService = require('./services/workflow');
+workflowService.initialize().catch(err => {
+  logger.error('Failed to initialize workflow service:', err);
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -26,10 +26,20 @@ import PreferencesCalculator from './components/RulesEngine/PreferencesCalculato
 import ExciseDutiesCalculator from './components/RulesEngine/ExciseDutiesCalculator'
 import QuotaManager from './components/RulesEngine/QuotaManager'
 import OEAManager from './components/OEA/OEAManager'
+import RegulationSearch from './components/Regulations/RegulationSearch'
 import DeadlineManager from './components/Deadlines/DeadlineManager'
 import InspectionManager from './components/Inspections/InspectionManager'
 import CommunicationsManager from './components/Communications/CommunicationsManager'
 import IntegrationsManager from './components/Integrations/IntegrationsManager'
+
+// ENS/ICS2 Declarations
+import { ENSDeclarationList, ENSDeclarationDetail } from './components/ENS'
+
+// Query Services (ADDS-JDIT)
+import { QueryDashboard } from './components/Queries'
+
+// PUE (Punto Unico de Entrada)
+import { PUEManager, PUERequestDetail } from './components/PUE'
 
 // AEAT Real Integration (Phase 6.1)
 import { CertificateManager, AEATStatusMonitor } from './components/AEATReal'
@@ -42,6 +52,9 @@ import { TenantSettings, BillingDashboard } from './components/Tenant'
 
 // ML Advanced (Phase 6.5)
 import { MLInsights } from './components/ML'
+
+// Admin Panel
+import AdminPanel from './components/Admin/AdminPanel'
 
 // Portal Pages (Client)
 import PortalHome from './components/Portal/PortalHome'
@@ -110,10 +123,22 @@ function App() {
         <Route path="excise-duties" element={<ExciseDutiesCalculator />} />
         <Route path="quotas" element={<QuotaManager />} />
         <Route path="oea" element={<OEAManager />} />
+        <Route path="regulations" element={<RegulationSearch />} />
         <Route path="deadlines" element={<DeadlineManager />} />
         <Route path="inspections" element={<InspectionManager />} />
         <Route path="communications" element={<CommunicationsManager />} />
         <Route path="integrations" element={<IntegrationsManager />} />
+
+        {/* ENS/ICS2 Declarations */}
+        <Route path="ens" element={<ENSDeclarationList />} />
+        <Route path="ens/:id" element={<ENSDeclarationDetail />} />
+
+        {/* Query Services (ADDS-JDIT) */}
+        <Route path="queries" element={<QueryDashboard />} />
+
+        {/* PUE (Punto Unico de Entrada) */}
+        <Route path="pue" element={<PUEManager />} />
+        <Route path="pue/:id" element={<PUERequestDetail />} />
 
         {/* AEAT Real Integration (Phase 6.1) */}
         <Route path="aeat/certificates" element={<CertificateManager />} />
@@ -129,6 +154,9 @@ function App() {
 
         {/* ML Advanced (Phase 6.5) */}
         <Route path="ml-insights" element={<MLInsights />} />
+
+        {/* Admin Panel */}
+        <Route path="admin" element={<AdminPanel />} />
       </Route>
 
       {/* Fallback */}

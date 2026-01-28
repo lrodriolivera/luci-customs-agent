@@ -16,6 +16,13 @@ const OEA = require('./OEA');
 const Deadline = require('./Deadline');
 const Inspection = require('./Inspection');
 const InspectorCommunication = require('./InspectorCommunication');
+const Workflow = require('./Workflow');
+const WorkflowExecution = require('./WorkflowExecution');
+const ClientApiKey = require('./ClientApiKey');
+const Payment = require('./Payment');
+const ENSDeclaration = require('./ENSDeclaration');
+const SummaryQuery = require('./SummaryQuery');
+const PUERequest = require('./PUERequest');
 
 module.exports = {
   User,
@@ -31,5 +38,12 @@ module.exports = {
   OEA,
   Deadline,
   Inspection,
-  InspectorCommunication
+  InspectorCommunication,
+  Workflow,
+  WorkflowExecution,
+  ClientApiKey,
+  Payment,
+  ENSDeclaration,
+  SummaryQuery,
+  PUERequest
 };

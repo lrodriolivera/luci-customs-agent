@@ -1,0 +1,670 @@
+/**
+ * PUE Controller
+ * Controlador para gestion de solicitudes PUE (ROHS, COM, ECO, CAL)
+ */
+
+const pueService = require('../services/pueService');
+const pueGenerator = require('../services/forms/pueGenerator');
+const { PUERequest } = require('../models');
+const logger = require('../config/logger');
+
+/**
+ * GET /api/pue/stats
+ * Obtener estadisticas PUE
+ */
+exports.getStats = async (req, res) => {
+  try {
+    const { startDate, endDate, pueType } = req.query;
+    const stats = await pueService.getStats({
+      startDate,
+      endDate,
+      pueType,
+      createdBy: req.user?.role !== 'admin' ? req.user?._id : null
+    });
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting stats:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/pue/types
+ * Obtener tipos de PUE disponibles
+ */
+exports.getTypes = async (req, res) => {
+  try {
+    const types = pueService.getTypes();
+    res.json({
+      success: true,
+      data: types
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting types:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/pue/soivre-offices
+ * Obtener oficinas SOIVRE
+ */
+exports.getSoivreOffices = async (req, res) => {
+  try {
+    const { province } = req.query;
+    const offices = pueService.getSoivreOffices(province);
+    res.json({
+      success: true,
+      data: offices
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting SOIVRE offices:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/pue/required-documents/:type
+ * Obtener documentos requeridos por tipo PUE
+ */
+exports.getRequiredDocuments = async (req, res) => {
+  try {
+    const { type } = req.params;
+    const documents = pueService.getRequiredDocuments(type);
+
+    if (!documents.length) {
+      return res.status(404).json({
+        success: false,
+        error: `Tipo PUE no encontrado: ${type}`
+      });
+    }
+
+    res.json({
+      success: true,
+      data: documents
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting required documents:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/validate
+ * Validar datos sin crear solicitud
+ */
+exports.validate = async (req, res) => {
+  try {
+    const validation = await pueService.preValidate(req.body);
+    res.json({
+      success: true,
+      data: validation
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error validating:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/check-taric
+ * Verificar codigos TARIC para controles PUE
+ */
+exports.checkTaric = async (req, res) => {
+  try {
+    const { taricCodes } = req.body;
+
+    if (!taricCodes || !Array.isArray(taricCodes)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Se requiere array de codigos TARIC'
+      });
+    }
+
+    const results = pueService.checkTaricCodes(taricCodes);
+    res.json({
+      success: true,
+      data: results
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error checking TARIC:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/batch
+ * Procesamiento masivo de solicitudes
+ */
+exports.processBatch = async (req, res) => {
+  try {
+    const { requests, autoSubmit, certificateAlias } = req.body;
+
+    if (!requests || !Array.isArray(requests)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Se requiere array de solicitudes'
+      });
+    }
+
+    const results = await pueService.processBatch(requests, req.user._id, {
+      autoSubmit,
+      certificateAlias
+    });
+
+    res.json({
+      success: true,
+      data: results
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error processing batch:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/pue/expedition/:id
+ * Obtener solicitudes PUE por expedicion
+ */
+exports.getByExpedition = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const requests = await PUERequest.findByExpedition(id);
+
+    res.json({
+      success: true,
+      data: requests
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting by expedition:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/pue/declaration/:mrn
+ * Obtener solicitudes PUE por MRN de declaracion
+ */
+exports.getByDeclaration = async (req, res) => {
+  try {
+    const { mrn } = req.params;
+    const requests = await PUERequest.findByDeclaration(mrn);
+
+    res.json({
+      success: true,
+      data: requests
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting by declaration:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/pue
+ * Listar solicitudes PUE
+ */
+exports.list = async (req, res) => {
+  try {
+    const filters = {
+      ...req.query,
+      createdBy: req.user?.role !== 'admin' ? req.user?._id : req.query.createdBy
+    };
+
+    const result = await pueService.list(filters);
+
+    res.json({
+      success: true,
+      data: result.data,
+      pagination: result.pagination
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error listing:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue
+ * Crear nueva solicitud PUE
+ */
+exports.create = async (req, res) => {
+  try {
+    const result = await pueService.createRequest(req.body, req.user._id);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    res.status(201).json({
+      success: true,
+      data: result.data
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error creating:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/pue/:id
+ * Obtener solicitud PUE por ID
+ */
+exports.getById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const request = await pueService.getById(id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Solicitud no encontrada'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: request
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting by ID:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * PUT /api/pue/:id
+ * Actualizar solicitud PUE
+ */
+exports.update = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pueService.update(id, req.body, req.user._id);
+
+    res.json({
+      success: true,
+      data: result.data
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error updating:', error);
+    res.status(error.message.includes('no encontrada') ? 404 : 400).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/:id/submit
+ * Enviar solicitud a AEAT
+ */
+exports.submit = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { certificateAlias } = req.body;
+
+    const result = await pueService.submitToAEAT(id, req.user._id, certificateAlias);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    res.json({
+      success: true,
+      data: result.data
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error submitting:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/:id/cancel
+ * Cancelar solicitud PUE
+ */
+exports.cancel = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({
+        success: false,
+        error: 'Motivo de cancelacion requerido'
+      });
+    }
+
+    const result = await pueService.cancelRequest(id, reason, req.user._id);
+
+    res.json({
+      success: true,
+      data: result.data
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error cancelling:', error);
+    res.status(error.message.includes('no encontrada') ? 404 : 400).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/:id/document
+ * Agregar documento a solicitud
+ */
+exports.addDocument = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pueService.addDocument(id, req.body, req.user._id);
+
+    res.json({
+      success: true,
+      data: result.data
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error adding document:', error);
+    res.status(error.message.includes('no encontrada') ? 404 : 500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/:id/inspection/schedule
+ * Programar inspeccion
+ */
+exports.scheduleInspection = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pueService.scheduleInspection(id, req.body, req.user._id);
+
+    res.json({
+      success: true,
+      data: result.data
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error scheduling inspection:', error);
+    res.status(error.message.includes('no encontrada') ? 404 : 500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/:id/inspection/result
+ * Registrar resultado de inspeccion
+ */
+exports.recordInspectionResult = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pueService.recordInspectionResult(id, req.body, req.user._id);
+
+    res.json({
+      success: true,
+      data: result.data
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error recording inspection result:', error);
+    res.status(error.message.includes('no encontrada') ? 404 : 500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/:id/certificate
+ * Emitir certificado
+ */
+exports.issueCertificate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pueService.issueCertificate(id, req.body, req.user._id);
+
+    res.json({
+      success: true,
+      data: result.data
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error issuing certificate:', error);
+    res.status(error.message.includes('no encontrada') ? 404 : 400).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/:id/link-declaration
+ * Vincular a declaracion aduanera
+ */
+exports.linkToDeclaration = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { mrn } = req.body;
+
+    if (!mrn) {
+      return res.status(400).json({
+        success: false,
+        error: 'MRN de declaracion requerido'
+      });
+    }
+
+    const request = await PUERequest.findById(id);
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Solicitud no encontrada'
+      });
+    }
+
+    request.declarationMRN = mrn;
+    request.statusHistory.push({
+      status: request.status,
+      timestamp: new Date(),
+      user: req.user._id,
+      reason: `Vinculada a declaracion ${mrn}`
+    });
+    await request.save();
+
+    res.json({
+      success: true,
+      data: request
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error linking to declaration:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/pue/:id/status
+ * Consultar estado en AEAT
+ */
+exports.queryStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const request = await PUERequest.findById(id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Solicitud no encontrada'
+      });
+    }
+
+    if (!request.pueReference) {
+      return res.status(400).json({
+        success: false,
+        error: 'Solicitud no ha sido enviada a AEAT'
+      });
+    }
+
+    const status = await pueService.queryStatus(request.pueReference);
+
+    res.json({
+      success: true,
+      data: status
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error querying status:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/pue/:id/xml
+ * Obtener XML generado
+ */
+exports.getXML = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const request = await PUERequest.findById(id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Solicitud no encontrada'
+      });
+    }
+
+    // Generate fresh XML if not present or requested
+    const xml = req.query.regenerate === 'true' || !request.generatedXML
+      ? pueGenerator.generate(request)
+      : request.generatedXML;
+
+    res.set('Content-Type', 'application/xml');
+    res.send(xml);
+  } catch (error) {
+    logger.error('PUE Controller: Error getting XML:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/pue/info
+ * Obtener informacion del servicio
+ */
+exports.getInfo = async (req, res) => {
+  try {
+    const info = pueService.getInfo();
+    res.json({
+      success: true,
+      data: info
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting info:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/pue/deadlines
+ * Obtener proximos vencimientos
+ */
+exports.getUpcomingDeadlines = async (req, res) => {
+  try {
+    const { days = 7 } = req.query;
+    const requests = await PUERequest.getUpcomingDeadlines(parseInt(days));
+
+    res.json({
+      success: true,
+      data: requests
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting deadlines:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * GET /api/pue/required-controls
+ * Determinar controles PUE requeridos para mercancias
+ */
+exports.getRequiredControls = async (req, res) => {
+  try {
+    const { goods } = req.body;
+
+    if (!goods || !Array.isArray(goods)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Se requiere array de mercancias'
+      });
+    }
+
+    const required = pueService.getRequiredPUE(goods);
+
+    res.json({
+      success: true,
+      data: required
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting required controls:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};

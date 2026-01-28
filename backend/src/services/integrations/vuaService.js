@@ -93,6 +93,35 @@ const VUA_CONFIG = {
       name: 'Declaración Intrastat',
       endpoint: '/IntrastatService',
       authorities: ['AEAT', 'INE']
+    },
+    // PUE Services - Punto Unico de Entrada
+    PUE_ROHS: {
+      code: 'PUE_ROHS',
+      name: 'PUE ROHS/RAEE',
+      endpoint: '/PUEService',
+      authorities: ['SOIVRE'],
+      description: 'Control de sustancias peligrosas en aparatos electricos'
+    },
+    PUE_COM: {
+      code: 'PUE_COM',
+      name: 'PUE Seguridad Productos',
+      endpoint: '/PUEService',
+      authorities: ['SOIVRE'],
+      description: 'Control de seguridad de productos industriales'
+    },
+    PUE_ECO: {
+      code: 'PUE_ECO',
+      name: 'PUE Productos Ecologicos',
+      endpoint: '/PUEService',
+      authorities: ['SOIVRE'],
+      description: 'Control de productos ecologicos'
+    },
+    PUE_CAL: {
+      code: 'PUE_CAL',
+      name: 'PUE Calidad Comercial',
+      endpoint: '/PUEService',
+      authorities: ['SOIVRE'],
+      description: 'Control de calidad comercial'
     }
   },
 
@@ -660,6 +689,141 @@ class VUAService {
    */
   getProcessingStates() {
     return VUA_CONFIG.processingStates;
+  }
+
+  /**
+   * Enviar solicitud PUE
+   * @param {Object} pueData - Datos de la solicitud PUE
+   */
+  async submitPUERequest(pueData) {
+    const {
+      pueType,
+      reference,
+      operator,
+      goods,
+      transport,
+      documents = []
+    } = pueData;
+
+    try {
+      const serviceType = `PUE_${pueType}`;
+      const service = VUA_CONFIG.services[serviceType];
+      if (!service) {
+        throw new Error(`Tipo PUE no válido: ${pueType}`);
+      }
+
+      const vuaReference = this.generateVUAReference(service.code);
+
+      logger.info(`VUA: Presentando solicitud PUE ${vuaReference} tipo ${pueType}`);
+
+      if (this.simulationMode) {
+        return this._simulatePUESubmission(vuaReference, pueData, service);
+      }
+
+      // En producción, llamaría al servicio web real
+      const result = await this._callVUAService(service.endpoint, {
+        operacion: 'PRESENTAR_PUE',
+        tipoPUE: pueType,
+        referencia: vuaReference,
+        referenciaLocal: reference,
+        operadorNIF: operator?.nif,
+        operadorEORI: operator?.eori,
+        operadorNombre: operator?.name,
+        mercancias: goods,
+        transporte: transport,
+        documentos: documents
+      });
+
+      return result;
+    } catch (error) {
+      logger.error('VUA: Error en presentación PUE:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Consultar estado de solicitud PUE
+   * @param {string} pueReference - Referencia PUE
+   */
+  async queryPUEStatus(pueReference) {
+    try {
+      logger.info(`VUA: Consultando estado PUE ${pueReference}`);
+
+      if (this.simulationMode) {
+        return this._simulatePUEStatusQuery(pueReference);
+      }
+
+      const result = await this._callVUAService('/PUEService', {
+        operacion: 'CONSULTAR_ESTADO_PUE',
+        referenciaPUE: pueReference
+      });
+
+      return result;
+    } catch (error) {
+      logger.error('VUA: Error consultando estado PUE:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Simular presentación PUE
+   */
+  _simulatePUESubmission(vuaReference, pueData, service) {
+    const delay = 500 + Math.random() * 1000;
+    const needsInspection = Math.random() > 0.8;
+
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          vuaReference,
+          pueReference: `PUE${new Date().getFullYear()}${pueData.pueType}${vuaReference.slice(-8)}`,
+          responseCode: needsInspection ? '1003' : '0001',
+          message: needsInspection
+            ? 'Solicitud PUE admitida - Requiere inspección'
+            : 'Solicitud PUE admitida a trámite',
+          status: needsInspection ? 'PENDING_INSPECTION' : 'REGISTERED',
+          service: service.code,
+          authorities: service.authorities,
+          timestamp: new Date().toISOString(),
+          expedientNumber: `EXP-SOIVRE-${Date.now()}`
+        });
+      }, delay);
+    });
+  }
+
+  /**
+   * Simular consulta estado PUE
+   */
+  _simulatePUEStatusQuery(pueReference) {
+    const statuses = ['REGISTERED', 'PENDING_DOCUMENTS', 'PENDING_INSPECTION', 'IN_INSPECTION', 'APPROVED'];
+    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+
+    return Promise.resolve({
+      success: true,
+      pueReference,
+      status: randomStatus,
+      statusName: this._getPUEStatusName(randomStatus),
+      lastUpdate: new Date().toISOString(),
+      authority: 'SOIVRE',
+      history: [
+        { status: 'REGISTERED', timestamp: new Date(Date.now() - 86400000).toISOString() },
+        { status: randomStatus, timestamp: new Date().toISOString() }
+      ]
+    });
+  }
+
+  _getPUEStatusName(status) {
+    const names = {
+      'REGISTERED': 'Registrada',
+      'PENDING_DOCUMENTS': 'Pendiente documentación',
+      'PENDING_INSPECTION': 'Pendiente inspección',
+      'IN_INSPECTION': 'En inspección',
+      'APPROVED': 'Aprobada',
+      'REJECTED': 'Rechazada',
+      'CANCELLED': 'Anulada'
+    };
+    return names[status] || status;
   }
 
   /**

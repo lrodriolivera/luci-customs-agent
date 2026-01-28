@@ -39,7 +39,7 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (credentials) => api.post('/api/auth/login', credentials),
   register: (data) => api.post('/api/auth/register', data),
-  profile: () => api.get('/api/auth/profile')
+  profile: () => api.get('/api/auth/me')
 }
 
 // Expeditions
@@ -103,15 +103,39 @@ export const calculationsAPI = {
 
 // Portal
 export const portalAPI = {
+  // Basic access
   access: (token) => api.get(`/api/portal/${token}`),
   uploadDocument: (token, formData) => api.post(
     `/api/portal/${token}/documents`,
     formData,
     { headers: { 'Content-Type': 'multipart/form-data' } }
   ),
-  getMessages: (token) => api.get(`/api/portal/${token}/messages`),
-  sendMessage: (token, message) => api.post(`/api/portal/${token}/messages`, { message }),
-  getStatus: (token) => api.get(`/api/portal/${token}/status`)
+  getMessages: (token) => api.get(`/api/portal/${token}/chat`),
+  sendMessage: (token, message) => api.post(`/api/portal/${token}/chat`, { content: message }),
+  getStatus: (token) => api.get(`/api/portal/${token}/status`),
+  getUnread: (token) => api.get(`/api/portal/${token}/unread`),
+
+  // Self-service
+  createExpedition: (data) => api.post('/api/portal/self-service/expeditions', data),
+  updateExpedition: (token, data) => api.put(`/api/portal/${token}/expedition`, data),
+  submitExpedition: (token) => api.post(`/api/portal/${token}/submit`),
+
+  // Payments
+  getPayments: (token) => api.get(`/api/portal/${token}/payments`),
+  createPayment: (token) => api.post(`/api/portal/${token}/payments`),
+  createCheckoutSession: (token, paymentId) =>
+    api.post(`/api/portal/${token}/payments/${paymentId}/checkout`),
+  getPaymentStatus: (token, paymentId) =>
+    api.get(`/api/portal/${token}/payments/${paymentId}`),
+
+  // Statistics
+  getStats: (token) => api.get(`/api/portal/${token}/stats`),
+  getHistory: (token, params) => api.get(`/api/portal/${token}/history`, { params }),
+
+  // Signed documents
+  getSignedDocuments: (token) => api.get(`/api/portal/${token}/signed-documents`),
+  downloadLevante: (token) => api.get(`/api/portal/${token}/signed-documents/levante`),
+  downloadDeclaration: (token) => api.get(`/api/portal/${token}/signed-documents/declaration`)
 }
 
 // Chat/AI
@@ -173,6 +197,43 @@ export const paraduaneroAPI = {
   recordResult: (id, data) => api.post(`/api/paraduanero/${id}/inspection/result`, data),
   issueCertificate: (id, data) => api.post(`/api/paraduanero/${id}/certificate`, data),
   changeStatus: (id, data) => api.post(`/api/paraduanero/${id}/status`, data)
+}
+
+// ENS Declarations (Entry Summary Declaration - ICS2)
+export const ensAPI = {
+  list: (params) => api.get('/api/ens', { params }),
+  getStats: (params) => api.get('/api/ens/stats', { params }),
+  get: (id) => api.get(`/api/ens/${id}`),
+  create: (data) => api.post('/api/ens', data),
+  update: (id, data) => api.put(`/api/ens/${id}`, data),
+  validate: (data) => api.post('/api/ens/validate', data),
+  submit: (id, certificateAlias) => api.post(`/api/ens/${id}/submit`, { certificateAlias }),
+  amend: (id, data) => api.post(`/api/ens/${id}/amend`, data),
+  cancel: (id, reason) => api.post(`/api/ens/${id}/cancel`, { reason }),
+  notifyArrival: (id, data) => api.post(`/api/ens/${id}/arrival`, data),
+  addDocument: (id, data) => api.post(`/api/ens/${id}/document`, data),
+  getXML: (id) => api.get(`/api/ens/${id}/xml`, { responseType: 'text' }),
+  searchByContainer: (container) => api.get(`/api/ens/search/container/${container}`),
+  searchByBOL: (bol) => api.get(`/api/ens/search/bol/${bol}`),
+  processBatch: (declarations, autoSubmit, certificateAlias) =>
+    api.post('/api/ens/batch', { declarations, autoSubmit, certificateAlias }),
+  getEntryOffices: (transportMode) => api.get('/api/ens/entry-offices', { params: { transportMode } }),
+  getDeadlines: () => api.get('/api/ens/deadlines')
+}
+
+// Query Services (ADDS-JDIT Queries)
+export const queryAPI = {
+  byBillOfLading: (data) => api.post('/api/queries/bill-of-lading', data),
+  byAWB: (data) => api.post('/api/queries/awb', data),
+  byContainer: (data) => api.post('/api/queries/container', data),
+  byLocation: (data) => api.post('/api/queries/location', data),
+  byMRN: (data) => api.post('/api/queries/mrn', data),
+  byEORI: (data) => api.post('/api/queries/eori', data),
+  documents: (data) => api.post('/api/queries/documents', data),
+  getHistory: (params) => api.get('/api/queries/history', { params }),
+  get: (id) => api.get(`/api/queries/${id}`),
+  getStats: (params) => api.get('/api/queries/stats', { params }),
+  getServices: () => api.get('/api/queries/services')
 }
 
 // H7 Declarations (E-commerce, bajo valor <= 150 EUR)
@@ -653,6 +714,77 @@ export const analyticsAPI = {
     detectAnomalies: (data) => api.post('/api/analytics/predictions/anomalies', data),
     analyzeTrends: (data) => api.post('/api/analytics/predictions/trends', data)
   }
+}
+
+// Regulations (BOE & EUR-Lex Search)
+export const regulationsAPI = {
+  // Search
+  search: (query, options = {}) => api.get('/api/regulations/search', { params: { q: query, ...options } }),
+  searchBOE: (query, options = {}) => api.get('/api/regulations/boe/search', { params: { q: query, ...options } }),
+  searchEURLex: (query, options = {}) => api.get('/api/regulations/eurlex/search', { params: { q: query, ...options } }),
+
+  // Catalogs
+  getCAUCatalog: () => api.get('/api/regulations/cau/catalog'),
+  getBOECatalog: () => api.get('/api/regulations/boe/catalog'),
+
+  // Document Access
+  getDocument: (source, id) => api.get('/api/regulations/document', { params: { source, id }, timeout: 60000 }),
+  searchArticle: (celex, article) => api.get('/api/regulations/article', { params: { celex, article }, timeout: 45000 }),
+
+  // LUCI Analysis - Longer timeout for AI processing (120s)
+  analyze: (data) => api.post('/api/regulations/analyze', data, { timeout: 120000 }),
+  analyzeClassification: (data) => api.post('/api/regulations/analyze-classification', data, { timeout: 120000 }),
+  query: (question) => api.post('/api/regulations/query', { question }, { timeout: 120000 })
+}
+
+// PUE (Punto Unico de Entrada - ROHS, COM, ECO, CAL)
+export const pueAPI = {
+  // CRUD
+  list: (params) => api.get('/api/pue', { params }),
+  get: (id) => api.get(`/api/pue/${id}`),
+  create: (data) => api.post('/api/pue', data),
+  update: (id, data) => api.put(`/api/pue/${id}`, data),
+
+  // Catalog & Info
+  getStats: (params) => api.get('/api/pue/stats', { params }),
+  getTypes: () => api.get('/api/pue/types'),
+  getSoivreOffices: (province) => api.get('/api/pue/soivre-offices', { params: { province } }),
+  getRequiredDocuments: (type) => api.get(`/api/pue/required-documents/${type}`),
+  getInfo: () => api.get('/api/pue/info'),
+  getDeadlines: (days) => api.get('/api/pue/deadlines', { params: { days } }),
+
+  // Validation
+  validate: (data) => api.post('/api/pue/validate', data),
+  checkTaric: (taricCodes) => api.post('/api/pue/check-taric', { taricCodes }),
+  getRequiredControls: (goods) => api.post('/api/pue/required-controls', { goods }),
+
+  // Batch
+  processBatch: (requests, autoSubmit, certificateAlias) =>
+    api.post('/api/pue/batch', { requests, autoSubmit, certificateAlias }),
+
+  // Related entities
+  getByExpedition: (expeditionId) => api.get(`/api/pue/expedition/${expeditionId}`),
+  getByDeclaration: (mrn) => api.get(`/api/pue/declaration/${mrn}`),
+
+  // Workflow
+  submit: (id, certificateAlias) => api.post(`/api/pue/${id}/submit`, { certificateAlias }),
+  cancel: (id, reason) => api.post(`/api/pue/${id}/cancel`, { reason }),
+
+  // Documents
+  addDocument: (id, data) => api.post(`/api/pue/${id}/document`, data),
+
+  // Inspection
+  scheduleInspection: (id, data) => api.post(`/api/pue/${id}/inspection/schedule`, data),
+  recordInspectionResult: (id, data) => api.post(`/api/pue/${id}/inspection/result`, data),
+
+  // Certificate
+  issueCertificate: (id, data) => api.post(`/api/pue/${id}/certificate`, data),
+
+  // Integration
+  linkToDeclaration: (id, mrn) => api.post(`/api/pue/${id}/link-declaration`, { mrn }),
+  queryStatus: (id) => api.get(`/api/pue/${id}/status`),
+  getXML: (id, regenerate = false) =>
+    api.get(`/api/pue/${id}/xml`, { params: { regenerate }, responseType: 'text' })
 }
 
 // ML Advanced Services (Fase 6.5)
