@@ -218,7 +218,14 @@ export const ensAPI = {
   processBatch: (declarations, autoSubmit, certificateAlias) =>
     api.post('/api/ens/batch', { declarations, autoSubmit, certificateAlias }),
   getEntryOffices: (transportMode) => api.get('/api/ens/entry-offices', { params: { transportMode } }),
-  getDeadlines: () => api.get('/api/ens/deadlines')
+  getDeadlines: () => api.get('/api/ens/deadlines'),
+  // AI-Powered Endpoints
+  aiAnalyzeExpedition: (expeditionId, existingData) =>
+    api.post('/api/ens/ai/analyze-expedition', { expeditionId, existingData }),
+  aiValidate: (ensData) => api.post('/api/ens/ai/validate', { ensData }),
+  aiPredictRejection: (ensId, ensData) =>
+    api.post('/api/ens/ai/predict-rejection', { ensId, ensData }),
+  aiGetSuggestions: (id) => api.get(`/api/ens/${id}/ai/suggestions`)
 }
 
 // Query Services (ADDS-JDIT Queries)
@@ -784,7 +791,21 @@ export const pueAPI = {
   linkToDeclaration: (id, mrn) => api.post(`/api/pue/${id}/link-declaration`, { mrn }),
   queryStatus: (id) => api.get(`/api/pue/${id}/status`),
   getXML: (id, regenerate = false) =>
-    api.get(`/api/pue/${id}/xml`, { params: { regenerate }, responseType: 'text' })
+    api.get(`/api/pue/${id}/xml`, { params: { regenerate }, responseType: 'text' }),
+
+  // AI-Powered Endpoints
+  aiDetermineType: (goods, context) =>
+    api.post('/api/pue/ai/determine-type', { goods, context }, { timeout: 60000 }),
+  aiAnalyzeGoods: (description, taricCode) =>
+    api.post('/api/pue/ai/analyze-goods', { description, taricCode }, { timeout: 60000 }),
+  aiPredictInspection: (id) =>
+    api.post(`/api/pue/${id}/ai/predict-inspection`, {}, { timeout: 60000 }),
+  aiSuggestDocuments: (id) =>
+    api.post(`/api/pue/${id}/ai/suggest-documents`, {}, { timeout: 60000 }),
+  aiGetRecommendations: (id, inspectionType = 'documental') =>
+    api.post(`/api/pue/${id}/ai/recommendations`, { inspectionType }, { timeout: 60000 }),
+  aiFullAnalysis: (id) =>
+    api.post(`/api/pue/${id}/ai/full-analysis`, {}, { timeout: 120000 })
 }
 
 // ML Advanced Services (Fase 6.5)

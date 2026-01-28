@@ -47,6 +47,16 @@ router.post('/check-taric', pueController.checkTaric);
 router.post('/required-controls', pueController.getRequiredControls);
 
 // ==========================================
+// AI-POWERED ROUTES
+// ==========================================
+
+// POST /api/pue/ai/determine-type - Determinar tipo PUE con IA
+router.post('/ai/determine-type', pueController.aiDetermineType);
+
+// POST /api/pue/ai/analyze-goods - Analizar mercancia con IA
+router.post('/ai/analyze-goods', pueController.aiAnalyzeGoods);
+
+// ==========================================
 // BATCH OPERATIONS
 // ==========================================
 
@@ -125,5 +135,21 @@ router.get('/:id/status', pueController.queryStatus);
 
 // GET /api/pue/:id/xml - Obtener XML
 router.get('/:id/xml', pueController.getXML);
+
+// ==========================================
+// AI ANALYSIS FOR SPECIFIC REQUEST
+// ==========================================
+
+// POST /api/pue/:id/ai/predict-inspection - Predecir resultado inspeccion
+router.post('/:id/ai/predict-inspection', pueController.aiPredictInspection);
+
+// POST /api/pue/:id/ai/suggest-documents - Sugerir documentos
+router.post('/:id/ai/suggest-documents', pueController.aiSuggestDocuments);
+
+// POST /api/pue/:id/ai/recommendations - Recomendaciones para inspeccion
+router.post('/:id/ai/recommendations', pueController.aiGetRecommendations);
+
+// POST /api/pue/:id/ai/full-analysis - Analisis completo IA
+router.post('/:id/ai/full-analysis', pueController.aiFullAnalysis);
 
 module.exports = router;

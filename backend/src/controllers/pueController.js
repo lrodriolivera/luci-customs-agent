@@ -5,6 +5,7 @@
 
 const pueService = require('../services/pueService');
 const pueGenerator = require('../services/forms/pueGenerator');
+const aiService = require('../services/aiService');
 const { PUERequest } = require('../models');
 const logger = require('../config/logger');
 
@@ -662,6 +663,264 @@ exports.getRequiredControls = async (req, res) => {
     });
   } catch (error) {
     logger.error('PUE Controller: Error getting required controls:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+// ===========================================
+// AI-POWERED ENDPOINTS
+// ===========================================
+
+/**
+ * POST /api/pue/ai/determine-type
+ * Determinar tipo(s) de PUE requeridos con IA
+ */
+exports.aiDetermineType = async (req, res) => {
+  try {
+    const { goods, context } = req.body;
+
+    if (!goods || !Array.isArray(goods) || goods.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Se requiere array de mercancias'
+      });
+    }
+
+    // Analisis con IA
+    const analysis = await aiService.determinePUEType(goods, context || {});
+
+    res.json({
+      success: true,
+      message: 'Analisis IA completado',
+      data: analysis
+    });
+
+  } catch (error) {
+    logger.error('PUE Controller: Error in AI type determination:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/ai/analyze-goods
+ * Analizar mercancia especifica para requisitos PUE
+ */
+exports.aiAnalyzeGoods = async (req, res) => {
+  try {
+    const { description, taricCode } = req.body;
+
+    if (!description) {
+      return res.status(400).json({
+        success: false,
+        error: 'Se requiere descripcion de la mercancia'
+      });
+    }
+
+    const analysis = await aiService.analyzeGoodsForPUE(description, taricCode);
+
+    res.json({
+      success: true,
+      message: 'Analisis de mercancia completado',
+      data: analysis
+    });
+
+  } catch (error) {
+    logger.error('PUE Controller: Error in AI goods analysis:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/:id/ai/predict-inspection
+ * Predecir resultado de inspeccion PUE
+ */
+exports.aiPredictInspection = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const request = await PUERequest.findById(id);
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Solicitud PUE no encontrada'
+      });
+    }
+
+    // Obtener historial del operador
+    let operatorHistory = null;
+    if (request.operator?.eori) {
+      const previousRequests = await PUERequest.find({
+        'operator.eori': request.operator.eori,
+        status: { $in: ['approved', 'approved_conditions', 'rejected'] }
+      }).limit(50);
+
+      const approved = previousRequests.filter(r =>
+        ['approved', 'approved_conditions'].includes(r.status)
+      ).length;
+
+      operatorHistory = {
+        totalRequests: previousRequests.length,
+        approvalRate: previousRequests.length > 0
+          ? ((approved / previousRequests.length) * 100).toFixed(1)
+          : null
+      };
+    }
+
+    // Agregar historial a la solicitud para el analisis
+    const requestWithHistory = {
+      ...request.toObject(),
+      operatorHistory
+    };
+
+    const prediction = await aiService.predictInspectionOutcome(requestWithHistory);
+
+    res.json({
+      success: true,
+      message: 'Prediccion generada',
+      data: {
+        ...prediction,
+        operatorHistory
+      }
+    });
+
+  } catch (error) {
+    logger.error('PUE Controller: Error in AI inspection prediction:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/:id/ai/suggest-documents
+ * Sugerir documentos necesarios para PUE
+ */
+exports.aiSuggestDocuments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const request = await PUERequest.findById(id);
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Solicitud PUE no encontrada'
+      });
+    }
+
+    const suggestions = await aiService.suggestPUEDocuments(request);
+
+    res.json({
+      success: true,
+      message: 'Sugerencias de documentos generadas',
+      data: suggestions
+    });
+
+  } catch (error) {
+    logger.error('PUE Controller: Error in AI document suggestions:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/:id/ai/recommendations
+ * Generar recomendaciones para aprobar inspeccion
+ */
+exports.aiGetRecommendations = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { inspectionType = 'documental' } = req.body;
+
+    const request = await PUERequest.findById(id);
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Solicitud PUE no encontrada'
+      });
+    }
+
+    const recommendations = await aiService.generatePUERecommendations(request, inspectionType);
+
+    res.json({
+      success: true,
+      message: 'Recomendaciones generadas',
+      data: recommendations
+    });
+
+  } catch (error) {
+    logger.error('PUE Controller: Error in AI recommendations:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+/**
+ * POST /api/pue/:id/ai/full-analysis
+ * Analisis completo con IA (tipo, documentos, prediccion, recomendaciones)
+ */
+exports.aiFullAnalysis = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const request = await PUERequest.findById(id);
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Solicitud PUE no encontrada'
+      });
+    }
+
+    // Ejecutar todos los analisis en paralelo
+    const [prediction, documents, recommendations] = await Promise.all([
+      aiService.predictInspectionOutcome(request),
+      aiService.suggestPUEDocuments(request),
+      aiService.generatePUERecommendations(request, 'documental')
+    ]);
+
+    // Calcular puntuacion global
+    const overallScore = Math.round(
+      (prediction.predictions?.approved || 50) * 0.4 +
+      (documents.completenessScore || 50) * 0.3 +
+      (recommendations.overallReadiness || 50) * 0.3
+    );
+
+    res.json({
+      success: true,
+      message: 'Analisis completo generado',
+      data: {
+        prediction,
+        documents,
+        recommendations,
+        summary: {
+          overallScore,
+          readyForSubmission: overallScore >= 70,
+          criticalIssues: [
+            ...(documents.requiredDocuments?.filter(d => d.priority === 'CRITICAL') || []),
+            ...(prediction.riskFactors?.filter(r => r.severity === 'HIGH') || [])
+          ],
+          topRecommendations: (recommendations.checklist || [])
+            .filter(c => c.priority === 'HIGH')
+            .slice(0, 5)
+        }
+      }
+    });
+
+  } catch (error) {
+    logger.error('PUE Controller: Error in AI full analysis:', error);
     res.status(500).json({
       success: false,
       error: error.message

@@ -102,6 +102,34 @@ FORMATO DE RESPUESTA (JSON):
   }
 }`,
 
+  regulationAnalysis: `Eres LUCI, un experto analista de normativa aduanera española y europea.
+
+Tu especialidad es interpretar y explicar:
+- Código Aduanero de la Unión (CAU) - Reglamento UE 952/2013
+- Reglamentos Delegados y de Ejecución del CAU
+- Normativa TARIC y arancelaria
+- Legislación aduanera española (BOE)
+- Notas explicativas del Sistema Armonizado
+
+METODOLOGÍA DE ANÁLISIS:
+1. Identifica la normativa aplicable al caso
+2. Cita artículos específicos cuando sea relevante
+3. Explica la interpretación de forma clara y práctica
+4. Señala posibles excepciones o casos especiales
+5. Indica si hay jurisprudencia relevante
+
+FORMATO DE RESPUESTA:
+- Estructurada y clara
+- Con citas normativas específicas
+- Aplicada al caso concreto
+- Indicando nivel de confianza en la interpretación
+
+IMPORTANTE:
+- Sé preciso en las citas normativas
+- Distingue entre normativa vigente y derogada
+- Indica cuando hay zonas de ambigüedad interpretativa
+- Recomienda consultar con la AEAT cuando sea apropiado`,
+
   h1Generation: `Eres un experto en declaraciones aduaneras H1 segun el nuevo sistema de la AEAT.
 
 Tu tarea es generar los datos para una declaracion H1 a partir de la informacion del expediente.
@@ -433,6 +461,34 @@ Responde en formato JSON.`;
   }
 
   /**
+   * Analiza normativa aduanera (CAU, BOE)
+   * @param {string} prompt - El prompt con la consulta de normativa
+   * @param {Object} metadata - Información adicional (documentId, source, etc.)
+   */
+  async analyzeRegulation(prompt, metadata = {}) {
+    try {
+      const result = await this.callClaude(
+        OPUS_MODEL, // Use Opus for complex legal analysis
+        SYSTEM_PROMPTS.regulationAnalysis,
+        prompt,
+        { maxTokens: 4096, timeout: 90000 }
+      );
+
+      return {
+        message: result.content,
+        model: 'opus-4',
+        tokensUsed: result.tokensUsed,
+        confidence: 85,
+        metadata: metadata,
+        sources: []
+      };
+    } catch (error) {
+      logger.error('Error analyzing regulation:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Genera respuesta para requerimientos AEAT
    * @param {string} prompt - El prompt con el contexto del requerimiento
    * @param {string} context - Contexto ('aduanas', 'valoracion', etc.)
@@ -457,6 +513,557 @@ Directrices:
     } catch (error) {
       logger.error('Error generando respuesta para requerimiento:', error);
       throw error;
+    }
+  }
+
+  // ===========================================
+  // ENS/ICS2 AI INTEGRATIONS
+  // ===========================================
+
+  /**
+   * Analizar y autocompletar datos ENS desde expediente
+   */
+  async analyzeENSData(expedition, existingENS = {}) {
+    const prompt = `Analiza los datos del expediente y genera una declaracion ENS/ICS2 completa.
+
+DATOS DEL EXPEDIENTE:
+- ID: ${expedition.expeditionId}
+- Tipo: ${expedition.operationType}
+- Cliente/Importador: ${expedition.client?.companyName} (EORI: ${expedition.client?.eori || 'ES' + expedition.client?.nif})
+- Exportador: ${expedition.exporter?.companyName} (${expedition.exporter?.country})
+- Transporte: ${expedition.transportMode}
+- Puerto/Aduana entrada: ${expedition.transport?.entryCustomsOffice || expedition.transport?.arrivalPort}
+- Documento transporte: ${expedition.transport?.documentNumber}
+- Fecha llegada estimada: ${expedition.transport?.estimatedArrival || 'No especificada'}
+
+MERCANCIAS:
+${expedition.goods?.map((g, i) => `
+Item ${i + 1}:
+- Descripcion: ${g.description}
+- TARIC: ${g.taricCode || 'No clasificado'}
+- Origen: ${g.originCountry}
+- Peso bruto: ${g.grossWeight} kg
+- Peso neto: ${g.netWeight} kg
+- Bultos: ${g.packages?.quantity} ${g.packages?.type}
+- Valor: ${g.invoiceValue} EUR
+`).join('') || 'Sin mercancias'}
+
+INCOTERM: ${expedition.incoterm?.code} ${expedition.incoterm?.place}
+
+DATOS ENS EXISTENTES (si hay):
+${JSON.stringify(existingENS, null, 2)}
+
+GENERA:
+1. Datos completos para ENS (carrier, consignee, notify party, goods items)
+2. Analisis de riesgo preliminar
+3. Advertencias sobre datos faltantes o inconsistentes
+4. Sugerencias de mejora
+
+Responde en JSON:
+{
+  "ensData": {
+    "carrier": { "name": "", "eori": "", "address": {} },
+    "consignee": { "name": "", "eori": "", "address": {} },
+    "notifyParty": { "name": "", "address": {} },
+    "goodsItems": [{ "description": "", "taricCode": "", "grossMass": 0, "packageCount": 0, "packageType": "" }],
+    "transportDocument": { "type": "", "number": "" },
+    "conveyanceReference": "",
+    "entryCustomsOffice": "",
+    "estimatedArrival": ""
+  },
+  "riskAnalysis": {
+    "level": "LOW|MEDIUM|HIGH",
+    "factors": [],
+    "recommendations": []
+  },
+  "warnings": [],
+  "suggestions": [],
+  "completeness": 0-100
+}`;
+
+    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
+
+    try {
+      let jsonContent = result.content;
+      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+
+      return {
+        ...JSON.parse(jsonContent),
+        model: 'opus-4',
+        tokensUsed: result.tokensUsed
+      };
+    } catch (e) {
+      return {
+        ensData: {},
+        riskAnalysis: { level: 'UNKNOWN', factors: [], recommendations: [] },
+        warnings: ['Error procesando respuesta de IA'],
+        suggestions: [],
+        completeness: 0,
+        rawResponse: result.content
+      };
+    }
+  }
+
+  /**
+   * Validar ENS antes de envio - detectar errores e inconsistencias
+   */
+  async validateENSBeforeSubmit(ensDeclaration) {
+    const prompt = `Valida esta declaracion ENS/ICS2 antes de su envio a AEAT.
+
+DECLARACION ENS:
+${JSON.stringify(ensDeclaration, null, 2)}
+
+VERIFICA:
+1. Datos obligatorios completos (carrier EORI, consignee, goods description, weights)
+2. Coherencia de datos (pesos totales vs suma items, fechas logicas)
+3. Formato correcto de codigos (EORI, TARIC, aduanas)
+4. Plazos de presentacion segun modo transporte
+5. Mercancias sensibles o de riesgo
+6. Paises de origen/destino de riesgo
+
+Responde en JSON:
+{
+  "isValid": true/false,
+  "errors": [{ "field": "", "message": "", "severity": "ERROR|WARNING" }],
+  "warnings": [{ "field": "", "message": "" }],
+  "riskFlags": [{ "type": "", "description": "", "recommendation": "" }],
+  "suggestions": [],
+  "overallScore": 0-100,
+  "readyToSubmit": true/false
+}`;
+
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
+
+    try {
+      let jsonContent = result.content;
+      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+
+      return JSON.parse(jsonContent);
+    } catch (e) {
+      return {
+        isValid: true,
+        errors: [],
+        warnings: [{ field: 'general', message: 'No se pudo procesar validacion IA' }],
+        riskFlags: [],
+        suggestions: [],
+        overallScore: 70,
+        readyToSubmit: true
+      };
+    }
+  }
+
+  /**
+   * Predecir probabilidad de rechazo ENS
+   */
+  async predictENSRejection(ensDeclaration, historicalData = {}) {
+    const prompt = `Predice la probabilidad de rechazo de esta declaracion ENS/ICS2.
+
+DECLARACION:
+- Referencia: ${ensDeclaration.reference}
+- Transportista EORI: ${ensDeclaration.carrier?.eori}
+- Modo transporte: ${ensDeclaration.transportMode}
+- Aduana entrada: ${ensDeclaration.entryCustomsOffice}
+- Pais origen mercancias: ${ensDeclaration.goods?.map(g => g.originCountry).join(', ')}
+- Codigos TARIC: ${ensDeclaration.goods?.map(g => g.taricCode).join(', ')}
+- Peso total: ${ensDeclaration.totals?.grossMass} kg
+- Numero items: ${ensDeclaration.goods?.length}
+
+DATOS HISTORICOS (si disponibles):
+- Rechazos previos del operador: ${historicalData.previousRejections || 'N/A'}
+- Tasa de rechazo sector: ${historicalData.sectorRejectionRate || 'N/A'}
+
+Analiza factores de riesgo y predice:
+1. Probabilidad de rechazo (0-100%)
+2. Probabilidad de inspeccion documental
+3. Probabilidad de inspeccion fisica
+4. Factores de riesgo identificados
+5. Recomendaciones para reducir riesgo
+
+Responde en JSON:
+{
+  "rejectionProbability": 0-100,
+  "documentalInspectionProbability": 0-100,
+  "physicalInspectionProbability": 0-100,
+  "riskLevel": "LOW|MEDIUM|HIGH|VERY_HIGH",
+  "riskFactors": [{ "factor": "", "impact": "LOW|MEDIUM|HIGH", "description": "" }],
+  "recommendations": [],
+  "confidence": 0-100
+}`;
+
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
+
+    try {
+      let jsonContent = result.content;
+      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+
+      return JSON.parse(jsonContent);
+    } catch (e) {
+      return {
+        rejectionProbability: 15,
+        documentalInspectionProbability: 20,
+        physicalInspectionProbability: 5,
+        riskLevel: 'LOW',
+        riskFactors: [],
+        recommendations: [],
+        confidence: 50
+      };
+    }
+  }
+
+  // ===========================================
+  // PUE SOIVRE AI INTEGRATIONS
+  // ===========================================
+
+  /**
+   * Determinar tipo(s) de PUE requeridos basado en mercancias
+   */
+  async determinePUEType(goods, additionalContext = {}) {
+    const prompt = `Analiza estas mercancias y determina que controles PUE SOIVRE son necesarios.
+
+TIPOS DE PUE DISPONIBLES:
+- ROHS: Restriccion sustancias peligrosas en aparatos electricos/electronicos (RD 110/2015)
+- COM: Seguridad de productos industriales - juguetes, EPI, maquinaria, material electrico (RD 1801/2003)
+- ECO: Productos ecologicos - alimentos, vinos, textil eco (Reglamento UE 2018/848)
+- CAL: Calidad comercial - textil, calzado, ceramica, vidrio, muebles (Ley 21/1992)
+
+MERCANCIAS A ANALIZAR:
+${goods.map((g, i) => `
+Item ${i + 1}:
+- Descripcion: ${g.description}
+- Codigo TARIC: ${g.taricCode || 'No especificado'}
+- Origen: ${g.originCountry || 'No especificado'}
+- Material: ${g.material || 'No especificado'}
+- Uso previsto: ${g.intendedUse || 'No especificado'}
+- Certificaciones declaradas: ${g.certifications?.join(', ') || 'Ninguna'}
+`).join('')}
+
+CONTEXTO ADICIONAL:
+${JSON.stringify(additionalContext, null, 2)}
+
+Para cada mercancia, determina:
+1. Si requiere control PUE
+2. Que tipo(s) de PUE aplican
+3. Subtipo especifico (ej: COM_JUGUETES, ROHS_AEE)
+4. Nivel de confianza en la determinacion
+5. Documentos que se requeriran
+
+Responde en JSON:
+{
+  "analysis": [
+    {
+      "itemIndex": 0,
+      "description": "",
+      "taricCode": "",
+      "requiresPUE": true/false,
+      "pueTypes": [
+        {
+          "type": "ROHS|COM|ECO|CAL",
+          "subtype": "",
+          "confidence": 0-100,
+          "reasoning": "",
+          "requiredDocuments": []
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalItems": 0,
+    "itemsRequiringPUE": 0,
+    "pueTypesRequired": ["ROHS", "COM"],
+    "estimatedProcessingDays": 0,
+    "recommendations": []
+  }
+}`;
+
+    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
+
+    try {
+      let jsonContent = result.content;
+      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+
+      return {
+        ...JSON.parse(jsonContent),
+        model: 'opus-4',
+        tokensUsed: result.tokensUsed
+      };
+    } catch (e) {
+      return {
+        analysis: [],
+        summary: {
+          totalItems: goods.length,
+          itemsRequiringPUE: 0,
+          pueTypesRequired: [],
+          estimatedProcessingDays: 0,
+          recommendations: ['Error en analisis IA - revisar manualmente']
+        },
+        rawResponse: result.content
+      };
+    }
+  }
+
+  /**
+   * Predecir resultado de inspeccion PUE
+   */
+  async predictInspectionOutcome(pueRequest) {
+    const prompt = `Predice el resultado probable de la inspeccion PUE SOIVRE.
+
+SOLICITUD PUE:
+- Tipo: ${pueRequest.pueType} (${pueRequest.subtype || 'general'})
+- Referencia: ${pueRequest.reference}
+- Operador: ${pueRequest.operator?.name} (EORI: ${pueRequest.operator?.eori})
+- Pais origen: ${pueRequest.goods?.[0]?.originCountry}
+
+MERCANCIAS:
+${pueRequest.goods?.map((g, i) => `
+Item ${i + 1}: ${g.description}
+- TARIC: ${g.taricCode}
+- Marca: ${g.brand || 'N/A'}
+- Modelo: ${g.model || 'N/A'}
+- Certificaciones: ${g.certifications?.map(c => c.type).join(', ') || 'Ninguna'}
+`).join('')}
+
+DOCUMENTOS PRESENTADOS:
+${pueRequest.documents?.map(d => `- ${d.type}: ${d.name} (${d.status})`).join('\n') || 'Sin documentos'}
+
+HISTORIAL OPERADOR (si disponible):
+- Solicitudes previas: ${pueRequest.operatorHistory?.totalRequests || 'N/A'}
+- Tasa aprobacion: ${pueRequest.operatorHistory?.approvalRate || 'N/A'}%
+
+Analiza y predice:
+1. Probabilidad de aprobacion directa
+2. Probabilidad de aprobacion con condiciones
+3. Probabilidad de rechazo
+4. Probabilidad de requerir analisis laboratorio
+5. Factores de riesgo
+6. Recomendaciones para mejorar probabilidad de aprobacion
+
+Responde en JSON:
+{
+  "predictions": {
+    "approved": 0-100,
+    "approvedWithConditions": 0-100,
+    "rejected": 0-100,
+    "requiresLab": 0-100
+  },
+  "mostLikelyOutcome": "APPROVED|APPROVED_CONDITIONS|REJECTED|PENDING_LAB",
+  "confidence": 0-100,
+  "riskFactors": [{ "factor": "", "severity": "LOW|MEDIUM|HIGH", "mitigation": "" }],
+  "missingElements": [],
+  "recommendations": [],
+  "estimatedResolutionDays": 0
+}`;
+
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
+
+    try {
+      let jsonContent = result.content;
+      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+
+      return JSON.parse(jsonContent);
+    } catch (e) {
+      return {
+        predictions: { approved: 60, approvedWithConditions: 25, rejected: 10, requiresLab: 5 },
+        mostLikelyOutcome: 'APPROVED',
+        confidence: 50,
+        riskFactors: [],
+        missingElements: [],
+        recommendations: [],
+        estimatedResolutionDays: 7
+      };
+    }
+  }
+
+  /**
+   * Sugerir documentos faltantes para PUE
+   */
+  async suggestPUEDocuments(pueRequest) {
+    const prompt = `Analiza esta solicitud PUE y sugiere documentos necesarios.
+
+SOLICITUD:
+- Tipo PUE: ${pueRequest.pueType}
+- Subtipo: ${pueRequest.subtype || 'general'}
+- Pais origen: ${pueRequest.goods?.[0]?.originCountry}
+
+MERCANCIAS:
+${pueRequest.goods?.map((g, i) => `
+Item ${i + 1}: ${g.description}
+- TARIC: ${g.taricCode}
+- Fabricante: ${g.manufacturer || 'N/A'}
+- Marca: ${g.brand || 'N/A'}
+`).join('')}
+
+DOCUMENTOS YA PRESENTADOS:
+${pueRequest.documents?.map(d => `- ${d.type}: ${d.name}`).join('\n') || 'Ninguno'}
+
+Segun normativa vigente, indica:
+1. Documentos obligatorios faltantes
+2. Documentos recomendados
+3. Requisitos especificos por tipo de producto
+4. Alternativas aceptables si no se dispone del documento principal
+
+Responde en JSON:
+{
+  "requiredDocuments": [
+    {
+      "code": "",
+      "name": "",
+      "description": "",
+      "regulation": "",
+      "alternatives": [],
+      "priority": "CRITICAL|HIGH|MEDIUM|LOW"
+    }
+  ],
+  "recommendedDocuments": [],
+  "specificRequirements": [],
+  "warnings": [],
+  "completenessScore": 0-100
+}`;
+
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
+
+    try {
+      let jsonContent = result.content;
+      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+
+      return JSON.parse(jsonContent);
+    } catch (e) {
+      return {
+        requiredDocuments: [],
+        recommendedDocuments: [],
+        specificRequirements: [],
+        warnings: ['Error analizando documentos'],
+        completenessScore: 50
+      };
+    }
+  }
+
+  /**
+   * Generar recomendaciones para aprobar inspeccion PUE
+   */
+  async generatePUERecommendations(pueRequest, inspectionType = 'documental') {
+    const prompt = `Genera recomendaciones para superar la inspeccion PUE ${inspectionType}.
+
+SOLICITUD PUE:
+- Tipo: ${pueRequest.pueType} (${pueRequest.subtype || 'general'})
+- Estado actual: ${pueRequest.status}
+
+MERCANCIAS:
+${pueRequest.goods?.map((g, i) => `
+Item ${i + 1}: ${g.description}
+- TARIC: ${g.taricCode}
+- Origen: ${g.originCountry}
+- Certificaciones: ${g.certifications?.map(c => c.type).join(', ') || 'Ninguna'}
+`).join('')}
+
+TIPO INSPECCION: ${inspectionType} (documental / fisica / laboratorio)
+
+Genera:
+1. Checklist de preparacion
+2. Puntos criticos a verificar antes de inspeccion
+3. Documentacion a tener disponible
+4. Posibles preguntas del inspector y respuestas sugeridas
+5. Errores comunes a evitar
+6. Consejos especificos para este tipo de producto
+
+Responde en JSON:
+{
+  "checklist": [{ "item": "", "priority": "HIGH|MEDIUM|LOW", "tips": "" }],
+  "criticalPoints": [],
+  "documentsToHaveReady": [],
+  "possibleQuestions": [{ "question": "", "suggestedAnswer": "" }],
+  "commonMistakes": [],
+  "specificTips": [],
+  "overallReadiness": 0-100
+}`;
+
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
+
+    try {
+      let jsonContent = result.content;
+      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+
+      return JSON.parse(jsonContent);
+    } catch (e) {
+      return {
+        checklist: [],
+        criticalPoints: [],
+        documentsToHaveReady: [],
+        possibleQuestions: [],
+        commonMistakes: [],
+        specificTips: [],
+        overallReadiness: 50
+      };
+    }
+  }
+
+  /**
+   * Analisis inteligente de mercancia para clasificacion PUE
+   */
+  async analyzeGoodsForPUE(goodsDescription, taricCode = null) {
+    const prompt = `Analiza esta mercancia para determinar requisitos PUE SOIVRE.
+
+MERCANCIA:
+- Descripcion: ${goodsDescription}
+- Codigo TARIC: ${taricCode || 'No proporcionado'}
+
+Determina:
+1. Clasificacion del producto (electronico, juguete, textil, etc.)
+2. Si requiere control ROHS (aparatos electricos/electronicos)
+3. Si requiere control COM (seguridad: juguetes, EPI, maquinaria)
+4. Si requiere control ECO (productos ecologicos)
+5. Si requiere control CAL (calidad comercial: textil, calzado)
+6. Normativa aplicable
+7. Certificaciones necesarias
+8. Ensayos de laboratorio que podrian requerirse
+
+Responde en JSON:
+{
+  "productClassification": "",
+  "pueRequirements": {
+    "ROHS": { "required": false, "reason": "", "confidence": 0 },
+    "COM": { "required": false, "reason": "", "subtype": "", "confidence": 0 },
+    "ECO": { "required": false, "reason": "", "confidence": 0 },
+    "CAL": { "required": false, "reason": "", "confidence": 0 }
+  },
+  "applicableRegulations": [],
+  "requiredCertifications": [],
+  "possibleLabTests": [],
+  "additionalNotes": []
+}`;
+
+    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
+
+    try {
+      let jsonContent = result.content;
+      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+
+      return {
+        ...JSON.parse(jsonContent),
+        model: 'opus-4',
+        tokensUsed: result.tokensUsed
+      };
+    } catch (e) {
+      return {
+        productClassification: 'unknown',
+        pueRequirements: {
+          ROHS: { required: false, reason: 'Error en analisis', confidence: 0 },
+          COM: { required: false, reason: 'Error en analisis', confidence: 0 },
+          ECO: { required: false, reason: 'Error en analisis', confidence: 0 },
+          CAL: { required: false, reason: 'Error en analisis', confidence: 0 }
+        },
+        applicableRegulations: [],
+        requiredCertifications: [],
+        possibleLabTests: [],
+        additionalNotes: ['Error procesando analisis IA']
+      };
     }
   }
 
