@@ -36,10 +36,13 @@ export default function CertificateManager() {
     try {
       const response = await aeatRealAPI.certificates.list(includeExpired)
       if (response.data.success) {
-        setCertificates(response.data.data)
+        setCertificates(Array.isArray(response.data.data) ? response.data.data : [])
+      } else {
+        setCertificates([])
       }
     } catch (error) {
       console.error('Error loading certificates:', error)
+      setCertificates([])
       toast.error('Error al cargar certificados')
     } finally {
       setLoading(false)
@@ -282,8 +285,10 @@ export default function CertificateManager() {
                     {getCertTypeLabel(cert.type)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{cert.subject?.CN || 'N/A'}</div>
-                    <div className="text-xs text-gray-500">{cert.subject?.serialNumber || ''}</div>
+                    <div className="text-sm text-gray-900">
+                      {typeof cert.subject === 'string' ? cert.subject : (cert.subject?.CN || cert.subjectDetails?.CN || 'N/A')}
+                    </div>
+                    <div className="text-xs text-gray-500">{cert.subjectDetails?.serialNumber || ''}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center">

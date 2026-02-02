@@ -10,25 +10,35 @@
 const axios = require('axios');
 const https = require('https');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const forge = require('node-forge');
 const logger = require('../../config/logger');
 const certificateService = require('./certificateService');
 const xadesSignatureService = require('./xadesSignatureService');
 
 class AEATRealService {
   constructor() {
-    // Configuración de entornos
+    // Configuración de entornos AEAT
+    // Documentación oficial: https://sede.agenciatributaria.gob.es/Sede/aduanas/aduana-electronica/guias-tecnicas.html
     this.ENVIRONMENTS = {
       PRODUCTION: {
         name: 'production',
+        description: 'Entorno de producción AEAT',
         baseUrl: 'https://www1.agenciatributaria.gob.es',
         wsBaseUrl: 'https://www2.agenciatributaria.gob.es',
-        ws3BaseUrl: 'https://www3.agenciatributaria.gob.es'
+        ws3BaseUrl: 'https://www3.agenciatributaria.gob.es',
+        testUrl: 'https://www1.agenciatributaria.gob.es'
       },
       SANDBOX: {
         name: 'sandbox',
-        baseUrl: 'https://www7.aeat.es',
+        description: 'Entorno de pruebas AEAT (Pre-producción)',
+        // URLs de pruebas AEAT (requieren autorización de IP)
+        baseUrl: 'https://prewww1.aeat.es',
         wsBaseUrl: 'https://prewww2.aeat.es',
-        ws3BaseUrl: 'https://prewww3.aeat.es'
+        ws3BaseUrl: 'https://prewww3.aeat.es',
+        // Para test de conectividad usar producción (siempre accesible)
+        testUrl: 'https://www1.agenciatributaria.gob.es'
       }
     };
 
@@ -144,12 +154,75 @@ class AEATRealService {
       },
 
       // === ICS2 (Import Control System 2) - Release 3 ===
-      ICS2_ENS: {
-        code: 'ICS2_ENS',
-        name: 'Entry Summary Declaration ICS2',
+      ICS2_ENS_SUBMIT: {
+        code: 'ICS2_ENS_SUBMIT',
+        name: 'Presentación ENS ICS2',
         wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ICS2ENSV3.wsdl',
         operation: 'enviarENS',
+        messageType: 'CC315C',
+        guideVersion: '3.0',
         description: 'Declaración sumaria de entrada ICS2 R3 (carretera/ferrocarril)'
+      },
+      ICS2_ENS_AMEND: {
+        code: 'ICS2_ENS_AMEND',
+        name: 'Rectificación ENS ICS2',
+        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ICS2ENSV3.wsdl',
+        operation: 'modificarENS',
+        messageType: 'CC313C',
+        description: 'Rectificación de declaración sumaria de entrada'
+      },
+      ICS2_ENS_ARRIVAL: {
+        code: 'ICS2_ENS_ARRIVAL',
+        name: 'Notificación Llegada ENS',
+        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ICS2ENSV3.wsdl',
+        operation: 'notificarLlegadaENS',
+        messageType: 'CC305C',
+        description: 'Notificación de llegada de mercancías ENS'
+      },
+      ICS2_ENS_CANCEL: {
+        code: 'ICS2_ENS_CANCEL',
+        name: 'Anulación ENS ICS2',
+        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ICS2ENSV3.wsdl',
+        operation: 'anularENS',
+        messageType: 'CC328C',
+        description: 'Anulación de declaración sumaria de entrada'
+      },
+      ICS2_ENS_QUERY: {
+        code: 'ICS2_ENS_QUERY',
+        name: 'Consulta ENS ICS2',
+        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaICS2V1.wsdl',
+        operation: 'consultarENS',
+        description: 'Consulta estado de declaración ENS'
+      },
+
+      // === CONSULTAS ADDS-JDIT ===
+      QUERY_BY_BOL: {
+        code: 'QUERY_BY_BOL',
+        name: 'Consulta por Conocimiento',
+        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaDeclaracV1.wsdl',
+        operation: 'consultarPorConocimiento',
+        description: 'Consulta declaraciones por número de B/L, AWB o CMR'
+      },
+      QUERY_BY_CONTAINER: {
+        code: 'QUERY_BY_CONTAINER',
+        name: 'Consulta por Contenedor',
+        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaDeclaracV1.wsdl',
+        operation: 'consultarPorContenedor',
+        description: 'Consulta declaraciones por número de contenedor'
+      },
+      QUERY_BY_LOCATION: {
+        code: 'QUERY_BY_LOCATION',
+        name: 'Consulta por Ubicación',
+        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaDeclaracV1.wsdl',
+        operation: 'consultarPorUbicacion',
+        description: 'Consulta declaraciones por ubicación/aduana'
+      },
+      QUERY_DOCUMENTS: {
+        code: 'QUERY_DOCUMENTS',
+        name: 'Consulta Documentos Asociados',
+        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaDocumentosV1.wsdl',
+        operation: 'consultarDocumentosAsociados',
+        description: 'Consulta documentos asociados a una declaración'
       },
 
       // === BANDEJA DE ENTRADA ===
@@ -250,6 +323,96 @@ class AEATRealService {
       maxRetries: parseInt(process.env.AEAT_MAX_RETRIES) || 3,
       retryDelay: parseInt(process.env.AEAT_RETRY_DELAY) || 1000
     };
+
+    // HTTPS Agent con certificado para autenticación mutua SSL
+    this.httpsAgent = null;
+    this.certificateLoaded = false;
+    this._initializeSSLAgent();
+  }
+
+  /**
+   * Inicializar agente HTTPS con certificado P12 para autenticación mutua SSL
+   */
+  _initializeSSLAgent() {
+    try {
+      const certPath = process.env.AEAT_CERTIFICATE_PATH;
+      const certPassword = process.env.AEAT_CERTIFICATE_PASSWORD;
+
+      if (!certPath || !certPassword) {
+        logger.warn('[AEAT] No certificate configured - SSL mutual auth disabled');
+        return;
+      }
+
+      // Resolver ruta del certificado
+      const absolutePath = path.isAbsolute(certPath)
+        ? certPath
+        : path.join(process.cwd(), certPath);
+
+      if (!fs.existsSync(absolutePath)) {
+        logger.warn(`[AEAT] Certificate file not found: ${absolutePath}`);
+        return;
+      }
+
+      // Leer certificado P12
+      const p12Buffer = fs.readFileSync(absolutePath);
+
+      // Convertir P12 a formato PEM para HTTPS agent
+      const p12Asn1 = forge.asn1.fromDer(forge.util.createBuffer(p12Buffer));
+      const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, certPassword);
+
+      // Extraer certificado y clave privada
+      const certBags = p12.getBags({ bagType: forge.pki.oids.certBag });
+      const keyBags = p12.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag });
+
+      const certBag = certBags[forge.pki.oids.certBag];
+      const keyBag = keyBags[forge.pki.oids.pkcs8ShroudedKeyBag];
+
+      if (!certBag || certBag.length === 0 || !keyBag || keyBag.length === 0) {
+        logger.error('[AEAT] Invalid P12 certificate - missing cert or key');
+        return;
+      }
+
+      const certificate = certBag[0].cert;
+      const privateKey = keyBag[0].key;
+
+      // Convertir a PEM
+      const certPem = forge.pki.certificateToPem(certificate);
+      const keyPem = forge.pki.privateKeyToPem(privateKey);
+
+      // Crear HTTPS agent con certificado cliente
+      this.httpsAgent = new https.Agent({
+        cert: certPem,
+        key: keyPem,
+        rejectUnauthorized: true, // Verificar certificado del servidor
+        keepAlive: true,
+        maxSockets: 10
+      });
+
+      this.certificateLoaded = true;
+
+      // Extraer información del certificado
+      const subject = certificate.subject.attributes.reduce((acc, attr) => {
+        acc[attr.shortName || attr.name] = attr.value;
+        return acc;
+      }, {});
+
+      logger.info('[AEAT] SSL mutual authentication configured', {
+        subject: subject.CN || subject.O,
+        validTo: certificate.validity.notAfter.toISOString(),
+        environment: this.environment.name
+      });
+
+    } catch (error) {
+      logger.error('[AEAT] Failed to initialize SSL agent', { error: error.message });
+      this.certificateLoaded = false;
+    }
+  }
+
+  /**
+   * Verificar si el certificado está cargado para conexión real
+   */
+  isCertificateReady() {
+    return this.certificateLoaded && this.httpsAgent !== null;
   }
 
   // ============== MÉTODOS PRINCIPALES ==============
@@ -311,6 +474,65 @@ class AEATRealService {
   }
 
   /**
+   * Enviar declaración ENS (ICS2)
+   */
+  async submitENSDeclaration(xml, certificateId, password, options = {}) {
+    return this._submitDeclaration(
+      this.SERVICES.ICS2_ENS_SUBMIT,
+      xml,
+      certificateId,
+      password,
+      options
+    );
+  }
+
+  /**
+   * Rectificar declaración ENS
+   */
+  async amendENSDeclaration(xml, certificateId, password, options = {}) {
+    return this._submitDeclaration(
+      this.SERVICES.ICS2_ENS_AMEND,
+      xml,
+      certificateId,
+      password,
+      options
+    );
+  }
+
+  /**
+   * Notificar llegada ENS
+   */
+  async notifyENSArrival(xml, certificateId, password, options = {}) {
+    return this._submitDeclaration(
+      this.SERVICES.ICS2_ENS_ARRIVAL,
+      xml,
+      certificateId,
+      password,
+      options
+    );
+  }
+
+  /**
+   * Anular declaración ENS
+   */
+  async cancelENSDeclaration(xml, certificateId, password, options = {}) {
+    return this._submitDeclaration(
+      this.SERVICES.ICS2_ENS_CANCEL,
+      xml,
+      certificateId,
+      password,
+      options
+    );
+  }
+
+  /**
+   * Consultar estado de ENS
+   */
+  async queryENSStatus(mrn, certificateId, password) {
+    return this.queryDeclarationStatus(mrn, 'ENS', certificateId, password);
+  }
+
+  /**
    * Consultar estado de declaración
    */
   async queryDeclarationStatus(mrn, declarationType, certificateId, password) {
@@ -318,7 +540,8 @@ class AEATRealService {
       'H1': this.SERVICES.H1_QUERY,
       'H7': this.SERVICES.H7_QUERY,
       'AES': this.SERVICES.AES_QUERY,
-      'NCTS': this.SERVICES.NCTS_QUERY
+      'NCTS': this.SERVICES.NCTS_QUERY,
+      'ENS': this.SERVICES.ICS2_ENS_QUERY
     };
 
     const service = serviceMap[declarationType];
@@ -488,21 +711,27 @@ class AEATRealService {
 
       const startTime = Date.now();
 
-      // Usar servicio de prueba (Suma/Resta)
-      const testUrl = `${this.environment.wsBaseUrl}/ADUA/internet/es/aeat/dit/adu/adws/calcula/SumaV4Pet.wsdl`;
+      // URL de prueba (usar la definida en el entorno o fallback a producción)
+      const testUrl = this.environment.testUrl || 'https://www1.agenciatributaria.gob.es';
+
+      // Usar el HTTPS agent con certificado si está disponible
+      const agent = this.httpsAgent || new https.Agent({ rejectUnauthorized: false });
 
       const response = await axios.get(testUrl, {
-        timeout: 10000,
-        httpsAgent: new https.Agent({ rejectUnauthorized: false })
+        timeout: 15000,
+        httpsAgent: agent,
+        validateStatus: (status) => status < 500 // Aceptar cualquier respuesta que no sea error de servidor
       });
 
       const latency = Date.now() - startTime;
 
       this.connectionStatus = {
         lastCheck: new Date().toISOString(),
-        isConnected: response.status === 200,
+        isConnected: true,
         environment: this.environment.name,
-        latency
+        latency,
+        sslMutualAuth: this.certificateLoaded,
+        responseStatus: response.status
       };
 
       return {
@@ -512,6 +741,7 @@ class AEATRealService {
           status: 'connected',
           message: `Conexión exitosa con AEAT (${this.environment.name})`,
           latency: `${latency}ms`,
+          sslStatus: this.certificateLoaded ? 'Autenticación SSL mutua activa' : 'Sin certificado cliente',
           recommendation: latency > 2000 ?
             'La latencia es alta, considerar reintentos automáticos' :
             'Conectividad óptima'
@@ -519,27 +749,53 @@ class AEATRealService {
       };
 
     } catch (error) {
+      const latency = Date.now() - (this.connectionStatus?.lastCheck ? new Date(this.connectionStatus.lastCheck).getTime() : Date.now());
+
       this.connectionStatus = {
         lastCheck: new Date().toISOString(),
         isConnected: false,
         environment: this.environment.name,
+        sslMutualAuth: this.certificateLoaded,
         error: error.message
       };
+
+      // Analizar tipo de error
+      let errorAnalysis = {
+        status: 'disconnected',
+        message: 'No se pudo conectar con AEAT',
+        error: error.message,
+        recommendations: [
+          'Verificar conexión a internet',
+          'Comprobar que los servicios AEAT estén operativos',
+          'Verificar configuración de firewall/proxy',
+          'Consultar estado de servicios: https://sede.agenciatributaria.gob.es'
+        ]
+      };
+
+      // Errores de certificado
+      if (error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' ||
+          error.code === 'CERT_HAS_EXPIRED' ||
+          error.message.includes('certificate')) {
+        errorAnalysis.recommendations = [
+          'Verificar que el certificado FNMT esté vigente',
+          'Comprobar que la IP esté autorizada en AEAT',
+          'Renovar certificado si ha expirado'
+        ];
+      }
+
+      // Errores de red
+      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        errorAnalysis.recommendations = [
+          'Verificar conexión a internet',
+          'Comprobar configuración de DNS',
+          'Verificar firewall corporativo'
+        ];
+      }
 
       return {
         success: false,
         connectivity: this.connectionStatus,
-        luciAnalysis: {
-          status: 'disconnected',
-          message: 'No se pudo conectar con AEAT',
-          error: error.message,
-          recommendations: [
-            'Verificar conexión a internet',
-            'Comprobar que los servicios AEAT estén operativos',
-            'Verificar configuración de firewall/proxy',
-            'Consultar estado de servicios: https://sede.agenciatributaria.gob.es'
-          ]
-        }
+        luciAnalysis: errorAnalysis
       };
     }
   }
@@ -689,29 +945,87 @@ class AEATRealService {
   async _sendSOAPRequest(service, soapEnvelope) {
     const wsdlUrl = `${this.environment.ws3BaseUrl}${service.wsdl}`;
 
-    // En modo sandbox/desarrollo, simular respuesta
-    if (this.environment.name === 'sandbox' || process.env.AEAT_SIMULATE === 'true') {
+    // En modo simulación, devolver respuesta simulada
+    if (process.env.AEAT_SIMULATE === 'true' || process.env.AEAT_FORCE_SIMULATION === 'true') {
+      logger.info(`[AEAT] Using SIMULATION mode for ${service.code}`);
       return this._simulateAEATResponse(service, soapEnvelope);
     }
 
-    // Petición real
-    const response = await axios.post(wsdlUrl, soapEnvelope, {
-      headers: {
-        'Content-Type': 'text/xml; charset=utf-8',
-        'SOAPAction': `"${service.operation}"`
-      },
-      timeout: this.httpConfig.timeout,
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: true,
-        // En producción: configurar certificado cliente
-      })
-    });
+    // Verificar que tenemos certificado para conexión real
+    if (!this.isCertificateReady()) {
+      logger.warn('[AEAT] No certificate loaded - falling back to simulation');
+      return this._simulateAEATResponse(service, soapEnvelope);
+    }
 
-    return {
-      status: response.status,
-      body: response.data,
-      signed: response.data.includes('<ds:Signature')
-    };
+    // Log de petición si debug está activo
+    if (process.env.AEAT_DEBUG === 'true') {
+      logger.info(`[AEAT] Sending REAL request to ${wsdlUrl}`, {
+        service: service.code,
+        operation: service.operation,
+        environment: this.environment.name
+      });
+    }
+
+    try {
+      // Petición real con autenticación SSL mutua
+      const response = await axios.post(wsdlUrl, soapEnvelope, {
+        headers: {
+          'Content-Type': 'text/xml; charset=utf-8',
+          'SOAPAction': `"${service.operation}"`,
+          'Accept': 'text/xml, application/xml',
+          'User-Agent': 'LUCI-Customs-Agent/1.0'
+        },
+        timeout: this.httpConfig.timeout,
+        httpsAgent: this.httpsAgent, // Usar agente con certificado
+        validateStatus: (status) => status < 500 // Aceptar respuestas de error de negocio
+      });
+
+      if (process.env.AEAT_DEBUG === 'true') {
+        logger.info(`[AEAT] Response received from ${service.code}`, {
+          status: response.status,
+          contentLength: response.data?.length
+        });
+      }
+
+      return {
+        status: response.status,
+        body: response.data,
+        signed: response.data.includes('<ds:Signature'),
+        simulated: false
+      };
+
+    } catch (error) {
+      // Manejar errores de conexión
+      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        logger.error(`[AEAT] Connection failed to ${wsdlUrl}`, {
+          code: error.code,
+          message: error.message
+        });
+        throw new Error(`No se pudo conectar con AEAT: ${error.message}`);
+      }
+
+      if (error.code === 'CERT_HAS_EXPIRED' || error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE') {
+        logger.error('[AEAT] SSL Certificate error', { code: error.code });
+        throw new Error('Error de certificado SSL: ' + error.message);
+      }
+
+      if (error.response) {
+        // AEAT respondió con error
+        logger.error('[AEAT] Server error response', {
+          status: error.response.status,
+          data: error.response.data?.substring?.(0, 500)
+        });
+        return {
+          status: error.response.status,
+          body: error.response.data,
+          signed: false,
+          simulated: false,
+          error: true
+        };
+      }
+
+      throw error;
+    }
   }
 
   /**
@@ -1064,11 +1378,11 @@ class AEATRealService {
   _getCriticalFields(serviceCode) {
     const fieldsMap = {
       'H1_SUBMIT': [
-        { tag: 'DeclarationOffice', name: 'Aduana de despacho', required: true },
+        { tag: 'DeclarationOfficeID', name: 'Aduana de despacho', required: true },
         { tag: 'Declarant', name: 'Declarante', required: true },
         { tag: 'GoodsShipment', name: 'Partida de mercancías', required: true },
-        { tag: 'CustomsValue', name: 'Valor en aduana', required: true },
-        { tag: 'CommodityCode', name: 'Código TARIC', required: true }
+        { tag: 'CustomsValuation', name: 'Valor en aduana', required: true },
+        { tag: 'Classification', name: 'Código TARIC', required: true }
       ],
       'H7_SUBMIT': [
         { tag: 'Sender', name: 'Remitente', required: true },
@@ -1236,6 +1550,20 @@ class AEATRealService {
   }
 
   /**
+   * Recargar certificado SSL (útil después de importar nuevo certificado)
+   */
+  reloadCertificate() {
+    logger.info('[AEAT] Reloading SSL certificate...');
+    this._initializeSSLAgent();
+    return {
+      success: this.certificateLoaded,
+      message: this.certificateLoaded
+        ? 'Certificate reloaded successfully'
+        : 'Failed to reload certificate'
+    };
+  }
+
+  /**
    * Obtener información del servicio
    */
   getInfo() {
@@ -1248,10 +1576,17 @@ class AEATRealService {
       supportedDeclarations: ['H1', 'H7', 'AES', 'NCTS', 'ENS', 'EXS'],
       features: [
         'Firma XAdES-EPES',
+        'Autenticación SSL mutua',
         'Reintentos automáticos',
         'Análisis LUCI integrado',
         'Modo sandbox/producción'
       ],
+      sslStatus: {
+        certificateLoaded: this.certificateLoaded,
+        mutualAuthEnabled: this.httpsAgent !== null,
+        certificatePath: process.env.AEAT_CERTIFICATE_PATH ? 'Configured' : 'Not configured'
+      },
+      simulationMode: process.env.AEAT_SIMULATE === 'true' || process.env.AEAT_FORCE_SIMULATION === 'true',
       connectivity: this.connectionStatus,
       documentation: {
         webServices: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/ws.html',

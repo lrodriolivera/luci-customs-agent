@@ -173,6 +173,12 @@ router.post('/environment',
   aeatRealController.setEnvironment
 );
 
+// Recargar certificado SSL - solo admin
+router.post('/reload-certificate',
+  requirePermission('canManageCertificates'),
+  aeatRealController.reloadSSLCertificate
+);
+
 // ============================================
 // IMPUESTOS ESPECIALES (SILICIE/EMCS)
 // ============================================

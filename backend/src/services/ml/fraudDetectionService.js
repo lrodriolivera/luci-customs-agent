@@ -531,9 +531,84 @@ function quickRiskAssessment(data) {
   };
 }
 
+// ==================== Statistics & Feedback ====================
+
+// In-memory storage for demo
+const analysisHistory = [];
+const feedbackData = [];
+
+/**
+ * Get fraud detection statistics
+ */
+function getStatistics() {
+  const totalAnalyses = analysisHistory.length;
+  const totalFeedback = feedbackData.length;
+  const confirmedFrauds = feedbackData.filter(f => f.wasActualFraud).length;
+
+  // Distribution by risk level
+  const riskDistribution = analysisHistory.reduce((acc, a) => {
+    acc[a.riskLevel] = (acc[a.riskLevel] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Most common patterns
+  const patternCounts = analysisHistory.reduce((acc, a) => {
+    (a.detectedPatterns || []).forEach(p => {
+      acc[p] = (acc[p] || 0) + 1;
+    });
+    return acc;
+  }, {});
+
+  return {
+    success: true,
+    statistics: {
+      totalAnalyses,
+      totalFeedback,
+      confirmedFrauds,
+      falsePositiveRate: totalFeedback > 0
+        ? Math.round(((totalFeedback - confirmedFrauds) / totalFeedback) * 100)
+        : null,
+      riskDistribution,
+      topPatterns: Object.entries(patternCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([pattern, count]) => ({ pattern, count })),
+      lastUpdated: new Date().toISOString()
+    }
+  };
+}
+
+/**
+ * Record feedback for fraud analysis
+ */
+function recordFeedback(analysisId, wasActualFraud, fraudType, notes) {
+  const feedback = {
+    analysisId,
+    wasActualFraud,
+    fraudType,
+    notes,
+    recordedAt: new Date().toISOString()
+  };
+
+  feedbackData.push(feedback);
+
+  logger.info('Fraud feedback recorded', {
+    analysisId,
+    wasActualFraud,
+    fraudType
+  });
+
+  return {
+    success: true,
+    feedback
+  };
+}
+
 module.exports = {
   analyzeForFraud,
   quickRiskAssessment,
+  getStatistics,
+  recordFeedback,
   detectUndervaluation,
   detectOriginFraud,
   detectMisclassification,

@@ -1002,6 +1002,340 @@ const getH7Stats = async (req, res) => {
   }
 };
 
+// ===========================================
+// AI ENDPOINTS - H1/AES DECLARATIONS
+// ===========================================
+
+/**
+ * Validar declaración antes de envío con IA
+ * POST /api/declarations/:expeditionId/ai/validate
+ */
+const aiValidateDeclaration = async (req, res) => {
+  try {
+    const { expeditionId } = req.params;
+    const { declarationType } = req.body;
+
+    const expedition = await Expedition.findById(expeditionId)
+      .populate('documents');
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    const type = declarationType || expedition.declaration?.type || 'H1';
+    logger.info(`AI: Validando declaración ${type} para ${expedition.expeditionId}`);
+
+    const validation = await aiService.validateDeclarationBeforeSubmit(expedition, type);
+
+    res.json({
+      success: true,
+      data: validation
+    });
+
+  } catch (error) {
+    logger.error('Error en AI validate declaration:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al validar declaración'
+    });
+  }
+};
+
+/**
+ * Detectar errores comunes con IA
+ * POST /api/declarations/:expeditionId/ai/detect-errors
+ */
+const aiDetectErrors = async (req, res) => {
+  try {
+    const { expeditionId } = req.params;
+    const { declarationType } = req.body;
+
+    const expedition = await Expedition.findById(expeditionId)
+      .populate('documents');
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    const type = declarationType || expedition.declaration?.type || 'H1';
+    logger.info(`AI: Detectando errores en declaración ${type} para ${expedition.expeditionId}`);
+
+    const errors = await aiService.detectDeclarationErrors(expedition, type);
+
+    res.json({
+      success: true,
+      data: errors
+    });
+
+  } catch (error) {
+    logger.error('Error en AI detect errors:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al detectar errores'
+    });
+  }
+};
+
+/**
+ * Sugerir régimen y preferencia con IA
+ * POST /api/declarations/:expeditionId/ai/suggest-regime
+ */
+const aiSuggestRegime = async (req, res) => {
+  try {
+    const { expeditionId } = req.params;
+
+    const expedition = await Expedition.findById(expeditionId)
+      .populate('documents');
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    if (expedition.operationType !== 'import') {
+      return res.status(400).json({
+        success: false,
+        error: 'Sugerencia de régimen solo disponible para importaciones'
+      });
+    }
+
+    logger.info(`AI: Sugiriendo régimen para ${expedition.expeditionId}`);
+
+    const suggestion = await aiService.suggestRegimeAndPreference(expedition);
+
+    res.json({
+      success: true,
+      data: suggestion
+    });
+
+  } catch (error) {
+    logger.error('Error en AI suggest regime:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al sugerir régimen'
+    });
+  }
+};
+
+/**
+ * Predecir canal de despacho con IA
+ * POST /api/declarations/:expeditionId/ai/predict-channel
+ */
+const aiPredictChannel = async (req, res) => {
+  try {
+    const { expeditionId } = req.params;
+    const { declarationType } = req.body;
+
+    const expedition = await Expedition.findById(expeditionId)
+      .populate('documents');
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    const type = declarationType || expedition.declaration?.type || 'H1';
+    logger.info(`AI: Prediciendo canal para ${expedition.expeditionId}`);
+
+    const prediction = await aiService.predictDeclarationChannel(expedition, type);
+
+    // Guardar predicción en el expediente
+    if (!expedition.aiAnalysis) expedition.aiAnalysis = {};
+    expedition.aiAnalysis.channelPrediction = {
+      ...prediction,
+      predictedAt: new Date()
+    };
+    await expedition.save();
+
+    res.json({
+      success: true,
+      data: prediction
+    });
+
+  } catch (error) {
+    logger.error('Error en AI predict channel:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al predecir canal'
+    });
+  }
+};
+
+/**
+ * Análisis completo de declaración con IA
+ * POST /api/declarations/:expeditionId/ai/full-analysis
+ */
+const aiFullDeclarationAnalysis = async (req, res) => {
+  try {
+    const { expeditionId } = req.params;
+    const { declarationType } = req.body;
+
+    const expedition = await Expedition.findById(expeditionId)
+      .populate('documents');
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    const type = declarationType || expedition.declaration?.type ||
+                 (expedition.operationType === 'import' ? 'H1' : 'AES');
+
+    logger.info(`AI: Análisis completo de declaración ${type} para ${expedition.expeditionId}`);
+
+    const analysis = await aiService.fullDeclarationAnalysis(expedition, type);
+
+    // Guardar análisis en el expediente
+    if (!expedition.aiAnalysis) expedition.aiAnalysis = {};
+    expedition.aiAnalysis.declarationAnalysis = {
+      ...analysis,
+      analyzedAt: new Date()
+    };
+    expedition.aiAnalysis.lastAnalysisAt = new Date();
+    await expedition.save();
+
+    // Registrar en timeline
+    expedition.timeline.push({
+      action: 'ai_declaration_analysis',
+      description: `Análisis IA de declaración ${type} - Puntuación: ${analysis.overallReadiness?.score}%`,
+      userId: req.user?._id,
+      performedBy: 'LUCI AI',
+      metadata: {
+        readinessScore: analysis.overallReadiness?.score,
+        estimatedChannel: analysis.overallReadiness?.estimatedChannel,
+        blockingErrors: analysis.errors?.blockingErrors || 0
+      }
+    });
+    await expedition.save();
+
+    res.json({
+      success: true,
+      data: analysis
+    });
+
+  } catch (error) {
+    logger.error('Error en AI full declaration analysis:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al realizar análisis completo'
+    });
+  }
+};
+
+/**
+ * Obtener último análisis IA de declaración
+ * GET /api/declarations/:expeditionId/ai/analysis
+ */
+const getAiDeclarationAnalysis = async (req, res) => {
+  try {
+    const { expeditionId } = req.params;
+
+    const expedition = await Expedition.findById(expeditionId)
+      .select('expeditionId declaration aiAnalysis');
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        expeditionId: expedition.expeditionId,
+        declarationType: expedition.declaration?.type,
+        declarationStatus: expedition.declaration?.status,
+        analysis: expedition.aiAnalysis?.declarationAnalysis || null,
+        channelPrediction: expedition.aiAnalysis?.channelPrediction || null,
+        hasAnalysis: !!expedition.aiAnalysis?.declarationAnalysis
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error obteniendo análisis IA de declaración:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener análisis'
+    });
+  }
+};
+
+/**
+ * Aplicar sugerencias de régimen/preferencia
+ * POST /api/declarations/:expeditionId/ai/apply-regime
+ */
+const applyRegimeSuggestion = async (req, res) => {
+  try {
+    const { expeditionId } = req.params;
+    const { regime, additionalProcedure, preference } = req.body;
+
+    const expedition = await Expedition.findById(expeditionId);
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    if (!expedition.declaration) {
+      // Si no hay declaración, crear una básica
+      expedition.declaration = {
+        type: expedition.operationType === 'import' ? 'H1' : 'AES',
+        status: 'draft'
+      };
+    }
+
+    // Actualizar régimen y preferencia
+    if (regime) expedition.declaration.regime = regime;
+    if (additionalProcedure) expedition.declaration.additionalProcedure = additionalProcedure;
+    if (preference) expedition.declaration.preference = preference;
+
+    // Registrar en timeline
+    expedition.timeline.push({
+      action: 'regime_updated',
+      description: `Régimen/preferencia actualizado: ${regime || expedition.declaration.regime}/${preference || expedition.declaration.preference}`,
+      userId: req.user?._id,
+      performedBy: req.user?.name || 'Sistema',
+      metadata: { regime, additionalProcedure, preference, source: 'ai_suggestion' }
+    });
+
+    await expedition.save();
+
+    logger.info(`Régimen aplicado: ${expedition.expeditionId} -> ${regime}/${preference}`);
+
+    res.json({
+      success: true,
+      data: {
+        regime: expedition.declaration.regime,
+        additionalProcedure: expedition.declaration.additionalProcedure,
+        preference: expedition.declaration.preference,
+        message: 'Régimen y preferencia actualizados correctamente'
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error aplicando régimen:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al aplicar sugerencia de régimen'
+    });
+  }
+};
+
 module.exports = {
   generateH1,
   generateH1Direct,
@@ -1014,5 +1348,13 @@ module.exports = {
   checkH7Eligibility,
   generateH7,
   submitH7,
-  getH7Stats
+  getH7Stats,
+  // AI endpoints
+  aiValidateDeclaration,
+  aiDetectErrors,
+  aiSuggestRegime,
+  aiPredictChannel,
+  aiFullDeclarationAnalysis,
+  getAiDeclarationAnalysis,
+  applyRegimeSuggestion
 };

@@ -47,3 +47,13 @@ coverage/
 tmp/
 temp/
 *.tmp
+
+# Certificates (SENSITIVE - NEVER COMMIT)
+Certificados/
+*.p12
+*.pfx
+*.pem
+*.key
+*.cer
+*.crt
+backend/Certificados/

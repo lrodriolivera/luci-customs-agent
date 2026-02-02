@@ -9,9 +9,11 @@ import {
   PlusIcon,
   ArrowPathIcon,
   ChevronRightIcon,
-  XMarkIcon
+  XMarkIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline'
 import { deadlinesAPI } from '../../services/api'
+import toast from 'react-hot-toast'
 
 const statusColors = {
   pending: 'bg-blue-100 text-blue-800',
@@ -48,6 +50,43 @@ const categoryLabels = {
   other: 'Otros'
 }
 
+const deadlineTypes = {
+  requirement_response: { label: 'Respuesta a Requerimiento', category: 'requirement' },
+  guarantee_expiration: { label: 'Vencimiento de Garantia', category: 'guarantee' },
+  guarantee_renewal: { label: 'Renovacion de Garantia', category: 'guarantee' },
+  regime_ultimation: { label: 'Ultimacion de Regimen', category: 'regime' },
+  regime_account: { label: 'Cuenta de Ultimacion', category: 'regime' },
+  oea_renewal: { label: 'Renovacion OEA', category: 'oea' },
+  oea_audit: { label: 'Auditoria OEA', category: 'oea' },
+  transit_arrival: { label: 'Llegada de Transito', category: 'transit' },
+  transit_discharge: { label: 'Descarga de Transito', category: 'transit' },
+  certificate_expiration: { label: 'Vencimiento de Certificado', category: 'certificate' },
+  license_expiration: { label: 'Vencimiento de Licencia', category: 'certificate' },
+  declaration_submission: { label: 'Presentacion de Declaracion', category: 'declaration' },
+  h7_completion: { label: 'Completar H7', category: 'declaration' },
+  inspection_appointment: { label: 'Cita de Inspeccion', category: 'inspection' },
+  paraduanero_response: { label: 'Respuesta Control Paraduanero', category: 'requirement' },
+  appeal_deadline: { label: 'Plazo de Alegacion/Recurso', category: 'requirement' },
+  payment_deadline: { label: 'Plazo de Pago', category: 'payment' },
+  document_presentation: { label: 'Presentacion de Documento', category: 'requirement' },
+  customs_storage: { label: 'Almacenamiento Temporal', category: 'other' },
+  other: { label: 'Otro', category: 'other' }
+}
+
+const priorityLabels = {
+  low: 'Baja',
+  medium: 'Media',
+  high: 'Alta',
+  critical: 'Critica'
+}
+
+const priorityColors = {
+  low: 'bg-gray-100 text-gray-800',
+  medium: 'bg-blue-100 text-blue-800',
+  high: 'bg-orange-100 text-orange-800',
+  critical: 'bg-red-100 text-red-800'
+}
+
 export default function DeadlineManager() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [dashboard, setDashboard] = useState(null)
@@ -59,7 +98,7 @@ export default function DeadlineManager() {
   })
   const [selectedDeadline, setSelectedDeadline] = useState(null)
   const [showModal, setShowModal] = useState(false)
-  const [modalType, setModalType] = useState('')
+  const [modalType, setModalType] = useState('') // 'extend' | 'create'
 
   useEffect(() => {
     loadDashboard()
@@ -114,9 +153,30 @@ export default function DeadlineManager() {
       setShowModal(false)
       loadDashboard()
       if (activeTab === 'list') loadDeadlines()
+      toast.success('Plazo extendido correctamente')
     } catch (error) {
       console.error('Error extending deadline:', error)
+      toast.error('Error al extender el plazo')
     }
+  }
+
+  const handleCreate = async (data) => {
+    try {
+      await deadlinesAPI.create(data)
+      setShowModal(false)
+      loadDashboard()
+      if (activeTab === 'list') loadDeadlines()
+      toast.success('Plazo creado correctamente')
+    } catch (error) {
+      console.error('Error creating deadline:', error)
+      toast.error('Error al crear el plazo')
+    }
+  }
+
+  const openCreateModal = () => {
+    setSelectedDeadline(null)
+    setModalType('create')
+    setShowModal(true)
   }
 
   const formatDate = (date) => {
@@ -409,6 +469,13 @@ export default function DeadlineManager() {
             <ArrowPathIcon className="w-4 h-4" />
             Actualizar
           </button>
+          <button
+            onClick={openCreateModal}
+            className="btn-primary flex items-center gap-2"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Nuevo Plazo
+          </button>
         </div>
       </div>
 
@@ -453,6 +520,14 @@ export default function DeadlineManager() {
           deadline={selectedDeadline}
           onClose={() => setShowModal(false)}
           onExtend={handleExtend}
+        />
+      )}
+
+      {/* Create Modal */}
+      {showModal && modalType === 'create' && (
+        <CreateDeadlineModal
+          onClose={() => setShowModal(false)}
+          onCreate={handleCreate}
         />
       )}
     </div>
@@ -561,6 +636,279 @@ function ExtendModal({ deadline, onClose, onExtend }) {
             </button>
             <button type="submit" className="btn-primary">
               Extender Plazo
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function CreateDeadlineModal({ onClose, onCreate }) {
+  const [formData, setFormData] = useState({
+    deadlineType: 'other',
+    title: '',
+    description: '',
+    dueDate: '',
+    priority: 'medium',
+    notes: '',
+    client: {
+      name: '',
+      nif: ''
+    }
+  })
+  const [loading, setLoading] = useState(false)
+
+  const selectedTypeConfig = deadlineTypes[formData.deadlineType]
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    if (name.startsWith('client.')) {
+      const clientField = name.split('.')[1]
+      setFormData(prev => ({
+        ...prev,
+        client: { ...prev.client, [clientField]: value }
+      }))
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }))
+    }
+  }
+
+  const handleTypeChange = (e) => {
+    const type = e.target.value
+    const config = deadlineTypes[type]
+    setFormData(prev => ({
+      ...prev,
+      deadlineType: type,
+      category: config.category
+    }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!formData.title || !formData.dueDate) return
+
+    setLoading(true)
+    try {
+      await onCreate({
+        ...formData,
+        category: selectedTypeConfig.category,
+        source: 'manual'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Calcular fecha minima (hoy)
+  const today = new Date().toISOString().split('T')[0]
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Nuevo Plazo</h3>
+            <p className="text-sm text-gray-500">Crear un nuevo plazo o vencimiento manual</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <XMarkIcon className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+          <div className="p-6 space-y-6">
+            {/* Tipo de plazo */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tipo de Plazo *
+                </label>
+                <select
+                  name="deadlineType"
+                  value={formData.deadlineType}
+                  onChange={handleTypeChange}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  required
+                >
+                  {Object.entries(deadlineTypes).map(([value, { label }]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Categoria
+                </label>
+                <div className="flex items-center h-10 px-3 bg-gray-100 rounded-md">
+                  <span className="text-sm text-gray-600">
+                    {categoryLabels[selectedTypeConfig?.category] || 'Otros'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Titulo */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Titulo *
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder="Ej: Respuesta requerimiento AEAT ref. 12345"
+                required
+              />
+            </div>
+
+            {/* Descripcion */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Descripcion
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                rows={3}
+                placeholder="Descripcion detallada del plazo..."
+              />
+            </div>
+
+            {/* Fecha y Prioridad */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Fecha de Vencimiento *
+                </label>
+                <input
+                  type="date"
+                  name="dueDate"
+                  value={formData.dueDate}
+                  onChange={handleChange}
+                  min={today}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Prioridad
+                </label>
+                <select
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleChange}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  {Object.entries(priorityLabels).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Cliente (opcional) */}
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                <InformationCircleIcon className="w-4 h-4 text-gray-400" />
+                Cliente / Operador (opcional)
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nombre / Razon Social
+                  </label>
+                  <input
+                    type="text"
+                    name="client.name"
+                    value={formData.client.name}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Empresa S.L."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    NIF/CIF
+                  </label>
+                  <input
+                    type="text"
+                    name="client.nif"
+                    value={formData.client.nif}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="B12345678"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Notas */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Notas internas
+              </label>
+              <textarea
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                rows={2}
+                placeholder="Notas adicionales..."
+              />
+            </div>
+
+            {/* Info de alertas */}
+            <div className="bg-blue-50 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <BellAlertIcon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium mb-1">Alertas automaticas</p>
+                  <p className="text-blue-600">
+                    Se configuraran alertas automaticas segun el tipo de plazo seleccionado:
+                    7 dias, 3 dias y 1 dia antes del vencimiento.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              disabled={loading}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+              disabled={loading || !formData.title || !formData.dueDate}
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Creando...
+                </>
+              ) : (
+                <>
+                  <PlusIcon className="w-4 h-4" />
+                  Crear Plazo
+                </>
+              )}
             </button>
           </div>
         </form>

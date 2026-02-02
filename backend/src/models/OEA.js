@@ -142,7 +142,7 @@ const oeaSchema = new mongoose.Schema({
     number: { type: String, unique: true, sparse: true }, // OEA authorization number
     status: {
       type: String,
-      enum: ['pending', 'under_review', 'approved', 'suspended', 'revoked', 'expired', 'renewal_pending'],
+      enum: ['pending', 'under_review', 'approved', 'suspended', 'revoked', 'expired', 'renewal_pending', 'reevaluation', 'incident'],
       default: 'pending'
     },
     applicationDate: Date,
@@ -154,8 +154,40 @@ const oeaSchema = new mongoose.Schema({
       type: String,
       default: 'AEAT - Departamento de Aduanas e Impuestos Especiales'
     },
-    responsibleOffice: String // Delegacion/Administracion AEAT
+    responsibleOffice: String, // Delegacion/Administracion AEAT
+    // Fields for reevaluation and incident tracking
+    previousStatus: String, // To restore after reevaluation/incident resolution
+    reevaluationStartDate: Date,
+    reevaluationReason: String,
+    reevaluationDeadline: Date
   },
+
+  // Incidents tracking (incidencias de mantenimiento)
+  incidents: [{
+    type: {
+      type: String,
+      enum: ['compliance', 'security', 'documentation', 'operational', 'other'],
+      required: true
+    },
+    description: String,
+    severity: {
+      type: String,
+      enum: ['critical', 'major', 'minor'],
+      default: 'minor'
+    },
+    reportedDate: Date,
+    reportedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    status: {
+      type: String,
+      enum: ['open', 'in_progress', 'resolved'],
+      default: 'open'
+    },
+    resolvedDate: Date,
+    resolvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    resolution: String,
+    affectedAreas: [String],
+    correctiveActions: String
+  }],
 
   // Benefits and privileges
   benefits: [benefitSchema],

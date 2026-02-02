@@ -47,7 +47,26 @@ router.post('/:id/inspection/result', requireRole('admin', 'agent'), requirement
 // POST /api/requirements/:id/resolve - Resolver requerimiento
 router.post('/:id/resolve', requireRole('admin', 'agent'), requirementController.resolveRequirement);
 
-// POST /api/requirements/:id/ai-response - Generar respuesta con IA
+// POST /api/requirements/:id/ai-response - Generar respuesta con IA (básico)
 router.post('/:id/ai-response', requireRole('admin', 'agent'), requirementController.generateAIResponse);
+
+// ===========================================
+// AI ENDPOINTS AVANZADOS - LUCI Integration
+// ===========================================
+
+// Analizar documentación solicitada
+router.post('/:id/ai/analyze-documents', requireRole('admin', 'agent'), requirementController.aiAnalyzeDocuments);
+
+// Sugerir argumentación legal
+router.post('/:id/ai/suggest-arguments', requireRole('admin', 'agent'), requirementController.aiSuggestArguments);
+
+// Analizar riesgo del requerimiento
+router.post('/:id/ai/analyze-risk', requireRole('admin', 'agent'), requirementController.aiAnalyzeRisk);
+
+// Análisis completo
+router.post('/:id/ai/full-analysis', requireRole('admin', 'agent'), requirementController.aiFullAnalysis);
+
+// Generar borrador de respuesta formal
+router.post('/:id/ai/draft-response', requireRole('admin', 'agent'), requirementController.aiDraftResponse);
 
 module.exports = router;

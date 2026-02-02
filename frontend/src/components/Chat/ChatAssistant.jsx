@@ -96,7 +96,7 @@ export default function ChatAssistant() {
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <SparklesIcon className="w-5 h-5 text-luci" />
-          Powered by Claude
+          Powered by LUCI
         </div>
       </div>
 

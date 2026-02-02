@@ -6,6 +6,7 @@
  */
 
 const { analyticsService, reportsService, kpiService, predictionsService } = require('../services/analytics');
+const aiService = require('../services/aiService');
 const logger = require('../config/logger');
 
 // ==================== Dashboard & Metrics ====================
@@ -700,6 +701,176 @@ async function getModelMetrics(req, res) {
   }
 }
 
+// ==================== AI Endpoints - LUCI Integration ====================
+
+/**
+ * Generate automatic insights from analytics data
+ * POST /api/analytics/ai/insights
+ */
+async function aiGenerateInsights(req, res) {
+  try {
+    const { analyticsData, context } = req.body;
+
+    if (!analyticsData) {
+      return res.status(400).json({
+        success: false,
+        error: 'analyticsData es requerido'
+      });
+    }
+
+    const result = await aiService.generateAutomaticInsights(analyticsData, context || {});
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    logger.error(`[AnalyticsController] AI insights error: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+/**
+ * Detect anomalies with AI
+ * POST /api/analytics/ai/anomalies
+ */
+async function aiDetectAnomalies(req, res) {
+  try {
+    const { data, thresholds } = req.body;
+
+    if (!data) {
+      return res.status(400).json({
+        success: false,
+        error: 'data es requerido'
+      });
+    }
+
+    const result = await aiService.detectAnomaliesAI(data, thresholds || {});
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    logger.error(`[AnalyticsController] AI anomalies error: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+/**
+ * Predict trends with AI
+ * POST /api/analytics/ai/trends
+ */
+async function aiPredictTrends(req, res) {
+  try {
+    const { historicalData, horizon } = req.body;
+
+    if (!historicalData) {
+      return res.status(400).json({
+        success: false,
+        error: 'historicalData es requerido'
+      });
+    }
+
+    const result = await aiService.predictTrendsAI(historicalData, horizon || 30);
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    logger.error(`[AnalyticsController] AI trends error: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+/**
+ * Generate executive report with AI
+ * POST /api/analytics/ai/executive-report
+ */
+async function aiGenerateExecutiveReport(req, res) {
+  try {
+    const { analyticsData, options } = req.body;
+
+    if (!analyticsData) {
+      return res.status(400).json({
+        success: false,
+        error: 'analyticsData es requerido'
+      });
+    }
+
+    const result = await aiService.generateExecutiveReport(analyticsData, options || {});
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    logger.error(`[AnalyticsController] AI executive report error: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+/**
+ * Analyze KPI deviations with AI
+ * POST /api/analytics/ai/kpi-analysis
+ */
+async function aiAnalyzeKPIDeviations(req, res) {
+  try {
+    const { kpiData, targets } = req.body;
+
+    if (!kpiData) {
+      return res.status(400).json({
+        success: false,
+        error: 'kpiData es requerido'
+      });
+    }
+
+    const result = await aiService.analyzeKPIDeviations(kpiData, targets || {});
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    logger.error(`[AnalyticsController] AI KPI analysis error: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+/**
+ * Full analytics analysis with AI
+ * POST /api/analytics/ai/full-analysis
+ */
+async function aiFullAnalysis(req, res) {
+  try {
+    const { analyticsData, options } = req.body;
+
+    if (!analyticsData) {
+      return res.status(400).json({
+        success: false,
+        error: 'analyticsData es requerido'
+      });
+    }
+
+    const result = await aiService.fullAnalyticsAnalysis(analyticsData, options || {});
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    logger.error(`[AnalyticsController] AI full analysis error: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
+
 module.exports = {
   // Dashboard & Metrics
   getDashboardMetrics,
@@ -741,5 +912,13 @@ module.exports = {
   predictDuties,
   detectAnomalies,
   analyzeTrends,
-  getModelMetrics
+  getModelMetrics,
+
+  // AI - LUCI Integration
+  aiGenerateInsights,
+  aiDetectAnomalies,
+  aiPredictTrends,
+  aiGenerateExecutiveReport,
+  aiAnalyzeKPIDeviations,
+  aiFullAnalysis
 };

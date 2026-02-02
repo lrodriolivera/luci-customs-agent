@@ -124,4 +124,24 @@ router.post('/predictions/anomalies', analyticsController.detectAnomalies);
 // POST /api/analytics/predictions/trends - Analyze trends
 router.post('/predictions/trends', analyticsController.analyzeTrends);
 
+// ==================== AI Endpoints - LUCI Integration ====================
+
+// POST /api/analytics/ai/insights - Generate automatic insights
+router.post('/ai/insights', analyticsController.aiGenerateInsights);
+
+// POST /api/analytics/ai/anomalies - Detect anomalies with AI
+router.post('/ai/anomalies', analyticsController.aiDetectAnomalies);
+
+// POST /api/analytics/ai/trends - Predict trends with AI
+router.post('/ai/trends', analyticsController.aiPredictTrends);
+
+// POST /api/analytics/ai/executive-report - Generate executive report
+router.post('/ai/executive-report', analyticsController.aiGenerateExecutiveReport);
+
+// POST /api/analytics/ai/kpi-analysis - Analyze KPI deviations
+router.post('/ai/kpi-analysis', analyticsController.aiAnalyzeKPIDeviations);
+
+// POST /api/analytics/ai/full-analysis - Full analytics analysis
+router.post('/ai/full-analysis', analyticsController.aiFullAnalysis);
+
 module.exports = router;

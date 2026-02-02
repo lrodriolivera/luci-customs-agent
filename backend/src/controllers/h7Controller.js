@@ -22,7 +22,8 @@ exports.list = async (req, res) => {
       search
     } = req.query;
 
-    const query = { createdBy: req.user._id };
+    // Los admins ven todas las declaraciones, otros usuarios solo las suyas
+    const query = req.user.role === 'admin' ? {} : { createdBy: req.user._id };
 
     if (status) query.status = status;
     if (carrier) query['carrier.code'] = carrier;
@@ -81,10 +82,12 @@ exports.list = async (req, res) => {
  */
 exports.getStats = async (req, res) => {
   try {
-    const stats = await h7Service.getStats({
-      ...req.query,
-      createdBy: req.user._id
-    });
+    // Los admins ven estadisticas de todas las declaraciones
+    const queryParams = req.user.role === 'admin'
+      ? { ...req.query }
+      : { ...req.query, createdBy: req.user._id };
+
+    const stats = await h7Service.getStats(queryParams);
 
     res.json({
       success: true,

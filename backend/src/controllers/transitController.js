@@ -4,6 +4,8 @@
  */
 
 const transitService = require('../services/transitService');
+const aiService = require('../services/aiService');
+const { Transit, Expedition } = require('../models');
 
 const transitController = {
   /**
@@ -353,6 +355,320 @@ const transitController = {
     } catch (error) {
       console.error('Error recording transit office passage:', error);
       res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  },
+
+  // ===========================================
+  // AI ENDPOINTS - LUCI Integration
+  // ===========================================
+
+  /**
+   * POST /api/transit/ai/auto-complete
+   * Auto-completar datos de tránsito desde expediente
+   */
+  async aiAutoComplete(req, res) {
+    try {
+      const { transitDraft, expeditionId } = req.body;
+
+      // Obtener expediente si se proporciona
+      let expedition = null;
+      if (expeditionId) {
+        expedition = await Expedition.findOne({
+          _id: expeditionId,
+          owner: req.user._id
+        });
+      }
+
+      // Obtener tránsitos anteriores similares
+      const previousTransits = await Transit.find({
+        owner: req.user._id,
+        status: 'completed'
+      })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select('transitType route departureOffice destinationOffice transitOffices guarantee');
+
+      const result = await aiService.autoCompleteTransitData(
+        transitDraft || {},
+        expedition,
+        previousTransits
+      );
+
+      res.json({
+        success: true,
+        data: result
+      });
+
+    } catch (error) {
+      console.error('Error in AI auto-complete:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  },
+
+  /**
+   * POST /api/transit/:id/ai/validate-route
+   * Validar y optimizar ruta de tránsito
+   */
+  async aiValidateRoute(req, res) {
+    try {
+      const transit = await Transit.findOne({
+        _id: req.params.id,
+        owner: req.user._id
+      });
+
+      if (!transit) {
+        return res.status(404).json({
+          success: false,
+          error: 'Tránsito no encontrado'
+        });
+      }
+
+      const result = await aiService.validateTransitRoute(transit);
+
+      res.json({
+        success: true,
+        data: result
+      });
+
+    } catch (error) {
+      console.error('Error in AI route validation:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  },
+
+  /**
+   * POST /api/transit/:id/ai/predict-incidents
+   * Predecir incidencias potenciales
+   */
+  async aiPredictIncidents(req, res) {
+    try {
+      const transit = await Transit.findOne({
+        _id: req.params.id,
+        owner: req.user._id
+      });
+
+      if (!transit) {
+        return res.status(404).json({
+          success: false,
+          error: 'Tránsito no encontrado'
+        });
+      }
+
+      // Obtener datos históricos
+      const completedTransits = await Transit.find({
+        owner: req.user._id,
+        status: 'completed',
+        'route.countries': { $in: transit.route?.countries || [] }
+      }).select('controlResult enquiry status');
+
+      const historicalData = {
+        similarTransits: completedTransits.length,
+        incidentRate: completedTransits.filter(t =>
+          t.controlResult?.discrepancies?.length > 0 || t.enquiry?.initiated
+        ).length / Math.max(completedTransits.length, 1) * 100,
+        commonIncidents: []
+      };
+
+      const result = await aiService.predictTransitIncidents(transit, historicalData);
+
+      res.json({
+        success: true,
+        data: result
+      });
+
+    } catch (error) {
+      console.error('Error in AI incident prediction:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  },
+
+  /**
+   * POST /api/transit/:id/ai/suggest-guarantee
+   * Sugerir garantía óptima para tránsito
+   */
+  async aiSuggestGuarantee(req, res) {
+    try {
+      const transit = await Transit.findOne({
+        _id: req.params.id,
+        owner: req.user._id
+      });
+
+      if (!transit) {
+        return res.status(404).json({
+          success: false,
+          error: 'Tránsito no encontrado'
+        });
+      }
+
+      // Construir perfil del operador
+      const operatorProfile = {
+        eori: req.user.eori || transit.principal?.eori,
+        oeaStatus: req.user.oeaStatus || 'none',
+        oeaType: req.user.oeaType,
+        hasGlobalGuarantee: req.user.hasGlobalGuarantee || false,
+        grn: req.user.grn,
+        availableAmount: req.user.guaranteeAvailable
+      };
+
+      const result = await aiService.suggestTransitGuarantee(transit, operatorProfile);
+
+      res.json({
+        success: true,
+        data: result
+      });
+
+    } catch (error) {
+      console.error('Error in AI guarantee suggestion:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  },
+
+  /**
+   * POST /api/transit/:id/ai/full-analysis
+   * Análisis completo de tránsito
+   */
+  async aiFullAnalysis(req, res) {
+    try {
+      const transit = await Transit.findOne({
+        _id: req.params.id,
+        owner: req.user._id
+      });
+
+      if (!transit) {
+        return res.status(404).json({
+          success: false,
+          error: 'Tránsito no encontrado'
+        });
+      }
+
+      // Obtener expediente relacionado
+      let expedition = null;
+      if (transit.expeditionId) {
+        expedition = await Expedition.findById(transit.expeditionId);
+      }
+
+      // Perfil del operador
+      const operatorProfile = {
+        eori: req.user.eori || transit.principal?.eori,
+        oeaStatus: req.user.oeaStatus || 'none',
+        oeaType: req.user.oeaType,
+        hasGlobalGuarantee: req.user.hasGlobalGuarantee || false,
+        grn: req.user.grn,
+        availableAmount: req.user.guaranteeAvailable
+      };
+
+      // Datos históricos
+      const completedTransits = await Transit.find({
+        owner: req.user._id,
+        status: 'completed'
+      }).select('controlResult enquiry');
+
+      const historicalData = {
+        similarTransits: completedTransits.length,
+        incidentRate: completedTransits.filter(t =>
+          t.controlResult?.discrepancies?.length > 0 || t.enquiry?.initiated
+        ).length / Math.max(completedTransits.length, 1) * 100
+      };
+
+      const result = await aiService.fullTransitAnalysis(
+        transit,
+        expedition,
+        operatorProfile,
+        historicalData
+      );
+
+      res.json({
+        success: true,
+        data: result
+      });
+
+    } catch (error) {
+      console.error('Error in AI full transit analysis:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  },
+
+  /**
+   * POST /api/transit/:id/ai/apply-suggestion
+   * Aplicar sugerencia de auto-completado
+   */
+  async aiApplySuggestion(req, res) {
+    try {
+      const { suggestedData } = req.body;
+
+      if (!suggestedData) {
+        return res.status(400).json({
+          success: false,
+          error: 'suggestedData es requerido'
+        });
+      }
+
+      const transit = await Transit.findOne({
+        _id: req.params.id,
+        owner: req.user._id
+      });
+
+      if (!transit) {
+        return res.status(404).json({
+          success: false,
+          error: 'Tránsito no encontrado'
+        });
+      }
+
+      if (transit.status !== 'draft') {
+        return res.status(400).json({
+          success: false,
+          error: 'Solo se pueden aplicar sugerencias a tránsitos en borrador'
+        });
+      }
+
+      // Aplicar datos sugeridos
+      const fieldsToApply = [
+        'transitType', 'principal', 'departureOffice', 'destinationOffice',
+        'transitOffices', 'route', 'guarantee', 'goodsItems'
+      ];
+
+      for (const field of fieldsToApply) {
+        if (suggestedData[field] !== undefined) {
+          transit[field] = suggestedData[field];
+        }
+      }
+
+      // Aplicar deadline si se sugirió
+      if (suggestedData.estimatedDeadline) {
+        transit.deadlines = transit.deadlines || {};
+        transit.deadlines.arrivalDeadline = new Date(suggestedData.estimatedDeadline);
+      }
+
+      await transit.save();
+
+      res.json({
+        success: true,
+        data: transit,
+        message: 'Sugerencias aplicadas correctamente'
+      });
+
+    } catch (error) {
+      console.error('Error applying AI suggestion:', error);
+      res.status(500).json({
         success: false,
         error: error.message
       });

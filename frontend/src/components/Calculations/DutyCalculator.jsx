@@ -4,7 +4,11 @@ import toast from 'react-hot-toast'
 import {
   CalculatorIcon,
   InformationCircleIcon,
-  CurrencyEuroIcon
+  CurrencyEuroIcon,
+  ExclamationTriangleIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+  CheckCircleIcon
 } from '@heroicons/react/24/outline'
 
 export default function DutyCalculator() {
@@ -52,7 +56,7 @@ export default function DutyCalculator() {
 
     try {
       const response = await calculationsAPI.calculateDuties({
-        taric_code: formData.taricCode,
+        taricCode: formData.taricCode,
         value: parseFloat(formData.value),
         origin: formData.origin,
         preference: formData.preference
@@ -199,38 +203,104 @@ export default function DutyCalculator() {
           </form>
 
           {/* Results */}
-          {result && (
+          {result && result.data && (
             <div className="card mt-6">
-              <h2 className="text-lg font-semibold mb-4">Resultado del Calculo</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Resultado del Calculo</h2>
+                <div className="flex items-center gap-2">
+                  {result.data.source && (
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      result.data.source === 'local_db' ? 'bg-green-100 text-green-700' :
+                      result.data.source === 'ai_realtime' ? 'bg-purple-100 text-purple-700' :
+                      result.data.source === 'ai_cache' ? 'bg-blue-100 text-blue-700' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {result.data.source === 'local_db' ? 'BD Local' :
+                       result.data.source === 'ai_realtime' ? 'IA' :
+                       result.data.source === 'ai_cache' ? 'Cache IA' :
+                       result.data.source === 'estimated' ? 'Estimado' : result.data.source}
+                    </span>
+                  )}
+                  {result.data.confidence && (
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      result.data.confidence >= 90 ? 'bg-green-100 text-green-700' :
+                      result.data.confidence >= 70 ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {result.data.confidence}% confianza
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Description */}
+              {result.data.description && (
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-700">{result.data.description}</p>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="p-4 bg-gray-50 rounded-xl text-center">
                   <p className="text-sm text-gray-500">Valor Aduanero</p>
                   <p className="text-xl font-bold text-gray-900">
-                    {result.customs_value?.toFixed(2)} EUR
+                    {(result.data.customsValue || result.data.customs_value || result.data.valueEur)?.toFixed(2)} EUR
                   </p>
                 </div>
                 <div className="p-4 bg-blue-50 rounded-xl text-center">
                   <p className="text-sm text-gray-500">Arancel</p>
                   <p className="text-xl font-bold text-blue-600">
-                    {result.duty_amount?.toFixed(2)} EUR
+                    {(result.data.dutyAmount || result.data.duty_amount)?.toFixed(2)} EUR
                   </p>
-                  <p className="text-xs text-gray-500">{result.effective_duty_rate}%</p>
+                  <p className="text-xs text-gray-500">{result.data.dutyRate || result.data.effective_duty_rate}%</p>
                 </div>
                 <div className="p-4 bg-purple-50 rounded-xl text-center">
                   <p className="text-sm text-gray-500">IVA</p>
                   <p className="text-xl font-bold text-purple-600">
-                    {result.vat_amount?.toFixed(2)} EUR
+                    {(result.data.vatAmount || result.data.vat_amount)?.toFixed(2)} EUR
                   </p>
-                  <p className="text-xs text-gray-500">{result.vat_rate}%</p>
+                  <p className="text-xs text-gray-500">{result.data.vatRate || result.data.vat_rate}%</p>
                 </div>
                 <div className="p-4 bg-green-50 rounded-xl text-center">
                   <p className="text-sm text-gray-500">Total a Pagar</p>
                   <p className="text-xl font-bold text-green-600">
-                    {result.total_to_pay?.toFixed(2)} EUR
+                    {(result.data.totalToPay || result.data.total_to_pay)?.toFixed(2)} EUR
                   </p>
                 </div>
               </div>
+
+              {/* Warnings */}
+              {result.data.warnings && result.data.warnings.length > 0 && (
+                <div className="mb-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="flex items-start gap-2">
+                    <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-yellow-800">Avisos Importantes</p>
+                      <ul className="text-sm text-yellow-700 mt-1 list-disc list-inside">
+                        {result.data.warnings.map((w, i) => (
+                          <li key={i}>{w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Antidumping Warning */}
+              {result.data.antidumping?.applies && (
+                <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                  <div className="flex items-start gap-2">
+                    <ShieldCheckIcon className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-red-800">Derechos Antidumping Aplicables</p>
+                      <p className="text-sm text-red-700 mt-1">
+                        Este producto esta sujeto a derechos antidumping adicionales.
+                        {result.data.antidumpingDuty > 0 && ` (+${result.data.antidumpingDuty?.toFixed(2)} EUR)`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Detailed Breakdown */}
               <div className="border-t border-gray-200 pt-4">
@@ -238,41 +308,84 @@ export default function DutyCalculator() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Codigo TARIC</span>
-                    <span className="font-mono">{result.taric_code}</span>
+                    <span className="font-mono">{result.data.taricCode || result.data.taric_code}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Origen</span>
-                    <span>{result.origin}</span>
+                    <span>{result.data.origin || '-'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Tipo Arancel Base</span>
-                    <span>{result.base_duty_rate}%</span>
+                    <span>{result.data.baseDutyRate || result.data.base_duty_rate || result.data.dutyRate}%</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Tipo Arancel Efectivo</span>
-                    <span>{result.effective_duty_rate}%</span>
+                    <span className="font-medium">{result.data.dutyRate || result.data.effective_duty_rate}%</span>
                   </div>
-                  {result.preference_applied && (
+                  {result.data.dutyType && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Tipo de Arancel</span>
+                      <span className="capitalize">{result.data.dutyType.replace('_', ' ')}</span>
+                    </div>
+                  )}
+                  {result.data.preferenceApplied && (
                     <div className="flex justify-between text-green-600">
                       <span>Preferencia Aplicada</span>
-                      <span>{result.preference_applied}</span>
+                      <span>{result.data.preferenceApplied.agreement || result.data.preferenceApplied}</span>
+                    </div>
+                  )}
+                  {result.data.specificDuty > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Arancel Especifico</span>
+                      <span>{result.data.specificDuty?.toFixed(2)} EUR</span>
+                    </div>
+                  )}
+                  {result.data.antidumpingDuty > 0 && (
+                    <div className="flex justify-between text-red-600">
+                      <span>Derecho Antidumping</span>
+                      <span>+{result.data.antidumpingDuty?.toFixed(2)} EUR</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span className="text-gray-500">Base IVA</span>
-                    <span>{result.vat_base?.toFixed(2)} EUR</span>
+                    <span>{(result.data.vatBase || result.data.vat_base)?.toFixed(2)} EUR</span>
                   </div>
                   <hr className="my-2" />
                   <div className="flex justify-between">
                     <span className="text-gray-500">Total Impuestos</span>
-                    <span className="font-medium">{result.total_taxes?.toFixed(2)} EUR</span>
+                    <span className="font-medium">{(result.data.totalTaxes || result.data.total_taxes)?.toFixed(2)} EUR</span>
                   </div>
                   <div className="flex justify-between font-bold text-lg">
                     <span>TOTAL A PAGAR</span>
-                    <span className="text-green-600">{result.total_to_pay?.toFixed(2)} EUR</span>
+                    <span className="text-green-600">{(result.data.totalToPay || result.data.total_to_pay)?.toFixed(2)} EUR</span>
                   </div>
                 </div>
               </div>
+
+              {/* Supplementary Unit Info */}
+              {result.data.supplementaryUnit?.required && (
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <span className="font-medium">Unidades suplementarias requeridas:</span> {result.data.supplementaryUnit.description} ({result.data.supplementaryUnit.type})
+                  </p>
+                </div>
+              )}
+
+              {/* Required Documents */}
+              {result.data.requiredDocuments && result.data.requiredDocuments.length > 0 && (
+                <div className="mt-4 border-t pt-4">
+                  <h4 className="font-medium text-gray-700 mb-2">Documentos Requeridos</h4>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    {result.data.requiredDocuments.slice(0, 5).map((doc, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                        <span className="font-mono text-xs bg-gray-100 px-1 rounded">{doc.code}</span>
+                        {doc.name || doc.description}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -12,4 +12,9 @@ router.post('/duties', auth, calculationValidators.calculate, calculationControl
 router.post('/vat', auth, calculationController.calculateVat);
 router.post('/total', auth, calculationController.calculateTotal);
 
+// Nuevos endpoints con IA
+router.get('/duty-info/:taricCode', auth, calculationController.getDutyInfo);
+router.post('/validate-duty', auth, calculationController.validateDutyRate);
+router.delete('/cache', auth, calculationController.clearCache);
+
 module.exports = router;

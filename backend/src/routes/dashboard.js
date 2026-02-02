@@ -99,16 +99,18 @@ router.get('/alerts', async (req, res) => {
     });
 
     lowBalanceGuarantees.forEach(g => {
-      const percentUsed = Math.round((1 - g.balance.available / g.amount) * 100);
+      const available = g.balance?.available ?? 0;
+      const amount = g.amount || 1;
+      const percentUsed = Math.round((1 - available / amount) * 100);
       alerts.push({
         id: g._id,
         type: 'guarantee_low_balance',
-        severity: g.balance.available < g.amount * 0.1 ? 'critical' : 'warning',
+        severity: available < amount * 0.1 ? 'critical' : 'warning',
         title: 'Garantia con saldo bajo',
         message: `${g.guaranteeNumber}: ${percentUsed}% utilizado`,
         guaranteeNumber: g.guaranteeNumber,
-        available: g.balance.available,
-        total: g.amount,
+        available: available,
+        total: amount,
         link: `/guarantees/${g._id}`,
         createdAt: g.updatedAt
       });

@@ -2,6 +2,7 @@ const { Expedition, ChatMessage } = require('../models');
 const logger = require('../config/logger');
 const documentChecklists = require('../utils/documentChecklists');
 const emailService = require('../services/emailService');
+const aiService = require('../services/aiService');
 
 /**
  * Crear nuevo expediente
@@ -644,6 +645,400 @@ function calculateDocumentCompletion(checklist) {
   return Math.round((received / required.length) * 100);
 }
 
+// ===========================================
+// AI ENDPOINTS
+// ===========================================
+
+/**
+ * Sugerir documentos faltantes con IA
+ * POST /api/expeditions/:id/ai/suggest-documents
+ */
+const aiSuggestDocuments = async (req, res) => {
+  try {
+    const expedition = await Expedition.findById(req.params.id);
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    logger.info(`AI: Analizando documentos faltantes para ${expedition.expeditionId}`);
+
+    const analysis = await aiService.suggestMissingDocuments(expedition);
+
+    // Guardar análisis en el expediente
+    if (!expedition.aiAnalysis) expedition.aiAnalysis = {};
+    expedition.aiAnalysis.documentSuggestions = {
+      ...analysis,
+      analyzedAt: new Date()
+    };
+    await expedition.save();
+
+    res.json({
+      success: true,
+      data: analysis
+    });
+
+  } catch (error) {
+    logger.error('Error en AI suggest documents:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al analizar documentos'
+    });
+  }
+};
+
+/**
+ * Análisis de riesgo del expediente con IA
+ * POST /api/expeditions/:id/ai/analyze-risk
+ */
+const aiAnalyzeRisk = async (req, res) => {
+  try {
+    const expedition = await Expedition.findById(req.params.id);
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    logger.info(`AI: Analizando riesgo para ${expedition.expeditionId}`);
+
+    const analysis = await aiService.analyzeExpeditionRisk(expedition);
+
+    // Guardar análisis en el expediente
+    if (!expedition.aiAnalysis) expedition.aiAnalysis = {};
+    expedition.aiAnalysis.riskAnalysis = {
+      ...analysis,
+      analyzedAt: new Date()
+    };
+
+    // Actualizar riskFlags si existen
+    if (analysis.criticalIssues && analysis.criticalIssues.length > 0) {
+      expedition.aiAnalysis.riskFlags = analysis.criticalIssues.map(issue => ({
+        type: issue.type,
+        severity: issue.priority === 'IMMEDIATE' ? 'high' : issue.priority === 'HIGH' ? 'high' : 'medium',
+        description: issue.description
+      }));
+    }
+
+    await expedition.save();
+
+    res.json({
+      success: true,
+      data: analysis
+    });
+
+  } catch (error) {
+    logger.error('Error en AI analyze risk:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al analizar riesgo'
+    });
+  }
+};
+
+/**
+ * Sugerir clasificación TARIC con IA
+ * POST /api/expeditions/:id/ai/suggest-taric
+ */
+const aiSuggestTaric = async (req, res) => {
+  try {
+    const expedition = await Expedition.findById(req.params.id);
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    if (!expedition.goods || expedition.goods.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'El expediente no tiene mercancías para clasificar'
+      });
+    }
+
+    logger.info(`AI: Sugiriendo clasificación TARIC para ${expedition.expeditionId}`);
+
+    const analysis = await aiService.suggestTaricClassification(expedition);
+
+    // Guardar análisis en el expediente
+    if (!expedition.aiAnalysis) expedition.aiAnalysis = {};
+    expedition.aiAnalysis.classificationSuggestions = analysis.items?.map(item => ({
+      itemIndex: item.itemIndex,
+      suggestedTaricCode: item.suggestions?.[0]?.taricCode,
+      confidence: item.suggestions?.[0]?.confidence,
+      reasoning: item.suggestions?.[0]?.reasoning,
+      alternatives: item.suggestions?.slice(1).map(s => ({
+        code: s.taricCode,
+        confidence: s.confidence
+      }))
+    })) || [];
+    expedition.aiAnalysis.lastAnalysisAt = new Date();
+
+    await expedition.save();
+
+    res.json({
+      success: true,
+      data: analysis
+    });
+
+  } catch (error) {
+    logger.error('Error en AI suggest TARIC:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al sugerir clasificación TARIC'
+    });
+  }
+};
+
+/**
+ * Detectar inconsistencias con IA
+ * POST /api/expeditions/:id/ai/detect-inconsistencies
+ */
+const aiDetectInconsistencies = async (req, res) => {
+  try {
+    const expedition = await Expedition.findById(req.params.id);
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    logger.info(`AI: Detectando inconsistencias para ${expedition.expeditionId}`);
+
+    const analysis = await aiService.detectInconsistencies(expedition);
+
+    // Guardar análisis en el expediente
+    if (!expedition.aiAnalysis) expedition.aiAnalysis = {};
+    expedition.aiAnalysis.inconsistencies = {
+      ...analysis,
+      analyzedAt: new Date()
+    };
+
+    await expedition.save();
+
+    res.json({
+      success: true,
+      data: analysis
+    });
+
+  } catch (error) {
+    logger.error('Error en AI detect inconsistencies:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al detectar inconsistencias'
+    });
+  }
+};
+
+/**
+ * Análisis completo del expediente con IA
+ * POST /api/expeditions/:id/ai/full-analysis
+ */
+const aiFullAnalysis = async (req, res) => {
+  try {
+    const expedition = await Expedition.findById(req.params.id);
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    logger.info(`AI: Análisis completo para ${expedition.expeditionId}`);
+
+    const analysis = await aiService.fullExpeditionAnalysis(expedition);
+
+    // Calcular next steps basado en el análisis
+    const nextSteps = [];
+
+    if (analysis.documents?.missingRequired?.length > 0) {
+      nextSteps.push({
+        priority: 1,
+        action: 'Solicitar documentos faltantes',
+        details: `${analysis.documents.missingRequired.length} documento(s) crítico(s) pendiente(s)`
+      });
+    }
+
+    if (analysis.classification?.items?.some(i => !i.currentTaric || i.suggestions?.[0]?.confidence < 80)) {
+      nextSteps.push({
+        priority: 2,
+        action: 'Revisar clasificación arancelaria',
+        details: 'Algunas mercancías necesitan clasificación o revisión'
+      });
+    }
+
+    if (analysis.inconsistencies?.criticalIssues > 0) {
+      nextSteps.push({
+        priority: 1,
+        action: 'Corregir inconsistencias críticas',
+        details: `${analysis.inconsistencies.criticalIssues} problema(s) crítico(s) detectado(s)`
+      });
+    }
+
+    if (analysis.risk?.overallRiskLevel === 'HIGH' || analysis.risk?.overallRiskLevel === 'CRITICAL') {
+      nextSteps.push({
+        priority: 2,
+        action: 'Revisar factores de riesgo',
+        details: `Nivel de riesgo: ${analysis.risk.overallRiskLevel}`
+      });
+    }
+
+    analysis.overallReadiness.nextSteps = nextSteps.sort((a, b) => a.priority - b.priority);
+
+    // Guardar análisis completo
+    expedition.aiAnalysis = {
+      ...expedition.aiAnalysis,
+      fullAnalysis: analysis,
+      lastAnalysisAt: new Date()
+    };
+
+    // Actualizar recommendations si existen
+    if (analysis.risk?.recommendations) {
+      expedition.aiAnalysis.recommendations = analysis.risk.recommendations;
+    }
+
+    await expedition.save();
+
+    // Agregar evento al timeline
+    expedition.timeline.push({
+      action: 'ai_analysis',
+      description: `Análisis IA completado - Puntuación: ${analysis.overallReadiness.score}%`,
+      userId: req.user._id,
+      performedBy: 'LUCI AI',
+      metadata: {
+        readinessScore: analysis.overallReadiness.score,
+        riskLevel: analysis.risk?.overallRiskLevel
+      }
+    });
+
+    await expedition.save();
+
+    res.json({
+      success: true,
+      data: analysis
+    });
+
+  } catch (error) {
+    logger.error('Error en AI full analysis:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al realizar análisis completo'
+    });
+  }
+};
+
+/**
+ * Obtener último análisis IA del expediente
+ * GET /api/expeditions/:id/ai/analysis
+ */
+const getAiAnalysis = async (req, res) => {
+  try {
+    const expedition = await Expedition.findById(req.params.id)
+      .select('expeditionId aiAnalysis');
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        expeditionId: expedition.expeditionId,
+        analysis: expedition.aiAnalysis || {},
+        hasAnalysis: !!expedition.aiAnalysis?.lastAnalysisAt
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error obteniendo análisis AI:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener análisis'
+    });
+  }
+};
+
+/**
+ * Aplicar sugerencia de clasificación TARIC
+ * POST /api/expeditions/:id/ai/apply-taric/:itemIndex
+ */
+const applyTaricSuggestion = async (req, res) => {
+  try {
+    const { id, itemIndex } = req.params;
+    const { taricCode, hsCode } = req.body;
+
+    const expedition = await Expedition.findById(id);
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    const index = parseInt(itemIndex);
+    if (index < 0 || index >= expedition.goods.length) {
+      return res.status(400).json({
+        success: false,
+        error: 'Índice de mercancía inválido'
+      });
+    }
+
+    // Actualizar código TARIC
+    expedition.goods[index].taricCode = taricCode;
+    if (hsCode) {
+      expedition.goods[index].hsCode = hsCode;
+    }
+
+    // Registrar en timeline
+    expedition.timeline.push({
+      action: 'taric_updated',
+      description: `Clasificación TARIC actualizada para item ${index + 1}: ${taricCode}`,
+      userId: req.user._id,
+      performedBy: req.user.name,
+      metadata: {
+        itemIndex: index,
+        newTaricCode: taricCode,
+        source: 'ai_suggestion'
+      }
+    });
+
+    await expedition.save();
+
+    logger.info(`TARIC aplicado: ${expedition.expeditionId} item ${index + 1} -> ${taricCode}`);
+
+    res.json({
+      success: true,
+      data: {
+        itemIndex: index,
+        taricCode,
+        hsCode,
+        message: 'Clasificación TARIC aplicada correctamente'
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error aplicando TARIC:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al aplicar clasificación TARIC'
+    });
+  }
+};
+
 module.exports = {
   create,
   list,
@@ -653,5 +1048,13 @@ module.exports = {
   getChecklist,
   regenerateChecklist,
   sendPortalLink,
-  getStats
+  getStats,
+  // AI endpoints
+  aiSuggestDocuments,
+  aiAnalyzeRisk,
+  aiSuggestTaric,
+  aiDetectInconsistencies,
+  aiFullAnalysis,
+  getAiAnalysis,
+  applyTaricSuggestion
 };

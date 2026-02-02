@@ -388,11 +388,303 @@ const getUnreadCount = async (req, res) => {
   }
 };
 
+// ===========================================
+// AI ENDPOINTS - LUCI Integration
+// ===========================================
+
+/**
+ * Chat mejorado con IA contextual
+ * POST /api/portal/:token/ai/chat
+ */
+const aiEnhancedChat = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        error: 'message es requerido'
+      });
+    }
+
+    const expedition = await Expedition.findByPortalToken(token);
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    // Obtener historial de conversación
+    const conversationHistory = await ChatMessage.getConversation(expedition._id, 10);
+
+    // Perfil del cliente
+    const clientProfile = {
+      companyName: expedition.client?.companyName,
+      email: expedition.client?.contact?.email,
+      operationHistory: 1, // TODO: Obtener historial real
+      experienceLevel: 'estándar'
+    };
+
+    const startTime = Date.now();
+    const result = await aiService.enhancedPortalChat(
+      message,
+      expedition,
+      conversationHistory,
+      clientProfile
+    );
+    const processingTime = Date.now() - startTime;
+
+    // Guardar mensaje del cliente
+    const clientMessage = new ChatMessage({
+      expedition: expedition._id,
+      sender: 'client',
+      senderInfo: {
+        name: expedition.client?.companyName,
+        email: expedition.client?.contact?.email
+      },
+      content: message,
+      messageType: 'text'
+    });
+    await clientMessage.save();
+
+    // Guardar respuesta de LUCI
+    const luciMessage = new ChatMessage({
+      expedition: expedition._id,
+      sender: 'luci',
+      senderInfo: {
+        name: 'LUCI',
+        email: 'luci@stocklogistic.com'
+      },
+      content: result.response?.message || 'No pude procesar tu mensaje',
+      messageType: 'text',
+      metadata: {
+        aiModel: result.model,
+        tokensUsed: result.tokensUsed,
+        processingTime,
+        intent: result.intent
+      },
+      aiContext: {
+        confidence: result.intentConfidence,
+        suggestedActions: result.suggestedActions
+      }
+    });
+    await luciMessage.save();
+
+    res.json({
+      success: true,
+      data: {
+        clientMessage: {
+          _id: clientMessage._id,
+          content: clientMessage.content,
+          createdAt: clientMessage.createdAt
+        },
+        response: result.response,
+        intent: result.intent,
+        suggestedActions: result.suggestedActions,
+        expeditionInsights: result.expeditionInsights,
+        escalationNeeded: result.escalationNeeded,
+        followUpQuestions: result.followUpQuestions
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error in AI enhanced chat:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al procesar mensaje'
+    });
+  }
+};
+
+/**
+ * Detectar FAQ y responder automáticamente
+ * POST /api/portal/:token/ai/faq
+ */
+const aiDetectFAQ = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { question } = req.body;
+
+    if (!question) {
+      return res.status(400).json({
+        success: false,
+        error: 'question es requerido'
+      });
+    }
+
+    const expedition = await Expedition.findByPortalToken(token);
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    const context = {
+      operationType: expedition.operationType,
+      status: expedition.status
+    };
+
+    const result = await aiService.detectAndRespondFAQ(question, context);
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    logger.error('Error detecting FAQ:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al procesar pregunta'
+    });
+  }
+};
+
+/**
+ * Generar resumen del expediente para cliente
+ * GET /api/portal/:token/ai/summary
+ */
+const aiGetSummary = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { detailLevel, includeCosts } = req.query;
+
+    const expedition = await Expedition.findByPortalToken(token);
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    const options = {
+      detailLevel: detailLevel || 'normal',
+      includeCosts: includeCosts === 'true',
+      language: 'es'
+    };
+
+    const result = await aiService.generateClientExpeditionSummary(expedition, options);
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    logger.error('Error generating summary:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al generar resumen'
+    });
+  }
+};
+
+/**
+ * Generar notificación inteligente
+ * POST /api/portal/:token/ai/notification
+ */
+const aiGenerateNotification = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { event, preferences } = req.body;
+
+    if (!event || !event.type) {
+      return res.status(400).json({
+        success: false,
+        error: 'event con type es requerido'
+      });
+    }
+
+    const expedition = await Expedition.findByPortalToken(token);
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    const result = await aiService.generateSmartNotification(
+      event,
+      expedition,
+      preferences || {}
+    );
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    logger.error('Error generating notification:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al generar notificación'
+    });
+  }
+};
+
+/**
+ * Análisis completo del portal para el cliente
+ * GET /api/portal/:token/ai/full-analysis
+ */
+const aiFullAnalysis = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const expedition = await Expedition.findByPortalToken(token);
+
+    if (!expedition) {
+      return res.status(404).json({
+        success: false,
+        error: 'Expediente no encontrado'
+      });
+    }
+
+    // Obtener perfil del cliente (simplificado)
+    const clientProfile = {
+      companyName: expedition.client?.companyName,
+      email: expedition.client?.contact?.email,
+      operationHistory: 1
+    };
+
+    const result = await aiService.fullPortalAnalysis(
+      expedition,
+      clientProfile,
+      { detailLevel: 'normal', language: 'es' }
+    );
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    logger.error('Error in full portal analysis:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al realizar análisis'
+    });
+  }
+};
+
 module.exports = {
   getByToken,
   getChatHistory,
   sendMessage,
   uploadDocument,
   getDocument,
-  getUnreadCount
+  getUnreadCount,
+  // AI endpoints
+  aiEnhancedChat,
+  aiDetectFAQ,
+  aiGetSummary,
+  aiGenerateNotification,
+  aiFullAnalysis
 };

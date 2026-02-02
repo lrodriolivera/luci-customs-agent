@@ -4,6 +4,7 @@
  */
 const { Guarantee } = require('../models');
 const guaranteeService = require('../services/guaranteeService');
+const aiService = require('../services/aiService');
 const logger = require('../config/logger');
 
 /**
@@ -730,6 +731,301 @@ exports.generateReport = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error al generar informe',
+      error: error.message
+    });
+  }
+};
+
+// ===========================================
+// AI ENDPOINTS - LUCI Integration
+// ===========================================
+
+/**
+ * Analizar necesidades de garantia para una operacion
+ * POST /api/guarantees/ai/analyze-needs
+ */
+exports.aiAnalyzeNeeds = async (req, res) => {
+  try {
+    const { operation } = req.body;
+
+    if (!operation) {
+      return res.status(400).json({
+        success: false,
+        message: 'operation es requerido'
+      });
+    }
+
+    // Obtener garantias existentes del usuario
+    const existingGuarantees = await Guarantee.find({
+      owner: req.user._id,
+      status: 'active'
+    }).select('reference name type usage totalAmount usedAmount availableAmount validUntil');
+
+    const analysis = await aiService.analyzeGuaranteeNeeds(operation, existingGuarantees);
+
+    res.json({
+      success: true,
+      data: analysis
+    });
+
+  } catch (error) {
+    logger.error('Error analyzing guarantee needs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al analizar necesidades de garantia',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Recomendar tipo de garantia optimo
+ * POST /api/guarantees/ai/recommend-type
+ */
+exports.aiRecommendType = async (req, res) => {
+  try {
+    const { operatorProfile, operationDetails } = req.body;
+
+    if (!operationDetails) {
+      return res.status(400).json({
+        success: false,
+        message: 'operationDetails es requerido'
+      });
+    }
+
+    // Construir perfil del operador si no se proporciona
+    const profile = operatorProfile || {
+      oeaStatus: req.user.oeaStatus || 'none',
+      operationVolume: req.user.operationVolume || 'medium',
+      historicalCompliance: req.user.historicalCompliance || 95
+    };
+
+    const recommendation = await aiService.recommendGuaranteeType(profile, operationDetails);
+
+    res.json({
+      success: true,
+      data: recommendation
+    });
+
+  } catch (error) {
+    logger.error('Error recommending guarantee type:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al recomendar tipo de garantia',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Optimizar uso de garantias existentes
+ * POST /api/guarantees/ai/optimize
+ */
+exports.aiOptimize = async (req, res) => {
+  try {
+    const { upcomingOperations } = req.body;
+
+    // Obtener garantias activas del usuario
+    const guarantees = await Guarantee.find({
+      owner: req.user._id,
+      status: { $in: ['active', 'draft'] }
+    }).select('reference name type usage totalAmount usedAmount availableAmount validUntil utilizationRate linkedExpeditions');
+
+    if (guarantees.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          currentStatus: {
+            totalGuarantees: 0,
+            message: 'No hay garantias activas para optimizar'
+          },
+          recommendation: 'Considere crear garantias antes de realizar operaciones aduaneras'
+        }
+      });
+    }
+
+    const optimization = await aiService.optimizeGuaranteeUsage(guarantees, upcomingOperations || []);
+
+    res.json({
+      success: true,
+      data: optimization
+    });
+
+  } catch (error) {
+    logger.error('Error optimizing guarantees:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al optimizar garantias',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Calcular importe optimo de garantia con IA
+ * POST /api/guarantees/ai/smart-calculate
+ */
+exports.aiSmartCalculate = async (req, res) => {
+  try {
+    const { operation } = req.body;
+
+    if (!operation) {
+      return res.status(400).json({
+        success: false,
+        message: 'operation es requerido'
+      });
+    }
+
+    const calculation = await aiService.calculateSmartGuaranteeAmount(operation);
+
+    res.json({
+      success: true,
+      data: calculation
+    });
+
+  } catch (error) {
+    logger.error('Error calculating smart guarantee:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al calcular garantia inteligente',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Analisis completo de garantias
+ * POST /api/guarantees/ai/full-analysis
+ */
+exports.aiFullAnalysis = async (req, res) => {
+  try {
+    const { operation, upcomingOperations } = req.body;
+
+    // Obtener garantias del usuario
+    const guarantees = await Guarantee.find({
+      owner: req.user._id,
+      status: { $in: ['active', 'draft'] }
+    });
+
+    // Perfil del operador
+    const operatorProfile = {
+      oeaStatus: req.user.oeaStatus || 'none',
+      operationVolume: req.user.operationVolume || 'medium',
+      historicalCompliance: req.user.historicalCompliance || 95
+    };
+
+    // Ejecutar analisis en paralelo
+    const [needsAnalysis, typeRecommendation, optimization, smartCalculation] = await Promise.all([
+      operation ? aiService.analyzeGuaranteeNeeds(operation, guarantees) : null,
+      operation ? aiService.recommendGuaranteeType(operatorProfile, operation) : null,
+      guarantees.length > 0 ? aiService.optimizeGuaranteeUsage(guarantees, upcomingOperations || []) : null,
+      operation ? aiService.calculateSmartGuaranteeAmount(operation) : null
+    ]);
+
+    // Calcular score de preparacion
+    let readinessScore = 0;
+    let factors = [];
+
+    if (guarantees.length > 0) {
+      const activeGuarantees = guarantees.filter(g => g.status === 'active');
+      const totalAvailable = activeGuarantees.reduce((sum, g) => sum + (g.availableAmount || 0), 0);
+
+      if (activeGuarantees.length > 0) {
+        readinessScore += 30;
+        factors.push('Tiene garantias activas');
+      }
+
+      if (totalAvailable > 50000) {
+        readinessScore += 20;
+        factors.push('Disponibilidad suficiente');
+      }
+
+      if (optimization?.utilizationAnalysis?.averageUtilization < 80) {
+        readinessScore += 15;
+        factors.push('Margen de utilizacion disponible');
+      }
+    }
+
+    if (needsAnalysis?.existingCoverage?.sufficient) {
+      readinessScore += 35;
+      factors.push('Cobertura existente suficiente');
+    }
+
+    // Generar proximos pasos
+    const nextSteps = [];
+
+    if (needsAnalysis && !needsAnalysis.existingCoverage?.sufficient) {
+      nextSteps.push({
+        priority: 1,
+        action: 'Aumentar cobertura de garantia',
+        details: needsAnalysis.recommendation
+      });
+    }
+
+    if (optimization?.optimizations?.length > 0) {
+      nextSteps.push({
+        priority: 2,
+        action: 'Aplicar optimizaciones sugeridas',
+        details: `${optimization.optimizations.length} optimizaciones identificadas`
+      });
+    }
+
+    if (typeRecommendation?.recommendedType) {
+      nextSteps.push({
+        priority: 3,
+        action: `Considerar ${typeRecommendation.recommendedType}`,
+        details: typeRecommendation.reasoning
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        needsAnalysis,
+        typeRecommendation,
+        optimization,
+        smartCalculation,
+        summary: {
+          readinessScore,
+          factors,
+          totalActiveGuarantees: guarantees.filter(g => g.status === 'active').length,
+          totalAvailableAmount: guarantees
+            .filter(g => g.status === 'active')
+            .reduce((sum, g) => sum + (g.availableAmount || 0), 0)
+        },
+        nextSteps: nextSteps.sort((a, b) => a.priority - b.priority)
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error in full guarantee analysis:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al realizar analisis completo',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Obtener ultimo analisis guardado
+ * GET /api/guarantees/ai/analysis
+ */
+exports.getAiAnalysis = async (req, res) => {
+  try {
+    // Por ahora retornamos null ya que el analisis no se guarda
+    // En el futuro se podria guardar en una coleccion aparte
+    res.json({
+      success: true,
+      data: null,
+      message: 'Los analisis de garantias se generan bajo demanda'
+    });
+
+  } catch (error) {
+    logger.error('Error getting AI analysis:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener analisis',
       error: error.message
     });
   }

@@ -15,7 +15,13 @@ import {
   BellAlertIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  CalculatorIcon
+  CalculatorIcon,
+  SparklesIcon,
+  LightBulbIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  CurrencyEuroIcon,
+  ScaleIcon
 } from '@heroicons/react/24/outline'
 
 // Configuracion de tipos de garantia
@@ -58,6 +64,7 @@ export default function GuaranteeManager() {
   const [loading, setLoading] = useState(true)
   const [showNewForm, setShowNewForm] = useState(false)
   const [showCalculator, setShowCalculator] = useState(false)
+  const [showAIPanel, setShowAIPanel] = useState(false)
   const [selectedGuarantee, setSelectedGuarantee] = useState(null)
   const [filters, setFilters] = useState({
     status: '',
@@ -166,6 +173,13 @@ export default function GuaranteeManager() {
           <p className="text-gray-600">CGU, avales, depositos y seguros de caucion</p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => setShowAIPanel(true)}
+            className="btn-secondary flex items-center gap-2 bg-gradient-to-r from-luci-light to-purple-50 border-luci/30 text-luci hover:bg-luci-light"
+          >
+            <SparklesIcon className="h-5 w-5" />
+            Analisis IA
+          </button>
           <button
             onClick={() => setShowCalculator(true)}
             className="btn-secondary flex items-center gap-2"
@@ -401,6 +415,15 @@ export default function GuaranteeManager() {
         <GuaranteeCalculator onClose={() => setShowCalculator(false)} />
       )}
 
+      {/* AI Analysis Panel */}
+      {showAIPanel && (
+        <GuaranteeAIPanel
+          guarantees={guarantees}
+          stats={stats}
+          onClose={() => setShowAIPanel(false)}
+        />
+      )}
+
       {/* Detail Modal */}
       {selectedGuarantee && (
         <GuaranteeDetail
@@ -413,7 +436,550 @@ export default function GuaranteeManager() {
   )
 }
 
-// Formulario de nueva garantia
+// AI Analysis Panel Component
+function GuaranteeAIPanel({ guarantees, stats, onClose }) {
+  const [activeTab, setActiveTab] = useState('analyze')
+  const [loading, setLoading] = useState(false)
+  const [analysisResult, setAnalysisResult] = useState(null)
+  const [optimizeResult, setOptimizeResult] = useState(null)
+  const [recommendResult, setRecommendResult] = useState(null)
+
+  // Form for analysis
+  const [operationData, setOperationData] = useState({
+    operationType: 'import',
+    regime: '40',
+    customsValue: '',
+    dutyAmount: '',
+    vatAmount: '',
+    origin: '',
+    goodsDescription: ''
+  })
+
+  const handleAnalyzeNeeds = async () => {
+    if (!operationData.customsValue) {
+      toast.error('Ingrese el valor de la operacion')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await guaranteesAPI.aiAnalyzeNeeds({
+        ...operationData,
+        customsValue: parseFloat(operationData.customsValue),
+        dutyAmount: parseFloat(operationData.dutyAmount) || 0,
+        vatAmount: parseFloat(operationData.vatAmount) || 0,
+        existingGuarantees: guarantees.filter(g => g.status === 'active')
+      })
+
+      if (response.data.success) {
+        setAnalysisResult(response.data.data)
+        toast.success('Analisis completado')
+      }
+    } catch (error) {
+      toast.error('Error al analizar necesidades')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRecommendType = async () => {
+    setLoading(true)
+    try {
+      const response = await guaranteesAPI.aiRecommendType({
+        operationProfile: {
+          averageMonthlyOperations: 50,
+          averageValue: parseFloat(operationData.customsValue) || 100000,
+          mainRegimes: ['40', '42'],
+          hasOEA: false
+        },
+        existingGuarantees: guarantees
+      })
+
+      if (response.data.success) {
+        setRecommendResult(response.data.data)
+        toast.success('Recomendacion generada')
+      }
+    } catch (error) {
+      toast.error('Error al generar recomendacion')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleOptimize = async () => {
+    setLoading(true)
+    try {
+      const response = await guaranteesAPI.aiOptimize({
+        guarantees: guarantees,
+        operationHistory: [],
+        projectedOperations: []
+      })
+
+      if (response.data.success) {
+        setOptimizeResult(response.data.data)
+        toast.success('Optimizacion analizada')
+      }
+    } catch (error) {
+      toast.error('Error al optimizar')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFullAnalysis = async () => {
+    setLoading(true)
+    try {
+      const response = await guaranteesAPI.aiFullAnalysis({
+        operation: operationData,
+        existingGuarantees: guarantees,
+        operatorProfile: {}
+      })
+
+      if (response.data.success) {
+        setAnalysisResult(response.data.data)
+        toast.success('Analisis completo finalizado')
+      }
+    } catch (error) {
+      toast.error('Error en analisis completo')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="sticky top-0 bg-gradient-to-r from-luci-light to-purple-50 border-b px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <SparklesIcon className="h-6 w-6 text-luci" />
+            <h2 className="text-xl font-bold text-gray-900">Analisis IA de Garantias</h2>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <XCircleIcon className="h-6 w-6" />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b px-6">
+          <div className="flex gap-4">
+            {[
+              { key: 'analyze', label: 'Analizar Necesidades', icon: ScaleIcon },
+              { key: 'recommend', label: 'Recomendar Tipo', icon: LightBulbIcon },
+              { key: 'optimize', label: 'Optimizar Uso', icon: ChartBarIcon }
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
+                  activeTab === tab.key
+                    ? 'border-luci text-luci'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {/* Analyze Needs Tab */}
+          {activeTab === 'analyze' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Tipo de Operacion</label>
+                  <select
+                    value={operationData.operationType}
+                    onChange={(e) => setOperationData({ ...operationData, operationType: e.target.value })}
+                    className="input"
+                  >
+                    <option value="import">Importacion</option>
+                    <option value="export">Exportacion</option>
+                    <option value="transit">Transito</option>
+                    <option value="warehouse">Deposito Aduanero</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Regimen</label>
+                  <select
+                    value={operationData.regime}
+                    onChange={(e) => setOperationData({ ...operationData, regime: e.target.value })}
+                    className="input"
+                  >
+                    <option value="40">40 - Despacho a libre practica</option>
+                    <option value="42">42 - Despacho a LP + exencion IVA</option>
+                    <option value="51">51 - Perfeccionamiento activo</option>
+                    <option value="53">53 - Importacion temporal</option>
+                    <option value="71">71 - Deposito aduanero</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Valor Aduanero (EUR) *</label>
+                  <input
+                    type="number"
+                    value={operationData.customsValue}
+                    onChange={(e) => setOperationData({ ...operationData, customsValue: e.target.value })}
+                    className="input"
+                    placeholder="100000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Aranceles Estimados (EUR)</label>
+                  <input
+                    type="number"
+                    value={operationData.dutyAmount}
+                    onChange={(e) => setOperationData({ ...operationData, dutyAmount: e.target.value })}
+                    className="input"
+                    placeholder="5000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">IVA Estimado (EUR)</label>
+                  <input
+                    type="number"
+                    value={operationData.vatAmount}
+                    onChange={(e) => setOperationData({ ...operationData, vatAmount: e.target.value })}
+                    className="input"
+                    placeholder="22050"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Pais Origen</label>
+                  <input
+                    type="text"
+                    value={operationData.origin}
+                    onChange={(e) => setOperationData({ ...operationData, origin: e.target.value })}
+                    className="input"
+                    placeholder="CN"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleAnalyzeNeeds}
+                  disabled={loading}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  {loading ? (
+                    <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <SparklesIcon className="h-5 w-5" />
+                  )}
+                  Analizar Necesidades
+                </button>
+                <button
+                  onClick={handleFullAnalysis}
+                  disabled={loading}
+                  className="btn-secondary flex items-center gap-2"
+                >
+                  Analisis Completo
+                </button>
+              </div>
+
+              {/* Analysis Result */}
+              {analysisResult && (
+                <div className="space-y-4 mt-6">
+                  {/* Required Amount */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                    <h3 className="font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                      <CurrencyEuroIcon className="h-5 w-5" />
+                      Garantia Requerida
+                    </h3>
+                    <div className="text-3xl font-bold text-blue-700">
+                      {(analysisResult.requiredAmount || 0).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                    </div>
+                    {analysisResult.existingCoverage && (
+                      <div className="mt-3 text-sm">
+                        <span className={analysisResult.existingCoverage.sufficient ? 'text-green-600' : 'text-red-600'}>
+                          {analysisResult.existingCoverage.sufficient
+                            ? '✓ Cobertura suficiente con garantias existentes'
+                            : `✗ Deficit de ${(analysisResult.existingCoverage.shortfall || 0).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}`
+                          }
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Recommendation */}
+                  {analysisResult.recommendation && (
+                    <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                      <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
+                        <LightBulbIcon className="h-5 w-5" />
+                        Recomendacion
+                      </h4>
+                      <p className="text-yellow-700">{analysisResult.recommendation}</p>
+                    </div>
+                  )}
+
+                  {/* Optimizations */}
+                  {analysisResult.optimizations?.length > 0 && (
+                    <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                      <h4 className="font-medium text-green-800 mb-2">Optimizaciones Sugeridas</h4>
+                      <ul className="space-y-2">
+                        {analysisResult.optimizations.map((opt, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-green-700">
+                            <CheckCircleIcon className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <span className="font-medium">{opt.action}</span>
+                              {opt.impact && <span className="text-green-600 ml-2">({opt.impact})</span>}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Risks */}
+                  {analysisResult.risks?.length > 0 && (
+                    <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                      <h4 className="font-medium text-red-800 mb-2">Riesgos Identificados</h4>
+                      <ul className="space-y-2">
+                        {analysisResult.risks.map((risk, i) => (
+                          <li key={i} className="text-sm text-red-700">
+                            <span className="font-medium">{risk.description}</span>
+                            {risk.mitigation && <p className="text-red-600 text-xs mt-1">Mitigacion: {risk.mitigation}</p>}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Recommend Type Tab */}
+          {activeTab === 'recommend' && (
+            <div className="space-y-6">
+              <p className="text-gray-600">
+                Basado en tu perfil de operaciones y garantias existentes, LUCI te recomienda el tipo de garantia mas adecuado.
+              </p>
+
+              <button
+                onClick={handleRecommendType}
+                disabled={loading}
+                className="btn-primary flex items-center gap-2"
+              >
+                {loading ? (
+                  <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                ) : (
+                  <SparklesIcon className="h-5 w-5" />
+                )}
+                Generar Recomendacion
+              </button>
+
+              {recommendResult && (
+                <div className="space-y-4">
+                  {/* Main Recommendation */}
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
+                    <h3 className="font-semibold text-purple-900 mb-2">Tipo Recomendado</h3>
+                    <div className="text-2xl font-bold text-purple-700">
+                      {GUARANTEE_TYPES[recommendResult.recommendedType]?.label || recommendResult.recommendedType}
+                    </div>
+                    {recommendResult.reasoning && (
+                      <p className="mt-2 text-purple-600">{recommendResult.reasoning}</p>
+                    )}
+                  </div>
+
+                  {/* Alternatives */}
+                  {recommendResult.alternatives?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-3">Alternativas</h4>
+                      <div className="space-y-3">
+                        {recommendResult.alternatives.map((alt, i) => (
+                          <div key={i} className="bg-gray-50 rounded-lg p-4 border">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <span className="font-medium">{GUARANTEE_TYPES[alt.type]?.label || alt.type}</span>
+                                {alt.estimatedCost && (
+                                  <span className="text-gray-500 ml-2">~{alt.estimatedCost}</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-green-600 font-medium">Ventajas:</span>
+                                <ul className="list-disc list-inside text-gray-600">
+                                  {alt.pros?.map((p, j) => <li key={j}>{p}</li>)}
+                                </ul>
+                              </div>
+                              <div>
+                                <span className="text-red-600 font-medium">Desventajas:</span>
+                                <ul className="list-disc list-inside text-gray-600">
+                                  {alt.cons?.map((c, j) => <li key={j}>{c}</li>)}
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Implementation Plan */}
+                  {recommendResult.implementationPlan?.length > 0 && (
+                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                      <h4 className="font-medium text-blue-800 mb-3">Plan de Implementacion</h4>
+                      <ol className="space-y-2">
+                        {recommendResult.implementationPlan.map((step, i) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-sm font-medium">
+                              {i + 1}
+                            </span>
+                            <div className="text-sm">
+                              <span className="font-medium text-blue-900">{step.action}</span>
+                              {step.timeframe && <span className="text-blue-600 ml-2">({step.timeframe})</span>}
+                            </div>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Optimize Tab */}
+          {activeTab === 'optimize' && (
+            <div className="space-y-6">
+              <p className="text-gray-600">
+                Analiza el uso actual de tus garantias y obtiene sugerencias para optimizar su utilizacion.
+              </p>
+
+              <button
+                onClick={handleOptimize}
+                disabled={loading}
+                className="btn-primary flex items-center gap-2"
+              >
+                {loading ? (
+                  <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                ) : (
+                  <SparklesIcon className="h-5 w-5" />
+                )}
+                Analizar Optimizaciones
+              </button>
+
+              {optimizeResult && (
+                <div className="space-y-4">
+                  {/* Current Status */}
+                  {optimizeResult.currentStatus && (
+                    <div className="bg-gray-50 rounded-lg p-4 border">
+                      <h4 className="font-medium mb-3">Estado Actual</h4>
+                      <div className="grid grid-cols-4 gap-4 text-center">
+                        <div>
+                          <p className="text-2xl font-bold text-gray-900">{optimizeResult.currentStatus.totalGuarantees || 0}</p>
+                          <p className="text-xs text-gray-500">Garantias</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-blue-600">
+                            {(optimizeResult.currentStatus.totalAmount || 0).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                          </p>
+                          <p className="text-xs text-gray-500">Total</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-orange-600">
+                            {(optimizeResult.currentStatus.totalUsed || 0).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                          </p>
+                          <p className="text-xs text-gray-500">Usado</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-green-600">
+                            {(optimizeResult.currentStatus.totalAvailable || 0).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                          </p>
+                          <p className="text-xs text-gray-500">Disponible</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Utilization Analysis */}
+                  {optimizeResult.utilizationAnalysis && (
+                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                      <h4 className="font-medium text-blue-800 mb-2">Analisis de Utilizacion</h4>
+                      <p className="text-blue-700">
+                        Utilizacion media: <span className="font-bold">{optimizeResult.utilizationAnalysis.averageUtilization || 0}%</span>
+                      </p>
+                      {optimizeResult.utilizationAnalysis.underutilized > 0 && (
+                        <p className="text-yellow-600 text-sm mt-1">
+                          {optimizeResult.utilizationAnalysis.underutilized} garantia(s) infrautilizada(s)
+                        </p>
+                      )}
+                      {optimizeResult.utilizationAnalysis.nearLimit > 0 && (
+                        <p className="text-red-600 text-sm mt-1">
+                          {optimizeResult.utilizationAnalysis.nearLimit} garantia(s) cerca del limite
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Optimizations */}
+                  {optimizeResult.optimizations?.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-3">Optimizaciones Sugeridas</h4>
+                      <div className="space-y-3">
+                        {optimizeResult.optimizations.map((opt, i) => (
+                          <div key={i} className="bg-green-50 rounded-lg p-4 border border-green-200">
+                            <div className="flex items-start gap-3">
+                              <LightBulbIcon className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <span className="font-medium text-green-800">{opt.type}</span>
+                                <p className="text-green-700 text-sm">{opt.description}</p>
+                                {opt.impact && (
+                                  <p className="text-green-600 text-xs mt-1">Impacto: {opt.impact}</p>
+                                )}
+                                {opt.action && (
+                                  <button className="mt-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">
+                                    {opt.action}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Plan */}
+                  {optimizeResult.actionPlan?.length > 0 && (
+                    <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                      <h4 className="font-medium text-purple-800 mb-3">Plan de Accion</h4>
+                      <ol className="space-y-2">
+                        {optimizeResult.actionPlan.map((action, i) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                              action.priority === 1 ? 'bg-red-200 text-red-800' :
+                              action.priority === 2 ? 'bg-yellow-200 text-yellow-800' :
+                              'bg-gray-200 text-gray-800'
+                            }`}>
+                              {action.priority}
+                            </span>
+                            <div>
+                              <span className="font-medium text-purple-900">{action.action}</span>
+                              {action.benefit && <p className="text-purple-600 text-sm">{action.benefit}</p>}
+                            </div>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Formulario de nueva garantia (sin cambios)
 function GuaranteeForm({ onClose, onCreated }) {
   const [formData, setFormData] = useState({
     name: '',
@@ -639,7 +1205,7 @@ function GuaranteeForm({ onClose, onCreated }) {
   )
 }
 
-// Calculadora de garantia requerida
+// Calculadora de garantia requerida (sin cambios mayores)
 function GuaranteeCalculator({ onClose }) {
   const [params, setParams] = useState({
     regime: 'transit',
@@ -651,7 +1217,9 @@ function GuaranteeCalculator({ onClose }) {
     oeaStatus: ''
   })
   const [result, setResult] = useState(null)
+  const [aiResult, setAiResult] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
 
   const regimeOptions = {
     transit: ['T1', 'T2', 'TIR'],
@@ -682,9 +1250,33 @@ function GuaranteeCalculator({ onClose }) {
     }
   }
 
+  const handleAICalculate = async () => {
+    setAiLoading(true)
+    try {
+      const response = await guaranteesAPI.aiSmartCalculate({
+        regime: params.regime,
+        subType: params.subType,
+        customsValue: parseFloat(params.customsValue) || 0,
+        dutyAmount: parseFloat(params.dutyAmount) || 0,
+        vatAmount: parseFloat(params.vatAmount) || 0,
+        duration: parseInt(params.duration) || 1,
+        oeaStatus: params.oeaStatus
+      })
+
+      if (response.data.success) {
+        setAiResult(response.data.data)
+        toast.success('Calculo inteligente completado')
+      }
+    } catch (error) {
+      toast.error('Error en calculo inteligente')
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-lg w-full">
+      <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div className="border-b px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-bold">Calculadora de Garantia</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -778,17 +1370,31 @@ function GuaranteeCalculator({ onClose }) {
             </select>
           </div>
 
-          <button
-            onClick={handleCalculate}
-            disabled={loading}
-            className="btn-primary w-full"
-          >
-            {loading ? 'Calculando...' : 'Calcular Garantia Requerida'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleCalculate}
+              disabled={loading}
+              className="btn-secondary flex-1"
+            >
+              {loading ? 'Calculando...' : 'Calculo Estandar'}
+            </button>
+            <button
+              onClick={handleAICalculate}
+              disabled={aiLoading}
+              className="btn-primary flex-1 flex items-center justify-center gap-2"
+            >
+              {aiLoading ? (
+                <ArrowPathIcon className="h-5 w-5 animate-spin" />
+              ) : (
+                <SparklesIcon className="h-5 w-5" />
+              )}
+              Calculo Inteligente
+            </button>
+          </div>
 
           {result && (
             <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 mb-2">Resultado</h3>
+              <h3 className="font-semibold text-blue-900 mb-2">Resultado Estandar</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Base de calculo:</span>
@@ -804,7 +1410,63 @@ function GuaranteeCalculator({ onClose }) {
                   <span>Garantia Requerida:</span>
                   <span className="text-blue-700">{result.finalAmount?.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
                 </div>
-                <p className="text-xs text-gray-600 mt-2">{result.description}</p>
+              </div>
+            </div>
+          )}
+
+          {aiResult && (
+            <div className="mt-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
+              <h3 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
+                <SparklesIcon className="h-5 w-5" />
+                Resultado Inteligente
+              </h3>
+              <div className="space-y-3 text-sm">
+                {aiResult.calculation && (
+                  <>
+                    <div className="flex justify-between">
+                      <span>Importe base:</span>
+                      <span className="font-medium">{aiResult.calculation.baseAmount?.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold border-t pt-2">
+                      <span>Importe Ajustado:</span>
+                      <span className="text-purple-700">{aiResult.calculation.adjustedAmount?.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
+                    </div>
+                  </>
+                )}
+
+                {aiResult.calculation?.reductions?.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs text-purple-600 font-medium">Reducciones aplicadas:</p>
+                    <ul className="text-xs text-purple-700 list-disc list-inside">
+                      {aiResult.calculation.reductions.map((r, i) => (
+                        <li key={i}>{r}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {aiResult.specialConsiderations?.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-purple-200">
+                    <p className="text-xs text-purple-600 font-medium">Consideraciones especiales:</p>
+                    <ul className="text-xs text-purple-700 space-y-1">
+                      {aiResult.specialConsiderations.map((c, i) => (
+                        <li key={i}><span className="font-medium">{c.factor}:</span> {c.impact}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {aiResult.alternatives?.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-purple-200">
+                    <p className="text-xs text-purple-600 font-medium">Alternativas:</p>
+                    {aiResult.alternatives.map((alt, i) => (
+                      <div key={i} className="text-xs bg-white/50 rounded p-2 mt-1">
+                        <span className="font-medium">{alt.scenario}:</span> {alt.amount?.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                        {alt.benefit && <span className="text-green-600 ml-1">({alt.benefit})</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -814,7 +1476,7 @@ function GuaranteeCalculator({ onClose }) {
   )
 }
 
-// Detalle de garantia
+// Detalle de garantia (sin cambios)
 function GuaranteeDetail({ guarantee, onClose, onUpdated }) {
   const [movements, setMovements] = useState([])
   const [loadingMovements, setLoadingMovements] = useState(true)

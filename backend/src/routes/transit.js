@@ -65,4 +65,26 @@ router.post('/:id/complete', transitController.complete);
 // Iniciar procedimiento de busqueda (IE118)
 router.post('/:id/enquiry', transitController.initiateEnquiry);
 
+// ===========================================
+// AI ENDPOINTS - LUCI Integration
+// ===========================================
+
+// Auto-completar datos de tránsito desde expediente
+router.post('/ai/auto-complete', transitController.aiAutoComplete);
+
+// Validar y optimizar ruta de tránsito
+router.post('/:id/ai/validate-route', transitController.aiValidateRoute);
+
+// Predecir incidencias potenciales
+router.post('/:id/ai/predict-incidents', transitController.aiPredictIncidents);
+
+// Sugerir garantía óptima para tránsito
+router.post('/:id/ai/suggest-guarantee', transitController.aiSuggestGuarantee);
+
+// Análisis completo de tránsito
+router.post('/:id/ai/full-analysis', transitController.aiFullAnalysis);
+
+// Aplicar sugerencia de auto-completado
+router.post('/:id/ai/apply-suggestion', transitController.aiApplySuggestion);
+
 module.exports = router;

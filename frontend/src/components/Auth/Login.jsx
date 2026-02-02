@@ -43,7 +43,7 @@ export default function Login() {
   // Demo credentials helper
   const fillDemoCredentials = () => {
     setFormData({
-      email: 'admin@stocklogistic.com',
+      email: 'admin@stocklogistic.es',
       password: 'admin123'
     })
   }
@@ -128,7 +128,7 @@ export default function Login() {
               onClick={fillDemoCredentials}
               className="w-full mt-2 text-sm text-yellow-700 hover:text-yellow-900 underline"
             >
-              Usar: admin@stocklogistic.com / admin123
+              Usar: admin@stocklogistic.es / admin123
             </button>
           </div>
         </div>

@@ -42,10 +42,10 @@ export default function AEATStatusMonitor() {
       ])
 
       if (trackedRes.data.success) {
-        setTrackedDeclarations(trackedRes.data.data)
+        setTrackedDeclarations(trackedRes.data.data?.declarations || [])
       }
       if (alertsRes.data.success) {
-        setAlerts(alertsRes.data.data)
+        setAlerts(alertsRes.data.data?.alerts || [])
       }
       if (statusRes.data.success) {
         setServiceStatus(statusRes.data.data)

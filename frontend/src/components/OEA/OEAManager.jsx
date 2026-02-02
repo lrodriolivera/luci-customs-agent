@@ -32,7 +32,9 @@ const STATUS_CONFIG = {
   suspended: { label: 'Suspendido', class: 'bg-orange-100 text-orange-800' },
   revoked: { label: 'Revocado', class: 'bg-red-100 text-red-800' },
   expired: { label: 'Expirado', class: 'bg-gray-100 text-gray-800' },
-  renewal_pending: { label: 'Renovacion Pendiente', class: 'bg-indigo-100 text-indigo-800' }
+  renewal_pending: { label: 'Renovacion Pendiente', class: 'bg-indigo-100 text-indigo-800' },
+  reevaluation: { label: 'En Reevaluacion', class: 'bg-purple-100 text-purple-800' },
+  incident: { label: 'Con Incidencias', class: 'bg-pink-100 text-pink-800' }
 }
 
 export default function OEAManager() {
@@ -97,7 +99,12 @@ export default function OEAManager() {
         oeaAPI.getSimplifications(),
         oeaAPI.getMutualRecognition()
       ])
-      setBenefits(benefitsRes.data.data || [])
+      // Flatten benefits object into array
+      const benefitsData = benefitsRes.data.data || {}
+      const flatBenefits = Object.entries(benefitsData).flatMap(([type, items]) =>
+        (Array.isArray(items) ? items : []).map(item => ({ ...item, oeaType: type }))
+      )
+      setBenefits(flatBenefits)
       setSimplifications(simplificationsRes.data.data || [])
       setMutualRecognition(mutualRes.data.data || [])
     } catch (err) {
@@ -531,7 +538,7 @@ export default function OEAManager() {
         <>
           {/* Filtros */}
           <div className="flex gap-2 flex-wrap">
-            {['all', 'approved', 'under_review', 'pending', 'suspended'].map((f) => (
+            {['all', 'approved', 'under_review', 'pending', 'suspended', 'reevaluation', 'incident'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -544,7 +551,9 @@ export default function OEAManager() {
                 {f === 'all' ? 'Todos' :
                  f === 'approved' ? 'Aprobados' :
                  f === 'under_review' ? 'En Revision' :
-                 f === 'pending' ? 'Pendientes' : 'Suspendidos'}
+                 f === 'pending' ? 'Pendientes' :
+                 f === 'suspended' ? 'Suspendidos' :
+                 f === 'reevaluation' ? 'Reevaluacion' : 'Incidencias'}
               </button>
             ))}
           </div>

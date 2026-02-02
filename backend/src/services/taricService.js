@@ -6,10 +6,18 @@
 const axios = require('axios');
 const logger = require('../config/logger');
 const TaricCode = require('../models/TaricCode');
+const TaricAICache = require('../models/TaricAICache');
+const TaricSearchHistory = require('../models/TaricSearchHistory');
 
 // URLs de la API TARIC de la UE
 const TARIC_CONSULTATION_URL = 'https://ec.europa.eu/taxation_customs/dds2/taric/taric_consultation.jsp';
 const TARIC_MEASURES_URL = 'https://ec.europa.eu/taxation_customs/dds2/taric/measures.jsp';
+
+// API Access2Markets (REST API moderna)
+const ACCESS2MARKETS_API = 'https://trade.ec.europa.eu/access-to-markets/api/v1';
+
+// API TARIC3 (nueva API de la UE)
+const TARIC3_API = 'https://ec.europa.eu/taxation_customs/tedb/rest-api/v1';
 
 // Cache de tipos de IVA por capitulo en Espana
 const VAT_RATES_ES = {
@@ -639,20 +647,223 @@ class TaricService {
     return results.sort((a, b) => b.confidence - a.confidence).slice(0, limit);
   }
 
-  async _searchTaricAPI(query, language) {
-    // La API de consulta TARIC de la UE es principalmente via web
-    // Para integracion real, se necesitaria web scraping o acceso a datos TARIC en formato XML/JSON
-    // Por ahora, retornamos vacio y confiamos en datos locales
-    return [];
+  /**
+   * Buscar en la API Access2Markets de la UE
+   */
+  async _searchTaricAPI(query, language = 'en') {
+    try {
+      // Intentar con Access2Markets API
+      const searchUrl = `${ACCESS2MARKETS_API}/nomenclatures/taric/search`;
+
+      const response = await axios.get(searchUrl, {
+        params: {
+          q: query,
+          lang: language === 'es' ? 'es' : 'en',
+          limit: 20
+        },
+        timeout: 10000,
+        headers: {
+          'Accept': 'application/json',
+          'Accept-Language': language
+        }
+      });
+
+      if (response.data && Array.isArray(response.data)) {
+        return response.data.map(item => ({
+          code: item.code || item.goodsCode,
+          description: {
+            es: item.description_es || item.description,
+            en: item.description_en || item.description
+          },
+          duties: item.duties || { thirdCountry: 0 },
+          source: 'eu_api'
+        }));
+      }
+
+      return [];
+
+    } catch (error) {
+      // API puede no estar disponible, usar fallback
+      logger.debug('API Access2Markets no disponible:', error.message);
+
+      // Intentar TARIC3 API como fallback
+      try {
+        return await this._searchTaric3API(query, language);
+      } catch (fallbackError) {
+        logger.debug('TARIC3 API tampoco disponible:', fallbackError.message);
+        return [];
+      }
+    }
   }
 
+  /**
+   * Buscar en TARIC3 API (fallback)
+   */
+  async _searchTaric3API(query, language) {
+    try {
+      const response = await axios.get(`${TARIC3_API}/goods/search`, {
+        params: { q: query, lang: language },
+        timeout: 8000
+      });
+
+      if (response.data && response.data.results) {
+        return response.data.results.map(item => ({
+          code: item.goodsNomenclatureItemId,
+          description: { es: item.description, en: item.descriptionEn },
+          source: 'taric3_api'
+        }));
+      }
+      return [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  /**
+   * Obtener informacion de codigo desde API de la UE
+   */
   async _getCodeFromAPI(code) {
-    // Similar al metodo anterior, la API TARIC no tiene endpoint REST publico
-    // En produccion se podria:
-    // 1. Web scraping de ec.europa.eu/taxation_customs/dds2/taric
-    // 2. Suscripcion a datos TARIC en XML
-    // 3. Uso de proveedores terceros
+    const normalizedCode = this._normalizeCode(code);
+
+    try {
+      // Intentar Access2Markets API
+      const response = await axios.get(`${ACCESS2MARKETS_API}/nomenclatures/taric/${normalizedCode}`, {
+        timeout: 10000,
+        headers: {
+          'Accept': 'application/json',
+          'Accept-Language': 'es'
+        }
+      });
+
+      if (response.data) {
+        const data = response.data;
+        return {
+          code: normalizedCode,
+          description: {
+            es: data.description_es || data.description,
+            en: data.description_en || data.description
+          },
+          breakdown: this._parseCodeBreakdown(normalizedCode),
+          duties: {
+            thirdCountry: data.conventionalRate || data.dutyRate || 0
+          },
+          vat: { applicable: 21 },
+          measures: data.measures || [],
+          source: 'eu_api'
+        };
+      }
+
+    } catch (error) {
+      logger.debug(`API UE no disponible para codigo ${code}:`, error.message);
+    }
+
+    // Intentar TARIC3 como fallback
+    try {
+      const response = await axios.get(`${TARIC3_API}/commodities/${normalizedCode}`, {
+        timeout: 8000
+      });
+
+      if (response.data) {
+        return {
+          code: normalizedCode,
+          description: {
+            es: response.data.description,
+            en: response.data.descriptionEn
+          },
+          breakdown: this._parseCodeBreakdown(normalizedCode),
+          duties: { thirdCountry: response.data.thirdCountryDuty || 0 },
+          vat: { applicable: 21 },
+          source: 'taric3_api'
+        };
+      }
+    } catch (error) {
+      logger.debug(`TARIC3 API no disponible para codigo ${code}`);
+    }
+
     return null;
+  }
+
+  /**
+   * Guardar busqueda en historial
+   */
+  async recordSearch(params) {
+    const { userId, tenantId, code, searchType, found, source, description, responseTime, resultSummary } = params;
+
+    try {
+      await TaricSearchHistory.create({
+        userId,
+        tenantId,
+        code,
+        normalizedCode: this._normalizeCode(code),
+        searchType: searchType || 'code_lookup',
+        found: found || false,
+        source: source || 'not_found',
+        description,
+        responseTime,
+        resultSummary
+      });
+    } catch (error) {
+      logger.warn('Error guardando historial de busqueda:', error.message);
+    }
+  }
+
+  /**
+   * Obtener historial de busquedas de un usuario
+   */
+  async getUserSearchHistory(userId, limit = 10) {
+    try {
+      return await TaricSearchHistory.getRecentByUser(userId, limit);
+    } catch (error) {
+      logger.error('Error obteniendo historial:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Obtener codigos mas buscados
+   */
+  async getMostSearchedCodes(tenantId, days = 30, limit = 20) {
+    try {
+      return await TaricSearchHistory.getMostSearchedCodes(tenantId, days, limit);
+    } catch (error) {
+      logger.error('Error obteniendo codigos mas buscados:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Verificar cache de IA antes de llamar a Claude
+   */
+  async getFromAICache(code) {
+    try {
+      return await TaricAICache.getFromCache(code);
+    } catch (error) {
+      logger.warn('Error obteniendo de cache IA:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Guardar resultado de IA en cache
+   */
+  async saveToAICache(code, aiResponse, metadata = {}) {
+    try {
+      return await TaricAICache.saveToCache(code, aiResponse, metadata);
+    } catch (error) {
+      logger.warn('Error guardando en cache IA:', error.message);
+    }
+  }
+
+  /**
+   * Obtener estadisticas del cache de IA
+   */
+  async getAICacheStats() {
+    try {
+      return await TaricAICache.getCacheStats();
+    } catch (error) {
+      logger.error('Error obteniendo stats de cache:', error);
+      return null;
+    }
   }
 
   _checkPreferenceEligibility(origin, prefConfig) {

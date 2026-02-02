@@ -12,11 +12,516 @@ import {
   ClockIcon,
   CloudArrowUpIcon,
   ClipboardDocumentIcon,
-  LinkIcon
+  LinkIcon,
+  SparklesIcon,
+  XMarkIcon,
+  ArrowPathIcon,
+  ShieldExclamationIcon,
+  MagnifyingGlassIcon,
+  LightBulbIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
 import RequirementManager from '../Requirements/RequirementManager'
 import ChannelStatus from '../Channels/ChannelStatus'
 import ParaduaneroManager from '../Paraduanero/ParaduaneroManager'
+
+// ==================== Expedition AI Panel Component ====================
+function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
+  const [activeTab, setActiveTab] = useState('documents')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [results, setResults] = useState({
+    documents: null,
+    risk: null,
+    inconsistencies: null,
+    full: null
+  })
+
+  const tabs = [
+    { id: 'documents', label: 'Sugerir Documentos', icon: DocumentTextIcon },
+    { id: 'risk', label: 'Analizar Riesgo', icon: ShieldExclamationIcon },
+    { id: 'inconsistencies', label: 'Detectar Inconsistencias', icon: MagnifyingGlassIcon },
+    { id: 'full', label: 'Analisis Completo', icon: SparklesIcon }
+  ]
+
+  const runAnalysis = async (type) => {
+    try {
+      setLoading(true)
+      setError(null)
+      let res
+
+      switch (type) {
+        case 'documents':
+          res = await expeditionsAPI.aiSuggestDocuments(expedition._id)
+          break
+        case 'risk':
+          res = await expeditionsAPI.aiAnalyzeRisk(expedition._id)
+          break
+        case 'inconsistencies':
+          res = await expeditionsAPI.aiDetectInconsistencies(expedition._id)
+          break
+        case 'full':
+          res = await expeditionsAPI.aiFullAnalysis(expedition._id)
+          break
+      }
+
+      if (res.data.success) {
+        setResults(prev => ({ ...prev, [type]: res.data.data }))
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || `Error en analisis ${type}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const renderDocumentSuggestions = (data) => {
+    if (!data) return null
+    return (
+      <div className="space-y-4">
+        {/* Required Documents */}
+        {data.requiredDocuments && data.requiredDocuments.length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h4 className="font-medium text-red-800 mb-3 flex items-center gap-2">
+              <ExclamationTriangleIcon className="w-5 h-5" />
+              Documentos Obligatorios Faltantes
+            </h4>
+            <ul className="space-y-2">
+              {data.requiredDocuments.map((doc, idx) => (
+                <li key={idx} className="flex items-start gap-2 text-sm">
+                  <span className="text-red-600">•</span>
+                  <div>
+                    <p className="font-medium text-red-700">{doc.name || doc.type}</p>
+                    {doc.reason && <p className="text-red-600 text-xs">{doc.reason}</p>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Recommended Documents */}
+        {data.recommendedDocuments && data.recommendedDocuments.length > 0 && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h4 className="font-medium text-yellow-800 mb-3 flex items-center gap-2">
+              <LightBulbIcon className="w-5 h-5" />
+              Documentos Recomendados
+            </h4>
+            <ul className="space-y-2">
+              {data.recommendedDocuments.map((doc, idx) => (
+                <li key={idx} className="flex items-start gap-2 text-sm">
+                  <span className="text-yellow-600">•</span>
+                  <div>
+                    <p className="font-medium text-yellow-700">{doc.name || doc.type}</p>
+                    {doc.benefit && <p className="text-yellow-600 text-xs">{doc.benefit}</p>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Current Documents Status */}
+        {data.currentStatus && (
+          <div className="bg-white border rounded-lg p-4">
+            <h4 className="font-medium text-gray-700 mb-3">Estado Actual</h4>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <p className="text-2xl font-bold text-green-600">{data.currentStatus.complete || 0}</p>
+                <p className="text-xs text-gray-500">Completos</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-yellow-600">{data.currentStatus.pending || 0}</p>
+                <p className="text-xs text-gray-500">Pendientes</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-red-600">{data.currentStatus.missing || 0}</p>
+                <p className="text-xs text-gray-500">Faltantes</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {data.summary && <p className="text-sm text-gray-600">{data.summary}</p>}
+      </div>
+    )
+  }
+
+  const renderRiskAnalysis = (data) => {
+    if (!data) return null
+    return (
+      <div className="space-y-4">
+        {/* Overall Risk Level */}
+        <div className={`p-4 rounded-lg ${
+          data.riskLevel === 'high' ? 'bg-red-50 border border-red-200' :
+          data.riskLevel === 'medium' ? 'bg-yellow-50 border border-yellow-200' :
+          'bg-green-50 border border-green-200'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldExclamationIcon className={`w-6 h-6 ${
+                data.riskLevel === 'high' ? 'text-red-600' :
+                data.riskLevel === 'medium' ? 'text-yellow-600' :
+                'text-green-600'
+              }`} />
+              <span className={`font-medium ${
+                data.riskLevel === 'high' ? 'text-red-800' :
+                data.riskLevel === 'medium' ? 'text-yellow-800' :
+                'text-green-800'
+              }`}>
+                Riesgo {data.riskLevel === 'high' ? 'Alto' : data.riskLevel === 'medium' ? 'Medio' : 'Bajo'}
+              </span>
+            </div>
+            {data.score && (
+              <span className="text-2xl font-bold">{data.score}/100</span>
+            )}
+          </div>
+          {data.summary && <p className="mt-2 text-sm text-gray-600">{data.summary}</p>}
+        </div>
+
+        {/* Risk Factors */}
+        {data.riskFactors && data.riskFactors.length > 0 && (
+          <div className="bg-white border rounded-lg p-4">
+            <h4 className="font-medium text-gray-700 mb-3">Factores de Riesgo</h4>
+            <div className="space-y-2">
+              {data.riskFactors.map((factor, idx) => (
+                <div key={idx} className={`p-2 rounded ${
+                  factor.severity === 'high' ? 'bg-red-50' :
+                  factor.severity === 'medium' ? 'bg-yellow-50' :
+                  'bg-gray-50'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm">{factor.factor || factor.name}</span>
+                    <span className={`px-2 py-0.5 text-xs rounded ${
+                      factor.severity === 'high' ? 'bg-red-200 text-red-800' :
+                      factor.severity === 'medium' ? 'bg-yellow-200 text-yellow-800' :
+                      'bg-gray-200 text-gray-800'
+                    }`}>
+                      {factor.severity === 'high' ? 'Alto' : factor.severity === 'medium' ? 'Medio' : 'Bajo'}
+                    </span>
+                  </div>
+                  {factor.description && <p className="text-xs text-gray-600 mt-1">{factor.description}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Channel Prediction */}
+        {data.channelPrediction && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-800 mb-2">Prediccion de Canal</h4>
+            <div className="flex items-center gap-4">
+              <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                data.channelPrediction.channel === 'green' ? 'bg-green-200 text-green-800' :
+                data.channelPrediction.channel === 'orange' ? 'bg-orange-200 text-orange-800' :
+                'bg-red-200 text-red-800'
+              }`}>
+                {data.channelPrediction.channel === 'green' ? 'VERDE' :
+                 data.channelPrediction.channel === 'orange' ? 'NARANJA' : 'ROJO'}
+              </span>
+              {data.channelPrediction.probability && (
+                <span className="text-sm text-gray-600">
+                  {(data.channelPrediction.probability * 100).toFixed(0)}% probabilidad
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Recommendations */}
+        {data.recommendations && data.recommendations.length > 0 && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <h4 className="font-medium text-indigo-800 mb-2">Recomendaciones</h4>
+            <ul className="space-y-1 text-sm text-indigo-700">
+              {data.recommendations.map((rec, idx) => (
+                <li key={idx}>• {rec}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const renderInconsistencies = (data) => {
+    if (!data) return null
+    return (
+      <div className="space-y-4">
+        {/* Summary */}
+        <div className={`p-4 rounded-lg ${
+          data.hasInconsistencies ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'
+        }`}>
+          <div className="flex items-center gap-2">
+            {data.hasInconsistencies ? (
+              <ExclamationTriangleIcon className="w-6 h-6 text-yellow-600" />
+            ) : (
+              <CheckCircleIcon className="w-6 h-6 text-green-600" />
+            )}
+            <span className={`font-medium ${data.hasInconsistencies ? 'text-yellow-800' : 'text-green-800'}`}>
+              {data.hasInconsistencies
+                ? `${data.inconsistencies?.length || 0} inconsistencia(s) detectada(s)`
+                : 'No se detectaron inconsistencias'}
+            </span>
+          </div>
+        </div>
+
+        {/* Inconsistencies List */}
+        {data.inconsistencies && data.inconsistencies.length > 0 && (
+          <div className="space-y-3">
+            {data.inconsistencies.map((inc, idx) => (
+              <div key={idx} className={`border rounded-lg p-4 ${
+                inc.severity === 'critical' ? 'border-red-300 bg-red-50' :
+                inc.severity === 'warning' ? 'border-yellow-300 bg-yellow-50' :
+                'border-gray-300 bg-gray-50'
+              }`}>
+                <div className="flex items-start justify-between mb-2">
+                  <span className="font-medium text-sm">{inc.type || inc.field}</span>
+                  <span className={`px-2 py-0.5 text-xs rounded ${
+                    inc.severity === 'critical' ? 'bg-red-200 text-red-800' :
+                    inc.severity === 'warning' ? 'bg-yellow-200 text-yellow-800' :
+                    'bg-gray-200 text-gray-800'
+                  }`}>
+                    {inc.severity === 'critical' ? 'Critico' : inc.severity === 'warning' ? 'Advertencia' : 'Info'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600">{inc.description || inc.message}</p>
+                {inc.suggestion && (
+                  <p className="text-xs text-blue-600 mt-2">
+                    <span className="font-medium">Sugerencia:</span> {inc.suggestion}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const renderFullAnalysis = (data) => {
+    if (!data) return null
+    return (
+      <div className="space-y-4">
+        {/* Overall Score */}
+        <div className={`p-4 rounded-lg ${
+          data.overallScore >= 80 ? 'bg-green-50 border border-green-200' :
+          data.overallScore >= 60 ? 'bg-yellow-50 border border-yellow-200' :
+          'bg-red-50 border border-red-200'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <SparklesIcon className="w-6 h-6 text-luci" />
+              <span className="font-medium">Analisis Integral LUCI</span>
+            </div>
+            <div className="text-right">
+              <span className={`text-2xl font-bold ${
+                data.overallScore >= 80 ? 'text-green-600' :
+                data.overallScore >= 60 ? 'text-yellow-600' :
+                'text-red-600'
+              }`}>
+                {data.overallScore || 0}/100
+              </span>
+              <p className="text-xs text-gray-500">Puntuacion</p>
+            </div>
+          </div>
+          {data.summary && <p className="mt-3 text-sm text-gray-600">{data.summary}</p>}
+        </div>
+
+        {/* Section Scores */}
+        {data.sections && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {Object.entries(data.sections).map(([key, section]) => (
+              <div key={key} className="bg-white border rounded-lg p-3 text-center">
+                <p className={`text-xl font-bold ${
+                  section.score >= 80 ? 'text-green-600' :
+                  section.score >= 60 ? 'text-yellow-600' :
+                  'text-red-600'
+                }`}>
+                  {section.score || 0}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{section.label || key}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Critical Issues */}
+        {data.criticalIssues && data.criticalIssues.length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h4 className="font-medium text-red-800 mb-2">Problemas Criticos</h4>
+            <ul className="space-y-1 text-sm text-red-700">
+              {data.criticalIssues.map((issue, idx) => (
+                <li key={idx}>• {issue}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* TARIC Suggestions */}
+        {data.taricSuggestions && data.taricSuggestions.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-800 mb-2">Sugerencias TARIC</h4>
+            <div className="space-y-2">
+              {data.taricSuggestions.map((sug, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2 bg-white rounded border">
+                  <div>
+                    <p className="font-mono text-sm font-medium">{sug.taricCode}</p>
+                    <p className="text-xs text-gray-500">{sug.description}</p>
+                  </div>
+                  <span className="text-sm font-medium text-blue-600">{(sug.confidence * 100).toFixed(0)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Action Items */}
+        {data.actionItems && data.actionItems.length > 0 && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <h4 className="font-medium text-indigo-800 mb-3">Acciones Recomendadas</h4>
+            <div className="space-y-2">
+              {data.actionItems.map((item, idx) => (
+                <div key={idx} className="flex items-start gap-2">
+                  <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                    item.priority === 'high' ? 'bg-red-200 text-red-800' :
+                    item.priority === 'medium' ? 'bg-yellow-200 text-yellow-800' :
+                    'bg-blue-200 text-blue-800'
+                  }`}>
+                    {idx + 1}
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">{item.action}</p>
+                    {item.reason && <p className="text-xs text-gray-500">{item.reason}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const renderContent = () => {
+    const currentResult = results[activeTab]
+
+    if (!currentResult) {
+      return (
+        <div className="text-center py-8">
+          <SparklesIcon className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+          <p className="text-gray-500 mb-4">
+            {activeTab === 'documents' && 'Obtiene sugerencias de documentos necesarios'}
+            {activeTab === 'risk' && 'Analiza el nivel de riesgo del expediente'}
+            {activeTab === 'inconsistencies' && 'Detecta inconsistencias en los datos'}
+            {activeTab === 'full' && 'Ejecuta un analisis completo con LUCI'}
+          </p>
+          <button
+            onClick={() => runAnalysis(activeTab)}
+            disabled={loading}
+            className="px-6 py-2 bg-luci text-white rounded-lg hover:bg-luci-dark disabled:opacity-50"
+          >
+            {loading ? 'Analizando...' : 'Ejecutar Analisis'}
+          </button>
+        </div>
+      )
+    }
+
+    switch (activeTab) {
+      case 'documents':
+        return renderDocumentSuggestions(currentResult)
+      case 'risk':
+        return renderRiskAnalysis(currentResult)
+      case 'inconsistencies':
+        return renderInconsistencies(currentResult)
+      case 'full':
+        return renderFullAnalysis(currentResult)
+      default:
+        return null
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-luci to-luci-dark text-white">
+          <div className="flex items-center gap-2">
+            <SparklesIcon className="w-6 h-6" />
+            <div>
+              <h2 className="font-bold">Analisis IA - Expediente</h2>
+              <p className="text-sm text-white/80">{expedition.expeditionId}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 hover:bg-white/20 rounded">
+            <XMarkIcon className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b bg-gray-50">
+          <div className="flex overflow-x-auto">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                  activeTab === tab.id
+                    ? 'border-luci text-luci bg-white'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+                {results[tab.id] && (
+                  <CheckCircleIcon className="w-4 h-4 text-green-500" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+              <button onClick={() => setError(null)} className="ml-2 underline">Cerrar</button>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <ArrowPathIcon className="w-8 h-8 animate-spin text-luci" />
+              <span className="ml-2 text-gray-500">Analizando con IA...</span>
+            </div>
+          ) : (
+            renderContent()
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t bg-gray-50 flex justify-between">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border rounded-lg hover:bg-gray-100"
+          >
+            Cerrar
+          </button>
+          {results[activeTab] && (
+            <button
+              onClick={() => runAnalysis(activeTab)}
+              disabled={loading}
+              className="px-4 py-2 text-luci border border-luci rounded-lg hover:bg-luci hover:text-white disabled:opacity-50"
+            >
+              Actualizar Analisis
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function ExpeditionDetail() {
   const { id } = useParams()
@@ -30,6 +535,7 @@ export default function ExpeditionDetail() {
   const [aeatResult, setAeatResult] = useState(null)
   const [portalLink, setPortalLink] = useState(null)
   const [showPortalModal, setShowPortalModal] = useState(false)
+  const [showAIPanel, setShowAIPanel] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -211,6 +717,13 @@ export default function ExpeditionDetail() {
         </div>
 
         <div className="flex gap-2">
+          <button
+            onClick={() => setShowAIPanel(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-luci to-luci-dark text-white rounded-lg hover:opacity-90"
+          >
+            <SparklesIcon className="w-5 h-5" />
+            Analisis IA
+          </button>
           <button
             onClick={handleSendPortalLink}
             className="btn-secondary flex items-center gap-2"
@@ -758,6 +1271,20 @@ export default function ExpeditionDetail() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* AI Panel Modal */}
+      {showAIPanel && (
+        <ExpeditionAIPanel
+          expedition={expedition}
+          onClose={() => setShowAIPanel(false)}
+          onRefresh={() => {
+            expeditionsAPI.get(id).then(resp => {
+              const data = resp.data?.data || resp.data
+              setExpedition(data)
+            })
+          }}
+        />
       )}
     </div>
   )

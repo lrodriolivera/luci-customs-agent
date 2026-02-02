@@ -543,6 +543,157 @@ class OEAService {
   }
 
   /**
+   * Initiate reevaluation process (Art. 23 CAU)
+   * Se inicia cuando hay cambios en legislacion o indicios de incumplimiento
+   */
+  async initiateReevaluation(id, reason, userId) {
+    logger.info(`[OEAService] Initiating reevaluation for OEA: ${id}`);
+
+    try {
+      const oea = await OEA.findById(id);
+      if (!oea) {
+        throw new Error('Certificacion OEA no encontrada');
+      }
+
+      if (!['approved', 'incident'].includes(oea.certification.status)) {
+        throw new Error(`No se puede iniciar reevaluacion en estado: ${oea.certification.status}`);
+      }
+
+      // Store previous status for potential restoration
+      oea.certification.previousStatus = oea.certification.status;
+      oea.certification.status = 'reevaluation';
+      oea.certification.reevaluationStartDate = new Date();
+      oea.certification.reevaluationReason = reason;
+
+      await oea.save();
+
+      await oea.addActivityLog(
+        'REEVALUATION_INITIATED',
+        `Reevaluacion iniciada: ${reason}`,
+        userId,
+        { reason }
+      );
+
+      await oea.addAlert(
+        'compliance_issue',
+        'warning',
+        `Reevaluacion iniciada: ${reason}`,
+        new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // 90 days deadline
+      );
+
+      return oea;
+
+    } catch (error) {
+      logger.error('[OEAService] Error initiating reevaluation:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Register an incident (incidencia de mantenimiento)
+   * Para comunicar incidencias o irregularidades detectadas
+   */
+  async registerIncident(id, incidentData, userId) {
+    logger.info(`[OEAService] Registering incident for OEA: ${id}`);
+
+    try {
+      const oea = await OEA.findById(id);
+      if (!oea) {
+        throw new Error('Certificacion OEA no encontrada');
+      }
+
+      if (oea.certification.status !== 'approved') {
+        throw new Error(`No se puede registrar incidencia en estado: ${oea.certification.status}`);
+      }
+
+      oea.certification.previousStatus = oea.certification.status;
+      oea.certification.status = 'incident';
+
+      // Add incident to history
+      if (!oea.incidents) oea.incidents = [];
+      oea.incidents.push({
+        type: incidentData.type,
+        description: incidentData.description,
+        severity: incidentData.severity || 'minor',
+        reportedDate: new Date(),
+        reportedBy: userId,
+        status: 'open',
+        affectedAreas: incidentData.affectedAreas || [],
+        correctiveActions: incidentData.correctiveActions || ''
+      });
+
+      await oea.save();
+
+      await oea.addActivityLog(
+        'INCIDENT_REGISTERED',
+        `Incidencia registrada: ${incidentData.type} - ${incidentData.description}`,
+        userId,
+        incidentData
+      );
+
+      const alertSeverity = incidentData.severity === 'critical' ? 'critical' : 'warning';
+      await oea.addAlert(
+        'compliance_issue',
+        alertSeverity,
+        `Incidencia registrada: ${incidentData.description}`,
+        null
+      );
+
+      return oea;
+
+    } catch (error) {
+      logger.error('[OEAService] Error registering incident:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Resolve an incident and restore status
+   */
+  async resolveIncident(id, incidentIndex, resolution, userId) {
+    logger.info(`[OEAService] Resolving incident for OEA: ${id}`);
+
+    try {
+      const oea = await OEA.findById(id);
+      if (!oea) {
+        throw new Error('Certificacion OEA no encontrada');
+      }
+
+      if (!oea.incidents || !oea.incidents[incidentIndex]) {
+        throw new Error('Incidencia no encontrada');
+      }
+
+      // Mark incident as resolved
+      oea.incidents[incidentIndex].status = 'resolved';
+      oea.incidents[incidentIndex].resolvedDate = new Date();
+      oea.incidents[incidentIndex].resolution = resolution;
+      oea.incidents[incidentIndex].resolvedBy = userId;
+
+      // Check if all incidents are resolved
+      const openIncidents = oea.incidents.filter(i => i.status === 'open');
+      if (openIncidents.length === 0 && oea.certification.status === 'incident') {
+        oea.certification.status = oea.certification.previousStatus || 'approved';
+        delete oea.certification.previousStatus;
+      }
+
+      await oea.save();
+
+      await oea.addActivityLog(
+        'INCIDENT_RESOLVED',
+        `Incidencia resuelta: ${resolution}`,
+        userId,
+        { incidentIndex, resolution }
+      );
+
+      return oea;
+
+    } catch (error) {
+      logger.error('[OEAService] Error resolving incident:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Initiate renewal process
    */
   async initiateRenewal(id, userId) {

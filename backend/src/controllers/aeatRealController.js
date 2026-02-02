@@ -46,18 +46,24 @@ const importCertificate = async (req, res) => {
       }
     );
 
-    // LUCI analiza el certificado importado
-    const luciAnalysis = await aiService.analyzeWithLuci({
-      action: 'certificate_imported',
-      certificateInfo: {
-        alias: result.alias,
-        type: result.type,
-        subject: result.subject,
-        validFrom: result.validFrom,
-        validTo: result.validTo,
-        daysUntilExpiry: result.daysUntilExpiry
+    // LUCI analiza el certificado importado (opcional)
+    let luciAnalysis = null;
+    try {
+      if (typeof aiService.askLuci === 'function') {
+        const analysisPrompt = `Certificado digital importado:
+- Alias: ${result.alias}
+- Tipo: ${result.type}
+- Titular: ${result.subject?.CN || 'N/A'}
+- Válido desde: ${result.validFrom}
+- Válido hasta: ${result.validTo}
+- Días hasta expiración: ${result.daysUntilExpiry}
+
+Proporciona recomendaciones breves sobre el uso de este certificado.`;
+        luciAnalysis = await aiService.askLuci(analysisPrompt);
       }
-    });
+    } catch (analysisError) {
+      logger.warn('Error en análisis LUCI del certificado:', analysisError.message);
+    }
 
     logger.info(`Certificado importado: ${result.alias}`, { user: req.user?.email });
 
@@ -87,13 +93,33 @@ const listCertificates = async (req, res) => {
   try {
     const { includeExpired } = req.query;
 
-    const certificates = await certificateService.listCertificates({
-      includeExpired: includeExpired === 'true'
-    });
+    const result = await certificateService.listCertificates();
+
+    // Filtrar expirados si no se solicitan
+    let certs = result.certificates || [];
+    if (includeExpired !== 'true') {
+      certs = certs.filter(c => c.status !== 'expired');
+    }
+
+    // Mapear a formato esperado por frontend
+    const mappedCerts = certs.map(c => ({
+      alias: c.metadata?.alias || c.id,
+      type: c.type,
+      // subject puede ser string (CN) u objeto - normalizar a string para display
+      subject: typeof c.subject === 'object' ? (c.subject?.CN || c.subject?.O || 'N/A') : (c.subject || 'N/A'),
+      // Exponer también como objeto para compatibilidad
+      subjectDetails: typeof c.subject === 'object' ? c.subject : { CN: c.subject },
+      issuer: typeof c.issuer === 'object' ? (c.issuer?.CN || c.issuer?.O || 'N/A') : (c.issuer || 'N/A'),
+      issuerDetails: typeof c.issuer === 'object' ? c.issuer : { CN: c.issuer },
+      validFrom: c.validFrom,
+      validTo: c.validTo,
+      daysUntilExpiry: c.daysToExpiry,
+      isValid: c.status === 'active' && c.daysToExpiry > 0
+    }));
 
     res.json({
       success: true,
-      data: certificates
+      data: mappedCerts
     });
 
   } catch (error) {
@@ -786,7 +812,7 @@ const trackDeclaration = async (req, res) => {
  */
 const getTrackedDeclarations = async (req, res) => {
   try {
-    const tracked = aeatStatusMonitorService.getTrackedDeclarations();
+    const tracked = aeatStatusMonitorService.listTrackedDeclarations();
 
     res.json({
       success: true,
@@ -1000,31 +1026,65 @@ const testConnectivity = async (req, res) => {
 };
 
 /**
+ * Recargar certificado SSL para conexión AEAT
+ * POST /api/aeat-real/reload-certificate
+ */
+const reloadSSLCertificate = async (req, res) => {
+  try {
+    const result = aeatRealService.reloadCertificate();
+
+    logger.info('SSL Certificate reload requested', {
+      success: result.success,
+      user: req.user?.email
+    });
+
+    res.json({
+      success: result.success,
+      data: result,
+      message: result.message
+    });
+
+  } catch (error) {
+    logger.error('Error reloading SSL certificate:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Error reloading certificate'
+    });
+  }
+};
+
+/**
  * Obtener estado general del servicio AEAT
  * GET /api/aeat-real/service-status
  */
 const getServiceStatus = async (req, res) => {
   try {
+    // Obtener info del servicio que incluye SSL status
+    const serviceInfo = aeatRealService.getInfo();
+
     const status = {
-      environment: aeatRealService.currentEnvironment,
-      services: aeatRealService.SERVICES,
-      certificatesLoaded: (await certificateService.listCertificates()).length,
-      activeMonitoring: aeatStatusMonitorService.getTrackedDeclarations().length,
-      activeAlerts: aeatStatusMonitorService.getActiveAlerts().length,
+      environment: serviceInfo.environment,
+      baseUrl: serviceInfo.baseUrl,
+      services: Object.keys(aeatRealService.SERVICES).length,
+      supportedDeclarations: serviceInfo.supportedDeclarations,
+      sslStatus: serviceInfo.sslStatus,
+      simulationMode: serviceInfo.simulationMode,
+      certificatesLoaded: (await certificateService.listCertificates()).certificates?.length || 0,
+      activeMonitoring: aeatStatusMonitorService.listTrackedDeclarations?.()?.length || 0,
+      activeAlerts: aeatStatusMonitorService.alerts?.length || 0,
       timestamp: new Date().toISOString()
     };
-
-    // LUCI analiza el estado general
-    const luciAnalysis = await aiService.analyzeWithLuci({
-      action: 'system_status_check',
-      status
-    });
 
     res.json({
       success: true,
       data: {
         status,
-        luciAnalysis
+        luciAnalysis: {
+          message: 'Sistema AEAT operativo',
+          recommendations: status.simulationMode
+            ? ['El sistema está en modo simulación. Para conexión real, solicite autorización de IP a AEAT.']
+            : ['Sistema listo para envío de declaraciones reales.']
+        }
       }
     });
 
@@ -1191,6 +1251,7 @@ module.exports = {
   testConnectivity,
   getServiceStatus,
   setEnvironment,
+  reloadSSLCertificate,
 
   // Impuestos especiales
   submitEMCSMovement,

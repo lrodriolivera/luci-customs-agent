@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const portalController = require('../controllers/portalController');
+const clientPortalController = require('../controllers/clientPortalController');
 const { upload, handleUploadError } = require('../middleware/upload');
 const { portalValidators } = require('../middleware/validators');
+const { authenticate, requireRole } = require('../middleware/auth');
 
-// Rutas del portal del cliente (publicas, autenticadas por token)
+// ==================== Public Portal Routes (token-based auth) ====================
 
 // Obtener expediente
 router.get('/:token', portalValidators.getByToken, portalController.getByToken);
@@ -25,5 +27,77 @@ router.get('/:token/documents/:docId', portalController.getDocument);
 
 // Mensajes no leidos
 router.get('/:token/unread', portalValidators.getByToken, portalController.getUnreadCount);
+
+// ==================== AI Endpoints - LUCI Integration ====================
+
+// Chat mejorado con IA contextual
+router.post('/:token/ai/chat', portalValidators.getByToken, portalController.aiEnhancedChat);
+
+// Detectar FAQ y responder automáticamente
+router.post('/:token/ai/faq', portalValidators.getByToken, portalController.aiDetectFAQ);
+
+// Generar resumen del expediente para cliente
+router.get('/:token/ai/summary', portalValidators.getByToken, portalController.aiGetSummary);
+
+// Generar notificación inteligente
+router.post('/:token/ai/notification', portalValidators.getByToken, portalController.aiGenerateNotification);
+
+// Análisis completo del portal para el cliente
+router.get('/:token/ai/full-analysis', portalValidators.getByToken, portalController.aiFullAnalysis);
+
+// ==================== Self-Service Routes ====================
+
+// Create new expedition (self-service)
+router.post('/self-service/expeditions', clientPortalController.createExpedition);
+
+// Update expedition from portal
+router.put('/:token/expedition', portalValidators.getByToken, clientPortalController.updateExpedition);
+
+// Submit expedition for processing
+router.post('/:token/submit', portalValidators.getByToken, clientPortalController.submitExpedition);
+
+// ==================== Payment Routes ====================
+
+// Get payments for expedition
+router.get('/:token/payments', portalValidators.getByToken, clientPortalController.getPayments);
+
+// Create payment
+router.post('/:token/payments', portalValidators.getByToken, clientPortalController.createPayment);
+
+// Create checkout session
+router.post('/:token/payments/:paymentId/checkout', portalValidators.getByToken, clientPortalController.createCheckoutSession);
+
+// Get payment status
+router.get('/:token/payments/:paymentId', portalValidators.getByToken, clientPortalController.getPaymentStatus);
+
+// ==================== Statistics Routes ====================
+
+// Get client statistics
+router.get('/:token/stats', portalValidators.getByToken, clientPortalController.getClientStats);
+
+// Get client history
+router.get('/:token/history', portalValidators.getByToken, clientPortalController.getClientHistory);
+
+// ==================== Signed Documents Routes ====================
+
+// List signed documents
+router.get('/:token/signed-documents', portalValidators.getByToken, clientPortalController.getSignedDocuments);
+
+// Download levante
+router.get('/:token/signed-documents/levante', portalValidators.getByToken, clientPortalController.downloadLevante);
+
+// Download declaration copy
+router.get('/:token/signed-documents/declaration', portalValidators.getByToken, clientPortalController.downloadDeclaration);
+
+// ==================== API Key Management (authenticated users) ====================
+
+// Create API key
+router.post('/api-keys', authenticate, requireRole('admin'), clientPortalController.createApiKey);
+
+// List API keys
+router.get('/api-keys', authenticate, requireRole('admin'), clientPortalController.listApiKeys);
+
+// Revoke API key
+router.delete('/api-keys/:keyId', authenticate, requireRole('admin'), clientPortalController.revokeApiKey);
 
 module.exports = router;

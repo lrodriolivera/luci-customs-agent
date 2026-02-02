@@ -23,6 +23,8 @@ const Payment = require('./Payment');
 const ENSDeclaration = require('./ENSDeclaration');
 const SummaryQuery = require('./SummaryQuery');
 const PUERequest = require('./PUERequest');
+const TaricSearchHistory = require('./TaricSearchHistory');
+const TaricAICache = require('./TaricAICache');
 
 module.exports = {
   User,
@@ -45,5 +47,7 @@ module.exports = {
   Payment,
   ENSDeclaration,
   SummaryQuery,
-  PUERequest
+  PUERequest,
+  TaricSearchHistory,
+  TaricAICache
 };

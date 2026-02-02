@@ -50,4 +50,26 @@ router.post('/:id/document', guaranteeController.addDocument);
 // Alertas
 router.post('/:id/alerts/:alertId/acknowledge', guaranteeController.acknowledgeAlert);
 
+// ===========================================
+// AI ENDPOINTS - LUCI Integration
+// ===========================================
+
+// Analizar necesidades de garantia para operacion
+router.post('/ai/analyze-needs', guaranteeController.aiAnalyzeNeeds);
+
+// Recomendar tipo de garantia optimo
+router.post('/ai/recommend-type', guaranteeController.aiRecommendType);
+
+// Optimizar uso de garantias existentes
+router.post('/ai/optimize', guaranteeController.aiOptimize);
+
+// Calcular importe optimo con IA
+router.post('/ai/smart-calculate', guaranteeController.aiSmartCalculate);
+
+// Analisis completo de garantias
+router.post('/ai/full-analysis', guaranteeController.aiFullAnalysis);
+
+// Obtener ultimo analisis
+router.get('/ai/analysis', guaranteeController.getAiAnalysis);
+
 module.exports = router;

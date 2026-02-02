@@ -22,4 +22,29 @@ router.get('/:id/checklist', expeditionValidators.getById, expeditionController.
 router.post('/:id/checklist', expeditionValidators.getById, expeditionController.regenerateChecklist);
 router.post('/:id/send-portal-link', expeditionValidators.getById, expeditionController.sendPortalLink);
 
+// ===========================================
+// AI ENDPOINTS - LUCI Integration
+// ===========================================
+
+// Sugerir documentos faltantes
+router.post('/:id/ai/suggest-documents', expeditionValidators.getById, expeditionController.aiSuggestDocuments);
+
+// Análisis de riesgo
+router.post('/:id/ai/analyze-risk', expeditionValidators.getById, expeditionController.aiAnalyzeRisk);
+
+// Sugerir clasificación TARIC
+router.post('/:id/ai/suggest-taric', expeditionValidators.getById, expeditionController.aiSuggestTaric);
+
+// Detectar inconsistencias
+router.post('/:id/ai/detect-inconsistencies', expeditionValidators.getById, expeditionController.aiDetectInconsistencies);
+
+// Análisis completo (todos los anteriores combinados)
+router.post('/:id/ai/full-analysis', expeditionValidators.getById, expeditionController.aiFullAnalysis);
+
+// Obtener último análisis IA
+router.get('/:id/ai/analysis', expeditionValidators.getById, expeditionController.getAiAnalysis);
+
+// Aplicar sugerencia de clasificación TARIC a un item
+router.post('/:id/ai/apply-taric/:itemIndex', expeditionValidators.getById, expeditionController.applyTaricSuggestion);
+
 module.exports = router;

@@ -9,13 +9,17 @@ import {
   ArrowPathIcon,
   CheckCircleIcon,
   XCircleIcon,
+  XMarkIcon,
   PlayIcon,
   ClockIcon,
   DocumentTextIcon,
   CameraIcon,
-  BeakerIcon
+  BeakerIcon,
+  BuildingOfficeIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline'
 import { inspectionsAPI } from '../../services/api'
+import toast from 'react-hot-toast'
 
 const statusColors = {
   requested: 'bg-gray-100 text-gray-800',
@@ -62,6 +66,55 @@ const resultLabels = {
   referred: 'Derivada'
 }
 
+const authorityTypes = {
+  AEAT: 'AEAT - Agencia Tributaria',
+  SOIVRE: 'SOIVRE - Comercio Exterior',
+  MAPA: 'MAPA - Agricultura/Veterinaria',
+  SANIDAD: 'Sanidad',
+  MITERD: 'MITERD - Medio Ambiente',
+  POLICE: 'Policia',
+  OTHER: 'Otra'
+}
+
+const locationTypes = {
+  port: 'Puerto',
+  airport: 'Aeropuerto',
+  warehouse: 'Almacen',
+  customs_office: 'Oficina Aduanas',
+  border: 'Frontera',
+  company: 'Empresa',
+  other: 'Otro'
+}
+
+const priorityLabels = {
+  low: 'Baja',
+  normal: 'Normal',
+  high: 'Alta',
+  urgent: 'Urgente'
+}
+
+const priorityColors = {
+  low: 'bg-gray-100 text-gray-800',
+  normal: 'bg-blue-100 text-blue-800',
+  high: 'bg-orange-100 text-orange-800',
+  urgent: 'bg-red-100 text-red-800'
+}
+
+// Ubicaciones predefinidas
+const predefinedLocations = [
+  { code: 'ESBCN', name: 'Puerto de Barcelona', city: 'Barcelona', type: 'port' },
+  { code: 'ESVLC', name: 'Puerto de Valencia', city: 'Valencia', type: 'port' },
+  { code: 'ESALG', name: 'Puerto de Algeciras', city: 'Algeciras', type: 'port' },
+  { code: 'ESBIO', name: 'Puerto de Bilbao', city: 'Bilbao', type: 'port' },
+  { code: 'ESLPA', name: 'Puerto de Las Palmas', city: 'Las Palmas', type: 'port' },
+  { code: 'LEMD', name: 'Aeropuerto Madrid-Barajas', city: 'Madrid', type: 'airport' },
+  { code: 'LEBL', name: 'Aeropuerto Barcelona-El Prat', city: 'Barcelona', type: 'airport' },
+  { code: 'LEZG', name: 'Aeropuerto Zaragoza', city: 'Zaragoza', type: 'airport' },
+  { code: 'ES002801', name: 'Aduana de Madrid', city: 'Madrid', type: 'customs_office' },
+  { code: 'ES000801', name: 'Aduana de Barcelona', city: 'Barcelona', type: 'customs_office' },
+  { code: 'ES004601', name: 'Aduana de Valencia', city: 'Valencia', type: 'customs_office' }
+]
+
 export default function InspectionManager() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [dashboard, setDashboard] = useState(null)
@@ -73,6 +126,7 @@ export default function InspectionManager() {
   })
   const [selectedInspection, setSelectedInspection] = useState(null)
   const [showDetail, setShowDetail] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
   const [inspectionTypes, setInspectionTypes] = useState([])
 
   useEffect(() => {
@@ -148,10 +202,25 @@ export default function InspectionManager() {
   const handleStart = async (id) => {
     try {
       await inspectionsAPI.start(id)
+      toast.success('Inspeccion iniciada')
       loadDashboard()
       if (activeTab === 'list') loadInspections()
     } catch (error) {
       console.error('Error starting inspection:', error)
+      toast.error('Error al iniciar la inspeccion')
+    }
+  }
+
+  const handleCreate = async (data) => {
+    try {
+      await inspectionsAPI.create(data)
+      setShowCreateModal(false)
+      toast.success('Inspeccion creada correctamente')
+      loadDashboard()
+      if (activeTab === 'list') loadInspections()
+    } catch (error) {
+      console.error('Error creating inspection:', error)
+      toast.error('Error al crear la inspeccion')
     }
   }
 
@@ -430,6 +499,13 @@ export default function InspectionManager() {
             <ArrowPathIcon className="w-4 h-4" />
             Actualizar
           </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Nueva Inspeccion
+          </button>
         </div>
       </div>
 
@@ -483,6 +559,15 @@ export default function InspectionManager() {
         <InspectionDetail
           inspection={selectedInspection}
           onClose={() => setShowDetail(false)}
+        />
+      )}
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <CreateInspectionModal
+          inspectionTypes={inspectionTypes}
+          onClose={() => setShowCreateModal(false)}
+          onCreate={handleCreate}
         />
       )}
     </div>
@@ -719,6 +804,594 @@ function InspectionDetail({ inspection, onClose }) {
             Cerrar
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function CreateInspectionModal({ inspectionTypes, onClose, onCreate }) {
+  const [formData, setFormData] = useState({
+    inspectionType: 'physical',
+    mrn: '',
+    lrn: '',
+    location: {
+      type: 'port',
+      name: '',
+      address: '',
+      city: '',
+      contactPerson: '',
+      contactPhone: ''
+    },
+    scheduling: {
+      requestedDate: '',
+      requestedTimeSlot: 'morning',
+      scheduledDate: '',
+      scheduledTime: '',
+      estimatedDuration: 120
+    },
+    authority: {
+      type: 'AEAT',
+      office: '',
+      officeName: ''
+    },
+    goods: {
+      description: '',
+      totalPackages: '',
+      totalGrossWeight: '',
+      containerNumbers: ''
+    },
+    client: {
+      name: '',
+      nif: '',
+      eori: '',
+      contact: '',
+      phone: '',
+      email: ''
+    },
+    priority: 'normal',
+    internalNotes: ''
+  })
+  const [loading, setLoading] = useState(false)
+  const [usePredefLocation, setUsePredefLocation] = useState(true)
+  const [selectedPredefLocation, setSelectedPredefLocation] = useState('')
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    const parts = name.split('.')
+
+    if (parts.length === 2) {
+      setFormData(prev => ({
+        ...prev,
+        [parts[0]]: {
+          ...prev[parts[0]],
+          [parts[1]]: value
+        }
+      }))
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }))
+    }
+  }
+
+  const handlePredefLocationChange = (e) => {
+    const code = e.target.value
+    setSelectedPredefLocation(code)
+
+    if (code) {
+      const loc = predefinedLocations.find(l => l.code === code)
+      if (loc) {
+        setFormData(prev => ({
+          ...prev,
+          location: {
+            ...prev.location,
+            type: loc.type,
+            name: loc.name,
+            city: loc.city
+          }
+        }))
+      }
+    }
+  }
+
+  const handleTypeChange = (e) => {
+    const type = e.target.value
+    const typeConfig = inspectionTypes.find(t => t.value === type)
+
+    setFormData(prev => ({
+      ...prev,
+      inspectionType: type,
+      authority: {
+        ...prev.authority,
+        type: typeConfig?.authority || 'AEAT'
+      },
+      scheduling: {
+        ...prev.scheduling,
+        estimatedDuration: typeConfig?.estimatedDuration || 60
+      }
+    }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!formData.inspectionType || !formData.location.name) {
+      toast.error('Complete los campos obligatorios')
+      return
+    }
+
+    setLoading(true)
+    try {
+      // Procesar containerNumbers como array
+      const dataToSend = {
+        ...formData,
+        goods: {
+          ...formData.goods,
+          totalPackages: formData.goods.totalPackages ? parseInt(formData.goods.totalPackages) : undefined,
+          totalGrossWeight: formData.goods.totalGrossWeight ? parseFloat(formData.goods.totalGrossWeight) : undefined,
+          containerNumbers: formData.goods.containerNumbers
+            ? formData.goods.containerNumbers.split(',').map(c => c.trim()).filter(c => c)
+            : []
+        }
+      }
+      await onCreate(dataToSend)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const today = new Date().toISOString().split('T')[0]
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Nueva Inspeccion</h3>
+            <p className="text-sm text-gray-500">Programar una nueva inspeccion fisica o documental</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <XMarkIcon className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+          <div className="p-6 space-y-6">
+
+            {/* Tipo y Autoridad */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tipo de Inspeccion *
+                </label>
+                <select
+                  name="inspectionType"
+                  value={formData.inspectionType}
+                  onChange={handleTypeChange}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  required
+                >
+                  {inspectionTypes.map((type) => (
+                    <option key={type.value} value={type.value}>{type.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Autoridad
+                </label>
+                <select
+                  name="authority.type"
+                  value={formData.authority.type}
+                  onChange={handleChange}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  {Object.entries(authorityTypes).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Prioridad
+                </label>
+                <select
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleChange}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  {Object.entries(priorityLabels).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* MRN/LRN */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  MRN (Numero de Referencia)
+                </label>
+                <input
+                  type="text"
+                  name="mrn"
+                  value={formData.mrn}
+                  onChange={handleChange}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Ej: 24ES12345678901234"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  LRN (Referencia Local)
+                </label>
+                <input
+                  type="text"
+                  name="lrn"
+                  value={formData.lrn}
+                  onChange={handleChange}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Referencia interna"
+                />
+              </div>
+            </div>
+
+            {/* Ubicacion */}
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <MapPinIcon className="w-4 h-4 text-gray-500" />
+                Ubicacion de la Inspeccion *
+              </h4>
+
+              <div className="mb-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={usePredefLocation}
+                    onChange={(e) => setUsePredefLocation(e.target.checked)}
+                    className="rounded text-blue-600"
+                  />
+                  <span className="text-sm text-gray-600">Usar ubicacion predefinida</span>
+                </label>
+              </div>
+
+              {usePredefLocation ? (
+                <select
+                  value={selectedPredefLocation}
+                  onChange={handlePredefLocationChange}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">Seleccionar ubicacion...</option>
+                  <optgroup label="Puertos">
+                    {predefinedLocations.filter(l => l.type === 'port').map(loc => (
+                      <option key={loc.code} value={loc.code}>{loc.name} - {loc.city}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Aeropuertos">
+                    {predefinedLocations.filter(l => l.type === 'airport').map(loc => (
+                      <option key={loc.code} value={loc.code}>{loc.name} - {loc.city}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Aduanas">
+                    {predefinedLocations.filter(l => l.type === 'customs_office').map(loc => (
+                      <option key={loc.code} value={loc.code}>{loc.name} - {loc.city}</option>
+                    ))}
+                  </optgroup>
+                </select>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                    <select
+                      name="location.type"
+                      value={formData.location.type}
+                      onChange={handleChange}
+                      className="w-full rounded-md border-gray-300 shadow-sm"
+                    >
+                      {Object.entries(locationTypes).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                    <input
+                      type="text"
+                      name="location.name"
+                      value={formData.location.name}
+                      onChange={handleChange}
+                      className="w-full rounded-md border-gray-300 shadow-sm"
+                      placeholder="Nombre del recinto"
+                      required={!usePredefLocation}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Direccion</label>
+                    <input
+                      type="text"
+                      name="location.address"
+                      value={formData.location.address}
+                      onChange={handleChange}
+                      className="w-full rounded-md border-gray-300 shadow-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
+                    <input
+                      type="text"
+                      name="location.city"
+                      value={formData.location.city}
+                      onChange={handleChange}
+                      className="w-full rounded-md border-gray-300 shadow-sm"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Persona de contacto</label>
+                  <input
+                    type="text"
+                    name="location.contactPerson"
+                    value={formData.location.contactPerson}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Telefono de contacto</label>
+                  <input
+                    type="text"
+                    name="location.contactPhone"
+                    value={formData.location.contactPhone}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Programacion */}
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <CalendarIcon className="w-4 h-4 text-gray-500" />
+                Programacion
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Fecha solicitada</label>
+                  <input
+                    type="date"
+                    name="scheduling.requestedDate"
+                    value={formData.scheduling.requestedDate}
+                    onChange={handleChange}
+                    min={today}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Franja horaria</label>
+                  <select
+                    name="scheduling.requestedTimeSlot"
+                    value={formData.scheduling.requestedTimeSlot}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                  >
+                    <option value="morning">Manana (08:00-14:00)</option>
+                    <option value="afternoon">Tarde (14:00-20:00)</option>
+                    <option value="any">Cualquier hora</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Fecha programada</label>
+                  <input
+                    type="date"
+                    name="scheduling.scheduledDate"
+                    value={formData.scheduling.scheduledDate}
+                    onChange={handleChange}
+                    min={today}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hora</label>
+                  <input
+                    type="time"
+                    name="scheduling.scheduledTime"
+                    value={formData.scheduling.scheduledTime}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Mercancias */}
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <ClipboardDocumentCheckIcon className="w-4 h-4 text-gray-500" />
+                Mercancias
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Descripcion</label>
+                  <textarea
+                    name="goods.description"
+                    value={formData.goods.description}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                    rows={2}
+                    placeholder="Descripcion de las mercancias a inspeccionar..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Total Bultos</label>
+                  <input
+                    type="number"
+                    name="goods.totalPackages"
+                    value={formData.goods.totalPackages}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Peso Bruto Total (kg)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="goods.totalGrossWeight"
+                    value={formData.goods.totalGrossWeight}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contenedores (separados por coma)</label>
+                  <input
+                    type="text"
+                    name="goods.containerNumbers"
+                    value={formData.goods.containerNumbers}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                    placeholder="MSKU1234567, TCLU7654321"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Cliente */}
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <BuildingOfficeIcon className="w-4 h-4 text-gray-500" />
+                Cliente / Operador
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre / Razon Social</label>
+                  <input
+                    type="text"
+                    name="client.name"
+                    value={formData.client.name}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">NIF/CIF</label>
+                  <input
+                    type="text"
+                    name="client.nif"
+                    value={formData.client.nif}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">EORI</label>
+                  <input
+                    type="text"
+                    name="client.eori"
+                    value={formData.client.eori}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                    placeholder="ES12345678901"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contacto</label>
+                  <input
+                    type="text"
+                    name="client.contact"
+                    value={formData.client.contact}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Telefono</label>
+                  <input
+                    type="text"
+                    name="client.phone"
+                    value={formData.client.phone}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    name="client.email"
+                    value={formData.client.email}
+                    onChange={handleChange}
+                    className="w-full rounded-md border-gray-300 shadow-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Notas */}
+            <div className="border-t pt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notas internas</label>
+              <textarea
+                name="internalNotes"
+                value={formData.internalNotes}
+                onChange={handleChange}
+                className="w-full rounded-md border-gray-300 shadow-sm"
+                rows={2}
+                placeholder="Notas o instrucciones adicionales..."
+              />
+            </div>
+
+            {/* Info */}
+            <div className="bg-blue-50 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <InformationCircleIcon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium mb-1">Informacion</p>
+                  <p className="text-blue-600">
+                    Al crear la inspeccion, se generara automaticamente un plazo en el Gestor de Plazos
+                    si se especifica una fecha programada.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              disabled={loading}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Creando...
+                </>
+              ) : (
+                <>
+                  <PlusIcon className="w-4 h-4" />
+                  Crear Inspeccion
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )

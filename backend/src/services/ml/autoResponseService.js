@@ -581,10 +581,76 @@ function listTemplates() {
   };
 }
 
+// ==================== Statistics & Feedback ====================
+
+// In-memory storage for demo
+const responseHistory = [];
+const feedbackData = [];
+
+/**
+ * Get auto-response statistics
+ */
+function getStatistics() {
+  const totalResponses = responseHistory.length;
+  const totalFeedback = feedbackData.length;
+  const acceptedCount = feedbackData.filter(f => f.wasAccepted).length;
+  const modifiedCount = feedbackData.filter(f => f.wasModified).length;
+  const aeatAcceptedCount = feedbackData.filter(f => f.acceptedByAEAT).length;
+
+  // By template distribution
+  const templateDistribution = responseHistory.reduce((acc, r) => {
+    acc[r.templateUsed] = (acc[r.templateUsed] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    success: true,
+    statistics: {
+      totalResponses,
+      totalFeedback,
+      acceptanceRate: totalFeedback > 0 ? Math.round((acceptedCount / totalFeedback) * 100) : null,
+      modificationRate: totalFeedback > 0 ? Math.round((modifiedCount / totalFeedback) * 100) : null,
+      aeatSuccessRate: totalFeedback > 0 ? Math.round((aeatAcceptedCount / totalFeedback) * 100) : null,
+      templateDistribution,
+      lastUpdated: new Date().toISOString()
+    }
+  };
+}
+
+/**
+ * Record feedback for auto-response
+ */
+function recordFeedback(responseId, wasAccepted, wasModified, acceptedByAEAT, notes) {
+  const feedback = {
+    responseId,
+    wasAccepted,
+    wasModified,
+    acceptedByAEAT,
+    notes,
+    recordedAt: new Date().toISOString()
+  };
+
+  feedbackData.push(feedback);
+
+  logger.info('Auto-response feedback recorded', {
+    responseId,
+    wasAccepted,
+    wasModified,
+    acceptedByAEAT
+  });
+
+  return {
+    success: true,
+    feedback
+  };
+}
+
 module.exports = {
   generateResponse,
   getTemplatePreview,
   listTemplates,
+  getStatistics,
+  recordFeedback,
   RESPONSE_TEMPLATES,
   STANDARD_PHRASES
 };

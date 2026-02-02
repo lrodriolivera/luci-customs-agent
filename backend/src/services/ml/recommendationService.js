@@ -503,9 +503,75 @@ function getQuickRecommendations(originCountry, taricCode, customsValue) {
   return recommendations;
 }
 
+// ==================== Statistics & Feedback ====================
+
+// In-memory storage for demo
+const recommendationHistory = [];
+const feedbackData = [];
+
+/**
+ * Get recommendation statistics
+ */
+function getStatistics() {
+  const totalRecommendations = recommendationHistory.length;
+  const totalFeedback = feedbackData.length;
+  const usefulCount = feedbackData.filter(f => f.wasUseful).length;
+  const implementedCount = feedbackData.filter(f => f.wasImplemented).length;
+  const totalSavings = feedbackData.reduce((sum, f) => sum + (f.actualSavings || 0), 0);
+
+  // By type distribution
+  const typeDistribution = recommendationHistory.reduce((acc, r) => {
+    acc[r.type] = (acc[r.type] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    success: true,
+    statistics: {
+      totalRecommendations,
+      totalFeedback,
+      usefulnessRate: totalFeedback > 0 ? Math.round((usefulCount / totalFeedback) * 100) : null,
+      implementationRate: totalFeedback > 0 ? Math.round((implementedCount / totalFeedback) * 100) : null,
+      totalSavingsGenerated: totalSavings,
+      typeDistribution,
+      lastUpdated: new Date().toISOString()
+    }
+  };
+}
+
+/**
+ * Record feedback for recommendation
+ */
+function recordFeedback(recommendationId, wasUseful, wasImplemented, actualSavings, notes) {
+  const feedback = {
+    recommendationId,
+    wasUseful,
+    wasImplemented,
+    actualSavings: actualSavings || 0,
+    notes,
+    recordedAt: new Date().toISOString()
+  };
+
+  feedbackData.push(feedback);
+
+  logger.info('Recommendation feedback recorded', {
+    recommendationId,
+    wasUseful,
+    wasImplemented,
+    actualSavings
+  });
+
+  return {
+    success: true,
+    feedback
+  };
+}
+
 module.exports = {
   generateRecommendations,
   getQuickRecommendations,
+  getStatistics,
+  recordFeedback,
   PREFERENCE_AGREEMENTS,
   SPECIAL_REGIMES,
   OEA_BENEFITS

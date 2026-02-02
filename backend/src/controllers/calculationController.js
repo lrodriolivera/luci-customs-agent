@@ -1,6 +1,7 @@
 const { TaricCode, Expedition } = require('../models');
 const logger = require('../config/logger');
 const axios = require('axios');
+const dutyCalculationService = require('../services/dutyCalculationService');
 
 // Cache para tipos de cambio (se actualiza cada hora)
 let exchangeRatesCache = {
@@ -11,69 +12,85 @@ let exchangeRatesCache = {
 /**
  * Calcular aranceles para un producto
  * POST /api/calculation/duties
+ * MEJORADO: Usa IA para obtener aranceles actualizados cuando no estan en BD local
  */
 const calculateDuties = async (req, res) => {
   try {
-    const { taricCode, value, currency, origin, weight, preference } = req.body;
+    const { taricCode, value, currency, origin, weight, preference, quantity } = req.body;
 
-    // Obtener info TARIC
-    const taricInfo = await TaricCode.findOne({ code: taricCode });
-
-    if (!taricInfo) {
-      return res.status(404).json({
+    if (!taricCode) {
+      return res.status(400).json({
         success: false,
-        error: 'Codigo TARIC no encontrado'
+        error: 'Se requiere codigo TARIC'
       });
     }
 
     // Convertir a EUR si es necesario
-    let valueEur = value;
-    if (currency && currency !== 'EUR') {
+    let valueEur = value || 0;
+    if (currency && currency !== 'EUR' && value) {
       const rate = await getExchangeRate(currency, 'EUR');
       valueEur = value * rate;
     }
 
-    // Determinar tipo de arancel segun origen y preferencia
-    let dutyRate = taricInfo.duties?.thirdCountry || 0;
+    // Usar nuevo servicio con IA para obtener aranceles
+    const calculation = await dutyCalculationService.calculateDutiesWithAI({
+      taricCode,
+      customsValue: valueEur,
+      origin: origin || null,
+      preference: preference || '100',
+      quantity: quantity || null,
+      netWeight: weight || null
+    });
 
-    // Verificar preferencias arancelarias
-    if (preference && preference !== '100' && taricInfo.preferences) {
-      const preferentialTreatment = taricInfo.preferences.find(p =>
-        p.countries.includes(origin) || p.agreement === getPreferenceAgreement(preference)
-      );
-      if (preferentialTreatment) {
-        dutyRate = preferentialTreatment.dutyRate || 0;
-      }
-    }
-
-    // Calcular arancel ad valorem
-    let dutyAmount = valueEur * (dutyRate / 100);
-
-    // Si hay arancel especifico (por peso, unidades, etc.)
-    if (taricInfo.duties?.specific && weight) {
-      const specificDuty = calculateSpecificDuty(taricInfo.duties.specific, weight);
-      dutyAmount += specificDuty;
-    }
-
-    // Arancel mixto (ad valorem + especifico con minimo/maximo)
-    if (taricInfo.duties?.mixed) {
-      const mixedDuty = calculateMixedDuty(taricInfo.duties.mixed, valueEur, weight);
-      dutyAmount = mixedDuty;
-    }
-
+    // Formatear respuesta compatible con frontend existente
     res.json({
       success: true,
       data: {
-        taricCode,
-        origin,
+        taricCode: calculation.taricCode,
+        description: calculation.description,
+        origin: calculation.origin,
         preference: preference || '100',
         originalValue: value,
         currency: currency || 'EUR',
         valueEur,
-        dutyRate,
-        dutyAmount: Math.round(dutyAmount * 100) / 100,
-        dutyType: taricInfo.duties?.specific ? 'mixed' : 'ad_valorem',
-        notes: getDutyNotes(taricInfo, origin, preference)
+        customsValue: calculation.customsValue,
+
+        // Aranceles
+        dutyRate: calculation.duties.effectiveDutyRate,
+        baseDutyRate: calculation.duties.baseDutyRate,
+        dutyAmount: calculation.duties.totalDuty,
+        dutyType: calculation.duties.dutyType,
+        adValoremDuty: calculation.duties.adValoremDuty,
+        specificDuty: calculation.duties.specificDuty,
+        antidumpingDuty: calculation.duties.antidumpingDuty,
+
+        // IVA
+        vatRate: calculation.vat.rate,
+        vatBase: calculation.vat.base,
+        vatAmount: calculation.vat.amount,
+
+        // Preferencia aplicada
+        preferenceApplied: calculation.preferenceApplied,
+
+        // Medidas especiales
+        measures: calculation.measures,
+        antidumping: calculation.antidumping,
+        quota: calculation.quota,
+
+        // Totales
+        totalTaxes: calculation.totalTaxes,
+        totalToPay: calculation.totalToPay,
+
+        // Informacion adicional
+        supplementaryUnit: calculation.supplementaryUnit,
+        requiredDocuments: calculation.requiredDocuments,
+        notes: calculation.warnings || [],
+        warnings: calculation.warnings || [],
+
+        // Metadata
+        source: calculation.source,
+        confidence: calculation.confidence,
+        calculatedAt: calculation.calculatedAt
       }
     });
 
@@ -81,7 +98,7 @@ const calculateDuties = async (req, res) => {
     logger.error('Error calculando aranceles:', error);
     res.status(500).json({
       success: false,
-      error: 'Error al calcular aranceles'
+      error: error.message || 'Error al calcular aranceles'
     });
   }
 };
@@ -133,6 +150,7 @@ const calculateVat = async (req, res) => {
 /**
  * Calculo completo de impuestos
  * POST /api/calculation/total
+ * MEJORADO: Usa IA para obtener aranceles actualizados
  */
 const calculateTotal = async (req, res) => {
   try {
@@ -171,59 +189,82 @@ const calculateTotal = async (req, res) => {
     let totalVat = 0;
     let totalSpecialTaxes = 0;
     const itemCalculations = [];
+    const allWarnings = [];
 
     for (const item of itemsToCalculate) {
-      const taricInfo = await TaricCode.findOne({ code: item.taricCode });
-
       // Convertir a EUR
-      let valueEur = item.value;
-      if (item.currency && item.currency !== 'EUR') {
+      let valueEur = item.value || 0;
+      if (item.currency && item.currency !== 'EUR' && item.value) {
         const rate = await getExchangeRate(item.currency, 'EUR');
         valueEur = item.value * rate;
       }
 
-      // Arancel
-      let dutyRate = taricInfo?.duties?.thirdCountry || 0;
-      if (preference && preference !== '100' && taricInfo?.preferences) {
-        const pref = taricInfo.preferences.find(p =>
-          p.countries?.includes(item.origin)
-        );
-        if (pref) dutyRate = pref.dutyRate || 0;
-      }
-      const dutyAmount = valueEur * (dutyRate / 100);
+      // Usar servicio con IA para calcular aranceles
+      try {
+        const calculation = await dutyCalculationService.calculateDutiesWithAI({
+          taricCode: item.taricCode,
+          customsValue: valueEur,
+          origin: item.origin || null,
+          preference: preference || '100',
+          quantity: item.quantity || null,
+          netWeight: item.weight || null
+        });
 
-      // IVA
-      const vatRate = taricInfo?.vat?.applicable || 21;
-      const vatBase = valueEur + dutyAmount;
-      const vatAmount = vatBase * (vatRate / 100);
+        totalInvoiceValue += valueEur;
+        totalDuties += calculation.duties.totalDuty;
+        totalVat += calculation.vat.amount;
 
-      // Impuestos especiales
-      let specialTaxAmount = 0;
-      if (taricInfo?.specialTaxes && taricInfo.specialTaxes.length > 0) {
-        for (const tax of taricInfo.specialTaxes) {
-          if (tax.unit === 'EUR/100kg' && item.weight) {
-            specialTaxAmount += (item.weight / 100) * tax.rate;
-          } else {
-            specialTaxAmount += valueEur * (tax.rate / 100);
-          }
+        // Recopilar warnings
+        if (calculation.warnings && calculation.warnings.length > 0) {
+          allWarnings.push(...calculation.warnings.map(w => `${item.taricCode}: ${w}`));
         }
+
+        itemCalculations.push({
+          taricCode: item.taricCode,
+          description: calculation.description || 'N/A',
+          valueEur: Math.round(valueEur * 100) / 100,
+          dutyRate: calculation.duties.effectiveDutyRate,
+          baseDutyRate: calculation.duties.baseDutyRate,
+          dutyAmount: Math.round(calculation.duties.totalDuty * 100) / 100,
+          dutyType: calculation.duties.dutyType,
+          vatRate: calculation.vat.rate,
+          vatAmount: Math.round(calculation.vat.amount * 100) / 100,
+          specialTaxes: 0,
+          preferenceApplied: calculation.preferenceApplied,
+          source: calculation.source,
+          confidence: calculation.confidence,
+          measures: calculation.measures,
+          antidumping: calculation.antidumping
+        });
+
+      } catch (itemError) {
+        logger.warn(`Error calculating duties for ${item.taricCode}:`, itemError.message);
+
+        // Fallback: usar estimacion basica
+        const fallbackRate = 5; // 5% por defecto
+        const dutyAmount = valueEur * (fallbackRate / 100);
+        const vatRate = 21;
+        const vatAmount = (valueEur + dutyAmount) * (vatRate / 100);
+
+        totalInvoiceValue += valueEur;
+        totalDuties += dutyAmount;
+        totalVat += vatAmount;
+
+        allWarnings.push(`${item.taricCode}: Arancel estimado (5%) - verificar en TARIC oficial`);
+
+        itemCalculations.push({
+          taricCode: item.taricCode,
+          description: 'Producto no identificado',
+          valueEur: Math.round(valueEur * 100) / 100,
+          dutyRate: fallbackRate,
+          dutyAmount: Math.round(dutyAmount * 100) / 100,
+          vatRate,
+          vatAmount: Math.round(vatAmount * 100) / 100,
+          specialTaxes: 0,
+          source: 'fallback',
+          confidence: 50
+        });
       }
-
-      totalInvoiceValue += valueEur;
-      totalDuties += dutyAmount;
-      totalVat += vatAmount;
-      totalSpecialTaxes += specialTaxAmount;
-
-      itemCalculations.push({
-        taricCode: item.taricCode,
-        description: taricInfo?.description?.es || 'N/A',
-        valueEur: Math.round(valueEur * 100) / 100,
-        dutyRate,
-        dutyAmount: Math.round(dutyAmount * 100) / 100,
-        vatRate,
-        vatAmount: Math.round(vatAmount * 100) / 100,
-        specialTaxes: Math.round(specialTaxAmount * 100) / 100
-      });
     }
 
     // Valor en aduana (CIF)
@@ -252,6 +293,7 @@ const calculateTotal = async (req, res) => {
       items: itemCalculations,
       preference: preference || '100',
       currency: 'EUR',
+      warnings: allWarnings,
       calculatedAt: new Date()
     };
 
@@ -297,7 +339,7 @@ const calculateTotal = async (req, res) => {
     logger.error('Error en calculo total:', error);
     res.status(500).json({
       success: false,
-      error: 'Error al calcular impuestos'
+      error: error.message || 'Error al calcular impuestos'
     });
   }
 };
@@ -439,9 +481,104 @@ function getDutyNotes(taricInfo, origin, preference) {
   return notes;
 }
 
+/**
+ * Obtener informacion de aranceles con IA
+ * GET /api/calculation/duty-info/:taricCode
+ */
+const getDutyInfo = async (req, res) => {
+  try {
+    const { taricCode } = req.params;
+    const { origin } = req.query;
+
+    const dutyInfo = await dutyCalculationService.getDutyInfo(taricCode, origin || null);
+
+    if (!dutyInfo) {
+      return res.status(404).json({
+        success: false,
+        error: 'No se pudo obtener informacion de aranceles'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: dutyInfo
+    });
+
+  } catch (error) {
+    logger.error('Error obteniendo info de aranceles:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener informacion de aranceles'
+    });
+  }
+};
+
+/**
+ * Validar arancel con IA
+ * POST /api/calculation/validate-duty
+ */
+const validateDutyRate = async (req, res) => {
+  try {
+    const { taricCode, currentRate, origin } = req.body;
+
+    if (!taricCode || currentRate === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: 'Se requiere taricCode y currentRate'
+      });
+    }
+
+    const validation = await dutyCalculationService.validateDutyRate(taricCode, currentRate, origin);
+
+    if (!validation) {
+      return res.status(500).json({
+        success: false,
+        error: 'No se pudo validar el arancel'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: validation
+    });
+
+  } catch (error) {
+    logger.error('Error validando arancel:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al validar arancel'
+    });
+  }
+};
+
+/**
+ * Limpiar cache de aranceles
+ * DELETE /api/calculation/cache
+ */
+const clearCache = async (req, res) => {
+  try {
+    dutyCalculationService.clearMemoryCache();
+
+    res.json({
+      success: true,
+      message: 'Cache de aranceles limpiado'
+    });
+
+  } catch (error) {
+    logger.error('Error limpiando cache:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al limpiar cache'
+    });
+  }
+};
+
 module.exports = {
   calculateDuties,
   calculateVat,
   calculateTotal,
-  getExchangeRate: getExchangeRateEndpoint
+  getExchangeRate: getExchangeRateEndpoint,
+  getDutyInfo,
+  validateDutyRate,
+  clearCache
 };

@@ -50,7 +50,24 @@ export const expeditionsAPI = {
   update: (id, data) => api.put(`/api/expeditions/${id}`, data),
   delete: (id) => api.delete(`/api/expeditions/${id}`),
   getChecklist: (id) => api.get(`/api/expeditions/${id}/checklist`),
-  sendPortalLink: (id) => api.post(`/api/expeditions/${id}/send-portal-link`)
+  sendPortalLink: (id) => api.post(`/api/expeditions/${id}/send-portal-link`),
+  getStats: () => api.get('/api/expeditions/stats'),
+
+  // AI-Powered Endpoints - LUCI Integration
+  aiSuggestDocuments: (id) =>
+    api.post(`/api/expeditions/${id}/ai/suggest-documents`, {}, { timeout: 60000 }),
+  aiAnalyzeRisk: (id) =>
+    api.post(`/api/expeditions/${id}/ai/analyze-risk`, {}, { timeout: 90000 }),
+  aiSuggestTaric: (id) =>
+    api.post(`/api/expeditions/${id}/ai/suggest-taric`, {}, { timeout: 120000 }),
+  aiDetectInconsistencies: (id) =>
+    api.post(`/api/expeditions/${id}/ai/detect-inconsistencies`, {}, { timeout: 60000 }),
+  aiFullAnalysis: (id) =>
+    api.post(`/api/expeditions/${id}/ai/full-analysis`, {}, { timeout: 180000 }),
+  getAiAnalysis: (id) =>
+    api.get(`/api/expeditions/${id}/ai/analysis`),
+  applyTaricSuggestion: (id, itemIndex, taricCode, hsCode) =>
+    api.post(`/api/expeditions/${id}/ai/apply-taric/${itemIndex}`, { taricCode, hsCode })
 }
 
 // Documents
@@ -71,7 +88,66 @@ export const classificationAPI = {
     api.post('/ai/validate-classification', null, {
       params: { taric_code: taricCode, description, origin }
     }),
-  search: (query) => api.get('/api/classification/search', { params: { query } })
+  search: (query) => api.get('/api/classification/search', { params: { query } }),
+  suggest: (data) => api.post('/api/classification/suggest', data, { timeout: 90000 }),
+  getTaricInfo: (code) => api.get(`/api/classification/taric/${code}`),
+  getChapters: () => api.get('/api/classification/chapters'),
+  calculateDuties: (data) => api.post('/api/classification/calculate-duties', data),
+  getRequiredDocuments: (code, origin) => api.get(`/api/classification/required-documents/${code}`, { params: { origin } }),
+  getPreferences: (origin) => api.get(`/api/classification/preferences/${origin}`),
+  applyClassification: (data) => api.post('/api/classification/apply', data),
+
+  // AI-Powered Endpoints - LUCI Integration (Phase 7 - Mejoras TARIC)
+  aiImproveWithFeedback: (productDescription, currentSuggestions, feedbackHistory) =>
+    api.post('/api/classification/ai/improve-with-feedback', {
+      productDescription,
+      currentSuggestions,
+      feedbackHistory
+    }, { timeout: 90000 }),
+
+  aiSuggestFromHistory: (productDescription, historicalClassifications, clientProfile) =>
+    api.post('/api/classification/ai/suggest-from-history', {
+      productDescription,
+      historicalClassifications,
+      clientProfile
+    }, { timeout: 90000 }),
+
+  aiCrossValidate: (classification, productDetails) =>
+    api.post('/api/classification/ai/cross-validate', {
+      classification,
+      productDetails
+    }, { timeout: 120000 }),
+
+  aiFullAnalysis: (productData, options = {}) =>
+    api.post('/api/classification/ai/full-analysis', {
+      productData,
+      options
+    }, { timeout: 180000 }),
+
+  aiRecordFeedback: (classificationData, feedback) =>
+    api.post('/api/classification/ai/record-feedback', {
+      classificationData,
+      feedback
+    }, { timeout: 30000 }),
+
+  // History and Cache Endpoints
+  getSearchHistory: (limit = 10) =>
+    api.get('/api/classification/history', { params: { limit } }),
+
+  getMostSearched: (days = 30, limit = 20) =>
+    api.get('/api/classification/most-searched', { params: { days, limit } }),
+
+  getSearchStats: (days = 30) =>
+    api.get('/api/classification/search-stats', { params: { days } }),
+
+  getCacheStats: () =>
+    api.get('/api/classification/cache-stats'),
+
+  markSearchAsUsed: (searchId, expeditionId) =>
+    api.put(`/api/classification/history/${searchId}/mark-used`, { expeditionId }),
+
+  cleanOldCache: (daysOld = 60) =>
+    api.delete('/api/classification/cache/clean', { params: { daysOld } })
 }
 
 // Declarations
@@ -93,12 +169,53 @@ export const declarationsAPI = {
       responseType: 'blob'
     }),
   submit: (expeditionId) => api.post(`/api/declarations/${expeditionId}/submit`),
-  getSummary: (expeditionId) => api.get(`/api/declarations/${expeditionId}/summary`)
+  getSummary: (expeditionId) => api.get(`/api/declarations/${expeditionId}/summary`),
+  update: (expeditionId, data) => api.put(`/api/declarations/${expeditionId}`, data),
+
+  // AI-Powered Endpoints - LUCI Integration
+  aiValidate: (expeditionId, declarationType) =>
+    api.post(`/api/declarations/${expeditionId}/ai/validate`, { declarationType }, { timeout: 90000 }),
+  aiDetectErrors: (expeditionId, declarationType) =>
+    api.post(`/api/declarations/${expeditionId}/ai/detect-errors`, { declarationType }, { timeout: 60000 }),
+  aiSuggestRegime: (expeditionId) =>
+    api.post(`/api/declarations/${expeditionId}/ai/suggest-regime`, {}, { timeout: 90000 }),
+  aiPredictChannel: (expeditionId, declarationType) =>
+    api.post(`/api/declarations/${expeditionId}/ai/predict-channel`, { declarationType }, { timeout: 90000 }),
+  aiFullAnalysis: (expeditionId, declarationType) =>
+    api.post(`/api/declarations/${expeditionId}/ai/full-analysis`, { declarationType }, { timeout: 180000 }),
+  getAiAnalysis: (expeditionId) =>
+    api.get(`/api/declarations/${expeditionId}/ai/analysis`),
+  applyRegimeSuggestion: (expeditionId, regime, preference, additionalProcedure) =>
+    api.post(`/api/declarations/${expeditionId}/ai/apply-regime`, { regime, preference, additionalProcedure })
 }
 
 // Calculations
 export const calculationsAPI = {
-  calculateDuties: (params) => api.post('/ai/calculate-duties', null, { params })
+  // Calculate duties with AI-powered tariff lookup
+  calculateDuties: (data) => api.post('/api/calculation/duties', data, { timeout: 60000 }),
+
+  // Calculate VAT
+  calculateVat: (data) => api.post('/api/calculation/vat', data),
+
+  // Calculate total (duties + VAT + fees)
+  calculateTotal: (data) => api.post('/api/calculation/total', data, { timeout: 90000 }),
+
+  // Get exchange rate
+  getExchangeRate: (currency = 'USD') => api.get('/api/calculation/exchange-rate', { params: { currency } }),
+
+  // Get duty info for a specific TARIC code (AI-powered)
+  getDutyInfo: (taricCode, origin = null) =>
+    api.get(`/api/calculation/duty-info/${taricCode}`, {
+      params: origin ? { origin } : {},
+      timeout: 60000
+    }),
+
+  // Validate a duty rate against AI knowledge
+  validateDutyRate: (taricCode, currentRate, origin = null) =>
+    api.post('/api/calculation/validate-duty', { taricCode, currentRate, origin }, { timeout: 60000 }),
+
+  // Clear calculation cache (admin)
+  clearCache: () => api.delete('/api/calculation/cache')
 }
 
 // Portal
@@ -135,7 +252,19 @@ export const portalAPI = {
   // Signed documents
   getSignedDocuments: (token) => api.get(`/api/portal/${token}/signed-documents`),
   downloadLevante: (token) => api.get(`/api/portal/${token}/signed-documents/levante`),
-  downloadDeclaration: (token) => api.get(`/api/portal/${token}/signed-documents/declaration`)
+  downloadDeclaration: (token) => api.get(`/api/portal/${token}/signed-documents/declaration`),
+
+  // AI-Powered Endpoints - LUCI Integration
+  aiEnhancedChat: (token, message) =>
+    api.post(`/api/portal/${token}/ai/chat`, { message }, { timeout: 60000 }),
+  aiDetectFAQ: (token, question) =>
+    api.post(`/api/portal/${token}/ai/faq`, { question }, { timeout: 30000 }),
+  aiGetSummary: (token, options = {}) =>
+    api.get(`/api/portal/${token}/ai/summary`, { params: options, timeout: 60000 }),
+  aiGenerateNotification: (token, event, preferences = {}) =>
+    api.post(`/api/portal/${token}/ai/notification`, { event, preferences }, { timeout: 30000 }),
+  aiFullAnalysis: (token) =>
+    api.get(`/api/portal/${token}/ai/full-analysis`, { timeout: 120000 })
 }
 
 // Chat/AI
@@ -169,7 +298,19 @@ export const requirementsAPI = {
   scheduleInspection: (id, data) => api.post(`/api/requirements/${id}/inspection/schedule`, data),
   recordInspectionResult: (id, data) => api.post(`/api/requirements/${id}/inspection/result`, data),
   resolve: (id, data) => api.post(`/api/requirements/${id}/resolve`, data),
-  generateAIResponse: (id) => api.post(`/api/requirements/${id}/ai-response`)
+  generateAIResponse: (id) => api.post(`/api/requirements/${id}/ai-response`, {}, { timeout: 120000 }),
+
+  // AI-Powered Endpoints - LUCI Integration
+  aiAnalyzeDocuments: (id) =>
+    api.post(`/api/requirements/${id}/ai/analyze-documents`, {}, { timeout: 60000 }),
+  aiSuggestArguments: (id) =>
+    api.post(`/api/requirements/${id}/ai/suggest-arguments`, {}, { timeout: 120000 }),
+  aiAnalyzeRisk: (id) =>
+    api.post(`/api/requirements/${id}/ai/analyze-risk`, {}, { timeout: 60000 }),
+  aiFullAnalysis: (id) =>
+    api.post(`/api/requirements/${id}/ai/full-analysis`, {}, { timeout: 180000 }),
+  aiDraftResponse: (id) =>
+    api.post(`/api/requirements/${id}/ai/draft-response`, {}, { timeout: 120000 })
 }
 
 // Channels (Circuitos de control)
@@ -283,7 +424,21 @@ export const guaranteesAPI = {
   getMovements: (id, params) => api.get(`/api/guarantees/${id}/movements`, { params }),
   calculate: (data) => api.post('/api/guarantees/calculate', data),
   findSuitable: (params) => api.get('/api/guarantees/find-suitable', { params }),
-  getReport: (params) => api.get('/api/guarantees/report', { params })
+  getReport: (params) => api.get('/api/guarantees/report', { params }),
+
+  // AI-Powered Endpoints - LUCI Integration
+  aiAnalyzeNeeds: (operation) =>
+    api.post('/api/guarantees/ai/analyze-needs', { operation }, { timeout: 90000 }),
+  aiRecommendType: (operatorProfile, operationDetails) =>
+    api.post('/api/guarantees/ai/recommend-type', { operatorProfile, operationDetails }, { timeout: 90000 }),
+  aiOptimize: (upcomingOperations) =>
+    api.post('/api/guarantees/ai/optimize', { upcomingOperations }, { timeout: 90000 }),
+  aiSmartCalculate: (operation) =>
+    api.post('/api/guarantees/ai/smart-calculate', { operation }, { timeout: 60000 }),
+  aiFullAnalysis: (operation, upcomingOperations) =>
+    api.post('/api/guarantees/ai/full-analysis', { operation, upcomingOperations }, { timeout: 180000 }),
+  getAiAnalysis: () =>
+    api.get('/api/guarantees/ai/analysis')
 }
 
 // Dashboard
@@ -311,7 +466,21 @@ export const transitAPI = {
   releaseGoods: (id) => api.post(`/api/transit/${id}/release-goods`),
   complete: (id) => api.post(`/api/transit/${id}/complete`),
   // Special procedures
-  initiateEnquiry: (id, data) => api.post(`/api/transit/${id}/enquiry`, data)
+  initiateEnquiry: (id, data) => api.post(`/api/transit/${id}/enquiry`, data),
+
+  // AI-Powered Endpoints - LUCI Integration
+  aiAutoComplete: (transitDraft, expeditionId) =>
+    api.post('/api/transit/ai/auto-complete', { transitDraft, expeditionId }, { timeout: 90000 }),
+  aiValidateRoute: (id) =>
+    api.post(`/api/transit/${id}/ai/validate-route`, {}, { timeout: 90000 }),
+  aiPredictIncidents: (id) =>
+    api.post(`/api/transit/${id}/ai/predict-incidents`, {}, { timeout: 90000 }),
+  aiSuggestGuarantee: (id) =>
+    api.post(`/api/transit/${id}/ai/suggest-guarantee`, {}, { timeout: 60000 }),
+  aiFullAnalysis: (id) =>
+    api.post(`/api/transit/${id}/ai/full-analysis`, {}, { timeout: 180000 }),
+  aiApplySuggestion: (id, suggestedData) =>
+    api.post(`/api/transit/${id}/ai/apply-suggestion`, { suggestedData })
 }
 
 // Preferences (Preferencias Arancelarias)
@@ -720,6 +889,22 @@ export const analyticsAPI = {
     predictDuties: (data) => api.post('/api/analytics/predictions/duties', data),
     detectAnomalies: (data) => api.post('/api/analytics/predictions/anomalies', data),
     analyzeTrends: (data) => api.post('/api/analytics/predictions/trends', data)
+  },
+
+  // AI-Powered Endpoints - LUCI Integration
+  ai: {
+    generateInsights: (analyticsData, context) =>
+      api.post('/api/analytics/ai/insights', { analyticsData, context }, { timeout: 120000 }),
+    detectAnomalies: (data, thresholds) =>
+      api.post('/api/analytics/ai/anomalies', { data, thresholds }, { timeout: 120000 }),
+    predictTrends: (historicalData, horizon) =>
+      api.post('/api/analytics/ai/trends', { historicalData, horizon }, { timeout: 120000 }),
+    generateExecutiveReport: (analyticsData, options) =>
+      api.post('/api/analytics/ai/executive-report', { analyticsData, options }, { timeout: 180000 }),
+    analyzeKPIDeviations: (kpiData, targets) =>
+      api.post('/api/analytics/ai/kpi-analysis', { kpiData, targets }, { timeout: 90000 }),
+    fullAnalysis: (analyticsData, options) =>
+      api.post('/api/analytics/ai/full-analysis', { analyticsData, options }, { timeout: 180000 })
   }
 }
 

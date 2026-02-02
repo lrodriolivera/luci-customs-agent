@@ -662,10 +662,27 @@ exports.getStats = async (req, res) => {
     // Agregar requerimientos vencidos
     const overdue = await Requirement.findOverdue();
 
+    // Calcular total
+    const total = await Requirement.countDocuments(userId ? { assignedTo: userId } : {});
+
+    // Formatear stats para el frontend
+    const byStatus = stats.byStatus || {};
+    const pending = (byStatus.pending || 0) + (byStatus.awaiting_client || 0);
+    const inProgress = (byStatus.in_progress || 0) + (byStatus.response_ready || 0) + (byStatus.submitted || 0) + (byStatus.under_review || 0);
+    const resolved = (byStatus.resolved || 0) + (byStatus.closed || 0);
+
     res.json({
       success: true,
       data: {
-        ...stats,
+        // Stats planos para las cards del frontend
+        total,
+        pending,
+        inProgress,
+        resolved,
+        // Stats detallados
+        byStatus,
+        byChannel: stats.byChannel || {},
+        overdue: stats.overdue || 0,
         urgentCount: urgent.length,
         overdueCount: overdue.length,
         urgentRequirements: urgent.slice(0, 5), // Top 5 urgentes
@@ -708,7 +725,7 @@ exports.getByExpedition = async (req, res) => {
 };
 
 /**
- * Generar respuesta con IA
+ * Generar respuesta con IA (versión básica - mantenida por compatibilidad)
  * Usa Claude para sugerir respuesta basada en el tipo de requerimiento
  */
 exports.generateAIResponse = async (req, res) => {
@@ -726,54 +743,24 @@ exports.generateAIResponse = async (req, res) => {
     // Obtener servicio de IA
     const aiService = require('../services/aiService');
 
-    // Construir contexto para la IA
-    const context = {
-      requirementType: requirement.requirementType,
-      channel: requirement.channel,
-      subject: requirement.subject,
-      description: requirement.description,
-      requestedItems: requirement.requestedItems,
-      expedition: {
-        operationType: requirement.expeditionId.operationType,
-        goods: requirement.expeditionId.goods,
-        client: requirement.expeditionId.client,
-        declaration: requirement.expeditionId.declaration
-      }
-    };
-
-    const prompt = `Eres un experto representante aduanero en España.
-Analiza el siguiente requerimiento de AEAT y genera una respuesta profesional:
-
-Tipo de requerimiento: ${requirement.requirementType}
-Canal: ${requirement.channel}
-Asunto: ${requirement.subject}
-Descripcion: ${requirement.description}
-
-Items solicitados:
-${requirement.requestedItems.map(item => `- ${item.description} (${item.itemType})`).join('\n')}
-
-Datos del expediente:
-- Tipo operacion: ${context.expedition.operationType}
-- Mercancias: ${context.expedition.goods.map(g => g.description).join(', ')}
-
-Por favor genera:
-1. Una respuesta formal para enviar a AEAT
-2. Lista de documentos que debemos adjuntar
-3. Puntos clave a destacar en la respuesta
-4. Posibles riesgos o consideraciones`;
-
-    const aiResponse = await aiService.generateResponse(prompt, 'aduanas');
+    // Usar el nuevo método mejorado
+    const aiResponse = await aiService.generateRequirementResponse(requirement, requirement.expeditionId);
 
     res.json({
       success: true,
       data: {
-        suggestedResponse: aiResponse.content,
-        suggestedDocuments: aiResponse.documents || [],
+        suggestedResponse: aiResponse.formalResponse?.body || aiResponse.rawResponse,
+        formalResponse: aiResponse.formalResponse,
+        suggestedDocuments: aiResponse.documentsToAttach || [],
         keyPoints: aiResponse.keyPoints || [],
         risks: aiResponse.risks || [],
-        confidence: aiResponse.confidence || 0.8,
+        legalArguments: aiResponse.legalArguments || [],
+        recommendedActions: aiResponse.recommendedActions || [],
+        estimatedOutcome: aiResponse.estimatedOutcome,
+        confidence: aiResponse.estimatedOutcome?.favorable / 100 || 0.8,
         model: aiResponse.model,
-        tokensUsed: aiResponse.tokensUsed
+        tokensUsed: aiResponse.tokensUsed,
+        summary: aiResponse.summary
       }
     });
   } catch (error) {
@@ -781,6 +768,200 @@ Por favor genera:
     res.status(500).json({
       success: false,
       message: 'Error al generar respuesta con IA',
+      error: error.message
+    });
+  }
+};
+
+// ===========================================
+// AI ENDPOINTS AVANZADOS - LUCI Integration
+// ===========================================
+
+const aiService = require('../services/aiService');
+
+/**
+ * Analizar documentación solicitada con IA
+ * POST /api/requirements/:id/ai/analyze-documents
+ */
+exports.aiAnalyzeDocuments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const requirement = await Requirement.findById(id).populate('expeditionId');
+    if (!requirement) {
+      return res.status(404).json({
+        success: false,
+        message: 'Requerimiento no encontrado'
+      });
+    }
+
+    logger.info(`AI: Analizando documentos solicitados para ${requirement.requirementNumber}`);
+
+    const analysis = await aiService.analyzeRequestedDocuments(requirement, requirement.expeditionId);
+
+    res.json({
+      success: true,
+      data: analysis
+    });
+
+  } catch (error) {
+    logger.error('Error en AI analyze documents:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al analizar documentos',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Sugerir argumentación legal con IA
+ * POST /api/requirements/:id/ai/suggest-arguments
+ */
+exports.aiSuggestArguments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const requirement = await Requirement.findById(id).populate('expeditionId');
+    if (!requirement) {
+      return res.status(404).json({
+        success: false,
+        message: 'Requerimiento no encontrado'
+      });
+    }
+
+    logger.info(`AI: Sugiriendo argumentación legal para ${requirement.requirementNumber}`);
+
+    const arguments_ = await aiService.suggestLegalArguments(requirement, requirement.expeditionId);
+
+    res.json({
+      success: true,
+      data: arguments_
+    });
+
+  } catch (error) {
+    logger.error('Error en AI suggest arguments:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al sugerir argumentación',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Analizar riesgo del requerimiento con IA
+ * POST /api/requirements/:id/ai/analyze-risk
+ */
+exports.aiAnalyzeRisk = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const requirement = await Requirement.findById(id).populate('expeditionId');
+    if (!requirement) {
+      return res.status(404).json({
+        success: false,
+        message: 'Requerimiento no encontrado'
+      });
+    }
+
+    logger.info(`AI: Analizando riesgo para ${requirement.requirementNumber}`);
+
+    const riskAnalysis = await aiService.analyzeRequirementRisk(requirement, requirement.expeditionId);
+
+    res.json({
+      success: true,
+      data: riskAnalysis
+    });
+
+  } catch (error) {
+    logger.error('Error en AI analyze risk:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al analizar riesgo',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Análisis completo del requerimiento con IA
+ * POST /api/requirements/:id/ai/full-analysis
+ */
+exports.aiFullAnalysis = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const requirement = await Requirement.findById(id).populate('expeditionId');
+    if (!requirement) {
+      return res.status(404).json({
+        success: false,
+        message: 'Requerimiento no encontrado'
+      });
+    }
+
+    logger.info(`AI: Análisis completo para ${requirement.requirementNumber}`);
+
+    const analysis = await aiService.fullRequirementAnalysis(requirement, requirement.expeditionId);
+
+    // Registrar en timeline
+    requirement.timeline.push({
+      action: 'ai_analysis',
+      description: `Análisis IA completado - Preparación: ${analysis.overallReadiness?.score}%`,
+      performedBy: req.user?._id,
+      metadata: {
+        readinessScore: analysis.overallReadiness?.score,
+        riskLevel: analysis.risk?.riskLevel,
+        estimatedOutcome: analysis.overallReadiness?.estimatedOutcome
+      }
+    });
+    await requirement.save();
+
+    res.json({
+      success: true,
+      data: analysis
+    });
+
+  } catch (error) {
+    logger.error('Error en AI full analysis:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al realizar análisis completo',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Generar borrador de respuesta formal con IA
+ * POST /api/requirements/:id/ai/draft-response
+ */
+exports.aiDraftResponse = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const requirement = await Requirement.findById(id).populate('expeditionId');
+    if (!requirement) {
+      return res.status(404).json({
+        success: false,
+        message: 'Requerimiento no encontrado'
+      });
+    }
+
+    logger.info(`AI: Generando borrador de respuesta para ${requirement.requirementNumber}`);
+
+    const response = await aiService.generateRequirementResponse(requirement, requirement.expeditionId);
+
+    res.json({
+      success: true,
+      data: response
+    });
+
+  } catch (error) {
+    logger.error('Error en AI draft response:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al generar borrador de respuesta',
       error: error.message
     });
   }
