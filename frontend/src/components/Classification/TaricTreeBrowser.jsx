@@ -32,6 +32,13 @@ function TreeSkeleton({ count = 4 }) {
   )
 }
 
+// Helper: extraer descripcion como string (puede venir como {es, en} o string)
+const getDesc = (d) => {
+  if (!d) return ''
+  if (typeof d === 'string') return d
+  return d.es || d.en || ''
+}
+
 export default function TaricTreeBrowser({ onCodeSelect }) {
   const [loading, setLoading] = useState(false)
   const [breadcrumb, setBreadcrumb] = useState([]) // [{code, label, level}]
@@ -228,7 +235,7 @@ export default function TaricTreeBrowser({ onCodeSelect }) {
                   <div className="flex-1 min-w-0">
                     <span className="font-mono text-sm font-bold text-gray-900">{item.code}</span>
                     <p className="text-xs text-gray-600 truncate">
-                      {item.description?.es || item.description || ''}
+                      {getDesc(item.description)}
                     </p>
                   </div>
                 </div>
@@ -322,7 +329,7 @@ export default function TaricTreeBrowser({ onCodeSelect }) {
                     }`}
                     onClick={() => {
                       if (isClickable) {
-                        handleNavigate(item.code, chapterName || item.description || item.code)
+                        handleNavigate(item.code, chapterName || getDesc(item.description) || item.code)
                       } else if (isLeafLevel) {
                         handleSelectCode(item.code)
                       }
@@ -348,7 +355,7 @@ export default function TaricTreeBrowser({ onCodeSelect }) {
                         )}
                       </div>
                       <p className="text-xs text-gray-600 truncate">
-                        {chapterName || item.description || ''}
+                        {chapterName || getDesc(item.description)}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">

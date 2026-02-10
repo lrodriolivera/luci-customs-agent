@@ -134,20 +134,37 @@ const getTaricInfo = async (req, res) => {
         }
       });
 
+      const obj = taricCode.toObject();
       return res.json({
         success: true,
         data: {
-          code: taricCode.toObject(),
+          code: obj.code,
           found: true,
           source: 'local_db',
+          description: obj.description?.es || obj.description?.en || '',
+          description_es: obj.description?.es || '',
+          chapter: obj.breakdown?.chapter,
+          heading: obj.breakdown?.heading,
+          subheading: obj.breakdown?.subheading,
+          breakdown: obj.breakdown,
+          duties: obj.duties,
+          vat: obj.vat,
+          measures: obj.measures || [],
+          requiredDocuments: obj.requiredDocuments || [],
+          preferences: obj.preferences || [],
+          supplementaryUnit: obj.supplementaryUnit,
+          notes: obj.notes || [],
+          examples: obj.examples || [],
+          keywords: obj.keywords || [],
+          isLeaf: obj.isLeaf,
           hierarchy: hierarchy.map(h => ({
             code: h.code,
             level: h.level,
-            description: h.description
+            description: h.description?.es || h.description?.en || h.description || ''
           })),
           children: children.map(c => ({
             code: c.code,
-            description: c.description
+            description: c.description?.es || c.description?.en || c.description || ''
           }))
         }
       });
