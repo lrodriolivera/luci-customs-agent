@@ -8,10 +8,9 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 
 const ApiKeySchema = new mongoose.Schema({
-  // Organization/Client reference
+  // Organization/Client reference (Tenant or User if no tenant)
   organizationId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Tenant',
     required: true,
     index: true
   },
@@ -48,7 +47,12 @@ const ApiKeySchema = new mongoose.Schema({
       'declarations:write',
       'payments:read',
       'payments:write',
-      'stats:read'
+      'stats:read',
+      'classification:read',
+      'classification:write',
+      'calculation:read',
+      'calculation:write',
+      'taric:read'
     ]
   }],
 
@@ -119,7 +123,7 @@ ApiKeySchema.statics.findByKey = async function(key) {
   const apiKey = await this.findOne({
     keyHash: hash,
     status: 'active'
-  }).populate('organizationId');
+  });
 
   if (!apiKey) {
     return null;
