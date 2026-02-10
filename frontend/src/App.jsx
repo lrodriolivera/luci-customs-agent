@@ -62,6 +62,9 @@ import PortalDocuments from './components/Portal/PortalDocuments'
 import PortalChat from './components/Portal/PortalChat'
 import PortalStatus from './components/Portal/PortalStatus'
 
+// Landing Page
+import LandingPage from './components/Landing/LandingPage'
+
 // Auth
 import Login from './components/Auth/Login'
 
@@ -88,6 +91,7 @@ function App() {
   return (
     <Routes>
       {/* Public Routes */}
+      <Route path="/landing" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
 
       {/* Client Portal Routes (Public with token) */}

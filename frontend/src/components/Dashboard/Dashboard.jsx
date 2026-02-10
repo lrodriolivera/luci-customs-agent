@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { expeditionsAPI, dashboardAPI } from '../../services/api'
+import { expeditionsAPI, dashboardAPI, classificationAPI } from '../../services/api'
 import {
   FolderIcon,
   DocumentCheckIcon,
@@ -13,7 +13,13 @@ import {
   ShieldExclamationIcon,
   BanknotesIcon,
   DocumentTextIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  TagIcon,
+  CalculatorIcon,
+  ChatBubbleLeftRightIcon,
+  SparklesIcon,
+  ClipboardDocumentCheckIcon,
+  ArrowTrendingUpIcon
 } from '@heroicons/react/24/outline'
 
 export default function Dashboard() {
@@ -28,16 +34,14 @@ export default function Dashboard() {
   const [alertStats, setAlertStats] = useState({ total: 0, critical: 0, warning: 0 })
   const [loading, setLoading] = useState(true)
   const [alertsLoading, setAlertsLoading] = useState(true)
+  const [cacheStats, setCacheStats] = useState(null)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await expeditionsAPI.list({ limit: 5 })
         const expeditions = response.data.expeditions || []
-
         setRecentExpeditions(expeditions)
-
-        // Calculate stats
         setStats({
           total: response.data.total || expeditions.length,
           pending: expeditions.filter(e => e.status === 'PENDING_DOCS' || e.status === 'pending_docs').length,
@@ -65,44 +69,22 @@ export default function Dashboard() {
       }
     }
 
+    const fetchCacheStats = async () => {
+      try {
+        const response = await classificationAPI.getCacheStats()
+        if (response.data.success) {
+          setCacheStats(response.data.data)
+        }
+      } catch {}
+    }
+
     fetchData()
     fetchAlerts()
+    fetchCacheStats()
 
-    // Actualizar alertas cada 5 minutos
     const alertInterval = setInterval(fetchAlerts, 5 * 60 * 1000)
     return () => clearInterval(alertInterval)
   }, [])
-
-  const statCards = [
-    {
-      label: 'Total Expedientes',
-      value: stats.total,
-      icon: FolderIcon,
-      color: 'bg-blue-500',
-      bgLight: 'bg-blue-50'
-    },
-    {
-      label: 'Pendiente Docs',
-      value: stats.pending,
-      icon: ClockIcon,
-      color: 'bg-yellow-500',
-      bgLight: 'bg-yellow-50'
-    },
-    {
-      label: 'En Proceso',
-      value: stats.inProgress,
-      icon: ExclamationCircleIcon,
-      color: 'bg-orange-500',
-      bgLight: 'bg-orange-50'
-    },
-    {
-      label: 'Completados',
-      value: stats.completed,
-      icon: DocumentCheckIcon,
-      color: 'bg-green-500',
-      bgLight: 'bg-green-50'
-    }
-  ]
 
   const getStatusBadge = (status) => {
     const statusMap = {
@@ -141,27 +123,9 @@ export default function Dashboard() {
 
   const getSeverityStyles = (severity) => {
     const styles = {
-      critical: {
-        bg: 'bg-red-50',
-        border: 'border-red-200',
-        icon: 'text-red-500',
-        text: 'text-red-800',
-        badge: 'bg-red-100 text-red-800'
-      },
-      warning: {
-        bg: 'bg-yellow-50',
-        border: 'border-yellow-200',
-        icon: 'text-yellow-500',
-        text: 'text-yellow-800',
-        badge: 'bg-yellow-100 text-yellow-800'
-      },
-      info: {
-        bg: 'bg-blue-50',
-        border: 'border-blue-200',
-        icon: 'text-blue-500',
-        text: 'text-blue-800',
-        badge: 'bg-blue-100 text-blue-800'
-      }
+      critical: { bg: 'bg-red-50', border: 'border-red-200', icon: 'text-red-500', text: 'text-red-800', badge: 'bg-red-100 text-red-800' },
+      warning: { bg: 'bg-yellow-50', border: 'border-yellow-200', icon: 'text-yellow-500', text: 'text-yellow-800', badge: 'bg-yellow-100 text-yellow-800' },
+      info: { bg: 'bg-blue-50', border: 'border-blue-200', icon: 'text-blue-500', text: 'text-blue-800', badge: 'bg-blue-100 text-blue-800' }
     }
     return styles[severity] || styles.info
   }
@@ -174,18 +138,42 @@ export default function Dashboard() {
     )
   }
 
+  const statCards = [
+    { label: 'Total Expedientes', value: stats.total, icon: FolderIcon, gradient: 'from-sky-500 to-blue-600', bg: 'bg-sky-50' },
+    { label: 'Pendiente Docs', value: stats.pending, icon: ClockIcon, gradient: 'from-amber-400 to-orange-500', bg: 'bg-amber-50' },
+    { label: 'En Proceso', value: stats.inProgress, icon: ArrowTrendingUpIcon, gradient: 'from-violet-500 to-purple-600', bg: 'bg-violet-50' },
+    { label: 'Completados', value: stats.completed, icon: DocumentCheckIcon, gradient: 'from-emerald-400 to-green-600', bg: 'bg-emerald-50' },
+  ]
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 mt-1">Bienvenido a LUCI - Agente Aduanero Inteligente</p>
+          <p className="text-sm text-gray-500 mt-0.5">Resumen de tu operativa aduanera</p>
         </div>
         <Link to="/expeditions/new" className="btn-primary flex items-center gap-2">
           <PlusIcon className="w-5 h-5" />
-          Nuevo Expediente
+          <span className="hidden sm:inline">Nuevo Expediente</span>
         </Link>
+      </div>
+
+      {/* KPI Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map(({ label, value, icon: Icon, gradient, bg }) => (
+          <div key={label} className="card group hover:shadow-md transition-all">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">{value}</p>
+              </div>
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg`}>
+                <Icon className="w-5 h-5 text-white" />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Alerts Panel */}
@@ -197,213 +185,184 @@ export default function Dashboard() {
                 <BellAlertIcon className="w-6 h-6 text-red-500" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Alertas Activas
-                </h2>
+                <h2 className="font-semibold text-gray-900">Alertas Activas</h2>
                 <p className="text-sm text-gray-500">
-                  {alertStats.critical > 0 && (
-                    <span className="text-red-600 font-medium">{alertStats.critical} criticas</span>
-                  )}
+                  {alertStats.critical > 0 && <span className="text-red-600 font-medium">{alertStats.critical} criticas</span>}
                   {alertStats.critical > 0 && alertStats.warning > 0 && ' · '}
-                  {alertStats.warning > 0 && (
-                    <span className="text-yellow-600 font-medium">{alertStats.warning} advertencias</span>
-                  )}
+                  {alertStats.warning > 0 && <span className="text-yellow-600 font-medium">{alertStats.warning} advertencias</span>}
                 </p>
               </div>
             </div>
-            <Link
-              to="/requirements"
-              className="text-luci hover:text-luci-dark text-sm font-medium flex items-center gap-1"
-            >
-              Ver todas
-              <ArrowRightIcon className="w-4 h-4" />
+            <Link to="/requirements" className="text-luci hover:text-luci-dark text-sm font-medium flex items-center gap-1">
+              Ver todas <ArrowRightIcon className="w-4 h-4" />
             </Link>
           </div>
-
           {alertsLoading ? (
             <div className="flex justify-center py-4">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-luci"></div>
             </div>
           ) : (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {alerts.slice(0, 5).map((alert) => {
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {alerts.slice(0, 4).map((alert) => {
                 const AlertIcon = getAlertIcon(alert.type)
                 const styles = getSeverityStyles(alert.severity)
                 return (
-                  <Link
-                    key={alert.id}
-                    to={alert.link}
-                    className={`block p-3 rounded-lg border ${styles.bg} ${styles.border} hover:shadow-sm transition-shadow`}
-                  >
+                  <Link key={alert.id} to={alert.link} className={`block p-3 rounded-lg border ${styles.bg} ${styles.border} hover:shadow-sm transition-shadow`}>
                     <div className="flex items-start gap-3">
                       <AlertIcon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${styles.icon}`} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className={`font-medium ${styles.text}`}>{alert.title}</p>
+                          <p className={`font-medium text-sm ${styles.text}`}>{alert.title}</p>
                           <span className={`text-xs px-1.5 py-0.5 rounded ${styles.badge}`}>
                             {alert.severity === 'critical' ? 'Critico' : alert.severity === 'warning' ? 'Aviso' : 'Info'}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 mt-0.5">{alert.message}</p>
-                        {alert.expeditionNumber && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Expediente: {alert.expeditionNumber}
-                            {alert.client && ` · ${alert.client}`}
-                          </p>
-                        )}
+                        <p className="text-xs text-gray-600 mt-0.5">{alert.message}</p>
                       </div>
-                      <ArrowRightIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
                     </div>
                   </Link>
                 )
               })}
-
-              {alerts.length > 5 && (
-                <div className="text-center pt-2">
-                  <Link
-                    to="/requirements"
-                    className="text-sm text-luci hover:text-luci-dark font-medium"
-                  >
-                    Ver {alerts.length - 5} alertas mas...
-                  </Link>
-                </div>
-              )}
             </div>
           )}
         </div>
       )}
 
-      {/* No Alerts Message */}
+      {/* No Alerts */}
       {!alertsLoading && alertStats.total === 0 && (
-        <div className="card bg-green-50 border border-green-200">
+        <div className="card bg-emerald-50 border border-emerald-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <CheckCircleIcon className="w-6 h-6 text-green-500" />
-            </div>
+            <CheckCircleIcon className="w-8 h-8 text-emerald-500" />
             <div>
-              <h3 className="font-medium text-green-800">Sin alertas pendientes</h3>
-              <p className="text-sm text-green-600">Todos los expedientes y requerimientos estan al dia</p>
+              <h3 className="font-medium text-emerald-800">Sin alertas pendientes</h3>
+              <p className="text-sm text-emerald-600">Todos los expedientes y requerimientos estan al dia</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map(({ label, value, icon: Icon, color, bgLight }) => (
-          <div key={label} className="card">
-            <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 ${bgLight} rounded-xl flex items-center justify-center`}>
-                <Icon className={`w-6 h-6 ${color.replace('bg-', 'text-')}`} />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">{label}</p>
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Recent Expeditions */}
-      <div className="card">
-        <div className="card-header">
-          <h2 className="text-lg font-semibold text-gray-900">Expedientes Recientes</h2>
-          <Link to="/expeditions" className="text-luci hover:text-luci-dark text-sm font-medium flex items-center gap-1">
-            Ver todos
-            <ArrowRightIcon className="w-4 h-4" />
-          </Link>
-        </div>
-
-        {recentExpeditions.length === 0 ? (
-          <div className="text-center py-8">
-            <FolderIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No hay expedientes todavia</p>
-            <Link to="/expeditions/new" className="btn-primary mt-4 inline-flex items-center gap-2">
-              <PlusIcon className="w-5 h-5" />
-              Crear Primer Expediente
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Expeditions - 2/3 width */}
+        <div className="lg:col-span-2 card">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-gray-900">Expedientes Recientes</h2>
+            <Link to="/expeditions" className="text-luci hover:text-luci-dark text-sm font-medium flex items-center gap-1">
+              Ver todos <ArrowRightIcon className="w-4 h-4" />
             </Link>
           </div>
-        ) : (
-          <div className="table-container">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>ID Expediente</th>
-                  <th>Cliente</th>
-                  <th>Tipo</th>
-                  <th>Estado</th>
-                  <th>Fecha</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {recentExpeditions.map((exp) => (
-                  <tr key={exp._id} className="hover:bg-gray-50">
-                    <td className="font-medium">{exp.expeditionId}</td>
-                    <td>{exp.client?.companyName || 'N/A'}</td>
-                    <td>
-                      <span className={`badge ${exp.operationType === 'IMPORT' || exp.operationType === 'import' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
-                        {exp.operationType === 'IMPORT' || exp.operationType === 'import' ? 'Importacion' : 'Exportacion'}
-                      </span>
-                    </td>
-                    <td>{getStatusBadge(exp.status)}</td>
-                    <td className="text-gray-500 text-sm">
-                      {new Date(exp.createdAt).toLocaleDateString('es-ES')}
-                    </td>
-                    <td>
-                      <Link
-                        to={`/expeditions/${exp._id}`}
-                        className="text-luci hover:text-luci-dark text-sm font-medium"
-                      >
-                        Ver
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link to="/classification" className="card hover:shadow-md transition-shadow group">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-              <span className="text-2xl">🏷️</span>
+          {recentExpeditions.length === 0 ? (
+            <div className="text-center py-10">
+              <FolderIcon className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+              <p className="text-gray-400 text-sm">No hay expedientes todavia</p>
+              <Link to="/expeditions/new" className="btn-primary mt-4 inline-flex items-center gap-2 text-sm">
+                <PlusIcon className="w-4 h-4" /> Crear Primer Expediente
+              </Link>
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Clasificacion TARIC</h3>
-              <p className="text-sm text-gray-500">Clasificar productos con IA</p>
+          ) : (
+            <div className="space-y-2">
+              {recentExpeditions.map((exp) => (
+                <Link
+                  key={exp._id}
+                  to={`/expeditions/${exp._id}`}
+                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors group"
+                >
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                    exp.status === 'COMPLETED' || exp.status === 'green_channel' ? 'bg-green-500' :
+                    exp.status === 'PENDING_DOCS' || exp.status === 'pending_docs' ? 'bg-amber-400' :
+                    exp.status === 'red_channel' ? 'bg-red-500' : 'bg-blue-500'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm font-medium text-gray-900">{exp.expeditionId}</span>
+                      {getStatusBadge(exp.status)}
+                    </div>
+                    <p className="text-xs text-gray-500 truncate mt-0.5">
+                      {exp.client?.companyName || 'Sin cliente'} · {exp.operationType === 'IMPORT' || exp.operationType === 'import' ? 'Importacion' : 'Exportacion'}
+                    </p>
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    {new Date(exp.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+                  </span>
+                  <ArrowRightIcon className="w-4 h-4 text-gray-300 group-hover:text-luci transition-colors" />
+                </Link>
+              ))}
             </div>
-          </div>
-        </Link>
+          )}
+        </div>
 
-        <Link to="/calculator" className="card hover:shadow-md transition-shadow group">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-colors">
-              <span className="text-2xl">🧮</span>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Calculadora de Derechos</h3>
-              <p className="text-sm text-gray-500">Calcular aranceles e IVA</p>
+        {/* Right sidebar - Quick Actions + AI Stats */}
+        <div className="space-y-6">
+          {/* Quick Actions */}
+          <div className="card">
+            <h3 className="font-semibold text-gray-900 mb-3">Acciones Rapidas</h3>
+            <div className="space-y-2">
+              <Link to="/classification" className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-sky-50 transition-colors group">
+                <div className="w-9 h-9 bg-sky-100 rounded-lg flex items-center justify-center group-hover:bg-sky-200 transition-colors">
+                  <TagIcon className="w-5 h-5 text-sky-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Clasificacion TARIC</p>
+                  <p className="text-xs text-gray-500">Clasificar con IA</p>
+                </div>
+              </Link>
+              <Link to="/calculator" className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-emerald-50 transition-colors group">
+                <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                  <CalculatorIcon className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Calculadora Derechos</p>
+                  <p className="text-xs text-gray-500">Aranceles e IVA</p>
+                </div>
+              </Link>
+              <Link to="/pue" className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-violet-50 transition-colors group">
+                <div className="w-9 h-9 bg-violet-100 rounded-lg flex items-center justify-center group-hover:bg-violet-200 transition-colors">
+                  <ClipboardDocumentCheckIcon className="w-5 h-5 text-violet-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">PUE SOIVRE</p>
+                  <p className="text-xs text-gray-500">Solicitudes inspeccion</p>
+                </div>
+              </Link>
+              <Link to="/assistant" className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-amber-50 transition-colors group">
+                <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                  <ChatBubbleLeftRightIcon className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Asistente LUCI</p>
+                  <p className="text-xs text-gray-500">Consultas normativa</p>
+                </div>
+              </Link>
             </div>
           </div>
-        </Link>
 
-        <Link to="/assistant" className="card hover:shadow-md transition-shadow group">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-luci-light rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-              <span className="text-2xl">💬</span>
+          {/* AI Stats */}
+          {cacheStats && (
+            <div className="card bg-gradient-to-br from-slate-900 to-slate-800 text-white">
+              <div className="flex items-center gap-2 mb-4">
+                <SparklesIcon className="w-5 h-5 text-sky-400" />
+                <h3 className="font-semibold">IA Clasificacion</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-2xl font-bold text-sky-400">{cacheStats.totalEntries || 0}</p>
+                  <p className="text-xs text-slate-400">Codigos cacheados</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-emerald-400">{cacheStats.totalHits || 0}</p>
+                  <p className="text-xs text-slate-400">Consultas resueltas</p>
+                </div>
+              </div>
+              {cacheStats.validatedCount > 0 && (
+                <div className="mt-3 pt-3 border-t border-slate-700">
+                  <p className="text-xs text-slate-400">
+                    {cacheStats.validatedCount} codigos validados manualmente
+                  </p>
+                </div>
+              )}
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Asistente LUCI</h3>
-              <p className="text-sm text-gray-500">Consultas de normativa</p>
-            </div>
-          </div>
-        </Link>
+          )}
+        </div>
       </div>
     </div>
   )
