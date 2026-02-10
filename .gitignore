@@ -9,6 +9,12 @@ __pycache__/
 .env
 .env.local
 .env.*.local
+.env.production
+*.env.production
+backend/.env
+backend/.env.production
+frontend/.env
+frontend/.env.production
 
 # Logs
 logs/
@@ -48,12 +54,24 @@ tmp/
 temp/
 *.tmp
 
-# Certificates (SENSITIVE - NEVER COMMIT)
+# Certificates and keys (SENSITIVE - NEVER COMMIT)
 Certificados/
+backend/Certificados/
+Credenciales_AWS/
 *.p12
 *.pfx
 *.pem
 *.key
 *.cer
 *.crt
-backend/Certificados/
+
+# AWS / SSH keys
+*.pem
+*.ppk
+ssh-keys/
+
+# Credentials files
+credentials.json
+service-account.json
+*secret*
+*credential*
