@@ -6340,6 +6340,90 @@ Si el código no existe o no es válido, devuelve:
   }
 
   /**
+   * Generar nodos del arbol TARIC para un nivel especifico
+   * Usado cuando la DB no tiene datos para ese nivel
+   * @param {string} parentCode - Codigo padre (ej: '08', '0807', '080711')
+   * @param {string} level - Nivel a generar: 'headings', 'subheadings', 'cnCodes', 'taricCodes'
+   * @returns {Array} Lista de nodos con code y description
+   */
+  async generateTreeLevel(parentCode, level) {
+    const levelConfig = {
+      headings: {
+        digits: 4,
+        name: 'partidas (4 digitos)',
+        parentName: 'capitulo',
+        example: '{"code":"0801","description":"Cocos, nueces del Brasil y nueces de anacardo (merey, cajuil, maranon), frescos o secos, incluso sin cascara o mondados"}'
+      },
+      subheadings: {
+        digits: 6,
+        name: 'subpartidas SA (6 digitos)',
+        parentName: 'partida',
+        example: '{"code":"080711","description":"Sandias"}'
+      },
+      cnCodes: {
+        digits: 8,
+        name: 'codigos NC (8 digitos)',
+        parentName: 'subpartida',
+        example: '{"code":"08071100","description":"Sandias, frescas"}'
+      },
+      taricCodes: {
+        digits: 10,
+        name: 'codigos TARIC (10 digitos)',
+        parentName: 'codigo NC',
+        example: '{"code":"0807110000","description":"Sandias, frescas","dutyRate":8.8,"vatRate":10}'
+      }
+    };
+
+    const config = levelConfig[level];
+    if (!config) throw new Error(`Nivel no valido: ${level}`);
+
+    const isTaric = level === 'taricCodes';
+
+    const prompt = `Genera la lista COMPLETA y REAL de ${config.name} que pertenecen al ${config.parentName} ${parentCode} del Arancel Integrado TARIC de la Union Europea.
+
+REGLAS ESTRICTAS:
+- SOLO codigos que REALMENTE existen en el TARIC oficial vigente
+- Descripciones en espanol, oficiales del arancel
+- NO inventes codigos ni descripciones
+- Incluye TODOS los codigos de este nivel, no solo los principales
+- Los codigos deben tener exactamente ${config.digits} digitos
+${isTaric ? '- Incluye dutyRate (arancel terceros paises en %) y vatRate (IVA en Espana: 21 general, 10 reducido, 4 superreducido, 0 exento)' : ''}
+
+FORMATO: Responde UNICAMENTE con un array JSON, sin texto adicional:
+[
+  ${config.example}${isTaric ? '' : ',\n  ...'}
+]
+
+${config.parentName.toUpperCase()} PADRE: ${parentCode}`;
+
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.classification, prompt, {
+      maxTokens: 4096,
+      timeout: 30000
+    });
+
+    try {
+      let jsonContent = result.content;
+      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = jsonContent.trim();
+
+      const parsed = JSON.parse(jsonContent);
+      if (!Array.isArray(parsed)) throw new Error('Respuesta no es un array');
+
+      // Validar formato de codigos
+      return parsed.filter(item =>
+        item.code &&
+        item.description &&
+        item.code.length === config.digits &&
+        item.code.startsWith(parentCode.replace(/[\s.]/g, ''))
+      );
+    } catch (e) {
+      logger.warn('Error parseando arbol TARIC de IA:', e.message);
+      return [];
+    }
+  }
+
+  /**
    * Respuesta mock cuando no hay API key
    */
   mockResponse(message) {

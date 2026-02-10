@@ -346,11 +346,38 @@ const getTaricInfo = async (req, res) => {
  */
 const searchTaric = async (req, res) => {
   try {
-    const { q, chapter, limit = 20 } = req.query;
+    const { q, code, chapter, limit = 20 } = req.query;
 
     let results;
 
-    if (q) {
+    if (code) {
+      // Busqueda por codigo TARIC (4-10 digitos)
+      const cleanCode = code.replace(/[\s.]/g, '');
+      if (cleanCode.length <= 3) {
+        // Codigo corto: buscar por capitulo
+        const chapterCode = cleanCode.padStart(2, '0');
+        results = await TaricCode.find({
+          'breakdown.chapter': chapterCode,
+          isActive: true,
+          level: { $gt: 2 }
+        }).sort({ code: 1 }).limit(parseInt(limit)).lean();
+      } else {
+        // Codigo largo: buscar exacto o por prefijo
+        const normalizedCode = cleanCode.padEnd(10, '0').substring(0, 10);
+        const exactMatch = await TaricCode.findOne({ code: normalizedCode, isActive: true }).lean();
+        if (exactMatch) {
+          results = [exactMatch];
+        } else {
+          // Buscar por prefijo
+          const prefix = cleanCode.substring(0, Math.min(cleanCode.length, 10));
+          results = await TaricCode.find({
+            code: { $regex: `^${prefix}` },
+            isActive: true,
+            level: { $gt: 2 }
+          }).sort({ code: 1 }).limit(parseInt(limit)).lean();
+        }
+      }
+    } else if (q) {
       // Busqueda por texto
       results = await TaricCode.search(q, parseInt(limit));
     } else if (chapter) {
@@ -986,6 +1013,250 @@ const cleanOldCache = async (req, res) => {
   }
 };
 
+/**
+ * Obtener datos del arbol TARIC para navegacion jerarquica
+ * GET /api/classification/tree?parent=XX
+ * Sin parent: devuelve capitulos (2 dig)
+ * parent=08: devuelve partidas (4 dig) del capitulo 08
+ * parent=0807: devuelve subpartidas (6 dig) de la partida 0807
+ * parent=080711: devuelve codigos NC (8 dig)
+ * parent=08071100: devuelve codigos TARIC (10 dig)
+ *
+ * Si no hay datos en DB, usa IA para generar el nivel y lo cachea en MongoDB.
+ */
+
+// Helper: guardar nodos generados por IA en MongoDB para cache futuro
+async function _cacheAITreeNodes(nodes, level, parentCode) {
+  const ops = nodes.map(node => {
+    const code10 = node.code.padEnd(10, '0');
+    const breakdown = {
+      chapter: code10.substring(0, 2),
+      heading: code10.substring(0, 4),
+      subheading: code10.substring(0, 6),
+      cnCode: code10.substring(0, 8),
+      taricCode: code10
+    };
+
+    const levelNum = node.code.length;
+    const doc = {
+      code: code10,
+      breakdown,
+      description: { es: node.description },
+      level: levelNum,
+      parent: parentCode.padEnd(10, '0'),
+      isActive: true,
+      isLeaf: level === 'taricCodes',
+      source: 'ai',
+      lastUpdated: new Date()
+    };
+
+    // Si el nodo trae info de aranceles (nivel TARIC)
+    if (node.dutyRate != null) {
+      doc.duties = { thirdCountry: node.dutyRate };
+    }
+    if (node.vatRate != null) {
+      doc.vat = { applicable: node.vatRate, standard: 21 };
+    }
+
+    return {
+      updateOne: {
+        filter: { code: code10 },
+        update: { $set: doc },
+        upsert: true
+      }
+    };
+  });
+
+  if (ops.length > 0) {
+    try {
+      await TaricCode.bulkWrite(ops, { ordered: false });
+      logger.info(`Cacheados ${ops.length} nodos TARIC (nivel ${level}, padre ${parentCode}) desde IA`);
+    } catch (e) {
+      logger.warn('Error cacheando nodos TARIC de IA:', e.message);
+    }
+  }
+}
+
+const getTreeData = async (req, res) => {
+  try {
+    const { parent } = req.query;
+
+    if (!parent) {
+      // Capitulos: siempre desde DB (98 placeholders + reales)
+      const chapters = await TaricCode.aggregate([
+        { $match: { isActive: true, level: { $gt: 2 } } },
+        { $group: {
+          _id: '$breakdown.chapter',
+          count: { $sum: 1 }
+        }},
+        { $sort: { _id: 1 } }
+      ]);
+      return res.json({
+        success: true,
+        data: {
+          level: 'chapters',
+          results: chapters.map(c => ({
+            code: c._id,
+            count: c.count
+          }))
+        }
+      });
+    }
+
+    const clean = parent.replace(/[\s.]/g, '');
+    const parentLen = clean.length;
+
+    // Configuracion por nivel
+    const levelMap = [
+      { maxLen: 2, level: 'headings', field: 'breakdown.chapter', group: '$breakdown.heading', padStart: true },
+      { maxLen: 4, level: 'subheadings', field: 'breakdown.heading', group: '$breakdown.subheading' },
+      { maxLen: 6, level: 'cnCodes', field: 'breakdown.subheading', group: '$breakdown.cnCode' },
+    ];
+
+    const config = levelMap.find(l => parentLen <= l.maxLen);
+
+    if (config) {
+      const parentNorm = config.padStart ? clean.padStart(2, '0') : clean.substring(0, config.maxLen);
+
+      // 1. Intentar desde DB
+      const dbResults = await TaricCode.aggregate([
+        { $match: { [config.field]: parentNorm, isActive: true, level: { $gt: 2 } } },
+        { $group: {
+          _id: config.group,
+          count: { $sum: 1 },
+          sampleDesc: { $first: '$description.es' }
+        }},
+        { $sort: { _id: 1 } }
+      ]);
+
+      if (dbResults.length > 0) {
+        return res.json({
+          success: true,
+          data: {
+            level: config.level,
+            parentCode: parentNorm,
+            source: 'database',
+            results: dbResults.map(r => ({
+              code: r._id,
+              count: r.count,
+              description: r.sampleDesc
+            }))
+          }
+        });
+      }
+
+      // 2. No hay datos en DB -> Generar con IA
+      logger.info(`Arbol TARIC: sin datos en DB para ${parentNorm}, generando con IA (nivel ${config.level})`);
+      const aiNodes = await aiService.generateTreeLevel(parentNorm, config.level);
+
+      if (aiNodes.length > 0) {
+        // Cachear en MongoDB de forma asincrona (no bloquear respuesta)
+        _cacheAITreeNodes(aiNodes, config.level, parentNorm).catch(() => {});
+
+        return res.json({
+          success: true,
+          data: {
+            level: config.level,
+            parentCode: parentNorm,
+            source: 'ai',
+            results: aiNodes.map(n => ({
+              code: n.code,
+              count: 1,
+              description: n.description
+            }))
+          }
+        });
+      }
+
+      // 3. IA tampoco devolvio datos
+      return res.json({
+        success: true,
+        data: {
+          level: config.level,
+          parentCode: parentNorm,
+          source: 'empty',
+          results: []
+        }
+      });
+    }
+
+    // Nivel TARIC (8+ digitos)
+    const prefix = clean.substring(0, 8);
+
+    // 1. Intentar desde DB
+    let codes = await TaricCode.find({
+      'breakdown.cnCode': prefix,
+      isActive: true
+    }).sort({ code: 1 }).select('code description breakdown duties vat measures').lean();
+
+    // Detectar si el unico resultado es un placeholder del nivel CN (termina en 00)
+    const isPlaceholder = codes.length === 1 && codes[0].code === prefix + '00';
+
+    if (codes.length > 0 && !isPlaceholder) {
+      return res.json({
+        success: true,
+        data: {
+          level: 'taricCodes',
+          parentCode: prefix,
+          source: 'database',
+          results: codes.map(c => ({
+            code: c.code,
+            description: c.description?.es || '',
+            duties: c.duties,
+            vat: c.vat,
+            hasMeasures: (c.measures?.length || 0) > 0
+          }))
+        }
+      });
+    }
+
+    // 2. Generar con IA (o si solo teniamos un placeholder)
+    logger.info(`Arbol TARIC: sin datos reales en DB para CN ${prefix}, generando codigos TARIC con IA`);
+    const aiTaricNodes = await aiService.generateTreeLevel(prefix, 'taricCodes');
+
+    if (aiTaricNodes.length > 0) {
+      // Eliminar placeholder CN si existia
+      if (isPlaceholder) {
+        TaricCode.deleteOne({ code: prefix + '00' }).catch(() => {});
+      }
+      _cacheAITreeNodes(aiTaricNodes, 'taricCodes', prefix).catch(() => {});
+
+      return res.json({
+        success: true,
+        data: {
+          level: 'taricCodes',
+          parentCode: prefix,
+          source: 'ai',
+          results: aiTaricNodes.map(n => ({
+            code: n.code.padEnd(10, '0'),
+            description: n.description,
+            duties: n.dutyRate != null ? { thirdCountry: n.dutyRate } : null,
+            vat: n.vatRate != null ? { applicable: n.vatRate } : null,
+            hasMeasures: false
+          }))
+        }
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        level: 'taricCodes',
+        parentCode: prefix,
+        source: 'empty',
+        results: []
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error getting tree data:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener datos del arbol TARIC'
+    });
+  }
+};
+
 module.exports = {
   suggestTaricCode,
   getTaricInfo,
@@ -993,6 +1264,7 @@ module.exports = {
   validateClassification,
   applyClassification,
   getChapters,
+  getTreeData,
   calculateDuties,
   getRequiredDocuments,
   getPreferences,
