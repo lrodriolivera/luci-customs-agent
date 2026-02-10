@@ -5,17 +5,34 @@
  */
 
 const logger = require('../config/logger');
-const { Payment, Expedition } = require('../models');
+const { Payment, Expedition, Tenant } = require('../models');
 
-// Stripe initialization (use test key if not configured)
+// Stripe initialization
 let stripe;
-try {
-  const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
+const stripeKey = process.env.STRIPE_SECRET_KEY;
+if (stripeKey && stripeKey.startsWith('sk_')) {
   stripe = require('stripe')(stripeKey);
-} catch (error) {
-  logger.warn('Stripe not configured, using mock mode');
+  logger.info('Stripe initialized in ' + (stripeKey.startsWith('sk_live') ? 'LIVE' : 'TEST') + ' mode');
+} else {
+  logger.warn('Stripe not configured (no valid STRIPE_SECRET_KEY). Running in mock mode.');
   stripe = null;
 }
+
+// Plan -> Stripe Price ID mapping
+const PLAN_PRICE_MAP = {
+  starter: {
+    monthly: process.env.STRIPE_PRICE_STARTER_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_STARTER_YEARLY
+  },
+  professional: {
+    monthly: process.env.STRIPE_PRICE_PROFESSIONAL_MONTHLY || process.env.STRIPE_PRICE_PROFESSIONAL,
+    yearly: process.env.STRIPE_PRICE_PROFESSIONAL_YEARLY
+  },
+  enterprise: {
+    monthly: process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_ENTERPRISE_YEARLY
+  }
+};
 
 class PaymentService {
   constructor() {
@@ -200,10 +217,32 @@ class PaymentService {
     logger.info(`Processing webhook event: ${event.type}`);
 
     switch (event.type) {
+      // Subscription events
       case 'checkout.session.completed':
-        await this.handleCheckoutComplete(event.data.object);
+        if (event.data.object.mode === 'subscription') {
+          await this.handleSubscriptionCheckoutComplete(event.data.object);
+        } else {
+          await this.handleCheckoutComplete(event.data.object);
+        }
         break;
 
+      case 'invoice.paid':
+        await this.handleInvoicePaid(event.data.object);
+        break;
+
+      case 'invoice.payment_failed':
+        await this.handleInvoicePaymentFailed(event.data.object);
+        break;
+
+      case 'customer.subscription.updated':
+        await this.handleSubscriptionUpdated(event.data.object);
+        break;
+
+      case 'customer.subscription.deleted':
+        await this.handleSubscriptionDeleted(event.data.object);
+        break;
+
+      // One-time payment events
       case 'payment_intent.succeeded':
         await this.handlePaymentSuccess(event.data.object);
         break;
@@ -480,6 +519,259 @@ class PaymentService {
     logger.info(`Payment refunded: ${paymentId} - ${refundAmount}${payment.currency} by user ${userId}`);
 
     return payment;
+  }
+
+  // ==================== SUBSCRIPTION METHODS ====================
+
+  /**
+   * Create Stripe Checkout Session for a subscription plan
+   */
+  async createSubscriptionCheckout(user, plan, billingCycle = 'monthly') {
+    const priceId = PLAN_PRICE_MAP[plan]?.[billingCycle];
+
+    if (!priceId) {
+      throw new Error(`No hay Price ID configurado para el plan ${plan} (${billingCycle}). Configure STRIPE_PRICE_${plan.toUpperCase()}_${billingCycle.toUpperCase()} en .env`);
+    }
+
+    if (!stripe) {
+      // Mock mode - simular suscripcion
+      logger.info(`[MOCK] Subscription checkout for ${user.email}, plan=${plan}`);
+      const tenant = await Tenant.findById(user.tenantId);
+      if (tenant) {
+        tenant.subscription.plan = plan;
+        tenant.subscription.status = 'active';
+        tenant.subscription.currentPeriodStart = new Date();
+        tenant.subscription.currentPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        await tenant.save();
+      }
+      return {
+        url: (process.env.FRONTEND_URL || 'https://aduanas.strixai.es') + '/billing?mock=true',
+        sessionId: `cs_mock_${Date.now()}`,
+        mockMode: true
+      };
+    }
+
+    // Find or create Stripe customer
+    let customerId;
+    const tenant = user.tenantId ? await Tenant.findById(user.tenantId) : null;
+
+    if (tenant?.subscription?.stripeCustomerId) {
+      customerId = tenant.subscription.stripeCustomerId;
+    } else {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.name,
+        metadata: {
+          userId: user._id.toString(),
+          tenantId: user.tenantId?.toString() || ''
+        }
+      });
+      customerId = customer.id;
+
+      // Save customer ID to tenant
+      if (tenant) {
+        tenant.subscription.stripeCustomerId = customerId;
+        await tenant.save();
+      }
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL || 'https://aduanas.strixai.es';
+
+    // Create checkout session
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      mode: 'subscription',
+      line_items: [{
+        price: priceId,
+        quantity: 1
+      }],
+      subscription_data: {
+        trial_period_days: plan !== 'free' ? 14 : undefined,
+        metadata: {
+          tenantId: user.tenantId?.toString() || '',
+          plan
+        }
+      },
+      success_url: `${frontendUrl}/billing?session_id={CHECKOUT_SESSION_ID}&success=true`,
+      cancel_url: `${frontendUrl}/billing?cancelled=true`,
+      locale: 'es',
+      metadata: {
+        userId: user._id.toString(),
+        tenantId: user.tenantId?.toString() || '',
+        plan,
+        billingCycle
+      }
+    });
+
+    logger.info(`Stripe checkout session created: ${session.id} for user ${user.email}, plan=${plan}`);
+
+    return {
+      url: session.url,
+      sessionId: session.id
+    };
+  }
+
+  /**
+   * Create a Stripe Customer Portal session (for managing subscription)
+   */
+  async createCustomerPortalSession(user) {
+    const tenant = user.tenantId ? await Tenant.findById(user.tenantId) : null;
+    const customerId = tenant?.subscription?.stripeCustomerId;
+
+    if (!customerId || !stripe) {
+      throw new Error('No Stripe customer found for this account');
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL || 'https://aduanas.strixai.es';
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${frontendUrl}/billing`
+    });
+
+    return { url: session.url };
+  }
+
+  /**
+   * Get subscription status for a tenant
+   */
+  async getSubscriptionStatus(tenantId) {
+    const tenant = await Tenant.findById(tenantId);
+    if (!tenant) throw new Error('Tenant not found');
+
+    const sub = tenant.subscription || {};
+    return {
+      plan: sub.plan || 'free',
+      status: sub.status || 'active',
+      stripeCustomerId: sub.stripeCustomerId || null,
+      stripeSubscriptionId: sub.stripeSubscriptionId || null,
+      currentPeriodStart: sub.currentPeriodStart,
+      currentPeriodEnd: sub.currentPeriodEnd,
+      cancelAtPeriodEnd: sub.cancelAtPeriodEnd || false,
+      trialEnd: sub.trialEnd
+    };
+  }
+
+  // ==================== SUBSCRIPTION WEBHOOK HANDLERS ====================
+
+  /**
+   * Handle subscription checkout completed
+   */
+  async handleSubscriptionCheckoutComplete(session) {
+    const tenantId = session.metadata?.tenantId;
+    const plan = session.metadata?.plan;
+    const subscriptionId = session.subscription;
+
+    if (!tenantId) {
+      logger.warn('Subscription checkout without tenantId metadata');
+      return;
+    }
+
+    const tenant = await Tenant.findById(tenantId);
+    if (!tenant) {
+      logger.warn(`Tenant ${tenantId} not found for subscription checkout`);
+      return;
+    }
+
+    // Get subscription details from Stripe
+    let subDetails = {};
+    if (stripe && subscriptionId) {
+      const sub = await stripe.subscriptions.retrieve(subscriptionId);
+      subDetails = {
+        status: sub.status,
+        currentPeriodStart: new Date(sub.current_period_start * 1000),
+        currentPeriodEnd: new Date(sub.current_period_end * 1000),
+        trialEnd: sub.trial_end ? new Date(sub.trial_end * 1000) : null
+      };
+    }
+
+    tenant.subscription.plan = plan || 'professional';
+    tenant.subscription.status = subDetails.status === 'trialing' ? 'trialing' : 'active';
+    tenant.subscription.stripeSubscriptionId = subscriptionId;
+    tenant.subscription.stripeCustomerId = session.customer;
+    tenant.subscription.currentPeriodStart = subDetails.currentPeriodStart || new Date();
+    tenant.subscription.currentPeriodEnd = subDetails.currentPeriodEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    tenant.subscription.trialEnd = subDetails.trialEnd;
+
+    // Update plan limits
+    const limits = Tenant.getDefaultLimits(plan || 'professional');
+    if (limits) tenant.limits = limits;
+
+    await tenant.save();
+    logger.info(`Subscription activated for tenant ${tenantId}: plan=${plan}, stripeSubId=${subscriptionId}`);
+  }
+
+  /**
+   * Handle invoice.paid - subscription renewal
+   */
+  async handleInvoicePaid(invoice) {
+    const subId = invoice.subscription;
+    if (!subId) return;
+
+    const tenant = await Tenant.findOne({ 'subscription.stripeSubscriptionId': subId });
+    if (!tenant) return;
+
+    tenant.subscription.status = 'active';
+    if (invoice.period_end) {
+      tenant.subscription.currentPeriodEnd = new Date(invoice.period_end * 1000);
+    }
+    if (invoice.period_start) {
+      tenant.subscription.currentPeriodStart = new Date(invoice.period_start * 1000);
+    }
+
+    await tenant.save();
+    logger.info(`Invoice paid for tenant ${tenant._id}, subscription renewed`);
+  }
+
+  /**
+   * Handle invoice.payment_failed
+   */
+  async handleInvoicePaymentFailed(invoice) {
+    const subId = invoice.subscription;
+    if (!subId) return;
+
+    const tenant = await Tenant.findOne({ 'subscription.stripeSubscriptionId': subId });
+    if (!tenant) return;
+
+    tenant.subscription.status = 'past_due';
+    await tenant.save();
+    logger.warn(`Payment failed for tenant ${tenant._id}. Subscription marked as past_due.`);
+  }
+
+  /**
+   * Handle customer.subscription.updated
+   */
+  async handleSubscriptionUpdated(subscription) {
+    const tenant = await Tenant.findOne({ 'subscription.stripeSubscriptionId': subscription.id });
+    if (!tenant) return;
+
+    tenant.subscription.status = subscription.status;
+    if (subscription.cancel_at_period_end) {
+      tenant.subscription.cancelAtPeriodEnd = true;
+    }
+    tenant.subscription.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+
+    await tenant.save();
+    logger.info(`Subscription updated for tenant ${tenant._id}: status=${subscription.status}`);
+  }
+
+  /**
+   * Handle customer.subscription.deleted
+   */
+  async handleSubscriptionDeleted(subscription) {
+    const tenant = await Tenant.findOne({ 'subscription.stripeSubscriptionId': subscription.id });
+    if (!tenant) return;
+
+    tenant.subscription.plan = 'free';
+    tenant.subscription.status = 'cancelled';
+    tenant.subscription.stripeSubscriptionId = null;
+    tenant.subscription.cancelAtPeriodEnd = false;
+
+    // Reset to free plan limits
+    const limits = Tenant.getDefaultLimits('free');
+    if (limits) tenant.limits = limits;
+
+    await tenant.save();
+    logger.info(`Subscription cancelled for tenant ${tenant._id}. Downgraded to free plan.`);
   }
 
   /**

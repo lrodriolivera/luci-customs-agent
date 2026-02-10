@@ -73,6 +73,7 @@ const audiences = [
 const plans = [
   {
     name: 'Starter',
+    planId: 'free',
     price: 'Gratis',
     period: '',
     description: 'Para probar la plataforma',
@@ -83,10 +84,12 @@ const plans = [
       '1 usuario',
     ],
     cta: 'Empezar Gratis',
+    ctaLink: '/login',
     highlighted: false
   },
   {
     name: 'Professional',
+    planId: 'professional',
     price: '149',
     period: '/ mes',
     description: 'Para agencias y transitarios',
@@ -98,11 +101,13 @@ const plans = [
       'Motor de reglas y preferencias',
       'Soporte por email',
     ],
-    cta: 'Solicitar Demo',
+    cta: 'Probar 14 dias gratis',
+    ctaLink: '/login?plan=professional',
     highlighted: true
   },
   {
     name: 'Enterprise',
+    planId: 'enterprise',
     price: 'Personalizado',
     period: '',
     description: 'Para grandes operadores',
@@ -115,6 +120,7 @@ const plans = [
       'SLA 99.9%',
     ],
     cta: 'Contactar Ventas',
+    ctaLink: '#contact',
     highlighted: false
   }
 ]
@@ -298,8 +304,8 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <a
-                  href="#contact"
+                <Link
+                  to={plan.ctaLink}
                   className={`block w-full text-center py-2.5 rounded-lg font-medium text-sm transition-all ${
                     plan.highlighted
                       ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:shadow-lg hover:shadow-sky-500/25'
@@ -307,7 +313,7 @@ export default function LandingPage() {
                   }`}
                 >
                   {plan.cta}
-                </a>
+                </Link>
               </div>
             ))}
           </div>

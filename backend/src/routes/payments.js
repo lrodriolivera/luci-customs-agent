@@ -6,7 +6,6 @@
 
 const express = require('express');
 const router = express.Router();
-const clientPortalController = require('../controllers/clientPortalController');
 const paymentService = require('../services/paymentService');
 const { authenticate, requireRole } = require('../middleware/auth');
 const logger = require('../config/logger');
@@ -21,8 +20,77 @@ const logger = require('../config/logger');
 router.post(
   '/webhook',
   express.raw({ type: 'application/json' }),
-  clientPortalController.handleStripeWebhook
+  async (req, res) => {
+    try {
+      const result = await paymentService.handleWebhook(
+        req.body,
+        req.headers['stripe-signature']
+      );
+      res.json(result);
+    } catch (error) {
+      logger.error('Webhook error:', error.message);
+      res.status(400).json({ error: error.message });
+    }
+  }
 );
+
+// ==================== Subscription Routes ====================
+
+/**
+ * @route POST /api/payments/create-checkout
+ * @desc Create Stripe Checkout Session for subscription
+ * @access Authenticated
+ */
+router.post('/create-checkout', authenticate, async (req, res) => {
+  try {
+    const { plan, billingCycle } = req.body;
+
+    if (!plan || !['starter', 'professional', 'enterprise'].includes(plan)) {
+      return res.status(400).json({ success: false, error: 'Plan invalido. Opciones: starter, professional, enterprise' });
+    }
+
+    const result = await paymentService.createSubscriptionCheckout(
+      req.user,
+      plan,
+      billingCycle || 'monthly'
+    );
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error('Error creating checkout session:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * @route POST /api/payments/customer-portal
+ * @desc Create Stripe Customer Portal session for managing subscription
+ * @access Authenticated
+ */
+router.post('/customer-portal', authenticate, async (req, res) => {
+  try {
+    const result = await paymentService.createCustomerPortalSession(req.user);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error('Error creating customer portal session:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * @route GET /api/payments/subscription
+ * @desc Get current subscription status
+ * @access Authenticated
+ */
+router.get('/subscription', authenticate, async (req, res) => {
+  try {
+    const status = await paymentService.getSubscriptionStatus(req.user.tenantId);
+    res.json({ success: true, data: status });
+  } catch (error) {
+    logger.error('Error getting subscription:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // ==================== Authenticated Payment Routes ====================
 

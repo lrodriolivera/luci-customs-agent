@@ -1050,4 +1050,13 @@ export const mlAPI = {
   }
 }
 
+// Billing & Subscriptions
+export const billingAPI = {
+  getSubscription: () => api.get('/api/payments/subscription'),
+  createCheckout: (plan, billingCycle = 'monthly') => api.post('/api/payments/create-checkout', { plan, billingCycle }),
+  createCustomerPortal: () => api.post('/api/payments/customer-portal'),
+  getPayments: (params) => api.get('/api/payments', { params }),
+  getStats: () => api.get('/api/payments/stats')
+}
+
 export default api
