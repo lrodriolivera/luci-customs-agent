@@ -635,8 +635,11 @@ class PaymentService {
    * Get subscription status for a tenant
    */
   async getSubscriptionStatus(tenantId) {
+    if (!tenantId) {
+      return { plan: 'free', status: 'active', stripeCustomerId: null, stripeSubscriptionId: null };
+    }
     const tenant = await Tenant.findById(tenantId);
-    if (!tenant) throw new Error('Tenant not found');
+    if (!tenant) return { plan: 'free', status: 'active' };
 
     const sub = tenant.subscription || {};
     return {
