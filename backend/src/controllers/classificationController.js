@@ -349,10 +349,16 @@ const searchTaric = async (req, res) => {
     const { q, code, chapter, limit = 20 } = req.query;
 
     let results;
+    let source = 'database';
 
-    if (code) {
-      // Busqueda por codigo TARIC (4-10 digitos)
-      const cleanCode = code.replace(/[\s.]/g, '');
+    // Determinar si q es un codigo numerico
+    const searchTerm = code || q;
+    const isCodeSearch = searchTerm && /^\d[\d.\s]*$/.test(searchTerm.trim());
+
+    if (isCodeSearch) {
+      // Busqueda por codigo TARIC (2-10 digitos)
+      const cleanCode = searchTerm.replace(/[\s.]/g, '');
+
       if (cleanCode.length <= 3) {
         // Codigo corto: buscar por capitulo
         const chapterCode = cleanCode.padStart(2, '0');
@@ -361,6 +367,28 @@ const searchTaric = async (req, res) => {
           isActive: true,
           level: { $gt: 2 }
         }).sort({ code: 1 }).limit(parseInt(limit)).lean();
+
+        // Si no hay datos en DB, generar partidas con IA
+        if (results.length === 0) {
+          logger.info(`Busqueda TARIC: sin datos para capitulo ${chapterCode}, generando con IA`);
+          const aiNodes = await aiService.generateTreeLevel(chapterCode, 'headings');
+          if (aiNodes.length > 0) {
+            _cacheAITreeNodes(aiNodes, 'headings', chapterCode).catch(() => {});
+            source = 'ai';
+            results = aiNodes.map(n => ({
+              code: n.code.padEnd(10, '0'),
+              description: { es: n.description },
+              breakdown: {
+                chapter: chapterCode,
+                heading: n.code,
+                subheading: n.code + '00',
+                cnCode: n.code + '0000',
+                taricCode: n.code.padEnd(10, '0')
+              },
+              level: 4
+            }));
+          }
+        }
       } else {
         // Codigo largo: buscar exacto o por prefijo
         const normalizedCode = cleanCode.padEnd(10, '0').substring(0, 10);
@@ -375,24 +403,55 @@ const searchTaric = async (req, res) => {
             isActive: true,
             level: { $gt: 2 }
           }).sort({ code: 1 }).limit(parseInt(limit)).lean();
+
+          // Si no hay resultados por prefijo, intentar con IA
+          if (results.length === 0) {
+            logger.info(`Busqueda TARIC: sin datos para codigo ${cleanCode}, consultando IA`);
+            const aiInfo = await aiService.getTaricCodeInfo(normalizedCode);
+            if (aiInfo && aiInfo.description && aiInfo.valid !== false) {
+              source = 'ai';
+              results = [{
+                code: normalizedCode,
+                description: { es: aiInfo.description_es || aiInfo.description },
+                breakdown: {
+                  chapter: normalizedCode.substring(0, 2),
+                  heading: normalizedCode.substring(0, 4),
+                  subheading: normalizedCode.substring(0, 6),
+                  cnCode: normalizedCode.substring(0, 8),
+                  taricCode: normalizedCode
+                },
+                duties: aiInfo.dutyRate ? { thirdCountry: parseFloat(aiInfo.dutyRate) || 0 } : undefined,
+                level: 10,
+                source: 'ai'
+              }];
+            }
+          }
         }
       }
     } else if (q) {
-      // Busqueda por texto
+      // Busqueda por texto en descripcion
       results = await TaricCode.search(q, parseInt(limit));
+
+      // Si no hay resultados por texto, buscar en todo lo cacheado con regex
+      if (results.length === 0) {
+        results = await TaricCode.find({
+          'description.es': { $regex: q, $options: 'i' },
+          isActive: true,
+          level: { $gt: 2 }
+        }).sort({ code: 1 }).limit(parseInt(limit)).lean();
+      }
     } else if (chapter) {
-      // Buscar por capitulo
       results = await TaricCode.findByChapter(chapter);
     } else {
-      // Devolver capitulos (nivel 2)
       results = await TaricCode.getChapters();
     }
 
     res.json({
       success: true,
       data: {
-        results,
-        count: results.length
+        results: results || [],
+        count: (results || []).length,
+        source
       }
     });
 
