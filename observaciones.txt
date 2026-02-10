@@ -1,0 +1,1 @@
+Hola, ¿qué tal, chicos? Luis, una pregunta. En el agente de aduanas, ¿se puede buscar directamente por partida arancelaria, por HS Code? O sea, ¿poner uno específico y que te diga cuál es? ¿O solamente es buscar por descripción del producto y demás? ¿Hay alguna opción que puedes hacer eso?
