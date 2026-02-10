@@ -16,7 +16,15 @@ let exchangeRatesCache = {
  */
 const calculateDuties = async (req, res) => {
   try {
-    const { taricCode, value, currency, origin, weight, preference, quantity } = req.body;
+    // Accept both field naming conventions for backwards compatibility
+    const taricCode = req.body.taricCode || req.body.code;
+    const value = req.body.value || req.body.customsValue;
+    const currency = req.body.currency;
+    const origin = req.body.origin || req.body.countryOfOrigin;
+    const weight = req.body.weight || req.body.netWeight;
+    const preference = req.body.preference;
+    const quantity = req.body.quantity;
+    const importDate = req.body.importDate;
 
     if (!taricCode) {
       return res.status(400).json({
@@ -39,7 +47,8 @@ const calculateDuties = async (req, res) => {
       origin: origin || null,
       preference: preference || '100',
       quantity: quantity || null,
-      netWeight: weight || null
+      netWeight: weight || null,
+      importDate: importDate || null
     });
 
     // Formatear respuesta compatible con frontend existente
@@ -66,6 +75,8 @@ const calculateDuties = async (req, res) => {
 
         // IVA
         vatRate: calculation.vat.rate,
+        vatType: calculation.vat.type,
+        vatDescription: calculation.vat.description,
         vatBase: calculation.vat.base,
         vatAmount: calculation.vat.amount,
 
@@ -86,6 +97,10 @@ const calculateDuties = async (req, res) => {
         requiredDocuments: calculation.requiredDocuments,
         notes: calculation.warnings || [],
         warnings: calculation.warnings || [],
+
+        // Aranceles estacionales
+        seasonal: calculation.seasonal || null,
+        importDate: calculation.importDate,
 
         // Metadata
         source: calculation.source,
@@ -111,13 +126,18 @@ const calculateVat = async (req, res) => {
   try {
     const { taricCode, customsValue, dutyAmount, specialTaxes } = req.body;
 
-    // Obtener tipo de IVA
-    let vatRate = 21; // Por defecto
+    // Obtener tipo de IVA usando tabla por capitulo (Ley 37/1992)
+    const dutyCalcService = require('../services/dutyCalculationService');
+    let vatRate = 21;
+    let vatType = 'standard';
 
     if (taricCode) {
-      const taricInfo = await TaricCode.findOne({ code: taricCode });
-      if (taricInfo && taricInfo.vat) {
-        vatRate = taricInfo.vat.applicable || taricInfo.vat.standard || 21;
+      // Primero intentar desde la tabla autoritativa por capitulo
+      const normalizedCode = taricCode.replace(/[\s.]/g, '').padEnd(10, '0').substring(0, 10);
+      const dutyInfo = await dutyCalcService.getDutyInfo(normalizedCode);
+      if (dutyInfo && dutyInfo.vatRate) {
+        vatRate = dutyInfo.vatRate;
+        vatType = dutyInfo.vatType || 'standard';
       }
     }
 
@@ -134,6 +154,7 @@ const calculateVat = async (req, res) => {
         specialTaxes: specialTaxes || 0,
         taxBase,
         vatRate,
+        vatType,
         vatAmount: Math.round(vatAmount * 100) / 100
       }
     });

@@ -215,10 +215,24 @@ const declarationValidators = {
 };
 
 /**
+ * Middleware para normalizar campos de calculo (acepta nombres alternativos)
+ */
+const normalizeCalculationFields = (req, res, next) => {
+  if (req.body) {
+    if (!req.body.taricCode && req.body.code) req.body.taricCode = req.body.code;
+    if (req.body.value === undefined && req.body.customsValue !== undefined) req.body.value = req.body.customsValue;
+    if (!req.body.origin && req.body.countryOfOrigin) req.body.origin = req.body.countryOfOrigin;
+    if (!req.body.weight && req.body.netWeight) req.body.weight = req.body.netWeight;
+  }
+  next();
+};
+
+/**
  * Validadores para calculos
  */
 const calculationValidators = {
   calculate: [
+    normalizeCalculationFields,
     body('taricCode')
       .matches(/^\d{10,14}$/)
       .withMessage('Codigo TARIC debe tener 10-14 digitos'),

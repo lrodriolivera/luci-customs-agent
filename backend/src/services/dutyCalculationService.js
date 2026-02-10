@@ -7,6 +7,7 @@ const logger = require('../config/logger');
 const TaricCode = require('../models/TaricCode');
 const TaricAICache = require('../models/TaricAICache');
 const aiService = require('./aiService');
+const { getSeasonalTariff, hasSeasonalTariff } = require('../data/seasonalTariffs');
 
 // Cache en memoria para aranceles (1 hora)
 const dutyCache = new Map();
@@ -30,13 +31,15 @@ async function getDutyInfo(taricCode, origin = null) {
   // 2. Buscar en BD local
   const localData = await TaricCode.findOne({ code: normalizedCode });
   if (localData && localData.duties && localData.duties.thirdCountry !== undefined) {
+    const localVatInfo = getVATRateByChapter(normalizedCode);
     const result = {
       code: normalizedCode,
       description: localData.description?.es || localData.description?.en,
       dutyRate: localData.duties.thirdCountry,
       dutyType: localData.duties.specific ? 'mixed' : 'ad_valorem',
       specificDuty: localData.duties.specific || null,
-      vatRate: localData.vat?.applicable || 21,
+      vatRate: localVatInfo.rate,
+      vatType: localVatInfo.type,
       supplementaryUnit: localData.supplementaryUnit,
       measures: localData.measures || [],
       requiredDocuments: localData.requiredDocuments || [],
@@ -53,12 +56,14 @@ async function getDutyInfo(taricCode, origin = null) {
   // 3. Buscar en cache de IA
   const aiCached = await TaricAICache.getFromCache(normalizedCode);
   if (aiCached && aiCached.aiResponse && aiCached.aiResponse.dutyRate) {
+    const vatInfo = getVATRateByChapter(normalizedCode);
     const result = {
       code: normalizedCode,
       description: aiCached.aiResponse.description_es || aiCached.aiResponse.description,
       dutyRate: parseFloat(aiCached.aiResponse.dutyRate) || 0,
       dutyType: 'ad_valorem',
-      vatRate: 21,
+      vatRate: vatInfo.rate,
+      vatType: vatInfo.type,
       measures: aiCached.aiResponse.measures || [],
       source: 'ai_cache',
       cacheHits: aiCached.hits,
@@ -180,6 +185,9 @@ REGLAS:
       throw new Error('Respuesta de IA no contiene dutyRate');
     }
 
+    // Usar tabla local de IVA como fuente autoritativa (Ley 37/1992)
+    const vatInfo = getVATRateByChapter(taricCode);
+
     return {
       code: taricCode,
       description: parsed.description_es || parsed.description,
@@ -187,8 +195,8 @@ REGLAS:
       dutyRate: parsed.dutyRateNumeric !== undefined ? parsed.dutyRateNumeric : parseFloat(parsed.dutyRate) || 0,
       dutyType: parsed.dutyType || 'ad_valorem',
       specificDuty: parsed.specificDuty || null,
-      vatRate: parsed.vatRate || 21,
-      vatType: parsed.vatType || 'standard',
+      vatRate: vatInfo.rate,
+      vatType: vatInfo.type,
       chapter: parsed.chapter,
       chapterDescription: parsed.chapterDescription,
       measures: parsed.measures || [],
@@ -217,8 +225,12 @@ async function calculateDutiesWithAI(params) {
     origin,
     preference = '100',
     quantity,
-    netWeight
+    netWeight,
+    importDate
   } = params;
+
+  // Fecha de importacion (por defecto: hoy)
+  const calcDate = importDate ? new Date(importDate) : new Date();
 
   // Obtener informacion de aranceles
   const dutyInfo = await getDutyInfo(taricCode, origin);
@@ -227,8 +239,30 @@ async function calculateDutiesWithAI(params) {
     throw new Error(`No se pudo obtener informacion de aranceles para ${taricCode}`);
   }
 
-  // Determinar tasa base
+  // Verificar aranceles estacionales
+  const normalizedCode = normalizeCode(taricCode);
+  const seasonalInfo = getSeasonalTariff(normalizedCode, calcDate);
+
+  // Determinar tasa base (estacional si aplica, sino la normal)
   let effectiveDutyRate = dutyInfo.dutyRate || 0;
+  let seasonalApplied = null;
+
+  if (seasonalInfo) {
+    effectiveDutyRate = seasonalInfo.currentRate;
+    seasonalApplied = {
+      isSeasonal: true,
+      currentRate: seasonalInfo.currentRate,
+      periodLabel: seasonalInfo.periodLabel,
+      hasEntryPrice: seasonalInfo.hasEntryPrice,
+      entryPrice: seasonalInfo.currentEntryPrice,
+      entryPriceUnit: seasonalInfo.entryPriceUnit,
+      allSeasons: seasonalInfo.allSeasons,
+      description: seasonalInfo.description
+    };
+    // Sobrescribir baseDutyRate con la estacional
+    dutyInfo.dutyRate = seasonalInfo.currentRate;
+  }
+
   let preferenceApplied = null;
 
   // Verificar preferencias arancelarias
@@ -286,13 +320,21 @@ async function calculateDutiesWithAI(params) {
   // Añadir antidumping
   totalDuty += customsValue * (antidumpingDuty / 100);
 
-  // Calcular IVA
-  const vatRate = dutyInfo.vatRate || 21;
+  // Calcular IVA - usar tabla por capitulo TARIC como fuente autoritativa
+  const vatByChapter = getVATRateByChapter(taricCode);
+  const vatRate = vatByChapter.rate;
+  const vatType = vatByChapter.type;
   const vatBase = customsValue + totalDuty;
   const vatAmount = vatBase * (vatRate / 100);
 
   // Warnings
   const warnings = [];
+  if (seasonalApplied) {
+    warnings.push(`Arancel estacional: ${seasonalApplied.currentRate}% (${seasonalApplied.periodLabel})`);
+    if (seasonalApplied.hasEntryPrice && seasonalApplied.entryPrice) {
+      warnings.push(`Sistema de precios de entrada: ${seasonalApplied.entryPrice} ${seasonalApplied.entryPriceUnit}. Si el precio de importacion es inferior, se aplican derechos adicionales.`);
+    }
+  }
   if (dutyInfo.antidumping?.applies) {
     warnings.push(`Producto sujeto a derechos antidumping desde ${dutyInfo.antidumping.countries?.join(', ')}`);
   }
@@ -326,7 +368,8 @@ async function calculateDutiesWithAI(params) {
     // IVA
     vat: {
       rate: vatRate,
-      type: dutyInfo.vatType,
+      type: vatType,
+      description: vatByChapter.description,
       base: Math.round(vatBase * 100) / 100,
       amount: Math.round(vatAmount * 100) / 100
     },
@@ -347,6 +390,10 @@ async function calculateDutiesWithAI(params) {
     supplementaryUnit: dutyInfo.supplementaryUnit,
     requiredDocuments: dutyInfo.requiredDocuments || [],
     warnings,
+
+    // Aranceles estacionales
+    seasonal: seasonalApplied,
+    importDate: calcDate.toISOString().split('T')[0],
 
     // Metadata
     source: dutyInfo.source,
@@ -393,6 +440,76 @@ Responde con JSON:
 }
 
 // ============== Funciones auxiliares ==============
+
+/**
+ * Determinar tipo de IVA por capitulo TARIC segun Ley 37/1992 del IVA (Espana)
+ * - 4% superreducido: productos de primera necesidad
+ * - 10% reducido: alimentos en general, agua, productos sanitarios
+ * - 21% general: todo lo demas
+ */
+function getVATRateByChapter(taricCode) {
+  const code = taricCode.replace(/[\s.]/g, '');
+  const chapter = code.substring(0, 2);
+  const heading = code.substring(0, 4);
+
+  // 4% Superreducido - Productos de primera necesidad (Art. 91.Dos Ley 37/1992)
+  const superReduced = {
+    // Pan comun, harinas panificables, leche, quesos, huevos, frutas, verduras,
+    // cereales, legumbres (productos basicos sin transformar)
+    headings: ['0407', '0408', '0401', '0402', '0403', '0404', '1001', '1002', '1003', '1004', '1005'],
+    // Medicamentos de uso humano
+    chapters: ['30']
+  };
+
+  // 10% Reducido - Alimentos en general (Art. 91.Uno Ley 37/1992)
+  const reduced = {
+    chapters: [
+      '01', // Animales vivos
+      '02', // Carnes
+      '03', // Pescados
+      '04', // Lacteos, huevos, miel
+      '05', // Otros productos de origen animal
+      '06', // Plantas vivas
+      '07', // Legumbres, hortalizas
+      '08', // Frutas
+      '09', // Cafe, te, especias
+      '10', // Cereales
+      '11', // Molineria
+      '12', // Semillas oleaginosas
+      '13', // Gomas, resinas
+      '14', // Materias trenzables
+      '15', // Grasas y aceites
+      '16', // Preparaciones de carne/pescado
+      '19', // Preparaciones de cereales
+      '20', // Preparaciones de legumbres/frutas
+      '21', // Preparaciones alimenticias diversas
+      '23', // Residuos industria alimentaria, piensos
+    ]
+  };
+
+  // Verificar superreducido por capitulo
+  if (superReduced.chapters.includes(chapter)) {
+    return { rate: 4, type: 'super_reduced', description: 'IVA superreducido (Ley 37/1992 Art. 91.Dos)' };
+  }
+
+  // Verificar superreducido por partida especifica
+  if (superReduced.headings.includes(heading)) {
+    return { rate: 4, type: 'super_reduced', description: 'IVA superreducido (Ley 37/1992 Art. 91.Dos)' };
+  }
+
+  // Verificar reducido por capitulo
+  if (reduced.chapters.includes(chapter)) {
+    return { rate: 10, type: 'reduced', description: 'IVA reducido - Alimentos (Ley 37/1992 Art. 91.Uno)' };
+  }
+
+  // Agua (2201)
+  if (heading === '2201') {
+    return { rate: 10, type: 'reduced', description: 'IVA reducido - Agua (Ley 37/1992 Art. 91.Uno)' };
+  }
+
+  // 21% General - Todo lo demas
+  return { rate: 21, type: 'standard', description: 'IVA general (Ley 37/1992 Art. 90)' };
+}
 
 function normalizeCode(code) {
   return code.replace(/[\s.]/g, '').padEnd(10, '0').substring(0, 10);

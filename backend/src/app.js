@@ -73,8 +73,24 @@ connectDB();
 app.use(helmet());
 
 // CORS configuration
+const allowedOrigins = [
+  'https://aduanas.strixai.es',
+  'http://aduanas.strixai.es',
+  process.env.FRONTEND_URL,
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:5173'
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (same-origin, curl, mobile apps)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(null, false);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Tenant-Slug']
@@ -83,8 +99,8 @@ app.use(cors({
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: { error: 'Demasiadas solicitudes, por favor intente más tarde' }
+  max: 500, // limit each IP to 500 requests per windowMs
+  message: { error: 'Demasiadas solicitudes, por favor intente mas tarde' }
 });
 app.use('/api/', limiter);
 

@@ -34,6 +34,34 @@ router.get('/info', pueController.getInfo);
 router.get('/deadlines', pueController.getUpcomingDeadlines);
 
 // ==========================================
+// PHASE 5: SOIVRE OVERHAUL - CATALOGS
+// ==========================================
+
+// GET /api/pue/catalogs/all - Todos los catalogos (carga inicial)
+router.get('/catalogs/all', pueController.getAllCatalogs);
+
+// GET /api/pue/catalogs/specificities/:flowType - Especificidades por flujo
+router.get('/catalogs/specificities/:flowType', pueController.getSpecificities);
+
+// GET /api/pue/catalogs/centers - Centros SOIVRE (CodCice)
+router.get('/catalogs/centers', pueController.getCenters);
+
+// GET /api/pue/catalogs/inspection-points/:code - Puntos inspeccion por centro
+router.get('/catalogs/inspection-points/:code', pueController.getInspectionPoints);
+
+// GET /api/pue/catalogs/units - Unidades de mercancia
+router.get('/catalogs/units', pueController.getUnits);
+
+// GET /api/pue/catalogs/certificate-types - Tipos de certificado
+router.get('/catalogs/certificate-types', pueController.getCertificateTypes);
+
+// POST /api/pue/lookup-mrn - Buscar declaracion por MRN + Clave Zeta
+router.post('/lookup-mrn', pueController.lookupMRN);
+
+// POST /api/pue/validate-rii - Validar RII por NIF
+router.post('/validate-rii', pueController.validateRII);
+
+// ==========================================
 // VALIDATION ROUTES
 // ==========================================
 

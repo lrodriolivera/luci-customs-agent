@@ -344,11 +344,112 @@ const PUERequestDetail = () => {
               </Grid>
             </Grid>
 
+            {/* Phase 5: MRN + Clave Zeta + Flow Type */}
             {request.declarationMRN && (
               <>
                 <Divider sx={{ my: 2 }} />
-                <Typography variant="caption" color="textSecondary">Declaracion Vinculada</Typography>
-                <Typography variant="body1">{request.declarationMRN}</Typography>
+                <Typography variant="subtitle2" gutterBottom>Declaracion Vinculada</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={4}>
+                    <Typography variant="caption" color="textSecondary">MRN / Partida</Typography>
+                    <Typography variant="body1" fontWeight={500}>{request.mrnPartida || request.declarationMRN}</Typography>
+                  </Grid>
+                  <Grid item xs={12} md={2}>
+                    <Typography variant="caption" color="textSecondary">Clave Zeta</Typography>
+                    <Typography variant="body1">{request.claveZeta || '-'}</Typography>
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <Typography variant="caption" color="textSecondary">Flujo</Typography>
+                    <Box>
+                      <Chip
+                        label={request.flowType === 'ROHS_RAEE' ? 'ROHS/RAEE' : request.flowType === 'SOIVRE' ? 'SOIVRE' : '-'}
+                        color={request.flowType === 'ROHS_RAEE' ? 'warning' : 'primary'}
+                        size="small"
+                      />
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <Typography variant="caption" color="textSecondary">Email Contacto</Typography>
+                    <Typography variant="body2">{request.contactEmail || '-'}</Typography>
+                  </Grid>
+                </Grid>
+              </>
+            )}
+
+            {/* Phase 5: CodCice + CodPi */}
+            {(request.codCice?.code || request.codPi?.code) && (
+              <>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" gutterBottom>Centro e Inspeccion SOIVRE</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="caption" color="textSecondary">CodCice (Centro)</Typography>
+                    <Typography variant="body2">{request.codCice?.code} - {request.codCice?.name}</Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="caption" color="textSecondary">CodPi (Punto Inspeccion)</Typography>
+                    <Typography variant="body2">{request.codPi?.code} - {request.codPi?.name}</Typography>
+                  </Grid>
+                </Grid>
+              </>
+            )}
+
+            {/* Phase 5: Especificidades */}
+            {request.specificities?.length > 0 && (
+              <>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" gutterBottom>Especificidades</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {request.specificities.map(code => (
+                    <Chip key={code} label={code} size="small" variant="outlined" />
+                  ))}
+                </Box>
+              </>
+            )}
+
+            {/* Phase 5: Certificados y RII */}
+            {(request.certificates?.rohs || request.certificates?.raee || request.certificates?.com) && (
+              <>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" gutterBottom>Certificados Solicitados</Typography>
+                <Grid container spacing={2}>
+                  {request.certificates?.com && (
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="textSecondary">COM</Typography>
+                      <Typography variant="body2">{request.certificates.com}</Typography>
+                    </Grid>
+                  )}
+                  {request.certificates?.rohs && (
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="textSecondary">ROHS</Typography>
+                      <Typography variant="body2">{request.certificates.rohs}</Typography>
+                    </Grid>
+                  )}
+                  {request.certificates?.raee && (
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="textSecondary">RAEE</Typography>
+                      <Typography variant="body2">{request.certificates.raee}</Typography>
+                    </Grid>
+                  )}
+                </Grid>
+              </>
+            )}
+
+            {/* Phase 5: RII Numbers */}
+            {(request.riiNumbers?.raee || request.riiNumbers?.pya) && (
+              <>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" gutterBottom>Numeros RII</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="textSecondary">RII RAEE</Typography>
+                    <Typography variant="body2">{request.riiNumbers?.raee || '-'}</Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="textSecondary">RII PyA</Typography>
+                    <Typography variant="body2">{request.riiNumbers?.pya || '-'}</Typography>
+                  </Grid>
+                </Grid>
               </>
             )}
           </Paper>

@@ -382,6 +382,116 @@ const PUERequestSchema = new mongoose.Schema({
   // MRN de declaracion aduanera
   declarationMRN: String,
 
+  // Clave Zeta Partida (5 digitos, identifica item dentro del MRN)
+  claveZeta: {
+    type: String,
+    match: /^\d{5}$/
+  },
+
+  // MRN + Clave Zeta combinado
+  mrnPartida: String,
+
+  // Tipo de flujo (determina bifurcacion UI SOIVRE vs ROHS/RAEE)
+  flowType: {
+    type: String,
+    enum: ['SOIVRE', 'ROHS_RAEE']
+  },
+
+  // Operacion
+  operationType: {
+    type: String,
+    enum: ['ALTA', 'BAJA', 'MODIFICACION'],
+    default: 'ALTA'
+  },
+
+  // Tipo documento
+  documentTypePue: {
+    type: String,
+    enum: ['DUA', 'OTRA_DECLARACION'],
+    default: 'DUA'
+  },
+
+  // Referencia / Docucice 1
+  referenciaDocucice: String,
+
+  // Especificidades (multi-select)
+  specificities: [String],
+
+  // Unidades de Mercancia
+  merchandiseUnit: {
+    type: String,
+    enum: ['DOZ', 'SET', 'MTR', 'M2', 'M3', 'PAR', 'UNI', 'KGM', 'PCE', 'TNE']
+  },
+
+  // Cantidad de mercancia
+  merchandiseQuantity: Number,
+
+  // DUA Precedente
+  duaPrecedente: String,
+
+  // Id. (No de solicitud) SOIVRE precedente
+  soivrePrecedente: String,
+
+  // CodCice (Centro del S.I. SOIVRE)
+  codCice: {
+    code: String,
+    name: String
+  },
+
+  // CodPi (Punto de inspeccion SOIVRE)
+  codPi: {
+    code: String,
+    name: String
+  },
+
+  // Correo electronico de contacto
+  contactEmail: String,
+
+  // Tipo Declaracion SOIVRE
+  declarationTypeSoivre: {
+    type: String,
+    enum: ['EXPEDIENTE_NUEVO', 'AMPLIACION', 'RECTIFICACION'],
+    default: 'EXPEDIENTE_NUEVO'
+  },
+
+  // Codigo SOIVRE Producto
+  codigoSoivreProducto: String,
+
+  // Certificados solicitados
+  certificates: {
+    com: {
+      type: String,
+      enum: ['NORMAL', 'NOT_APPLICABLE', 'CONSULT']
+    },
+    rohs: {
+      type: String,
+      enum: ['NORMAL', 'NOT_APPLICABLE', 'CONSULT']
+    },
+    raee: {
+      type: String,
+      enum: ['NORMAL', 'NOT_APPLICABLE', 'CONSULT']
+    }
+  },
+
+  // Numeros RII (Registro Integrado Industrial)
+  riiNumbers: {
+    raee: String,
+    pya: String
+  },
+
+  // Datos auto-rellenados desde H1
+  h1AutoFill: {
+    importerName: String,
+    importerNif: String,
+    importerEori: String,
+    taricCode: String,
+    goodsDescription: String,
+    quantity: Number,
+    unit: String,
+    origin: String,
+    customsOffice: String
+  },
+
   // Referencia ENS (si aplica)
   ensReference: String,
 
@@ -590,6 +700,10 @@ PUERequestSchema.index({ createdBy: 1, createdAt: -1 });
 PUERequestSchema.index({ deadline: 1 });
 PUERequestSchema.index({ 'goods.taricCode': 1 });
 PUERequestSchema.index({ 'transport.containerNumber': 1 });
+PUERequestSchema.index({ mrnPartida: 1 });
+PUERequestSchema.index({ flowType: 1 });
+PUERequestSchema.index({ 'codCice.code': 1 });
+PUERequestSchema.index({ 'riiNumbers.raee': 1 });
 
 // Generar referencia automatica
 PUERequestSchema.pre('save', async function(next) {
@@ -710,13 +824,64 @@ PUERequestSchema.methods.validateForSubmission = function() {
     });
   }
 
-  // Validar transporte
-  if (!this.transport?.mode) {
+  // Validar transporte (solo si no tiene MRN vinculado)
+  if (!this.declarationMRN && !this.transport?.mode) {
     errors.push({
       field: 'transport.mode',
       code: 'PUE_TRANSPORT_REQUIRED',
       message: 'Modo de transporte es obligatorio'
     });
+  }
+
+  // === Validaciones Phase 5: SOIVRE Overhaul ===
+
+  // Validar CodCice y CodPi
+  if (this.flowType && !this.codCice?.code) {
+    errors.push({
+      field: 'codCice',
+      code: 'PUE_CODCICE_REQUIRED',
+      message: 'Centro SOIVRE (CodCice) es obligatorio'
+    });
+  }
+
+  if (this.flowType && !this.codPi?.code) {
+    errors.push({
+      field: 'codPi',
+      code: 'PUE_CODPI_REQUIRED',
+      message: 'Punto de inspeccion (CodPi) es obligatorio'
+    });
+  }
+
+  // Validar email de contacto
+  if (this.flowType && !this.contactEmail) {
+    errors.push({
+      field: 'contactEmail',
+      code: 'PUE_EMAIL_REQUIRED',
+      message: 'Correo electronico de contacto es obligatorio'
+    });
+  }
+
+  // Validaciones especificas por flujo
+  if (this.flowType === 'SOIVRE') {
+    // SOIVRE requiere documentos obligatoriamente
+    if (!this.attachedDocuments || this.attachedDocuments.length === 0) {
+      errors.push({
+        field: 'attachedDocuments',
+        code: 'PUE_SOIVRE_DOCS_REQUIRED',
+        message: 'Flujo SOIVRE requiere documentacion adjunta. El inspector no firmara sin documentacion.'
+      });
+    }
+  }
+
+  if (this.flowType === 'ROHS_RAEE') {
+    // ROHS/RAEE requiere certificados
+    if (!this.certificates?.rohs && !this.certificates?.raee) {
+      errors.push({
+        field: 'certificates',
+        code: 'PUE_ROHS_CERT_REQUIRED',
+        message: 'Debe seleccionar al menos un certificado ROHS o RAEE'
+      });
+    }
   }
 
   return {

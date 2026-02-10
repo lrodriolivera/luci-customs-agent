@@ -7,6 +7,7 @@ const { classificationValidators } = require('../middleware/validators');
 // Rutas publicas (con auth opcional para tracking)
 router.get('/chapters', classificationController.getChapters);
 router.get('/search', classificationController.searchTaric);
+router.get('/tree', classificationController.getTreeData);
 router.get('/taric/:code', classificationValidators.getByCode, classificationController.getTaricInfo);
 
 // Rutas que requieren autenticacion

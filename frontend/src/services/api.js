@@ -88,10 +88,12 @@ export const classificationAPI = {
     api.post('/ai/validate-classification', null, {
       params: { taric_code: taricCode, description, origin }
     }),
-  search: (query) => api.get('/api/classification/search', { params: { query } }),
+  search: (query) => api.get('/api/classification/search', { params: { q: query } }),
+  searchByChapter: (chapter) => api.get('/api/classification/search', { params: { chapter } }),
   suggest: (data) => api.post('/api/classification/suggest', data, { timeout: 90000 }),
   getTaricInfo: (code) => api.get(`/api/classification/taric/${code}`),
   getChapters: () => api.get('/api/classification/chapters'),
+  getTreeData: (parent) => api.get('/api/classification/tree', { params: parent ? { parent } : {} }),
   calculateDuties: (data) => api.post('/api/classification/calculate-duties', data),
   getRequiredDocuments: (code, origin) => api.get(`/api/classification/required-documents/${code}`, { params: { origin } }),
   getPreferences: (origin) => api.get(`/api/classification/preferences/${origin}`),
@@ -977,6 +979,16 @@ export const pueAPI = {
   queryStatus: (id) => api.get(`/api/pue/${id}/status`),
   getXML: (id, regenerate = false) =>
     api.get(`/api/pue/${id}/xml`, { params: { regenerate }, responseType: 'text' }),
+
+  // Phase 5: SOIVRE Overhaul Endpoints
+  getCatalogs: () => api.get('/api/pue/catalogs/all'),
+  getSpecificities: (flowType) => api.get(`/api/pue/catalogs/specificities/${flowType}`),
+  getCenters: () => api.get('/api/pue/catalogs/centers'),
+  getInspectionPoints: (centerCode) => api.get(`/api/pue/catalogs/inspection-points/${centerCode}`),
+  getUnits: () => api.get('/api/pue/catalogs/units'),
+  getCertificateTypes: () => api.get('/api/pue/catalogs/certificate-types'),
+  lookupMRN: (mrn, claveZeta) => api.post('/api/pue/lookup-mrn', { mrn, claveZeta }),
+  validateRII: (nif) => api.post('/api/pue/validate-rii', { nif }),
 
   // AI-Powered Endpoints
   aiDetermineType: (goods, context) =>

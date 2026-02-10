@@ -671,6 +671,152 @@ exports.getRequiredControls = async (req, res) => {
 };
 
 // ===========================================
+// PHASE 5: SOIVRE OVERHAUL ENDPOINTS
+// ===========================================
+
+/**
+ * GET /api/pue/catalogs/all
+ * Obtener todos los catalogos SOIVRE de una vez
+ */
+exports.getAllCatalogs = async (req, res) => {
+  try {
+    const catalogs = pueService.getAllCatalogs();
+    res.json({
+      success: true,
+      data: catalogs
+    });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting catalogs:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * GET /api/pue/catalogs/specificities/:flowType
+ * Obtener especificidades por tipo de flujo
+ */
+exports.getSpecificities = async (req, res) => {
+  try {
+    const { flowType } = req.params;
+    const data = pueService.getSpecificities(flowType);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting specificities:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * GET /api/pue/catalogs/centers
+ * Obtener centros SOIVRE (CodCice)
+ */
+exports.getCenters = async (req, res) => {
+  try {
+    const data = pueService.getSoivreCenters();
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting centers:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * GET /api/pue/catalogs/inspection-points/:code
+ * Obtener puntos de inspeccion por centro
+ */
+exports.getInspectionPoints = async (req, res) => {
+  try {
+    const { code } = req.params;
+    const data = pueService.getInspectionPoints(code);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting inspection points:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * GET /api/pue/catalogs/units
+ * Obtener unidades de mercancia
+ */
+exports.getUnits = async (req, res) => {
+  try {
+    const data = pueService.getMerchandiseUnits();
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting units:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * GET /api/pue/catalogs/certificate-types
+ * Obtener tipos de certificado
+ */
+exports.getCertificateTypes = async (req, res) => {
+  try {
+    const data = pueService.getCertificateTypes();
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error('PUE Controller: Error getting certificate types:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * POST /api/pue/lookup-mrn
+ * Buscar declaracion por MRN + Clave Zeta y extraer datos
+ */
+exports.lookupMRN = async (req, res) => {
+  try {
+    const { mrn, claveZeta } = req.body;
+
+    if (!mrn) {
+      return res.status(400).json({
+        success: false,
+        error: 'MRN es obligatorio'
+      });
+    }
+
+    if (!claveZeta) {
+      return res.status(400).json({
+        success: false,
+        error: 'Clave Zeta (numero de partida) es obligatorio'
+      });
+    }
+
+    const result = await pueService.lookupMRN(mrn, claveZeta);
+    res.json(result);
+  } catch (error) {
+    logger.error('PUE Controller: Error looking up MRN:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * POST /api/pue/validate-rii
+ * Validar RII (Registro Integrado Industrial) por NIF
+ */
+exports.validateRII = async (req, res) => {
+  try {
+    const { nif } = req.body;
+
+    if (!nif) {
+      return res.status(400).json({
+        success: false,
+        error: 'NIF/CIF del importador es obligatorio'
+      });
+    }
+
+    const result = await pueService.validateRII(nif);
+    res.json(result);
+  } catch (error) {
+    logger.error('PUE Controller: Error validating RII:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ===========================================
 // AI-POWERED ENDPOINTS
 // ===========================================
 

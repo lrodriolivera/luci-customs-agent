@@ -907,7 +907,13 @@ class PUEService {
     const allowedFields = [
       'operator', 'importer', 'manufacturer', 'representative', 'consignee',
       'goods', 'transport', 'customsOffice', 'soivreOffice', 'pueSubtype',
-      'priority', 'declarationMRN', 'ensReference'
+      'priority', 'declarationMRN', 'ensReference',
+      // Phase 5 fields
+      'claveZeta', 'mrnPartida', 'flowType', 'operationType', 'documentTypePue',
+      'referenciaDocucice', 'specificities', 'merchandiseUnit', 'merchandiseQuantity',
+      'duaPrecedente', 'soivrePrecedente', 'codCice', 'codPi', 'contactEmail',
+      'declarationTypeSoivre', 'codigoSoivreProducto', 'certificates', 'riiNumbers',
+      'h1AutoFill'
     ];
 
     for (const field of allowedFields) {
@@ -998,6 +1004,170 @@ class PUEService {
   }
 
   // ============================================
+  // PHASE 5: SOIVRE OVERHAUL METHODS
+  // ============================================
+
+  /**
+   * Buscar declaracion por MRN y extraer datos para autorrelleno
+   */
+  async lookupMRN(mrn, claveZeta) {
+    try {
+      const Expedition = require('../models/Expedition');
+      const expedition = await Expedition.findOne({ 'declaration.mrn': mrn });
+
+      if (!expedition) {
+        return {
+          success: false,
+          error: `MRN ${mrn} no encontrado en el sistema. Verifique que la declaracion H1 ha sido creada.`
+        };
+      }
+
+      const zetaNum = parseInt(claveZeta, 10);
+      const goodsItem = expedition.goods.find(g => g.itemNumber === zetaNum);
+
+      if (!goodsItem) {
+        return {
+          success: false,
+          error: `Clave Zeta ${claveZeta} no encontrada en declaracion ${mrn}. La declaracion tiene ${expedition.goods.length} partida(s) (00001 a ${String(expedition.goods.length).padStart(5, '0')}).`
+        };
+      }
+
+      // Determinar tipo de flujo automaticamente basado en codigo TARIC
+      const taric = goodsItem.taricCode || '';
+      const prefix4 = taric.substring(0, 4);
+      const prefix2 = taric.substring(0, 2);
+      const rohsTarics = this.config.taricCodes.ROHS || [];
+      const isElectrical = rohsTarics.some(code => taric.startsWith(code) || prefix4.startsWith(code) || prefix2 === code);
+      const suggestedFlow = isElectrical ? 'ROHS_RAEE' : 'SOIVRE';
+
+      const autoFillData = {
+        importerName: expedition.importer?.companyName || expedition.client?.companyName,
+        importerNif: expedition.importer?.nif || expedition.client?.nif,
+        importerEori: expedition.importer?.eori || expedition.client?.eori,
+        taricCode: goodsItem.taricCode,
+        goodsDescription: goodsItem.description,
+        quantity: goodsItem.quantity,
+        unit: goodsItem.unit || 'KGM',
+        origin: goodsItem.originCountry,
+        customsOffice: expedition.declaration?.customsOffice
+      };
+
+      logger.info(`PUE: MRN lookup exitoso ${mrn} partida ${claveZeta} - TARIC ${taric}`);
+
+      return {
+        success: true,
+        data: {
+          h1AutoFill: autoFillData,
+          suggestedFlow,
+          declarationMRN: mrn,
+          claveZeta: String(zetaNum).padStart(5, '0'),
+          mrnPartida: `${mrn}/${String(zetaNum).padStart(5, '0')}`,
+          expeditionId: expedition.expeditionId,
+          allItems: expedition.goods.map(g => ({
+            itemNumber: g.itemNumber,
+            description: g.description,
+            taricCode: g.taricCode
+          }))
+        }
+      };
+    } catch (error) {
+      logger.error('PUE: Error en lookup MRN:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Validar RII (Registro Integrado Industrial) por NIF
+   */
+  async validateRII(nif) {
+    try {
+      if (!nif) {
+        return {
+          success: false,
+          error: 'NIF/CIF del importador es obligatorio para validar RII'
+        };
+      }
+
+      if (this.simulationMode) {
+        const result = this._simulateRIIValidation(nif);
+        logger.info(`PUE: RII validation para NIF ${nif} - ${result.found ? 'encontrado' : 'no encontrado'}`);
+        return {
+          success: true,
+          data: result
+        };
+      }
+
+      // Produccion: consultar URLs del Ministerio de Industria
+      // https://industria.serviciosmin.gob.es/RII_aee/UI/ConsultasPublicas/ProductoresIns.aspx
+      // https://industria.serviciosmin.gob.es/RII_PYA/UI/ConsultasPublicas/ProductoresIns.aspx
+      throw new Error('Integracion RII produccion pendiente de implementacion');
+    } catch (error) {
+      logger.error('PUE: Error validando RII:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtener catalogos SOIVRE (todos de una vez para carga inicial)
+   */
+  getAllCatalogs() {
+    const catalogs = require('../data/soivreCatalogs');
+    return {
+      soivreSpecificities: catalogs.SOIVRE_SPECIFICITIES,
+      rohsRaeeSpecificities: catalogs.ROHS_RAEE_SPECIFICITIES,
+      merchandiseUnits: catalogs.MERCHANDISE_UNITS,
+      certificateTypes: catalogs.CERTIFICATE_TYPES,
+      declarationTypes: catalogs.DECLARATION_TYPES,
+      operationTypes: catalogs.OPERATION_TYPES,
+      documentTypes: catalogs.DOCUMENT_TYPES,
+      centers: catalogs.SOIVRE_CENTERS,
+      inspectionPoints: catalogs.INSPECTION_POINTS
+    };
+  }
+
+  /**
+   * Obtener especificidades por tipo de flujo
+   */
+  getSpecificities(flowType) {
+    const catalogs = require('../data/soivreCatalogs');
+    if (flowType === 'SOIVRE') return catalogs.SOIVRE_SPECIFICITIES;
+    if (flowType === 'ROHS_RAEE') return catalogs.ROHS_RAEE_SPECIFICITIES;
+    return [];
+  }
+
+  /**
+   * Obtener centros SOIVRE (CodCice)
+   */
+  getSoivreCenters() {
+    const catalogs = require('../data/soivreCatalogs');
+    return catalogs.SOIVRE_CENTERS;
+  }
+
+  /**
+   * Obtener puntos de inspeccion (CodPi) por centro
+   */
+  getInspectionPoints(centerCode) {
+    const catalogs = require('../data/soivreCatalogs');
+    return catalogs.INSPECTION_POINTS[centerCode] || [];
+  }
+
+  /**
+   * Obtener unidades de mercancia
+   */
+  getMerchandiseUnits() {
+    const catalogs = require('../data/soivreCatalogs');
+    return catalogs.MERCHANDISE_UNITS;
+  }
+
+  /**
+   * Obtener tipos de certificado
+   */
+  getCertificateTypes() {
+    const catalogs = require('../data/soivreCatalogs');
+    return catalogs.CERTIFICATE_TYPES;
+  }
+
+  // ============================================
   // METODOS PRIVADOS - SIMULACION
   // ============================================
 
@@ -1014,6 +1184,37 @@ class PUEService {
         : 'Solicitud admitida a tramite',
       status: needsInspection ? 'pending_inspection' : 'registered',
       correlationId: crypto.randomUUID()
+    };
+  }
+
+  _simulateRIIValidation(nif) {
+    // Simular consulta al Ministerio de Industria y Turismo
+    // En produccion se consultaria:
+    // - RII RAEE: https://industria.serviciosmin.gob.es/RII_aee/UI/ConsultasPublicas/ProductoresIns.aspx
+    // - RII PyA: https://industria.serviciosmin.gob.es/RII_PYA/UI/ConsultasPublicas/ProductoresIns.aspx
+    const hash = nif.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    const hasRII = hash % 3 !== 0; // 66% probabilidad de estar registrado
+
+    if (hasRII) {
+      const year = new Date().getFullYear();
+      return {
+        found: true,
+        nif,
+        riiRaee: `RAEE-${nif.substring(0, 8)}-${year}`,
+        riiPya: `PYA-${nif.substring(0, 8)}-${year}`,
+        status: 'ACTIVO',
+        registrationDate: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        message: `Empresa con NIF ${nif} registrada en RII RAEE y RII PyA`
+      };
+    }
+
+    return {
+      found: false,
+      nif,
+      riiRaee: null,
+      riiPya: null,
+      status: 'NO_REGISTRADO',
+      message: `Empresa con NIF ${nif} NO encontrada en el Registro Integrado Industrial. Debe tramitar el registro RII antes de importar aparatos electricos y electronicos.`
     };
   }
 

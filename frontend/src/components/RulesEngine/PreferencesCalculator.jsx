@@ -24,7 +24,10 @@ export default function PreferencesCalculator() {
     taricCode: '',
     customsValue: '',
     certificate: '',
-    declarationOnOrigin: false
+    declarationOnOrigin: false,
+    exporterType: 'normal',
+    rexNumber: '',
+    authorizedExporterNumber: ''
   })
   const [certData, setCertData] = useState({
     type: 'EUR.1',
@@ -292,6 +295,83 @@ export default function PreferencesCalculator() {
               </label>
             </div>
 
+            {/* Tipo de Exportador */}
+            <div className="border-t border-gray-200 pt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tipo de Exportador
+              </label>
+              <select
+                value={formData.exporterType}
+                onChange={(e) => setFormData({ ...formData, exporterType: e.target.value, rexNumber: '', authorizedExporterNumber: '' })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="normal">Normal (sin acreditacion)</option>
+                <option value="authorized">Exportador Autorizado (EA)</option>
+                <option value="rex">Exportador Registrado (REX)</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.exporterType === 'authorized' && 'Habilitado para emitir declaraciones en factura sin limite de valor'}
+                {formData.exporterType === 'rex' && 'Registrado en sistema REX para certificar origen en SPG/acuerdos modernos'}
+                {formData.exporterType === 'normal' && 'Puede usar declaracion en factura solo hasta 6.000 EUR'}
+              </p>
+            </div>
+
+            {/* Numero REX - solo si exportador REX */}
+            {formData.exporterType === 'rex' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Numero REX
+                </label>
+                <input
+                  type="text"
+                  value={formData.rexNumber}
+                  onChange={(e) => setFormData({ ...formData, rexNumber: e.target.value.toUpperCase() })}
+                  placeholder="ej. REREG/2026/12345"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Numero de registro en el sistema REX de la UE</p>
+              </div>
+            )}
+
+            {/* Numero Exportador Autorizado - solo si EA */}
+            {formData.exporterType === 'authorized' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Numero de Autorizacion
+                </label>
+                <input
+                  type="text"
+                  value={formData.authorizedExporterNumber}
+                  onChange={(e) => setFormData({ ...formData, authorizedExporterNumber: e.target.value.toUpperCase() })}
+                  placeholder="ej. ES/001/2026"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">Numero de autorizacion de exportador autorizado</p>
+              </div>
+            )}
+
+            {/* Info certificado valido segun tipo exportador */}
+            {formData.exporterType !== 'normal' && (
+              <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                <p className="text-xs font-medium text-purple-800">
+                  {formData.exporterType === 'rex'
+                    ? 'Certificado valido: Declaracion de origen en factura (Statement on Origin) - sin limite de valor. Aplicable a SPG, CETA, JEFTA, EU-Vietnam y acuerdos modernos.'
+                    : 'Certificado valido: Declaracion de origen en factura (EUR.1 no necesario) - sin limite de valor. Aplicable a acuerdos bilaterales y Pan-Euro-Med.'}
+                </p>
+              </div>
+            )}
+
+            {formData.exporterType === 'normal' && parseFloat(formData.customsValue) > 6000 && (
+              <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div className="flex items-start gap-2">
+                  <ExclamationTriangleIcon className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-yellow-800">
+                    Para envios superiores a 6.000 EUR, un exportador normal necesita EUR.1 emitido por aduanas del pais exportador. Solo exportadores Autorizados o REX pueden usar declaracion en factura sin limite.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={checking}
@@ -441,31 +521,66 @@ export default function PreferencesCalculator() {
                 <div className="bg-white rounded-lg shadow-md p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                     <DocumentCheckIcon className="h-6 w-6 mr-2 text-purple-600" />
-                    Documentación Necesaria
+                    Documentacion Necesaria
                   </h3>
                   <ul className="space-y-2">
+                    {formData.exporterType === 'rex' ? (
+                      <>
+                        <li className="flex items-start">
+                          <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
+                          <span className="text-sm text-gray-700">
+                            <strong>Declaracion de origen en factura</strong> (Statement on Origin) con numero REX
+                            {formData.rexNumber && <span className="text-purple-600"> ({formData.rexNumber})</span>}
+                          </span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-blue-600 mr-2 flex-shrink-0">i</span>
+                          <span className="text-sm text-gray-500">EUR.1 no necesario - exportador registrado en sistema REX</span>
+                        </li>
+                      </>
+                    ) : formData.exporterType === 'authorized' ? (
+                      <>
+                        <li className="flex items-start">
+                          <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
+                          <span className="text-sm text-gray-700">
+                            <strong>Declaracion de origen en factura</strong> con numero de autorizacion
+                            {formData.authorizedExporterNumber && <span className="text-purple-600"> ({formData.authorizedExporterNumber})</span>}
+                          </span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-blue-600 mr-2 flex-shrink-0">i</span>
+                          <span className="text-sm text-gray-500">EUR.1 no necesario - exportador autorizado sin limite de valor</span>
+                        </li>
+                      </>
+                    ) : (
+                      <>
+                        <li className="flex items-start">
+                          <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
+                          <span className="text-sm text-gray-700">
+                            {parseFloat(formData.customsValue) > 6000
+                              ? <><strong>{result.certificate}</strong> emitido por autoridad aduanera del pais exportador</>
+                              : <><strong>Declaracion de origen en factura</strong> (envios hasta 6.000 EUR) o <strong>{result.certificate}</strong></>
+                            }
+                          </span>
+                        </li>
+                      </>
+                    )}
                     <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
+                      <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
                       <span className="text-sm text-gray-700">
-                        {result.certificate} válido emitido por autoridad competente
+                        Factura comercial con declaracion de origen
                       </span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
+                      <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
                       <span className="text-sm text-gray-700">
-                        Factura comercial con declaración de origen
+                        Documentacion que acredite cumplimiento de reglas de origen
                       </span>
                     </li>
                     <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
+                      <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
                       <span className="text-sm text-gray-700">
-                        Documentación que acredite cumplimiento de reglas de origen
-                      </span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
-                      <span className="text-sm text-gray-700">
-                        Declaración en DUA con código de preferencia arancelaria
+                        Declaracion en DUA con codigo de preferencia arancelaria
                       </span>
                     </li>
                   </ul>
