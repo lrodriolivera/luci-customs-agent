@@ -92,6 +92,37 @@
   .sidebar-link-active {
     @apply bg-luci-light text-luci font-medium;
   }
+
+  /* Help system */
+  .help-fab {
+    @apply fixed bottom-6 right-6 z-40 w-14 h-14 bg-luci text-white rounded-full shadow-lg
+           flex items-center justify-center
+           hover:bg-luci-dark hover:shadow-xl hover:scale-105
+           focus:outline-none focus:ring-2 focus:ring-luci focus:ring-offset-2
+           transition-all duration-200;
+  }
+
+  .help-modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-40;
+  }
+
+  .help-modal-panel {
+    @apply w-full max-w-2xl bg-white rounded-2xl shadow-xl p-6;
+  }
+
+  .help-tab {
+    @apply flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium
+           rounded-md text-gray-500 hover:text-gray-700
+           focus:outline-none transition-colors;
+  }
+
+  .help-tab-active {
+    @apply bg-white text-luci shadow-sm;
+  }
+
+  .help-regulation-card {
+    @apply p-3 bg-gray-50 rounded-lg border border-gray-100;
+  }
 }
 
 /* Custom scrollbar */
@@ -112,6 +143,29 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a1a1a1;
+}
+
+/* Dark scrollbar for sidebar */
+.custom-scrollbar-dark::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar-dark::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar-dark::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+.custom-scrollbar-dark::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Improved card hover */
+.card {
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* LUCI Chat bubble animation */
@@ -139,4 +193,16 @@
 
 .dropzone-active {
   @apply border-luci bg-luci-light;
+}
+
+/* Help button pulse animation */
+@keyframes help-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
 }
