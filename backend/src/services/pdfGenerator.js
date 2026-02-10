@@ -538,6 +538,206 @@ class PDFGenerator {
     this._drawFooter(doc);
     return this._toBuffer(doc);
   }
+
+  // ==================== NCTS - DECLARACION DE TRANSITO ====================
+
+  async generateNCTSPDF(transit, options = {}) {
+    const doc = new PDFDocument({ size: 'A4', margin: 40, autoFirstPage: true });
+    const principal = transit.principal || {};
+    const guarantee = transit.guarantee || {};
+    const transport = transit.transport || {};
+    const goodsItems = transit.goodsItems || [];
+    const totals = transit.totals || {};
+
+    const transitTypeDesc = { T1: 'T1 - Transito externo', T2: 'T2 - Transito interno', T2F: 'T2F - Transito interno fiscal', TIR: 'TIR - Cuaderno TIR' };
+
+    this._drawHeader(doc, `DECLARACION DE TRANSITO NCTS`, transitTypeDesc[transit.transitType] || transit.transitType, {
+      mrn: transit.mrn, lrn: transit.lrn, expeditionId: transit.reference
+    });
+
+    if (options.draft) this._drawDraftWatermark(doc);
+
+    const mx = doc.page.margins.left;
+    const midX = mx + 260;
+
+    // Obligado principal
+    this._drawSection(doc, 'OBLIGADO PRINCIPAL');
+    const pY = doc.y;
+    this._drawField(doc, 'Nombre', fmt(principal.name), mx + 10, pY);
+    this._drawField(doc, 'EORI', fmt(principal.eori), midX, pY);
+    const addr = principal.address || {};
+    this._drawField(doc, 'Direccion', `${fmt(addr.street)} - ${fmt(addr.postalCode)} ${fmt(addr.city)} (${fmt(addr.country)})`, mx + 10, pY + 25, 460);
+    doc.y = pY + 55;
+
+    // Aduanas
+    this._drawSection(doc, 'ADUANAS');
+    const aY = doc.y;
+    const dep = transit.departureOffice || {};
+    const dest = transit.destinationOffice || {};
+    this._drawField(doc, 'Aduana Partida', `${fmt(dep.code)} - ${fmt(dep.name)}`, mx + 10, aY);
+    this._drawField(doc, 'Aduana Destino', `${fmt(dest.code)} - ${fmt(dest.name)}`, midX, aY);
+
+    if (transit.transitOffices?.length > 0) {
+      this._drawField(doc, 'Aduanas de Paso', transit.transitOffices.map(o => o.code).join(', '), mx + 10, aY + 25, 460);
+      doc.y = aY + 55;
+    } else {
+      doc.y = aY + 30;
+    }
+
+    // Garantia
+    this._drawSection(doc, 'GARANTIA');
+    const gY = doc.y;
+    const gTypeMap = { '0': 'Exencion', '1': 'Garantia global', '2': 'Garantia individual fianza', '3': 'Garantia individual metalico', '8': 'Garantia individual otro', R: 'Exencion reglamento' };
+    this._drawField(doc, 'Tipo', gTypeMap[guarantee.type] || fmt(guarantee.type), mx + 10, gY);
+    this._drawField(doc, 'GRN', fmt(guarantee.grn), midX, gY);
+    this._drawField(doc, 'Importe', guarantee.amount ? fmtMoney(guarantee.amount) : '-', mx + 10, gY + 25);
+    this._drawField(doc, 'Validez', guarantee.validTo ? `${fmtDate(guarantee.validFrom)} - ${fmtDate(guarantee.validTo)}` : '-', midX, gY + 25);
+    doc.y = gY + 55;
+
+    // Transporte
+    this._drawSection(doc, 'TRANSPORTE');
+    const tY = doc.y;
+    const tModeMap = { '1': '1 (Maritimo)', '2': '2 (Ferrocarril)', '3': '3 (Carretera)', '4': '4 (Aereo)' };
+    this._drawField(doc, 'Modo', tModeMap[transport.mode] || fmt(transport.mode), mx + 10, tY);
+    this._drawField(doc, 'Vehiculo', fmt(transport.identityAtDeparture?.identification), midX, tY);
+    this._drawField(doc, 'Contenedor', transport.containerIndicator ? 'Si' : 'No', mx + 10, tY + 25);
+    this._drawField(doc, 'Precintos', transit.transport?.seals?.map(s => s.number).join(', ') || '-', midX, tY + 25);
+    doc.y = tY + 55;
+
+    // Mercancias
+    this._drawSection(doc, 'MERCANCIAS');
+    const headers = ['Nro', 'TARIC', 'Descripcion', 'Peso Bruto', 'Bultos', 'Origen'];
+    const rows = goodsItems.map((g, i) => [
+      g.itemNumber || i + 1, fmt(g.taricCode), (g.description || '').substring(0, 25),
+      g.grossWeight ? `${g.grossWeight} kg` : '-', fmt(g.packages?.count), fmt(g.countryOfOrigin)
+    ]);
+    if (rows.length === 0) rows.push([1, '-', 'Sin partidas', '-', '-', '-']);
+    this._drawTable(doc, headers, rows);
+
+    // Totales
+    doc.y += 3;
+    const pageWidth = doc.page.width - mx - doc.page.margins.right;
+    doc.rect(mx, doc.y, pageWidth, 20).fill(COLORS.lightGray);
+    doc.font('Helvetica-Bold').fontSize(8).fillColor(COLORS.dark)
+       .text(`Peso Bruto Total: ${totals.grossWeight || '-'} kg   |   Partidas: ${totals.itemCount || goodsItems.length}   |   Bultos: ${totals.packageCount || '-'}`, mx + 10, doc.y + 5, { lineBreak: false });
+    doc.y += 25;
+
+    // Estado
+    const statusMap = { draft: 'BORRADOR', submitted: 'PRESENTADA', accepted: 'ACEPTADA', in_transit: 'EN TRANSITO', arrived: 'LLEGADA', completed: 'COMPLETADO' };
+    doc.font('Helvetica-Bold').fontSize(8).fillColor(COLORS.gray)
+       .text(`Estado: ${statusMap[transit.status] || transit.status}`, mx, doc.y, { lineBreak: false });
+
+    this._drawFooter(doc);
+    return this._toBuffer(doc);
+  }
+
+  // ==================== PUE SOIVRE - SOLICITUD INSPECCION SOIVRE ====================
+
+  async generatePUESOIVREPDF(pueRequest, options = {}) {
+    const doc = new PDFDocument({ size: 'A4', margin: 40, autoFirstPage: true });
+    const operator = pueRequest.operator || {};
+    const h1Data = pueRequest.h1AutoFill || {};
+    const goods = pueRequest.goods || [];
+
+    const flowLabel = pueRequest.flowType === 'ROHS_RAEE' ? 'ROHS / RAEE' : 'SOIVRE';
+
+    this._drawHeader(doc, `SOLICITUD PUE ${flowLabel}`, `Tipo: ${pueRequest.operationType || 'ALTA'}`, {
+      expeditionId: pueRequest.reference, lrn: pueRequest.pueReference
+    });
+
+    if (options.draft) this._drawDraftWatermark(doc);
+
+    const mx = doc.page.margins.left;
+    const midX = mx + 260;
+
+    // MRN y datos de la partida
+    this._drawSection(doc, 'DATOS DE LA DECLARACION');
+    const dY = doc.y;
+    this._drawField(doc, 'MRN Partida', fmt(pueRequest.mrnPartida || pueRequest.declarationMRN), mx + 10, dY);
+    this._drawField(doc, 'Clave Zeta', fmt(pueRequest.claveZeta), midX, dY);
+    this._drawField(doc, 'Tipo Documento', fmt(pueRequest.documentTypePue || 'DUA'), mx + 10, dY + 25);
+    this._drawField(doc, 'Tipo Declaracion', fmt(pueRequest.declarationTypeSoivre || 'EXPEDIENTE_NUEVO'), midX, dY + 25);
+    doc.y = dY + 55;
+
+    // Operador / Importador
+    this._drawSection(doc, 'OPERADOR / IMPORTADOR');
+    const oY = doc.y;
+    this._drawField(doc, 'Nombre', fmt(operator.name || h1Data.importerName), mx + 10, oY);
+    this._drawField(doc, 'NIF', fmt(operator.nif || h1Data.importerNif), midX, oY);
+    this._drawField(doc, 'EORI', fmt(operator.eori || h1Data.importerEori), mx + 10, oY + 25);
+    this._drawField(doc, 'Email', fmt(pueRequest.contactEmail || operator.email), midX, oY + 25);
+    doc.y = oY + 55;
+
+    // Centro y Punto de Inspeccion
+    this._drawSection(doc, 'CENTRO DE INSPECCION');
+    const cY = doc.y;
+    const codCice = pueRequest.codCice || {};
+    const codPi = pueRequest.codPi || {};
+    this._drawField(doc, 'CodCice (Centro S.I. SOIVRE)', `${fmt(codCice.code)} - ${fmt(codCice.name)}`, mx + 10, cY, 460);
+    this._drawField(doc, 'CodPi (Punto Inspeccion)', `${fmt(codPi.code)} - ${fmt(codPi.name)}`, mx + 10, cY + 25, 460);
+    doc.y = cY + 55;
+
+    // Especificidades
+    if (pueRequest.specificities?.length > 0) {
+      this._drawSection(doc, 'ESPECIFICIDADES');
+      const specs = pueRequest.specificities;
+      doc.font('Helvetica').fontSize(8).fillColor(COLORS.dark);
+      specs.forEach(s => {
+        doc.text(`• ${s}`, mx + 10, doc.y, { width: 460 });
+        doc.y += 2;
+      });
+      doc.y += 5;
+    }
+
+    // Mercancia
+    this._drawSection(doc, 'MERCANCIA');
+    const mY = doc.y;
+    this._drawField(doc, 'Unidad', fmt(pueRequest.merchandiseUnit), mx + 10, mY);
+    this._drawField(doc, 'Cantidad', fmt(pueRequest.merchandiseQuantity), midX, mY);
+    this._drawField(doc, 'Codigo SOIVRE Producto', fmt(pueRequest.codigoSoivreProducto), mx + 10, mY + 25);
+    this._drawField(doc, 'Partida Arancelaria', fmt(h1Data.taricCode), midX, mY + 25);
+    doc.y = mY + 55;
+
+    // Certificados solicitados
+    if (pueRequest.certificates) {
+      this._drawSection(doc, 'CERTIFICADOS SOLICITADOS');
+      const certY = doc.y;
+      const certs = pueRequest.certificates;
+      const certLabels = { NORMAL: 'Declaracion Normal', NOT_APPLICABLE: 'No procede', CONSULT: 'Consulta si procede' };
+      this._drawField(doc, 'Certificado COM', certLabels[certs.com] || fmt(certs.com), mx + 10, certY);
+      this._drawField(doc, 'Certificado ROHS', certLabels[certs.rohs] || fmt(certs.rohs), midX, certY);
+      this._drawField(doc, 'Certificado RAEE', certLabels[certs.raee] || fmt(certs.raee), mx + 10, certY + 25);
+      doc.y = certY + 55;
+    }
+
+    // Numeros RII
+    if (pueRequest.riiNumbers?.raee || pueRequest.riiNumbers?.pya) {
+      this._drawSection(doc, 'REGISTRO INTEGRADO INDUSTRIAL (RII)');
+      const rY = doc.y;
+      this._drawField(doc, 'Numero RII RAEE', fmt(pueRequest.riiNumbers.raee), mx + 10, rY);
+      this._drawField(doc, 'Numero RII PyA', fmt(pueRequest.riiNumbers.pya), midX, rY);
+      doc.y = rY + 30;
+    }
+
+    // Partidas de mercancias (si hay)
+    if (goods.length > 0) {
+      this._drawSection(doc, 'PARTIDAS');
+      const headers = ['Nro', 'TARIC', 'Descripcion', 'Cantidad', 'Peso', 'Origen'];
+      const rows = goods.map((g, i) => [
+        g.sequenceNumber || i + 1, fmt(g.taricCode), (g.description || '').substring(0, 25),
+        `${g.quantity || '-'} ${g.unitOfMeasure || ''}`, g.grossMass ? `${g.grossMass} kg` : '-', fmt(g.countryOfOrigin)
+      ]);
+      this._drawTable(doc, headers, rows);
+    }
+
+    // Estado
+    const statusMap = { draft: 'BORRADOR', submitted: 'PRESENTADA', registered: 'REGISTRADA', approved: 'APROBADA', rejected: 'RECHAZADA', pending_inspection: 'PENDIENTE INSPECCION' };
+    doc.font('Helvetica-Bold').fontSize(8).fillColor(COLORS.gray)
+       .text(`Estado: ${statusMap[pueRequest.status] || pueRequest.status}   |   Prioridad: ${(pueRequest.priority || 'normal').toUpperCase()}`, mx, doc.y, { lineBreak: false });
+
+    this._drawFooter(doc);
+    return this._toBuffer(doc);
+  }
 }
 
 module.exports = new PDFGenerator();

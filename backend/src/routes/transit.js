@@ -87,4 +87,22 @@ router.post('/:id/ai/full-analysis', transitController.aiFullAnalysis);
 // Aplicar sugerencia de auto-completado
 router.post('/:id/ai/apply-suggestion', transitController.aiApplySuggestion);
 
+// === PDF ===
+const pdfGenerator = require('../services/pdfGenerator');
+const { Transit } = require('../models');
+
+router.get('/:id/pdf', async (req, res) => {
+  try {
+    const transit = await Transit.findById(req.params.id).lean();
+    if (!transit) return res.status(404).json({ success: false, error: 'Transito no encontrado' });
+    const isDraft = req.query.preview === 'true';
+    const pdfBuffer = await pdfGenerator.generateNCTSPDF(transit, { draft: isDraft });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="NCTS_${transit.reference || transit._id}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;

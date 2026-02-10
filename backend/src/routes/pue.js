@@ -180,4 +180,23 @@ router.post('/:id/ai/recommendations', pueController.aiGetRecommendations);
 // POST /api/pue/:id/ai/full-analysis - Analisis completo IA
 router.post('/:id/ai/full-analysis', pueController.aiFullAnalysis);
 
+// === PDF ===
+const pdfGenerator = require('../services/pdfGenerator');
+const { PUERequest } = require('../models');
+
+router.get('/:id/pdf', async (req, res) => {
+  try {
+    const pue = await PUERequest.findById(req.params.id).lean();
+    if (!pue) return res.status(404).json({ success: false, error: 'Solicitud PUE no encontrada' });
+    const isDraft = req.query.preview === 'true';
+    const pdfBuffer = await pdfGenerator.generatePUESOIVREPDF(pue, { draft: isDraft });
+    const flowType = pue.flowType === 'ROHS_RAEE' ? 'ROHS' : 'SOIVRE';
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="PUE_${flowType}_${pue.reference || pue._id}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;
