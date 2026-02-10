@@ -1,0 +1,543 @@
+/**
+ * PDF Generator Service
+ * Genera PDFs para declaraciones aduaneras (H1, H7, AES, ENS)
+ * y resumenes de expedientes para el portal del cliente.
+ *
+ * Usa PDFKit para generacion nativa sin dependencias del sistema.
+ */
+
+const PDFDocument = require('pdfkit');
+const logger = require('../config/logger');
+
+// Colores corporativos
+const COLORS = {
+  primary: '#0284c7',    // sky-600
+  primaryDark: '#0c4a6e', // sky-900
+  dark: '#1e293b',       // slate-800
+  gray: '#64748b',       // slate-500
+  lightGray: '#f1f5f9',  // slate-100
+  border: '#cbd5e1',     // slate-300
+  white: '#ffffff',
+  red: '#ef4444',
+  green: '#22c55e',
+  amber: '#f59e0b'
+};
+
+// Helpers
+const fmt = (val) => {
+  if (val == null) return '-';
+  if (typeof val === 'object') return JSON.stringify(val);
+  return String(val);
+};
+const fmtMoney = (val) => val != null && val !== 0 ? `${Number(val).toLocaleString('es-ES', { minimumFractionDigits: 2 })} EUR` : '0,00 EUR';
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
+const fmtPct = (val) => val != null ? `${val}%` : '-';
+
+class PDFGenerator {
+
+  /**
+   * Genera buffer PDF a partir de un PDFDocument
+   */
+  _toBuffer(doc) {
+    return new Promise((resolve, reject) => {
+      const chunks = [];
+      doc.on('data', chunk => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+      doc.end();
+    });
+  }
+
+  /**
+   * Header comun para todos los PDFs
+   */
+  _drawHeader(doc, title, subtitle, data = {}) {
+    const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+
+    // Barra superior
+    doc.rect(doc.page.margins.left, doc.page.margins.top, pageWidth, 60)
+       .fill(COLORS.dark);
+
+    // Logo text
+    doc.font('Helvetica-Bold').fontSize(18).fillColor(COLORS.white)
+       .text('LUCI', doc.page.margins.left + 15, doc.page.margins.top + 10);
+    doc.font('Helvetica').fontSize(7).fillColor('#94a3b8')
+       .text('Agente Aduanero IA · by Strix AI', doc.page.margins.left + 15, doc.page.margins.top + 32);
+
+    // Right side info
+    const rightX = doc.page.width - doc.page.margins.right - 200;
+    doc.font('Helvetica').fontSize(8).fillColor('#94a3b8')
+       .text(`Fecha: ${fmtDate(new Date())}`, rightX, doc.page.margins.top + 10, { width: 185, align: 'right' });
+    if (data.mrn) {
+      doc.text(`MRN: ${data.mrn}`, rightX, doc.page.margins.top + 22, { width: 185, align: 'right' });
+    }
+    if (data.expeditionId) {
+      doc.text(`Exp: ${data.expeditionId}`, rightX, doc.page.margins.top + 34, { width: 185, align: 'right' });
+    }
+    doc.font('Helvetica').fontSize(7).fillColor('#94a3b8')
+       .text(`Ref: ${data.lrn || data.expeditionId || '-'}`, rightX, doc.page.margins.top + 46, { width: 185, align: 'right' });
+
+    // Title bar
+    const titleY = doc.page.margins.top + 65;
+    doc.rect(doc.page.margins.left, titleY, pageWidth, 28)
+       .fill(COLORS.primary);
+    doc.font('Helvetica-Bold').fontSize(12).fillColor(COLORS.white)
+       .text(title, doc.page.margins.left + 15, titleY + 7);
+    if (subtitle) {
+      doc.font('Helvetica').fontSize(8).fillColor('#bae6fd')
+         .text(subtitle, doc.page.width - doc.page.margins.right - 200, titleY + 9, { width: 185, align: 'right' });
+    }
+
+    doc.y = titleY + 38;
+    doc.fillColor(COLORS.dark);
+  }
+
+  /**
+   * Draft watermark
+   */
+  _drawDraftWatermark(doc) {
+    doc.save();
+    doc.rotate(45, { origin: [doc.page.width / 2, doc.page.height / 2] });
+    doc.font('Helvetica-Bold').fontSize(80).fillColor('#ef444420')
+       .text('BORRADOR', 100, doc.page.height / 2 - 50, { width: 500, align: 'center' });
+    doc.restore();
+  }
+
+  /**
+   * Footer - dibujado al pie de la pagina actual sin crear paginas nuevas
+   */
+  _drawFooter(doc) {
+    const bottom = doc.page.height - 25;
+    const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    const mx = doc.page.margins.left;
+
+    doc.save();
+    doc.rect(mx, bottom - 8, pageWidth, 0.5).fill(COLORS.border);
+    doc.font('Helvetica').fontSize(6.5).fillColor(COLORS.gray);
+    doc.text('Generado por LUCI · aduanas.strixai.es · Strix AI', mx, bottom - 3, { width: pageWidth * 0.6, lineBreak: false });
+    doc.text('Pagina 1', mx + pageWidth * 0.6, bottom - 3, { width: pageWidth * 0.4, align: 'right', lineBreak: false });
+    doc.restore();
+  }
+
+  /**
+   * Seccion con titulo
+   */
+  _drawSection(doc, title, y) {
+    const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    if (y) doc.y = y;
+
+    doc.rect(doc.page.margins.left, doc.y, pageWidth, 20).fill(COLORS.lightGray);
+    doc.rect(doc.page.margins.left, doc.y, 3, 20).fill(COLORS.primary);
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(COLORS.dark)
+       .text(title, doc.page.margins.left + 10, doc.y + 5);
+    doc.y += 25;
+  }
+
+  /**
+   * Par clave-valor
+   */
+  _drawField(doc, label, value, x, y, width = 200) {
+    doc.font('Helvetica').fontSize(7).fillColor(COLORS.gray)
+       .text(label, x, y);
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(COLORS.dark)
+       .text(fmt(value), x, y + 10, { width });
+  }
+
+  /**
+   * Tabla simple
+   */
+  _drawTable(doc, headers, rows, startY) {
+    const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    const colWidth = pageWidth / headers.length;
+    let y = startY || doc.y;
+
+    // Header
+    doc.rect(doc.page.margins.left, y, pageWidth, 18).fill(COLORS.dark);
+    headers.forEach((h, i) => {
+      doc.font('Helvetica-Bold').fontSize(7).fillColor(COLORS.white)
+         .text(h, doc.page.margins.left + i * colWidth + 5, y + 5, { width: colWidth - 10 });
+    });
+    y += 18;
+
+    // Rows
+    rows.forEach((row, ri) => {
+      const bg = ri % 2 === 0 ? COLORS.white : COLORS.lightGray;
+      doc.rect(doc.page.margins.left, y, pageWidth, 16).fill(bg);
+      row.forEach((cell, ci) => {
+        doc.font('Helvetica').fontSize(7).fillColor(COLORS.dark)
+           .text(String(cell ?? '-'), doc.page.margins.left + ci * colWidth + 5, y + 4, { width: colWidth - 10 });
+      });
+      y += 16;
+    });
+
+    // Bottom border
+    doc.rect(doc.page.margins.left, y, pageWidth, 0.5).fill(COLORS.border);
+    doc.y = y + 5;
+  }
+
+  // ==================== H1 - DECLARACION DE IMPORTACION ====================
+
+  async generateH1PDF(expedition, options = {}) {
+    const doc = new PDFDocument({ size: 'A4', margin: 40, autoFirstPage: true });
+    const decl = expedition.declaration || {};
+    const goods = expedition.goods || [];
+    const calc = expedition.calculations || {};
+    const client = expedition.client || {};
+    const transport = expedition.transport || {};
+
+    // Header
+    this._drawHeader(doc, 'DECLARACION DE IMPORTACION H1', `Regimen: ${fmt(decl.regime)}`, {
+      mrn: decl.mrn,
+      expeditionId: expedition.expeditionId,
+      lrn: decl.lrn
+    });
+
+    if (options.draft) this._drawDraftWatermark(doc);
+
+    // Secciones
+    const mx = doc.page.margins.left;
+    const midX = mx + 260;
+
+    // 1. Partes
+    this._drawSection(doc, 'PARTES DE LA DECLARACION');
+    const partiesY = doc.y;
+    this._drawField(doc, 'DECLARANTE / REPRESENTANTE', 'Stock Logistic S.L.', mx + 10, partiesY);
+    this._drawField(doc, 'NIF/EORI', 'B22477020 / ESB22477020000', mx + 10, partiesY + 25);
+    this._drawField(doc, 'EXPEDIDOR', fmt(client.companyName || expedition.shipper?.name), midX, partiesY);
+    this._drawField(doc, 'Pais', fmt(expedition.origin?.country || client.country), midX, partiesY + 25);
+    this._drawField(doc, 'DESTINATARIO', fmt(client.companyName), mx + 10, partiesY + 55);
+    this._drawField(doc, 'NIF', fmt(client.taxId || client.nif), mx + 10, partiesY + 80);
+    this._drawField(doc, 'ADUANA', fmt(decl.customsOffice), midX, partiesY + 55);
+    this._drawField(doc, 'Fecha declaracion', fmtDate(decl.declarationDate || expedition.createdAt), midX, partiesY + 80);
+    doc.y = partiesY + 105;
+
+    // 2. Datos operacion
+    this._drawSection(doc, 'DATOS DE LA OPERACION');
+    const opY = doc.y;
+    this._drawField(doc, 'Regimen', fmt(decl.regime), mx + 10, opY, 120);
+    this._drawField(doc, 'Proc. Adicional', fmt(decl.additionalProcedure || '000'), mx + 140, opY, 120);
+    this._drawField(doc, 'Preferencia', fmt(decl.preference || '100'), mx + 270, opY, 120);
+    const originCountry = goods[0]?.countryOfOrigin || expedition.origin?.country || '-';
+    const incoterm = typeof expedition.incoterm === 'object' ? (expedition.incoterm?.code || expedition.incoterm?.type || '-') : (expedition.incoterm || '-');
+    this._drawField(doc, 'Pais Origen', originCountry, mx + 10, opY + 25, 120);
+    this._drawField(doc, 'Pais Procedencia', originCountry, mx + 140, opY + 25, 120);
+    this._drawField(doc, 'Incoterm', incoterm, mx + 270, opY + 25, 120);
+    doc.y = opY + 55;
+
+    // 3. Transporte
+    this._drawSection(doc, 'TRANSPORTE');
+    const trY = doc.y;
+    const modeMap = { air: '4 (Aereo)', sea: '1 (Maritimo)', road: '3 (Carretera)', rail: '2 (Ferrocarril)', maritime: '1 (Maritimo)', AIR: '4 (Aereo)', SEA: '1 (Maritimo)', ROAD: '3 (Carretera)', RAIL: '2 (Ferrocarril)' };
+    this._drawField(doc, 'Modo Transporte', modeMap[expedition.transportMode] || fmt(expedition.transportMode), mx + 10, trY);
+    this._drawField(doc, 'Documento Transporte', fmt(transport.documentNumber || transport.blNumber || transport.awbNumber), midX, trY);
+    this._drawField(doc, 'Contenedor', fmt(transport.containerNumber || 'N/A'), mx + 10, trY + 25);
+    this._drawField(doc, 'Bultos', fmt(expedition.packages), midX, trY + 25);
+    doc.y = trY + 55;
+
+    // 4. Partidas
+    this._drawSection(doc, 'PARTIDAS DE MERCANCIAS');
+    const tableHeaders = ['Nro', 'Codigo TARIC', 'Descripcion', 'Peso Neto', 'Valor EUR', 'Arancel', 'IVA'];
+    const tableRows = goods.map((g, i) => [
+      i + 1,
+      fmt(g.taricCode),
+      (g.description || '').substring(0, 25),
+      g.netWeight ? `${g.netWeight} kg` : '-',
+      fmtMoney(g.invoiceValue || g.value),
+      fmtPct(g.dutyRate),
+      fmtPct(g.vatRate)
+    ]);
+
+    if (tableRows.length === 0) {
+      tableRows.push([1, '-', 'Sin partidas registradas', '-', '-', '-', '-']);
+    }
+
+    this._drawTable(doc, tableHeaders, tableRows);
+
+    // 5. Liquidacion
+    doc.y += 5;
+    this._drawSection(doc, 'LIQUIDACION');
+    const liqY = doc.y;
+    const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+
+    doc.rect(mx, liqY, pageWidth, 80).fill(COLORS.lightGray).stroke(COLORS.border);
+
+    // Calcular valor aduanero desde partidas si no existe en calc
+    const totalGoodsValue = goods.reduce((sum, g) => sum + (g.invoiceValue || g.value || 0), 0);
+    const customsValue = calc.customsValue || calc.invoiceTotal || totalGoodsValue || 0;
+    this._drawField(doc, 'Valor en Aduana', fmtMoney(customsValue), mx + 10, liqY + 5, 150);
+    // Calcular derechos desde partidas si no existen en calc
+    const totalDuties = calc.totalDuties || goods.reduce((sum, g) => sum + (g.dutyAmount || 0), 0);
+    const totalVat = calc.totalVat || goods.reduce((sum, g) => sum + (g.vatAmount || 0), 0);
+    const totalTaxes = calc.totalTaxes || (totalDuties + totalVat);
+
+    this._drawField(doc, 'Derechos Arancelarios (A00)', fmtMoney(totalDuties), mx + 10, liqY + 30, 200);
+    this._drawField(doc, 'IVA Importacion (B00)', fmtMoney(totalVat), midX, liqY + 30, 200);
+
+    // Total destacado
+    doc.rect(mx + 10, liqY + 55, pageWidth - 20, 20).fill(COLORS.primary);
+    doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.white)
+       .text(`TOTAL A INGRESAR: ${fmtMoney(totalTaxes)}`, mx + 20, liqY + 59, { width: pageWidth - 40, align: 'right' });
+
+    doc.y = liqY + 85;
+
+    // Status
+    if (decl.status) {
+      doc.y += 5;
+      const statusText = {
+        draft: 'BORRADOR', pending: 'PENDIENTE', submitted: 'PRESENTADA',
+        accepted: 'ACEPTADA', rejected: 'RECHAZADA'
+      };
+      doc.font('Helvetica-Bold').fontSize(8).fillColor(COLORS.gray)
+         .text(`Estado: ${statusText[decl.status] || decl.status}   |   Canal: ${(decl.channel || '-').toUpperCase()}`, mx, doc.y, { lineBreak: false });
+    }
+
+    // Footer at bottom of current page - use save/restore to avoid page creation
+    const footerY = doc.page.height - 25;
+    const fw = doc.page.width - mx - doc.page.margins.right;
+    doc.rect(mx, footerY - 8, fw, 0.5).fill(COLORS.border);
+    doc.font('Helvetica').fontSize(6.5).fillColor(COLORS.gray);
+    doc.text('Generado por LUCI · aduanas.strixai.es · Strix AI', mx, footerY - 3, { lineBreak: false });
+
+    return this._toBuffer(doc);
+  }
+
+  // ==================== H7 - DECLARACION BAJO VALOR ====================
+
+  async generateH7PDF(h7Decl, options = {}) {
+    const doc = new PDFDocument({ size: 'A4', margin: 40, autoFirstPage: true });
+
+    this._drawHeader(doc, 'DECLARACION H7 - BAJO VALOR E-COMMERCE', `Estado: ${fmt(h7Decl.status)}`, {
+      mrn: h7Decl.mrn,
+      lrn: h7Decl.lrn || h7Decl.declarationNumber
+    });
+
+    if (options.draft) this._drawDraftWatermark(doc);
+
+    const mx = doc.page.margins.left;
+    const midX = mx + 260;
+
+    // Remitente / Destinatario
+    this._drawSection(doc, 'REMITENTE Y DESTINATARIO');
+    const pY = doc.y;
+    this._drawField(doc, 'REMITENTE', fmt(h7Decl.sender?.name), mx + 10, pY);
+    this._drawField(doc, 'EORI', fmt(h7Decl.sender?.eori), mx + 10, pY + 25);
+    this._drawField(doc, 'DESTINATARIO', fmt(h7Decl.recipient?.name), midX, pY);
+    this._drawField(doc, 'NIF/ID', fmt(h7Decl.recipient?.taxId), midX, pY + 25);
+    if (h7Decl.iossNumber) {
+      this._drawField(doc, 'IOSS', h7Decl.iossNumber, mx + 10, pY + 50);
+    }
+    doc.y = pY + (h7Decl.iossNumber ? 75 : 55);
+
+    // Items
+    this._drawSection(doc, 'ARTICULOS');
+    const items = h7Decl.items || [];
+    const headers = ['Nro', 'TARIC', 'Descripcion', 'Cantidad', 'Valor Unit.', 'Valor Total', 'Origen'];
+    const rows = items.map((it, i) => [
+      i + 1, fmt(it.taricCode), (it.description || '').substring(0, 20),
+      it.quantity || 1, fmtMoney(it.unitValue), fmtMoney(it.totalValue), fmt(it.countryOfOrigin)
+    ]);
+    this._drawTable(doc, headers, rows);
+
+    // Totales
+    doc.y += 5;
+    this._drawSection(doc, 'TOTALES Y LIQUIDACION');
+    const tY = doc.y;
+    const totals = h7Decl.totals || {};
+    const duties = h7Decl.duties || {};
+
+    this._drawField(doc, 'Valor Intrinseco', fmtMoney(totals.intrinsicValue), mx + 10, tY, 130);
+    this._drawField(doc, 'Transporte', fmtMoney(totals.shippingCost), mx + 150, tY, 130);
+    this._drawField(doc, 'Valor Aduanero', fmtMoney(totals.customsValue), mx + 290, tY, 130);
+    this._drawField(doc, 'Arancel', fmtMoney(duties.tariff?.amount || 0), mx + 10, tY + 30, 130);
+    this._drawField(doc, `IVA (${fmtPct(duties.vat?.rate)})`, fmtMoney(duties.vat?.amount || 0), mx + 150, tY + 30, 130);
+
+    const pageWidth = doc.page.width - mx - doc.page.margins.right;
+    doc.rect(mx + 10, tY + 55, pageWidth - 20, 20).fill(COLORS.primary);
+    doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.white)
+       .text(`TOTAL: ${fmtMoney(duties.totalDue || 0)}`, mx + 20, tY + 59, { width: pageWidth - 40, align: 'right' });
+
+    this._drawFooter(doc);
+    return this._toBuffer(doc);
+  }
+
+  // ==================== AES - DECLARACION DE EXPORTACION ====================
+
+  async generateAESPDF(expedition, options = {}) {
+    const doc = new PDFDocument({ size: 'A4', margin: 40, autoFirstPage: true });
+    const decl = expedition.declaration || {};
+    const goods = expedition.goods || [];
+    const client = expedition.client || {};
+
+    this._drawHeader(doc, 'DECLARACION DE EXPORTACION AES', `Regimen: ${fmt(decl.regime)}`, {
+      mrn: decl.mrn, expeditionId: expedition.expeditionId
+    });
+
+    if (options.draft) this._drawDraftWatermark(doc);
+
+    const mx = doc.page.margins.left;
+    const midX = mx + 260;
+
+    // Exportador / Destinatario
+    this._drawSection(doc, 'PARTES');
+    const pY = doc.y;
+    this._drawField(doc, 'EXPORTADOR', fmt(client.companyName), mx + 10, pY);
+    this._drawField(doc, 'NIF/EORI', fmt(client.taxId), mx + 10, pY + 25);
+    this._drawField(doc, 'DESTINATARIO', fmt(expedition.consignee?.name || expedition.destination?.name), midX, pY);
+    this._drawField(doc, 'Pais Destino', fmt(expedition.destination?.country), midX, pY + 25);
+    this._drawField(doc, 'Aduana Salida', fmt(decl.customsOffice), mx + 10, pY + 55);
+    this._drawField(doc, 'Aduana Destino', fmt(expedition.destination?.customsOffice), midX, pY + 55);
+    doc.y = pY + 85;
+
+    // Partidas
+    this._drawSection(doc, 'PARTIDAS');
+    const headers = ['Nro', 'TARIC', 'Descripcion', 'Peso Neto', 'Valor Estadistico', 'Pais Destino'];
+    const rows = goods.map((g, i) => [
+      i + 1, fmt(g.taricCode), (g.description || '').substring(0, 25),
+      g.netWeight ? `${g.netWeight} kg` : '-', fmtMoney(g.invoiceValue || g.value),
+      fmt(g.countryOfDestination || expedition.destination?.country)
+    ]);
+    this._drawTable(doc, headers, rows);
+
+    this._drawFooter(doc);
+    return this._toBuffer(doc);
+  }
+
+  // ==================== ENS - DECLARACION SUMARIA DE ENTRADA ====================
+
+  async generateENSPDF(ensDecl, options = {}) {
+    const doc = new PDFDocument({ size: 'A4', margin: 40, autoFirstPage: true });
+
+    const modeMap = { AIR: 'Aereo', SEA: 'Maritimo', ROAD: 'Carretera', RAIL: 'Ferrocarril' };
+
+    this._drawHeader(doc, `DECLARACION SUMARIA DE ENTRADA (ENS/ICS2)`, `Modo: ${modeMap[ensDecl.transportMode] || ensDecl.transportMode}`, {
+      mrn: ensDecl.mrn, lrn: ensDecl.lrn
+    });
+
+    if (options.draft) this._drawDraftWatermark(doc);
+
+    const mx = doc.page.margins.left;
+    const midX = mx + 260;
+
+    // Datos generales
+    this._drawSection(doc, 'DATOS GENERALES');
+    const gY = doc.y;
+    this._drawField(doc, 'Tipo Declaracion', fmt(ensDecl.declarationType), mx + 10, gY);
+    this._drawField(doc, 'Aduana Entrada', fmt(ensDecl.entryOffice?.code), midX, gY);
+    this._drawField(doc, 'Llegada Prevista', fmtDate(ensDecl.entryOffice?.expectedArrival), mx + 10, gY + 25);
+    this._drawField(doc, 'Medio Transporte', fmt(ensDecl.transportMeans?.identification), midX, gY + 25);
+    doc.y = gY + 55;
+
+    // Carrier
+    this._drawSection(doc, 'TRANSPORTISTA');
+    const cY = doc.y;
+    this._drawField(doc, 'Nombre', fmt(ensDecl.carrier?.name), mx + 10, cY);
+    this._drawField(doc, 'EORI', fmt(ensDecl.carrier?.eori), midX, cY);
+    doc.y = cY + 30;
+
+    // Consignment
+    this._drawSection(doc, 'ENVIO');
+    const sY = doc.y;
+    const cons = ensDecl.consignment || {};
+    this._drawField(doc, 'Referencia (BL/AWB/CMR)', fmt(cons.referenceNumber), mx + 10, sY);
+    this._drawField(doc, 'Contenedor', fmt(cons.containerNumber || 'N/A'), midX, sY);
+    this._drawField(doc, 'Peso Bruto', cons.grossMass ? `${cons.grossMass} kg` : '-', mx + 10, sY + 25);
+    this._drawField(doc, 'Bultos', fmt(cons.numberOfPackages), midX, sY + 25);
+    this._drawField(doc, 'Descripcion Mercancia', fmt(cons.goodsDescription), mx + 10, sY + 50, 460);
+    doc.y = sY + 80;
+
+    // House consignments
+    if (ensDecl.houseConsignments?.length > 0) {
+      this._drawSection(doc, 'ENVIOS HOUSE (GRUPAJE)');
+      const headers = ['Nro', 'Consignatario', 'Mercancia', 'Peso', 'Bultos'];
+      const rows = ensDecl.houseConsignments.map((h, i) => [
+        i + 1, fmt(h.consignee?.name), (h.goods?.[0]?.description || '').substring(0, 30),
+        h.grossMass ? `${h.grossMass} kg` : '-', fmt(h.numberOfPackages)
+      ]);
+      this._drawTable(doc, headers, rows);
+    }
+
+    // Risk assessment
+    if (ensDecl.riskAssessment) {
+      this._drawSection(doc, 'EVALUACION DE RIESGO');
+      const rY = doc.y;
+      const ra = ensDecl.riskAssessment;
+      const statusColors = { CLEARED: COLORS.green, HOLD: COLORS.red, PENDING: COLORS.amber };
+      this._drawField(doc, 'Estado', fmt(ra.status), mx + 10, rY);
+      this._drawField(doc, 'Puntuacion Riesgo', ra.riskScore != null ? `${ra.riskScore}/100` : '-', midX, rY);
+      doc.y = rY + 30;
+    }
+
+    this._drawFooter(doc);
+    return this._toBuffer(doc);
+  }
+
+  // ==================== RESUMEN EXPEDIENTE (para portal cliente) ====================
+
+  async generateExpeditionSummaryPDF(expedition, options = {}) {
+    const doc = new PDFDocument({ size: 'A4', margin: 40, autoFirstPage: true });
+    const decl = expedition.declaration || {};
+    const calc = expedition.calculations || {};
+    const client = expedition.client || {};
+
+    this._drawHeader(doc, 'RESUMEN DE EXPEDIENTE', `${expedition.operationType === 'import' || expedition.operationType === 'IMPORT' ? 'Importacion' : 'Exportacion'}`, {
+      expeditionId: expedition.expeditionId, mrn: decl.mrn
+    });
+
+    const mx = doc.page.margins.left;
+    const midX = mx + 260;
+
+    // Estado
+    this._drawSection(doc, 'ESTADO DEL EXPEDIENTE');
+    const sY = doc.y;
+    this._drawField(doc, 'Estado', fmt(expedition.status), mx + 10, sY);
+    this._drawField(doc, 'Canal', fmt(decl.channel || '-'), midX, sY);
+    this._drawField(doc, 'Creado', fmtDate(expedition.createdAt), mx + 10, sY + 25);
+    this._drawField(doc, 'Actualizado', fmtDate(expedition.updatedAt), midX, sY + 25);
+    doc.y = sY + 55;
+
+    // Cliente
+    this._drawSection(doc, 'DATOS DEL CLIENTE');
+    const clY = doc.y;
+    this._drawField(doc, 'Empresa', fmt(client.companyName), mx + 10, clY);
+    this._drawField(doc, 'NIF', fmt(client.taxId || client.nif), midX, clY);
+    this._drawField(doc, 'Contacto', fmt(client.contact?.name || client.contactName), mx + 10, clY + 25);
+    this._drawField(doc, 'Email', fmt(client.contact?.email || client.email), midX, clY + 25);
+    doc.y = clY + 55;
+
+    // Mercancias
+    if (expedition.goods?.length > 0) {
+      this._drawSection(doc, 'MERCANCIAS');
+      const headers = ['Nro', 'Codigo', 'Descripcion', 'Cantidad', 'Valor'];
+      const rows = expedition.goods.map((g, i) => [
+        i + 1, fmt(g.taricCode), (g.description || '').substring(0, 30),
+        `${g.quantity || '-'} ${g.unit || ''}`, fmtMoney(g.invoiceValue || g.value)
+      ]);
+      this._drawTable(doc, headers, rows);
+    }
+
+    // Importes
+    this._drawSection(doc, 'IMPORTES');
+    const iY = doc.y;
+    this._drawField(doc, 'Valor Factura', fmtMoney(calc.invoiceTotal), mx + 10, iY, 130);
+    this._drawField(doc, 'Valor Aduanero', fmtMoney(calc.customsValue), mx + 150, iY, 130);
+    this._drawField(doc, 'Aranceles', fmtMoney(calc.totalDuties || 0), mx + 10, iY + 25, 130);
+    this._drawField(doc, 'IVA', fmtMoney(calc.totalVat || 0), mx + 150, iY + 25, 130);
+    this._drawField(doc, 'Total Tasas', fmtMoney(calc.totalTaxes || 0), mx + 290, iY + 25, 130);
+    doc.y = iY + 55;
+
+    // Documentos
+    if (expedition.documentChecklist?.length > 0) {
+      this._drawSection(doc, 'DOCUMENTACION');
+      const headers = ['Documento', 'Obligatorio', 'Recibido'];
+      const rows = expedition.documentChecklist.map(d => [
+        d.documentName || d.name, d.required ? 'Si' : 'No', d.received ? 'Si' : 'Pendiente'
+      ]);
+      this._drawTable(doc, headers, rows);
+    }
+
+    this._drawFooter(doc);
+    return this._toBuffer(doc);
+  }
+}
+
+module.exports = new PDFGenerator();

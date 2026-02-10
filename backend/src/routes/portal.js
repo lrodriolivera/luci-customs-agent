@@ -89,6 +89,47 @@ router.get('/:token/signed-documents/levante', portalValidators.getByToken, clie
 // Download declaration copy
 router.get('/:token/signed-documents/declaration', portalValidators.getByToken, clientPortalController.downloadDeclaration);
 
+// ==================== PDF Downloads (public via token) ====================
+
+const pdfGenerator = require('../services/pdfGenerator');
+
+// Download declaration PDF via portal
+router.get('/:token/declaration-pdf', portalValidators.getByToken, async (req, res) => {
+  try {
+    const { Expedition } = require('../models');
+    const expedition = await Expedition.findOne({ 'clientPortal.token': req.params.token }).lean();
+    if (!expedition) return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
+
+    const isExport = expedition.operationType === 'export' || expedition.operationType === 'EXPORT';
+    const pdfBuffer = isExport
+      ? await pdfGenerator.generateAESPDF(expedition)
+      : await pdfGenerator.generateH1PDF(expedition);
+
+    const type = isExport ? 'AES' : 'H1';
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${type}_${expedition.expeditionId}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Download expedition summary PDF via portal
+router.get('/:token/summary-pdf', portalValidators.getByToken, async (req, res) => {
+  try {
+    const { Expedition } = require('../models');
+    const expedition = await Expedition.findOne({ 'clientPortal.token': req.params.token }).lean();
+    if (!expedition) return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
+
+    const pdfBuffer = await pdfGenerator.generateExpeditionSummaryPDF(expedition);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="Resumen_${expedition.expeditionId}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // ==================== API Key Management (authenticated users) ====================
 
 // Create API key
