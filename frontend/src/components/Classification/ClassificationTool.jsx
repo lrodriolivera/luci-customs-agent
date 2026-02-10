@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { classificationAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import TaricTreeBrowser from './TaricTreeBrowser'
+import TARIC_CHAPTERS from '../../data/taricChapters'
 import {
   MagnifyingGlassIcon,
   TagIcon,
@@ -20,8 +22,16 @@ import {
   LightBulbIcon,
   ArrowPathIcon,
   ArchiveBoxIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  QueueListIcon
 } from '@heroicons/react/24/outline'
+
+// Helper: extraer descripcion como string (puede venir como {es, en} o string)
+const getDesc = (d) => {
+  if (!d) return ''
+  if (typeof d === 'string') return d
+  return d.es || d.en || ''
+}
 
 export default function ClassificationTool() {
   const [description, setDescription] = useState('')
@@ -54,6 +64,7 @@ export default function ClassificationTool() {
   const [taricCode, setTaricCode] = useState('')
   const [taricLookupLoading, setTaricLookupLoading] = useState(false)
   const [taricLookupResult, setTaricLookupResult] = useState(null)
+  const [chapterResults, setChapterResults] = useState(null) // For 2-3 digit code searches
 
   // Search history state
   const [searchHistory, setSearchHistory] = useState([])
@@ -270,17 +281,55 @@ export default function ClassificationTool() {
       return
     }
 
+    if (!/^\d+$/.test(cleanCode)) {
+      toast.error('El codigo debe contener solo digitos')
+      return
+    }
+
     setTaricLookupLoading(true)
     setTaricLookupResult(null)
+    setChapterResults(null)
 
     try {
-      const response = await classificationAPI.getTaricInfo(cleanCode)
-      const result = response.data.data || response.data
-      setTaricLookupResult(result)
-      if (result.found === false) {
-        toast.error(result.message || 'Codigo no encontrado')
+      // For 2-3 digit codes, search by chapter using tree endpoint
+      if (cleanCode.length <= 3) {
+        const chapter = cleanCode.padStart(2, '0')
+        const chapterName = TARIC_CHAPTERS[chapter]
+        const response = await classificationAPI.getTreeData(chapter)
+        const data = response.data.data
+        const results = data?.results || []
+
+        if (results.length > 0) {
+          setChapterResults({
+            chapter,
+            chapterName: chapterName || `Capitulo ${chapter}`,
+            level: data.level,
+            results
+          })
+          toast.success(`${results.length} partidas encontradas en Cap. ${chapter}`)
+        } else if (chapterName) {
+          // Chapter exists in reference but no codes in DB
+          setChapterResults({
+            chapter,
+            chapterName,
+            level: 'headings',
+            results: [],
+            empty: true
+          })
+          toast('Capitulo sin codigos en la base de datos local', { icon: 'i' })
+        } else {
+          toast.error(`Capitulo ${chapter} no valido`)
+        }
       } else {
-        toast.success(`Informacion encontrada (fuente: ${result.source || 'local'})`)
+        // For 4+ digit codes, use existing getTaricInfo
+        const response = await classificationAPI.getTaricInfo(cleanCode)
+        const result = response.data.data || response.data
+        setTaricLookupResult(result)
+        if (result.found === false) {
+          toast.error(result.message || 'Codigo no encontrado')
+        } else {
+          toast.success(`Informacion encontrada (fuente: ${result.source || 'local'})`)
+        }
       }
       // Reload history after search
       loadSearchHistory()
@@ -291,6 +340,46 @@ export default function ClassificationTool() {
         toast.error('Error al buscar el codigo')
       }
       console.error(error)
+    } finally {
+      setTaricLookupLoading(false)
+    }
+  }
+
+  // Handle drilling into a chapter result
+  const handleChapterDrillDown = async (code) => {
+    setTaricLookupLoading(true)
+    try {
+      if (code.length < 10) {
+        // Not a leaf code, drill deeper
+        const response = await classificationAPI.getTreeData(code)
+        const data = response.data.data
+        const results = data?.results || []
+        if (results.length > 0) {
+          setChapterResults(prev => ({
+            ...prev,
+            parentCode: code,
+            level: data.level,
+            results,
+            breadcrumb: [...(prev?.breadcrumb || [{ code: prev?.chapter, label: prev?.chapterName }]), { code, label: code }]
+          }))
+        } else {
+          toast('No hay subdivisiones disponibles', { icon: 'i' })
+        }
+      } else {
+        // Leaf code - switch to detail view
+        setChapterResults(null)
+        setTaricCode(code)
+        const response = await classificationAPI.getTaricInfo(code)
+        const result = response.data.data || response.data
+        setTaricLookupResult(result)
+        if (result.found === false) {
+          toast.error(result.message || 'Codigo no encontrado')
+        } else {
+          toast.success(`Informacion encontrada (fuente: ${result.source || 'local'})`)
+        }
+      }
+    } catch {
+      toast.error('Error al cargar datos')
     } finally {
       setTaricLookupLoading(false)
     }
@@ -336,10 +425,10 @@ export default function ClassificationTool() {
         </div>
 
         {/* Tab Selector */}
-        <div className="flex bg-gray-100 rounded-lg p-1">
+        <div className="flex bg-gray-100 rounded-lg p-1 flex-wrap gap-0.5">
           <button
             onClick={() => setActiveTab('basic')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'basic'
                 ? 'bg-white text-gray-900 shadow'
                 : 'text-gray-600 hover:text-gray-900'
@@ -349,18 +438,29 @@ export default function ClassificationTool() {
           </button>
           <button
             onClick={() => setActiveTab('lookup')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
               activeTab === 'lookup'
                 ? 'bg-white text-gray-900 shadow'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
             <TagIcon className="w-4 h-4" />
-            Buscar por Codigo
+            Buscar Codigo
+          </button>
+          <button
+            onClick={() => setActiveTab('tree')}
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
+              activeTab === 'tree'
+                ? 'bg-white text-gray-900 shadow'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <QueueListIcon className="w-4 h-4" />
+            Explorar Arbol
           </button>
           <button
             onClick={() => setActiveTab('advanced')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
               activeTab === 'advanced'
                 ? 'bg-white text-gray-900 shadow'
                 : 'text-gray-600 hover:text-gray-900'
@@ -489,13 +589,13 @@ export default function ClassificationTool() {
                   <input
                     type="text"
                     value={taricCode}
-                    onChange={(e) => setTaricCode(e.target.value)}
+                    onChange={(e) => setTaricCode(e.target.value.replace(/[^\d]/g, ''))}
                     className="input font-mono text-lg"
-                    placeholder="Ej: 6109100021, 610910, 6109..."
+                    placeholder="Ej: 08, 0801, 6109, 610910..."
                     maxLength={10}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Puede ingresar codigos de 4 a 10 digitos (partida, subpartida SA, NC o TARIC)
+                    Puede ingresar codigos de 2 a 10 digitos: capitulo (2), partida (4), subpartida SA (6), NC (8) o TARIC (10)
                   </p>
                 </div>
                 <button
@@ -517,8 +617,103 @@ export default function ClassificationTool() {
                 </button>
               </form>
 
+              {/* Loading skeleton */}
+              {taricLookupLoading && (
+                <div className="mt-6 space-y-3 animate-pulse">
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <div className="h-4 bg-gray-200 rounded w-20 mb-2" />
+                    <div className="h-8 bg-gray-200 rounded w-40" />
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <div className="h-4 bg-gray-200 rounded w-24 mb-2" />
+                    <div className="h-4 bg-gray-100 rounded w-full mb-1" />
+                    <div className="h-4 bg-gray-100 rounded w-3/4" />
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <div className="h-4 bg-gray-200 rounded w-20 mb-2" />
+                    <div className="space-y-2">
+                      <div className="h-3 bg-gray-100 rounded w-32" />
+                      <div className="h-3 bg-gray-100 rounded w-28" />
+                      <div className="h-3 bg-gray-100 rounded w-36" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Chapter Search Results (for 2-3 digit codes) */}
+              {chapterResults && !taricLookupLoading && (
+                <div className="mt-6 space-y-4">
+                  <div className="p-4 bg-gradient-to-r from-luci-light to-blue-50 rounded-xl border border-luci/30">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <p className="text-sm text-gray-600">Capitulo</p>
+                        <p className="font-mono text-2xl font-bold text-gray-900">
+                          {chapterResults.chapter}
+                        </p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-gray-700 font-medium">{chapterResults.chapterName}</p>
+                        <p className="text-xs text-gray-500">
+                          {chapterResults.results.length} {chapterResults.level === 'headings' ? 'partidas' : 'codigos'} encontrado{chapterResults.results.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    {/* Breadcrumb for drill-down */}
+                    {chapterResults.breadcrumb?.length > 0 && (
+                      <div className="mt-2 flex items-center gap-1 text-sm">
+                        <button
+                          onClick={() => {
+                            setTaricCode(chapterResults.chapter)
+                            handleTaricLookup({ preventDefault: () => {} })
+                          }}
+                          className="text-luci hover:underline font-mono"
+                        >
+                          Cap. {chapterResults.chapter}
+                        </button>
+                        {chapterResults.breadcrumb.slice(1).map((bc, i) => (
+                          <span key={i} className="flex items-center gap-1">
+                            <span className="text-gray-400">&rsaquo;</span>
+                            <span className="font-mono text-gray-700">{bc.code}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {chapterResults.empty ? (
+                    <div className="text-center py-6 text-gray-500">
+                      <p className="text-sm">No hay codigos cargados para este capitulo en la base de datos local.</p>
+                      <p className="text-xs mt-1">Use la pestana "Explorar Arbol" para ver todos los capitulos disponibles.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1 max-h-96 overflow-y-auto">
+                      {chapterResults.results.map((item, i) => (
+                        <button
+                          key={item.code || i}
+                          onClick={() => handleChapterDrillDown(item.code)}
+                          className="w-full text-left p-3 rounded-lg hover:bg-luci-light border border-transparent hover:border-luci/20 transition-colors flex items-center gap-3"
+                        >
+                          <span className="font-mono text-sm font-bold text-gray-900 w-24 flex-shrink-0">
+                            {item.code}
+                          </span>
+                          <span className="text-sm text-gray-600 flex-1 truncate">
+                            {getDesc(item.description)}
+                          </span>
+                          {item.count > 0 && (
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full flex-shrink-0">
+                              {item.count}
+                            </span>
+                          )}
+                          <ChevronDownIcon className="w-4 h-4 text-gray-400 flex-shrink-0 -rotate-90" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* TARIC Lookup Results */}
-              {taricLookupResult && (
+              {taricLookupResult && !taricLookupLoading && (
                 <div className="mt-6 space-y-4">
                   <div className="p-4 bg-gradient-to-r from-luci-light to-blue-50 rounded-xl border border-luci/30">
                     <div className="flex items-start justify-between">
@@ -541,9 +736,9 @@ export default function ClassificationTool() {
                   <div className="card bg-gray-50">
                     <h3 className="font-semibold text-gray-900 mb-2">Descripcion</h3>
                     <p className="text-gray-700">
-                      {taricLookupResult.description || taricLookupResult.descripcion || 'Sin descripcion disponible'}
+                      {getDesc(taricLookupResult.description) || taricLookupResult.descripcion || 'Sin descripcion disponible'}
                     </p>
-                    {taricLookupResult.description_es && taricLookupResult.description_es !== taricLookupResult.description && (
+                    {taricLookupResult.description_es && taricLookupResult.description_es !== getDesc(taricLookupResult.description) && (
                       <p className="text-gray-600 mt-2 text-sm">
                         <span className="font-medium">ES:</span> {taricLookupResult.description_es}
                       </p>
@@ -628,7 +823,7 @@ export default function ClassificationTool() {
                   <div className="flex gap-3 pt-2">
                     <button
                       onClick={() => {
-                        setDescription(taricLookupResult.description || taricLookupResult.descripcion || '')
+                        setDescription(getDesc(taricLookupResult.description) || taricLookupResult.descripcion || '')
                         setActiveTab('basic')
                         toast.success('Descripcion copiada al clasificador')
                       }}
@@ -638,7 +833,7 @@ export default function ClassificationTool() {
                     </button>
                     <button
                       onClick={() => {
-                        setDescription(taricLookupResult.description || taricLookupResult.descripcion || '')
+                        setDescription(getDesc(taricLookupResult.description) || taricLookupResult.descripcion || '')
                         setActiveTab('advanced')
                         toast.success('Descripcion copiada al clasificador avanzado')
                       }}
@@ -650,6 +845,39 @@ export default function ClassificationTool() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TARIC Tree Browser */}
+          {activeTab === 'tree' && (
+            <div className="card mt-6">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <QueueListIcon className="w-5 h-5 text-luci" />
+                Explorar Arbol Arancelario
+              </h2>
+              <TaricTreeBrowser
+                onCodeSelect={(code) => {
+                  setTaricCode(code)
+                  setActiveTab('lookup')
+                  // Trigger lookup for this code
+                  setTimeout(() => {
+                    setTaricLookupLoading(true)
+                    setTaricLookupResult(null)
+                    setChapterResults(null)
+                    classificationAPI.getTaricInfo(code).then(response => {
+                      const result = response.data.data || response.data
+                      setTaricLookupResult(result)
+                      if (result.found !== false) {
+                        toast.success(`Informacion de ${code}`)
+                      }
+                    }).catch(() => {
+                      toast.error('Codigo no encontrado en detalle')
+                    }).finally(() => {
+                      setTaricLookupLoading(false)
+                    })
+                  }, 100)
+                }}
+              />
             </div>
           )}
 
@@ -1249,7 +1477,7 @@ export default function ClassificationTool() {
                       </span>
                     </div>
                     {item.description && (
-                      <p className="text-xs text-gray-500 mt-1 truncate">{item.description}</p>
+                      <p className="text-xs text-gray-500 mt-1 truncate">{getDesc(item.description)}</p>
                     )}
                   </button>
                 ))}
@@ -1280,7 +1508,7 @@ export default function ClassificationTool() {
                       </span>
                     </div>
                     {item.description && (
-                      <p className="text-xs text-gray-500 mt-1 truncate">{item.description}</p>
+                      <p className="text-xs text-gray-500 mt-1 truncate">{getDesc(item.description)}</p>
                     )}
                   </button>
                 ))}
