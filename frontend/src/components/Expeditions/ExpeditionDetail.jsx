@@ -1183,6 +1183,44 @@ export default function ExpeditionDetail() {
                   Descargar XML H1
                 </button>
               )}
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await declarationsAPI.downloadPDF(id)
+                    const blob = new Blob([response.data], { type: 'application/pdf' })
+                    const url = window.URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `H1_${expedition.expeditionId}.pdf`
+                    a.click()
+                    window.URL.revokeObjectURL(url)
+                    toast.success('PDF descargado')
+                  } catch { toast.error('Error al generar PDF') }
+                }}
+                className="w-full btn-primary flex items-center justify-center gap-2"
+              >
+                <DocumentTextIcon className="w-4 h-4" />
+                Descargar PDF Declaracion
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await declarationsAPI.downloadSummaryPDF(id)
+                    const blob = new Blob([response.data], { type: 'application/pdf' })
+                    const url = window.URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `Resumen_${expedition.expeditionId}.pdf`
+                    a.click()
+                    window.URL.revokeObjectURL(url)
+                    toast.success('Resumen PDF descargado')
+                  } catch { toast.error('Error al generar resumen') }
+                }}
+                className="w-full btn-secondary flex items-center justify-center gap-2"
+              >
+                <DocumentTextIcon className="w-4 h-4" />
+                Resumen Expediente PDF
+              </button>
             </div>
           </div>
 

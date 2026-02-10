@@ -174,6 +174,16 @@ export const declarationsAPI = {
   getSummary: (expeditionId) => api.get(`/api/declarations/${expeditionId}/summary`),
   update: (expeditionId, data) => api.put(`/api/declarations/${expeditionId}`, data),
 
+  // PDF Generation
+  downloadPDF: (expeditionId, preview = false) =>
+    api.get(`/api/declarations/${expeditionId}/pdf${preview ? '?preview=true' : ''}`, { responseType: 'blob' }),
+  downloadH7PDF: (id, preview = false) =>
+    api.get(`/api/declarations/h7/${id}/pdf${preview ? '?preview=true' : ''}`, { responseType: 'blob' }),
+  downloadENSPDF: (id, preview = false) =>
+    api.get(`/api/declarations/ens/${id}/pdf${preview ? '?preview=true' : ''}`, { responseType: 'blob' }),
+  downloadSummaryPDF: (expeditionId) =>
+    api.get(`/api/declarations/${expeditionId}/summary-pdf`, { responseType: 'blob' }),
+
   // AI-Powered Endpoints - LUCI Integration
   aiValidate: (expeditionId, declarationType) =>
     api.post(`/api/declarations/${expeditionId}/ai/validate`, { declarationType }, { timeout: 90000 }),
