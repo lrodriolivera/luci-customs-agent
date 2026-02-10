@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { HelpButton, HelpModal } from '../Help'
 import useContextualHelp from '../../hooks/useContextualHelp'
+import FloatingAssistant from './FloatingAssistant'
 import {
   HomeIcon,
   FolderIcon,
@@ -390,6 +391,7 @@ export default function MainLayout() {
         </main>
       </div>
 
+      <FloatingAssistant />
       <HelpButton onClick={openHelp} />
       <HelpModal isOpen={helpOpen} onClose={closeHelp} helpData={helpData} />
     </div>

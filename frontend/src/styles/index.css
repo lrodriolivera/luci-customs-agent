@@ -14,7 +14,7 @@
   }
 
   .btn-primary {
-    @apply btn bg-luci text-white hover:bg-luci-dark focus:ring-luci;
+    @apply btn bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:shadow-lg hover:shadow-sky-500/25 focus:ring-sky-500;
   }
 
   .btn-secondary {
@@ -93,12 +93,12 @@
     @apply bg-luci-light text-luci font-medium;
   }
 
-  /* Help system */
+  /* Help system - positioned left of the chat FAB */
   .help-fab {
-    @apply fixed bottom-6 right-6 z-40 w-14 h-14 bg-luci text-white rounded-full shadow-lg
+    @apply fixed bottom-6 right-24 z-40 w-10 h-10 bg-gray-200 text-gray-600 rounded-full shadow-md
            flex items-center justify-center
-           hover:bg-luci-dark hover:shadow-xl hover:scale-105
-           focus:outline-none focus:ring-2 focus:ring-luci focus:ring-offset-2
+           hover:bg-gray-300 hover:shadow-lg hover:scale-105
+           focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2
            transition-all duration-200;
   }
 
