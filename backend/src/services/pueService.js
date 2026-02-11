@@ -6,6 +6,7 @@
  */
 
 const { PUERequest } = require('../models');
+const aeatSubmitService = require('./aeat/aeatSubmitService');
 const logger = require('../config/logger');
 const crypto = require('crypto');
 
@@ -394,42 +395,43 @@ class PUEService {
 
       logger.info(`PUE: Enviando solicitud ${request.reference} a AEAT`);
 
-      if (this.simulationMode) {
-        // Simular respuesta AEAT
-        const response = this._simulateAEATSubmission(request);
+      // Enviar a AEAT real via aeatSubmitService
+      const aeatResult = await aeatSubmitService.submitPUE(request);
 
-        request.pueReference = response.pueReference;
-        request.status = response.status;
-        request.submittedAt = new Date();
-        request.aeatResponse = {
-          code: response.code,
-          message: response.message,
-          timestamp: new Date(),
-          correlationId: response.correlationId
-        };
-        request.statusHistory.push({
-          status: response.status,
-          timestamp: new Date(),
-          user: userId,
-          aeatCode: response.code
-        });
-
-        await request.save();
-
+      if (!aeatResult.success) {
         return {
-          success: true,
-          data: {
-            reference: request.reference,
-            pueReference: request.pueReference,
-            status: request.status,
-            aeatResponse: request.aeatResponse
-          }
+          success: false,
+          error: aeatResult.error || 'Error en respuesta AEAT'
         };
       }
 
-      // Produccion: llamar servicio AEAT real
-      // TODO: Implementar llamada real a AEAT
-      throw new Error('Integracion AEAT produccion pendiente de implementacion');
+      request.pueReference = aeatResult.mrn || aeatResult.csv || `PUE-${Date.now()}`;
+      request.status = 'pending_inspection';
+      request.submittedAt = new Date();
+      request.aeatResponse = {
+        code: aeatResult.code,
+        message: aeatResult.estado || 'Solicitud PUE enviada',
+        timestamp: new Date(),
+        csv: aeatResult.csv
+      };
+      request.statusHistory.push({
+        status: 'pending_inspection',
+        timestamp: new Date(),
+        user: userId,
+        aeatCode: aeatResult.code
+      });
+
+      await request.save();
+
+      return {
+        success: true,
+        data: {
+          reference: request.reference,
+          pueReference: request.pueReference,
+          status: request.status,
+          aeatResponse: request.aeatResponse
+        }
+      };
 
     } catch (error) {
       logger.error('PUE: Error enviando a AEAT:', error);

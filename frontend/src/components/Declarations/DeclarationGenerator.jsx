@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import {
   DocumentTextIcon,
   ArrowDownTrayIcon,
+  PaperAirplaneIcon,
   InformationCircleIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline'
@@ -13,6 +14,8 @@ export default function DeclarationGenerator() {
   const [selectedExpedition, setSelectedExpedition] = useState(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [aeatResult, setAeatResult] = useState(null)
   const [declarationType, setDeclarationType] = useState('H1')
   const [options, setOptions] = useState({
     regime: '40',
@@ -97,6 +100,33 @@ export default function DeclarationGenerator() {
       toast.success('XML descargado')
     } catch (error) {
       toast.error('Error al exportar XML')
+    }
+  }
+
+  const handleSubmitToAEAT = async () => {
+    if (!selectedExpedition) return
+    if (!confirm(`Enviar declaracion ${declarationType} a AEAT?`)) return
+
+    setSubmitting(true)
+    setAeatResult(null)
+    try {
+      const response = await declarationsAPI.submit(selectedExpedition._id)
+      const resultData = response.data?.data || response.data
+      setAeatResult(resultData)
+
+      if (resultData.channel === 'green') {
+        toast.success(`Canal VERDE - MRN: ${resultData.mrn}`)
+      } else if (resultData.channel === 'orange') {
+        toast('Canal NARANJA - Revision documental', { icon: '🟠' })
+      } else if (resultData.channel === 'red') {
+        toast('Canal ROJO - Inspeccion fisica', { icon: '🔴' })
+      } else {
+        toast.success(`Enviado a AEAT - MRN: ${resultData.mrn || 'Pendiente'}`)
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Error al enviar a AEAT')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -264,15 +294,50 @@ export default function DeclarationGenerator() {
             </button>
 
             {generatedDeclaration && (
-              <button
-                onClick={handleExportXML}
-                className="btn-success flex items-center gap-2"
-              >
-                <ArrowDownTrayIcon className="w-5 h-5" />
-                Descargar XML
-              </button>
+              <>
+                <button
+                  onClick={handleExportXML}
+                  className="btn-success flex items-center gap-2"
+                >
+                  <ArrowDownTrayIcon className="w-5 h-5" />
+                  Descargar XML
+                </button>
+                <button
+                  onClick={handleSubmitToAEAT}
+                  disabled={submitting}
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Enviando a AEAT...
+                    </>
+                  ) : (
+                    <>
+                      <PaperAirplaneIcon className="w-5 h-5" />
+                      Enviar a AEAT
+                    </>
+                  )}
+                </button>
+              </>
             )}
           </div>
+
+          {/* AEAT Result */}
+          {aeatResult && (
+            <div className={`card border-2 ${
+              aeatResult.channel === 'green' ? 'border-green-300 bg-green-50' :
+              aeatResult.channel === 'orange' ? 'border-orange-300 bg-orange-50' :
+              aeatResult.channel === 'red' ? 'border-red-300 bg-red-50' :
+              'border-blue-300 bg-blue-50'
+            }`}>
+              <h3 className="font-semibold mb-2">Respuesta AEAT</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                {aeatResult.mrn && <div><span className="text-gray-600">MRN:</span> <span className="font-mono font-medium">{aeatResult.mrn}</span></div>}
+                {aeatResult.channel && <div><span className="text-gray-600">Canal:</span> <span className="font-medium uppercase">{aeatResult.channel}</span></div>}
+              </div>
+            </div>
+          )}
 
           {/* Generated Result */}
           {generatedDeclaration && (

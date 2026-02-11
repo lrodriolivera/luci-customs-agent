@@ -69,19 +69,14 @@ function buildH7ImportXML(data) {
   <soapenv:Body>
     <ent:DeclaSimpliImporV1Ent xmlns:ent="${NS_ENT}">
       <SegmentosDeServicio Id="${transId}" fecha="${fecha}" hora="${hora}"${test ? ' Test="S"' : ''}/>
-      <CAaduana>${aduanaDespacho}</CAaduana>
+      <CAaduana>${aduanaDespacho.replace(/^ES/, '').substring(0, 6)}</CAaduana>
       <C011EstatutoMercancias>IM</C011EstatutoMercancias>
       <C012ProcedimientoSolicitado>C</C012ProcedimientoSolicitado>
-      <C02Exportador>
-        <C02ExportadorNID>${remitenteNIF}</C02ExportadorNID>
-        <C02ExportadorRazonSocial>${remitenteNombre}</C02ExportadorRazonSocial>
-        <C02ExportadorPais>${remitentePais}</C02ExportadorPais>
-      </C02Exportador>
       <C05NumeroDePartidas>${numPartidas}</C05NumeroDePartidas>
       <C06TotalBultos>${totalBultos}</C06TotalBultos>
       <C08Importador>
         <C08ImportadorNID>${destinatarioNIF}</C08ImportadorNID>
-        <C08ImportadorParticular>N</C08ImportadorParticular>
+        <C08ImportadorParticular></C08ImportadorParticular>
         <C08ImportadorRazonSocial>${destinatarioNombre}</C08ImportadorRazonSocial>
         <C08ImportadorDireccion>${destinatarioDireccion}</C08ImportadorDireccion>
         <C08ImportadorPoblacion>${destinatarioPoblacion}</C08ImportadorPoblacion>
@@ -96,6 +91,9 @@ function buildH7ImportXML(data) {
       </C14Declarante>
       <EmailNotificaDespacho>${emailDespacho}</EmailNotificaDespacho>
       <C15aPaisExpedicion>${remitentePais}</C15aPaisExpedicion>
+      <C30LocalizacionMercancias>ES${aduanaDespacho.replace(/^ES/, '').substring(0, 6)}LUCI01</C30LocalizacionMercancias>
+      <CBImporteTotalTributos>0.00</CBImporteTotalTributos>
+      <CBmodalidadDePago>A</CBmodalidadDePago>
       <C17aPaisDestino>ES</C17aPaisDestino>
       <C19TransporteEnContenedores>0</C19TransporteEnContenedores>
       <C20CondicionesDeEntrega>
@@ -104,11 +102,9 @@ function buildH7ImportXML(data) {
         <C203CondicionesEntregaZona></C203CondicionesEntregaZona>
       </C20CondicionesDeEntrega>
       <C221CodigoDivisa>EUR</C221CodigoDivisa>
+      <C222ImporteFactura>${partidas.reduce((s, p) => s + Number(p.valorFactura || 0), 0).toFixed(3)}</C222ImporteFactura>
       <C24NaturalezaTransaccion>11</C24NaturalezaTransaccion>
-      <C25ModoTransporteFrontera>${modoTransporte}</C25ModoTransporteFrontera>
-      <C30LocalizacionMercancias>ES${aduanaDespacho}LUCI01</C30LocalizacionMercancias>
-      <CBImporteTotalTributos>0.00</CBImporteTotalTributos>
-      <CBmodalidadDePago>A</CBmodalidadDePago>${partidasXML}
+      <C25ModoTransporteFrontera>${modoTransporte}</C25ModoTransporteFrontera>${partidasXML}
     </ent:DeclaSimpliImporV1Ent>
   </soapenv:Body>
 </soapenv:Envelope>`;

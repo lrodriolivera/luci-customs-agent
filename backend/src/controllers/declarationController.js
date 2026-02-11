@@ -5,6 +5,7 @@ const h1Generator = require('../services/forms/h1Generator');
 const aesGenerator = require('../services/forms/aesGenerator');
 const h7Generator = require('../services/forms/h7Generator');
 const aeatService = require('../services/aeatService');
+const aeatSubmitService = require('../services/aeat/aeatSubmitService');
 const channelService = require('../services/channelService');
 
 /**
@@ -346,38 +347,47 @@ const submitDeclaration = async (req, res) => {
       });
     }
 
-    // Enviar a AEAT usando el servicio de integracion
+    // Enviar a AEAT real via aeatSubmitService
     logger.info(`Enviando declaracion ${expedition.declaration.type} a AEAT...`);
 
-    const aeatResponse = await aeatService.submitH1(
-      expedition.declaration.xmlContent,
-      {
-        expeditionId: expedition.expeditionId,
-        declarationType: expedition.declaration.type
-      }
-    );
+    let aeatResult;
+    if (expedition.declaration.type === 'AES') {
+      aeatResult = await aeatSubmitService.submitAES(expedition);
+    } else {
+      aeatResult = await aeatSubmitService.submitH1(expedition);
+    }
 
-    if (!aeatResponse.success) {
+    if (!aeatResult.success) {
       return res.status(400).json({
         success: false,
-        error: aeatResponse.message || 'Error en respuesta de AEAT',
-        aeatResponse
+        error: aeatResult.error || 'Error en respuesta de AEAT',
+        aeatResponse: aeatResult
       });
     }
 
+    // Normalizar respuesta para compatibilidad
+    const aeatResponse = {
+      success: true,
+      mrn: aeatResult.mrn,
+      channel: aeatResult.channel,
+      acceptanceDate: new Date(),
+      simulated: false
+    };
+
     // Actualizar declaracion con respuesta AEAT
     expedition.declaration.status = 'submitted';
-    expedition.declaration.mrn = aeatResponse.mrn;
+    expedition.declaration.mrn = aeatResult.mrn;
     expedition.declaration.submittedAt = new Date();
-    expedition.declaration.acceptanceDate = aeatResponse.acceptanceDate;
-    expedition.declaration.channel = aeatResponse.channel;
+    expedition.declaration.acceptanceDate = new Date();
+    expedition.declaration.channel = aeatResult.channel;
 
     // Guardar respuesta completa de AEAT
     expedition.declaration.aeatResponse = {
-      responseCode: aeatResponse.aeatResponse?.code,
-      responseDescription: aeatResponse.aeatResponse?.description,
-      timestamp: aeatResponse.aeatResponse?.timestamp,
-      simulated: aeatResponse.simulated || false
+      responseCode: aeatResult.code,
+      responseDescription: aeatResult.estado || 'Aceptada',
+      timestamp: new Date(),
+      csv: aeatResult.csv,
+      simulated: false
     };
 
     // Actualizar status del expediente segun canal

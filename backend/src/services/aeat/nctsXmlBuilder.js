@@ -2,6 +2,7 @@
  * NCTS XML Builder - Declaracion de transito
  * Schema: CC015CV1Ent.xsd -> ES_CC015C_v515.xsd (formato EU EUCDM qualified)
  * Endpoint: /wlpl/ADTR-JDIT/ws/ncts5/CC015CV1SOAP
+ * IMPORTANTE: elementFormDefault="qualified" - TODOS los hijos llevan prefijo ent:
  */
 
 const { generateTransactionId } = require('./queryXmlBuilder');
@@ -34,75 +35,79 @@ function buildNCTSTransitXML(data) {
   const totalItems = (consignment.goodsItems || []).length || 1;
 
   const transitOfficesXML = transitOffices.map(o => `
-        <CustomsOfficeOfTransitDeclared>
-          <sequenceNumber>${o.sequence || 1}</sequenceNumber>
-          <referenceNumber>${o.code}</referenceNumber>
-        </CustomsOfficeOfTransitDeclared>`).join('');
+        <ent:CustomsOfficeOfTransitDeclared>
+          <ent:sequenceNumber>${o.sequence || 1}</ent:sequenceNumber>
+          <ent:referenceNumber>${o.code}</ent:referenceNumber>
+        </ent:CustomsOfficeOfTransitDeclared>`).join('');
 
   const itemsXML = (consignment.goodsItems || []).map((g, i) => `
-          <HouseConsignment>
-            <sequenceNumber>${i + 1}</sequenceNumber>
-            <grossMass>${Number(g.grossWeight || 0).toFixed(3)}</grossMass>
-            <ConsignmentItem>
-              <goodsItemNumber>${i + 1}</goodsItemNumber>
-              <declarationGoodsItemNumber>${i + 1}</declarationGoodsItemNumber>
-              <Commodity>
-                <descriptionOfGoods>${(g.description || '').substring(0, 512)}</descriptionOfGoods>
-                <CommodityCode>
-                  <harmonizedSystemSubHeadingCode>${(g.taricCode || '').substring(0, 6)}</harmonizedSystemSubHeadingCode>
-                </CommodityCode>
-              </Commodity>
-              <Packaging>
-                <sequenceNumber>1</sequenceNumber>
-                <typeOfPackages>${g.packageType || 'CT'}</typeOfPackages>
-                <numberOfPackages>${g.packages || 1}</numberOfPackages>
-              </Packaging>
-            </ConsignmentItem>
-          </HouseConsignment>`).join('');
+          <ent:HouseConsignment>
+            <ent:sequenceNumber>${i + 1}</ent:sequenceNumber>
+            <ent:grossMass>${Number(g.grossWeight || 0).toFixed(3)}</ent:grossMass>
+            <ent:ConsignmentItem>
+              <ent:goodsItemNumber>${i + 1}</ent:goodsItemNumber>
+              <ent:declarationGoodsItemNumber>${i + 1}</ent:declarationGoodsItemNumber>
+              <ent:Commodity>
+                <ent:descriptionOfGoods>${(g.description || '').substring(0, 512)}</ent:descriptionOfGoods>
+                <ent:CommodityCode>
+                  <ent:harmonizedSystemSubHeadingCode>${(g.taricCode || '').substring(0, 6)}</ent:harmonizedSystemSubHeadingCode>
+                </ent:CommodityCode>
+              </ent:Commodity>
+              <ent:Packaging>
+                <ent:sequenceNumber>1</ent:sequenceNumber>
+                <ent:typeOfPackages>${g.packageType || 'CT'}</ent:typeOfPackages>
+                <ent:numberOfPackages>${g.packages || 1}</ent:numberOfPackages>
+              </ent:Packaging>
+            </ent:ConsignmentItem>
+          </ent:HouseConsignment>`).join('');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
   <soapenv:Body>
     <ent:CC015CV1Ent xmlns:ent="${NS_ENT}" Id="${transId}">
-      <CC015C>
-        <TransitOperation>
-          <LRN>${lrn || transId}</LRN>
-          <declarationType>${transitType}</declarationType>
-          <additionalDeclarationType>A</additionalDeclarationType>
-          <security>${securityIndicator}</security>
-          <reducedDatasetIndicator>0</reducedDatasetIndicator>
-          <bindingItinerary>0</bindingItinerary>
-        </TransitOperation>
-        <CustomsOfficeOfDeparture>
-          <referenceNumber>${officeOfDeparture}</referenceNumber>
-        </CustomsOfficeOfDeparture>
-        <CustomsOfficeOfDestinationDeclared>
-          <referenceNumber>${officeOfDestination}</referenceNumber>
-        </CustomsOfficeOfDestinationDeclared>${transitOfficesXML}
-        <HolderOfTheTransitProcedure>
-          <identificationNumber>${holderEORI}</identificationNumber>
-          <name>${holderName}</name>
-          <Address>
-            <streetAndNumber>${holderStreet}</streetAndNumber>
-            <postcode>${holderPostcode}</postcode>
-            <city>${holderCity}</city>
-            <country>${holderCountry}</country>
-          </Address>
-        </HolderOfTheTransitProcedure>
-        <Guarantee>
-          <sequenceNumber>1</sequenceNumber>
-          <guaranteeType>${guaranteeType}</guaranteeType>${guaranteeGRN ? `
-          <GuaranteeReference>
-            <sequenceNumber>1</sequenceNumber>
-            <GRN>${guaranteeGRN}</GRN>
-            <accessCode>${guaranteeAccessCode}</accessCode>
-          </GuaranteeReference>` : ''}
-        </Guarantee>
-        <Consignment>
-          <grossMass>${totalGross.toFixed(3)}</grossMass>
-          <modeOfTransportAtTheBorder>${consignment.transportMode || '3'}</modeOfTransportAtTheBorder>${itemsXML}
-        </Consignment>
-      </CC015C>
+      <ent:CC015C>
+        <ent:messageSender>${holderEORI}</ent:messageSender>
+        <ent:messageRecipient>NTA.ES</ent:messageRecipient>
+        <ent:preparationDateAndTime>${new Date().toISOString().substring(0, 19)}</ent:preparationDateAndTime>
+        <ent:messageIdentification>${transId.substring(0, 14)}</ent:messageIdentification>
+        <ent:messageType>CC015C</ent:messageType>
+        <ent:TransitOperation>
+          <ent:LRN>${lrn || transId}</ent:LRN>
+          <ent:declarationType>${transitType}</ent:declarationType>
+          <ent:additionalDeclarationType>A</ent:additionalDeclarationType>
+          <ent:security>${securityIndicator}</ent:security>
+          <ent:reducedDatasetIndicator>0</ent:reducedDatasetIndicator>
+          <ent:bindingItinerary>0</ent:bindingItinerary>
+        </ent:TransitOperation>
+        <ent:CustomsOfficeOfDeparture>
+          <ent:referenceNumber>${officeOfDeparture}</ent:referenceNumber>
+        </ent:CustomsOfficeOfDeparture>
+        <ent:CustomsOfficeOfDestinationDeclared>
+          <ent:referenceNumber>${officeOfDestination}</ent:referenceNumber>
+        </ent:CustomsOfficeOfDestinationDeclared>${transitOfficesXML}
+        <ent:HolderOfTheTransitProcedure>
+          <ent:identificationNumber>${holderEORI}</ent:identificationNumber>
+          <ent:name>${holderName}</ent:name>
+          <ent:Address>
+            <ent:streetAndNumber>${holderStreet}</ent:streetAndNumber>
+            <ent:postcode>${holderPostcode}</ent:postcode>
+            <ent:city>${holderCity}</ent:city>
+            <ent:country>${holderCountry}</ent:country>
+          </ent:Address>
+        </ent:HolderOfTheTransitProcedure>
+        <ent:Guarantee>
+          <ent:sequenceNumber>1</ent:sequenceNumber>
+          <ent:guaranteeType>${guaranteeType}</ent:guaranteeType>${guaranteeGRN ? `
+          <ent:GuaranteeReference>
+            <ent:sequenceNumber>1</ent:sequenceNumber>
+            <ent:GRN>${guaranteeGRN}</ent:GRN>
+            <ent:accessCode>${guaranteeAccessCode}</ent:accessCode>
+          </ent:GuaranteeReference>` : ''}
+        </ent:Guarantee>
+        <ent:Consignment>
+          <ent:grossMass>${totalGross.toFixed(3)}</ent:grossMass>${itemsXML}
+        </ent:Consignment>
+      </ent:CC015C>
     </ent:CC015CV1Ent>
   </soapenv:Body>
 </soapenv:Envelope>`;

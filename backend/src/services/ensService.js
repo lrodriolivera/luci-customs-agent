@@ -12,6 +12,7 @@
  */
 const { ENSDeclaration, Expedition } = require('../models');
 const ensGenerator = require('./forms/ensGenerator');
+const aeatSubmitService = require('./aeat/aeatSubmitService');
 const logger = require('../config/logger');
 
 // Configuracion ENS
@@ -245,12 +246,19 @@ class ENSService {
       // Guardar XML generado
       declaration.generatedXML = xmlResult.xml;
 
-      // TODO: Enviar a AEAT real via aeatRealService
-      // Por ahora simular respuesta
-      const mrn = this.generateMRN('ENS');
+      // Enviar a AEAT real via aeatSubmitService
+      const aeatResult = await aeatSubmitService.submitENS(declaration);
+
+      if (!aeatResult.success) {
+        return {
+          success: false,
+          error: aeatResult.error || 'Error en respuesta AEAT',
+          details: aeatResult
+        };
+      }
 
       declaration.status = 'submitted';
-      declaration.mrn = mrn;
+      declaration.mrn = aeatResult.mrn;
       declaration.submittedAt = new Date();
       declaration.statusHistory.push({
         status: 'submitted',
@@ -258,39 +266,31 @@ class ENSService {
         user: userId
       });
 
-      // Simular respuesta AEAT
       declaration.aeatResponse = {
-        code: '0000',
-        message: 'Declaracion ENS aceptada',
+        code: aeatResult.code,
+        message: aeatResult.estado || 'Declaracion ENS enviada',
         timestamp: new Date(),
-        correlationId: `CORR-${Date.now()}`
+        csv: aeatResult.csv
       };
 
-      // Simular asignacion de estado de riesgo
-      const riskStatus = this.simulateRiskAssessment(declaration);
-      declaration.riskAssessment = {
-        status: riskStatus.status,
-        riskScore: riskStatus.score,
-        assessedAt: new Date(),
-        doNotLoadList: riskStatus.dnl,
-        dnlReason: riskStatus.dnlReason
-      };
-
-      if (riskStatus.status === 'ACK') {
+      // Evaluar riesgo basado en respuesta real
+      if (aeatResult.code === '0' || aeatResult.code === '1') {
         declaration.status = 'accepted';
-      } else if (riskStatus.status === 'DNL') {
-        declaration.status = 'dnl';
+        declaration.riskAssessment = {
+          status: 'ACK',
+          assessedAt: new Date()
+        };
       }
 
       await declaration.save();
 
-      logger.info(`ENS ${declaration.reference} submitted: MRN ${mrn}, Risk: ${riskStatus.status}`);
+      logger.info(`ENS ${declaration.reference} submitted: MRN ${aeatResult.mrn}`);
 
       return {
         success: true,
         data: {
           reference: declaration.reference,
-          mrn,
+          mrn: aeatResult.mrn,
           status: declaration.status,
           riskAssessment: declaration.riskAssessment
         }

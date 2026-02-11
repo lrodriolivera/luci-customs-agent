@@ -4,6 +4,8 @@
  */
 
 const { Transit, Guarantee, Expedition } = require('../models');
+const aeatSubmitService = require('./aeat/aeatSubmitService');
+const logger = require('../config/logger');
 
 const transitService = {
   /**
@@ -172,7 +174,7 @@ const transitService = {
     // Validar campos requeridos
     this.validateForSubmission(transit);
 
-    // Simular envio NCTS (IE015)
+    // Enviar a NCTS real via aeatSubmitService (IE015)
     const messageId = `MSG${Date.now()}`;
     transit.messages.push({
       type: 'IE015',
@@ -182,9 +184,13 @@ const transitService = {
       correlationId: messageId
     });
 
-    // Simular respuesta positiva (IE028 - MRN asignado)
-    const mrn = this.generateMRN(transit.departureOffice.country);
-    transit.mrn = mrn;
+    const aeatResult = await aeatSubmitService.submitNCTS(transit);
+
+    if (!aeatResult.success) {
+      throw new Error(aeatResult.error || 'Error en respuesta NCTS/AEAT');
+    }
+
+    transit.mrn = aeatResult.mrn;
     transit.status = 'accepted';
     transit.dates.declaration = new Date();
     transit.dates.acceptance = new Date();
@@ -193,7 +199,7 @@ const transitService = {
       type: 'IE028',
       direction: 'inbound',
       timestamp: new Date(),
-      content: { mrn, lrn: transit.lrn },
+      content: { mrn: aeatResult.mrn, lrn: transit.lrn, code: aeatResult.code },
       correlationId: messageId
     });
 
@@ -201,8 +207,10 @@ const transitService = {
       status: 'accepted',
       timestamp: new Date(),
       user: userId,
-      reason: 'MRN asignado por NCTS'
+      reason: `MRN ${aeatResult.mrn} asignado por NCTS`
     });
+
+    logger.info(`Transit ${transit.lrn} submitted: MRN ${aeatResult.mrn}`);
 
     await transit.save();
     return transit;

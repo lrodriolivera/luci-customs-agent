@@ -158,7 +158,7 @@ function buildH1ImportXML(data) {
   const bodyXML = `<ent:ImportacionCompletaV1Ent xmlns:ent="${NS_ENT}">
   <SegmentosDeServicio Id="${transId}" fecha="${fecha}" hora="${hora}"${isTest ? ' Test="S"' : ''}/>${mrn ? `
   <NumeroReferenciaDUA>${mrn}</NumeroReferenciaDUA>` : ''}
-  <CAaduana>${data.aduanaDespacho || data.customsOffice || 'ES002801'}</CAaduana>
+  <CAaduana>${(data.aduanaDespacho || data.customsOffice || '002801').replace(/^ES/, '').substring(0, 6)}</CAaduana>
   <C011EstatutoMercancias>${estatutoMercancias}</C011EstatutoMercancias>
   <C012ProcedimientoSolicitado>${procedimiento}</C012ProcedimientoSolicitado>
   <C02Exportador>
@@ -174,7 +174,7 @@ function buildH1ImportXML(data) {
   <C07ReferenciaComercial>${referenciaComercial}</C07ReferenciaComercial>` : ''}
   <C08Importador>
     <C08ImportadorNID>${importadorNIF}</C08ImportadorNID>
-    <C08ImportadorParticular>${importadorParticular}</C08ImportadorParticular>
+    <C08ImportadorParticular>${importadorParticular === 'P' ? 'P' : ''}</C08ImportadorParticular>
     <C08ImportadorRazonSocial>${importadorNombre}</C08ImportadorRazonSocial>
     <C08ImportadorDireccion>${importadorDireccion}</C08ImportadorDireccion>
     <C08ImportadorPoblacion>${importadorPoblacion}</C08ImportadorPoblacion>

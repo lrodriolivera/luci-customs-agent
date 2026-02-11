@@ -5,6 +5,8 @@
 
 const Requirement = require('../models/Requirement');
 const Expedition = require('../models/Expedition');
+const aeatRealService = require('../services/aeat/aeatRealService');
+const certificateService = require('../services/aeat/certificateService');
 const logger = require('../config/logger');
 
 /**
@@ -392,37 +394,41 @@ exports.submitToAEAT = async (req, res) => {
 
     const response = requirement.responses[responseIndex];
 
-    // En modo demo, simular envio
-    const isDemo = !process.env.AEAT_CERTIFICATE_PATH;
+    // Enviar documentacion a AEAT real
+    const certs = certificateService.listCertificates();
+    const certAlias = certs.length > 0 ? certs[0].alias : null;
 
-    if (isDemo) {
-      // Simular envio exitoso
-      response.aeatSubmission = {
-        submitted: true,
-        submittedAt: new Date(),
-        confirmationNumber: `CONF-${Date.now()}`,
-        xmlContent: '<simulatedRequest>...</simulatedRequest>',
-        responseXml: '<simulatedResponse><status>RECEIVED</status></simulatedResponse>'
-      };
-      response.result = {
-        status: 'pending',
-        notes: '[MODO DEMO] Respuesta recibida por AEAT, pendiente de evaluacion'
-      };
+    const docs = (response.attachments || []).map(att => ({
+      name: att.fileName || att.name,
+      content: att.content || att.base64,
+      mimeType: att.mimeType || 'application/pdf'
+    }));
 
-      requirement.status = 'submitted';
+    const aeatResult = await aeatRealService.submitDigitalDocuments(
+      requirement.mrn,
+      docs,
+      certAlias
+    );
 
-      await requirement.addTimelineEvent(
-        'response_submitted',
-        `[DEMO] Respuesta #${responseIndex + 1} enviada a AEAT`,
-        req.user._id,
-        { confirmationNumber: response.aeatSubmission.confirmationNumber }
-      );
-    } else {
-      // TODO: Implementar envio real a AEAT
-      // const aeatService = require('../services/aeatService');
-      // const result = await aeatService.submitDocumentation(requirement, response);
-      throw new Error('Envio real a AEAT no implementado aun');
-    }
+    response.aeatSubmission = {
+      submitted: true,
+      submittedAt: new Date(),
+      confirmationNumber: aeatResult.csv || `CONF-${Date.now()}`,
+      responseCode: aeatResult.code
+    };
+    response.result = {
+      status: 'pending',
+      notes: 'Respuesta enviada a AEAT, pendiente de evaluacion'
+    };
+
+    requirement.status = 'submitted';
+
+    await requirement.addTimelineEvent(
+      'response_submitted',
+      `Respuesta #${responseIndex + 1} enviada a AEAT`,
+      req.user._id,
+      { confirmationNumber: response.aeatSubmission.confirmationNumber }
+    );
 
     await requirement.save();
 
@@ -430,7 +436,7 @@ exports.submitToAEAT = async (req, res) => {
 
     res.json({
       success: true,
-      message: isDemo ? '[DEMO] Respuesta enviada a AEAT' : 'Respuesta enviada a AEAT',
+      message: 'Respuesta enviada a AEAT',
       data: requirement
     });
   } catch (error) {

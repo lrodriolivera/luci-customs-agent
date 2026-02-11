@@ -10,6 +10,7 @@
  * - Deteccion de fraude de valor
  */
 const { H7Declaration, Expedition } = require('../models');
+const aeatSubmitService = require('./aeat/aeatSubmitService');
 const logger = require('../config/logger');
 
 // Limites y configuracion H7
@@ -414,11 +415,18 @@ class H7Service {
     // Calcular derechos finales
     declaration.calculateDuties();
 
-    // [DEMO] Simular envio a AEAT
-    const mrn = this.generateMRN();
+    // Enviar a AEAT real via aeatSubmitService
+    const aeatResult = await aeatSubmitService.submitH7(declaration);
+
+    if (!aeatResult.success) {
+      return {
+        success: false,
+        error: aeatResult.error || 'Error en respuesta AEAT'
+      };
+    }
 
     declaration.status = 'submitted';
-    declaration.mrn = mrn;
+    declaration.mrn = aeatResult.mrn;
     declaration.submittedAt = new Date();
     declaration.statusHistory.push({
       status: 'submitted',
@@ -426,15 +434,15 @@ class H7Service {
       user: userId
     });
 
-    // Simular respuesta AEAT
     declaration.aeatResponse = {
-      code: 'ACCEPTED',
-      message: 'Declaracion H7 aceptada para despacho',
-      timestamp: new Date()
+      code: aeatResult.code,
+      message: aeatResult.estado || 'Declaracion H7 enviada',
+      timestamp: new Date(),
+      csv: aeatResult.csv
     };
 
-    // En H7, el levante suele ser automatico
-    if (declaration.totals.customsValue <= 22 || declaration.vatPrepaid) {
+    // En H7, el levante suele ser automatico si canal verde
+    if (aeatResult.channel === 'green' || declaration.totals.customsValue <= 22 || declaration.vatPrepaid) {
       declaration.status = 'released';
       declaration.releasedAt = new Date();
       declaration.statusHistory.push({
@@ -446,13 +454,14 @@ class H7Service {
 
     await declaration.save();
 
-    logger.info(`H7 ${declaration.reference} submitted: MRN ${mrn}`);
+    logger.info(`H7 ${declaration.reference} submitted: MRN ${aeatResult.mrn}`);
 
     return {
       success: true,
       data: {
         reference: declaration.reference,
-        mrn,
+        mrn: aeatResult.mrn,
+        channel: aeatResult.channel,
         status: declaration.status,
         dutiesPayable: declaration.duties.totalDue
       }
