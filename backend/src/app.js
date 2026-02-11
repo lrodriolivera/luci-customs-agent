@@ -24,7 +24,7 @@ try {
   expeditionRoutes = require('./routes/expeditions');
   documentRoutes = require('./routes/documents');
   declarationRoutes = require('./routes/declarations');
-  portalRoutes = require('./routes/portal');
+  try { portalRoutes = require('./routes/portal'); } catch(e) { console.error('Portal routes not loaded (stripe?):', e.message); }
   chatRoutes = require('./routes/chat');
   classificationRoutes = require('./routes/classification');
   calculationRoutes = require('./routes/calculation');
