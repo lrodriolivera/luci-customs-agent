@@ -18,7 +18,7 @@ function buildH1ImportXML(data) {
     // Servicio
     tipoOperacion = 'DECL',  // DECL, PREC (predeclaracion), COMP (complementaria)
     // Casillas principales
-    estatutoMercancias = 'I',  // I = Importacion
+    estatutoMercancias = 'IM',  // IM = Importacion desde pais tercero no AELC, CO = Comunitaria
     procedimiento = 'A',       // A = Declaracion completa
     // Exportador (C02)
     exportadorNIF = '',
@@ -79,6 +79,20 @@ function buildH1ImportXML(data) {
 
   const numPartidas = partidas.length || 1;
   const totalBultos = partidas.reduce((sum, p) => sum + (p.bultos || 0), 0);
+
+  // Generar Id de transaccion unico (timestamp con microsegundos)
+  const now = new Date();
+  const transId = now.getFullYear().toString() +
+    String(now.getMonth() + 1).padStart(2, '0') +
+    String(now.getDate()).padStart(2, '0') +
+    String(now.getHours()).padStart(2, '0') +
+    String(now.getMinutes()).padStart(2, '0') +
+    String(now.getSeconds()).padStart(2, '0') +
+    String(now.getMilliseconds()).padStart(3, '0') +
+    String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+  const fecha = transId.substring(0, 8);  // AAAAMMDD
+  const hora = transId.substring(8, 14);  // HHMMSS
+  const isTest = data.test !== false;  // Default to test mode
 
   // Construir XML de partidas
   const partidasXML = partidas.map((p, i) => {
@@ -142,10 +156,9 @@ function buildH1ImportXML(data) {
   // XML principal - NOTA: elementFormDefault="unqualified" en el XSD
   // Los hijos NO deben tener namespace, solo el root element
   const bodyXML = `<ent:ImportacionCompletaV1Ent xmlns:ent="${NS_ENT}">
-  <SegmentosDeServicio>
-    <idenTransaccion>${tipoOperacion}</idenTransaccion>
-  </SegmentosDeServicio>${mrn ? `
+  <SegmentosDeServicio Id="${transId}" fecha="${fecha}" hora="${hora}"${isTest ? ' Test="S"' : ''}/>${mrn ? `
   <NumeroReferenciaDUA>${mrn}</NumeroReferenciaDUA>` : ''}
+  <CAaduana>${data.aduanaDespacho || data.customsOffice || 'ES002801'}</CAaduana>
   <C011EstatutoMercancias>${estatutoMercancias}</C011EstatutoMercancias>
   <C012ProcedimientoSolicitado>${procedimiento}</C012ProcedimientoSolicitado>
   <C02Exportador>
@@ -187,11 +200,7 @@ function buildH1ImportXML(data) {
   <C222ImporteFactura>${Number(importeFactura).toFixed(3)}</C222ImporteFactura>
   <C24NaturalezaTransaccion>${naturalezaTransaccion}</C24NaturalezaTransaccion>
   <C25ModoTransporteFrontera>${modoTransporteFrontera}</C25ModoTransporteFrontera>
-  <C30LocalizacionMercancias>
-    <C30Cualificador>A</C30Cualificador>
-    <C30TipoIdentificacion>V</C30TipoIdentificacion>
-    <C30IdentificacionLugar>${localizacionMercancias || ''}</C30IdentificacionLugar>
-  </C30LocalizacionMercancias>
+  <C30LocalizacionMercancias>${localizacionMercancias || 'ES' + (data.aduanaDespacho || '002801') + 'LUCI01'}</C30LocalizacionMercancias>
   <CBImporteTotalTributos>${Number(importeTotalTributos).toFixed(2)}</CBImporteTotalTributos>
   <CBmodalidadDePago>${modalidadPago}</CBmodalidadDePago>${garantiaLevante ? `
   <CBgarantiaLevante>${garantiaLevante}</CBgarantiaLevante>` : ''}${partidasXML}
