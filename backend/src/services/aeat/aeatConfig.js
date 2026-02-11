@@ -4,6 +4,8 @@
  */
 
 // Entornos disponibles
+// NOTA: NO se requiere registro de IP ante la AEAT (eliminado).
+// Solo se necesita certificado electronico cualificado para autenticacion SSL mutua.
 const ENVIRONMENTS = {
   simulation: {
     name: 'Simulacion',
@@ -12,25 +14,42 @@ const ENVIRONMENTS = {
     description: 'Modo simulacion para desarrollo y demostraciones'
   },
   test: {
-    name: 'Pruebas AEAT',
+    name: 'Pruebas AEAT (PRE)',
     isReal: true,
-    baseUrl: 'https://www1.agenciatributaria.gob.es',
+    baseUrl: 'https://prewww10.aeat.es',
+    altUrls: ['https://prewww1.aeat.es', 'https://prewww2.aeat.es'],
+    description: 'Entorno de pruebas con certificado - NO requiere registro de IP',
     paths: {
+      // Aduanas - Declaraciones
       h1Submit: '/wlpl/ADUA-JDIT/ws/PresDecAduana',
       h1Query: '/wlpl/ADUA-JDIT/ws/ConsultaDeclarac',
       aesSubmit: '/wlpl/ADUA-JDIT/ws/PresDecExportacion',
-      cancel: '/wlpl/ADUA-JDIT/ws/AnulacionDeclara'
+      cancel: '/wlpl/ADUA-JDIT/ws/AnulacionDeclara',
+      // H7 Bajo Valor
+      h7Submit: '/wlpl/ADUA-JDIT/ws/BajoValorH7',
+      // ENS/ICS2
+      ensSubmit: '/wlpl/ADUA-JDIT/ws/ENS_ICS2',
+      // NCTS
+      nctsSubmit: '/wlpl/ADUA-JDIT/ws/TransitoNCTS'
     }
   },
   production: {
     name: 'Produccion AEAT',
     isReal: true,
-    baseUrl: 'https://www.agenciatributaria.gob.es',
+    baseUrl: 'https://www2.agenciatributaria.gob.es',
+    description: 'Entorno de produccion - Solo certificado electronico',
     paths: {
-      h1Submit: '/AEAT/ws/Presentacion/ImportacionH1',
-      h1Query: '/AEAT/ws/Consulta/EstadoDeclaracion',
-      aesSubmit: '/AEAT/ws/Presentacion/ExportacionAES',
-      cancel: '/AEAT/ws/Anulacion/Declaracion'
+      // Aduanas - Declaraciones
+      h1Submit: '/wlpl/ADUA-JDIT/ws/PresDecAduana',
+      h1Query: '/wlpl/ADUA-JDIT/ws/ConsultaDeclarac',
+      aesSubmit: '/wlpl/ADUA-JDIT/ws/PresDecExportacion',
+      cancel: '/wlpl/ADUA-JDIT/ws/AnulacionDeclara',
+      // H7 Bajo Valor
+      h7Submit: '/wlpl/ADUA-JDIT/ws/BajoValorH7',
+      // ENS/ICS2
+      ensSubmit: '/wlpl/ADUA-JDIT/ws/ENS_ICS2',
+      // NCTS
+      nctsSubmit: '/wlpl/ADUA-JDIT/ws/TransitoNCTS'
     }
   }
 };
