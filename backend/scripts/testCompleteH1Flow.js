@@ -208,8 +208,60 @@ function generateLRN() {
   return `${year}ES${random}`;
 }
 
-// Generar XML H1 completo
+// Generar XML H1 en formato AEAT (ImportacionCompletaV1Ent.xsd)
+const { buildH1ImportXML } = require('../src/services/aeat/h1XmlBuilder');
+
 function generateH1XML(expedition) {
+  const lrn = generateLRN();
+  const modeMap = { maritime: '1', rail: '2', road: '3', air: '4' };
+  const totalValue = expedition.goods.reduce((s, g) => s + g.invoiceValue, 0);
+
+  const xml = buildH1ImportXML({
+    referenciaComercial: lrn,
+    exportadorNIF: '',
+    exportadorNombre: expedition.exporter.companyName,
+    exportadorDireccion: expedition.exporter.address,
+    exportadorPoblacion: expedition.exporter.city,
+    exportadorCP: '',
+    exportadorPais: expedition.exporter.country,
+    importadorNIF: expedition.client.nif,
+    importadorNombre: expedition.client.companyName,
+    importadorDireccion: expedition.client.address.street,
+    importadorPoblacion: expedition.client.address.city,
+    importadorCP: expedition.client.address.postalCode,
+    emailDespacho: expedition.client.contact.email,
+    paisExpedicion: expedition.exporter.country,
+    incoterm: expedition.incoterm.code,
+    incotermZona: expedition.incoterm.place,
+    importeFactura: totalValue,
+    modoTransporteFrontera: modeMap[expedition.transport.mode] || '1',
+    contenedores: expedition.transport.containers ? '1' : '0',
+    partidas: expedition.goods.map(g => ({
+      descripcion: g.description,
+      taricCode: g.taricCode,
+      paisOrigen: g.originCountry,
+      pesobruto: g.grossWeight,
+      pesoneto: g.netWeight,
+      bultos: g.packages.quantity,
+      tipoBulto: g.packages.type,
+      marcas: g.packages.marks,
+      valorFactura: g.invoiceValue,
+      preferencia: '100',
+      regimen: '40',
+      arancelTipo: 0,
+      arancelImporte: 0,
+      ivaTipo: 21,
+      ivaImporte: 0
+    }))
+  });
+
+  // Extract just the body (without SOAP envelope) for signing
+  const bodyMatch = xml.match(/<ImportacionCompletaV1Ent[\s\S]*<\/ImportacionCompletaV1Ent>/);
+  return { lrn, xml: bodyMatch ? bodyMatch[0] : xml };
+}
+
+// OLD generateH1XML kept for reference
+function generateH1XML_OLD(expedition) {
   const lrn = generateLRN();
   const timestamp = new Date().toISOString();
 

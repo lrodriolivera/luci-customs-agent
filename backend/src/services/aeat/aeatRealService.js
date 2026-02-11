@@ -57,7 +57,7 @@ class AEATRealService {
         path: '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.ImportacionCompletaV1SOAP',
         wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adip/ws/ImportacionCompletaV1.wsdl',
         operation: 'ImportacionCompletaV1',
-        messageType: 'CC460A',
+        messageType: 'ImportacionCompletaV1Ent',
         description: 'Declaracion completa de importacion segun CAU'
       },
       H1_QUERY: {
@@ -875,24 +875,13 @@ class AEATRealService {
 
   /**
    * Construir sobre SOAP
+   * El body contiene directamente el XML de la declaracion sin headers custom
    */
   _buildSOAPEnvelope(service, signedContent) {
-    const timestamp = new Date().toISOString();
-
     return `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns:aeat="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas">
-  <soapenv:Header>
-    <aeat:ServiceHeader>
-      <aeat:Timestamp>${timestamp}</aeat:Timestamp>
-      <aeat:ServiceCode>${service.code}</aeat:ServiceCode>
-      <aeat:Version>${service.guideVersion || '1.0'}</aeat:Version>
-    </aeat:ServiceHeader>
-  </soapenv:Header>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
   <soapenv:Body>
-    <aeat:${service.operation}Request>
-      ${signedContent}
-    </aeat:${service.operation}Request>
+    ${signedContent}
   </soapenv:Body>
 </soapenv:Envelope>`;
   }
@@ -1363,11 +1352,11 @@ class AEATRealService {
   _getCriticalFields(serviceCode) {
     const fieldsMap = {
       'H1_SUBMIT': [
-        { tag: 'DeclarationOfficeID', name: 'Aduana de despacho', required: true },
-        { tag: 'Declarant', name: 'Declarante', required: true },
-        { tag: 'GoodsShipment', name: 'Partida de mercancías', required: true },
-        { tag: 'CustomsValuation', name: 'Valor en aduana', required: true },
-        { tag: 'Classification', name: 'Código TARIC', required: true }
+        { tag: 'ImportacionCompletaV1Ent', name: 'Elemento raiz AEAT', required: true },
+        { tag: 'C14Declarante', name: 'Declarante', required: true },
+        { tag: 'Partida', name: 'Partida de mercancias', required: true },
+        { tag: 'C42ValorFactura', name: 'Valor factura', required: true },
+        { tag: 'C3312CodigoPosicionTaric', name: 'Codigo TARIC', required: true }
       ],
       'H7_SUBMIT': [
         { tag: 'Sender', name: 'Remitente', required: true },
