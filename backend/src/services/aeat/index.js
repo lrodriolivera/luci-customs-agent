@@ -56,5 +56,14 @@ module.exports = {
   RESPONSE_CODES: aeatConfig.RESPONSE_CODES,
   INSPECTION_CHANNELS: aeatConfig.INSPECTION_CHANNELS,
   CUSTOMS_OFFICES: aeatConfig.CUSTOMS_OFFICES,
-  CUSTOMS_REGIMES: aeatConfig.CUSTOMS_REGIMES
+  CUSTOMS_REGIMES: aeatConfig.CUSTOMS_REGIMES,
+
+  // === XML Builders (formato oficial AEAT) ===
+  h1XmlBuilder: require('./h1XmlBuilder'),
+  h7XmlBuilder: require('./h7XmlBuilder'),
+  aesXmlBuilder: require('./aesXmlBuilder'),
+  nctsXmlBuilder: require('./nctsXmlBuilder'),
+  ensXmlBuilder: require('./ensXmlBuilder'),
+  soivreXmlBuilder: require('./soivreXmlBuilder'),
+  queryXmlBuilder: require('./queryXmlBuilder')
 };
