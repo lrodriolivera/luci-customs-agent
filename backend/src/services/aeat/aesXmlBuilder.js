@@ -77,7 +77,6 @@ function buildAESExportXML(data) {
           <ent:LRN>${lrn || transId}</ent:LRN>
           <ent:declarationType>${declarationType}</ent:declarationType>
           <ent:additionalDeclarationType>A</ent:additionalDeclarationType>
-          <ent:specificCircumstanceIndicator>E</ent:specificCircumstanceIndicator>
         </ent:ExportOperation>
         <ent:CustomsOfficeOfExport>
           <ent:referenceNumber>${customsOfficeExport}</ent:referenceNumber>
