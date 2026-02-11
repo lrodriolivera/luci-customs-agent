@@ -46,151 +46,137 @@ class AEATRealService {
 
     // ============== SERVICIOS WEB AEAT ==============
 
-    // Declaraciones de Importación H1 (CAU)
+    // ============== SERVICIOS WEB AEAT - ENDPOINTS OFICIALES (de WSDLs) ==============
+    // Fuente: https://www2.agenciatributaria.gob.es/ADUA/internet/ws.html
+    // Los paths son relativos al baseUrl/wsBaseUrl del entorno actual
     this.SERVICES = {
-      // === IMPORTACIÓN H1 ===
+      // === IMPORTACIÓN H1 (CAU) ===
       H1_SUBMIT: {
         code: 'H1_SUBMIT',
         name: 'Presentación DUA Importación H1',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/DeclaracionH1V1.wsdl',
-        operation: 'enviarDeclaracion',
-        messageType: 'CC515C',
-        guideVersion: '3.15',
-        description: 'Envío de declaración de importación según CAU'
+        path: '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.ImportacionCompletaV1SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adip/ws/ImportacionCompletaV1.wsdl',
+        operation: 'ImportacionCompletaV1',
+        messageType: 'CC460A',
+        description: 'Declaracion completa de importacion segun CAU'
       },
       H1_QUERY: {
         code: 'H1_QUERY',
         name: 'Consulta DUA Importación',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaH1V1.wsdl',
-        operation: 'consultarDeclaracion',
-        description: 'Consulta estado de declaración H1'
+        path: '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.ConsultaImportacionV2SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adip/ws/ConsultaImportacionV2.wsdl',
+        operation: 'ConsultaImportacionV2',
+        description: 'Consulta estado de declaracion H1'
       },
-      H1_AMENDMENT: {
-        code: 'H1_AMENDMENT',
-        name: 'Modificación DUA Importación',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ModificacionH1V1.wsdl',
-        operation: 'modificarDeclaracion',
-        messageType: 'CC513C',
-        description: 'Modificación de declaración H1 presentada'
+      H1_SIMPLIFIED: {
+        code: 'H1_SIMPLIFIED',
+        name: 'Declaracion Simplificada Importación',
+        path: '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.DeclaSimpliImporV1SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adip/ws/DeclaSimpliImporV1.wsdl',
+        operation: 'DeclaSimpliImporV1',
+        description: 'Declaracion simplificada de importacion'
       },
       H1_INVALIDATION: {
         code: 'H1_INVALIDATION',
-        name: 'Invalidación DUA Importación',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/InvalidacionH1V1.wsdl',
-        operation: 'invalidarDeclaracion',
-        messageType: 'CC514C',
-        description: 'Invalidación de declaración H1'
-      },
-
-      // === IMPORTACIÓN H7 (Bajo Valor < 150€) ===
-      H7_SUBMIT: {
-        code: 'H7_SUBMIT',
-        name: 'Presentación H7 Bajo Valor',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/DeclaracionH7V1.wsdl',
-        operation: 'enviarDeclaracionH7',
-        messageType: 'CC515B',
-        description: 'Envío declaración envíos bajo valor (<150€)',
-        notes: 'Desde 2026 aplica a TODOS los envíos e-commerce sin umbral mínimo'
-      },
-      H7_QUERY: {
-        code: 'H7_QUERY',
-        name: 'Consulta H7',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaH7V1.wsdl',
-        operation: 'consultarH7',
-        description: 'Consulta estado declaración H7'
+        name: 'Anulación DUA Importación',
+        path: '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.AnulaImportacionV1SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adip/ws/AnulaImportacionV1.wsdl',
+        operation: 'AnulaImportacionV1',
+        description: 'Anulacion de declaracion H1'
       },
 
       // === EXPORTACIÓN AES ===
       AES_SUBMIT: {
         code: 'AES_SUBMIT',
-        name: 'Presentación Declaración Exportación',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/DeclaracionAESV1.wsdl',
-        operation: 'enviarDeclaracionExportacion',
-        messageType: 'CC615C',
-        guideVersion: '1.21',
-        description: 'Envío de declaración de exportación AES'
+        name: 'Presentación Declaración Exportación AES',
+        path: '/wlpl/ADEX-JDIT/ws/aes/CC515CV1SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/CC515CV1.wsdl',
+        operation: 'CC515CV1',
+        messageType: 'CC515C',
+        description: 'Declaracion de exportacion AES P1'
       },
       AES_QUERY: {
         code: 'AES_QUERY',
         name: 'Consulta Exportación',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaAESV1.wsdl',
-        operation: 'consultarExportacion',
-        description: 'Consulta estado declaración exportación'
-      },
-      AES_AMENDMENT: {
-        code: 'AES_AMENDMENT',
-        name: 'Modificación Exportación',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ModificacionAESV1.wsdl',
-        operation: 'modificarExportacion',
-        description: 'Modificación declaración exportación'
+        path: '/wlpl/ADEX-JDIT/ws/aes/CCAESCV1SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/CCAESCV1.wsdl',
+        operation: 'CCAESCV1',
+        description: 'Consulta estado declaracion exportacion'
       },
 
-      // === TRÁNSITO NCTS6 ===
+      // === TRÁNSITO NCTS5 ===
       NCTS_SUBMIT: {
         code: 'NCTS_SUBMIT',
         name: 'Presentación Tránsito NCTS',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/TransitoNCTS6V1.wsdl',
-        operation: 'enviarTransito',
-        messageType: 'IE015',
-        guideVersion: '1.16',
-        description: 'Declaración de tránsito NCTS Fase 6'
+        path: '/wlpl/ADTR-JDIT/ws/ncts5/CC015CV1SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC015CV1.wsdl',
+        operation: 'CC015CV1',
+        messageType: 'CC015C',
+        description: 'Declaracion de transito NCTS Fase 5'
       },
       NCTS_ARRIVAL: {
         code: 'NCTS_ARRIVAL',
         name: 'Notificación Llegada NCTS',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/LlegadaNCTS6V1.wsdl',
-        operation: 'notificarLlegada',
-        messageType: 'IE007',
-        description: 'Notificación de llegada de tránsito'
+        path: '/wlpl/ADTR-JDIT/ws/ncts5/CC007CV1SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC007CV1.wsdl',
+        operation: 'CC007CV1',
+        messageType: 'CC007C',
+        description: 'Notificacion de llegada de transito'
+      },
+      NCTS_UNLOADING: {
+        code: 'NCTS_UNLOADING',
+        name: 'Notificación Descarga NCTS',
+        path: '/wlpl/ADTR-JDIT/ws/ncts5/CC044CV1SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC044CV1.wsdl',
+        operation: 'CC044CV1',
+        messageType: 'CC044C',
+        description: 'Observaciones descarga de transito'
       },
       NCTS_QUERY: {
         code: 'NCTS_QUERY',
         name: 'Consulta Tránsito',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaNCTS6V1.wsdl',
-        operation: 'consultarTransito',
-        description: 'Consulta estado de tránsito'
+        path: '/wlpl/ADTR-JDIT/ws/ncts5/CCTRACV2SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CCTRACV2.wsdl',
+        operation: 'CCTRACV2',
+        description: 'Consulta estado de transito'
       },
 
-      // === ICS2 (Import Control System 2) - Release 3 ===
+      // === ICS2 ENS (Import Control System 2) - Release 5 ===
       ICS2_ENS_SUBMIT: {
         code: 'ICS2_ENS_SUBMIT',
         name: 'Presentación ENS ICS2',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ICS2ENSV3.wsdl',
-        operation: 'enviarENS',
-        messageType: 'CC315C',
-        guideVersion: '3.0',
-        description: 'Declaración sumaria de entrada ICS2 R3 (carretera/ferrocarril)'
+        path: '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.IE315V5SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/aden/enswsv5/IE315V5.wsdl',
+        operation: 'IE315V5',
+        messageType: 'IE315',
+        description: 'Declaracion sumaria de entrada ICS2'
       },
       ICS2_ENS_AMEND: {
         code: 'ICS2_ENS_AMEND',
         name: 'Rectificación ENS ICS2',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ICS2ENSV3.wsdl',
-        operation: 'modificarENS',
-        messageType: 'CC313C',
-        description: 'Rectificación de declaración sumaria de entrada'
-      },
-      ICS2_ENS_ARRIVAL: {
-        code: 'ICS2_ENS_ARRIVAL',
-        name: 'Notificación Llegada ENS',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ICS2ENSV3.wsdl',
-        operation: 'notificarLlegadaENS',
-        messageType: 'CC305C',
-        description: 'Notificación de llegada de mercancías ENS'
-      },
-      ICS2_ENS_CANCEL: {
-        code: 'ICS2_ENS_CANCEL',
-        name: 'Anulación ENS ICS2',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ICS2ENSV3.wsdl',
-        operation: 'anularENS',
-        messageType: 'CC328C',
-        description: 'Anulación de declaración sumaria de entrada'
+        path: '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.IE313V5SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/aden/enswsv5/IE313V5.wsdl',
+        operation: 'IE313V5',
+        messageType: 'IE313',
+        description: 'Rectificacion de declaracion sumaria de entrada'
       },
       ICS2_ENS_QUERY: {
         code: 'ICS2_ENS_QUERY',
         name: 'Consulta ENS ICS2',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaICS2V1.wsdl',
-        operation: 'consultarENS',
-        description: 'Consulta estado de declaración ENS'
+        path: '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.ConsENSV3SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/aden/enswsv5/ConsENSV3.wsdl',
+        operation: 'ConsENSV3',
+        description: 'Consulta estado de declaracion ENS'
+      },
+
+      // === SOIVRE ===
+      SOIVRE_SUBMIT: {
+        code: 'SOIVRE_SUBMIT',
+        name: 'Alta Solicitud SOIVRE',
+        path: '/L/inwinvoc/es.aeat.dit.adu.ad44.soivre.SOIVREaltaV1SOAP',
+        wsdlUrl: 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/ad44/soivre/SOIVREaltaV1.wsdl',
+        operation: 'SOIVREaltaV1',
+        description: 'Alta de solicitud de inspeccion SOIVRE'
       },
 
       // === CONSULTAS ADDS-JDIT ===
@@ -941,7 +927,8 @@ class AEATRealService {
    * Enviar petición SOAP
    */
   async _sendSOAPRequest(service, soapEnvelope) {
-    const wsdlUrl = `${this.environment.ws3BaseUrl}${service.wsdl}`;
+    // Usar path directo al SOAP endpoint (no WSDL)
+    const serviceUrl = `${this.environment.wsBaseUrl}${service.path || service.wsdl}`;
 
     // En modo simulación, devolver respuesta simulada
     if (process.env.AEAT_SIMULATE === 'true' || process.env.AEAT_FORCE_SIMULATION === 'true') {
@@ -957,7 +944,7 @@ class AEATRealService {
 
     // Log de petición si debug está activo
     if (process.env.AEAT_DEBUG === 'true') {
-      logger.info(`[AEAT] Sending REAL request to ${wsdlUrl}`, {
+      logger.info(`[AEAT] Sending REAL request to ${serviceUrl}`, {
         service: service.code,
         operation: service.operation,
         environment: this.environment.name
@@ -966,7 +953,7 @@ class AEATRealService {
 
     try {
       // Petición real con autenticación SSL mutua
-      const response = await axios.post(wsdlUrl, soapEnvelope, {
+      const response = await axios.post(serviceUrl, soapEnvelope, {
         headers: {
           'Content-Type': 'text/xml; charset=utf-8',
           'SOAPAction': `"${service.operation}"`,
@@ -995,7 +982,7 @@ class AEATRealService {
     } catch (error) {
       // Manejar errores de conexión
       if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
-        logger.error(`[AEAT] Connection failed to ${wsdlUrl}`, {
+        logger.error(`[AEAT] Connection failed to ${serviceUrl}`, {
           code: error.code,
           message: error.message
         });
