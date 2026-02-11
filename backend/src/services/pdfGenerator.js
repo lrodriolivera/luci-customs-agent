@@ -175,128 +175,212 @@ class PDFGenerator {
     doc.y = y + 5;
   }
 
-  // ==================== H1 - DECLARACION DE IMPORTACION ====================
+  // ==================== H1 - DECLARACION DE IMPORTACION (formato DUA) ====================
+
+  /**
+   * Dibuja una casilla numerada estilo DUA oficial
+   */
+  _drawBox(doc, num, label, value, x, y, w, h) {
+    // Borde
+    doc.rect(x, y, w, h).lineWidth(0.5).strokeColor(COLORS.border).stroke();
+    // Numero y etiqueta
+    doc.font('Helvetica').fontSize(5.5).fillColor(COLORS.gray)
+       .text(`${num} ${label}`, x + 3, y + 2, { width: w - 6, lineBreak: false });
+    // Valor
+    const val = (value == null || value === '' || value === '-') ? '' : String(value);
+    doc.font('Helvetica-Bold').fontSize(8).fillColor(COLORS.dark)
+       .text(val, x + 3, y + 11, { width: w - 6, height: h - 14 });
+  }
 
   async generateH1PDF(expedition, options = {}) {
-    const doc = new PDFDocument({ size: 'A4', margin: 40, autoFirstPage: true });
+    const doc = new PDFDocument({ size: 'A4', margin: 30, autoFirstPage: true });
     const decl = expedition.declaration || {};
     const goods = expedition.goods || [];
     const calc = expedition.calculations || {};
     const client = expedition.client || {};
     const transport = expedition.transport || {};
+    const g0 = goods[0] || {};
 
-    // Header
-    this._drawHeader(doc, 'DECLARACION DE IMPORTACION H1', `Regimen: ${fmt(decl.regime)}`, {
-      mrn: decl.mrn,
-      expeditionId: expedition.expeditionId,
-      lrn: decl.lrn
-    });
-
-    if (options.draft) this._drawDraftWatermark(doc);
-
-    // Secciones
     const mx = doc.page.margins.left;
-    const midX = mx + 260;
+    const pw = doc.page.width - mx - doc.page.margins.right; // page width usable
+    const col2 = mx + pw * 0.5;
+    const col3 = mx + pw * 0.66;
 
-    // 1. Partes
-    this._drawSection(doc, 'PARTES DE LA DECLARACION');
-    const partiesY = doc.y;
-    this._drawField(doc, 'DECLARANTE / REPRESENTANTE', 'Stock Logistic S.L.', mx + 10, partiesY);
-    this._drawField(doc, 'NIF/EORI', 'B22477020 / ESB22477020000', mx + 10, partiesY + 25);
-    this._drawField(doc, 'EXPEDIDOR', fmt(client.companyName || expedition.shipper?.name), midX, partiesY);
-    this._drawField(doc, 'Pais', fmt(expedition.origin?.country || client.country), midX, partiesY + 25);
-    this._drawField(doc, 'DESTINATARIO', fmt(client.companyName), mx + 10, partiesY + 55);
-    this._drawField(doc, 'NIF', fmt(client.taxId || client.nif), mx + 10, partiesY + 80);
-    this._drawField(doc, 'ADUANA', fmt(decl.customsOffice), midX, partiesY + 55);
-    this._drawField(doc, 'Fecha declaracion', fmtDate(decl.declarationDate || expedition.createdAt), midX, partiesY + 80);
-    doc.y = partiesY + 105;
-
-    // 2. Datos operacion
-    this._drawSection(doc, 'DATOS DE LA OPERACION');
-    const opY = doc.y;
-    this._drawField(doc, 'Regimen', fmt(decl.regime), mx + 10, opY, 120);
-    this._drawField(doc, 'Proc. Adicional', fmt(decl.additionalProcedure || '000'), mx + 140, opY, 120);
-    this._drawField(doc, 'Preferencia', fmt(decl.preference || '100'), mx + 270, opY, 120);
-    const originCountry = goods[0]?.countryOfOrigin || expedition.origin?.country || '-';
-    const incoterm = typeof expedition.incoterm === 'object' ? (expedition.incoterm?.code || expedition.incoterm?.type || '-') : (expedition.incoterm || '-');
-    this._drawField(doc, 'Pais Origen', originCountry, mx + 10, opY + 25, 120);
-    this._drawField(doc, 'Pais Procedencia', originCountry, mx + 140, opY + 25, 120);
-    this._drawField(doc, 'Incoterm', incoterm, mx + 270, opY + 25, 120);
-    doc.y = opY + 55;
-
-    // 3. Transporte
-    this._drawSection(doc, 'TRANSPORTE');
-    const trY = doc.y;
-    const modeMap = { air: '4 (Aereo)', sea: '1 (Maritimo)', road: '3 (Carretera)', rail: '2 (Ferrocarril)', maritime: '1 (Maritimo)', AIR: '4 (Aereo)', SEA: '1 (Maritimo)', ROAD: '3 (Carretera)', RAIL: '2 (Ferrocarril)' };
-    this._drawField(doc, 'Modo Transporte', modeMap[expedition.transportMode] || fmt(expedition.transportMode), mx + 10, trY);
-    this._drawField(doc, 'Documento Transporte', fmt(transport.documentNumber || transport.blNumber || transport.awbNumber), midX, trY);
-    this._drawField(doc, 'Contenedor', fmt(transport.containerNumber || 'N/A'), mx + 10, trY + 25);
-    this._drawField(doc, 'Bultos', fmt(expedition.packages), midX, trY + 25);
-    doc.y = trY + 55;
-
-    // 4. Partidas
-    this._drawSection(doc, 'PARTIDAS DE MERCANCIAS');
-    const tableHeaders = ['Nro', 'Codigo TARIC', 'Descripcion', 'Peso Neto', 'Valor EUR', 'Arancel', 'IVA'];
-    const tableRows = goods.map((g, i) => [
-      i + 1,
-      fmt(g.taricCode),
-      (g.description || '').substring(0, 25),
-      g.netWeight ? `${g.netWeight} kg` : '-',
-      fmtMoney(g.invoiceValue || g.value),
-      fmtPct(g.dutyRate),
-      fmtPct(g.vatRate)
-    ]);
-
-    if (tableRows.length === 0) {
-      tableRows.push([1, '-', 'Sin partidas registradas', '-', '-', '-', '-']);
-    }
-
-    this._drawTable(doc, tableHeaders, tableRows);
-
-    // 5. Liquidacion
-    doc.y += 5;
-    this._drawSection(doc, 'LIQUIDACION');
-    const liqY = doc.y;
-    const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-
-    doc.rect(mx, liqY, pageWidth, 80).fill(COLORS.lightGray).stroke(COLORS.border);
-
-    // Calcular valor aduanero desde partidas si no existe en calc
+    const originCountry = g0.countryOfOrigin || expedition.origin?.country || '';
+    const incoterm = typeof expedition.incoterm === 'object' ? (expedition.incoterm?.code || expedition.incoterm?.type || '') : (expedition.incoterm || '');
+    const modeMap = { air: '4', sea: '1', road: '3', rail: '2', maritime: '1', AIR: '4', SEA: '1', ROAD: '3', RAIL: '2' };
+    const transportMode = modeMap[expedition.transportMode] || expedition.transportMode || '';
     const totalGoodsValue = goods.reduce((sum, g) => sum + (g.invoiceValue || g.value || 0), 0);
     const customsValue = calc.customsValue || calc.invoiceTotal || totalGoodsValue || 0;
-    this._drawField(doc, 'Valor en Aduana', fmtMoney(customsValue), mx + 10, liqY + 5, 150);
-    // Calcular derechos desde partidas si no existen en calc
     const totalDuties = calc.totalDuties || goods.reduce((sum, g) => sum + (g.dutyAmount || 0), 0);
     const totalVat = calc.totalVat || goods.reduce((sum, g) => sum + (g.vatAmount || 0), 0);
     const totalTaxes = calc.totalTaxes || (totalDuties + totalVat);
 
-    this._drawField(doc, 'Derechos Arancelarios (A00)', fmtMoney(totalDuties), mx + 10, liqY + 30, 200);
-    this._drawField(doc, 'IVA Importacion (B00)', fmtMoney(totalVat), midX, liqY + 30, 200);
-
-    // Total destacado
-    doc.rect(mx + 10, liqY + 55, pageWidth - 20, 20).fill(COLORS.primary);
+    // ===== CABECERA =====
+    doc.rect(mx, mx, pw, 40).fill(COLORS.dark);
     doc.font('Helvetica-Bold').fontSize(10).fillColor(COLORS.white)
-       .text(`TOTAL A INGRESAR: ${fmtMoney(totalTaxes)}`, mx + 20, liqY + 59, { width: pageWidth - 40, align: 'right' });
+       .text('COMUNIDAD EUROPEA', mx + 8, mx + 5);
+    doc.font('Helvetica-Bold').fontSize(14).fillColor(COLORS.white)
+       .text('DECLARACION DE IMPORTACION H1', mx + 8, mx + 18);
+    // Right side
+    doc.font('Helvetica').fontSize(7).fillColor('#94a3b8')
+       .text(`MRN: ${decl.mrn || 'Pendiente'}`, mx + pw - 180, mx + 5, { width: 170, align: 'right' })
+       .text(`Exp: ${expedition.expeditionId}`, mx + pw - 180, mx + 15, { width: 170, align: 'right' })
+       .text(`Fecha: ${fmtDate(decl.declarationDate || expedition.createdAt)}`, mx + pw - 180, mx + 25, { width: 170, align: 'right' });
 
-    doc.y = liqY + 85;
+    if (options.draft) this._drawDraftWatermark(doc);
 
-    // Status
-    if (decl.status) {
-      doc.y += 5;
-      const statusText = {
-        draft: 'BORRADOR', pending: 'PENDIENTE', submitted: 'PRESENTADA',
-        accepted: 'ACEPTADA', rejected: 'RECHAZADA'
-      };
-      doc.font('Helvetica-Bold').fontSize(8).fillColor(COLORS.gray)
-         .text(`Estado: ${statusText[decl.status] || decl.status}   |   Canal: ${(decl.channel || '-').toUpperCase()}`, mx, doc.y, { lineBreak: false });
-    }
+    let y = mx + 45;
+    const rh = 28; // row height
+    const rh2 = 38; // taller row
 
-    // Footer at bottom of current page - use save/restore to avoid page creation
-    const footerY = doc.page.height - 25;
-    const fw = doc.page.width - mx - doc.page.margins.right;
-    doc.rect(mx, footerY - 8, fw, 0.5).fill(COLORS.border);
-    doc.font('Helvetica').fontSize(6.5).fillColor(COLORS.gray);
-    doc.text('Generado por LUCI · aduanas.strixai.es · Strix AI', mx, footerY - 3, { lineBreak: false });
+    // ===== FILA 1: Declaracion, Expedidor =====
+    this._drawBox(doc, '1', 'DECLARACION', `IM  ${decl.declarationType || 'A'}`, mx, y, pw * 0.15, rh);
+    this._drawBox(doc, '2', 'EXPEDIDOR / EXPORTADOR', client.companyName || expedition.shipper?.name || '', mx + pw * 0.15, y, pw * 0.45, rh2);
+    this._drawBox(doc, '5', 'PARTIDAS', String(goods.length || 1), mx + pw * 0.6, y, pw * 0.1, rh);
+    this._drawBox(doc, '6', 'TOTAL BULTOS', fmt(expedition.packages || g0.numberOfPackages), mx + pw * 0.7, y, pw * 0.15, rh);
+    this._drawBox(doc, '7', 'N. REF.', expedition.expeditionId, mx + pw * 0.85, y, pw * 0.15, rh);
+    y += rh2;
+
+    // ===== FILA 2: Destinatario, Representante =====
+    this._drawBox(doc, '8', 'DESTINATARIO - EORI', `${client.companyName || ''}\n${client.taxId || client.nif || ''}`, mx, y, pw * 0.5, rh2);
+    this._drawBox(doc, '14', 'DECLARANTE / REPRESENTANTE', `Stock Logistic S.L.\nB22477020 / ESB22477020000`, mx + pw * 0.5, y, pw * 0.5, rh2);
+    y += rh2;
+
+    // ===== FILA 3: Paises, transporte =====
+    this._drawBox(doc, '15', 'PAIS EXPEDICION', originCountry, mx, y, pw * 0.15, rh);
+    this._drawBox(doc, '17', 'PAIS DESTINO', 'ES', mx + pw * 0.15, y, pw * 0.15, rh);
+    this._drawBox(doc, '18', 'IDENT. MEDIO TRANSPORTE', fmt(transport.vehicleId || transport.vesselName || transport.flightNumber), mx + pw * 0.3, y, pw * 0.25, rh);
+    this._drawBox(doc, '19', 'CTR', transport.containerNumber ? 'SI' : 'NO', mx + pw * 0.55, y, pw * 0.08, rh);
+    this._drawBox(doc, '20', 'COND. ENTREGA', incoterm, mx + pw * 0.63, y, pw * 0.12, rh);
+    this._drawBox(doc, '22', 'DIVISA / IMPORTE', `EUR ${fmtMoney(customsValue)}`, mx + pw * 0.75, y, pw * 0.25, rh);
+    y += rh;
+
+    // ===== FILA 4: Transporte, Aduana =====
+    this._drawBox(doc, '25', 'MODO TRANSP.', transportMode, mx, y, pw * 0.1, rh);
+    this._drawBox(doc, '26', 'TRANSP. INTERIOR', transportMode, mx + pw * 0.1, y, pw * 0.1, rh);
+    this._drawBox(doc, '29', 'ADUANA PRESENTACION', fmt(decl.customsOffice), mx + pw * 0.2, y, pw * 0.25, rh);
+    this._drawBox(doc, '30', 'LOCALIZACION MERCANCIAS', fmt(transport.warehouseCode || decl.goodsLocation), mx + pw * 0.45, y, pw * 0.25, rh);
+    this._drawBox(doc, '36', 'PREFERENCIA', fmt(decl.preference || '100'), mx + pw * 0.7, y, pw * 0.15, rh);
+    this._drawBox(doc, '37', 'REGIMEN', fmt(decl.regime || '40') + ' ' + fmt(decl.additionalProcedure || '000'), mx + pw * 0.85, y, pw * 0.15, rh);
+    y += rh;
+
+    // ===== FILA 5: Documento transporte =====
+    this._drawBox(doc, '40', 'DOC. CARGO / DOC. PRECEDENTE', fmt(transport.documentNumber || transport.blNumber || transport.awbNumber), mx, y, pw * 0.5, rh);
+    this._drawBox(doc, '44', 'INDICACIONES ESPECIALES / DOCS', (decl.notes || expedition.notes || []).join(', ') || '', mx + pw * 0.5, y, pw * 0.5, rh);
+    y += rh;
+
+    // ===== PARTIDAS (tabla) =====
+    y += 3;
+    doc.rect(mx, y, pw, 16).fill(COLORS.dark);
+    const thCols = [
+      { label: 'N.', w: pw * 0.04 },
+      { label: '33 COD. MERCANCIAS', w: pw * 0.14 },
+      { label: '31 DESCRIPCION', w: pw * 0.22 },
+      { label: '34 ORIGEN', w: pw * 0.07 },
+      { label: '35 MASA BRUTA', w: pw * 0.1 },
+      { label: '38 MASA NETA', w: pw * 0.1 },
+      { label: '42 VALOR', w: pw * 0.11 },
+      { label: '46 VAL.EST.', w: pw * 0.11 },
+      { label: 'ARANCEL', w: pw * 0.06 },
+      { label: 'IVA', w: pw * 0.05 },
+    ];
+    let tx = mx;
+    thCols.forEach(c => {
+      doc.font('Helvetica-Bold').fontSize(5.5).fillColor(COLORS.white)
+         .text(c.label, tx + 2, y + 4, { width: c.w - 4, lineBreak: false });
+      tx += c.w;
+    });
+    y += 16;
+
+    // Rows
+    const rowData = goods.length > 0 ? goods : [{ description: 'Sin partidas', taricCode: '-' }];
+    rowData.forEach((g, i) => {
+      const bg = i % 2 === 0 ? COLORS.white : COLORS.lightGray;
+      doc.rect(mx, y, pw, 14).fill(bg);
+      tx = mx;
+      const cells = [
+        String(i + 1),
+        fmt(g.taricCode),
+        (g.description || '').substring(0, 22),
+        fmt(g.countryOfOrigin || originCountry),
+        g.grossWeight ? `${g.grossWeight}` : '-',
+        g.netWeight ? `${g.netWeight}` : '-',
+        g.invoiceValue || g.value ? `${Number(g.invoiceValue || g.value).toFixed(2)}` : '-',
+        g.statisticalValue ? `${g.statisticalValue}` : g.invoiceValue ? `${Number(g.invoiceValue || g.value).toFixed(2)}` : '-',
+        g.dutyRate != null ? `${g.dutyRate}%` : '-',
+        g.vatRate != null ? `${g.vatRate}%` : '-'
+      ];
+      cells.forEach((val, ci) => {
+        doc.font('Helvetica').fontSize(6.5).fillColor(COLORS.dark)
+           .text(val, tx + 2, y + 3, { width: thCols[ci].w - 4, lineBreak: false });
+        tx += thCols[ci].w;
+      });
+      y += 14;
+    });
+    doc.rect(mx, y, pw, 0.5).fill(COLORS.border);
+    y += 5;
+
+    // ===== LIQUIDACION (Casilla 47) =====
+    doc.rect(mx, y, pw, 16).fill(COLORS.dark);
+    doc.font('Helvetica-Bold').fontSize(7).fillColor(COLORS.white)
+       .text('47 CALCULO DE LOS TRIBUTOS', mx + 5, y + 4);
+    const tCols2 = [
+      { label: 'TIPO', w: pw * 0.1 },
+      { label: 'BASE IMPONIBLE', w: pw * 0.2 },
+      { label: 'TIPO GRAVAMEN', w: pw * 0.15 },
+      { label: 'IMPORTE', w: pw * 0.2 },
+      { label: 'MP', w: pw * 0.1 },
+      { label: '', w: pw * 0.25 }
+    ];
+    y += 16;
+
+    // A00 - Derechos
+    doc.rect(mx, y, pw, 14).fill(COLORS.lightGray);
+    tx = mx;
+    ['A00', fmtMoney(customsValue), g0.dutyRate != null ? `${g0.dutyRate}%` : '-', fmtMoney(totalDuties), 'A', ''].forEach((val, ci) => {
+      doc.font('Helvetica').fontSize(7).fillColor(COLORS.dark)
+         .text(val, tx + 3, y + 3, { width: tCols2[ci].w - 6, lineBreak: false });
+      tx += tCols2[ci].w;
+    });
+    y += 14;
+
+    // B00 - IVA
+    doc.rect(mx, y, pw, 14).fill(COLORS.white);
+    tx = mx;
+    const vatBase = customsValue + totalDuties;
+    ['B00', fmtMoney(vatBase), g0.vatRate != null ? `${g0.vatRate}%` : '21%', fmtMoney(totalVat), 'A', ''].forEach((val, ci) => {
+      doc.font('Helvetica').fontSize(7).fillColor(COLORS.dark)
+         .text(val, tx + 3, y + 3, { width: tCols2[ci].w - 6, lineBreak: false });
+      tx += tCols2[ci].w;
+    });
+    y += 14;
+
+    // Total
+    doc.rect(mx, y, pw, 18).fill(COLORS.primary);
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(COLORS.white)
+       .text('TOTAL A INGRESAR', mx + 5, y + 4, { lineBreak: false });
+    doc.font('Helvetica-Bold').fontSize(11).fillColor(COLORS.white)
+       .text(fmtMoney(totalTaxes), mx + pw * 0.5, y + 3, { width: pw * 0.48, align: 'right', lineBreak: false });
+    y += 22;
+
+    // ===== PIE: Estado, Firma =====
+    const statusText = { draft: 'BORRADOR', pending: 'PENDIENTE', submitted: 'PRESENTADA', accepted: 'ACEPTADA', rejected: 'RECHAZADA', ready_for_declaration: 'BORRADOR' };
+    const channelColors = { green: COLORS.green, orange: COLORS.amber, red: COLORS.red };
+
+    this._drawBox(doc, '54', 'LUGAR, FECHA Y FIRMA DEL DECLARANTE', `${fmtDate(decl.declarationDate || expedition.createdAt)}  -  Stock Logistic S.L.`, mx, y, pw * 0.5, rh);
+
+    // Canal/Estado
+    doc.rect(mx + pw * 0.5, y, pw * 0.25, rh).lineWidth(0.5).strokeColor(COLORS.border).stroke();
+    doc.font('Helvetica').fontSize(5.5).fillColor(COLORS.gray).text('ESTADO', mx + pw * 0.5 + 3, y + 2, { lineBreak: false });
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(COLORS.dark)
+       .text(statusText[decl.status || expedition.status] || (decl.status || expedition.status || '').toUpperCase(), mx + pw * 0.5 + 3, y + 12, { lineBreak: false });
+
+    doc.rect(mx + pw * 0.75, y, pw * 0.25, rh).lineWidth(0.5).strokeColor(COLORS.border).stroke();
+    doc.font('Helvetica').fontSize(5.5).fillColor(COLORS.gray).text('J CANAL', mx + pw * 0.75 + 3, y + 2, { lineBreak: false });
+    const ch = decl.channel || '';
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(channelColors[ch] || COLORS.dark)
+       .text(ch ? ch.toUpperCase() : '-', mx + pw * 0.75 + 3, y + 12, { lineBreak: false });
 
     return this._toBuffer(doc);
   }
