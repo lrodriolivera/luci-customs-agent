@@ -24,21 +24,19 @@ class AEATRealService {
     this.ENVIRONMENTS = {
       PRODUCTION: {
         name: 'production',
-        description: 'Entorno de producción AEAT',
-        baseUrl: 'https://www1.agenciatributaria.gob.es',
+        description: 'Entorno de produccion AEAT',
+        baseUrl: 'https://www2.agenciatributaria.gob.es',
         wsBaseUrl: 'https://www2.agenciatributaria.gob.es',
-        ws3BaseUrl: 'https://www3.agenciatributaria.gob.es',
+        ws3BaseUrl: 'https://www2.agenciatributaria.gob.es',
         testUrl: 'https://www1.agenciatributaria.gob.es'
       },
       SANDBOX: {
         name: 'sandbox',
-        description: 'Entorno de pruebas AEAT (Pre-producción)',
-        // URLs de pruebas AEAT (requieren autorización de IP)
-        baseUrl: 'https://prewww1.aeat.es',
-        wsBaseUrl: 'https://prewww2.aeat.es',
-        ws3BaseUrl: 'https://prewww3.aeat.es',
-        // Para test de conectividad usar producción (siempre accesible)
-        testUrl: 'https://www1.agenciatributaria.gob.es'
+        description: 'Entorno de pruebas AEAT (Pre-produccion) - NO requiere registro IP',
+        baseUrl: 'https://prewww10.aeat.es',
+        wsBaseUrl: 'https://prewww10.aeat.es',
+        ws3BaseUrl: 'https://prewww10.aeat.es',
+        testUrl: 'https://prewww10.aeat.es'
       }
     };
 
