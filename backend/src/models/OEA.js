@@ -7,7 +7,7 @@
  * - OEAS: Security and Safety
  * - OEAF: Full (OEAC + OEAS)
  *
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const mongoose = require('mongoose');

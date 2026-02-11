@@ -20,8 +20,8 @@ function buildH7ImportXML(data) {
     destinatarioNIF = '', destinatarioNombre = '', destinatarioDireccion = '',
     destinatarioPoblacion = '', destinatarioCP = '', destinatarioPais = 'ES',
     // Declarante
-    declaranteNIF = 'B22477020', declaranteNombre = 'Stock Logistic S.L.',
-    emailDespacho = 'despacho@stocklogistic.es',
+    declaranteNIF = 'B22477020', declaranteNombre = 'STRIX AI SL',
+    emailDespacho = 'despacho@strixai.es',
     // IOSS
     iossNumber = '',
     // Transporte

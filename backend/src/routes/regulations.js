@@ -2,7 +2,7 @@
  * Regulations Routes - BOE and EUR-Lex Search
  * Handles regulation search and LUCI analysis endpoints
  *
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const express = require('express');

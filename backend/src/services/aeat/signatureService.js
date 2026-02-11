@@ -2,7 +2,7 @@
  * Servicio de Firma Digital para AEAT
  * En produccion usara xml-crypto o similar
  * En simulacion agrega estructura mock XAdES
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const crypto = require('crypto');
@@ -143,7 +143,7 @@ class SignatureService {
     <ds:SignatureValue>MOCK_SIGNATURE_VALUE_${nonce.replace(/[+/=]/g, '')}</ds:SignatureValue>
     <ds:KeyInfo>
       <ds:X509Data>
-        <ds:X509SubjectName>CN=LUCI Customs Agent Mock,O=Stock Logistic,C=ES,SERIALNUMBER=${this.representativeNIF}</ds:X509SubjectName>
+        <ds:X509SubjectName>CN=LUCI Customs Agent Mock,O=STRIX AI SL,C=ES,SERIALNUMBER=${this.representativeNIF}</ds:X509SubjectName>
         <ds:X509Certificate>MOCK_CERTIFICATE_BASE64_DATA_${certHash.substring(0, 20)}</ds:X509Certificate>
       </ds:X509Data>
       <ds:KeyValue>

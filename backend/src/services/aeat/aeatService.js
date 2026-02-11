@@ -1,7 +1,7 @@
 /**
  * AEAT Integration Service - Servicio Principal
  * Orquesta envio de declaraciones H1/AES a AEAT
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const https = require('https');

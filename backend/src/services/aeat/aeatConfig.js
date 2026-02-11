@@ -1,6 +1,6 @@
 /**
  * Configuracion centralizada para integracion AEAT
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 // Entornos disponibles

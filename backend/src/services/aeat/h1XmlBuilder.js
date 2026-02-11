@@ -37,7 +37,7 @@ function buildH1ImportXML(data) {
     importadorParticular = 'N',
     // Declarante (C14)
     declaranteNIF = 'B22477020',
-    declaranteNombre = 'Stock Logistic S.L.',
+    declaranteNombre = 'STRIX AI SL',
     formaRepresentacion = '2',  // 2 = Representacion indirecta
     tipoAutorizaDespacho = 'G', // G = Global
     // Emails
@@ -187,7 +187,7 @@ function buildH1ImportXML(data) {
     <C14DeclaranteRazonSocial>${declaranteNombre}</C14DeclaranteRazonSocial>
     <C14DeclaranteTipoAutorizaDespacho>${tipoAutorizaDespacho}</C14DeclaranteTipoAutorizaDespacho>
   </C14Declarante>
-  <EmailNotificaDespacho>${emailDespacho || 'despacho@stocklogistic.es'}</EmailNotificaDespacho>
+  <EmailNotificaDespacho>${emailDespacho || 'despacho@strixai.es'}</EmailNotificaDespacho>
   <C15aPaisExpedicion>${paisExpedicion}</C15aPaisExpedicion>
   <C17aPaisDestino>${paisDestino}</C17aPaisDestino>
   <C19TransporteEnContenedores>${contenedores}</C19TransporteEnContenedores>
@@ -246,7 +246,7 @@ function expeditionToH1Data(expedition) {
     importadorPoblacion: client.address?.city || '',
     importadorCP: client.address?.postalCode || '',
     // Emails
-    emailDespacho: client.contact?.email || 'despacho@stocklogistic.es',
+    emailDespacho: client.contact?.email || 'despacho@strixai.es',
     // Paises
     paisExpedicion: goods[0]?.countryOfOrigin || '',
     // Incoterm

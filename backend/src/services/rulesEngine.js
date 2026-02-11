@@ -3,7 +3,7 @@
  * Determina automaticamente todos los requisitos para una operacion
  * basandose en: origen, destino, TARIC, valor, tipo de operacion
  *
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const logger = require('../config/logger');

@@ -129,7 +129,7 @@ async function submitH7(h7Declaration) {
     destinatarioDireccion: h7Declaration.recipient?.address?.street || '',
     destinatarioPoblacion: h7Declaration.recipient?.address?.city || '',
     destinatarioCP: h7Declaration.recipient?.address?.postalCode || '',
-    emailDespacho: h7Declaration.recipient?.email || 'despacho@stocklogistic.es',
+    emailDespacho: h7Declaration.recipient?.email || 'despacho@strixai.es',
     iossNumber: h7Declaration.iossNumber || '',
     partidas: (h7Declaration.items || []).map(it => ({
       descripcion: it.description,

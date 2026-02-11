@@ -65,7 +65,7 @@ const actionHandlers = {
       sender: 'system',
       senderInfo: {
         name: 'LUCI (Automatico)',
-        email: 'luci@stocklogistic.com'
+        email: 'luci@strixai.es'
       },
       content: config.messageContent || config.notificationBody,
       messageType: 'system_notification'

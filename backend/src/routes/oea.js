@@ -2,7 +2,7 @@
  * OEA Routes - Operador Economico Autorizado
  * Authorized Economic Operator Routes
  *
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const express = require('express');

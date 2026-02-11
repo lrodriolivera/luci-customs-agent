@@ -145,7 +145,7 @@ export default function PortalChat() {
                 <div className="flex-1 max-w-[80%]">
                   <div className="bg-luci-light rounded-2xl rounded-tl-none p-4">
                     <p className="text-gray-800">
-                      Hola! Soy LUCI, su asistente de aduanas de Stock Logistic.
+                      Hola! Soy LUCI, su asistente de aduanas de STRIX AI.
                       Estoy aqui para ayudarle con su expediente {expedition?.expeditionId}.
                       Como puedo ayudarle?
                     </p>

@@ -2,7 +2,7 @@
  * Preferential Tariffs Service
  * Gestión de preferencias arancelarias: EUR.1, Form A, ATR, acumulación origen
  *
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const logger = require('../config/logger');

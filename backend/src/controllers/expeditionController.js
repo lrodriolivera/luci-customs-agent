@@ -124,7 +124,7 @@ const create = async (req, res) => {
       createdBy: req.user._id,
       assignedTo: req.user._id,
       representative: {
-        companyName: req.user.profile?.company || 'Stock Logistic',
+        companyName: req.user.profile?.company || 'STRIX AI SL',
         nif: req.user.profile?.eoriNumber?.replace('ES', '') || '',
         eori: req.user.profile?.eoriNumber || '',
         representationType: 'indirect'

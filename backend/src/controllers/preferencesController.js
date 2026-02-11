@@ -2,7 +2,7 @@
  * Preferences Controller
  * Endpoints para gestion de Preferencias Arancelarias
  *
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const preferencesService = require('../services/preferencesService');

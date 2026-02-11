@@ -1,7 +1,7 @@
 /**
  * Generador de declaraciones AES (Exportacion)
  * Automated Export System - Sistema de Exportacion Automatizada
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const { v4: uuidv4 } = require('uuid');
@@ -363,7 +363,7 @@ class AESGenerator {
       // Declarante/Representante
       declarant: {
         identificationNumber: expedition.representative?.eori || `ES${expedition.representative?.nif}`,
-        name: expedition.representative?.companyName || 'Stock Logistic',
+        name: expedition.representative?.companyName || 'STRIX AI SL',
         representativeStatus: expedition.representative?.representationType === 'direct' ? '2' : '3'
       },
 

@@ -1,7 +1,7 @@
 /**
  * Motor de Simulacion AEAT
  * Genera respuestas realistas sin conexion real a AEAT
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const crypto = require('crypto');

@@ -2,7 +2,7 @@
  * OEA Service - Operador Economico Autorizado
  * Business logic for OEA certification management
  *
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const OEA = require('../models/OEA');

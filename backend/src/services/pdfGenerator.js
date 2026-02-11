@@ -244,7 +244,7 @@ class PDFGenerator {
 
     // ===== FILA 2: Destinatario, Representante =====
     this._drawBox(doc, '8', 'DESTINATARIO - EORI', `${client.companyName || ''}\n${client.taxId || client.nif || ''}`, mx, y, pw * 0.5, rh2);
-    this._drawBox(doc, '14', 'DECLARANTE / REPRESENTANTE', `Stock Logistic S.L.\nB22477020 / ESB22477020000`, mx + pw * 0.5, y, pw * 0.5, rh2);
+    this._drawBox(doc, '14', 'DECLARANTE / REPRESENTANTE', `STRIX AI SL\nB22477020 / ESB22477020000`, mx + pw * 0.5, y, pw * 0.5, rh2);
     y += rh2;
 
     // ===== FILA 3: Paises, transporte =====
@@ -368,7 +368,7 @@ class PDFGenerator {
     const statusText = { draft: 'BORRADOR', pending: 'PENDIENTE', submitted: 'PRESENTADA', accepted: 'ACEPTADA', rejected: 'RECHAZADA', ready_for_declaration: 'BORRADOR' };
     const channelColors = { green: COLORS.green, orange: COLORS.amber, red: COLORS.red };
 
-    this._drawBox(doc, '54', 'LUGAR, FECHA Y FIRMA DEL DECLARANTE', `${fmtDate(decl.declarationDate || expedition.createdAt)}  -  Stock Logistic S.L.`, mx, y, pw * 0.5, rh);
+    this._drawBox(doc, '54', 'LUGAR, FECHA Y FIRMA DEL DECLARANTE', `${fmtDate(decl.declarationDate || expedition.createdAt)}  -  STRIX AI SL`, mx, y, pw * 0.5, rh);
 
     // Canal/Estado
     doc.rect(mx + pw * 0.5, y, pw * 0.25, rh).lineWidth(0.5).strokeColor(COLORS.border).stroke();

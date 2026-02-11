@@ -99,7 +99,7 @@ class EmailService {
 <body>
   <div class="container">
     <div class="header">
-      <h1>LUCI - Stock Logistic</h1>
+      <h1>LUCI - STRIX AI</h1>
     </div>
     <div class="content">
       <p>Estimado/a <strong>${companyName}</strong>,</p>
@@ -129,11 +129,11 @@ class EmailService {
       <p>Si tiene alguna duda, puede usar el chat del portal o contactarnos directamente.</p>
 
       <p>Saludos cordiales,<br>
-      <strong>Equipo de Aduanas - Stock Logistic</strong></p>
+      <strong>Equipo de Aduanas - STRIX AI</strong></p>
     </div>
     <div class="footer">
-      <p>Este email ha sido enviado automaticamente por LUCI, el agente aduanero inteligente de Stock Logistic.</p>
-      <p>Stock Logistic | Comercio Exterior</p>
+      <p>Este email ha sido enviado automaticamente por LUCI, el agente aduanero inteligente de STRIX AI.</p>
+      <p>STRIX AI | Comercio Exterior</p>
     </div>
   </div>
 </body>

@@ -12,7 +12,7 @@ const OPUS_MODEL = 'claude-opus-4-20250514';
 
 // System prompts especializados
 const SYSTEM_PROMPTS = {
-  chatClient: `Eres LUCI, un asistente virtual experto en comercio exterior y aduanas para Stock Logistic.
+  chatClient: `Eres LUCI, un asistente virtual experto en comercio exterior y aduanas para STRIX AI.
 Tu rol es ayudar a los clientes a entender el proceso de importacion/exportacion y guiarlos en la documentacion necesaria.
 
 PERSONALIDAD:
@@ -34,7 +34,7 @@ REGLAS:
 - Responde en espanol
 - Se conciso pero completo`,
 
-  chatAgent: `Eres LUCI, un asistente tecnico experto en aduanas para agentes de Stock Logistic.
+  chatAgent: `Eres LUCI, un asistente tecnico experto en aduanas para agentes de STRIX AI.
 Tu rol es asistir a los agentes aduaneros con informacion tecnica precisa.
 
 CAPACIDADES:
@@ -4207,7 +4207,7 @@ Responde en JSON:
    * Detecta intención, FAQs, y proporciona respuestas enriquecidas
    */
   async enhancedPortalChat(message, expedition, conversationHistory = [], clientProfile = {}) {
-    const prompt = `Eres LUCI, el asistente virtual de Stock Logistic para el portal de clientes. Tu rol es ayudar a los clientes con sus operaciones aduaneras de forma clara, profesional y empática.
+    const prompt = `Eres LUCI, el asistente virtual de STRIX AI para el portal de clientes. Tu rol es ayudar a los clientes con sus operaciones aduaneras de forma clara, profesional y empática.
 
 CONTEXTO DEL CLIENTE:
 - Empresa: ${clientProfile.companyName || expedition?.client?.companyName || 'No especificada'}
@@ -4661,7 +4661,7 @@ Responde en JSON:
       supportOptions: {
         chatAvailable: true,
         phoneSupport: '+34 900 XXX XXX',
-        emailSupport: 'soporte@stocklogistic.com',
+        emailSupport: 'soporte@strixai.es',
         faqLink: '/ayuda/faq'
       },
       analyzedAt: new Date().toISOString()

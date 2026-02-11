@@ -2,7 +2,7 @@
  * Regulation Controller - BOE and EUR-Lex Search
  * Handles regulation search and LUCI analysis
  *
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const regulationService = require('../services/regulationService');

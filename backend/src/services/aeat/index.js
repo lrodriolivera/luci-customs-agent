@@ -1,7 +1,7 @@
 /**
  * AEAT Services - Index
  * Exporta todos los servicios de integracion AEAT
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  *
  * Fase 6.1: Integración Real AEAT
  */

@@ -2,7 +2,7 @@
  * Regulation Service - BOE and EUR-Lex Integration
  * Searches Spanish (BOE) and European (EUR-Lex) regulations
  *
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const axios = require('axios');

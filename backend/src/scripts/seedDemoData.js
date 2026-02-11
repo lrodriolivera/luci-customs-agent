@@ -1047,10 +1047,10 @@ async function seedCommunications(demoUserId, expeditions, requirements) {
           content: `Comunicación inicial presentada ante ${authorityType} en relación con el expediente.`,
           sentAt: ['sent', 'delivered', 'awaiting_response', 'responded', 'resolved'].includes(status) ? createdAt : undefined,
           sender: {
-            name: 'Stock Logistic S.A.',
+            name: 'STRIX AI SL',
             role: 'Representante Aduanero',
-            organization: 'Stock Logistic',
-            email: 'aduanas@stocklogistic.es'
+            organization: 'STRIX AI',
+            email: 'aduanas@strixai.es'
           },
           recipient: {
             name: authorityType,
@@ -1096,7 +1096,7 @@ async function seedCommunications(demoUserId, expeditions, requirements) {
       },
       representation: {
         type: 'direct',
-        representativeName: 'Stock Logistic S.A.',
+        representativeName: 'STRIX AI SL',
         representativeNif: 'B12345678'
       },
       assignedTo: demoUserId,

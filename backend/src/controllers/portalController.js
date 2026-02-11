@@ -161,7 +161,7 @@ const sendMessage = async (req, res) => {
       sender: 'luci',
       senderInfo: {
         name: 'LUCI',
-        email: 'luci@stocklogistic.com'
+        email: 'luci@strixai.es'
       },
       content: luciResponse.message,
       messageType: 'text',
@@ -456,7 +456,7 @@ const aiEnhancedChat = async (req, res) => {
       sender: 'luci',
       senderInfo: {
         name: 'LUCI',
-        email: 'luci@stocklogistic.com'
+        email: 'luci@strixai.es'
       },
       content: result.response?.message || 'No pude procesar tu mensaje',
       messageType: 'text',

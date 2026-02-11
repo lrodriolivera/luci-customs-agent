@@ -118,7 +118,7 @@ class ClientPortalService {
       sender: 'luci',
       senderInfo: {
         name: 'LUCI',
-        email: 'luci@stocklogistic.com'
+        email: 'luci@strixai.es'
       },
       content: `¡Bienvenido! He creado el expediente ${expeditionId} para su operacion de ${this.getOperationTypeName(operationData.operationType)}.\n\nPuede subir los documentos necesarios en la seccion "Documentos". Estoy aqui para ayudarle con cualquier consulta.`,
       messageType: 'text'

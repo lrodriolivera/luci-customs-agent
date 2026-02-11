@@ -2,7 +2,7 @@
  * OEA Controller
  * Endpoints para gestion de Operador Economico Autorizado
  *
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const oeaService = require('../services/oeaService');

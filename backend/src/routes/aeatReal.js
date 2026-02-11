@@ -1,7 +1,7 @@
 /**
  * AEAT Real Routes
  * Rutas para integración real con servicios web AEAT
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  *
  * Fase 6.1: Integración Real AEAT
  */

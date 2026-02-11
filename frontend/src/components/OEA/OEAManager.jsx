@@ -357,7 +357,7 @@ export default function OEAManager() {
                     value={formData.organizationName}
                     onChange={handleInputChange}
                     className="input"
-                    placeholder="Stock Logistic S.A."
+                    placeholder="STRIX AI SL"
                     required
                   />
                 </div>

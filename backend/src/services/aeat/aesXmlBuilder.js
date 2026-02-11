@@ -20,7 +20,7 @@ function buildAESExportXML(data) {
     // Exportador
     exporterEORI = '', exporterName = '', exporterStreet = '', exporterCity = '', exporterPostcode = '', exporterCountry = 'ES',
     // Declarante
-    declarantEORI = 'ESB22477020000', declarantName = 'Stock Logistic S.L.',
+    declarantEORI = 'ESB22477020000', declarantName = 'STRIX AI SL',
     // Envio
     destinationCountry = '',
     // Partidas

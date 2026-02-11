@@ -106,7 +106,7 @@ ${goodsXML}
     <CouOfRouCodITI1>ES</CouOfRouCodITI1>
   </ITI>
   <TRAREP>
-    <NamTRE1>${carrierName || 'STOCK LOGISTIC SL'}</NamTRE1>
+    <NamTRE1>${carrierName || 'STRIX AI SL'}</NamTRE1>
     <TINTRE1>${carrierEORI}</TINTRE1>
   </TRAREP>
   <CUSOFFFENT730>

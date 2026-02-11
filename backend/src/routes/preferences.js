@@ -2,7 +2,7 @@
  * Preferences Routes
  * API endpoints para gestion de Preferencias Arancelarias
  *
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const express = require('express');

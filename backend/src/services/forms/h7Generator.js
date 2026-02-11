@@ -176,7 +176,7 @@ class H7Generator {
         identificationNumber: expedition.representative?.eori ||
           `ES${expedition.representative?.nif}` ||
           'ESB12345678', // Operador por defecto
-        name: expedition.representative?.companyName || 'Stock Logistic Express',
+        name: expedition.representative?.companyName || 'STRIX AI SL',
         representativeStatus: '3' // Representacion indirecta para H7
       },
 

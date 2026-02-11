@@ -1,6 +1,6 @@
 /**
  * Parser de respuestas XML de AEAT
- * Stock Logistic - LUCI Customs Agent
+ * STRIX AI - LUCI Customs Agent
  */
 
 const { RESPONSE_CODES, INSPECTION_CHANNELS } = require('./aeatConfig');

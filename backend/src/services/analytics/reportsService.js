@@ -123,7 +123,7 @@ async function generateReport(type, options = {}) {
       metadata: {
         title: options.title || template.name,
         subtitle: options.subtitle || `Período: ${_formatPeriodName(period)}`,
-        organization: options.organization || 'Stock Logistic',
+        organization: options.organization || 'STRIX AI SL',
         logo: options.logo || null
       },
 

@@ -55,7 +55,7 @@ export default function PortalLayout() {
           </h1>
           <p className="text-gray-600 mb-6">{error}</p>
           <p className="text-sm text-gray-500">
-            Si cree que esto es un error, contacte con Stock Logistic.
+            Si cree que esto es un error, contacte con STRIX AI.
           </p>
         </div>
       </div>
@@ -81,7 +81,7 @@ export default function PortalLayout() {
               </div>
               <div>
                 <h1 className="font-semibold text-gray-900">Portal de Cliente</h1>
-                <p className="text-sm text-gray-500">Stock Logistic</p>
+                <p className="text-sm text-gray-500">STRIX AI</p>
               </div>
             </div>
             <div className="text-right">
@@ -129,7 +129,7 @@ export default function PortalLayout() {
             Powered by <span className="font-medium text-luci">LUCI</span> - Agente Aduanero Inteligente
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            Stock Logistic &copy; {new Date().getFullYear()}
+            STRIX AI &copy; {new Date().getFullYear()}
           </p>
         </div>
       </footer>

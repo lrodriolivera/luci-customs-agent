@@ -43,7 +43,7 @@ export default function Login() {
   // Demo credentials helper
   const fillDemoCredentials = () => {
     setFormData({
-      email: 'admin@stocklogistic.es',
+      email: 'admin@strixai.es',
       password: 'admin123'
     })
   }
@@ -128,14 +128,14 @@ export default function Login() {
               onClick={fillDemoCredentials}
               className="w-full mt-2 text-sm text-yellow-700 hover:text-yellow-900 underline"
             >
-              Usar: admin@stocklogistic.es / admin123
+              Usar: admin@strixai.es / admin123
             </button>
           </div>
         </div>
 
         {/* Footer */}
         <p className="text-center text-sm text-gray-500 mt-6">
-          Stock Logistic &copy; {new Date().getFullYear()}
+          STRIX AI &copy; {new Date().getFullYear()}
         </p>
       </div>
     </div>

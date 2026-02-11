@@ -20,7 +20,7 @@ function buildSOIVREAltaXML(data) {
     numeroDeCertificado = '',
     // Operador
     nifOperadorAutorizado = 'B22477020',
-    razonSocialOperadorAut = 'Stock Logistic S.L.',
+    razonSocialOperadorAut = 'STRIX AI SL',
     // Validez
     fechaInicioValidez = '',
     fechaFinValidez = '',
