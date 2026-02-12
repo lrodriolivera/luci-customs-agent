@@ -36,8 +36,8 @@ function buildH1ImportXML(data) {
     importadorPais = 'ES',
     importadorParticular = 'N',
     // Declarante (C14)
-    declaranteNIF = 'B22477020',
-    declaranteNombre = 'STRIX AI SL',
+    declaranteNIF = '',
+    declaranteNombre = '',
     formaRepresentacion = '2',  // 2 = Representacion indirecta
     tipoAutorizaDespacho = 'G', // G = Global
     // Emails
@@ -187,7 +187,7 @@ function buildH1ImportXML(data) {
     <C14DeclaranteRazonSocial>${declaranteNombre}</C14DeclaranteRazonSocial>
     <C14DeclaranteTipoAutorizaDespacho>${tipoAutorizaDespacho}</C14DeclaranteTipoAutorizaDespacho>
   </C14Declarante>
-  <EmailNotificaDespacho>${emailDespacho || 'despacho@strixai.es'}</EmailNotificaDespacho>
+  <EmailNotificaDespacho>${emailDespacho}</EmailNotificaDespacho>
   <C15aPaisExpedicion>${paisExpedicion}</C15aPaisExpedicion>
   <C17aPaisDestino>${paisDestino}</C17aPaisDestino>
   <C19TransporteEnContenedores>${contenedores}</C19TransporteEnContenedores>

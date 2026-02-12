@@ -19,8 +19,8 @@ function buildSOIVREAltaXML(data) {
     tipoDeCertificado = 'ROHS',
     numeroDeCertificado = '',
     // Operador
-    nifOperadorAutorizado = 'B22477020',
-    razonSocialOperadorAut = 'STRIX AI SL',
+    nifOperadorAutorizado = '',
+    razonSocialOperadorAut = '',
     // Validez
     fechaInicioValidez = '',
     fechaFinValidez = '',

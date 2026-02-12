@@ -19,7 +19,7 @@ function buildENSDeclarationXML(data) {
     // Carrier
     carrierEORI = '', carrierName = '',
     // Entry office
-    entryOffice = 'ES002801',
+    entryOffice = '',
     // Transport
     transportMode = '1', transportId = '', transportCountry = '',
     // Consignment
@@ -106,7 +106,7 @@ ${goodsXML}
     <CouOfRouCodITI1>ES</CouOfRouCodITI1>
   </ITI>
   <TRAREP>
-    <NamTRE1>${carrierName || 'STRIX AI SL'}</NamTRE1>
+    <NamTRE1>${carrierName}</NamTRE1>
     <TINTRE1>${carrierEORI}</TINTRE1>
   </TRAREP>
   <CUSOFFFENT730>

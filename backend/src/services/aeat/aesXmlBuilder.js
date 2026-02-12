@@ -16,11 +16,11 @@ function buildAESExportXML(data) {
   const {
     lrn = '', declarationType = 'A',
     // Aduanas
-    customsOfficeExport = 'ES002801', customsOfficeExit = 'ES002801',
+    customsOfficeExport = '', customsOfficeExit = '',
     // Exportador
     exporterEORI = '', exporterName = '', exporterStreet = '', exporterCity = '', exporterPostcode = '', exporterCountry = 'ES',
     // Declarante
-    declarantEORI = 'ESB22477020000', declarantName = 'STRIX AI SL',
+    declarantEORI = '', declarantName = '',
     // Envio
     destinationCountry = '',
     // Partidas

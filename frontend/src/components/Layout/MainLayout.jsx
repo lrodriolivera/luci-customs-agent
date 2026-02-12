@@ -249,6 +249,11 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* Skip to content (accessibility) */}
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-luci focus:text-white focus:top-0 focus:left-0">
+        Saltar al contenido principal
+      </a>
+
       {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
@@ -259,6 +264,8 @@ export default function MainLayout() {
 
       {/* Sidebar */}
       <aside
+        role="navigation"
+        aria-label="Menu principal"
         className={`
           fixed lg:static inset-y-0 left-0 z-30
           bg-slate-900 text-white
@@ -386,7 +393,7 @@ export default function MainLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main id="main-content" role="main" className="flex-1 p-6 overflow-auto">
           <Outlet />
         </main>
       </div>

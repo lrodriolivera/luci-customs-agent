@@ -16,12 +16,12 @@ function buildNCTSTransitXML(data) {
   const {
     lrn = '', transitType = 'T1', securityIndicator = '0',
     // Aduanas
-    officeOfDeparture = 'ES002801', officeOfDestination = '',
+    officeOfDeparture = '', officeOfDestination = '',
     transitOffices = [],
     // Titular
     holderEORI = '', holderName = '', holderStreet = '', holderCity = '', holderPostcode = '', holderCountry = 'ES',
     // Declarante
-    declarantEORI = 'ESB22477020000',
+    declarantEORI = '',
     // Garantia
     guaranteeType = '1', guaranteeGRN = '', guaranteeAccessCode = '',
     // Envio

@@ -13,15 +13,15 @@ const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
  */
 function buildH7ImportXML(data) {
   const {
-    aduanaDespacho = '002801',
+    aduanaDespacho = '',
     // Exportador/Remitente
     remitenteNIF = '', remitenteNombre = '', remitentePais = '',
     // Destinatario
     destinatarioNIF = '', destinatarioNombre = '', destinatarioDireccion = '',
     destinatarioPoblacion = '', destinatarioCP = '', destinatarioPais = 'ES',
     // Declarante
-    declaranteNIF = 'B22477020', declaranteNombre = 'STRIX AI SL',
-    emailDespacho = 'despacho@strixai.es',
+    declaranteNIF = '', declaranteNombre = '',
+    emailDespacho = '',
     // IOSS
     iossNumber = '',
     // Transporte

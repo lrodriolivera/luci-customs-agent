@@ -6,6 +6,17 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 require('dotenv').config();
 
+// Sentry error tracking (initialize before everything else)
+const Sentry = require('@sentry/node');
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+    tracesSampleRate: 0.1,
+    release: '1.0.0'
+  });
+}
+
 const connectDB = require('./config/database');
 const logger = require('./config/logger');
 
@@ -235,7 +246,8 @@ workflowService.initialize().catch(err => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  logger.error(`Error: ${err.message}`, { stack: err.stack });
+  logger.error(`Error: ${err.message}`, { stack: err.stack, url: req.originalUrl, method: req.method, userId: req.user?._id });
+  if (process.env.SENTRY_DSN) Sentry.captureException(err);
 
   res.status(err.status || 500).json({
     success: false,

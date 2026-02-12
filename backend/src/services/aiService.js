@@ -7,6 +7,7 @@ const axios = require('axios');
 const logger = require('../config/logger');
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 const SONNET_MODEL = 'claude-sonnet-4-20250514';
 const OPUS_MODEL = 'claude-opus-4-20250514';
 
@@ -183,7 +184,7 @@ class AIService {
         {
           model,
           max_tokens: options.maxTokens || 4096,
-          system: systemPrompt,
+          system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
           messages: [
             { role: 'user', content: userMessage }
           ]
@@ -192,7 +193,8 @@ class AIService {
           headers: {
             'Content-Type': 'application/json',
             'x-api-key': this.apiKey,
-            'anthropic-version': '2023-06-01'
+            'anthropic-version': '2023-06-01',
+            'anthropic-beta': 'prompt-caching-2024-07-31'
           },
           timeout: options.timeout || 60000
         }
@@ -363,7 +365,7 @@ Responde en JSON: { "isValid": boolean, "confidence": number, "reasoning": strin
 Genera datos de ejemplo que se extraerian de este tipo de documento.
 Responde en JSON con el formato especificado en el system prompt.`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.documentValidation, prompt);
+    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.documentValidation, prompt);
 
     try {
       return JSON.parse(result.content);
@@ -581,7 +583,7 @@ Responde en JSON:
   "completeness": 0-100
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -633,7 +635,7 @@ Responde en JSON:
   "readyToSubmit": true/false
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
+    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
 
     try {
       let jsonContent = result.content;
@@ -692,7 +694,7 @@ Responde en JSON:
   "confidence": 0-100
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
+    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
 
     try {
       let jsonContent = result.content;
@@ -778,7 +780,7 @@ Responde en JSON:
   }
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -857,7 +859,7 @@ Responde en JSON:
   "estimatedResolutionDays": 0
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
+    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
 
     try {
       let jsonContent = result.content;
@@ -924,7 +926,7 @@ Responde en JSON:
   "completenessScore": 0-100
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
+    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
 
     try {
       let jsonContent = result.content;
@@ -982,7 +984,7 @@ Responde en JSON:
   "overallReadiness": 0-100
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
+    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
 
     try {
       let jsonContent = result.content;
@@ -1272,7 +1274,7 @@ Responde en JSON:
   "summary": "Resumen ejecutivo de la recomendación"
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -1728,7 +1730,7 @@ Responde en JSON:
   "summary": "Resumen ejecutivo de la respuesta"
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 8192, timeout: 120000 });
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 8192, timeout: 120000 });
 
     try {
       let jsonContent = result.content;
@@ -1836,7 +1838,7 @@ Responde en JSON:
   "summary": "Resumen del análisis documental"
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.documentValidation, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.documentValidation, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -2756,7 +2758,7 @@ Responde en JSON:
   "summary": "Resumen de la predicción"
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -3137,7 +3139,7 @@ Responde en JSON:
   "summary": "Resumen ejecutivo del análisis de riesgo"
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096, timeout: 90000 });
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096, timeout: 90000 });
 
     try {
       let jsonContent = result.content;
@@ -3386,7 +3388,7 @@ Responde en JSON:
   "summary": "Resumen del análisis de consistencia"
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.documentValidation, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.documentValidation, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -3494,7 +3496,7 @@ Responde en JSON:
   "additionalNotes": []
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt);
 
     try {
       let jsonContent = result.content;
@@ -3639,7 +3641,7 @@ Responde en JSON:
   "confidence": 0-100
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -3759,7 +3761,7 @@ Responde en JSON:
   "riskLevel": "LOW|MEDIUM|HIGH"
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -3888,7 +3890,7 @@ Responde en JSON:
   ]
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -4275,7 +4277,7 @@ Responde en JSON:
   "followUpQuestions": ["Preguntas de seguimiento sugeridas"]
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatClient, prompt, { maxTokens: 2048 });
+    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatClient, prompt, { maxTokens: 2048 });
 
     try {
       let jsonContent = result.content;
@@ -4356,7 +4358,7 @@ Responde en JSON:
   "confidence": 0-100
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatClient, prompt, { maxTokens: 1500 });
+    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatClient, prompt, { maxTokens: 1500 });
 
     try {
       let jsonContent = result.content;
@@ -4452,7 +4454,7 @@ Responde en JSON:
   }
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatClient, prompt, { maxTokens: 1500 });
+    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatClient, prompt, { maxTokens: 1500 });
 
     try {
       let jsonContent = result.content;
@@ -4580,7 +4582,7 @@ Responde en JSON:
   ]
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatClient, prompt, { maxTokens: 2500 });
+    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatClient, prompt, { maxTokens: 2500 });
 
     try {
       let jsonContent = result.content;
@@ -4804,7 +4806,7 @@ Responde en JSON:
   }
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -4925,7 +4927,7 @@ Responde en JSON:
   }
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -5040,7 +5042,7 @@ Responde en JSON:
   "limitations": ["limitación 1", "limitación 2"]
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -5173,7 +5175,7 @@ Responde en JSON:
   }
 }`;
 
-    const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 5000 });
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent, prompt, { maxTokens: 5000 });
 
     try {
       let jsonContent = result.content;
