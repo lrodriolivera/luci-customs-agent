@@ -67,6 +67,9 @@ import LandingPage from './components/Landing/LandingPage'
 
 // Auth
 import Login from './components/Auth/Login'
+import Register from './components/Auth/Register'
+import ForgotPassword from './components/Auth/ForgotPassword'
+import ResetPassword from './components/Auth/ResetPassword'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -93,6 +96,9 @@ function App() {
       {/* Public Routes */}
       <Route path="/landing" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
 
       {/* Client Portal Routes (Public with token) */}
       <Route path="/portal/:token" element={<PortalLayout />}>

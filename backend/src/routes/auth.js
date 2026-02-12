@@ -7,6 +7,8 @@ const { authValidators } = require('../middleware/validators');
 // Rutas publicas
 router.post('/register', authValidators.register, authController.register);
 router.post('/login', authValidators.login, authController.login);
+router.post('/forgot-password', authValidators.forgotPassword, authController.forgotPassword);
+router.post('/reset-password/:token', authValidators.resetPassword, authController.resetPassword);
 
 // Rutas protegidas
 router.get('/me', auth, authController.getMe);

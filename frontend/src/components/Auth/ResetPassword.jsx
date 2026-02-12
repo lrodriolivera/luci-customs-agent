@@ -1,51 +1,53 @@
 import React, { useState } from 'react'
-import { useNavigate, Navigate, Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { authAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
-export default function Login() {
-  const { login, isAuthenticated } = useAuth()
+export default function ResetPassword() {
+  const { token } = useParams()
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   })
   const [loading, setLoading] = useState(false)
 
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Las contrasenas no coinciden')
+      return
+    }
+
+    if (formData.password.length < 6) {
+      toast.error('La contrasena debe tener al menos 6 caracteres')
+      return
+    }
+
     setLoading(true)
 
-    const result = await login(formData.email, formData.password)
+    try {
+      const response = await authAPI.resetPassword(token, formData.password)
 
-    if (result.success) {
-      toast.success('Bienvenido a LUCI')
-      navigate('/')
-    } else {
-      toast.error(result.error)
+      if (response.data.success) {
+        toast.success('Contrasena actualizada. Ya puedes iniciar sesion.')
+        navigate('/login')
+      } else {
+        toast.error(response.data.error || 'Error al restablecer la contrasena')
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.error || 'Token invalido o expirado. Solicita un nuevo enlace.'
+      )
     }
 
     setLoading(false)
   }
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
-
-  // Demo credentials helper
-  const fillDemoCredentials = () => {
-    setFormData({
-      email: 'admin@strixai.es',
-      password: 'admin123'
-    })
+    setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
   return (
@@ -60,33 +62,14 @@ export default function Login() {
           <p className="text-gray-600 mt-1">Agente Aduanero Inteligente</p>
         </div>
 
-        {/* Login Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-            Iniciar Sesion
+            Nueva Contrasena
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="label">
-                Correo Electronico
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="input"
-                placeholder="tu@email.com"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="label">
-                Contrasena
-              </label>
+              <label htmlFor="password" className="label">Nueva Contrasena</label>
               <input
                 type="password"
                 id="password"
@@ -94,18 +77,25 @@ export default function Login() {
                 value={formData.password}
                 onChange={handleChange}
                 className="input"
-                placeholder="********"
+                placeholder="Minimo 6 caracteres"
                 required
+                minLength={6}
               />
             </div>
 
-            <div className="flex justify-end">
-              <Link
-                to="/forgot-password"
-                className="text-sm text-luci hover:text-luci-dark"
-              >
-                Olvidaste tu contrasena?
-              </Link>
+            <div>
+              <label htmlFor="confirmPassword" className="label">Confirmar Contrasena</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="input"
+                placeholder="Repite tu contrasena"
+                required
+                minLength={6}
+              />
             </div>
 
             <button
@@ -119,37 +109,21 @@ export default function Login() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Ingresando...
+                  Actualizando...
                 </span>
               ) : (
-                'Ingresar'
+                'Restablecer Contrasena'
               )}
             </button>
           </form>
 
-          {/* Demo Mode Notice */}
-          <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-            <p className="text-sm text-yellow-800 text-center">
-              <strong>Modo Demo:</strong> Haga clic para usar credenciales de prueba
-            </p>
-            <button
-              type="button"
-              onClick={fillDemoCredentials}
-              className="w-full mt-2 text-sm text-yellow-700 hover:text-yellow-900 underline"
-            >
-              Usar: admin@strixai.es / admin123
-            </button>
-          </div>
-
-          <p className="mt-4 text-center text-sm text-gray-600">
-            No tienes cuenta?{' '}
-            <Link to="/register" className="text-luci hover:text-luci-dark font-medium">
-              Registrate
+          <p className="mt-6 text-center text-sm text-gray-600">
+            <Link to="/login" className="text-luci hover:text-luci-dark font-medium">
+              Volver a Iniciar Sesion
             </Link>
           </p>
         </div>
 
-        {/* Footer */}
         <p className="text-center text-sm text-gray-500 mt-6">
           STRIX AI &copy; {new Date().getFullYear()}
         </p>

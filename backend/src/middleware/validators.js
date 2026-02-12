@@ -36,6 +36,12 @@ const authValidators = {
       .withMessage('El nombre es obligatorio')
       .isLength({ max: 100 })
       .withMessage('El nombre no puede exceder 100 caracteres'),
+    body('companyName')
+      .trim()
+      .notEmpty()
+      .withMessage('El nombre de la empresa es obligatorio')
+      .isLength({ max: 200 })
+      .withMessage('El nombre de empresa no puede exceder 200 caracteres'),
     handleValidationErrors
   ],
 
@@ -47,6 +53,26 @@ const authValidators = {
     body('password')
       .notEmpty()
       .withMessage('La contrasena es obligatoria'),
+    handleValidationErrors
+  ],
+
+  forgotPassword: [
+    body('email')
+      .isEmail()
+      .withMessage('Email invalido')
+      .normalizeEmail(),
+    handleValidationErrors
+  ],
+
+  resetPassword: [
+    param('token')
+      .isHexadecimal()
+      .withMessage('Token invalido')
+      .isLength({ min: 64, max: 64 })
+      .withMessage('Token invalido'),
+    body('password')
+      .isLength({ min: 6 })
+      .withMessage('La contrasena debe tener al menos 6 caracteres'),
     handleValidationErrors
   ]
 };

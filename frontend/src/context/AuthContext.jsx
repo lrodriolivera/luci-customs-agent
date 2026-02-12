@@ -55,6 +55,27 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const register = async (name, email, password, companyName) => {
+    try {
+      const response = await api.post('/api/auth/register', { name, email, password, companyName })
+
+      if (response.data.success && response.data.data) {
+        const { token, user: userData } = response.data.data
+
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(userData))
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+
+        setUser(userData)
+        return { success: true }
+      } else {
+        return { success: false, error: response.data.error || 'Error al crear la cuenta' }
+      }
+    } catch (error) {
+      return { success: false, error: error.response?.data?.error || 'Error al crear la cuenta' }
+    }
+  }
+
   const logout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
@@ -67,6 +88,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
     loading,
     login,
+    register,
     logout
   }
 

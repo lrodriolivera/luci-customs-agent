@@ -260,6 +260,65 @@ class EmailService {
   }
 
   /**
+   * Email de bienvenida al registrarse
+   */
+  async sendWelcomeEmail(email, name, companyName) {
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+      body{font-family:Arial,sans-serif;line-height:1.6;color:#333}
+      .container{max-width:600px;margin:0 auto;padding:20px}
+      .header{background:#0284c7;color:white;padding:20px;text-align:center;border-radius:8px 8px 0 0}
+      .header h1{margin:0}
+      .content{padding:20px;background:#f7fafc}
+      .highlight{background:#ebf8ff;padding:15px;border-left:4px solid #0284c7;margin:15px 0}
+      .footer{padding:20px;text-align:center;font-size:12px;color:#718096}
+    </style></head><body><div class="container">
+      <div class="header"><h1>LUCI - STRIX AI</h1><p>Bienvenido a bordo</p></div>
+      <div class="content">
+        <p>Hola <strong>${name}</strong>,</p>
+        <p>Tu cuenta para <strong>${companyName}</strong> ha sido creada exitosamente en LUCI, el agente aduanero inteligente.</p>
+        <div class="highlight">
+          <p><strong>Tu plan actual: Starter (gratuito)</strong></p>
+          <ul><li>Hasta 5 usuarios</li><li>100 declaraciones/mes</li><li>Asistente IA incluido</li></ul>
+        </div>
+        <p>Ya puedes iniciar sesion y comenzar a gestionar tus operaciones aduaneras.</p>
+        <p>Saludos cordiales,<br><strong>Equipo LUCI - STRIX AI</strong></p>
+      </div>
+      <div class="footer"><p>STRIX AI SL | Agente Aduanero Inteligente</p></div>
+    </div></body></html>`;
+    return this.sendEmail(email, 'Bienvenido a LUCI - Tu cuenta esta lista', html);
+  }
+
+  /**
+   * Email de reset de contrasena
+   */
+  async sendPasswordResetEmail(email, name, resetUrl) {
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+      body{font-family:Arial,sans-serif;line-height:1.6;color:#333}
+      .container{max-width:600px;margin:0 auto;padding:20px}
+      .header{background:#0284c7;color:white;padding:20px;text-align:center;border-radius:8px 8px 0 0}
+      .header h1{margin:0}
+      .content{padding:20px;background:#f7fafc}
+      .button{display:inline-block;background:#0284c7;color:white;padding:12px 24px;text-decoration:none;border-radius:4px;margin:20px 0}
+      .warning{background:#fffaf0;padding:15px;border-left:4px solid #ed8936;margin:15px 0}
+      .footer{padding:20px;text-align:center;font-size:12px;color:#718096}
+    </style></head><body><div class="container">
+      <div class="header"><h1>LUCI - STRIX AI</h1></div>
+      <div class="content">
+        <p>Hola <strong>${name}</strong>,</p>
+        <p>Hemos recibido una solicitud para restablecer tu contrasena.</p>
+        <p style="text-align:center"><a href="${resetUrl}" class="button">Restablecer Contrasena</a></p>
+        <div class="warning">
+          <p><strong>Este enlace expira en 1 hora.</strong></p>
+          <p>Si no solicitaste este cambio, puedes ignorar este email.</p>
+        </div>
+        <p>Saludos cordiales,<br><strong>Equipo LUCI - STRIX AI</strong></p>
+      </div>
+      <div class="footer"><p>STRIX AI SL | Agente Aduanero Inteligente</p></div>
+    </div></body></html>`;
+    return this.sendEmail(email, 'Restablecer contrasena - LUCI', html);
+  }
+
+  /**
    * Convertir HTML basico a texto plano
    */
   htmlToText(html) {
