@@ -24,7 +24,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !error.config?.url?.includes('/refresh-token')) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'
@@ -32,6 +32,27 @@ api.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+// Auto-refresh token every 6 hours (JWT expires in 7 days)
+let refreshInterval = null
+const startTokenRefresh = () => {
+  if (refreshInterval) clearInterval(refreshInterval)
+  refreshInterval = setInterval(async () => {
+    const token = localStorage.getItem('token')
+    if (!token) return
+    try {
+      const res = await api.post('/api/auth/refresh-token')
+      if (res.data?.success && res.data?.data?.token) {
+        localStorage.setItem('token', res.data.data.token)
+        localStorage.setItem('user', JSON.stringify(res.data.data.user))
+      }
+    } catch { /* silent fail */ }
+  }, 6 * 60 * 60 * 1000) // 6 hours
+}
+if (localStorage.getItem('token')) startTokenRefresh()
+
+// Export for AuthContext to call after login/register
+export const initTokenRefresh = () => startTokenRefresh()
 
 // API Methods
 

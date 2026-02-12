@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import api from '../services/api'
+import api, { initTokenRefresh } from '../services/api'
 
 const AuthContext = createContext(null)
 
@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', token)
         localStorage.setItem('user', JSON.stringify(userData))
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+        initTokenRefresh()
 
         setUser(userData)
         return { success: true }
@@ -65,6 +66,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', token)
         localStorage.setItem('user', JSON.stringify(userData))
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+        initTokenRefresh()
 
         setUser(userData)
         return { success: true }

@@ -137,6 +137,23 @@ const login = async (req, res) => {
 };
 
 /**
+ * Refresh token (extend session)
+ * POST /api/auth/refresh-token
+ */
+const refreshToken = async (req, res) => {
+  try {
+    const token = req.user.generateAuthToken();
+    res.json({
+      success: true,
+      data: { token, user: req.user.toPublicJSON() }
+    });
+  } catch (error) {
+    logger.error('Error refreshing token:', error);
+    res.status(500).json({ success: false, error: 'Error al renovar sesion' });
+  }
+};
+
+/**
  * Obtener usuario actual
  * GET /api/auth/me
  */
@@ -415,6 +432,7 @@ const resetPassword = async (req, res) => {
 module.exports = {
   register,
   login,
+  refreshToken,
   getMe,
   updateProfile,
   changePassword,

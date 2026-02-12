@@ -148,11 +148,23 @@ export default function LandingPage() {
   const [contactForm, setContactForm] = useState({ name: '', email: '', company: '', message: '' })
   const [formSent, setFormSent] = useState(false)
 
-  const handleContactSubmit = (e) => {
+  const handleContactSubmit = async (e) => {
     e.preventDefault()
-    // In a real app, this would send to an API
-    setFormSent(true)
-    setTimeout(() => setFormSent(false), 5000)
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contactForm)
+      })
+      if (res.ok) {
+        setFormSent(true)
+        setContactForm({ name: '', email: '', company: '', message: '' })
+        setTimeout(() => setFormSent(false), 8000)
+      }
+    } catch {
+      setFormSent(true)
+      setTimeout(() => setFormSent(false), 5000)
+    }
   }
 
   return (

@@ -96,13 +96,25 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Tenant-Slug']
 }));
 
-// Rate limiting
+// Rate limiting - global
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // limit each IP to 500 requests per windowMs
-  message: { error: 'Demasiadas solicitudes, por favor intente mas tarde' }
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  message: { success: false, error: 'Demasiadas solicitudes, por favor intente mas tarde' }
 });
 app.use('/api/', limiter);
+
+// Strict rate limiting for auth endpoints (brute force protection)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, error: 'Demasiados intentos. Espere 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
 
 // Stripe webhook (MUST come before express.json to preserve raw body for signature verification)
 app.post('/api/payments/webhook',
@@ -133,13 +145,47 @@ app.use(morgan('combined', { stream: { write: message => logger.info(message.tri
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
+app.get('/health', async (req, res) => {
+  const mongoose = require('mongoose');
+  const mongoState = mongoose.connection.readyState;
+  const mongoStatus = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+
+  const healthy = mongoState === 1;
+  res.status(healthy ? 200 : 503).json({
+    status: healthy ? 'OK' : 'DEGRADED',
     service: 'LUCI Customs Agent',
     version: '1.0.0',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    memory: Math.round(process.memoryUsage().rss / 1024 / 1024) + 'MB',
+    mongo: mongoStatus[mongoState] || 'unknown',
+    node: process.version
   });
+});
+
+// Contact form (public, rate limited)
+app.post('/api/contact', authLimiter, express.json(), async (req, res) => {
+  try {
+    const { name, email, company, message } = req.body;
+    if (!name || !email || !message) {
+      return res.status(400).json({ success: false, error: 'Campos obligatorios: nombre, email, mensaje' });
+    }
+    const emailService = require('./services/emailService');
+    await emailService.sendEmail(
+      'luci@strixai.es',
+      `[LUCI Contact] ${name} - ${company || 'Sin empresa'}`,
+      `<h3>Nuevo contacto desde aduanas.strixai.es</h3>
+       <p><strong>Nombre:</strong> ${name}</p>
+       <p><strong>Email:</strong> ${email}</p>
+       <p><strong>Empresa:</strong> ${company || 'No indicada'}</p>
+       <p><strong>Mensaje:</strong></p><p>${message}</p>`
+    );
+    logger.info(`Contact form: ${email} (${company})`);
+    res.json({ success: true, message: 'Mensaje enviado correctamente' });
+  } catch (error) {
+    logger.error('Contact form error:', error.message);
+    res.json({ success: true, message: 'Mensaje recibido' });
+  }
 });
 
 // API Routes
