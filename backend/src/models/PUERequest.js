@@ -330,6 +330,9 @@ const ResponseSchema = new mongoose.Schema({
 
 // Esquema principal PUERequest
 const PUERequestSchema = new mongoose.Schema({
+  // Multi-tenancy
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },
+
   // === IDENTIFICADORES ===
 
   // Referencia interna unica

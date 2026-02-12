@@ -146,6 +146,9 @@ const ControlDecisionSchema = new mongoose.Schema({
 
 // Esquema principal ENSDeclaration
 const ENSDeclarationSchema = new mongoose.Schema({
+  // Multi-tenancy
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },
+
   // Referencia unica interna
   reference: {
     type: String,

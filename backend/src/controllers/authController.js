@@ -260,6 +260,7 @@ const listUsers = async (req, res) => {
     const { page = 1, limit = 20, role, isActive } = req.query;
 
     const query = {};
+    if (req.user.tenantId) query.tenantId = req.user.tenantId;
     if (role) query.role = role;
     if (isActive !== undefined) query.isActive = isActive === 'true';
 

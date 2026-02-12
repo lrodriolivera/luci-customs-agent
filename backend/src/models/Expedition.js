@@ -172,6 +172,13 @@ const ExpeditionSchema = new mongoose.Schema({
     }
   },
 
+  // Multi-tenancy
+  tenantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tenant',
+    index: true
+  },
+
   // Operation type
   operationType: {
     type: String,

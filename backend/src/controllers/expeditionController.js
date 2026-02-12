@@ -108,6 +108,7 @@ const create = async (req, res) => {
 
     // Crear expediente
     const expedition = new Expedition({
+      tenantId: req.user.tenantId,
       operationType,
       transportMode,
       client,
@@ -207,7 +208,12 @@ const list = async (req, res) => {
       ];
     }
 
-    // Si no es admin, solo ver sus expedientes
+    // Scope by tenant (all roles)
+    if (req.user.tenantId) {
+      query.tenantId = req.user.tenantId;
+    }
+
+    // Non-admins only see their own expeditions
     if (req.user.role !== 'admin') {
       query.$or = [
         { assignedTo: req.user._id },
@@ -278,6 +284,11 @@ const getById = async (req, res) => {
         success: false,
         error: 'Expediente no encontrado'
       });
+    }
+
+    // Tenant isolation check
+    if (req.user.tenantId && expedition.tenantId && expedition.tenantId.toString() !== req.user.tenantId.toString()) {
+      return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
     }
 
     res.json({

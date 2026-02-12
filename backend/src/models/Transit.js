@@ -9,6 +9,9 @@
 const mongoose = require('mongoose');
 
 const transitSchema = new mongoose.Schema({
+  // Multi-tenancy
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },
+
   // Identificadores
   mrn: {
     type: String,

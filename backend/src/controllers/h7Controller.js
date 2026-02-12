@@ -22,8 +22,10 @@ exports.list = async (req, res) => {
       search
     } = req.query;
 
-    // Los admins ven todas las declaraciones, otros usuarios solo las suyas
-    const query = req.user.role === 'admin' ? {} : { createdBy: req.user._id };
+    // Scope by tenant + role
+    const query = {};
+    if (req.user.tenantId) query.tenantId = req.user.tenantId;
+    if (req.user.role !== 'admin') query.createdBy = req.user._id;
 
     if (status) query.status = status;
     if (carrier) query['carrier.code'] = carrier;

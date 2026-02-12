@@ -78,6 +78,9 @@ const H7ItemSchema = new mongoose.Schema({
 
 // Esquema principal H7
 const H7DeclarationSchema = new mongoose.Schema({
+  // Multi-tenancy
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },
+
   // Referencia unica
   reference: {
     type: String,
