@@ -78,10 +78,11 @@ const plans = [
     period: '',
     description: 'Para probar la plataforma',
     features: [
-      '10 clasificaciones IA / mes',
-      'Calculadora de derechos basica',
-      'Arbol TARIC completo',
+      '5 declaraciones / mes',
       '1 usuario',
+      'Clasificacion TARIC con IA',
+      'Calculo de aranceles e IVA',
+      'Chat basico con asistente IA',
     ],
     cta: 'Empezar Gratis',
     ctaLink: '/login',
@@ -94,29 +95,47 @@ const plans = [
     period: '/ mes',
     description: 'Para agencias y transitarios',
     features: [
-      'Clasificaciones IA ilimitadas',
-      'PUE SOIVRE / ROHS completo',
-      'Declaraciones H1, H7, ENS',
+      '50 declaraciones / mes',
+      'H1, H7, AES, NCTS, ENS completos',
+      'Envio directo a AEAT',
       'Hasta 5 usuarios',
-      'Motor de reglas y preferencias',
-      'Soporte por email',
+      'PDF declaraciones (DUA oficial)',
+      'Portal de clientes',
     ],
     cta: 'Probar 14 dias gratis',
     ctaLink: '/login?plan=professional',
+    highlighted: false
+  },
+  {
+    name: 'Business',
+    planId: 'business',
+    price: '349',
+    period: '/ mes',
+    description: 'Para operadores con volumen',
+    features: [
+      '200 declaraciones / mes',
+      'Todo de Professional',
+      'PUE SOIVRE / ROHS completo',
+      'Hasta 15 usuarios',
+      'API publica + analytics',
+      'Soporte prioritario',
+    ],
+    cta: 'Empezar ahora',
+    ctaLink: '/login?plan=business',
     highlighted: true
   },
   {
     name: 'Enterprise',
     planId: 'enterprise',
-    price: 'Personalizado',
-    period: '',
+    price: 'Desde 799',
+    period: '/ mes',
     description: 'Para grandes operadores',
     features: [
-      'Todo de Professional',
+      'Declaraciones ilimitadas',
+      'Todo de Business',
       'Usuarios ilimitados',
-      'Acceso API',
-      'Integraciones custom (AEAT, ERP)',
-      'Soporte prioritario + onboarding',
+      'Integraciones custom (ERP, WMS)',
+      'Soporte dedicado + onboarding',
       'SLA 99.9%',
     ],
     cta: 'Contactar Ventas',
@@ -270,7 +289,7 @@ export default function LandingPage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Planes simples y transparentes</h2>
             <p className="mt-4 text-lg text-gray-600">Empieza gratis, escala cuando lo necesites</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {plans.map((plan, i) => (
               <div key={i} className={`relative rounded-2xl p-8 ${
                 plan.highlighted

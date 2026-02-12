@@ -75,33 +75,34 @@ const BillingDashboard = () => {
 
       setPlans([
         {
-          id: 'free',
-          name: 'Free',
-          price: 0,
-          billingCycle: 'monthly',
-          features: ['20 declaraciones/mes', '2 usuarios', '1 GB almacenamiento', 'Soporte por email']
-        },
-        {
           id: 'starter',
           name: 'Starter',
-          price: 49,
+          price: 0,
           billingCycle: 'monthly',
-          features: ['100 declaraciones/mes', '5 usuarios', '10 GB almacenamiento', 'Analytics basico', 'Soporte estandar']
+          features: ['5 declaraciones/mes', '1 usuario', 'Clasificacion TARIC con IA', 'Calculo de aranceles e IVA', 'Chat basico con asistente IA']
         },
         {
           id: 'professional',
           name: 'Professional',
           price: 149,
           billingCycle: 'monthly',
+          features: ['50 declaraciones/mes', 'Hasta 5 usuarios', 'H1, H7, AES, NCTS, ENS completos', 'Envio directo a AEAT', 'PDF declaraciones (DUA oficial)', 'Portal de clientes']
+        },
+        {
+          id: 'business',
+          name: 'Business',
+          price: 349,
+          billingCycle: 'monthly',
           popular: true,
-          features: ['500 declaraciones/mes', '20 usuarios', '50 GB almacenamiento', 'Analytics avanzado', 'API access', 'Soporte prioritario']
+          features: ['200 declaraciones/mes', 'Hasta 15 usuarios', 'Todo de Professional', 'PUE SOIVRE / ROHS completo', 'API publica + analytics', 'Soporte prioritario']
         },
         {
           id: 'enterprise',
           name: 'Enterprise',
-          price: 499,
+          price: 799,
           billingCycle: 'monthly',
-          features: ['Ilimitadas declaraciones', 'Usuarios ilimitados', 'Almacenamiento ilimitado', 'Todo incluido', 'SSO', 'SLA garantizado']
+          isCustom: true,
+          features: ['Declaraciones ilimitadas', 'Usuarios ilimitados', 'Todo de Business', 'Integraciones custom (ERP, WMS)', 'Soporte dedicado + onboarding', 'SLA 99.9%']
         }
       ]);
 
@@ -513,8 +514,18 @@ const BillingDashboard = () => {
               <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                  <span className="text-gray-500">EUR/mes</span>
+                  {plan.isCustom ? (
+                    <>
+                      <span className="text-lg text-gray-500">Desde </span>
+                      <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
+                      <span className="text-gray-500"> EUR/mes</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
+                      <span className="text-gray-500"> EUR/mes</span>
+                    </>
+                  )}
                 </div>
                 <ul className="mt-6 space-y-3">
                   {plan.features.map((feature, idx) => (
@@ -534,7 +545,7 @@ const BillingDashboard = () => {
                   }`}
                   disabled={billingData?.subscription?.plan === plan.id}
                 >
-                  {billingData?.subscription?.plan === plan.id ? 'Plan Actual' : 'Seleccionar'}
+                  {billingData?.subscription?.plan === plan.id ? 'Plan Actual' : plan.isCustom ? 'Contactar Ventas' : 'Seleccionar'}
                 </button>
               </div>
             </div>
@@ -566,7 +577,7 @@ const BillingDashboard = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="font-medium text-gray-900">{plan.name}</span>
-                        <span className="text-gray-500 ml-2">{plan.price} EUR/mes</span>
+                        <span className="text-gray-500 ml-2">{plan.isCustom ? 'Desde ' : ''}{plan.price} EUR/mes</span>
                       </div>
                       {plan.price > billingData?.subscription?.price ? (
                         <ArrowUpIcon className="h-5 w-5 text-green-500" />
