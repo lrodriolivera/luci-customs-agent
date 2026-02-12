@@ -62,6 +62,19 @@ const UserSchema = new mongoose.Schema({
     emailOnChannelAssigned: { type: Boolean, default: true }
   },
 
+  // Multi-tenancy
+  tenantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tenant',
+    index: true
+  },
+
+  organizationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tenant',
+    index: true
+  },
+
   // Estado
   isActive: {
     type: Boolean,

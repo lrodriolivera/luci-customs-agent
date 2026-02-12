@@ -27,6 +27,7 @@
     "nodemailer": "^6.9.4",
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.17.2",
+    "stripe": "^17.7.0",
     "tesseract.js": "^4.1.1",
     "uuid": "^9.0.0",
     "winston": "^3.10.0",

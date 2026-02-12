@@ -13,6 +13,7 @@ import {
   TrashIcon,
   StarIcon
 } from '@heroicons/react/24/outline';
+import { billingAPI } from '../../services/api';
 
 const BillingDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -23,76 +24,67 @@ const BillingDashboard = () => {
   const [plans, setPlans] = useState([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [billingCycle, setBillingCycle] = useState('monthly');
+  const [successMsg, setSuccessMsg] = useState(null);
 
   useEffect(() => {
     loadBillingData();
   }, []);
 
+  const PLAN_PRICES = { starter: 0, professional: 149, business: 349, enterprise: 799 };
+
   const loadBillingData = async () => {
     setLoading(true);
     try {
-      // Simulated data - replace with API calls
+      // Fetch real subscription data from backend
+      const subResponse = await billingAPI.getSubscription();
+      const sub = subResponse.data?.data || subResponse.data || {};
+
       setBillingData({
         subscription: {
-          plan: 'professional',
-          status: 'active',
+          plan: sub.plan || 'starter',
+          status: sub.status || 'active',
           billingCycle: 'monthly',
-          price: 149,
-          currentPeriodStart: '2026-01-20',
-          currentPeriodEnd: '2026-02-20',
-          cancelAtPeriodEnd: false
+          price: PLAN_PRICES[sub.plan] || 0,
+          currentPeriodStart: sub.currentPeriodStart,
+          currentPeriodEnd: sub.currentPeriodEnd,
+          cancelAtPeriodEnd: sub.cancelAtPeriodEnd || false,
+          trialEnd: sub.trialEnd
         },
-        usage: {
-          declarations: { used: 287, limit: 500, percentage: 57.4 },
-          expeditions: { used: 145, limit: 250, percentage: 58 },
-          users: { used: 12, limit: 20, percentage: 60 },
-          storage: { used: 23.5, limit: 50, unit: 'GB', percentage: 47 },
-          apiCalls: { used: 2340, limit: 5000, percentage: 46.8 },
-          luciQueries: { used: 856, limit: 2000, percentage: 42.8 }
-        },
-        nextInvoice: {
-          date: '2026-02-20',
-          amount: 180.29,
+        usage: null,
+        nextInvoice: sub.currentPeriodEnd ? {
+          date: sub.currentPeriodEnd,
+          amount: Math.round((PLAN_PRICES[sub.plan] || 0) * 1.21 * 100) / 100,
           items: [
-            { description: 'Plan Professional', amount: 149 },
-            { description: 'IVA (21%)', amount: 31.29 }
+            { description: `Plan ${sub.plan || 'Starter'}`, amount: PLAN_PRICES[sub.plan] || 0 },
+            { description: 'IVA (21%)', amount: Math.round((PLAN_PRICES[sub.plan] || 0) * 0.21 * 100) / 100 }
           ]
-        }
+        } : null
       });
 
-      setInvoices([
-        { id: 'INV-2026-00012', date: '2026-01-20', amount: 180.29, status: 'paid', plan: 'professional' },
-        { id: 'INV-2025-00011', date: '2025-12-20', amount: 180.29, status: 'paid', plan: 'professional' },
-        { id: 'INV-2025-00010', date: '2025-11-20', amount: 180.29, status: 'paid', plan: 'professional' },
-        { id: 'INV-2025-00009', date: '2025-10-20', amount: 59.29, status: 'paid', plan: 'starter' },
-        { id: 'INV-2025-00008', date: '2025-09-20', amount: 59.29, status: 'paid', plan: 'starter' }
-      ]);
-
-      setPaymentMethods([
-        { id: 'pm-1', type: 'card', brand: 'visa', last4: '4242', expiryMonth: 12, expiryYear: 2027, isDefault: true },
-        { id: 'pm-2', type: 'sepa', iban: 'ES91****1234', bankName: 'BBVA', isDefault: false }
-      ]);
+      setInvoices([]);
+      setPaymentMethods([]);
 
       setPlans([
         {
           id: 'starter',
           name: 'Starter',
           price: 0,
-          billingCycle: 'monthly',
+          yearlyPrice: 0,
           features: ['5 declaraciones/mes', '1 usuario', 'Clasificacion TARIC con IA', 'Calculo de aranceles e IVA', 'Chat basico con asistente IA']
         },
         {
           id: 'professional',
           name: 'Professional',
           price: 149,
-          billingCycle: 'monthly',
+          yearlyPrice: 1490,
           features: ['50 declaraciones/mes', 'Hasta 5 usuarios', 'H1, H7, AES, NCTS, ENS completos', 'Envio directo a AEAT', 'PDF declaraciones (DUA oficial)', 'Portal de clientes']
         },
         {
           id: 'business',
           name: 'Business',
           price: 349,
-          billingCycle: 'monthly',
+          yearlyPrice: 3490,
           popular: true,
           features: ['200 declaraciones/mes', 'Hasta 15 usuarios', 'Todo de Professional', 'PUE SOIVRE / ROHS completo', 'API publica + analytics', 'Soporte prioritario']
         },
@@ -100,7 +92,7 @@ const BillingDashboard = () => {
           id: 'enterprise',
           name: 'Enterprise',
           price: 799,
-          billingCycle: 'monthly',
+          yearlyPrice: 7990,
           isCustom: true,
           features: ['Declaraciones ilimitadas', 'Usuarios ilimitados', 'Todo de Business', 'Integraciones custom (ERP, WMS)', 'Soporte dedicado + onboarding', 'SLA 99.9%']
         }
@@ -108,8 +100,69 @@ const BillingDashboard = () => {
 
     } catch (error) {
       console.error('Error loading billing data:', error);
+      // Fallback to starter
+      setBillingData({ subscription: { plan: 'starter', status: 'active', price: 0 } });
+      setPlans([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle Stripe checkout return
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === 'true') {
+      setSuccessMsg('Suscripcion activada correctamente');
+      window.history.replaceState({}, '', '/billing');
+      loadBillingData();
+    }
+    if (params.get('cancelled') === 'true') {
+      setSuccessMsg('Pago cancelado');
+      window.history.replaceState({}, '', '/billing');
+    }
+  }, []);
+
+  const handlePlanSelect = async (planId) => {
+    if (planId === billingData?.subscription?.plan) return;
+
+    if (planId === 'enterprise') {
+      window.open('mailto:luci@strixai.es?subject=Plan Enterprise LUCI', '_blank');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await billingAPI.createCheckout(planId, billingCycle);
+      const data = response.data?.data || response.data;
+
+      if (data.freePlan) {
+        await loadBillingData();
+        setSuccessMsg('Plan actualizado a Starter');
+        setShowUpgradeModal(false);
+        return;
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      alert('Error al crear la sesion de pago. Intente de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManagePayments = async () => {
+    try {
+      const response = await billingAPI.createCustomerPortal();
+      const data = response.data?.data || response.data;
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Error opening customer portal:', error);
+      alert('Para gestionar pagos necesitas una suscripcion activa de pago.');
     }
   };
 
@@ -182,6 +235,17 @@ const BillingDashboard = () => {
           Cambiar Plan
         </button>
       </div>
+
+      {/* Success message */}
+      {successMsg && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircleIcon className="h-5 w-5" />
+            <span>{successMsg}</span>
+          </div>
+          <button onClick={() => setSuccessMsg(null)} className="text-green-500 hover:text-green-700">&times;</button>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="border-b border-gray-200">
@@ -382,123 +446,41 @@ const BillingDashboard = () => {
       {/* Payment Methods Tab */}
       {activeTab === 'payment' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900">Metodos de Pago</h3>
-              <button
-                onClick={() => setShowPaymentModal(true)}
-                className="px-4 py-2 bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200 flex items-center gap-2"
-              >
-                <PlusIcon className="h-4 w-4" />
-                Agregar Metodo
-              </button>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {paymentMethods.map(method => (
-                <div key={method.id} className="p-6 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-lg ${
-                      method.type === 'card' ? 'bg-blue-100' : 'bg-green-100'
-                    }`}>
-                      <CreditCardIcon className={`h-6 w-6 ${
-                        method.type === 'card' ? 'text-blue-600' : 'text-green-600'
-                      }`} />
-                    </div>
-                    <div>
-                      {method.type === 'card' ? (
-                        <>
-                          <p className="font-medium text-gray-900 capitalize">
-                            {method.brand} ****{method.last4}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Expira {method.expiryMonth}/{method.expiryYear}
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="font-medium text-gray-900">
-                            SEPA - {method.iban}
-                          </p>
-                          <p className="text-sm text-gray-500">{method.bankName}</p>
-                        </>
-                      )}
-                    </div>
-                    {method.isDefault && (
-                      <span className="px-2 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-medium">
-                        Por defecto
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {!method.isDefault && (
-                      <button className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800">
-                        Hacer principal
-                      </button>
-                    )}
-                    <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Billing Info */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Datos de Facturacion</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Razon Social
-                </label>
-                <input
-                  type="text"
-                  defaultValue="Agencia Aduanera Demo S.L."
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  NIF/CIF
-                </label>
-                <input
-                  type="text"
-                  defaultValue="B12345678"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Direccion de Facturacion
-                </label>
-                <input
-                  type="text"
-                  defaultValue="Calle Principal 123, 08001 Barcelona"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email de Facturacion
-                </label>
-                <input
-                  type="email"
-                  defaultValue="facturacion@demo-agency.com"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-            </div>
-            <button className="mt-4 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700">
-              Guardar Datos
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <CreditCardIcon className="h-16 w-16 text-violet-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Gestion de Pagos</h3>
+            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              Los metodos de pago, facturas y datos de facturacion se gestionan de forma segura a traves del portal de Stripe.
+            </p>
+            <button
+              onClick={handleManagePayments}
+              className="px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 font-medium"
+            >
+              Abrir Portal de Pagos
             </button>
+            <p className="text-xs text-gray-400 mt-3">Procesado de forma segura por Stripe</p>
           </div>
         </div>
       )}
 
       {/* Plans Tab */}
       {activeTab === 'plans' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div>
+          {/* Billing Cycle Toggle */}
+          <div className="flex items-center justify-center mb-8 gap-3">
+            <span className={`text-sm font-medium ${billingCycle === 'monthly' ? 'text-gray-900' : 'text-gray-400'}`}>Mensual</span>
+            <button
+              onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
+              className={`relative w-14 h-7 rounded-full transition-colors ${billingCycle === 'yearly' ? 'bg-violet-600' : 'bg-gray-300'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${billingCycle === 'yearly' ? 'translate-x-7' : ''}`} />
+            </button>
+            <span className={`text-sm font-medium ${billingCycle === 'yearly' ? 'text-gray-900' : 'text-gray-400'}`}>
+              Anual <span className="text-green-600 text-xs font-bold">-17%</span>
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map(plan => (
             <div
               key={plan.id}
@@ -519,6 +501,12 @@ const BillingDashboard = () => {
                       <span className="text-lg text-gray-500">Desde </span>
                       <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
                       <span className="text-gray-500"> EUR/mes</span>
+                    </>
+                  ) : billingCycle === 'yearly' && plan.yearlyPrice ? (
+                    <>
+                      <span className="text-4xl font-bold text-gray-900">{Math.round(plan.yearlyPrice / 12)}</span>
+                      <span className="text-gray-500"> EUR/mes</span>
+                      <div className="text-xs text-gray-400 mt-1">{plan.yearlyPrice} EUR/ano</div>
                     </>
                   ) : (
                     <>
@@ -544,12 +532,14 @@ const BillingDashboard = () => {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                   disabled={billingData?.subscription?.plan === plan.id}
+                  onClick={() => handlePlanSelect(plan.id)}
                 >
                   {billingData?.subscription?.plan === plan.id ? 'Plan Actual' : plan.isCustom ? 'Contactar Ventas' : 'Seleccionar'}
                 </button>
               </div>
             </div>
           ))}
+          </div>
         </div>
       )}
 
@@ -571,7 +561,7 @@ const BillingDashboard = () => {
                     className="w-full p-4 border border-gray-200 rounded-lg hover:border-violet-500 hover:bg-violet-50 text-left"
                     onClick={() => {
                       setShowUpgradeModal(false);
-                      // Handle plan change
+                      handlePlanSelect(plan.id);
                     }}
                   >
                     <div className="flex items-center justify-between">
@@ -601,79 +591,7 @@ const BillingDashboard = () => {
         </div>
       )}
 
-      {/* Add Payment Modal */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4">
-            <div className="fixed inset-0 bg-black/50" onClick={() => setShowPaymentModal(false)} />
-            <div className="relative bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Agregar Metodo de Pago</h3>
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <button className="flex-1 p-4 border-2 border-violet-500 bg-violet-50 rounded-lg text-center">
-                    <CreditCardIcon className="h-8 w-8 mx-auto text-violet-600" />
-                    <span className="block mt-2 font-medium">Tarjeta</span>
-                  </button>
-                  <button className="flex-1 p-4 border border-gray-200 rounded-lg text-center hover:border-violet-500">
-                    <DocumentTextIcon className="h-8 w-8 mx-auto text-gray-400" />
-                    <span className="block mt-2 font-medium">SEPA</span>
-                  </button>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Numero de Tarjeta
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="4242 4242 4242 4242"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Fecha Expiracion
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="MM/YY"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      CVC
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="123"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    />
-                  </div>
-                </div>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" className="rounded border-gray-300 text-violet-600" />
-                  <span className="text-sm text-gray-700">Establecer como metodo por defecto</span>
-                </label>
-              </div>
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  onClick={() => setShowPaymentModal(false)}
-                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => setShowPaymentModal(false)}
-                  className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
-                >
-                  Agregar Tarjeta
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Payment modal removed - managed via Stripe Customer Portal */}
     </div>
   );
 };

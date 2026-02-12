@@ -25,6 +25,7 @@ const SummaryQuery = require('./SummaryQuery');
 const PUERequest = require('./PUERequest');
 const TaricSearchHistory = require('./TaricSearchHistory');
 const TaricAICache = require('./TaricAICache');
+const Tenant = require('./Tenant');
 
 module.exports = {
   User,
@@ -49,5 +50,6 @@ module.exports = {
   SummaryQuery,
   PUERequest,
   TaricSearchHistory,
-  TaricAICache
+  TaricAICache,
+  Tenant
 };

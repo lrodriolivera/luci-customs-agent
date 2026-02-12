@@ -14,6 +14,7 @@ const PLAN_TYPES = {
   FREE: 'free',
   STARTER: 'starter',
   PROFESSIONAL: 'professional',
+  BUSINESS: 'business',
   ENTERPRISE: 'enterprise'
 };
 
@@ -416,6 +417,26 @@ TenantSchema.statics.getDefaultLimits = function(plan) {
       maxStorageGB: 50,
       maxApiCallsPerDay: 5000,
       maxLuciQueriesPerMonth: 2000,
+      features: {
+        analytics: true,
+        advancedReports: true,
+        apiAccess: true,
+        customBranding: true,
+        prioritySupport: true,
+        dedicatedAccount: false,
+        sso: false,
+        auditLogs: true,
+        webhooks: true,
+        multipleLocations: true
+      }
+    },
+    [PLAN_TYPES.BUSINESS]: {
+      maxUsers: 15,
+      maxDeclarationsPerMonth: 200,
+      maxExpeditionsPerMonth: 100,
+      maxStorageGB: 100,
+      maxApiCallsPerDay: 10000,
+      maxLuciQueriesPerMonth: 5000,
       features: {
         analytics: true,
         advancedReports: true,

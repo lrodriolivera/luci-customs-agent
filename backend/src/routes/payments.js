@@ -10,29 +10,7 @@ const paymentService = require('../services/paymentService');
 const { authenticate, requireRole } = require('../middleware/auth');
 const logger = require('../config/logger');
 
-// ==================== Stripe Webhook (must be before body parser) ====================
-
-/**
- * @route POST /api/payments/webhook
- * @desc Handle Stripe webhook events
- * @access Public (verified by Stripe signature)
- */
-router.post(
-  '/webhook',
-  express.raw({ type: 'application/json' }),
-  async (req, res) => {
-    try {
-      const result = await paymentService.handleWebhook(
-        req.body,
-        req.headers['stripe-signature']
-      );
-      res.json(result);
-    } catch (error) {
-      logger.error('Webhook error:', error.message);
-      res.status(400).json({ error: error.message });
-    }
-  }
-);
+// Webhook is mounted directly in app.js BEFORE express.json() for raw body access
 
 // ==================== Subscription Routes ====================
 
@@ -45,8 +23,8 @@ router.post('/create-checkout', authenticate, async (req, res) => {
   try {
     const { plan, billingCycle } = req.body;
 
-    if (!plan || !['starter', 'professional', 'enterprise'].includes(plan)) {
-      return res.status(400).json({ success: false, error: 'Plan invalido. Opciones: starter, professional, enterprise' });
+    if (!plan || !['starter', 'professional', 'business', 'enterprise'].includes(plan)) {
+      return res.status(400).json({ success: false, error: 'Plan invalido. Opciones: starter, professional, business, enterprise' });
     }
 
     const result = await paymentService.createSubscriptionCheckout(

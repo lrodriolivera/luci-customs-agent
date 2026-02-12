@@ -104,7 +104,25 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Body parsing
+// Stripe webhook (MUST come before express.json to preserve raw body for signature verification)
+app.post('/api/payments/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    try {
+      const paymentService = require('./services/paymentService');
+      const result = await paymentService.handleWebhook(
+        req.body,
+        req.headers['stripe-signature']
+      );
+      res.json(result);
+    } catch (error) {
+      logger.error('Webhook error:', error.message);
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// Body parsing (AFTER webhook route)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

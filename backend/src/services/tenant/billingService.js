@@ -44,25 +44,25 @@ const PAYMENT_METHODS = {
  * Pricing plans (monthly in EUR)
  */
 const PLAN_PRICING = {
-  free: {
+  starter: {
     monthly: 0,
     yearly: 0,
-    features: ['Basic declarations', 'Email support', '2 users']
-  },
-  starter: {
-    monthly: 49,
-    yearly: 490, // ~17% discount
-    features: ['100 declarations/month', 'Standard support', '5 users', 'Basic analytics']
+    features: ['5 declaraciones/mes', '1 usuario', 'Clasificacion TARIC con IA', 'Calculo aranceles e IVA', 'Chat basico IA']
   },
   professional: {
     monthly: 149,
     yearly: 1490, // ~17% discount
-    features: ['500 declarations/month', 'Priority support', '20 users', 'Advanced analytics', 'API access', 'Custom branding']
+    features: ['50 declaraciones/mes', '5 usuarios', 'H1, H7, AES, NCTS, ENS', 'Envio directo AEAT', 'PDF declaraciones', 'Portal clientes']
+  },
+  business: {
+    monthly: 349,
+    yearly: 3490, // ~17% discount
+    features: ['200 declaraciones/mes', '15 usuarios', 'Todo de Professional', 'PUE SOIVRE / ROHS', 'API publica + analytics', 'Soporte prioritario']
   },
   enterprise: {
-    monthly: 499,
-    yearly: 4990, // ~17% discount
-    features: ['Unlimited declarations', 'Dedicated support', 'Unlimited users', 'Full analytics', 'SSO', 'SLA']
+    monthly: 799,
+    yearly: 7990, // ~17% discount
+    features: ['Declaraciones ilimitadas', 'Usuarios ilimitados', 'Todo de Business', 'Integraciones custom', 'Soporte dedicado + onboarding', 'SLA 99.9%']
   }
 };
 
@@ -823,7 +823,7 @@ function processRenewal(tenantId) {
 // Helper functions
 
 function getPlanValue(plan) {
-  const values = { free: 0, starter: 1, professional: 2, enterprise: 3 };
+  const values = { free: 0, starter: 1, professional: 2, business: 3, enterprise: 4 };
   return values[plan] || 0;
 }
 

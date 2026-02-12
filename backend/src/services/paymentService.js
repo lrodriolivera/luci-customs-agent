@@ -20,13 +20,13 @@ if (stripeKey && stripeKey.startsWith('sk_')) {
 
 // Plan -> Stripe Price ID mapping
 const PLAN_PRICE_MAP = {
-  starter: {
-    monthly: process.env.STRIPE_PRICE_STARTER_MONTHLY,
-    yearly: process.env.STRIPE_PRICE_STARTER_YEARLY
-  },
   professional: {
     monthly: process.env.STRIPE_PRICE_PROFESSIONAL_MONTHLY || process.env.STRIPE_PRICE_PROFESSIONAL,
     yearly: process.env.STRIPE_PRICE_PROFESSIONAL_YEARLY
+  },
+  business: {
+    monthly: process.env.STRIPE_PRICE_BUSINESS_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_BUSINESS_YEARLY
   },
   enterprise: {
     monthly: process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY,
@@ -527,6 +527,25 @@ class PaymentService {
    * Create Stripe Checkout Session for a subscription plan
    */
   async createSubscriptionCheckout(user, plan, billingCycle = 'monthly') {
+    // Starter is free - no Stripe checkout needed
+    if (plan === 'starter') {
+      const tenant = user.tenantId ? await Tenant.findById(user.tenantId) : null;
+      if (tenant) {
+        tenant.subscription.plan = 'starter';
+        tenant.subscription.status = 'active';
+        tenant.subscription.currentPeriodStart = new Date();
+        tenant.subscription.currentPeriodEnd = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+        const limits = Tenant.getDefaultLimits('starter');
+        if (limits) tenant.limits = limits;
+        await tenant.save();
+      }
+      return {
+        url: (process.env.FRONTEND_URL || 'https://aduanas.strixai.es') + '/billing?success=true&plan=starter',
+        sessionId: null,
+        freePlan: true
+      };
+    }
+
     const priceId = PLAN_PRICE_MAP[plan]?.[billingCycle];
 
     if (!priceId) {
