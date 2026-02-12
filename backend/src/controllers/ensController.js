@@ -837,3 +837,50 @@ exports.aiGetSuggestions = async (req, res) => {
     });
   }
 };
+
+/**
+ * Amend ENS declaration (IE313)
+ * POST /api/ens/:id/amend
+ */
+exports.amend = async (req, res) => {
+  try {
+    const { ENSDeclaration } = require('../models');
+    const aeatSubmitService = require('../services/aeat/aeatSubmitService');
+
+    const declaration = await ENSDeclaration.findById(req.params.id);
+    if (!declaration) {
+      return res.status(404).json({ success: false, error: 'Declaracion ENS no encontrada' });
+    }
+    if (!declaration.mrn) {
+      return res.status(400).json({ success: false, error: 'La declaracion no tiene MRN asignado' });
+    }
+
+    const result = await aeatSubmitService.submitENSAmendment({
+      mrn: declaration.mrn,
+      lrn: declaration.reference || '',
+      carrierEORI: declaration.carrier?.eori || req.body.carrierEORI || '',
+      carrierName: declaration.carrier?.name || req.body.carrierName || '',
+      entryOffice: declaration.entryOffice?.code || req.body.entryOffice || '',
+      amendmentReason: req.body.reason || 'Rectificacion de datos',
+      goodsItems: req.body.goodsItems || declaration.goodsItems?.map(g => ({
+        sequenceNumber: g.sequenceNumber,
+        description: g.description,
+        commodityCode: g.commodityCode,
+        grossWeight: g.grossWeight,
+        numberOfPackages: g.numberOfPackages,
+        packageType: g.packageType
+      })) || []
+    });
+
+    if (result.success) {
+      declaration.status = 'amended';
+      declaration.amendedAt = new Date();
+      declaration.amendmentMRN = result.mrn || declaration.mrn;
+    }
+    await declaration.save();
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

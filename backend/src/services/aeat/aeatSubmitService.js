@@ -13,6 +13,10 @@ const { buildAESExportXML } = require('./aesXmlBuilder');
 const { buildNCTSTransitXML } = require('./nctsXmlBuilder');
 const { buildENSDeclarationXML } = require('./ensXmlBuilder');
 const { buildSOIVREAltaXML } = require('./soivreXmlBuilder');
+const { buildH1CancelXML } = require('./h1CancelXmlBuilder');
+const { buildCC007ArrivalXML } = require('./cc007XmlBuilder');
+const { buildCC044UnloadingXML } = require('./cc044XmlBuilder');
+const { buildIE313AmendmentXML } = require('./ie313XmlBuilder');
 const { buildQueryImportXML } = require('./queryXmlBuilder');
 
 // Helper: obtener certificado activo
@@ -275,6 +279,46 @@ async function queryStatus(mrn) {
   return _sendToAEAT(soapXML, '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.ConsultaImportacionV2SOAP');
 }
 
+/**
+ * Cancel H1 declaration
+ */
+async function cancelH1(data) {
+  data.test = process.env.AEAT_ENVIRONMENT !== 'production';
+  const xml = buildH1CancelXML(data);
+  logger.info(`[AEAT] Cancelling H1: MRN=${data.mrn}`);
+  return _sendToAEAT(xml, '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.AnulaImportacionV1SOAP');
+}
+
+/**
+ * NCTS Arrival notification (CC007)
+ */
+async function submitNCTSArrival(data) {
+  data.test = process.env.AEAT_ENVIRONMENT !== 'production';
+  const xml = buildCC007ArrivalXML(data);
+  logger.info(`[AEAT] NCTS Arrival: MRN=${data.mrn}`);
+  return _sendToAEAT(xml, '/wlpl/ADTR-JDIT/ws/ncts5/CC007CV1SOAP');
+}
+
+/**
+ * NCTS Unloading remarks (CC044)
+ */
+async function submitNCTSUnloading(data) {
+  data.test = process.env.AEAT_ENVIRONMENT !== 'production';
+  const xml = buildCC044UnloadingXML(data);
+  logger.info(`[AEAT] NCTS Unloading: MRN=${data.mrn}`);
+  return _sendToAEAT(xml, '/wlpl/ADTR-JDIT/ws/ncts5/CC044CV1SOAP');
+}
+
+/**
+ * ENS Amendment (IE313)
+ */
+async function submitENSAmendment(data) {
+  data.test = process.env.AEAT_ENVIRONMENT !== 'production';
+  const xml = buildIE313AmendmentXML(data);
+  logger.info(`[AEAT] ENS Amendment: MRN=${data.mrn}`);
+  return _sendToAEAT(xml, '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.IE313V5SOAP');
+}
+
 module.exports = {
   submitH1,
   submitH7,
@@ -282,5 +326,9 @@ module.exports = {
   submitNCTS,
   submitENS,
   submitPUE,
-  queryStatus
+  queryStatus,
+  cancelH1,
+  submitNCTSArrival,
+  submitNCTSUnloading,
+  submitENSAmendment
 };

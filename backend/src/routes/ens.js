@@ -49,4 +49,7 @@ router.get('/:id/xml', ensController.getXML);
 // AI suggestions for specific declaration
 router.get('/:id/ai/suggestions', ensController.aiGetSuggestions);
 
+// ENS Amendment (IE313)
+router.post('/:id/amend', ensController.amend);
+
 module.exports = router;

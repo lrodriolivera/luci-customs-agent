@@ -1346,6 +1346,53 @@ const applyRegimeSuggestion = async (req, res) => {
   }
 };
 
+/**
+ * Cancel H1 declaration
+ * POST /api/declarations/:expeditionId/cancel
+ */
+const cancelDeclaration = async (req, res) => {
+  try {
+    const { Expedition } = require('../models');
+    const aeatSubmitService = require('../services/aeat/aeatSubmitService');
+
+    const expedition = await Expedition.findById(req.params.expeditionId);
+    if (!expedition) {
+      return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
+    }
+
+    if (!expedition.declaration?.mrn) {
+      return res.status(400).json({ success: false, error: 'La declaracion no tiene MRN asignado' });
+    }
+
+    const result = await aeatSubmitService.cancelH1({
+      mrn: expedition.declaration.mrn,
+      reason: req.body.reason || '0',
+      declaranteNIF: expedition.representative?.nif || '',
+      aduanaDespacho: expedition.declaration?.customsOffice || ''
+    });
+
+    expedition.timeline.push({
+      action: 'declaration_cancelled',
+      description: `Anulacion enviada a AEAT. ${result.success ? 'Aceptada' : 'Rechazada: ' + result.error}`,
+      performedBy: req.user?.name,
+      userId: req.user?._id,
+      metadata: { aeatResponse: result }
+    });
+
+    if (result.success) {
+      expedition.status = 'cancelled';
+      expedition.declaration.cancelledAt = new Date();
+    }
+
+    await expedition.save();
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error('Error cancelling declaration:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 module.exports = {
   generateH1,
   generateH1Direct,
@@ -1354,6 +1401,7 @@ module.exports = {
   updateDeclaration,
   submitDeclaration,
   getDeclarationSummary,
+  cancelDeclaration,
   // H7 endpoints
   checkH7Eligibility,
   generateH7,

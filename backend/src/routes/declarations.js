@@ -28,6 +28,9 @@ router.put('/:expeditionId', declarationController.updateDeclaration);
 // Enviar declaracion (requiere permiso especial)
 router.post('/:expeditionId/submit', requirePermission('canApproveDeclarations'), declarationController.submitDeclaration);
 
+// Anular declaracion
+router.post('/:expeditionId/cancel', requirePermission('canApproveDeclarations'), declarationController.cancelDeclaration);
+
 // ===========================================
 // PDF GENERATION
 // ===========================================

@@ -65,5 +65,11 @@ module.exports = {
   nctsXmlBuilder: require('./nctsXmlBuilder'),
   ensXmlBuilder: require('./ensXmlBuilder'),
   soivreXmlBuilder: require('./soivreXmlBuilder'),
-  queryXmlBuilder: require('./queryXmlBuilder')
+  queryXmlBuilder: require('./queryXmlBuilder'),
+
+  // === Lifecycle Builders (cancellation, arrival, unloading, amendment) ===
+  h1CancelXmlBuilder: require('./h1CancelXmlBuilder'),
+  cc007XmlBuilder: require('./cc007XmlBuilder'),
+  cc044XmlBuilder: require('./cc044XmlBuilder'),
+  ie313XmlBuilder: require('./ie313XmlBuilder')
 };

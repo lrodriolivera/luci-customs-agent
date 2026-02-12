@@ -105,4 +105,12 @@ router.get('/:id/pdf', async (req, res) => {
   }
 });
 
+// === NCTS LIFECYCLE ===
+
+// Notificacion de llegada (CC007)
+router.post('/:id/arrival', transitController.notifyArrival);
+
+// Observaciones de descarga (CC044)
+router.post('/:id/unloading', transitController.notifyUnloading);
+
 module.exports = router;

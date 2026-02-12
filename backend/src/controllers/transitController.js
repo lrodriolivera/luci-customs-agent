@@ -676,4 +676,69 @@ const transitController = {
   }
 };
 
+/**
+ * NCTS Arrival notification (CC007)
+ * POST /api/transit/:id/arrival
+ */
+transitController.notifyArrival = async (req, res) => {
+  try {
+    const { Transit } = require('../models');
+    const aeatSubmitService = require('../services/aeat/aeatSubmitService');
+
+    const transit = await Transit.findById(req.params.id);
+    if (!transit) return res.status(404).json({ success: false, error: 'Transito no encontrado' });
+    if (!transit.mrn) return res.status(400).json({ success: false, error: 'El transito no tiene MRN' });
+
+    const result = await aeatSubmitService.submitNCTSArrival({
+      mrn: transit.mrn,
+      officeOfDestination: transit.destinationOffice?.code || req.body.officeOfDestination || '',
+      arrivalDate: req.body.arrivalDate || '',
+      traderEORI: transit.consignee?.eori || req.body.traderEORI || '',
+      traderName: transit.consignee?.name || ''
+    });
+
+    transit.status = result.success ? 'arrived' : transit.status;
+    transit.arrivedAt = result.success ? new Date() : undefined;
+    await transit.save();
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * NCTS Unloading remarks (CC044)
+ * POST /api/transit/:id/unloading
+ */
+transitController.notifyUnloading = async (req, res) => {
+  try {
+    const { Transit } = require('../models');
+    const aeatSubmitService = require('../services/aeat/aeatSubmitService');
+
+    const transit = await Transit.findById(req.params.id);
+    if (!transit) return res.status(404).json({ success: false, error: 'Transito no encontrado' });
+    if (!transit.mrn) return res.status(400).json({ success: false, error: 'El transito no tiene MRN' });
+
+    const result = await aeatSubmitService.submitNCTSUnloading({
+      mrn: transit.mrn,
+      officeOfDestination: transit.destinationOffice?.code || '',
+      traderEORI: transit.consignee?.eori || req.body.traderEORI || '',
+      unloadingDate: req.body.unloadingDate || '',
+      unloadingRemark: req.body.remark || '',
+      sealsOk: req.body.sealsOk !== false,
+      goodsConform: req.body.goodsConform !== false,
+      goodsDiscrepancies: req.body.discrepancies || []
+    });
+
+    transit.status = result.success ? 'unloaded' : transit.status;
+    transit.unloadedAt = result.success ? new Date() : undefined;
+    await transit.save();
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 module.exports = transitController;
