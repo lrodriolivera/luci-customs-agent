@@ -76,6 +76,7 @@ import PrivacyPolicy from './components/Legal/PrivacyPolicy'
 import TermsOfService from './components/Legal/TermsOfService'
 import CookiePolicy from './components/Legal/CookiePolicy'
 import CookieBanner from './components/Legal/CookieBanner'
+import NotFound from './components/NotFound'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -181,7 +182,7 @@ function App() {
       </Route>
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
     </>
   )

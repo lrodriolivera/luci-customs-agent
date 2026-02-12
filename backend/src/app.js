@@ -208,9 +208,43 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 5001;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logger.info(`LUCI Customs Agent running on port ${PORT}`);
   logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+// Graceful shutdown
+let isShuttingDown = false;
+const shutdown = (signal) => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  logger.info(`${signal} received. Shutting down gracefully...`);
+
+  server.close(() => {
+    logger.info('HTTP server closed');
+    const mongoose = require('mongoose');
+    mongoose.connection.close(false).then(() => {
+      logger.info('MongoDB connection closed');
+      process.exit(0);
+    });
+  });
+
+  setTimeout(() => {
+    logger.error('Forced shutdown after 30s timeout');
+    process.exit(1);
+  }, 30000);
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+process.on('uncaughtException', (error) => {
+  logger.error('UNCAUGHT EXCEPTION:', error);
+  shutdown('uncaughtException');
+});
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('UNHANDLED REJECTION:', reason);
 });
 
 module.exports = app;
