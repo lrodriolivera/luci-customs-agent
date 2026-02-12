@@ -71,6 +71,12 @@ import Register from './components/Auth/Register'
 import ForgotPassword from './components/Auth/ForgotPassword'
 import ResetPassword from './components/Auth/ResetPassword'
 
+// Legal
+import PrivacyPolicy from './components/Legal/PrivacyPolicy'
+import TermsOfService from './components/Legal/TermsOfService'
+import CookiePolicy from './components/Legal/CookiePolicy'
+import CookieBanner from './components/Legal/CookieBanner'
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
@@ -92,6 +98,8 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   return (
+    <>
+    <CookieBanner />
     <Routes>
       {/* Public Routes */}
       <Route path="/landing" element={<LandingPage />} />
@@ -99,6 +107,9 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/cookies" element={<CookiePolicy />} />
 
       {/* Client Portal Routes (Public with token) */}
       <Route path="/portal/:token" element={<PortalLayout />}>
@@ -172,6 +183,7 @@ function App() {
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   )
 }
 

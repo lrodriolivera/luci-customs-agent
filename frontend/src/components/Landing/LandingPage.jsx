@@ -419,9 +419,11 @@ export default function LandingPage() {
               <span className="font-bold text-white">LUCI</span>
               <span className="text-slate-500 text-sm">by Strix AI</span>
             </div>
-            <div className="flex items-center gap-6 text-sm text-slate-400">
+            <div className="flex items-center flex-wrap gap-4 sm:gap-6 text-sm text-slate-400">
               <a href="https://strixai.es" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">strixai.es</a>
-              <span>info@strixai.es</span>
+              <Link to="/privacy" className="hover:text-white transition-colors">Privacidad</Link>
+              <Link to="/terms" className="hover:text-white transition-colors">Terminos</Link>
+              <Link to="/cookies" className="hover:text-white transition-colors">Cookies</Link>
             </div>
             <p className="text-sm text-slate-500">
               Strix AI {new Date().getFullYear()}. Todos los derechos reservados.
