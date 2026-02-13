@@ -60,6 +60,10 @@ function buildH1ImportXML(data) {
     // Transporte
     modoTransporteFrontera = '1',  // 1=Mar, 2=Ferro, 3=Road, 4=Air
     modoTransporteInterior = '',
+    identidadTransporteFrontera = '',
+    paisTransporteFrontera = '',
+    // Provincia destino (casilla 17b)
+    provinciaDestino = '',
     // Aduana
     aduanaEntrada = '',
     localizacionMercancias = '',
@@ -189,13 +193,16 @@ function buildH1ImportXML(data) {
   </C14Declarante>
   <EmailNotificaDespacho>${emailDespacho}</EmailNotificaDespacho>
   <C15aPaisExpedicion>${paisExpedicion}</C15aPaisExpedicion>
-  <C17aPaisDestino>${paisDestino}</C17aPaisDestino>
+  <C17aPaisDestino>${paisDestino}</C17aPaisDestino>${provinciaDestino ? `
+  <C17bProvinciaIslaDestino>${provinciaDestino}</C17bProvinciaIslaDestino>` : ''}
+  <C181IdentMedioTransporteLlegada>${identidadTransporteFrontera || ''}</C181IdentMedioTransporteLlegada>
   <C19TransporteEnContenedores>${contenedores}</C19TransporteEnContenedores>
   <C20CondicionesDeEntrega>
     <C201CondicionesEntregaCodigo>${incoterm}</C201CondicionesEntregaCodigo>
     <C202CondicionesEntregaNombre>${incotermNombre || incoterm}</C202CondicionesEntregaNombre>
     <C203CondicionesEntregaZona>${incotermZona || ''}</C203CondicionesEntregaZona>
   </C20CondicionesDeEntrega>
+  <C21PaisMedioTransporteFrontera>${paisTransporteFrontera || paisExpedicion || ''}</C21PaisMedioTransporteFrontera>
   <C221CodigoDivisa>${divisa}</C221CodigoDivisa>
   <C222ImporteFactura>${Number(importeFactura).toFixed(3)}</C222ImporteFactura>
   <C24NaturalezaTransaccion>${naturalezaTransaccion}</C24NaturalezaTransaccion>

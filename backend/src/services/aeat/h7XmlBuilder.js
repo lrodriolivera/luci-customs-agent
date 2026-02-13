@@ -22,6 +22,7 @@ function buildH7ImportXML(data) {
     // Declarante
     declaranteNIF = '', declaranteNombre = '',
     emailDespacho = '',
+    formaRepresentacion = '2',
     // IOSS
     iossNumber = '',
     // Transporte
@@ -84,7 +85,7 @@ function buildH7ImportXML(data) {
         <C08ImportadorPais>${destinatarioPais}</C08ImportadorPais>
       </C08Importador>
       <C14Declarante>
-        <C14DeclaranteFormaRepresentacion>2</C14DeclaranteFormaRepresentacion>
+        <C14DeclaranteFormaRepresentacion>${formaRepresentacion}</C14DeclaranteFormaRepresentacion>
         <C14DeclaranteNID>${declaranteNIF}</C14DeclaranteNID>
         <C14DeclaranteRazonSocial>${declaranteNombre}</C14DeclaranteRazonSocial>
         <C14DeclaranteTipoAutorizaDespacho>G</C14DeclaranteTipoAutorizaDespacho>

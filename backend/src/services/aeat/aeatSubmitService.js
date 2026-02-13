@@ -266,7 +266,7 @@ async function submitPUE(pueRequest) {
     numeroRIIPyA: pueRequest.riiNumbers?.pya || '',
     especificidades: pueRequest.specificities || []
   });
-  return _sendToAEAT(soapXML, '/L/inwinvoc/es.aeat.dit.adu.ad44.soivre.SOIVREaltaV1SOAP');
+  return _sendToAEAT(soapXML, '/wlpl/AD44-JDIT/ws/rohs/ROHSsolicitudV1SOAP');
 }
 
 /**
