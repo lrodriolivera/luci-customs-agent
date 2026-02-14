@@ -91,20 +91,20 @@ function buildENSDeclarationXML(data) {
     <PlaLoaGOOITE333>${placeOfLoading}</PlaLoaGOOITE333>` : ''}${placeOfUnloading ? `
     <PlaUnlGOOITE333>${placeOfUnloading}</PlaUnlGOOITE333>` : ''}
     <TRACONCO2>
-      <NamCO27>${h.consignor?.name || ''}</NamCO27>
-      <StrAndNumCO222>${h.consignor?.street || h.consignor?.address?.street || ''}</StrAndNumCO222>${consignorPostcode ? `
-      <PosCodCO223>${consignorPostcode}</PosCodCO223>` : ''}
-      <CitCO224>${h.consignor?.city || h.consignor?.address?.city || ''}</CitCO224>
-      <CouCO225>${h.consignor?.country || h.consignor?.address?.country || ''}</CouCO225>
+      <NamCO27>${h.consignor?.name || 'Expedidor'}</NamCO27>
+      <StrAndNumCO222>${h.consignor?.street || h.consignor?.address?.street || '-'}</StrAndNumCO222>
+      <PosCodCO223>${consignorPostcode || '00000'}</PosCodCO223>
+      <CitCO224>${h.consignor?.city || h.consignor?.address?.city || '-'}</CitCO224>
+      <CouCO225>${h.consignor?.country || h.consignor?.address?.country || data.originCountry || 'CN'}</CouCO225>
     </TRACONCO2>
     <COMCODGODITM>
       <ComNomCMD1>${(h.commodityCode || h.goods?.[0]?.commodityCode || '').substring(0, 6)}</ComNomCMD1>
     </COMCODGODITM>
     <TRACONCE2>
-      <NamCE27>${h.consignee?.name || ''}</NamCE27>
-      <StrAndNumCE222>${h.consignee?.street || h.consignee?.address?.street || ''}</StrAndNumCE222>${consigneePostcode ? `
-      <PosCodCE223>${consigneePostcode}</PosCodCE223>` : ''}
-      <CitCE224>${h.consignee?.city || h.consignee?.address?.city || ''}</CitCE224>
+      <NamCE27>${h.consignee?.name || 'Destinatario'}</NamCE27>
+      <StrAndNumCE222>${h.consignee?.street || h.consignee?.address?.street || '-'}</StrAndNumCE222>
+      <PosCodCE223>${consigneePostcode || '00000'}</PosCodCE223>
+      <CitCE224>${h.consignee?.city || h.consignee?.address?.city || '-'}</CitCE224>
       <CouCE225>${h.consignee?.country || h.consignee?.address?.country || 'ES'}</CouCE225>
     </TRACONCE2>${hasContainer ? `
     <CONNR2>

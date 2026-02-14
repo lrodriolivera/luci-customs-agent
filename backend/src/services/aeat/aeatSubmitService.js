@@ -47,23 +47,40 @@ async function _getCertificate() {
 function _parseAEATResponse(responseData) {
   const body = typeof responseData === 'string' ? responseData : '';
   const code = (body.match(/<CodigoRespuesta>(\d+)</) || [])[1];
-  const mrn = (body.match(/<MRN>([^<]+)</) || body.match(/<NumeroReferenciaDUA>([^<]+)</) || [])[1];
-  const error = (body.match(/<DescripcionError>([^<]+)</) || [])[1];
+  const mrn = (body.match(/<MRN>([^<]+)</) || body.match(/<NumeroReferenciaDUA>([^<]+)</) || body.match(/<DocNumHEA5>([^<]+)</) || [])[1];
+  const error = (body.match(/<DescripcionError>([^<]+)</) || body.match(/<DescripcionRespuesta>([^<]+)</) || body.match(/<errorDescription>([^<]+)</) || [])[1];
   const fault = (body.match(/<faultstring>([^<]+)</) || [])[1];
-  const csv = (body.match(/<CSV>([^<]+)</) || [])[1];
+  const csv = (body.match(/<CSV>([^<]+)</) || body.match(/Código Seguro de Verificación ([A-Z0-9]+)/) || [])[1];
   const circuito = (body.match(/<Circuito>([^<]+)</) || body.match(/<circuito>([^<]+)</) || [])[1];
   const estado = (body.match(/<EstadoDespacho>([^<]+)</) || [])[1];
+  const xmlError = (body.match(/<errorText>([^<]+)</) || [])[1];
+  // ENS legacy: extraer TODOS los errores FUNERRER1
+  const ensErrors = [...body.matchAll(/<OriAttValER14>([^<]+)</g)].map(m => m[1]);
+  const ensReasons = [...body.matchAll(/<ErrReaER13>([^<]+)</g)].map(m => m[1]);
+  const ensPointers = [...body.matchAll(/<ErrPoiER12>([^<]+)</g)].map(m => m[1]);
+  const ensError = ensErrors.length > 0 ? ensErrors.join(' | ') : (ensPointers.length > 0 ? ensPointers.map((p, i) => p + (ensReasons[i] ? ':' + ensReasons[i] : '')).join(' | ') : null);
+  // AES/NCTS: extraer errorDescription
+  const funcErrors = [...body.matchAll(/<errorDescription>([^<]+)</g)].map(m => m[1]);
+  const funcError = funcErrors.length > 0 ? funcErrors.join(' | ') : null;
+
+  // Detectar tipo de mensaje (para AES/NCTS/ENS que usan formato diferente)
+  const msgType = (body.match(/<MesTypMES20>([^<]+)</) || body.match(/<messageType>([^<]+)</) || [])[1];
+  const tipoResp = (body.match(/<tipoRespuesta>([^<]+)</) || [])[1];
 
   const channelMap = { V: 'green', N: 'orange', R: 'red', verde: 'green', naranja: 'orange', rojo: 'red' };
 
+  // Exito: H1/H7 usan CodigoRespuesta 0/1/2, ENS usa CC328A, AES usa CC528C, NCTS usa CC028C
+  const isSuccess = code === '0' || code === '1' || code === '2' || code === '0000'
+    || msgType === 'CC328A' || msgType === 'CC528C' || msgType === 'CC028C';
+
   return {
-    success: code === '0' || code === '1' || code === '2',
-    code,
+    success: isSuccess,
+    code: code || tipoResp || msgType,
     mrn: mrn || null,
     csv: csv || null,
     channel: channelMap[circuito] || channelMap[circuito?.toLowerCase()] || null,
     estado: estado || null,
-    error: error || fault || null,
+    error: isSuccess ? null : (error || xmlError || ensError || funcError || fault || null),
     rawResponse: body
   };
 }
@@ -223,25 +240,79 @@ async function submitNCTS(transit) {
 async function submitENS(ensDeclaration) {
   const carrier = ensDeclaration.carrier || {};
   const cons = ensDeclaration.consignment || {};
+  const modeMap = { 'AIR': '4', 'SEA': '1', 'ROAD': '3', 'RAIL': '2', '1': '1', '2': '2', '3': '3', '4': '4' };
+
+  // Construir houseConsignments desde goods (envio directo) o houseConsignments (grupaje)
+  let houses = [];
+  if (ensDeclaration.houseConsignments && ensDeclaration.houseConsignments.length > 0) {
+    houses = ensDeclaration.houseConsignments.map(h => ({
+      grossMass: h.grossMass || 0,
+      numberOfPackages: h.numberOfPackages || 1,
+      placeOfLoading: h.placeOfLoading || '',
+      placeOfUnloading: h.placeOfUnloading || '',
+      consignor: {
+        name: h.consignor?.name || h.consignor?.address?.name || '',
+        street: h.consignor?.street || h.consignor?.address?.street || '',
+        city: h.consignor?.city || h.consignor?.address?.city || '',
+        postcode: h.consignor?.postcode || h.consignor?.address?.postcode || '',
+        country: h.consignor?.country || h.consignor?.address?.country || ''
+      },
+      consignee: {
+        name: h.consignee?.name || h.consignee?.address?.name || '',
+        street: h.consignee?.street || h.consignee?.address?.street || '',
+        city: h.consignee?.city || h.consignee?.address?.city || '',
+        postcode: h.consignee?.postcode || h.consignee?.address?.postcode || '',
+        country: h.consignee?.country || h.consignee?.address?.country || 'ES'
+      },
+      goodsDescription: h.goodsDescription || h.goods?.[0]?.description || '',
+      commodityCode: h.commodityCode || h.goods?.[0]?.commodityCode || '',
+      marksOfPackages: h.marksOfPackages || h.goods?.[0]?.marksOfPackages || 'N/M'
+    }));
+  } else if (ensDeclaration.goods && ensDeclaration.goods.length > 0) {
+    // Envio directo: convertir goods a un solo houseConsignment
+    // consignor/consignee pueden estar a nivel raiz del documento
+    const rootConsignor = ensDeclaration.consignor || cons.consignor || {};
+    const rootConsignee = ensDeclaration.consignee || cons.consignee || {};
+    const totalGross = ensDeclaration.goods.reduce((s, g) => s + (g.grossMass || g.grossWeight || 0), 0);
+    const totalPkgs = ensDeclaration.goods.reduce((s, g) => s + (g.numberOfPackages || g.packages || 1), 0);
+    houses = [{
+      grossMass: totalGross || cons.grossMass || 0,
+      numberOfPackages: totalPkgs || cons.numberOfPackages || 1,
+      placeOfLoading: cons.placeOfLoading || ensDeclaration.placeOfLoading || ((rootConsignor.country || rootConsignor.address?.country || 'CN') + 'ZZZ'),
+      placeOfUnloading: cons.placeOfUnloading || ensDeclaration.placeOfUnloading || 'ESZZZ',
+      consignor: {
+        name: rootConsignor.name || '',
+        street: rootConsignor.address?.street || rootConsignor.street || '',
+        city: rootConsignor.address?.city || rootConsignor.city || '',
+        postcode: rootConsignor.address?.postcode || rootConsignor.postcode || '',
+        country: rootConsignor.address?.country || rootConsignor.country || ''
+      },
+      consignee: {
+        name: rootConsignee.name || '',
+        street: rootConsignee.address?.street || rootConsignee.street || '',
+        city: rootConsignee.address?.city || rootConsignee.city || '',
+        postcode: rootConsignee.address?.postcode || rootConsignee.postcode || '',
+        country: rootConsignee.address?.country || rootConsignee.country || 'ES'
+      },
+      goodsDescription: ensDeclaration.goods[0].description || cons.goodsDescription || '',
+      commodityCode: ensDeclaration.goods[0].commodityCode || ensDeclaration.goods[0].taricCode || '',
+      marksOfPackages: ensDeclaration.goods[0].marksOfPackages || 'N/M'
+    }];
+  }
 
   const soapXML = buildENSDeclarationXML({
     test: process.env.AEAT_ENVIRONMENT !== 'production',
     lrn: ensDeclaration.lrn || '',
     carrierEORI: carrier.eori || '',
     entryOffice: ensDeclaration.entryOffice?.code || 'ES002801',
-    transportMode: ensDeclaration.transportMode === 'AIR' ? '4' : ensDeclaration.transportMode === 'SEA' ? '1' : '3',
-    transportId: ensDeclaration.transportMeans?.identification || '',
+    transportMode: modeMap[ensDeclaration.transportMode] || ensDeclaration.transportMode || '3',
+    transportId: ensDeclaration.transportMeans?.identification || carrier.vehicleId || '',
     transportCountry: ensDeclaration.transportMeans?.nationality || '',
     consignment: { containerNumber: cons.containerNumber || '' },
-    houseConsignments: (ensDeclaration.houseConsignments || []).map(h => ({
-      grossMass: h.grossMass || 0,
-      numberOfPackages: h.numberOfPackages || 1,
-      consignor: { name: h.consignor?.name || '', street: h.consignor?.address?.street || '', city: h.consignor?.address?.city || '', country: h.consignor?.address?.country || '' },
-      consignee: { name: h.consignee?.name || '', street: h.consignee?.address?.street || '', city: h.consignee?.address?.city || '', country: h.consignee?.address?.country || 'ES' },
-      goodsDescription: h.goods?.[0]?.description || '',
-      commodityCode: h.goods?.[0]?.commodityCode || ''
-    }))
+    houseConsignments: houses
   });
+
+  logger.info(`[AEAT-SUBMIT] ENS XML generado: ${soapXML.length} bytes, ${houses.length} houses`);
   return _sendToAEAT(soapXML, '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.IE315V5SOAP');
 }
 

@@ -73,10 +73,47 @@ class ENSService {
         };
       }
 
+      // Completar campos que el formulario no envia pero el schema requiere
+      const modeMap = { 'RAIL': '2', 'ROAD': '3', 'AIR': '4', 'SEA': '1' };
+      if (!data.transportMeans) data.transportMeans = {};
+      if (!data.transportMeans.modeAtBorder) {
+        data.transportMeans.modeAtBorder = modeMap[data.transportMode] || data.transportMode || '3';
+      }
+      if (!data.transportMeans.identificationType) {
+        const idTypeMap = { 'RAIL': 'TRAIN_NUMBER', 'ROAD': 'VEHICLE_REGISTRATION', 'AIR': 'FLIGHT_NUMBER', 'SEA': 'VESSEL_IMO' };
+        data.transportMeans.identificationType = idTypeMap[data.transportMode] || 'VEHICLE_REGISTRATION';
+      }
+      if (!data.transportMeans.identification && data.carrier?.vehicleId) {
+        data.transportMeans.identification = data.carrier.vehicleId;
+      }
+      // carrier.name: si tiene EORI pero no nombre, poner placeholder
+      if (data.carrier?.eori && !data.carrier.name) {
+        data.carrier.name = data.carrier.eori;
+      }
+      // Generar LRN si no existe
+      if (!data.lrn) {
+        const ts = Date.now().toString(36).toUpperCase();
+        const rnd = Math.random().toString(36).substring(2, 8).toUpperCase();
+        data.lrn = `LUCI${ts}${rnd}`;
+      }
+      // Completar goods: sequenceNumber y commodityCode
+      if (data.goods && data.goods.length > 0) {
+        data.goods.forEach((g, i) => {
+          if (!g.sequenceNumber) g.sequenceNumber = i + 1;
+          if (!g.commodityCode && g.taricCode) g.commodityCode = g.taricCode;
+          if (!g.commodityCode) g.commodityCode = '000000';
+        });
+      }
+
+      // Obtener tenantId del usuario
+      const User = require('../models/User');
+      const user = await User.findById(userId).select('tenantId').lean();
+
       // Crear declaracion
       const declaration = new ENSDeclaration({
         ...data,
         createdBy: userId,
+        tenantId: data.tenantId || user?.tenantId,
         status: 'draft'
       });
 
@@ -230,26 +267,14 @@ class ENSService {
     }
 
     try {
-      // Generar XML
-      const xmlResult = ensGenerator.generate(declaration, {
-        environment: process.env.AEAT_ENVIRONMENT || 'sandbox'
-      });
-
-      if (!xmlResult.success) {
-        return {
-          success: false,
-          error: 'Error generando XML',
-          details: xmlResult.error
-        };
-      }
-
-      // Guardar XML generado
-      declaration.generatedXML = xmlResult.xml;
-
-      // Enviar a AEAT real via aeatSubmitService
+      // Enviar a AEAT real via aeatSubmitService (usa ensXmlBuilder con formato legacy CC315A)
       const aeatResult = await aeatSubmitService.submitENS(declaration);
 
+      // Guardar XML y respuesta raw para debugging
+      declaration.generatedXML = aeatResult.rawResponse ? 'Enviado via aeatSubmitService' : '';
+
       if (!aeatResult.success) {
+        logger.warn(`[ENS] AEAT rechazo: code=${aeatResult.code}, error=${aeatResult.error}`);
         return {
           success: false,
           error: aeatResult.error || 'Error en respuesta AEAT',
@@ -274,7 +299,7 @@ class ENSService {
       };
 
       // Evaluar riesgo basado en respuesta real
-      if (aeatResult.code === '0' || aeatResult.code === '1') {
+      if (aeatResult.success) {
         declaration.status = 'accepted';
         declaration.riskAssessment = {
           status: 'ACK',

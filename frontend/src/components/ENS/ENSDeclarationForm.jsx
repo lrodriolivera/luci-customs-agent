@@ -30,6 +30,8 @@ const transportModes = [
 
 // Spanish entry customs offices
 const entryOffices = [
+  { code: 'ES009999', name: 'PRE Pruebas Peninsula', modes: ['SEA', 'ROAD', 'RAIL', 'AIR'] },
+  { code: 'ES009998', name: 'PRE Pruebas Canarias', modes: ['SEA', 'ROAD', 'RAIL', 'AIR'] },
   { code: 'ES002801', name: 'Algeciras', modes: ['SEA', 'ROAD'] },
   { code: 'ES000801', name: 'Barcelona', modes: ['SEA', 'ROAD', 'RAIL', 'AIR'] },
   { code: 'ES002101', name: 'Bilbao', modes: ['SEA', 'ROAD'] },
@@ -298,10 +300,13 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
       setSaving(true)
       let response
 
+      // Guardar borrador permite validacion parcial
+      const payload = { ...formData, allowDraft: !submit }
+
       if (declarationId) {
-        response = await ensAPI.update(declarationId, formData)
+        response = await ensAPI.update(declarationId, payload)
       } else {
-        response = await ensAPI.create(formData)
+        response = await ensAPI.create(payload)
       }
 
       if (response.data.success) {
@@ -317,7 +322,19 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
       }
     } catch (error) {
       console.error('Error saving declaration:', error)
-      setErrors({ general: error.response?.data?.message || 'Error al guardar' })
+      const errData = error.response?.data
+      const detailedErrors = errData?.errors
+      if (detailedErrors && Array.isArray(detailedErrors)) {
+        // Mostrar errores especificos por campo
+        const fieldErrors = {}
+        detailedErrors.forEach(e => {
+          if (e.field) fieldErrors[e.field] = e.message
+        })
+        fieldErrors.general = errData.message + ': ' + detailedErrors.map(e => e.message).join(' | ')
+        setErrors(fieldErrors)
+      } else {
+        setErrors({ general: errData?.message || 'Error al guardar' })
+      }
     } finally {
       setSaving(false)
     }
