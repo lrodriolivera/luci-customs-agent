@@ -426,7 +426,7 @@ const ENSDeclarationList = () => {
                     {dec.status === 'draft' && (
                       <>
                         <Tooltip title="Editar">
-                          <IconButton size="small" onClick={() => navigate(`/ens/${dec._id}`)}>
+                          <IconButton size="small" onClick={() => navigate(`/ens/${dec._id}/edit`)}>
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>

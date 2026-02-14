@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 
 // Layout
@@ -33,7 +33,7 @@ import CommunicationsManager from './components/Communications/CommunicationsMan
 import IntegrationsManager from './components/Integrations/IntegrationsManager'
 
 // ENS/ICS2 Declarations
-import { ENSDeclarationList, ENSDeclarationDetail } from './components/ENS'
+import { ENSDeclarationList, ENSDeclarationDetail, ENSDeclarationForm } from './components/ENS'
 
 // Query Services (ADDS-JDIT)
 import { QueryDashboard } from './components/Queries'
@@ -77,6 +77,12 @@ import TermsOfService from './components/Legal/TermsOfService'
 import CookiePolicy from './components/Legal/CookiePolicy'
 import CookieBanner from './components/Legal/CookieBanner'
 import NotFound from './components/NotFound'
+// ENS Edit Page wrapper
+const ENSEditPage = () => {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  return <ENSDeclarationForm declarationId={id} onSuccess={() => navigate(`/ens/${id}`)} onClose={() => navigate(`/ens/${id}`)} />
+}
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -154,6 +160,7 @@ function App() {
         {/* ENS/ICS2 Declarations */}
         <Route path="ens" element={<ENSDeclarationList />} />
         <Route path="ens/:id" element={<ENSDeclarationDetail />} />
+        <Route path="ens/:id/edit" element={<ENSEditPage />} />
 
         {/* Query Services (ADDS-JDIT) */}
         <Route path="queries" element={<QueryDashboard />} />
