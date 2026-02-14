@@ -581,7 +581,7 @@ class TaricService {
         level: 10,
         duties: data.duties,
         vat: data.vat,
-        supplementaryUnit: data.supplementaryUnit,
+        supplementaryUnit: typeof data.supplementaryUnit === 'object' ? (data.supplementaryUnit?.type || data.supplementaryUnit?.description || '') : (data.supplementaryUnit || ''),
         specialTaxes: data.specialTaxes || [],
         isLeaf: true,
         isActive: true,
