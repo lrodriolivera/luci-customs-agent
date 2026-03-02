@@ -1,6 +1,6 @@
 /**
  * Servicio de IA - Integracion con Claude API
- * Usa Claude Sonnet 4 para chat y Claude Opus 4.5 para tareas complejas
+ * Usa Claude Sonnet 4.6 para chat y Claude Opus 4.6 para tareas complejas
  */
 
 const axios = require('axios');
@@ -8,8 +8,8 @@ const logger = require('../config/logger');
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
-const SONNET_MODEL = 'claude-sonnet-4-20250514';
-const OPUS_MODEL = 'claude-opus-4-20250514';
+const SONNET_MODEL = 'claude-sonnet-4-6-20250514';
+const OPUS_MODEL = 'claude-opus-4-6-20250514';
 
 // System prompts especializados
 const SYSTEM_PROMPTS = {

@@ -9,6 +9,37 @@ const logger = require('../config/logger');
 router.use(auth);
 
 /**
+ * Obtener historial global de chats del usuario
+ * GET /api/chat/history
+ */
+router.get('/history', async (req, res) => {
+  try {
+    const { limit = 50, before } = req.query;
+
+    const query = {};
+    if (before) {
+      query.createdAt = { $lt: new Date(before) };
+    }
+
+    const messages = await ChatMessage.find(query)
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .populate('expedition', 'expeditionId');
+
+    res.json({
+      success: true,
+      data: { messages: messages.reverse() }
+    });
+  } catch (error) {
+    logger.error('Error obteniendo historial de chat:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener historial de chat'
+    });
+  }
+});
+
+/**
  * Obtener historial de chat de un expediente
  * GET /api/chat/:expeditionId
  */
