@@ -8,6 +8,15 @@ import { declarationsAPI } from '../../services/api'
  */
 const H7Declaration = ({ expedition, onUpdate }) => {
   const { t } = useTranslation()
+
+  // Multi-country support
+  const isNL = (() => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
+      return storedUser?.tenant?.customsConfig?.country === 'NL'
+    } catch { return false }
+  })()
+
   const [loading, setLoading] = useState(false)
   const [eligibility, setEligibility] = useState(null)
   const [h7Data, setH7Data] = useState(null)
@@ -377,6 +386,21 @@ const H7Declaration = ({ expedition, onUpdate }) => {
           <li>• Tiempo de despacho estimado: 1-4 horas (inmediato con IOSS)</li>
         </ul>
       </div>
+
+      {/* NL DECO specific note */}
+      {isNL && (
+        <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+          <h4 className="font-medium text-orange-900 mb-2 flex items-center gap-2">
+            <span>{'\u{1F1F3}\u{1F1F1}'}</span> DECO - Paises Bajos
+          </h4>
+          <ul className="text-sm text-orange-800 space-y-1">
+            <li>• DECO: Maximo 150 EUR por envio</li>
+            <li>• Codigo mercancia: solo 6 digitos (HS6) en lugar de TARIC 10 digitos</li>
+            <li>• IOSS recomendado para envios e-commerce B2C</li>
+            <li>• Sistema: Douane Management Systeem (DMS) / DECO</li>
+          </ul>
+        </div>
+      )}
     </div>
   )
 }

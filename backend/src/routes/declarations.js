@@ -161,4 +161,128 @@ router.get('/:expeditionId/ai/analysis', declarationController.getAiDeclarationA
 // Aplicar sugerencia de régimen/preferencia
 router.post('/:expeditionId/ai/apply-regime', declarationController.applyRegimeSuggestion);
 
+// ===========================================
+// MULTI-COUNTRY V2 SUBMISSION
+// ===========================================
+
+/**
+ * @route POST /api/declarations/:expeditionId/submit-v2
+ * @desc Multi-country aware submission - uses tenant's country config
+ * Uses CustomsServiceFactory pattern to route to the correct country service
+ */
+router.post('/:expeditionId/submit-v2', requirePermission('canApproveDeclarations'), async (req, res) => {
+  try {
+    const { CustomsServiceFactory } = require('../services/customs');
+
+    const expedition = await Expedition.findOne({
+      _id: req.params.expeditionId,
+      tenantId: req.tenantId  // Tenant isolation
+    });
+
+    if (!expedition) {
+      return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
+    }
+
+    if (expedition.declaration?.status === 'accepted') {
+      return res.status(400).json({ success: false, error: 'Declaracion ya aceptada' });
+    }
+
+    // Get country from tenant config or default to ES
+    const tenant = req.tenant || {};
+    const country = tenant.customsConfig?.country || 'ES';
+    const declarationType = expedition.declaration?.type || 'H1';
+
+    // Get the right customs service via factory
+    const customsService = CustomsServiceFactory.getServiceForTenant(tenant);
+
+    // Submit via the country-specific service
+    const result = await customsService.submitDeclaration(expedition, declarationType);
+
+    if (result.success) {
+      // Update expedition with result
+      expedition.declaration = expedition.declaration || {};
+      expedition.declaration.mrn = result.mrn;
+      expedition.declaration.status = 'accepted';
+      expedition.declaration.channel = result.channel || 'green';
+      expedition.declaration.submittedAt = new Date();
+      expedition.declaration.aeatResponse = {
+        code: result.code,
+        csv: result.csv,
+        timestamp: new Date(),
+        country: country,
+        system: country === 'NL' ? 'DECO' : 'AEAT',
+        simulated: result.simulated || false
+      };
+
+      await expedition.save();
+    }
+
+    res.json({
+      success: result.success,
+      data: {
+        mrn: result.mrn,
+        lrn: result.lrn || expedition.expeditionId,
+        channel: result.channel,
+        country: country,
+        system: country === 'NL' ? (declarationType === 'H7' ? 'DECO' : 'DMS 4.0') : 'AEAT',
+        simulated: result.simulated || false,
+      },
+      error: result.error
+    });
+
+  } catch (error) {
+    console.error('Multi-country submit error:', error);
+    res.status(500).json({ success: false, error: 'Error enviando declaracion' });
+  }
+});
+
+/**
+ * @route POST /api/declarations/:expeditionId/validate-v2
+ * @desc Multi-country validation - validates without submitting
+ * Returns { valid, errors, warnings, country, system }
+ */
+router.post('/:expeditionId/validate-v2', async (req, res) => {
+  try {
+    const { CustomsServiceFactory } = require('../services/customs');
+
+    const expedition = await Expedition.findOne({
+      _id: req.params.expeditionId,
+      tenantId: req.tenantId
+    });
+
+    if (!expedition) {
+      return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
+    }
+
+    const tenant = req.tenant || {};
+    const country = tenant.customsConfig?.country || 'ES';
+    const declarationType = expedition.declaration?.type || req.body.declarationType || 'H1';
+
+    const customsService = CustomsServiceFactory.getServiceForTenant(tenant);
+
+    // Validate only - do not submit
+    const validation = await customsService.validateDeclaration(expedition, declarationType);
+
+    const systemName = country === 'NL'
+      ? (declarationType === 'H7' ? 'DECO' : 'DMS 4.0')
+      : 'AEAT';
+
+    res.json({
+      success: true,
+      data: {
+        valid: validation.valid,
+        errors: validation.errors || [],
+        warnings: validation.warnings || [],
+        country: country,
+        system: systemName,
+        declarationType: declarationType,
+      }
+    });
+
+  } catch (error) {
+    console.error('Multi-country validate error:', error);
+    res.status(500).json({ success: false, error: 'Error validando declaracion' });
+  }
+});
+
 module.exports = router;

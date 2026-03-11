@@ -29,6 +29,16 @@ export default function Dashboard() {
   const { t } = useTranslation()
   const { user } = useAuth()
 
+  // Multi-country: read tenant customs config (default ES/AEAT)
+  const customsCountry = (() => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
+      return storedUser?.tenant?.customsConfig?.country || 'ES'
+    } catch { return 'ES' }
+  })()
+  const customsSystem = customsCountry === 'NL' ? 'DMS/DECO' : 'AEAT'
+  const countryFlag = customsCountry === 'NL' ? '\u{1F1F3}\u{1F1F1}' : '\u{1F1EA}\u{1F1F8}'
+
   const quickActions = [
     { path: '/classification', icon: TagIcon, label: t('dashboard.taricClassification'), desc: t('dashboard.aiTariff'), color: 'from-sky-500 to-blue-600', bg: 'bg-sky-50 group-hover:bg-sky-100' },
     { path: '/calculator', icon: CalculatorIcon, label: t('dashboard.calculator'), desc: t('dashboard.dutiesVat'), color: 'from-emerald-500 to-green-600', bg: 'bg-emerald-50 group-hover:bg-emerald-100' },
@@ -156,10 +166,17 @@ export default function Dashboard() {
               {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>
-          <Link to="/expeditions/new" className="bg-white/10 backdrop-blur-sm text-white border border-white/20 font-medium px-5 py-2.5 rounded-xl hover:bg-white/20 transition-all flex items-center gap-2 text-sm">
-            <PlusIcon className="w-4 h-4" />
-            {t('dashboard.newExpedition')}
-          </Link>
+          <div className="flex items-center gap-3">
+            {/* Country Badge */}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+              <span>{countryFlag}</span>
+              <span className="text-white text-sm font-medium">{customsSystem}</span>
+            </div>
+            <Link to="/expeditions/new" className="bg-white/10 backdrop-blur-sm text-white border border-white/20 font-medium px-5 py-2.5 rounded-xl hover:bg-white/20 transition-all flex items-center gap-2 text-sm">
+              <PlusIcon className="w-4 h-4" />
+              {t('dashboard.newExpedition')}
+            </Link>
+          </div>
         </div>
 
         {/* KPI Cards */}

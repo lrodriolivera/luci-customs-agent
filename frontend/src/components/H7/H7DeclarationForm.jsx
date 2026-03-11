@@ -20,6 +20,14 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
   const navigate = useNavigate()
   const expeditionId = propExpeditionId || params.expeditionId
 
+  // Multi-country support
+  const isNL = (() => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
+      return storedUser?.tenant?.customsConfig?.country === 'NL'
+    } catch { return false }
+  })()
+
   const [expedition, setExpedition] = useState(null)
   const [eligibility, setEligibility] = useState(null)
   const [h7Data, setH7Data] = useState(null)
@@ -149,6 +157,13 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
             <h2 className="text-xl font-bold text-gray-900">{t('h7.h7Declaration')}</h2>
             <p className="text-sm text-gray-500">{t('h7.lowValueImport')}</p>
           </div>
+          {/* Country indicator */}
+          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+            isNL ? 'bg-orange-50 text-orange-700' : 'bg-blue-50 text-blue-700'
+          }`}>
+            <span>{isNL ? '\u{1F1F3}\u{1F1F1}' : '\u{1F1EA}\u{1F1F8}'}</span>
+            <span>{isNL ? 'DECO' : 'AEAT'}</span>
+          </div>
         </div>
         {isH7Submitted && (
           <span className="badge bg-green-100 text-green-800 px-3 py-1">
@@ -222,19 +237,22 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
             {/* IOSS Number */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('h7.iossOptional')}
+                {isNL ? 'Numero IOSS (recomendado para e-commerce)' : t('h7.iossOptional')}
               </label>
               <input
                 type="text"
                 name="iossNumber"
                 value={formData.iossNumber}
                 onChange={handleInputChange}
-                placeholder="IM372XXXXXXXXX"
+                placeholder={isNL ? 'IMNL00XXXXXXXXX' : 'IM372XXXXXXXXX'}
                 className="input"
                 disabled={isH7Generated}
               />
               <p className="text-xs text-gray-500 mt-1">
-                {t('h7.iossHintLong')}
+                {isNL
+                  ? 'Si el vendedor tiene IOSS, el IVA ya fue cobrado en origen. Formato: IM + pais + digitos.'
+                  : t('h7.iossHintLong')
+                }
               </p>
             </div>
 
@@ -250,13 +268,41 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
                 className="input"
                 disabled={isH7Generated}
               >
-                <option value="ES000101">Valencia (ES000101)</option>
-                <option value="ES000301">Barcelona (ES000301)</option>
-                <option value="ES002801">Madrid Barajas (ES002801)</option>
-                <option value="ES004101">Sevilla (ES004101)</option>
-                <option value="ES004801">Bilbao (ES004801)</option>
+                {isNL ? (
+                  <>
+                    <option value="NL000010">Rotterdam (NL000010)</option>
+                    <option value="NL000020">Schiphol (NL000020)</option>
+                    <option value="NL000030">Amsterdam (NL000030)</option>
+                    <option value="NL000040">Eindhoven (NL000040)</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="ES000101">Valencia (ES000101)</option>
+                    <option value="ES000301">Barcelona (ES000301)</option>
+                    <option value="ES002801">Madrid Barajas (ES002801)</option>
+                    <option value="ES004101">Sevilla (ES004101)</option>
+                    <option value="ES004801">Bilbao (ES004801)</option>
+                  </>
+                )}
               </select>
             </div>
+
+            {/* NL-specific: DECO note and commodity code info */}
+            {isNL && (
+              <div className="md:col-span-2 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <InformationCircleIcon className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-orange-700">
+                    <p className="font-medium mb-1">DECO - Paises Bajos</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>Maximo 150 EUR por envio</li>
+                      <li>Codigo mercancia: 6 digitos (HS6, no TARIC 10 digitos)</li>
+                      <li>El numero IOSS es recomendado para envios e-commerce</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Force Generate */}
             {!eligibility?.eligible && !isH7Generated && (

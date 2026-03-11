@@ -208,6 +208,9 @@ export const declarationsAPI = {
   downloadSummaryPDF: (expeditionId) =>
     api.get(`/api/declarations/${expeditionId}/summary-pdf`, { responseType: 'blob' }),
 
+  // Multi-country support
+  supportedCountries: () => api.get('/api/declarations/supported-countries'),
+
   // AI-Powered Endpoints - LUCI Integration
   aiValidate: (expeditionId, declarationType) =>
     api.post(`/api/declarations/${expeditionId}/ai/validate`, { declarationType }, { timeout: 90000 }),

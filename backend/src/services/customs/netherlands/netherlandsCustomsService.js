@@ -25,17 +25,23 @@ const NL_CONFIG = {
 const NL_CODES = {
   customsOffices: {
     'AMSTERDAM': 'NL000396',
-    'ROTTERDAM': 'NL000297',
+    'ROTTERDAM_HAVEN': 'NL000297',
+    'ROTTERDAM_RIJNMOND': 'NL000251',
     'SCHIPHOL': 'NL000399',
     'EINDHOVEN': 'NL000440',
     'MAASTRICHT': 'NL000447',
+    'GRONINGEN': 'NL000460',
+    'BREDA': 'NL000231',
+    'HEERLEN': 'NL000441',
+    'VENLO': 'NL000448',
   },
   documentTypes: {
-    transport: ['N740', 'N741', 'N714', 'N730'],
-    previous: ['N830', 'N821', 'NMRN'],
-    additional: ['N853', 'N861', 'N862'],
-    authorization: ['N990', 'N991'],
-    supporting: ['N380', 'N386', 'N325'],
+    transport: ['N740', 'N741', 'N714', 'N730', 'N720', 'N722', 'N750', 'N760'],
+    previous: ['N830', 'N821', 'NMRN', 'N822', 'N825', 'NZZZ'],
+    additional: ['N853', 'N861', 'N862', 'N864', 'N865', 'N954', 'N955'],
+    authorization: ['N990', 'N991', 'N992', 'C514', 'C517', 'C518', 'C519'],
+    supporting: ['N380', 'N386', 'N325', 'N271', 'N935', 'N941', 'N951', 'N952', 'N953'],
+    deco: ['N380', 'N271', 'N325', 'N740', 'N741', 'N714'],
   }
 };
 
@@ -111,73 +117,373 @@ class NetherlandsCustomsService extends BaseCustomsService {
 
   /**
    * Build DECO H7 XML (Netherlands-specific format)
-   * Aligned with EUCDM but using NL national codes
+   * Aligned with EU Annex B H7 dataset requirements + WCO DMS namespace
+   * Data elements per EUCDM Annex B for simplified low-value declarations
    */
   _buildDECOXml(data) {
-    const items = data.items.map((item, idx) => `
-      <GoodsItem>
-        <SequenceNumber>${item.itemNumber}</SequenceNumber>
-        <CommodityCode>${item.commodityCode}</CommodityCode>
-        <GoodsDescription>${this._escapeXml(item.description)}</GoodsDescription>
-        <GrossMass>${item.grossMass}</GrossMass>
-        <StatisticalValue>${item.customsValue}</StatisticalValue>
-        <StatisticalValueCurrency>${item.currency}</StatisticalValueCurrency>
-        <CountryOfOrigin>${item.countryOfOrigin || 'XX'}</CountryOfOrigin>
-        <NumberOfPackages>${item.numberOfPackages}</NumberOfPackages>
-        <PackageType>${item.packageType}</PackageType>
-      </GoodsItem>`).join('');
+    const lrn = data.lrn || data.uniqueConsignmentRef || `LRN-${Date.now()}`;
+    const customsOffice = data.customsOffice || NL_CODES.customsOffices['SCHIPHOL'];
+    const countryOfDestination = data.countryOfDestination || 'NL';
+    const countryOfDispatch = data.countryOfDispatch || data.exporter?.country || 'XX';
+    const borderTransportMode = data.transport?.modeAtBorder || '4'; // default air
+    const containerId = data.transport?.containerId || '';
+    const currency = data.currency || 'EUR';
+    const intrinsicValue = data.intrinsicValue || data.totalCustomsValue || 0;
+
+    // D.E. 6/x - Goods items with all required H7 data elements
+    const items = data.items.map((item, idx) => {
+      const seqNum = item.itemNumber || (idx + 1);
+      const commodityCode = (item.commodityCode || '000000').substring(0, 6); // D.E. 6/14: HS 6 digits for H7
+      const netMass = item.netMass || item.grossMass || 0;
+      const grossMass = item.grossMass || 0;
+      const itemValue = item.customsValue || item.statisticalValue || 0;
+
+      return `
+      <GovernmentAgencyGoodsItem>
+        <SequenceNumeric>${seqNum}</SequenceNumeric>
+        <!-- D.E. 8/6: Statistical value -->
+        <StatisticalValueAmount currencyID="${item.currency || currency}">${itemValue}</StatisticalValueAmount>
+        <!-- D.E. 2/1: Previous documents -->
+        ${item.previousDocument ? `<PreviousDocument>
+          <CategoryCode>Y</CategoryCode>
+          <ID>${this._escapeXml(item.previousDocument.id || '')}</ID>
+          <TypeCode>${item.previousDocument.type || 'N830'}</TypeCode>
+          <LineNumeric>${seqNum}</LineNumeric>
+        </PreviousDocument>` : ''}
+        <Commodity>
+          <!-- D.E. 6/14: Commodity code (HS 6 digits for H7) -->
+          <Classification>
+            <ID>${commodityCode}</ID>
+            <IdentificationTypeCode>TSP</IdentificationTypeCode>
+          </Classification>
+          <!-- D.E. 6/8: Description of goods -->
+          <Description>${this._escapeXml(item.description || '')}</Description>
+          <!-- D.E. 6/5: Gross mass -->
+          <GoodsMeasure>
+            <GrossMassMeasure unitCode="KGM">${grossMass}</GrossMassMeasure>
+            <!-- D.E. 6/1: Net mass -->
+            <NetNetWeightMeasure unitCode="KGM">${netMass}</NetNetWeightMeasure>
+          </GoodsMeasure>
+        </Commodity>
+        <!-- D.E. 5/14: Country of dispatch (item level) -->
+        <GovernmentProcedure>
+          <CurrentCode>C</CurrentCode>
+          <PreviousCode>00</PreviousCode>
+        </GovernmentProcedure>
+        <Origin>
+          <CountryCode>${item.countryOfOrigin || countryOfDispatch}</CountryCode>
+        </Origin>
+        <Packaging>
+          <!-- D.E. 6/9: Type of packages -->
+          <TypeCode>${item.packageType || 'PK'}</TypeCode>
+          <!-- D.E. 6/10: Number of packages -->
+          <QuantityQuantity>${item.numberOfPackages || 1}</QuantityQuantity>
+        </Packaging>
+        <!-- D.E. 6/16: Items value -->
+        <ValuationAdjustment>
+          <AdditionCode>0000</AdditionCode>
+        </ValuationAdjustment>
+        <CustomsValuation>
+          <ItemChargeAmount currencyID="${item.currency || currency}">${itemValue}</ItemChargeAmount>
+        </CustomsValuation>
+      </GovernmentAgencyGoodsItem>`;
+    }).join('');
 
     return `<?xml version="1.0" encoding="UTF-8"?>
-<Declaration xmlns="urn:wco:datamodel:WCO:DEC-DMS:2" xmlns:ds="urn:wco:datamodel:WCO:Declaration_DS:DMS:2">
+<Declaration xmlns="urn:wco:datamodel:WCO:DEC-DMS:2"
+             xmlns:ds="urn:wco:datamodel:WCO:Declaration_DS:DMS:2"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="urn:wco:datamodel:WCO:DEC-DMS:2 WCO_DEC_2_DMS.xsd">
+  <!-- D.E. 1/1: Declaration type - IM for import -->
   <FunctionCode>9</FunctionCode>
+  <FunctionalReferenceID>${this._escapeXml(lrn)}</FunctionalReferenceID>
+  <!-- D.E. 1/1: Type code -->
   <TypeCode>IM</TypeCode>
-  <AdditionalTypeCode>C</AdditionalTypeCode>
-  <TotalGrossMassMeasure>${data.totalGrossMass}</TotalGrossMassMeasure>
-  <TotalPackageQuantity>${data.totalPackages}</TotalPackageQuantity>
+  <!-- D.E. 1/2: Additional declaration type - C for simplified -->
+  <AdditionalDeclarationTypeCode>C</AdditionalDeclarationTypeCode>
+  <GoodsItemQuantity>${data.items.length}</GoodsItemQuantity>
+  <!-- D.E. 6/5: Total gross mass at declaration level -->
+  <TotalGrossMassMeasure unitCode="KGM">${data.totalGrossMass || 0}</TotalGrossMassMeasure>
+  <TotalPackageQuantity>${data.totalPackages || 0}</TotalPackageQuantity>
+  <!-- D.E. 4/18: Intrinsic value -->
+  <InvoiceAmount currencyID="${currency}">${intrinsicValue}</InvoiceAmount>
+  ${data.authentication ? `<Authentication>
+    <Authenticator>${this._escapeXml(data.authentication.authenticator || '')}</Authenticator>
+  </Authentication>` : ''}
+  <!-- D.E. 3/16: Declarant -->
   <Declarant>
-    <ID>${data.declarant.eori}</ID>
+    <ID>${this._escapeXml(data.declarant.eori || '')}</ID>
     <Name>${this._escapeXml(data.declarant.name || '')}</Name>
+    ${data.declarant.address ? `<Address>
+      <Line>${this._escapeXml(data.declarant.address.street || '')}</Line>
+      <CityName>${this._escapeXml(data.declarant.address.city || '')}</CityName>
+      <CountryCode>${data.declarant.address.country || 'NL'}</CountryCode>
+      <PostcodeID>${this._escapeXml(data.declarant.address.postalCode || '')}</PostcodeID>
+    </Address>` : ''}
   </Declarant>
+  <!-- D.E. 3/1: Exporter (seller/consignor) -->
   <Exporter>
     <Name>${this._escapeXml(data.exporter.name || '')}</Name>
     <Address>
-      <CountryCode>${data.exporter.country || 'XX'}</CountryCode>
+      <Line>${this._escapeXml(data.exporter.address?.street || '')}</Line>
+      <CityName>${this._escapeXml(data.exporter.address?.city || '')}</CityName>
+      <CountryCode>${data.exporter.country || countryOfDispatch}</CountryCode>
+      <PostcodeID>${this._escapeXml(data.exporter.address?.postalCode || '')}</PostcodeID>
     </Address>
   </Exporter>
+  <!-- D.E. 3/15: Importer -->
   <Importer>
-    <ID>${data.importer.eori}</ID>
+    <ID>${this._escapeXml(data.importer.eori || '')}</ID>
+    ${data.importer.name ? `<Name>${this._escapeXml(data.importer.name)}</Name>` : ''}
   </Importer>
-  ${data.iossNumber ? `<AdditionalInformation>
-    <StatementCode>IOSS</StatementCode>
-    <StatementDescription>${data.iossNumber}</StatementDescription>
-  </AdditionalInformation>` : ''}
+  <!-- D.E. 3/40: Additional fiscal references (IOSS/Special scheme) -->
+  ${data.iossNumber ? `<AdditionalFiscalReference>
+    <ID>${this._escapeXml(data.iossNumber)}</ID>
+    <RoleCode>FR5</RoleCode>
+  </AdditionalFiscalReference>` : ''}
   <GoodsShipment>
     <TransactionNatureCode>11</TransactionNatureCode>
-    <UCR>${data.uniqueConsignmentRef}</UCR>
+    <!-- D.E. 5/8: Country of destination -->
+    <Destination>
+      <CountryCode>${countryOfDestination}</CountryCode>
+    </Destination>
+    <!-- D.E. 5/14: Country of dispatch -->
+    <ExportCountry>
+      <ID>${countryOfDispatch}</ID>
+    </ExportCountry>
+    <!-- D.E. 5/23: Location of goods (customs office) -->
+    <GoodsLocation>
+      <Name>${this._escapeXml(data.goodsLocation?.name || 'Customs warehouse')}</Name>
+      <ID>${customsOffice}</ID>
+      <TypeCode>${data.goodsLocation?.typeCode || 'B'}</TypeCode>
+      <Address>
+        <TypeCode>U</TypeCode>
+        <CountryCode>NL</CountryCode>
+      </Address>
+    </GoodsLocation>
+    <Consignment>
+      <!-- D.E. 7/4: Mode of transport at the border -->
+      <ArrivalTransportMeans>
+        <ModeCode>${borderTransportMode}</ModeCode>
+      </ArrivalTransportMeans>
+      <!-- D.E. 7/2: Container identification -->
+      ${containerId ? `<TransportEquipment>
+        <SequenceNumeric>1</SequenceNumeric>
+        <ID>${this._escapeXml(containerId)}</ID>
+      </TransportEquipment>` : ''}
+    </Consignment>
+    <!-- UCR / transport document -->
+    <UCR>
+      <TraderAssignedReferenceID>${this._escapeXml(data.uniqueConsignmentRef || lrn)}</TraderAssignedReferenceID>
+    </UCR>
     <TransportDocument>
-      <ID>${data.transport.documentRef || ''}</ID>
-      <TypeCode>${data.transport.documentType || 'N740'}</TypeCode>
+      <ID>${this._escapeXml(data.transport?.documentRef || '')}</ID>
+      <TypeCode>${data.transport?.documentType || 'N740'}</TypeCode>
     </TransportDocument>
+    <!-- Goods items -->
     ${items}
   </GoodsShipment>
 </Declaration>`;
   }
 
   /**
-   * Build DMS 4.0 H1 XML
+   * Build DMS 4.0 H1 XML (Standard import/export - full EUCDM dataset)
    */
   _buildDMSXml(data, operationType) {
-    // DMS 4.0 uses EUCDM-aligned XML
-    // More complex than DECO - full dataset
-    // TODO: Implement full DMS 4.0 XML once MIG specs obtained from nh.douane.nl
+    logger.info(`NL DMS 4.0 ${operationType} XML builder`);
 
-    logger.info(`NL DMS 4.0 ${operationType} XML builder - placeholder`);
+    const isExport = operationType === 'export';
+    const typeCode = isExport ? 'EX' : 'IM';
+    const additionalType = data.additionalDeclarationType || 'A'; // A = standard
+    const lrn = data.lrn || data.uniqueConsignmentRef || `LRN-${Date.now()}`;
+    const currency = data.currency || 'EUR';
+    const customsOffice = data.customsOffice || NL_CODES.customsOffices['ROTTERDAM_HAVEN'];
+    const supervisingOffice = data.supervisingOffice || customsOffice;
+
+    // Build goods items
+    const items = (data.items || []).map((item, idx) => {
+      const seqNum = item.itemNumber || (idx + 1);
+      const commodityCode = item.commodityCode || '0000000000'; // 10 digits for H1
+      const taricAdditional = item.taricAdditionalCode || '';
+      const nationalAdditional = item.nationalAdditionalCode || '';
+      const netMass = item.netMass || 0;
+      const grossMass = item.grossMass || 0;
+      const itemValue = item.customsValue || item.statisticalValue || 0;
+      const procedureCode = item.procedureCode || (isExport ? '1000' : '4000');
+      const previousProcedure = item.previousProcedure || '00';
+
+      return `
+      <GovernmentAgencyGoodsItem>
+        <SequenceNumeric>${seqNum}</SequenceNumeric>
+        <StatisticalValueAmount currencyID="${item.currency || currency}">${itemValue}</StatisticalValueAmount>
+        ${item.previousDocument ? `<PreviousDocument>
+          <CategoryCode>Y</CategoryCode>
+          <ID>${this._escapeXml(item.previousDocument.id || '')}</ID>
+          <TypeCode>${item.previousDocument.type || 'NMRN'}</TypeCode>
+          <LineNumeric>${seqNum}</LineNumeric>
+        </PreviousDocument>` : ''}
+        ${(item.additionalDocuments || []).map(doc => `<AdditionalDocument>
+          <CategoryCode>${doc.category || 'N'}</CategoryCode>
+          <ID>${this._escapeXml(doc.id || '')}</ID>
+          <TypeCode>${doc.type || 'N380'}</TypeCode>
+        </AdditionalDocument>`).join('')}
+        <Commodity>
+          <Description>${this._escapeXml(item.description || '')}</Description>
+          <Classification>
+            <ID>${commodityCode}</ID>
+            <IdentificationTypeCode>TSP</IdentificationTypeCode>
+          </Classification>
+          ${taricAdditional ? `<Classification>
+            <ID>${taricAdditional}</ID>
+            <IdentificationTypeCode>TRA</IdentificationTypeCode>
+          </Classification>` : ''}
+          ${nationalAdditional ? `<Classification>
+            <ID>${nationalAdditional}</ID>
+            <IdentificationTypeCode>GN</IdentificationTypeCode>
+          </Classification>` : ''}
+          <DutyTaxFee>
+            <TypeCode>${isExport ? 'A00' : 'A00'}</TypeCode>
+            <Payment>
+              <MethodCode>${data.paymentMethod || 'E'}</MethodCode>
+            </Payment>
+          </DutyTaxFee>
+          ${!isExport ? `<DutyTaxFee>
+            <TypeCode>B00</TypeCode>
+            <Payment>
+              <MethodCode>${data.paymentMethod || 'E'}</MethodCode>
+            </Payment>
+          </DutyTaxFee>` : ''}
+          <GoodsMeasure>
+            <GrossMassMeasure unitCode="KGM">${grossMass}</GrossMassMeasure>
+            <NetNetWeightMeasure unitCode="KGM">${netMass}</NetNetWeightMeasure>
+            ${item.supplementaryUnits ? `<TariffQuantity>${item.supplementaryUnits}</TariffQuantity>` : ''}
+          </GoodsMeasure>
+        </Commodity>
+        <GovernmentProcedure>
+          <CurrentCode>${procedureCode.substring(0, 2)}</CurrentCode>
+          <PreviousCode>${previousProcedure}</PreviousCode>
+        </GovernmentProcedure>
+        ${item.additionalProcedure ? `<GovernmentProcedure>
+          <CurrentCode>${item.additionalProcedure}</CurrentCode>
+        </GovernmentProcedure>` : ''}
+        <Origin>
+          <CountryCode>${item.countryOfOrigin || 'XX'}</CountryCode>
+          ${item.preferentialOrigin ? `<TypeCode>1</TypeCode>` : ''}
+        </Origin>
+        <Packaging>
+          <TypeCode>${item.packageType || 'PK'}</TypeCode>
+          <QuantityQuantity>${item.numberOfPackages || 1}</QuantityQuantity>
+          ${item.shippingMarks ? `<MarksNumbersID>${this._escapeXml(item.shippingMarks)}</MarksNumbersID>` : ''}
+        </Packaging>
+        <ValuationAdjustment>
+          <AdditionCode>0000</AdditionCode>
+        </ValuationAdjustment>
+      </GovernmentAgencyGoodsItem>`;
+    }).join('');
+
     return `<?xml version="1.0" encoding="UTF-8"?>
-<Declaration xmlns="urn:wco:datamodel:WCO:DEC-DMS:2">
+<Declaration xmlns="urn:wco:datamodel:WCO:DEC-DMS:2"
+             xmlns:ds="urn:wco:datamodel:WCO:Declaration_DS:DMS:2"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="urn:wco:datamodel:WCO:DEC-DMS:2 WCO_DEC_2_DMS.xsd">
   <FunctionCode>9</FunctionCode>
-  <TypeCode>${operationType === 'export' ? 'EX' : 'IM'}</TypeCode>
-  <AdditionalTypeCode>A</AdditionalTypeCode>
-  <!-- DMS 4.0 full implementation pending MIG specs from nh.douane.nl -->
+  <FunctionalReferenceID>${this._escapeXml(lrn)}</FunctionalReferenceID>
+  <TypeCode>${typeCode}</TypeCode>
+  <AdditionalDeclarationTypeCode>${additionalType}</AdditionalDeclarationTypeCode>
+  <GoodsItemQuantity>${(data.items || []).length}</GoodsItemQuantity>
+  <TotalGrossMassMeasure unitCode="KGM">${data.totalGrossMass || 0}</TotalGrossMassMeasure>
+  <TotalPackageQuantity>${data.totalPackages || 0}</TotalPackageQuantity>
+  <InvoiceAmount currencyID="${currency}">${data.totalCustomsValue || 0}</InvoiceAmount>
+  <!-- Declarant (D.E. 3/18) -->
+  <Declarant>
+    <ID>${this._escapeXml(data.declarant?.eori || '')}</ID>
+    <Name>${this._escapeXml(data.declarant?.name || '')}</Name>
+    ${data.declarant?.address ? `<Address>
+      <Line>${this._escapeXml(data.declarant.address.street || '')}</Line>
+      <CityName>${this._escapeXml(data.declarant.address.city || '')}</CityName>
+      <CountryCode>${data.declarant.address.country || 'NL'}</CountryCode>
+      <PostcodeID>${this._escapeXml(data.declarant.address.postalCode || '')}</PostcodeID>
+    </Address>` : ''}
+  </Declarant>
+  <!-- Exporter / Seller -->
+  <Exporter>
+    ${data.exporter?.eori ? `<ID>${this._escapeXml(data.exporter.eori)}</ID>` : ''}
+    <Name>${this._escapeXml(data.exporter?.name || '')}</Name>
+    <Address>
+      <Line>${this._escapeXml(data.exporter?.address?.street || '')}</Line>
+      <CityName>${this._escapeXml(data.exporter?.address?.city || '')}</CityName>
+      <CountryCode>${data.exporter?.country || 'XX'}</CountryCode>
+      <PostcodeID>${this._escapeXml(data.exporter?.address?.postalCode || '')}</PostcodeID>
+    </Address>
+  </Exporter>
+  <!-- Importer / Buyer -->
+  <Importer>
+    <ID>${this._escapeXml(data.importer?.eori || '')}</ID>
+    ${data.importer?.name ? `<Name>${this._escapeXml(data.importer.name)}</Name>` : ''}
+    ${data.importer?.address ? `<Address>
+      <Line>${this._escapeXml(data.importer.address.street || '')}</Line>
+      <CityName>${this._escapeXml(data.importer.address.city || '')}</CityName>
+      <CountryCode>${data.importer.address.country || 'NL'}</CountryCode>
+      <PostcodeID>${this._escapeXml(data.importer.address.postalCode || '')}</PostcodeID>
+    </Address>` : ''}
+  </Importer>
+  ${data.representative ? `<Agent>
+    <ID>${this._escapeXml(data.representative.eori || '')}</ID>
+    <FunctionCode>${data.representative.status || '2'}</FunctionCode>
+  </Agent>` : ''}
+  <GoodsShipment>
+    <TransactionNatureCode>${data.transactionNature || '11'}</TransactionNatureCode>
+    <Destination>
+      <CountryCode>${data.countryOfDestination || 'NL'}</CountryCode>
+    </Destination>
+    <ExportCountry>
+      <ID>${data.countryOfDispatch || data.exporter?.country || 'XX'}</ID>
+    </ExportCountry>
+    <GoodsLocation>
+      <Name>${this._escapeXml(data.goodsLocation?.name || '')}</Name>
+      <ID>${customsOffice}</ID>
+      <TypeCode>${data.goodsLocation?.typeCode || 'B'}</TypeCode>
+      <Address>
+        <TypeCode>U</TypeCode>
+        <CountryCode>NL</CountryCode>
+      </Address>
+    </GoodsLocation>
+    <Consignment>
+      <ContainerCode>${data.transport?.containerIndicator || '0'}</ContainerCode>
+      <ArrivalTransportMeans>
+        <ModeCode>${data.transport?.modeAtBorder || '1'}</ModeCode>
+        ${data.transport?.borderMeansId ? `<ID>${this._escapeXml(data.transport.borderMeansId)}</ID>` : ''}
+        ${data.transport?.borderMeansType ? `<IdentificationTypeCode>${data.transport.borderMeansType}</IdentificationTypeCode>` : ''}
+        ${data.transport?.borderNationality ? `<RegistrationNationalityCode>${data.transport.borderNationality}</RegistrationNationalityCode>` : ''}
+      </ArrivalTransportMeans>
+      ${data.transport?.containerId ? `<TransportEquipment>
+        <SequenceNumeric>1</SequenceNumeric>
+        <ID>${this._escapeXml(data.transport.containerId)}</ID>
+      </TransportEquipment>` : ''}
+    </Consignment>
+    ${data.warehouse ? `<Warehouse>
+      <ID>${this._escapeXml(data.warehouse.id || '')}</ID>
+      <TypeCode>${data.warehouse.type || 'U'}</TypeCode>
+    </Warehouse>` : ''}
+    <CustomsOfficeOfEntry>
+      <ID>${customsOffice}</ID>
+    </CustomsOfficeOfEntry>
+    <SupervisingOffice>
+      <ID>${supervisingOffice}</ID>
+    </SupervisingOffice>
+    ${data.guarantee ? `<ObligationGuarantee>
+      <ID>${this._escapeXml(data.guarantee.reference || '')}</ID>
+      <SecurityDetailsCode>${data.guarantee.type || '0'}</SecurityDetailsCode>
+    </ObligationGuarantee>` : ''}
+    <TransportDocument>
+      <ID>${this._escapeXml(data.transport?.documentRef || '')}</ID>
+      <TypeCode>${data.transport?.documentType || 'N740'}</TypeCode>
+    </TransportDocument>
+    <UCR>
+      <TraderAssignedReferenceID>${this._escapeXml(data.uniqueConsignmentRef || lrn)}</TraderAssignedReferenceID>
+    </UCR>
+    ${items}
+  </GoodsShipment>
 </Declaration>`;
   }
 

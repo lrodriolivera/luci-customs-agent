@@ -19,6 +19,14 @@ export default function DeclarationGenerator() {
   const [submitting, setSubmitting] = useState(false)
   const [aeatResult, setAeatResult] = useState(null)
   const [declarationType, setDeclarationType] = useState('H1')
+
+  // Multi-country: tenant customs config (default ES/AEAT)
+  const [customsCountry] = useState(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      return user?.tenant?.customsConfig?.country || 'ES'
+    } catch { return 'ES' }
+  })
   const [options, setOptions] = useState({
     regime: '40',
     additionalProcedure: '000',
@@ -152,11 +160,30 @@ export default function DeclarationGenerator() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('declarations.title')}</h1>
-        <p className="text-gray-500 mt-1">
-          {t('declarations.subtitle')}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{t('declarations.title')}</h1>
+          <p className="text-gray-500 mt-1">
+            {t('declarations.subtitle')}
+          </p>
+        </div>
+
+        {/* Country / Customs System Indicator */}
+        <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+          customsCountry === 'NL'
+            ? 'bg-orange-50 border-orange-200'
+            : 'bg-blue-50 border-blue-200'
+        }`}>
+          <span className="text-lg">{customsCountry === 'NL' ? '\u{1F1F3}\u{1F1F1}' : '\u{1F1EA}\u{1F1F8}'}</span>
+          <div className="text-sm">
+            <span className={`font-medium ${customsCountry === 'NL' ? 'text-orange-700' : 'text-blue-700'}`}>
+              {customsCountry === 'NL'
+                ? (declarationType === 'H7' ? 'Paises Bajos - DECO' : 'Paises Bajos - DMS 4.0')
+                : 'Espana - AEAT'
+              }
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

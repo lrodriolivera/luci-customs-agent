@@ -11,7 +11,10 @@ import {
   PaintBrushIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  FlagIcon,
+  ArrowUpTrayIcon,
+  SignalIcon
 } from '@heroicons/react/24/outline';
 
 const TenantSettings = () => {
@@ -54,6 +57,14 @@ const TenantSettings = () => {
           plan: 'professional',
           status: 'active',
           currentPeriodEnd: '2026-02-20'
+        },
+        customsConfig: {
+          country: 'ES',
+          system: 'AEAT',
+          eori: 'ES12345678901234',
+          environment: 'test',
+          certificateStatus: 'configured',
+          certificateExpiry: '2027-10-14'
         }
       });
 
@@ -137,6 +148,7 @@ const TenantSettings = () => {
     { id: 'notifications', name: t('settings.notifications'), icon: BellIcon },
     { id: 'security', name: t('settings.security'), icon: ShieldCheckIcon },
     { id: 'roles', name: t('settings.roles'), icon: UserGroupIcon },
+    { id: 'customs', name: 'Aduanas', icon: FlagIcon },
     { id: 'integrations', name: t('settings.integrations'), icon: GlobeAltIcon }
   ];
 
@@ -658,6 +670,235 @@ const TenantSettings = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Customs / Country Configuration Tab */}
+        {activeTab === 'customs' && (
+          <div className="space-y-6">
+            <h2 className="text-lg font-medium text-gray-900">Configuracion de Pais y Aduanas</h2>
+            <p className="text-sm text-gray-500">
+              Selecciona el pais y sistema aduanero con el que opera tu organizacion.
+            </p>
+
+            {/* Country Selector */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Pais de operacion
+                </label>
+                <select
+                  value={tenant?.customsConfig?.country || 'ES'}
+                  onChange={(e) => {
+                    const country = e.target.value;
+                    const systemMap = { ES: 'AEAT', NL: 'DMS/DECO' };
+                    setTenant(prev => ({
+                      ...prev,
+                      customsConfig: {
+                        ...prev.customsConfig,
+                        country,
+                        system: systemMap[country] || 'AEAT'
+                      }
+                    }));
+                  }}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                >
+                  <option value="ES">Espana</option>
+                  <option value="NL">Paises Bajos</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sistema aduanero
+                </label>
+                <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-700">
+                  {tenant?.customsConfig?.country === 'NL' ? (
+                    <span className="flex items-center gap-2">
+                      <span className="text-lg">🇳🇱</span>
+                      <span className="font-medium">DMS / DECO</span>
+                      <span className="text-xs text-gray-500">(Douane Management Systeem)</span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <span className="text-lg">🇪🇸</span>
+                      <span className="font-medium">AEAT</span>
+                      <span className="text-xs text-gray-500">(Agencia Estatal de Administracion Tributaria)</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* EORI Number */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Numero EORI
+              </label>
+              <input
+                type="text"
+                value={tenant?.customsConfig?.eori || ''}
+                onChange={(e) => setTenant(prev => ({
+                  ...prev,
+                  customsConfig: { ...prev.customsConfig, eori: e.target.value }
+                }))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                placeholder={tenant?.customsConfig?.country === 'NL' ? 'NL123456789012' : 'ES12345678901234'}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Identificador unico para operadores economicos registrados en la UE.
+              </p>
+            </div>
+
+            {/* Environment Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Entorno
+              </label>
+              <div className="flex gap-4">
+                <label className={`flex-1 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                  tenant?.customsConfig?.environment === 'test'
+                    ? 'border-amber-400 bg-amber-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}>
+                  <input
+                    type="radio"
+                    name="environment"
+                    value="test"
+                    checked={tenant?.customsConfig?.environment === 'test'}
+                    onChange={(e) => setTenant(prev => ({
+                      ...prev,
+                      customsConfig: { ...prev.customsConfig, environment: e.target.value }
+                    }))}
+                    className="sr-only"
+                  />
+                  <span className="font-medium text-gray-900">Test / Pre-produccion</span>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Entorno de pruebas. Las declaraciones no tienen efecto legal.
+                  </p>
+                </label>
+
+                <label className={`flex-1 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                  tenant?.customsConfig?.environment === 'production'
+                    ? 'border-green-400 bg-green-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}>
+                  <input
+                    type="radio"
+                    name="environment"
+                    value="production"
+                    checked={tenant?.customsConfig?.environment === 'production'}
+                    onChange={(e) => setTenant(prev => ({
+                      ...prev,
+                      customsConfig: { ...prev.customsConfig, environment: e.target.value }
+                    }))}
+                    className="sr-only"
+                  />
+                  <span className="font-medium text-gray-900">Produccion</span>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Entorno real. Las declaraciones se envian oficialmente.
+                  </p>
+                </label>
+              </div>
+            </div>
+
+            {/* Certificate Section */}
+            <div className="border-t pt-6">
+              <h3 className="font-medium text-gray-900 mb-4">Certificado digital</h3>
+
+              <div className="p-4 border border-gray-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      tenant?.customsConfig?.certificateStatus === 'configured'
+                        ? 'bg-green-100'
+                        : 'bg-gray-100'
+                    }`}>
+                      <ShieldCheckIcon className={`h-6 w-6 ${
+                        tenant?.customsConfig?.certificateStatus === 'configured'
+                          ? 'text-green-600'
+                          : 'text-gray-400'
+                      }`} />
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-900">
+                        {tenant?.customsConfig?.country === 'NL'
+                          ? 'Certificado PKIoverheid / eHerkenning'
+                          : 'Certificado FNMT / Digital'}
+                      </span>
+                      {tenant?.customsConfig?.certificateStatus === 'configured' ? (
+                        <p className="text-sm text-green-600">
+                          Configurado - Valido hasta {tenant?.customsConfig?.certificateExpiry || 'N/A'}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-500">No configurado</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {tenant?.customsConfig?.certificateStatus === 'configured' ? (
+                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                        Activo
+                      </span>
+                    ) : (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">
+                        Pendiente
+                      </span>
+                    )}
+                    <button className="px-3 py-1.5 text-sm bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200 flex items-center gap-1">
+                      <ArrowUpTrayIcon className="h-4 w-4" />
+                      Subir certificado
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Connection Status */}
+            <div className="p-4 rounded-lg bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <SignalIcon className={`h-5 w-5 ${
+                    tenant?.customsConfig?.certificateStatus === 'configured' && tenant?.customsConfig?.eori
+                      ? 'text-green-500'
+                      : 'text-gray-400'
+                  }`} />
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">Estado de conexion aduanera</span>
+                  </div>
+                </div>
+                {tenant?.customsConfig?.certificateStatus === 'configured' && tenant?.customsConfig?.eori ? (
+                  <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    Configurado y listo
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                    <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                    Pendiente de configuracion
+                  </span>
+                )}
+              </div>
+
+              {/* Checklist */}
+              <div className="mt-3 space-y-2">
+                {[
+                  { label: 'Pais seleccionado', done: !!tenant?.customsConfig?.country },
+                  { label: 'EORI configurado', done: !!tenant?.customsConfig?.eori },
+                  { label: 'Certificado subido', done: tenant?.customsConfig?.certificateStatus === 'configured' },
+                  { label: 'Entorno seleccionado', done: !!tenant?.customsConfig?.environment }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-sm">
+                    {item.done ? (
+                      <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <span className="h-4 w-4 rounded-full border-2 border-gray-300 inline-block"></span>
+                    )}
+                    <span className={item.done ? 'text-gray-700' : 'text-gray-400'}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
