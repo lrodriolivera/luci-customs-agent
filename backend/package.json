@@ -10,6 +10,7 @@
     "lint": "eslint src/"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.1007.0",
     "@sentry/node": "^10.38.0",
     "axios": "^1.5.0",
     "bcryptjs": "^2.4.3",

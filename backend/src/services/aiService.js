@@ -178,12 +178,42 @@ FORMATO DE RESPUESTA (JSON):
 }`
 };
 
+// Patrones de mensajes simples que pueden usar Haiku
+const SIMPLE_PATTERNS = /^(si|no|ok|vale|entendido|gracias|claro|perfecto|de acuerdo|bien|correcto|hecho|listo|yes|oui|sim|d'accord|va bene|certo)[\s!.?]*$/i;
+
 class AIService {
   constructor() {
     this.apiKey = process.env.ANTHROPIC_API_KEY;
     if (!this.apiKey) {
       logger.warn('ANTHROPIC_API_KEY no configurada - AI Service funcionara en modo mock');
     }
+  }
+
+  /**
+   * Selecciona modelo optimo segun complejidad del mensaje/contexto
+   * Haiku para: mensajes cortos, confirmaciones, follow-ups, datos ya completos
+   * Sonnet/Opus para: clasificacion, analisis documental, consultas complejas
+   */
+  _selectModel(message, context = 'chat') {
+    // Contextos que siempre requieren Sonnet/Opus
+    const complexContexts = ['classification', 'documentAnalysis', 'regulation', 'h1Generation', 'legalArguments', 'declarationValidation'];
+    if (complexContexts.includes(context)) {
+      const model = context === 'regulation' || context === 'legalArguments' || context === 'declarationValidation' ? OPUS_MODEL : SONNET_MODEL;
+      logger.info(`AI model: ${model} for ${context} (complex context)`);
+      return model;
+    }
+
+    // Mensajes cortos o confirmaciones simples -> Haiku
+    if (typeof message === 'string') {
+      if (message.length < 50 || SIMPLE_PATTERNS.test(message.trim())) {
+        logger.info(`AI model: ${HAIKU_MODEL} for ${context} (simple/short message)`);
+        return HAIKU_MODEL;
+      }
+    }
+
+    // Default: Sonnet para chat general
+    logger.info(`AI model: ${SONNET_MODEL} for ${context}`);
+    return SONNET_MODEL;
   }
 
   /**
@@ -259,13 +289,14 @@ CONTEXTO DEL EXPEDIENTE:
 
     const fullPrompt = `${expeditionContext}${history}\n\nMensaje actual: ${message}`;
 
-    const result = await this.callClaude(SONNET_MODEL, systemPrompt, fullPrompt);
+    const selectedModel = this._selectModel(message, 'chat');
+    const result = await this.callClaude(selectedModel, systemPrompt, fullPrompt);
 
     return {
       message: result.content,
-      model: 'sonnet-4',
+      model: selectedModel === HAIKU_MODEL ? 'haiku-4.5' : selectedModel === OPUS_MODEL ? 'opus-4' : 'sonnet-4',
       tokensUsed: result.tokensUsed,
-      confidence: 85,
+      confidence: selectedModel === HAIKU_MODEL ? 75 : 85,
       sources: []
     };
   }
@@ -274,17 +305,18 @@ CONTEXTO DEL EXPEDIENTE:
    * Preguntar a LUCI sin contexto de expediente
    */
   async askLuci(question, language = 'es') {
+    const selectedModel = this._selectModel(question, 'chat');
     const result = await this.callClaude(
-      SONNET_MODEL,
+      selectedModel,
       SYSTEM_PROMPTS.chatAgent(language),
       question
     );
 
     return {
       message: result.content,
-      model: 'sonnet-4',
+      model: selectedModel === HAIKU_MODEL ? 'haiku-4.5' : 'sonnet-4',
       tokensUsed: result.tokensUsed,
-      confidence: 80,
+      confidence: selectedModel === HAIKU_MODEL ? 70 : 80,
       sources: []
     };
   }

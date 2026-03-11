@@ -240,6 +240,29 @@ if (queryRoutes) app.use('/api/queries', queryRoutes);
 if (pueRoutes) app.use('/api/pue', pueRoutes);
 if (certificateRoutes) app.use('/api/certificates', certificateRoutes);
 
+// Email test endpoint (admin only)
+app.post('/api/email/test', async (req, res) => {
+  try {
+    // Verify JWT token and admin role
+    const jwt = require('jsonwebtoken');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Token requerido' });
+    }
+    const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
+    if (decoded.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Solo administradores' });
+    }
+    const emailService = require('./services/emailService');
+    const { to } = req.body;
+    const result = await emailService.sendTestEmail(to || decoded.email);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error('Email test error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Initialize workflow service
 const workflowService = require('./services/workflow');
 workflowService.initialize().catch(err => {

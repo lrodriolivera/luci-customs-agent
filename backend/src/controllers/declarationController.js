@@ -358,6 +358,19 @@ const submitDeclaration = async (req, res) => {
     }
 
     if (!aeatResult.success) {
+      // Non-blocking rejection email
+      try {
+        const emailService = require('../services/emailService');
+        if (req.user?.email) {
+          emailService.sendDeclarationRejected(req.user.email, {
+            expeditionId: expedition.expeditionId,
+            declarationType: expedition.declaration.type,
+            errorDetails: aeatResult.error,
+            errorCode: aeatResult.code
+          }).catch(e => logger.warn('Email rechazo no enviado:', e.message));
+        }
+      } catch (e) { /* silent */ }
+
       return res.status(400).json({
         success: false,
         error: aeatResult.error || 'Error en respuesta de AEAT',
@@ -431,6 +444,30 @@ const submitDeclaration = async (req, res) => {
     }
 
     logger.info(`Declaracion enviada: ${expedition.expeditionId} - MRN: ${aeatResponse.mrn} - Canal: ${aeatResponse.channel}`);
+
+    // Non-blocking email notifications
+    try {
+      const emailService = require('../services/emailService');
+      const userEmail = req.user?.email;
+      if (userEmail) {
+        // Declaration accepted email
+        emailService.sendDeclarationAccepted(userEmail, {
+          mrn: aeatResponse.mrn,
+          channel: aeatResponse.channel,
+          expeditionId: expedition.expeditionId,
+          declarationType: expedition.declaration.type
+        }).catch(e => logger.warn('Email declaracion aceptada no enviado:', e.message));
+
+        // Channel-specific email for orange/red
+        if (aeatResponse.channel === 'orange' || aeatResponse.channel === 'red') {
+          emailService.sendChannelAssigned(userEmail, {
+            mrn: aeatResponse.mrn,
+            channel: aeatResponse.channel,
+            expeditionId: expedition.expeditionId
+          }).catch(e => logger.warn('Email canal asignado no enviado:', e.message));
+        }
+      }
+    } catch (e) { /* silent - email should never break declaration flow */ }
 
     // Mensaje segun canal
     const channelMessages = {
@@ -903,6 +940,19 @@ const submitH7 = async (req, res) => {
     await expedition.save();
 
     logger.info(`H7 enviado: ${expedition.expeditionId} - MRN: ${aeatResponse.mrn} - Canal: ${aeatResponse.channel}`);
+
+    // Non-blocking email notification for H7
+    try {
+      const emailService = require('../services/emailService');
+      if (req.user?.email) {
+        emailService.sendDeclarationAccepted(req.user.email, {
+          mrn: aeatResponse.mrn,
+          channel: aeatResponse.channel,
+          expeditionId: expedition.expeditionId,
+          declarationType: 'H7'
+        }).catch(e => logger.warn('Email H7 aceptado no enviado:', e.message));
+      }
+    } catch (e) { /* silent */ }
 
     // Mensajes segun canal
     const channelMessages = {
