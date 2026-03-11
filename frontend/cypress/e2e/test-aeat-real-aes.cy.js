@@ -31,7 +31,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 01 - Dashboard inicial', () => {
     cy.visit('/')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
 
     cy.get('body').should('not.contain', 'Error')
     cy.get('body').then($body => {
@@ -49,7 +49,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 02 - Navegar a expediciones', () => {
     cy.visit('/expeditions')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-02-lista-expediciones')
   })
 
@@ -59,13 +59,13 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 03 - Crear nueva expedicion de exportacion', () => {
     cy.visit('/expeditions/new')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
 
     // Seleccionar tipo EXPORT (segundo boton)
     cy.get('body').then($body => {
       if ($body.text().match(/Exportaci[oó]n|Export/)) {
         cy.contains(/Exportaci[oó]n|Export/).first().click({ force: true })
-        cy.wait(3000)
+        cy.wait(10000)
       }
     })
 
@@ -78,20 +78,20 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 04 - Datos del exportador (STRIX AI SL)', () => {
     cy.visit('/expeditions/new')
     cy.waitForLoad()
-    cy.wait(3000)
+    cy.wait(10000)
 
     // Seleccionar EXPORT
     cy.get('body').then($body => {
       if ($body.text().match(/Exportaci[oó]n|Export/)) {
         cy.contains(/Exportaci[oó]n|Export/).first().click({ force: true })
-        cy.wait(2000)
+        cy.wait(6000)
       }
     })
 
     // === STEP 1: Exportador (client section) ===
     // companyName - STRIX AI SL (exportador espanol)
     cy.get('input[type="text"]').first().clear({ force: true }).type('STRIX AI SL', { force: true })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // NIF
     cy.get('body').then($body => {
@@ -100,39 +100,39 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
         cy.wrap(nifInput.first()).clear({ force: true }).type('B22477020', { force: true })
       }
     })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // EORI
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 2) cy.wrap(allText.eq(2)).clear({ force: true }).type('ESB22477020', { force: true })
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // Address
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 3) cy.wrap(allText.eq(3)).clear({ force: true }).type('Calle Innovacion 5', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // City
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 4) cy.wrap(allText.eq(4)).clear({ force: true }).type('Valencia', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // PostalCode
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 5) cy.wrap(allText.eq(5)).clear({ force: true }).type('46001', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // Email
     cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-aes-real@strixai.es', { force: true })
-    cy.wait(500)
+    cy.wait(3000)
 
     // Phone
     cy.get('body').then($body => {
@@ -141,7 +141,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
         cy.wrap(telInputs.first()).clear({ force: true }).type('961234567', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Consignatario/Destinatario (France) ---
     // For EXPORT: the second section is "consignee" (destination buyer)
@@ -150,14 +150,14 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 6) cy.wrap(allText.eq(6)).clear({ force: true }).type('FRANCE TECH DISTRIBUTION SARL', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // Country consignee - FR
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 7) cy.wrap(allText.eq(7)).clear({ force: true }).type('FR', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // City consignee
     cy.get('body').then($body => {
@@ -165,7 +165,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       if (allText.length > 8) cy.wrap(allText.eq(8)).clear({ force: true }).type('Paris', { force: true })
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-04-datos-exportador-completos')
   })
 
@@ -175,13 +175,13 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 05 - Datos de mercancia (equipos informaticos)', () => {
     cy.visit('/expeditions/new')
     cy.waitForLoad()
-    cy.wait(3000)
+    cy.wait(10000)
 
     // Seleccionar EXPORT
     cy.get('body').then($body => {
       if ($body.text().match(/Exportaci[oó]n|Export/)) {
         cy.contains(/Exportaci[oó]n|Export/).first().click({ force: true })
-        cy.wait(1000)
+        cy.wait(4000)
       }
     })
 
@@ -197,11 +197,11 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 7) cy.wrap(allText.eq(7)).clear({ force: true }).type('FR', { force: true })
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // Avanzar a Step 2 (Goods)
     cy.get('.btn-primary').last().click({ force: true })
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-05-paso-mercancia')
 
     // --- Descripcion de mercancia ---
@@ -209,7 +209,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       'Equipos informaticos: servidores rack, switches de red y cables de fibra optica. Marca: Dell/Cisco. Para infraestructura datacenter cliente frances.',
       { force: true }
     )
-    cy.wait(2000)
+    cy.wait(6000)
 
     // --- Material ---
     cy.get('body').then($body => {
@@ -218,7 +218,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
         cy.wrap(textInputs.eq(0)).clear({ force: true }).type('Metal, plastico, componentes electronicos, fibra optica', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Uso ---
     cy.get('body').then($body => {
@@ -227,7 +227,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
         cy.wrap(textInputs.eq(1)).clear({ force: true }).type('Infraestructura de centro de datos', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Codigo TARIC 8471410000 (maquinas automaticas para tratamiento de datos) ---
     cy.get('body').then($body => {
@@ -236,7 +236,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
         cy.wrap(taricInput.first()).clear({ force: true }).type('8471410000', { force: true })
       }
     })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // --- Pais de origen ES (fabricacion/procedencia Espana) ---
     cy.get('body').then($body => {
@@ -244,28 +244,28 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       const nonMaxLen = textInputs.filter((i, el) => !Cypress.$(el).attr('maxlength'))
       if (nonMaxLen.length > 2) cy.wrap(nonMaxLen.eq(2)).clear({ force: true }).type('ES', { force: true })
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Cantidad: 20 unidades ---
     cy.get('body').then($body => {
       const nums = $body.find('input[type="number"]')
       if (nums.length >= 1) cy.wrap(nums.eq(0)).clear({ force: true }).type('20', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // --- Peso neto: 1800 kg ---
     cy.get('body').then($body => {
       const nums = $body.find('input[type="number"]')
       if (nums.length >= 2) cy.wrap(nums.eq(1)).clear({ force: true }).type('1800', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // --- Peso bruto: 2000 kg ---
     cy.get('body').then($body => {
       const nums = $body.find('input[type="number"]')
       if (nums.length >= 3) cy.wrap(nums.eq(2)).clear({ force: true }).type('2000', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // --- Valor factura: 25000 EUR ---
     cy.get('body').then($body => {
@@ -273,7 +273,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       if (nums.length >= 4) cy.wrap(nums.eq(3)).clear({ force: true }).type('25000', { force: true })
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-05b-mercancia-completa')
   })
 
@@ -283,13 +283,13 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 06 - Transporte carretera y crear expedicion', () => {
     cy.visit('/expeditions/new')
     cy.waitForLoad()
-    cy.wait(3000)
+    cy.wait(10000)
 
     // Seleccionar EXPORT
     cy.get('body').then($body => {
       if ($body.text().match(/Exportaci[oó]n|Export/)) {
         cy.contains(/Exportaci[oó]n|Export/).first().click({ force: true })
-        cy.wait(1000)
+        cy.wait(4000)
       }
     })
 
@@ -341,11 +341,11 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 8) cy.wrap(allText.eq(8)).clear({ force: true }).type('Paris', { force: true })
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // Avanzar a Step 2
     cy.get('.btn-primary').last().click({ force: true })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // === STEP 2: Mercancia ===
     cy.get('textarea').first().clear({ force: true }).type(
@@ -382,11 +382,11 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       const nums = $body.find('input[type="number"]')
       if (nums.length >= 4) cy.wrap(nums.eq(3)).clear({ force: true }).type('25000', { force: true })
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // Avanzar a Step 3
     cy.get('.btn-primary').last().click({ force: true })
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-06-paso-transporte')
 
     // === STEP 3: Transporte ROAD (carretera) ===
@@ -395,7 +395,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
         cy.wrap($sel).select('ROAD', { force: true })
       }
     })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // Incoterm - FOB para exportacion
     cy.get('body').then($body => {
@@ -407,7 +407,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
         }
       }
     })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // Lugar incoterm
     cy.get('body').then($body => {
@@ -417,12 +417,12 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-06b-transporte-carretera-completo')
 
     // === CREAR EXPEDICION ===
     cy.get('button[type="submit"]').click({ force: true })
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-06c-expedicion-creada')
   })
 
@@ -432,13 +432,13 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 07 - Verificar expedicion exportacion en lista', () => {
     cy.visit('/expeditions')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-07-lista-con-expedicion')
 
     cy.get('body').then($body => {
       if ($body.find('tbody tr').length > 0) {
         cy.get('tbody tr').first().click({ force: true })
-        cy.wait(5000)
+        cy.wait(10000)
         cy.captureStep('aeat-aes-07b-detalle-expedicion-export')
       }
     })
@@ -450,14 +450,14 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 08 - Pantalla declaraciones y seleccionar tipo AES', () => {
     cy.visit('/declarations')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-08-pantalla-declaraciones')
 
     // Seleccionar tipo AES (segundo boton de tipo)
     cy.get('body').then($body => {
       if ($body.text().includes('AES')) {
         cy.contains('AES').first().click({ force: true })
-        cy.wait(3000)
+        cy.wait(10000)
         cy.captureStep('aeat-aes-08b-tipo-aes-seleccionado')
       }
     })
@@ -480,11 +480,11 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
         } else {
           cy.wrap(cards.first()).click({ force: true })
         }
-        cy.wait(3000)
+        cy.wait(10000)
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-08c-expedicion-export-seleccionada')
   })
 
@@ -494,13 +494,13 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 09 - Generar declaracion AES XML', () => {
     cy.visit('/declarations')
     cy.waitForLoad()
-    cy.wait(3000)
+    cy.wait(10000)
 
     // Seleccionar AES
     cy.get('body').then($body => {
       if ($body.text().includes('AES')) {
         cy.contains('AES').first().click({ force: true })
-        cy.wait(2000)
+        cy.wait(6000)
       }
     })
 
@@ -516,7 +516,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
           }
         })
         cy.wrap(exportCard || cards.first()).click({ force: true })
-        cy.wait(2000)
+        cy.wait(6000)
       }
     })
 
@@ -537,7 +537,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-09c-estado-declaracion')
   })
 
@@ -547,20 +547,20 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 10 - Visualizar XML AES generado', () => {
     cy.visit('/declarations')
     cy.waitForLoad()
-    cy.wait(3000)
+    cy.wait(10000)
 
     // Seleccionar AES y expedicion
     cy.get('body').then($body => {
       if ($body.text().includes('AES')) {
         cy.contains('AES').first().click({ force: true })
-        cy.wait(1000)
+        cy.wait(4000)
       }
     })
     cy.get('body').then($body => {
       const cards = $body.find('[class*="cursor-pointer"]')
       if (cards.length > 0) {
         cy.wrap(cards.first()).click({ force: true })
-        cy.wait(2000)
+        cy.wait(6000)
       }
     })
 
@@ -580,7 +580,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-10b-declaracion-aes-lista')
   })
 
@@ -590,13 +590,13 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 11 - ENVIAR DECLARACION AES A AEAT PRE (REAL)', () => {
     cy.visit('/declarations')
     cy.waitForLoad()
-    cy.wait(3000)
+    cy.wait(10000)
 
     // Seleccionar AES
     cy.get('body').then($body => {
       if ($body.text().includes('AES')) {
         cy.contains('AES').first().click({ force: true })
-        cy.wait(1000)
+        cy.wait(4000)
       }
     })
 
@@ -605,7 +605,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       const cards = $body.find('[class*="cursor-pointer"]')
       if (cards.length > 0) {
         cy.wrap(cards.first()).click({ force: true })
-        cy.wait(2000)
+        cy.wait(6000)
       }
     })
 
@@ -617,7 +617,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-11-antes-envio')
 
     // Click en "Enviar a AEAT" (boton naranja)
@@ -638,7 +638,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
     })
 
     // ESPERAR RESPUESTA DE AEAT PRE (real submission)
-    cy.wait(15000)
+    cy.wait(20000)
     cy.captureStep('aeat-aes-11b-RESPUESTA-AEAT-REAL')
 
     // Verificar resultado
@@ -667,14 +667,14 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 12 - Verificar MRN y Canal V en expedicion', () => {
     cy.visit('/expeditions')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-12-lista-post-envio')
 
     // Click en primera expedicion
     cy.get('body').then($body => {
       if ($body.find('tbody tr').length > 0) {
         cy.get('tbody tr').first().click({ force: true })
-        cy.wait(5000)
+        cy.wait(10000)
         cy.captureStep('aeat-aes-12b-detalle-con-mrn')
 
         // Verificar canal y MRN
@@ -701,7 +701,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 13 - Verificar en dashboard de canales', () => {
     cy.visit('/channels')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-13-dashboard-canales')
 
     cy.get('body').then($body => {
@@ -714,7 +714,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-13d-dashboard-canales-final')
   })
 
@@ -724,13 +724,13 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
   it('PASO 14 - Resumen final de la exportacion', () => {
     cy.visit('/')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-14-dashboard-final')
 
     // Navegar a expediciones para vista final
     cy.visit('/expeditions')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-aes-14b-expediciones-final')
   })
 })

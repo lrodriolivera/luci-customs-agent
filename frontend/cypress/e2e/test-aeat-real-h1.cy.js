@@ -28,7 +28,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
   it('PASO 01 - Dashboard inicial', () => {
     cy.visit('/')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
 
     cy.get('body').should('not.contain', 'Error')
     cy.get('body').then($body => {
@@ -46,7 +46,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
   it('PASO 02 - Navegar a expediciones', () => {
     cy.visit('/expeditions')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-02-lista-expediciones')
 
     cy.get('body').then($body => {
@@ -62,11 +62,11 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
   it('PASO 03 - Crear nueva expedicion de importacion', () => {
     cy.visit('/expeditions')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
 
     // Click en boton de nueva expedicion
     cy.contains(/Nuevo|Nueva|Crear|New/).first().click({ force: true })
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-03-formulario-nuevo')
 
     // Seleccionar tipo Importacion (primer boton en step 1)
@@ -74,7 +74,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       // The form defaults to IMPORT, but click it to be sure
       if ($body.text().match(/Importaci[oó]n|Import/)) {
         cy.contains(/Importaci[oó]n|Import/).first().click({ force: true })
-        cy.wait(3000)
+        cy.wait(10000)
       }
     })
     cy.captureStep('aeat-h1-03b-tipo-importacion-seleccionado')
@@ -86,13 +86,13 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
   it('PASO 04 - Rellenar datos del importador/cliente', () => {
     cy.visit('/expeditions/new')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
 
     // Asegurar que IMPORT esta seleccionado
     cy.get('body').then($body => {
       if ($body.text().match(/Importaci[oó]n|Import/)) {
         cy.contains(/Importaci[oó]n|Import/).first().click({ force: true })
-        cy.wait(2000)
+        cy.wait(6000)
       }
     })
 
@@ -105,7 +105,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(inputs.first()).clear({ force: true }).type('PRUEBA AEAT H1 REAL SL', { force: true })
       }
     })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // --- NIF/CIF ---
     cy.get('body').then($body => {
@@ -120,7 +120,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         }
       }
     })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // --- EORI ---
     cy.get('body').then($body => {
@@ -130,7 +130,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(inputs.eq(2)).clear({ force: true }).type('ESB99887766', { force: true })
       }
     })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // --- Direccion ---
     cy.get('body').then($body => {
@@ -140,7 +140,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(inputs.eq(3)).clear({ force: true }).type('Calle Mayor 10', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Ciudad ---
     cy.get('body').then($body => {
@@ -149,7 +149,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(inputs.eq(4)).clear({ force: true }).type('Madrid', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Codigo Postal ---
     cy.get('body').then($body => {
@@ -158,7 +158,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(inputs.eq(5)).clear({ force: true }).type('28001', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Email ---
     cy.get('body').then($body => {
@@ -167,7 +167,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(emailInputs.first()).clear({ force: true }).type('prueba-h1-real@strixai.es', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Telefono ---
     cy.get('body').then($body => {
@@ -176,7 +176,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(telInputs.first()).clear({ force: true }).type('911234567', { force: true })
       }
     })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // --- Exportador/Proveedor (seccion inferior de Step 1) ---
     // Company name del exportador
@@ -190,7 +190,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(allTextInputs.eq(6)).clear({ force: true }).type('CHINA ELECTRONICS TRADING CO LTD', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Pais del exportador (required - ISO code input) ---
     cy.get('body').then($body => {
@@ -199,7 +199,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(allTextInputs.eq(7)).clear({ force: true }).type('CN', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Ciudad del exportador ---
     cy.get('body').then($body => {
@@ -209,7 +209,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-04-datos-importador-completos')
   })
 
@@ -219,12 +219,12 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
   it('PASO 05 - Rellenar datos de mercancia con TARIC', () => {
     cy.visit('/expeditions/new')
     cy.waitForLoad()
-    cy.wait(3000)
+    cy.wait(10000)
 
     // --- Rapidamente rellenar Step 1 (minimos obligatorios) ---
     // companyName
     cy.get('input[type="text"]').first().clear({ force: true }).type('PRUEBA AEAT H1 REAL SL', { force: true })
-    cy.wait(500)
+    cy.wait(3000)
     // NIF
     cy.get('body').then($body => {
       const nifInput = $body.find('input[pattern="[A-Z0-9]{8,10}"]')
@@ -232,10 +232,10 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(nifInput.first()).clear({ force: true }).type('B99887766', { force: true })
       }
     })
-    cy.wait(500)
+    cy.wait(3000)
     // Email
     cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-h1-real@strixai.es', { force: true })
-    cy.wait(500)
+    cy.wait(3000)
     // Exporter country (required)
     cy.get('body').then($body => {
       const allTextInputs = $body.find('input[type="text"]')
@@ -243,11 +243,11 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(allTextInputs.eq(7)).clear({ force: true }).type('CN', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // Click "Siguiente" to go to Step 2 (Goods)
     cy.get('.btn-primary').last().click({ force: true })
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-05-paso-mercancia')
 
     // --- Descripcion de mercancia ---
@@ -255,7 +255,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       'Ordenadores portatiles para procesamiento de datos. Marca: Lenovo. Modelo: ThinkPad X1 Carbon Gen 11. Procesador Intel i7, 16GB RAM, 512GB SSD.',
       { force: true }
     )
-    cy.wait(2000)
+    cy.wait(6000)
 
     // --- Material ---
     cy.get('body').then($body => {
@@ -264,7 +264,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(textInputs.eq(0)).clear({ force: true }).type('Plastico, aluminio, componentes electronicos', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Uso/Funcion ---
     cy.get('body').then($body => {
@@ -273,7 +273,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(textInputs.eq(1)).clear({ force: true }).type('Procesamiento de datos informaticos', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Codigo TARIC (10 digitos) - input with maxLength 10 ---
     cy.get('body').then($body => {
@@ -282,7 +282,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(taricInput.first()).clear({ force: true }).type('8471300000', { force: true })
       }
     })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // --- Pais de origen (ISO code input) ---
     cy.get('body').then($body => {
@@ -293,7 +293,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(lastTextInputs.eq(2)).clear({ force: true }).type('CN', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Cantidad ---
     cy.get('body').then($body => {
@@ -302,7 +302,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(numInputs.eq(0)).clear({ force: true }).type('10', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Peso neto ---
     cy.get('body').then($body => {
@@ -311,7 +311,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(numInputs.eq(1)).clear({ force: true }).type('140', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Peso bruto ---
     cy.get('body').then($body => {
@@ -320,7 +320,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap(numInputs.eq(2)).clear({ force: true }).type('150', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Valor factura ---
     cy.get('body').then($body => {
@@ -330,7 +330,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-05b-datos-mercancia-completos')
   })
 
@@ -340,7 +340,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
   it('PASO 06 - Transporte e Incoterm y crear expedicion', () => {
     cy.visit('/expeditions/new')
     cy.waitForLoad()
-    cy.wait(3000)
+    cy.wait(10000)
 
     // === STEP 1: Rellenar minimos obligatorios ===
     cy.get('input[type="text"]').first().clear({ force: true }).type('PRUEBA AEAT H1 REAL SL', { force: true })
@@ -384,11 +384,11 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 8) cy.wrap(allText.eq(8)).clear({ force: true }).type('Shenzhen', { force: true })
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // Avanzar a Step 2
     cy.get('.btn-primary').last().click({ force: true })
-    cy.wait(3000)
+    cy.wait(10000)
 
     // === STEP 2: Rellenar mercancia ===
     cy.get('textarea').first().clear({ force: true }).type(
@@ -425,11 +425,11 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       const nums = $body.find('input[type="number"]')
       if (nums.length >= 4) cy.wrap(nums.eq(3)).clear({ force: true }).type('5000', { force: true })
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // Avanzar a Step 3
     cy.get('.btn-primary').last().click({ force: true })
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-06-paso-transporte')
 
     // === STEP 3: Transporte e Incoterm ===
@@ -440,7 +440,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         cy.wrap($sel).select('ROAD', { force: true })
       }
     })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // Incoterm select - select CIF
     cy.get('body').then($body => {
@@ -452,7 +452,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
         }
       }
     })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // Lugar incoterm
     cy.get('body').then($body => {
@@ -462,12 +462,12 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-06b-transporte-completo')
 
     // === CREAR EXPEDICION (submit form) ===
     cy.get('button[type="submit"]').click({ force: true })
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-06c-expedicion-creada')
   })
 
@@ -477,18 +477,18 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
   it('PASO 07 - Verificar expedicion en lista', () => {
     cy.visit('/expeditions')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-07-lista-con-expedicion')
 
     // Click en la primera expedicion (la mas reciente)
     cy.get('body').then($body => {
       if ($body.find('tbody tr').length > 0) {
         cy.get('tbody tr').first().click({ force: true })
-        cy.wait(5000)
+        cy.wait(10000)
         cy.captureStep('aeat-h1-07b-detalle-expedicion')
       } else if ($body.find('table tr').length > 1) {
         cy.get('table tr').eq(1).click({ force: true })
-        cy.wait(5000)
+        cy.wait(10000)
         cy.captureStep('aeat-h1-07b-detalle-expedicion')
       }
     })
@@ -500,14 +500,14 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
   it('PASO 08 - Pantalla de declaraciones y seleccionar expedicion', () => {
     cy.visit('/declarations')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-08-pantalla-declaraciones')
 
     // Asegurar que H1 esta seleccionado (primera opcion por defecto)
     cy.get('body').then($body => {
       if ($body.text().includes('H1')) {
         cy.contains('H1').first().click({ force: true })
-        cy.wait(3000)
+        cy.wait(10000)
       }
     })
 
@@ -516,17 +516,17 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       const cards = $body.find('[class*="cursor-pointer"]')
       if (cards.length > 0) {
         cy.wrap(cards.first()).click({ force: true })
-        cy.wait(3000)
+        cy.wait(10000)
       } else {
         // Try clicking on text that looks like an expedition ID
         if ($body.text().match(/EXP-\d{4}-/)) {
           cy.contains(/EXP-\d{4}-/).first().click({ force: true })
-          cy.wait(3000)
+          cy.wait(10000)
         }
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-08b-expedicion-seleccionada')
   })
 
@@ -536,13 +536,13 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
   it('PASO 09 - Generar declaracion H1 XML', () => {
     cy.visit('/declarations')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
 
     // Seleccionar H1
     cy.get('body').then($body => {
       if ($body.text().includes('H1')) {
         cy.contains('H1').first().click({ force: true })
-        cy.wait(2000)
+        cy.wait(6000)
       }
     })
 
@@ -551,7 +551,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       const cards = $body.find('[class*="cursor-pointer"]')
       if (cards.length > 0) {
         cy.wrap(cards.first()).click({ force: true })
-        cy.wait(3000)
+        cy.wait(10000)
       }
     })
 
@@ -572,20 +572,20 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
   it('PASO 10 - Visualizar XML generado', () => {
     cy.visit('/declarations')
     cy.waitForLoad()
-    cy.wait(3000)
+    cy.wait(10000)
 
     // Seleccionar H1 y expedicion
     cy.get('body').then($body => {
       if ($body.text().includes('H1')) {
         cy.contains('H1').first().click({ force: true })
-        cy.wait(1000)
+        cy.wait(4000)
       }
     })
     cy.get('body').then($body => {
       const cards = $body.find('[class*="cursor-pointer"]')
       if (cards.length > 0) {
         cy.wrap(cards.first()).click({ force: true })
-        cy.wait(2000)
+        cy.wait(6000)
       }
     })
 
@@ -605,7 +605,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-10b-estado-declaracion')
   })
 
@@ -615,13 +615,13 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
   it('PASO 11 - ENVIAR DECLARACION H1 A AEAT PRE (REAL)', () => {
     cy.visit('/declarations')
     cy.waitForLoad()
-    cy.wait(3000)
+    cy.wait(10000)
 
     // Seleccionar H1
     cy.get('body').then($body => {
       if ($body.text().includes('H1')) {
         cy.contains('H1').first().click({ force: true })
-        cy.wait(1000)
+        cy.wait(4000)
       }
     })
 
@@ -630,7 +630,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       const cards = $body.find('[class*="cursor-pointer"]')
       if (cards.length > 0) {
         cy.wrap(cards.first()).click({ force: true })
-        cy.wait(2000)
+        cy.wait(6000)
       }
     })
 
@@ -642,7 +642,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-11-antes-envio')
 
     // Click en "Enviar a AEAT" button (orange button)
@@ -663,7 +663,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
     })
 
     // ESPERAR RESPUESTA DE AEAT PRE (envio real tarda 5-30 segundos)
-    cy.wait(15000)
+    cy.wait(20000)
     cy.captureStep('aeat-h1-11b-RESPUESTA-AEAT-REAL')
 
     // Verificar resultado
@@ -690,14 +690,14 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
   it('PASO 12 - Verificar MRN y canal en expedicion', () => {
     cy.visit('/expeditions')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-12-lista-post-envio')
 
     // Click en la primera expedicion para ver detalle
     cy.get('body').then($body => {
       if ($body.find('tbody tr').length > 0) {
         cy.get('tbody tr').first().click({ force: true })
-        cy.wait(5000)
+        cy.wait(10000)
         cy.captureStep('aeat-h1-12b-detalle-con-mrn')
 
         // Verificar si hay badges de canal
@@ -724,7 +724,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
   it('PASO 13 - Verificar en dashboard de canales', () => {
     cy.visit('/channels')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-13-dashboard-canales')
 
     // Verificar que hay estadisticas
@@ -738,7 +738,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h1-13d-dashboard-canales-final')
   })
 })

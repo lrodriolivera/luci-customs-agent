@@ -29,7 +29,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
   it('PASO 01 - Dashboard inicial', () => {
     cy.visit('/')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
 
     cy.get('body').should('not.contain', 'Error')
     cy.captureStep('aeat-h7-01-dashboard')
@@ -41,13 +41,13 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
   it('PASO 02 - Crear expedicion importacion bajo valor', () => {
     cy.visit('/expeditions/new')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
 
     // Asegurar tipo IMPORT seleccionado
     cy.get('body').then($body => {
       if ($body.text().match(/Importaci[oó]n|Import/)) {
         cy.contains(/Importaci[oó]n|Import/).first().click({ force: true })
-        cy.wait(2000)
+        cy.wait(6000)
       }
     })
 
@@ -60,12 +60,12 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
   it('PASO 03 - Datos del importador (consignee)', () => {
     cy.visit('/expeditions/new')
     cy.waitForLoad()
-    cy.wait(3000)
+    cy.wait(10000)
 
     // === STEP 1: Cliente/Importador ===
     // companyName
     cy.get('input[type="text"]').first().clear({ force: true }).type('STRIX AI SL', { force: true })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // NIF
     cy.get('body').then($body => {
@@ -74,39 +74,39 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
         cy.wrap(nifInput.first()).clear({ force: true }).type('B22477020', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // EORI
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 2) cy.wrap(allText.eq(2)).clear({ force: true }).type('ESB22477020', { force: true })
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // Address
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 3) cy.wrap(allText.eq(3)).clear({ force: true }).type('Calle Innovacion 5', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // City
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 4) cy.wrap(allText.eq(4)).clear({ force: true }).type('Valencia', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // PostalCode
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 5) cy.wrap(allText.eq(5)).clear({ force: true }).type('46001', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // Email
     cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-h7-real@strixai.es', { force: true })
-    cy.wait(500)
+    cy.wait(3000)
 
     // Phone
     cy.get('body').then($body => {
@@ -115,21 +115,21 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
         cy.wrap(telInputs.first()).clear({ force: true }).type('961234567', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Exportador/Proveedor (Shenzhen Textiles) ---
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 6) cy.wrap(allText.eq(6)).clear({ force: true }).type('SHENZHEN TEXTILES CO LTD', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // Exporter country
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 7) cy.wrap(allText.eq(7)).clear({ force: true }).type('CN', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // Exporter city
     cy.get('body').then($body => {
@@ -137,7 +137,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       if (allText.length > 8) cy.wrap(allText.eq(8)).clear({ force: true }).type('Shenzhen', { force: true })
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h7-03-datos-importador-completos')
   })
 
@@ -147,7 +147,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
   it('PASO 04 - Datos mercancia bajo valor (camisetas algodon)', () => {
     cy.visit('/expeditions/new')
     cy.waitForLoad()
-    cy.wait(3000)
+    cy.wait(10000)
 
     // === STEP 1 minimos ===
     cy.get('input[type="text"]').first().clear({ force: true }).type('STRIX AI SL', { force: true })
@@ -160,11 +160,11 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 7) cy.wrap(allText.eq(7)).clear({ force: true }).type('CN', { force: true })
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // Avanzar a Step 2 (Goods)
     cy.get('.btn-primary').last().click({ force: true })
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h7-04-paso-mercancia')
 
     // --- Descripcion ---
@@ -172,7 +172,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       'Camisetas de algodon para adulto, 100% algodon, tallas S-XL, colores variados. Marca: Shenzhen Basics. Lote de 50 unidades para venta online.',
       { force: true }
     )
-    cy.wait(2000)
+    cy.wait(6000)
 
     // --- Material ---
     cy.get('body').then($body => {
@@ -181,7 +181,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
         cy.wrap(textInputs.eq(0)).clear({ force: true }).type('Algodon 100%', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Uso ---
     cy.get('body').then($body => {
@@ -190,7 +190,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
         cy.wrap(textInputs.eq(1)).clear({ force: true }).type('Vestimenta casual adulto', { force: true })
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Codigo TARIC 6109100000 (camisetas algodon) ---
     cy.get('body').then($body => {
@@ -199,7 +199,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
         cy.wrap(taricInput.first()).clear({ force: true }).type('6109100000', { force: true })
       }
     })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // --- Pais de origen CN ---
     cy.get('body').then($body => {
@@ -207,7 +207,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       const nonMaxLen = textInputs.filter((i, el) => !Cypress.$(el).attr('maxlength'))
       if (nonMaxLen.length > 2) cy.wrap(nonMaxLen.eq(2)).clear({ force: true }).type('CN', { force: true })
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Cantidad: 50 unidades ---
     cy.get('body').then($body => {
@@ -224,21 +224,21 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
         }
       })
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // --- Peso neto: 45 kg ---
     cy.get('body').then($body => {
       const nums = $body.find('input[type="number"]')
       if (nums.length >= 2) cy.wrap(nums.eq(1)).clear({ force: true }).type('45', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // --- Peso bruto: 50 kg ---
     cy.get('body').then($body => {
       const nums = $body.find('input[type="number"]')
       if (nums.length >= 3) cy.wrap(nums.eq(2)).clear({ force: true }).type('50', { force: true })
     })
-    cy.wait(500)
+    cy.wait(3000)
 
     // --- Valor factura: 120 EUR (bajo valor < 150 EUR) ---
     cy.get('body').then($body => {
@@ -246,7 +246,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       if (nums.length >= 4) cy.wrap(nums.eq(3)).clear({ force: true }).type('120', { force: true })
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h7-04b-mercancia-bajo-valor-completa')
   })
 
@@ -256,7 +256,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
   it('PASO 05 - Transporte aereo y crear expedicion', () => {
     cy.visit('/expeditions/new')
     cy.waitForLoad()
-    cy.wait(3000)
+    cy.wait(10000)
 
     // === STEP 1 minimos ===
     cy.get('input[type="text"]').first().clear({ force: true }).type('STRIX AI SL', { force: true })
@@ -295,11 +295,11 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 7) cy.wrap(allText.eq(7)).clear({ force: true }).type('CN', { force: true })
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // Avanzar a Step 2
     cy.get('.btn-primary').last().click({ force: true })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // === STEP 2: Mercancia ===
     cy.get('textarea').first().clear({ force: true }).type(
@@ -336,11 +336,11 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       const nums = $body.find('input[type="number"]')
       if (nums.length >= 4) cy.wrap(nums.eq(3)).clear({ force: true }).type('120', { force: true })
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // Avanzar a Step 3
     cy.get('.btn-primary').last().click({ force: true })
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h7-05-paso-transporte')
 
     // === STEP 3: Transporte AIR ===
@@ -349,7 +349,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
         cy.wrap($sel).select('AIR', { force: true })
       }
     })
-    cy.wait(2000)
+    cy.wait(6000)
 
     // Incoterm - DAP para e-commerce
     cy.get('body').then($body => {
@@ -361,7 +361,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
         }
       }
     })
-    cy.wait(1000)
+    cy.wait(4000)
 
     // Lugar incoterm
     cy.get('body').then($body => {
@@ -371,12 +371,12 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h7-05b-transporte-aereo-completo')
 
     // CREAR EXPEDICION
     cy.get('button[type="submit"]').click({ force: true })
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h7-05c-expedicion-creada')
   })
 
@@ -386,7 +386,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
   it('PASO 06 - Navegar a seccion H7', () => {
     cy.visit('/h7')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h7-06-pantalla-h7')
 
     // Verificar que la pagina H7 cargo correctamente
@@ -405,7 +405,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
   it('PASO 07 - Verificar expediciones disponibles para H7', () => {
     cy.visit('/h7')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
 
     // Buscar expediciones en la tabla o lista
     cy.get('body').then($body => {
@@ -413,11 +413,11 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
         cy.captureStep('aeat-h7-07-expediciones-disponibles')
         // Click en la primera expedicion
         cy.get('tbody tr').first().click({ force: true })
-        cy.wait(5000)
+        cy.wait(10000)
         cy.captureStep('aeat-h7-07b-expedicion-seleccionada')
       } else if ($body.find('[class*="cursor-pointer"]').length > 0) {
         cy.get('[class*="cursor-pointer"]').first().click({ force: true })
-        cy.wait(5000)
+        cy.wait(10000)
         cy.captureStep('aeat-h7-07b-expedicion-seleccionada')
       }
     })
@@ -429,7 +429,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
   it('PASO 08 - Generar H7 desde pantalla de declaraciones', () => {
     cy.visit('/declarations')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
 
     // Las H7 podrian generarse desde la seccion /h7 o desde /declarations
     // Intentar seleccionar expedicion y generar
@@ -438,11 +438,11 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       const cards = $body.find('[class*="cursor-pointer"]')
       if (cards.length > 0) {
         cy.wrap(cards.first()).click({ force: true })
-        cy.wait(3000)
+        cy.wait(10000)
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h7-08-declaraciones-expedicion')
 
     // Si hay boton de generar H7
@@ -461,7 +461,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
   it('PASO 09 - Generar H7 desde seccion dedicada', () => {
     cy.visit('/h7')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
 
     // Buscar boton de crear/generar nueva H7
     cy.get('body').then($body => {
@@ -469,7 +469,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       // Try finding new/create button
       if (text.match(/Nuevo|Nueva|Crear|New|Generate/)) {
         cy.contains(/Nuevo|Nueva|Crear|New/).first().click({ force: true })
-        cy.wait(5000)
+        cy.wait(10000)
         cy.captureStep('aeat-h7-09-formulario-h7')
       }
     })
@@ -479,7 +479,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       const iossInput = $body.find('input[name="iossNumber"], input[placeholder*="IOSS"]')
       if (iossInput.length > 0) {
         cy.wrap(iossInput.first()).clear({ force: true }).type('IMES000000123', { force: true })
-        cy.wait(2000)
+        cy.wait(6000)
       }
       // Otros inputs del formulario H7
       const textInputs = $body.find('input[type="text"]')
@@ -492,7 +492,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       })
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h7-09b-formulario-h7-completo')
 
     // Generar
@@ -511,13 +511,13 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
   it('PASO 10 - ENVIAR H7 A AEAT PRE (REAL)', () => {
     cy.visit('/h7')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
 
     // Buscar expedicion con H7 generada
     cy.get('body').then($body => {
       if ($body.find('tbody tr').length > 0) {
         cy.get('tbody tr').first().click({ force: true })
-        cy.wait(5000)
+        cy.wait(10000)
       }
     })
 
@@ -531,7 +531,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       })
       if (sendBtn.length > 0) {
         cy.wrap(sendBtn.first()).click({ force: true })
-        cy.wait(3000)
+        cy.wait(10000)
 
         // Confirmar si hay dialogo
         cy.get('body').then($body2 => {
@@ -547,7 +547,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
     })
 
     // ESPERAR RESPUESTA DE AEAT PRE
-    cy.wait(15000)
+    cy.wait(20000)
     cy.captureStep('aeat-h7-10b-RESPUESTA-AEAT-REAL')
 
     // Verificar resultado
@@ -574,14 +574,14 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
   it('PASO 11 - Verificar MRN y garantia en detalle', () => {
     cy.visit('/h7')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h7-11-lista-post-envio')
 
     // Click en primera expedicion para ver detalle
     cy.get('body').then($body => {
       if ($body.find('tbody tr').length > 0) {
         cy.get('tbody tr').first().click({ force: true })
-        cy.wait(5000)
+        cy.wait(10000)
         cy.captureStep('aeat-h7-11b-detalle-h7')
 
         cy.get('body').then($detail => {
@@ -603,13 +603,13 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
   it('PASO 12 - Verificar en lista de expediciones', () => {
     cy.visit('/expeditions')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h7-12-expediciones-post-envio')
 
     cy.get('body').then($body => {
       if ($body.find('tbody tr').length > 0) {
         cy.get('tbody tr').first().click({ force: true })
-        cy.wait(5000)
+        cy.wait(10000)
         cy.captureStep('aeat-h7-12b-detalle-expedicion')
       }
     })
@@ -621,7 +621,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
   it('PASO 13 - Verificar en dashboard de canales', () => {
     cy.visit('/channels')
     cy.waitForLoad()
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h7-13-dashboard-canales')
 
     cy.get('body').then($body => {
@@ -634,7 +634,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       }
     })
 
-    cy.wait(5000)
+    cy.wait(10000)
     cy.captureStep('aeat-h7-13d-dashboard-canales-final')
   })
 })
