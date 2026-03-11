@@ -7,6 +7,15 @@ const { declarationValidators } = require('../middleware/validators');
 // Todas las rutas requieren autenticacion
 router.use(auth);
 
+// GET /api/declarations/supported-countries
+router.get('/supported-countries', (req, res) => {
+  const { CustomsServiceFactory } = require('../services/customs');
+  res.json({
+    success: true,
+    data: CustomsServiceFactory.getSupportedCountries()
+  });
+});
+
 // Generar declaraciones H1 (Importacion estandar)
 router.post('/h1/generate', declarationValidators.generateH1, declarationController.generateH1);
 router.post('/h1/generate-direct', declarationController.generateH1Direct);  // Modo demo sin validaciones

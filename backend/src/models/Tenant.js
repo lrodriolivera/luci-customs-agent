@@ -238,6 +238,17 @@ const TenantSchema = new mongoose.Schema({
   // Settings
   settings: SettingsSchema,
 
+  // Customs configuration (multi-country support)
+  customsConfig: {
+    country: { type: String, enum: ['ES', 'NL', 'BE', 'DE', 'FR', 'PT', 'IT'], default: 'ES' },
+    system: { type: String }, // 'AEAT', 'DMS', 'DECO', 'PLDA', etc.
+    environment: { type: String, enum: ['simulation', 'test', 'production'], default: 'test' },
+    certificatePath: { type: String },
+    certificatePassword: { type: String },
+    digipoortEndpoint: { type: String },
+    customsOffice: { type: String },
+  },
+
   // Admin
   owner: {
     type: mongoose.Schema.Types.ObjectId,
