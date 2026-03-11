@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   CreditCard,
   DollarSign,
@@ -19,20 +20,21 @@ import {
 } from 'lucide-react';
 import { portalAPI } from '../../services/api';
 
-const STATUS_CONFIG = {
-  pending: { color: 'yellow', icon: Clock, text: 'Pendiente' },
-  processing: { color: 'blue', icon: RefreshCw, text: 'Procesando' },
-  completed: { color: 'green', icon: Check, text: 'Completado' },
-  failed: { color: 'red', icon: AlertCircle, text: 'Fallido' },
-  refunded: { color: 'gray', icon: RefreshCw, text: 'Reembolsado' }
-};
-
 const PortalPayments = ({ token, expedition }) => {
+  const { t } = useTranslation();
   const [payments, setPayments] = useState({ pending: null, history: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [creatingPayment, setCreatingPayment] = useState(false);
   const [expandedPayment, setExpandedPayment] = useState(null);
+
+  const STATUS_CONFIG = {
+    pending: { color: 'yellow', icon: Clock, text: t('portal.statusPending') },
+    processing: { color: 'blue', icon: RefreshCw, text: t('portal.statusProcessing') },
+    completed: { color: 'green', icon: Check, text: t('portal.statusCompleted') },
+    failed: { color: 'red', icon: AlertCircle, text: t('portal.statusFailed') },
+    refunded: { color: 'gray', icon: RefreshCw, text: t('portal.statusRefunded') }
+  };
 
   useEffect(() => {
     fetchPayments();
@@ -44,7 +46,7 @@ const PortalPayments = ({ token, expedition }) => {
       const response = await portalAPI.getPayments(token);
       setPayments(response.data);
     } catch (err) {
-      setError('Error al cargar informacion de pagos');
+      setError(t('portal.errorLoadingPayments'));
       console.error('Error fetching payments:', err);
     } finally {
       setLoading(false);
@@ -65,7 +67,7 @@ const PortalPayments = ({ token, expedition }) => {
         }
       }));
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al crear pago');
+      setError(err.response?.data?.error || t('portal.errorCreatingPayment'));
     } finally {
       setCreatingPayment(false);
     }
@@ -81,10 +83,10 @@ const PortalPayments = ({ token, expedition }) => {
       } else if (response.data.mockMode) {
         // Mock mode - simulate success
         await fetchPayments();
-        alert('Pago simulado completado (modo de prueba)');
+        alert(t('portal.mockPaymentDone'));
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al iniciar checkout');
+      setError(err.response?.data?.error || t('portal.errorCheckout'));
     }
   };
 
@@ -130,7 +132,7 @@ const PortalPayments = ({ token, expedition }) => {
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
           <CreditCard className="w-6 h-6 mr-2 text-blue-600" />
-          Pago Pendiente
+          {t('portal.pendingPayment')}
         </h2>
 
         {pending?.hasPendingPayment ? (
@@ -138,11 +140,11 @@ const PortalPayments = ({ token, expedition }) => {
             {/* Payment breakdown */}
             {pending.breakdown && (
               <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-700 mb-3">Desglose</h3>
+                <h3 className="font-semibold text-gray-700 mb-3">{t('portal.breakdown')}</h3>
                 <div className="space-y-2">
                   {pending.breakdown.duties > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Derechos de Aduana</span>
+                      <span className="text-gray-600">{t('portal.customsDuties')}</span>
                       <span className="font-medium">
                         {formatCurrency(pending.breakdown.duties)}
                       </span>
@@ -150,7 +152,7 @@ const PortalPayments = ({ token, expedition }) => {
                   )}
                   {pending.breakdown.vat > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">IVA Importacion</span>
+                      <span className="text-gray-600">{t('portal.importVat')}</span>
                       <span className="font-medium">
                         {formatCurrency(pending.breakdown.vat)}
                       </span>
@@ -158,14 +160,14 @@ const PortalPayments = ({ token, expedition }) => {
                   )}
                   {pending.breakdown.specialTaxes > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Impuestos Especiales</span>
+                      <span className="text-gray-600">{t('portal.specialTaxes')}</span>
                       <span className="font-medium">
                         {formatCurrency(pending.breakdown.specialTaxes)}
                       </span>
                     </div>
                   )}
                   <div className="border-t pt-2 mt-2 flex justify-between">
-                    <span className="font-semibold text-gray-800">Total</span>
+                    <span className="font-semibold text-gray-800">{t('common.total')}</span>
                     <span className="font-bold text-lg text-blue-600">
                       {formatCurrency(pending.breakdown.total)}
                     </span>
@@ -178,11 +180,11 @@ const PortalPayments = ({ token, expedition }) => {
             {pending.payment && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-blue-700">ID de Pago</span>
+                  <span className="text-sm text-blue-700">{t('portal.paymentId')}</span>
                   <span className="font-mono text-sm">{pending.payment.paymentId}</span>
                 </div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-blue-700">Monto</span>
+                  <span className="text-sm text-blue-700">{t('portal.payAmount')}</span>
                   <span className="font-bold text-lg">
                     {formatCurrency(pending.payment.totalAmount)}
                   </span>
@@ -192,7 +194,7 @@ const PortalPayments = ({ token, expedition }) => {
                   className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center font-semibold"
                 >
                   <CreditCard className="w-5 h-5 mr-2" />
-                  Pagar Ahora
+                  {t('portal.payNow')}
                 </button>
               </div>
             )}
@@ -207,12 +209,12 @@ const PortalPayments = ({ token, expedition }) => {
                 {creatingPayment ? (
                   <>
                     <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                    Creando pago...
+                    {t('portal.creatingPayment')}
                   </>
                 ) : (
                   <>
                     <DollarSign className="w-5 h-5 mr-2" />
-                    Proceder al Pago
+                    {t('portal.proceedToPayment')}
                   </>
                 )}
               </button>
@@ -224,11 +226,11 @@ const PortalPayments = ({ token, expedition }) => {
               <Check className="w-8 h-8 text-green-600" />
             </div>
             <p className="text-gray-600">
-              {pending?.message || 'No hay pagos pendientes'}
+              {pending?.message || t('portal.noPendingPayments')}
             </p>
             {pending?.paidAt && (
               <p className="text-sm text-gray-500 mt-2">
-                Ultimo pago: {formatDate(pending.paidAt)}
+                {t('portal.lastPayment')} {formatDate(pending.paidAt)}
               </p>
             )}
           </div>
@@ -239,7 +241,7 @@ const PortalPayments = ({ token, expedition }) => {
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
           <FileText className="w-6 h-6 mr-2 text-gray-600" />
-          Historial de Pagos
+          {t('portal.paymentHistory')}
         </h2>
 
         {history.length > 0 ? (
@@ -287,7 +289,7 @@ const PortalPayments = ({ token, expedition }) => {
                     <div className="px-4 pb-4 border-t bg-gray-50">
                       <div className="pt-3 space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">ID de Pago</span>
+                          <span className="text-gray-500">{t('portal.paymentId')}</span>
                           <span className="font-mono">{payment.paymentId}</span>
                         </div>
                         {payment.items?.map((item, idx) => (
@@ -304,7 +306,7 @@ const PortalPayments = ({ token, expedition }) => {
                             className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm mt-2"
                           >
                             <ExternalLink className="w-4 h-4 mr-1" />
-                            Ver Recibo
+                            {t('portal.viewReceipt')}
                           </a>
                         )}
                       </div>
@@ -317,19 +319,19 @@ const PortalPayments = ({ token, expedition }) => {
         ) : (
           <div className="text-center py-8 text-gray-500">
             <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p>No hay pagos anteriores</p>
+            <p>{t('portal.noPreviousPayments')}</p>
           </div>
         )}
       </div>
 
       {/* Payment Info */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-800 mb-2">Informacion de Pago</h3>
+        <h3 className="font-semibold text-blue-800 mb-2">{t('portal.paymentInfo')}</h3>
         <ul className="text-sm text-blue-700 space-y-1">
-          <li>• Aceptamos tarjetas de credito y debito (Visa, Mastercard, Amex)</li>
-          <li>• Los pagos son procesados de forma segura mediante Stripe</li>
-          <li>• Recibira un recibo por email al completar el pago</li>
-          <li>• Para pagos por transferencia bancaria, contacte con nosotros</li>
+          <li>• {t('portal.paymentInfoCards')}</li>
+          <li>• {t('portal.paymentInfoStripe')}</li>
+          <li>• {t('portal.paymentInfoReceipt')}</li>
+          <li>• {t('portal.paymentInfoTransfer')}</li>
         </ul>
       </div>
     </div>

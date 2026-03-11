@@ -22,6 +22,7 @@ import {
 } from '@heroicons/react/24/outline'
 import RegimeAdvisor from './RegimeAdvisor'
 import YieldValidator from './YieldValidator'
+import { useTranslation } from 'react-i18next'
 
 // Configuracion de tipos de regimen
 const REGIME_CONFIG = {
@@ -90,6 +91,7 @@ const STATUS_CONFIG = {
 }
 
 export default function SpecialRegimeManager() {
+  const { t } = useTranslation()
   const [stats, setStats] = useState(null)
   const [regimes, setRegimes] = useState([])
   const [expiring, setExpiring] = useState([])
@@ -171,8 +173,8 @@ export default function SpecialRegimeManager() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Regimenes Especiales</h1>
-          <p className="text-gray-600">Gestion de regimenes aduaneros especiales (CAU Art. 210-262)</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('specialRegimes.title')}</h1>
+          <p className="text-gray-600">{t('specialRegimes.subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -188,14 +190,14 @@ export default function SpecialRegimeManager() {
             title="Asistente IA"
           >
             <SparklesIcon className="h-5 w-5" />
-            Asistente IA
+            {t('specialRegimes.aiAssistant')}
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
             className="btn-primary flex items-center gap-2"
           >
             <PlusIcon className="h-5 w-5" />
-            Nuevo Regimen
+            {t('specialRegimes.newRegime')}
           </button>
         </div>
       </div>

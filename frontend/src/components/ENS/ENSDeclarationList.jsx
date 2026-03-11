@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   Box, Typography, Paper, Grid, Button, TextField, MenuItem,
@@ -29,40 +30,41 @@ import { ensAPI } from '../../services/api'
 import ENSDeclarationForm from './ENSDeclarationForm'
 import ENSBatchUpload from './ENSBatchUpload'
 
-// Transport mode icons and colors
-const transportModeConfig = {
-  ROAD: { icon: TruckIcon, color: '#4CAF50', label: 'Carretera' },
-  RAIL: { icon: RailIcon, color: '#FF9800', label: 'Ferrocarril' },
-  AIR: { icon: AirIcon, color: '#2196F3', label: 'Aereo' },
-  SEA: { icon: SeaIcon, color: '#00BCD4', label: 'Maritimo' }
-}
-
-// Status configuration
-const statusConfig = {
-  draft: { color: 'default', label: 'Borrador' },
-  validated: { color: 'info', label: 'Validada' },
-  submitted: { color: 'primary', label: 'Enviada' },
-  accepted: { color: 'success', label: 'Aceptada' },
-  rejected: { color: 'error', label: 'Rechazada' },
-  amendment_pending: { color: 'warning', label: 'Rectificacion Pendiente' },
-  amended: { color: 'info', label: 'Rectificada' },
-  arrived: { color: 'secondary', label: 'Llegada Notificada' },
-  released: { color: 'success', label: 'Levantada' },
-  dnl: { color: 'error', label: 'DNL' },
-  cancelled: { color: 'default', label: 'Anulada' }
-}
-
-// Risk status configuration
-const riskConfig = {
-  PENDING: { color: 'default', label: 'Pendiente' },
-  ACK: { color: 'success', label: 'Aceptada' },
-  HOLD: { color: 'warning', label: 'Retenida' },
-  DNL: { color: 'error', label: 'No Cargar' },
-  CLEARED: { color: 'success', label: 'Despachada' }
-}
-
 const ENSDeclarationList = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
+
+  // Transport mode icons and colors
+  const transportModeConfig = {
+    ROAD: { icon: TruckIcon, color: '#4CAF50', label: t('ens.road') },
+    RAIL: { icon: RailIcon, color: '#FF9800', label: t('ens.rail') },
+    AIR: { icon: AirIcon, color: '#2196F3', label: t('ens.air') },
+    SEA: { icon: SeaIcon, color: '#00BCD4', label: t('ens.maritime') }
+  }
+
+  // Status configuration
+  const statusConfig = {
+    draft: { color: 'default', label: t('ens.statusDraft') },
+    validated: { color: 'info', label: t('ens.statusValidated') },
+    submitted: { color: 'primary', label: t('ens.statusSent') },
+    accepted: { color: 'success', label: t('ens.statusAccepted') },
+    rejected: { color: 'error', label: t('ens.statusRejected') },
+    amendment_pending: { color: 'warning', label: t('ens.statusAmendmentPending') },
+    amended: { color: 'info', label: t('ens.statusAmended') },
+    arrived: { color: 'secondary', label: t('ens.statusArrivalNotified') },
+    released: { color: 'success', label: t('ens.statusReleased') },
+    dnl: { color: 'error', label: t('ens.statusDnl') },
+    cancelled: { color: 'default', label: t('ens.statusCancelled') }
+  }
+
+  // Risk status configuration
+  const riskConfig = {
+    PENDING: { color: 'default', label: t('ens.riskPending') },
+    ACK: { color: 'success', label: t('ens.riskAccepted') },
+    HOLD: { color: 'warning', label: t('ens.riskHeld') },
+    DNL: { color: 'error', label: t('ens.riskDoNotLoad') },
+    CLEARED: { color: 'success', label: t('ens.riskCleared') }
+  }
   const [declarations, setDeclarations] = useState([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState(null)
@@ -152,7 +154,7 @@ const ENSDeclarationList = () => {
   }
 
   const handleSubmitDeclaration = async (id) => {
-    if (!window.confirm('Esta seguro de enviar esta declaracion a AEAT?')) return
+    if (!window.confirm(t('ens.confirmSend'))) return
 
     try {
       const response = await ensAPI.submit(id)
@@ -202,7 +204,7 @@ const ENSDeclarationList = () => {
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 600 }}>
-          Declaraciones ENS (ICS2)
+          {t('ens.title')}
         </Typography>
         <Box>
           <Button
@@ -211,14 +213,14 @@ const ENSDeclarationList = () => {
             sx={{ mr: 1 }}
             onClick={() => setBatchUploadOpen(true)}
           >
-            Importar Lote
+            {t('ens.importBatch')}
           </Button>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => setCreateDialogOpen(true)}
           >
-            Nueva ENS
+            {t('ens.new')}
           </Button>
         </Box>
       </Box>
@@ -230,7 +232,7 @@ const ENSDeclarationList = () => {
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
-                  Total Declaraciones
+                  {t('ens.totalDeclarations')}
                 </Typography>
                 <Typography variant="h4">
                   {stats.totals?.declarations || 0}
@@ -242,7 +244,7 @@ const ENSDeclarationList = () => {
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
-                  Peso Total (Tn)
+                  {t('ens.totalWeight')}
                 </Typography>
                 <Typography variant="h4">
                   {((stats.totals?.weight || 0) / 1000).toFixed(1)}
@@ -254,7 +256,7 @@ const ENSDeclarationList = () => {
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
-                  Total Bultos
+                  {t('ens.totalPackages')}
                 </Typography>
                 <Typography variant="h4">
                   {stats.totals?.packages?.toLocaleString() || 0}
@@ -266,7 +268,7 @@ const ENSDeclarationList = () => {
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
-                  Por Modo Transporte
+                  {t('ens.byTransportMode')}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                   {stats.byTransportMode?.map(tm => (
@@ -288,7 +290,7 @@ const ENSDeclarationList = () => {
             <TextField
               fullWidth
               size="small"
-              placeholder="Buscar por referencia, MRN, contenedor, B/L..."
+              placeholder={t('ens.searchPlaceholder')}
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               InputProps={{
@@ -305,11 +307,11 @@ const ENSDeclarationList = () => {
               fullWidth
               size="small"
               select
-              label="Estado"
+              label={t('ens.statusFilter')}
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
             >
-              <MenuItem value="">Todos</MenuItem>
+              <MenuItem value="">{t('common.all')}</MenuItem>
               {Object.entries(statusConfig).map(([key, config]) => (
                 <MenuItem key={key} value={key}>{config.label}</MenuItem>
               ))}
@@ -320,11 +322,11 @@ const ENSDeclarationList = () => {
               fullWidth
               size="small"
               select
-              label="Modo Transporte"
+              label={t('ens.transportModeFilter')}
               value={filters.transportMode}
               onChange={(e) => handleFilterChange('transportMode', e.target.value)}
             >
-              <MenuItem value="">Todos</MenuItem>
+              <MenuItem value="">{t('common.all')}</MenuItem>
               {Object.entries(transportModeConfig).map(([key, config]) => (
                 <MenuItem key={key} value={key}>{config.label}</MenuItem>
               ))}
@@ -335,7 +337,7 @@ const ENSDeclarationList = () => {
               fullWidth
               size="small"
               type="date"
-              label="Desde"
+              label={t('common.from')}
               value={filters.startDate}
               onChange={(e) => handleFilterChange('startDate', e.target.value)}
               InputLabelProps={{ shrink: true }}
@@ -346,7 +348,7 @@ const ENSDeclarationList = () => {
               fullWidth
               size="small"
               type="date"
-              label="Hasta"
+              label={t('common.to')}
               value={filters.endDate}
               onChange={(e) => handleFilterChange('endDate', e.target.value)}
               InputLabelProps={{ shrink: true }}
@@ -362,17 +364,17 @@ const ENSDeclarationList = () => {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Referencia</TableCell>
-                <TableCell>Modo</TableCell>
-                <TableCell>MRN</TableCell>
-                <TableCell>Conocimiento</TableCell>
-                <TableCell>Contenedor</TableCell>
-                <TableCell>Transportista</TableCell>
-                <TableCell>Aduana Entrada</TableCell>
-                <TableCell>Llegada Prevista</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell>Riesgo</TableCell>
-                <TableCell align="right">Acciones</TableCell>
+                <TableCell>{t('ens.reference')}</TableCell>
+                <TableCell>{t('ens.mode')}</TableCell>
+                <TableCell>{t('ens.mrnLabel')}</TableCell>
+                <TableCell>{t('ens.billOfLading')}</TableCell>
+                <TableCell>{t('ens.container')}</TableCell>
+                <TableCell>{t('ens.carrier')}</TableCell>
+                <TableCell>{t('ens.entryCustoms')}</TableCell>
+                <TableCell>{t('ens.expectedArrival')}</TableCell>
+                <TableCell>{t('common.status')}</TableCell>
+                <TableCell>{t('ens.risk')}</TableCell>
+                <TableCell align="right">{t('common.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -418,19 +420,19 @@ const ENSDeclarationList = () => {
                     {dec.riskAssessment?.status && renderRiskChip(dec.riskAssessment.status)}
                   </TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Ver detalle">
+                    <Tooltip title={t('common.viewDetail')}>
                       <IconButton size="small" onClick={() => navigate(`/ens/${dec._id}`)}>
                         <ViewIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                     {dec.status === 'draft' && (
                       <>
-                        <Tooltip title="Editar">
+                        <Tooltip title={t('common.edit')}>
                           <IconButton size="small" onClick={() => navigate(`/ens/${dec._id}/edit`)}>
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Enviar a AEAT">
+                        <Tooltip title={t('ens.sendToAeat')}>
                           <IconButton
                             size="small"
                             color="primary"
@@ -448,7 +450,7 @@ const ENSDeclarationList = () => {
                 <TableRow>
                   <TableCell colSpan={11} align="center">
                     <Typography color="textSecondary" sx={{ py: 4 }}>
-                      No se encontraron declaraciones ENS
+                      {t('ens.noDeclarations')}
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -464,7 +466,7 @@ const ENSDeclarationList = () => {
           rowsPerPage={pagination.limit}
           onRowsPerPageChange={handleRowsPerPageChange}
           rowsPerPageOptions={[10, 20, 50, 100]}
-          labelRowsPerPage="Filas por pagina:"
+          labelRowsPerPage={t('ens.rowsPerPage')}
         />
       </Paper>
 
@@ -476,7 +478,7 @@ const ENSDeclarationList = () => {
         fullWidth
       >
         <DialogTitle>
-          Detalle ENS: {selectedDeclaration?.reference}
+          {t('ens.detailTitle')}: {selectedDeclaration?.reference}
         </DialogTitle>
         <DialogContent dividers>
           {selectedDeclaration && (
@@ -485,18 +487,18 @@ const ENSDeclarationList = () => {
               <Grid item xs={12} md={6}>
                 <Paper variant="outlined" sx={{ p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom color="primary">
-                    Informacion General
+                    {t('ens.generalInfo')}
                   </Typography>
                   <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
-                    <Typography variant="body2" color="textSecondary">Referencia:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.reference')}:</Typography>
                     <Typography variant="body2">{selectedDeclaration.reference}</Typography>
-                    <Typography variant="body2" color="textSecondary">LRN:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.lrn')}:</Typography>
                     <Typography variant="body2">{selectedDeclaration.lrn}</Typography>
-                    <Typography variant="body2" color="textSecondary">MRN:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.mrnLabel')}:</Typography>
                     <Typography variant="body2">{selectedDeclaration.mrn || '-'}</Typography>
-                    <Typography variant="body2" color="textSecondary">Estado:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('common.status')}:</Typography>
                     <Box>{renderStatusChip(selectedDeclaration.status)}</Box>
-                    <Typography variant="body2" color="textSecondary">Modo Transporte:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.transportModeFilter')}:</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       {renderTransportModeIcon(selectedDeclaration.transportMode)}
                       <Typography variant="body2">
@@ -511,14 +513,14 @@ const ENSDeclarationList = () => {
               <Grid item xs={12} md={6}>
                 <Paper variant="outlined" sx={{ p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom color="primary">
-                    Aduana de Entrada
+                    {t('ens.entryCustomsLabel')}
                   </Typography>
                   <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
-                    <Typography variant="body2" color="textSecondary">Codigo:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.code')}:</Typography>
                     <Typography variant="body2">{selectedDeclaration.entryOffice?.code}</Typography>
-                    <Typography variant="body2" color="textSecondary">Nombre:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('common.name')}:</Typography>
                     <Typography variant="body2">{selectedDeclaration.entryOffice?.name || '-'}</Typography>
-                    <Typography variant="body2" color="textSecondary">Llegada Prevista:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.expectedArrival')}:</Typography>
                     <Typography variant="body2">{formatDate(selectedDeclaration.entryOffice?.expectedArrival)}</Typography>
                   </Box>
                 </Paper>
@@ -528,12 +530,12 @@ const ENSDeclarationList = () => {
               <Grid item xs={12} md={6}>
                 <Paper variant="outlined" sx={{ p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom color="primary">
-                    Transportista
+                    {t('ens.carrier')}
                   </Typography>
                   <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
-                    <Typography variant="body2" color="textSecondary">EORI:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.eoriLabel')}:</Typography>
                     <Typography variant="body2">{selectedDeclaration.carrier?.eori}</Typography>
-                    <Typography variant="body2" color="textSecondary">Nombre:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('common.name')}:</Typography>
                     <Typography variant="body2">{selectedDeclaration.carrier?.name || '-'}</Typography>
                   </Box>
                 </Paper>
@@ -543,16 +545,16 @@ const ENSDeclarationList = () => {
               <Grid item xs={12} md={6}>
                 <Paper variant="outlined" sx={{ p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom color="primary">
-                    Envio
+                    {t('ens.shipment')}
                   </Typography>
                   <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
-                    <Typography variant="body2" color="textSecondary">Referencia:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.reference')}:</Typography>
                     <Typography variant="body2">{selectedDeclaration.consignment?.referenceNumber}</Typography>
-                    <Typography variant="body2" color="textSecondary">Contenedor:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.container')}:</Typography>
                     <Typography variant="body2">{selectedDeclaration.consignment?.containerNumber || '-'}</Typography>
-                    <Typography variant="body2" color="textSecondary">Peso Bruto:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.grossWeight')}:</Typography>
                     <Typography variant="body2">{selectedDeclaration.consignment?.grossMass} kg</Typography>
-                    <Typography variant="body2" color="textSecondary">Bultos:</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.packagesLabel')}:</Typography>
                     <Typography variant="body2">{selectedDeclaration.consignment?.numberOfPackages}</Typography>
                   </Box>
                 </Paper>
@@ -563,16 +565,16 @@ const ENSDeclarationList = () => {
                 <Grid item xs={12}>
                   <Paper variant="outlined" sx={{ p: 2 }}>
                     <Typography variant="subtitle2" gutterBottom color="primary">
-                      Analisis de Riesgo
+                      {t('ens.riskAnalysis')}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
                       <Box>
-                        <Typography variant="body2" color="textSecondary">Estado:</Typography>
+                        <Typography variant="body2" color="textSecondary">{t('common.status')}:</Typography>
                         {renderRiskChip(selectedDeclaration.riskAssessment.status)}
                       </Box>
                       {selectedDeclaration.riskAssessment.riskScore !== undefined && (
                         <Box>
-                          <Typography variant="body2" color="textSecondary">Puntuacion:</Typography>
+                          <Typography variant="body2" color="textSecondary">{t('ens.score')}:</Typography>
                           <Typography variant="body1" fontWeight={500}>
                             {selectedDeclaration.riskAssessment.riskScore}/100
                           </Typography>
@@ -580,7 +582,7 @@ const ENSDeclarationList = () => {
                       )}
                       {selectedDeclaration.riskAssessment.doNotLoadList && (
                         <Alert severity="error" sx={{ flex: 1 }}>
-                          <strong>DNL Emitido:</strong> {selectedDeclaration.riskAssessment.dnlReason}
+                          <strong>{t('ens.dnlIssued')}:</strong> {selectedDeclaration.riskAssessment.dnlReason}
                         </Alert>
                       )}
                     </Box>
@@ -592,7 +594,7 @@ const ENSDeclarationList = () => {
               <Grid item xs={12}>
                 <Paper variant="outlined" sx={{ p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom color="primary">
-                    Historial de Estados
+                    {t('ens.statusHistory')}
                   </Typography>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                     {selectedDeclaration.statusHistory?.map((history, idx) => (
@@ -616,7 +618,7 @@ const ENSDeclarationList = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDetailDialogOpen(false)}>
-            Cerrar
+            {t('common.close')}
           </Button>
           {selectedDeclaration?.status === 'draft' && (
             <Button
@@ -628,7 +630,7 @@ const ENSDeclarationList = () => {
                 setDetailDialogOpen(false)
               }}
             >
-              Enviar a AEAT
+              {t('ens.sendToAeat')}
             </Button>
           )}
         </DialogActions>

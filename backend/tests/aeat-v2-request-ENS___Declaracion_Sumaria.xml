@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+  <soapenv:Body>
+    <ent:CC315A xmlns:ent="https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/aden/enswsv5/IE315V5Ent.xsd">
+  <MesSenMES3>ESB22477020</MesSenMES3>
+  <MesRecMES6>NICA.ES</MesRecMES6>
+  <DatOfPreMES9>260303</DatOfPreMES9>
+  <TimOfPreMES10>1532</TimOfPreMES10>
+  <TesIndMES18>1</TesIndMES18>
+  <MesIdeMES19>20260303153249</MesIdeMES19>
+  <MesTypMES20>CC315A</MesTypMES20>
+  <HEAHEA>
+    <RefNumHEA4>LRN-ENS-2026030315</RefNumHEA4>
+    <TraModAtBorHEA76>2</TraModAtBorHEA76>
+    <IdeOfMeaOfTraCroHEA85>TRAIN-ES-002</IdeOfMeaOfTraCroHEA85>
+    <TotNumOfIteHEA305>1</TotNumOfIteHEA305>
+    <TotNumOfPacHEA306>2</TotNumOfPacHEA306>
+    <TotGroMasHEA307>150.000</TotGroMasHEA307>
+    <DecPlaHEA394>ES</DecPlaHEA394>
+    <DecDatTimHEA114>202603031532</DecDatTimHEA114>
+  </HEAHEA>
+
+  <GOOITEGDS>
+    <IteNumGDS7>1</IteNumGDS7>
+    <GooDesGDS23>Servidores rack para procesamiento de datos</GooDesGDS23>
+    <GroMasGDS46>150.000</GroMasGDS46>
+    <ComRefNumGIM1>REF-1</ComRefNumGIM1>
+    <PlaLoaGOOITE333>CNSZX</PlaLoaGOOITE333>
+    <PlaUnlGOOITE333>ESZAZ</PlaUnlGOOITE333>
+    <TRACONCO2>
+      <NamCO27>SHENZHEN ELECTRONICS CO LTD</NamCO27>
+      <StrAndNumCO222>123 Technology Road</StrAndNumCO222>
+      <PosCodCO223>518000</PosCodCO223>
+      <CitCO224>Shenzhen</CitCO224>
+      <CouCO225>CN</CouCO225>
+    </TRACONCO2>
+    <COMCODGODITM>
+      <ComNomCMD1>847130</ComNomCMD1>
+    </COMCODGODITM>
+    <TRACONCE2>
+      <NamCE27>STRIX AI SL</NamCE27>
+      <StrAndNumCE222>Calle Ejemplo 1</StrAndNumCE222>
+      <PosCodCE223>50001</PosCodCE223>
+      <CitCE224>Zaragoza</CitCE224>
+      <CouCE225>ES</CouCE225>
+    </TRACONCE2>
+    <PACGS2>
+      <KinOfPacGS23>PK</KinOfPacGS23>
+      <NumOfPacGS24>2</NumOfPacGS24>
+      <MarNumOfPacGSL21>STRIX-SERVER-002</MarNumOfPacGSL21>
+    </PACGS2>
+  </GOOITEGDS>
+  <ITI>
+    <CouOfRouCodITI1>CN</CouOfRouCodITI1>
+  </ITI>
+  <ITI>
+    <CouOfRouCodITI1>ES</CouOfRouCodITI1>
+  </ITI>
+  <TRAREP>
+    <TINTRE1>ESB22477020</TINTRE1>
+  </TRAREP>
+  <PERLODSUMDEC>
+    <TINPLD1>ESB22477020</TINPLD1>
+  </PERLODSUMDEC>
+  <CUSOFFFENT730>
+    <RefNumCUSOFFFENT731>ES009999</RefNumCUSOFFFENT731>
+    <ExpDatOfArrFIRENT733>202603041532</ExpDatOfArrFIRENT733>
+  </CUSOFFFENT730>
+  <TRACARENT601>
+    <TINTRACARENT602>ESB22477020</TINTRACARENT602>
+  </TRACARENT601>
+    </ent:CC315A>
+  </soapenv:Body>
+</soapenv:Envelope>

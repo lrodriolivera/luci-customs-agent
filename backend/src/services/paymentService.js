@@ -527,8 +527,12 @@ class PaymentService {
    * Create Stripe Checkout Session for a subscription plan
    */
   async createSubscriptionCheckout(user, plan, billingCycle = 'monthly') {
-    // Starter is free - no Stripe checkout needed
+    // Legacy starter redirect to professional
     if (plan === 'starter') {
+      plan = 'professional';
+    }
+    // Handle legacy free plan
+    if (plan === 'free') {
       const tenant = user.tenantId ? await Tenant.findById(user.tenantId) : null;
       if (tenant) {
         tenant.subscription.plan = 'starter';
@@ -783,17 +787,17 @@ class PaymentService {
     const tenant = await Tenant.findOne({ 'subscription.stripeSubscriptionId': subscription.id });
     if (!tenant) return;
 
-    tenant.subscription.plan = 'free';
+    tenant.subscription.plan = 'professional';
     tenant.subscription.status = 'cancelled';
     tenant.subscription.stripeSubscriptionId = null;
     tenant.subscription.cancelAtPeriodEnd = false;
 
-    // Reset to free plan limits
-    const limits = Tenant.getDefaultLimits('free');
+    // Reset to professional plan limits
+    const limits = Tenant.getDefaultLimits('professional');
     if (limits) tenant.limits = limits;
 
     await tenant.save();
-    logger.info(`Subscription cancelled for tenant ${tenant._id}. Downgraded to free plan.`);
+    logger.info(`Subscription cancelled for tenant ${tenant._id}. Downgraded to professional plan.`);
   }
 
   /**

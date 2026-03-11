@@ -23,6 +23,8 @@ function buildH7ImportXML(data) {
     declaranteNIF = '', declaranteNombre = '',
     emailDespacho = '',
     formaRepresentacion = '2',
+    // Ubicacion
+    localizacionMercancias = '',
     // IOSS
     iossNumber = '',
     // Transporte
@@ -42,13 +44,11 @@ function buildH7ImportXML(data) {
     <Partida>
       <C32NumeroDePartida>${i + 1}</C32NumeroDePartida>
       <C31EmpaquetamientoInterno>
-        <C31NumeroBultos>${p.bultos || 1}</C31NumeroBultos>
-        <C31TipoBulto>${p.tipoBulto || 'PK'}</C31TipoBulto>
-        <C31MarcasNumerosDeLosBultos>${p.marcas || ''}</C31MarcasNumerosDeLosBultos>
+        <C31EmpaqInternoClase>${p.tipoBulto || 'PK'}</C31EmpaqInternoClase>
+        <C31EmpaqInternoMarcas>${p.marcas || ''}</C31EmpaqInternoMarcas>
+        <C31EmpaqInternoNumeroBultos>${p.bultos || 1}</C31EmpaqInternoNumeroBultos>
       </C31EmpaquetamientoInterno>
-      <C31DescripcionDeLaMercancia>
-        <C31DescrMerc1>${(p.descripcion || '').substring(0, 280)}</C31DescrMerc1>
-      </C31DescripcionDeLaMercancia>
+      <C31DescripcionDeLaMercancia>${(p.descripcion || '').substring(0, 250)}</C31DescripcionDeLaMercancia>
       <C3312CodigoPosicionTaric>${p.taricCode || ''}</C3312CodigoPosicionTaric>
       <C34PaisOrigen>${p.paisOrigen || remitentePais}</C34PaisOrigen>
       <C35MasaBrutaEnKg>${Number(p.pesobruto || 0).toFixed(3)}</C35MasaBrutaEnKg>
@@ -57,12 +57,31 @@ function buildH7ImportXML(data) {
       <C37RegimenAduanero>
         <C371RegimenSolicitado>40</C371RegimenSolicitado>
         <C371RegimenPrecedente>00</C371RegimenPrecedente>
-        <C372CodigoAdicional>C07</C372CodigoAdicional>
+        <C372CodigoAdicional>${p.codigoAdicional || 'C07'}</C372CodigoAdicional>
       </C37RegimenAduanero>
       <C38MasaNetaEnKg>${Number(p.pesoneto || p.pesobruto || 0).toFixed(3)}</C38MasaNetaEnKg>
       <C42ValorFactura>${Number(p.valorFactura || 0).toFixed(3)}</C42ValorFactura>
-      <C46ValorEstadistico>${Number(p.valorFactura || 0).toFixed(2)}</C46ValorEstadistico>
-      <C47ImporteTotal>0.00</C47ImporteTotal>
+      ${(p.documentos || [{ tipo: p.docTipo || 'N380', referencia: p.docRef || 'FACTURA-001' }]).map(d => `<C44DocumentosYCertificados>
+        <C44Tipo>${d.tipo}</C44Tipo>
+        <C44Referencia>${d.referencia}</C44Referencia>
+      </C44DocumentosYCertificados>`).join('\n      ')}
+      <C47TributoDeclarado>
+        <C47TributoClase>A00</C47TributoClase>
+        <C47TributoBaseImponible>${Number(p.valorFactura || 0).toFixed(3)}</C47TributoBaseImponible>
+        <C47TributoTipoImpositivo>0.000000</C47TributoTipoImpositivo>
+        <C47TributoIndicadorMaxMinNor>NO</C47TributoIndicadorMaxMinNor>
+        <C47TributoUnidadFiscal>%</C47TributoUnidadFiscal>
+        <C47TributoCuota>0.00</C47TributoCuota>
+      </C47TributoDeclarado>
+      <C47TributoDeclarado>
+        <C47TributoClase>B00</C47TributoClase>
+        <C47TributoBaseImponible>${Number(p.valorFactura || 0).toFixed(3)}</C47TributoBaseImponible>
+        <C47TributoTipoImpositivo>21.000000</C47TributoTipoImpositivo>
+        <C47TributoIndicadorMaxMinNor>NO</C47TributoIndicadorMaxMinNor>
+        <C47TributoUnidadFiscal>%</C47TributoUnidadFiscal>
+        <C47TributoCuota>${(Number(p.valorFactura || 0) * 0.21).toFixed(2)}</C47TributoCuota>
+      </C47TributoDeclarado>
+      <C47ImporteTotal>${(Number(p.valorFactura || 0) * 0.21).toFixed(2)}</C47ImporteTotal>
     </Partida>`).join('');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -88,24 +107,16 @@ function buildH7ImportXML(data) {
         <C14DeclaranteFormaRepresentacion>${formaRepresentacion}</C14DeclaranteFormaRepresentacion>
         <C14DeclaranteNID>${declaranteNIF}</C14DeclaranteNID>
         <C14DeclaranteRazonSocial>${declaranteNombre}</C14DeclaranteRazonSocial>
-        <C14DeclaranteTipoAutorizaDespacho>G</C14DeclaranteTipoAutorizaDespacho>
+        <C14DeclaranteTipoAutorizaDespacho>O</C14DeclaranteTipoAutorizaDespacho>
       </C14Declarante>
       <EmailNotificaDespacho>${emailDespacho}</EmailNotificaDespacho>
       <C15aPaisExpedicion>${remitentePais}</C15aPaisExpedicion>
-      <C30LocalizacionMercancias>ES${aduanaDespacho.replace(/^ES/, '').substring(0, 6)}LUCI01</C30LocalizacionMercancias>
-      <CBImporteTotalTributos>0.00</CBImporteTotalTributos>
-      <CBmodalidadDePago>A</CBmodalidadDePago>
-      <C17aPaisDestino>ES</C17aPaisDestino>
       <C19TransporteEnContenedores>0</C19TransporteEnContenedores>
-      <C20CondicionesDeEntrega>
-        <C201CondicionesEntregaCodigo>DAP</C201CondicionesEntregaCodigo>
-        <C202CondicionesEntregaNombre>DAP</C202CondicionesEntregaNombre>
-        <C203CondicionesEntregaZona></C203CondicionesEntregaZona>
-      </C20CondicionesDeEntrega>
       <C221CodigoDivisa>EUR</C221CodigoDivisa>
-      <C222ImporteFactura>${partidas.reduce((s, p) => s + Number(p.valorFactura || 0), 0).toFixed(3)}</C222ImporteFactura>
-      <C24NaturalezaTransaccion>11</C24NaturalezaTransaccion>
-      <C25ModoTransporteFrontera>${modoTransporte}</C25ModoTransporteFrontera>${partidasXML}
+      <C30LocalizacionMercancias>${localizacionMercancias || 'ES' + aduanaDespacho.replace(/^ES/, '').substring(0, 6) + 'LUCI01'}</C30LocalizacionMercancias>
+      <CBImporteTotalTributos>${partidas.reduce((s, p) => s + Number(p.valorFactura || 0) * 0.21, 0).toFixed(2)}</CBImporteTotalTributos>
+      <CBmodalidadDePago>R</CBmodalidadDePago>
+      <CBgarantiaGRN>${data.garantiaGRN || ''}</CBgarantiaGRN>${partidasXML}
     </ent:DeclaSimpliImporV1Ent>
   </soapenv:Body>
 </soapenv:Envelope>`;

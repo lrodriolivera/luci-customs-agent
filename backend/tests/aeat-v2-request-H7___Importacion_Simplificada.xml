@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+  <soapenv:Body>
+    <ent:DeclaSimpliImporV1Ent xmlns:ent="https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/adip/ws/DeclaSimpliImporV1Ent.xsd">
+      <SegmentosDeServicio Id="20260303153243609770712" fecha="20260303" hora="153243" Test="S"/>
+      <CAaduana>002801</CAaduana>
+      <C011EstatutoMercancias>IM</C011EstatutoMercancias>
+      <C012ProcedimientoSolicitado>C</C012ProcedimientoSolicitado>
+      <C05NumeroDePartidas>1</C05NumeroDePartidas>
+      <C06TotalBultos>1</C06TotalBultos>
+      <C08Importador>
+        <C08ImportadorNID>ESB22477020</C08ImportadorNID>
+        <C08ImportadorParticular></C08ImportadorParticular>
+        <C08ImportadorRazonSocial>STRIX AI SL</C08ImportadorRazonSocial>
+        <C08ImportadorDireccion>Calle Ejemplo 1</C08ImportadorDireccion>
+        <C08ImportadorPoblacion>Zaragoza</C08ImportadorPoblacion>
+        <C08ImportadorCodigoPostal>50001</C08ImportadorCodigoPostal>
+        <C08ImportadorPais>ES</C08ImportadorPais>
+      </C08Importador>
+      <C14Declarante>
+        <C14DeclaranteFormaRepresentacion>1</C14DeclaranteFormaRepresentacion>
+        <C14DeclaranteNID>ESB22477020</C14DeclaranteNID>
+        <C14DeclaranteRazonSocial>STRIX AI SL</C14DeclaranteRazonSocial>
+        <C14DeclaranteTipoAutorizaDespacho>O</C14DeclaranteTipoAutorizaDespacho>
+      </C14Declarante>
+      <EmailNotificaDespacho>despacho@strixai.es</EmailNotificaDespacho>
+      <C15aPaisExpedicion>ES</C15aPaisExpedicion>
+      <C19TransporteEnContenedores>0</C19TransporteEnContenedores>
+      <C221CodigoDivisa>EUR</C221CodigoDivisa>
+      <C30LocalizacionMercancias>ES002801AAAAAC</C30LocalizacionMercancias>
+      <CBImporteTotalTributos>2.63</CBImporteTotalTributos>
+      <CBmodalidadDePago>R</CBmodalidadDePago>
+      <CBgarantiaGRN>26ESAGL2800000054</CBgarantiaGRN>
+    <Partida>
+      <C32NumeroDePartida>1</C32NumeroDePartida>
+      <C31EmpaquetamientoInterno>
+        <C31EmpaqInternoClase>PK</C31EmpaqInternoClase>
+        <C31EmpaqInternoMarcas>S/M</C31EmpaqInternoMarcas>
+        <C31EmpaqInternoNumeroBultos>1</C31EmpaqInternoNumeroBultos>
+      </C31EmpaquetamientoInterno>
+      <C31DescripcionDeLaMercancia>Cafe verde sin tostar ni descafeinar</C31DescripcionDeLaMercancia>
+      <C3312CodigoPosicionTaric>0901110000</C3312CodigoPosicionTaric>
+      <C34PaisOrigen>CN</C34PaisOrigen>
+      <C35MasaBrutaEnKg>0.200</C35MasaBrutaEnKg>
+      <C36Preferencia>1</C36Preferencia>
+      <C36Reduccion>00</C36Reduccion>
+      <C37RegimenAduanero>
+        <C371RegimenSolicitado>40</C371RegimenSolicitado>
+        <C371RegimenPrecedente>00</C371RegimenPrecedente>
+        <C372CodigoAdicional>F44</C372CodigoAdicional>
+      </C37RegimenAduanero>
+      <C38MasaNetaEnKg>0.150</C38MasaNetaEnKg>
+      <C42ValorFactura>12.500</C42ValorFactura>
+      <C44DocumentosYCertificados>
+        <C44Tipo>N380</C44Tipo>
+        <C44Referencia>FACTURA-H7-001</C44Referencia>
+      </C44DocumentosYCertificados>
+      <C44DocumentosYCertificados>
+        <C44Tipo>N730</C44Tipo>
+        <C44Referencia>CMR-H7-001</C44Referencia>
+      </C44DocumentosYCertificados>
+      <C47TributoDeclarado>
+        <C47TributoClase>A00</C47TributoClase>
+        <C47TributoBaseImponible>12.500</C47TributoBaseImponible>
+        <C47TributoTipoImpositivo>0.000000</C47TributoTipoImpositivo>
+        <C47TributoIndicadorMaxMinNor>NO</C47TributoIndicadorMaxMinNor>
+        <C47TributoUnidadFiscal>%</C47TributoUnidadFiscal>
+        <C47TributoCuota>0.00</C47TributoCuota>
+      </C47TributoDeclarado>
+      <C47TributoDeclarado>
+        <C47TributoClase>B00</C47TributoClase>
+        <C47TributoBaseImponible>12.500</C47TributoBaseImponible>
+        <C47TributoTipoImpositivo>21.000000</C47TributoTipoImpositivo>
+        <C47TributoIndicadorMaxMinNor>NO</C47TributoIndicadorMaxMinNor>
+        <C47TributoUnidadFiscal>%</C47TributoUnidadFiscal>
+        <C47TributoCuota>2.63</C47TributoCuota>
+      </C47TributoDeclarado>
+      <C47ImporteTotal>2.63</C47ImporteTotal>
+    </Partida>
+    </ent:DeclaSimpliImporV1Ent>
+  </soapenv:Body>
+</soapenv:Envelope>

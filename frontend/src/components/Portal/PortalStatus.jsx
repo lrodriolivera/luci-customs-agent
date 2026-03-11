@@ -1,5 +1,6 @@
 import React from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   CheckCircleIcon,
   ClockIcon,
@@ -9,43 +10,44 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function PortalStatus() {
+  const { t } = useTranslation()
   const { expedition } = useOutletContext()
 
   const statusSteps = [
     {
       id: 'PENDING_DOCS',
-      label: 'Esperando Documentos',
-      description: 'El cliente debe subir los documentos requeridos',
+      label: t('portal.stepWaitingDocs'),
+      description: t('portal.stepWaitingDocsDesc'),
       icon: DocumentTextIcon
     },
     {
       id: 'DOCS_RECEIVED',
-      label: 'Documentos Recibidos',
-      description: 'Los documentos han sido recibidos y estan siendo revisados',
+      label: t('portal.stepDocsReceived'),
+      description: t('portal.stepDocsReceivedDesc'),
       icon: DocumentTextIcon
     },
     {
       id: 'VALIDATING',
-      label: 'Validando Informacion',
-      description: 'Verificando la informacion de los documentos',
+      label: t('portal.stepValidating'),
+      description: t('portal.stepValidatingDesc'),
       icon: CheckCircleIcon
     },
     {
       id: 'PROCESSING',
-      label: 'Preparando Declaracion',
-      description: 'Generando la declaracion aduanera H1/AES',
+      label: t('portal.stepDeclaration'),
+      description: t('portal.stepDeclarationDesc'),
       icon: BuildingOfficeIcon
     },
     {
       id: 'SUBMITTED',
-      label: 'Presentada en Aduana',
-      description: 'La declaracion ha sido enviada a la AEAT',
+      label: t('portal.stepSubmitted'),
+      description: t('portal.stepSubmittedDesc'),
       icon: TruckIcon
     },
     {
       id: 'COMPLETED',
-      label: 'Completado',
-      description: 'El despacho aduanero ha finalizado',
+      label: t('portal.stepCompleted'),
+      description: t('portal.stepCompletedDesc'),
       icon: CheckCircleIcon
     }
   ]
@@ -59,9 +61,9 @@ export default function PortalStatus() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Estado del Expediente</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('portal.statusTitle')}</h1>
         <p className="text-gray-600 mt-1">
-          Seguimiento de su {expedition?.operationType === 'IMPORT' ? 'importacion' : 'exportacion'}
+          {expedition?.operationType === 'IMPORT' ? t('portal.statusSubtitleImport') : t('portal.statusSubtitleExport')}
         </p>
       </div>
 
@@ -76,9 +78,9 @@ export default function PortalStatus() {
             )}
           </div>
           <div>
-            <p className="text-sm opacity-80">Estado Actual</p>
+            <p className="text-sm opacity-80">{t('portal.currentStatus')}</p>
             <h2 className="text-2xl font-bold">
-              {statusSteps[currentIndex]?.label || 'Desconocido'}
+              {statusSteps[currentIndex]?.label || t('portal.unknown')}
             </h2>
             <p className="text-sm opacity-90 mt-1">
               {statusSteps[currentIndex]?.description}
@@ -89,7 +91,7 @@ export default function PortalStatus() {
 
       {/* Progress Steps */}
       <div className="card">
-        <h2 className="text-lg font-semibold mb-6">Progreso del Expediente</h2>
+        <h2 className="text-lg font-semibold mb-6">{t('portal.expeditionProgress')}</h2>
 
         <div className="relative">
           {/* Progress Line */}
@@ -152,7 +154,7 @@ export default function PortalStatus() {
       {/* Timeline Events */}
       {expedition?.timeline?.length > 0 && (
         <div className="card">
-          <h2 className="text-lg font-semibold mb-4">Historial de Eventos</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('portal.eventHistory')}</h2>
           <div className="space-y-3">
             {expedition.timeline.slice().reverse().map((event, index) => (
               <div key={index} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
@@ -163,7 +165,7 @@ export default function PortalStatus() {
                     {new Date(event.timestamp).toLocaleString('es-ES')}
                   </p>
                   {event.user && (
-                    <p className="text-xs text-gray-400">Por: {event.user}</p>
+                    <p className="text-xs text-gray-400">{t('portal.byUser')} {event.user}</p>
                   )}
                 </div>
               </div>
@@ -174,42 +176,42 @@ export default function PortalStatus() {
 
       {/* Expedition Info */}
       <div className="card">
-        <h2 className="text-lg font-semibold mb-4">Informacion del Expediente</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('portal.expeditionInfo')}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <p className="text-sm text-gray-500">ID Expediente</p>
+            <p className="text-sm text-gray-500">{t('portal.expeditionId')}</p>
             <p className="font-medium">{expedition?.expeditionId}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Tipo</p>
+            <p className="text-sm text-gray-500">{t('common.type')}</p>
             <p className="font-medium">
-              {expedition?.operationType === 'IMPORT' ? 'Importacion' : 'Exportacion'}
+              {expedition?.operationType === 'IMPORT' ? t('common.import') : t('common.export')}
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Transporte</p>
+            <p className="text-sm text-gray-500">{t('portal.transport')}</p>
             <p className="font-medium">{expedition?.transportMode}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Incoterm</p>
+            <p className="text-sm text-gray-500">{t('portal.incoterm')}</p>
             <p className="font-medium">{expedition?.incoterm}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Partidas</p>
+            <p className="text-sm text-gray-500">{t('portal.items')}</p>
             <p className="font-medium">{expedition?.goods?.length || 0}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Documentos</p>
+            <p className="text-sm text-gray-500">{t('portal.documents')}</p>
             <p className="font-medium">{expedition?.documents?.length || 0}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Fecha Creacion</p>
+            <p className="text-sm text-gray-500">{t('portal.creationDate')}</p>
             <p className="font-medium">
               {expedition?.createdAt && new Date(expedition.createdAt).toLocaleDateString('es-ES')}
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Ultima Actualizacion</p>
+            <p className="text-sm text-gray-500">{t('portal.lastUpdate')}</p>
             <p className="font-medium">
               {expedition?.updatedAt && new Date(expedition.updatedAt).toLocaleDateString('es-ES')}
             </p>

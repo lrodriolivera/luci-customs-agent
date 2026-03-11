@@ -21,6 +21,7 @@ import {
   SparklesIcon
 } from '@heroicons/react/24/outline'
 import { analyticsAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 
 const REPORT_TYPE_ICONS = {
   executive_summary: DocumentChartBarIcon,
@@ -52,6 +53,7 @@ const PERIOD_OPTIONS = [
 ]
 
 export default function ReportsManager() {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [reports, setReports] = useState([])
   const [reportTypes, setReportTypes] = useState([])
@@ -98,7 +100,7 @@ export default function ReportsManager() {
         setReports(response.data.reports)
       }
     } catch (error) {
-      toast.error('Error cargando informes')
+      toast.error(t('analyticsPage.errorLoadingReports'))
       console.error(error)
     } finally {
       setLoading(false)
@@ -107,7 +109,7 @@ export default function ReportsManager() {
 
   const handleGenerateReport = async () => {
     if (!selectedType) {
-      toast.error('Selecciona un tipo de informe')
+      toast.error(t('analyticsPage.selectReportType'))
       return
     }
 
@@ -122,7 +124,7 @@ export default function ReportsManager() {
       })
 
       if (response.data.success) {
-        toast.success('Informe generado correctamente')
+        toast.success(t('analyticsPage.reportGenerated'))
         setShowGenerateModal(false)
         loadReports()
         resetForm()
@@ -130,7 +132,7 @@ export default function ReportsManager() {
         toast.error(response.data.error || 'Error generando informe')
       }
     } catch (error) {
-      toast.error('Error generando informe')
+      toast.error(t('analyticsPage.errorGeneratingReport'))
       console.error(error)
     } finally {
       setGenerating(false)
@@ -245,8 +247,8 @@ export default function ReportsManager() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestor de Informes</h1>
-          <p className="text-sm text-gray-500">Genera y gestiona informes de analytics</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('analyticsPage.reportsManager')}</h1>
+          <p className="text-sm text-gray-500">{t('analyticsPage.reportsManagerSubtitle')}</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -255,14 +257,14 @@ export default function ReportsManager() {
             className="btn-secondary"
           >
             <ClockIcon className="w-5 h-5 mr-2" />
-            Programar
+            {t('analyticsPage.schedule')}
           </button>
           <button
             onClick={() => setShowGenerateModal(true)}
             className="btn-primary"
           >
             <PlusIcon className="w-5 h-5 mr-2" />
-            Generar Informe
+            {t('analyticsPage.generateReport')}
           </button>
         </div>
       </div>
@@ -301,7 +303,7 @@ export default function ReportsManager() {
             <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Buscar informes..."
+              placeholder={t('analyticsPage.searchReports')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-field pl-10"
@@ -313,7 +315,7 @@ export default function ReportsManager() {
             onChange={(e) => setFilterType(e.target.value)}
             className="input-field"
           >
-            <option value="">Todos los tipos</option>
+            <option value="">{t('common.allTypes')}</option>
             {reportTypes.map((type) => (
               <option key={type.type} value={type.type}>{type.name}</option>
             ))}
@@ -360,8 +362,8 @@ export default function ReportsManager() {
                 <tr>
                   <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
                     <DocumentTextIcon className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                    <p>No hay informes generados</p>
-                    <p className="text-sm">Genera tu primer informe haciendo clic en "Generar Informe"</p>
+                    <p>{t('analyticsPage.noReports')}</p>
+                    <p className="text-sm">{t('analyticsPage.noReportsHint')}</p>
                   </td>
                 </tr>
               ) : (

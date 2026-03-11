@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { channelsAPI, expeditionsAPI } from '../../services/api'
+import { channelsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import {
   CheckCircleIcon,
@@ -15,52 +16,52 @@ import {
   ExclamationCircleIcon
 } from '@heroicons/react/24/outline'
 
-// Configuracion de canales
-const CHANNEL_CONFIG = {
-  green: {
-    color: 'bg-green-500',
-    bgLight: 'bg-green-50',
-    borderColor: 'border-green-200',
-    textColor: 'text-green-700',
-    icon: CheckCircleIcon,
-    label: 'Canal Verde',
-    description: 'Levante autorizado'
-  },
-  yellow: {
-    color: 'bg-yellow-500',
-    bgLight: 'bg-yellow-50',
-    borderColor: 'border-yellow-200',
-    textColor: 'text-yellow-700',
-    icon: ClockIcon,
-    label: 'Canal Amarillo',
-    description: 'Certificados pendientes'
-  },
-  orange: {
-    color: 'bg-orange-500',
-    bgLight: 'bg-orange-50',
-    borderColor: 'border-orange-200',
-    textColor: 'text-orange-700',
-    icon: DocumentTextIcon,
-    label: 'Canal Naranja',
-    description: 'Revision documental'
-  },
-  red: {
-    color: 'bg-red-500',
-    bgLight: 'bg-red-50',
-    borderColor: 'border-red-200',
-    textColor: 'text-red-700',
-    icon: ExclamationTriangleIcon,
-    label: 'Canal Rojo',
-    description: 'Inspeccion fisica'
-  }
-}
-
 export default function ChannelDashboard() {
+  const { t } = useTranslation()
+
+  const CHANNEL_CONFIG = {
+    green: {
+      color: 'bg-green-500',
+      bgLight: 'bg-green-50',
+      borderColor: 'border-green-200',
+      textColor: 'text-green-700',
+      icon: CheckCircleIcon,
+      label: t('channels.greenChannel'),
+      description: t('channels.greenDesc')
+    },
+    yellow: {
+      color: 'bg-yellow-500',
+      bgLight: 'bg-yellow-50',
+      borderColor: 'border-yellow-200',
+      textColor: 'text-yellow-700',
+      icon: ClockIcon,
+      label: t('channels.yellowChannel'),
+      description: t('channels.yellowDesc')
+    },
+    orange: {
+      color: 'bg-orange-500',
+      bgLight: 'bg-orange-50',
+      borderColor: 'border-orange-200',
+      textColor: 'text-orange-700',
+      icon: DocumentTextIcon,
+      label: t('channels.orangeChannel'),
+      description: t('channels.orangeDesc')
+    },
+    red: {
+      color: 'bg-red-500',
+      bgLight: 'bg-red-50',
+      borderColor: 'border-red-200',
+      textColor: 'text-red-700',
+      icon: ExclamationTriangleIcon,
+      label: t('channels.redChannel'),
+      description: t('channels.redDesc')
+    }
+  }
   const [stats, setStats] = useState(null)
   const [expeditions, setExpeditions] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedChannel, setSelectedChannel] = useState(null)
-  const [dateRange, setDateRange] = useState('week')
+  const [dateRange, setDateRange] = useState('all')
 
   useEffect(() => {
     loadData()
@@ -90,24 +91,36 @@ export default function ChannelDashboard() {
           startDate = null
       }
 
-      // Cargar estadisticas y expedientes en paralelo
-      const [statsResponse, expeditionsResponse] = await Promise.all([
-        channelsAPI.getStats({ startDate: startDate?.toISOString(), endDate: endDate.toISOString() }),
-        expeditionsAPI.list()
-      ])
+      // Cargar estadisticas
+      try {
+        const statsResponse = await channelsAPI.getStats({ startDate: startDate?.toISOString(), endDate: endDate.toISOString() })
+        setStats(statsResponse.data?.data || statsResponse.data)
+      } catch (e) {
+        console.error('Error loading stats:', e)
+      }
 
-      setStats(statsResponse.data?.data || statsResponse.data)
-
-      // Filtrar expedientes con canal asignado
-      const allExpeditions = expeditionsResponse.data?.data?.expeditions || expeditionsResponse.data?.expeditions || []
-      const withChannel = Array.isArray(allExpeditions)
-        ? allExpeditions.filter(exp => exp.channel || exp.declaration?.channel)
-        : []
-      setExpeditions(withChannel)
+      // Cargar expedientes con canal via API dedicada
+      try {
+        const expResponse = await channelsAPI.getExpeditions()
+        // Debug: try all possible data paths
+        const d1 = expResponse?.data?.data
+        const d2 = expResponse?.data
+        const d3 = expResponse
+        const expData = Array.isArray(d1) ? d1 : Array.isArray(d2) ? d2 : Array.isArray(d3) ? d3 : []
+        setExpeditions(expData.map(exp => ({
+          ...exp,
+          _channel: exp.channel || 'green',
+          _clientName: exp.clientName || '-',
+          _mrn: exp.mrn || '-',
+          _channelDate: exp.channelDate || exp.createdAt
+        })))
+      } catch (e) {
+        // Silently handle
+      }
 
     } catch (error) {
       console.error('Error loading channel data:', error)
-      toast.error('Error al cargar datos de circuitos')
+      toast.error(t('channels.errorLoading'))
     } finally {
       setLoading(false)
     }
@@ -115,19 +128,15 @@ export default function ChannelDashboard() {
 
   // Filtrar expedientes por canal seleccionado
   const filteredExpeditions = selectedChannel
-    ? expeditions.filter(exp => (exp.channel || exp.declaration?.channel) === selectedChannel)
+    ? expeditions.filter(exp => (exp._channel || exp.channel || exp.declaration?.channel) === selectedChannel)
     : expeditions
 
   // Calcular expedientes criticos (canal rojo sin cita, naranja por vencer)
-  const criticalExpeditions = expeditions.filter(exp => {
-    const channel = exp.channel || exp.declaration?.channel
-    if (channel === 'red') return true // Todos los rojos son criticos
-    if (channel === 'orange') {
-      // Verificar si tiene requerimientos por vencer
-      // Por ahora marcamos todos los naranja como atencion
-      return true
-    }
-    return false
+  const criticalExpeditions = (expeditions || []).filter(exp => {
+    try {
+      const channel = exp._channel || exp.channel || exp.declaration?.channel
+      return channel === 'red' || channel === 'orange'
+    } catch { return false }
   })
 
   if (loading) {
@@ -143,8 +152,8 @@ export default function ChannelDashboard() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard de Circuitos</h1>
-          <p className="text-gray-600">Control y seguimiento de canales aduaneros</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('channels.title')}</h1>
+          <p className="text-gray-600">{t('channels.subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           {/* Selector de rango de fechas */}
@@ -153,11 +162,11 @@ export default function ChannelDashboard() {
             onChange={(e) => setDateRange(e.target.value)}
             className="border rounded-lg px-3 py-2 text-sm"
           >
-            <option value="today">Hoy</option>
-            <option value="week">Ultima semana</option>
-            <option value="month">Ultimo mes</option>
-            <option value="year">Ultimo ano</option>
-            <option value="all">Todo</option>
+            <option value="today">{t('channels.filterToday')}</option>
+            <option value="week">{t('channels.filterWeek')}</option>
+            <option value="month">{t('channels.filterMonth')}</option>
+            <option value="year">{t('channels.filterYear')}</option>
+            <option value="all">{t('channels.filterAll')}</option>
           </select>
           <button
             onClick={loadData}
@@ -202,7 +211,7 @@ export default function ChannelDashboard() {
                       style={{ width: `${channelStats.percentage}%` }}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{channelStats.percentage}% del total</p>
+                  <p className="text-xs text-gray-500 mt-1">{channelStats.percentage}{t('channels.ofTotal')}</p>
                 </div>
               )}
             </button>
@@ -219,12 +228,12 @@ export default function ChannelDashboard() {
               <ChartBarIcon className="h-6 w-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total procesados</p>
+              <p className="text-sm text-gray-500">{t('channels.totalProcessed')}</p>
               <p className="text-2xl font-bold text-gray-900">{stats?.total || 0}</p>
             </div>
           </div>
           <div className="text-xs text-gray-500">
-            Tasa canal verde: {stats?.green?.percentage || 0}%
+            {t('channels.greenRate')}: {stats?.green?.percentage || 0}%
           </div>
         </div>
 
@@ -235,12 +244,12 @@ export default function ChannelDashboard() {
               <ExclamationCircleIcon className="h-6 w-6 text-orange-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Requieren atencion</p>
+              <p className="text-sm text-gray-500">{t('channels.requireAttention')}</p>
               <p className="text-2xl font-bold text-orange-600">{criticalExpeditions.length}</p>
             </div>
           </div>
           <div className="text-xs text-gray-500">
-            Canal naranja y rojo pendientes
+            {t('channels.orangeRedPending')}
           </div>
         </div>
 
@@ -251,14 +260,14 @@ export default function ChannelDashboard() {
               <CalendarDaysIcon className="h-6 w-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Tiempo medio levante</p>
+              <p className="text-sm text-gray-500">{t('channels.avgReleaseTime')}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {stats?.green?.avgHours ? `${stats.green.avgHours}h` : '-'}
               </p>
             </div>
           </div>
           <div className="text-xs text-gray-500">
-            Canal verde promedio
+            {t('channels.greenAvg')}
           </div>
         </div>
       </div>
@@ -270,8 +279,8 @@ export default function ChannelDashboard() {
             <FunnelIcon className="h-5 w-5 text-gray-400" />
             <h2 className="font-medium text-gray-900">
               {selectedChannel
-                ? `Expedientes en ${CHANNEL_CONFIG[selectedChannel].label}`
-                : 'Todos los expedientes con canal asignado'
+                ? `${t('channels.expeditionsIn')} ${CHANNEL_CONFIG[selectedChannel].label}`
+                : t('channels.allExpeditions')
               }
             </h2>
             <span className="text-sm text-gray-500">({filteredExpeditions.length})</span>
@@ -281,7 +290,7 @@ export default function ChannelDashboard() {
               onClick={() => setSelectedChannel(null)}
               className="text-sm text-blue-600 hover:text-blue-700"
             >
-              Ver todos
+              {t('channels.viewAll')}
             </button>
           )}
         </div>
@@ -289,28 +298,28 @@ export default function ChannelDashboard() {
         {filteredExpeditions.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             <TruckIcon className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p>No hay expedientes con canal asignado</p>
-            <p className="text-sm">Los expedientes apareceran aqui despues de enviar la declaracion a AEAT</p>
+            <p>{t('channels.noExpeditions')}</p>
+            <p className="text-sm">{t('channels.noExpeditionsDesc')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 text-left text-xs text-gray-500 uppercase">
-                  <th className="px-4 py-3">Expediente</th>
-                  <th className="px-4 py-3">Cliente</th>
+                  <th className="px-4 py-3">{t('channels.expedition')}</th>
+                  <th className="px-4 py-3">{t('h7.clientLabel')}</th>
                   <th className="px-4 py-3">MRN</th>
-                  <th className="px-4 py-3">Canal</th>
-                  <th className="px-4 py-3">Estado</th>
-                  <th className="px-4 py-3">Fecha Canal</th>
-                  <th className="px-4 py-3">Acciones</th>
+                  <th className="px-4 py-3">{t('nav.channels')}</th>
+                  <th className="px-4 py-3">{t('common.status')}</th>
+                  <th className="px-4 py-3">{t('channels.channelDate')}</th>
+                  <th className="px-4 py-3">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredExpeditions.map((exp) => {
-                  const channel = exp.channel || exp.declaration?.channel
-                  const config = CHANNEL_CONFIG[channel]
-                  const Icon = config?.icon || DocumentTextIcon
+                  const channel = exp._channel || exp.channel || exp.declaration?.channel || 'green'
+                  const config = CHANNEL_CONFIG[channel] || CHANNEL_CONFIG.green
+                  const Icon = config.icon
 
                   return (
                     <tr key={exp._id} className="hover:bg-gray-50">
@@ -319,14 +328,14 @@ export default function ChannelDashboard() {
                           to={`/expeditions/${exp._id}`}
                           className="font-medium text-blue-600 hover:text-blue-700"
                         >
-                          {exp.expeditionId || exp.reference || exp._id.slice(-8)}
+                          {exp.expeditionId || exp.reference || (exp._id || '').slice(-8)}
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
-                        {exp.client?.companyName || '-'}
+                        {exp._clientName || exp.client?.companyName || '-'}
                       </td>
                       <td className="px-4 py-3 font-mono text-sm">
-                        {exp.mrn || exp.declaration?.mrn || '-'}
+                        {exp._mrn || exp.mrn || exp.declaration?.mrn || '-'}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config?.bgLight} ${config?.textColor}`}>
@@ -338,8 +347,8 @@ export default function ChannelDashboard() {
                         <span className="text-sm text-gray-600">{exp.status}</span>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500">
-                        {exp.declaration?.channelAssignedAt
-                          ? new Date(exp.declaration.channelAssignedAt).toLocaleDateString('es-ES')
+                        {exp._channelDate
+                          ? new Date(exp._channelDate).toLocaleDateString('es-ES')
                           : '-'
                         }
                       </td>
@@ -348,7 +357,7 @@ export default function ChannelDashboard() {
                           to={`/expeditions/${exp._id}`}
                           className="text-sm text-blue-600 hover:text-blue-700"
                         >
-                          Ver detalle
+                          {t('common.viewDetail')}
                         </Link>
                       </td>
                     </tr>
@@ -362,34 +371,34 @@ export default function ChannelDashboard() {
 
       {/* Leyenda de canales */}
       <div className="bg-gray-50 rounded-lg p-4">
-        <h3 className="font-medium text-gray-700 mb-3">Leyenda de Circuitos Aduaneros</h3>
+        <h3 className="font-medium text-gray-700 mb-3">{t('channels.legend')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
           <div className="flex items-start gap-2">
             <div className="w-4 h-4 rounded-full bg-green-500 mt-0.5" />
             <div>
-              <p className="font-medium text-green-700">Canal Verde</p>
-              <p className="text-gray-600">Levante inmediato. La mercancia puede retirarse.</p>
+              <p className="font-medium text-green-700">{t('channels.greenChannel')}</p>
+              <p className="text-gray-600">{t('channels.greenLegend')}</p>
             </div>
           </div>
           <div className="flex items-start gap-2">
             <div className="w-4 h-4 rounded-full bg-yellow-500 mt-0.5" />
             <div>
-              <p className="font-medium text-yellow-700">Canal Amarillo</p>
-              <p className="text-gray-600">Esperando certificados adicionales.</p>
+              <p className="font-medium text-yellow-700">{t('channels.yellowChannel')}</p>
+              <p className="text-gray-600">{t('channels.yellowLegend')}</p>
             </div>
           </div>
           <div className="flex items-start gap-2">
             <div className="w-4 h-4 rounded-full bg-orange-500 mt-0.5" />
             <div>
-              <p className="font-medium text-orange-700">Canal Naranja</p>
-              <p className="text-gray-600">Revision documental por AEAT.</p>
+              <p className="font-medium text-orange-700">{t('channels.orangeChannel')}</p>
+              <p className="text-gray-600">{t('channels.orangeLegend')}</p>
             </div>
           </div>
           <div className="flex items-start gap-2">
             <div className="w-4 h-4 rounded-full bg-red-500 mt-0.5" />
             <div>
-              <p className="font-medium text-red-700">Canal Rojo</p>
-              <p className="text-gray-600">Inspeccion fisica obligatoria.</p>
+              <p className="font-medium text-red-700">{t('channels.redChannel')}</p>
+              <p className="text-gray-600">{t('channels.redLegend')}</p>
             </div>
           </div>
         </div>

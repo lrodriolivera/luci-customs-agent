@@ -1,18 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router-dom'
 import { ChatBubbleLeftRightIcon, XMarkIcon, PaperAirplaneIcon, SparklesIcon } from '@heroicons/react/24/outline'
 import { chatAPI } from '../../services/api'
 
 export default function FloatingAssistant() {
+  const { t, i18n } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Hola, soy LUCI. Puedo ayudarte con normativa aduanera, clasificacion arancelaria, calculos de derechos y procedimientos. Preguntame lo que necesites.' }
+    { role: 'assistant', content: t('floating.welcomeMessage') }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
   const location = useLocation()
+
+  // Update welcome message when language changes
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length === 1 && prev[0].role === 'assistant') {
+        return [{ role: 'assistant', content: t('floating.welcomeMessage') }]
+      }
+      return [{ role: 'assistant', content: t('floating.welcomeMessage') }, ...prev.slice(1)]
+    })
+  }, [i18n.language])
 
   // Don't show on the assistant page itself or landing
   if (location.pathname === '/assistant' || location.pathname === '/landing') return null
@@ -42,10 +54,10 @@ export default function FloatingAssistant() {
         message: userMsg,
         context: 'agent'
       })
-      const reply = response.data.data?.message || response.data.message || response.data?.response || 'No pude procesar tu consulta.'
+      const reply = response.data.data?.message || response.data.message || response.data?.response || t('floating.noProcessResponse')
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Error al conectar con el servicio. Intenta de nuevo.' }])
+      setMessages(prev => [...prev, { role: 'assistant', content: t('floating.errorMessage') }])
     } finally {
       setLoading(false)
     }
@@ -65,8 +77,8 @@ export default function FloatingAssistant() {
                 <SparklesIcon className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-white font-semibold text-sm">Asistente LUCI</p>
-                <p className="text-slate-400 text-[10px]">IA experta en aduanas</p>
+                <p className="text-white font-semibold text-sm">{t('floating.title')}</p>
+                <p className="text-slate-400 text-[10px]">{t('floating.subtitle')}</p>
               </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white transition-colors p-1">
@@ -109,7 +121,7 @@ export default function FloatingAssistant() {
                 type="text"
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder="Escribe tu consulta..."
+                placeholder={t('floating.placeholder')}
                 className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
                 disabled={loading}
               />
@@ -133,7 +145,7 @@ export default function FloatingAssistant() {
             ? 'bg-slate-800 hover:bg-slate-700 rotate-0'
             : 'bg-gradient-to-r from-sky-500 to-blue-600 hover:shadow-sky-500/40 hover:scale-105'
         }`}
-        title="Asistente LUCI"
+        title={t('floating.fabTitle')}
       >
         {isOpen ? (
           <XMarkIcon className="w-6 h-6 text-white" />

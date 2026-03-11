@@ -18,6 +18,7 @@ import {
   Warning as WarningIcon
 } from '@mui/icons-material'
 import { pueAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 
 // All steps definition
 const ALL_STEPS = [
@@ -44,6 +45,7 @@ const documentTypeOptions = [
 ]
 
 const PUERequestForm = ({ open, onClose, onSuccess, initialType, editData }) => {
+  const { t } = useTranslation()
   const [activeStep, setActiveStep] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)

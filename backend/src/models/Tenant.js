@@ -11,8 +11,6 @@ const mongoose = require('mongoose');
  * Subscription plan types
  */
 const PLAN_TYPES = {
-  FREE: 'free',
-  STARTER: 'starter',
   PROFESSIONAL: 'professional',
   BUSINESS: 'business',
   ENTERPRISE: 'enterprise'
@@ -370,46 +368,6 @@ TenantSchema.virtual('fullAddress').get(function() {
 // Default plan limits
 TenantSchema.statics.getDefaultLimits = function(plan) {
   const defaults = {
-    [PLAN_TYPES.FREE]: {
-      maxUsers: 2,
-      maxDeclarationsPerMonth: 20,
-      maxExpeditionsPerMonth: 10,
-      maxStorageGB: 1,
-      maxApiCallsPerDay: 100,
-      maxLuciQueriesPerMonth: 50,
-      features: {
-        analytics: false,
-        advancedReports: false,
-        apiAccess: false,
-        customBranding: false,
-        prioritySupport: false,
-        dedicatedAccount: false,
-        sso: false,
-        auditLogs: true,
-        webhooks: false,
-        multipleLocations: false
-      }
-    },
-    [PLAN_TYPES.STARTER]: {
-      maxUsers: 5,
-      maxDeclarationsPerMonth: 100,
-      maxExpeditionsPerMonth: 50,
-      maxStorageGB: 10,
-      maxApiCallsPerDay: 1000,
-      maxLuciQueriesPerMonth: 500,
-      features: {
-        analytics: true,
-        advancedReports: false,
-        apiAccess: false,
-        customBranding: false,
-        prioritySupport: false,
-        dedicatedAccount: false,
-        sso: false,
-        auditLogs: true,
-        webhooks: false,
-        multipleLocations: false
-      }
-    },
     [PLAN_TYPES.PROFESSIONAL]: {
       maxUsers: 20,
       maxDeclarationsPerMonth: 500,
@@ -472,7 +430,7 @@ TenantSchema.statics.getDefaultLimits = function(plan) {
     }
   };
 
-  return defaults[plan] || defaults[PLAN_TYPES.FREE];
+  return defaults[plan] || defaults[PLAN_TYPES.PROFESSIONAL];
 };
 
 // Export constants

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { guaranteesAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import {
@@ -58,6 +59,7 @@ const USAGE_TYPES = [
 ]
 
 export default function GuaranteeManager() {
+  const { t } = useTranslation()
   const [guarantees, setGuarantees] = useState([])
   const [stats, setStats] = useState(null)
   const [alerts, setAlerts] = useState([])
@@ -88,7 +90,7 @@ export default function GuaranteeManager() {
       if (statsRes.data.success) setStats(statsRes.data.data)
       if (alertsRes.data.success) setAlerts(alertsRes.data.data)
     } catch (error) {
-      toast.error('Error al cargar garantias')
+      toast.error(t('guarantees.errorLoading'))
     } finally {
       setLoading(false)
     }
@@ -100,20 +102,20 @@ export default function GuaranteeManager() {
 
     try {
       await guaranteesAPI.activate(id, { grn })
-      toast.success('Garantia activada')
+      toast.success(t('guarantees.activated'))
       loadData()
     } catch (error) {
-      toast.error('Error al activar garantia')
+      toast.error(t('guarantees.errorActivating'))
     }
   }
 
   const handleAcknowledgeAlert = async (guaranteeId, alertId) => {
     try {
       await guaranteesAPI.acknowledgeAlert(guaranteeId, alertId)
-      toast.success('Alerta reconocida')
+      toast.success(t('guarantees.alertAcknowledged'))
       loadData()
     } catch (error) {
-      toast.error('Error al reconocer alerta')
+      toast.error(t('guarantees.errorAcknowledging'))
     }
   }
 
@@ -169,8 +171,8 @@ export default function GuaranteeManager() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Garantias Aduaneras</h1>
-          <p className="text-gray-600">CGU, avales, depositos y seguros de caucion</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('guarantees.title')}</h1>
+          <p className="text-gray-600">{t('guarantees.subtitleFull')}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -178,21 +180,21 @@ export default function GuaranteeManager() {
             className="btn-secondary flex items-center gap-2 bg-gradient-to-r from-luci-light to-purple-50 border-luci/30 text-luci hover:bg-luci-light"
           >
             <SparklesIcon className="h-5 w-5" />
-            Analisis IA
+            {t('guarantees.aiAnalysis')}
           </button>
           <button
             onClick={() => setShowCalculator(true)}
             className="btn-secondary flex items-center gap-2"
           >
             <CalculatorIcon className="h-5 w-5" />
-            Calculadora
+            {t('guarantees.calculator')}
           </button>
           <button
             onClick={() => setShowNewForm(true)}
             className="btn-primary flex items-center gap-2"
           >
             <PlusIcon className="h-5 w-5" />
-            Nueva Garantia
+            {t('guarantees.newGuarantee')}
           </button>
         </div>
       </div>
@@ -337,12 +339,12 @@ export default function GuaranteeManager() {
         ) : guarantees.length === 0 ? (
           <div className="text-center py-12">
             <ShieldCheckIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No hay garantias registradas</p>
+            <p className="text-gray-500">{t('guarantees.noGuarantees')}</p>
             <button
               onClick={() => setShowNewForm(true)}
               className="btn-primary mt-4"
             >
-              Crear primera garantia
+              {t('guarantees.createFirstGuarantee')}
             </button>
           </div>
         ) : (

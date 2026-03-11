@@ -23,6 +23,7 @@ import {
   Science as LabIcon
 } from '@mui/icons-material'
 import { pueAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 
 // Status configuration
 const statusConfig = {
@@ -43,6 +44,7 @@ const statusConfig = {
 }
 
 const PUERequestDetail = () => {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const [request, setRequest] = useState(null)

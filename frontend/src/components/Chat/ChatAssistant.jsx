@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { chatAPI, knowledgeAPI } from '../../services/api'
 import { PaperAirplaneIcon, SparklesIcon } from '@heroicons/react/24/solid'
 import { BookOpenIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 
 export default function ChatAssistant() {
+  const { t } = useTranslation()
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(false)
@@ -63,7 +65,7 @@ export default function ChatAssistant() {
       const errorMessage = {
         id: Date.now() + 1,
         role: 'assistant',
-        content: 'Lo siento, ha ocurrido un error al procesar su consulta. Por favor, intente de nuevo.',
+        content: t('chat.errorMessage'),
         timestamp: new Date().toISOString(),
         isError: true
       }
@@ -74,12 +76,12 @@ export default function ChatAssistant() {
   }
 
   const suggestedQuestions = [
-    'Como se determina el origen preferencial de una mercancia?',
-    'Cuales son los requisitos para el regimen 42?',
-    'Que documentos necesito para importar productos alimenticios?',
-    'Como se calcula el valor en aduana con Incoterm FOB?',
-    'Que es el perfeccionamiento activo?',
-    'Cuando es obligatorio el certificado EUR.1?'
+    t('chat.q1'),
+    t('chat.q2'),
+    t('chat.q3'),
+    t('chat.q4'),
+    t('chat.q5'),
+    t('chat.q6')
   ]
 
   const handleSuggestedQuestion = (question) => {
@@ -91,12 +93,12 @@ export default function ChatAssistant() {
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Asistente LUCI</h1>
-          <p className="text-gray-500">Consultas tecnicas sobre normativa aduanera</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('chat.title')}</h1>
+          <p className="text-gray-500">{t('chat.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <SparklesIcon className="w-5 h-5 text-luci" />
-          Powered by LUCI
+          {t('chat.poweredBy')}
         </div>
       </div>
 
@@ -111,17 +113,15 @@ export default function ChatAssistant() {
                   <span className="text-4xl">💬</span>
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                  Hola! Soy LUCI
+                  {t('chat.welcomeTitle')}
                 </h2>
                 <p className="text-gray-600 max-w-md mx-auto mb-6">
-                  Su asistente experto en aduanas y comercio exterior.
-                  Puedo ayudarle con normativa, clasificacion arancelaria,
-                  requisitos de importacion/exportacion y mas.
+                  {t('chat.welcomeMessage')}
                 </p>
 
                 {/* Suggested Questions */}
                 <div className="max-w-xl mx-auto">
-                  <p className="text-sm text-gray-500 mb-3">Preguntas sugeridas:</p>
+                  <p className="text-sm text-gray-500 mb-3">{t('chat.suggestedQuestions')}</p>
                   <div className="flex flex-wrap gap-2 justify-center">
                     {suggestedQuestions.slice(0, 4).map((q, i) => (
                       <button
@@ -206,7 +206,7 @@ export default function ChatAssistant() {
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Escriba su consulta sobre aduanas..."
+                placeholder={t('chat.placeholder')}
                 className="input flex-1"
                 disabled={loading}
               />
@@ -226,13 +226,13 @@ export default function ChatAssistant() {
           <div className="card">
             <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <BookOpenIcon className="w-5 h-5 text-luci" />
-              Base de Conocimiento
+              {t('chat.knowledgeBase')}
             </h3>
             <div className="space-y-2">
               {Object.entries(categories).slice(0, 8).map(([key, cat]) => (
                 <button
                   key={key}
-                  onClick={() => handleSuggestedQuestion(`Explicame sobre ${cat.name}`)}
+                  onClick={() => handleSuggestedQuestion(`${t('chat.explainAbout')} ${cat.name}`)}
                   className="w-full text-left p-2 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                 >
                   <p className="font-medium text-gray-900">{cat.name}</p>
@@ -245,7 +245,7 @@ export default function ChatAssistant() {
           <div className="card">
             <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <QuestionMarkCircleIcon className="w-5 h-5 text-luci" />
-              Mas Preguntas
+              {t('chat.moreQuestions')}
             </h3>
             <div className="space-y-2">
               {suggestedQuestions.slice(4).map((q, i) => (
@@ -262,9 +262,7 @@ export default function ChatAssistant() {
 
           <div className="card bg-luci-light">
             <p className="text-sm text-luci-dark">
-              <strong>Tip:</strong> Para mejores respuestas, sea especifico
-              en su consulta. Incluya codigos TARIC, paises, o tipos de producto
-              cuando sea relevante.
+              <strong>{t('chat.tip')}</strong> {t('chat.tipText')}
             </p>
           </div>
         </div>

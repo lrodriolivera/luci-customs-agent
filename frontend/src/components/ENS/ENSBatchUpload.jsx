@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box, Typography, Paper, Grid, Button, Card, CardContent,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -43,6 +44,7 @@ const CSV_TEMPLATE_COLUMNS = [
 ]
 
 const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
+  const { t } = useTranslation()
   const fileInputRef = useRef(null)
   const [activeStep, setActiveStep] = useState(0)
   const [file, setFile] = useState(null)
@@ -55,7 +57,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
   const [autoSubmit, setAutoSubmit] = useState(false)
   const [selectedRows, setSelectedRows] = useState([])
 
-  const steps = ['Cargar Archivo', 'Validar Datos', 'Procesar']
+  const steps = [t('ens.stepUpload'), t('ens.stepValidate'), t('ens.stepProcess')]
 
   const handleFileSelect = (event) => {
     const selectedFile = event.target.files[0]
@@ -72,7 +74,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
       const lines = text.split('\n').filter(line => line.trim())
 
       if (lines.length < 2) {
-        throw new Error('El archivo debe tener al menos una fila de datos ademas del encabezado')
+        throw new Error(t('ens.fileMinRows'))
       }
 
       const headers = lines[0].split(';').map(h => h.trim().replace(/"/g, ''))
@@ -155,38 +157,38 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
 
       // Required field validations
       if (!dec.transportMode) {
-        errors.push('Modo de transporte requerido')
+        errors.push(t('ens.transportModeRequired'))
       } else if (!['ROAD', 'RAIL', 'AIR', 'SEA'].includes(dec.transportMode)) {
-        errors.push('Modo de transporte invalido (ROAD, RAIL, AIR, SEA)')
+        errors.push(t('ens.transportModeInvalid'))
       }
 
       if (!dec.entryOffice.code) {
-        errors.push('Codigo de aduana requerido')
+        errors.push(t('ens.customsCodeRequired'))
       } else if (!/^ES\d{6}$/.test(dec.entryOffice.code)) {
-        warnings.push('Formato de codigo de aduana puede ser incorrecto')
+        warnings.push(t('ens.customsCodeFormat'))
       }
 
       if (!dec.entryOffice.expectedArrival) {
-        errors.push('Fecha de llegada requerida')
+        errors.push(t('ens.arrivalRequired'))
       }
 
       if (!dec.carrier.eori) {
-        errors.push('EORI del transportista requerido')
+        errors.push(t('ens.carrierEoriRequired'))
       } else if (!/^[A-Z]{2}\w{1,15}$/.test(dec.carrier.eori)) {
-        warnings.push('Formato EORI puede ser incorrecto')
+        warnings.push(t('ens.eoriFormat2'))
       }
 
       if (!dec.consignment.referenceNumber) {
-        errors.push('Numero de conocimiento (B/L) requerido')
+        errors.push(t('ens.blRequiredBatch'))
       }
 
       if (!dec.consignment.grossMass || dec.consignment.grossMass <= 0) {
-        errors.push('Peso bruto debe ser mayor que 0')
+        errors.push(t('ens.grossWeightPositive'))
       }
 
       // Container validation if present
       if (dec.consignment.containerNumber && !/^[A-Z]{4}\d{7}$/i.test(dec.consignment.containerNumber)) {
-        warnings.push('Formato de contenedor puede ser incorrecto (ISO 6346)')
+        warnings.push(t('ens.containerFormatWarn'))
       }
 
       return {
@@ -297,12 +299,12 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
 
   const getStatusChip = (status) => {
     const configs = {
-      pending: { color: 'default', label: 'Pendiente' },
-      valid: { color: 'success', label: 'Valido' },
-      warning: { color: 'warning', label: 'Advertencias' },
-      error: { color: 'error', label: 'Errores' },
-      processed: { color: 'success', label: 'Procesado' },
-      process_error: { color: 'error', label: 'Error al procesar' }
+      pending: { color: 'default', label: t('ens.batchPending') },
+      valid: { color: 'success', label: t('ens.batchValid') },
+      warning: { color: 'warning', label: t('ens.batchWarnings') },
+      error: { color: 'error', label: t('ens.batchErrors') },
+      processed: { color: 'success', label: t('ens.batchProcessed') },
+      process_error: { color: 'error', label: t('ens.batchProcessError') }
     }
     const config = configs[status] || configs.pending
     return <Chip size="small" color={config.color} label={config.label} />
@@ -314,7 +316,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
       <DialogTitle>
-        Importacion Masiva de Declaraciones ENS
+        {t('ens.batchTitle')}
       </DialogTitle>
       <DialogContent dividers>
         {/* Stepper */}
@@ -355,10 +357,10 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
                 <>
                   <UploadIcon sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
                   <Typography variant="h6" gutterBottom>
-                    Arrastre un archivo CSV o haga clic para seleccionar
+                    {t('ens.dragOrClick')}
                   </Typography>
                   <Typography color="textSecondary">
-                    Formato: CSV con separador punto y coma (;)
+                    {t('ens.csvFormat')}
                   </Typography>
                 </>
               )}
@@ -370,20 +372,20 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
                 startIcon={<DownloadIcon />}
                 onClick={handleDownloadTemplate}
               >
-                Descargar Plantilla CSV
+                {t('ens.downloadTemplate')}
               </Button>
             </Box>
 
             <Alert severity="info" sx={{ mt: 3, textAlign: 'left' }}>
               <Typography variant="subtitle2" gutterBottom>
-                Columnas requeridas:
+                {t('ens.requiredColumns')}
               </Typography>
               <Typography variant="body2">
                 transportMode, entryOfficeCode, expectedArrivalDate, expectedArrivalTime,
                 carrierEORI, carrierName, billOfLading, grossMass
               </Typography>
               <Typography variant="subtitle2" gutterBottom sx={{ mt: 1 }}>
-                Columnas opcionales:
+                {t('ens.optionalColumns')}
               </Typography>
               <Typography variant="body2">
                 transportIdentification, transportNationality, containerNumber, sealNumber,
@@ -402,7 +404,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
               <Grid item xs={3}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography color="textSecondary">Total</Typography>
+                    <Typography color="textSecondary">{t('common.total')}</Typography>
                     <Typography variant="h4">{parsedData.length}</Typography>
                   </CardContent>
                 </Card>
@@ -410,7 +412,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
               <Grid item xs={3}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography color="success.main">Validos</Typography>
+                    <Typography color="success.main">{t('ens.batchValid')}</Typography>
                     <Typography variant="h4" color="success.main">
                       {parsedData.filter(d => d.status === 'valid').length}
                     </Typography>
@@ -420,7 +422,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
               <Grid item xs={3}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography color="warning.main">Advertencias</Typography>
+                    <Typography color="warning.main">{t('ens.batchWarnings')}</Typography>
                     <Typography variant="h4" color="warning.main">
                       {parsedData.filter(d => d.status === 'warning').length}
                     </Typography>
@@ -430,7 +432,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
               <Grid item xs={3}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography color="error.main">Errores</Typography>
+                    <Typography color="error.main">{t('ens.batchErrors')}</Typography>
                     <Typography variant="h4" color="error.main">{errorCount}</Typography>
                   </CardContent>
                 </Card>
@@ -450,14 +452,14 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
                       />
                     </TableCell>
                     <TableCell>#</TableCell>
-                    <TableCell>Modo</TableCell>
-                    <TableCell>Aduana</TableCell>
-                    <TableCell>Transportista</TableCell>
-                    <TableCell>Conocimiento</TableCell>
-                    <TableCell>Contenedor</TableCell>
-                    <TableCell>Peso (kg)</TableCell>
-                    <TableCell>Estado</TableCell>
-                    <TableCell>Detalles</TableCell>
+                    <TableCell>{t('ens.mode')}</TableCell>
+                    <TableCell>{t('ens.entryCustoms')}</TableCell>
+                    <TableCell>{t('ens.carrier')}</TableCell>
+                    <TableCell>{t('ens.billOfLading')}</TableCell>
+                    <TableCell>{t('ens.container')}</TableCell>
+                    <TableCell>{t('ens.batchWeight')}</TableCell>
+                    <TableCell>{t('common.status')}</TableCell>
+                    <TableCell>{t('common.details')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -512,7 +514,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
                     onChange={(e) => setAutoSubmit(e.target.checked)}
                   />
                 }
-                label="Enviar automaticamente a AEAT despues de crear"
+                label={t('ens.autoSubmit')}
               />
             </Box>
           </Box>
@@ -525,7 +527,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
               <Box sx={{ textAlign: 'center', py: 4 }}>
                 <CircularProgress size={64} />
                 <Typography variant="h6" sx={{ mt: 2 }}>
-                  Procesando declaraciones...
+                  {t('ens.processingDeclarations')}
                 </Typography>
                 <LinearProgress
                   variant="determinate"
@@ -540,14 +542,14 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
                   sx={{ mb: 3 }}
                 >
                   <Typography variant="subtitle1">
-                    Procesamiento completado
+                    {t('ens.processingComplete')}
                   </Typography>
                   <Typography variant="body2">
-                    {processResults.successful || 0} de {processResults.total || 0} declaraciones procesadas correctamente
+                    {t('ens.processedCount', { success: processResults.successful || 0, total: processResults.total || 0 })}
                   </Typography>
                   {processResults.failed > 0 && (
                     <Typography variant="body2" color="error">
-                      {processResults.failed} declaraciones con errores
+                      {t('ens.failedCount', { count: processResults.failed })}
                     </Typography>
                   )}
                 </Alert>
@@ -559,10 +561,10 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>Referencia</TableCell>
-                          <TableCell>MRN</TableCell>
-                          <TableCell>Estado</TableCell>
-                          <TableCell>Mensaje</TableCell>
+                          <TableCell>{t('ens.reference')}</TableCell>
+                          <TableCell>{t('ens.mrnLabel')}</TableCell>
+                          <TableCell>{t('common.status')}</TableCell>
+                          <TableCell>{t('ens.message')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -573,9 +575,9 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
                             <TableCell>{result.mrn || '-'}</TableCell>
                             <TableCell>
                               {result.success ? (
-                                <Chip size="small" color="success" icon={<CheckIcon />} label="Exito" />
+                                <Chip size="small" color="success" icon={<CheckIcon />} label={t('ens.success')} />
                               ) : (
-                                <Chip size="small" color="error" icon={<ErrorIcon />} label="Error" />
+                                <Chip size="small" color="error" icon={<ErrorIcon />} label={t('common.error')} />
                               )}
                             </TableCell>
                             <TableCell>
@@ -594,12 +596,12 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
       </DialogContent>
       <DialogActions>
         {activeStep === 0 && (
-          <Button onClick={handleClose}>Cancelar</Button>
+          <Button onClick={handleClose}>{t('common.cancel')}</Button>
         )}
         {activeStep === 1 && (
           <>
             <Button onClick={handleReset}>
-              Cargar otro archivo
+              {t('ens.loadAnotherFile')}
             </Button>
             <Button
               variant="contained"
@@ -607,17 +609,17 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
               onClick={handleProcess}
               disabled={validCount === 0 || selectedRows.length === 0}
             >
-              Procesar {selectedRows.filter(i => parsedData[i]?.status !== 'error').length} declaraciones
+              {t('ens.processDeclarations', { count: selectedRows.filter(i => parsedData[i]?.status !== 'error').length })}
             </Button>
           </>
         )}
         {activeStep === 2 && !processing && (
           <>
             <Button onClick={handleReset}>
-              Nueva importacion
+              {t('ens.newImport')}
             </Button>
             <Button variant="contained" onClick={handleClose}>
-              Cerrar
+              {t('common.close')}
             </Button>
           </>
         )}

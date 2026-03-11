@@ -17,6 +17,9 @@ router.get('/config', channelController.getChannelConfigs);
 // GET /api/channels/stats - Estadisticas de canales
 router.get('/stats', channelController.getChannelStats);
 
+// GET /api/channels/expeditions - Expedientes con canal asignado
+router.get('/expeditions', channelController.getChannelExpeditions);
+
 // GET /api/channels/:expeditionId/status - Estado del canal de un expediente
 router.get('/:expeditionId/status', channelController.getChannelStatus);
 

@@ -23,9 +23,11 @@ import {
   DocumentTextIcon
 } from '@heroicons/react/24/outline'
 import { analyticsAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 
 // ==================== Analytics AI Panel Component ====================
 function AnalyticsAIPanel({ period, onClose }) {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('insights')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -39,12 +41,12 @@ function AnalyticsAIPanel({ period, onClose }) {
   })
 
   const tabs = [
-    { id: 'insights', label: 'Insights', icon: LightBulbIcon },
-    { id: 'anomalies', label: 'Anomalias', icon: MagnifyingGlassCircleIcon },
-    { id: 'trends', label: 'Tendencias', icon: ArrowTrendingUpIcon },
-    { id: 'executive', label: 'Reporte Ejecutivo', icon: PresentationChartBarIcon },
-    { id: 'kpi', label: 'KPI Analysis', icon: BoltIcon },
-    { id: 'full', label: 'Analisis Completo', icon: SparklesIcon }
+    { id: 'insights', label: t('analyticsPage.insights'), icon: LightBulbIcon },
+    { id: 'anomalies', label: t('analyticsPage.anomalies'), icon: MagnifyingGlassCircleIcon },
+    { id: 'trends', label: t('analyticsPage.trends'), icon: ArrowTrendingUpIcon },
+    { id: 'executive', label: t('analyticsPage.executiveReport'), icon: PresentationChartBarIcon },
+    { id: 'kpi', label: t('analyticsPage.kpiAnalysis'), icon: BoltIcon },
+    { id: 'full', label: t('analyticsPage.fullAnalysis'), icon: SparklesIcon }
   ]
 
   const runAnalysis = async (type) => {
@@ -93,7 +95,7 @@ function AnalyticsAIPanel({ period, onClose }) {
           <div className="bg-luci/5 border border-luci/20 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <LightBulbIcon className="w-5 h-5 text-luci" />
-              <span className="font-medium text-luci">Resumen LUCI</span>
+              <span className="font-medium text-luci">{t('analyticsPage.luciSummary')}</span>
             </div>
             <p className="text-sm text-gray-700">{data.summary}</p>
           </div>
@@ -102,7 +104,7 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* Key Insights */}
         {data.insights && data.insights.length > 0 && (
           <div className="bg-white border rounded-lg p-4">
-            <h4 className="font-medium text-gray-700 mb-3">Insights Principales</h4>
+            <h4 className="font-medium text-gray-700 mb-3">{t('analyticsPage.mainInsights')}</h4>
             <div className="space-y-3">
               {data.insights.map((insight, idx) => (
                 <div key={idx} className={`p-3 rounded-lg ${
@@ -115,7 +117,7 @@ function AnalyticsAIPanel({ period, onClose }) {
                   <p className="text-sm text-gray-600 mt-1">{insight.description}</p>
                   {insight.action && (
                     <p className="text-xs mt-2 text-blue-600">
-                      <span className="font-medium">Accion:</span> {insight.action}
+                      <span className="font-medium">{t('common.action')}:</span> {insight.action}
                     </p>
                   )}
                 </div>
@@ -127,7 +129,7 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* Recommendations */}
         {data.recommendations && data.recommendations.length > 0 && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-            <h4 className="font-medium text-indigo-800 mb-2">Recomendaciones</h4>
+            <h4 className="font-medium text-indigo-800 mb-2">{t('analyticsPage.recommendations')}</h4>
             <ul className="space-y-1 text-sm text-indigo-700">
               {data.recommendations.map((rec, idx) => (
                 <li key={idx}>• {rec}</li>
@@ -187,16 +189,16 @@ function AnalyticsAIPanel({ period, onClose }) {
                 <p className="text-sm text-gray-600">{anomaly.description}</p>
                 {anomaly.expectedValue && (
                   <div className="mt-2 text-xs text-gray-500">
-                    <span>Esperado: {anomaly.expectedValue}</span>
+                    <span>{t('analyticsPage.expected')}: {anomaly.expectedValue}</span>
                     <span className="mx-2">|</span>
-                    <span>Actual: {anomaly.actualValue}</span>
+                    <span>{t('analyticsPage.actual')}: {anomaly.actualValue}</span>
                     <span className="mx-2">|</span>
-                    <span className="text-red-600">Desviacion: {anomaly.deviation}%</span>
+                    <span className="text-red-600">{t('analyticsPage.deviation')}: {anomaly.deviation}%</span>
                   </div>
                 )}
                 {anomaly.suggestedAction && (
                   <p className="text-xs mt-2 text-blue-600">
-                    <span className="font-medium">Accion sugerida:</span> {anomaly.suggestedAction}
+                    <span className="font-medium">{t('analyticsPage.suggestedAction')}:</span> {anomaly.suggestedAction}
                   </p>
                 )}
               </div>
@@ -214,7 +216,7 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* Predictions */}
         {data.predictions && (
           <div className="bg-white border rounded-lg p-4">
-            <h4 className="font-medium text-gray-700 mb-3">Predicciones</h4>
+            <h4 className="font-medium text-gray-700 mb-3">{t('analyticsPage.predictions')}</h4>
             <div className="grid grid-cols-2 gap-4">
               {Object.entries(data.predictions).map(([key, pred]) => (
                 <div key={key} className="p-3 bg-gray-50 rounded-lg">
@@ -230,7 +232,7 @@ function AnalyticsAIPanel({ period, onClose }) {
                     <span className="text-lg font-bold">{pred.percentage}%</span>
                   </div>
                   {pred.confidence && (
-                    <p className="text-xs text-gray-400 mt-1">Confianza: {(pred.confidence * 100).toFixed(0)}%</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('analyticsPage.confidence')}: {(pred.confidence * 100).toFixed(0)}%</p>
                   )}
                 </div>
               ))}
@@ -241,11 +243,11 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* Seasonality */}
         {data.seasonality && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-800 mb-2">Patrones Estacionales</h4>
+            <h4 className="font-medium text-blue-800 mb-2">{t('analyticsPage.seasonalPatterns')}</h4>
             <p className="text-sm text-blue-700">{data.seasonality.summary}</p>
             {data.seasonality.peakPeriods && (
               <div className="mt-2 text-xs text-blue-600">
-                <span className="font-medium">Periodos pico:</span> {data.seasonality.peakPeriods.join(', ')}
+                <span className="font-medium">{t('analyticsPage.peakPeriods')}:</span> {data.seasonality.peakPeriods.join(', ')}
               </div>
             )}
           </div>
@@ -254,7 +256,7 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* Trend Alerts */}
         {data.alerts && data.alerts.length > 0 && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h4 className="font-medium text-yellow-800 mb-2">Alertas de Tendencia</h4>
+            <h4 className="font-medium text-yellow-800 mb-2">{t('analyticsPage.trendAlerts')}</h4>
             <ul className="space-y-1 text-sm text-yellow-700">
               {data.alerts.map((alert, idx) => (
                 <li key={idx}>• {alert}</li>
@@ -274,7 +276,7 @@ function AnalyticsAIPanel({ period, onClose }) {
         <div className="bg-gradient-to-r from-luci/10 to-purple-50 border rounded-lg p-4">
           <div className="flex items-center gap-2 mb-3">
             <PresentationChartBarIcon className="w-6 h-6 text-luci" />
-            <span className="font-bold text-lg">Reporte Ejecutivo</span>
+            <span className="font-bold text-lg">{t('analyticsPage.executiveReport')}</span>
           </div>
           {data.executiveSummary && (
             <p className="text-gray-700">{data.executiveSummary}</p>
@@ -284,7 +286,7 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* Key Metrics */}
         {data.keyMetrics && (
           <div className="bg-white border rounded-lg p-4">
-            <h4 className="font-medium text-gray-700 mb-3">Metricas Clave</h4>
+            <h4 className="font-medium text-gray-700 mb-3">{t('analyticsPage.keyMetrics')}</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {Object.entries(data.keyMetrics).map(([key, value]) => (
                 <div key={key} className="text-center p-3 bg-gray-50 rounded-lg">
@@ -299,7 +301,7 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* Achievements */}
         {data.achievements && data.achievements.length > 0 && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h4 className="font-medium text-green-800 mb-2">Logros del Periodo</h4>
+            <h4 className="font-medium text-green-800 mb-2">{t('analyticsPage.periodAchievements')}</h4>
             <ul className="space-y-1 text-sm text-green-700">
               {data.achievements.map((ach, idx) => (
                 <li key={idx} className="flex items-center gap-2">
@@ -314,7 +316,7 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* Areas of Concern */}
         {data.concerns && data.concerns.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h4 className="font-medium text-red-800 mb-2">Areas de Atencion</h4>
+            <h4 className="font-medium text-red-800 mb-2">{t('analyticsPage.attentionAreas')}</h4>
             <ul className="space-y-1 text-sm text-red-700">
               {data.concerns.map((concern, idx) => (
                 <li key={idx}>• {concern}</li>
@@ -326,7 +328,7 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* Strategic Recommendations */}
         {data.strategicRecommendations && data.strategicRecommendations.length > 0 && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-            <h4 className="font-medium text-indigo-800 mb-2">Recomendaciones Estrategicas</h4>
+            <h4 className="font-medium text-indigo-800 mb-2">{t('analyticsPage.strategicRecommendations')}</h4>
             <div className="space-y-2">
               {data.strategicRecommendations.map((rec, idx) => (
                 <div key={idx} className="flex items-start gap-2">
@@ -396,13 +398,13 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* KPI Deviations */}
         {data.deviations && data.deviations.length > 0 && (
           <div className="bg-white border rounded-lg p-4">
-            <h4 className="font-medium text-gray-700 mb-3">Desviaciones de KPIs</h4>
+            <h4 className="font-medium text-gray-700 mb-3">{t('analyticsPage.kpiDeviations')}</h4>
             <div className="space-y-3">
               {data.deviations.map((dev, idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium text-sm">{dev.kpiName}</p>
-                    <p className="text-xs text-gray-500">Objetivo: {dev.target} | Actual: {dev.actual}</p>
+                    <p className="text-xs text-gray-500">{t('common.target')}: {dev.target} | {t('analyticsPage.actual')}: {dev.actual}</p>
                   </div>
                   <div className="text-right">
                     <span className={`text-lg font-bold ${dev.deviation >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -418,7 +420,7 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* Root Causes */}
         {data.rootCauses && data.rootCauses.length > 0 && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h4 className="font-medium text-yellow-800 mb-2">Causas Raiz Identificadas</h4>
+            <h4 className="font-medium text-yellow-800 mb-2">{t('analyticsPage.rootCauses')}</h4>
             <ul className="space-y-1 text-sm text-yellow-700">
               {data.rootCauses.map((cause, idx) => (
                 <li key={idx}>• {cause}</li>
@@ -430,7 +432,7 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* Improvement Actions */}
         {data.improvementActions && data.improvementActions.length > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-800 mb-2">Acciones de Mejora</h4>
+            <h4 className="font-medium text-blue-800 mb-2">{t('analyticsPage.improvementActions')}</h4>
             <div className="space-y-2">
               {data.improvementActions.map((action, idx) => (
                 <div key={idx} className="flex items-start gap-2">
@@ -444,7 +446,7 @@ function AnalyticsAIPanel({ period, onClose }) {
                   <div>
                     <p className="text-sm font-medium text-gray-700">{action.action}</p>
                     {action.expectedImpact && (
-                      <p className="text-xs text-gray-500">Impacto esperado: {action.expectedImpact}</p>
+                      <p className="text-xs text-gray-500">{t('analyticsPage.expectedImpact')}: {action.expectedImpact}</p>
                     )}
                   </div>
                 </div>
@@ -469,7 +471,7 @@ function AnalyticsAIPanel({ period, onClose }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <SparklesIcon className="w-6 h-6 text-luci" />
-              <span className="font-medium">Analisis Integral LUCI</span>
+              <span className="font-medium">{t('analyticsPage.fullLuciAnalysis')}</span>
             </div>
             <div className="text-right">
               <span className={`text-2xl font-bold ${
@@ -479,7 +481,7 @@ function AnalyticsAIPanel({ period, onClose }) {
               }`}>
                 {data.overallScore || 0}/100
               </span>
-              <p className="text-xs text-gray-500">Puntuacion</p>
+              <p className="text-xs text-gray-500">{t('analyticsPage.score')}</p>
             </div>
           </div>
           {data.summary && <p className="mt-3 text-sm text-gray-600">{data.summary}</p>}
@@ -509,7 +511,7 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* Critical Items */}
         {data.criticalItems && data.criticalItems.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h4 className="font-medium text-red-800 mb-2">Items Criticos</h4>
+            <h4 className="font-medium text-red-800 mb-2">{t('analyticsPage.criticalItems')}</h4>
             <ul className="space-y-1 text-sm text-red-700">
               {data.criticalItems.map((item, idx) => (
                 <li key={idx}>• {item}</li>
@@ -521,7 +523,7 @@ function AnalyticsAIPanel({ period, onClose }) {
         {/* Action Items */}
         {data.actionItems && data.actionItems.length > 0 && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-            <h4 className="font-medium text-indigo-800 mb-3">Acciones Recomendadas</h4>
+            <h4 className="font-medium text-indigo-800 mb-3">{t('analyticsPage.recommendedActions')}</h4>
             <div className="space-y-2">
               {data.actionItems.map((item, idx) => (
                 <div key={idx} className="flex items-start gap-2">
@@ -597,8 +599,8 @@ function AnalyticsAIPanel({ period, onClose }) {
           <div className="flex items-center gap-2">
             <SparklesIcon className="w-6 h-6" />
             <div>
-              <h2 className="font-bold">Centro de Analisis IA</h2>
-              <p className="text-sm text-white/80">Analytics avanzados con LUCI</p>
+              <h2 className="font-bold">{t('analyticsPage.aiAnalysisCenter')}</h2>
+              <p className="text-sm text-white/80">{t('analyticsPage.advancedAnalytics')}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-white/20 rounded">
@@ -634,14 +636,14 @@ function AnalyticsAIPanel({ period, onClose }) {
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {error}
-              <button onClick={() => setError(null)} className="ml-2 underline">Cerrar</button>
+              <button onClick={() => setError(null)} className="ml-2 underline">{t('common.close')}</button>
             </div>
           )}
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <ArrowPathIcon className="w-8 h-8 animate-spin text-luci" />
-              <span className="ml-2 text-gray-500">Analizando con IA...</span>
+              <span className="ml-2 text-gray-500">{t('analyticsPage.analyzingWithAI')}</span>
             </div>
           ) : (
             renderContent()
@@ -672,17 +674,18 @@ function AnalyticsAIPanel({ period, onClose }) {
 }
 
 const TIME_PERIODS = [
-  { value: 'today', label: 'Hoy' },
-  { value: 'yesterday', label: 'Ayer' },
-  { value: 'last_7_days', label: 'Ultimos 7 dias' },
-  { value: 'last_30_days', label: 'Ultimos 30 dias' },
-  { value: 'this_month', label: 'Este mes' },
-  { value: 'last_month', label: 'Mes anterior' },
-  { value: 'this_quarter', label: 'Este trimestre' },
-  { value: 'this_year', label: 'Este ano' }
+  { value: 'today', labelKey: 'analyticsPage.today' },
+  { value: 'yesterday', labelKey: 'analyticsPage.yesterday' },
+  { value: 'last_7_days', labelKey: 'analyticsPage.last7Days' },
+  { value: 'last_30_days', labelKey: 'analyticsPage.last30Days' },
+  { value: 'this_month', labelKey: 'analyticsPage.thisMonth' },
+  { value: 'last_month', labelKey: 'analyticsPage.lastMonth' },
+  { value: 'this_quarter', labelKey: 'analyticsPage.thisQuarter' },
+  { value: 'this_year', labelKey: 'analyticsPage.thisYear' }
 ]
 
 export default function AnalyticsDashboard() {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState('last_30_days')
   const [dashboardData, setDashboardData] = useState(null)
@@ -709,7 +712,7 @@ export default function AnalyticsDashboard() {
         setDashboardData(response.data.data)
       }
     } catch (error) {
-      toast.error('Error cargando datos del dashboard')
+      toast.error(t('analyticsPage.errorLoadingDashboard'))
       console.error(error)
     } finally {
       setLoading(false)
@@ -807,8 +810,8 @@ export default function AnalyticsDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="text-sm text-gray-500">Inteligencia de negocio con LUCI</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('analyticsPage.title')}</h1>
+          <p className="text-sm text-gray-500">{t('analyticsPage.subtitle')}</p>
         </div>
 
         <div className="flex items-center gap-3">

@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   DocumentArrowUpIcon,
   ChatBubbleLeftRightIcon,
@@ -8,6 +9,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function PortalHome() {
+  const { t } = useTranslation()
   const { expedition, token } = useOutletContext()
 
   const getProgressPercentage = () => {
@@ -24,14 +26,14 @@ export default function PortalHome() {
 
   const getStatusMessage = () => {
     const messages = {
-      'PENDING_DOCS': 'Estamos esperando que suba los documentos requeridos',
-      'DOCS_RECEIVED': 'Hemos recibido sus documentos y los estamos revisando',
-      'VALIDATING': 'Estamos validando la informacion de los documentos',
-      'PROCESSING': 'Su declaracion esta siendo procesada',
-      'SUBMITTED': 'La declaracion ha sido presentada ante aduanas',
-      'COMPLETED': 'El despacho aduanero ha sido completado'
+      'PENDING_DOCS': t('portal.waitingDocs'),
+      'DOCS_RECEIVED': t('portal.docsReceived'),
+      'VALIDATING': t('portal.validatingInfo'),
+      'PROCESSING': t('portal.processingDeclaration'),
+      'SUBMITTED': t('portal.submittedToCustoms'),
+      'COMPLETED': t('portal.customsCompleted')
     }
-    return messages[expedition?.status] || 'Estado desconocido'
+    return messages[expedition?.status] || t('portal.unknownStatus')
   }
 
   return (
@@ -39,20 +41,20 @@ export default function PortalHome() {
       {/* Welcome Card */}
       <div className="card bg-gradient-to-r from-luci to-blue-600 text-white">
         <h1 className="text-2xl font-bold mb-2">
-          Bienvenido, {expedition?.client?.companyName}
+          {t('portal.welcome')} {expedition?.client?.companyName}
         </h1>
         <p className="opacity-90">
-          Expediente de {expedition?.operationType === 'IMPORT' ? 'Importacion' : 'Exportacion'}: {expedition?.expeditionId}
+          {expedition?.operationType === 'IMPORT' ? t('portal.importExpedition') : t('portal.exportExpedition')}: {expedition?.expeditionId}
         </p>
       </div>
 
       {/* Progress */}
       <div className="card">
-        <h2 className="text-lg font-semibold mb-4">Estado del Expediente</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('portal.expeditionStatus')}</h2>
 
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-600">Progreso</span>
+            <span className="text-gray-600">{t('portal.progress')}</span>
             <span className="font-medium">{getProgressPercentage()}%</span>
           </div>
           <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
@@ -73,7 +75,7 @@ export default function PortalHome() {
           </div>
           <div>
             <p className="font-medium text-gray-900">
-              {getProgressPercentage() === 100 ? 'Completado' : 'En proceso'}
+              {getProgressPercentage() === 100 ? t('portal.completed') : t('portal.inProcess')}
             </p>
             <p className="text-sm text-gray-600">{getStatusMessage()}</p>
           </div>
@@ -91,8 +93,8 @@ export default function PortalHome() {
               <DocumentArrowUpIcon className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Subir Documentos</h3>
-              <p className="text-sm text-gray-500">Factura, Packing List, etc.</p>
+              <h3 className="font-semibold text-gray-900">{t('portal.uploadDocs')}</h3>
+              <p className="text-sm text-gray-500">{t('portal.uploadDocsDesc')}</p>
             </div>
           </div>
         </Link>
@@ -106,8 +108,8 @@ export default function PortalHome() {
               <ChatBubbleLeftRightIcon className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Chat con LUCI</h3>
-              <p className="text-sm text-gray-500">Consultas y dudas</p>
+              <h3 className="font-semibold text-gray-900">{t('portal.chatWithLuci')}</h3>
+              <p className="text-sm text-gray-500">{t('portal.chatDesc')}</p>
             </div>
           </div>
         </Link>
@@ -121,8 +123,8 @@ export default function PortalHome() {
               <ClockIcon className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Ver Estado</h3>
-              <p className="text-sm text-gray-500">Timeline completo</p>
+              <h3 className="font-semibold text-gray-900">{t('portal.viewStatus')}</h3>
+              <p className="text-sm text-gray-500">{t('portal.viewStatusDesc')}</p>
             </div>
           </div>
         </Link>
@@ -130,7 +132,7 @@ export default function PortalHome() {
 
       {/* Documents Checklist Summary */}
       <div className="card">
-        <h2 className="text-lg font-semibold mb-4">Documentos Requeridos</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('portal.requiredDocs')}</h2>
         <div className="space-y-2">
           {expedition?.documentChecklist?.slice(0, 5).map((doc, index) => (
             <div
@@ -148,18 +150,18 @@ export default function PortalHome() {
                 {doc.name}
               </span>
               {doc.required && !doc.uploaded && (
-                <span className="text-xs text-red-500 ml-auto">Pendiente</span>
+                <span className="text-xs text-red-500 ml-auto">{t('common.pending')}</span>
               )}
             </div>
           )) || (
-            <p className="text-gray-500 text-sm">Cargando checklist...</p>
+            <p className="text-gray-500 text-sm">{t('portal.loadingChecklist')}</p>
           )}
         </div>
         <Link
           to={`/portal/${token}/documents`}
           className="mt-4 text-luci hover:text-luci-dark text-sm font-medium inline-block"
         >
-          Ver todos los documentos &rarr;
+          {t('portal.allDocs')} &rarr;
         </Link>
       </div>
     </div>

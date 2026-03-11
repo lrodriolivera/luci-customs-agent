@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { portalAPI, chatAPI } from '../../services/api'
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid'
 
 export default function PortalChat() {
+  const { t } = useTranslation()
   const { expedition, token } = useOutletContext()
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
@@ -72,7 +74,7 @@ export default function PortalChat() {
         id: Date.now() + 1,
         sender: 'luci',
         senderName: 'LUCI',
-        content: 'Lo siento, ha ocurrido un error. Por favor, intente de nuevo.',
+        content: t('portal.chatError'),
         timestamp: new Date().toISOString()
       }
       setMessages(prev => [...prev, errorMessage])
@@ -82,10 +84,10 @@ export default function PortalChat() {
   }
 
   const quickQuestions = [
-    'Que documentos necesito para mi importacion?',
-    'Como se calcula el arancel?',
-    'Cuanto tiempo tarda el despacho?',
-    'Que es el Incoterm CIF?'
+    t('portal.chatFaq1'),
+    t('portal.chatFaq2'),
+    t('portal.chatFaq3'),
+    t('portal.chatFaq4')
   ]
 
   const handleQuickQuestion = (question) => {
@@ -95,9 +97,9 @@ export default function PortalChat() {
   return (
     <div className="h-[calc(100vh-280px)] flex flex-col">
       <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Chat con LUCI</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('portal.chatTitle')}</h1>
         <p className="text-gray-600">
-          Haga sus consultas sobre comercio exterior y aduanas
+          {t('portal.chatSubtitle')}
         </p>
       </div>
 
@@ -114,14 +116,14 @@ export default function PortalChat() {
               <div className="w-16 h-16 bg-luci-light rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">💬</span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Bienvenido al Chat de LUCI</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">{t('portal.chatWelcome')}</h3>
               <p className="text-gray-600 mb-4">
-                Soy su asistente virtual para consultas de aduanas
+                {t('portal.chatBotIntro')}
               </p>
 
               {/* Quick Questions */}
               <div className="max-w-md mx-auto">
-                <p className="text-sm text-gray-500 mb-2">Preguntas frecuentes:</p>
+                <p className="text-sm text-gray-500 mb-2">{t('portal.chatFaq')}:</p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {quickQuestions.map((q, i) => (
                     <button
@@ -145,9 +147,8 @@ export default function PortalChat() {
                 <div className="flex-1 max-w-[80%]">
                   <div className="bg-luci-light rounded-2xl rounded-tl-none p-4">
                     <p className="text-gray-800">
-                      Hola! Soy LUCI, su asistente de aduanas de STRIX AI.
-                      Estoy aqui para ayudarle con su expediente {expedition?.expeditionId}.
-                      Como puedo ayudarle?
+                      {t('portal.chatGreeting')} {expedition?.expeditionId}.
+                      {' '}{t('portal.chatHowHelp')}
                     </p>
                   </div>
                 </div>
@@ -210,7 +211,7 @@ export default function PortalChat() {
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Escriba su mensaje..."
+              placeholder={t('portal.chatPlaceholder')}
               className="input flex-1"
               disabled={loading}
             />

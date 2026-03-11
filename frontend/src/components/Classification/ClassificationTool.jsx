@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { classificationAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import TaricTreeBrowser from './TaricTreeBrowser'
@@ -34,6 +35,7 @@ const getDesc = (d) => {
 }
 
 export default function ClassificationTool() {
+  const { t } = useTranslation()
   const [description, setDescription] = useState('')
   const [additionalInfo, setAdditionalInfo] = useState({
     material: '',
@@ -117,7 +119,7 @@ export default function ClassificationTool() {
   const handleClassify = async (e) => {
     e.preventDefault()
     if (!description.trim()) {
-      toast.error('Introduzca una descripcion del producto')
+      toast.error(t('classification.enterDescription'))
       return
     }
 
@@ -138,7 +140,7 @@ export default function ClassificationTool() {
 
       setResults(response.data)
     } catch (error) {
-      toast.error('Error al clasificar producto')
+      toast.error(t('classification.classifyError'))
     } finally {
       setLoading(false)
     }
@@ -146,7 +148,7 @@ export default function ClassificationTool() {
 
   const handleFullAnalysis = async () => {
     if (!description.trim()) {
-      toast.error('Introduzca una descripcion del producto')
+      toast.error(t('classification.enterDescription'))
       return
     }
 
@@ -171,9 +173,9 @@ export default function ClassificationTool() {
       )
 
       setFullAnalysisResult(response.data.data)
-      toast.success('Analisis completo finalizado')
+      toast.success(t('classification.fullAnalysisComplete'))
     } catch (error) {
-      toast.error('Error al realizar analisis completo')
+      toast.error(t('classification.fullAnalysisError'))
       console.error(error)
     } finally {
       setFullAnalysisLoading(false)
@@ -202,12 +204,12 @@ export default function ClassificationTool() {
       setCrossValidationResult(response.data.data)
 
       if (response.data.data.validationResult?.isValid) {
-        toast.success('Clasificacion validada con normativa')
+        toast.success(t('classification.classificationValidated'))
       } else {
-        toast.error('Revision de clasificacion recomendada')
+        toast.error(t('classification.classificationReviewRecommended'))
       }
     } catch (error) {
-      toast.error('Error al validar con normativa')
+      toast.error(t('classification.regulationValidationError'))
     } finally {
       setCrossValidating(false)
     }
@@ -230,12 +232,12 @@ export default function ClassificationTool() {
       }))
 
       if (response.data.is_valid) {
-        toast.success('Codigo validado correctamente')
+        toast.success(t('classification.codeValidatedOk'))
       } else {
-        toast.error('El codigo podria no ser correcto')
+        toast.error(t('classification.codeMayNotBeCorrect'))
       }
     } catch (error) {
-      toast.error('Error al validar codigo')
+      toast.error(t('classification.codeValidationError'))
     } finally {
       setValidating(false)
     }
@@ -258,9 +260,9 @@ export default function ClassificationTool() {
         }
       )
 
-      toast.success(wasCorrect ? 'Gracias por confirmar la clasificacion' : 'Feedback registrado para mejora')
+      toast.success(wasCorrect ? t('classification.feedbackConfirmThanks') : t('classification.feedbackRecorded'))
     } catch (error) {
-      toast.error('Error al registrar feedback')
+      toast.error(t('classification.feedbackError'))
     } finally {
       setFeedbackSubmitting(false)
     }
@@ -277,12 +279,12 @@ export default function ClassificationTool() {
     e.preventDefault()
     const cleanCode = taricCode.trim().replace(/\s+/g, '')
     if (!cleanCode) {
-      toast.error('Introduzca un codigo TARIC o HS Code')
+      toast.error(t('classification.enterTaricCode'))
       return
     }
 
     if (!/^\d+$/.test(cleanCode)) {
-      toast.error('El codigo debe contener solo digitos')
+      toast.error(t('classification.codeDigitsOnly'))
       return
     }
 
@@ -302,11 +304,11 @@ export default function ClassificationTool() {
         if (results.length > 0) {
           setChapterResults({
             chapter,
-            chapterName: chapterName || `Capitulo ${chapter}`,
+            chapterName: chapterName || `${t('classification.chapter')} ${chapter}`,
             level: data.level,
             results
           })
-          toast.success(`${results.length} partidas encontradas en Cap. ${chapter}`)
+          toast.success(t('classification.foundInChapter', { count: results.length, chapter }))
         } else if (chapterName) {
           // Chapter exists in reference but no codes in DB
           setChapterResults({
@@ -316,9 +318,9 @@ export default function ClassificationTool() {
             results: [],
             empty: true
           })
-          toast('Capitulo sin codigos en la base de datos local', { icon: 'i' })
+          toast(t('classification.chapterNoCodesLocal'), { icon: 'i' })
         } else {
-          toast.error(`Capitulo ${chapter} no valido`)
+          toast.error(`${t('classification.chapter')} ${chapter} ${t('classification.chapterNotValid')}`)
         }
       } else {
         // For 4+ digit codes, use existing getTaricInfo
@@ -326,18 +328,18 @@ export default function ClassificationTool() {
         const result = response.data.data || response.data
         setTaricLookupResult(result)
         if (result.found === false) {
-          toast.error(result.message || 'Codigo no encontrado')
+          toast.error(result.message || t('classification.codeNotFound'))
         } else {
-          toast.success(`Informacion encontrada (fuente: ${result.source || 'local'})`)
+          toast.success(t('classification.infoFoundSource', { source: result.source || 'local' }))
         }
       }
       // Reload history after search
       loadSearchHistory()
     } catch (error) {
       if (error.response?.status === 404) {
-        toast.error('Codigo no encontrado en la base de datos TARIC')
+        toast.error(t('classification.codeNotFoundTaric'))
       } else {
-        toast.error('Error al buscar el codigo')
+        toast.error(t('classification.errorSearchingCode'))
       }
       console.error(error)
     } finally {
@@ -363,7 +365,7 @@ export default function ClassificationTool() {
             breadcrumb: [...(prev?.breadcrumb || [{ code: prev?.chapter, label: prev?.chapterName }]), { code, label: code }]
           }))
         } else {
-          toast('No hay subdivisiones disponibles', { icon: 'i' })
+          toast(t('classification.noSubdivisions'), { icon: 'i' })
         }
       } else {
         // Leaf code - switch to detail view
@@ -373,13 +375,13 @@ export default function ClassificationTool() {
         const result = response.data.data || response.data
         setTaricLookupResult(result)
         if (result.found === false) {
-          toast.error(result.message || 'Codigo no encontrado')
+          toast.error(result.message || t('classification.codeNotFound'))
         } else {
-          toast.success(`Informacion encontrada (fuente: ${result.source || 'local'})`)
+          toast.success(t('classification.infoFoundSource', { source: result.source || 'local' }))
         }
       }
     } catch {
-      toast.error('Error al cargar datos')
+      toast.error(t('classification.errorLoadingData'))
     } finally {
       setTaricLookupLoading(false)
     }
@@ -404,11 +406,11 @@ export default function ClassificationTool() {
 
   const getAssessmentLabel = (assessment) => {
     switch (assessment) {
-      case 'CONFIRMED': return 'Confirmado'
-      case 'LIKELY_CORRECT': return 'Probablemente Correcto'
-      case 'NEEDS_REVIEW': return 'Requiere Revision'
-      case 'LIKELY_INCORRECT': return 'Probablemente Incorrecto'
-      case 'INVALID': return 'Invalido'
+      case 'CONFIRMED': return t('classification.confirmed')
+      case 'LIKELY_CORRECT': return t('classification.likelyCorrect')
+      case 'NEEDS_REVIEW': return t('classification.needsReviewAssessment')
+      case 'LIKELY_INCORRECT': return t('classification.likelyIncorrect')
+      case 'INVALID': return t('classification.invalid')
       default: return assessment
     }
   }
@@ -418,9 +420,9 @@ export default function ClassificationTool() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clasificacion TARIC</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('classification.title')}</h1>
           <p className="text-gray-500 mt-1">
-            Utilice IA para clasificar productos y obtener codigos arancelarios
+            {t('classification.subtitle')}
           </p>
         </div>
 
@@ -434,7 +436,7 @@ export default function ClassificationTool() {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Basico
+            {t('classification.basic')}
           </button>
           <button
             onClick={() => setActiveTab('lookup')}
@@ -445,7 +447,7 @@ export default function ClassificationTool() {
             }`}
           >
             <TagIcon className="w-4 h-4" />
-            Buscar Codigo
+            {t('classification.lookupCode')}
           </button>
           <button
             onClick={() => setActiveTab('tree')}
@@ -456,7 +458,7 @@ export default function ClassificationTool() {
             }`}
           >
             <QueueListIcon className="w-4 h-4" />
-            Explorar Arbol
+            {t('classification.exploreTree')}
           </button>
           <button
             onClick={() => setActiveTab('advanced')}
@@ -467,7 +469,7 @@ export default function ClassificationTool() {
             }`}
           >
             <SparklesIcon className="w-4 h-4" />
-            Avanzado IA
+            {t('classification.advanced')}
           </button>
         </div>
       </div>
@@ -479,56 +481,56 @@ export default function ClassificationTool() {
           {(activeTab === 'basic' || activeTab === 'advanced') && (
           <form onSubmit={handleClassify} className="card space-y-4">
             <div>
-              <label className="label">Descripcion del Producto *</label>
+              <label className="label">{t('classification.productDescription')}</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="input"
                 rows={4}
-                placeholder="Describa el producto de forma detallada. Incluya material, composicion, uso, etc."
+                placeholder={t('classification.productPlaceholder')}
                 required
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="label">Material Principal</label>
+                <label className="label">{t('classification.mainMaterial')}</label>
                 <input
                   type="text"
                   value={additionalInfo.material}
                   onChange={(e) => setAdditionalInfo({ ...additionalInfo, material: e.target.value })}
                   className="input"
-                  placeholder="Ej: algodon, plastico..."
+                  placeholder={t('classification.materialPlaceholder')}
                 />
               </div>
               <div>
-                <label className="label">Uso/Funcion</label>
+                <label className="label">{t('classification.useFunction')}</label>
                 <input
                   type="text"
                   value={additionalInfo.use}
                   onChange={(e) => setAdditionalInfo({ ...additionalInfo, use: e.target.value })}
                   className="input"
-                  placeholder="Ej: decorativo, industrial..."
+                  placeholder={t('classification.usePlaceholder')}
                 />
               </div>
               <div>
-                <label className="label">Composicion</label>
+                <label className="label">{t('classification.composition')}</label>
                 <input
                   type="text"
                   value={additionalInfo.composition}
                   onChange={(e) => setAdditionalInfo({ ...additionalInfo, composition: e.target.value })}
                   className="input"
-                  placeholder="Ej: 80% algodon, 20% poliester"
+                  placeholder={t('classification.compositionPlaceholder')}
                 />
               </div>
               <div>
-                <label className="label">Pais de Origen</label>
+                <label className="label">{t('classification.originCountryLabel')}</label>
                 <input
                   type="text"
                   value={additionalInfo.origin}
                   onChange={(e) => setAdditionalInfo({ ...additionalInfo, origin: e.target.value })}
                   className="input"
-                  placeholder="Codigo ISO (ej: CN)"
+                  placeholder={t('classification.originPlaceholder')}
                 />
               </div>
             </div>
@@ -542,12 +544,12 @@ export default function ClassificationTool() {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Analizando...
+                    {t('classification.analyzing')}
                   </>
                 ) : (
                   <>
                     <MagnifyingGlassIcon className="w-5 h-5" />
-                    Clasificar
+                    {t('classification.classify')}
                   </>
                 )}
               </button>
@@ -562,12 +564,12 @@ export default function ClassificationTool() {
                   {fullAnalysisLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-luci"></div>
-                      Analizando...
+                      {t('classification.analyzing')}
                     </>
                   ) : (
                     <>
                       <SparklesIcon className="w-5 h-5 text-luci" />
-                      Analisis Completo IA
+                      {t('classification.fullAnalysisAI')}
                     </>
                   )}
                 </button>
@@ -581,21 +583,21 @@ export default function ClassificationTool() {
             <div className="card mt-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <TagIcon className="w-5 h-5 text-luci" />
-                Buscar por Codigo TARIC / HS Code
+                {t('classification.searchByCode')}
               </h2>
               <form onSubmit={handleTaricLookup} className="space-y-4">
                 <div>
-                  <label className="label">Codigo TARIC o HS Code</label>
+                  <label className="label">{t('classification.taricOrHsCode')}</label>
                   <input
                     type="text"
                     value={taricCode}
                     onChange={(e) => setTaricCode(e.target.value.replace(/[^\d]/g, ''))}
                     className="input font-mono text-lg"
-                    placeholder="Ej: 08, 0801, 6109, 610910..."
+                    placeholder={t('classification.codePlaceholder')}
                     maxLength={10}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Puede ingresar codigos de 2 a 10 digitos: capitulo (2), partida (4), subpartida SA (6), NC (8) o TARIC (10)
+                    {t('classification.codeDigitsHelp')}
                   </p>
                 </div>
                 <button
@@ -606,12 +608,12 @@ export default function ClassificationTool() {
                   {taricLookupLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      Buscando...
+                      {t('classification.searching')}
                     </>
                   ) : (
                     <>
                       <MagnifyingGlassIcon className="w-5 h-5" />
-                      Buscar Codigo
+                      {t('classification.searchCode')}
                     </>
                   )}
                 </button>
@@ -646,7 +648,7 @@ export default function ClassificationTool() {
                   <div className="p-4 bg-gradient-to-r from-luci-light to-blue-50 rounded-xl border border-luci/30">
                     <div className="flex items-center gap-3">
                       <div>
-                        <p className="text-sm text-gray-600">Capitulo</p>
+                        <p className="text-sm text-gray-600">{t('classification.chapter')}</p>
                         <p className="font-mono text-2xl font-bold text-gray-900">
                           {chapterResults.chapter}
                         </p>
@@ -654,7 +656,7 @@ export default function ClassificationTool() {
                       <div className="flex-1">
                         <p className="text-gray-700 font-medium">{chapterResults.chapterName}</p>
                         <p className="text-xs text-gray-500">
-                          {chapterResults.results.length} {chapterResults.level === 'headings' ? 'partidas' : 'codigos'} encontrado{chapterResults.results.length !== 1 ? 's' : ''}
+                          {chapterResults.results.length} {chapterResults.level === 'headings' ? t('classification.headings') : t('classification.codes')} {chapterResults.results.length !== 1 ? t('classification.foundPlural') : t('classification.found')}
                         </p>
                       </div>
                     </div>
@@ -682,8 +684,8 @@ export default function ClassificationTool() {
 
                   {chapterResults.empty ? (
                     <div className="text-center py-6 text-gray-500">
-                      <p className="text-sm">No hay codigos cargados para este capitulo en la base de datos local.</p>
-                      <p className="text-xs mt-1">Use la pestana "Explorar Arbol" para ver todos los capitulos disponibles.</p>
+                      <p className="text-sm">{t('classification.noCodesLoaded')}</p>
+                      <p className="text-xs mt-1">{t('classification.useTreeTab')}</p>
                     </div>
                   ) : (
                     <div className="space-y-1 max-h-96 overflow-y-auto">
@@ -718,7 +720,7 @@ export default function ClassificationTool() {
                   <div className="p-4 bg-gradient-to-r from-luci-light to-blue-50 rounded-xl border border-luci/30">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm text-gray-600">Codigo</p>
+                        <p className="text-sm text-gray-600">{t('classification.code')}</p>
                         <p className="font-mono text-2xl font-bold text-gray-900">
                           {taricLookupResult.code || taricLookupResult.taricCode || taricCode}
                         </p>
@@ -727,16 +729,16 @@ export default function ClassificationTool() {
                         onClick={() => navigator.clipboard.writeText(taricLookupResult.code || taricLookupResult.taricCode || taricCode)}
                         className="btn-secondary text-sm"
                       >
-                        Copiar
+                        {t('classification.copy')}
                       </button>
                     </div>
                   </div>
 
                   {/* Description */}
                   <div className="card bg-gray-50">
-                    <h3 className="font-semibold text-gray-900 mb-2">Descripcion</h3>
+                    <h3 className="font-semibold text-gray-900 mb-2">{t('classification.description')}</h3>
                     <p className="text-gray-700">
-                      {getDesc(taricLookupResult.description) || taricLookupResult.descripcion || 'Sin descripcion disponible'}
+                      {getDesc(taricLookupResult.description) || taricLookupResult.descripcion || t('classification.noDescription')}
                     </p>
                     {taricLookupResult.description_es && taricLookupResult.description_es !== getDesc(taricLookupResult.description) && (
                       <p className="text-gray-600 mt-2 text-sm">
@@ -748,24 +750,24 @@ export default function ClassificationTool() {
                   {/* Hierarchy */}
                   {(taricLookupResult.hierarchy || taricLookupResult.chapter || taricLookupResult.heading) && (
                     <div className="card">
-                      <h3 className="font-semibold text-gray-900 mb-3">Jerarquia</h3>
+                      <h3 className="font-semibold text-gray-900 mb-3">{t('classification.hierarchy')}</h3>
                       <div className="space-y-2 text-sm">
                         {taricLookupResult.chapter && (
                           <div className="flex items-center gap-2">
                             <span className="font-mono bg-gray-100 px-2 py-1 rounded">{taricLookupResult.chapter}</span>
-                            <span className="text-gray-600">Capitulo</span>
+                            <span className="text-gray-600">{t('classification.chapterLabel')}</span>
                           </div>
                         )}
                         {taricLookupResult.heading && (
                           <div className="flex items-center gap-2">
                             <span className="font-mono bg-gray-100 px-2 py-1 rounded">{taricLookupResult.heading}</span>
-                            <span className="text-gray-600">Partida</span>
+                            <span className="text-gray-600">{t('classification.headingLabel')}</span>
                           </div>
                         )}
                         {taricLookupResult.subheading && (
                           <div className="flex items-center gap-2">
                             <span className="font-mono bg-gray-100 px-2 py-1 rounded">{taricLookupResult.subheading}</span>
-                            <span className="text-gray-600">Subpartida</span>
+                            <span className="text-gray-600">{t('classification.subheadingLabel')}</span>
                           </div>
                         )}
                         {taricLookupResult.hierarchy?.map((level, i) => (
@@ -781,10 +783,10 @@ export default function ClassificationTool() {
                   {/* Duty Rates */}
                   {(taricLookupResult.dutyRate || taricLookupResult.duties || taricLookupResult.measures) && (
                     <div className="card">
-                      <h3 className="font-semibold text-gray-900 mb-3">Aranceles y Medidas</h3>
+                      <h3 className="font-semibold text-gray-900 mb-3">{t('classification.tariffsAndMeasures')}</h3>
                       {taricLookupResult.dutyRate && (
                         <div className="p-3 bg-blue-50 rounded-lg mb-2">
-                          <span className="text-sm text-blue-700">Arancel base: </span>
+                          <span className="text-sm text-blue-700">{t('classification.baseTariff')}</span>
                           <span className="font-bold text-blue-800">{taricLookupResult.dutyRate}</span>
                         </div>
                       )}
@@ -800,7 +802,7 @@ export default function ClassificationTool() {
                       )}
                       {taricLookupResult.measures?.length > 0 && (
                         <div className="mt-3">
-                          <p className="text-sm text-gray-600 mb-2">Medidas aplicables:</p>
+                          <p className="text-sm text-gray-600 mb-2">{t('classification.applicableMeasures')}</p>
                           <ul className="list-disc list-inside text-sm text-gray-700">
                             {taricLookupResult.measures.map((m, i) => (
                               <li key={i}>{typeof m === 'string' ? m : m.description || m.type}</li>
@@ -814,7 +816,7 @@ export default function ClassificationTool() {
                   {/* Additional Info */}
                   {taricLookupResult.notes && (
                     <div className="card bg-yellow-50 border-yellow-200">
-                      <h3 className="font-semibold text-yellow-800 mb-2">Notas</h3>
+                      <h3 className="font-semibold text-yellow-800 mb-2">{t('classification.notes')}</h3>
                       <p className="text-sm text-yellow-700">{taricLookupResult.notes}</p>
                     </div>
                   )}
@@ -825,22 +827,22 @@ export default function ClassificationTool() {
                       onClick={() => {
                         setDescription(getDesc(taricLookupResult.description) || taricLookupResult.descripcion || '')
                         setActiveTab('basic')
-                        toast.success('Descripcion copiada al clasificador')
+                        toast.success(t('classification.descCopiedBasic'))
                       }}
                       className="btn-secondary text-sm"
                     >
-                      Usar en Clasificador Basico
+                      {t('classification.useInBasicClassifier')}
                     </button>
                     <button
                       onClick={() => {
                         setDescription(getDesc(taricLookupResult.description) || taricLookupResult.descripcion || '')
                         setActiveTab('advanced')
-                        toast.success('Descripcion copiada al clasificador avanzado')
+                        toast.success(t('classification.descCopiedAdvanced'))
                       }}
                       className="btn-secondary text-sm flex items-center gap-1"
                     >
                       <SparklesIcon className="w-4 h-4" />
-                      Usar en Analisis IA
+                      {t('classification.useInAIAnalysis')}
                     </button>
                   </div>
                 </div>
@@ -853,7 +855,7 @@ export default function ClassificationTool() {
             <div className="card mt-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <QueueListIcon className="w-5 h-5 text-luci" />
-                Explorar Arbol Arancelario
+                {t('classification.exploreArbolArancelario')}
               </h2>
               <TaricTreeBrowser
                 onCodeSelect={(code) => {
@@ -868,10 +870,10 @@ export default function ClassificationTool() {
                       const result = response.data.data || response.data
                       setTaricLookupResult(result)
                       if (result.found !== false) {
-                        toast.success(`Informacion de ${code}`)
+                        toast.success(`${t('classification.infoOf')} ${code}`)
                       }
                     }).catch(() => {
-                      toast.error('Codigo no encontrado en detalle')
+                      toast.error(t('classification.codeDetailNotFound'))
                     }).finally(() => {
                       setTaricLookupLoading(false)
                     })
@@ -884,14 +886,14 @@ export default function ClassificationTool() {
           {/* Basic Results */}
           {results && activeTab === 'basic' && (
             <div className="card mt-6">
-              <h2 className="text-lg font-semibold mb-4">Sugerencias de Clasificacion</h2>
+              <h2 className="text-lg font-semibold mb-4">{t('classification.classificationSuggestions')}</h2>
 
               {results.warnings?.length > 0 && (
                 <div className="mb-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
                   <div className="flex items-start gap-2">
                     <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-medium text-yellow-800">Advertencias</p>
+                      <p className="font-medium text-yellow-800">{t('classification.warnings')}</p>
                       <ul className="text-sm text-yellow-700 mt-1 list-disc list-inside">
                         {results.warnings.map((w, i) => (
                           <li key={i}>{w}</li>
@@ -939,13 +941,13 @@ export default function ClassificationTool() {
                         disabled={validating}
                         className="btn-secondary text-sm"
                       >
-                        {validating && selectedCode === suggestion.code ? 'Validando...' : 'Validar'}
+                        {validating && selectedCode === suggestion.code ? t('classification.validating') : t('classification.validate')}
                       </button>
                       <button
                         onClick={() => navigator.clipboard.writeText(suggestion.code)}
                         className="btn-secondary text-sm"
                       >
-                        Copiar
+                        {t('classification.copy')}
                       </button>
                     </div>
                   </div>
@@ -968,7 +970,7 @@ export default function ClassificationTool() {
                       <p className={`font-medium ${
                         results.validationResult.is_valid ? 'text-green-800' : 'text-red-800'
                       }`}>
-                        {results.validationResult.is_valid ? 'Codigo Validado' : 'Revision Requerida'}
+                        {results.validationResult.is_valid ? t('classification.codeValidated') : t('classification.reviewRequired')}
                       </p>
                       <p className={`text-sm mt-1 ${
                         results.validationResult.is_valid ? 'text-green-700' : 'text-red-700'
@@ -990,12 +992,12 @@ export default function ClassificationTool() {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold flex items-center gap-2">
                     <ShieldCheckIcon className="w-5 h-5 text-luci" />
-                    Evaluacion Final
+                    {t('classification.finalAssessment')}
                   </h2>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                     getConfidenceColor(fullAnalysisResult.finalAssessment?.confidence || 0)
                   }`}>
-                    {fullAnalysisResult.finalAssessment?.confidence || 0}% Confianza
+                    {fullAnalysisResult.finalAssessment?.confidence || 0}% {t('classification.confidence')}
                   </span>
                 </div>
 
@@ -1004,7 +1006,7 @@ export default function ClassificationTool() {
                     <div className="flex items-center gap-3">
                       <TagIcon className="w-8 h-8 text-luci" />
                       <div>
-                        <p className="text-sm text-gray-600">Codigo Recomendado</p>
+                        <p className="text-sm text-gray-600">{t('classification.recommendedCode')}</p>
                         <p className="font-mono text-2xl font-bold text-gray-900">
                           {fullAnalysisResult.finalAssessment.recommendedCode}
                         </p>
@@ -1018,19 +1020,19 @@ export default function ClassificationTool() {
                           : 'bg-yellow-100 text-yellow-700'
                       }`}>
                         {fullAnalysisResult.finalAssessment.readyToUse
-                          ? 'Listo para usar'
-                          : 'Requiere revision'}
+                          ? t('classification.readyToUse')
+                          : t('classification.needsReview')}
                       </span>
                       <span className={`px-2 py-1 rounded text-xs font-medium ${
                         getConfidenceColor(fullAnalysisResult.finalAssessment.confidence)
                       }`}>
-                        Nivel: {fullAnalysisResult.finalAssessment.confidenceLevel}
+                        {t('classification.level')}: {fullAnalysisResult.finalAssessment.confidenceLevel}
                       </span>
                     </div>
 
                     {fullAnalysisResult.finalAssessment.factors?.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-luci/20">
-                        <p className="text-xs text-gray-500 mb-1">Factores de confianza:</p>
+                        <p className="text-xs text-gray-500 mb-1">{t('classification.confidenceFactors')}</p>
                         <ul className="text-sm text-gray-600 space-y-1">
                           {fullAnalysisResult.finalAssessment.factors.map((f, i) => (
                             <li key={i} className="flex items-start gap-1">
@@ -1048,7 +1050,7 @@ export default function ClassificationTool() {
 
                 {/* Feedback buttons */}
                 <div className="mt-4 flex items-center gap-3 pt-4 border-t">
-                  <span className="text-sm text-gray-600">Esta clasificacion es correcta?</span>
+                  <span className="text-sm text-gray-600">{t('classification.isCorrect')}</span>
                   <button
                     onClick={() => handleFeedback(
                       { taricCode: fullAnalysisResult.finalAssessment?.recommendedCode, confidence: fullAnalysisResult.finalAssessment?.confidence },
@@ -1058,11 +1060,11 @@ export default function ClassificationTool() {
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-colors text-sm"
                   >
                     <HandThumbUpIcon className="w-4 h-4" />
-                    Si
+                    {t('common.yes')}
                   </button>
                   <button
                     onClick={() => {
-                      const correctCode = prompt('Cual es el codigo correcto?')
+                      const correctCode = prompt(t('classification.whatIsCorrectCode'))
                       if (correctCode) {
                         handleFeedback(
                           { taricCode: fullAnalysisResult.finalAssessment?.recommendedCode, confidence: fullAnalysisResult.finalAssessment?.confidence },
@@ -1075,7 +1077,7 @@ export default function ClassificationTool() {
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors text-sm"
                   >
                     <HandThumbDownIcon className="w-4 h-4" />
-                    No
+                    {t('common.no')}
                   </button>
                 </div>
               </div>
@@ -1085,7 +1087,7 @@ export default function ClassificationTool() {
                 <div className="card">
                   <h3 className="font-semibold mb-3 flex items-center gap-2">
                     <LightBulbIcon className="w-5 h-5 text-yellow-500" />
-                    Sugerencias Consolidadas
+                    {t('classification.consolidatedSuggestions')}
                   </h3>
                   <div className="space-y-2">
                     {fullAnalysisResult.suggestions.map((s, i) => (
@@ -1119,13 +1121,13 @@ export default function ClassificationTool() {
                             className="text-xs text-luci hover:underline flex items-center gap-1"
                           >
                             <ScaleIcon className="w-3 h-3" />
-                            Validar con normativa
+                            {t('classification.validateWithRegulation')}
                           </button>
                           <button
                             onClick={() => navigator.clipboard.writeText(s.taricCode)}
                             className="text-xs text-gray-500 hover:underline"
                           >
-                            Copiar
+                            {t('classification.copy')}
                           </button>
                         </div>
                       </div>
@@ -1137,7 +1139,7 @@ export default function ClassificationTool() {
               {/* Alerts */}
               {fullAnalysisResult.alerts?.length > 0 && (
                 <div className="card">
-                  <h3 className="font-semibold mb-3">Alertas</h3>
+                  <h3 className="font-semibold mb-3">{t('classification.alerts')}</h3>
                   <div className="space-y-2">
                     {fullAnalysisResult.alerts.map((alert, i) => (
                       <div key={i} className={`p-3 rounded-lg ${
@@ -1155,7 +1157,7 @@ export default function ClassificationTool() {
                             alert.type === 'ERROR' ? 'text-red-600' :
                             alert.type === 'WARNING' ? 'text-yellow-600' :
                             'text-blue-600'
-                          }`}>Accion: {alert.action}</p>
+                          }`}>{t('classification.actionLabel')}: {alert.action}</p>
                         )}
                       </div>
                     ))}
@@ -1168,7 +1170,7 @@ export default function ClassificationTool() {
                 <div className="card">
                   <h3 className="font-semibold mb-3 flex items-center gap-2">
                     <ArrowPathIcon className="w-5 h-5 text-gray-400" />
-                    Proximos Pasos
+                    {t('classification.nextSteps')}
                   </h3>
                   <ol className="space-y-2">
                     {fullAnalysisResult.nextSteps.map((step, i) => (
@@ -1198,7 +1200,7 @@ export default function ClassificationTool() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
                   <ScaleIcon className="w-5 h-5 text-luci" />
-                  Validacion Normativa
+                  {t('classification.regulatoryValidation')}
                 </h2>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                   getAssessmentColor(crossValidationResult.validationResult?.overallAssessment)
@@ -1210,7 +1212,7 @@ export default function ClassificationTool() {
               {/* Validation Score */}
               <div className="mb-4">
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-600">Puntuacion de validacion</span>
+                  <span className="text-gray-600">{t('classification.validationScore')}</span>
                   <span className="font-medium">{crossValidationResult.validationResult?.validationScore || 0}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -1234,7 +1236,7 @@ export default function ClassificationTool() {
                   >
                     <span className="flex items-center gap-2 font-medium">
                       <BookOpenIcon className="w-4 h-4" />
-                      Analisis RGI (Reglas Generales de Interpretacion)
+                      {t('classification.rgiAnalysis')}
                     </span>
                     {expandedSections.rgi ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
                   </button>
@@ -1242,25 +1244,25 @@ export default function ClassificationTool() {
                     <div className="p-3 pt-0 border-t space-y-2">
                       {crossValidationResult.rgiAnalysis.rgi1_description?.applies && (
                         <div className="text-sm p-2 bg-gray-50 rounded">
-                          <span className="font-medium">RGI 1 (Texto partidas):</span>
+                          <span className="font-medium">{t('classification.rgi1Text')}</span>
                           <p className="text-gray-600">{crossValidationResult.rgiAnalysis.rgi1_description.assessment}</p>
                         </div>
                       )}
                       {crossValidationResult.rgiAnalysis.rgi3_specific?.applies && (
                         <div className="text-sm p-2 bg-gray-50 rounded">
-                          <span className="font-medium">RGI 3 (Mas especifico):</span>
+                          <span className="font-medium">{t('classification.rgi3Text')}</span>
                           <p className="text-gray-600">{crossValidationResult.rgiAnalysis.rgi3_specific.assessment}</p>
                         </div>
                       )}
                       {crossValidationResult.rgiAnalysis.rgi6_subheading?.applies && (
                         <div className="text-sm p-2 bg-gray-50 rounded">
-                          <span className="font-medium">RGI 6 (Subpartidas):</span>
+                          <span className="font-medium">{t('classification.rgi6Text')}</span>
                           <p className="text-gray-600">{crossValidationResult.rgiAnalysis.rgi6_subheading.assessment}</p>
                         </div>
                       )}
                       {crossValidationResult.rgiAnalysis.conclusionRGI && (
                         <div className="text-sm p-2 bg-luci-light rounded border border-luci/20">
-                          <span className="font-medium text-luci">Conclusion:</span>
+                          <span className="font-medium text-luci">{t('classification.conclusion')}</span>
                           <p className="text-gray-700">{crossValidationResult.rgiAnalysis.conclusionRGI}</p>
                         </div>
                       )}
@@ -1278,7 +1280,7 @@ export default function ClassificationTool() {
                   >
                     <span className="flex items-center gap-2 font-medium">
                       <DocumentCheckIcon className="w-4 h-4" />
-                      Notas de Seccion y Capitulo
+                      {t('classification.sectionChapterNotes')}
                     </span>
                     {expandedSections.chapterNotes ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
                   </button>
@@ -1286,7 +1288,7 @@ export default function ClassificationTool() {
                     <div className="p-3 pt-0 border-t space-y-2 text-sm">
                       {crossValidationResult.chapterNotes.sectionNotes?.length > 0 && (
                         <div>
-                          <p className="font-medium text-gray-700">Notas de seccion:</p>
+                          <p className="font-medium text-gray-700">{t('classification.sectionNotes')}</p>
                           <ul className="list-disc list-inside text-gray-600">
                             {crossValidationResult.chapterNotes.sectionNotes.map((n, i) => <li key={i}>{n}</li>)}
                           </ul>
@@ -1294,7 +1296,7 @@ export default function ClassificationTool() {
                       )}
                       {crossValidationResult.chapterNotes.chapterNotes?.length > 0 && (
                         <div>
-                          <p className="font-medium text-gray-700">Notas de capitulo:</p>
+                          <p className="font-medium text-gray-700">{t('classification.chapterNotes')}</p>
                           <ul className="list-disc list-inside text-gray-600">
                             {crossValidationResult.chapterNotes.chapterNotes.map((n, i) => <li key={i}>{n}</li>)}
                           </ul>
@@ -1302,7 +1304,7 @@ export default function ClassificationTool() {
                       )}
                       {crossValidationResult.chapterNotes.inclusions?.length > 0 && (
                         <div className="p-2 bg-green-50 rounded">
-                          <p className="font-medium text-green-700">Inclusiones que confirman:</p>
+                          <p className="font-medium text-green-700">{t('classification.inclusionsConfirm')}</p>
                           <ul className="list-disc list-inside text-green-600">
                             {crossValidationResult.chapterNotes.inclusions.map((n, i) => <li key={i}>{n}</li>)}
                           </ul>
@@ -1310,7 +1312,7 @@ export default function ClassificationTool() {
                       )}
                       {crossValidationResult.chapterNotes.exclusions?.length > 0 && (
                         <div className="p-2 bg-red-50 rounded">
-                          <p className="font-medium text-red-700">Posibles exclusiones:</p>
+                          <p className="font-medium text-red-700">{t('classification.possibleExclusions')}</p>
                           <ul className="list-disc list-inside text-red-600">
                             {crossValidationResult.chapterNotes.exclusions.map((n, i) => <li key={i}>{n}</li>)}
                           </ul>
@@ -1330,34 +1332,34 @@ export default function ClassificationTool() {
                   >
                     <span className="flex items-center gap-2 font-medium">
                       <ExclamationTriangleIcon className="w-4 h-4" />
-                      Medidas Especiales
+                      {t('classification.specialMeasures')}
                     </span>
                     {expandedSections.specialMeasures ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
                   </button>
                   {expandedSections.specialMeasures && (
                     <div className="p-3 pt-0 border-t grid grid-cols-2 gap-2 text-sm">
                       <div className={`p-2 rounded ${crossValidationResult.specialMeasures.antidumping?.applies ? 'bg-red-50' : 'bg-gray-50'}`}>
-                        <span className="font-medium">Antidumping:</span>
+                        <span className="font-medium">{t('classification.antidumping')}</span>
                         <span className={crossValidationResult.specialMeasures.antidumping?.applies ? 'text-red-600 ml-2' : 'text-gray-500 ml-2'}>
-                          {crossValidationResult.specialMeasures.antidumping?.applies ? 'SI' : 'No'}
+                          {crossValidationResult.specialMeasures.antidumping?.applies ? t('common.yes').toUpperCase() : t('common.no')}
                         </span>
                       </div>
                       <div className={`p-2 rounded ${crossValidationResult.specialMeasures.quota?.applies ? 'bg-yellow-50' : 'bg-gray-50'}`}>
-                        <span className="font-medium">Cuota:</span>
+                        <span className="font-medium">{t('classification.quota')}</span>
                         <span className={crossValidationResult.specialMeasures.quota?.applies ? 'text-yellow-600 ml-2' : 'text-gray-500 ml-2'}>
-                          {crossValidationResult.specialMeasures.quota?.applies ? 'SI' : 'No'}
+                          {crossValidationResult.specialMeasures.quota?.applies ? t('common.yes').toUpperCase() : t('common.no')}
                         </span>
                       </div>
                       <div className={`p-2 rounded ${crossValidationResult.specialMeasures.suspension?.applies ? 'bg-green-50' : 'bg-gray-50'}`}>
-                        <span className="font-medium">Suspension:</span>
+                        <span className="font-medium">{t('classification.suspensionLabel')}</span>
                         <span className={crossValidationResult.specialMeasures.suspension?.applies ? 'text-green-600 ml-2' : 'text-gray-500 ml-2'}>
-                          {crossValidationResult.specialMeasures.suspension?.applies ? 'SI' : 'No'}
+                          {crossValidationResult.specialMeasures.suspension?.applies ? t('common.yes').toUpperCase() : t('common.no')}
                         </span>
                       </div>
                       <div className={`p-2 rounded ${crossValidationResult.specialMeasures.safeguard?.applies ? 'bg-orange-50' : 'bg-gray-50'}`}>
-                        <span className="font-medium">Salvaguardia:</span>
+                        <span className="font-medium">{t('classification.safeguard')}</span>
                         <span className={crossValidationResult.specialMeasures.safeguard?.applies ? 'text-orange-600 ml-2' : 'text-gray-500 ml-2'}>
-                          {crossValidationResult.specialMeasures.safeguard?.applies ? 'SI' : 'No'}
+                          {crossValidationResult.specialMeasures.safeguard?.applies ? t('common.yes').toUpperCase() : t('common.no')}
                         </span>
                       </div>
                     </div>
@@ -1374,7 +1376,7 @@ export default function ClassificationTool() {
                   >
                     <span className="flex items-center gap-2 font-medium">
                       <TagIcon className="w-4 h-4" />
-                      Clasificaciones Alternativas ({crossValidationResult.alternativeClassifications.length})
+                      {t('classification.alternativeClassifications')} ({crossValidationResult.alternativeClassifications.length})
                     </span>
                     {expandedSections.alternatives ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
                   </button>
@@ -1384,10 +1386,10 @@ export default function ClassificationTool() {
                         <div key={i} className="text-sm p-2 bg-gray-50 rounded">
                           <div className="flex items-center justify-between">
                             <span className="font-mono font-medium">{alt.taricCode}</span>
-                            <span className="text-gray-500">{alt.probability}% probable</span>
+                            <span className="text-gray-500">{alt.probability}% {t('classification.probable')}</span>
                           </div>
                           <p className="text-gray-600 mt-1">{alt.reasoning}</p>
-                          <p className="text-xs text-gray-500 mt-1">Factor diferenciador: {alt.differentiatingFactor}</p>
+                          <p className="text-xs text-gray-500 mt-1">{t('classification.differentiatingFactor')} {alt.differentiatingFactor}</p>
                         </div>
                       ))}
                     </div>
@@ -1398,14 +1400,14 @@ export default function ClassificationTool() {
               {/* Documentation Requirements */}
               {crossValidationResult.documentationRequirements?.length > 0 && (
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium text-blue-800 mb-2">Documentacion Requerida</h4>
+                  <h4 className="font-medium text-blue-800 mb-2">{t('classification.documentationRequired')}</h4>
                   <ul className="space-y-1">
                     {crossValidationResult.documentationRequirements.map((doc, i) => (
                       <li key={i} className="flex items-center gap-2 text-sm">
                         <span className={`w-2 h-2 rounded-full ${doc.mandatory ? 'bg-red-500' : 'bg-gray-400'}`}></span>
                         <span className="font-mono text-xs bg-white px-1 rounded">{doc.code}</span>
                         <span className="text-blue-700">{doc.document}</span>
-                        {doc.mandatory && <span className="text-xs text-red-600">(obligatorio)</span>}
+                        {doc.mandatory && <span className="text-xs text-red-600">({t('classification.mandatory')})</span>}
                       </li>
                     ))}
                   </ul>
@@ -1423,8 +1425,8 @@ export default function ClassificationTool() {
                     crossValidationResult.finalRecommendation.proceed ? 'text-green-800' : 'text-yellow-800'
                   }`}>
                     {crossValidationResult.finalRecommendation.proceed
-                      ? 'Se recomienda proceder con esta clasificacion'
-                      : 'Se recomienda revisar antes de proceder'}
+                      ? t('classification.recommendProceed')
+                      : t('classification.recommendReview')}
                   </p>
                   <p className={`text-sm mt-1 ${
                     crossValidationResult.finalRecommendation.proceed ? 'text-green-700' : 'text-yellow-700'
@@ -1450,10 +1452,10 @@ export default function ClassificationTool() {
           <div className="card">
             <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <ClockIcon className="w-4 h-4 text-gray-500" />
-              Historial de Busquedas
+              {t('classification.searchHistory')}
             </h3>
             {historyLoading ? (
-              <div className="text-sm text-gray-500">Cargando...</div>
+              <div className="text-sm text-gray-500">{t('classification.loadingHistory')}</div>
             ) : searchHistory.length > 0 ? (
               <div className="space-y-2">
                 {searchHistory.slice(0, 5).map((item, i) => (
@@ -1483,7 +1485,7 @@ export default function ClassificationTool() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">Sin busquedas recientes</p>
+              <p className="text-sm text-gray-500">{t('classification.noRecentSearches')}</p>
             )}
           </div>
 
@@ -1492,7 +1494,7 @@ export default function ClassificationTool() {
             <div className="card">
               <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <ChartBarIcon className="w-4 h-4 text-gray-500" />
-                Codigos Mas Buscados
+                {t('classification.mostSearchedCodes')}
               </h3>
               <div className="space-y-2">
                 {mostSearched.map((item, i) => (
@@ -1521,23 +1523,23 @@ export default function ClassificationTool() {
             <div className="card bg-gradient-to-br from-gray-50 to-blue-50">
               <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <ArchiveBoxIcon className="w-4 h-4 text-gray-500" />
-                Estadisticas de Cache IA
+                {t('classification.cacheStatsTitle')}
               </h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="p-2 bg-white rounded shadow-sm">
-                  <p className="text-gray-500 text-xs">Entradas</p>
+                  <p className="text-gray-500 text-xs">{t('classification.entries')}</p>
                   <p className="font-bold text-lg">{cacheStats.totalEntries || 0}</p>
                 </div>
                 <div className="p-2 bg-white rounded shadow-sm">
-                  <p className="text-gray-500 text-xs">Total Hits</p>
+                  <p className="text-gray-500 text-xs">{t('classification.totalHits')}</p>
                   <p className="font-bold text-lg">{cacheStats.totalHits || 0}</p>
                 </div>
                 <div className="p-2 bg-white rounded shadow-sm">
-                  <p className="text-gray-500 text-xs">Validadas</p>
+                  <p className="text-gray-500 text-xs">{t('classification.validated')}</p>
                   <p className="font-bold text-lg">{cacheStats.validatedCount || 0}</p>
                 </div>
                 <div className="p-2 bg-white rounded shadow-sm">
-                  <p className="text-gray-500 text-xs">Calidad Prom.</p>
+                  <p className="text-gray-500 text-xs">{t('classification.avgQuality')}</p>
                   <p className="font-bold text-lg">{cacheStats.avgQuality?.toFixed(1) || '-'}</p>
                 </div>
               </div>
@@ -1545,23 +1547,23 @@ export default function ClassificationTool() {
           )}
 
           <div className="card">
-            <h3 className="font-semibold text-gray-900 mb-3">Consejos de Clasificacion</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">{t('classification.classificationTips')}</h3>
             <ul className="text-sm text-gray-600 space-y-2">
               <li className="flex items-start gap-2">
                 <span className="text-luci">1.</span>
-                Describa el producto con detalle: material, composicion, uso
+                {t('classification.tip1')}
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-luci">2.</span>
-                Indique si es un producto acabado o semiacabado
+                {t('classification.tip2')}
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-luci">3.</span>
-                Especifique el proceso de fabricacion si es relevante
+                {t('classification.tip3')}
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-luci">4.</span>
-                Use el modo Avanzado para validacion normativa completa
+                {t('classification.tip4')}
               </li>
             </ul>
           </div>
@@ -1570,50 +1572,48 @@ export default function ClassificationTool() {
             <div className="card bg-luci-light border-luci/30">
               <h3 className="font-semibold text-luci mb-2 flex items-center gap-2">
                 <SparklesIcon className="w-4 h-4" />
-                Funciones IA Avanzadas
+                {t('classification.advancedAIFeatures')}
               </h3>
               <ul className="text-sm text-gray-700 space-y-2">
                 <li className="flex items-start gap-2">
                   <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5" />
-                  Validacion con RGI 1-6
+                  {t('classification.rgiValidation')}
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5" />
-                  Analisis de notas de capitulo
+                  {t('classification.chapterNotesAnalysis')}
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5" />
-                  Deteccion de medidas especiales
+                  {t('classification.specialMeasuresDetection')}
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5" />
-                  Aprendizaje de feedback
+                  {t('classification.feedbackLearning')}
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5" />
-                  Sugerencias basadas en historial
+                  {t('classification.historyBasedSuggestions')}
                 </li>
               </ul>
             </div>
           )}
 
           <div className="card bg-yellow-50 border-yellow-200">
-            <h3 className="font-semibold text-yellow-800 mb-2">Aviso Legal</h3>
+            <h3 className="font-semibold text-yellow-800 mb-2">{t('classification.legalNotice')}</h3>
             <p className="text-sm text-yellow-700">
-              Las sugerencias de clasificacion son orientativas. Para operaciones
-              criticas, consulte con un experto o solicite una IAV (Informacion
-              Arancelaria Vinculante) a la AEAT.
+              {t('classification.legalNoticeText')}
             </p>
           </div>
 
           <div className="card">
-            <h3 className="font-semibold text-gray-900 mb-3">Estructura TARIC</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">{t('classification.taricStructure')}</h3>
             <div className="text-sm text-gray-600 space-y-1">
-              <p><span className="font-mono">XX</span> - Capitulo (2 dig.)</p>
-              <p><span className="font-mono">XXXX</span> - Partida (4 dig.)</p>
-              <p><span className="font-mono">XXXXXX</span> - Subpartida SA (6 dig.)</p>
-              <p><span className="font-mono">XXXXXXXX</span> - NC (8 dig.)</p>
-              <p><span className="font-mono">XXXXXXXXXX</span> - TARIC (10 dig.)</p>
+              <p><span className="font-mono">XX</span> - {t('classification.chapterDigits')}</p>
+              <p><span className="font-mono">XXXX</span> - {t('classification.headingDigits')}</p>
+              <p><span className="font-mono">XXXXXX</span> - {t('classification.subheadingSADigits')}</p>
+              <p><span className="font-mono">XXXXXXXX</span> - {t('classification.ncDigits')}</p>
+              <p><span className="font-mono">XXXXXXXXXX</span> - {t('classification.taricDigits')}</p>
             </div>
           </div>
         </div>

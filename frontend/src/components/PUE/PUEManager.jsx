@@ -12,6 +12,7 @@ import {
   Assignment as AssignmentIcon
 } from '@mui/icons-material'
 import { pueAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 import PUERequestList from './PUERequestList'
 import PUERequestForm from './PUERequestForm'
 
@@ -48,6 +49,7 @@ const pueTypeConfig = {
 }
 
 const PUEManager = () => {
+  const { t } = useTranslation()
   const [selectedTab, setSelectedTab] = useState(0)
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)

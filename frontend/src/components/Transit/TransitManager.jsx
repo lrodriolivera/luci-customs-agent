@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { transitAPI } from '../../services/api'
 import {
   TruckIcon,
@@ -55,6 +56,7 @@ const TRANSPORT_MODES = {
 
 // ==================== Transit AI Panel Component ====================
 function TransitAIPanel({ transit, onClose, onApplySuggestion }) {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('validate')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -694,6 +696,7 @@ function TransitAIPanel({ transit, onClose, onApplySuggestion }) {
 
 // ==================== Main Transit Manager Component ====================
 export default function TransitManager() {
+  const { t } = useTranslation()
   const [transits, setTransits] = useState([])
   const [stats, setStats] = useState(null)
   const [overdue, setOverdue] = useState([])
@@ -824,8 +827,8 @@ export default function TransitManager() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Transitos NCTS</h1>
-          <p className="text-gray-500">Gestion de operaciones T1/T2/TIR</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('transit.title')}</h1>
+          <p className="text-gray-500">{t('transit.subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -833,7 +836,7 @@ export default function TransitManager() {
             className="flex items-center gap-2 px-4 py-2 bg-luci text-white rounded-lg hover:bg-luci-dark"
           >
             <PlusIcon className="w-5 h-5" />
-            Nuevo Transito
+            {t('transit.newTransit')}
           </button>
         </div>
       </div>
@@ -886,7 +889,7 @@ export default function TransitManager() {
             onChange={(e) => setFilters(f => ({ ...f, transitType: e.target.value }))}
             className="border rounded-lg px-3 py-2"
           >
-            <option value="">Todos los tipos</option>
+            <option value="">{t('transit.allTypes')}</option>
             {Object.entries(TRANSIT_TYPES).map(([key, val]) => (
               <option key={key} value={key}>{val.label}</option>
             ))}
@@ -896,7 +899,7 @@ export default function TransitManager() {
             onChange={(e) => setFilters(f => ({ ...f, status: e.target.value }))}
             className="border rounded-lg px-3 py-2"
           >
-            <option value="">Todos los estados</option>
+            <option value="">{t('transit.allStatuses')}</option>
             {Object.entries(STATUS_CONFIG).map(([key, val]) => (
               <option key={key} value={key}>{val.label}</option>
             ))}
@@ -906,7 +909,7 @@ export default function TransitManager() {
             className="flex items-center justify-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
           >
             <ArrowPathIcon className="w-5 h-5" />
-            Actualizar
+            {t('common.update')}
           </button>
         </div>
       </div>
@@ -929,7 +932,7 @@ export default function TransitManager() {
         ) : transits.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             <TruckIcon className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            No hay transitos registrados
+            {t('transit.noTransits')}
           </div>
         ) : (
           <div className="divide-y">

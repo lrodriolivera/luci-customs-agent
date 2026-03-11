@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { classificationAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 import TARIC_CHAPTERS, { TARIC_SECTIONS, LEVEL_NAMES, getChapterName } from '../../data/taricChapters'
 import toast from 'react-hot-toast'
 import {
@@ -40,6 +41,7 @@ const getDesc = (d) => {
 }
 
 export default function TaricTreeBrowser({ onCodeSelect }) {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [breadcrumb, setBreadcrumb] = useState([]) // [{code, label, level}]
   const [items, setItems] = useState([])

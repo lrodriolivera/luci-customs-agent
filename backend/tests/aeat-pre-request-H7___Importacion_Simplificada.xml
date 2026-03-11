@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+  <soapenv:Body>
+    <ent:DeclaSimpliImporV1Ent xmlns:ent="https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/adip/ws/DeclaSimpliImporV1Ent.xsd">
+      <SegmentosDeServicio Id="20260213094824426825594" fecha="20260213" hora="094824" Test="S"/>
+      <CAaduana>009999</CAaduana>
+      <C011EstatutoMercancias>IM</C011EstatutoMercancias>
+      <C012ProcedimientoSolicitado>C</C012ProcedimientoSolicitado>
+      <C05NumeroDePartidas>1</C05NumeroDePartidas>
+      <C06TotalBultos>1</C06TotalBultos>
+      <C08Importador>
+        <C08ImportadorNID>ESB22477020</C08ImportadorNID>
+        <C08ImportadorParticular></C08ImportadorParticular>
+        <C08ImportadorRazonSocial>STRIX AI SL</C08ImportadorRazonSocial>
+        <C08ImportadorDireccion>Calle Ejemplo 1</C08ImportadorDireccion>
+        <C08ImportadorPoblacion>Zaragoza</C08ImportadorPoblacion>
+        <C08ImportadorCodigoPostal>50001</C08ImportadorCodigoPostal>
+        <C08ImportadorPais>ES</C08ImportadorPais>
+      </C08Importador>
+      <C14Declarante>
+        <C14DeclaranteFormaRepresentacion>1</C14DeclaranteFormaRepresentacion>
+        <C14DeclaranteNID>ESB22477020</C14DeclaranteNID>
+        <C14DeclaranteRazonSocial>STRIX AI SL</C14DeclaranteRazonSocial>
+        <C14DeclaranteTipoAutorizaDespacho>G</C14DeclaranteTipoAutorizaDespacho>
+      </C14Declarante>
+      <EmailNotificaDespacho>despacho@strixai.es</EmailNotificaDespacho>
+      <C15aPaisExpedicion>ES</C15aPaisExpedicion>
+      <C30LocalizacionMercancias>ES009999LUCI01</C30LocalizacionMercancias>
+      <CBImporteTotalTributos>0.00</CBImporteTotalTributos>
+      <CBmodalidadDePago>A</CBmodalidadDePago>
+      <C17aPaisDestino>ES</C17aPaisDestino>
+      <C19TransporteEnContenedores>0</C19TransporteEnContenedores>
+      <C20CondicionesDeEntrega>
+        <C201CondicionesEntregaCodigo>DAP</C201CondicionesEntregaCodigo>
+        <C202CondicionesEntregaNombre>DAP</C202CondicionesEntregaNombre>
+        <C203CondicionesEntregaZona></C203CondicionesEntregaZona>
+      </C20CondicionesDeEntrega>
+      <C221CodigoDivisa>EUR</C221CodigoDivisa>
+      <C222ImporteFactura>12.500</C222ImporteFactura>
+      <C24NaturalezaTransaccion>11</C24NaturalezaTransaccion>
+      <C25ModoTransporteFrontera>4</C25ModoTransporteFrontera>
+    <Partida>
+      <C32NumeroDePartida>1</C32NumeroDePartida>
+      <C31EmpaquetamientoInterno>
+        <C31NumeroBultos>1</C31NumeroBultos>
+        <C31TipoBulto>PK</C31TipoBulto>
+        <C31MarcasNumerosDeLosBultos></C31MarcasNumerosDeLosBultos>
+      </C31EmpaquetamientoInterno>
+      <C31DescripcionDeLaMercancia>
+        <C31DescrMerc1>Funda protectora para telefono movil</C31DescrMerc1>
+      </C31DescripcionDeLaMercancia>
+      <C3312CodigoPosicionTaric>3926909790</C3312CodigoPosicionTaric>
+      <C34PaisOrigen>CN</C34PaisOrigen>
+      <C35MasaBrutaEnKg>0.200</C35MasaBrutaEnKg>
+      <C36Preferencia>1</C36Preferencia>
+      <C36Reduccion>00</C36Reduccion>
+      <C37RegimenAduanero>
+        <C371RegimenSolicitado>40</C371RegimenSolicitado>
+        <C371RegimenPrecedente>00</C371RegimenPrecedente>
+        <C372CodigoAdicional>C07</C372CodigoAdicional>
+      </C37RegimenAduanero>
+      <C38MasaNetaEnKg>0.150</C38MasaNetaEnKg>
+      <C42ValorFactura>12.500</C42ValorFactura>
+      <C46ValorEstadistico>12.50</C46ValorEstadistico>
+      <C47ImporteTotal>0.00</C47ImporteTotal>
+    </Partida>
+    </ent:DeclaSimpliImporV1Ent>
+  </soapenv:Body>
+</soapenv:Envelope>

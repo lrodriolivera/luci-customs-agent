@@ -14,6 +14,7 @@ import {
   ChevronRightIcon
 } from '@heroicons/react/24/outline'
 import { communicationsAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800',
@@ -82,6 +83,7 @@ const resolutionLabels = {
 }
 
 export default function CommunicationsManager() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [dashboard, setDashboard] = useState(null)
   const [communications, setCommunications] = useState([])
@@ -491,8 +493,8 @@ export default function CommunicationsManager() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Comunicaciones con Inspectores</h1>
-          <p className="text-gray-500">Alegaciones, recursos y respuestas a autoridades</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('communications.title')}</h1>
+          <p className="text-gray-500">{t('communications.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -500,7 +502,7 @@ export default function CommunicationsManager() {
             className="btn-primary flex items-center gap-2"
           >
             <PlusIcon className="w-4 h-4" />
-            Nueva Comunicacion
+            {t('communications.newCommunication')}
           </button>
           <button
             onClick={loadDashboard}

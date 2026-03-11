@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { authAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
 export default function ResetPassword() {
+  const { t } = useTranslation()
   const { token } = useParams()
   const navigate = useNavigate()
 
@@ -17,12 +19,12 @@ export default function ResetPassword() {
     e.preventDefault()
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Las contrasenas no coinciden')
+      toast.error(t('auth.passwordMismatch'))
       return
     }
 
     if (formData.password.length < 6) {
-      toast.error('La contrasena debe tener al menos 6 caracteres')
+      toast.error(t('auth.resetError'))
       return
     }
 
@@ -32,14 +34,14 @@ export default function ResetPassword() {
       const response = await authAPI.resetPassword(token, formData.password)
 
       if (response.data.success) {
-        toast.success('Contrasena actualizada. Ya puedes iniciar sesion.')
+        toast.success(t('auth.resetSuccess'))
         navigate('/login')
       } else {
-        toast.error(response.data.error || 'Error al restablecer la contrasena')
+        toast.error(response.data.error || t('auth.resetError'))
       }
     } catch (error) {
       toast.error(
-        error.response?.data?.error || 'Token invalido o expirado. Solicita un nuevo enlace.'
+        error.response?.data?.error || t('auth.resetError')
       )
     }
 
@@ -59,17 +61,17 @@ export default function ResetPassword() {
             <span className="text-white text-4xl font-bold">L</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">LUCI</h1>
-          <p className="text-gray-600 mt-1">Agente Aduanero Inteligente</p>
+          <p className="text-gray-600 mt-1">{t('auth.subtitle')}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-            Nueva Contrasena
+            {t('auth.resetTitle')}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="password" className="label">Nueva Contrasena</label>
+              <label htmlFor="password" className="label">{t('auth.newPassword')}</label>
               <input
                 type="password"
                 id="password"
@@ -84,7 +86,7 @@ export default function ResetPassword() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="label">Confirmar Contrasena</label>
+              <label htmlFor="confirmPassword" className="label">{t('auth.confirmPassword')}</label>
               <input
                 type="password"
                 id="confirmPassword"
@@ -109,17 +111,17 @@ export default function ResetPassword() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Actualizando...
+                  {t('auth.resetting')}
                 </span>
               ) : (
-                'Restablecer Contrasena'
+                t('auth.resetButton')
               )}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-600">
             <Link to="/login" className="text-luci hover:text-luci-dark font-medium">
-              Volver a Iniciar Sesion
+              {t('auth.backToLogin')}
             </Link>
           </p>
         </div>

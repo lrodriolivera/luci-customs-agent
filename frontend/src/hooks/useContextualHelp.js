@@ -1,12 +1,16 @@
 import { useState, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
-import helpContent from '../data/helpContent'
+import { useTranslation } from 'react-i18next'
+import getHelpContent from '../data/helpContent'
 
 export default function useContextualHelp() {
   const { pathname } = useLocation()
+  const { i18n } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
 
   const helpData = useMemo(() => {
+    const helpContent = getHelpContent()
+
     // Exact match first
     if (helpContent[pathname]) {
       return helpContent[pathname]
@@ -24,7 +28,7 @@ export default function useContextualHelp() {
 
     // Final fallback to dashboard
     return helpContent['/'] || null
-  }, [pathname])
+  }, [pathname, i18n.language])
 
   const open = () => setIsOpen(true)
   const close = () => setIsOpen(false)

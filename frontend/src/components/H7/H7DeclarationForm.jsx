@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router-dom'
 import { declarationsAPI, expeditionsAPI } from '../../services/api'
 import {
@@ -14,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSuccess }) {
+  const { t } = useTranslation()
   const params = useParams()
   const navigate = useNavigate()
   const expeditionId = propExpeditionId || params.expeditionId
@@ -58,7 +60,7 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
         setH7Data(exp.declaration)
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al cargar datos')
+      setError(err.response?.data?.error || t('h7.errorLoadingData'))
     } finally {
       setLoading(false)
     }
@@ -85,11 +87,11 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
 
       if (response.data.success) {
         setH7Data(response.data.data.declaration)
-        setSuccess('H7 generado correctamente')
+        setSuccess(t('h7.h7Generated'))
         setTimeout(() => setSuccess(null), 3000)
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al generar H7')
+      setError(err.response?.data?.error || t('h7.errorGenerating'))
     } finally {
       setGenerating(false)
     }
@@ -103,13 +105,13 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
 
       if (response.data.success) {
         setH7Data(response.data.data.declaration)
-        setSuccess(`H7 enviado correctamente. MRN: ${response.data.data.mrn}`)
+        setSuccess(t('h7.h7SentMrn', { mrn: response.data.data.mrn }))
         if (onSuccess) {
           onSuccess(response.data.data)
         }
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al enviar H7')
+      setError(err.response?.data?.error || t('h7.errorSubmitting'))
     } finally {
       setSubmitting(false)
     }
@@ -126,7 +128,7 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
   if (!expedition) {
     return (
       <div className="card bg-red-50 border border-red-200">
-        <p className="text-red-600">Expediente no encontrado</p>
+        <p className="text-red-600">{t('h7.expeditionNotFound')}</p>
       </div>
     )
   }
@@ -144,8 +146,8 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
             <ShoppingBagIcon className="w-6 h-6 text-purple-600" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Declaracion H7</h2>
-            <p className="text-sm text-gray-500">Importacion de bajo valor (E-commerce)</p>
+            <h2 className="text-xl font-bold text-gray-900">{t('h7.h7Declaration')}</h2>
+            <p className="text-sm text-gray-500">{t('h7.lowValueImport')}</p>
           </div>
         </div>
         {isH7Submitted && (
@@ -180,14 +182,14 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
           )}
           <div className="flex-1">
             <h3 className={`font-semibold ${eligibility?.eligible ? 'text-green-800' : 'text-yellow-800'}`}>
-              {eligibility?.eligible ? 'Expediente elegible para H7' : 'Advertencia de elegibilidad'}
+              {eligibility?.eligible ? t('h7.eligible') : t('h7.eligibilityWarning')}
             </h3>
             <p className={`text-sm mt-1 ${eligibility?.eligible ? 'text-green-600' : 'text-yellow-600'}`}>
               {eligibility?.reason || `Valor: ${totalValue.toFixed(2)} EUR (limite: 150 EUR)`}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-500">Valor intrínseco</p>
+            <p className="text-sm text-gray-500">{t('h7.intrinsicValueLabel')}</p>
             <p className={`text-xl font-bold ${totalValue <= 150 ? 'text-green-600' : 'text-red-600'}`}>
               {totalValue.toFixed(2)} EUR
             </p>
@@ -200,12 +202,12 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
         <div className="flex items-start gap-3">
           <InformationCircleIcon className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-blue-700">
-            <p className="font-medium mb-1">Que es el H7?</p>
+            <p className="font-medium mb-1">{t('h7.whatIsH7')}</p>
             <ul className="list-disc list-inside space-y-1">
-              <li>Declaracion simplificada para envios e-commerce de bajo valor (hasta 150 EUR)</li>
-              <li>Exento de aranceles pero sujeto a IVA (21%)</li>
-              <li>Si tiene numero IOSS, el IVA ya esta pagado por el vendedor</li>
-              <li>Despacho rapido (normalmente menos de 1 hora)</li>
+              <li>{t('h7.h7Info1')}</li>
+              <li>{t('h7.h7Info2')}</li>
+              <li>{t('h7.h7Info3')}</li>
+              <li>{t('h7.h7Info4')}</li>
             </ul>
           </div>
         </div>
@@ -214,13 +216,13 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
       {/* Formulario */}
       {!isH7Submitted && (
         <div className="card">
-          <h3 className="font-semibold text-gray-900 mb-4">Configuracion H7</h3>
+          <h3 className="font-semibold text-gray-900 mb-4">{t('h7.h7Config')}</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* IOSS Number */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Numero IOSS (opcional)
+                {t('h7.iossOptional')}
               </label>
               <input
                 type="text"
@@ -232,14 +234,14 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
                 disabled={isH7Generated}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Import One-Stop Shop - Si el vendedor ya pago el IVA
+                {t('h7.iossHintLong')}
               </p>
             </div>
 
             {/* Customs Office */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Aduana de presentacion
+                {t('h7.customsPresentation')}
               </label>
               <select
                 name="customsOffice"
@@ -268,7 +270,7 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
                     className="rounded border-gray-300 text-luci focus:ring-luci"
                   />
                   <span className="text-sm text-gray-700">
-                    Generar H7 aunque el valor exceda 150 EUR (no recomendado)
+                    {t('h7.forceGenerate')}
                   </span>
                 </label>
               </div>
@@ -288,7 +290,7 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
                 ) : (
                   <DocumentTextIcon className="w-5 h-5" />
                 )}
-                Generar H7
+                {t('h7.generateH7')}
               </button>
             ) : (
               <button
@@ -301,7 +303,7 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
                 ) : (
                   <PaperAirplaneIcon className="w-5 h-5" />
                 )}
-                Enviar a AEAT
+                {t('ens.sendToAeat')}
               </button>
             )}
 
@@ -313,7 +315,7 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
                 }}
                 className="btn-secondary"
               >
-                Regenerar
+                {t('h7.regenerate')}
               </button>
             )}
           </div>
@@ -325,7 +327,7 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
         <div className="card">
           <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <DocumentTextIcon className="w-5 h-5 text-purple-500" />
-            Resumen H7
+            {t('h7.h7Summary')}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -342,7 +344,7 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-sm text-gray-500">Estado</p>
               <p className={`font-medium ${h7Data.status === 'submitted' ? 'text-green-600' : 'text-yellow-600'}`}>
-                {h7Data.status === 'submitted' ? 'Enviada' : 'Borrador'}
+                {h7Data.status === 'submitted' ? t('h7.statusSubmittedLabel') : t('h7.statusDraftLabel')}
               </p>
             </div>
           </div>
@@ -352,23 +354,23 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
             <div className="mt-4 border-t pt-4">
               <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                 <CurrencyEuroIcon className="w-5 h-5 text-green-500" />
-                Calculo de Derechos
+                {t('h7.dutyCalculation')}
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Valor intrínseco</p>
+                  <p className="text-sm text-gray-500">{t('h7.intrinsicValueLabel')}</p>
                   <p className="font-semibold">{h7Data.vatCalculation.intrinsicValue?.toFixed(2) || totalValue.toFixed(2)} EUR</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Arancel</p>
-                  <p className="font-semibold text-green-600">0.00 EUR (exento)</p>
+                  <p className="text-sm text-gray-500">{t('h7.tariff')}</p>
+                  <p className="font-semibold text-green-600">{t('h7.tariffExempt')}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">IVA ({h7Data.vatCalculation.vatRate || 21}%)</p>
+                  <p className="text-sm text-gray-500">{t('h7.vat')} ({h7Data.vatCalculation.vatRate || 21}%)</p>
                   <p className="font-semibold">{h7Data.vatCalculation.vatAmount?.toFixed(2) || '0.00'} EUR</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Total a pagar</p>
+                  <p className="text-sm text-gray-500">{t('h7.totalToPay')}</p>
                   <p className="font-bold text-lg text-luci">
                     {h7Data.vatCalculation.totalToPay?.toFixed(2) || '0.00'} EUR
                   </p>
@@ -379,7 +381,7 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
                 <div className="mt-3 bg-green-50 rounded-lg p-3 flex items-center gap-2">
                   <CheckCircleIcon className="w-5 h-5 text-green-500" />
                   <span className="text-sm text-green-700">
-                    IVA ya pagado via IOSS ({h7Data.h7Data.iossData.iossNumber})
+                    {t('h7.iossPaid')} ({h7Data.h7Data.iossData.iossNumber})
                   </span>
                 </div>
               )}
@@ -391,7 +393,7 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
             <div className="mt-4 border-t pt-4">
               <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                 <TruckIcon className="w-5 h-5 text-blue-500" />
-                Resultado AEAT
+                {t('h7.aeatResult')}
               </h4>
               <div className={`p-4 rounded-lg ${
                 h7Data.channel === 'green' ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'
@@ -402,12 +404,12 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
                   </span>
                   <div>
                     <p className={`font-semibold ${h7Data.channel === 'green' ? 'text-green-800' : 'text-yellow-800'}`}>
-                      {h7Data.channel === 'green' ? 'CANAL VERDE - Levante inmediato' : 'CANAL AMARILLO - Pendiente pago IVA'}
+                      {h7Data.channel === 'green' ? t('h7.greenChannelRelease') : t('h7.yellowChannelPending')}
                     </p>
                     <p className={`text-sm ${h7Data.channel === 'green' ? 'text-green-600' : 'text-yellow-600'}`}>
                       {h7Data.channel === 'green'
-                        ? 'El paquete puede ser entregado inmediatamente'
-                        : 'Mercancia retenida hasta liquidacion del IVA'
+                        ? t('h7.greenChannelMsg')
+                        : t('h7.yellowChannelMsg')
                       }
                     </p>
                   </div>
@@ -415,7 +417,7 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
                 {h7Data.levanteNumber && (
                   <div className="mt-3 pt-3 border-t border-green-200">
                     <p className="text-sm text-gray-600">
-                      Numero de levante: <span className="font-mono font-medium">{h7Data.levanteNumber}</span>
+                      {t('h7.releaseNumber')}: <span className="font-mono font-medium">{h7Data.levanteNumber}</span>
                     </p>
                   </div>
                 )}
@@ -427,22 +429,22 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
 
       {/* Datos del envio */}
       <div className="card">
-        <h3 className="font-semibold text-gray-900 mb-4">Datos del envio</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">{t('h7.shipmentData')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-gray-500">Expediente</p>
+            <p className="text-sm text-gray-500">{t('h7.expeditionLabel')}</p>
             <p className="font-medium">{expedition.expeditionId}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Cliente</p>
+            <p className="text-sm text-gray-500">{t('h7.clientLabel')}</p>
             <p className="font-medium">{expedition.client?.companyName || 'N/A'}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Origen</p>
+            <p className="text-sm text-gray-500">{t('h7.originLabel')}</p>
             <p className="font-medium">{expedition.exporter?.country || expedition.goods?.[0]?.originCountry || 'N/A'}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Items</p>
+            <p className="text-sm text-gray-500">{t('h7.itemsLabel')}</p>
             <p className="font-medium">{expedition.goods?.length || 0} producto(s)</p>
           </div>
         </div>
@@ -450,14 +452,14 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
         {/* Lista de productos */}
         {expedition.goods && expedition.goods.length > 0 && (
           <div className="mt-4 border-t pt-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Productos</h4>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">{t('h7.productsLabel')}</h4>
             <div className="space-y-2">
               {expedition.goods.map((good, index) => (
                 <div key={index} className="bg-gray-50 rounded-lg p-3 flex justify-between items-center">
                   <div>
                     <p className="font-medium text-sm">{good.description}</p>
                     <p className="text-xs text-gray-500">
-                      TARIC: {good.taricCode || 'Sin clasificar'} · Origen: {good.originCountry || 'N/A'}
+                      {t('h7.taricLabel')}: {good.taricCode || t('h7.noClassification')} · {t('h7.originLabel')}: {good.originCountry || 'N/A'}
                     </p>
                   </div>
                   <p className="font-semibold text-luci">{(good.invoiceValue || 0).toFixed(2)} EUR</p>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { oeaAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 import {
   ShieldCheckIcon,
   PlusIcon,
@@ -38,6 +39,7 @@ const STATUS_CONFIG = {
 }
 
 export default function OEAManager() {
+  const { t } = useTranslation()
   const [oeas, setOeas] = useState([])
   const [stats, setStats] = useState(null)
   const [expiring, setExpiring] = useState([])
@@ -243,8 +245,8 @@ export default function OEAManager() {
             <ShieldCheckIcon className="w-6 h-6 text-purple-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Operador Economico Autorizado</h1>
-            <p className="text-sm text-gray-500">Gestion de certificaciones OEA (OEAC/OEAS/OEAF)</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('oea.title')}</h1>
+            <p className="text-sm text-gray-500">{t('oea.subtitle')}</p>
           </div>
         </div>
         <button
@@ -252,7 +254,7 @@ export default function OEAManager() {
           className="btn-primary flex items-center gap-2"
         >
           <PlusIcon className="w-5 h-5" />
-          Nueva Solicitud
+          {t('oea.newApplication')}
         </button>
       </div>
 
@@ -341,7 +343,7 @@ export default function OEAManager() {
       {/* Formulario de creacion */}
       {showCreateForm && (
         <div className="card">
-          <h3 className="font-semibold text-gray-900 mb-4">Nueva Solicitud OEA</h3>
+          <h3 className="font-semibold text-gray-900 mb-4">{t('oea.newApplicationOEA')}</h3>
           <form onSubmit={handleCreate} className="space-y-4">
             {/* Datos de organizacion */}
             <div className="border-b pb-4 mb-4">

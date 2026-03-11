@@ -6,6 +6,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Package,
   Truck,
@@ -25,26 +26,27 @@ import {
 } from 'lucide-react';
 import { portalAPI } from '../../services/api';
 
-const OPERATION_TYPES = [
-  { id: 'import', name: 'Importacion', icon: Package, description: 'Entrada de mercancias al territorio aduanero' },
-  { id: 'export', name: 'Exportacion', icon: Truck, description: 'Salida de mercancias del territorio aduanero' },
-  { id: 'transit', name: 'Transito', icon: Ship, description: 'Paso de mercancias por el territorio' }
-];
-
-const TRANSPORT_MODES = [
-  { id: 'maritime', name: 'Maritimo', icon: Ship },
-  { id: 'air', name: 'Aereo', icon: Plane },
-  { id: 'road', name: 'Terrestre', icon: Truck }
-];
-
-const INCOTERMS = ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP'];
-
 const PortalSelfService = ({ organizationId }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
+  const OPERATION_TYPES = [
+    { id: 'import', name: t('portal.operationImport'), icon: Package, description: t('portal.operationImportDesc') },
+    { id: 'export', name: t('portal.operationExport'), icon: Truck, description: t('portal.operationExportDesc') },
+    { id: 'transit', name: t('portal.operationTransit'), icon: Ship, description: t('portal.operationTransitDesc') }
+  ];
+
+  const TRANSPORT_MODES = [
+    { id: 'maritime', name: t('portal.transportMaritime'), icon: Ship },
+    { id: 'air', name: t('portal.transportAir'), icon: Plane },
+    { id: 'road', name: t('portal.transportRoad'), icon: Truck }
+  ];
+
+  const INCOTERMS = ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP'];
 
   // Form data
   const [formData, setFormData] = useState({
@@ -165,7 +167,7 @@ const PortalSelfService = ({ organizationId }) => {
       setStep(step + 1);
       setError(null);
     } else {
-      setError('Por favor complete todos los campos requeridos');
+      setError(t('portal.fillRequiredFields'));
     }
   };
 
@@ -176,7 +178,7 @@ const PortalSelfService = ({ organizationId }) => {
 
   const handleSubmit = async () => {
     if (!validateStep(4)) {
-      setError('Por favor complete todos los campos requeridos');
+      setError(t('portal.fillRequiredFields'));
       return;
     }
 
@@ -197,7 +199,7 @@ const PortalSelfService = ({ organizationId }) => {
 
       setSuccess(response.data);
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al crear el expediente');
+      setError(err.response?.data?.error || t('portal.errorCreatingExpedition'));
     } finally {
       setLoading(false);
     }
@@ -212,14 +214,14 @@ const PortalSelfService = ({ organizationId }) => {
             <Check className="w-8 h-8 text-green-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Expediente Creado Exitosamente
+            {t('portal.expeditionCreated')}
           </h2>
           <p className="text-gray-600 mb-6">
-            Su expediente ha sido creado. Puede acceder al portal para subir documentos y dar seguimiento.
+            {t('portal.expeditionCreatedDesc')}
           </p>
 
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <p className="text-sm text-gray-500 mb-1">Numero de Expediente</p>
+            <p className="text-sm text-gray-500 mb-1">{t('portal.expeditionNumber')}</p>
             <p className="text-lg font-mono font-bold text-blue-600">
               {success.expeditionId}
             </p>
@@ -229,12 +231,12 @@ const PortalSelfService = ({ organizationId }) => {
             href={success.portalUrl}
             className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Acceder al Portal
+            {t('portal.accessPortal')}
             <ArrowRight className="ml-2 w-4 h-4" />
           </a>
 
           <p className="text-sm text-gray-500 mt-4">
-            Guarde este enlace para acceder a su expediente en cualquier momento
+            {t('portal.savePortalLink')}
           </p>
         </div>
       </div>
@@ -271,10 +273,10 @@ const PortalSelfService = ({ organizationId }) => {
           ))}
         </div>
         <div className="flex justify-between mt-2 text-sm text-gray-500">
-          <span>Operacion</span>
-          <span>Empresa</span>
-          <span>Detalles</span>
-          <span>Mercancias</span>
+          <span>{t('portal.stepOperation')}</span>
+          <span>{t('portal.stepCompany')}</span>
+          <span>{t('portal.stepDetails')}</span>
+          <span>{t('portal.stepGoods')}</span>
         </div>
       </div>
 
@@ -292,10 +294,10 @@ const PortalSelfService = ({ organizationId }) => {
         {step === 1 && (
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Tipo de Operacion
+              {t('portal.selfServiceTitle')}
             </h2>
             <p className="text-gray-600 mb-6">
-              Seleccione el tipo de operacion aduanera que desea realizar
+              {t('portal.selfServiceDesc')}
             </p>
 
             <div className="grid gap-4 mb-6">
@@ -322,7 +324,7 @@ const PortalSelfService = ({ organizationId }) => {
               ))}
             </div>
 
-            <h3 className="font-semibold text-gray-900 mb-3">Modo de Transporte</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">{t('portal.transportMode')}</h3>
             <div className="flex gap-4">
               {TRANSPORT_MODES.map((mode) => (
                 <button
@@ -348,10 +350,10 @@ const PortalSelfService = ({ organizationId }) => {
         {step === 2 && (
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Datos de la Empresa
+              {t('portal.companyData')}
             </h2>
             <p className="text-gray-600 mb-6">
-              Ingrese los datos de su empresa
+              {t('portal.companyDataDesc')}
             </p>
 
             <div className="grid gap-4">
@@ -359,19 +361,19 @@ const PortalSelfService = ({ organizationId }) => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     <Building className="inline w-4 h-4 mr-1" />
-                    Nombre de Empresa *
+                    {t('portal.companyNameLabel')}
                   </label>
                   <input
                     type="text"
                     value={formData.client.companyName}
                     onChange={(e) => updateFormData('client', 'companyName', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Mi Empresa S.L."
+                    placeholder={t('portal.companyNamePlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    NIF/CIF
+                    {t('portal.nifCif')}
                   </label>
                   <input
                     type="text"
@@ -385,7 +387,7 @@ const PortalSelfService = ({ organizationId }) => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Numero EORI
+                  {t('portal.eoriNumber')}
                 </label>
                 <input
                   type="text"
@@ -401,27 +403,27 @@ const PortalSelfService = ({ organizationId }) => {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Persona de Contacto *
+                    {t('portal.contactPerson')}
                   </label>
                   <input
                     type="text"
                     value={formData.client.contactName}
                     onChange={(e) => updateFormData('client', 'contactName', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Juan Garcia"
+                    placeholder={t('portal.contactPersonPlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     <Mail className="inline w-4 h-4 mr-1" />
-                    Email *
+                    {t('portal.emailLabel')}
                   </label>
                   <input
                     type="email"
                     value={formData.client.email}
                     onChange={(e) => updateFormData('client', 'email', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="juan@miempresa.com"
+                    placeholder={t('portal.emailPlaceholder')}
                   />
                 </div>
               </div>
@@ -429,14 +431,14 @@ const PortalSelfService = ({ organizationId }) => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   <Phone className="inline w-4 h-4 mr-1" />
-                  Telefono
+                  {t('common.phone')}
                 </label>
                 <input
                   type="tel"
                   value={formData.client.phone}
                   onChange={(e) => updateFormData('client', 'phone', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="+34 612 345 678"
+                  placeholder={t('portal.phonePlaceholder')}
                 />
               </div>
             </div>
@@ -447,10 +449,10 @@ const PortalSelfService = ({ organizationId }) => {
         {step === 3 && (
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Detalles de la Operacion
+              {t('portal.operationDetails')}
             </h2>
             <p className="text-gray-600 mb-6">
-              Especifique los detalles de origen y destino
+              {t('portal.operationDetailsDesc')}
             </p>
 
             <div className="grid gap-4">
@@ -458,7 +460,7 @@ const PortalSelfService = ({ organizationId }) => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     <MapPin className="inline w-4 h-4 mr-1" />
-                    Pais de Origen *
+                    {t('portal.originCountry')}
                   </label>
                   <input
                     type="text"
@@ -468,11 +470,11 @@ const PortalSelfService = ({ organizationId }) => {
                     placeholder="CN"
                     maxLength={2}
                   />
-                  <p className="text-xs text-gray-500 mt-1">Codigo ISO de 2 letras (ej: CN, US, DE)</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('portal.isoCodeHint')}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Pais de Destino
+                    {t('portal.destinationCountry')}
                   </label>
                   <input
                     type="text"
@@ -487,7 +489,7 @@ const PortalSelfService = ({ organizationId }) => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Incoterm
+                  {t('portal.incoterm')}
                 </label>
                 <select
                   value={formData.operation.incoterm}
@@ -503,14 +505,14 @@ const PortalSelfService = ({ organizationId }) => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   <FileText className="inline w-4 h-4 mr-1" />
-                  Notas Adicionales
+                  {t('portal.additionalNotes')}
                 </label>
                 <textarea
                   value={formData.operation.notes}
                   onChange={(e) => updateFormData('operation', 'notes', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   rows={3}
-                  placeholder="Informacion adicional sobre la operacion..."
+                  placeholder={t('portal.additionalNotesPlaceholder')}
                 />
               </div>
             </div>
@@ -521,10 +523,10 @@ const PortalSelfService = ({ organizationId }) => {
         {step === 4 && (
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Mercancias
+              {t('portal.goodsTitle')}
             </h2>
             <p className="text-gray-600 mb-6">
-              Agregue las mercancias de la operacion
+              {t('portal.goodsDesc')}
             </p>
 
             <div className="space-y-4">
@@ -532,7 +534,7 @@ const PortalSelfService = ({ organizationId }) => {
                 <div key={index} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex justify-between items-center mb-3">
                     <span className="font-medium text-gray-700">
-                      Mercancia {index + 1}
+                      {t('portal.goodItem')} {index + 1}
                     </span>
                     {formData.goods.length > 1 && (
                       <button
@@ -547,21 +549,21 @@ const PortalSelfService = ({ organizationId }) => {
                   <div className="grid gap-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Descripcion *
+                        {t('portal.goodDescription')}
                       </label>
                       <input
                         type="text"
                         value={good.description}
                         onChange={(e) => updateGood(index, 'description', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Descripcion de la mercancia"
+                        placeholder={t('portal.goodDescPlaceholder')}
                       />
                     </div>
 
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Cantidad *
+                          {t('portal.quantity')}
                         </label>
                         <input
                           type="number"
@@ -574,7 +576,7 @@ const PortalSelfService = ({ organizationId }) => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Unidad
+                          {t('portal.unit')}
                         </label>
                         <select
                           value={good.unit}
@@ -582,14 +584,14 @@ const PortalSelfService = ({ organizationId }) => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
                           <option value="KG">KG</option>
-                          <option value="PCS">Piezas</option>
-                          <option value="CTN">Cajas</option>
-                          <option value="PLT">Pallets</option>
+                          <option value="PCS">{t('portal.unitPcs')}</option>
+                          <option value="CTN">{t('portal.unitCtn')}</option>
+                          <option value="PLT">{t('portal.unitPlt')}</option>
                         </select>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Valor (EUR)
+                          {t('portal.valueEur')}
                         </label>
                         <input
                           type="number"
@@ -610,7 +612,7 @@ const PortalSelfService = ({ organizationId }) => {
                 className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Agregar Mercancia
+                {t('portal.addGood')}
               </button>
             </div>
           </div>
@@ -624,7 +626,7 @@ const PortalSelfService = ({ organizationId }) => {
               className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Anterior
+              {t('common.previous')}
             </button>
           ) : (
             <div />
@@ -636,7 +638,7 @@ const PortalSelfService = ({ organizationId }) => {
               disabled={!validateStep(step)}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
             >
-              Siguiente
+              {t('common.next')}
               <ArrowRight className="w-4 h-4 ml-2" />
             </button>
           ) : (
@@ -651,12 +653,12 @@ const PortalSelfService = ({ organizationId }) => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Creando...
+                  {t('portal.creating')}
                 </>
               ) : (
                 <>
                   <Check className="w-4 h-4 mr-2" />
-                  Crear Expediente
+                  {t('portal.createExpedition')}
                 </>
               )}
             </button>

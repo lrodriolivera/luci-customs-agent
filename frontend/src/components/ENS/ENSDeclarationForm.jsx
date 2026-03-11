@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box, Typography, Paper, Grid, Button, TextField, MenuItem,
   Stepper, Step, StepLabel, StepContent, Card, CardContent,
@@ -20,12 +21,12 @@ import {
 } from '@mui/icons-material'
 import { ensAPI } from '../../services/api'
 
-// Transport mode configuration
-const transportModes = [
-  { value: 'ROAD', label: 'Carretera', icon: TruckIcon, color: '#4CAF50', deadline: '1 hora' },
-  { value: 'RAIL', label: 'Ferrocarril', icon: RailIcon, color: '#FF9800', deadline: '2 horas' },
-  { value: 'AIR', label: 'Aereo', icon: AirIcon, color: '#2196F3', deadline: '4 horas' },
-  { value: 'SEA', label: 'Maritimo', icon: SeaIcon, color: '#00BCD4', deadline: '24 horas' }
+// Transport mode configuration (labels resolved at render time via t())
+const getTransportModes = (t) => [
+  { value: 'ROAD', label: t('ens.road'), icon: TruckIcon, color: '#4CAF50', deadline: t('ens.oneHour') },
+  { value: 'RAIL', label: t('ens.rail'), icon: RailIcon, color: '#FF9800', deadline: t('ens.twoHours') },
+  { value: 'AIR', label: t('ens.air'), icon: AirIcon, color: '#2196F3', deadline: t('ens.fourHours') },
+  { value: 'SEA', label: t('ens.maritime'), icon: SeaIcon, color: '#00BCD4', deadline: t('ens.twentyFourHours') }
 ]
 
 // Spanish entry customs offices
@@ -76,6 +77,7 @@ const emptyHouseConsignment = {
 }
 
 const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
+  const { t } = useTranslation()
   const [activeStep, setActiveStep] = useState(0)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -244,23 +246,23 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
 
     switch (step) {
       case 0: // Transport
-        if (!formData.transportMode) newErrors['transportMode'] = 'Modo de transporte requerido'
-        if (!formData.entryOffice.code) newErrors['entryOffice.code'] = 'Aduana de entrada requerida'
-        if (!formData.entryOffice.expectedArrival) newErrors['entryOffice.expectedArrival'] = 'Fecha de llegada requerida'
+        if (!formData.transportMode) newErrors['transportMode'] = t('ens.transportModeRequired')
+        if (!formData.entryOffice.code) newErrors['entryOffice.code'] = t('ens.entryCustomsRequired')
+        if (!formData.entryOffice.expectedArrival) newErrors['entryOffice.expectedArrival'] = t('ens.arrivalRequired')
         break
       case 1: // Carrier
-        if (!formData.carrier.eori) newErrors['carrier.eori'] = 'EORI del transportista requerido'
+        if (!formData.carrier.eori) newErrors['carrier.eori'] = t('ens.carrierEoriRequired')
         break
       case 2: // Consignment
-        if (!formData.consignment.referenceNumber) newErrors['consignment.referenceNumber'] = 'Numero de conocimiento requerido'
-        if (!formData.consignment.grossMass) newErrors['consignment.grossMass'] = 'Peso bruto requerido'
+        if (!formData.consignment.referenceNumber) newErrors['consignment.referenceNumber'] = t('ens.blRequired')
+        if (!formData.consignment.grossMass) newErrors['consignment.grossMass'] = t('ens.grossWeightRequired')
         break
       case 3: // Goods
         if (!formData.isGroupage && formData.goods.length === 0) {
-          newErrors['goods'] = 'Se requiere al menos una partida'
+          newErrors['goods'] = t('ens.itemRequired')
         }
         if (formData.isGroupage && formData.houseConsignments.length === 0) {
-          newErrors['houseConsignments'] = 'Se requiere al menos un envio house'
+          newErrors['houseConsignments'] = t('ens.houseRequired')
         }
         break
     }
@@ -333,21 +335,22 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
         fieldErrors.general = errData.message + ': ' + detailedErrors.map(e => e.message).join(' | ')
         setErrors(fieldErrors)
       } else {
-        setErrors({ general: errData?.message || 'Error al guardar' })
+        setErrors({ general: errData?.message || t('ens.errorSaving') })
       }
     } finally {
       setSaving(false)
     }
   }
 
+  const transportModes = getTransportModes(t)
   const filteredOffices = entryOffices.filter(o => o.modes.includes(formData.transportMode))
 
   const steps = [
-    'Transporte',
-    'Transportista',
-    'Envio',
-    'Mercancias',
-    'Revision'
+    t('ens.stepTransport'),
+    t('ens.stepCarrier'),
+    t('ens.stepShipment'),
+    t('ens.stepGoods'),
+    t('ens.stepReview')
   ]
 
   if (loading) {
@@ -366,7 +369,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
           <BackIcon />
         </IconButton>
         <Typography variant="h5" sx={{ fontWeight: 600 }}>
-          {declarationId ? 'Editar Declaracion ENS' : 'Nueva Declaracion ENS'}
+          {declarationId ? t('ens.editTitle') : t('ens.newTitle')}
         </Typography>
       </Box>
 
@@ -390,7 +393,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
-                Modo de Transporte
+                {t('ens.transportModeLabel')}
               </Typography>
               <Grid container spacing={2}>
                 {transportModes.map((mode) => {
@@ -410,7 +413,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                           <IconComponent sx={{ fontSize: 48, color: mode.color, mb: 1 }} />
                           <Typography variant="subtitle1">{mode.label}</Typography>
                           <Typography variant="caption" color="textSecondary">
-                            Plazo: {mode.deadline}
+                            {t('ens.deadline')}: {mode.deadline}
                           </Typography>
                         </CardContent>
                       </Card>
@@ -432,7 +435,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Aduana de Entrada"
+                    label={t('ens.entryCustomsLabel')}
                     required
                     error={!!errors['entryOffice.code']}
                     helperText={errors['entryOffice.code']}
@@ -445,7 +448,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               <TextField
                 fullWidth
                 type="datetime-local"
-                label="Fecha/Hora Llegada Prevista"
+                label={t('ens.expectedArrivalLabel')}
                 value={formData.entryOffice.expectedArrival}
                 onChange={(e) => handleFieldChange('entryOffice.expectedArrival', e.target.value)}
                 InputLabelProps={{ shrink: true }}
@@ -462,26 +465,26 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
-                Datos del Transportista
+                {t('ens.carrierData')}
               </Typography>
             </Grid>
 
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="EORI Transportista"
+                label={t('ens.eoriCarrier')}
                 value={formData.carrier.eori}
                 onChange={(e) => handleFieldChange('carrier.eori', e.target.value.toUpperCase())}
                 required
                 error={!!errors['carrier.eori']}
-                helperText={errors['carrier.eori'] || 'Formato: ES + NIF (ej: ESA12345678)'}
+                helperText={errors['carrier.eori'] || t('ens.eoriFormat')}
               />
             </Grid>
 
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Nombre/Razon Social"
+                label={t('ens.companyName')}
                 value={formData.carrier.name}
                 onChange={(e) => handleFieldChange('carrier.name', e.target.value)}
               />
@@ -490,14 +493,14 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12}>
               <Divider sx={{ my: 2 }} />
               <Typography variant="subtitle1" gutterBottom>
-                Direccion
+                {t('ens.addressLabel')}
               </Typography>
             </Grid>
 
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Calle"
+                label={t('ens.street')}
                 value={formData.carrier.address.street}
                 onChange={(e) => handleFieldChange('carrier.address.street', e.target.value)}
               />
@@ -506,7 +509,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
-                label="Ciudad"
+                label={t('common.city')}
                 value={formData.carrier.address.city}
                 onChange={(e) => handleFieldChange('carrier.address.city', e.target.value)}
               />
@@ -515,7 +518,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
-                label="Codigo Postal"
+                label={t('common.postalCode')}
                 value={formData.carrier.address.postcode}
                 onChange={(e) => handleFieldChange('carrier.address.postcode', e.target.value)}
               />
@@ -524,18 +527,18 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
-                label="Pais"
+                label={t('common.country')}
                 value={formData.carrier.address.country}
                 onChange={(e) => handleFieldChange('carrier.address.country', e.target.value.toUpperCase())}
                 inputProps={{ maxLength: 2 }}
-                helperText="Codigo ISO (ej: ES)"
+                helperText={t('ens.isoCodeHint')}
               />
             </Grid>
 
             <Grid item xs={12}>
               <Divider sx={{ my: 2 }} />
               <Typography variant="subtitle1" gutterBottom>
-                Medio de Transporte
+                {t('ens.transportMeans')}
               </Typography>
             </Grid>
 
@@ -543,23 +546,23 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               <TextField
                 fullWidth
                 select
-                label="Tipo"
+                label={t('common.type')}
                 value={formData.transportMeans.type}
                 onChange={(e) => handleFieldChange('transportMeans.type', e.target.value)}
               >
-                <MenuItem value="truck">Camion</MenuItem>
-                <MenuItem value="trailer">Remolque</MenuItem>
-                <MenuItem value="container">Contenedor</MenuItem>
-                <MenuItem value="wagon">Vagon</MenuItem>
-                <MenuItem value="aircraft">Aeronave</MenuItem>
-                <MenuItem value="vessel">Buque</MenuItem>
+                <MenuItem value="truck">{t('ens.truck')}</MenuItem>
+                <MenuItem value="trailer">{t('ens.trailer')}</MenuItem>
+                <MenuItem value="container">{t('ens.containerLabel')}</MenuItem>
+                <MenuItem value="wagon">{t('ens.wagon')}</MenuItem>
+                <MenuItem value="aircraft">{t('ens.aircraft')}</MenuItem>
+                <MenuItem value="vessel">{t('ens.vessel')}</MenuItem>
               </TextField>
             </Grid>
 
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Identificacion (Matricula/IMO)"
+                label={t('ens.identification')}
                 value={formData.transportMeans.identification}
                 onChange={(e) => handleFieldChange('transportMeans.identification', e.target.value.toUpperCase())}
               />
@@ -568,11 +571,11 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Nacionalidad"
+                label={t('ens.nationality')}
                 value={formData.transportMeans.nationality}
                 onChange={(e) => handleFieldChange('transportMeans.nationality', e.target.value.toUpperCase())}
                 inputProps={{ maxLength: 2 }}
-                helperText="Codigo ISO"
+                helperText={t('ens.isoCode')}
               />
             </Grid>
           </Grid>
@@ -583,14 +586,14 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
-                Datos del Envio
+                {t('ens.shipmentData')}
               </Typography>
             </Grid>
 
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Numero de Conocimiento (B/L / CMR)"
+                label={t('ens.blNumber')}
                 value={formData.consignment.referenceNumber}
                 onChange={(e) => handleFieldChange('consignment.referenceNumber', e.target.value)}
                 required
@@ -602,17 +605,17 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Numero de Contenedor"
+                label={t('ens.containerNumber')}
                 value={formData.consignment.containerNumber}
                 onChange={(e) => handleFieldChange('consignment.containerNumber', e.target.value.toUpperCase())}
-                helperText="Formato ISO 6346 (ej: MSKU1234567)"
+                helperText={t('ens.containerFormat')}
               />
             </Grid>
 
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Numero de Precinto"
+                label={t('ens.sealNumber')}
                 value={formData.consignment.sealNumber}
                 onChange={(e) => handleFieldChange('consignment.sealNumber', e.target.value)}
               />
@@ -622,7 +625,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               <TextField
                 fullWidth
                 type="number"
-                label="Peso Bruto (kg)"
+                label={t('ens.grossWeightKg')}
                 value={formData.consignment.grossMass}
                 onChange={(e) => handleFieldChange('consignment.grossMass', e.target.value)}
                 required
@@ -635,7 +638,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               <TextField
                 fullWidth
                 type="number"
-                label="Numero de Bultos"
+                label={t('ens.numberOfPackages')}
                 value={formData.consignment.numberOfPackages}
                 onChange={(e) => handleFieldChange('consignment.numberOfPackages', e.target.value)}
               />
@@ -646,7 +649,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                 fullWidth
                 multiline
                 rows={2}
-                label="Descripcion General de la Mercancia"
+                label={t('ens.goodsDescriptionLabel')}
                 value={formData.consignment.goodsDescription}
                 onChange={(e) => handleFieldChange('consignment.goodsDescription', e.target.value)}
               />
@@ -656,14 +659,14 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12}>
               <Divider sx={{ my: 2 }} />
               <Typography variant="subtitle1" gutterBottom>
-                Expedidor (Consignor)
+                {t('ens.consignorLabel')}
               </Typography>
             </Grid>
 
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="EORI Expedidor"
+                label={t('ens.eoriConsignor')}
                 value={formData.consignor.eori}
                 onChange={(e) => handleFieldChange('consignor.eori', e.target.value.toUpperCase())}
               />
@@ -672,7 +675,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Nombre Expedidor"
+                label={t('ens.nameConsignor')}
                 value={formData.consignor.name}
                 onChange={(e) => handleFieldChange('consignor.name', e.target.value)}
               />
@@ -682,14 +685,14 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12}>
               <Divider sx={{ my: 2 }} />
               <Typography variant="subtitle1" gutterBottom>
-                Destinatario (Consignee)
+                {t('ens.consigneeLabel')}
               </Typography>
             </Grid>
 
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="EORI Destinatario"
+                label={t('ens.eoriConsignee')}
                 value={formData.consignee.eori}
                 onChange={(e) => handleFieldChange('consignee.eori', e.target.value.toUpperCase())}
               />
@@ -698,7 +701,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Nombre Destinatario"
+                label={t('ens.nameConsignee')}
                 value={formData.consignee.name}
                 onChange={(e) => handleFieldChange('consignee.name', e.target.value)}
               />
@@ -712,7 +715,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6">
-                  Partidas de Mercancia
+                  {t('ens.goodsItems')}
                 </Typography>
                 <FormControlLabel
                   control={
@@ -721,7 +724,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                       onChange={(e) => handleFieldChange('isGroupage', e.target.checked)}
                     />
                   }
-                  label="Grupaje (multiples envios house)"
+                  label={t('ens.groupageLabel')}
                 />
               </Box>
             </Grid>
@@ -734,7 +737,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                     <Paper variant="outlined" sx={{ p: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                         <Typography variant="subtitle2">
-                          Partida {item.itemNumber}
+                          {t('ens.item')} {item.itemNumber}
                         </Typography>
                         {formData.goods.length > 1 && (
                           <IconButton
@@ -751,7 +754,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                           <TextField
                             fullWidth
                             size="small"
-                            label="Descripcion"
+                            label={t('common.description')}
                             value={item.description}
                             onChange={(e) => handleGoodsItemChange(index, 'description', e.target.value)}
                           />
@@ -760,7 +763,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                           <TextField
                             fullWidth
                             size="small"
-                            label="Codigo TARIC"
+                            label={t('ens.taricCode')}
                             value={item.taricCode}
                             onChange={(e) => handleGoodsItemChange(index, 'taricCode', e.target.value)}
                             inputProps={{ maxLength: 10 }}
@@ -770,7 +773,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                           <TextField
                             fullWidth
                             size="small"
-                            label="Pais Origen"
+                            label={t('ens.countryOfOrigin')}
                             value={item.countryOfOrigin}
                             onChange={(e) => handleGoodsItemChange(index, 'countryOfOrigin', e.target.value.toUpperCase())}
                             inputProps={{ maxLength: 2 }}
@@ -781,7 +784,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                             fullWidth
                             size="small"
                             type="number"
-                            label="Peso Bruto (kg)"
+                            label={t('ens.grossWeightKg')}
                             value={item.grossMass}
                             onChange={(e) => handleGoodsItemChange(index, 'grossMass', e.target.value)}
                           />
@@ -791,7 +794,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                             fullWidth
                             size="small"
                             type="number"
-                            label="Peso Neto (kg)"
+                            label={t('ens.netWeightKg')}
                             value={item.netMass}
                             onChange={(e) => handleGoodsItemChange(index, 'netMass', e.target.value)}
                           />
@@ -801,7 +804,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                             fullWidth
                             size="small"
                             type="number"
-                            label="Bultos"
+                            label={t('ens.packagesLabel')}
                             value={item.numberOfPackages}
                             onChange={(e) => handleGoodsItemChange(index, 'numberOfPackages', e.target.value)}
                           />
@@ -810,7 +813,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                           <TextField
                             fullWidth
                             size="small"
-                            label="Tipo Embalaje"
+                            label={t('ens.packageType')}
                             value={item.packageType}
                             onChange={(e) => handleGoodsItemChange(index, 'packageType', e.target.value)}
                           />
@@ -825,7 +828,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                     startIcon={<AddIcon />}
                     onClick={handleAddGoodsItem}
                   >
-                    Agregar Partida
+                    {t('ens.addItem')}
                   </Button>
                 </Grid>
               </>
@@ -837,7 +840,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                     <Paper variant="outlined" sx={{ p: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                         <Typography variant="subtitle2">
-                          Envio House {index + 1}
+                          {t('ens.houseShipment')} {index + 1}
                         </Typography>
                         <IconButton
                           size="small"
@@ -852,7 +855,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                           <TextField
                             fullWidth
                             size="small"
-                            label="Referencia House B/L"
+                            label={t('ens.houseBlRef')}
                             value={house.referenceNumber}
                             onChange={(e) => {
                               const newHouses = [...formData.houseConsignments]
@@ -865,7 +868,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                           <TextField
                             fullWidth
                             size="small"
-                            label="EORI Destinatario"
+                            label={t('ens.eoriConsignee')}
                             value={house.consignee.eori}
                             onChange={(e) => {
                               const newHouses = [...formData.houseConsignments]
@@ -878,7 +881,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                           <TextField
                             fullWidth
                             size="small"
-                            label="Nombre Destinatario"
+                            label={t('ens.nameConsignee')}
                             value={house.consignee.name}
                             onChange={(e) => {
                               const newHouses = [...formData.houseConsignments]
@@ -897,7 +900,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                     startIcon={<AddIcon />}
                     onClick={handleAddHouseConsignment}
                   >
-                    Agregar Envio House
+                    {t('ens.addHouseShipment')}
                   </Button>
                 </Grid>
                 {errors['houseConsignments'] && (
@@ -915,7 +918,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
-                Revision de la Declaracion
+                {t('ens.reviewTitle')}
               </Typography>
             </Grid>
 
@@ -927,7 +930,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                 onClick={handleValidate}
                 disabled={validating}
               >
-                {validating ? 'Validando...' : 'Validar Declaracion'}
+                {validating ? t('ens.validating') : t('ens.validateDeclaration')}
               </Button>
             </Grid>
 
@@ -935,8 +938,8 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               <Grid item xs={12}>
                 <Alert severity={validationResult.isValid ? 'success' : 'warning'}>
                   {validationResult.isValid
-                    ? 'La declaracion es valida y puede ser enviada a AEAT'
-                    : `Se encontraron ${validationResult.errors?.length || 0} errores y ${validationResult.warnings?.length || 0} advertencias`}
+                    ? t('ens.declarationValid')
+                    : t('ens.errorsAndWarnings', { errors: validationResult.errors?.length || 0, warnings: validationResult.warnings?.length || 0 })}
                 </Alert>
                 {validationResult.errors?.length > 0 && (
                   <Box sx={{ mt: 1 }}>
@@ -949,7 +952,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                 )}
                 {validationResult.suggestions?.length > 0 && (
                   <Box sx={{ mt: 1 }}>
-                    <Typography variant="subtitle2">Sugerencias LUCI:</Typography>
+                    <Typography variant="subtitle2">{t('ens.luciSuggestions')}</Typography>
                     {validationResult.suggestions.map((sug, i) => (
                       <Typography key={i} variant="body2" color="textSecondary">
                         - {sug}
@@ -964,16 +967,16 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12} md={6}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="subtitle2" gutterBottom color="primary">
-                  Transporte
+                  {t('ens.summaryTransport')}
                 </Typography>
                 <Typography variant="body2">
-                  Modo: {transportModes.find(m => m.value === formData.transportMode)?.label}
+                  {t('ens.summaryMode')}: {transportModes.find(m => m.value === formData.transportMode)?.label}
                 </Typography>
                 <Typography variant="body2">
-                  Aduana: {formData.entryOffice.code} - {formData.entryOffice.name}
+                  {t('ens.summaryCustoms')}: {formData.entryOffice.code} - {formData.entryOffice.name}
                 </Typography>
                 <Typography variant="body2">
-                  Llegada: {formData.entryOffice.expectedArrival ? new Date(formData.entryOffice.expectedArrival).toLocaleString('es-ES') : '-'}
+                  {t('ens.summaryArrival')}: {formData.entryOffice.expectedArrival ? new Date(formData.entryOffice.expectedArrival).toLocaleString('es-ES') : '-'}
                 </Typography>
               </Paper>
             </Grid>
@@ -981,16 +984,16 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12} md={6}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="subtitle2" gutterBottom color="primary">
-                  Transportista
+                  {t('ens.summaryCarrier')}
                 </Typography>
                 <Typography variant="body2">
-                  EORI: {formData.carrier.eori || '-'}
+                  {t('ens.summaryEori')}: {formData.carrier.eori || '-'}
                 </Typography>
                 <Typography variant="body2">
-                  Nombre: {formData.carrier.name || '-'}
+                  {t('ens.summaryName')}: {formData.carrier.name || '-'}
                 </Typography>
                 <Typography variant="body2">
-                  Vehiculo: {formData.transportMeans.identification || '-'}
+                  {t('ens.summaryVehicle')}: {formData.transportMeans.identification || '-'}
                 </Typography>
               </Paper>
             </Grid>
@@ -998,19 +1001,19 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12} md={6}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="subtitle2" gutterBottom color="primary">
-                  Envio
+                  {t('ens.summaryShipment')}
                 </Typography>
                 <Typography variant="body2">
-                  Conocimiento: {formData.consignment.referenceNumber || '-'}
+                  {t('ens.summaryBl')}: {formData.consignment.referenceNumber || '-'}
                 </Typography>
                 <Typography variant="body2">
-                  Contenedor: {formData.consignment.containerNumber || '-'}
+                  {t('ens.summaryContainer')}: {formData.consignment.containerNumber || '-'}
                 </Typography>
                 <Typography variant="body2">
-                  Peso: {formData.consignment.grossMass} kg
+                  {t('ens.summaryWeight')}: {formData.consignment.grossMass} kg
                 </Typography>
                 <Typography variant="body2">
-                  Bultos: {formData.consignment.numberOfPackages || '-'}
+                  {t('ens.summaryPackages')}: {formData.consignment.numberOfPackages || '-'}
                 </Typography>
               </Paper>
             </Grid>
@@ -1018,15 +1021,15 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             <Grid item xs={12} md={6}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="subtitle2" gutterBottom color="primary">
-                  Mercancias
+                  {t('ens.summaryGoods')}
                 </Typography>
                 <Typography variant="body2">
-                  Tipo: {formData.isGroupage ? 'Grupaje' : 'Directo'}
+                  {t('ens.summaryType')}: {formData.isGroupage ? t('ens.groupage') : t('ens.direct')}
                 </Typography>
                 <Typography variant="body2">
                   {formData.isGroupage
-                    ? `Envios House: ${formData.houseConsignments.length}`
-                    : `Partidas: ${formData.goods.length}`}
+                    ? `${t('ens.houseShipments')}: ${formData.houseConsignments.length}`
+                    : `${t('ens.items')}: ${formData.goods.length}`}
                 </Typography>
               </Paper>
             </Grid>
@@ -1041,7 +1044,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
           onClick={handleBack}
           startIcon={<BackIcon />}
         >
-          Anterior
+          {t('ens.previous')}
         </Button>
         <Box>
           {activeStep === steps.length - 1 ? (
@@ -1053,7 +1056,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                 disabled={saving}
                 sx={{ mr: 2 }}
               >
-                Guardar Borrador
+                {t('ens.saveDraft')}
               </Button>
               <Button
                 variant="contained"
@@ -1061,7 +1064,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                 onClick={() => handleSave(true)}
                 disabled={saving || (validationResult && !validationResult.isValid)}
               >
-                Guardar y Enviar a AEAT
+                {t('ens.saveAndSend')}
               </Button>
             </>
           ) : (
@@ -1070,7 +1073,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               onClick={handleNext}
               endIcon={<NextIcon />}
             >
-              Siguiente
+              {t('ens.next')}
             </Button>
           )}
         </Box>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { integrationsAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 import {
   CloudIcon,
   CheckCircleIcon,
@@ -40,6 +41,7 @@ const integrationIcons = {
 }
 
 export default function IntegrationsManager() {
+  const { t } = useTranslation()
   const [view, setView] = useState('dashboard')
   const [integrations, setIntegrations] = useState([])
   const [status, setStatus] = useState(null)
@@ -102,8 +104,8 @@ export default function IntegrationsManager() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Integraciones</h1>
-          <p className="text-gray-600">Gestion de conexiones con sistemas externos</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('integrations.title')}</h1>
+          <p className="text-gray-600">{t('integrations.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <button

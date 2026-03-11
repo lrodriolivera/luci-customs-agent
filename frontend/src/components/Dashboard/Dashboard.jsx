@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import { expeditionsAPI, dashboardAPI, classificationAPI } from '../../services/api'
 import {
@@ -24,15 +25,16 @@ import {
   ArrowUpRightIcon
 } from '@heroicons/react/24/outline'
 
-const quickActions = [
-  { path: '/classification', icon: TagIcon, label: 'Clasificacion TARIC', desc: 'IA arancelaria', color: 'from-sky-500 to-blue-600', bg: 'bg-sky-50 group-hover:bg-sky-100' },
-  { path: '/calculator', icon: CalculatorIcon, label: 'Calculadora', desc: 'Derechos e IVA', color: 'from-emerald-500 to-green-600', bg: 'bg-emerald-50 group-hover:bg-emerald-100' },
-  { path: '/pue', icon: ClipboardDocumentCheckIcon, label: 'PUE SOIVRE', desc: 'Inspecciones', color: 'from-violet-500 to-purple-600', bg: 'bg-violet-50 group-hover:bg-violet-100' },
-  { path: '/declarations', icon: DocumentTextIcon, label: 'Declaraciones', desc: 'H1 / H7 / ENS', color: 'from-amber-500 to-orange-600', bg: 'bg-amber-50 group-hover:bg-amber-100' },
-]
-
 export default function Dashboard() {
+  const { t } = useTranslation()
   const { user } = useAuth()
+
+  const quickActions = [
+    { path: '/classification', icon: TagIcon, label: t('dashboard.taricClassification'), desc: t('dashboard.aiTariff'), color: 'from-sky-500 to-blue-600', bg: 'bg-sky-50 group-hover:bg-sky-100' },
+    { path: '/calculator', icon: CalculatorIcon, label: t('dashboard.calculator'), desc: t('dashboard.dutiesVat'), color: 'from-emerald-500 to-green-600', bg: 'bg-emerald-50 group-hover:bg-emerald-100' },
+    { path: '/pue', icon: ClipboardDocumentCheckIcon, label: t('dashboard.pueSoivre'), desc: t('dashboard.inspectionsLabel'), color: 'from-violet-500 to-purple-600', bg: 'bg-violet-50 group-hover:bg-violet-100' },
+    { path: '/declarations', icon: DocumentTextIcon, label: t('dashboard.declarationsLabel'), desc: t('dashboard.h1H7Ens'), color: 'from-amber-500 to-orange-600', bg: 'bg-amber-50 group-hover:bg-amber-100' },
+  ]
   const [stats, setStats] = useState({ total: 0, pending: 0, inProgress: 0, completed: 0 })
   const [recentExpeditions, setRecentExpeditions] = useState([])
   const [alerts, setAlerts] = useState([])
@@ -90,24 +92,24 @@ export default function Dashboard() {
 
   const getGreeting = () => {
     const h = new Date().getHours()
-    if (h < 12) return 'Buenos dias'
-    if (h < 20) return 'Buenas tardes'
-    return 'Buenas noches'
+    if (h < 12) return t('dashboard.goodMorning')
+    if (h < 20) return t('dashboard.goodAfternoon')
+    return t('dashboard.goodEvening')
   }
 
   const getStatusConfig = (status) => {
     const map = {
-      'PENDING_DOCS': { label: 'Pendiente', dot: 'bg-amber-400', badge: 'bg-amber-50 text-amber-700 ring-amber-200' },
-      'pending_docs': { label: 'Pendiente', dot: 'bg-amber-400', badge: 'bg-amber-50 text-amber-700 ring-amber-200' },
-      'DOCS_RECEIVED': { label: 'Docs Recibidos', dot: 'bg-blue-400', badge: 'bg-blue-50 text-blue-700 ring-blue-200' },
-      'VALIDATING': { label: 'Validando', dot: 'bg-blue-400', badge: 'bg-blue-50 text-blue-700 ring-blue-200' },
-      'PROCESSING': { label: 'En Proceso', dot: 'bg-blue-400', badge: 'bg-blue-50 text-blue-700 ring-blue-200' },
-      'declaration_draft': { label: 'Borrador', dot: 'bg-gray-400', badge: 'bg-gray-50 text-gray-700 ring-gray-200' },
-      'ready_for_declaration': { label: 'Listo H1', dot: 'bg-indigo-400', badge: 'bg-indigo-50 text-indigo-700 ring-indigo-200' },
-      'green_channel': { label: 'Canal Verde', dot: 'bg-emerald-400', badge: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
-      'orange_channel': { label: 'Canal Naranja', dot: 'bg-orange-400', badge: 'bg-orange-50 text-orange-700 ring-orange-200' },
-      'red_channel': { label: 'Canal Rojo', dot: 'bg-red-400', badge: 'bg-red-50 text-red-700 ring-red-200' },
-      'COMPLETED': { label: 'Completado', dot: 'bg-emerald-400', badge: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
+      'PENDING_DOCS': { label: t('dashboard.statusPending'), dot: 'bg-amber-400', badge: 'bg-amber-50 text-amber-700 ring-amber-200' },
+      'pending_docs': { label: t('dashboard.statusPending'), dot: 'bg-amber-400', badge: 'bg-amber-50 text-amber-700 ring-amber-200' },
+      'DOCS_RECEIVED': { label: t('dashboard.statusDocsReceived'), dot: 'bg-blue-400', badge: 'bg-blue-50 text-blue-700 ring-blue-200' },
+      'VALIDATING': { label: t('dashboard.statusValidating'), dot: 'bg-blue-400', badge: 'bg-blue-50 text-blue-700 ring-blue-200' },
+      'PROCESSING': { label: t('dashboard.statusInProcess'), dot: 'bg-blue-400', badge: 'bg-blue-50 text-blue-700 ring-blue-200' },
+      'declaration_draft': { label: t('dashboard.statusDraft'), dot: 'bg-gray-400', badge: 'bg-gray-50 text-gray-700 ring-gray-200' },
+      'ready_for_declaration': { label: t('dashboard.statusReadyH1'), dot: 'bg-indigo-400', badge: 'bg-indigo-50 text-indigo-700 ring-indigo-200' },
+      'green_channel': { label: t('dashboard.statusGreenChannel'), dot: 'bg-emerald-400', badge: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
+      'orange_channel': { label: t('dashboard.statusOrangeChannel'), dot: 'bg-orange-400', badge: 'bg-orange-50 text-orange-700 ring-orange-200' },
+      'red_channel': { label: t('dashboard.statusRedChannel'), dot: 'bg-red-400', badge: 'bg-red-50 text-red-700 ring-red-200' },
+      'COMPLETED': { label: t('dashboard.statusCompleted'), dot: 'bg-emerald-400', badge: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
     }
     return map[status] || { label: status, dot: 'bg-gray-400', badge: 'bg-gray-50 text-gray-600 ring-gray-200' }
   }
@@ -130,10 +132,10 @@ export default function Dashboard() {
   }
 
   const statCards = [
-    { label: 'Expedientes', value: stats.total, icon: FolderIcon, color: 'text-sky-600', iconBg: 'bg-sky-100', accent: 'border-sky-200' },
-    { label: 'Pendientes', value: stats.pending, icon: ClockIcon, color: 'text-amber-600', iconBg: 'bg-amber-100', accent: 'border-amber-200' },
-    { label: 'En Proceso', value: stats.inProgress, icon: ArrowTrendingUpIcon, color: 'text-violet-600', iconBg: 'bg-violet-100', accent: 'border-violet-200' },
-    { label: 'Completados', value: stats.completed, icon: DocumentCheckIcon, color: 'text-emerald-600', iconBg: 'bg-emerald-100', accent: 'border-emerald-200' },
+    { label: t('dashboard.statExpeditions'), value: stats.total, icon: FolderIcon, color: 'text-sky-600', iconBg: 'bg-sky-100', accent: 'border-sky-200' },
+    { label: t('dashboard.statPending'), value: stats.pending, icon: ClockIcon, color: 'text-amber-600', iconBg: 'bg-amber-100', accent: 'border-amber-200' },
+    { label: t('dashboard.statInProgress'), value: stats.inProgress, icon: ArrowTrendingUpIcon, color: 'text-violet-600', iconBg: 'bg-violet-100', accent: 'border-violet-200' },
+    { label: t('dashboard.statCompleted'), value: stats.completed, icon: DocumentCheckIcon, color: 'text-emerald-600', iconBg: 'bg-emerald-100', accent: 'border-emerald-200' },
   ]
 
   return (
@@ -148,7 +150,7 @@ export default function Dashboard() {
           <div>
             <p className="text-sky-400 text-sm font-medium">{getGreeting()}</p>
             <h1 className="text-2xl font-bold text-white mt-1">
-              {user?.name || 'Usuario'}
+              {user?.name || t('dashboard.user')}
             </h1>
             <p className="text-slate-400 text-sm mt-1">
               {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -156,7 +158,7 @@ export default function Dashboard() {
           </div>
           <Link to="/expeditions/new" className="bg-white/10 backdrop-blur-sm text-white border border-white/20 font-medium px-5 py-2.5 rounded-xl hover:bg-white/20 transition-all flex items-center gap-2 text-sm">
             <PlusIcon className="w-4 h-4" />
-            Nuevo Expediente
+            {t('dashboard.newExpedition')}
           </Link>
         </div>
 
@@ -182,7 +184,7 @@ export default function Dashboard() {
       <div className="px-8 space-y-6">
         {/* Quick Actions */}
         <div>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Acciones Rapidas</h2>
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{t('dashboard.quickActions')}</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {quickActions.map(({ path, icon: Icon, label, desc, color, bg }) => (
               <Link key={path} to={path} className="group flex items-center gap-3 bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md hover:border-gray-200 transition-all">
@@ -208,16 +210,16 @@ export default function Dashboard() {
                   <BellAlertIcon className="w-4 h-4 text-red-500" />
                 </div>
                 <div>
-                  <span className="font-semibold text-gray-900 text-sm">Alertas</span>
+                  <span className="font-semibold text-gray-900 text-sm">{t('dashboard.alerts')}</span>
                   <span className="text-xs text-gray-500 ml-2">
-                    {alertStats.critical > 0 && <span className="text-red-600 font-medium">{alertStats.critical} criticas</span>}
+                    {alertStats.critical > 0 && <span className="text-red-600 font-medium">{alertStats.critical} {t('dashboard.criticalAlerts')}</span>}
                     {alertStats.critical > 0 && alertStats.warning > 0 && ' · '}
-                    {alertStats.warning > 0 && <span className="text-amber-600 font-medium">{alertStats.warning} avisos</span>}
+                    {alertStats.warning > 0 && <span className="text-amber-600 font-medium">{alertStats.warning} {t('dashboard.warnings')}</span>}
                   </span>
                 </div>
               </div>
               <Link to="/requirements" className="text-xs text-sky-600 hover:text-sky-700 font-medium flex items-center gap-1">
-                Ver todas <ArrowRightIcon className="w-3 h-3" />
+                {t('dashboard.viewAll')} <ArrowRightIcon className="w-3 h-3" />
               </Link>
             </div>
             <div className="divide-y divide-gray-50">
@@ -232,7 +234,7 @@ export default function Dashboard() {
                       <p className="text-xs text-gray-500 truncate">{alert.message}</p>
                     </div>
                     <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${isCritical ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
-                      {isCritical ? 'Critico' : 'Aviso'}
+                      {isCritical ? t('dashboard.criticalLabel') : t('dashboard.warningLabel')}
                     </span>
                   </Link>
                 )
@@ -244,7 +246,7 @@ export default function Dashboard() {
         {!alertsLoading && alertStats.total === 0 && (
           <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 rounded-xl px-5 py-3">
             <CheckCircleIcon className="w-5 h-5 text-emerald-500" />
-            <p className="text-sm text-emerald-700 font-medium">Sin alertas pendientes - Todo al dia</p>
+            <p className="text-sm text-emerald-700 font-medium">{t('dashboard.noAlerts')}</p>
           </div>
         )}
 
@@ -253,9 +255,9 @@ export default function Dashboard() {
           {/* Expeditions */}
           <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-900 text-sm">Expedientes Recientes</h2>
+              <h2 className="font-semibold text-gray-900 text-sm">{t('dashboard.recentExpeditions')}</h2>
               <Link to="/expeditions" className="text-xs text-sky-600 hover:text-sky-700 font-medium flex items-center gap-1">
-                Ver todos <ArrowRightIcon className="w-3 h-3" />
+                {t('dashboard.viewAllExpeditions')} <ArrowRightIcon className="w-3 h-3" />
               </Link>
             </div>
 
@@ -264,10 +266,10 @@ export default function Dashboard() {
                 <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <FolderIcon className="w-8 h-8 text-gray-300" />
                 </div>
-                <p className="text-gray-500 text-sm font-medium">Sin expedientes</p>
-                <p className="text-gray-400 text-xs mt-1">Crea tu primer expediente para empezar</p>
+                <p className="text-gray-500 text-sm font-medium">{t('dashboard.noExpeditions')}</p>
+                <p className="text-gray-400 text-xs mt-1">{t('dashboard.createFirstExpedition')}</p>
                 <Link to="/expeditions/new" className="inline-flex items-center gap-1.5 text-sm text-sky-600 font-medium mt-4 hover:text-sky-700">
-                  <PlusIcon className="w-4 h-4" /> Crear expediente
+                  <PlusIcon className="w-4 h-4" /> {t('dashboard.createExpedition')}
                 </Link>
               </div>
             ) : (
@@ -285,9 +287,9 @@ export default function Dashboard() {
                           </span>
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5 truncate">
-                          {exp.client?.companyName || 'Sin cliente'}
+                          {exp.client?.companyName || t('dashboard.noClient')}
                           <span className="mx-1.5 text-gray-300">·</span>
-                          {exp.operationType === 'IMPORT' || exp.operationType === 'import' ? 'Importacion' : 'Exportacion'}
+                          {exp.operationType === 'IMPORT' || exp.operationType === 'import' ? t('common.import') : t('common.export')}
                         </p>
                       </div>
                       <div className="text-right flex-shrink-0">
@@ -311,35 +313,35 @@ export default function Dashboard() {
               <div className="relative">
                 <div className="flex items-center gap-2 mb-4">
                   <SparklesIcon className="w-4 h-4 text-sky-400" />
-                  <h3 className="font-semibold text-white text-sm">Motor IA</h3>
+                  <h3 className="font-semibold text-white text-sm">{t('dashboard.aiEngine')}</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-white/5 rounded-lg p-3">
                     <p className="text-xl font-bold text-sky-400">{cacheStats?.totalEntries || 0}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">Codigos TARIC</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{t('dashboard.taricCodes')}</p>
                   </div>
                   <div className="bg-white/5 rounded-lg p-3">
                     <p className="text-xl font-bold text-emerald-400">{cacheStats?.totalHits || 0}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">Consultas IA</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{t('dashboard.aiQueries')}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-white/10">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <p className="text-[10px] text-slate-400">Modelo activo - Claude Sonnet 4</p>
+                  <p className="text-[10px] text-slate-400">{t('dashboard.activeModel')}</p>
                 </div>
               </div>
             </div>
 
             {/* Platform Stats */}
             <div className="bg-white rounded-xl border border-gray-100 p-5">
-              <h3 className="font-semibold text-gray-900 text-sm mb-4">Plataforma</h3>
+              <h3 className="font-semibold text-gray-900 text-sm mb-4">{t('dashboard.platform')}</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 bg-sky-50 rounded-lg flex items-center justify-center">
                       <GlobeAltIcon className="w-4 h-4 text-sky-600" />
                     </div>
-                    <span className="text-sm text-gray-600">Paises</span>
+                    <span className="text-sm text-gray-600">{t('dashboard.countries')}</span>
                   </div>
                   <span className="text-sm font-semibold text-gray-900">195</span>
                 </div>
@@ -348,7 +350,7 @@ export default function Dashboard() {
                     <div className="w-8 h-8 bg-violet-50 rounded-lg flex items-center justify-center">
                       <TagIcon className="w-4 h-4 text-violet-600" />
                     </div>
-                    <span className="text-sm text-gray-600">Capitulos TARIC</span>
+                    <span className="text-sm text-gray-600">{t('dashboard.taricChapters')}</span>
                   </div>
                   <span className="text-sm font-semibold text-gray-900">98</span>
                 </div>
@@ -357,9 +359,9 @@ export default function Dashboard() {
                     <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
                       <ClockIcon className="w-4 h-4 text-emerald-600" />
                     </div>
-                    <span className="text-sm text-gray-600">Clasif. IA</span>
+                    <span className="text-sm text-gray-600">{t('dashboard.aiClassification')}</span>
                   </div>
-                  <span className="text-sm font-semibold text-gray-900">&lt; 3 seg</span>
+                  <span className="text-sm font-semibold text-gray-900">{t('dashboard.lessThan3Sec')}</span>
                 </div>
               </div>
             </div>
@@ -371,8 +373,8 @@ export default function Dashboard() {
                   <ChatBubbleLeftRightIcon className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-semibold text-sm">Asistente LUCI</p>
-                  <p className="text-sky-100 text-xs">Consulta normativa con IA</p>
+                  <p className="text-white font-semibold text-sm">{t('dashboard.luciAssistant')}</p>
+                  <p className="text-sky-100 text-xs">{t('dashboard.aiRegulationQuery')}</p>
                 </div>
                 <ArrowRightIcon className="w-4 h-4 text-white/60 ml-auto group-hover:translate-x-1 transition-transform" />
               </div>

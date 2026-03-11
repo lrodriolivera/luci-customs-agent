@@ -1,6 +1,8 @@
 /**
  * Plan Limits Middleware
  * Checks if the user's subscription plan allows a specific action
+ *
+ * Plans: Professional (149 EUR), Business (749 EUR), Enterprise (contacto)
  */
 
 const { Tenant } = require('../models');
@@ -8,17 +10,15 @@ const logger = require('../config/logger');
 
 // Plan feature access
 const PLAN_FEATURES = {
-  free: ['classification_basic', 'calculator', 'taric_tree'],
-  starter: ['classification_basic', 'calculator', 'taric_tree', 'expeditions', 'analytics_basic'],
-  professional: ['classification_basic', 'classification_unlimited', 'calculator', 'taric_tree', 'expeditions', 'declarations', 'pue_soivre', 'preferences', 'analytics_basic', 'analytics_advanced', 'api_access'],
+  professional: ['classification_basic', 'classification_unlimited', 'calculator', 'taric_tree', 'expeditions', 'declarations', 'preferences', 'analytics_basic', 'api_access'],
+  business: ['classification_basic', 'classification_unlimited', 'calculator', 'taric_tree', 'expeditions', 'declarations', 'pue_soivre', 'preferences', 'analytics_basic', 'analytics_advanced', 'api_access'],
   enterprise: ['*'] // All features
 };
 
 // Monthly usage limits per plan
 const PLAN_LIMITS = {
-  free: { aiClassifications: 10, declarations: 0, expeditions: 5 },
-  starter: { aiClassifications: 100, declarations: 20, expeditions: 50 },
-  professional: { aiClassifications: -1, declarations: 500, expeditions: -1 }, // -1 = unlimited
+  professional: { aiClassifications: -1, declarations: 50, expeditions: -1 },
+  business: { aiClassifications: -1, declarations: 200, expeditions: -1 },
   enterprise: { aiClassifications: -1, declarations: -1, expeditions: -1 }
 };
 
@@ -29,8 +29,6 @@ function requireFeature(feature) {
   return async (req, res, next) => {
     try {
       const tenantId = req.user?.tenantId;
-
-      // No tenant = free plan
       const plan = await getTenantPlan(tenantId);
 
       if (plan === 'enterprise' || PLAN_FEATURES[plan]?.includes('*')) {
@@ -96,14 +94,14 @@ function requireUsage(metric) {
 
 // Helpers
 async function getTenantPlan(tenantId) {
-  if (!tenantId) return 'free';
+  if (!tenantId) return 'professional';
   const tenant = await Tenant.findById(tenantId).select('subscription.plan subscription.status').lean();
-  if (!tenant || tenant.subscription?.status === 'cancelled') return 'free';
-  return tenant.subscription?.plan || 'free';
+  if (!tenant || tenant.subscription?.status === 'cancelled') return 'professional';
+  return tenant.subscription?.plan || 'professional';
 }
 
 function getMinimumPlan(feature) {
-  for (const plan of ['starter', 'professional', 'enterprise']) {
+  for (const plan of ['professional', 'business', 'enterprise']) {
     if (PLAN_FEATURES[plan]?.includes(feature) || PLAN_FEATURES[plan]?.includes('*')) {
       return plan;
     }

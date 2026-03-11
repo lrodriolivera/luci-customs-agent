@@ -14,8 +14,10 @@ import {
   EyeIcon
 } from '@heroicons/react/24/outline'
 import { aeatRealAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 
 export default function AEATStatusMonitor() {
+  const { t } = useTranslation()
   const [trackedDeclarations, setTrackedDeclarations] = useState([])
   const [alerts, setAlerts] = useState([])
   const [serviceStatus, setServiceStatus] = useState(null)

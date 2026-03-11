@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useDropzone } from 'react-dropzone'
 import { portalAPI } from '../../services/api'
 import toast from 'react-hot-toast'
@@ -12,28 +13,29 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function PortalDocuments() {
+  const { t } = useTranslation()
   const { expedition, token } = useOutletContext()
   const [uploading, setUploading] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState([])
   const [selectedDocType, setSelectedDocType] = useState('')
 
   const documentTypes = [
-    { value: 'commercial_invoice', label: 'Factura Comercial' },
-    { value: 'packing_list', label: 'Packing List' },
-    { value: 'bill_of_lading', label: 'Bill of Lading (B/L)' },
-    { value: 'air_waybill', label: 'Air Waybill (AWB)' },
-    { value: 'cmr', label: 'CMR' },
-    { value: 'certificate_origin', label: 'Certificado de Origen' },
-    { value: 'eur1', label: 'EUR.1' },
-    { value: 'sanitary_certificate', label: 'Certificado Sanitario' },
-    { value: 'phytosanitary_certificate', label: 'Certificado Fitosanitario' },
-    { value: 'insurance', label: 'Poliza de Seguro' },
-    { value: 'other', label: 'Otro Documento' }
+    { value: 'commercial_invoice', label: t('portal.docCommercialInvoice') },
+    { value: 'packing_list', label: t('portal.docPackingList') },
+    { value: 'bill_of_lading', label: t('portal.docBillOfLading') },
+    { value: 'air_waybill', label: t('portal.docAirWaybill') },
+    { value: 'cmr', label: t('portal.docCmr') },
+    { value: 'certificate_origin', label: t('portal.docCertificateOrigin') },
+    { value: 'eur1', label: t('portal.docEur1') },
+    { value: 'sanitary_certificate', label: t('portal.docHealthCert') },
+    { value: 'phytosanitary_certificate', label: t('portal.docPhytoCert') },
+    { value: 'insurance', label: t('portal.docInsurance') },
+    { value: 'other', label: t('portal.docOther') }
   ]
 
   const onDrop = useCallback(async (acceptedFiles) => {
     if (!selectedDocType) {
-      toast.error('Seleccione el tipo de documento primero')
+      toast.error(t('portal.selectDocFirst'))
       return
     }
 
@@ -53,20 +55,20 @@ export default function PortalDocuments() {
           status: 'success'
         }])
 
-        toast.success(`${file.name} subido correctamente`)
+        toast.success(`${file.name} ${t('portal.uploadSuccess')}`)
       } catch (error) {
         setUploadedFiles(prev => [...prev, {
           name: file.name,
           type: selectedDocType,
           status: 'error'
         }])
-        toast.error(`Error al subir ${file.name}`)
+        toast.error(`${t('portal.uploadError')} ${file.name}`)
       }
     }
 
     setUploading(false)
     setSelectedDocType('')
-  }, [token, selectedDocType])
+  }, [token, selectedDocType, t])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -83,15 +85,15 @@ export default function PortalDocuments() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Subir Documentos</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('portal.uploadTitle')}</h1>
         <p className="text-gray-600 mt-1">
-          Suba los documentos requeridos para su expediente de {expedition?.operationType === 'IMPORT' ? 'importacion' : 'exportacion'}
+          {expedition?.operationType === 'IMPORT' ? t('portal.uploadSubtitleImport') : t('portal.uploadSubtitleExport')}
         </p>
       </div>
 
       {/* Document Type Selection */}
       <div className="card">
-        <h2 className="text-lg font-semibold mb-4">1. Seleccione el tipo de documento</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('portal.selectDocType')}</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
           {documentTypes.map(type => (
             <button
@@ -111,7 +113,7 @@ export default function PortalDocuments() {
 
       {/* Upload Area */}
       <div className="card">
-        <h2 className="text-lg font-semibold mb-4">2. Suba el archivo</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('portal.uploadFile')}</h2>
 
         <div
           {...getRootProps()}
@@ -124,19 +126,19 @@ export default function PortalDocuments() {
           {uploading ? (
             <div className="flex flex-col items-center">
               <ArrowPathIcon className="w-12 h-12 text-luci animate-spin mb-4" />
-              <p className="text-gray-600">Subiendo documento...</p>
+              <p className="text-gray-600">{t('portal.uploading')}</p>
             </div>
           ) : (
             <div className="flex flex-col items-center">
               <CloudArrowUpIcon className="w-16 h-16 text-gray-400 mb-4" />
               <p className="text-gray-700 font-medium">
                 {selectedDocType
-                  ? 'Arrastre archivos aqui o haga clic para seleccionar'
-                  : 'Seleccione primero el tipo de documento'
+                  ? t('portal.dragFiles')
+                  : t('portal.selectFirst')
                 }
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                PDF, Word, imagenes (max. 10MB)
+                {t('portal.fileFormats')}
               </p>
             </div>
           )}
@@ -146,7 +148,7 @@ export default function PortalDocuments() {
       {/* Uploaded Files */}
       {uploadedFiles.length > 0 && (
         <div className="card">
-          <h2 className="text-lg font-semibold mb-4">Archivos Subidos</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('portal.uploadedFiles')}</h2>
           <div className="space-y-2">
             {uploadedFiles.map((file, index) => (
               <div
@@ -170,7 +172,7 @@ export default function PortalDocuments() {
                 <span className={`text-xs ${
                   file.status === 'success' ? 'text-green-600' : 'text-red-600'
                 }`}>
-                  {file.status === 'success' ? 'Subido' : 'Error'}
+                  {file.status === 'success' ? t('portal.uploaded') : t('common.error')}
                 </span>
               </div>
             ))}
@@ -180,7 +182,7 @@ export default function PortalDocuments() {
 
       {/* Checklist */}
       <div className="card">
-        <h2 className="text-lg font-semibold mb-4">Checklist de Documentos</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('portal.docChecklist')}</h2>
         <div className="space-y-2">
           {expedition?.documentChecklist?.map((doc, index) => (
             <div
@@ -199,23 +201,21 @@ export default function PortalDocuments() {
               </span>
               {doc.required && (
                 <span className={`text-xs ml-auto ${doc.uploaded ? 'text-green-600' : 'text-red-500'}`}>
-                  {doc.required ? 'Obligatorio' : 'Opcional'}
+                  {doc.required ? t('common.required') : t('common.optional')}
                 </span>
               )}
             </div>
           )) || (
-            <p className="text-gray-500 text-sm">Cargando checklist...</p>
+            <p className="text-gray-500 text-sm">{t('portal.loadingChecklist')}</p>
           )}
         </div>
       </div>
 
       {/* Help */}
       <div className="card bg-blue-50 border-blue-200">
-        <h3 className="font-semibold text-blue-900 mb-2">Necesita ayuda?</h3>
+        <h3 className="font-semibold text-blue-900 mb-2">{t('portal.needHelp')}</h3>
         <p className="text-sm text-blue-800">
-          Si tiene dudas sobre que documentos subir o como obtenerlos,
-          puede consultar con LUCI a traves del chat. Nuestro asistente
-          virtual le guiara en el proceso.
+          {t('portal.helpText')}
         </p>
       </div>
     </div>

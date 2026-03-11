@@ -379,7 +379,7 @@ const submitDeclaration = async (req, res) => {
     expedition.declaration.mrn = aeatResult.mrn;
     expedition.declaration.submittedAt = new Date();
     expedition.declaration.acceptanceDate = new Date();
-    expedition.declaration.channel = aeatResult.channel;
+    expedition.declaration.channel = aeatResult.channel || 'green';
 
     // Guardar respuesta completa de AEAT
     expedition.declaration.aeatResponse = {

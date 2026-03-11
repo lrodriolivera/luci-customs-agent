@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FileText,
   Download,
@@ -20,38 +21,39 @@ import {
 } from 'lucide-react';
 import { portalAPI } from '../../services/api';
 
-const DOC_TYPE_CONFIG = {
-  levante: {
-    icon: CheckCircle,
-    color: 'green',
-    title: 'Documento de Levante',
-    description: 'Autorizacion oficial de despacho aduanero'
-  },
-  declaration: {
-    icon: FileText,
-    color: 'blue',
-    title: 'Copia de Declaracion',
-    description: 'DUA presentado ante la AEAT'
-  },
-  payment_receipt: {
-    icon: Receipt,
-    color: 'purple',
-    title: 'Recibo de Pago',
-    description: 'Comprobante de pago de derechos'
-  },
-  certificate: {
-    icon: Award,
-    color: 'yellow',
-    title: 'Certificado',
-    description: 'Certificado de origen validado'
-  }
-};
-
 const PortalSignedDocs = ({ token, expedition }) => {
+  const { t } = useTranslation();
   const [documents, setDocuments] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [downloading, setDownloading] = useState(null);
+
+  const DOC_TYPE_CONFIG = {
+    levante: {
+      icon: CheckCircle,
+      color: 'green',
+      title: t('portal.levanteDoc'),
+      description: t('portal.levanteDocDesc')
+    },
+    declaration: {
+      icon: FileText,
+      color: 'blue',
+      title: t('portal.declarationCopy'),
+      description: t('portal.declarationCopyDesc')
+    },
+    payment_receipt: {
+      icon: Receipt,
+      color: 'purple',
+      title: t('portal.paymentReceipt'),
+      description: t('portal.paymentReceiptDesc')
+    },
+    certificate: {
+      icon: Award,
+      color: 'yellow',
+      title: t('portal.certificate'),
+      description: t('portal.certificateDesc')
+    }
+  };
 
   useEffect(() => {
     fetchDocuments();
@@ -63,7 +65,7 @@ const PortalSignedDocs = ({ token, expedition }) => {
       const response = await portalAPI.getSignedDocuments(token);
       setDocuments(response.data);
     } catch (err) {
-      setError('Error al cargar documentos firmados');
+      setError(t('portal.errorLoadingSignedDocs'));
       console.error('Error fetching signed documents:', err);
     } finally {
       setLoading(false);
@@ -100,7 +102,7 @@ const PortalSignedDocs = ({ token, expedition }) => {
       }
     } catch (err) {
       console.error('Error downloading document:', err);
-      alert('Error al descargar el documento');
+      alert(t('portal.errorDownloading'));
     } finally {
       setDownloading(null);
     }
@@ -243,10 +245,10 @@ Generado: ${formatDate(data.generatedAt)}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center">
           <Shield className="w-6 h-6 mr-2 text-green-600" />
-          Documentos Oficiales
+          {t('portal.officialDocuments')}
         </h2>
         <p className="text-gray-600">
-          Descargue los documentos oficiales y firmados de su expediente
+          {t('portal.officialDocsDesc')}
         </p>
 
         {documents?.mrn && (
@@ -325,17 +327,17 @@ Generado: ${formatDate(data.generatedAt)}
                     {downloading === doc.type ? (
                       <>
                         <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                        Descargando...
+                        {t('portal.downloading')}
                       </>
                     ) : doc.downloadUrl?.startsWith('http') ? (
                       <>
                         <ExternalLink className="w-4 h-4 mr-2" />
-                        Abrir
+                        {t('portal.open')}
                       </>
                     ) : (
                       <>
                         <Download className="w-4 h-4 mr-2" />
-                        Descargar
+                        {t('common.download')}
                       </>
                     )}
                   </button>
@@ -350,23 +352,22 @@ Generado: ${formatDate(data.generatedAt)}
             <FileCheck className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            No hay documentos disponibles
+            {t('portal.noDocsAvailable')}
           </h3>
           <p className="text-gray-500">
-            Los documentos oficiales estaran disponibles una vez que el expediente
-            haya sido procesado y se haya obtenido el levante.
+            {t('portal.noDocsAvailableDesc')}
           </p>
         </div>
       )}
 
       {/* Info Box */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-800 mb-2">Informacion</h3>
+        <h3 className="font-semibold text-blue-800 mb-2">{t('portal.docsInfo')}</h3>
         <ul className="text-sm text-blue-700 space-y-1">
-          <li>• El Documento de Levante certifica la autorizacion de la aduana para retirar la mercancia</li>
-          <li>• La copia de la Declaracion (DUA) es el documento oficial presentado ante la AEAT</li>
-          <li>• Los recibos de pago son comprobantes de los derechos e impuestos abonados</li>
-          <li>• Para documentos con firma digital, verifique su autenticidad en la sede electronica de la AEAT</li>
+          <li>• {t('portal.docsInfoLevante')}</li>
+          <li>• {t('portal.docsInfoDua')}</li>
+          <li>• {t('portal.docsInfoReceipts')}</li>
+          <li>• {t('portal.docsInfoVerify')}</li>
         </ul>
       </div>
     </div>

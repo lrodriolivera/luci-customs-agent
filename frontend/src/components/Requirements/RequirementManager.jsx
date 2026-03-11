@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { requirementsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import {
@@ -58,6 +59,7 @@ const TYPE_LABELS = {
 
 // ==================== Requirement AI Panel Component ====================
 function RequirementAIPanel({ requirement, onClose, onApplySuggestion }) {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('analyze')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -564,6 +566,7 @@ function RequirementAIPanel({ requirement, onClose, onApplySuggestion }) {
 }
 
 export default function RequirementManager({ expeditionId, onRequirementChange }) {
+  const { t } = useTranslation()
   const [requirements, setRequirements] = useState([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState(null)
@@ -604,7 +607,7 @@ export default function RequirementManager({ expeditionId, onRequirementChange }
       setRequirements(data)
     } catch (error) {
       console.error('Error loading requirements:', error)
-      toast.error('Error al cargar requerimientos')
+      toast.error(t('requirements.errorLoading'))
     } finally {
       setLoading(false)
     }
@@ -614,7 +617,7 @@ export default function RequirementManager({ expeditionId, onRequirementChange }
   const handleCreateRequirement = async (e) => {
     e.preventDefault()
     if (!newRequirement.subject || !newRequirement.description) {
-      toast.error('Completa los campos obligatorios')
+      toast.error(t('requirements.fillRequired'))
       return
     }
 
@@ -624,7 +627,7 @@ export default function RequirementManager({ expeditionId, onRequirementChange }
         expeditionId,
         ...newRequirement
       })
-      toast.success('Requerimiento creado')
+      toast.success(t('requirements.created'))
       setShowNewForm(false)
       setNewRequirement({
         requirementType: 'documentary',
@@ -646,14 +649,14 @@ export default function RequirementManager({ expeditionId, onRequirementChange }
   // Agregar respuesta
   const handleAddResponse = async (requirementId) => {
     if (!responseForm.notes) {
-      toast.error('Escribe una respuesta')
+      toast.error(t('requirements.writeResponse'))
       return
     }
 
     setSubmitting(true)
     try {
       await requirementsAPI.addResponse(requirementId, responseForm)
-      toast.success('Respuesta agregada')
+      toast.success(t('requirements.responseAdded'))
       setShowResponseForm(null)
       setResponseForm({ responseType: 'documentary', notes: '' })
       loadRequirements()
@@ -690,9 +693,9 @@ export default function RequirementManager({ expeditionId, onRequirementChange }
         notes: data.suggestedResponse || ''
       })
       setShowResponseForm(requirementId)
-      toast.success('Respuesta generada con IA')
+      toast.success(t('requirements.aiResponseGenerated'))
     } catch (error) {
-      toast.error('Error al generar respuesta con IA')
+      toast.error(t('requirements.errorAiResponse'))
     } finally {
       setGeneratingAI(null)
     }
@@ -706,7 +709,7 @@ export default function RequirementManager({ expeditionId, onRequirementChange }
         status,
         notes: `Resuelto como ${status}`
       })
-      toast.success('Requerimiento resuelto')
+      toast.success(t('requirements.resolved'))
       loadRequirements()
       onRequirementChange?.()
     } catch (error) {
@@ -738,7 +741,7 @@ export default function RequirementManager({ expeditionId, onRequirementChange }
       {/* Header */}
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold text-gray-900">
-          Requerimientos AEAT
+          {t('requirements.title')}
           {requirements.length > 0 && (
             <span className="ml-2 text-sm font-normal text-gray-500">
               ({requirements.length})
@@ -750,19 +753,19 @@ export default function RequirementManager({ expeditionId, onRequirementChange }
           className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <PlusIcon className="h-4 w-4" />
-          Nuevo Requerimiento
+          {t('requirements.newRequirement')}
         </button>
       </div>
 
       {/* Formulario nuevo requerimiento */}
       {showNewForm && (
         <div className="bg-gray-50 border rounded-lg p-4">
-          <h4 className="font-medium text-gray-900 mb-4">Crear Requerimiento</h4>
+          <h4 className="font-medium text-gray-900 mb-4">{t('requirements.createRequirement')}</h4>
           <form onSubmit={handleCreateRequirement} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo de Requerimiento
+                  {t('requirements.requirementType')}
                 </label>
                 <select
                   value={newRequirement.requirementType}
@@ -776,23 +779,23 @@ export default function RequirementManager({ expeditionId, onRequirementChange }
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Canal
+                  {t('requirements.channel')}
                 </label>
                 <select
                   value={newRequirement.channel}
                   onChange={(e) => setNewRequirement({ ...newRequirement, channel: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="yellow">Amarillo - Certificados</option>
-                  <option value="orange">Naranja - Documental</option>
-                  <option value="red">Rojo - Inspeccion</option>
+                  <option value="yellow">{t('requirements.channelYellow')} - {t('requirements.channelYellowDesc')}</option>
+                  <option value="orange">{t('requirements.channelOrange')} - {t('requirements.channelOrangeDesc')}</option>
+                  <option value="red">{t('requirements.channelRed')} - {t('requirements.channelRedDesc')}</option>
                 </select>
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Asunto *
+                {t('requirements.subject')} *
               </label>
               <input
                 type="text"
@@ -806,7 +809,7 @@ export default function RequirementManager({ expeditionId, onRequirementChange }
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Descripcion *
+                {t('common.description')} *
               </label>
               <textarea
                 value={newRequirement.description}
@@ -820,7 +823,7 @@ export default function RequirementManager({ expeditionId, onRequirementChange }
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fecha Limite
+                {t('requirements.deadline')}
               </label>
               <input
                 type="date"
@@ -836,14 +839,14 @@ export default function RequirementManager({ expeditionId, onRequirementChange }
                 onClick={() => setShowNewForm(false)}
                 className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 disabled={submitting}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
-                {submitting ? 'Creando...' : 'Crear Requerimiento'}
+                {submitting ? t('requirements.creating') : t('requirements.createRequirement')}
               </button>
             </div>
           </form>
@@ -854,8 +857,8 @@ export default function RequirementManager({ expeditionId, onRequirementChange }
       {requirements.length === 0 ? (
         <div className="text-center py-8 bg-gray-50 rounded-lg">
           <CheckCircleIcon className="h-12 w-12 text-green-500 mx-auto mb-2" />
-          <p className="text-gray-600">No hay requerimientos pendientes</p>
-          <p className="text-sm text-gray-500">El expediente no tiene requerimientos de AEAT</p>
+          <p className="text-gray-600">{t('requirements.noPendingRequirements')}</p>
+          <p className="text-sm text-gray-500">{t('requirements.expeditionNoRequirements')}</p>
         </div>
       ) : (
         <div className="space-y-3">

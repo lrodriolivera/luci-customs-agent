@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><CC515CV1Sal xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/CC515CV1Sal.xsd" Id="20260213134828165017">
+	<messageSender>NECA.ES</messageSender>
+	<messageRecipient>ESB22477020</messageRecipient>
+	<preparationDateAndTime>2026-02-13T13:48:29</preparationDateAndTime>
+	<messageIdentification>20260213134828165017</messageIdentification>
+	<messageType>RE515C</messageType>
+	<correlationIdentifier>20260213094826264860374</correlationIdentifier>
+	<ControlRespuesta>
+		<tipoRespuesta>EF</tipoRespuesta>
+	</ControlRespuesta>
+	<FunctionalError>
+		<errorPointer>/CC515C/GoodsShipment/Consignment/LocationOfGoods/authorisationNumber</errorPointer>
+		<errorCode>14</errorCode>
+		<errorReason>1650</errorReason>
+		<errorDescription>El recinto indicado en AuthorisationNumber (ubicación) NO existe.</errorDescription>
+		<originalAttributeValue>ES009999</originalAttributeValue>
+	</FunctionalError>
+	<FunctionalError>
+		<errorPointer>/CC515C/GoodsShipment/Consignment/CountryOfRoutingOfConsignment</errorPointer>
+		<errorCode>13</errorCode>
+		<errorReason>1020</errorReason>
+		<errorDescription>Si ExportOperation/security es '2', el grupo CountryOfRoutingOfConsignment es obligatorio.</errorDescription>
+	</FunctionalError>
+	<FunctionalError>
+		<errorPointer>/CC515C/GoodsShipment/GoodsItem[1]/Origin/regionOfDispatch</errorPointer>
+		<errorCode>14</errorCode>
+		<errorReason>1877</errorReason>
+		<errorDescription>Si countryOfExport es España, regionOfDispatch debe venir relleno.</errorDescription>
+	</FunctionalError>
+</CC515CV1Sal>
+
+</env:Body></env:Envelope>

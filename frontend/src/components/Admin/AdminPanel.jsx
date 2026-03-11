@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import {
   UsersIcon,
   Cog6ToothIcon,
@@ -24,25 +25,11 @@ import {
 } from '@heroicons/react/24/outline'
 import api from '../../services/api'
 
-const tabs = [
-  { id: 'dashboard', name: 'Dashboard', icon: ChartBarIcon },
-  { id: 'users', name: 'Usuarios', icon: UsersIcon },
-  { id: 'settings', name: 'Configuracion', icon: Cog6ToothIcon },
-  { id: 'audit', name: 'Auditoria', icon: ClipboardDocumentListIcon }
-]
-
 const roleColors = {
   admin: 'bg-red-100 text-red-800',
   supervisor: 'bg-purple-100 text-purple-800',
   agent: 'bg-blue-100 text-blue-800',
   viewer: 'bg-gray-100 text-gray-800'
-}
-
-const roleLabels = {
-  admin: 'Administrador',
-  supervisor: 'Supervisor',
-  agent: 'Agente',
-  viewer: 'Consultor'
 }
 
 const actionIcons = {
@@ -60,8 +47,23 @@ const actionIcons = {
 }
 
 export default function AdminPanel() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [loading, setLoading] = useState(true)
+
+  const tabs = [
+    { id: 'dashboard', name: t('admin.dashboard'), icon: ChartBarIcon },
+    { id: 'users', name: t('admin.users'), icon: UsersIcon },
+    { id: 'settings', name: t('admin.settings'), icon: Cog6ToothIcon },
+    { id: 'audit', name: t('admin.audit'), icon: ClipboardDocumentListIcon }
+  ]
+
+  const roleLabels = {
+    admin: t('admin.roleAdmin'),
+    supervisor: t('admin.roleSupervisor'),
+    agent: t('admin.roleAgent'),
+    viewer: t('admin.roleConsultant')
+  }
 
   // Dashboard state
   const [dashboardStats, setDashboardStats] = useState(null)
@@ -120,7 +122,7 @@ export default function AdminPanel() {
           break
       }
     } catch (error) {
-      toast.error('Error al cargar datos')
+      toast.error(t('admin.errorLoadingData'))
       console.error(error)
     } finally {
       setLoading(false)
@@ -134,9 +136,9 @@ export default function AdminPanel() {
         settings: editingSettings[section]
       })
       setSettings(prev => ({ ...prev, [section]: editingSettings[section] }))
-      toast.success('Configuracion guardada')
+      toast.success(t('admin.settingsSaved'))
     } catch (error) {
-      toast.error('Error al guardar')
+      toast.error(t('admin.errorSaving'))
     }
   }
 
@@ -153,10 +155,10 @@ export default function AdminPanel() {
           password: res.data.temporaryPassword
         })
       } else {
-        toast.success('Usuario creado exitosamente')
+        toast.success(t('admin.userCreated'))
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Error al crear usuario')
+      toast.error(error.response?.data?.error || t('admin.errorCreatingUser'))
     }
   }
 
@@ -169,7 +171,7 @@ export default function AdminPanel() {
         password: res.data.temporaryPassword
       })
     } catch (error) {
-      toast.error('Error al restablecer contraseña')
+      toast.error(t('admin.errorResetPassword'))
     }
   }
 
@@ -178,9 +180,9 @@ export default function AdminPanel() {
       const res = await api.put(`/api/admin/users/${userId}`, userData)
       setUsers(prev => prev.map(u => u.id === userId ? res.data.user : u))
       setEditingUser(null)
-      toast.success('Usuario actualizado')
+      toast.success(t('admin.userUpdated'))
     } catch (error) {
-      toast.error('Error al actualizar')
+      toast.error(t('admin.errorUpdatingUser'))
     }
   }
 
@@ -189,9 +191,9 @@ export default function AdminPanel() {
     try {
       await api.delete(`/api/admin/users/${userId}`)
       setUsers(prev => prev.filter(u => u.id !== userId))
-      toast.success('Usuario eliminado')
+      toast.success(t('admin.userDeleted'))
     } catch (error) {
-      toast.error('Error al eliminar')
+      toast.error(t('admin.errorDeletingUser'))
     }
   }
 
@@ -213,37 +215,37 @@ export default function AdminPanel() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Usuarios</p>
+              <p className="text-sm text-gray-500">{t('admin.totalUsers')}</p>
               <p className="text-3xl font-bold text-gray-900">{dashboardStats?.users?.total || 0}</p>
             </div>
             <UsersIcon className="w-12 h-12 text-blue-500 opacity-20" />
           </div>
           <div className="mt-2 flex items-center text-sm">
-            <span className="text-green-600">{dashboardStats?.users?.active || 0} activos</span>
+            <span className="text-green-600">{dashboardStats?.users?.active || 0} {t('admin.activeUsers')}</span>
             <span className="mx-2 text-gray-300">|</span>
-            <span className="text-gray-500">{dashboardStats?.users?.inactive || 0} inactivos</span>
+            <span className="text-gray-500">{dashboardStats?.users?.inactive || 0} {t('admin.inactiveUsers')}</span>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Actividad (24h)</p>
+              <p className="text-sm text-gray-500">{t('admin.activity24h')}</p>
               <p className="text-3xl font-bold text-gray-900">{dashboardStats?.activity?.last24h || 0}</p>
             </div>
             <ClockIcon className="w-12 h-12 text-purple-500 opacity-20" />
           </div>
           <p className="mt-2 text-sm text-gray-500">
-            {dashboardStats?.activity?.totalLogs || 0} eventos totales
+            {dashboardStats?.activity?.totalLogs || 0} {t('admin.totalEvents')}
           </p>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Estado AEAT</p>
+              <p className="text-sm text-gray-500">{t('admin.aeatStatus')}</p>
               <p className="text-xl font-bold text-gray-900">
-                {dashboardStats?.system?.aeatStatus === 'connected' ? 'Conectado' : 'Desconectado'}
+                {dashboardStats?.system?.aeatStatus === 'connected' ? t('admin.connected') : t('admin.disconnected')}
               </p>
             </div>
             {dashboardStats?.system?.aeatStatus === 'connected' ? (
@@ -257,9 +259,9 @@ export default function AdminPanel() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Asistente IA</p>
+              <p className="text-sm text-gray-500">{t('admin.aiAssistant')}</p>
               <p className="text-xl font-bold text-gray-900">
-                {dashboardStats?.system?.aiStatus === 'active' ? 'Activo' : 'Inactivo'}
+                {dashboardStats?.system?.aiStatus === 'active' ? t('admin.aiActive') : t('admin.aiInactive')}
               </p>
             </div>
             {dashboardStats?.system?.aiStatus === 'active' ? (
@@ -273,7 +275,7 @@ export default function AdminPanel() {
 
       {/* Users by Role */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Usuarios por Rol</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('admin.usersByRole')}</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Object.entries(dashboardStats?.users?.byRole || {}).map(([role, count]) => (
             <div key={role} className="text-center p-4 bg-gray-50 rounded-lg">
@@ -299,7 +301,7 @@ export default function AdminPanel() {
               <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar por nombre o email..."
+                placeholder={t('admin.searchByNameEmail')}
                 value={userFilter.search}
                 onChange={(e) => setUserFilter(prev => ({ ...prev, search: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-luci focus:border-transparent"
@@ -311,7 +313,7 @@ export default function AdminPanel() {
             onChange={(e) => setUserFilter(prev => ({ ...prev, role: e.target.value }))}
             className="border border-gray-300 rounded-lg px-3 py-2"
           >
-            <option value="">Todos los roles</option>
+            <option value="">{t('admin.allRoles')}</option>
             {roles.map(r => (
               <option key={r.id} value={r.id}>{r.name}</option>
             ))}
@@ -321,16 +323,16 @@ export default function AdminPanel() {
             onChange={(e) => setUserFilter(prev => ({ ...prev, status: e.target.value }))}
             className="border border-gray-300 rounded-lg px-3 py-2"
           >
-            <option value="">Todos los estados</option>
-            <option value="active">Activos</option>
-            <option value="inactive">Inactivos</option>
+            <option value="">{t('admin.allStatuses')}</option>
+            <option value="active">{t('admin.activeStatus')}</option>
+            <option value="inactive">{t('admin.inactiveStatus')}</option>
           </select>
           <button
             onClick={() => { setEditingUser(null); setShowUserModal(true) }}
             className="flex items-center gap-2 px-4 py-2 bg-luci text-white rounded-lg hover:bg-luci-dark"
           >
             <UserPlusIcon className="w-5 h-5" />
-            Nuevo Usuario
+            {t('admin.newUser')}
           </button>
         </div>
       </div>
@@ -340,11 +342,11 @@ export default function AdminPanel() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rol</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ultimo Acceso</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.user')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.role')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.lastAccess')}</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -369,16 +371,16 @@ export default function AdminPanel() {
                 <td className="px-6 py-4">
                   {user.status === 'active' ? (
                     <span className="flex items-center text-green-600 text-sm">
-                      <CheckCircleIcon className="w-4 h-4 mr-1" /> Activo
+                      <CheckCircleIcon className="w-4 h-4 mr-1" /> {t('admin.aiActive')}
                     </span>
                   ) : (
                     <span className="flex items-center text-gray-500 text-sm">
-                      <XCircleIcon className="w-4 h-4 mr-1" /> Inactivo
+                      <XCircleIcon className="w-4 h-4 mr-1" /> {t('admin.aiInactive')}
                     </span>
                   )}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500">
-                  {user.lastLogin ? new Date(user.lastLogin).toLocaleString('es-ES') : 'Nunca'}
+                  {user.lastLogin ? new Date(user.lastLogin).toLocaleString('es-ES') : t('admin.never')}
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">
@@ -438,11 +440,11 @@ export default function AdminPanel() {
       {/* General Settings */}
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Configuracion General</h3>
+          <h3 className="text-lg font-semibold">{t('admin.generalSettings')}</h3>
         </div>
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de Empresa</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.companyName')}</label>
             <input
               type="text"
               value={editingSettings?.general?.companyName || ''}
@@ -454,7 +456,7 @@ export default function AdminPanel() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Zona Horaria</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.timezone')}</label>
             <select
               value={editingSettings?.general?.timezone || ''}
               onChange={(e) => setEditingSettings(prev => ({
@@ -469,7 +471,7 @@ export default function AdminPanel() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Formato de Fecha</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.dateFormat')}</label>
             <select
               value={editingSettings?.general?.dateFormat || ''}
               onChange={(e) => setEditingSettings(prev => ({
@@ -484,7 +486,7 @@ export default function AdminPanel() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.currency')}</label>
             <select
               value={editingSettings?.general?.currency || ''}
               onChange={(e) => setEditingSettings(prev => ({
@@ -504,7 +506,7 @@ export default function AdminPanel() {
             onClick={() => handleSaveSettings('general')}
             className="px-4 py-2 bg-luci text-white rounded-lg hover:bg-luci-dark"
           >
-            Guardar Cambios
+            {t('admin.saveChanges')}
           </button>
         </div>
       </div>
@@ -512,13 +514,13 @@ export default function AdminPanel() {
       {/* Notifications Settings */}
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Notificaciones</h3>
+          <h3 className="text-lg font-semibold">{t('admin.notifications')}</h3>
         </div>
         <div className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Notificaciones por Email</p>
-              <p className="text-sm text-gray-500">Enviar alertas por correo electronico</p>
+              <p className="font-medium">{t('admin.emailNotifications')}</p>
+              <p className="text-sm text-gray-500">{t('admin.emailAlertsDesc')}</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -535,7 +537,7 @@ export default function AdminPanel() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Alerta Plazos (dias antes)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.deadlineAlert')}</label>
               <input
                 type="number"
                 min="1"
@@ -549,7 +551,7 @@ export default function AdminPanel() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Alerta Inspecciones (horas antes)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.inspectionAlert')}</label>
               <input
                 type="number"
                 min="1"
@@ -563,7 +565,7 @@ export default function AdminPanel() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Alerta Requerimientos (horas)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.requirementAlert')}</label>
               <input
                 type="number"
                 min="1"
@@ -583,7 +585,7 @@ export default function AdminPanel() {
             onClick={() => handleSaveSettings('notifications')}
             className="px-4 py-2 bg-luci text-white rounded-lg hover:bg-luci-dark"
           >
-            Guardar Cambios
+            {t('admin.saveChanges')}
           </button>
         </div>
       </div>
@@ -591,7 +593,7 @@ export default function AdminPanel() {
       {/* Integrations Settings */}
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Integraciones</h3>
+          <h3 className="text-lg font-semibold">{t('admin.integrationsTitle')}</h3>
         </div>
         <div className="p-6 space-y-4">
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -600,8 +602,8 @@ export default function AdminPanel() {
                 <span className="text-xl">🏛️</span>
               </div>
               <div>
-                <p className="font-medium">Conexion AEAT</p>
-                <p className="text-sm text-gray-500">Agencia Tributaria</p>
+                <p className="font-medium">{t('admin.aeatConnection')}</p>
+                <p className="text-sm text-gray-500">{t('admin.taxAgency')}</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -613,8 +615,8 @@ export default function AdminPanel() {
                 }))}
                 className="border border-gray-300 rounded-lg px-3 py-2"
               >
-                <option value="test">Entorno Test</option>
-                <option value="production">Produccion</option>
+                <option value="test">{t('admin.testEnvironment')}</option>
+                <option value="production">{t('admin.production')}</option>
               </select>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -636,8 +638,8 @@ export default function AdminPanel() {
                 <span className="text-xl">📊</span>
               </div>
               <div>
-                <p className="font-medium">API TARIC</p>
-                <p className="text-sm text-gray-500">Consulta arancelaria</p>
+                <p className="font-medium">{t('admin.taricApi')}</p>
+                <p className="text-sm text-gray-500">{t('admin.tariffConsultation')}</p>
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -659,8 +661,8 @@ export default function AdminPanel() {
                 <span className="text-xl">🤖</span>
               </div>
               <div>
-                <p className="font-medium">Asistente LUCI IA</p>
-                <p className="text-sm text-gray-500">Inteligencia artificial</p>
+                <p className="font-medium">{t('admin.luciAiAssistant')}</p>
+                <p className="text-sm text-gray-500">{t('admin.artificialIntelligence')}</p>
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -682,7 +684,7 @@ export default function AdminPanel() {
             onClick={() => handleSaveSettings('integrations')}
             className="px-4 py-2 bg-luci text-white rounded-lg hover:bg-luci-dark"
           >
-            Guardar Cambios
+            {t('admin.saveChanges')}
           </button>
         </div>
       </div>
@@ -690,11 +692,11 @@ export default function AdminPanel() {
       {/* Security Settings */}
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Seguridad</h3>
+          <h3 className="text-lg font-semibold">{t('admin.securityTitle')}</h3>
         </div>
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Timeout de Sesion (minutos)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.sessionTimeout')}</label>
             <input
               type="number"
               min="5"
@@ -708,7 +710,7 @@ export default function AdminPanel() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Longitud Minima Contrasena</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.minPasswordLength')}</label>
             <input
               type="number"
               min="6"
@@ -722,7 +724,7 @@ export default function AdminPanel() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Intentos Maximos de Login</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.maxLoginAttempts')}</label>
             <input
               type="number"
               min="3"
@@ -746,7 +748,7 @@ export default function AdminPanel() {
                 }))}
                 className="w-4 h-4 text-luci border-gray-300 rounded focus:ring-luci"
               />
-              <span className="ml-2 text-sm text-gray-700">Requerir autenticacion de dos factores</span>
+              <span className="ml-2 text-sm text-gray-700">{t('admin.require2fa')}</span>
             </label>
           </div>
         </div>
@@ -755,7 +757,7 @@ export default function AdminPanel() {
             onClick={() => handleSaveSettings('security')}
             className="px-4 py-2 bg-luci text-white rounded-lg hover:bg-luci-dark"
           >
-            Guardar Cambios
+            {t('admin.saveChanges')}
           </button>
         </div>
       </div>
@@ -768,21 +770,21 @@ export default function AdminPanel() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-sm text-gray-500">Total Eventos</p>
+          <p className="text-sm text-gray-500">{t('admin.totalEventsAudit')}</p>
           <p className="text-2xl font-bold">{auditStats?.totalLogs || 0}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-sm text-gray-500">Ultimos 7 dias</p>
+          <p className="text-sm text-gray-500">{t('admin.last7Days')}</p>
           <p className="text-2xl font-bold">{auditStats?.last7Days || 0}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-sm text-gray-500">Modulo mas activo</p>
+          <p className="text-sm text-gray-500">{t('admin.mostActiveModule')}</p>
           <p className="text-xl font-bold">
             {auditStats?.byModule ? Object.entries(auditStats.byModule).sort((a, b) => b[1] - a[1])[0]?.[0] || '-' : '-'}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-sm text-gray-500">Usuario mas activo</p>
+          <p className="text-sm text-gray-500">{t('admin.mostActiveUser')}</p>
           <p className="text-xl font-bold truncate">
             {auditStats?.byUser ? Object.entries(auditStats.byUser).sort((a, b) => b[1] - a[1])[0]?.[0] || '-' : '-'}
           </p>
@@ -794,35 +796,35 @@ export default function AdminPanel() {
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <FunnelIcon className="w-5 h-5 text-gray-400" />
-            <span className="text-sm font-medium text-gray-700">Filtros:</span>
+            <span className="text-sm font-medium text-gray-700">{t('admin.filters')}:</span>
           </div>
           <select
             value={auditFilter.module}
             onChange={(e) => setAuditFilter(prev => ({ ...prev, module: e.target.value }))}
             className="border border-gray-300 rounded-lg px-3 py-2"
           >
-            <option value="">Todos los modulos</option>
-            <option value="auth">Autenticacion</option>
-            <option value="expeditions">Expedientes</option>
-            <option value="declarations">Declaraciones</option>
-            <option value="inspections">Inspecciones</option>
-            <option value="settings">Configuracion</option>
-            <option value="users">Usuarios</option>
-            <option value="aeat">AEAT</option>
-            <option value="reports">Reportes</option>
+            <option value="">{t('admin.allModules')}</option>
+            <option value="auth">{t('admin.authModule')}</option>
+            <option value="expeditions">{t('admin.expeditionsModule')}</option>
+            <option value="declarations">{t('admin.declarationsModule')}</option>
+            <option value="inspections">{t('admin.inspectionsModule')}</option>
+            <option value="settings">{t('admin.settingsModule')}</option>
+            <option value="users">{t('admin.usersModule')}</option>
+            <option value="aeat">{t('admin.aeatModule')}</option>
+            <option value="reports">{t('admin.reportsModule')}</option>
           </select>
           <select
             value={auditFilter.action}
             onChange={(e) => setAuditFilter(prev => ({ ...prev, action: e.target.value }))}
             className="border border-gray-300 rounded-lg px-3 py-2"
           >
-            <option value="">Todas las acciones</option>
+            <option value="">{t('admin.allActions')}</option>
             <option value="LOGIN">Login</option>
-            <option value="CREATE">Crear</option>
-            <option value="UPDATE">Actualizar</option>
-            <option value="DELETE">Eliminar</option>
-            <option value="EXPORT">Exportar</option>
-            <option value="SUBMIT">Enviar</option>
+            <option value="CREATE">{t('common.create')}</option>
+            <option value="UPDATE">{t('common.update')}</option>
+            <option value="DELETE">{t('common.delete')}</option>
+            <option value="EXPORT">{t('common.export')}</option>
+            <option value="SUBMIT">{t('common.send')}</option>
             <option value="CONFIG_CHANGE">Config</option>
           </select>
           <button
@@ -830,7 +832,7 @@ export default function AdminPanel() {
             className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
           >
             <ArrowPathIcon className="w-4 h-4" />
-            Actualizar
+            {t('admin.refresh')}
           </button>
         </div>
       </div>
@@ -840,11 +842,11 @@ export default function AdminPanel() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha/Hora</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Accion</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Modulo</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descripcion</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.dateTime')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.user')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.action')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.module')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.description')}</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -882,8 +884,8 @@ export default function AdminPanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Panel de Administracion</h1>
-          <p className="text-gray-500">Gestion de usuarios, configuracion y auditoria del sistema</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.panelTitle')}</h1>
+          <p className="text-gray-500">{t('admin.panelSubtitle')}</p>
         </div>
         <ShieldCheckIcon className="w-10 h-10 text-luci" />
       </div>
@@ -927,6 +929,7 @@ export default function AdminPanel() {
 
 // User Modal Component
 function UserModal({ user, roles, onClose, onSave }) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     email: user?.email || '',
     name: user?.name || '',
@@ -943,7 +946,7 @@ function UserModal({ user, roles, onClose, onSave }) {
 
     // Si es nuevo usuario y no genera password, validar que tenga contraseña
     if (!user && !formData.generatePassword && formData.password.length < 6) {
-      toast.error('La contraseña debe tener al menos 6 caracteres')
+      toast.error(t('admin.passwordMinError'))
       return
     }
 
@@ -965,7 +968,7 @@ function UserModal({ user, roles, onClose, onSave }) {
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h3 className="text-lg font-semibold">
-            {user ? 'Editar Usuario' : 'Nuevo Usuario'}
+            {user ? t('admin.editUserTitle') : t('admin.newUserTitle')}
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <XMarkIcon className="w-6 h-6" />
@@ -973,7 +976,7 @@ function UserModal({ user, roles, onClose, onSave }) {
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.email')}</label>
             <input
               type="email"
               required
@@ -984,7 +987,7 @@ function UserModal({ user, roles, onClose, onSave }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.name')}</label>
             <input
               type="text"
               required
@@ -994,7 +997,7 @@ function UserModal({ user, roles, onClose, onSave }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.role')}</label>
             <select
               value={formData.role}
               onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
@@ -1018,19 +1021,19 @@ function UserModal({ user, roles, onClose, onSave }) {
                   className="w-4 h-4 text-luci border-gray-300 rounded focus:ring-luci"
                 />
                 <label htmlFor="generatePassword" className="ml-2 text-sm text-gray-700">
-                  Generar contraseña automatica
+                  {t('admin.generateAutoPassword')}
                 </label>
               </div>
 
               {!formData.generatePassword && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.password')}</label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={formData.password}
                       onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                      placeholder="Minimo 6 caracteres"
+                      placeholder={t('admin.minChars')}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10"
                     />
                     <button
@@ -1050,24 +1053,24 @@ function UserModal({ user, roles, onClose, onSave }) {
           {user && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.status')}</label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
                 >
-                  <option value="active">Activo</option>
-                  <option value="inactive">Inactivo</option>
+                  <option value="active">{t('admin.aiActive')}</option>
+                  <option value="inactive">{t('admin.aiInactive')}</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña (opcional)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.newPasswordOptional')}</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                    placeholder="Dejar vacio para no cambiar"
+                    placeholder={t('admin.leaveEmptyNoChange')}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10"
                   />
                   <button
@@ -1088,13 +1091,13 @@ function UserModal({ user, roles, onClose, onSave }) {
               onClick={onClose}
               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               className="px-4 py-2 bg-luci text-white rounded-lg hover:bg-luci-dark"
             >
-              {user ? 'Guardar Cambios' : 'Crear Usuario'}
+              {user ? t('admin.saveChanges') : t('admin.createUser')}
             </button>
           </div>
         </form>
@@ -1105,12 +1108,13 @@ function UserModal({ user, roles, onClose, onSave }) {
 
 // Password Modal Component - Shows temporary password
 function PasswordModal({ email, password, onClose }) {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(password)
     setCopied(true)
-    toast.success('Contraseña copiada')
+    toast.success(t('admin.passwordCopied'))
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -1120,7 +1124,7 @@ function PasswordModal({ email, password, onClose }) {
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <KeyIcon className="w-5 h-5 text-amber-500" />
-            Contraseña Temporal
+            {t('admin.tempPassword')}
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <XMarkIcon className="w-6 h-6" />
@@ -1129,13 +1133,13 @@ function PasswordModal({ email, password, onClose }) {
         <div className="p-6 space-y-4">
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
             <p className="text-sm text-amber-800 mb-2">
-              Se ha generado una contraseña temporal para:
+              {t('admin.tempPasswordGenerated')}
             </p>
             <p className="font-medium text-amber-900">{email}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña:</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.passwordLabel')}</label>
             <div className="flex items-center gap-2">
               <div className="flex-1 bg-gray-100 rounded-lg px-4 py-3 font-mono text-lg tracking-wider">
                 {password}
@@ -1152,8 +1156,7 @@ function PasswordModal({ email, password, onClose }) {
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
-              <strong>Importante:</strong> Comparte esta contraseña de forma segura con el usuario.
-              Se recomienda que cambie su contraseña en el primer inicio de sesion.
+              <strong>Importante:</strong> {t('admin.tempPasswordImportant')}
             </p>
           </div>
 
@@ -1162,7 +1165,7 @@ function PasswordModal({ email, password, onClose }) {
               onClick={onClose}
               className="px-4 py-2 bg-luci text-white rounded-lg hover:bg-luci-dark"
             >
-              Entendido
+              {t('admin.understood')}
             </button>
           </div>
         </div>

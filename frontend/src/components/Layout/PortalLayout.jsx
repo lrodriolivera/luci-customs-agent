@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Outlet, NavLink, useParams } from 'react-router-dom'
 import { portalAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 import {
   HomeIcon,
   DocumentArrowUpIcon,
@@ -9,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function PortalLayout() {
+  const { t } = useTranslation()
   const { token } = useParams()
   const [expedition, setExpedition] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -37,7 +39,7 @@ export default function PortalLayout() {
             <span className="text-white text-2xl font-bold">L</span>
           </div>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-luci mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando portal...</p>
+          <p className="mt-4 text-gray-600">{t('portal.loading')}</p>
         </div>
       </div>
     )

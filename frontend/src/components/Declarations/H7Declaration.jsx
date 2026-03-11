@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { declarationsAPI } from '../../services/api'
 
 /**
@@ -6,6 +7,7 @@ import { declarationsAPI } from '../../services/api'
  * Para comercio electronico B2C con sistema IOSS
  */
 const H7Declaration = ({ expedition, onUpdate }) => {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [eligibility, setEligibility] = useState(null)
   const [h7Data, setH7Data] = useState(null)

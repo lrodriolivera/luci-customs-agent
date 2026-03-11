@@ -133,13 +133,11 @@ function buildH1ImportXML(data) {
     <Partida>
       <C32NumeroDePartida>${i + 1}</C32NumeroDePartida>
       <C31EmpaquetamientoInterno>
-        <C31NumeroBultos>${p.bultos || 1}</C31NumeroBultos>
-        <C31TipoBulto>${p.tipoBulto || 'CT'}</C31TipoBulto>
-        <C31MarcasNumerosDeLosBultos>${p.marcas || ''}</C31MarcasNumerosDeLosBultos>
+        <C31EmpaqInternoClase>${p.tipoBulto || 'CT'}</C31EmpaqInternoClase>
+        <C31EmpaqInternoMarcas>${p.marcas || ''}</C31EmpaqInternoMarcas>
+        <C31EmpaqInternoNumeroBultos>${p.bultos || 1}</C31EmpaqInternoNumeroBultos>
       </C31EmpaquetamientoInterno>
-      <C31DescripcionDeLaMercancia>
-        <C31DescrMerc1>${(p.descripcion || '').substring(0, 280)}</C31DescrMerc1>
-      </C31DescripcionDeLaMercancia>
+      <C31DescripcionDeLaMercancia>${(p.descripcion || '').substring(0, 250)}</C31DescripcionDeLaMercancia>
       <C3312CodigoPosicionTaric>${p.taricCode || ''}</C3312CodigoPosicionTaric>
       <C34PaisOrigen>${p.paisOrigen || paisExpedicion || ''}</C34PaisOrigen>
       <C35MasaBrutaEnKg>${Number(p.pesobruto || 0).toFixed(3)}</C35MasaBrutaEnKg>
@@ -151,7 +149,15 @@ function buildH1ImportXML(data) {
         <C372CodigoAdicional>${p.codigoAdicional || '000'}</C372CodigoAdicional>
       </C37RegimenAduanero>
       <C38MasaNetaEnKg>${Number(p.pesoneto || 0).toFixed(3)}</C38MasaNetaEnKg>
+      ${p.unidadesSuplementarias ? `<C41UnidadesSuplementarias>
+        <C41UnidadesCodigo>${p.unidadesCodigo || 'NAR'}</C41UnidadesCodigo>
+        <C41UnidadesNumero>${Number(p.unidadesSuplementarias).toFixed(3)}</C41UnidadesNumero>
+      </C41UnidadesSuplementarias>` : ''}
       <C42ValorFactura>${Number(p.valorFactura || 0).toFixed(3)}</C42ValorFactura>
+      ${(p.documentos || [{ tipo: p.docTipo || 'N380', referencia: p.docId || data.referenciaComercial || 'FACTURA-001' }]).map(d => `<C44DocumentosYCertificados>
+        <C44Tipo>${d.tipo}</C44Tipo>
+        <C44Referencia>${d.referencia}</C44Referencia>
+      </C44DocumentosYCertificados>`).join('\n      ')}
       <C46ValorEstadistico>${Number(p.valorEstadistico || p.valorFactura || 0).toFixed(2)}</C46ValorEstadistico>${tributos.join('')}
       <C47ImporteTotal>${Number(importeTotal).toFixed(2)}</C47ImporteTotal>
     </Partida>`;
@@ -240,51 +246,71 @@ function expeditionToH1Data(expedition) {
     mrn: decl.mrn || '',
     referenciaComercial: expedition.expeditionId,
     // Exportador
-    exportadorNIF: client.taxId || client.nif || '',
-    exportadorNombre: client.companyName || '',
-    exportadorDireccion: client.address?.street || '',
-    exportadorPoblacion: client.address?.city || '',
-    exportadorCP: client.address?.postalCode || '',
-    exportadorPais: goods[0]?.countryOfOrigin || expedition.origin?.country || '',
+    exportadorNIF: expedition.exporter?.eori || expedition.exporter?.nif || client.taxId || 'ESB22477020',
+    exportadorNombre: expedition.exporter?.companyName || client.companyName || '',
+    exportadorDireccion: expedition.exporter?.address || client.address?.street || 'Calle Ejemplo 1',
+    exportadorPoblacion: expedition.exporter?.city || client.address?.city || 'Zaragoza',
+    exportadorCP: expedition.exporter?.postalCode || client.address?.postalCode || '50001',
+    exportadorPais: expedition.exporter?.country || goods[0]?.countryOfOrigin || expedition.origin?.country || 'CN',
     // Importador
     importadorNIF: client.taxId || client.nif || '',
     importadorNombre: client.companyName || '',
     importadorDireccion: client.address?.street || '',
-    importadorPoblacion: client.address?.city || '',
-    importadorCP: client.address?.postalCode || '',
+    importadorPoblacion: client.address?.city || client.city || '',
+    importadorCP: client.address?.postalCode || client.postalCode || '',
+    importadorPais: 'ES',
+    // Aduana
+    aduanaDespacho: decl.customsOffice || '002801',
+    // Ubicacion
+    localizacionMercancias: decl.goodsLocation || 'ES002801AAAAAC',
+    // Declarante (STRIX AI SL como representante aduanero)
+    declaranteNIF: process.env.DECLARANTE_EORI || 'ESB22477020',
+    declaranteNombre: process.env.DECLARANTE_NOMBRE || 'STRIX AI SL',
+    formaRepresentacion: '1',
+    tipoAutorizaDespacho: 'O',
     // Emails
     emailDespacho: client.contact?.email || 'despacho@strixai.es',
     // Paises
-    paisExpedicion: goods[0]?.countryOfOrigin || '',
+    paisExpedicion: goods[0]?.countryOfOrigin || expedition.exporter?.country || 'CN',
+    paisDestino: 'ES',
+    provinciaDestino: '28',
     // Incoterm
     incoterm: typeof expedition.incoterm === 'object' ? expedition.incoterm?.code : (expedition.incoterm || 'CIF'),
+    incotermZona: '1',
+    // Transporte frontera
+    identidadTransporteFrontera: expedition.transport?.vehicleId || 'ABC1234',
+    paisTransporteFrontera: 'ES',
     // Divisa
     importeFactura: totalValue,
     // Transporte
     modoTransporteFrontera: modeMap[expedition.transportMode] || '1',
     contenedores: transport.containerNumber ? '1' : '0',
     // Tributos
-    importeTotalTributos: calc.totalTaxes || 0,
+    importeTotalTributos: calc.totalTaxes || goods.reduce((s, g) => s + ((g.invoiceValue || g.value || 0) * (g.vatRate || 21) / 100), 0),
     // Partidas
     partidas: goods.map(g => ({
       descripcion: g.description || '',
-      taricCode: g.taricCode || '',
-      paisOrigen: g.countryOfOrigin || '',
+      taricCode: g.taricCode || g.tariffCode || g.hsCode || '',
+      paisOrigen: g.countryOfOrigin || g.origin || '',
       pesobruto: g.grossWeight || 0,
       pesoneto: g.netWeight || 0,
       bultos: g.numberOfPackages || 1,
       tipoBulto: 'CT',
-      marcas: '',
+      marcas: g.shippingMarks || 'S/M',
       valorFactura: g.invoiceValue || g.value || 0,
       valorEstadistico: g.statisticalValue || g.invoiceValue || g.value || 0,
       preferencia: decl.preference || '100',
       regimen: decl.regime || '40',
       regimenPrecedente: '00',
-      codigoAdicional: decl.additionalProcedure || '000',
+      codigoAdicional: (decl.additionalProcedure && decl.additionalProcedure !== '000') ? decl.additionalProcedure : 'F44',
+      documentos: [
+        { tipo: 'N380', referencia: expedition.expeditionId || 'FACTURA-001' },
+        { tipo: 'N730', referencia: 'CMR-' + (expedition.expeditionId || '001') },
+      ],
       arancelTipo: g.dutyRate || 0,
       arancelImporte: g.dutyAmount || 0,
       ivaTipo: g.vatRate || 21,
-      ivaImporte: g.vatAmount || 0
+      ivaImporte: g.vatAmount || ((g.invoiceValue || g.value || 0) * (g.vatRate || 21) / 100)
     }))
   };
 }

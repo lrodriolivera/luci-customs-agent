@@ -14,6 +14,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { deadlinesAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 
 const statusColors = {
   pending: 'bg-blue-100 text-blue-800',
@@ -88,6 +89,7 @@ const priorityColors = {
 }
 
 export default function DeadlineManager() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [dashboard, setDashboard] = useState(null)
   const [deadlines, setDeadlines] = useState([])
@@ -458,8 +460,8 @@ export default function DeadlineManager() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestor de Plazos</h1>
-          <p className="text-gray-500">Control de vencimientos y alertas</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('deadlines.title')}</h1>
+          <p className="text-gray-500">{t('deadlines.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -467,14 +469,14 @@ export default function DeadlineManager() {
             className="btn-secondary flex items-center gap-2"
           >
             <ArrowPathIcon className="w-4 h-4" />
-            Actualizar
+            {t('common.refresh')}
           </button>
           <button
             onClick={openCreateModal}
             className="btn-primary flex items-center gap-2"
           >
             <PlusIcon className="w-4 h-4" />
-            Nuevo Plazo
+            {t('deadlines.newDeadline')}
           </button>
         </div>
       </div>

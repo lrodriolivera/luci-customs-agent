@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import {
   ChartBarIcon,
   ExclamationTriangleIcon,
@@ -10,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function QuotaManager() {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(false)
   const [quotas, setQuotas] = useState([])
@@ -153,10 +155,10 @@ export default function QuotaManager() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 flex items-center">
           <ChartBarIcon className="h-8 w-8 mr-3 text-indigo-600" />
-          Gestión de Contingentes Arancelarios
+          {t('quotaManager.title')}
         </h1>
         <p className="mt-2 text-gray-600">
-          TRQ (Tariff Rate Quotas) - Consulta y gestión de contingentes para importación con arancel reducido
+          {t('quotaManager.subtitle')}
         </p>
       </div>
 

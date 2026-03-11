@@ -1,4 +1,5 @@
 import React, { Fragment } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, Transition, Tab } from '@headlessui/react'
 import {
   XMarkIcon,
@@ -9,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 function UsageTab({ data }) {
+  const { t } = useTranslation()
   if (!data) return null
   return (
     <div className="space-y-6">
@@ -21,7 +23,7 @@ function UsageTab({ data }) {
 
       {data.steps?.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-gray-900 mb-3">Pasos</h4>
+          <h4 className="text-sm font-semibold text-gray-900 mb-3">{t('help.steps')}</h4>
           <ol className="space-y-2">
             {data.steps.map((step, i) => (
               <li key={i} className="flex gap-3 text-sm text-gray-600">
@@ -88,12 +90,13 @@ function LuciIATab({ data }) {
 }
 
 const tabConfig = [
-  { key: 'uso', label: 'Como usar', Icon: BookOpenIcon, Component: UsageTab },
-  { key: 'normativa', label: 'Normativa', Icon: ScaleIcon, Component: NormativaTab },
-  { key: 'luciIA', label: 'LUCI IA', Icon: SparklesIcon, Component: LuciIATab }
+  { key: 'uso', labelKey: 'help.howToUse', Icon: BookOpenIcon, Component: UsageTab },
+  { key: 'normativa', labelKey: 'help.regulation', Icon: ScaleIcon, Component: NormativaTab },
+  { key: 'luciIA', labelKey: 'help.luciAi', Icon: SparklesIcon, Component: LuciIATab }
 ]
 
 export default function HelpModal({ isOpen, onClose, helpData }) {
+  const { t } = useTranslation()
   if (!helpData) return null
 
   return (
@@ -142,7 +145,7 @@ export default function HelpModal({ isOpen, onClose, helpData }) {
                 {/* Tabs */}
                 <Tab.Group>
                   <Tab.List className="flex gap-1 bg-gray-100 rounded-lg p-1 mb-4">
-                    {tabConfig.map(({ key, label, Icon }) => (
+                    {tabConfig.map(({ key, labelKey, Icon }) => (
                       <Tab
                         key={key}
                         className={({ selected }) =>
@@ -150,7 +153,7 @@ export default function HelpModal({ isOpen, onClose, helpData }) {
                         }
                       >
                         <Icon className="w-4 h-4" />
-                        <span>{label}</span>
+                        <span>{t(labelKey)}</span>
                       </Tab>
                     ))}
                   </Tab.List>

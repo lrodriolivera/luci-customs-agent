@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BuildingOfficeIcon,
   Cog6ToothIcon,
@@ -14,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const TenantSettings = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
@@ -98,7 +100,7 @@ const TenantSettings = () => {
 
     } catch (error) {
       console.error('Error loading settings:', error);
-      setMessage({ type: 'error', text: 'Error al cargar la configuracion' });
+      setMessage({ type: 'error', text: t('settings.loadError') });
     } finally {
       setLoading(false);
     }
@@ -109,10 +111,10 @@ const TenantSettings = () => {
     try {
       // API call to save settings
       await new Promise(resolve => setTimeout(resolve, 1000));
-      setMessage({ type: 'success', text: 'Configuracion guardada correctamente' });
+      setMessage({ type: 'success', text: t('settings.saved') });
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
-      setMessage({ type: 'error', text: 'Error al guardar la configuracion' });
+      setMessage({ type: 'error', text: t('settings.saveError') });
     } finally {
       setSaving(false);
     }
@@ -129,13 +131,13 @@ const TenantSettings = () => {
   };
 
   const tabs = [
-    { id: 'general', name: 'General', icon: BuildingOfficeIcon },
-    { id: 'branding', name: 'Marca', icon: PaintBrushIcon },
-    { id: 'defaults', name: 'Valores por Defecto', icon: Cog6ToothIcon },
-    { id: 'notifications', name: 'Notificaciones', icon: BellIcon },
-    { id: 'security', name: 'Seguridad', icon: ShieldCheckIcon },
-    { id: 'roles', name: 'Roles', icon: UserGroupIcon },
-    { id: 'integrations', name: 'Integraciones', icon: GlobeAltIcon }
+    { id: 'general', name: t('settings.general'), icon: BuildingOfficeIcon },
+    { id: 'branding', name: t('settings.brand'), icon: PaintBrushIcon },
+    { id: 'defaults', name: t('settings.defaults'), icon: Cog6ToothIcon },
+    { id: 'notifications', name: t('settings.notifications'), icon: BellIcon },
+    { id: 'security', name: t('settings.security'), icon: ShieldCheckIcon },
+    { id: 'roles', name: t('settings.roles'), icon: UserGroupIcon },
+    { id: 'integrations', name: t('settings.integrations'), icon: GlobeAltIcon }
   ];
 
   if (loading) {
@@ -151,9 +153,9 @@ const TenantSettings = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Configuracion de Organizacion</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('settings.title')}</h1>
           <p className="text-gray-500 mt-1">
-            Gestiona la configuracion de {tenant?.name}
+            {t('settings.subtitle')} {tenant?.name}
           </p>
         </div>
         <button
@@ -162,7 +164,7 @@ const TenantSettings = () => {
           className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2"
         >
           {saving && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
-          Guardar Cambios
+          {t('settings.saveChanges')}
         </button>
       </div>
 
@@ -205,12 +207,12 @@ const TenantSettings = () => {
         {/* General Tab */}
         {activeTab === 'general' && (
           <div className="space-y-6">
-            <h2 className="text-lg font-medium text-gray-900">Informacion General</h2>
+            <h2 className="text-lg font-medium text-gray-900">{t('settings.generalInfo')}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre de la Organizacion
+                  {t('settings.orgName')}
                 </label>
                 <input
                   type="text"
@@ -222,7 +224,7 @@ const TenantSettings = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Slug (URL)
+                  {t('settings.slug')}
                 </label>
                 <input
                   type="text"
@@ -234,7 +236,7 @@ const TenantSettings = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  NIF/CIF
+                  {t('settings.nifCif')}
                 </label>
                 <input
                   type="text"
@@ -267,24 +269,24 @@ const TenantSettings = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo de Organizacion
+                  {t('settings.orgType')}
                 </label>
                 <select
                   value={tenant?.businessInfo?.type || ''}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
                 >
-                  <option value="customs_agent">Agente de Aduanas</option>
-                  <option value="importer">Importador</option>
-                  <option value="exporter">Exportador</option>
-                  <option value="carrier">Transportista</option>
-                  <option value="other">Otro</option>
+                  <option value="customs_agent">{t('settings.typeAgent')}</option>
+                  <option value="importer">{t('settings.typeImporter')}</option>
+                  <option value="exporter">{t('settings.typeExporter')}</option>
+                  <option value="carrier">{t('settings.typeCarrier')}</option>
+                  <option value="other">{t('settings.typeOther')}</option>
                 </select>
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Direccion
+                {t('common.address')}
               </label>
               <input
                 type="text"
@@ -324,13 +326,13 @@ const TenantSettings = () => {
             <div className="p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-sm font-medium text-gray-700">Estado de la Cuenta</span>
+                  <span className="text-sm font-medium text-gray-700">{t('settings.accountStatus')}</span>
                   <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
                     tenant?.status === 'active'
                       ? 'bg-green-100 text-green-700'
                       : 'bg-yellow-100 text-yellow-700'
                   }`}>
-                    {tenant?.status === 'active' ? 'Activa' : tenant?.status}
+                    {tenant?.status === 'active' ? t('common.active') : tenant?.status}
                   </span>
                 </div>
                 <div className="text-sm text-gray-500">
@@ -344,27 +346,27 @@ const TenantSettings = () => {
         {/* Branding Tab */}
         {activeTab === 'branding' && (
           <div className="space-y-6">
-            <h2 className="text-lg font-medium text-gray-900">Personalizacion de Marca</h2>
+            <h2 className="text-lg font-medium text-gray-900">{t('settings.brandCustomization')}</h2>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Logo de la Empresa
+                {t('settings.companyLogo')}
               </label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <PaintBrushIcon className="h-12 w-12 mx-auto text-gray-400" />
                 <p className="mt-2 text-sm text-gray-500">
-                  Arrastra tu logo aqui o haz clic para seleccionar
+                  {t('settings.dragLogo')}
                 </p>
                 <input type="file" className="hidden" accept="image/*" />
                 <button className="mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                  Seleccionar Archivo
+                  {t('settings.selectFile')}
                 </button>
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Color Principal
+                {t('settings.primaryColor')}
               </label>
               <div className="flex items-center gap-4">
                 <input
@@ -384,7 +386,7 @@ const TenantSettings = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nombre para Mostrar
+                {t('settings.displayName')}
               </label>
               <input
                 type="text"
@@ -399,12 +401,12 @@ const TenantSettings = () => {
         {/* Defaults Tab */}
         {activeTab === 'defaults' && (
           <div className="space-y-6">
-            <h2 className="text-lg font-medium text-gray-900">Valores por Defecto</h2>
+            <h2 className="text-lg font-medium text-gray-900">{t('settings.defaults')}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Aduana por Defecto
+                  {t('settings.defaultCustoms')}
                 </label>
                 <input
                   type="text"
@@ -417,7 +419,7 @@ const TenantSettings = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Moneda
+                  {t('settings.currency')}
                 </label>
                 <select
                   value={settings?.defaults?.currency || 'EUR'}
@@ -432,7 +434,7 @@ const TenantSettings = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Idioma
+                  {t('settings.language')}
                 </label>
                 <select
                   value={settings?.defaults?.language || 'es'}
@@ -448,7 +450,7 @@ const TenantSettings = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Zona Horaria
+                  {t('settings.timezone')}
                 </label>
                 <select
                   value={settings?.defaults?.timezone || 'Europe/Madrid'}
@@ -464,7 +466,7 @@ const TenantSettings = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Formato de Fecha
+                  {t('settings.dateFormat')}
                 </label>
                 <select
                   value={settings?.defaults?.dateFormat || 'DD/MM/YYYY'}
@@ -483,14 +485,14 @@ const TenantSettings = () => {
         {/* Notifications Tab */}
         {activeTab === 'notifications' && (
           <div className="space-y-6">
-            <h2 className="text-lg font-medium text-gray-900">Preferencias de Notificaciones</h2>
+            <h2 className="text-lg font-medium text-gray-900">{t('settings.notificationPrefs')}</h2>
 
             <div className="space-y-4">
               {[
-                { key: 'emailAlerts', label: 'Alertas por Email', description: 'Recibir notificaciones importantes por correo electronico' },
-                { key: 'deadlineReminders', label: 'Recordatorios de Plazos', description: 'Recibir avisos antes de que venzan los plazos' },
-                { key: 'channelNotifications', label: 'Notificaciones de Canal', description: 'Avisos de cambios en circuitos de declaraciones' },
-                { key: 'weeklyReport', label: 'Informe Semanal', description: 'Recibir un resumen semanal de actividad' }
+                { key: 'emailAlerts', label: t('settings.emailAlerts'), description: t('settings.emailAlertsDesc') },
+                { key: 'deadlineReminders', label: t('settings.deadlineReminders'), description: t('settings.deadlineRemindersDesc') },
+                { key: 'channelNotifications', label: t('settings.channelNotifications'), description: t('settings.channelNotificationsDesc') },
+                { key: 'weeklyReport', label: t('settings.weeklyReport'), description: t('settings.weeklyReportDesc') }
               ].map(item => (
                 <div key={item.key} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
@@ -515,13 +517,13 @@ const TenantSettings = () => {
         {/* Security Tab */}
         {activeTab === 'security' && (
           <div className="space-y-6">
-            <h2 className="text-lg font-medium text-gray-900">Configuracion de Seguridad</h2>
+            <h2 className="text-lg font-medium text-gray-900">{t('settings.securityConfig')}</h2>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <span className="font-medium text-gray-900">MFA Obligatorio</span>
-                  <p className="text-sm text-gray-500">Requerir autenticacion de dos factores para todos los usuarios</p>
+                  <span className="font-medium text-gray-900">{t('settings.mfaRequired')}</span>
+                  <p className="text-sm text-gray-500">{t('settings.mfaRequiredDesc')}</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -536,7 +538,7 @@ const TenantSettings = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tiempo de Sesion (minutos)
+                  {t('settings.sessionTimeout')}
                 </label>
                 <input
                   type="number"
@@ -548,22 +550,22 @@ const TenantSettings = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Lista Blanca de IPs
+                  {t('settings.ipWhitelist')}
                 </label>
                 <textarea
                   value={(settings?.security?.ipWhitelist || []).join('\n')}
                   onChange={(e) => updateSettings('security', 'ipWhitelist', e.target.value.split('\n').filter(ip => ip.trim()))}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 h-24"
-                  placeholder="Una IP por linea (dejar vacio para permitir todas)"
+                  placeholder={t('settings.ipWhitelistDesc')}
                 />
               </div>
 
               <div className="border-t pt-4">
-                <h3 className="font-medium text-gray-900 mb-4">Politica de Contrasenas</h3>
+                <h3 className="font-medium text-gray-900 mb-4">{t('settings.passwordPolicy')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Longitud Minima
+                      {t('settings.minLength')}
                     </label>
                     <input
                       type="number"
@@ -573,7 +575,7 @@ const TenantSettings = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Expiracion (dias, 0 = nunca)
+                      {t('settings.expiration')}
                     </label>
                     <input
                       type="number"
@@ -584,9 +586,9 @@ const TenantSettings = () => {
                 </div>
                 <div className="flex flex-wrap gap-4 mt-4">
                   {[
-                    { key: 'requireUppercase', label: 'Mayusculas' },
-                    { key: 'requireNumbers', label: 'Numeros' },
-                    { key: 'requireSpecialChars', label: 'Caracteres especiales' }
+                    { key: 'requireUppercase', label: t('settings.uppercase') },
+                    { key: 'requireNumbers', label: t('settings.numbers') },
+                    { key: 'requireSpecialChars', label: t('settings.specialChars') }
                   ].map(item => (
                     <label key={item.key} className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -607,9 +609,9 @@ const TenantSettings = () => {
         {activeTab === 'roles' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-900">Roles y Permisos</h2>
+              <h2 className="text-lg font-medium text-gray-900">{t('settings.rolesPermissions')}</h2>
               <button className="px-4 py-2 bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200">
-                Crear Rol Personalizado
+                {t('settings.createCustomRole')}
               </button>
             </div>
 
@@ -617,10 +619,10 @@ const TenantSettings = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rol</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuarios</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('settings.role')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.type')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('settings.users')}</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -636,7 +638,7 @@ const TenantSettings = () => {
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           role.isBuiltIn ? 'bg-gray-100 text-gray-600' : 'bg-violet-100 text-violet-600'
                         }`}>
-                          {role.isBuiltIn ? 'Predefinido' : 'Personalizado'}
+                          {role.isBuiltIn ? t('settings.predefined') : t('settings.custom')}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-500">
@@ -644,11 +646,11 @@ const TenantSettings = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <button className="text-violet-600 hover:text-violet-800 mr-3">
-                          Ver Permisos
+                          {t('settings.viewPermissions')}
                         </button>
                         {!role.isBuiltIn && (
                           <button className="text-red-600 hover:text-red-800">
-                            Eliminar
+                            {t('common.delete')}
                           </button>
                         )}
                       </td>
@@ -663,7 +665,7 @@ const TenantSettings = () => {
         {/* Integrations Tab */}
         {activeTab === 'integrations' && (
           <div className="space-y-6">
-            <h2 className="text-lg font-medium text-gray-900">Integraciones</h2>
+            <h2 className="text-lg font-medium text-gray-900">{t('settings.integrations')}</h2>
 
             <div className="space-y-4">
               {/* AEAT Certificate */}
@@ -674,12 +676,12 @@ const TenantSettings = () => {
                       <ShieldCheckIcon className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
-                      <span className="font-medium text-gray-900">Certificado AEAT</span>
-                      <p className="text-sm text-gray-500">Certificado digital para comunicacion con la AEAT</p>
+                      <span className="font-medium text-gray-900">{t('settings.aeatCertificate')}</span>
+                      <p className="text-sm text-gray-500">{t('settings.aeatCertificateDesc')}</p>
                     </div>
                   </div>
                   <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                    Configurado
+                    {t('settings.configured')}
                   </span>
                 </div>
               </div>
@@ -692,12 +694,12 @@ const TenantSettings = () => {
                       <KeyIcon className="h-6 w-6 text-violet-600" />
                     </div>
                     <div>
-                      <span className="font-medium text-gray-900">API Key</span>
-                      <p className="text-sm text-gray-500">Clave para acceder a la API de LUCI</p>
+                      <span className="font-medium text-gray-900">{t('settings.apiKey')}</span>
+                      <p className="text-sm text-gray-500">{t('settings.apiKeyDesc')}</p>
                     </div>
                   </div>
                   <button className="px-3 py-1 text-sm bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200">
-                    Gestionar
+                    {t('settings.manage')}
                   </button>
                 </div>
               </div>
@@ -710,12 +712,12 @@ const TenantSettings = () => {
                       <GlobeAltIcon className="h-6 w-6 text-orange-600" />
                     </div>
                     <div>
-                      <span className="font-medium text-gray-900">Webhooks</span>
-                      <p className="text-sm text-gray-500">Recibe notificaciones de eventos en tiempo real</p>
+                      <span className="font-medium text-gray-900">{t('settings.webhooks')}</span>
+                      <p className="text-sm text-gray-500">{t('settings.webhooksDesc')}</p>
                     </div>
                   </div>
                   <button className="px-3 py-1 text-sm bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200">
-                    Configurar
+                    {t('settings.configure')}
                   </button>
                 </div>
               </div>

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 
 export default function HelpButton({ onClick }) {
+  const { t } = useTranslation()
   const [showPulse, setShowPulse] = useState(false)
 
   useEffect(() => {
@@ -23,8 +25,8 @@ export default function HelpButton({ onClick }) {
     <button
       onClick={handleClick}
       className="help-fab"
-      title="Ayuda contextual"
-      aria-label="Abrir ayuda contextual"
+      title={t('help.contextualHelp')}
+      aria-label={t('help.openContextualHelp')}
     >
       <QuestionMarkCircleIcon className="w-7 h-7" />
       {showPulse && (

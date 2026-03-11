@@ -11,8 +11,10 @@ import {
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
 import { preferencesAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 
 export default function PreferencesCalculator() {
+  const { t } = useTranslation()
   const [checking, setChecking] = useState(false)
   const [validating, setValidating] = useState(false)
   const [result, setResult] = useState(null)
@@ -161,10 +163,10 @@ export default function PreferencesCalculator() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 flex items-center">
           <GlobeAltIcon className="h-8 w-8 mr-3 text-purple-600" />
-          Calculadora de Preferencias Arancelarias
+          {t('preferencesCalc.title')}
         </h1>
         <p className="mt-2 text-gray-600">
-          Verifique la elegibilidad para preferencias arancelarias segun acuerdos de libre comercio (FTA) y sistemas preferenciales (GSP, GSP+, EBA)
+          {t('preferencesCalc.subtitle')}
         </p>
       </div>
 

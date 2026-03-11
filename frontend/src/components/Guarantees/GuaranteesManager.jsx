@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { guaranteesAPI } from '../../services/api'
 import {
   BanknotesIcon,
@@ -16,6 +17,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function GuaranteesManager() {
+  const { t } = useTranslation()
   const [guarantees, setGuarantees] = useState([])
   const [stats, setStats] = useState(null)
   const [alerts, setAlerts] = useState([])
@@ -56,7 +58,7 @@ export default function GuaranteesManager() {
       setStats(statsRes.data.data)
       setAlerts(alertsRes.data.data || [])
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al cargar garantias')
+      setError(err.response?.data?.error || t('guarantees.errorLoading'))
     } finally {
       setLoading(false)
     }
@@ -89,7 +91,7 @@ export default function GuaranteesManager() {
       })
       fetchData()
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al crear garantia')
+      setError(err.response?.data?.error || t('guarantees.errorCreating'))
     } finally {
       setCreating(false)
     }
@@ -152,8 +154,8 @@ export default function GuaranteesManager() {
             <BanknotesIcon className="w-6 h-6 text-green-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Garantias Aduaneras</h1>
-            <p className="text-sm text-gray-500">CGU, avales bancarios y depositos</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('guarantees.title')}</h1>
+            <p className="text-sm text-gray-500">{t('guarantees.subtitle')}</p>
           </div>
         </div>
         <button
@@ -161,7 +163,7 @@ export default function GuaranteesManager() {
           className="btn-primary flex items-center gap-2"
         >
           <PlusIcon className="w-5 h-5" />
-          Nueva Garantia
+          {t('guarantees.newGuarantee')}
         </button>
       </div>
 
@@ -170,7 +172,7 @@ export default function GuaranteesManager() {
         <div className="card border-l-4 border-l-yellow-500 bg-yellow-50">
           <h3 className="font-semibold text-yellow-800 mb-2 flex items-center gap-2">
             <ExclamationTriangleIcon className="w-5 h-5" />
-            Alertas de Garantias ({alerts.length})
+            {t('guarantees.alerts')} ({alerts.length})
           </h3>
           <div className="space-y-2">
             {alerts.slice(0, 3).map((alert, index) => (
@@ -186,19 +188,19 @@ export default function GuaranteesManager() {
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="card">
-            <p className="text-sm text-gray-500">Garantias Activas</p>
+            <p className="text-sm text-gray-500">{t('guarantees.activeGuarantees')}</p>
             <p className="text-2xl font-bold text-gray-900">{stats.active || 0}</p>
           </div>
           <div className="card">
-            <p className="text-sm text-gray-500">Importe Total</p>
+            <p className="text-sm text-gray-500">{t('guarantees.totalAmount')}</p>
             <p className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalAmount)}</p>
           </div>
           <div className="card">
-            <p className="text-sm text-gray-500">Disponible</p>
+            <p className="text-sm text-gray-500">{t('guarantees.available')}</p>
             <p className="text-2xl font-bold text-blue-600">{formatCurrency(stats.availableAmount)}</p>
           </div>
           <div className="card">
-            <p className="text-sm text-gray-500">Utilizado</p>
+            <p className="text-sm text-gray-500">{t('guarantees.used')}</p>
             <p className="text-2xl font-bold text-orange-600">
               {formatCurrency((stats.totalAmount || 0) - (stats.availableAmount || 0))}
             </p>
@@ -209,12 +211,12 @@ export default function GuaranteesManager() {
       {/* Formulario de creacion */}
       {showCreateForm && (
         <div className="card">
-          <h3 className="font-semibold text-gray-900 mb-4">Nueva Garantia</h3>
+          <h3 className="font-semibold text-gray-900 mb-4">{t('guarantees.newGuarantee')}</h3>
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo de Garantia
+                  {t('guarantees.guaranteeType')}
                 </label>
                 <select
                   name="type"
@@ -223,16 +225,16 @@ export default function GuaranteesManager() {
                   className="input"
                   required
                 >
-                  <option value="CGU">CGU - Garantia Global Unica</option>
-                  <option value="bank_guarantee">Aval Bancario</option>
-                  <option value="deposit">Deposito en Efectivo</option>
-                  <option value="insurance">Seguro de Caucion</option>
+                  <option value="CGU">CGU - {t('guarantees.globalGuarantee')}</option>
+                  <option value="bank_guarantee">{t('guarantees.bankGuarantee')}</option>
+                  <option value="deposit">{t('guarantees.deposit')}</option>
+                  <option value="insurance">{t('guarantees.insuranceBond')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Importe
+                  {t('common.amount')}
                 </label>
                 <input
                   type="number"
@@ -249,7 +251,7 @@ export default function GuaranteesManager() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Moneda
+                  {t('guarantees.currency')}
                 </label>
                 <select
                   name="currency"
@@ -265,7 +267,7 @@ export default function GuaranteesManager() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Entidad Garante
+                  {t('guarantees.guarantorEntity')}
                 </label>
                 <input
                   type="text"
@@ -280,7 +282,7 @@ export default function GuaranteesManager() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  NIF Garante
+                  {t('guarantees.guarantorNif')}
                 </label>
                 <input
                   type="text"
@@ -294,7 +296,7 @@ export default function GuaranteesManager() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  GRN (si aplica)
+                  {t('guarantees.grnIfApplicable')}
                 </label>
                 <input
                   type="text"
@@ -308,7 +310,7 @@ export default function GuaranteesManager() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha Vencimiento
+                  {t('guarantees.expirationDate')}
                 </label>
                 <input
                   type="date"
@@ -322,7 +324,7 @@ export default function GuaranteesManager() {
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notas
+                  {t('common.notes')}
                 </label>
                 <input
                   type="text"
@@ -352,14 +354,14 @@ export default function GuaranteesManager() {
                 ) : (
                   <CheckCircleIcon className="w-5 h-5" />
                 )}
-                Crear Garantia
+                {t('guarantees.createGuarantee')}
               </button>
               <button
                 type="button"
                 onClick={() => setShowCreateForm(false)}
                 className="btn-secondary"
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
             </div>
           </form>
@@ -378,7 +380,7 @@ export default function GuaranteesManager() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            {f === 'all' ? 'Todas' : f === 'active' ? 'Activas' : f === 'pending' ? 'Pendientes' : 'Vencidas'}
+            {f === 'all' ? t('common.all') : f === 'active' ? t('guarantees.statusActive') : f === 'pending' ? t('guarantees.statusPending') : t('guarantees.statusExpired')}
           </button>
         ))}
       </div>
@@ -388,12 +390,12 @@ export default function GuaranteesManager() {
         {guarantees.length === 0 ? (
           <div className="card text-center py-12">
             <BanknotesIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No hay garantias registradas</p>
+            <p className="text-gray-500">{t('guarantees.noGuarantees')}</p>
             <button
               onClick={() => setShowCreateForm(true)}
               className="btn-primary mt-4"
             >
-              Crear Primera Garantia
+              {t('guarantees.createFirstGuarantee')}
             </button>
           </div>
         ) : (
@@ -421,14 +423,14 @@ export default function GuaranteesManager() {
                         {getStatusBadge(guarantee.status)}
                       </div>
                       <p className="text-sm text-gray-500">
-                        {guarantee.guarantor?.name || 'Sin garante'}
+                        {guarantee.guarantor?.name || t('guarantees.noGuarantor')}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-6">
                     <div className="text-right">
-                      <p className="text-sm text-gray-500">Disponible / Total</p>
+                      <p className="text-sm text-gray-500">{t('guarantees.available')} / {t('guarantees.totalLabel')}</p>
                       <p className="font-semibold">
                         <span className="text-green-600">
                           {formatCurrency(guarantee.balance?.available)}
@@ -450,9 +452,9 @@ export default function GuaranteesManager() {
                 {/* Barra de uso */}
                 <div className="mt-4">
                   <div className="flex justify-between text-xs text-gray-500 mb-1">
-                    <span>Uso: {usagePercent}%</span>
+                    <span>{t('guarantees.usage')}: {usagePercent}%</span>
                     <span>
-                      {formatCurrency(guarantee.amount - (guarantee.balance?.available || 0))} utilizado
+                      {formatCurrency(guarantee.amount - (guarantee.balance?.available || 0))} {t('guarantees.used')}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -480,7 +482,7 @@ export default function GuaranteesManager() {
                         <p className="font-mono text-sm">{guarantee.guarantor?.nif || 'N/A'}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Fecha Activacion</p>
+                        <p className="text-sm text-gray-500">{t('guarantees.activationDate')}</p>
                         <p className="text-sm">
                           {guarantee.activationDate
                             ? new Date(guarantee.activationDate).toLocaleDateString('es-ES')
@@ -488,7 +490,7 @@ export default function GuaranteesManager() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Vencimiento</p>
+                        <p className="text-sm text-gray-500">{t('guarantees.expirationDate')}</p>
                         <p className={`text-sm font-medium ${
                           guarantee.expirationDate && new Date(guarantee.expirationDate) < new Date()
                             ? 'text-red-600'
@@ -496,7 +498,7 @@ export default function GuaranteesManager() {
                         }`}>
                           {guarantee.expirationDate
                             ? new Date(guarantee.expirationDate).toLocaleDateString('es-ES')
-                            : 'Sin fecha'}
+                            : t('guarantees.noDate')}
                         </p>
                       </div>
                     </div>
@@ -505,7 +507,7 @@ export default function GuaranteesManager() {
                     {guarantee.linkedExpeditions && guarantee.linkedExpeditions.length > 0 && (
                       <div>
                         <p className="text-sm font-medium text-gray-700 mb-2">
-                          Expedientes Vinculados ({guarantee.linkedExpeditions.length})
+                          {t('guarantees.linkedExpeditions')} ({guarantee.linkedExpeditions.length})
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {guarantee.linkedExpeditions.slice(0, 5).map((exp, index) => (
@@ -530,13 +532,13 @@ export default function GuaranteesManager() {
                     <div className="flex gap-2 pt-2">
                       <button className="btn-secondary text-sm">
                         <DocumentTextIcon className="w-4 h-4 mr-1" />
-                        Ver Movimientos
+                        {t('guarantees.viewMovements')}
                       </button>
                       {guarantee.status === 'active' && (
                         <>
                           <button className="btn-secondary text-sm">
                             <CalendarDaysIcon className="w-4 h-4 mr-1" />
-                            Renovar
+                            {t('guarantees.renew')}
                           </button>
                         </>
                       )}

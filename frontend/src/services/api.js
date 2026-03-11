@@ -1,4 +1,5 @@
 import axios from 'axios'
+import i18n from '../i18n/i18n'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
@@ -291,7 +292,7 @@ export const portalAPI = {
 
   // AI-Powered Endpoints - LUCI Integration
   aiEnhancedChat: (token, message) =>
-    api.post(`/api/portal/${token}/ai/chat`, { message }, { timeout: 60000 }),
+    api.post(`/api/portal/${token}/ai/chat`, { message, language: i18n.language }, { timeout: 60000 }),
   aiDetectFAQ: (token, question) =>
     api.post(`/api/portal/${token}/ai/faq`, { question }, { timeout: 30000 }),
   aiGetSummary: (token, options = {}) =>
@@ -304,8 +305,8 @@ export const portalAPI = {
 
 // Chat/AI
 export const chatAPI = {
-  send: (data) => api.post('/ai/chat', data),
-  ask: (question) => api.post('/ai/ask', null, { params: { question } })
+  send: (data) => api.post('/ai/chat', { ...data, language: i18n.language }),
+  ask: (question) => api.post('/ai/ask', { question, language: i18n.language })
 }
 
 // Knowledge
@@ -352,6 +353,7 @@ export const requirementsAPI = {
 export const channelsAPI = {
   getConfig: () => api.get('/api/channels/config'),
   getStats: (params) => api.get('/api/channels/stats', { params }),
+  getExpeditions: () => api.get('/api/channels/expeditions'),
   getStatus: (expeditionId) => api.get(`/api/channels/${expeditionId}/status`),
   getLevante: (expeditionId) => api.get(`/api/channels/${expeditionId}/levante`),
   reevaluate: (expeditionId) => api.post(`/api/channels/${expeditionId}/reevaluate`),

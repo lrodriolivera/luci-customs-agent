@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:roh="https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/ad44/jdit/ws/rohs/ROHSSolicitudCertificadoV1Ent.xsd">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <roh:ROHSSolicitudCertificadoV1Ent>
+      <SegmentosDeServicio Id="20260303153251689937768" fecha="20260303" hora="153251" Test="S"/>
+      <TipoOperacion>ALT</TipoOperacion>
+      <Especificidades>
+        <Valor>06</Valor>
+      </Especificidades>
+      <TipoDocumento>DUA</TipoDocumento>
+      <MRNPartida>26ES009999Z000001300001</MRNPartida>
+      <UnidadDeMedidaDeMercancia>unidades fisicas</UnidadDeMedidaDeMercancia>
+      <CantidadDeUnidadesDeMercancia>2</CantidadDeUnidadesDeMercancia>
+      <CodCice>50</CodCice>
+      <CodPI>01</CodPI>
+      <email>despacho@strixai.es</email>
+      <TipoDeclaracion>01</TipoDeclaracion>
+      <CertificadoSolicitadoROHS>01</CertificadoSolicitadoROHS>
+      <CertificadoSolicitadoRAEE>02</CertificadoSolicitadoRAEE>
+    </roh:ROHSSolicitudCertificadoV1Ent>
+  </soapenv:Body>
+</soapenv:Envelope>

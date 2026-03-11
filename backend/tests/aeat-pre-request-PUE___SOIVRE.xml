@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+  <soapenv:Body>
+    <ent:SOIVREaltaV1Ent xmlns:ent="https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/ad44/soivre/SOIVREaltaV1Ent.xsd" Id="20260213093442804219007">
+      <tipoDeCertificado>ROHS</tipoDeCertificado>
+      <numeroDeCertificado>CERT-2026021309</numeroDeCertificado>
+      <nifOperadorAutorizado>B22477020</nifOperadorAutorizado>
+      <razonSocialOperadorAut>STRIX AI SL</razonSocialOperadorAut>
+      <fechaInicioValidez>20260213</fechaInicioValidez>
+      <fechaFinValidez>20270213</fechaFinValidez>
+      <tipoDeControl>DOC</tipoDeControl>
+      <resultadoDelControl>FAVORABLE</resultadoDelControl>
+      <codigoMercancia>8471300000</codigoMercancia>
+      <productos>
+        <producto>
+          <codigoSoivre>8471300000</codigoSoivre>
+          <descripcion>Servidores rack</descripcion>
+        </producto>
+      </productos>
+    </ent:SOIVREaltaV1Ent>
+  </soapenv:Body>
+</soapenv:Envelope>

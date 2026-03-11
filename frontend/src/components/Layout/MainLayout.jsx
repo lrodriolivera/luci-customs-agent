@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import { HelpButton, HelpModal } from '../Help'
 import useContextualHelp from '../../hooks/useContextualHelp'
 import FloatingAssistant from './FloatingAssistant'
+import LanguageSelector from './LanguageSelector'
 import {
   HomeIcon,
   FolderIcon,
@@ -43,98 +45,97 @@ import {
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline'
 
-// Grupos del sidebar
+// Grupos del sidebar (con claves i18n)
 const navGroups = [
   {
     id: 'operations',
-    label: 'Operaciones',
+    labelKey: 'nav.operations',
     icon: HomeIcon,
     items: [
-      { path: '/', icon: HomeIcon, label: 'Dashboard' },
-      { path: '/expeditions', icon: FolderIcon, label: 'Expedientes' },
-      { path: '/channels', icon: SignalIcon, label: 'Circuitos' },
-      { path: '/requirements', icon: ClipboardDocumentCheckIcon, label: 'Requerimientos' },
+      { path: '/', icon: HomeIcon, labelKey: 'nav.dashboard' },
+      { path: '/expeditions', icon: FolderIcon, labelKey: 'nav.expeditions' },
+      { path: '/channels', icon: SignalIcon, labelKey: 'nav.channels' },
+      { path: '/requirements', icon: ClipboardDocumentCheckIcon, labelKey: 'nav.requirements' },
     ]
   },
   {
     id: 'declarations',
-    label: 'Declaraciones',
+    labelKey: 'nav.declarations',
     icon: DocumentTextIcon,
     items: [
-      { path: '/classification', icon: TagIcon, label: 'Clasificacion TARIC' },
-      { path: '/declarations', icon: DocumentTextIcon, label: 'Declaraciones H1' },
-      { path: '/h7', icon: ShoppingCartIcon, label: 'H7 E-commerce' },
-      { path: '/ens', icon: DocumentTextIcon, label: 'ENS/ICS2' },
-      { path: '/pue', icon: ClipboardDocumentCheckIcon, label: 'PUE SOIVRE' },
+      { path: '/classification', icon: TagIcon, labelKey: 'nav.taricClassification' },
+      { path: '/declarations', icon: DocumentTextIcon, labelKey: 'nav.declarationsH1' },
+      { path: '/h7', icon: ShoppingCartIcon, labelKey: 'nav.h7Ecommerce' },
+      { path: '/ens', icon: DocumentTextIcon, labelKey: 'nav.ensIcs2' },
+      { path: '/pue', icon: ClipboardDocumentCheckIcon, labelKey: 'nav.pueSoivre' },
     ]
   },
   {
     id: 'calculation',
-    label: 'Calculo y Normativa',
+    labelKey: 'nav.calculationRules',
     icon: CalculatorIcon,
     items: [
-      { path: '/calculator', icon: CalculatorIcon, label: 'Calculadora Derechos' },
-      { path: '/preferences', icon: GlobeAltIcon, label: 'Preferencias' },
-      { path: '/rules-engine', icon: BeakerIcon, label: 'Motor de Reglas' },
-      { path: '/excise-duties', icon: BeakerIcon, label: 'Imp. Especiales' },
-      { path: '/quotas', icon: ChartBarIcon, label: 'Contingentes' },
-      { path: '/regulations', icon: BookOpenIcon, label: 'Normativa CAU/BOE' },
+      { path: '/calculator', icon: CalculatorIcon, labelKey: 'nav.dutyCalculator' },
+      { path: '/preferences', icon: GlobeAltIcon, labelKey: 'nav.preferences' },
+      { path: '/rules-engine', icon: BeakerIcon, labelKey: 'nav.rulesEngine' },
+      { path: '/excise-duties', icon: BeakerIcon, labelKey: 'nav.exciseDuties' },
+      { path: '/quotas', icon: ChartBarIcon, labelKey: 'nav.quotas' },
+      { path: '/regulations', icon: BookOpenIcon, labelKey: 'nav.regulationsCau' },
     ]
   },
   {
     id: 'control',
-    label: 'Control Aduanero',
+    labelKey: 'nav.customsControl',
     icon: ClipboardDocumentCheckIcon,
     items: [
-      { path: '/deadlines', icon: ClockIcon, label: 'Plazos' },
-      { path: '/inspections', icon: MagnifyingGlassIcon, label: 'Inspecciones' },
-      { path: '/communications', icon: EnvelopeIcon, label: 'Comunicaciones' },
-      { path: '/queries', icon: MagnifyingGlassIcon, label: 'Consultas ADDS' },
+      { path: '/deadlines', icon: ClockIcon, labelKey: 'nav.deadlines' },
+      { path: '/inspections', icon: MagnifyingGlassIcon, labelKey: 'nav.inspections' },
+      { path: '/communications', icon: EnvelopeIcon, labelKey: 'nav.communications' },
+      { path: '/queries', icon: MagnifyingGlassIcon, labelKey: 'nav.queriesAdds' },
     ]
   },
   {
     id: 'regimes',
-    label: 'Regimenes',
+    labelKey: 'nav.regimes',
     icon: BuildingLibraryIcon,
     items: [
-      { path: '/guarantees', icon: ShieldCheckIcon, label: 'Garantias' },
-      { path: '/oea', icon: IdentificationIcon, label: 'OEA' },
-      { path: '/special-regimes', icon: CubeTransparentIcon, label: 'Regimenes Especiales' },
-      { path: '/transit', icon: TruckIcon, label: 'Transitos NCTS' },
+      { path: '/guarantees', icon: ShieldCheckIcon, labelKey: 'nav.guarantees' },
+      { path: '/oea', icon: IdentificationIcon, labelKey: 'nav.oea' },
+      { path: '/special-regimes', icon: CubeTransparentIcon, labelKey: 'nav.specialRegimes' },
+      { path: '/transit', icon: TruckIcon, labelKey: 'nav.transitNcts' },
     ]
   },
   {
     id: 'integrations',
-    label: 'AEAT e Integraciones',
+    labelKey: 'nav.aeatIntegrations',
     icon: LinkIcon,
     items: [
-      { path: '/aeat/certificates', icon: KeyIcon, label: 'Certificados AEAT' },
-      { path: '/aeat/monitor', icon: SignalIcon, label: 'Monitor AEAT' },
-      { path: '/integrations', icon: CloudIcon, label: 'Integraciones' },
+      { path: '/aeat/certificates', icon: KeyIcon, labelKey: 'nav.aeatCertificates' },
+      { path: '/aeat/monitor', icon: SignalIcon, labelKey: 'nav.aeatMonitor' },
+      { path: '/integrations', icon: CloudIcon, labelKey: 'nav.integrations' },
     ]
   },
   {
     id: 'admin',
-    label: 'Administracion',
+    labelKey: 'nav.administration',
     icon: AdjustmentsHorizontalIcon,
     items: [
-      { path: '/analytics', icon: ChartBarIcon, label: 'Analytics' },
-      { path: '/settings', icon: Cog6ToothIcon, label: 'Configuracion' },
-      { path: '/billing', icon: CreditCardIcon, label: 'Facturacion' },
-      { path: '/ml-insights', icon: SparklesIcon, label: 'ML Insights' },
-      { path: '/admin', icon: UserGroupIcon, label: 'Admin Panel' },
+      { path: '/analytics', icon: ChartBarIcon, labelKey: 'nav.analytics' },
+      { path: '/settings', icon: Cog6ToothIcon, labelKey: 'nav.settings' },
+      { path: '/billing', icon: CreditCardIcon, labelKey: 'nav.billing' },
+      { path: '/ml-insights', icon: SparklesIcon, labelKey: 'nav.mlInsights' },
+      { path: '/admin', icon: UserGroupIcon, labelKey: 'nav.adminPanel' },
     ]
   }
 ]
 
-function SidebarGroup({ group, isExpanded, isActive, isOpen, onToggle, onNavClick }) {
+function SidebarGroup({ group, isExpanded, isActive, isOpen, onToggle, onNavClick, t }) {
   const GroupIcon = group.icon
 
   if (!isExpanded) {
-    // Collapsed: show only first item icon or group icon
     return (
       <div className="mb-1">
-        {group.items.map(({ path, icon: Icon, label }) => (
+        {group.items.map(({ path, icon: Icon, labelKey }) => (
           <NavLink
             key={path}
             to={path}
@@ -147,7 +148,7 @@ function SidebarGroup({ group, isExpanded, isActive, isOpen, onToggle, onNavClic
               }`
             }
             onClick={onNavClick}
-            title={label}
+            title={t(labelKey)}
           >
             <Icon className="w-5 h-5" />
           </NavLink>
@@ -167,13 +168,13 @@ function SidebarGroup({ group, isExpanded, isActive, isOpen, onToggle, onNavClic
         }`}
       >
         <GroupIcon className="w-4 h-4 flex-shrink-0" />
-        <span className="flex-1 text-left">{group.label}</span>
+        <span className="flex-1 text-left">{t(group.labelKey)}</span>
         <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`} />
       </button>
 
       <div className={`overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="ml-2 pl-2 border-l border-slate-700 space-y-0.5 mt-0.5">
-          {group.items.map(({ path, icon: Icon, label }) => (
+          {group.items.map(({ path, icon: Icon, labelKey }) => (
             <NavLink
               key={path}
               to={path}
@@ -188,7 +189,7 @@ function SidebarGroup({ group, isExpanded, isActive, isOpen, onToggle, onNavClic
               onClick={onNavClick}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate">{label}</span>
+              <span className="truncate">{t(labelKey)}</span>
             </NavLink>
           ))}
         </div>
@@ -198,6 +199,7 @@ function SidebarGroup({ group, isExpanded, isActive, isOpen, onToggle, onNavClic
 }
 
 export default function MainLayout() {
+  const { t } = useTranslation()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -251,7 +253,7 @@ export default function MainLayout() {
     <div className="min-h-screen bg-gray-50 flex">
       {/* Skip to content (accessibility) */}
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-luci focus:text-white focus:top-0 focus:left-0">
-        Saltar al contenido principal
+        {t('nav.skipToContent')}
       </a>
 
       {/* Mobile backdrop */}
@@ -265,7 +267,7 @@ export default function MainLayout() {
       {/* Sidebar */}
       <aside
         role="navigation"
-        aria-label="Menu principal"
+        aria-label={t('nav.mainMenu')}
         className={`
           fixed lg:static inset-y-0 left-0 z-30
           bg-slate-900 text-white
@@ -296,7 +298,7 @@ export default function MainLayout() {
           <button
             className={`hidden lg:flex p-1 text-slate-500 hover:text-slate-300 hover:bg-slate-700 rounded transition-all ${isExpanded ? '' : 'absolute -right-3 top-5 bg-slate-800 border border-slate-600 shadow-lg'}`}
             onClick={() => setIsCollapsed(!isCollapsed)}
-            title={isCollapsed ? 'Fijar menu' : 'Colapsar menu'}
+            title={isCollapsed ? t('nav.pinMenu') : t('nav.collapseMenu')}
           >
             {isCollapsed ? (
               <ChevronRightIcon className="w-4 h-4" />
@@ -317,6 +319,7 @@ export default function MainLayout() {
               isOpen={openGroups[group.id] || false}
               onToggle={() => toggleGroup(group.id)}
               onNavClick={() => setSidebarOpen(false)}
+              t={t}
             />
           ))}
         </nav>
@@ -332,14 +335,14 @@ export default function MainLayout() {
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700'
               } ${!isExpanded ? 'justify-center' : ''}`
             }
-            title={!isExpanded ? 'Asistente LUCI' : undefined}
+            title={!isExpanded ? t('nav.luciAssistant') : undefined}
           >
             <ChatBubbleLeftRightIcon className="w-5 h-5 flex-shrink-0" />
             <span className={`whitespace-nowrap transition-opacity duration-200 ${isExpanded ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
-              Asistente LUCI
+              {t('nav.luciAssistant')}
             </span>
             {isExpanded && (
-              <span className="ml-auto text-[10px] bg-sky-400/20 text-sky-300 px-1.5 py-0.5 rounded-full">IA</span>
+              <span className="ml-auto text-[10px] bg-sky-400/20 text-sky-300 px-1.5 py-0.5 rounded-full">{t('nav.ai')}</span>
             )}
           </NavLink>
         </div>
@@ -352,21 +355,21 @@ export default function MainLayout() {
             </div>
             <div className={`flex-1 min-w-0 transition-opacity duration-200 ${isExpanded ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
               <p className="text-sm font-medium text-white truncate">
-                {user?.name || 'Usuario'}
+                {user?.name || t('nav.user')}
               </p>
               <p className="text-xs text-slate-400 truncate">
-                {user?.role === 'admin' ? 'Administrador' : 'Agente Aduanero'}
+                {user?.role === 'admin' ? t('nav.admin') : t('nav.customsAgent')}
               </p>
             </div>
           </div>
           <button
             onClick={handleLogout}
             className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors ${!isExpanded ? 'justify-center' : ''}`}
-            title={!isExpanded ? 'Cerrar Sesion' : undefined}
+            title={!isExpanded ? t('nav.logout') : undefined}
           >
             <ArrowRightOnRectangleIcon className="w-4 h-4 flex-shrink-0" />
             <span className={`whitespace-nowrap transition-opacity duration-200 ${isExpanded ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
-              Cerrar Sesion
+              {t('nav.logout')}
             </span>
           </button>
         </div>
@@ -386,8 +389,9 @@ export default function MainLayout() {
           </div>
 
           <div className="flex items-center gap-4">
+            <LanguageSelector variant="header" />
             <span className="text-xs text-gray-400 hidden sm:block">
-              Powered by Strix AI
+              {t('common.poweredBy')}
             </span>
           </div>
         </header>

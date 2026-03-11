@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { h7API } from '../../services/api'
 import toast from 'react-hot-toast'
@@ -17,20 +18,7 @@ import {
   ArrowDownTrayIcon
 } from '@heroicons/react/24/outline'
 
-// Configuracion de estados
-const STATUS_CONFIG = {
-  draft: { label: 'Borrador', color: 'gray', icon: ClockIcon },
-  validating: { label: 'Validando', color: 'blue', icon: ArrowPathIcon },
-  pending: { label: 'Pendiente', color: 'yellow', icon: ClockIcon },
-  submitted: { label: 'Enviada', color: 'blue', icon: DocumentArrowUpIcon },
-  accepted: { label: 'Aceptada', color: 'green', icon: CheckCircleIcon },
-  held: { label: 'Retenida', color: 'orange', icon: ExclamationTriangleIcon },
-  rejected: { label: 'Rechazada', color: 'red', icon: XCircleIcon },
-  released: { label: 'Levante', color: 'green', icon: CheckCircleIcon },
-  delivered: { label: 'Entregada', color: 'emerald', icon: TruckIcon },
-  returned: { label: 'Devuelta', color: 'red', icon: XCircleIcon },
-  cancelled: { label: 'Cancelada', color: 'gray', icon: XCircleIcon }
-}
+// STATUS_CONFIG is defined inside the component to use t()
 
 // Transportistas
 const CARRIERS = [
@@ -47,6 +35,22 @@ const CARRIERS = [
 ]
 
 export default function H7DeclarationList() {
+  const { t } = useTranslation()
+
+  const STATUS_CONFIG = {
+    draft: { label: t('h7.statusDraft'), color: 'gray', icon: ClockIcon },
+    validating: { label: t('h7.statusValidating'), color: 'blue', icon: ArrowPathIcon },
+    pending: { label: t('h7.statusPending'), color: 'yellow', icon: ClockIcon },
+    submitted: { label: t('h7.statusSent'), color: 'blue', icon: DocumentArrowUpIcon },
+    accepted: { label: t('h7.statusAccepted'), color: 'green', icon: CheckCircleIcon },
+    held: { label: t('h7.statusHeld'), color: 'orange', icon: ExclamationTriangleIcon },
+    rejected: { label: t('h7.statusRejected'), color: 'red', icon: XCircleIcon },
+    released: { label: t('h7.statusRelease'), color: 'green', icon: CheckCircleIcon },
+    delivered: { label: t('h7.statusDelivered'), color: 'emerald', icon: TruckIcon },
+    returned: { label: t('h7.statusReturned'), color: 'red', icon: XCircleIcon },
+    cancelled: { label: t('h7.statusCancelled'), color: 'gray', icon: XCircleIcon }
+  }
+
   const [declarations, setDeclarations] = useState([])
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -89,7 +93,7 @@ export default function H7DeclarationList() {
         }))
       }
     } catch (error) {
-      toast.error('Error al cargar declaraciones H7')
+      toast.error(t('h7.loadingH7Error'))
     } finally {
       setLoading(false)
     }
@@ -116,12 +120,12 @@ export default function H7DeclarationList() {
     try {
       const response = await h7API.submit(id)
       if (response.data.success) {
-        toast.success(`Declaracion enviada - MRN: ${response.data.data.mrn}`)
+        toast.success(t('h7.declarationSent', { mrn: response.data.data.mrn }))
         loadDeclarations()
         loadStats()
       }
     } catch (error) {
-      toast.error('Error al enviar declaracion')
+      toast.error(t('h7.errorSendingDecl'))
     }
   }
 
@@ -141,8 +145,8 @@ export default function H7DeclarationList() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Declaraciones H7</h1>
-          <p className="text-gray-600">E-commerce y envios de bajo valor (hasta 150 EUR)</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('h7.title')}</h1>
+          <p className="text-gray-600">{t('h7.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -150,14 +154,14 @@ export default function H7DeclarationList() {
             className="btn-secondary flex items-center gap-2"
           >
             <FunnelIcon className="h-5 w-5" />
-            Filtros
+            {t('h7.filters')}
           </button>
           <button
             onClick={() => setShowNewForm(true)}
             className="btn-primary flex items-center gap-2"
           >
             <PlusIcon className="h-5 w-5" />
-            Nueva H7
+            {t('h7.new')}
           </button>
         </div>
       </div>
@@ -168,7 +172,7 @@ export default function H7DeclarationList() {
           <div className="card bg-blue-50 border-blue-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-600 text-sm font-medium">Total Declaraciones</p>
+                <p className="text-blue-600 text-sm font-medium">{t('h7.totalDeclarations')}</p>
                 <p className="text-2xl font-bold text-blue-900">{stats.totals?.declarations || 0}</p>
               </div>
               <ShoppingCartIcon className="h-10 w-10 text-blue-500" />
@@ -178,7 +182,7 @@ export default function H7DeclarationList() {
           <div className="card bg-green-50 border-green-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-600 text-sm font-medium">Valor Total</p>
+                <p className="text-green-600 text-sm font-medium">{t('h7.totalValue')}</p>
                 <p className="text-2xl font-bold text-green-900">
                   {(stats.totals?.value || 0).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                 </p>
@@ -190,7 +194,7 @@ export default function H7DeclarationList() {
           <div className="card bg-yellow-50 border-yellow-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-yellow-600 text-sm font-medium">Derechos Recaudados</p>
+                <p className="text-yellow-600 text-sm font-medium">{t('h7.dutiesCollected')}</p>
                 <p className="text-2xl font-bold text-yellow-900">
                   {(stats.totals?.duties || 0).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                 </p>
@@ -202,7 +206,7 @@ export default function H7DeclarationList() {
           <div className="card bg-purple-50 border-purple-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-600 text-sm font-medium">Transportistas</p>
+                <p className="text-purple-600 text-sm font-medium">{t('h7.carriers')}</p>
                 <p className="text-2xl font-bold text-purple-900">
                   {stats.byCarrier?.length || 0}
                 </p>
@@ -216,30 +220,30 @@ export default function H7DeclarationList() {
       {/* Filters */}
       {showFilters && (
         <div className="card">
-          <h3 className="font-semibold mb-4">Filtros</h3>
+          <h3 className="font-semibold mb-4">{t('h7.filters')}</h3>
           <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('h7.searchLabel')}</label>
               <div className="relative">
                 <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                  placeholder="Tracking, MRN, destinatario..."
+                  placeholder={t('h7.searchPlaceholder')}
                   className="input pl-10"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.status')}</label>
               <select
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                 className="input"
               >
-                <option value="">Todos</option>
+                <option value="">{t('common.all')}</option>
                 {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}
@@ -247,13 +251,13 @@ export default function H7DeclarationList() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Transportista</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('h7.carrier')}</label>
               <select
                 value={filters.carrier}
                 onChange={(e) => setFilters({ ...filters, carrier: e.target.value })}
                 className="input"
               >
-                <option value="">Todos</option>
+                <option value="">{t('common.all')}</option>
                 {CARRIERS.map(c => (
                   <option key={c.code} value={c.code}>{c.name}</option>
                 ))}
@@ -262,7 +266,7 @@ export default function H7DeclarationList() {
 
             <div className="flex items-end">
               <button type="submit" className="btn-primary w-full">
-                Buscar
+                {t('common.search')}
               </button>
             </div>
           </form>
@@ -278,12 +282,12 @@ export default function H7DeclarationList() {
         ) : declarations.length === 0 ? (
           <div className="text-center py-12">
             <ShoppingCartIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No hay declaraciones H7</p>
+            <p className="text-gray-500">{t('h7.noDeclarations')}</p>
             <button
               onClick={() => setShowNewForm(true)}
               className="btn-primary mt-4"
             >
-              Crear primera declaracion
+              {t('h7.createFirst')}
             </button>
           </div>
         ) : (
@@ -291,15 +295,15 @@ export default function H7DeclarationList() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Referencia</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tracking</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transportista</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Destinatario</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Derechos</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">MRN</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('h7.reference')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('h7.tracking')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('h7.carrier')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('h7.recipient')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('h7.value')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('h7.duties')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('h7.mrnLabel')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -330,7 +334,7 @@ export default function H7DeclarationList() {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {decl.vatPrepaid ? (
-                        <span className="text-green-600">IOSS pagado</span>
+                        <span className="text-green-600">{t('h7.iossPaidLabel')}</span>
                       ) : (
                         <span className="font-medium">
                           {decl.duties?.totalDue?.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
@@ -350,14 +354,14 @@ export default function H7DeclarationList() {
                             onClick={() => handleSubmit(decl._id)}
                             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                           >
-                            Enviar
+                            {t('h7.sendLabel')}
                           </button>
                         )}
                         <Link
                           to={`/h7/${decl._id}`}
                           className="text-gray-600 hover:text-gray-800 text-sm"
                         >
-                          Ver
+                          {t('h7.viewLabel')}
                         </Link>
                       </div>
                     </td>
@@ -372,7 +376,7 @@ export default function H7DeclarationList() {
         {pagination.pages > 1 && (
           <div className="flex justify-between items-center px-4 py-3 border-t">
             <p className="text-sm text-gray-500">
-              Mostrando {((pagination.page - 1) * pagination.limit) + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total}
+              {t('common.showing')} {((pagination.page - 1) * pagination.limit) + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)} {t('common.of')} {pagination.total}
             </p>
             <div className="flex gap-2">
               <button
@@ -380,14 +384,14 @@ export default function H7DeclarationList() {
                 disabled={pagination.page === 1}
                 className="btn-secondary text-sm disabled:opacity-50"
               >
-                Anterior
+                {t('common.previous')}
               </button>
               <button
                 onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
                 disabled={pagination.page >= pagination.pages}
                 className="btn-secondary text-sm disabled:opacity-50"
               >
-                Siguiente
+                {t('common.next')}
               </button>
             </div>
           </div>
@@ -411,6 +415,7 @@ export default function H7DeclarationList() {
 
 // Componente para crear nueva H7
 function H7NewForm({ onClose, onCreated }) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     trackingNumber: '',
     carrier: { code: 'CORREOS', name: 'Correos' },
@@ -504,7 +509,7 @@ function H7NewForm({ onClose, onCreated }) {
       setValidation(response.data.data)
       return response.data.data.eligible
     } catch (error) {
-      toast.error('Error de validacion')
+      toast.error(t('h7.validationErrorLabel'))
       return false
     }
   }
@@ -514,7 +519,7 @@ function H7NewForm({ onClose, onCreated }) {
 
     const isValid = await validateForm()
     if (!isValid) {
-      toast.error('La declaracion no cumple requisitos H7')
+      toast.error(t('h7.doesNotMeetRequirements'))
       return
     }
 
@@ -532,11 +537,11 @@ function H7NewForm({ onClose, onCreated }) {
       })
 
       if (response.data.success) {
-        toast.success(`Declaracion ${response.data.data.reference} creada`)
+        toast.success(t('h7.declarationCreated', { ref: response.data.data.reference }))
         onCreated()
       }
     } catch (error) {
-      toast.error('Error al crear declaracion')
+      toast.error(t('h7.errorCreating'))
     } finally {
       setLoading(false)
     }
@@ -548,7 +553,7 @@ function H7NewForm({ onClose, onCreated }) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold">Nueva Declaracion H7</h2>
+          <h2 className="text-xl font-bold">{t('h7.newTitle')}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <XCircleIcon className="h-6 w-6" />
           </button>
@@ -558,7 +563,7 @@ function H7NewForm({ onClose, onCreated }) {
           {/* Validacion */}
           {validation && !validation.eligible && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <h4 className="font-medium text-red-800 mb-2">Errores de validacion:</h4>
+              <h4 className="font-medium text-red-800 mb-2">{t('h7.validationErrors')}</h4>
               <ul className="list-disc list-inside text-sm text-red-700">
                 {validation.errors?.map((err, i) => (
                   <li key={i}>{err.message}</li>
@@ -570,7 +575,7 @@ function H7NewForm({ onClose, onCreated }) {
           {/* Datos del envio */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Numero de Tracking *</label>
+              <label className="block text-sm font-medium mb-1">{t('h7.trackingNumber')} *</label>
               <input
                 type="text"
                 required
@@ -581,7 +586,7 @@ function H7NewForm({ onClose, onCreated }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Transportista *</label>
+              <label className="block text-sm font-medium mb-1">{t('h7.carrier')} *</label>
               <select
                 value={formData.carrier.code}
                 onChange={(e) => {
@@ -599,7 +604,7 @@ function H7NewForm({ onClose, onCreated }) {
 
           {/* IOSS */}
           <div>
-            <label className="block text-sm font-medium mb-1">Numero IOSS (si aplica)</label>
+            <label className="block text-sm font-medium mb-1">{t('h7.iossNumber')}</label>
             <input
               type="text"
               value={formData.iossNumber}
@@ -607,12 +612,12 @@ function H7NewForm({ onClose, onCreated }) {
               className="input"
               placeholder="IM + 10 digitos (ej: IM2760000001)"
             />
-            <p className="text-xs text-gray-500 mt-1">Si tiene IOSS, el IVA ya esta pagado</p>
+            <p className="text-xs text-gray-500 mt-1">{t('h7.iossHint')}</p>
           </div>
 
           {/* Remitente */}
           <div className="border rounded-lg p-4">
-            <h3 className="font-medium mb-3">Remitente (Vendedor)</h3>
+            <h3 className="font-medium mb-3">{t('h7.sender')}</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Nombre *</label>
@@ -650,7 +655,7 @@ function H7NewForm({ onClose, onCreated }) {
 
           {/* Destinatario */}
           <div className="border rounded-lg p-4">
-            <h3 className="font-medium mb-3">Destinatario (Comprador)</h3>
+            <h3 className="font-medium mb-3">{t('h7.recipientBuyer')}</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Nombre *</label>
@@ -733,23 +738,23 @@ function H7NewForm({ onClose, onCreated }) {
           {/* Articulos */}
           <div className="border rounded-lg p-4">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="font-medium">Articulos</h3>
+              <h3 className="font-medium">{t('h7.articles')}</h3>
               <button type="button" onClick={addItem} className="btn-secondary text-sm">
-                + Agregar articulo
+                {t('h7.addArticle')}
               </button>
             </div>
 
             {formData.items.map((item, index) => (
               <div key={index} className="border rounded p-3 mb-3 bg-gray-50">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">Articulo {index + 1}</span>
+                  <span className="text-sm font-medium">{t('h7.article')} {index + 1}</span>
                   {formData.items.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeItem(index)}
                       className="text-red-500 text-sm"
                     >
-                      Eliminar
+                      {t('common.delete')}
                     </button>
                   )}
                 </div>
@@ -835,7 +840,7 @@ function H7NewForm({ onClose, onCreated }) {
 
           {/* Totales */}
           <div className="border rounded-lg p-4 bg-blue-50">
-            <h3 className="font-medium mb-3">Resumen</h3>
+            <h3 className="font-medium mb-3">{t('h7.summary')}</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-medium mb-1">Valor intrinseco</label>
@@ -846,7 +851,7 @@ function H7NewForm({ onClose, onCreated }) {
                   className={`input text-sm bg-white ${totals.intrinsicValue > 150 ? 'border-red-500 text-red-600' : ''}`}
                 />
                 {totals.intrinsicValue > 150 && (
-                  <p className="text-xs text-red-600 mt-1">Excede limite H7 de 150 EUR</p>
+                  <p className="text-xs text-red-600 mt-1">{t('h7.exceedsH7Limit')}</p>
                 )}
               </div>
               <div>
@@ -896,21 +901,21 @@ function H7NewForm({ onClose, onCreated }) {
           {/* Botones */}
           <div className="flex justify-end gap-3 pt-4 border-t">
             <button type="button" onClick={onClose} className="btn-secondary">
-              Cancelar
+              {t('common.cancel')}
             </button>
             <button
               type="button"
               onClick={validateForm}
               className="btn-secondary"
             >
-              Validar
+              {t('h7.validate')}
             </button>
             <button
               type="submit"
               disabled={loading || totals.intrinsicValue > 150}
               className="btn-primary disabled:opacity-50"
             >
-              {loading ? 'Creando...' : 'Crear Declaracion H7'}
+              {loading ? t('h7.creatingH7') : t('h7.createH7')}
             </button>
           </div>
         </form>

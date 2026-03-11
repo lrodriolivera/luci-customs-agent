@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import {
   BeakerIcon,
   ExclamationCircleIcon,
@@ -9,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function ExciseDutiesCalculator() {
+  const { t } = useTranslation()
   const [detecting, setDetecting] = useState(false)
   const [calculating, setCalculating] = useState(false)
   const [detection, setDetection] = useState(null)
@@ -156,10 +158,10 @@ export default function ExciseDutiesCalculator() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 flex items-center">
           <BeakerIcon className="h-8 w-8 mr-3 text-orange-600" />
-          Calculadora de Impuestos Especiales (SILICIE)
+          {t('excise.title')}
         </h1>
         <p className="mt-2 text-gray-600">
-          Sistema de gestión de Impuestos Especiales para alcohol, tabaco, hidrocarburos y electricidad
+          {t('excise.subtitle')}
         </p>
       </div>
 

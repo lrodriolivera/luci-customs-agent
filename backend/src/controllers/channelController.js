@@ -324,11 +324,45 @@ const getLevante = async (req, res) => {
   }
 };
 
+/**
+ * Obtener expedientes con canal asignado
+ * GET /api/channels/expeditions
+ */
+const getChannelExpeditions = async (req, res) => {
+  try {
+    const tenantId = req.user?.tenantId;
+    const query = { 'declaration.channel': { $exists: true, $ne: null } };
+    if (tenantId) query.tenantId = tenantId;
+
+    const expeditions = await Expedition.find(query)
+      .select('expeditionId status client.companyName declaration.channel declaration.mrn declaration.channelAssignedAt declaration.submittedAt createdAt')
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
+
+    const result = expeditions.map(exp => ({
+      _id: exp._id,
+      expeditionId: exp.expeditionId,
+      status: exp.status,
+      clientName: exp.client?.companyName || '-',
+      channel: exp.declaration?.channel,
+      mrn: exp.declaration?.mrn || '-',
+      channelDate: exp.declaration?.channelAssignedAt || exp.declaration?.submittedAt || exp.createdAt
+    }));
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error('Error getting channel expeditions:', error);
+    res.status(500).json({ success: false, error: 'Error al obtener expedientes con canal' });
+  }
+};
+
 module.exports = {
   getChannelStatus,
   reevaluateChannel,
   getChannelConfigs,
   getChannelStats,
+  getChannelExpeditions,
   processChannelManually,
   getLevante
 };

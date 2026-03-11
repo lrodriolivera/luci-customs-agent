@@ -25,6 +25,7 @@ import {
   ExpandMore as ExpandIcon
 } from '@mui/icons-material'
 import { queryAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 
 // Query type configuration
 const queryTypeConfig = {
@@ -56,6 +57,7 @@ const declarationTypeColors = {
 }
 
 const QueryDashboard = () => {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState(0)
   const [loading, setLoading] = useState(false)
   const [queryType, setQueryType] = useState('QIntNuCono')
@@ -231,7 +233,7 @@ const QueryDashboard = () => {
     <Box sx={{ p: 3 }}>
       {/* Header */}
       <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
-        Consultas ADDS-JDIT
+        {t('queries.title')}
       </Typography>
 
       {/* Stats Cards */}

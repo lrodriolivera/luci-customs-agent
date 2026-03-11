@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { expeditionsAPI, declarationsAPI, knowledgeAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import {
@@ -10,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function DeclarationGenerator() {
+  const { t } = useTranslation()
   const [expeditions, setExpeditions] = useState([])
   const [selectedExpedition, setSelectedExpedition] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -57,7 +59,7 @@ export default function DeclarationGenerator() {
 
   const handleGenerate = async () => {
     if (!selectedExpedition) {
-      toast.error('Seleccione un expediente')
+      toast.error(t('declarations.selectExpeditionError'))
       return
     }
 
@@ -78,9 +80,9 @@ export default function DeclarationGenerator() {
           })
 
       setGeneratedDeclaration(response.data)
-      toast.success(`Declaracion ${declarationType} generada`)
+      toast.success(t('declarations.declarationGeneratedType', { type: declarationType }))
     } catch (error) {
-      toast.error('Error al generar declaracion')
+      toast.error(t('declarations.errorGenerating'))
     } finally {
       setGenerating(false)
     }
@@ -97,15 +99,15 @@ export default function DeclarationGenerator() {
       a.href = url
       a.download = `${declarationType}_${selectedExpedition.expeditionId}.xml`
       a.click()
-      toast.success('XML descargado')
+      toast.success(t('declarations.xmlDownloaded'))
     } catch (error) {
-      toast.error('Error al exportar XML')
+      toast.error(t('declarations.errorExportXml'))
     }
   }
 
   const handleSubmitToAEAT = async () => {
     if (!selectedExpedition) return
-    if (!confirm(`Enviar declaracion ${declarationType} a AEAT?`)) return
+    if (!confirm(t('declarations.confirmSendAeat', { type: declarationType }))) return
 
     setSubmitting(true)
     setAeatResult(null)
@@ -115,45 +117,45 @@ export default function DeclarationGenerator() {
       setAeatResult(resultData)
 
       if (resultData.channel === 'green') {
-        toast.success(`Canal VERDE - MRN: ${resultData.mrn}`)
+        toast.success(`${t('declarations.greenChannel')} ${resultData.mrn}`)
       } else if (resultData.channel === 'orange') {
-        toast('Canal NARANJA - Revision documental', { icon: '🟠' })
+        toast(t('declarations.orangeChannel'), { icon: '🟠' })
       } else if (resultData.channel === 'red') {
-        toast('Canal ROJO - Inspeccion fisica', { icon: '🔴' })
+        toast(t('declarations.redChannel'), { icon: '🔴' })
       } else {
-        toast.success(`Enviado a AEAT - MRN: ${resultData.mrn || 'Pendiente'}`)
+        toast.success(t('declarations.sentToAeatMrn', { mrn: resultData.mrn || t('common.pending') }))
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Error al enviar a AEAT')
+      toast.error(error.response?.data?.error || t('declarations.errorSendAeat'))
     } finally {
       setSubmitting(false)
     }
   }
 
   const regimes = [
-    { code: '40', label: 'Libre Practica (40)' },
-    { code: '42', label: 'Libre Practica + Entrega Intra-UE (42)' },
-    { code: '44', label: 'Libre Practica + Destino Final (44)' },
-    { code: '51', label: 'Perfeccionamiento Activo (51)' },
-    { code: '53', label: 'Importacion Temporal (53)' },
-    { code: '61', label: 'Reimportacion (61)' },
-    { code: '71', label: 'Deposito Aduanero (71)' }
+    { code: '40', label: t('declarations.regime40') },
+    { code: '42', label: t('declarations.regime42') },
+    { code: '44', label: t('declarations.regime44') },
+    { code: '51', label: t('declarations.regime51') },
+    { code: '53', label: t('declarations.regime53') },
+    { code: '61', label: t('declarations.regime61') },
+    { code: '71', label: t('declarations.regime71') }
   ]
 
   const preferences = [
-    { code: '100', label: 'Sin Preferencia (MFN)' },
-    { code: '200', label: 'SPG' },
-    { code: '300', label: 'Preferencial (EUR.1)' },
-    { code: '400', label: 'Union Aduanera (ATR)' }
+    { code: '100', label: t('declarations.noPreference') },
+    { code: '200', label: t('declarations.spg') },
+    { code: '300', label: t('declarations.preferentialEur1') },
+    { code: '400', label: t('declarations.customsUnionAtr') }
   ]
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Generador de Declaraciones</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('declarations.title')}</h1>
         <p className="text-gray-500 mt-1">
-          Genere declaraciones H1 (importacion) o AES (exportacion) con ayuda de IA
+          {t('declarations.subtitle')}
         </p>
       </div>
 
@@ -161,7 +163,7 @@ export default function DeclarationGenerator() {
         <div className="lg:col-span-2 space-y-6">
           {/* Declaration Type */}
           <div className="card">
-            <h2 className="text-lg font-semibold mb-4">Tipo de Declaracion</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('declarations.declarationType')}</h2>
             <div className="flex gap-4">
               <button
                 onClick={() => setDeclarationType('H1')}
@@ -172,8 +174,8 @@ export default function DeclarationGenerator() {
                 }`}
               >
                 <span className="text-2xl mb-2 block">📥</span>
-                <span className="font-medium">H1 - Importacion</span>
-                <p className="text-sm text-gray-500 mt-1">Declaracion de importacion</p>
+                <span className="font-medium">{t('declarations.h1Import')}</span>
+                <p className="text-sm text-gray-500 mt-1">{t('declarations.h1Description')}</p>
               </button>
               <button
                 onClick={() => setDeclarationType('AES')}
@@ -184,15 +186,15 @@ export default function DeclarationGenerator() {
                 }`}
               >
                 <span className="text-2xl mb-2 block">📤</span>
-                <span className="font-medium">AES - Exportacion</span>
-                <p className="text-sm text-gray-500 mt-1">Declaracion de exportacion</p>
+                <span className="font-medium">{t('declarations.aesExport')}</span>
+                <p className="text-sm text-gray-500 mt-1">{t('declarations.aesDescription')}</p>
               </button>
             </div>
           </div>
 
           {/* Expedition Selection */}
           <div className="card">
-            <h2 className="text-lg font-semibold mb-4">Seleccionar Expediente</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('declarations.selectExpedition')}</h2>
 
             {loading ? (
               <div className="flex justify-center py-8">
@@ -200,7 +202,7 @@ export default function DeclarationGenerator() {
               </div>
             ) : expeditions.length === 0 ? (
               <p className="text-gray-500 text-center py-8">
-                No hay expedientes disponibles para generar declaraciones
+                {t('declarations.noExpeditionsAvailable')}
               </p>
             ) : (
               <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -220,7 +222,7 @@ export default function DeclarationGenerator() {
                         <p className="text-sm text-gray-500">{exp.client?.companyName}</p>
                       </div>
                       <span className={`badge ${exp.operationType === 'IMPORT' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
-                        {exp.operationType === 'IMPORT' ? 'Importacion' : 'Exportacion'}
+                        {exp.operationType === 'IMPORT' ? t('common.import') : t('common.export')}
                       </span>
                     </div>
                   </div>
@@ -232,11 +234,11 @@ export default function DeclarationGenerator() {
           {/* Options */}
           {selectedExpedition && declarationType === 'H1' && (
             <div className="card">
-              <h2 className="text-lg font-semibold mb-4">Opciones de Declaracion</h2>
+              <h2 className="text-lg font-semibold mb-4">{t('declarations.declarationOptions')}</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="label">Regimen Aduanero</label>
+                  <label className="label">{t('declarations.customsRegime')}</label>
                   <select
                     value={options.regime}
                     onChange={(e) => setOptions({ ...options, regime: e.target.value })}
@@ -248,7 +250,7 @@ export default function DeclarationGenerator() {
                   </select>
                 </div>
                 <div>
-                  <label className="label">Procedimiento Adicional</label>
+                  <label className="label">{t('declarations.additionalProcedure')}</label>
                   <input
                     type="text"
                     value={options.additionalProcedure}
@@ -258,7 +260,7 @@ export default function DeclarationGenerator() {
                   />
                 </div>
                 <div>
-                  <label className="label">Preferencia</label>
+                  <label className="label">{t('declarations.preference')}</label>
                   <select
                     value={options.preference}
                     onChange={(e) => setOptions({ ...options, preference: e.target.value })}
@@ -283,12 +285,12 @@ export default function DeclarationGenerator() {
               {generating ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Generando con IA...
+                  {t('declarations.generating')}
                 </>
               ) : (
                 <>
                   <DocumentTextIcon className="w-5 h-5" />
-                  Generar {declarationType}
+                  {t('declarations.generate')} {declarationType}
                 </>
               )}
             </button>
@@ -300,7 +302,7 @@ export default function DeclarationGenerator() {
                   className="btn-success flex items-center gap-2"
                 >
                   <ArrowDownTrayIcon className="w-5 h-5" />
-                  Descargar XML
+                  {t('declarations.downloadXml')}
                 </button>
                 <button
                   onClick={handleSubmitToAEAT}
@@ -310,12 +312,12 @@ export default function DeclarationGenerator() {
                   {submitting ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      Enviando a AEAT...
+                      {t('declarations.sendingToAeat')}
                     </>
                   ) : (
                     <>
                       <PaperAirplaneIcon className="w-5 h-5" />
-                      Enviar a AEAT
+                      {t('declarations.sendToAeat')}
                     </>
                   )}
                 </button>
@@ -331,10 +333,10 @@ export default function DeclarationGenerator() {
               aeatResult.channel === 'red' ? 'border-red-300 bg-red-50' :
               'border-blue-300 bg-blue-50'
             }`}>
-              <h3 className="font-semibold mb-2">Respuesta AEAT</h3>
+              <h3 className="font-semibold mb-2">{t('declarations.aeatResponse')}</h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                {aeatResult.mrn && <div><span className="text-gray-600">MRN:</span> <span className="font-mono font-medium">{aeatResult.mrn}</span></div>}
-                {aeatResult.channel && <div><span className="text-gray-600">Canal:</span> <span className="font-medium uppercase">{aeatResult.channel}</span></div>}
+                {aeatResult.mrn && <div><span className="text-gray-600">{t('declarations.mrn')}:</span> <span className="font-mono font-medium">{aeatResult.mrn}</span></div>}
+                {aeatResult.channel && <div><span className="text-gray-600">{t('declarations.channel')}:</span> <span className="font-medium uppercase">{aeatResult.channel}</span></div>}
               </div>
             </div>
           )}
@@ -344,12 +346,12 @@ export default function DeclarationGenerator() {
             <div className="card">
               <div className="flex items-center gap-2 mb-4">
                 <CheckCircleIcon className="w-6 h-6 text-green-500" />
-                <h2 className="text-lg font-semibold">Declaracion Generada</h2>
+                <h2 className="text-lg font-semibold">{t('declarations.generated')}</h2>
               </div>
 
               {generatedDeclaration.warnings?.length > 0 && (
                 <div className="mb-4 p-3 bg-yellow-50 rounded-lg text-sm">
-                  <p className="font-medium text-yellow-800 mb-1">Advertencias:</p>
+                  <p className="font-medium text-yellow-800 mb-1">{t('declarations.warningsLabel')}</p>
                   <ul className="list-disc list-inside text-yellow-700">
                     {generatedDeclaration.warnings.map((w, i) => (
                       <li key={i}>{w}</li>
@@ -360,7 +362,7 @@ export default function DeclarationGenerator() {
 
               {generatedDeclaration.recommendations?.length > 0 && (
                 <div className="mb-4 p-3 bg-blue-50 rounded-lg text-sm">
-                  <p className="font-medium text-blue-800 mb-1">Recomendaciones:</p>
+                  <p className="font-medium text-blue-800 mb-1">{t('declarations.recommendations')}:</p>
                   <ul className="list-disc list-inside text-blue-700">
                     {generatedDeclaration.recommendations.map((r, i) => (
                       <li key={i}>{r}</li>
@@ -383,13 +385,13 @@ export default function DeclarationGenerator() {
           {regimeInfo && !regimeInfo.error && (
             <div className="card">
               <h3 className="font-semibold text-gray-900 mb-3">
-                Regimen {regimeInfo.code}: {regimeInfo.name}
+                {t('declarations.regime')} {regimeInfo.code}: {regimeInfo.name}
               </h3>
               <p className="text-sm text-gray-600 mb-4">{regimeInfo.description}</p>
 
               <div className="space-y-3">
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase">Requisitos</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase">{t('declarations.requirements')}</p>
                   <ul className="text-sm text-gray-700 mt-1 space-y-1">
                     {regimeInfo.requirements?.map((req, i) => (
                       <li key={i} className="flex items-start gap-2">
@@ -401,12 +403,12 @@ export default function DeclarationGenerator() {
                 </div>
 
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase">IVA</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase">{t('declarations.vat')}</p>
                   <p className="text-sm text-gray-700 mt-1">{regimeInfo.vat}</p>
                 </div>
 
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase">Uso Tipico</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase">{t('declarations.typicalUse')}</p>
                   <p className="text-sm text-gray-700 mt-1">{regimeInfo.typical_use}</p>
                 </div>
               </div>
@@ -416,21 +418,17 @@ export default function DeclarationGenerator() {
           <div className="card">
             <h3 className="font-semibold text-gray-900 mb-3">
               <InformationCircleIcon className="w-5 h-5 inline mr-1 text-luci" />
-              Sobre H1
+              {t('declarations.aboutH1')}
             </h3>
             <p className="text-sm text-gray-600">
-              El sistema H1 es el nuevo formato de declaracion de importacion de la UE,
-              obligatorio en Espana desde octubre 2025. Reemplaza al antiguo DUA
-              (Documento Unico Administrativo).
+              {t('declarations.h1Info')}
             </p>
           </div>
 
           <div className="card bg-yellow-50 border-yellow-200">
-            <h3 className="font-semibold text-yellow-800 mb-2">Importante</h3>
+            <h3 className="font-semibold text-yellow-800 mb-2">{t('declarations.important')}</h3>
             <p className="text-sm text-yellow-700">
-              La declaracion generada es un borrador. Revise todos los campos
-              antes de presentarla ante la AEAT. La responsabilidad final
-              recae en el declarante.
+              {t('declarations.h1Disclaimer')}
             </p>
           </div>
         </div>

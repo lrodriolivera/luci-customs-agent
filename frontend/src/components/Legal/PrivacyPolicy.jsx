@@ -1,7 +1,10 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 export default function PrivacyPolicy() {
+  const { t } = useTranslation()
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200">
@@ -12,138 +15,124 @@ export default function PrivacyPolicy() {
             </div>
             <span className="font-bold text-gray-900">LUCI</span>
           </Link>
-          <Link to="/landing" className="text-sm text-luci hover:text-luci-dark">Volver al inicio</Link>
+          <Link to="/landing" className="text-sm text-luci hover:text-luci-dark">{t('legal.backToHome')}</Link>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Politica de Privacidad</h1>
-        <p className="text-sm text-gray-500 mb-8">Ultima actualizacion: 12 de febrero de 2026</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('legal.privacyTitle')}</h1>
+        <p className="text-sm text-gray-500 mb-8">{t('legal.lastUpdated')}</p>
 
         <div className="prose prose-gray max-w-none space-y-6">
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">1. Responsable del Tratamiento</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">{t('legal.privacyS1Title')}</h2>
             <p className="text-gray-700">
-              <strong>STRIX AI SL</strong> (en adelante, "STRIX AI"), con NIF B22477020 y domicilio social en Espana,
-              es el responsable del tratamiento de los datos personales recogidos a traves de la plataforma LUCI
-              (accesible en <strong>aduanas.strixai.es</strong>).
+              <strong>STRIX AI SL</strong> {t('legal.privacyS1Text1').replace('STRIX AI SL (en adelante, "STRIX AI"), con', '(en adelante, "STRIX AI"), con')}
             </p>
-            <p className="text-gray-700">Email de contacto: <strong>soporte@strixai.es</strong></p>
+            <p className="text-gray-700">{t('legal.privacyS1Contact')}</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">2. Datos que Recopilamos</h2>
-            <p className="text-gray-700">Recopilamos los siguientes datos personales:</p>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">{t('legal.privacyS2Title')}</h2>
+            <p className="text-gray-700">{t('legal.privacyS2Intro')}</p>
             <ul className="list-disc pl-6 text-gray-700 space-y-1">
-              <li><strong>Datos de registro:</strong> nombre, email, nombre de empresa</li>
-              <li><strong>Datos de uso:</strong> acciones realizadas en la plataforma, historial de clasificaciones, declaraciones generadas</li>
-              <li><strong>Datos de facturacion:</strong> gestionados de forma segura por Stripe (no almacenamos datos de tarjeta)</li>
-              <li><strong>Datos aduaneros:</strong> informacion de expedientes, mercancias, valores, documentos subidos por el usuario</li>
-              <li><strong>Datos tecnicos:</strong> direccion IP, navegador, sistema operativo, logs de acceso</li>
+              <li><strong>{t('legal.privacyS2Registration')}</strong></li>
+              <li><strong>{t('legal.privacyS2Usage')}</strong></li>
+              <li><strong>{t('legal.privacyS2Billing')}</strong></li>
+              <li><strong>{t('legal.privacyS2Customs')}</strong></li>
+              <li><strong>{t('legal.privacyS2Technical')}</strong></li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">3. Finalidad del Tratamiento</h2>
-            <p className="text-gray-700">Tratamos sus datos para:</p>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">{t('legal.privacyS3Title')}</h2>
+            <p className="text-gray-700">{t('legal.privacyS3Intro')}</p>
             <ul className="list-disc pl-6 text-gray-700 space-y-1">
-              <li>Gestionar su cuenta y proporcionar acceso a la plataforma LUCI</li>
-              <li>Procesar declaraciones aduaneras y expedientes de comercio exterior</li>
-              <li>Clasificar mercancias mediante inteligencia artificial</li>
-              <li>Calcular aranceles, IVA e impuestos aplicables</li>
-              <li>Enviar notificaciones transaccionales (confirmacion de cuenta, reset de contrasena, estado de declaraciones)</li>
-              <li>Gestionar la facturacion y suscripciones</li>
-              <li>Mejorar nuestros servicios y experiencia de usuario</li>
-              <li>Cumplir con obligaciones legales y regulatorias</li>
+              <li>{t('legal.privacyS3Account')}</li>
+              <li>{t('legal.privacyS3Declarations')}</li>
+              <li>{t('legal.privacyS3Classification')}</li>
+              <li>{t('legal.privacyS3Duties')}</li>
+              <li>{t('legal.privacyS3Notifications')}</li>
+              <li>{t('legal.privacyS3BillingPurpose')}</li>
+              <li>{t('legal.privacyS3Improve')}</li>
+              <li>{t('legal.privacyS3Legal')}</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">4. Base Legal</h2>
-            <p className="text-gray-700">El tratamiento de sus datos se fundamenta en:</p>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">{t('legal.privacyS4Title')}</h2>
+            <p className="text-gray-700">{t('legal.privacyS4Intro')}</p>
             <ul className="list-disc pl-6 text-gray-700 space-y-1">
-              <li><strong>Ejecucion contractual</strong> (Art. 6.1.b RGPD): prestacion del servicio contratado</li>
-              <li><strong>Obligacion legal</strong> (Art. 6.1.c RGPD): cumplimiento de normativa aduanera y fiscal</li>
-              <li><strong>Interes legitimo</strong> (Art. 6.1.f RGPD): mejora de servicios y seguridad</li>
-              <li><strong>Consentimiento</strong> (Art. 6.1.a RGPD): comunicaciones comerciales opcionales</li>
+              <li><strong>{t('legal.privacyS4Contract')}</strong></li>
+              <li><strong>{t('legal.privacyS4Obligation')}</strong></li>
+              <li><strong>{t('legal.privacyS4Interest')}</strong></li>
+              <li><strong>{t('legal.privacyS4Consent')}</strong></li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">5. Destinatarios de los Datos</h2>
-            <p className="text-gray-700">Sus datos pueden ser compartidos con:</p>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">{t('legal.privacyS5Title')}</h2>
+            <p className="text-gray-700">{t('legal.privacyS5Intro')}</p>
             <ul className="list-disc pl-6 text-gray-700 space-y-1">
-              <li><strong>AEAT</strong> (Agencia Estatal de Administracion Tributaria): para el envio de declaraciones aduaneras, conforme a la normativa vigente</li>
-              <li><strong>Stripe</strong>: procesamiento seguro de pagos (certificado PCI-DSS)</li>
-              <li><strong>Amazon Web Services (AWS)</strong>: infraestructura y alojamiento en la UE (region eu-west-1, Irlanda)</li>
-              <li><strong>Anthropic</strong>: procesamiento de consultas de IA (datos anonimizados)</li>
+              <li><strong>{t('legal.privacyS5Aeat')}</strong></li>
+              <li><strong>{t('legal.privacyS5Stripe')}</strong></li>
+              <li><strong>{t('legal.privacyS5Aws')}</strong></li>
+              <li><strong>{t('legal.privacyS5Anthropic')}</strong></li>
             </ul>
-            <p className="text-gray-700 mt-2">No vendemos ni compartimos sus datos con terceros con fines comerciales.</p>
+            <p className="text-gray-700 mt-2">{t('legal.privacyS5NoSell')}</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">6. Transferencias Internacionales</h2>
-            <p className="text-gray-700">
-              Los datos se almacenan en servidores de AWS en la Union Europea (Irlanda).
-              El procesamiento de IA por Anthropic puede implicar transferencias a EE.UU., protegidas por
-              clausulas contractuales tipo aprobadas por la Comision Europea.
-            </p>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">{t('legal.privacyS6Title')}</h2>
+            <p className="text-gray-700">{t('legal.privacyS6Text')}</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">7. Plazos de Conservacion</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">{t('legal.privacyS7Title')}</h2>
             <ul className="list-disc pl-6 text-gray-700 space-y-1">
-              <li><strong>Datos de cuenta:</strong> mientras la cuenta este activa + 5 anos tras la baja</li>
-              <li><strong>Datos aduaneros:</strong> 5 anos (obligacion legal, Art. 163 Codigo Aduanero de la Union)</li>
-              <li><strong>Datos de facturacion:</strong> 5 anos (Ley General Tributaria)</li>
-              <li><strong>Logs de acceso:</strong> 12 meses</li>
+              <li><strong>{t('legal.privacyS7Account')}</strong></li>
+              <li><strong>{t('legal.privacyS7Customs')}</strong></li>
+              <li><strong>{t('legal.privacyS7Billing')}</strong></li>
+              <li><strong>{t('legal.privacyS7Logs')}</strong></li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">8. Derechos del Interesado</h2>
-            <p className="text-gray-700">Puede ejercer los siguientes derechos:</p>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">{t('legal.privacyS8Title')}</h2>
+            <p className="text-gray-700">{t('legal.privacyS8Intro')}</p>
             <ul className="list-disc pl-6 text-gray-700 space-y-1">
-              <li><strong>Acceso:</strong> solicitar copia de sus datos personales</li>
-              <li><strong>Rectificacion:</strong> corregir datos inexactos</li>
-              <li><strong>Supresion:</strong> solicitar la eliminacion de sus datos ("derecho al olvido")</li>
-              <li><strong>Limitacion:</strong> restringir el tratamiento en determinadas circunstancias</li>
-              <li><strong>Portabilidad:</strong> recibir sus datos en formato estructurado</li>
-              <li><strong>Oposicion:</strong> oponerse al tratamiento basado en interes legitimo</li>
+              <li><strong>{t('legal.privacyS8Access')}</strong></li>
+              <li><strong>{t('legal.privacyS8Rectification')}</strong></li>
+              <li><strong>{t('legal.privacyS8Erasure')}</strong></li>
+              <li><strong>{t('legal.privacyS8Restriction')}</strong></li>
+              <li><strong>{t('legal.privacyS8Portability')}</strong></li>
+              <li><strong>{t('legal.privacyS8Objection')}</strong></li>
             </ul>
+            <p className="text-gray-700 mt-2">{t('legal.privacyS8Contact')}</p>
             <p className="text-gray-700 mt-2">
-              Para ejercer estos derechos, contacte con <strong>soporte@strixai.es</strong>.
-              Responderemos en un plazo maximo de 30 dias.
-            </p>
-            <p className="text-gray-700 mt-2">
-              Puede presentar una reclamacion ante la <strong>Agencia Espanola de Proteccion de Datos (AEPD)</strong>: <a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer" className="text-luci hover:text-luci-dark">www.aepd.es</a>
+              {t('legal.privacyS8Aepd')} <a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer" className="text-luci hover:text-luci-dark">www.aepd.es</a>
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">9. Seguridad</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">{t('legal.privacyS9Title')}</h2>
+            <p className="text-gray-700">{t('legal.privacyS9Text')}</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">{t('legal.privacyS10Title')}</h2>
             <p className="text-gray-700">
-              Implementamos medidas tecnicas y organizativas para proteger sus datos:
-              cifrado SSL/TLS, autenticacion JWT, hash de contrasenas con bcrypt,
-              firewall y control de accesos, backups diarios cifrados y almacenados de forma segura.
+              {t('legal.privacyS10Text')} <Link to="/cookies" className="text-luci hover:text-luci-dark">{t('legal.cookiesTitle')}</Link>.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">10. Cookies</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">{t('legal.privacyS11Title')}</h2>
             <p className="text-gray-700">
-              Utilizamos cookies esenciales para el funcionamiento de la plataforma.
-              Para mas informacion, consulte nuestra <Link to="/cookies" className="text-luci hover:text-luci-dark">Politica de Cookies</Link>.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-3">11. Contacto</h2>
-            <p className="text-gray-700">
-              STRIX AI SL<br />
-              NIF: B22477020<br />
-              Email: soporte@strixai.es<br />
-              Web: aduanas.strixai.es
+              {t('legal.contactStrix')}<br />
+              {t('legal.contactNif')}<br />
+              {t('legal.contactEmail')}<br />
+              {t('legal.contactWeb')}
             </p>
           </section>
         </div>

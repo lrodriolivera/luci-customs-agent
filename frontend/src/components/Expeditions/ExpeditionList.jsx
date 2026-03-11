@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { expeditionsAPI } from '../../services/api'
 import {
   PlusIcon,
@@ -9,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function ExpeditionList() {
+  const { t } = useTranslation()
   const [expeditions, setExpeditions] = useState([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({
@@ -48,18 +50,18 @@ export default function ExpeditionList() {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      'draft': { label: 'Borrador', class: 'bg-gray-100 text-gray-800' },
-      'pending_documents': { label: 'Pendiente Docs', class: 'bg-yellow-100 text-yellow-800' },
-      'documents_received': { label: 'Docs Recibidos', class: 'bg-blue-100 text-blue-800' },
-      'validating_documents': { label: 'Validando', class: 'bg-purple-100 text-purple-800' },
-      'documents_validated': { label: 'Docs Validados', class: 'bg-indigo-100 text-indigo-800' },
-      'ready_for_declaration': { label: 'Listo Declaracion', class: 'bg-cyan-100 text-cyan-800' },
-      'declaration_submitted': { label: 'Presentada', class: 'bg-orange-100 text-orange-800' },
-      'green_channel': { label: 'Canal Verde', class: 'bg-green-100 text-green-800' },
-      'orange_channel': { label: 'Canal Naranja', class: 'bg-orange-100 text-orange-800' },
-      'red_channel': { label: 'Canal Rojo', class: 'bg-red-100 text-red-800' },
-      'completed': { label: 'Completado', class: 'bg-green-100 text-green-800' },
-      'cancelled': { label: 'Cancelado', class: 'bg-gray-100 text-gray-800' }
+      'draft': { label: t('expeditions.statusDraft'), class: 'bg-gray-100 text-gray-800' },
+      'pending_documents': { label: t('expeditions.statusPendingDocs'), class: 'bg-yellow-100 text-yellow-800' },
+      'documents_received': { label: t('expeditions.statusDocsReceived'), class: 'bg-blue-100 text-blue-800' },
+      'validating_documents': { label: t('expeditions.statusValidating'), class: 'bg-purple-100 text-purple-800' },
+      'documents_validated': { label: t('expeditions.statusDocsValidated'), class: 'bg-indigo-100 text-indigo-800' },
+      'ready_for_declaration': { label: t('expeditions.statusDeclarationReady'), class: 'bg-cyan-100 text-cyan-800' },
+      'declaration_submitted': { label: t('expeditions.statusSubmitted'), class: 'bg-orange-100 text-orange-800' },
+      'green_channel': { label: t('expeditions.statusGreenChannel'), class: 'bg-green-100 text-green-800' },
+      'orange_channel': { label: t('expeditions.statusOrangeChannel'), class: 'bg-orange-100 text-orange-800' },
+      'red_channel': { label: t('expeditions.statusRedChannel'), class: 'bg-red-100 text-red-800' },
+      'completed': { label: t('expeditions.statusCompleted'), class: 'bg-green-100 text-green-800' },
+      'cancelled': { label: t('expeditions.statusCancelled'), class: 'bg-gray-100 text-gray-800' }
     }
     const config = statusMap[status] || { label: status, class: 'bg-gray-100 text-gray-800' }
     return <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.class}`}>{config.label}</span>
@@ -70,12 +72,12 @@ export default function ExpeditionList() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Expedientes</h1>
-          <p className="text-gray-500 mt-1">Gestiona expedientes de importacion/exportacion</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('expeditions.title')}</h1>
+          <p className="text-gray-500 mt-1">{t('expeditions.subtitle')}</p>
         </div>
         <Link to="/expeditions/new" className="btn-primary flex items-center gap-2">
           <PlusIcon className="w-5 h-5" />
-          Nuevo Expediente
+          {t('expeditions.new')}
         </Link>
       </div>
 
@@ -87,7 +89,7 @@ export default function ExpeditionList() {
               <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar por ID, cliente..."
+                placeholder={t('expeditions.searchPlaceholder')}
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                 className="input pl-10"
@@ -100,13 +102,13 @@ export default function ExpeditionList() {
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
             className="input w-auto"
           >
-            <option value="">Todos los estados</option>
-            <option value="draft">Borrador</option>
-            <option value="pending_documents">Pendiente Docs</option>
-            <option value="documents_received">Docs Recibidos</option>
-            <option value="validating_documents">Validando</option>
-            <option value="ready_for_declaration">Listo Declaracion</option>
-            <option value="completed">Completado</option>
+            <option value="">{t('expeditions.allStatuses')}</option>
+            <option value="draft">{t('expeditions.statusDraft')}</option>
+            <option value="pending_documents">{t('expeditions.statusPendingDocs')}</option>
+            <option value="documents_received">{t('expeditions.statusDocsReceived')}</option>
+            <option value="validating_documents">{t('expeditions.statusValidating')}</option>
+            <option value="ready_for_declaration">{t('expeditions.statusDeclarationReady')}</option>
+            <option value="completed">{t('expeditions.statusCompleted')}</option>
           </select>
 
           <select
@@ -114,21 +116,21 @@ export default function ExpeditionList() {
             onChange={(e) => setFilters({ ...filters, operationType: e.target.value })}
             className="input w-auto"
           >
-            <option value="">Todos los tipos</option>
-            <option value="import">Importacion</option>
-            <option value="export">Exportacion</option>
+            <option value="">{t('expeditions.allTypes')}</option>
+            <option value="import">{t('common.import')}</option>
+            <option value="export">{t('common.export')}</option>
           </select>
 
           <button type="submit" className="btn-secondary flex items-center gap-2">
             <FunnelIcon className="w-5 h-5" />
-            Filtrar
+            {t('common.filter')}
           </button>
 
           <button
             type="button"
             onClick={fetchExpeditions}
             className="btn-secondary"
-            title="Actualizar"
+            title={t('expeditions.refresh')}
           >
             <ArrowPathIcon className="w-5 h-5" />
           </button>
@@ -143,20 +145,20 @@ export default function ExpeditionList() {
           </div>
         ) : expeditions.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">No se encontraron expedientes</p>
+            <p className="text-gray-500">{t('expeditions.noExpeditions')}</p>
           </div>
         ) : (
           <div className="table-container">
             <table className="table">
               <thead>
                 <tr>
-                  <th>ID Expediente</th>
-                  <th>Cliente</th>
-                  <th>Tipo</th>
-                  <th>Origen/Destino</th>
-                  <th>Estado</th>
-                  <th>Documentos</th>
-                  <th>Fecha</th>
+                  <th>{t('expeditions.tableId')}</th>
+                  <th>{t('expeditions.tableClient')}</th>
+                  <th>{t('expeditions.tableType')}</th>
+                  <th>{t('expeditions.tableOriginDest')}</th>
+                  <th>{t('expeditions.tableStatus')}</th>
+                  <th>{t('expeditions.tableDocs')}</th>
+                  <th>{t('expeditions.tableDate')}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -172,7 +174,7 @@ export default function ExpeditionList() {
                     </td>
                     <td>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${exp.operationType === 'import' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
-                        {exp.operationType === 'import' ? 'Importacion' : 'Exportacion'}
+                        {exp.operationType === 'import' ? t('common.import') : t('common.export')}
                       </span>
                     </td>
                     <td>
@@ -184,7 +186,7 @@ export default function ExpeditionList() {
                     <td>{getStatusBadge(exp.status)}</td>
                     <td>
                       <span className="text-sm">
-                        {exp.documents?.length || 0} doc(s)
+                        {t('expeditions.docCount', { count: exp.documents?.length || 0 })}
                       </span>
                     </td>
                     <td className="text-gray-500 text-sm">
@@ -195,7 +197,7 @@ export default function ExpeditionList() {
                         to={`/expeditions/${exp._id}`}
                         className="text-luci hover:text-luci-dark text-sm font-medium"
                       >
-                        Ver Detalle
+                        {t('expeditions.viewDetail')}
                       </Link>
                     </td>
                   </tr>

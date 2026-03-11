@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { requirementsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import {
@@ -48,6 +49,7 @@ const TYPE_LABELS = {
 }
 
 export default function RequirementsList() {
+  const { t } = useTranslation()
   const [requirements, setRequirements] = useState([])
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -76,7 +78,7 @@ export default function RequirementsList() {
       setStats(statsData)
     } catch (error) {
       console.error('Error loading requirements:', error)
-      toast.error('Error al cargar requerimientos')
+      toast.error(t('requirements.errorLoading'))
     } finally {
       setLoading(false)
     }
@@ -103,15 +105,15 @@ export default function RequirementsList() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Requerimientos AEAT</h1>
-          <p className="text-gray-500 mt-1">Gestion de requerimientos y controles</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('requirements.title')}</h1>
+          <p className="text-gray-500 mt-1">{t('requirements.subtitle')}</p>
         </div>
         <button
           onClick={loadData}
           className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
         >
           <ArrowPathIcon className="h-5 w-5" />
-          Actualizar
+          {t('common.update')}
         </button>
       </div>
 
@@ -119,19 +121,19 @@ export default function RequirementsList() {
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white p-4 rounded-xl shadow-sm border">
-            <p className="text-sm text-gray-500">Total</p>
+            <p className="text-sm text-gray-500">{t('requirements.totalLabel')}</p>
             <p className="text-2xl font-bold text-gray-900">{stats.total || 0}</p>
           </div>
           <div className="bg-yellow-50 p-4 rounded-xl shadow-sm border border-yellow-200">
-            <p className="text-sm text-yellow-700">Pendientes</p>
+            <p className="text-sm text-yellow-700">{t('requirements.pendingLabel')}</p>
             <p className="text-2xl font-bold text-yellow-800">{stats.pending || 0}</p>
           </div>
           <div className="bg-blue-50 p-4 rounded-xl shadow-sm border border-blue-200">
-            <p className="text-sm text-blue-700">En Proceso</p>
+            <p className="text-sm text-blue-700">{t('requirements.inProcessLabel')}</p>
             <p className="text-2xl font-bold text-blue-800">{stats.inProgress || 0}</p>
           </div>
           <div className="bg-green-50 p-4 rounded-xl shadow-sm border border-green-200">
-            <p className="text-sm text-green-700">Resueltos</p>
+            <p className="text-sm text-green-700">{t('requirements.resolvedLabel')}</p>
             <p className="text-2xl font-bold text-green-800">{stats.resolved || 0}</p>
           </div>
         </div>
@@ -147,7 +149,7 @@ export default function RequirementsList() {
             onChange={(e) => handleFilterChange('status', e.target.value)}
             className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Todos los estados</option>
+            <option value="">{t('requirements.allStatuses')}</option>
             {Object.entries(STATUS_CONFIG).map(([value, { label }]) => (
               <option key={value} value={value}>{label}</option>
             ))}
@@ -158,10 +160,10 @@ export default function RequirementsList() {
             onChange={(e) => handleFilterChange('channel', e.target.value)}
             className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Todos los canales</option>
-            <option value="yellow">Amarillo</option>
-            <option value="orange">Naranja</option>
-            <option value="red">Rojo</option>
+            <option value="">{t('requirements.allChannels')}</option>
+            <option value="yellow">{t('requirements.channelYellow')}</option>
+            <option value="orange">{t('requirements.channelOrange')}</option>
+            <option value="red">{t('requirements.channelRed')}</option>
           </select>
 
           <select
@@ -169,7 +171,7 @@ export default function RequirementsList() {
             onChange={(e) => handleFilterChange('requirementType', e.target.value)}
             className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Todos los tipos</option>
+            <option value="">{t('requirements.allTypes')}</option>
             {Object.entries(TYPE_LABELS).map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
             ))}
@@ -180,7 +182,7 @@ export default function RequirementsList() {
               onClick={clearFilters}
               className="text-sm text-blue-600 hover:text-blue-800"
             >
-              Limpiar filtros
+              {t('common.clear')}
             </button>
           )}
         </div>
@@ -194,8 +196,8 @@ export default function RequirementsList() {
       ) : requirements.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl shadow-sm border">
           <CheckCircleIcon className="h-16 w-16 text-green-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">Sin requerimientos</h3>
-          <p className="text-gray-500 mt-1">No hay requerimientos que coincidan con los filtros</p>
+          <h3 className="text-lg font-medium text-gray-900">{t('requirements.noRequirements')}</h3>
+          <p className="text-gray-500 mt-1">{t('requirements.noRequirementsFilter')}</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
@@ -203,25 +205,25 @@ export default function RequirementsList() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Requerimiento
+                  {t('requirements.requirement')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Expediente
+                  {t('requirements.expedition')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tipo
+                  {t('common.type')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Canal
+                  {t('requirements.channel')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
+                  {t('common.status')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vencimiento
+                  {t('requirements.expiry')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
+                  {t('common.actions')}
                 </th>
               </tr>
             </thead>
@@ -244,7 +246,7 @@ export default function RequirementsList() {
                         to={`/expeditions/${req.expeditionId?._id || req.expeditionId}`}
                         className="text-blue-600 hover:text-blue-800 text-sm"
                       >
-                        {req.expeditionId?.expeditionId || 'Ver expediente'}
+                        {req.expeditionId?.expeditionId || t('requirements.viewExpedition')}
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -272,10 +274,10 @@ export default function RequirementsList() {
                         }`}>
                           <CalendarIcon className="h-4 w-4" />
                           {daysRemaining < 0
-                            ? `Vencido (${Math.abs(daysRemaining)}d)`
+                            ? `${t('requirements.expired')} (${Math.abs(daysRemaining)}d)`
                             : daysRemaining === 0
-                            ? 'Hoy'
-                            : `${daysRemaining} dias`}
+                            ? t('common.today')
+                            : `${daysRemaining} ${t('common.days')}`}
                         </span>
                       ) : (
                         <span className="text-gray-400 text-sm">-</span>
@@ -286,7 +288,7 @@ export default function RequirementsList() {
                         to={`/expeditions/${req.expeditionId?._id || req.expeditionId}`}
                         className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                       >
-                        Ver detalle
+                        {t('common.viewDetail')}
                       </Link>
                     </td>
                   </tr>

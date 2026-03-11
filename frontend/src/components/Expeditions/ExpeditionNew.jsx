@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { expeditionsAPI, classificationAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import { ArrowLeftIcon, PlusIcon, TrashIcon, SparklesIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
 
 export default function ExpeditionNew() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
@@ -108,7 +110,7 @@ export default function ExpeditionNew() {
   const handleClassifyWithAI = async (index) => {
     const item = formData.goods[index]
     if (!item.description || item.description.trim().length < 3) {
-      toast.error('Introduzca una descripcion del producto para clasificar')
+      toast.error(t('expeditions.enterDescription'))
       return
     }
 
@@ -138,16 +140,16 @@ export default function ExpeditionNew() {
         if (bestSuggestion.code && bestSuggestion.code !== '0000000000') {
           handleGoodsChange(index, 'taricCode', bestSuggestion.code)
           handleGoodsChange(index, 'dutyRate', bestSuggestion.duty_rate || 0)
-          toast.success(`Codigo TARIC sugerido: ${bestSuggestion.code} (${bestSuggestion.confidence}% confianza)`)
+          toast.success(`${t('expeditions.taricSuggested')} ${bestSuggestion.code} (${bestSuggestion.confidence}% ${t('expeditions.confidence')})`)
         } else {
-          toast('No se pudo determinar codigo automaticamente', { icon: '⚠️' })
+          toast(t('expeditions.couldNotDetermine'), { icon: '⚠️' })
         }
       } else {
-        toast.error('No se encontraron sugerencias')
+        toast.error(t('expeditions.noSuggestions'))
       }
     } catch (error) {
       console.error('Classification error:', error)
-      toast.error('Error al clasificar producto')
+      toast.error(t('expeditions.classificationError'))
     } finally {
       setClassifyingIndex(null)
     }
@@ -157,7 +159,7 @@ export default function ExpeditionNew() {
   const applySuggestion = (index, suggestion) => {
     handleGoodsChange(index, 'taricCode', suggestion.code)
     handleGoodsChange(index, 'dutyRate', suggestion.duty_rate || 0)
-    toast.success(`Codigo ${suggestion.code} aplicado`)
+    toast.success(t('expeditions.codeApplied', { code: suggestion.code }))
   }
 
   const handleSubmit = async (e) => {
@@ -166,7 +168,7 @@ export default function ExpeditionNew() {
 
     try {
       const response = await expeditionsAPI.create(formData)
-      toast.success('Expediente creado correctamente')
+      toast.success(t('expeditions.created'))
       // Handle different response formats
       const expeditionId = response.data?.data?._id || response.data?._id || response.data?.data?.id
       navigate(`/expeditions/${expeditionId}`)
@@ -175,11 +177,11 @@ export default function ExpeditionNew() {
       // Handle validation errors from backend
       if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
         const errorMessages = error.response.data.details.map(d => `${d.field}: ${d.message}`).join('\n')
-        toast.error(`Errores de validacion:\n${errorMessages}`, { duration: 5000 })
+        toast.error(`${t('expeditions.validationErrors')}\n${errorMessages}`, { duration: 5000 })
       } else if (error.response?.data?.error) {
         toast.error(error.response.data.error)
       } else {
-        toast.error(error.response?.data?.message || 'Error al crear expediente')
+        toast.error(error.response?.data?.message || t('expeditions.createError'))
       }
     } finally {
       setLoading(false)
@@ -187,11 +189,11 @@ export default function ExpeditionNew() {
   }
 
   const transportModes = [
-    { value: 'SEA', label: 'Maritimo' },
-    { value: 'AIR', label: 'Aereo' },
-    { value: 'ROAD', label: 'Carretera' },
-    { value: 'RAIL', label: 'Ferrocarril' },
-    { value: 'MULTIMODAL', label: 'Multimodal' }
+    { value: 'SEA', label: t('expeditions.maritime') },
+    { value: 'AIR', label: t('expeditions.air') },
+    { value: 'ROAD', label: t('expeditions.road') },
+    { value: 'RAIL', label: t('expeditions.rail') },
+    { value: 'MULTIMODAL', label: t('expeditions.multimodal') }
   ]
 
   const incoterms = ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP']
@@ -207,8 +209,8 @@ export default function ExpeditionNew() {
           <ArrowLeftIcon className="w-5 h-5 text-gray-600" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Nuevo Expediente</h1>
-          <p className="text-gray-500">Crear expediente de {formData.operationType === 'IMPORT' ? 'importacion' : 'exportacion'}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('expeditions.newTitle')}</h1>
+          <p className="text-gray-500">{formData.operationType === 'IMPORT' ? t('expeditions.createSubtitleImport') : t('expeditions.createSubtitleExport')}</p>
         </div>
       </div>
 
@@ -230,16 +232,16 @@ export default function ExpeditionNew() {
         ))}
       </div>
       <div className="flex justify-center gap-16 text-sm text-gray-500 mb-8">
-        <span className={step === 1 ? 'text-luci font-medium' : ''}>Tipo y Cliente</span>
-        <span className={step === 2 ? 'text-luci font-medium' : ''}>Mercancias</span>
-        <span className={step === 3 ? 'text-luci font-medium' : ''}>Transporte</span>
+        <span className={step === 1 ? 'text-luci font-medium' : ''}>{t('expeditions.stepTypeClient')}</span>
+        <span className={step === 2 ? 'text-luci font-medium' : ''}>{t('expeditions.stepGoods')}</span>
+        <span className={step === 3 ? 'text-luci font-medium' : ''}>{t('expeditions.stepTransport')}</span>
       </div>
 
       <form onSubmit={handleSubmit}>
         {/* Step 1: Operation Type and Client */}
         {step === 1 && (
           <div className="card space-y-6">
-            <h2 className="text-lg font-semibold">Tipo de Operacion</h2>
+            <h2 className="text-lg font-semibold">{t('expeditions.operationType')}</h2>
 
             <div className="flex gap-4">
               <button
@@ -252,7 +254,7 @@ export default function ExpeditionNew() {
                 }`}
               >
                 <span className="text-2xl mb-2 block">📥</span>
-                <span className="font-medium">Importacion</span>
+                <span className="font-medium">{t('common.import')}</span>
               </button>
               <button
                 type="button"
@@ -264,19 +266,19 @@ export default function ExpeditionNew() {
                 }`}
               >
                 <span className="text-2xl mb-2 block">📤</span>
-                <span className="font-medium">Exportacion</span>
+                <span className="font-medium">{t('common.export')}</span>
               </button>
             </div>
 
             <hr className="my-6" />
 
             <h2 className="text-lg font-semibold">
-              {formData.operationType === 'IMPORT' ? 'Importador' : 'Exportador'} (Cliente)
+              {formData.operationType === 'IMPORT' ? t('expeditions.importer') : t('expeditions.exporter')} ({t('expeditions.client')})
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="label">Razon Social *</label>
+                <label className="label">{t('expeditions.companyName')} *</label>
                 <input
                   type="text"
                   value={formData.client.companyName}
@@ -286,32 +288,32 @@ export default function ExpeditionNew() {
                 />
               </div>
               <div>
-                <label className="label">NIF/CIF *</label>
+                <label className="label">{t('expeditions.nifCif')} *</label>
                 <input
                   type="text"
                   value={formData.client.nif}
                   onChange={(e) => handleChange('client', 'nif', e.target.value.toUpperCase())}
                   className={`input ${formData.client.nif && !/^[A-Z0-9]{8,10}$/.test(formData.client.nif) ? 'border-red-500' : ''}`}
-                  placeholder="B12345678"
+                  placeholder={t('expeditions.nifPlaceholder')}
                   pattern="[A-Z0-9]{8,10}"
                   required
                 />
                 {formData.client.nif && !/^[A-Z0-9]{8,10}$/.test(formData.client.nif) && (
-                  <p className="text-xs text-red-500 mt-1">El NIF debe tener 8-10 caracteres alfanumericos</p>
+                  <p className="text-xs text-red-500 mt-1">{t('expeditions.nifValidation')}</p>
                 )}
               </div>
               <div>
-                <label className="label">EORI</label>
+                <label className="label">{t('expeditions.eori')}</label>
                 <input
                   type="text"
                   value={formData.client.eori}
                   onChange={(e) => handleChange('client', 'eori', e.target.value)}
                   className="input"
-                  placeholder="ES + NIF"
+                  placeholder={t('expeditions.eoriPlaceholder')}
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="label">Direccion</label>
+                <label className="label">{t('common.address')}</label>
                 <input
                   type="text"
                   value={formData.client.address}
@@ -320,7 +322,7 @@ export default function ExpeditionNew() {
                 />
               </div>
               <div>
-                <label className="label">Ciudad</label>
+                <label className="label">{t('common.city')}</label>
                 <input
                   type="text"
                   value={formData.client.city}
@@ -329,7 +331,7 @@ export default function ExpeditionNew() {
                 />
               </div>
               <div>
-                <label className="label">Codigo Postal</label>
+                <label className="label">{t('common.postalCode')}</label>
                 <input
                   type="text"
                   value={formData.client.postalCode}
@@ -338,7 +340,7 @@ export default function ExpeditionNew() {
                 />
               </div>
               <div>
-                <label className="label">Email *</label>
+                <label className="label">{t('common.email')} *</label>
                 <input
                   type="email"
                   value={formData.client.email}
@@ -348,7 +350,7 @@ export default function ExpeditionNew() {
                 />
               </div>
               <div>
-                <label className="label">Telefono</label>
+                <label className="label">{t('common.phone')}</label>
                 <input
                   type="tel"
                   value={formData.client.phone}
@@ -361,12 +363,12 @@ export default function ExpeditionNew() {
             <hr className="my-6" />
 
             <h2 className="text-lg font-semibold">
-              {formData.operationType === 'IMPORT' ? 'Exportador (Proveedor)' : 'Consignatario (Destinatario)'}
+              {formData.operationType === 'IMPORT' ? t('expeditions.exporterSupplier') : t('expeditions.consignee')}
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="label">Razon Social</label>
+                <label className="label">{t('expeditions.companyName')}</label>
                 <input
                   type="text"
                   value={formData.operationType === 'IMPORT' ? formData.exporter.companyName : formData.consignee.companyName}
@@ -379,7 +381,7 @@ export default function ExpeditionNew() {
                 />
               </div>
               <div>
-                <label className="label">Pais *</label>
+                <label className="label">{t('common.country')} *</label>
                 <input
                   type="text"
                   value={formData.operationType === 'IMPORT' ? formData.exporter.country : formData.consignee.country}
@@ -389,12 +391,12 @@ export default function ExpeditionNew() {
                     e.target.value
                   )}
                   className="input"
-                  placeholder="Codigo ISO (ej: CN, US, DE)"
+                  placeholder={t('expeditions.isoCodePlaceholder')}
                   required
                 />
               </div>
               <div>
-                <label className="label">Ciudad</label>
+                <label className="label">{t('common.city')}</label>
                 <input
                   type="text"
                   value={formData.operationType === 'IMPORT' ? formData.exporter.city : formData.consignee.city}
@@ -414,7 +416,7 @@ export default function ExpeditionNew() {
                 onClick={() => setStep(2)}
                 className="btn-primary"
               >
-                Siguiente
+                {t('common.next')}
               </button>
             </div>
           </div>
@@ -424,21 +426,21 @@ export default function ExpeditionNew() {
         {step === 2 && (
           <div className="card space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Mercancias</h2>
+              <h2 className="text-lg font-semibold">{t('expeditions.goods')}</h2>
               <button
                 type="button"
                 onClick={addGoodsItem}
                 className="btn-secondary flex items-center gap-2 text-sm"
               >
                 <PlusIcon className="w-4 h-4" />
-                Anadir Partida
+                {t('expeditions.addItem')}
               </button>
             </div>
 
             {formData.goods.map((item, index) => (
               <div key={index} className="p-4 border border-gray-200 rounded-xl space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-gray-700">Partida {index + 1}</h3>
+                  <h3 className="font-medium text-gray-700">{t('expeditions.itemNumber', { number: index + 1 })}</h3>
                   {formData.goods.length > 1 && (
                     <button
                       type="button"
@@ -452,48 +454,48 @@ export default function ExpeditionNew() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="label">Descripcion de la Mercancia *</label>
+                    <label className="label">{t('expeditions.goodsDescription')} *</label>
                     <textarea
                       value={item.description}
                       onChange={(e) => handleGoodsChange(index, 'description', e.target.value)}
                       className="input"
                       rows={2}
-                      placeholder="Describa el producto con detalle: material, funcion, uso..."
+                      placeholder={t('expeditions.descriptionPlaceholder')}
                       required
                     />
                   </div>
 
                   {/* Additional info for better classification */}
                   <div>
-                    <label className="label">Material Principal</label>
+                    <label className="label">{t('expeditions.mainMaterial')}</label>
                     <input
                       type="text"
                       value={item.material || ''}
                       onChange={(e) => handleGoodsChange(index, 'material', e.target.value)}
                       className="input"
-                      placeholder="Ej: plastico, algodon, metal..."
+                      placeholder={t('expeditions.materialPlaceholder')}
                     />
                   </div>
                   <div>
-                    <label className="label">Uso/Funcion</label>
+                    <label className="label">{t('expeditions.useFunction')}</label>
                     <input
                       type="text"
                       value={item.use || ''}
                       onChange={(e) => handleGoodsChange(index, 'use', e.target.value)}
                       className="input"
-                      placeholder="Ej: proteccion movil, decorativo..."
+                      placeholder={t('expeditions.usePlaceholder')}
                     />
                   </div>
 
                   <div>
-                    <label className="label">Codigo TARIC</label>
+                    <label className="label">{t('expeditions.taricCode')}</label>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={item.taricCode}
                         onChange={(e) => handleGoodsChange(index, 'taricCode', e.target.value)}
                         className="input flex-1"
-                        placeholder="10 digitos"
+                        placeholder={t('expeditions.tenDigits')}
                         maxLength={10}
                       />
                       <button
@@ -501,7 +503,7 @@ export default function ExpeditionNew() {
                         onClick={() => handleClassifyWithAI(index)}
                         disabled={classifyingIndex === index}
                         className="btn-primary flex items-center gap-1 whitespace-nowrap"
-                        title="Clasificar con IA"
+                        title={t('expeditions.classifyWithAI')}
                       >
                         {classifyingIndex === index ? (
                           <>
@@ -519,20 +521,20 @@ export default function ExpeditionNew() {
                     {item.taricCode && item.taricCode.length === 10 && (
                       <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
                         <CheckCircleIcon className="w-3 h-3" />
-                        Codigo TARIC valido
-                        {item.dutyRate !== undefined && ` - Arancel: ${item.dutyRate}%`}
+                        {t('expeditions.validTaric')}
+                        {item.dutyRate !== undefined && ` - ${t('expeditions.tariff')}: ${item.dutyRate}%`}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="label">Pais de Origen *</label>
+                    <label className="label">{t('expeditions.originCountry')} *</label>
                     <input
                       type="text"
                       value={item.originCountry}
                       onChange={(e) => handleGoodsChange(index, 'originCountry', e.target.value)}
                       className="input"
-                      placeholder="Codigo ISO (ej: CN)"
+                      placeholder={t('expeditions.isoCodePlaceholderShort')}
                       required
                     />
                   </div>
@@ -542,7 +544,7 @@ export default function ExpeditionNew() {
                     <div className="md:col-span-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <p className="text-sm font-medium text-blue-800 mb-2 flex items-center gap-1">
                         <SparklesIcon className="w-4 h-4" />
-                        Sugerencias de IA
+                        {t('expeditions.aiSuggestions')}
                       </p>
                       <div className="space-y-2">
                         {classificationResults[index].suggestions?.slice(0, 3).map((suggestion, sIndex) => (
@@ -562,7 +564,7 @@ export default function ExpeditionNew() {
                                 {suggestion.confidence}%
                               </span>
                               <span className="ml-2 text-sm text-gray-600">
-                                Arancel: {suggestion.duty_rate || 0}%
+                                {t('expeditions.tariff')}: {suggestion.duty_rate || 0}%
                               </span>
                               {suggestion.description && (
                                 <p className="text-xs text-gray-500 mt-1">{suggestion.description}</p>
@@ -574,7 +576,7 @@ export default function ExpeditionNew() {
                                 onClick={() => applySuggestion(index, suggestion)}
                                 className="text-xs text-blue-600 hover:text-blue-800 ml-2"
                               >
-                                Aplicar
+                                {t('expeditions.apply')}
                               </button>
                             )}
                           </div>
@@ -582,7 +584,7 @@ export default function ExpeditionNew() {
                       </div>
                       {classificationResults[index].warnings?.length > 0 && (
                         <div className="mt-2 text-xs text-yellow-700">
-                          <p className="font-medium">Advertencias:</p>
+                          <p className="font-medium">{t('expeditions.warnings')}:</p>
                           <ul className="list-disc list-inside">
                             {classificationResults[index].warnings.map((w, wIndex) => (
                               <li key={wIndex}>{w}</li>
@@ -593,7 +595,7 @@ export default function ExpeditionNew() {
                     </div>
                   )}
                   <div>
-                    <label className="label">Cantidad</label>
+                    <label className="label">{t('expeditions.quantity')}</label>
                     <div className="flex gap-2">
                       <input
                         type="number"
@@ -607,14 +609,14 @@ export default function ExpeditionNew() {
                         className="input w-24"
                       >
                         <option value="KGM">KG</option>
-                        <option value="PCS">Uds</option>
+                        <option value="PCS">{t('expeditions.units')}</option>
                         <option value="MTR">M</option>
                         <option value="LTR">L</option>
                       </select>
                     </div>
                   </div>
                   <div>
-                    <label className="label">Peso Neto (kg)</label>
+                    <label className="label">{t('expeditions.netWeight')}</label>
                     <input
                       type="number"
                       step="0.001"
@@ -624,7 +626,7 @@ export default function ExpeditionNew() {
                     />
                   </div>
                   <div>
-                    <label className="label">Peso Bruto (kg)</label>
+                    <label className="label">{t('expeditions.grossWeight')}</label>
                     <input
                       type="number"
                       step="0.001"
@@ -634,7 +636,7 @@ export default function ExpeditionNew() {
                     />
                   </div>
                   <div>
-                    <label className="label">Valor Factura *</label>
+                    <label className="label">{t('expeditions.invoiceValue')} *</label>
                     <div className="flex gap-2">
                       <input
                         type="number"
@@ -666,14 +668,14 @@ export default function ExpeditionNew() {
                 onClick={() => setStep(1)}
                 className="btn-secondary"
               >
-                Anterior
+                {t('common.previous')}
               </button>
               <button
                 type="button"
                 onClick={() => setStep(3)}
                 className="btn-primary"
               >
-                Siguiente
+                {t('common.next')}
               </button>
             </div>
           </div>
@@ -682,11 +684,11 @@ export default function ExpeditionNew() {
         {/* Step 3: Transport */}
         {step === 3 && (
           <div className="card space-y-6">
-            <h2 className="text-lg font-semibold">Transporte e Incoterm</h2>
+            <h2 className="text-lg font-semibold">{t('expeditions.transportIncoterm')}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="label">Modo de Transporte *</label>
+                <label className="label">{t('expeditions.transportMode')} *</label>
                 <select
                   value={formData.transportMode}
                   onChange={(e) => handleChange(null, 'transportMode', e.target.value)}
@@ -699,7 +701,7 @@ export default function ExpeditionNew() {
                 </select>
               </div>
               <div>
-                <label className="label">Incoterm *</label>
+                <label className="label">{t('expeditions.incoterm')} *</label>
                 <select
                   value={formData.incoterm}
                   onChange={(e) => handleChange(null, 'incoterm', e.target.value)}
@@ -712,13 +714,13 @@ export default function ExpeditionNew() {
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="label">Lugar Incoterm</label>
+                <label className="label">{t('expeditions.incotermPlace')}</label>
                 <input
                   type="text"
                   value={formData.incotermPlace}
                   onChange={(e) => handleChange(null, 'incotermPlace', e.target.value)}
                   className="input"
-                  placeholder="Ej: Puerto de Barcelona"
+                  placeholder={t('expeditions.incotermPlaceholder')}
                 />
               </div>
             </div>
@@ -727,22 +729,22 @@ export default function ExpeditionNew() {
 
             {/* Summary */}
             <div className="bg-gray-50 p-4 rounded-xl">
-              <h3 className="font-medium text-gray-700 mb-3">Resumen del Expediente</h3>
+              <h3 className="font-medium text-gray-700 mb-3">{t('expeditions.expeditionSummary')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <p className="text-gray-500">Tipo</p>
-                  <p className="font-medium">{formData.operationType === 'IMPORT' ? 'Importacion' : 'Exportacion'}</p>
+                  <p className="text-gray-500">{t('expeditions.summaryType')}</p>
+                  <p className="font-medium">{formData.operationType === 'IMPORT' ? t('common.import') : t('common.export')}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Cliente</p>
+                  <p className="text-gray-500">{t('expeditions.summaryClient')}</p>
                   <p className="font-medium">{formData.client.companyName || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Partidas</p>
+                  <p className="text-gray-500">{t('expeditions.summaryItems')}</p>
                   <p className="font-medium">{formData.goods.length}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Transporte</p>
+                  <p className="text-gray-500">{t('expeditions.summaryTransport')}</p>
                   <p className="font-medium">{transportModes.find(m => m.value === formData.transportMode)?.label}</p>
                 </div>
               </div>
@@ -754,14 +756,14 @@ export default function ExpeditionNew() {
                 onClick={() => setStep(2)}
                 className="btn-secondary"
               >
-                Anterior
+                {t('common.previous')}
               </button>
               <button
                 type="submit"
                 disabled={loading}
                 className="btn-primary"
               >
-                {loading ? 'Creando...' : 'Crear Expediente'}
+                {loading ? t('expeditions.creating') : t('expeditions.createButton')}
               </button>
             </div>
           </div>

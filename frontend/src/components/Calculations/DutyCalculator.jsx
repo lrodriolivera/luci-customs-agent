@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { calculationsAPI, knowledgeAPI } from '../../services/api'
 import { commonCountries, allCountries } from '../../data/countries'
 import toast from 'react-hot-toast'
@@ -15,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function DutyCalculator() {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     taricCode: '',
     value: '',
@@ -51,7 +53,7 @@ export default function DutyCalculator() {
     e.preventDefault()
 
     if (!formData.taricCode || !formData.value || !formData.origin) {
-      toast.error('Complete todos los campos obligatorios')
+      toast.error(t('calculator.fillRequired'))
       return
     }
 
@@ -69,7 +71,7 @@ export default function DutyCalculator() {
 
       setResult(response.data)
     } catch (error) {
-      toast.error('Error al calcular derechos')
+      toast.error(t('calculator.errorCalculating'))
     } finally {
       setCalculating(false)
     }
@@ -78,10 +80,10 @@ export default function DutyCalculator() {
   const incoterms = ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP']
 
   const preferences = [
-    { code: '100', label: 'MFN (Sin preferencia)' },
-    { code: '200', label: 'SPG (Paises en desarrollo)' },
-    { code: '300', label: 'Preferencial (EUR.1)' },
-    { code: '400', label: 'Union Aduanera (ATR)' }
+    { code: '100', label: t('calculator.mfn') },
+    { code: '200', label: t('calculator.spg') },
+    { code: '300', label: t('calculator.preferentialEur1') },
+    { code: '400', label: t('calculator.customsUnionAtr') }
   ]
 
   // Paises no comunes para el optgroup "Todos"
@@ -92,9 +94,9 @@ export default function DutyCalculator() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Calculadora de Derechos</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('calculator.title')}</h1>
         <p className="text-gray-500 mt-1">
-          Calcule aranceles, IVA y total a pagar por importaciones
+          {t('calculator.subtitle')}
         </p>
       </div>
 
@@ -104,7 +106,7 @@ export default function DutyCalculator() {
           <form onSubmit={handleCalculate} className="card space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="label">Codigo TARIC *</label>
+                <label className="label">{t('calculator.taricCode')} *</label>
                 <input
                   type="text"
                   value={formData.taricCode}
@@ -114,11 +116,11 @@ export default function DutyCalculator() {
                   maxLength={10}
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">10 digitos</p>
+                <p className="text-xs text-gray-500 mt-1">{t('calculator.tenDigits')}</p>
               </div>
 
               <div>
-                <label className="label">Valor en Aduana (EUR) *</label>
+                <label className="label">{t('calculator.customsValue')} *</label>
                 <div className="relative">
                   <CurrencyEuroIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
@@ -134,20 +136,20 @@ export default function DutyCalculator() {
               </div>
 
               <div>
-                <label className="label">Pais de Origen *</label>
+                <label className="label">{t('calculator.originCountry')} *</label>
                 <select
                   value={formData.origin}
                   onChange={(e) => handleChange('origin', e.target.value)}
                   className="input"
                   required
                 >
-                  <option value="">Seleccione...</option>
-                  <optgroup label="Mas comunes">
+                  <option value="">{t('calculator.select')}</option>
+                  <optgroup label={t('calculator.mostCommon')}>
                     {commonCountries.map(o => (
                       <option key={o.code} value={o.code}>{o.label} ({o.code})</option>
                     ))}
                   </optgroup>
-                  <optgroup label="Todos los paises">
+                  <optgroup label={t('calculator.allCountries')}>
                     {otherCountries.map(o => (
                       <option key={o.code} value={o.code}>{o.label} ({o.code})</option>
                     ))}
@@ -156,7 +158,7 @@ export default function DutyCalculator() {
               </div>
 
               <div>
-                <label className="label">Preferencia Arancelaria</label>
+                <label className="label">{t('calculator.tariffPreference')}</label>
                 <select
                   value={formData.preference}
                   onChange={(e) => handleChange('preference', e.target.value)}
@@ -169,7 +171,7 @@ export default function DutyCalculator() {
               </div>
 
               <div>
-                <label className="label">Incoterm</label>
+                <label className="label">{t('calculator.incoterm')}</label>
                 <select
                   value={formData.incoterm}
                   onChange={(e) => handleChange('incoterm', e.target.value)}
@@ -180,14 +182,14 @@ export default function DutyCalculator() {
                   ))}
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
-                  Afecta al calculo del valor en aduana
+                  {t('calculator.incotermEffect')}
                 </p>
               </div>
 
               <div>
                 <label className="label">
                   <CalendarDaysIcon className="w-4 h-4 inline mr-1" />
-                  Fecha de Importacion
+                  {t('calculator.importDate')}
                 </label>
                 <input
                   type="date"
@@ -196,7 +198,7 @@ export default function DutyCalculator() {
                   className="input"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Afecta aranceles estacionales (frutas, hortalizas)
+                  {t('calculator.dateEffect')}
                 </p>
               </div>
             </div>
@@ -209,12 +211,12 @@ export default function DutyCalculator() {
               {calculating ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Calculando...
+                  {t('calculator.calculating')}
                 </>
               ) : (
                 <>
                   <CalculatorIcon className="w-5 h-5" />
-                  Calcular Derechos
+                  {t('calculator.calculate')}
                 </>
               )}
             </button>
@@ -224,7 +226,7 @@ export default function DutyCalculator() {
           {result && result.data && (
             <div className="card mt-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Resultado del Calculo</h2>
+                <h2 className="text-lg font-semibold">{t('calculator.result')}</h2>
                 <div className="flex items-center gap-2">
                   {result.data.source && (
                     <span className={`text-xs px-2 py-1 rounded-full ${
@@ -233,10 +235,10 @@ export default function DutyCalculator() {
                       result.data.source === 'ai_cache' ? 'bg-blue-100 text-blue-700' :
                       'bg-gray-100 text-gray-600'
                     }`}>
-                      {result.data.source === 'local_db' ? 'BD Local' :
+                      {result.data.source === 'local_db' ? t('calculator.localDb') :
                        result.data.source === 'ai_realtime' ? 'IA' :
-                       result.data.source === 'ai_cache' ? 'Cache IA' :
-                       result.data.source === 'estimated' ? 'Estimado' : result.data.source}
+                       result.data.source === 'ai_cache' ? t('calculator.aiCache') :
+                       result.data.source === 'estimated' ? t('calculator.estimated') : result.data.source}
                     </span>
                   )}
                   {result.data.confidence && (
@@ -245,7 +247,7 @@ export default function DutyCalculator() {
                       result.data.confidence >= 70 ? 'bg-yellow-100 text-yellow-700' :
                       'bg-red-100 text-red-700'
                     }`}>
-                      {result.data.confidence}% confianza
+                      {result.data.confidence}% {t('calculator.confidence')}
                     </span>
                   )}
                 </div>
@@ -260,13 +262,13 @@ export default function DutyCalculator() {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="p-4 bg-gray-50 rounded-xl text-center">
-                  <p className="text-sm text-gray-500">Valor Aduanero</p>
+                  <p className="text-sm text-gray-500">{t('calculator.customsValueResult')}</p>
                   <p className="text-xl font-bold text-gray-900">
                     {(result.data.customsValue || result.data.customs_value || result.data.valueEur)?.toFixed(2)} EUR
                   </p>
                 </div>
                 <div className="p-4 bg-blue-50 rounded-xl text-center">
-                  <p className="text-sm text-gray-500">Arancel</p>
+                  <p className="text-sm text-gray-500">{t('calculator.tariff')}</p>
                   <p className="text-xl font-bold text-blue-600">
                     {(result.data.dutyAmount ?? result.data.duty_amount ?? 0).toFixed(2)} EUR
                   </p>
@@ -274,12 +276,12 @@ export default function DutyCalculator() {
                   {result.data.seasonal && (
                     <span className="inline-flex items-center gap-1 text-xs mt-1 px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full">
                       <SunIcon className="w-3 h-3" />
-                      Estacional
+                      {t('calculator.seasonal')}
                     </span>
                   )}
                 </div>
                 <div className="p-4 bg-purple-50 rounded-xl text-center">
-                  <p className="text-sm text-gray-500">IVA</p>
+                  <p className="text-sm text-gray-500">{t('calculator.vatLabel')}</p>
                   <p className="text-xl font-bold text-purple-600">
                     {(result.data.vatAmount || result.data.vat_amount)?.toFixed(2)} EUR
                   </p>
@@ -288,12 +290,12 @@ export default function DutyCalculator() {
                     <p className={`text-xs mt-1 font-medium ${
                       result.data.vatType === 'super_reduced' ? 'text-green-600' : 'text-blue-600'
                     }`}>
-                      {result.data.vatType === 'reduced' ? 'Reducido' : 'Superreducido'}
+                      {result.data.vatType === 'reduced' ? t('calculator.reduced') : t('calculator.superReduced')}
                     </p>
                   )}
                 </div>
                 <div className="p-4 bg-green-50 rounded-xl text-center">
-                  <p className="text-sm text-gray-500">Total a Pagar</p>
+                  <p className="text-sm text-gray-500">{t('calculator.totalToPay')}</p>
                   <p className="text-xl font-bold text-green-600">
                     {(result.data.totalToPay || result.data.total_to_pay)?.toFixed(2)} EUR
                   </p>
@@ -306,7 +308,7 @@ export default function DutyCalculator() {
                   <div className="flex items-start gap-2">
                     <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-medium text-yellow-800">Avisos Importantes</p>
+                      <p className="font-medium text-yellow-800">{t('calculator.importantWarnings')}</p>
                       <ul className="text-sm text-yellow-700 mt-1 list-disc list-inside">
                         {result.data.warnings.map((w, i) => (
                           <li key={i}>{w}</li>
@@ -323,9 +325,9 @@ export default function DutyCalculator() {
                   <div className="flex items-start gap-2">
                     <ShieldCheckIcon className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-medium text-red-800">Derechos Antidumping Aplicables</p>
+                      <p className="font-medium text-red-800">{t('calculator.antidumpingDuties')}</p>
                       <p className="text-sm text-red-700 mt-1">
-                        Este producto esta sujeto a derechos antidumping adicionales.
+                        {t('calculator.antidumpingDescription')}
                         {result.data.antidumpingDuty > 0 && ` (+${result.data.antidumpingDuty?.toFixed(2)} EUR)`}
                       </p>
                     </div>
@@ -340,14 +342,14 @@ export default function DutyCalculator() {
                     <SunIcon className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <p className="font-medium text-orange-800">
-                        Arancel Estacional — {result.data.seasonal.description}
+                        {t('calculator.seasonalTariff')} — {result.data.seasonal.description}
                       </p>
                       <p className="text-sm text-orange-700 mt-1">
-                        Periodo actual: <span className="font-semibold">{result.data.seasonal.periodLabel}</span> — Tipo aplicado: <span className="font-semibold">{result.data.seasonal.currentRate}%</span>
+                        {t('calculator.currentPeriod')} <span className="font-semibold">{result.data.seasonal.periodLabel}</span> — {t('calculator.appliedRate')} <span className="font-semibold">{result.data.seasonal.currentRate}%</span>
                       </p>
                       {result.data.seasonal.hasEntryPrice && result.data.seasonal.entryPrice && (
                         <p className="text-sm text-orange-700 mt-1">
-                          Precio de entrada: <span className="font-semibold">{result.data.seasonal.entryPrice} {result.data.seasonal.entryPriceUnit}</span>
+                          {t('calculator.entryPrice')} <span className="font-semibold">{result.data.seasonal.entryPrice} {result.data.seasonal.entryPriceUnit}</span>
                         </p>
                       )}
                     </div>
@@ -356,7 +358,7 @@ export default function DutyCalculator() {
                   {/* Seasonal Timeline */}
                   {result.data.seasonal.allSeasons && result.data.seasonal.allSeasons.length > 1 && (
                     <div className="mt-3">
-                      <p className="text-xs font-medium text-orange-800 mb-2">Calendario de periodos arancelarios:</p>
+                      <p className="text-xs font-medium text-orange-800 mb-2">{t('calculator.periodCalendar')}</p>
                       <div className="space-y-1">
                         {result.data.seasonal.allSeasons.map((season, i) => {
                           const isCurrent = season.label === result.data.seasonal.periodLabel
@@ -391,65 +393,65 @@ export default function DutyCalculator() {
 
               {/* Detailed Breakdown */}
               <div className="border-t border-gray-200 pt-4">
-                <h3 className="font-medium text-gray-700 mb-3">Desglose Detallado</h3>
+                <h3 className="font-medium text-gray-700 mb-3">{t('calculator.detailedBreakdown')}</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Codigo TARIC</span>
+                    <span className="text-gray-500">{t('calculator.taricCode')}</span>
                     <span className="font-mono">{result.data.taricCode || result.data.taric_code}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Origen</span>
+                    <span className="text-gray-500">{t('calculator.origin')}</span>
                     <span>{result.data.origin || '-'}</span>
                   </div>
                   {result.data.importDate && (
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Fecha Importacion</span>
+                      <span className="text-gray-500">{t('calculator.importDate')}</span>
                       <span>{new Date(result.data.importDate + 'T00:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Tipo Arancel Base (MFN)</span>
+                    <span className="text-gray-500">{t('calculator.baseMfnRate')}</span>
                     <span>{(result.data.baseDutyRate ?? result.data.base_duty_rate ?? result.data.dutyRate ?? 0)}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Tipo Arancel Efectivo</span>
+                    <span className="text-gray-500">{t('calculator.effectiveRate')}</span>
                     <span className="font-medium">{(result.data.dutyRate ?? result.data.effective_duty_rate ?? 0)}%</span>
                   </div>
                   {result.data.dutyType && (
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Tipo de Arancel</span>
+                      <span className="text-gray-500">{t('calculator.tariffType')}</span>
                       <span className="capitalize">{result.data.dutyType.replace('_', ' ')}</span>
                     </div>
                   )}
                   {result.data.preferenceApplied && (
                     <div className="flex justify-between text-green-600">
-                      <span>Preferencia Aplicada</span>
+                      <span>{t('calculator.appliedPreference')}</span>
                       <span>{result.data.preferenceApplied.agreement || result.data.preferenceApplied}</span>
                     </div>
                   )}
                   {result.data.specificDuty > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Arancel Especifico</span>
+                      <span className="text-gray-500">{t('calculator.specificDuty')}</span>
                       <span>{result.data.specificDuty?.toFixed(2)} EUR</span>
                     </div>
                   )}
                   {result.data.antidumpingDuty > 0 && (
                     <div className="flex justify-between text-red-600">
-                      <span>Derecho Antidumping</span>
+                      <span>{t('calculator.antidumpingDuty')}</span>
                       <span>+{result.data.antidumpingDuty?.toFixed(2)} EUR</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Base IVA</span>
+                    <span className="text-gray-500">{t('calculator.vatBase')}</span>
                     <span>{(result.data.vatBase || result.data.vat_base)?.toFixed(2)} EUR</span>
                   </div>
                   <hr className="my-2" />
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Total Impuestos</span>
+                    <span className="text-gray-500">{t('calculator.totalTaxes')}</span>
                     <span className="font-medium">{(result.data.totalTaxes || result.data.total_taxes)?.toFixed(2)} EUR</span>
                   </div>
                   <div className="flex justify-between font-bold text-lg">
-                    <span>TOTAL A PAGAR</span>
+                    <span>{t('calculator.totalPayable')}</span>
                     <span className="text-green-600">{(result.data.totalToPay || result.data.total_to_pay)?.toFixed(2)} EUR</span>
                   </div>
                 </div>
@@ -459,7 +461,7 @@ export default function DutyCalculator() {
               {result.data.supplementaryUnit?.required && (
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    <span className="font-medium">Unidades suplementarias requeridas:</span> {result.data.supplementaryUnit.description} ({result.data.supplementaryUnit.type})
+                    <span className="font-medium">{t('calculator.supplementaryUnits')}</span> {result.data.supplementaryUnit.description} ({result.data.supplementaryUnit.type})
                   </p>
                 </div>
               )}
@@ -467,7 +469,7 @@ export default function DutyCalculator() {
               {/* Required Documents */}
               {result.data.requiredDocuments && result.data.requiredDocuments.length > 0 && (
                 <div className="mt-4 border-t pt-4">
-                  <h4 className="font-medium text-gray-700 mb-2">Documentos Requeridos</h4>
+                  <h4 className="font-medium text-gray-700 mb-2">{t('calculator.requiredDocuments')}</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
                     {result.data.requiredDocuments.slice(0, 5).map((doc, i) => (
                       <li key={i} className="flex items-center gap-2">
@@ -492,12 +494,12 @@ export default function DutyCalculator() {
                 {incotermInfo.name} ({formData.incoterm})
               </h3>
               <p className="text-sm text-gray-600 mb-3">
-                Punto de entrega: {incotermInfo.delivery_point}
+                {t('calculator.deliveryPoint')}: {incotermInfo.delivery_point}
               </p>
 
               <div className="space-y-2">
                 <p className="text-xs font-medium text-gray-500 uppercase">
-                  Ajustes al Valor en Aduana
+                  {t('calculator.customsValueAdjustments')}
                 </p>
                 <ul className="text-sm text-gray-700 space-y-1">
                   {incotermInfo.customs_value_adjustments?.map((adj, i) => (
@@ -514,45 +516,43 @@ export default function DutyCalculator() {
           <div className="card">
             <h3 className="font-semibold text-gray-900 mb-3">
               <InformationCircleIcon className="w-5 h-5 inline mr-1 text-luci" />
-              Calculo del Valor en Aduana
+              {t('calculator.customsValueCalculation')}
             </h3>
             <div className="text-sm text-gray-600 space-y-2">
-              <p>El valor en aduana se calcula segun el Incoterm:</p>
+              <p>{t('calculator.customsValueInfo')}</p>
               <ul className="list-disc list-inside space-y-1">
-                <li><strong>CIF/CIP:</strong> Ya incluye flete y seguro</li>
-                <li><strong>FOB/FCA:</strong> Anadir flete y seguro hasta frontera UE</li>
-                <li><strong>EXW:</strong> Anadir todos los costes hasta frontera UE</li>
-                <li><strong>DDP:</strong> Restar impuestos incluidos</li>
+                <li><strong>CIF/CIP:</strong> {t('calculator.cifCip')}</li>
+                <li><strong>FOB/FCA:</strong> {t('calculator.fobFca')}</li>
+                <li><strong>EXW:</strong> {t('calculator.exw')}</li>
+                <li><strong>DDP:</strong> {t('calculator.ddp')}</li>
               </ul>
             </div>
           </div>
 
           <div className="card">
             <h3 className="font-semibold text-gray-900 mb-3">
-              Tipos de IVA en Espana
+              {t('calculator.vatTypesSpain')}
             </h3>
             <div className="text-sm text-gray-600 space-y-2">
               <div className="flex justify-between">
-                <span>General</span>
+                <span>{t('calculator.general')}</span>
                 <span className="font-medium">21%</span>
               </div>
               <div className="flex justify-between">
-                <span>Reducido</span>
+                <span>{t('calculator.reduced')}</span>
                 <span className="font-medium">10%</span>
               </div>
               <div className="flex justify-between">
-                <span>Superreducido</span>
+                <span>{t('calculator.superReduced')}</span>
                 <span className="font-medium">4%</span>
               </div>
             </div>
           </div>
 
           <div className="card bg-yellow-50 border-yellow-200">
-            <h3 className="font-semibold text-yellow-800 mb-2">Aviso</h3>
+            <h3 className="font-semibold text-yellow-800 mb-2">{t('calculator.disclaimer')}</h3>
             <p className="text-sm text-yellow-700">
-              Este calculo es orientativo. El importe definitivo dependera
-              de la clasificacion arancelaria final y de posibles medidas
-              comerciales adicionales (antidumping, salvaguardia, etc.).
+              {t('calculator.disclaimerText')}
             </p>
           </div>
         </div>

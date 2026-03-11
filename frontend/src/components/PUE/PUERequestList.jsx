@@ -14,6 +14,7 @@ import {
   Add as AddIcon
 } from '@mui/icons-material'
 import { pueAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 
 // Status configuration
 const statusConfig = {
@@ -42,6 +43,7 @@ const typeColors = {
 }
 
 const PUERequestList = ({ pueType, onRefresh, onCreateNew }) => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><CC015CV1Sal xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC015CV1Sal.xsd" Id="20260213134841663025">
+	<messageSender>NTA.ES</messageSender>
+	<messageRecipient>ESB22477020</messageRecipient>
+	<preparationDateAndTime>2026-02-13T13:48:42</preparationDateAndTime>
+	<messageIdentification>20260213134841663025</messageIdentification>
+	<messageType>RE015C</messageType>
+	<correlationIdentifier>20260213094830260221307</correlationIdentifier>
+	<ControlRespuesta>
+		<tipoRespuesta>EF</tipoRespuesta>
+	</ControlRespuesta>
+	<FunctionalError>
+		<errorPointer>/CC015C/Consignment/LocationOfGoods/authorisationNumber</errorPointer>
+		<errorCode>14</errorCode>
+		<errorReason>1660</errorReason>
+		<errorDescription>Recinto de expedición (CUSTOMS OFFICE OF DEPARTURE / Reference number) es distinto del de la ubicación.</errorDescription>
+		<originalAttributeValue>ES009999001</originalAttributeValue>
+	</FunctionalError>
+</CC015CV1Sal>
+
+</env:Body></env:Envelope>

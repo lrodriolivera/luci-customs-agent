@@ -89,7 +89,7 @@ router.get('/:expeditionId', async (req, res) => {
 router.post('/:expeditionId', async (req, res) => {
   try {
     const { expeditionId } = req.params;
-    const { content, useAI } = req.body;
+    const { content, useAI, language } = req.body;
 
     const expedition = await Expedition.findById(expeditionId);
     if (!expedition) {
@@ -123,7 +123,8 @@ router.post('/:expeditionId', async (req, res) => {
         content,
         expedition,
         await ChatMessage.getConversation(expedition._id, 10),
-        'agent' // Contexto de agente (mas tecnico)
+        'agent',
+        language || 'es'
       );
       const processingTime = Date.now() - startTime;
 
@@ -205,7 +206,7 @@ router.get('/:expeditionId/unread', async (req, res) => {
  */
 router.post('/ask-luci', async (req, res) => {
   try {
-    const { question } = req.body;
+    const { question, language } = req.body;
 
     if (!question || question.trim().length === 0) {
       return res.status(400).json({
@@ -215,7 +216,7 @@ router.post('/ask-luci', async (req, res) => {
     }
 
     const startTime = Date.now();
-    const response = await aiService.askLuci(question);
+    const response = await aiService.askLuci(question, language || 'es');
     const processingTime = Date.now() - startTime;
 
     res.json({

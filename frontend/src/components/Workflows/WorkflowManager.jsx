@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -437,6 +438,7 @@ const CreateWorkflowModal = ({ templates, events, actions, onClose, onCreate }) 
 // ==================== Main Component ====================
 
 const WorkflowManager = () => {
+  const { t } = useTranslation();
   const [workflows, setWorkflows] = useState([]);
   const [stats, setStats] = useState(null);
   const [templates, setTemplates] = useState([]);
@@ -570,8 +572,8 @@ const WorkflowManager = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Workflow Engine</h1>
-          <p className="text-gray-500">Automatiza flujos de trabajo aduaneros</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('workflows.title')}</h1>
+          <p className="text-gray-500">{t('workflows.subtitle')}</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
@@ -580,7 +582,7 @@ const WorkflowManager = () => {
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Nuevo Workflow
+          {t('workflows.newWorkflow')}
         </button>
       </div>
 

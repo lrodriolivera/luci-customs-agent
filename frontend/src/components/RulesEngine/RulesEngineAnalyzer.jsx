@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import {
   BeakerIcon,
   ShieldCheckIcon,
@@ -11,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function RulesEngineAnalyzer() {
+  const { t } = useTranslation()
   const [analyzing, setAnalyzing] = useState(false)
   const [analysis, setAnalysis] = useState(null)
   const [formData, setFormData] = useState({
@@ -126,10 +128,10 @@ export default function RulesEngineAnalyzer() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 flex items-center">
           <BeakerIcon className="h-8 w-8 mr-3 text-indigo-600" />
-          Motor de Reglas Aduaneras
+          {t('rulesEngine.title')}
         </h1>
         <p className="mt-2 text-gray-600">
-          Análisis automático de requisitos, aranceles, impuestos y controles para operaciones aduaneras
+          {t('rulesEngine.subtitle')}
         </p>
       </div>
 

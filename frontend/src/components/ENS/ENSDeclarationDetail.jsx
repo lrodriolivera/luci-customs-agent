@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box, Typography, Paper, Grid, Button, Chip, Card, CardContent,
@@ -30,41 +31,42 @@ import {
 } from '@mui/icons-material'
 import { ensAPI } from '../../services/api'
 
-// Transport mode configuration
-const transportModeConfig = {
-  ROAD: { icon: TruckIcon, color: '#4CAF50', label: 'Carretera' },
-  RAIL: { icon: RailIcon, color: '#FF9800', label: 'Ferrocarril' },
-  AIR: { icon: AirIcon, color: '#2196F3', label: 'Aereo' },
-  SEA: { icon: SeaIcon, color: '#00BCD4', label: 'Maritimo' }
-}
-
-// Status configuration
-const statusConfig = {
-  draft: { color: 'default', label: 'Borrador', icon: EditIcon },
-  validated: { color: 'info', label: 'Validada', icon: SuccessIcon },
-  submitted: { color: 'primary', label: 'Enviada', icon: SendIcon },
-  accepted: { color: 'success', label: 'Aceptada', icon: SuccessIcon },
-  rejected: { color: 'error', label: 'Rechazada', icon: ErrorIcon },
-  amendment_pending: { color: 'warning', label: 'Rectificacion Pendiente', icon: ScheduleIcon },
-  amended: { color: 'info', label: 'Rectificada', icon: EditIcon },
-  arrived: { color: 'secondary', label: 'Llegada Notificada', icon: ArrivalIcon },
-  released: { color: 'success', label: 'Levantada', icon: SuccessIcon },
-  dnl: { color: 'error', label: 'DNL', icon: WarningIcon },
-  cancelled: { color: 'default', label: 'Anulada', icon: CancelIcon }
-}
-
-// Risk status configuration
-const riskConfig = {
-  PENDING: { color: 'default', label: 'Pendiente', severity: 'info' },
-  ACK: { color: 'success', label: 'Aceptada', severity: 'success' },
-  HOLD: { color: 'warning', label: 'Retenida', severity: 'warning' },
-  DNL: { color: 'error', label: 'No Cargar', severity: 'error' },
-  CLEARED: { color: 'success', label: 'Despachada', severity: 'success' }
-}
-
 const ENSDeclarationDetail = () => {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
+
+  // Transport mode configuration
+  const transportModeConfig = {
+    ROAD: { icon: TruckIcon, color: '#4CAF50', label: t('ens.road') },
+    RAIL: { icon: RailIcon, color: '#FF9800', label: t('ens.rail') },
+    AIR: { icon: AirIcon, color: '#2196F3', label: t('ens.air') },
+    SEA: { icon: SeaIcon, color: '#00BCD4', label: t('ens.maritime') }
+  }
+
+  // Status configuration
+  const statusConfig = {
+    draft: { color: 'default', label: t('ens.statusDraft'), icon: EditIcon },
+    validated: { color: 'info', label: t('ens.statusValidated'), icon: SuccessIcon },
+    submitted: { color: 'primary', label: t('ens.statusSent'), icon: SendIcon },
+    accepted: { color: 'success', label: t('ens.statusAccepted'), icon: SuccessIcon },
+    rejected: { color: 'error', label: t('ens.statusRejected'), icon: ErrorIcon },
+    amendment_pending: { color: 'warning', label: t('ens.statusAmendmentPending'), icon: ScheduleIcon },
+    amended: { color: 'info', label: t('ens.statusAmended'), icon: EditIcon },
+    arrived: { color: 'secondary', label: t('ens.statusArrivalNotified'), icon: ArrivalIcon },
+    released: { color: 'success', label: t('ens.statusReleased'), icon: SuccessIcon },
+    dnl: { color: 'error', label: t('ens.statusDnl'), icon: WarningIcon },
+    cancelled: { color: 'default', label: t('ens.statusCancelled'), icon: CancelIcon }
+  }
+
+  // Risk status configuration
+  const riskConfig = {
+    PENDING: { color: 'default', label: t('ens.riskPending'), severity: 'info' },
+    ACK: { color: 'success', label: t('ens.riskAccepted'), severity: 'success' },
+    HOLD: { color: 'warning', label: t('ens.riskHeld'), severity: 'warning' },
+    DNL: { color: 'error', label: t('ens.riskDoNotLoad'), severity: 'error' },
+    CLEARED: { color: 'success', label: t('ens.riskCleared'), severity: 'success' }
+  }
 
   const [declaration, setDeclaration] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -98,7 +100,7 @@ const ENSDeclarationDetail = () => {
   }
 
   const handleSubmit = async () => {
-    if (!window.confirm('Esta seguro de enviar esta declaracion a AEAT?')) return
+    if (!window.confirm(t('ens.confirmSend'))) return
 
     try {
       setActionLoading(true)
@@ -194,9 +196,9 @@ const ENSDeclarationDetail = () => {
   if (!declaration) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Declaracion no encontrada</Alert>
+        <Alert severity="error">{t('ens.declarationNotFound')}</Alert>
         <Button startIcon={<BackIcon />} onClick={() => navigate('/ens')} sx={{ mt: 2 }}>
-          Volver a la lista
+          {t('ens.backToList')}
         </Button>
       </Box>
     )
@@ -239,7 +241,7 @@ const ENSDeclarationDetail = () => {
                 onClick={() => navigate(`/ens/${id}/edit`)}
                 sx={{ mr: 1 }}
               >
-                Editar
+                {t('common.edit')}
               </Button>
               <Button
                 variant="contained"
@@ -247,7 +249,7 @@ const ENSDeclarationDetail = () => {
                 onClick={handleSubmit}
                 disabled={actionLoading}
               >
-                Enviar a AEAT
+                {t('ens.sendToAeat')}
               </Button>
             </>
           )}
@@ -259,7 +261,7 @@ const ENSDeclarationDetail = () => {
                 onClick={() => setArrivalDialogOpen(true)}
                 sx={{ mr: 1 }}
               >
-                Notificar Llegada
+                {t('ens.notifyArrival')}
               </Button>
               <Button
                 variant="outlined"
@@ -267,7 +269,7 @@ const ENSDeclarationDetail = () => {
                 startIcon={<CancelIcon />}
                 onClick={() => setCancelDialogOpen(true)}
               >
-                Anular
+                {t('ens.cancel')}
               </Button>
             </>
           )}
@@ -278,7 +280,7 @@ const ENSDeclarationDetail = () => {
               onClick={handleDownloadXML}
               sx={{ ml: 1 }}
             >
-              Descargar XML
+              {t('ens.downloadXml')}
             </Button>
           )}
         </Box>
@@ -292,16 +294,16 @@ const ENSDeclarationDetail = () => {
           icon={declaration.riskAssessment.doNotLoadList ? <WarningIcon /> : undefined}
         >
           <Typography variant="subtitle2">
-            Analisis de Riesgo: {riskConfig[declaration.riskAssessment.status]?.label}
+            {t('ens.riskAnalysisLabel')}: {riskConfig[declaration.riskAssessment.status]?.label}
           </Typography>
           {declaration.riskAssessment.doNotLoadList && (
             <Typography variant="body2">
-              <strong>DNL EMITIDO:</strong> {declaration.riskAssessment.dnlReason || 'Mercancia retenida. No proceder a la carga.'}
+              <strong>{t('ens.dnlIssuedAlert')}:</strong> {declaration.riskAssessment.dnlReason || t('ens.dnlDefaultMsg')}
             </Typography>
           )}
           {declaration.riskAssessment.controlDecisions?.length > 0 && (
             <Typography variant="body2">
-              Decisiones de control: {declaration.riskAssessment.controlDecisions.map(d => d.code).join(', ')}
+              {t('ens.controlDecisions')}: {declaration.riskAssessment.controlDecisions.map(d => d.code).join(', ')}
             </Typography>
           )}
         </Alert>
@@ -310,12 +312,12 @@ const ENSDeclarationDetail = () => {
       {/* Tabs */}
       <Paper sx={{ mb: 3 }}>
         <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)}>
-          <Tab label="General" />
-          <Tab label="Transportista" />
-          <Tab label="Envio" />
-          <Tab label="Mercancias" />
-          <Tab label="Documentos" />
-          <Tab label="Historial" />
+          <Tab label={t('ens.tabGeneral')} />
+          <Tab label={t('ens.tabCarrier')} />
+          <Tab label={t('ens.tabShipment')} />
+          <Tab label={t('ens.tabGoods')} />
+          <Tab label={t('ens.tabDocuments')} />
+          <Tab label={t('ens.tabHistory')} />
         </Tabs>
       </Paper>
 
@@ -326,11 +328,11 @@ const ENSDeclarationDetail = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Informacion General
+                  {t('ens.generalInfo')}
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">Referencia</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.reference')}</Typography>
                     <Typography variant="body1">{declaration.reference}</Typography>
                   </Grid>
                   <Grid item xs={6}>
@@ -342,15 +344,15 @@ const ENSDeclarationDetail = () => {
                     <Typography variant="body1" fontFamily="monospace">{declaration.mrn || '-'}</Typography>
                   </Grid>
                   <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">Tipo</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('common.type')}</Typography>
                     <Typography variant="body1">{declaration.declarationType || 'ENS'}</Typography>
                   </Grid>
                   <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">Creada</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.created')}</Typography>
                     <Typography variant="body1">{formatDate(declaration.createdAt)}</Typography>
                   </Grid>
                   <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">Actualizada</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.updated')}</Typography>
                     <Typography variant="body1">{formatDate(declaration.updatedAt)}</Typography>
                   </Grid>
                 </Grid>
@@ -362,19 +364,19 @@ const ENSDeclarationDetail = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Aduana de Entrada
+                  {t('ens.entryCustomsLabel')}
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">Codigo</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.code')}</Typography>
                     <Typography variant="body1">{declaration.entryOffice?.code}</Typography>
                   </Grid>
                   <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">Nombre</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('common.name')}</Typography>
                     <Typography variant="body1">{declaration.entryOffice?.name || '-'}</Typography>
                   </Grid>
                   <Grid item xs={12}>
-                    <Typography variant="body2" color="textSecondary">Llegada Prevista</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.expectedArrival')}</Typography>
                     <Typography variant="body1">{formatDate(declaration.entryOffice?.expectedArrival)}</Typography>
                   </Grid>
                 </Grid>
@@ -387,11 +389,11 @@ const ENSDeclarationDetail = () => {
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    Analisis de Riesgo
+                    {t('ens.riskAnalysis')}
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid item xs={6} md={3}>
-                      <Typography variant="body2" color="textSecondary">Estado</Typography>
+                      <Typography variant="body2" color="textSecondary">{t('common.status')}</Typography>
                       <Chip
                         color={riskConfig[declaration.riskAssessment.status]?.color || 'default'}
                         label={riskConfig[declaration.riskAssessment.status]?.label || declaration.riskAssessment.status}
@@ -399,19 +401,19 @@ const ENSDeclarationDetail = () => {
                     </Grid>
                     {declaration.riskAssessment.riskScore !== undefined && (
                       <Grid item xs={6} md={3}>
-                        <Typography variant="body2" color="textSecondary">Puntuacion</Typography>
+                        <Typography variant="body2" color="textSecondary">{t('ens.score')}</Typography>
                         <Typography variant="h5">{declaration.riskAssessment.riskScore}/100</Typography>
                       </Grid>
                     )}
                     <Grid item xs={6} md={3}>
-                      <Typography variant="body2" color="textSecondary">DNL</Typography>
+                      <Typography variant="body2" color="textSecondary">{t('ens.dnlLabel')}</Typography>
                       <Typography variant="body1">
                         {declaration.riskAssessment.doNotLoadList ? 'SI' : 'NO'}
                       </Typography>
                     </Grid>
                     {declaration.riskAssessment.evaluatedAt && (
                       <Grid item xs={6} md={3}>
-                        <Typography variant="body2" color="textSecondary">Evaluado</Typography>
+                        <Typography variant="body2" color="textSecondary">{t('ens.evaluated')}</Typography>
                         <Typography variant="body1">{formatDate(declaration.riskAssessment.evaluatedAt)}</Typography>
                       </Grid>
                     )}
@@ -426,19 +428,19 @@ const ENSDeclarationDetail = () => {
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    Respuesta AEAT
+                    {t('ens.aeatResponse')}
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid item xs={6} md={3}>
-                      <Typography variant="body2" color="textSecondary">Codigo</Typography>
+                      <Typography variant="body2" color="textSecondary">{t('ens.code')}</Typography>
                       <Typography variant="body1">{declaration.aeatResponse.code || '-'}</Typography>
                     </Grid>
                     <Grid item xs={6} md={3}>
-                      <Typography variant="body2" color="textSecondary">Fecha</Typography>
+                      <Typography variant="body2" color="textSecondary">{t('common.date')}</Typography>
                       <Typography variant="body1">{formatDate(declaration.aeatResponse.timestamp)}</Typography>
                     </Grid>
                     <Grid item xs={12}>
-                      <Typography variant="body2" color="textSecondary">Mensaje</Typography>
+                      <Typography variant="body2" color="textSecondary">{t('ens.message')}</Typography>
                       <Typography variant="body1">{declaration.aeatResponse.message || '-'}</Typography>
                     </Grid>
                     {declaration.aeatResponse.errors?.length > 0 && (
@@ -467,20 +469,20 @@ const ENSDeclarationDetail = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Datos del Transportista
+                  {t('ens.carrierData')}
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
-                    <Typography variant="body2" color="textSecondary">EORI</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.eoriLabel')}</Typography>
                     <Typography variant="body1" fontFamily="monospace">{declaration.carrier?.eori || '-'}</Typography>
                   </Grid>
                   <Grid item xs={12}>
-                    <Typography variant="body2" color="textSecondary">Nombre</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('common.name')}</Typography>
                     <Typography variant="body1">{declaration.carrier?.name || '-'}</Typography>
                   </Grid>
                   {declaration.carrier?.address && (
                     <Grid item xs={12}>
-                      <Typography variant="body2" color="textSecondary">Direccion</Typography>
+                      <Typography variant="body2" color="textSecondary">{t('common.address')}</Typography>
                       <Typography variant="body1">
                         {[
                           declaration.carrier.address.street,
@@ -500,19 +502,19 @@ const ENSDeclarationDetail = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Medio de Transporte
+                  {t('ens.transportMeans')}
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">Tipo</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('common.type')}</Typography>
                     <Typography variant="body1">{declaration.transportMeans?.type || '-'}</Typography>
                   </Grid>
                   <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">Identificacion</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.identification')}</Typography>
                     <Typography variant="body1">{declaration.transportMeans?.identification || '-'}</Typography>
                   </Grid>
                   <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">Nacionalidad</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.nationality')}</Typography>
                     <Typography variant="body1">{declaration.transportMeans?.nationality || '-'}</Typography>
                   </Grid>
                 </Grid>
@@ -529,31 +531,31 @@ const ENSDeclarationDetail = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Datos del Envio
+                  {t('ens.shipmentData')}
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={6} md={3}>
-                    <Typography variant="body2" color="textSecondary">Conocimiento</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.billOfLading')}</Typography>
                     <Typography variant="body1">{declaration.consignment?.referenceNumber || '-'}</Typography>
                   </Grid>
                   <Grid item xs={6} md={3}>
-                    <Typography variant="body2" color="textSecondary">Contenedor</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.container')}</Typography>
                     <Typography variant="body1" fontFamily="monospace">{declaration.consignment?.containerNumber || '-'}</Typography>
                   </Grid>
                   <Grid item xs={6} md={3}>
-                    <Typography variant="body2" color="textSecondary">Precinto</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.seal')}</Typography>
                     <Typography variant="body1">{declaration.consignment?.sealNumber || '-'}</Typography>
                   </Grid>
                   <Grid item xs={6} md={3}>
-                    <Typography variant="body2" color="textSecondary">Peso Bruto</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.grossWeight')}</Typography>
                     <Typography variant="body1">{declaration.consignment?.grossMass ? `${declaration.consignment.grossMass} kg` : '-'}</Typography>
                   </Grid>
                   <Grid item xs={6} md={3}>
-                    <Typography variant="body2" color="textSecondary">Bultos</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.packagesLabel')}</Typography>
                     <Typography variant="body1">{declaration.consignment?.numberOfPackages || '-'}</Typography>
                   </Grid>
                   <Grid item xs={12}>
-                    <Typography variant="body2" color="textSecondary">Descripcion</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('common.description')}</Typography>
                     <Typography variant="body1">{declaration.consignment?.goodsDescription || '-'}</Typography>
                   </Grid>
                 </Grid>
@@ -565,9 +567,9 @@ const ENSDeclarationDetail = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Expedidor (Consignor)
+                  {t('ens.consignorLabel')}
                 </Typography>
-                <Typography variant="body2" color="textSecondary">EORI</Typography>
+                <Typography variant="body2" color="textSecondary">{t('ens.eoriLabel')}</Typography>
                 <Typography variant="body1">{declaration.consignor?.eori || '-'}</Typography>
                 <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>Nombre</Typography>
                 <Typography variant="body1">{declaration.consignor?.name || '-'}</Typography>
@@ -579,9 +581,9 @@ const ENSDeclarationDetail = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Destinatario (Consignee)
+                  {t('ens.consigneeLabel')}
                 </Typography>
-                <Typography variant="body2" color="textSecondary">EORI</Typography>
+                <Typography variant="body2" color="textSecondary">{t('ens.eoriLabel')}</Typography>
                 <Typography variant="body1">{declaration.consignee?.eori || '-'}</Typography>
                 <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>Nombre</Typography>
                 <Typography variant="body1">{declaration.consignee?.name || '-'}</Typography>
@@ -600,17 +602,17 @@ const ENSDeclarationDetail = () => {
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    Envios House (Grupaje)
+                    {t('ens.houseGroupage')}
                   </Typography>
                   <TableContainer>
                     <Table size="small">
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>Referencia</TableCell>
-                          <TableCell>Destinatario</TableCell>
-                          <TableCell>EORI</TableCell>
-                          <TableCell>Partidas</TableCell>
+                          <TableCell>{t('ens.reference')}</TableCell>
+                          <TableCell>{t('ens.recipient')}</TableCell>
+                          <TableCell>{t('ens.eoriLabel')}</TableCell>
+                          <TableCell>{t('ens.items')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -637,18 +639,18 @@ const ENSDeclarationDetail = () => {
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    Partidas de Mercancia
+                    {t('ens.goodsItems')}
                   </Typography>
                   <TableContainer>
                     <Table size="small">
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>Descripcion</TableCell>
+                          <TableCell>{t('common.description')}</TableCell>
                           <TableCell>TARIC</TableCell>
-                          <TableCell>Origen</TableCell>
-                          <TableCell>Peso Bruto</TableCell>
-                          <TableCell>Bultos</TableCell>
+                          <TableCell>{t('ens.countryOfOrigin')}</TableCell>
+                          <TableCell>{t('ens.grossWeight')}</TableCell>
+                          <TableCell>{t('ens.packagesLabel')}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -675,19 +677,19 @@ const ENSDeclarationDetail = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Totales
+                  {t('ens.totals')}
                 </Typography>
                 <Grid container spacing={3}>
                   <Grid item xs={4}>
-                    <Typography variant="body2" color="textSecondary">Peso Total</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.totalWeight')}</Typography>
                     <Typography variant="h5">{declaration.totals?.grossMass || declaration.consignment?.grossMass || 0} kg</Typography>
                   </Grid>
                   <Grid item xs={4}>
-                    <Typography variant="body2" color="textSecondary">Bultos</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.packagesLabel')}</Typography>
                     <Typography variant="h5">{declaration.totals?.numberOfPackages || declaration.consignment?.numberOfPackages || 0}</Typography>
                   </Grid>
                   <Grid item xs={4}>
-                    <Typography variant="body2" color="textSecondary">Partidas</Typography>
+                    <Typography variant="body2" color="textSecondary">{t('ens.items')}</Typography>
                     <Typography variant="h5">{declaration.totals?.numberOfItems || declaration.goods?.length || 0}</Typography>
                   </Grid>
                 </Grid>
@@ -702,18 +704,18 @@ const ENSDeclarationDetail = () => {
         <Card>
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Documentos Adjuntos
+              {t('ens.attachedDocuments')}
             </Typography>
             {declaration.documents?.length > 0 ? (
               <TableContainer>
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell>Tipo</TableCell>
-                      <TableCell>Numero</TableCell>
-                      <TableCell>Nombre</TableCell>
-                      <TableCell>Fecha</TableCell>
-                      <TableCell>Acciones</TableCell>
+                      <TableCell>{t('common.type')}</TableCell>
+                      <TableCell>{t('ens.number')}</TableCell>
+                      <TableCell>{t('common.name')}</TableCell>
+                      <TableCell>{t('common.date')}</TableCell>
+                      <TableCell>{t('common.actions')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -736,7 +738,7 @@ const ENSDeclarationDetail = () => {
                 </Table>
               </TableContainer>
             ) : (
-              <Typography color="textSecondary">No hay documentos adjuntos</Typography>
+              <Typography color="textSecondary">{t('ens.noDocuments')}</Typography>
             )}
           </CardContent>
         </Card>
@@ -747,7 +749,7 @@ const ENSDeclarationDetail = () => {
         <Card>
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Historial de Estados
+              {t('ens.statusHistory')}
             </Typography>
             {declaration.statusHistory?.length > 0 ? (
               <Box sx={{ pl: 2 }}>
@@ -780,7 +782,7 @@ const ENSDeclarationDetail = () => {
                         )}
                         {history.performedBy && (
                           <Typography variant="caption" color="textSecondary">
-                            Por: {history.performedBy}
+                            {t('ens.performedBy')}: {history.performedBy}
                           </Typography>
                         )}
                       </Box>
@@ -789,7 +791,7 @@ const ENSDeclarationDetail = () => {
                 })}
               </Box>
             ) : (
-              <Typography color="textSecondary">No hay historial disponible</Typography>
+              <Typography color="textSecondary">{t('ens.noHistory')}</Typography>
             )}
           </CardContent>
         </Card>
@@ -797,22 +799,22 @@ const ENSDeclarationDetail = () => {
 
       {/* Cancel Dialog */}
       <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)}>
-        <DialogTitle>Anular Declaracion ENS</DialogTitle>
+        <DialogTitle>{t('ens.cancelDeclaration')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            Esta accion anulara la declaracion ENS. Por favor, indique el motivo:
+            {t('ens.cancelReason')}
           </Typography>
           <TextField
             fullWidth
             multiline
             rows={3}
-            label="Motivo de anulacion"
+            label={t('ens.cancelReasonLabel')}
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCancelDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setCancelDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button
             variant="contained"
             color="error"
@@ -820,22 +822,22 @@ const ENSDeclarationDetail = () => {
             disabled={!cancelReason.trim() || actionLoading}
             startIcon={actionLoading ? <CircularProgress size={20} /> : <CancelIcon />}
           >
-            Anular Declaracion
+            {t('ens.cancelButton')}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Arrival Dialog */}
       <Dialog open={arrivalDialogOpen} onClose={() => setArrivalDialogOpen(false)}>
-        <DialogTitle>Notificar Llegada</DialogTitle>
+        <DialogTitle>{t('ens.arrivalDialogTitle')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            Notifique la llegada de la mercancia a la aduana de entrada:
+            {t('ens.arrivalDialogDesc')}
           </Typography>
           <TextField
             fullWidth
             type="date"
-            label="Fecha de Llegada"
+            label={t('ens.arrivalDate')}
             value={arrivalData.arrivalDate}
             onChange={(e) => setArrivalData(prev => ({ ...prev, arrivalDate: e.target.value }))}
             InputLabelProps={{ shrink: true }}
@@ -844,7 +846,7 @@ const ENSDeclarationDetail = () => {
           <TextField
             fullWidth
             type="time"
-            label="Hora de Llegada"
+            label={t('ens.arrivalTime')}
             value={arrivalData.actualArrivalTime}
             onChange={(e) => setArrivalData(prev => ({ ...prev, actualArrivalTime: e.target.value }))}
             InputLabelProps={{ shrink: true }}
@@ -854,20 +856,20 @@ const ENSDeclarationDetail = () => {
             fullWidth
             multiline
             rows={2}
-            label="Observaciones"
+            label={t('ens.remarks')}
             value={arrivalData.remarks}
             onChange={(e) => setArrivalData(prev => ({ ...prev, remarks: e.target.value }))}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setArrivalDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setArrivalDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button
             variant="contained"
             onClick={handleNotifyArrival}
             disabled={!arrivalData.arrivalDate || actionLoading}
             startIcon={actionLoading ? <CircularProgress size={20} /> : <ArrivalIcon />}
           >
-            Notificar Llegada
+            {t('ens.notifyArrival')}
           </Button>
         </DialogActions>
       </Dialog>

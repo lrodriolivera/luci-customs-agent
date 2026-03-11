@@ -14,8 +14,10 @@ import {
   SparklesIcon
 } from '@heroicons/react/24/outline'
 import { aeatRealAPI } from '../../services/api'
+import { useTranslation } from 'react-i18next'
 
 export default function CertificateManager() {
+  const { t } = useTranslation()
   const [certificates, setCertificates] = useState([])
   const [loading, setLoading] = useState(true)
   const [importing, setImporting] = useState(false)

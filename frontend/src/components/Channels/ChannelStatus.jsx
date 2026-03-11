@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { channelsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import {
@@ -15,47 +16,47 @@ import {
 } from '@heroicons/react/24/outline'
 import InspectionScheduler from './InspectionScheduler'
 
-// Configuracion de canales
-const CHANNEL_CONFIG = {
-  green: {
-    color: 'bg-green-500',
-    bgLight: 'bg-green-50',
-    borderColor: 'border-green-300',
-    textColor: 'text-green-800',
-    icon: CheckCircleIcon,
-    label: 'Canal Verde',
-    description: 'Levante autorizado'
-  },
-  yellow: {
-    color: 'bg-yellow-500',
-    bgLight: 'bg-yellow-50',
-    borderColor: 'border-yellow-300',
-    textColor: 'text-yellow-800',
-    icon: ClockIcon,
-    label: 'Canal Amarillo',
-    description: 'Certificados pendientes'
-  },
-  orange: {
-    color: 'bg-orange-500',
-    bgLight: 'bg-orange-50',
-    borderColor: 'border-orange-300',
-    textColor: 'text-orange-800',
-    icon: DocumentTextIcon,
-    label: 'Canal Naranja',
-    description: 'Revision documental'
-  },
-  red: {
-    color: 'bg-red-500',
-    bgLight: 'bg-red-50',
-    borderColor: 'border-red-300',
-    textColor: 'text-red-800',
-    icon: ExclamationTriangleIcon,
-    label: 'Canal Rojo',
-    description: 'Inspeccion fisica'
-  }
-}
-
 export default function ChannelStatus({ expeditionId, channel: propChannel, onStatusChange }) {
+  const { t } = useTranslation()
+
+  const CHANNEL_CONFIG = {
+    green: {
+      color: 'bg-green-500',
+      bgLight: 'bg-green-50',
+      borderColor: 'border-green-300',
+      textColor: 'text-green-800',
+      icon: CheckCircleIcon,
+      label: t('channels.greenChannel'),
+      description: t('channels.greenDesc')
+    },
+    yellow: {
+      color: 'bg-yellow-500',
+      bgLight: 'bg-yellow-50',
+      borderColor: 'border-yellow-300',
+      textColor: 'text-yellow-800',
+      icon: ClockIcon,
+      label: t('channels.yellowChannel'),
+      description: t('channels.yellowDesc')
+    },
+    orange: {
+      color: 'bg-orange-500',
+      bgLight: 'bg-orange-50',
+      borderColor: 'border-orange-300',
+      textColor: 'text-orange-800',
+      icon: DocumentTextIcon,
+      label: t('channels.orangeChannel'),
+      description: t('channels.orangeDesc')
+    },
+    red: {
+      color: 'bg-red-500',
+      bgLight: 'bg-red-50',
+      borderColor: 'border-red-300',
+      textColor: 'text-red-800',
+      icon: ExclamationTriangleIcon,
+      label: t('channels.redChannel'),
+      description: t('channels.redDesc')
+    }
+  }
   const [status, setStatus] = useState(null)
   const [loading, setLoading] = useState(true)
   const [reevaluating, setReevaluating] = useState(false)
@@ -77,7 +78,7 @@ export default function ChannelStatus({ expeditionId, channel: propChannel, onSt
       console.error('Error loading channel status:', error)
       // Si no hay canal, no es error
       if (error.response?.status !== 400) {
-        toast.error('Error al cargar estado del canal')
+        toast.error(t('channels.loadingError'))
       }
     } finally {
       setLoading(false)
@@ -91,14 +92,14 @@ export default function ChannelStatus({ expeditionId, channel: propChannel, onSt
       const result = response.data?.data || response.data
 
       if (result.success) {
-        toast.success(result.message || 'Canal actualizado')
+        toast.success(result.message || t('channels.channelUpdated'))
         loadStatus()
         onStatusChange?.()
       } else {
-        toast.error(result.message || 'No se pudo actualizar el canal')
+        toast.error(result.message || t('channels.channelUpdateFailed'))
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Error al reevaluar canal')
+      toast.error(error.response?.data?.error || t('channels.reevaluateError'))
     } finally {
       setReevaluating(false)
     }
@@ -149,9 +150,9 @@ La mercancia puede retirarse del recinto aduanero
       a.click()
       window.URL.revokeObjectURL(url)
 
-      toast.success('Documento de levante descargado')
+      toast.success(t('channels.levanteDownloaded'))
     } catch (error) {
-      toast.error('Error al descargar levante')
+      toast.error(t('channels.levanteDownloadError'))
     }
   }
 
@@ -201,16 +202,16 @@ La mercancia puede retirarse del recinto aduanero
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-green-700">
             <ShieldCheckIcon className="h-5 w-5" />
-            <span className="font-medium">Levante Autorizado</span>
+            <span className="font-medium">{t('channels.levanteAuthorized')}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-gray-500">Numero Levante</p>
+              <p className="text-gray-500">{t('channels.levanteNumber')}</p>
               <p className="font-mono font-medium">{status.levante.number}</p>
             </div>
             <div>
-              <p className="text-gray-500">Fecha Levante</p>
+              <p className="text-gray-500">{t('channels.levanteDate')}</p>
               <p className="font-medium">
                 {status.levante.date
                   ? new Date(status.levante.date).toLocaleDateString('es-ES')
@@ -224,11 +225,11 @@ La mercancia puede retirarse del recinto aduanero
             className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
             <DocumentArrowDownIcon className="h-5 w-5" />
-            Descargar Levante
+            {t('channels.downloadLevante')}
           </button>
 
           <p className="text-xs text-green-600 text-center mt-2">
-            La mercancia puede retirarse del recinto aduanero
+            {t('channels.levanteCanWithdraw')}
           </p>
         </div>
       )}
@@ -236,12 +237,12 @@ La mercancia puede retirarse del recinto aduanero
       {channel === 'yellow' && (
         <div className="space-y-3">
           <p className="text-sm text-yellow-700">
-            Esperando certificados para completar el despacho.
+            {t('channels.yellowWaiting')}
           </p>
 
           {status?.pendingCertificates?.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Certificados pendientes:</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">{t('channels.pendingCertificates')}</p>
               <ul className="space-y-1">
                 {status.pendingCertificates.map((cert, idx) => (
                   <li key={idx} className="flex items-center gap-2 text-sm">
@@ -260,11 +261,11 @@ La mercancia puede retirarse del recinto aduanero
             className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50"
           >
             <ArrowPathIcon className={`h-5 w-5 ${reevaluating ? 'animate-spin' : ''}`} />
-            {reevaluating ? 'Verificando...' : 'Verificar Certificados'}
+            {reevaluating ? t('channels.verifying') : t('channels.verifyCertificates')}
           </button>
 
           <p className="text-xs text-yellow-600 text-center">
-            Suba los certificados y pulse verificar para actualizar el estado
+            {t('channels.yellowUploadHint')}
           </p>
         </div>
       )}
@@ -272,12 +273,12 @@ La mercancia puede retirarse del recinto aduanero
       {channel === 'orange' && (
         <div className="space-y-3">
           <p className="text-sm text-orange-700">
-            Revision documental requerida por AEAT.
+            {t('channels.orangeReview')}
           </p>
 
           {status?.requirements?.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Requerimientos activos:</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">{t('channels.activeRequirements')}</p>
               <ul className="space-y-2">
                 {status.requirements.map((req) => (
                   <li key={req.id} className="p-2 bg-white rounded border text-sm">
@@ -294,7 +295,7 @@ La mercancia puede retirarse del recinto aduanero
                     {req.deadline && (
                       <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
                         <CalendarIcon className="h-3.5 w-3.5" />
-                        Vence: {new Date(req.deadline).toLocaleDateString('es-ES')}
+                        {t('channels.expires')}: {new Date(req.deadline).toLocaleDateString('es-ES')}
                       </div>
                     )}
                   </li>
@@ -304,7 +305,7 @@ La mercancia puede retirarse del recinto aduanero
           )}
 
           <p className="text-xs text-orange-600 text-center">
-            Responda los requerimientos en la seccion de Requerimientos AEAT
+            {t('channels.orangeHint')}
           </p>
         </div>
       )}
@@ -312,34 +313,34 @@ La mercancia puede retirarse del recinto aduanero
       {channel === 'red' && (
         <div className="space-y-3">
           <p className="text-sm text-red-700">
-            Inspeccion fisica requerida. La mercancia permanece retenida.
+            {t('channels.redInspection')}
           </p>
 
           {status?.physicalInspection && (
             <div className="p-3 bg-white rounded border">
               <p className="font-medium text-sm text-gray-700 mb-2">
-                Estado de la inspeccion:
+                {t('channels.inspectionStatus')}
               </p>
 
               {status.physicalInspection.scheduled ? (
                 <div className="space-y-1 text-sm">
                   <p>
-                    <span className="text-gray-500">Fecha:</span>{' '}
+                    <span className="text-gray-500">{t('channels.inspectionDate')}</span>{' '}
                     <span className="font-medium">
                       {new Date(status.physicalInspection.scheduledDate).toLocaleDateString('es-ES')}
                     </span>
                   </p>
                   <p>
-                    <span className="text-gray-500">Hora:</span>{' '}
+                    <span className="text-gray-500">{t('channels.inspectionTime')}</span>{' '}
                     <span className="font-medium">{status.physicalInspection.scheduledTime}</span>
                   </p>
                   <p>
-                    <span className="text-gray-500">Lugar:</span>{' '}
+                    <span className="text-gray-500">{t('channels.inspectionPlace')}</span>{' '}
                     <span className="font-medium">{status.physicalInspection.location?.name}</span>
                   </p>
                   {status.physicalInspection.inspectorName && (
                     <p>
-                      <span className="text-gray-500">Inspector:</span>{' '}
+                      <span className="text-gray-500">{t('channels.inspectorLabel')}</span>{' '}
                       <span className="font-medium">{status.physicalInspection.inspectorName}</span>
                     </p>
                   )}
@@ -347,7 +348,7 @@ La mercancia puede retirarse del recinto aduanero
               ) : (
                 <div className="flex items-center gap-2 text-yellow-600 text-sm">
                   <ClockIcon className="h-4 w-4" />
-                  Pendiente de programar cita
+                  {t('channels.pendingSchedule')}
                 </div>
               )}
             </div>
@@ -360,12 +361,12 @@ La mercancia puede retirarse del recinto aduanero
               className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
             >
               <CalendarDaysIcon className="h-5 w-5" />
-              {status?.physicalInspection?.scheduled ? 'Modificar Cita' : 'Programar Inspeccion'}
+              {status?.physicalInspection?.scheduled ? t('channels.modifyAppointment') : t('channels.scheduleInspection')}
             </button>
           )}
 
           <p className="text-xs text-red-600 text-center">
-            La mercancia no puede retirarse hasta completar la inspeccion
+            {t('channels.redCannotWithdraw')}
           </p>
         </div>
       )}

@@ -96,7 +96,15 @@ function buildNCTSTransitXML(data) {
                 <ent:typeOfPackages>${g.packageType || 'PK'}</ent:typeOfPackages>
                 <ent:numberOfPackages>${g.packages || 1}</ent:numberOfPackages>
                 <ent:shippingMarks>${g.shippingMarks || 'N/M'}</ent:shippingMarks>
-              </ent:Packaging>
+              </ent:Packaging>${g.previousDocumentType ? `
+              <ent:PreviousDocument>
+                <ent:sequenceNumber>1</ent:sequenceNumber>
+                <ent:type>${g.previousDocumentType}</ent:type>
+                <ent:referenceNumber>${g.previousDocumentRef}</ent:referenceNumber>${g.previousDocumentType === 'NMRN' ? `
+                <ent:goodsItemNumber>${parseInt(g.previousDocumentItem || '1', 10)}</ent:goodsItemNumber>
+                <ent:measurementUnitAndQualifier>KGM</ent:measurementUnitAndQualifier>
+                <ent:quantity>${Number(g.netWeight || g.grossWeight || 1).toFixed(3)}</ent:quantity>` : ''}
+              </ent:PreviousDocument>` : ''}
             </ent:ConsignmentItem>
           </ent:HouseConsignment>`).join('');
 
@@ -121,7 +129,12 @@ function buildNCTSTransitXML(data) {
           <ent:security>${securityIndicator}</ent:security>
           <ent:reducedDatasetIndicator>0</ent:reducedDatasetIndicator>
           <ent:bindingItinerary>0</ent:bindingItinerary>
-        </ent:TransitOperation>
+        </ent:TransitOperation>${data.authorisationNumber ? `
+        <ent:Authorisation>
+          <ent:sequenceNumber>1</ent:sequenceNumber>
+          <ent:type>C521</ent:type>
+          <ent:referenceNumber>${data.authorisationNumber}</ent:referenceNumber>
+        </ent:Authorisation>` : ''}
         <ent:CustomsOfficeOfDeparture>
           <ent:referenceNumber>${officeOfDeparture}</ent:referenceNumber>
         </ent:CustomsOfficeOfDeparture>

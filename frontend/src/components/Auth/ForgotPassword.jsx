@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { authAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
 export default function ForgotPassword() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
@@ -15,10 +17,10 @@ export default function ForgotPassword() {
     try {
       await authAPI.forgotPassword(email)
       setSent(true)
-      toast.success('Email enviado. Revisa tu bandeja de entrada.')
+      toast.success(t('auth.forgotSuccess'))
     } catch (error) {
       setSent(true)
-      toast.success('Si el email existe, recibiras un enlace para restablecer tu contrasena.')
+      toast.success(t('auth.forgotError'))
     }
 
     setLoading(false)
@@ -33,21 +35,21 @@ export default function ForgotPassword() {
             <span className="text-white text-4xl font-bold">L</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">LUCI</h1>
-          <p className="text-gray-600 mt-1">Agente Aduanero Inteligente</p>
+          <p className="text-gray-600 mt-1">{t('auth.subtitle')}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-2 text-center">
-            Recuperar Contrasena
+            {t('auth.forgotTitle')}
           </h2>
           <p className="text-sm text-gray-500 text-center mb-6">
-            Introduce tu email y te enviaremos un enlace para restablecer tu contrasena.
+            {t('auth.forgotSubtitle')}
           </p>
 
           {!sent ? (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label htmlFor="email" className="label">Correo Electronico</label>
+                <label htmlFor="email" className="label">{t('auth.emailLabel')}</label>
                 <input
                   type="email"
                   id="email"
@@ -70,10 +72,10 @@ export default function ForgotPassword() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Enviando...
+                    {t('auth.sending')}
                   </span>
                 ) : (
-                  'Enviar Enlace'
+                  t('auth.sendResetLink')
                 )}
               </button>
             </form>
@@ -84,16 +86,16 @@ export default function ForgotPassword() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                 </svg>
               </div>
-              <p className="text-gray-700 font-medium">Revisa tu bandeja de entrada</p>
+              <p className="text-gray-700 font-medium">{t('auth.forgotSuccess')}</p>
               <p className="text-sm text-gray-500 mt-2">
-                Si el email esta registrado, recibiras un enlace para restablecer tu contrasena.
+                {t('auth.forgotSubtitle')}
               </p>
             </div>
           )}
 
           <p className="mt-6 text-center text-sm text-gray-600">
             <Link to="/login" className="text-luci hover:text-luci-dark font-medium">
-              Volver a Iniciar Sesion
+              {t('auth.backToLogin')}
             </Link>
           </p>
         </div>

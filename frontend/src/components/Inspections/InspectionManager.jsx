@@ -20,6 +20,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { inspectionsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 
 const statusColors = {
   requested: 'bg-gray-100 text-gray-800',
@@ -116,6 +117,7 @@ const predefinedLocations = [
 ]
 
 export default function InspectionManager() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [dashboard, setDashboard] = useState(null)
   const [inspections, setInspections] = useState([])
@@ -488,7 +490,7 @@ export default function InspectionManager() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Coordinacion de Inspecciones</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('inspections.title')}</h1>
           <p className="text-gray-500">Gestion de inspecciones fisicas y documentales</p>
         </div>
         <div className="flex gap-2">

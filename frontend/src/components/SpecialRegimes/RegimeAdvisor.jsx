@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { specialRegimesAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import {
   SparklesIcon,
   LightBulbIcon,
@@ -33,6 +34,7 @@ const REGIME_COLORS = {
 }
 
 export default function RegimeAdvisor({ onClose, onSelectRegime }) {
+  const { t } = useTranslation()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -96,8 +98,8 @@ export default function RegimeAdvisor({ onClose, onSelectRegime }) {
           <div className="flex items-center gap-3 text-white">
             <SparklesIcon className="h-6 w-6" />
             <div>
-              <h2 className="text-lg font-semibold">Asistente IA de Regimenes</h2>
-              <p className="text-sm text-blue-100">LUCI te ayuda a elegir el mejor regimen especial</p>
+              <h2 className="text-lg font-semibold">{t('specialRegimes.aiAdvisorTitle')}</h2>
+              <p className="text-sm text-blue-100">{t('specialRegimes.aiAdvisorSubtitle')}</p>
             </div>
           </div>
           <button onClick={onClose} className="text-white hover:text-gray-200">

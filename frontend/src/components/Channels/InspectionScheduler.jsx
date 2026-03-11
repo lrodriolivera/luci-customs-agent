@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { requirementsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import {
@@ -34,6 +35,7 @@ const AVAILABLE_TIMES = [
 ]
 
 export default function InspectionScheduler({ requirementId, currentInspection, onScheduled, onClose }) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     scheduledDate: currentInspection?.scheduledDate?.split('T')[0] || '',
     scheduledTime: currentInspection?.scheduledTime || '',
@@ -70,15 +72,15 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
 
     // Validaciones
     if (!formData.scheduledDate) {
-      toast.error('Seleccione una fecha para la inspeccion')
+      toast.error(t('channels.selectDateError'))
       return
     }
     if (!formData.scheduledTime) {
-      toast.error('Seleccione una hora para la inspeccion')
+      toast.error(t('channels.selectTimeError'))
       return
     }
     if (!formData.locationCode) {
-      toast.error('Seleccione una ubicacion')
+      toast.error(t('channels.selectLocationError'))
       return
     }
 
@@ -87,7 +89,7 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     if (selectedDate < today) {
-      toast.error('La fecha no puede ser anterior a hoy')
+      toast.error(t('channels.pastDateError'))
       return
     }
 
@@ -125,14 +127,14 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
       })
 
       if (response.data?.success) {
-        toast.success('Inspeccion programada correctamente')
+        toast.success(t('channels.inspectionScheduled'))
         onScheduled?.(response.data.data)
       } else {
-        toast.error(response.data?.message || 'Error al programar inspeccion')
+        toast.error(response.data?.message || t('channels.inspectionScheduleError'))
       }
     } catch (error) {
       console.error('Error scheduling inspection:', error)
-      toast.error(error.response?.data?.message || 'Error al programar la inspeccion')
+      toast.error(error.response?.data?.message || t('channels.inspectionScheduleError'))
     } finally {
       setLoading(false)
     }
@@ -153,8 +155,8 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
               <CalendarDaysIcon className="h-6 w-6 text-red-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Programar Inspeccion Fisica</h2>
-              <p className="text-sm text-gray-600">Canal Rojo - Coordinacion con Aduana</p>
+              <h2 className="text-lg font-semibold text-gray-900">{t('channels.scheduleTitle')}</h2>
+              <p className="text-sm text-gray-600">{t('channels.scheduleSubtitle')}</p>
             </div>
           </div>
           <button
@@ -171,7 +173,7 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 <CalendarDaysIcon className="h-4 w-4 inline mr-1" />
-                Fecha de inspeccion *
+                {t('channels.inspectionDateLabel')} *
               </label>
               <input
                 type="date"
@@ -186,7 +188,7 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 <ClockIcon className="h-4 w-4 inline mr-1" />
-                Hora *
+                {t('channels.inspectionTimeLabel')} *
               </label>
               <select
                 name="scheduledTime"
@@ -195,7 +197,7 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
                 required
                 className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent"
               >
-                <option value="">Seleccionar hora</option>
+                <option value="">{t('channels.selectTime')}</option>
                 {AVAILABLE_TIMES.map(time => (
                   <option key={time} value={time}>{time}</option>
                 ))}
@@ -207,7 +209,7 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               <MapPinIcon className="h-4 w-4 inline mr-1" />
-              Ubicacion / Recinto Aduanero *
+              {t('channels.locationLabel')} *
             </label>
             <select
               name="locationCode"
@@ -216,7 +218,7 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
               required
               className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
-              <option value="">Seleccionar ubicacion</option>
+              <option value="">{t('channels.selectLocation')}</option>
               {CUSTOMS_LOCATIONS.map(loc => (
                 <option key={loc.code} value={loc.code}>{loc.name}</option>
               ))}
@@ -229,7 +231,7 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
             {formData.locationCode === 'CUSTOM' && (
               <div className="mt-3 space-y-3 p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Nombre del lugar</label>
+                  <label className="block text-sm text-gray-600 mb-1">{t('channels.customLocationName')}</label>
                   <input
                     type="text"
                     name="customLocation.name"
@@ -240,7 +242,7 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Direccion completa</label>
+                  <label className="block text-sm text-gray-600 mb-1">{t('channels.customLocationAddress')}</label>
                   <input
                     type="text"
                     name="customLocation.address"
@@ -257,13 +259,13 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
           {/* Datos del Inspector (Opcionales) */}
           <div className="border-t pt-4">
             <h3 className="text-sm font-medium text-gray-700 mb-3">
-              Datos del Inspector (si se conocen)
+              {t('channels.inspectorData')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-gray-600 mb-1">
                   <UserIcon className="h-4 w-4 inline mr-1" />
-                  Nombre
+                  {t('common.name')}
                 </label>
                 <input
                   type="text"
@@ -275,7 +277,7 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">ID / Numero de plaza</label>
+                <label className="block text-sm text-gray-600 mb-1">{t('channels.inspectorIdLabel')}</label>
                 <input
                   type="text"
                   name="inspectorId"
@@ -288,7 +290,7 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
               <div>
                 <label className="block text-sm text-gray-600 mb-1">
                   <PhoneIcon className="h-4 w-4 inline mr-1" />
-                  Telefono
+                  {t('common.phone')}
                 </label>
                 <input
                   type="tel"
@@ -302,7 +304,7 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
               <div>
                 <label className="block text-sm text-gray-600 mb-1">
                   <EnvelopeIcon className="h-4 w-4 inline mr-1" />
-                  Email
+                  {t('common.email')}
                 </label>
                 <input
                   type="email"
@@ -319,9 +321,7 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
           {/* Notas */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
             <p className="text-sm text-yellow-800">
-              <strong>Importante:</strong> Asegurese de que la mercancia y toda la documentacion
-              original esten disponibles en el recinto para la fecha y hora programadas.
-              El representante debe estar presente durante la inspeccion.
+              <strong>{t('channels.importantNote')}</strong> {t('channels.inspectionNote')}
             </p>
           </div>
 
@@ -332,7 +332,7 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
               onClick={onClose}
               className="px-4 py-2 text-gray-700 border rounded-lg hover:bg-gray-50"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -342,12 +342,12 @@ export default function InspectionScheduler({ requirementId, currentInspection, 
               {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Programando...
+                  {t('channels.scheduling')}
                 </>
               ) : (
                 <>
                   <CheckCircleIcon className="h-5 w-5" />
-                  Confirmar Programacion
+                  {t('channels.confirmSchedule')}
                 </>
               )}
             </button>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { specialRegimesAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import {
   SparklesIcon,
   CheckCircleIcon,
@@ -12,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function YieldValidator({ onClose, regimeData }) {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     input_goods: regimeData?.goods?.map(g => ({
@@ -112,8 +114,8 @@ export default function YieldValidator({ onClose, regimeData }) {
           <div className="flex items-center gap-3 text-white">
             <BeakerIcon className="h-6 w-6" />
             <div>
-              <h2 className="text-lg font-semibold">Validador de Tasa de Rendimiento</h2>
-              <p className="text-sm text-blue-100">IA para validar tasas en perfeccionamiento activo (51)</p>
+              <h2 className="text-lg font-semibold">{t('specialRegimes.yieldValidatorTitle')}</h2>
+              <p className="text-sm text-blue-100">{t('specialRegimes.yieldValidatorSubtitle')}</p>
             </div>
           </div>
           <button onClick={onClose} className="text-white hover:text-gray-200">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { expeditionsAPI, documentsAPI, declarationsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import {
@@ -27,6 +28,7 @@ import ParaduaneroManager from '../Paraduanero/ParaduaneroManager'
 
 // ==================== Expedition AI Panel Component ====================
 function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('documents')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -38,10 +40,10 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
   })
 
   const tabs = [
-    { id: 'documents', label: 'Sugerir Documentos', icon: DocumentTextIcon },
-    { id: 'risk', label: 'Analizar Riesgo', icon: ShieldExclamationIcon },
-    { id: 'inconsistencies', label: 'Detectar Inconsistencias', icon: MagnifyingGlassIcon },
-    { id: 'full', label: 'Analisis Completo', icon: SparklesIcon }
+    { id: 'documents', label: t('expeditions.suggestDocs'), icon: DocumentTextIcon },
+    { id: 'risk', label: t('expeditions.analyzeRisk'), icon: ShieldExclamationIcon },
+    { id: 'inconsistencies', label: t('expeditions.detectInconsistencies'), icon: MagnifyingGlassIcon },
+    { id: 'full', label: t('expeditions.fullAnalysis'), icon: SparklesIcon }
   ]
 
   const runAnalysis = async (type) => {
@@ -84,7 +86,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <h4 className="font-medium text-red-800 mb-3 flex items-center gap-2">
               <ExclamationTriangleIcon className="w-5 h-5" />
-              Documentos Obligatorios Faltantes
+              {t('expeditions.requiredMandatoryDocs')}
             </h4>
             <ul className="space-y-2">
               {data.requiredDocuments.map((doc, idx) => (
@@ -105,7 +107,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <h4 className="font-medium text-yellow-800 mb-3 flex items-center gap-2">
               <LightBulbIcon className="w-5 h-5" />
-              Documentos Recomendados
+              {t('expeditions.recommendedDocs')}
             </h4>
             <ul className="space-y-2">
               {data.recommendedDocuments.map((doc, idx) => (
@@ -124,19 +126,19 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
         {/* Current Documents Status */}
         {data.currentStatus && (
           <div className="bg-white border rounded-lg p-4">
-            <h4 className="font-medium text-gray-700 mb-3">Estado Actual</h4>
+            <h4 className="font-medium text-gray-700 mb-3">{t('expeditions.currentStatus')}</h4>
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-2xl font-bold text-green-600">{data.currentStatus.complete || 0}</p>
-                <p className="text-xs text-gray-500">Completos</p>
+                <p className="text-xs text-gray-500">{t('expeditions.complete')}</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-yellow-600">{data.currentStatus.pending || 0}</p>
-                <p className="text-xs text-gray-500">Pendientes</p>
+                <p className="text-xs text-gray-500">{t('expeditions.pendingDocsLabel')}</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-red-600">{data.currentStatus.missing || 0}</p>
-                <p className="text-xs text-gray-500">Faltantes</p>
+                <p className="text-xs text-gray-500">{t('expeditions.missing')}</p>
               </div>
             </div>
           </div>
@@ -169,7 +171,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
                 data.riskLevel === 'medium' ? 'text-yellow-800' :
                 'text-green-800'
               }`}>
-                Riesgo {data.riskLevel === 'high' ? 'Alto' : data.riskLevel === 'medium' ? 'Medio' : 'Bajo'}
+                {t('expeditions.riskLabel')} {data.riskLevel === 'high' ? t('expeditions.riskHigh') : data.riskLevel === 'medium' ? t('expeditions.riskMedium') : t('expeditions.riskLow')}
               </span>
             </div>
             {data.score && (
@@ -182,7 +184,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
         {/* Risk Factors */}
         {data.riskFactors && data.riskFactors.length > 0 && (
           <div className="bg-white border rounded-lg p-4">
-            <h4 className="font-medium text-gray-700 mb-3">Factores de Riesgo</h4>
+            <h4 className="font-medium text-gray-700 mb-3">{t('expeditions.riskFactors')}</h4>
             <div className="space-y-2">
               {data.riskFactors.map((factor, idx) => (
                 <div key={idx} className={`p-2 rounded ${
@@ -197,7 +199,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
                       factor.severity === 'medium' ? 'bg-yellow-200 text-yellow-800' :
                       'bg-gray-200 text-gray-800'
                     }`}>
-                      {factor.severity === 'high' ? 'Alto' : factor.severity === 'medium' ? 'Medio' : 'Bajo'}
+                      {factor.severity === 'high' ? t('expeditions.riskHigh') : factor.severity === 'medium' ? t('expeditions.riskMedium') : t('expeditions.riskLow')}
                     </span>
                   </div>
                   {factor.description && <p className="text-xs text-gray-600 mt-1">{factor.description}</p>}
@@ -210,19 +212,19 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
         {/* Channel Prediction */}
         {data.channelPrediction && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-800 mb-2">Prediccion de Canal</h4>
+            <h4 className="font-medium text-blue-800 mb-2">{t('expeditions.channelPrediction')}</h4>
             <div className="flex items-center gap-4">
               <span className={`px-3 py-1 rounded-full text-sm font-bold ${
                 data.channelPrediction.channel === 'green' ? 'bg-green-200 text-green-800' :
                 data.channelPrediction.channel === 'orange' ? 'bg-orange-200 text-orange-800' :
                 'bg-red-200 text-red-800'
               }`}>
-                {data.channelPrediction.channel === 'green' ? 'VERDE' :
-                 data.channelPrediction.channel === 'orange' ? 'NARANJA' : 'ROJO'}
+                {data.channelPrediction.channel === 'green' ? t('expeditions.channelGreen') :
+                 data.channelPrediction.channel === 'orange' ? t('expeditions.channelOrange') : t('expeditions.channelRed')}
               </span>
               {data.channelPrediction.probability && (
                 <span className="text-sm text-gray-600">
-                  {(data.channelPrediction.probability * 100).toFixed(0)}% probabilidad
+                  {(data.channelPrediction.probability * 100).toFixed(0)}% {t('expeditions.probability')}
                 </span>
               )}
             </div>
@@ -232,7 +234,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
         {/* Recommendations */}
         {data.recommendations && data.recommendations.length > 0 && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-            <h4 className="font-medium text-indigo-800 mb-2">Recomendaciones</h4>
+            <h4 className="font-medium text-indigo-800 mb-2">{t('expeditions.recommendations')}</h4>
             <ul className="space-y-1 text-sm text-indigo-700">
               {data.recommendations.map((rec, idx) => (
                 <li key={idx}>• {rec}</li>
@@ -260,8 +262,8 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
             )}
             <span className={`font-medium ${data.hasInconsistencies ? 'text-yellow-800' : 'text-green-800'}`}>
               {data.hasInconsistencies
-                ? `${data.inconsistencies?.length || 0} inconsistencia(s) detectada(s)`
-                : 'No se detectaron inconsistencias'}
+                ? t('expeditions.inconsistenciesDetected', { count: data.inconsistencies?.length || 0 })
+                : t('expeditions.noInconsistencies')}
             </span>
           </div>
         </div>
@@ -282,13 +284,13 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
                     inc.severity === 'warning' ? 'bg-yellow-200 text-yellow-800' :
                     'bg-gray-200 text-gray-800'
                   }`}>
-                    {inc.severity === 'critical' ? 'Critico' : inc.severity === 'warning' ? 'Advertencia' : 'Info'}
+                    {inc.severity === 'critical' ? t('expeditions.severityCritical') : inc.severity === 'warning' ? t('expeditions.severityWarning') : t('expeditions.severityInfo')}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600">{inc.description || inc.message}</p>
                 {inc.suggestion && (
                   <p className="text-xs text-blue-600 mt-2">
-                    <span className="font-medium">Sugerencia:</span> {inc.suggestion}
+                    <span className="font-medium">{t('expeditions.suggestion')}:</span> {inc.suggestion}
                   </p>
                 )}
               </div>
@@ -312,7 +314,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <SparklesIcon className="w-6 h-6 text-luci" />
-              <span className="font-medium">Analisis Integral LUCI</span>
+              <span className="font-medium">{t('expeditions.luciFullAnalysis')}</span>
             </div>
             <div className="text-right">
               <span className={`text-2xl font-bold ${
@@ -322,7 +324,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
               }`}>
                 {data.overallScore || 0}/100
               </span>
-              <p className="text-xs text-gray-500">Puntuacion</p>
+              <p className="text-xs text-gray-500">{t('expeditions.score')}</p>
             </div>
           </div>
           {data.summary && <p className="mt-3 text-sm text-gray-600">{data.summary}</p>}
@@ -349,7 +351,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
         {/* Critical Issues */}
         {data.criticalIssues && data.criticalIssues.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h4 className="font-medium text-red-800 mb-2">Problemas Criticos</h4>
+            <h4 className="font-medium text-red-800 mb-2">{t('expeditions.criticalIssues')}</h4>
             <ul className="space-y-1 text-sm text-red-700">
               {data.criticalIssues.map((issue, idx) => (
                 <li key={idx}>• {issue}</li>
@@ -361,7 +363,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
         {/* TARIC Suggestions */}
         {data.taricSuggestions && data.taricSuggestions.length > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-800 mb-2">Sugerencias TARIC</h4>
+            <h4 className="font-medium text-blue-800 mb-2">{t('expeditions.taricSuggestions')}</h4>
             <div className="space-y-2">
               {data.taricSuggestions.map((sug, idx) => (
                 <div key={idx} className="flex items-center justify-between p-2 bg-white rounded border">
@@ -379,7 +381,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
         {/* Action Items */}
         {data.actionItems && data.actionItems.length > 0 && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-            <h4 className="font-medium text-indigo-800 mb-3">Acciones Recomendadas</h4>
+            <h4 className="font-medium text-indigo-800 mb-3">{t('expeditions.recommendedActions')}</h4>
             <div className="space-y-2">
               {data.actionItems.map((item, idx) => (
                 <div key={idx} className="flex items-start gap-2">
@@ -411,17 +413,17 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
         <div className="text-center py-8">
           <SparklesIcon className="w-12 h-12 mx-auto text-gray-300 mb-4" />
           <p className="text-gray-500 mb-4">
-            {activeTab === 'documents' && 'Obtiene sugerencias de documentos necesarios'}
-            {activeTab === 'risk' && 'Analiza el nivel de riesgo del expediente'}
-            {activeTab === 'inconsistencies' && 'Detecta inconsistencias en los datos'}
-            {activeTab === 'full' && 'Ejecuta un analisis completo con LUCI'}
+            {activeTab === 'documents' && t('expeditions.getDocSuggestions')}
+            {activeTab === 'risk' && t('expeditions.analyzeRiskDesc')}
+            {activeTab === 'inconsistencies' && t('expeditions.detectInconsistenciesDesc')}
+            {activeTab === 'full' && t('expeditions.runFullAnalysis')}
           </p>
           <button
             onClick={() => runAnalysis(activeTab)}
             disabled={loading}
             className="px-6 py-2 bg-luci text-white rounded-lg hover:bg-luci-dark disabled:opacity-50"
           >
-            {loading ? 'Analizando...' : 'Ejecutar Analisis'}
+            {loading ? t('expeditions.analyzing') : t('expeditions.runAnalysis')}
           </button>
         </div>
       )
@@ -449,7 +451,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
           <div className="flex items-center gap-2">
             <SparklesIcon className="w-6 h-6" />
             <div>
-              <h2 className="font-bold">Analisis IA - Expediente</h2>
+              <h2 className="font-bold">{t('expeditions.aiAnalysisTitle')}</h2>
               <p className="text-sm text-white/80">{expedition.expeditionId}</p>
             </div>
           </div>
@@ -486,14 +488,14 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {error}
-              <button onClick={() => setError(null)} className="ml-2 underline">Cerrar</button>
+              <button onClick={() => setError(null)} className="ml-2 underline">{t('common.close')}</button>
             </div>
           )}
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <ArrowPathIcon className="w-8 h-8 animate-spin text-luci" />
-              <span className="ml-2 text-gray-500">Analizando con IA...</span>
+              <span className="ml-2 text-gray-500">{t('expeditions.analyzingWithAI')}</span>
             </div>
           ) : (
             renderContent()
@@ -506,7 +508,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
             onClick={onClose}
             className="px-4 py-2 border rounded-lg hover:bg-gray-100"
           >
-            Cerrar
+            {t('common.close')}
           </button>
           {results[activeTab] && (
             <button
@@ -514,7 +516,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
               disabled={loading}
               className="px-4 py-2 text-luci border border-luci rounded-lg hover:bg-luci hover:text-white disabled:opacity-50"
             >
-              Actualizar Analisis
+              {t('expeditions.updateAnalysis')}
             </button>
           )}
         </div>
@@ -524,6 +526,7 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
 }
 
 export default function ExpeditionDetail() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const [expedition, setExpedition] = useState(null)
@@ -556,7 +559,7 @@ export default function ExpeditionDetail() {
         }
       } catch (error) {
         console.error('Error loading expedition:', error)
-        toast.error('Error al cargar expediente')
+        toast.error(t('expeditions.loadError'))
         navigate('/expeditions')
       } finally {
         setLoading(false)
@@ -564,7 +567,7 @@ export default function ExpeditionDetail() {
     }
 
     fetchData()
-  }, [id, navigate])
+  }, [id, navigate, t])
 
   const handleSendPortalLink = async () => {
     try {
@@ -573,15 +576,15 @@ export default function ExpeditionDetail() {
       const url = data?.portalUrl || response.data?.portalUrl
       setPortalLink(url)
       setShowPortalModal(true)
-      toast.success('Enlace de portal generado')
+      toast.success(t('expeditions.portalGenerated'))
     } catch (error) {
-      toast.error('Error al enviar enlace')
+      toast.error(t('expeditions.portalError'))
     }
   }
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text)
-    toast.success('Link copiado al portapapeles')
+    toast.success(t('expeditions.linkCopied'))
   }
 
   const handleGenerateH1 = async () => {
@@ -602,10 +605,10 @@ export default function ExpeditionDetail() {
       const expeditionData = expResponse.data?.data || expResponse.data
       setExpedition(expeditionData)
 
-      toast.success('Declaracion H1 generada correctamente')
+      toast.success(t('expeditions.h1GeneratedSuccess'))
     } catch (error) {
       console.error('H1 generation error:', error)
-      toast.error(error.response?.data?.error || 'Error al generar H1')
+      toast.error(error.response?.data?.error || t('expeditions.h1GenerateError'))
     } finally {
       setGeneratingH1(false)
     }
@@ -620,15 +623,15 @@ export default function ExpeditionDetail() {
       a.href = url
       a.download = `H1_${expedition.expeditionId}.xml`
       a.click()
-      toast.success('XML descargado')
+      toast.success(t('expeditions.xmlDownloaded'))
     } catch (error) {
-      toast.error('Error al exportar XML')
+      toast.error(t('expeditions.xmlExportError'))
     }
   }
 
   const handleSubmitToAEAT = async () => {
     if (!expedition.declaration?.xmlContent) {
-      toast.error('Primero debe generar la declaracion H1')
+      toast.error(t('expeditions.generateFirstH1'))
       return
     }
 
@@ -646,15 +649,15 @@ export default function ExpeditionDetail() {
 
       // Show toast based on channel
       if (resultData.channel === 'green') {
-        toast.success(`Canal VERDE - MRN: ${resultData.mrn}`)
+        toast.success(t('expeditions.greenChannelToast', { mrn: resultData.mrn }))
       } else if (resultData.channel === 'orange') {
-        toast('Canal NARANJA - Revision documental', { icon: '🟠' })
+        toast(t('expeditions.orangeChannelToast'), { icon: '🟠' })
       } else {
-        toast('Canal ROJO - Inspeccion fisica', { icon: '🔴' })
+        toast(t('expeditions.redChannelToast'), { icon: '🔴' })
       }
     } catch (error) {
       console.error('AEAT submission error:', error)
-      toast.error(error.response?.data?.error || 'Error al enviar a AEAT')
+      toast.error(error.response?.data?.error || t('expeditions.aeatSubmitError'))
     } finally {
       setSubmittingToAEAT(false)
     }
@@ -662,15 +665,15 @@ export default function ExpeditionDetail() {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      'draft': { label: 'Borrador', class: 'bg-gray-100 text-gray-800', icon: ClockIcon },
-      'pending_documents': { label: 'Pendiente Docs', class: 'bg-yellow-100 text-yellow-800', icon: ClockIcon },
-      'documents_received': { label: 'Docs Recibidos', class: 'bg-blue-100 text-blue-800', icon: DocumentTextIcon },
-      'validating_documents': { label: 'Validando', class: 'bg-purple-100 text-purple-800', icon: ExclamationCircleIcon },
-      'documents_validated': { label: 'Docs Validados', class: 'bg-indigo-100 text-indigo-800', icon: CheckCircleIcon },
-      'ready_for_declaration': { label: 'Listo Declaracion', class: 'bg-cyan-100 text-cyan-800', icon: DocumentTextIcon },
-      'declaration_submitted': { label: 'Presentada', class: 'bg-orange-100 text-orange-800', icon: CheckCircleIcon },
-      'green_channel': { label: 'Canal Verde', class: 'bg-green-100 text-green-800', icon: CheckCircleIcon },
-      'completed': { label: 'Completado', class: 'bg-green-100 text-green-800', icon: CheckCircleIcon }
+      'draft': { label: t('expeditions.statusDraft'), class: 'bg-gray-100 text-gray-800', icon: ClockIcon },
+      'pending_documents': { label: t('expeditions.statusPendingDocs'), class: 'bg-yellow-100 text-yellow-800', icon: ClockIcon },
+      'documents_received': { label: t('expeditions.statusDocsReceived'), class: 'bg-blue-100 text-blue-800', icon: DocumentTextIcon },
+      'validating_documents': { label: t('expeditions.statusValidating'), class: 'bg-purple-100 text-purple-800', icon: ExclamationCircleIcon },
+      'documents_validated': { label: t('expeditions.statusDocsValidated'), class: 'bg-indigo-100 text-indigo-800', icon: CheckCircleIcon },
+      'ready_for_declaration': { label: t('expeditions.statusDeclarationReady'), class: 'bg-cyan-100 text-cyan-800', icon: DocumentTextIcon },
+      'declaration_submitted': { label: t('expeditions.statusSubmitted'), class: 'bg-orange-100 text-orange-800', icon: CheckCircleIcon },
+      'green_channel': { label: t('expeditions.statusGreenChannel'), class: 'bg-green-100 text-green-800', icon: CheckCircleIcon },
+      'completed': { label: t('expeditions.statusCompleted'), class: 'bg-green-100 text-green-800', icon: CheckCircleIcon }
     }
     const config = statusMap[status] || { label: status, class: 'bg-gray-100 text-gray-800', icon: ClockIcon }
     const Icon = config.icon
@@ -709,7 +712,7 @@ export default function ExpeditionDetail() {
             <h1 className="text-2xl font-bold text-gray-900">{expedition.expeditionId}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${expedition.operationType === 'import' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
-                {expedition.operationType === 'import' ? 'Importacion' : 'Exportacion'}
+                {expedition.operationType === 'import' ? t('common.import') : t('common.export')}
               </span>
               {getStatusBadge(expedition.status)}
             </div>
@@ -722,14 +725,14 @@ export default function ExpeditionDetail() {
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-luci to-luci-dark text-white rounded-lg hover:opacity-90"
           >
             <SparklesIcon className="w-5 h-5" />
-            Analisis IA
+            {t('expeditions.aiAnalysis')}
           </button>
           <button
             onClick={handleSendPortalLink}
             className="btn-secondary flex items-center gap-2"
           >
             <PaperAirplaneIcon className="w-5 h-5" />
-            Enviar Portal
+            {t('expeditions.sendPortal')}
           </button>
           {expedition.operationType === 'import' && (
             <button
@@ -738,7 +741,7 @@ export default function ExpeditionDetail() {
               className="btn-primary flex items-center gap-2"
             >
               <DocumentTextIcon className="w-5 h-5" />
-              {generatingH1 ? 'Generando...' : 'Generar H1'}
+              {generatingH1 ? t('expeditions.generatingH1') : t('expeditions.generateH1')}
             </button>
           )}
         </div>
@@ -750,23 +753,23 @@ export default function ExpeditionDetail() {
           {/* Client Info */}
           <div className="card">
             <h2 className="text-lg font-semibold mb-4">
-              {expedition.operationType === 'import' ? 'Importador' : 'Exportador'}
+              {expedition.operationType === 'import' ? t('expeditions.importer') : t('expeditions.exporter')}
             </h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-500">Razon Social</p>
+                <p className="text-sm text-gray-500">{t('expeditions.companyName')}</p>
                 <p className="font-medium">{expedition.client?.companyName}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">NIF/CIF</p>
+                <p className="text-sm text-gray-500">{t('expeditions.nifCif')}</p>
                 <p className="font-medium">{expedition.client?.nif}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">EORI</p>
+                <p className="text-sm text-gray-500">{t('expeditions.eori')}</p>
                 <p className="font-medium">{expedition.client?.eori || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Contacto</p>
+                <p className="text-sm text-gray-500">{t('expeditions.contact')}</p>
                 <p className="font-medium">{expedition.client?.contact?.name || 'N/A'}</p>
                 <p className="text-xs text-gray-500">{expedition.client?.contact?.email || ''}</p>
               </div>
@@ -775,32 +778,32 @@ export default function ExpeditionDetail() {
 
           {/* Goods */}
           <div className="card">
-            <h2 className="text-lg font-semibold mb-4">Mercancias ({expedition.goods?.length || 0} partidas)</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('expeditions.goods')} ({expedition.goods?.length || 0} {t('expeditions.items').toLowerCase()})</h2>
             <div className="space-y-4">
               {expedition.goods?.map((item, index) => (
                 <div key={index} className="p-4 bg-gray-50 rounded-xl">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-medium">Partida {index + 1}</h3>
+                    <h3 className="font-medium">{t('expeditions.itemNumber', { number: index + 1 })}</h3>
                     <span className="text-sm text-gray-500">
-                      {item.taricCode || 'Sin TARIC'}
+                      {item.taricCode || t('expeditions.noTaric')}
                     </span>
                   </div>
                   <p className="text-gray-700 mb-3">{item.description}</p>
                   <div className="grid grid-cols-4 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-500">Origen</p>
+                      <p className="text-gray-500">{t('expeditions.origin')}</p>
                       <p className="font-medium">{item.originCountry}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Peso Neto</p>
+                      <p className="text-gray-500">{t('expeditions.netWeightLabel')}</p>
                       <p className="font-medium">{item.netWeight || '-'} kg</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Peso Bruto</p>
+                      <p className="text-gray-500">{t('expeditions.grossWeightLabel')}</p>
                       <p className="font-medium">{item.grossWeight || '-'} kg</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Valor</p>
+                      <p className="text-gray-500">{t('expeditions.value')}</p>
                       <p className="font-medium">{item.invoiceValue} {item.currency}</p>
                     </div>
                   </div>
@@ -812,9 +815,9 @@ export default function ExpeditionDetail() {
           {/* Documents */}
           <div className="card">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Documentos</h2>
+              <h2 className="text-lg font-semibold">{t('expeditions.documents')}</h2>
               <span className="text-sm text-gray-500">
-                {expedition.documents?.length || 0} subidos
+                {expedition.documents?.length || 0} {t('expeditions.uploaded')}
               </span>
             </div>
 
@@ -830,7 +833,7 @@ export default function ExpeditionDetail() {
                       </div>
                     </div>
                     <span className={`badge ${doc.validationStatus === 'VALIDATED' ? 'badge-completed' : 'badge-pending'}`}>
-                      {doc.validationStatus === 'VALIDATED' ? 'Validado' : 'Pendiente'}
+                      {doc.validationStatus === 'VALIDATED' ? t('expeditions.validated') : t('expeditions.pendingValidation')}
                     </span>
                   </div>
                 ))}
@@ -838,8 +841,8 @@ export default function ExpeditionDetail() {
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <DocumentArrowUpIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>No hay documentos subidos</p>
-                <p className="text-sm">El cliente puede subirlos desde el portal</p>
+                <p>{t('expeditions.noDocuments')}</p>
+                <p className="text-sm">{t('expeditions.clientCanUpload')}</p>
               </div>
             )}
           </div>
@@ -849,7 +852,7 @@ export default function ExpeditionDetail() {
         <div className="space-y-6">
           {/* Checklist */}
           <div className="card">
-            <h2 className="text-lg font-semibold mb-4">Checklist de Documentos</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('expeditions.documentChecklist')}</h2>
             {checklist?.checklist ? (
               <div className="space-y-2">
                 {checklist.checklist.map((item, index) => (
@@ -866,37 +869,37 @@ export default function ExpeditionDetail() {
                     )}
                     <span>{item.name}</span>
                     {item.required && !item.uploaded && (
-                      <span className="text-xs text-red-500 ml-auto">Requerido</span>
+                      <span className="text-xs text-red-500 ml-auto">{t('expeditions.required')}</span>
                     )}
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">Cargando checklist...</p>
+              <p className="text-gray-500 text-sm">{t('expeditions.loadingChecklist')}</p>
             )}
           </div>
 
           {/* Transport Info */}
           <div className="card">
-            <h2 className="text-lg font-semibold mb-4">Transporte</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('expeditions.transport')}</h2>
             <div className="space-y-3">
               <div>
-                <p className="text-sm text-gray-500">Modo</p>
+                <p className="text-sm text-gray-500">{t('expeditions.modeLabel')}</p>
                 <p className="font-medium capitalize">{expedition.transportMode}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Incoterm</p>
+                <p className="text-sm text-gray-500">{t('expeditions.incoterm')}</p>
                 <p className="font-medium">{expedition.incoterm?.code} {expedition.incoterm?.place}</p>
               </div>
               {expedition.transport?.documentNumber && (
                 <div>
-                  <p className="text-sm text-gray-500">Doc. Transporte</p>
+                  <p className="text-sm text-gray-500">{t('expeditions.transportDoc')}</p>
                   <p className="font-medium">{expedition.transport.documentNumber}</p>
                 </div>
               )}
               {expedition.transport?.carrier && (
                 <div>
-                  <p className="text-sm text-gray-500">Transportista</p>
+                  <p className="text-sm text-gray-500">{t('expeditions.carrier')}</p>
                   <p className="font-medium">{expedition.transport.carrier}</p>
                 </div>
               )}
@@ -906,55 +909,55 @@ export default function ExpeditionDetail() {
           {/* H1 Generation Result */}
           {(h1Result || expedition.declaration?.xmlContent) && (
             <div className="card border-2 border-green-200 bg-green-50">
-              <h2 className="text-lg font-semibold mb-4 text-green-800">Declaracion H1 Generada</h2>
+              <h2 className="text-lg font-semibold mb-4 text-green-800">{t('expeditions.h1Generated')}</h2>
 
               <div className="space-y-3 text-sm">
                 <div>
-                  <p className="text-gray-500">LRN (Referencia Local)</p>
+                  <p className="text-gray-500">{t('expeditions.lrn')}</p>
                   <p className="font-medium font-mono text-xs">{h1Result?.declaration?.lrn || expedition.declaration?.lrn}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Tipo Declaracion</p>
-                  <p className="font-medium">H1 - Importacion</p>
+                  <p className="text-gray-500">{t('expeditions.declarationType')}</p>
+                  <p className="font-medium">{t('expeditions.h1Import')}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Aduana</p>
+                  <p className="text-gray-500">{t('expeditions.customsOffice')}</p>
                   <p className="font-medium">{h1Result?.declaration?.customsOffice || expedition.declaration?.customsOffice}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Regimen</p>
-                  <p className="font-medium">{h1Result?.declaration?.regime || expedition.declaration?.regime || '40'} - Despacho libre practica</p>
+                  <p className="text-gray-500">{t('expeditions.regime')}</p>
+                  <p className="font-medium">{h1Result?.declaration?.regime || expedition.declaration?.regime || '40'} - {t('expeditions.freeCirculation')}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Preferencia</p>
+                  <p className="text-gray-500">{t('expeditions.preference')}</p>
                   <p className="font-medium">{h1Result?.declaration?.preference || expedition.declaration?.preference || '100'}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Estado</p>
+                  <p className="text-gray-500">{t('common.status')}</p>
                   <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                    {expedition.declaration?.status === 'draft' ? 'Borrador' : expedition.declaration?.status}
+                    {expedition.declaration?.status === 'draft' ? t('expeditions.statusDraft') : expedition.declaration?.status}
                   </span>
                 </div>
               </div>
 
               {h1Result?.summary && (
                 <div className="mt-4 p-3 bg-white rounded-lg border">
-                  <p className="text-gray-700 font-medium text-sm mb-2">Resumen:</p>
+                  <p className="text-gray-700 font-medium text-sm mb-2">{t('expeditions.summaryLabel')}</p>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-gray-500">Partidas:</span>
+                      <span className="text-gray-500">{t('expeditions.items')}:</span>
                       <span className="ml-1 font-medium">{h1Result.summary.totalItems}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Bultos:</span>
+                      <span className="text-gray-500">{t('expeditions.totalPackages')}:</span>
                       <span className="ml-1 font-medium">{h1Result.summary.totalPackages}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Peso Bruto:</span>
+                      <span className="text-gray-500">{t('expeditions.totalGrossWeight')}:</span>
                       <span className="ml-1 font-medium">{h1Result.summary.totalGrossWeight?.toLocaleString('es-ES')} kg</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Valor:</span>
+                      <span className="text-gray-500">{t('expeditions.totalValue')}:</span>
                       <span className="ml-1 font-medium">{h1Result.summary.totalValue?.toLocaleString('es-ES')} EUR</span>
                     </div>
                   </div>
@@ -963,7 +966,7 @@ export default function ExpeditionDetail() {
 
               {h1Result?.warnings && h1Result.warnings.length > 0 && (
                 <div className="mt-4 p-3 bg-yellow-100 rounded-lg">
-                  <p className="text-yellow-800 font-medium text-sm mb-1">Advertencias:</p>
+                  <p className="text-yellow-800 font-medium text-sm mb-1">{t('expeditions.warnings')}:</p>
                   <ul className="text-yellow-700 text-xs list-disc list-inside">
                     {h1Result.warnings.map((w, i) => <li key={i}>{w}</li>)}
                   </ul>
@@ -973,10 +976,10 @@ export default function ExpeditionDetail() {
               {/* XML Preview */}
               {(h1Result?.xml || expedition.declaration?.xmlContent) && (
                 <div className="mt-4">
-                  <p className="text-gray-600 font-medium text-sm mb-2">XML para AEAT (CC515C):</p>
+                  <p className="text-gray-600 font-medium text-sm mb-2">{t('expeditions.xmlForAeat')}</p>
                   <pre className="text-xs bg-gray-900 text-green-400 p-3 rounded-lg overflow-auto max-h-64 font-mono">
                     {(h1Result?.xml || expedition.declaration?.xmlContent)?.substring(0, 2000)}
-                    {(h1Result?.xml || expedition.declaration?.xmlContent)?.length > 2000 && '\n\n... (XML truncado para visualizacion)'}
+                    {(h1Result?.xml || expedition.declaration?.xmlContent)?.length > 2000 && `\n\n${t('expeditions.xmlTruncated')}`}
                   </pre>
                 </div>
               )}
@@ -992,12 +995,12 @@ export default function ExpeditionDetail() {
                     a.download = `H1_${expedition.expeditionId}_${expedition.declaration?.lrn || 'draft'}.xml`
                     a.click()
                     window.URL.revokeObjectURL(url)
-                    toast.success('XML descargado')
+                    toast.success(t('expeditions.xmlDownloaded'))
                   }}
                   className="btn-success text-sm flex items-center gap-1"
                 >
                   <DocumentTextIcon className="w-4 h-4" />
-                  Descargar XML
+                  {t('expeditions.downloadXml')}
                 </button>
                 <button
                   onClick={() => {
@@ -1012,7 +1015,7 @@ export default function ExpeditionDetail() {
                   }}
                   className="btn-secondary text-sm"
                 >
-                  Descargar JSON
+                  {t('expeditions.downloadJson')}
                 </button>
               </div>
 
@@ -1025,10 +1028,10 @@ export default function ExpeditionDetail() {
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                   >
                     <CloudArrowUpIcon className="w-5 h-5" />
-                    {submittingToAEAT ? 'Enviando a AEAT...' : 'Enviar a AEAT'}
+                    {submittingToAEAT ? t('expeditions.submittingToAeat') : t('expeditions.submitToAeat')}
                   </button>
                   <p className="text-xs text-gray-500 mt-2 text-center">
-                    Modo demo: simula el envio a los Web Services de AEAT
+                    {t('expeditions.demoMode')}
                   </p>
                 </div>
               )}
@@ -1049,58 +1052,58 @@ export default function ExpeditionDetail() {
                 expedition.declaration?.channel === 'red' ? 'text-red-800' :
                 'text-blue-800'
               }`}>
-                Respuesta AEAT
+                {t('expeditions.aeatResponse')}
               </h2>
 
               <div className="space-y-3 text-sm">
                 <div>
-                  <p className="text-gray-500">MRN (Movement Reference Number)</p>
+                  <p className="text-gray-500">{t('expeditions.mrnLabel')}</p>
                   <p className="font-mono font-bold text-lg">{aeatResult?.mrn || expedition.declaration?.mrn}</p>
                 </div>
 
                 <div>
-                  <p className="text-gray-500">Canal de Inspeccion</p>
+                  <p className="text-gray-500">{t('expeditions.inspectionChannel')}</p>
                   <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${
                     expedition.declaration?.channel === 'green' ? 'bg-green-200 text-green-800' :
                     expedition.declaration?.channel === 'orange' ? 'bg-orange-200 text-orange-800' :
                     'bg-red-200 text-red-800'
                   }`}>
-                    {expedition.declaration?.channel === 'green' ? '🟢 CANAL VERDE' :
-                     expedition.declaration?.channel === 'orange' ? '🟠 CANAL NARANJA' :
-                     '🔴 CANAL ROJO'}
+                    {expedition.declaration?.channel === 'green' ? t('expeditions.greenChannelFull') :
+                     expedition.declaration?.channel === 'orange' ? t('expeditions.orangeChannelFull') :
+                     t('expeditions.redChannelFull')}
                   </span>
                 </div>
 
                 <div>
-                  <p className="text-gray-500">Estado</p>
+                  <p className="text-gray-500">{t('common.status')}</p>
                   <p className="font-medium">
-                    {expedition.declaration?.channel === 'green' ? 'Levante autorizado - Mercancia puede retirarse' :
-                     expedition.declaration?.channel === 'orange' ? 'Pendiente revision documental' :
-                     'Pendiente inspeccion fisica'}
+                    {expedition.declaration?.channel === 'green' ? t('expeditions.releaseAuthorized') :
+                     expedition.declaration?.channel === 'orange' ? t('expeditions.pendingDocReview') :
+                     t('expeditions.pendingPhysicalInspection')}
                   </p>
                 </div>
 
                 {expedition.declaration?.levanteDate && (
                   <div>
-                    <p className="text-gray-500">Fecha Levante</p>
+                    <p className="text-gray-500">{t('expeditions.releaseDate')}</p>
                     <p className="font-medium">{new Date(expedition.declaration.levanteDate).toLocaleString('es-ES')}</p>
                   </div>
                 )}
 
                 {aeatResult?.duties && (
                   <div className="mt-3 p-3 bg-white rounded-lg border">
-                    <p className="font-medium text-gray-700 mb-2">Liquidacion Estimada:</p>
+                    <p className="font-medium text-gray-700 mb-2">{t('expeditions.estimatedSettlement')}</p>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <span className="text-gray-500">Derechos:</span>
+                        <span className="text-gray-500">{t('expeditions.duties')}:</span>
                         <span className="ml-1 font-medium">{aeatResult.duties.dutyAmount?.toLocaleString('es-ES')} EUR</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">IVA:</span>
+                        <span className="text-gray-500">{t('expeditions.vat')}:</span>
                         <span className="ml-1 font-medium">{aeatResult.duties.vatAmount?.toLocaleString('es-ES')} EUR</span>
                       </div>
                       <div className="col-span-2 pt-1 border-t">
-                        <span className="text-gray-700 font-medium">Total:</span>
+                        <span className="text-gray-700 font-medium">{t('common.total')}:</span>
                         <span className="ml-1 font-bold">{aeatResult.duties.totalAmount?.toLocaleString('es-ES')} EUR</span>
                       </div>
                     </div>
@@ -1109,7 +1112,7 @@ export default function ExpeditionDetail() {
 
                 {aeatResult?.simulated && (
                   <p className="text-xs text-gray-500 italic mt-2">
-                    * Respuesta simulada (modo demo)
+                    {t('expeditions.simulatedResponse')}
                   </p>
                 )}
               </div>
@@ -1161,26 +1164,26 @@ export default function ExpeditionDetail() {
 
           {/* Actions */}
           <div className="card">
-            <h2 className="text-lg font-semibold mb-4">Acciones</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('expeditions.actions')}</h2>
             <div className="space-y-2">
               <Link
                 to={`/classification?expedition=${id}`}
                 className="w-full btn-secondary text-center block"
               >
-                Clasificar TARIC
+                {t('expeditions.classifyTaric')}
               </Link>
               <Link
                 to={`/calculator?expedition=${id}`}
                 className="w-full btn-secondary text-center block"
               >
-                Calcular Derechos
+                {t('expeditions.calculateDuties')}
               </Link>
               {expedition.declaration?.h1Data && (
                 <button
                   onClick={handleExportXML}
                   className="w-full btn-success"
                 >
-                  Descargar XML H1
+                  {t('expeditions.downloadXmlH1')}
                 </button>
               )}
               <button
@@ -1194,13 +1197,13 @@ export default function ExpeditionDetail() {
                     a.download = `H1_${expedition.expeditionId}.pdf`
                     a.click()
                     window.URL.revokeObjectURL(url)
-                    toast.success('PDF descargado')
-                  } catch { toast.error('Error al generar PDF') }
+                    toast.success(t('expeditions.pdfDownloaded'))
+                  } catch { toast.error(t('expeditions.pdfError')) }
                 }}
                 className="w-full btn-primary flex items-center justify-center gap-2"
               >
                 <DocumentTextIcon className="w-4 h-4" />
-                Descargar PDF Declaracion
+                {t('expeditions.downloadPdf')}
               </button>
               <button
                 onClick={async () => {
@@ -1213,20 +1216,20 @@ export default function ExpeditionDetail() {
                     a.download = `Resumen_${expedition.expeditionId}.pdf`
                     a.click()
                     window.URL.revokeObjectURL(url)
-                    toast.success('Resumen PDF descargado')
-                  } catch { toast.error('Error al generar resumen') }
+                    toast.success(t('expeditions.summaryPdfDownloaded'))
+                  } catch { toast.error(t('expeditions.summaryPdfError')) }
                 }}
                 className="w-full btn-secondary flex items-center justify-center gap-2"
               >
                 <DocumentTextIcon className="w-4 h-4" />
-                Resumen Expediente PDF
+                {t('expeditions.summaryPdf')}
               </button>
             </div>
           </div>
 
           {/* Timeline */}
           <div className="card">
-            <h2 className="text-lg font-semibold mb-4">Historial</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('expeditions.timeline')}</h2>
             <div className="space-y-3">
               {expedition.timeline?.slice(-5).reverse().map((event, index) => (
                 <div key={index} className="flex gap-3 text-sm">
@@ -1250,11 +1253,11 @@ export default function ExpeditionDetail() {
           <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 p-6">
             <div className="flex items-center gap-3 mb-4">
               <LinkIcon className="h-8 w-8 text-luci" />
-              <h3 className="text-xl font-bold">Link del Portal del Cliente</h3>
+              <h3 className="text-xl font-bold">{t('expeditions.portalLinkTitle')}</h3>
             </div>
 
             <p className="text-gray-600 mb-4">
-              Comparte este enlace con tu cliente para que pueda subir los documentos requeridos:
+              {t('expeditions.portalLinkDescription')}
             </p>
 
             <div className="bg-gray-100 p-4 rounded-lg mb-4">
@@ -1268,7 +1271,7 @@ export default function ExpeditionDetail() {
                 <button
                   onClick={() => copyToClipboard(portalLink)}
                   className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-                  title="Copiar al portapapeles"
+                  title={t('expeditions.copyLink')}
                 >
                   <ClipboardDocumentIcon className="h-5 w-5 text-gray-600" />
                 </button>
@@ -1281,7 +1284,7 @@ export default function ExpeditionDetail() {
                 className="flex-1 btn-primary flex items-center justify-center gap-2"
               >
                 <ClipboardDocumentIcon className="h-5 w-5" />
-                Copiar Link
+                {t('expeditions.copyLink')}
               </button>
               <a
                 href={portalLink}
@@ -1290,14 +1293,13 @@ export default function ExpeditionDetail() {
                 className="flex-1 btn-secondary flex items-center justify-center gap-2"
               >
                 <LinkIcon className="h-5 w-5" />
-                Abrir Portal
+                {t('expeditions.openPortal')}
               </a>
             </div>
 
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-700">
-                <strong>Nota:</strong> El cliente no necesita crear cuenta.
-                El link es unico para este expediente y expira en 30 dias.
+                <strong>{t('common.notes') || 'Nota'}:</strong> {t('expeditions.portalNote')}
               </p>
             </div>
 
@@ -1305,7 +1307,7 @@ export default function ExpeditionDetail() {
               onClick={() => setShowPortalModal(false)}
               className="w-full mt-4 py-2 text-gray-500 hover:text-gray-700"
             >
-              Cerrar
+              {t('common.close')}
             </button>
           </div>
         </div>

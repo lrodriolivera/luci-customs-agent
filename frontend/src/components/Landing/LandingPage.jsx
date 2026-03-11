@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   TagIcon,
   CalculatorIcon,
@@ -19,134 +20,83 @@ import {
   PhoneIcon
 } from '@heroicons/react/24/outline'
 
-const features = [
-  {
-    icon: TagIcon,
-    title: 'Clasificacion TARIC con IA',
-    description: 'Clasificacion arancelaria automatica con inteligencia artificial. Navega el arbol TARIC completo generado en tiempo real.'
-  },
-  {
-    icon: CalculatorIcon,
-    title: 'Calculo de Derechos',
-    description: 'Calcula aranceles, IVA y preferencias comerciales al instante. Incluye tarifas estacionales y precios de entrada.'
-  },
-  {
-    icon: ClipboardDocumentCheckIcon,
-    title: 'PUE SOIVRE/ROHS Digital',
-    description: 'Solicitudes de inspeccion SOIVRE y ROHS/RAEE automatizadas con autorrelleno desde MRN y validacion RII.'
-  },
-  {
-    icon: DocumentTextIcon,
-    title: 'Declaraciones H1/H7/ENS',
-    description: 'Genera declaraciones aduaneras H1, H7 e-commerce y ENS/ICS2 con asistencia de inteligencia artificial.'
-  },
-  {
-    icon: ShieldCheckIcon,
-    title: 'Regimenes y Garantias',
-    description: 'Gestion completa de regimenes especiales, garantias CGU, OEA y transitos NCTS.'
-  },
-  {
-    icon: ChatBubbleLeftRightIcon,
-    title: 'Asistente IA 24/7',
-    description: 'Consulta normativa CAU, reglamentos y procedimientos aduaneros con un experto virtual disponible siempre.'
-  }
-]
-
-const audiences = [
-  {
-    icon: BuildingOfficeIcon,
-    title: 'Agentes de Aduanas',
-    description: 'Acelera tu despacho aduanero con clasificacion IA, calculo automatico de derechos y gestion integral de expedientes.'
-  },
-  {
-    icon: TruckIcon,
-    title: 'Freight Forwarders',
-    description: 'Integra el despacho aduanero en tu cadena logistica. Declaraciones H1, PUE SOIVRE y control de circuitos en una sola plataforma.'
-  },
-  {
-    icon: CubeTransparentIcon,
-    title: 'Importadores y Exportadores',
-    description: 'Controla tus operaciones de comercio exterior. Visibilidad completa de aranceles, plazos e inspecciones.'
-  }
-]
-
-const plans = [
-  {
-    name: 'Starter',
-    planId: 'free',
-    price: 'Gratis',
-    period: '',
-    description: 'Para probar la plataforma',
-    features: [
-      '5 declaraciones / mes',
-      '1 usuario',
-      'Clasificacion TARIC con IA',
-      'Calculo de aranceles e IVA',
-      'Chat basico con asistente IA',
-    ],
-    cta: 'Empezar Gratis',
-    ctaLink: '/login',
-    highlighted: false
-  },
-  {
-    name: 'Professional',
-    planId: 'professional',
-    price: '149',
-    period: '/ mes',
-    description: 'Para agencias y transitarios',
-    features: [
-      '50 declaraciones / mes',
-      'H1, H7, AES, NCTS, ENS completos',
-      'Envio directo a AEAT',
-      'Hasta 5 usuarios',
-      'PDF declaraciones (DUA oficial)',
-      'Portal de clientes',
-    ],
-    cta: 'Probar 14 dias gratis',
-    ctaLink: '/login?plan=professional',
-    highlighted: false
-  },
-  {
-    name: 'Business',
-    planId: 'business',
-    price: '349',
-    period: '/ mes',
-    description: 'Para operadores con volumen',
-    features: [
-      '200 declaraciones / mes',
-      'Todo de Professional',
-      'PUE SOIVRE / ROHS completo',
-      'Hasta 15 usuarios',
-      'API publica + analytics',
-      'Soporte prioritario',
-    ],
-    cta: 'Empezar ahora',
-    ctaLink: '/login?plan=business',
-    highlighted: true
-  },
-  {
-    name: 'Enterprise',
-    planId: 'enterprise',
-    price: 'Desde 799',
-    period: '/ mes',
-    description: 'Para grandes operadores',
-    features: [
-      'Declaraciones ilimitadas',
-      'Todo de Business',
-      'Usuarios ilimitados',
-      'Integraciones custom (ERP, WMS)',
-      'Soporte dedicado + onboarding',
-      'SLA 99.9%',
-    ],
-    cta: 'Contactar Ventas',
-    ctaLink: '#contact',
-    highlighted: false
-  }
-]
-
 export default function LandingPage() {
+  const { t } = useTranslation()
   const [contactForm, setContactForm] = useState({ name: '', email: '', company: '', message: '' })
   const [formSent, setFormSent] = useState(false)
+
+  const features = [
+    { icon: TagIcon, title: t('landing.feature1Title'), description: t('landing.feature1Desc') },
+    { icon: CalculatorIcon, title: t('landing.feature2Title'), description: t('landing.feature2Desc') },
+    { icon: ClipboardDocumentCheckIcon, title: t('landing.feature3Title'), description: t('landing.feature3Desc') },
+    { icon: DocumentTextIcon, title: t('landing.feature4Title'), description: t('landing.feature4Desc') },
+    { icon: ShieldCheckIcon, title: t('landing.feature5Title'), description: t('landing.feature5Desc') },
+    { icon: ChatBubbleLeftRightIcon, title: t('landing.feature6Title'), description: t('landing.feature6Desc') }
+  ]
+
+  const audiences = [
+    { icon: BuildingOfficeIcon, title: t('landing.audience1Title'), description: t('landing.audience1Desc') },
+    { icon: TruckIcon, title: t('landing.audience2Title'), description: t('landing.audience2Desc') },
+    { icon: CubeTransparentIcon, title: t('landing.audience3Title'), description: t('landing.audience3Desc') }
+  ]
+
+  const plans = [
+    {
+      name: 'Professional',
+      planId: 'professional',
+      price: '149',
+      period: t('landing.perMonth'),
+      description: t('landing.planProfessionalDesc'),
+      features: [
+        '50 declaraciones / mes',
+        'H1, H7, AES, NCTS, ENS completos',
+        'Envio directo a AEAT',
+        'Hasta 5 usuarios',
+        'PDF declaraciones (DUA oficial)',
+        'Clasificacion TARIC con IA',
+        'Portal de clientes',
+      ],
+      cta: t('landing.requestFreeDemo'),
+      ctaLink: '/login?plan=professional',
+      highlighted: false
+    },
+    {
+      name: 'Business',
+      planId: 'business',
+      price: '749',
+      period: t('landing.perMonth'),
+      description: t('landing.planBusinessDesc'),
+      features: [
+        '200 declaraciones / mes',
+        'Todo de Professional',
+        'PUE SOIVRE / ROHS completo',
+        'Hasta 15 usuarios',
+        'API publica + analytics',
+        'Soporte prioritario',
+      ],
+      cta: t('landing.requestDemo'),
+      ctaLink: '/login?plan=business',
+      highlighted: true
+    },
+    {
+      name: 'Enterprise',
+      planId: 'enterprise',
+      price: t('landing.planCustom'),
+      period: '',
+      description: t('landing.planEnterpriseDesc'),
+      features: [
+        'Declaraciones ilimitadas',
+        'Todo de Business',
+        'Usuarios ilimitados',
+        'Integraciones custom (ERP, WMS)',
+        'Soporte dedicado + onboarding',
+        'SLA 99.9%',
+      ],
+      cta: t('landing.contact'),
+      ctaLink: '#contact',
+      highlighted: false
+    }
+  ]
 
   const handleContactSubmit = async (e) => {
     e.preventDefault()
@@ -183,17 +133,17 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="hidden md:flex items-center gap-8 text-sm">
-              <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Funciones</a>
-              <a href="#for-who" className="text-gray-600 hover:text-gray-900 transition-colors">Para quien</a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Precios</a>
-              <a href="#contact" className="text-gray-600 hover:text-gray-900 transition-colors">Contacto</a>
+              <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">{t('landing.features')}</a>
+              <a href="#for-who" className="text-gray-600 hover:text-gray-900 transition-colors">{t('landing.forWhom')}</a>
+              <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">{t('landing.pricing')}</a>
+              <a href="#contact" className="text-gray-600 hover:text-gray-900 transition-colors">{t('landing.contact')}</a>
             </div>
             <div className="flex items-center gap-3">
               <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 font-medium">
-                Iniciar Sesion
+                {t('landing.login')}
               </Link>
               <a href="#contact" className="bg-gradient-to-r from-sky-500 to-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-sky-500/25 transition-all">
-                Solicitar Demo
+                {t('landing.requestDemo')}
               </a>
             </div>
           </div>
@@ -205,27 +155,27 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-sky-50 text-sky-700 text-sm font-medium px-4 py-1.5 rounded-full mb-6 border border-sky-100">
             <SparklesIcon className="w-4 h-4" />
-            Potenciado por Inteligencia Artificial
+            {t('landing.aiPowered')}
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight leading-tight">
-            Tu Agente Aduanero
+            {t('landing.heroTitle1')}
             <br />
             <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
-              Inteligente
+              {t('landing.heroTitle2')}
             </span>
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Clasificacion TARIC con IA, calculo de derechos automatico y gestion completa de declaraciones aduaneras. Todo en una sola plataforma.
+            {t('landing.heroDescription')}
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="#contact" className="w-full sm:w-auto bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:shadow-xl hover:shadow-sky-500/25 transition-all text-center">
-              Solicitar Demo Gratuita
+              {t('landing.requestFreeDemo')}
             </a>
             <Link to="/login" className="w-full sm:w-auto bg-white text-gray-700 font-semibold px-8 py-3.5 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all text-center">
-              Probar Gratis
+              {t('landing.requestDemo')}
             </Link>
           </div>
-          <p className="mt-4 text-sm text-gray-400">Sin tarjeta de credito. 10 clasificaciones IA gratis al mes.</p>
+          <p className="mt-4 text-sm text-gray-400">{t('landing.trialInfo')}</p>
         </div>
       </section>
 
@@ -234,10 +184,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
-              Todo lo que necesitas para el despacho aduanero
+              {t('landing.featuresTitle')}
             </h2>
             <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-              Una plataforma integral que combina inteligencia artificial con el conocimiento experto en aduanas
+              {t('landing.featuresSubtitle')}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -259,10 +209,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
-              { value: '98', label: 'Capitulos TARIC' },
-              { value: '195', label: 'Paises cubiertos' },
-              { value: '<3s', label: 'Clasificacion IA' },
-              { value: '24/7', label: 'Disponibilidad' },
+              { value: '98', label: t('landing.statChapters') },
+              { value: '195', label: t('landing.statCountries') },
+              { value: '<3s', label: t('landing.statAiClassification') },
+              { value: '24/7', label: t('landing.statAvailability') },
             ].map((stat, i) => (
               <div key={i}>
                 <div className="text-3xl sm:text-4xl font-bold text-white">{stat.value}</div>
@@ -277,8 +227,8 @@ export default function LandingPage() {
       <section id="for-who" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Dissenado para profesionales del comercio exterior</h2>
-            <p className="mt-4 text-lg text-gray-600">Sea cual sea tu rol en la cadena de suministro, LUCI te ayuda</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">{t('landing.audienceTitle')}</h2>
+            <p className="mt-4 text-lg text-gray-600">{t('landing.audienceSubtitle')}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {audiences.map((audience, i) => (
@@ -298,10 +248,10 @@ export default function LandingPage() {
       <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Planes simples y transparentes</h2>
-            <p className="mt-4 text-lg text-gray-600">Empieza gratis, escala cuando lo necesites</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">{t('landing.pricingTitle')}</h2>
+            <p className="mt-4 text-lg text-gray-600">{t('landing.pricingSubtitle')}</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {plans.map((plan, i) => (
               <div key={i} className={`relative rounded-2xl p-8 ${
                 plan.highlighted
@@ -310,14 +260,14 @@ export default function LandingPage() {
               }`}>
                 {plan.highlighted && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full">
-                    Mas Popular
+                    {t('landing.mostPopular')}
                   </div>
                 )}
                 <div className="text-center">
                   <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
                   <p className="text-sm text-gray-500 mt-1">{plan.description}</p>
                   <div className="mt-4 mb-6">
-                    {plan.price === 'Gratis' || plan.price === 'Personalizado' ? (
+                    {plan.price === t('landing.planCustom') ? (
                       <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
                     ) : (
                       <div>
@@ -355,66 +305,66 @@ export default function LandingPage() {
       <section id="contact" className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-900">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white">Solicita una demo personalizada</h2>
-            <p className="mt-4 text-lg text-slate-400">Te mostramos como LUCI puede transformar tu despacho aduanero en 15 minutos</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white">{t('landing.contactTitle')}</h2>
+            <p className="mt-4 text-lg text-slate-400">{t('landing.contactSubtitle')}</p>
           </div>
 
           {formSent ? (
             <div className="text-center py-12 bg-slate-800 rounded-2xl">
               <CheckIcon className="w-16 h-16 text-green-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white">Solicitud enviada</h3>
-              <p className="text-slate-400 mt-2">Nos pondremos en contacto contigo en menos de 24h</p>
+              <h3 className="text-xl font-semibold text-white">{t('landing.contactSuccess')}</h3>
+              <p className="text-slate-400 mt-2">{t('landing.contactSuccessDesc')}</p>
             </div>
           ) : (
             <form onSubmit={handleContactSubmit} className="bg-slate-800 rounded-2xl p-8 space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Nombre</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">{t('landing.contactNameLabel')}</label>
                   <input
                     type="text"
                     required
                     value={contactForm.name}
                     onChange={e => setContactForm(p => ({ ...p, name: e.target.value }))}
                     className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 placeholder-slate-400"
-                    placeholder="Tu nombre"
+                    placeholder={t('landing.contactName')}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Email</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">{t('landing.contactEmailLabel')}</label>
                   <input
                     type="email"
                     required
                     value={contactForm.email}
                     onChange={e => setContactForm(p => ({ ...p, email: e.target.value }))}
                     className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 placeholder-slate-400"
-                    placeholder="tu@empresa.com"
+                    placeholder={t('landing.contactEmail')}
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Empresa</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">{t('landing.contactCompanyLabel')}</label>
                 <input
                   type="text"
                   value={contactForm.company}
                   onChange={e => setContactForm(p => ({ ...p, company: e.target.value }))}
                   className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 placeholder-slate-400"
-                  placeholder="Nombre de tu empresa"
+                  placeholder={t('landing.contactCompany')}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Mensaje (opcional)</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">{t('landing.contactMessage')}</label>
                 <textarea
                   rows={3}
                   value={contactForm.message}
                   onChange={e => setContactForm(p => ({ ...p, message: e.target.value }))}
                   className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 placeholder-slate-400 resize-none"
-                  placeholder="Cuentanos sobre tu operativa..."
+                  placeholder={t('landing.contactMessagePlaceholder')}
                 />
               </div>
               <button type="submit" className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold py-3 rounded-lg hover:shadow-lg hover:shadow-sky-500/25 transition-all">
-                Solicitar Demo Gratuita
+                {t('landing.contactButton')}
               </button>
-              <p className="text-center text-xs text-slate-500">Te respondemos en menos de 24 horas laborables</p>
+              <p className="text-center text-xs text-slate-500">{t('landing.contactResponse')}</p>
             </form>
           )}
         </div>
@@ -433,12 +383,12 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center flex-wrap gap-4 sm:gap-6 text-sm text-slate-400">
               <a href="https://strixai.es" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">strixai.es</a>
-              <Link to="/privacy" className="hover:text-white transition-colors">Privacidad</Link>
-              <Link to="/terms" className="hover:text-white transition-colors">Terminos</Link>
-              <Link to="/cookies" className="hover:text-white transition-colors">Cookies</Link>
+              <Link to="/privacy" className="hover:text-white transition-colors">{t('landing.footerPrivacy')}</Link>
+              <Link to="/terms" className="hover:text-white transition-colors">{t('landing.footerTerms')}</Link>
+              <Link to="/cookies" className="hover:text-white transition-colors">{t('landing.footerCookies')}</Link>
             </div>
             <p className="text-sm text-slate-500">
-              Strix AI {new Date().getFullYear()}. Todos los derechos reservados.
+              Strix AI {new Date().getFullYear()}. {t('landing.footerRights')}
             </p>
           </div>
         </div>

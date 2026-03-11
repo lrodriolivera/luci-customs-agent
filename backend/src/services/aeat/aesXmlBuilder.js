@@ -68,7 +68,8 @@ function buildAESExportXML(data) {
             <ent:previousProcedure>00</ent:previousProcedure>
           </ent:Procedure>${g.countryOfOrigin ? `
           <ent:Origin>
-            <ent:countryOfOrigin>${g.countryOfOrigin}</ent:countryOfOrigin>
+            <ent:countryOfOrigin>${g.countryOfOrigin}</ent:countryOfOrigin>${countryOfExport === 'ES' ? `
+            <ent:regionOfDispatch>${g.regionOfDispatch || data.provinciaExport || '28'}</ent:regionOfDispatch>` : ''}
           </ent:Origin>` : ''}
           <ent:Commodity>
             <ent:descriptionOfGoods>${(g.description || '').substring(0, 512)}</ent:descriptionOfGoods>
@@ -155,8 +156,8 @@ function buildAESExportXML(data) {
           <ent:countryOfDestination>${destinationCountry}</ent:countryOfDestination>
           ${deliveryTermsXML}
           <ent:Consignment>
-            <ent:containerIndicator>0</ent:containerIndicator>
-            <ent:inlandModeOfTransport>${inlandModeOfTransport}</ent:inlandModeOfTransport>
+            <ent:containerIndicator>0</ent:containerIndicator>${!data.directExport && inlandModeOfTransport ? `
+            <ent:inlandModeOfTransport>${inlandModeOfTransport}</ent:inlandModeOfTransport>` : ''}
             <ent:modeOfTransportAtTheBorder>${modeOfTransportAtBorder}</ent:modeOfTransportAtTheBorder>
             <ent:grossMass>${totalGross.toFixed(3)}</ent:grossMass>
             <ent:Consignee>
@@ -174,14 +175,22 @@ function buildAESExportXML(data) {
               <ent:qualifierOfIdentification>${locationOfGoodsQualifier}</ent:qualifierOfIdentification>
               <ent:authorisationNumber>${locationAuthorisationNumber || customsOfficeExport}</ent:authorisationNumber>
             </ent:LocationOfGoods>
-            <ent:DepartureTransportMeans>
+${!data.directExport ? `            <ent:DepartureTransportMeans>
               <ent:sequenceNumber>1</ent:sequenceNumber>
               <ent:typeOfIdentification>${departureTransportType}</ent:typeOfIdentification>
               <ent:identificationNumber>${departureTransportId || 'UNKNOWN'}</ent:identificationNumber>
               <ent:nationality>${departureTransportCountry || countryOfExport}</ent:nationality>
-            </ent:DepartureTransportMeans>
+            </ent:DepartureTransportMeans>` : ''}${security === '2' ? `
+            <ent:CountryOfRoutingOfConsignment>
+              <ent:sequenceNumber>1</ent:sequenceNumber>
+              <ent:country>${countryOfExport}</ent:country>
+            </ent:CountryOfRoutingOfConsignment>
+            <ent:CountryOfRoutingOfConsignment>
+              <ent:sequenceNumber>2</ent:sequenceNumber>
+              <ent:country>${destinationCountry}</ent:country>
+            </ent:CountryOfRoutingOfConsignment>` : ''}
             <ent:ActiveBorderTransportMeans>
-              <ent:typeOfIdentification>${activeBorderTransportType}</ent:typeOfIdentification>
+              <ent:typeOfIdentification>${activeBorderTransportType || departureTransportType}</ent:typeOfIdentification>
               <ent:identificationNumber>${activeBorderTransportId || departureTransportId || 'UNKNOWN'}</ent:identificationNumber>
               <ent:nationality>${activeBorderTransportCountry || departureTransportCountry || countryOfExport}</ent:nationality>
             </ent:ActiveBorderTransportMeans>

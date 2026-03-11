@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { paraduaneroAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import {
   ShieldCheckIcon,
   DocumentCheckIcon,
@@ -98,6 +99,7 @@ const STATUS_CONFIG = {
 }
 
 export default function ParaduaneroManager({ expeditionId, onControlsChange }) {
+  const { t } = useTranslation()
   const [controls, setControls] = useState([])
   const [analysis, setAnalysis] = useState(null)
   const [loading, setLoading] = useState(true)

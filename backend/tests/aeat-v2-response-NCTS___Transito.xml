@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><CC015CV1Sal xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC015CV1Sal.xsd" Id="20260303193247664025">
+	<messageSender>NTA.ES</messageSender>
+	<messageRecipient>ESB22477020</messageRecipient>
+	<preparationDateAndTime>2026-03-03T19:32:48</preparationDateAndTime>
+	<messageIdentification>20260303193247664025</messageIdentification>
+	<messageType>RE015C</messageType>
+	<correlationIdentifier>20260303153247532016346</correlationIdentifier>
+	<ControlRespuesta>
+		<tipoRespuesta>EF</tipoRespuesta>
+	</ControlRespuesta>
+	<FunctionalError>
+		<errorPointer>/CC015C/Consignment/HouseConsignment[1]/ConsignmentItem[1]/PreviousDocument[1]referenceNumber</errorPointer>
+		<errorCode>14</errorCode>
+		<errorReason>90006</errorReason>
+		<errorDescription>ADDV_ No existe el documento DUA y/o partida 25ES00280180003993001</errorDescription>
+		<originalAttributeValue>Documento: DUA25ES00280180003993 Extractor del tránsito: ESB22477020</originalAttributeValue>
+	</FunctionalError>
+</CC015CV1Sal>
+
+</env:Body></env:Envelope>

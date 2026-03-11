@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { regulationsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import {
   MagnifyingGlassIcon,
   DocumentTextIcon,
@@ -32,6 +33,7 @@ const SUGGESTED_QUESTIONS = [
 ]
 
 export default function RegulationSearch() {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState(null)
@@ -290,9 +292,9 @@ export default function RegulationSearch() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Buscador de Normativa</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('regulations.title')}</h1>
         <p className="text-gray-500 mt-1">
-          Busque en el CAU (EUR-Lex) y BOE. Seleccione una normativa para analizarla con LUCI.
+          {t('regulations.subtitle')}
         </p>
       </div>
 

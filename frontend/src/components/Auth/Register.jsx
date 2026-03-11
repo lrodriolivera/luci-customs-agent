@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
 import { useNavigate, Navigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
 export default function Register() {
+  const { t } = useTranslation()
   const { register, isAuthenticated } = useAuth()
   const navigate = useNavigate()
 
@@ -24,12 +26,12 @@ export default function Register() {
     e.preventDefault()
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Las contrasenas no coinciden')
+      toast.error(t('auth.passwordMismatch'))
       return
     }
 
     if (formData.password.length < 6) {
-      toast.error('La contrasena debe tener al menos 6 caracteres')
+      toast.error(t('auth.registerError'))
       return
     }
 
@@ -43,7 +45,7 @@ export default function Register() {
     )
 
     if (result.success) {
-      toast.success('Cuenta creada exitosamente. Bienvenido a LUCI!')
+      toast.success(t('auth.registerSuccess'))
       navigate('/')
     } else {
       toast.error(result.error)
@@ -65,18 +67,18 @@ export default function Register() {
             <span className="text-white text-4xl font-bold">L</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">LUCI</h1>
-          <p className="text-gray-600 mt-1">Agente Aduanero Inteligente</p>
+          <p className="text-gray-600 mt-1">{t('auth.subtitle')}</p>
         </div>
 
         {/* Register Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-            Crear Cuenta
+            {t('auth.registerTitle')}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="name" className="label">Nombre Completo</label>
+              <label htmlFor="name" className="label">{t('auth.fullName')}</label>
               <input
                 type="text"
                 id="name"
@@ -90,7 +92,7 @@ export default function Register() {
             </div>
 
             <div>
-              <label htmlFor="email" className="label">Correo Electronico</label>
+              <label htmlFor="email" className="label">{t('auth.emailLabel')}</label>
               <input
                 type="email"
                 id="email"
@@ -104,7 +106,7 @@ export default function Register() {
             </div>
 
             <div>
-              <label htmlFor="companyName" className="label">Nombre de Empresa</label>
+              <label htmlFor="companyName" className="label">{t('auth.company')}</label>
               <input
                 type="text"
                 id="companyName"
@@ -118,7 +120,7 @@ export default function Register() {
             </div>
 
             <div>
-              <label htmlFor="password" className="label">Contrasena</label>
+              <label htmlFor="password" className="label">{t('auth.passwordLabel')}</label>
               <input
                 type="password"
                 id="password"
@@ -133,7 +135,7 @@ export default function Register() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="label">Confirmar Contrasena</label>
+              <label htmlFor="confirmPassword" className="label">{t('auth.confirmPassword')}</label>
               <input
                 type="password"
                 id="confirmPassword"
@@ -158,18 +160,18 @@ export default function Register() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Creando cuenta...
+                  {t('auth.registering')}
                 </span>
               ) : (
-                'Crear Cuenta'
+                t('auth.registerButton')
               )}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-600">
-            Ya tienes cuenta?{' '}
+            {t('auth.hasAccount')}{' '}
             <Link to="/login" className="text-luci hover:text-luci-dark font-medium">
-              Iniciar Sesion
+              {t('auth.loginLink')}
             </Link>
           </p>
         </div>

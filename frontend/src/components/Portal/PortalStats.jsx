@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BarChart3,
   TrendingUp,
@@ -23,6 +24,7 @@ import {
 import { portalAPI } from '../../services/api';
 
 const PortalStats = ({ token }) => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [history, setHistory] = useState({ expeditions: [], total: 0 });
   const [loading, setLoading] = useState(true);
@@ -44,7 +46,7 @@ const PortalStats = ({ token }) => {
       setStats(statsRes.data);
       setHistory(historyRes.data);
     } catch (err) {
-      setError('Error al cargar estadisticas');
+      setError(t('portal.errorLoadingStats'));
       console.error('Error fetching stats:', err);
     } finally {
       setLoading(false);
@@ -99,16 +101,16 @@ const PortalStats = ({ token }) => {
 
   const getStatusText = (status) => {
     const texts = {
-      draft: 'Borrador',
-      pending_documents: 'Pendiente Docs',
-      documents_received: 'Docs Recibidos',
-      validating_documents: 'Validando',
-      declaration_submitted: 'DUA Enviado',
-      green_channel: 'Canal Verde',
-      orange_channel: 'Canal Naranja',
-      red_channel: 'Canal Rojo',
-      levante: 'Levante',
-      completed: 'Completado'
+      draft: t('portal.statusDraft'),
+      pending_documents: t('portal.statusPendingDocs'),
+      documents_received: t('portal.statusDocsReceived'),
+      validating_documents: t('portal.statusValidating'),
+      declaration_submitted: t('portal.statusDuaSubmitted'),
+      green_channel: t('portal.statusGreenChannel'),
+      orange_channel: t('portal.statusOrangeChannel'),
+      red_channel: t('portal.statusRedChannel'),
+      levante: t('portal.statusLevante'),
+      completed: t('portal.statusCompleted')
     };
     return texts[status] || status;
   };
@@ -147,7 +149,7 @@ const PortalStats = ({ token }) => {
     return (
       <div className="text-center py-8 text-gray-500">
         <BarChart3 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-        <p>No hay estadisticas disponibles</p>
+        <p>{t('portal.noStatsAvailable')}</p>
       </div>
     );
   }
@@ -159,7 +161,7 @@ const PortalStats = ({ token }) => {
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Expedientes</p>
+              <p className="text-sm text-gray-500">{t('portal.totalExpeditions')}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {stats.summary?.totalExpeditions || 0}
               </p>
@@ -173,7 +175,7 @@ const PortalStats = ({ token }) => {
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Completados</p>
+              <p className="text-sm text-gray-500">{t('portal.completedExpeditions')}</p>
               <p className="text-2xl font-bold text-green-600">
                 {stats.summary?.completedExpeditions || 0}
               </p>
@@ -187,7 +189,7 @@ const PortalStats = ({ token }) => {
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">En Proceso</p>
+              <p className="text-sm text-gray-500">{t('portal.inProcessExpeditions')}</p>
               <p className="text-2xl font-bold text-yellow-600">
                 {stats.summary?.pendingExpeditions || 0}
               </p>
@@ -201,7 +203,7 @@ const PortalStats = ({ token }) => {
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Tiempo Medio</p>
+              <p className="text-sm text-gray-500">{t('portal.avgProcessingTime')}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {stats.summary?.avgProcessingDays || 0}d
               </p>
@@ -218,24 +220,24 @@ const PortalStats = ({ token }) => {
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
             <DollarSign className="w-5 h-5 mr-2 text-green-600" />
-            Resumen Financiero
+            {t('portal.financialSummary')}
           </h2>
 
           <div className="grid md:grid-cols-3 gap-4">
             <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm text-gray-500 mb-1">Total Derechos</p>
+              <p className="text-sm text-gray-500 mb-1">{t('portal.totalDuties')}</p>
               <p className="text-xl font-bold text-gray-900">
                 {formatCurrency(stats.financial.totalDuties)}
               </p>
             </div>
             <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm text-gray-500 mb-1">Total IVA</p>
+              <p className="text-sm text-gray-500 mb-1">{t('portal.totalVat')}</p>
               <p className="text-xl font-bold text-gray-900">
                 {formatCurrency(stats.financial.totalVat)}
               </p>
             </div>
             <div className="bg-green-50 rounded-lg p-4">
-              <p className="text-sm text-green-700 mb-1">Total Pagado</p>
+              <p className="text-sm text-green-700 mb-1">{t('portal.totalPaid')}</p>
               <p className="text-xl font-bold text-green-700">
                 {formatCurrency(stats.financial.totalPaid)}
               </p>
@@ -248,14 +250,14 @@ const PortalStats = ({ token }) => {
       {stats.channelAnalysis && (
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">
-            Analisis de Canales
+            {t('portal.channelAnalysis')}
           </h2>
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* Green channel rate */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Tasa Canal Verde</span>
+                <span className="text-gray-600">{t('portal.greenChannelRate')}</span>
                 <span className="font-bold text-green-600">
                   {stats.channelAnalysis.greenChannelRate}%
                 </span>
@@ -274,19 +276,19 @@ const PortalStats = ({ token }) => {
                 <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-1">
                   <span className="text-green-600 font-bold">{stats.byChannel?.green || 0}</span>
                 </div>
-                <span className="text-xs text-gray-500">Verde</span>
+                <span className="text-xs text-gray-500">{t('portal.channelGreen')}</span>
               </div>
               <div className="text-center">
                 <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-1">
                   <span className="text-orange-600 font-bold">{stats.byChannel?.orange || 0}</span>
                 </div>
-                <span className="text-xs text-gray-500">Naranja</span>
+                <span className="text-xs text-gray-500">{t('portal.channelOrange')}</span>
               </div>
               <div className="text-center">
                 <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-1">
                   <span className="text-red-600 font-bold">{stats.byChannel?.red || 0}</span>
                 </div>
-                <span className="text-xs text-gray-500">Rojo</span>
+                <span className="text-xs text-gray-500">{t('portal.channelRed')}</span>
               </div>
             </div>
           </div>
@@ -298,7 +300,7 @@ const PortalStats = ({ token }) => {
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
             <Calendar className="w-5 h-5 mr-2 text-gray-600" />
-            Volumen Mensual
+            {t('portal.monthlyVolume')}
           </h2>
 
           <div className="flex items-end space-x-2 h-32">
@@ -326,7 +328,7 @@ const PortalStats = ({ token }) => {
       {/* Recent Expeditions */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">
-          Historial de Expedientes
+          {t('portal.expeditionHistory')}
         </h2>
 
         {history.expeditions.length > 0 ? (
@@ -366,7 +368,7 @@ const PortalStats = ({ token }) => {
                 onClick={loadMoreHistory}
                 className="w-full py-2 text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center justify-center"
               >
-                Cargar mas
+                {t('portal.loadMore')}
                 <ChevronRight className="w-4 h-4 ml-1" />
               </button>
             )}
@@ -374,7 +376,7 @@ const PortalStats = ({ token }) => {
         ) : (
           <div className="text-center py-6 text-gray-500">
             <Package className="w-10 h-10 mx-auto mb-2 text-gray-300" />
-            <p>No hay expedientes anteriores</p>
+            <p>{t('portal.noPreviousExpeditions')}</p>
           </div>
         )}
       </div>

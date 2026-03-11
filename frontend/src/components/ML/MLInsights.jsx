@@ -15,17 +15,19 @@ import {
   ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline'
 import { mlAPI } from '../../services/api'
-
-const TABS = [
-  { id: 'overview', label: 'Vista General', icon: ChartBarIcon },
-  { id: 'classification', label: 'Clasificacion', icon: AcademicCapIcon },
-  { id: 'fraud', label: 'Deteccion Fraude', icon: ShieldExclamationIcon },
-  { id: 'channel', label: 'Prediccion Circuito', icon: CpuChipIcon },
-  { id: 'recommendations', label: 'Recomendaciones', icon: LightBulbIcon },
-  { id: 'autoresponse', label: 'Auto-Respuesta', icon: DocumentTextIcon }
-]
+import { useTranslation } from 'react-i18next'
 
 export default function MLInsights() {
+  const { t } = useTranslation()
+
+  const TABS = [
+    { id: 'overview', label: t('ml.overview'), icon: ChartBarIcon },
+    { id: 'classification', label: t('ml.classification'), icon: AcademicCapIcon },
+    { id: 'fraud', label: t('ml.fraudDetection'), icon: ShieldExclamationIcon },
+    { id: 'channel', label: t('ml.channelPrediction'), icon: CpuChipIcon },
+    { id: 'recommendations', label: t('ml.recommendations'), icon: LightBulbIcon },
+    { id: 'autoresponse', label: t('ml.autoResponse'), icon: DocumentTextIcon }
+  ]
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [stats, setStats] = useState(null)

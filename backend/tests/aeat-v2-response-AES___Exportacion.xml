@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><CC515CV1Sal xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/CC515CV1Sal.xsd" Id="20260303193245992025">
+	<messageSender>NECA.ES</messageSender>
+	<messageRecipient>ESB22477020</messageRecipient>
+	<preparationDateAndTime>2026-03-03T19:32:46</preparationDateAndTime>
+	<messageIdentification>20260303193245992025</messageIdentification>
+	<messageType>RE515C</messageType>
+	<correlationIdentifier>20260303153245854692099</correlationIdentifier>
+	<ControlRespuesta>
+		<tipoRespuesta>EF</tipoRespuesta>
+	</ControlRespuesta>
+	<FunctionalError>
+		<errorPointer>/CC515C/ExportOperation/LRN</errorPointer>
+		<errorCode>14</errorCode>
+		<errorReason>1160</errorReason>
+		<errorDescription>Envío de declaración duplicada, ya existe para los valores LRN/Declarant.IdentificationNumber indicados.</errorDescription>
+		<originalAttributeValue>LRN-AES-2026030315-ESB22477020</originalAttributeValue>
+	</FunctionalError>
+</CC515CV1Sal>
+
+</env:Body></env:Envelope>

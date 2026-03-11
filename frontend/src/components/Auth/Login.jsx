@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
 import { useNavigate, Navigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
 export default function Login() {
+  const { t } = useTranslation()
   const { login, isAuthenticated } = useAuth()
   const navigate = useNavigate()
 
@@ -24,7 +26,7 @@ export default function Login() {
     const result = await login(formData.email, formData.password)
 
     if (result.success) {
-      toast.success('Bienvenido a LUCI')
+      toast.success(t('auth.welcome'))
       navigate('/')
     } else {
       toast.error(result.error)
@@ -57,19 +59,19 @@ export default function Login() {
             <span className="text-white text-4xl font-bold">L</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">LUCI</h1>
-          <p className="text-gray-600 mt-1">Agente Aduanero Inteligente</p>
+          <p className="text-gray-600 mt-1">{t('auth.subtitle')}</p>
         </div>
 
         {/* Login Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-            Iniciar Sesion
+            {t('auth.loginTitle')}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="email" className="label">
-                Correo Electronico
+                {t('auth.emailLabel')}
               </label>
               <input
                 type="email"
@@ -85,7 +87,7 @@ export default function Login() {
 
             <div>
               <label htmlFor="password" className="label">
-                Contrasena
+                {t('auth.passwordLabel')}
               </label>
               <input
                 type="password"
@@ -104,7 +106,7 @@ export default function Login() {
                 to="/forgot-password"
                 className="text-sm text-luci hover:text-luci-dark"
               >
-                Olvidaste tu contrasena?
+                {t('auth.forgotPassword')}
               </Link>
             </div>
 
@@ -119,10 +121,10 @@ export default function Login() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Ingresando...
+                  {t('auth.loggingIn')}
                 </span>
               ) : (
-                'Ingresar'
+                t('auth.loginButton')
               )}
             </button>
           </form>
@@ -130,21 +132,21 @@ export default function Login() {
           {/* Demo Mode Notice */}
           <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
             <p className="text-sm text-yellow-800 text-center">
-              <strong>Modo Demo:</strong> Haga clic para usar credenciales de prueba
+              <strong>{t('auth.demoMode')}:</strong> {t('auth.demoClick')}
             </p>
             <button
               type="button"
               onClick={fillDemoCredentials}
               className="w-full mt-2 text-sm text-yellow-700 hover:text-yellow-900 underline"
             >
-              Usar: admin@strixai.es / admin123
+              {t('auth.demoCredentials')}
             </button>
           </div>
 
           <p className="mt-4 text-center text-sm text-gray-600">
-            No tienes cuenta?{' '}
+            {t('auth.noAccount')}{' '}
             <Link to="/register" className="text-luci hover:text-luci-dark font-medium">
-              Registrate
+              {t('auth.registerLink')}
             </Link>
           </p>
         </div>
