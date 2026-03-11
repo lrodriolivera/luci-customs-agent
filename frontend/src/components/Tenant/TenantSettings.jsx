@@ -16,6 +16,7 @@ import {
   ArrowUpTrayIcon,
   SignalIcon
 } from '@heroicons/react/24/outline';
+import api from '../../services/api';
 
 const TenantSettings = () => {
   const { t } = useTranslation();
@@ -26,6 +27,14 @@ const TenantSettings = () => {
   const [tenant, setTenant] = useState(null);
   const [roles, setRoles] = useState([]);
   const [message, setMessage] = useState(null);
+  // Certificate upload state
+  const [certFile, setCertFile] = useState(null);
+  const [certPassword, setCertPassword] = useState('');
+  const [certUploading, setCertUploading] = useState(false);
+  const [certInfo, setCertInfo] = useState(null);
+  // EORI per country state
+  const [eoriNumbers, setEoriNumbers] = useState({ ES: '', NL: '' });
+  const [eoriSaving, setEoriSaving] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -803,20 +812,69 @@ const TenantSettings = () => {
               </div>
             </div>
 
+            {/* EORI per Country Section */}
+            <div className="border-t pt-6">
+              <h3 className="font-medium text-gray-900 mb-4">EORI por pais</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Configura el numero EORI para cada pais donde operas.
+              </p>
+
+              <div className="space-y-3">
+                {[
+                  { code: 'ES', name: 'Espana', flag: 'ES', placeholder: 'ESB22477020' },
+                  { code: 'NL', name: 'Paises Bajos', flag: 'NL', placeholder: 'NL123456789012' }
+                ].map(country => (
+                  <div key={country.code} className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-gray-700 w-32 flex items-center gap-2">
+                      <span className="text-lg">{country.code === 'ES' ? 'ES' : 'NL'}</span>
+                      {country.name}
+                    </span>
+                    <input
+                      type="text"
+                      value={eoriNumbers[country.code] || ''}
+                      onChange={(e) => setEoriNumbers(prev => ({ ...prev, [country.code]: e.target.value }))}
+                      className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      placeholder={country.placeholder}
+                    />
+                  </div>
+                ))}
+                <button
+                  onClick={async () => {
+                    setEoriSaving(true);
+                    try {
+                      await api.put('/api/tenant/eori', { eoriNumbers });
+                      setMessage({ type: 'success', text: 'EORI actualizado correctamente' });
+                      setTimeout(() => setMessage(null), 3000);
+                    } catch (err) {
+                      setMessage({ type: 'error', text: err.response?.data?.error || 'Error guardando EORI' });
+                    } finally {
+                      setEoriSaving(false);
+                    }
+                  }}
+                  disabled={eoriSaving}
+                  className="px-4 py-2 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2"
+                >
+                  {eoriSaving && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
+                  Guardar EORI
+                </button>
+              </div>
+            </div>
+
             {/* Certificate Section */}
             <div className="border-t pt-6">
               <h3 className="font-medium text-gray-900 mb-4">Certificado digital</h3>
 
-              <div className="p-4 border border-gray-200 rounded-lg">
+              {/* Current cert status */}
+              <div className="p-4 border border-gray-200 rounded-lg mb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${
-                      tenant?.customsConfig?.certificateStatus === 'configured'
+                      certInfo || tenant?.customsConfig?.certificateStatus === 'configured'
                         ? 'bg-green-100'
                         : 'bg-gray-100'
                     }`}>
                       <ShieldCheckIcon className={`h-6 w-6 ${
-                        tenant?.customsConfig?.certificateStatus === 'configured'
+                        certInfo || tenant?.customsConfig?.certificateStatus === 'configured'
                           ? 'text-green-600'
                           : 'text-gray-400'
                       }`} />
@@ -827,7 +885,15 @@ const TenantSettings = () => {
                           ? 'Certificado PKIoverheid / eHerkenning'
                           : 'Certificado FNMT / Digital'}
                       </span>
-                      {tenant?.customsConfig?.certificateStatus === 'configured' ? (
+                      {certInfo ? (
+                        <div className="text-sm text-green-600 space-y-0.5">
+                          <p>Emitido a: {certInfo.issuedTo || 'N/A'}</p>
+                          <p>Emisor: {certInfo.issuer || 'N/A'}</p>
+                          {certInfo.validUntil && (
+                            <p>Valido hasta: {new Date(certInfo.validUntil).toLocaleDateString()}</p>
+                          )}
+                        </div>
+                      ) : tenant?.customsConfig?.certificateStatus === 'configured' ? (
                         <p className="text-sm text-green-600">
                           Configurado - Valido hasta {tenant?.customsConfig?.certificateExpiry || 'N/A'}
                         </p>
@@ -837,20 +903,111 @@ const TenantSettings = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {tenant?.customsConfig?.certificateStatus === 'configured' ? (
-                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                        Activo
-                      </span>
+                    {(certInfo || tenant?.customsConfig?.certificateStatus === 'configured') ? (
+                      <>
+                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                          Activo
+                        </span>
+                        <button
+                          onClick={async () => {
+                            if (!confirm('Eliminar el certificado? Esta accion no se puede deshacer.')) return;
+                            try {
+                              const country = tenant?.customsConfig?.country || 'ES';
+                              await api.delete(`/api/certificates/${country}`);
+                              setCertInfo(null);
+                              setTenant(prev => ({
+                                ...prev,
+                                customsConfig: { ...prev.customsConfig, certificateStatus: null }
+                              }));
+                              setMessage({ type: 'success', text: 'Certificado eliminado' });
+                              setTimeout(() => setMessage(null), 3000);
+                            } catch (err) {
+                              setMessage({ type: 'error', text: 'Error eliminando certificado' });
+                            }
+                          }}
+                          className="px-3 py-1.5 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                        >
+                          Eliminar
+                        </button>
+                      </>
                     ) : (
                       <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">
                         Pendiente
                       </span>
                     )}
-                    <button className="px-3 py-1.5 text-sm bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200 flex items-center gap-1">
-                      <ArrowUpTrayIcon className="h-4 w-4" />
-                      Subir certificado
-                    </button>
                   </div>
+                </div>
+              </div>
+
+              {/* Upload form */}
+              <div className="p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Subir certificado (.p12 / .pfx)</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Archivo de certificado</label>
+                    <input
+                      type="file"
+                      accept=".p12,.pfx"
+                      onChange={(e) => setCertFile(e.target.files[0])}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Password del certificado</label>
+                    <input
+                      type="password"
+                      value={certPassword}
+                      onChange={(e) => setCertPassword(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      placeholder="Contrasena del archivo .p12"
+                    />
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (!certFile || !certPassword) {
+                        setMessage({ type: 'error', text: 'Selecciona un archivo y escribe la password' });
+                        return;
+                      }
+                      setCertUploading(true);
+                      try {
+                        const formData = new FormData();
+                        formData.append('certificate', certFile);
+                        formData.append('password', certPassword);
+                        formData.append('country', tenant?.customsConfig?.country || 'ES');
+
+                        const res = await api.post('/api/certificates/upload', formData, {
+                          headers: { 'Content-Type': 'multipart/form-data' }
+                        });
+
+                        if (res.data?.success) {
+                          setCertInfo(res.data.certificate?.metadata || {});
+                          setCertFile(null);
+                          setCertPassword('');
+                          setTenant(prev => ({
+                            ...prev,
+                            customsConfig: { ...prev.customsConfig, certificateStatus: 'configured' }
+                          }));
+                          setMessage({ type: 'success', text: 'Certificado subido correctamente' });
+                        } else {
+                          setMessage({ type: 'error', text: res.data?.error || 'Error subiendo certificado' });
+                        }
+                      } catch (err) {
+                        setMessage({ type: 'error', text: err.response?.data?.error || 'Error subiendo certificado' });
+                      } finally {
+                        setCertUploading(false);
+                        setTimeout(() => setMessage(null), 5000);
+                      }
+                    }}
+                    disabled={certUploading || !certFile || !certPassword}
+                    className="px-4 py-2 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {certUploading ? (
+                      <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ArrowUpTrayIcon className="h-4 w-4" />
+                    )}
+                    Subir certificado
+                  </button>
                 </div>
               </div>
             </div>

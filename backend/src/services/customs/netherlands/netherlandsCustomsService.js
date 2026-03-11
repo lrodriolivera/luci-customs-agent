@@ -76,12 +76,19 @@ class NetherlandsCustomsService extends BaseCustomsService {
    */
   async _submitDECO(expedition) {
     const UCCDataMapper = require('../common/uccDataMapper');
+    const NLValidation = require('./nlValidation');
     const uccData = UCCDataMapper.expeditionToH7(expedition);
 
-    // Validate H7 constraints
-    const validation = UCCDataMapper.validateH7(uccData);
-    if (!validation.valid) {
-      return { success: false, errors: validation.errors };
+    // Validate with NL-specific DECO rules
+    const nlValidation = NLValidation.validateDECO(uccData);
+    if (!nlValidation.valid) {
+      return { success: false, errors: nlValidation.errors, warnings: nlValidation.warnings, system: 'DECO' };
+    }
+
+    // Also run common UCC validation
+    const uccValidation = UCCDataMapper.validateH7(uccData);
+    if (!uccValidation.valid) {
+      return { success: false, errors: uccValidation.errors };
     }
 
     // Build DECO XML
@@ -100,8 +107,21 @@ class NetherlandsCustomsService extends BaseCustomsService {
    * Submit standard declaration via DMS 4.0
    */
   async _submitDMS(expedition, operationType) {
+    // Check if CVB is needed for maritime imports
+    const CVBService = require('./cvbService');
+    if (CVBService.requiresCVB(expedition) && !expedition.cvbReleaseId) {
+      return { success: false, error: 'Container Release Message (CVB) required for maritime imports. Request CVB first.', requiresCVB: true };
+    }
+
     const UCCDataMapper = require('../common/uccDataMapper');
+    const NLValidation = require('./nlValidation');
     const uccData = UCCDataMapper.expeditionToH1(expedition);
+
+    // Validate with NL-specific DMS rules
+    const nlValidation = NLValidation.validateDMS(uccData);
+    if (!nlValidation.valid) {
+      return { success: false, errors: nlValidation.errors, warnings: nlValidation.warnings, system: 'DMS 4.0' };
+    }
 
     // Build DMS 4.0 XML
     const xml = this._buildDMSXml(uccData, operationType);
@@ -546,25 +566,137 @@ class NetherlandsCustomsService extends BaseCustomsService {
   }
 
   /**
-   * Parse Digipoort response
+   * Parse Digipoort/DECO/DMS response
+   * Handles multiple response formats from Dutch customs
    */
-  _parseDigipoortResponse(responseData) {
+  _parseDigipoortResponse(responseData, declarationType = 'H7') {
     const body = typeof responseData === 'string' ? responseData : JSON.stringify(responseData);
+    const NL_CODES_EXT = require('./nlCodes');
 
-    const statusMatch = body.match(/<statuscode>(\w+)<\/statuscode>/);
-    const mrnMatch = body.match(/<MRN>([^<]+)<\/MRN>/);
-    const errorMatch = body.match(/<fout(?:beschrijving)?>([^<]+)</);
-
-    const status = statusMatch ? statusMatch[1] : 'UNKNOWN';
-
-    return {
-      success: ['OK', '0000', 'ACCEPTED'].includes(status.toUpperCase()),
-      code: status,
-      mrn: mrnMatch ? mrnMatch[1] : null,
-      channel: 'green', // NL defaults, actual channel from response
-      error: errorMatch ? errorMatch[1] : null,
-      rawResponse: body.substring(0, 2000)
+    // Extract key elements using multiple patterns (DMS can return different formats)
+    const extractors = {
+      // MRN - multiple possible element names
+      mrn: [
+        /<MRN>([^<]+)<\/MRN>/,
+        /<mrn>([^<]+)<\/mrn>/,
+        /<DeclarationReferenceNumber>([^<]+)<\/DeclarationReferenceNumber>/,
+        /<ReferenceNumber>([^<]+)<\/ReferenceNumber>/,
+      ],
+      // Status code
+      status: [
+        /<statuscode>([^<]+)<\/statuscode>/,
+        /<StatusCode>([^<]+)<\/StatusCode>/,
+        /<ResponseCode>([^<]+)<\/ResponseCode>/,
+        /<resultaat>([^<]+)<\/resultaat>/,
+        /<FunctionCode>([^<]+)<\/FunctionCode>/,
+      ],
+      // Error description
+      error: [
+        /<foutbeschrijving>([^<]+)<\/foutbeschrijving>/,
+        /<ErrorDescription>([^<]+)<\/ErrorDescription>/,
+        /<Reason>([^<]+)<\/Reason>/,
+        /<faultstring>([^<]+)<\/faultstring>/,
+        /<ErrorText>([^<]+)<\/ErrorText>/,
+      ],
+      // Error code
+      errorCode: [
+        /<foutcode>([^<]+)<\/foutcode>/,
+        /<ErrorCode>([^<]+)<\/ErrorCode>/,
+        /<ReasonCode>([^<]+)<\/ReasonCode>/,
+      ],
+      // Channel/control type
+      channel: [
+        /<ControlType>([^<]+)<\/ControlType>/,
+        /<CustomsIntervention>([^<]+)<\/CustomsIntervention>/,
+        /<ControlResult>([^<]+)<\/ControlResult>/,
+      ],
+      // Declaration ID from Digipoort
+      kenmerk: [
+        /<kenmerk>([^<]+)<\/kenmerk>/,
+        /<berichtkenmerk>([^<]+)<\/berichtkenmerk>/,
+        /<MessageIdentification>([^<]+)<\/MessageIdentification>/,
+      ],
+      // Correction indicators
+      correction: [
+        /<CorrectionRequired>([^<]+)<\/CorrectionRequired>/,
+        /<Amendment>([^<]+)<\/Amendment>/,
+      ],
+      // Duty/tax amounts
+      dutyAmount: [
+        /<TotalDutyAmount>([^<]+)<\/TotalDutyAmount>/,
+        /<PayableAmount>([^<]+)<\/PayableAmount>/,
+      ],
     };
+
+    // Run all extractors
+    const extracted = {};
+    for (const [key, patterns] of Object.entries(extractors)) {
+      for (const pattern of patterns) {
+        const match = body.match(pattern);
+        if (match) {
+          extracted[key] = match[1].trim();
+          break;
+        }
+      }
+    }
+
+    // Extract all errors (there can be multiple)
+    const allErrors = [];
+    const errorPattern = /<(?:Error|Fout|FunctionalError)[^>]*>([\s\S]*?)<\/(?:Error|Fout|FunctionalError)>/g;
+    let errorMatch;
+    while ((errorMatch = errorPattern.exec(body)) !== null) {
+      const errorBlock = errorMatch[1];
+      const code = (errorBlock.match(/<(?:ErrorCode|foutcode|Code)>([^<]+)/) || [])[1];
+      const desc = (errorBlock.match(/<(?:ErrorDescription|foutbeschrijving|Description|Text)>([^<]+)/) || [])[1];
+      const pointer = (errorBlock.match(/<(?:Pointer|ErrorPointer|Location)>([^<]+)/) || [])[1];
+      allErrors.push({ code, description: desc, pointer });
+    }
+
+    // Determine success
+    const statusCode = extracted.status || '';
+    const isSuccess = ['OK', '01', '02', '0000', 'ACCEPTED', 'RELEASED', '9'].includes(statusCode.toUpperCase())
+      || !!(extracted.mrn && !extracted.errorCode);
+
+    // Map channel
+    const channelMap = {
+      '00': 'green',   // No control
+      '01': 'green',   // Release
+      '10': 'orange',  // Document control
+      '11': 'red',     // Physical control
+      'H1': 'green',
+      'H2': 'orange',
+      'H3': 'red',
+    };
+    const channel = channelMap[extracted.channel] || (isSuccess ? 'green' : null);
+
+    // Check if correction is required (NL-specific: declarant must correct)
+    const correctionRequired = extracted.correction === 'true' || extracted.correction === '1'
+      || statusCode === '04' || statusCode === '06';
+
+    // Build response
+    const response = {
+      success: isSuccess && !correctionRequired,
+      code: statusCode,
+      mrn: extracted.mrn || null,
+      channel: channel,
+      messageId: extracted.kenmerk || null,
+      error: extracted.error || (allErrors.length > 0 ? allErrors[0].description : null),
+      errorCode: extracted.errorCode || (allErrors.length > 0 ? allErrors[0].code : null),
+      errors: allErrors,
+      correctionRequired: correctionRequired,
+      dutyAmount: extracted.dutyAmount ? parseFloat(extracted.dutyAmount) : null,
+      rawResponse: body.substring(0, 3000),
+      system: declarationType === 'H7' ? 'DECO' : 'DMS 4.0',
+      timestamp: new Date().toISOString(),
+    };
+
+    // Add status description from NL codes
+    const statusInfo = Object.values(NL_CODES_EXT.responseCodes).find(s => s.code === statusCode);
+    if (statusInfo) {
+      response.statusDescription = statusInfo.description;
+    }
+
+    return response;
   }
 
   /**
@@ -586,6 +718,109 @@ class NetherlandsCustomsService extends BaseCustomsService {
     };
   }
 
+  /**
+   * Submit batch H7 declarations via DECO
+   * @param {Array} expeditions - Array of expedition objects
+   * @returns {Object} { success, results: [{expeditionId, mrn, success, error}], stats }
+   */
+  async submitBatchDECO(expeditions) {
+    const NLValidation = require('./nlValidation');
+    const UCCDataMapper = require('../common/uccDataMapper');
+
+    if (expeditions.length > 10000) {
+      return { success: false, error: 'DECO batch max 10,000 declarations' };
+    }
+
+    // Validate all first
+    const validationResults = [];
+    const validExpeditions = [];
+
+    for (const exp of expeditions) {
+      const uccData = UCCDataMapper.expeditionToH7(exp);
+      const validation = NLValidation.validateDECO(uccData);
+
+      if (validation.valid) {
+        validExpeditions.push({ expedition: exp, uccData });
+      }
+      validationResults.push({
+        expeditionId: exp.expeditionId,
+        valid: validation.valid,
+        errors: validation.errors,
+        warnings: validation.warnings
+      });
+    }
+
+    if (validExpeditions.length === 0) {
+      return {
+        success: false,
+        error: 'No hay declaraciones validas en el batch',
+        validationResults
+      };
+    }
+
+    // Build batch XML
+    const batchXml = this._buildBatchDECOXml(validExpeditions.map(v => v.uccData));
+
+    logger.info(`NL DECO Batch: ${validExpeditions.length}/${expeditions.length} validas, enviando...`);
+
+    if (!this.isConfigured()) {
+      // Simulate batch response
+      const results = validExpeditions.map(v => ({
+        expeditionId: v.expedition.expeditionId,
+        ...this._simulateResponse('H7', v.expedition.expeditionId)
+      }));
+
+      return {
+        success: true,
+        simulated: true,
+        results,
+        stats: {
+          total: expeditions.length,
+          valid: validExpeditions.length,
+          invalid: expeditions.length - validExpeditions.length,
+          submitted: validExpeditions.length
+        },
+        validationResults
+      };
+    }
+
+    // Real submission via Digipoort
+    const response = await this._sendViaDigipoort(batchXml, 'DECO');
+
+    // Parse batch response (each declaration gets its own result)
+    return {
+      success: response.success,
+      results: validExpeditions.map((v, idx) => ({
+        expeditionId: v.expedition.expeditionId,
+        mrn: response.mrn, // In real API, each gets its own MRN
+        success: response.success,
+      })),
+      stats: {
+        total: expeditions.length,
+        valid: validExpeditions.length,
+        invalid: expeditions.length - validExpeditions.length,
+        submitted: validExpeditions.length
+      },
+      validationResults
+    };
+  }
+
+  /**
+   * Build batch DECO XML (multiple declarations in one file)
+   */
+  _buildBatchDECOXml(dataArray) {
+    const declarations = dataArray.map(data => this._buildDECOXml(data));
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<DeclarationBatch xmlns="urn:wco:datamodel:WCO:DEC-DMS:2"
+                  xmlns:ds="urn:wco:datamodel:WCO:Declaration_DS:DMS:2"
+                  totalDeclarations="${declarations.length}">
+  ${declarations.map((xml, idx) =>
+    `<BatchItem sequenceNumber="${idx + 1}">\n${xml.replace(/<\?xml[^>]*\?>/, '').trim()}\n</BatchItem>`
+  ).join('\n  ')}
+</DeclarationBatch>`;
+  }
+
   async queryStatus(mrn) {
     if (!this.isConfigured()) {
       return { success: true, status: 'ACCEPTED', mrn, simulated: true };
@@ -603,12 +838,18 @@ class NetherlandsCustomsService extends BaseCustomsService {
   }
 
   async validateDeclaration(data, declarationType) {
+    const NLValidation = require('./nlValidation');
+    const UCCDataMapper = require('../common/uccDataMapper');
+
     if (declarationType === 'H7') {
-      const UCCDataMapper = require('../common/uccDataMapper');
       const uccData = UCCDataMapper.expeditionToH7({ ...data, goods: data.goods || data.items });
-      return UCCDataMapper.validateH7(uccData);
+      return NLValidation.validateDECO(uccData);
     }
-    return { valid: true, errors: [] };
+    if (declarationType === 'H1') {
+      const uccData = UCCDataMapper.expeditionToH1({ ...data, goods: data.goods || data.items });
+      return NLValidation.validateDMS(uccData);
+    }
+    return { valid: true, errors: [], warnings: [] };
   }
 
   getEndpoints() {

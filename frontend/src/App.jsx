@@ -53,6 +53,9 @@ import { TenantSettings, BillingDashboard } from './components/Tenant'
 // ML Advanced (Phase 6.5)
 import { MLInsights } from './components/ML'
 
+// Netherlands Customs
+import NLExpeditionPanel from './components/NL/NLExpeditionPanel'
+
 // Admin Panel
 import AdminPanel from './components/Admin/AdminPanel'
 
@@ -183,6 +186,9 @@ function App() {
 
         {/* ML Advanced (Phase 6.5) */}
         <Route path="ml-insights" element={<MLInsights />} />
+
+        {/* Netherlands Customs Panel */}
+        <Route path="nl-customs" element={<NLExpeditionPanel />} />
 
         {/* Admin Panel */}
         <Route path="admin" element={<AdminPanel />} />

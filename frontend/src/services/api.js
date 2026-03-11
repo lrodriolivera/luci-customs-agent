@@ -1097,4 +1097,37 @@ export const billingAPI = {
   getStats: () => api.get('/api/payments/stats')
 }
 
+// Certificates
+export const certificatesAPI = {
+  upload: (formData) => api.post('/api/certificates/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  list: () => api.get('/api/certificates'),
+  delete: (country) => api.delete(`/api/certificates/${country}`),
+  getStatus: (country) => api.get(`/api/certificates/${country}/status`)
+}
+
+// Netherlands Customs
+export const nlCustomsAPI = {
+  getHealth: () => api.get('/api/declarations/nl/monitor/health'),
+  getStats: () => api.get('/api/declarations/nl/monitor/stats'),
+  getPendingCorrections: () => api.get('/api/declarations/corrections/pending'),
+  submitCorrection: (expeditionId, correctionId, data) =>
+    api.post(`/api/declarations/${expeditionId}/corrections/${correctionId}/submit`, data),
+  requestCVB: (expeditionId, data) =>
+    api.post(`/api/declarations/${expeditionId}/cvb-request`, data),
+  getCVBStatus: (expeditionId) =>
+    api.get(`/api/declarations/${expeditionId}/cvb-status`),
+  submitV2: (expeditionId) =>
+    api.post(`/api/declarations/${expeditionId}/submit-v2`),
+  validateV2: (expeditionId, declarationType) =>
+    api.post(`/api/declarations/${expeditionId}/validate-v2`, { declarationType })
+}
+
+// Tenant EORI
+export const tenantEoriAPI = {
+  get: () => api.get('/api/tenant/eori'),
+  update: (eoriNumbers) => api.put('/api/tenant/eori', { eoriNumbers })
+}
+
 export default api

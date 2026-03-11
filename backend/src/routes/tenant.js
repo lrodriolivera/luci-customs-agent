@@ -274,4 +274,83 @@ router.get(
   tenantController.getBillingStatement
 );
 
+// =====================================================
+// CUSTOMS CONFIG - EORI per country
+// =====================================================
+
+const Tenant = require('../models/Tenant');
+const { auth } = require('../middleware/auth');
+
+/**
+ * GET /api/tenant/eori
+ * Get EORI numbers for all countries
+ */
+router.get('/tenant/eori', requireTenant, async (req, res) => {
+  try {
+    const tenant = await Tenant.findById(req.tenantId);
+    if (!tenant) return res.status(404).json({ success: false, error: 'Tenant no encontrado' });
+
+    res.json({
+      success: true,
+      data: {
+        eoriNumbers: tenant.customsConfig?.eoriNumbers || {},
+        defaultEori: tenant.businessInfo?.eori || ''
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /api/tenant/eori
+ * Update EORI numbers per country
+ * Body: { eoriNumbers: { ES: 'ESxxx', NL: 'NLxxx' } }
+ */
+router.put('/tenant/eori', requireTenant, adminOnly, async (req, res) => {
+  try {
+    const { eoriNumbers } = req.body;
+    if (!eoriNumbers || typeof eoriNumbers !== 'object') {
+      return res.status(400).json({ success: false, error: 'eoriNumbers object requerido' });
+    }
+
+    // Validate EORI format per country
+    const validCountries = ['ES', 'NL', 'BE', 'DE', 'FR', 'PT', 'IT'];
+    const errors = [];
+    for (const [country, eori] of Object.entries(eoriNumbers)) {
+      if (!validCountries.includes(country)) {
+        errors.push(`Pais no soportado: ${country}`);
+        continue;
+      }
+      if (eori && !eori.startsWith(country)) {
+        errors.push(`EORI de ${country} debe comenzar con ${country} (recibido: ${eori})`);
+      }
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({ success: false, errors });
+    }
+
+    const tenant = await Tenant.findById(req.tenantId);
+    if (!tenant) return res.status(404).json({ success: false, error: 'Tenant no encontrado' });
+
+    if (!tenant.customsConfig) tenant.customsConfig = {};
+    if (!tenant.customsConfig.eoriNumbers) tenant.customsConfig.eoriNumbers = {};
+
+    // Merge with existing
+    for (const [country, eori] of Object.entries(eoriNumbers)) {
+      tenant.customsConfig.eoriNumbers[country] = eori;
+    }
+
+    await tenant.save();
+
+    res.json({
+      success: true,
+      data: { eoriNumbers: tenant.customsConfig.eoriNumbers }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;

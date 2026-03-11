@@ -29,6 +29,87 @@ router.get('/h7/stats', declarationController.getH7Stats);
 router.post('/h7/generate', declarationController.generateH7);
 router.post('/h7/submit/:expeditionId', requirePermission('canApproveDeclarations'), declarationController.submitH7);
 
+// ===========================================
+// NETHERLANDS - BATCH DECO SUBMISSION (static route, must be before /:expeditionId)
+// ===========================================
+
+/**
+ * @route POST /api/declarations/batch-submit-nl
+ * @desc Submit multiple H7 declarations via DECO batch (up to 5,000)
+ */
+router.post('/batch-submit-nl', requirePermission('canApproveDeclarations'), async (req, res) => {
+  try {
+    const { CustomsServiceFactory } = require('../services/customs');
+    const { Expedition } = require('../models');
+
+    const { expeditionIds } = req.body;
+    if (!expeditionIds || !Array.isArray(expeditionIds)) {
+      return res.status(400).json({ success: false, error: 'expeditionIds array requerido' });
+    }
+
+    if (expeditionIds.length > 5000) {
+      return res.status(400).json({ success: false, error: 'Maximo 5,000 declaraciones por batch' });
+    }
+
+    const expeditions = await Expedition.find({
+      _id: { $in: expeditionIds },
+      tenantId: req.tenantId
+    });
+
+    const tenant = req.tenant || {};
+    const customsService = CustomsServiceFactory.getServiceForTenant({ ...tenant, customsConfig: { ...tenant.customsConfig, country: 'NL' } });
+
+    const result = await customsService.submitBatchDECO(expeditions);
+
+    // Update expeditions with results
+    if (result.success && result.results) {
+      for (const r of result.results) {
+        if (r.success && r.mrn) {
+          await Expedition.findOneAndUpdate(
+            { expeditionId: r.expeditionId, tenantId: req.tenantId },
+            {
+              'declaration.mrn': r.mrn,
+              'declaration.status': 'accepted',
+              'declaration.channel': 'green',
+              'declaration.submittedAt': new Date(),
+              'declaration.aeatResponse': {
+                code: '0000', country: 'NL', system: 'DECO', simulated: r.simulated || false
+              }
+            }
+          );
+        }
+      }
+    }
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Batch submit NL error:', error);
+    res.status(500).json({ success: false, error: 'Error en envio batch' });
+  }
+});
+
+// ===========================================
+// NETHERLANDS - CORRECTION WORKFLOW (static route, must be before /:expeditionId)
+// ===========================================
+
+/**
+ * @route GET /api/declarations/corrections/pending
+ * @desc List all pending NL corrections for the tenant
+ */
+router.get('/corrections/pending', async (req, res) => {
+  try {
+    const NLCorrectionWorkflow = require('../services/customs/netherlands/nlCorrectionWorkflow');
+    const { Expedition } = require('../models');
+
+    const corrections = await NLCorrectionWorkflow.getPendingCorrections(Expedition, req.tenantId);
+
+    res.json({ success: true, data: corrections });
+  } catch (error) {
+    console.error('Corrections list error:', error);
+    res.status(500).json({ success: false, error: 'Error obteniendo correcciones pendientes' });
+  }
+});
+
 // Obtener/actualizar declaracion
 router.get('/:expeditionId/summary', declarationController.getDeclarationSummary);
 router.get('/:expeditionId/xml', declarationController.getXML);
@@ -282,6 +363,185 @@ router.post('/:expeditionId/validate-v2', async (req, res) => {
   } catch (error) {
     console.error('Multi-country validate error:', error);
     res.status(500).json({ success: false, error: 'Error validando declaracion' });
+  }
+});
+
+// ===========================================
+// NETHERLANDS - CVB (Container Release Message)
+// ===========================================
+
+/**
+ * @route POST /api/declarations/:expeditionId/cvb-request
+ * @desc Request Container Release Message (CVB) for maritime imports
+ */
+router.post('/:expeditionId/cvb-request', requirePermission('canApproveDeclarations'), async (req, res) => {
+  try {
+    const CVBService = require('../services/customs/netherlands/cvbService');
+
+    const expedition = await Expedition.findOne({
+      _id: req.params.expeditionId,
+      tenantId: req.tenantId
+    });
+
+    if (!expedition) {
+      return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
+    }
+
+    const cvbService = new CVBService({
+      apiKey: req.tenant?.customsConfig?.cvbApiKey || process.env.NL_CVB_API_KEY
+    });
+
+    const containerData = {
+      containerNumber: req.body.containerNumber || expedition.transport?.containerNumber,
+      billOfLading: req.body.billOfLading || expedition.transport?.billOfLading,
+      carrierCode: req.body.carrierCode || expedition.transport?.carrierCode,
+      portOfDischarge: req.body.portOfDischarge || expedition.transport?.entryCustomsOffice,
+      consigneeEori: req.body.consigneeEori || expedition.consignee?.eori,
+      customsStatus: req.body.customsStatus || 'T1',
+      estimatedArrival: req.body.estimatedArrival || expedition.transport?.estimatedArrival,
+      grossWeight: req.body.grossWeight || expedition.totalGrossMass,
+      numberOfPackages: req.body.numberOfPackages || expedition.totalPackages,
+    };
+
+    const result = await cvbService.requestRelease(containerData);
+
+    if (result.success) {
+      expedition.cvbReleaseId = result.releaseId;
+      expedition.cvbStatus = result.status;
+      expedition.cvbRequestedAt = new Date();
+      await expedition.save();
+    }
+
+    res.json({ success: result.success, data: result });
+  } catch (error) {
+    console.error('CVB request error:', error);
+    res.status(500).json({ success: false, error: 'Error solicitando CVB' });
+  }
+});
+
+/**
+ * @route GET /api/declarations/:expeditionId/cvb-status
+ * @desc Check CVB release status
+ */
+router.get('/:expeditionId/cvb-status', async (req, res) => {
+  try {
+    const CVBService = require('../services/customs/netherlands/cvbService');
+
+    const expedition = await Expedition.findOne({
+      _id: req.params.expeditionId,
+      tenantId: req.tenantId
+    });
+
+    if (!expedition) {
+      return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
+    }
+
+    if (!expedition.cvbReleaseId) {
+      return res.status(400).json({ success: false, error: 'No hay solicitud CVB para este expediente' });
+    }
+
+    const cvbService = new CVBService({
+      apiKey: req.tenant?.customsConfig?.cvbApiKey || process.env.NL_CVB_API_KEY
+    });
+
+    const result = await cvbService.checkReleaseStatus(expedition.cvbReleaseId);
+
+    if (result.success && result.status) {
+      expedition.cvbStatus = result.status;
+      await expedition.save();
+    }
+
+    res.json({ success: result.success, data: result });
+  } catch (error) {
+    console.error('CVB status error:', error);
+    res.status(500).json({ success: false, error: 'Error consultando estado CVB' });
+  }
+});
+
+/**
+ * @route POST /api/declarations/:expeditionId/corrections/:correctionId/submit
+ * @desc Submit a correction for a specific error flagged by NL customs
+ */
+router.post('/:expeditionId/corrections/:correctionId/submit', requirePermission('canApproveDeclarations'), async (req, res) => {
+  try {
+    const NLCorrectionWorkflow = require('../services/customs/netherlands/nlCorrectionWorkflow');
+
+    const expedition = await Expedition.findOne({
+      _id: req.params.expeditionId,
+      tenantId: req.tenantId
+    });
+
+    if (!expedition) {
+      return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
+    }
+
+    const { correctedData } = req.body;
+    if (!correctedData || typeof correctedData !== 'object') {
+      return res.status(400).json({ success: false, error: 'correctedData object requerido' });
+    }
+
+    const result = await NLCorrectionWorkflow.submitCorrection(
+      expedition,
+      req.params.correctionId,
+      correctedData
+    );
+
+    if (result.success) {
+      await expedition.save();
+    }
+
+    res.json({ success: result.success, data: result });
+  } catch (error) {
+    console.error('Correction submit error:', error);
+    res.status(500).json({ success: false, error: 'Error enviando correccion' });
+  }
+});
+
+// ===========================================
+// NETHERLANDS - STATUS MONITOR
+// ===========================================
+
+/**
+ * @route GET /api/declarations/nl/monitor/health
+ * @desc Get DECO/DMS system health status
+ */
+router.get('/nl/monitor/health', async (req, res) => {
+  try {
+    const NLStatusMonitor = require('../services/customs/netherlands/nlStatusMonitor');
+    const { NetherlandsCustomsService } = require('../services/customs');
+
+    const tenant = req.tenant || {};
+    const nlService = new NetherlandsCustomsService({
+      certificatePath: tenant.customsConfig?.certificatePath,
+      certificatePassword: tenant.customsConfig?.certificatePassword,
+      eoriNumber: tenant.customsConfig?.eori || tenant.businessInfo?.eori,
+      environment: tenant.customsConfig?.environment || 'test'
+    });
+
+    const monitor = new NLStatusMonitor(nlService);
+    const health = await monitor.getSystemHealth();
+
+    res.json({ success: true, data: health });
+  } catch (error) {
+    console.error('NL monitor health error:', error);
+    res.status(500).json({ success: false, error: 'Error obteniendo estado del sistema NL' });
+  }
+});
+
+/**
+ * @route GET /api/declarations/nl/monitor/stats
+ * @desc Get NL tracking stats
+ */
+router.get('/nl/monitor/stats', async (req, res) => {
+  try {
+    const NLStatusMonitor = require('../services/customs/netherlands/nlStatusMonitor');
+    const monitor = new NLStatusMonitor(null);
+    const stats = monitor.getStats();
+
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    console.error('NL monitor stats error:', error);
+    res.status(500).json({ success: false, error: 'Error obteniendo estadisticas NL' });
   }
 });
 

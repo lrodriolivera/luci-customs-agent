@@ -247,6 +247,26 @@ const TenantSchema = new mongoose.Schema({
     certificatePassword: { type: String },
     digipoortEndpoint: { type: String },
     customsOffice: { type: String },
+    eoriNumbers: {
+      ES: { type: String },
+      NL: { type: String },
+      BE: { type: String },
+      DE: { type: String },
+      FR: { type: String },
+      PT: { type: String },
+      IT: { type: String }
+    },
+    certificates: [{
+      country: { type: String },
+      filename: { type: String },
+      filePath: { type: String },
+      encryptedPassword: { type: String },
+      issuedTo: { type: String },
+      issuer: { type: String },
+      validFrom: { type: Date },
+      validUntil: { type: Date },
+      uploadedAt: { type: Date, default: Date.now }
+    }]
   },
 
   // Admin

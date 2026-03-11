@@ -28,7 +28,7 @@ let specialRegimeRoutes, dashboardRoutes, transitRoutes, rulesEngineRoutes, exci
 let deadlineRoutes, inspectionRoutes, communicationRoutes, integrationRoutes;
 let aeatRealRoutes, analyticsRoutes, tenantRoutes, mlRoutes, workflowRoutes;
 let publicApiRoutes, paymentRoutes, regulationRoutes, adminRoutes;
-let ensRoutes, queryRoutes, pueRoutes;
+let ensRoutes, queryRoutes, pueRoutes, certificateRoutes;
 
 try {
   authRoutes = require('./routes/auth');
@@ -68,6 +68,7 @@ try {
   ensRoutes = require('./routes/ens');
   queryRoutes = require('./routes/queries');
   pueRoutes = require('./routes/pue');
+  certificateRoutes = require('./routes/certificates');
 } catch (err) {
   console.error('Error loading routes:', err.message);
 }
@@ -237,6 +238,7 @@ if (adminRoutes) app.use('/api/admin', adminRoutes);
 if (ensRoutes) app.use('/api/ens', ensRoutes);
 if (queryRoutes) app.use('/api/queries', queryRoutes);
 if (pueRoutes) app.use('/api/pue', pueRoutes);
+if (certificateRoutes) app.use('/api/certificates', certificateRoutes);
 
 // Initialize workflow service
 const workflowService = require('./services/workflow');
