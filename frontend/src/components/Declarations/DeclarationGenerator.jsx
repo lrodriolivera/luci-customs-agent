@@ -20,15 +20,12 @@ export default function DeclarationGenerator() {
   const [aeatResult, setAeatResult] = useState(null)
   const [declarationType, setDeclarationType] = useState('H1')
 
-  // Multi-country: tenant customs config (default ES/AEAT)
-  const [customsCountry] = useState(() => {
-    try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
-      return user?.tenant?.customsConfig?.country || 'ES'
-    } catch { return 'ES' }
-  })
+  // Multi-country: read from dashboard country selector
+  const [customsCountry, setCustomsCountry] = useState(
+    localStorage.getItem('activeCustomsCountry') || 'ES'
+  )
   const [options, setOptions] = useState({
-    regime: '40',
+    regime: (localStorage.getItem('activeCustomsCountry') || 'ES') === 'NL' ? '4000' : '40',
     additionalProcedure: '000',
     preference: '100'
   })
@@ -113,14 +110,17 @@ export default function DeclarationGenerator() {
     }
   }
 
-  const handleSubmitToAEAT = async () => {
+  const handleSubmitToCustoms = async () => {
     if (!selectedExpedition) return
-    if (!confirm(t('declarations.confirmSendAeat', { type: declarationType }))) return
+    const systemName = isNL ? 'DMS 4.0' : 'AEAT'
+    if (!confirm(`Enviar ${declarationType} a ${systemName}?`)) return
 
     setSubmitting(true)
     setAeatResult(null)
     try {
-      const response = await declarationsAPI.submit(selectedExpedition._id)
+      const response = isNL
+        ? await declarationsAPI.submitV2(selectedExpedition._id)
+        : await declarationsAPI.submit(selectedExpedition._id)
       const resultData = response.data?.data || response.data
       setAeatResult(resultData)
 
@@ -140,7 +140,9 @@ export default function DeclarationGenerator() {
     }
   }
 
-  const regimes = [
+  const isNL = customsCountry === 'NL'
+
+  const regimesES = [
     { code: '40', label: t('declarations.regime40') },
     { code: '42', label: t('declarations.regime42') },
     { code: '44', label: t('declarations.regime44') },
@@ -149,6 +151,18 @@ export default function DeclarationGenerator() {
     { code: '61', label: t('declarations.regime61') },
     { code: '71', label: t('declarations.regime71') }
   ]
+
+  const regimesNL = [
+    { code: '4000', label: '4000 - Despacho a libre practica' },
+    { code: '4200', label: '4200 - Libre practica con exencion IVA (otro EEMM)' },
+    { code: '4400', label: '4400 - Importacion uso final' },
+    { code: '5100', label: '5100 - Perfeccionamiento activo' },
+    { code: '5300', label: '5300 - Importacion temporal' },
+    { code: '6100', label: '6100 - Reimportacion' },
+    { code: '7100', label: '7100 - Deposito aduanero' }
+  ]
+
+  const regimes = isNL ? regimesNL : regimesES
 
   const preferences = [
     { code: '100', label: t('declarations.noPreference') },
@@ -201,8 +215,8 @@ export default function DeclarationGenerator() {
                 }`}
               >
                 <span className="text-2xl mb-2 block">📥</span>
-                <span className="font-medium">{t('declarations.h1Import')}</span>
-                <p className="text-sm text-gray-500 mt-1">{t('declarations.h1Description')}</p>
+                <span className="font-medium">{isNL ? 'DMS 4.0 Import' : t('declarations.h1Import')}</span>
+                <p className="text-sm text-gray-500 mt-1">{isNL ? 'Declaracion de importacion via DMS 4.0 (Douane)' : t('declarations.h1Description')}</p>
               </button>
               <button
                 onClick={() => setDeclarationType('AES')}
@@ -317,10 +331,17 @@ export default function DeclarationGenerator() {
               ) : (
                 <>
                   <DocumentTextIcon className="w-5 h-5" />
-                  {t('declarations.generate')} {declarationType}
+                  {isNL ? `Generar DMS 4.0 ${declarationType}` : `${t('declarations.generate')} ${declarationType}`}
                 </>
               )}
             </button>
+
+            {/* Country system badge */}
+            <span className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium ${
+              isNL ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+            }`}>
+              {isNL ? '\u{1F1F3}\u{1F1F1} DMS 4.0' : '\u{1F1EA}\u{1F1F8} AEAT'}
+            </span>
 
             {generatedDeclaration && (
               <>
@@ -332,19 +353,19 @@ export default function DeclarationGenerator() {
                   {t('declarations.downloadXml')}
                 </button>
                 <button
-                  onClick={handleSubmitToAEAT}
+                  onClick={handleSubmitToCustoms}
                   disabled={submitting}
                   className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
                   {submitting ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      {t('declarations.sendingToAeat')}
+                      {isNL ? 'Enviando a DMS...' : t('declarations.sendingToAeat')}
                     </>
                   ) : (
                     <>
                       <PaperAirplaneIcon className="w-5 h-5" />
-                      {t('declarations.sendToAeat')}
+                      {isNL ? 'Enviar a DMS 4.0' : t('declarations.sendToAeat')}
                     </>
                   )}
                 </button>
@@ -360,7 +381,7 @@ export default function DeclarationGenerator() {
               aeatResult.channel === 'red' ? 'border-red-300 bg-red-50' :
               'border-blue-300 bg-blue-50'
             }`}>
-              <h3 className="font-semibold mb-2">{t('declarations.aeatResponse')}</h3>
+              <h3 className="font-semibold mb-2">{isNL ? 'Respuesta DMS 4.0' : t('declarations.aeatResponse')}</h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 {aeatResult.mrn && <div><span className="text-gray-600">{t('declarations.mrn')}:</span> <span className="font-mono font-medium">{aeatResult.mrn}</span></div>}
                 {aeatResult.channel && <div><span className="text-gray-600">{t('declarations.channel')}:</span> <span className="font-medium uppercase">{aeatResult.channel}</span></div>}

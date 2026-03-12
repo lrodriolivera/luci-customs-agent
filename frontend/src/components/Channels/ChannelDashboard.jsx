@@ -18,6 +18,8 @@ import {
 
 export default function ChannelDashboard() {
   const { t } = useTranslation()
+  const customsCountry = localStorage.getItem('activeCustomsCountry') || 'ES'
+  const isNL = customsCountry === 'NL'
 
   const CHANNEL_CONFIG = {
     green: {
@@ -156,6 +158,12 @@ export default function ChannelDashboard() {
           <p className="text-gray-600">{t('channels.subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Country indicator */}
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border ${
+            isNL ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-blue-50 border-blue-200 text-blue-700'
+          }`}>
+            {isNL ? '\u{1F1F3}\u{1F1F1} Douane NL' : '\u{1F1EA}\u{1F1F8} AEAT'}
+          </span>
           {/* Selector de rango de fechas */}
           <select
             value={dateRange}
@@ -372,12 +380,25 @@ export default function ChannelDashboard() {
       {/* Leyenda de canales */}
       <div className="bg-gray-50 rounded-lg p-4">
         <h3 className="font-medium text-gray-700 mb-3">{t('channels.legend')}</h3>
+
+        {/* NL channel interpretation note */}
+        {isNL && (
+          <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-800">
+            <p className="font-medium mb-1">{'\u{1F1F3}\u{1F1F1}'} Interpretacion canales Douane (Paises Bajos)</p>
+            <ul className="list-disc list-inside space-y-0.5 text-xs">
+              <li><span className="font-medium text-green-700">Verde (00/01)</span>: Levante autorizado, sin control</li>
+              <li><span className="font-medium text-orange-700">Naranja (10)</span>: Control documental requerido</li>
+              <li><span className="font-medium text-red-700">Rojo (11)</span>: Control fisico de mercancias</li>
+            </ul>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
           <div className="flex items-start gap-2">
             <div className="w-4 h-4 rounded-full bg-green-500 mt-0.5" />
             <div>
               <p className="font-medium text-green-700">{t('channels.greenChannel')}</p>
-              <p className="text-gray-600">{t('channels.greenLegend')}</p>
+              <p className="text-gray-600">{isNL ? 'Codigo 00/01 - Levante sin control' : t('channels.greenLegend')}</p>
             </div>
           </div>
           <div className="flex items-start gap-2">
@@ -391,14 +412,14 @@ export default function ChannelDashboard() {
             <div className="w-4 h-4 rounded-full bg-orange-500 mt-0.5" />
             <div>
               <p className="font-medium text-orange-700">{t('channels.orangeChannel')}</p>
-              <p className="text-gray-600">{t('channels.orangeLegend')}</p>
+              <p className="text-gray-600">{isNL ? 'Codigo 10 - Control documental' : t('channels.orangeLegend')}</p>
             </div>
           </div>
           <div className="flex items-start gap-2">
             <div className="w-4 h-4 rounded-full bg-red-500 mt-0.5" />
             <div>
               <p className="font-medium text-red-700">{t('channels.redChannel')}</p>
-              <p className="text-gray-600">{t('channels.redLegend')}</p>
+              <p className="text-gray-600">{isNL ? 'Codigo 11 - Control fisico' : t('channels.redLegend')}</p>
             </div>
           </div>
         </div>

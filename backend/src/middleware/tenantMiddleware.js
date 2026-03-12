@@ -90,6 +90,13 @@ const extractTenant = (options = {}) => {
       req.tenant = tenant;
       req.tenantId = tenant?.id || null;
 
+      // Inject country from tenant config (for multi-country routing)
+      if (tenant?.customsConfig?.country) {
+        req.country = tenant.customsConfig.country;
+      } else {
+        req.country = 'ES'; // Default
+      }
+
       next();
     } catch (error) {
       logger.error(`[TenantMiddleware] Error extracting tenant: ${error.message}`);

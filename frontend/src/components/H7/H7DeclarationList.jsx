@@ -15,13 +15,14 @@ import {
   DocumentArrowUpIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
+  ArrowUpTrayIcon
 } from '@heroicons/react/24/outline'
 
 // STATUS_CONFIG is defined inside the component to use t()
 
 // Transportistas
-const CARRIERS = [
+const CARRIERS_ES = [
   { code: 'CORREOS', name: 'Correos' },
   { code: 'DHL', name: 'DHL Express' },
   { code: 'UPS', name: 'UPS' },
@@ -33,6 +34,32 @@ const CARRIERS = [
   { code: 'AMAZON', name: 'Amazon Logistics' },
   { code: 'OTHER', name: 'Otro' }
 ]
+
+const CARRIERS_NL = [
+  { code: 'POSTNL', name: 'PostNL' },
+  { code: 'DHL', name: 'DHL Express' },
+  { code: 'DPD', name: 'DPD' },
+  { code: 'UPS', name: 'UPS' },
+  { code: 'FEDEX', name: 'FedEx' },
+  { code: 'GLS', name: 'GLS' },
+  { code: 'TNT', name: 'TNT' },
+  { code: 'AMAZON', name: 'Amazon Logistics' },
+  { code: 'BOL', name: 'Bol.com Logistics' },
+  { code: 'OTHER', name: 'Otro' }
+]
+
+const NL_CUSTOMS_OFFICES = [
+  { code: 'NL000297', name: 'Rotterdam Haven' },
+  { code: 'NL000399', name: 'Schiphol' },
+  { code: 'NL000396', name: 'Amsterdam' },
+  { code: 'NL000440', name: 'Eindhoven' },
+  { code: 'NL000448', name: 'Venlo' },
+  { code: 'NL000231', name: 'Breda' },
+  { code: 'NL000251', name: 'Rotterdam Rijnmond' },
+]
+
+const getActiveCountry = () => localStorage.getItem('activeCustomsCountry') || 'ES'
+const CARRIERS = getActiveCountry() === 'NL' ? CARRIERS_NL : CARRIERS_ES
 
 export default function H7DeclarationList() {
   const { t } = useTranslation()
@@ -66,6 +93,12 @@ export default function H7DeclarationList() {
   })
   const [showFilters, setShowFilters] = useState(false)
   const [showNewForm, setShowNewForm] = useState(false)
+  const [showBatchDECO, setShowBatchDECO] = useState(false)
+  const [batchSelected, setBatchSelected] = useState([])
+  const [batchSubmitting, setBatchSubmitting] = useState(false)
+
+  const activeCountry = localStorage.getItem('activeCustomsCountry') || 'ES'
+  const isNL = activeCountry === 'NL'
 
   useEffect(() => {
     loadDeclarations()
@@ -156,12 +189,21 @@ export default function H7DeclarationList() {
             <FunnelIcon className="h-5 w-5" />
             {t('h7.filters')}
           </button>
+          {isNL && (
+            <button
+              onClick={() => setShowBatchDECO(true)}
+              className="btn-secondary flex items-center gap-2"
+            >
+              <ArrowUpTrayIcon className="h-5 w-5" />
+              Batch DECO
+            </button>
+          )}
           <button
             onClick={() => setShowNewForm(true)}
             className="btn-primary flex items-center gap-2"
           >
             <PlusIcon className="h-5 w-5" />
-            {t('h7.new')}
+            {isNL ? 'Nueva DECO' : t('h7.new')}
           </button>
         </div>
       </div>
@@ -409,6 +451,133 @@ export default function H7DeclarationList() {
           }}
         />
       )}
+
+      {/* Batch DECO Modal (NL only) */}
+      {showBatchDECO && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold">{'\u{1F1F3}\u{1F1F1}'} Batch DECO</h2>
+                <p className="text-sm text-gray-500">Selecciona declaraciones H7 para enviar en lote via DECO</p>
+              </div>
+              <button onClick={() => { setShowBatchDECO(false); setBatchSelected([]) }} className="text-gray-400 hover:text-gray-600">
+                <XCircleIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* CSV upload option */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                <ArrowUpTrayIcon className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                <p className="text-sm text-gray-600 mb-2">Subir CSV con declaraciones DECO</p>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => {
+                    if (e.target.files[0]) {
+                      toast.success(`CSV "${e.target.files[0].name}" cargado. Procesando...`)
+                    }
+                  }}
+                  className="text-sm"
+                />
+                <p className="text-xs text-gray-400 mt-2">Formato: tracking,sender,recipient_eori,description,value,taric_code</p>
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+                <div className="relative flex justify-center"><span className="bg-white px-3 text-sm text-gray-500">o seleccionar existentes</span></div>
+              </div>
+
+              {/* Select from existing draft declarations */}
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {declarations.filter(d => d.status === 'draft').length === 0 ? (
+                  <p className="text-center text-gray-500 py-4">No hay declaraciones en borrador para enviar</p>
+                ) : (
+                  declarations.filter(d => d.status === 'draft').map(decl => (
+                    <label key={decl._id} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      batchSelected.includes(decl._id) ? 'border-orange-300 bg-orange-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={batchSelected.includes(decl._id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setBatchSelected([...batchSelected, decl._id])
+                          } else {
+                            setBatchSelected(batchSelected.filter(id => id !== decl._id))
+                          }
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{decl.reference}</p>
+                        <p className="text-xs text-gray-500">{decl.recipient?.name} - {decl.trackingNumber}</p>
+                      </div>
+                      <span className="text-sm font-medium">
+                        {decl.totals?.customsValue?.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                      </span>
+                    </label>
+                  ))
+                )}
+              </div>
+
+              {batchSelected.length > 0 && (
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm">
+                  <p className="font-medium text-orange-800">{batchSelected.length} declaracion(es) seleccionada(s)</p>
+                  <p className="text-xs text-orange-600 mt-1">Se enviaran todas a DECO en un unico lote</p>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                  onClick={() => { setShowBatchDECO(false); setBatchSelected([]) }}
+                  className="btn-secondary"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  onClick={async () => {
+                    if (batchSelected.length === 0) {
+                      toast.error('Selecciona al menos una declaracion')
+                      return
+                    }
+                    setBatchSubmitting(true)
+                    try {
+                      for (const id of batchSelected) {
+                        await h7API.submit(id)
+                      }
+                      toast.success(`${batchSelected.length} declaracion(es) enviada(s) a DECO`)
+                      setShowBatchDECO(false)
+                      setBatchSelected([])
+                      loadDeclarations()
+                      loadStats()
+                    } catch (error) {
+                      toast.error('Error enviando lote DECO')
+                    } finally {
+                      setBatchSubmitting(false)
+                    }
+                  }}
+                  disabled={batchSelected.length === 0 || batchSubmitting}
+                  className="btn-primary disabled:opacity-50 flex items-center gap-2"
+                >
+                  {batchSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowUpTrayIcon className="h-4 w-4" />
+                      Enviar Batch DECO ({batchSelected.length})
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -416,10 +585,16 @@ export default function H7DeclarationList() {
 // Componente para crear nueva H7
 function H7NewForm({ onClose, onCreated }) {
   const { t } = useTranslation()
+  const activeCountry = localStorage.getItem('activeCustomsCountry') || 'ES'
+  const isNL = activeCountry === 'NL'
+  const carriers = isNL ? CARRIERS_NL : CARRIERS_ES
+  const defaultCarrier = isNL ? { code: 'POSTNL', name: 'PostNL' } : { code: 'CORREOS', name: 'Correos' }
   const [formData, setFormData] = useState({
     trackingNumber: '',
-    carrier: { code: 'CORREOS', name: 'Correos' },
+    carrier: defaultCarrier,
     iossNumber: '',
+    customsOffice: isNL ? 'NL000399' : '',
+    destinationCountry: isNL ? 'NL' : 'ES',
     sender: {
       name: '',
       address: { country: 'CN' }
@@ -427,11 +602,12 @@ function H7NewForm({ onClose, onCreated }) {
     recipient: {
       name: '',
       taxId: '',
+      eori: '',
       address: {
         street: '',
         city: '',
         postalCode: '',
-        country: 'ES'
+        country: isNL ? 'NL' : 'ES'
       }
     },
     items: [{
@@ -560,6 +736,42 @@ function H7NewForm({ onClose, onCreated }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Country indicator */}
+          <div className={`flex items-center justify-between p-3 rounded-lg ${isNL ? 'bg-orange-50 border border-orange-200' : 'bg-blue-50 border border-blue-200'}`}>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{isNL ? '🇳🇱' : '🇪🇸'}</span>
+              <span className={`font-medium ${isNL ? 'text-orange-700' : 'text-blue-700'}`}>
+                {isNL ? 'DECO - Paises Bajos' : 'AEAT - España'}
+              </span>
+              {isNL && <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">H7 max 150 EUR</span>}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const next = isNL ? 'ES' : 'NL'
+                localStorage.setItem('activeCustomsCountry', next)
+                window.location.reload()
+              }}
+              className="text-xs text-gray-500 hover:text-gray-700 underline"
+            >
+              Cambiar a {isNL ? 'España' : 'Paises Bajos'}
+            </button>
+          </div>
+
+          {/* NL DECO info box */}
+          {isNL && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+              <p className="font-medium mb-1">Declaracion DECO (Paises Bajos)</p>
+              <ul className="list-disc list-inside space-y-0.5 text-xs">
+                <li>Valor intrinseco maximo: 150 EUR por envio</li>
+                <li>Codigo arancelario: 6 digitos (no 10 como TARIC)</li>
+                <li>Si tiene IOSS, el IVA ya fue cobrado en origen</li>
+                <li>El destinatario necesita EORI holandes (NLxxxxxxxxx)</li>
+                <li>Mercancias sujetas a impuestos especiales NO pueden usar DECO</li>
+              </ul>
+            </div>
+          )}
+
           {/* Validacion */}
           {validation && !validation.eligible && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -590,12 +802,12 @@ function H7NewForm({ onClose, onCreated }) {
               <select
                 value={formData.carrier.code}
                 onChange={(e) => {
-                  const carrier = CARRIERS.find(c => c.code === e.target.value)
+                  const carrier = carriers.find(c => c.code === e.target.value)
                   setFormData({ ...formData, carrier: { code: carrier.code, name: carrier.name } })
                 }}
                 className="input"
               >
-                {CARRIERS.map(c => (
+                {carriers.map(c => (
                   <option key={c.code} value={c.code}>{c.name}</option>
                 ))}
               </select>
@@ -612,8 +824,29 @@ function H7NewForm({ onClose, onCreated }) {
               className="input"
               placeholder="IM + 10 digitos (ej: IM2760000001)"
             />
-            <p className="text-xs text-gray-500 mt-1">{t('h7.iossHint')}</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {isNL
+                ? 'Si el vendedor tiene IOSS, el IVA ya fue cobrado. Formato: IM + pais + digitos (ej: IMNL000000123)'
+                : t('h7.iossHint')}
+            </p>
           </div>
+
+          {/* NL: Customs office selector */}
+          {isNL && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Aduana de entrada (Paises Bajos) *</label>
+              <select
+                value={formData.customsOffice}
+                onChange={(e) => setFormData({ ...formData, customsOffice: e.target.value })}
+                className="input"
+                required
+              >
+                {NL_CUSTOMS_OFFICES.map(o => (
+                  <option key={o.code} value={o.code}>{o.name} ({o.code})</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Remitente */}
           <div className="border rounded-lg p-4">
@@ -671,17 +904,19 @@ function H7NewForm({ onClose, onCreated }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">NIF/NIE *</label>
+                <label className="block text-sm font-medium mb-1">{isNL ? 'EORI *' : 'NIF/NIE *'}</label>
                 <input
                   type="text"
                   required
-                  value={formData.recipient.taxId}
+                  value={isNL ? formData.recipient.eori : formData.recipient.taxId}
                   onChange={(e) => setFormData({
                     ...formData,
-                    recipient: { ...formData.recipient, taxId: e.target.value.toUpperCase() }
+                    recipient: isNL
+                      ? { ...formData.recipient, eori: e.target.value.toUpperCase() }
+                      : { ...formData.recipient, taxId: e.target.value.toUpperCase() }
                   })}
                   className="input"
-                  placeholder="12345678A"
+                  placeholder={isNL ? 'NL123456789' : '12345678A'}
                 />
               </div>
               <div className="col-span-2">

@@ -347,14 +347,28 @@ const submitDeclaration = async (req, res) => {
       });
     }
 
-    // Enviar a AEAT real via aeatSubmitService
-    logger.info(`Enviando declaracion ${expedition.declaration.type} a AEAT...`);
+    // Enviar a AEAT real via aeatSubmitService (or multi-country factory)
+    logger.info(`Enviando declaracion ${expedition.declaration.type}...`);
+
+    const { CustomsServiceFactory } = require('../services/customs');
+    const Tenant = require('../models/Tenant');
+
+    const tenant = await Tenant.findById(expedition.tenantId);
+    const country = tenant?.customsConfig?.country || 'ES';
+    const type = expedition.declaration.type;
 
     let aeatResult;
-    if (expedition.declaration.type === 'AES') {
-      aeatResult = await aeatSubmitService.submitAES(expedition);
+    if (country === 'ES') {
+      // Existing AEAT code (backward compatible)
+      if (type === 'AES') {
+        aeatResult = await aeatSubmitService.submitAES(expedition);
+      } else {
+        aeatResult = await aeatSubmitService.submitH1(expedition);
+      }
     } else {
-      aeatResult = await aeatSubmitService.submitH1(expedition);
+      // Multi-country via factory
+      const customsService = CustomsServiceFactory.getServiceForTenant(tenant);
+      aeatResult = await customsService.submitDeclaration(expedition, type);
     }
 
     if (!aeatResult.success) {

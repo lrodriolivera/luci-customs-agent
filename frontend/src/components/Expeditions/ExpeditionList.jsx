@@ -155,6 +155,7 @@ export default function ExpeditionList() {
                   <th>{t('expeditions.tableId')}</th>
                   <th>{t('expeditions.tableClient')}</th>
                   <th>{t('expeditions.tableType')}</th>
+                  <th>Pais</th>
                   <th>{t('expeditions.tableOriginDest')}</th>
                   <th>{t('expeditions.tableStatus')}</th>
                   <th>{t('expeditions.tableDocs')}</th>
@@ -163,18 +164,27 @@ export default function ExpeditionList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {expeditions.map((exp) => (
+                {expeditions.map((exp) => {
+                  const expCountry = exp.country || exp.client?.country || 'ES'
+                  return (
                   <tr key={exp._id} className="hover:bg-gray-50">
                     <td className="font-medium text-luci">{exp.expeditionId}</td>
                     <td>
                       <div>
                         <p className="font-medium">{exp.client?.companyName || 'N/A'}</p>
-                        <p className="text-xs text-gray-500">{exp.client?.nif || ''}</p>
+                        <p className="text-xs text-gray-500">{exp.client?.nif || exp.client?.eori || ''}</p>
                       </div>
                     </td>
                     <td>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${exp.operationType === 'import' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
                         {exp.operationType === 'import' ? t('common.import') : t('common.export')}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
+                        expCountry === 'NL' ? 'bg-orange-50 text-orange-700' : 'bg-blue-50 text-blue-700'
+                      }`}>
+                        {expCountry === 'NL' ? '\u{1F1F3}\u{1F1F1}' : '\u{1F1EA}\u{1F1F8}'} {expCountry}
                       </span>
                     </td>
                     <td>
@@ -201,7 +211,8 @@ export default function ExpeditionList() {
                       </Link>
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>

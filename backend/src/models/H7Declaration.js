@@ -88,6 +88,22 @@ const H7DeclarationSchema = new mongoose.Schema({
     sparse: true
   },
 
+  // Country and customs system
+  country: { type: String, enum: ['ES', 'NL'], default: 'ES' },
+  customsOffice: { type: String },
+  destinationCountry: { type: String, default: 'ES' },
+  customsSystem: { type: String, enum: ['AEAT', 'DECO'], default: 'AEAT' },
+
+  // NL correction workflow
+  correctionRequired: { type: Boolean, default: false },
+  correctionDeadline: { type: Date },
+  correctionHistory: [{
+    errorCode: String,
+    errorDescription: String,
+    submittedAt: Date,
+    resolvedAt: Date
+  }],
+
   // Expediente asociado (opcional)
   expedition: {
     type: mongoose.Schema.Types.ObjectId,

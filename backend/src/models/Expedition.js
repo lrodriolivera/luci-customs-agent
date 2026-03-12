@@ -131,8 +131,10 @@ const DeclarationSchema = new mongoose.Schema({
   submittedAt: Date,
   status: {
     type: String,
-    enum: ['draft', 'pending', 'submitted', 'accepted', 'rejected', 'amendment_required']
+    enum: ['draft', 'pending', 'submitted', 'accepted', 'rejected', 'amendment_required', 'correction_required', 'amendment_pending']
   },
+  customsCountry: { type: String },
+  customsSystem: { type: String }, // 'AEAT', 'DMS', 'DECO'
   channel: {
     type: String,
     enum: ['green', 'orange', 'red']
@@ -178,6 +180,19 @@ const ExpeditionSchema = new mongoose.Schema({
     ref: 'Tenant',
     index: true
   },
+
+  // Country for customs routing
+  country: {
+    type: String,
+    enum: ['ES', 'NL', 'BE', 'DE', 'FR', 'PT', 'IT'],
+    default: 'ES'
+  },
+
+  // NL-specific fields
+  iossNumber: { type: String },
+  nlCustomsOffice: { type: String },
+  cvbReleaseId: { type: String },
+  cvbStatus: { type: String, enum: ['pending', 'released', 'rejected', null] },
 
   // Operation type
   operationType: {

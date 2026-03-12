@@ -13,11 +13,17 @@ const { H7Declaration, Expedition } = require('../models');
 const aeatSubmitService = require('./aeat/aeatSubmitService');
 const logger = require('../config/logger');
 
+// VAT rates per country
+const VAT_RATES = {
+  ES: { standard: 21, reduced: 10, superReduced: 4 },
+  NL: { standard: 21, reduced: 9, zero: 0 },
+};
+
 // Limites y configuracion H7
 const H7_CONFIG = {
   maxIntrinsicValue: 150,        // EUR
   b2bLimit: 22,                  // EUR para B2B
-  vatRate: 21,                   // % IVA Espana
+  vatRate: 21,                   // % IVA Espana (default)
   reducedVatRate: 10,            // % IVA reducido
   superReducedVatRate: 4,        // % IVA superreducido
   handlingFees: {
@@ -247,14 +253,24 @@ class H7Service {
     const customsValue = intrinsicValue + shippingCost + insuranceCost;
     const grossWeight = data.totals?.grossWeight || netWeight * 1.1;
 
-    // Determinar tasa IVA
-    let vatRate = H7_CONFIG.vatRate;
+    // Determinar tasa IVA (country-aware)
+    const country = data.country || 'ES';
+    const rates = VAT_RATES[country] || VAT_RATES.ES;
+    let vatRate = rates.standard;
     if (items.length > 0) {
       const dominantCode = items[0].taricCode?.substring(0, 4);
-      if (REDUCED_VAT_CODES.superReduced.includes(dominantCode)) {
-        vatRate = H7_CONFIG.superReducedVatRate;
-      } else if (REDUCED_VAT_CODES.reduced.includes(dominantCode)) {
-        vatRate = H7_CONFIG.reducedVatRate;
+      if (country === 'ES') {
+        // Spain has super-reduced rate
+        if (REDUCED_VAT_CODES.superReduced.includes(dominantCode)) {
+          vatRate = rates.superReduced;
+        } else if (REDUCED_VAT_CODES.reduced.includes(dominantCode)) {
+          vatRate = rates.reduced;
+        }
+      } else if (country === 'NL') {
+        // NL has reduced (9%) and zero rates
+        if (REDUCED_VAT_CODES.reduced.includes(dominantCode)) {
+          vatRate = rates.reduced;
+        }
       }
     }
 
@@ -415,8 +431,23 @@ class H7Service {
     // Calcular derechos finales
     declaration.calculateDuties();
 
-    // Enviar a AEAT real via aeatSubmitService
-    const aeatResult = await aeatSubmitService.submitH7(declaration);
+    // Route submission based on tenant country
+    const { CustomsServiceFactory } = require('./customs');
+    const Tenant = require('../models/Tenant');
+
+    // Get tenant to determine country
+    const tenant = await Tenant.findById(declaration.tenantId);
+    const country = tenant?.customsConfig?.country || 'ES';
+
+    let aeatResult;
+    if (country === 'ES') {
+      // Existing AEAT flow
+      aeatResult = await aeatSubmitService.submitH7(declaration);
+    } else {
+      // Multi-country flow via factory
+      const customsService = CustomsServiceFactory.getServiceForTenant(tenant);
+      aeatResult = await customsService.submitDeclaration(declaration, 'H7');
+    }
 
     if (!aeatResult.success) {
       return {

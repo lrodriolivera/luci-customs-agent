@@ -5,6 +5,16 @@ import { expeditionsAPI, classificationAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import { ArrowLeftIcon, PlusIcon, TrashIcon, SparklesIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
 
+const NL_CUSTOMS_OFFICES = [
+  { code: 'NL000297', name: 'Rotterdam Haven' },
+  { code: 'NL000399', name: 'Schiphol' },
+  { code: 'NL000396', name: 'Amsterdam' },
+  { code: 'NL000440', name: 'Eindhoven' },
+  { code: 'NL000448', name: 'Venlo' },
+  { code: 'NL000231', name: 'Breda' },
+  { code: 'NL000251', name: 'Rotterdam Rijnmond' },
+]
+
 export default function ExpeditionNew() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -13,8 +23,15 @@ export default function ExpeditionNew() {
   const [classifyingIndex, setClassifyingIndex] = useState(null)
   const [classificationResults, setClassificationResults] = useState({})
 
+  const defaultCountry = localStorage.getItem('activeCustomsCountry') || 'ES'
+  const [customsCountry, setCustomsCountry] = useState(defaultCountry)
+  const isNL = customsCountry === 'NL'
+
   const [formData, setFormData] = useState({
     operationType: 'IMPORT',
+    country: defaultCountry,
+    customsOffice: defaultCountry === 'NL' ? 'NL000399' : '',
+    iossNumber: '',
     client: {
       companyName: '',
       nif: '',
@@ -22,7 +39,7 @@ export default function ExpeditionNew() {
       address: '',
       city: '',
       postalCode: '',
-      country: 'ES',
+      country: defaultCountry,
       contactPerson: '',
       email: '',
       phone: ''
@@ -241,6 +258,90 @@ export default function ExpeditionNew() {
         {/* Step 1: Operation Type and Client */}
         {step === 1 && (
           <div className="card space-y-6">
+            {/* Country selector */}
+            <div>
+              <label className="label">Pais de destino aduanero *</label>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomsCountry('ES')
+                    setFormData(prev => ({
+                      ...prev,
+                      country: 'ES',
+                      customsOffice: '',
+                      client: { ...prev.client, country: 'ES' }
+                    }))
+                  }}
+                  className={`flex-1 p-3 rounded-xl border-2 transition-colors flex items-center gap-3 ${
+                    customsCountry === 'ES'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <span className="text-2xl">{'\u{1F1EA}\u{1F1F8}'}</span>
+                  <div className="text-left">
+                    <span className="font-medium block">Espana (ES)</span>
+                    <span className="text-xs text-gray-500">AEAT</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomsCountry('NL')
+                    setFormData(prev => ({
+                      ...prev,
+                      country: 'NL',
+                      customsOffice: 'NL000399',
+                      client: { ...prev.client, country: 'NL' }
+                    }))
+                  }}
+                  className={`flex-1 p-3 rounded-xl border-2 transition-colors flex items-center gap-3 ${
+                    customsCountry === 'NL'
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <span className="text-2xl">{'\u{1F1F3}\u{1F1F1}'}</span>
+                  <div className="text-left">
+                    <span className="font-medium block">Paises Bajos (NL)</span>
+                    <span className="text-xs text-gray-500">DMS 4.0 / DECO</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* NL-specific fields */}
+            {isNL && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <div>
+                  <label className="label">Aduana de entrada (NL) *</label>
+                  <select
+                    value={formData.customsOffice}
+                    onChange={(e) => setFormData({ ...formData, customsOffice: e.target.value })}
+                    className="input"
+                  >
+                    {NL_CUSTOMS_OFFICES.map(o => (
+                      <option key={o.code} value={o.code}>{o.name} ({o.code})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">IOSS (opcional)</label>
+                  <input
+                    type="text"
+                    value={formData.iossNumber}
+                    onChange={(e) => setFormData({ ...formData, iossNumber: e.target.value })}
+                    className="input"
+                    placeholder="IMNL000000123"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Si el vendedor tiene IOSS, el IVA ya fue cobrado</p>
+                </div>
+              </div>
+            )}
+
+            <hr className="my-2" />
+
             <h2 className="text-lg font-semibold">{t('expeditions.operationType')}</h2>
 
             <div className="flex gap-4">
@@ -288,28 +389,41 @@ export default function ExpeditionNew() {
                 />
               </div>
               <div>
-                <label className="label">{t('expeditions.nifCif')} *</label>
-                <input
-                  type="text"
-                  value={formData.client.nif}
-                  onChange={(e) => handleChange('client', 'nif', e.target.value.toUpperCase())}
-                  className={`input ${formData.client.nif && !/^[A-Z0-9]{8,10}$/.test(formData.client.nif) ? 'border-red-500' : ''}`}
-                  placeholder={t('expeditions.nifPlaceholder')}
-                  pattern="[A-Z0-9]{8,10}"
-                  required
-                />
-                {formData.client.nif && !/^[A-Z0-9]{8,10}$/.test(formData.client.nif) && (
-                  <p className="text-xs text-red-500 mt-1">{t('expeditions.nifValidation')}</p>
+                <label className="label">{isNL ? 'EORI *' : `${t('expeditions.nifCif')} *`}</label>
+                {isNL ? (
+                  <input
+                    type="text"
+                    value={formData.client.eori}
+                    onChange={(e) => handleChange('client', 'eori', e.target.value.toUpperCase())}
+                    className="input"
+                    placeholder="NL823456789"
+                    required
+                  />
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      value={formData.client.nif}
+                      onChange={(e) => handleChange('client', 'nif', e.target.value.toUpperCase())}
+                      className={`input ${formData.client.nif && !/^[A-Z0-9]{8,10}$/.test(formData.client.nif) ? 'border-red-500' : ''}`}
+                      placeholder={t('expeditions.nifPlaceholder')}
+                      pattern="[A-Z0-9]{8,10}"
+                      required
+                    />
+                    {formData.client.nif && !/^[A-Z0-9]{8,10}$/.test(formData.client.nif) && (
+                      <p className="text-xs text-red-500 mt-1">{t('expeditions.nifValidation')}</p>
+                    )}
+                  </>
                 )}
               </div>
               <div>
-                <label className="label">{t('expeditions.eori')}</label>
+                <label className="label">{isNL ? 'NIF (opcional)' : t('expeditions.eori')}</label>
                 <input
                   type="text"
-                  value={formData.client.eori}
-                  onChange={(e) => handleChange('client', 'eori', e.target.value)}
+                  value={isNL ? formData.client.nif : formData.client.eori}
+                  onChange={(e) => handleChange('client', isNL ? 'nif' : 'eori', e.target.value)}
                   className="input"
-                  placeholder={t('expeditions.eoriPlaceholder')}
+                  placeholder={isNL ? 'Solo si aplica' : t('expeditions.eoriPlaceholder')}
                 />
               </div>
               <div className="md:col-span-2">
