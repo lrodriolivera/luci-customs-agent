@@ -109,6 +109,7 @@
     "aeatIntegrations": "AEAT i Integracions",
     "aeatCertificates": "Certificats AEAT",
     "aeatMonitor": "Monitor AEAT",
+    "nlCustoms": "Duanes NL",
     "integrations": "Integracions",
     "administration": "Administracio",
     "analytics": "Analytics",
@@ -2273,7 +2274,946 @@
     "howToUse": "Com utilitzar",
     "regulation": "Normativa",
     "luciAi": "LUCI IA",
-    "steps": "Passos"
+    "steps": "Passos",
+    "dashboard": {
+      "title": "Panell de Control",
+      "description": "Vista general de l'estat de les teves operacions duaneres, expedients actius i metriques clau",
+      "uso": {
+        "s0Title": "Vista general d'operacions",
+        "s0Text": "El dashboard mostra un resum en temps real de tots els teus expedients, declaracions pendents, alertes actives i estat de connexio amb l'AEAT",
+        "s1Title": "Widgets i metriques",
+        "s1Text": "Personalitza els widgets del panell per veure les metriques que mes t'interessen: volum d'operacions, temps mitjans de despatx, canals assignats i mes",
+        "step0": "Accedeix al panell de control des del menu principal",
+        "step1": "Revisa les targetes de resum amb les metriques del periode",
+        "step2": "Consulta les alertes i notificacions pendents",
+        "step3": "Fes clic a qualsevol metrica per veure el detall complet"
+      },
+      "normativa": {
+        "r0Title": "Codi Duaner de la Unio",
+        "r0Desc": "Marc normatiu general per a totes les operacions duaneres a la UE (Reg. 952/2013)",
+        "r1Title": "Reglament d'Ordenacio Duanera",
+        "r1Desc": "Normativa nacional que desenvolupa el CDU a Espanya, regulant l'organitzacio i procediments duaners"
+      },
+      "luciIA": {
+        "f0Name": "Resum intel·ligent",
+        "f0Desc": "LUCI analitza automaticament les teves operacions i genera un resum executiu amb els punts d'atencio mes rellevants",
+        "f1Name": "Alertes predictives",
+        "f1Desc": "Detecta possibles incidencies abans que passin analitzant patrons en les teves declaracions i terminis",
+        "f2Name": "Recomanacions diaries",
+        "f2Desc": "Rep suggeriments personalitzats per optimitzar els teus processos duaners basats en l'analisi de la teva operativa"
+      }
+    },
+    "expeditions": {
+      "title": "Gestio d'Expedients",
+      "description": "Crea, gestiona i fes seguiment de tots els teus expedients d'importacio i exportacio",
+      "uso": {
+        "s0Title": "Crear un expedient",
+        "s0Text": "Inicia un nou expedient indicant el tipus d'operacio (importacio/exportacio), dades de l'operador i descripcio de la mercaderia",
+        "s1Title": "Seguiment de l'expedient",
+        "s1Text": "Consulta l'estat de cada expedient en temps real: documents adjunts, declaracions associades, canal assignat i comunicacions amb l'AEAT",
+        "s2Title": "Documentacio adjunta",
+        "s2Text": "Adjunta factures, packing lists, certificats d'origen, llicencies i qualsevol document necessari per al despatx duaner",
+        "step0": "Accedeix a la seccio Expedients des del menu lateral",
+        "step1": "Fes clic a Nou Expedient i selecciona el tipus d'operacio",
+        "step2": "Completa les dades de l'operador, mercaderia i documents",
+        "step3": "Desa l'expedient i associa les declaracions necessaries"
+      },
+      "normativa": {
+        "r0Title": "Declaracions duaneres (CDU Art. 158-187)",
+        "r0Desc": "Regula els diferents tipus de declaracions duaneres, els seus requisits i els procediments de despatx",
+        "r1Title": "Presentacio electronica (CDU Art. 15)",
+        "r1Desc": "Obligacio de presentacio electronica de totes les declaracions i documents davant les autoritats duaneres",
+        "r2Title": "Documents d'acompanyament (AD Art. 143-152)",
+        "r2Desc": "Requisits sobre documents que han d'acompanyar les mercaderies i les declaracions duaneres"
+      },
+      "luciIA": {
+        "f0Name": "Creacio assistida",
+        "f0Desc": "LUCI et guia pas a pas en la creacio de l'expedient, suggerint dades basades en operacions anteriors similars",
+        "f1Name": "Deteccio de documents faltants",
+        "f1Desc": "Analitza automaticament l'expedient i alerta si falta algun document obligatori segons el tipus de mercaderia i origen",
+        "f2Name": "Classificacio automatica",
+        "f2Desc": "Suggereix automaticament el codi TARIC adequat a partir de la descripcio de la mercaderia"
+      }
+    },
+    "declarations": {
+      "title": "Declaracions Duaneres H1",
+      "description": "Gestiona declaracions d'importacio completes (H1) per al seu enviament a l'AEAT mitjancant el sistema VUA/DIVA",
+      "uso": {
+        "s0Title": "Crear declaracio H1",
+        "s0Text": "Genera una declaracio H1 completa amb totes les dades requerides: intervinents, mercaderies, valor, tributs i documents d'acompanyament",
+        "s1Title": "Partides de mercaderia",
+        "s1Text": "Afegeix una o varies partides amb el seu codi TARIC, pes, valor, pais d'origen, regim duaner i documents associats",
+        "s2Title": "Enviament a l'AEAT",
+        "s2Text": "Un cop completada, envia la declaracio directament a l'AEAT i rep el MRN (Movement Reference Number) de confirmacio",
+        "step0": "Crea un expedient o selecciona un d'existent",
+        "step1": "Fes clic a Nova Declaracio H1 i omple les dades generals",
+        "step2": "Afegeix les partides de mercaderia amb els seus codis TARIC i valors",
+        "step3": "Adjunta els documents requerits (factura, DV1, certificats)",
+        "step4": "Valida i envia la declaracio a l'AEAT"
+      },
+      "normativa": {
+        "r0Title": "Declaracions d'importacio (CDU Art. 158-187)",
+        "r0Desc": "Marc legal per a les declaracions d'importacio, incloent contingut de l'Annex B columna H1 del CDU",
+        "r1Title": "Datasets d'importacio (AD Art. 143)",
+        "r1Desc": "Defineix els elements de dades requerits per a cada tipus de declaracio d'importacio",
+        "r2Title": "Valor en duana (CDU Art. 70-74)",
+        "r2Desc": "Metodes de valoracio duanera per determinar la base imposable dels drets d'importacio"
+      },
+      "luciIA": {
+        "f0Name": "Autocompletat intel·ligent",
+        "f0Desc": "LUCI omple automaticament camps basant-se en la informacio de l'expedient i operacions anteriors",
+        "f1Name": "Validacio pre-enviament",
+        "f1Desc": "Verifica que tots els camps obligatoris estan complets i son coherents abans d'enviar a l'AEAT",
+        "f2Name": "Calcul automatic de tributs",
+        "f2Desc": "Calcula automaticament aranzels, IVA i impostos especials a partir del codi TARIC i el valor declarat",
+        "f3Name": "Prediccio de canal",
+        "f3Desc": "Estima el canal probable (verd, taronja, vermell) basant-se en l'analisi de la mercaderia i l'historial de l'operador"
+      }
+    },
+    "h7": {
+      "title": "Declaracions H7 - Enviaments de Baix Valor",
+      "description": "Gestiona declaracions simplificades per a importacions de comerç electronic amb valor inferior a 150 EUR",
+      "uso": {
+        "s0Title": "Crear declaracio H7",
+        "s0Text": "Omple les dades de l'enviament: remitent, destinatari, mercaderia i valor declarat. El dataset es super-reduit respecte a l'H1",
+        "s1Title": "Importar manifest",
+        "s1Text": "Puja un fitxer CSV amb multiples enviaments i la IA classificara automaticament cada linia, generant declaracions H7 individuals",
+        "step0": "Accedeix a la seccio H7 E-commerce des del menu lateral",
+        "step1": "Fes clic a Nova H7 o Importar Manifest",
+        "step2": "Completa les dades requerides o puja el teu fitxer CSV",
+        "step3": "Envia la declaracio a l'AEAT i rep el MRN"
+      },
+      "normativa": {
+        "r0Title": "Codi Duaner de la Unio (CDU Art. 143a)",
+        "r0Desc": "Estableix el dataset super-reduit per a enviaments de baix valor fins a 150 EUR",
+        "r1Title": "Reglament (UE) 2019/1143",
+        "r1Desc": "Modifica el Reglament Delegat per incloure la columna H7 de l'Annex B amb les dades simplificades",
+        "r2Title": "Directiva (UE) 2017/2455 - Paquet IVA e-commerce",
+        "r2Desc": "Obligacio de declaracio duanera per a tots els enviaments, eliminant l'exempcio de 22 EUR"
+      },
+      "luciIA": {
+        "f0Name": "Classificacio automatica",
+        "f0Desc": "La IA classifica automaticament les mercaderies assignant codis HS de 6 digits a partir de la descripcio",
+        "f1Name": "Processament de manifest",
+        "f1Desc": "Puja un CSV complet i LUCI generara declaracions H7 per a cada enviament elegible del manifest",
+        "f2Name": "Validacio intel·ligent",
+        "f2Desc": "Detecta automaticament enviaments que superen 150 EUR i requereixen declaracio H1 completa"
+      }
+    },
+    "ens": {
+      "title": "Declaracions ENS - Declaracio Sumaria d'Entrada",
+      "description": "Gestiona declaracions sumaries d'entrada (ENS/ICS2) per a mercaderies que ingressen al territori duaner de la UE",
+      "uso": {
+        "s0Title": "Crear declaracio ENS",
+        "s0Text": "Introdueix les dades del transportista, remitent, destinatari, itinerari i descripcio de la mercaderia per a la notificacio previa d'arribada",
+        "s1Title": "Seguiment d'ENS",
+        "s1Text": "Monitoritza l'estat de les teves declaracions ENS: acceptades, rebutjades o pendents d'avaluacio de riscos per la duana",
+        "step0": "Accedeix a la seccio ENS des del menu lateral",
+        "step1": "Fes clic a Nova ENS i selecciona el mode de transport",
+        "step2": "Completa les dades d'intervinents, itinerari i mercaderia",
+        "step3": "Envia la declaracio i consulta el MRN assignat"
+      },
+      "normativa": {
+        "r0Title": "Declaracio sumaria d'entrada (CDU Art. 127-130)",
+        "r0Desc": "Obligacio de presentar declaracio sumaria abans de la introduccio de mercaderies al territori duaner de la UE",
+        "r1Title": "Sistema ICS2 (Reg. 2019/1010)",
+        "r1Desc": "Nou sistema de control d'importacions que implementa la declaracio previa de carrega en tres fases",
+        "r2Title": "Analisi de riscos (CDU Art. 46-47)",
+        "r2Desc": "Marc per a l'analisi de riscos duaners i els controls basats en la informacio previa de la mercaderia"
+      },
+      "luciIA": {
+        "f0Name": "Generacio automatica d'ENS",
+        "f0Desc": "LUCI genera la declaracio ENS a partir de les dades del coneixement d'embarcament o carta de port",
+        "f1Name": "Validacio d'itineraris",
+        "f1Desc": "Verifica automaticament la coherencia dels codis de pais, ports i duanes de l'itinerari declarat",
+        "f2Name": "Alertes de rebuig",
+        "f2Desc": "Detecta errors frequents abans de l'enviament per reduir el risc de rebuig per l'AEAT"
+      }
+    },
+    "channels": {
+      "title": "Circuits Duaners",
+      "description": "Consulta i gestiona els canals d'inspeccio assignats a les teves declaracions (verd, taronja, vermell)",
+      "uso": {
+        "s0Title": "Consultar canals assignats",
+        "s0Text": "Visualitza el canal assignat a cada declaracio despres de l'enviament: verd (aixecament directe), taronja (control documental) o vermell (reconeixement fisic)",
+        "s1Title": "Gestio d'incidencies de canal",
+        "s1Text": "Quan una declaracio rep canal taronja o vermell, gestiona la resposta als requeriments de la duana des d'aquesta seccio",
+        "step0": "Accedeix a la seccio Circuits des del menu lateral",
+        "step1": "Filtra per tipus de canal, data o estat de l'expedient",
+        "step2": "Revisa les declaracions amb canal taronja o vermell pendents",
+        "step3": "Aten els requeriments adjuntant la documentacio sol·licitada"
+      },
+      "normativa": {
+        "r0Title": "Control duaner (CDU Art. 188-193)",
+        "r0Desc": "Facultats de la duana per realitzar controls documentals i reconeixements fisics de les mercaderies",
+        "r1Title": "Gestio de riscos (CDU Art. 46)",
+        "r1Desc": "Sistema d'analisi de riscos que determina l'assignacio de canal a cada declaracio"
+      },
+      "luciIA": {
+        "f0Name": "Prediccio de canal",
+        "f0Desc": "LUCI prediu el canal probable abans de l'enviament analitzant la mercaderia, origen, operador i patrons historics",
+        "f1Name": "Alertes en temps real",
+        "f1Desc": "Rep notificacions immediates quan s'assigna un canal a les teves declaracions",
+        "f2Name": "Estadistiques de canals",
+        "f2Desc": "Analitza la distribucio historica de canals per identificar tendencies i optimitzar les teves operacions"
+      }
+    },
+    "requirements": {
+      "title": "Requeriments de l'AEAT",
+      "description": "Gestiona i respon als requeriments de documentacio i informacio de l'Agencia Tributaria",
+      "uso": {
+        "s0Title": "Veure requeriments pendents",
+        "s0Text": "Consulta tots els requeriments rebuts de l'AEAT, classificats per urgencia, tipus i termini de resposta",
+        "s1Title": "Respondre a requeriments",
+        "s1Text": "Prepara i envia la resposta al requeriment adjuntant els documents sol·licitats dins del termini establert",
+        "step0": "Accedeix a la seccio Requeriments des del menu lateral",
+        "step1": "Revisa els requeriments pendents ordenats per data limit",
+        "step2": "Prepara la documentacio sol·licitada i redacta la resposta",
+        "step3": "Envia la resposta a l'AEAT dins del termini"
+      },
+      "normativa": {
+        "r0Title": "Requeriments duaners (CDU Art. 188)",
+        "r0Desc": "Facultat de la duana per sol·licitar documents i informacio addicional durant el despatx de mercaderies",
+        "r1Title": "Obligacio de col·laboracio (LGT Art. 93)",
+        "r1Desc": "Deure d'aportar documentacio i informacio requerida per l'administracio tributaria en termini",
+        "r2Title": "Terminis administratius (Llei 39/2015 Art. 68)",
+        "r2Desc": "Regulacio dels terminis per esmenar deficiencies i aportar documentacio en procediments administratius"
+      },
+      "luciIA": {
+        "f0Name": "Esborrany de resposta",
+        "f0Desc": "LUCI genera un esborrany de resposta al requeriment basant-se en la documentacio disponible a l'expedient",
+        "f1Name": "Deteccio de documents",
+        "f1Desc": "Identifica automaticament quins documents de l'expedient son rellevants per respondre al requeriment",
+        "f2Name": "Alerta de terminis",
+        "f2Desc": "Notifica amb antelacio quan s'acosta la data limit per respondre a un requeriment"
+      }
+    },
+    "deadlines": {
+      "title": "Control de Terminis",
+      "description": "Monitoritza i gestiona tots els terminis critics de les teves operacions duaneres per evitar sancions",
+      "uso": {
+        "s0Title": "Calendari de terminis",
+        "s0Text": "Visualitza tots els terminis actius en un calendari: venciments de declaracions temporals, respostes a requeriments, renovacio de garanties i mes",
+        "s1Title": "Configurar alertes",
+        "s1Text": "Defineix amb quants dies d'antelacio vols rebre alertes per a cada tipus de termini (email i notificacio a la plataforma)",
+        "step0": "Accedeix a la seccio Terminis des del menu lateral",
+        "step1": "Revisa el calendari amb tots els terminis actius",
+        "step2": "Configura les alertes d'antelacio segons les teves necessitats",
+        "step3": "Aten els terminis propers a vencer per evitar sancions"
+      },
+      "normativa": {
+        "r0Title": "Terminis de despatx (CDU Art. 108)",
+        "r0Desc": "Terminis per a la presentacio de declaracions duaneres i posada a disposicio de les mercaderies",
+        "r1Title": "Diposit temporal (CDU Art. 172)",
+        "r1Desc": "Terminis maxims de permanencia de mercaderies en diposit temporal abans d'assignar una destinacio duanera",
+        "r2Title": "Terminis administratius (Llei 39/2015 Art. 21)",
+        "r2Desc": "Obligacio de resoldre els procediments administratius dins dels terminis legalment establerts"
+      },
+      "luciIA": {
+        "f0Name": "Calendari intel·ligent",
+        "f0Desc": "LUCI calcula automaticament tots els terminis a partir de les dates de les teves operacions i la normativa aplicable",
+        "f1Name": "Alertes predictives",
+        "f1Desc": "Prioritza els terminis segons el risc d'incompliment considerant la carrega de treball i els temps habituals",
+        "f2Name": "Suggeriments d'accio",
+        "f2Desc": "Recomana accions concretes per complir cada termini basant-se en l'estat actual de l'expedient"
+      }
+    },
+    "inspections": {
+      "title": "Inspeccions Duaneres",
+      "description": "Gestiona les inspeccions fisiques i documentals requerides per la duana per a les teves mercaderies",
+      "uso": {
+        "s0Title": "Inspeccions pendents",
+        "s0Text": "Consulta les declaracions que requereixen inspeccio fisica (canal vermell) o documental (canal taronja), amb data i ubicacio programada",
+        "s1Title": "Gestio de resultats",
+        "s1Text": "Registra els resultats de cada inspeccio: conformitat, incidencies detectades i accions correctives necessaries",
+        "step0": "Accedeix a la seccio Inspeccions des del menu lateral",
+        "step1": "Revisa les inspeccions programades i la seva ubicacio",
+        "step2": "Prepara la documentacio necessaria per a la inspeccio",
+        "step3": "Registra el resultat un cop finalitzada la inspeccio"
+      },
+      "normativa": {
+        "r0Title": "Controls duaners (CDU Art. 188-193)",
+        "r0Desc": "Marc legal per al reconeixement fisic de mercaderies i els controls documentals per part de la duana",
+        "r1Title": "Procediment de reconeixement (RD 1073/2014)",
+        "r1Desc": "Regulacio del procediment de reconeixement fisic a les duanes espanyoles",
+        "r2Title": "Presa de mostres (CDU Art. 189)",
+        "r2Desc": "Procediment per a la presa de mostres durant el reconeixement fisic de les mercaderies"
+      },
+      "luciIA": {
+        "f0Name": "Preparacio d'inspeccio",
+        "f0Desc": "LUCI genera un checklist personalitzat amb els documents i accions necessaries per a cada tipus d'inspeccio",
+        "f1Name": "Historial d'inspeccions",
+        "f1Desc": "Analitza l'historial d'inspeccions per identificar patrons i reduir la frequencia de canals vermell i taronja",
+        "f2Name": "Assistent en temps real",
+        "f2Desc": "Durant la inspeccio, consulta a LUCI qualsevol dubte sobre la mercaderia, classificacio o documentacio"
+      }
+    },
+    "communications": {
+      "title": "Comunicacions AEAT",
+      "description": "Gestiona totes les notificacions i comunicacions electroniques amb l'Agencia Tributaria",
+      "uso": {
+        "s0Title": "Safata de comunicacions",
+        "s0Text": "Consulta totes les notificacions rebudes de l'AEAT: resolucions, requeriments, informacio de canal i aixecament de mercaderies",
+        "s1Title": "Enviament de documentacio",
+        "s1Text": "Envia respostes i documentacio addicional a l'AEAT directament des de la plataforma de forma segura",
+        "step0": "Accedeix a la seccio Comunicacions des del menu lateral",
+        "step1": "Revisa les comunicacions rebudes ordenades per data",
+        "step2": "Obre cada comunicacio per veure el contingut complet",
+        "step3": "Respon o adjunta documentacio segons sigui necessari"
+      },
+      "normativa": {
+        "r0Title": "Notificacions electroniques (Llei 39/2015 Art. 40-44)",
+        "r0Desc": "Regulacio de les notificacions electroniques obligatories en els procediments administratius",
+        "r1Title": "Relacio electronica obligatoria (Llei 39/2015 Art. 14)",
+        "r1Desc": "Obligacio de relacionar-se electronicament amb l'administracio per a determinats col·lectius, incloent representants duaners"
+      },
+      "luciIA": {
+        "f0Name": "Resum automatic",
+        "f0Desc": "LUCI resumeix automaticament el contingut de cada comunicacio destacant les accions requerides i els terminis",
+        "f1Name": "Classificacio intel·ligent",
+        "f1Desc": "Classifica automaticament les comunicacions per tipus (requeriment, aixecament, notificacio) i prioritat",
+        "f2Name": "Resposta assistida",
+        "f2Desc": "Genera esborranys de resposta per agilitzar l'atencio a les comunicacions de l'AEAT"
+      }
+    },
+    "classification": {
+      "title": "Classificacio Aranzelaria TARIC",
+      "description": "Consulta i classifica mercaderies segons la nomenclatura combinada i l'aranzel integrat TARIC de la UE",
+      "uso": {
+        "s0Title": "Buscar codi aranzelari",
+        "s0Text": "Busca codis TARIC per descripcio de la mercaderia, numero de capitol o codi aranzelari parcial",
+        "s1Title": "Navegacio per capitols",
+        "s1Text": "Navega per l'estructura jerarquica de l'aranzel: seccions, capitols, partides, subpartides i codis TARIC de 10 digits",
+        "s2Title": "Mesures i restriccions",
+        "s2Text": "Consulta les mesures aranzelaries, antidumping, contingents, preferencies i restriccions aplicables a cada codi",
+        "step0": "Accedeix a la seccio Classificacio TARIC des del menu lateral",
+        "step1": "Introdueix la descripcio de la mercaderia o navega per capitols",
+        "step2": "Selecciona el codi TARIC que millor s'ajusti a la teva mercaderia",
+        "step3": "Consulta les mesures i restriccions aplicables al codi seleccionat"
+      },
+      "normativa": {
+        "r0Title": "Classificacio de mercaderies (CDU Art. 56-57)",
+        "r0Desc": "Normes per a la classificacio aranzelaria de mercaderies en la nomenclatura combinada de la UE",
+        "r1Title": "Regles Generals d'Interpretacio (RGI 1-6)",
+        "r1Desc": "Les sis regles que determinen la classificacio correcta de qualsevol mercaderia en el Sistema Harmonitzat",
+        "r2Title": "Nomenclatura Combinada (Reg. 2658/87)",
+        "r2Desc": "Reglament base que estableix la nomenclatura aranzelaria i estadistica de la UE, actualitzat anualment"
+      },
+      "luciIA": {
+        "f0Name": "Classificacio per IA",
+        "f0Desc": "Descriu la mercaderia en llenguatge natural i LUCI suggerira els codis TARIC mes probables amb el seu nivell de confianca",
+        "f1Name": "Analisi d'imatge",
+        "f1Desc": "Puja una foto del producte i la IA ajudara a identificar la partida aranzelaria corresponent",
+        "f2Name": "Comparador de codis",
+        "f2Desc": "Compara les diferencies entre codis TARIC similars per triar la classificacio correcta"
+      }
+    },
+    "regulations": {
+      "title": "Normativa Duanera",
+      "description": "Consulta la legislacio duanera actualitzada de la UE i espanyola aplicable a les teves operacions",
+      "uso": {
+        "s0Title": "Cercador de normativa",
+        "s0Text": "Busca articles, reglaments i directives per paraula clau, numero d'article o materia (classificacio, valor, origen, etc.)",
+        "s1Title": "Normativa per materia",
+        "s1Text": "Navega per la normativa organitzada per tematiques: CDU, Actes Delegats, Actes d'Execucio, legislacio nacional i convenis internacionals",
+        "step0": "Accedeix a la seccio Normativa des del menu lateral",
+        "step1": "Utilitza el cercador o navega per categories tematiques",
+        "step2": "Selecciona l'article o reglament per veure el seu contingut",
+        "step3": "Consulta les notes explicatives i jurisprudencia relacionada"
+      },
+      "normativa": {
+        "r0Title": "Codi Duaner de la Unio (Reg. 952/2013)",
+        "r0Desc": "Text refos del CDU, norma basica que regula totes les operacions duaneres a la Unio Europea",
+        "r1Title": "Actes Delegats (Reg. 2015/2446)",
+        "r1Desc": "Reglament delegat que complementa el CDU amb disposicions detallades sobre procediments duaners",
+        "r2Title": "Actes d'Execucio (Reg. 2015/2447)",
+        "r2Desc": "Reglament d'execucio que estableix normes tecniques i formats per a l'aplicacio del CDU",
+        "r3Title": "Ordenacio del comerc exterior (RD 1073/2014)",
+        "r3Desc": "Normativa nacional que adapta i desenvolupa el CDU en l'ambit espanyol"
+      },
+      "luciIA": {
+        "f0Name": "Consulta per IA",
+        "f0Desc": "Pregunta a LUCI sobre qualsevol aspecte normatiu en llenguatge natural i rebras una resposta fonamentada amb referencies legals",
+        "f1Name": "Alertes de canvis normatius",
+        "f1Desc": "Rep notificacions quan es publiquin modificacions normatives que afectin les teves operacions habituals",
+        "f2Name": "Interpretacio contextual",
+        "f2Desc": "LUCI contextualitza la normativa aplicable segons el tipus d'operacio, mercaderia i paisos involucrats"
+      }
+    },
+    "queries": {
+      "title": "Consultes Tributaries",
+      "description": "Realitza consultes vinculants i no vinculants a l'AEAT sobre questions duaneres i tributaries",
+      "uso": {
+        "s0Title": "Nova consulta",
+        "s0Text": "Redacta i envia consultes tributaries a l'AEAT sobre classificacio, valor, origen o altres materies duaneres",
+        "s1Title": "Historial de consultes",
+        "s1Text": "Consulta l'estat i les respostes de les teves consultes anteriors, incloent les Informacions Aranzelaries Vinculants (IAV)",
+        "step0": "Accedeix a la seccio Consultes des del menu lateral",
+        "step1": "Fes clic a Nova Consulta i selecciona el tipus",
+        "step2": "Redacta la consulta detallant la questio tributaria",
+        "step3": "Envia la consulta i espera la resolucio de l'AEAT"
+      },
+      "normativa": {
+        "r0Title": "Consultes tributaries (RD 1065/2007)",
+        "r0Desc": "Procediment per a la formulacio de consultes tributaries escrites davant l'administracio",
+        "r1Title": "Caracter reservat de les dades (Llei 58/2003 Art. 95)",
+        "r1Desc": "Proteccio de les dades tributaries obtingudes per l'administracio en l'exercici de les seves funcions"
+      },
+      "luciIA": {
+        "f0Name": "Redaccio assistida",
+        "f0Desc": "LUCI ajuda a redactar consultes tributaries amb el format i la fonamentacio juridica adequada",
+        "f1Name": "Cerca de precedents",
+        "f1Desc": "Busca consultes i resolucions similars a la base de dades de la DGT i jurisprudencia rellevant",
+        "f2Name": "Seguiment de resolucions",
+        "f2Desc": "Monitoritza l'estat de les teves consultes i et notifica quan es publiqui la resolucio"
+      }
+    },
+    "pue": {
+      "title": "PUE - Punt d'Inspeccio Fronterer",
+      "description": "Gestiona els controls sanitaris, fitosanitaris i veterinaris als Punts d'Inspeccio Fronterer",
+      "uso": {
+        "s0Title": "Sol·licitud d'inspeccio PUE",
+        "s0Text": "Presenta la sol·licitud d'inspeccio fronterera per a mercaderies subjectes a controls sanitaris, fitosanitaris o veterinaris (DSCE/DSPE)",
+        "s1Title": "Seguiment de controls",
+        "s1Text": "Monitoritza l'estat de les inspeccions al PUE: analisis de laboratori, resultats i autoritzacio d'entrada",
+        "step0": "Accedeix a la seccio PUE des del menu lateral",
+        "step1": "Fes clic a Nova Sol·licitud i selecciona el tipus de control",
+        "step2": "Completa les dades de la mercaderia i els documents sanitaris",
+        "step3": "Envia la sol·licitud i monitoritza el resultat de la inspeccio"
+      },
+      "normativa": {
+        "r0Title": "Controls oficials (RD 330/2008)",
+        "r0Desc": "Normativa nacional sobre control sanitari del comerc exterior de productes alimentaris i animals",
+        "r1Title": "Sistema TRACES (Reg. 2019/1013)",
+        "r1Desc": "Reglament que estableix l'us del sistema TRACES-NT per a la gestio electronica de controls fronterers",
+        "r2Title": "Controls oficials UE (Reg. 2017/625)",
+        "r2Desc": "Marc harmonitzat de la UE per a controls oficials en la cadena alimentaria, sanitat vegetal i animal"
+      },
+      "luciIA": {
+        "f0Name": "Deteccio de requisits PUE",
+        "f0Desc": "LUCI identifica automaticament si la teva mercaderia requereix control sanitari o fitosanitari segons el seu codi TARIC",
+        "f1Name": "Documentacio automatica",
+        "f1Desc": "Genera els formularis DSCE/DSPE pre-omplerts a partir de les dades de l'expedient",
+        "f2Name": "Alertes de resultat",
+        "f2Desc": "Rep notificacions immediates quan es publiqui el resultat de la inspeccio al PUE"
+      }
+    },
+    "transit": {
+      "title": "Transit Duaner - NCTS",
+      "description": "Gestiona declaracions de transit comunitari i internacional a traves del sistema NCTS",
+      "uso": {
+        "s0Title": "Crear declaracio de transit",
+        "s0Text": "Genera declaracions T1 (transit extern) o T2 (transit intern) amb totes les dades requerides pel NCTS",
+        "s1Title": "Seguiment de transits",
+        "s1Text": "Monitoritza en temps real l'estat dels teus transits: en curs, presentats a desti, ultimats o amb incidencies",
+        "step0": "Accedeix a la seccio Transit des del menu lateral",
+        "step1": "Fes clic a Nou Transit i selecciona T1 o T2",
+        "step2": "Completa les dades de duana de sortida, desti, itinerari i mercaderies",
+        "step3": "Envia la declaracio i monitoritza el transit fins a la seva ultimacio"
+      },
+      "normativa": {
+        "r0Title": "Regim de transit (CDU Art. 226-236)",
+        "r0Desc": "Marc legal per al transit duaner comunitari i internacional de mercaderies",
+        "r1Title": "Conveni TIR",
+        "r1Desc": "Conveni internacional que facilita el transport de mercaderies per carretera sota precinte duaner",
+        "r2Title": "Conveni de Transit Comu",
+        "r2Desc": "Acord que estendeix el regim de transit comunitari a paisos AELC i altres paisos adherits"
+      },
+      "luciIA": {
+        "f0Name": "Generacio automatica",
+        "f0Desc": "LUCI genera la declaracio de transit a partir de les dades del DUA d'importacio o exportacio previ",
+        "f1Name": "Calcul de garantia",
+        "f1Desc": "Calcula automaticament l'import de garantia necessari segons les mercaderies i la ruta de transit",
+        "f2Name": "Monitoritzacio intel·ligent",
+        "f2Desc": "Detecta possibles retards o incidencies en el transit i alerta abans que se superin els terminis"
+      }
+    },
+    "calculator": {
+      "title": "Calculadora d'Aranzels i Impostos",
+      "description": "Calcula els drets d'importacio, IVA i impostos especials aplicables a les teves operacions",
+      "uso": {
+        "s0Title": "Calcular tributs d'importacio",
+        "s0Text": "Introdueix el codi TARIC, pais d'origen, valor en duana i pes per obtenir un desglossament complet d'aranzels, IVA i impostos especials",
+        "s1Title": "Simulacions i comparatives",
+        "s1Text": "Compara el cost tributari entre diferents origens, regims preferencials o classificacions aranzelaries alternatives",
+        "step0": "Accedeix a la Calculadora des del menu lateral",
+        "step1": "Introdueix el codi TARIC i el pais d'origen de la mercaderia",
+        "step2": "Indica el valor en duana, pes i unitats suplementaries",
+        "step3": "Obte el desglossament d'aranzels, IVA i impostos aplicables"
+      },
+      "normativa": {
+        "r0Title": "Aranzel duaner comu (CDU Art. 56)",
+        "r0Desc": "Els drets d'importacio es calculen segons l'aranzel duaner comu de la UE aplicable a la classificacio de la mercaderia",
+        "r1Title": "TARIC - Aranzel Integrat de la UE",
+        "r1Desc": "Base de dades integrada que recull totes les mesures aranzelaries, antidumping, preferencies i contingents",
+        "r2Title": "IVA a la importacio (Llei 37/1992)",
+        "r2Desc": "Llei de l'IVA espanyola que regula la tributacio en la importacio de bens, incloent tipus i exempcions"
+      },
+      "luciIA": {
+        "f0Name": "Calcul intel·ligent",
+        "f0Desc": "LUCI aplica automaticament preferencies, contingents i mesures especials vigents al calcular els tributs",
+        "f1Name": "Optimitzacio fiscal",
+        "f1Desc": "Suggereix regims duaners alternatius o preferencies aplicables que puguin reduir la carrega tributaria",
+        "f2Name": "Historic de calculs",
+        "f2Desc": "Desa i compara calculs anteriors per analitzar l'evolucio de costos de les teves importacions"
+      }
+    },
+    "assistant": {
+      "title": "Assistent LUCI IA",
+      "description": "Xat intel·ligent que respon a les teves consultes sobre duanes, normativa, classificacio i procediments",
+      "uso": {
+        "s0Title": "Consultar a LUCI",
+        "s0Text": "Escriu la teva pregunta en llenguatge natural sobre qualsevol tema duaner: classificacio, valor, origen, regims, procediments o normativa",
+        "s1Title": "Consultes contextuals",
+        "s1Text": "Des de qualsevol expedient o declaracio, obre LUCI per obtenir ajuda especifica sobre aquella operacio amb context complet",
+        "step0": "Fes clic a la icona de LUCI o accedeix a la seccio Assistent",
+        "step1": "Escriu la teva pregunta o selecciona un suggeriment rapid",
+        "step2": "Revisa la resposta amb les referencies normatives incloses",
+        "step3": "Continua la conversacio per aprofundir o aclareix els teus dubtes"
+      },
+      "normativa": {
+        "r0Title": "Base normativa completa (CDU)",
+        "r0Desc": "LUCI te acces al Codi Duaner de la Unio complet, Actes Delegats i Actes d'Execucio com a base de coneixement",
+        "r1Title": "Legislacio nacional",
+        "r1Desc": "Inclou la Llei General Tributaria, normativa duanera espanyola i resolucions de la DGT"
+      },
+      "luciIA": {
+        "f0Name": "Xat en llenguatge natural",
+        "f0Desc": "Pregunta qualsevol cosa sobre duanes com si parlessis amb un expert: LUCI enten el context i respon amb precisio",
+        "f1Name": "Referencies normatives",
+        "f1Desc": "Cada resposta inclou les referencies legals exactes (article, reglament) per a que puguis verificar la informacio",
+        "f2Name": "Context de l'expedient",
+        "f2Desc": "Al consultar des d'un expedient, LUCI analitza les dades especifiques de la teva operacio per donar respostes personalitzades",
+        "f3Name": "Aprenentatge continu",
+        "f3Desc": "LUCI millora les seves respostes amb cada interaccio, adaptant-se al teu tipus d'operativa i preguntes frequents"
+      }
+    },
+    "analytics": {
+      "title": "Analitica i Informes",
+      "description": "Visualitza estadistiques, KPIs i genera informes detallats de les teves operacions duaneres",
+      "uso": {
+        "s0Title": "Dashboard analitic",
+        "s0Text": "Consulta metriques clau: volum d'operacions, temps mitjans de despatx, distribucio de canals, costos i tendencies",
+        "s1Title": "Generacio d'informes",
+        "s1Text": "Genera informes personalitzats per periode, tipus d'operacio, mercaderia o client per presentar a la direccio o a la duana",
+        "step0": "Accedeix a la seccio Analitica des del menu lateral",
+        "step1": "Selecciona el periode i les metriques que vols analitzar",
+        "step2": "Explora els grafics interactius i les taules de dades",
+        "step3": "Exporta els informes en format PDF o Excel segons necessitis"
+      },
+      "normativa": {
+        "r0Title": "Reporting intern i compliance",
+        "r0Desc": "Les metriques ajuden a complir amb les obligacions de control intern i auditories duaneres"
+      },
+      "luciIA": {
+        "f0Name": "Insights automatics",
+        "f0Desc": "LUCI detecta automaticament anomalies, tendencies i oportunitats de millora en les teves operacions",
+        "f1Name": "Informe executiu amb IA",
+        "f1Desc": "Genera informes executius amb resum narratiu, destacant els punts mes rellevants del periode",
+        "f2Name": "Prediccio de tendencies",
+        "f2Desc": "Utilitza models predictius per anticipar volums, costos i possibles incidencies futures"
+      }
+    },
+    "admin": {
+      "title": "Panell d'Administracio",
+      "description": "Gestiona usuaris, rols, permisos i configuracio general del sistema LUCI",
+      "uso": {
+        "s0Title": "Gestio d'usuaris",
+        "s0Text": "Crea, edita i elimina usuaris del sistema. Assigna rols (administrador, supervisor, agent, consultor) i controla els permisos de cada perfil",
+        "s1Title": "Auditoria del sistema",
+        "s1Text": "Consulta el registre d'activitat complet: accessos, accions realitzades, modificacions i esdeveniments de seguretat",
+        "s2Title": "Configuracio del sistema",
+        "s2Text": "Configura els parametres generals: dades d'empresa, zona horaria, formats, integracions amb l'AEAT i politiques de seguretat",
+        "step0": "Accedeix al Panell d'Administracio des del menu lateral",
+        "step1": "Gestiona els usuaris i assigna els rols adequats",
+        "step2": "Revisa el registre d'auditoria periodicament",
+        "step3": "Configura els parametres del sistema segons les necessitats de la teva organitzacio"
+      },
+      "normativa": {
+        "r0Title": "Proteccio de dades (RGPD)",
+        "r0Desc": "El tractament de dades personals ha de complir el Reglament General de Proteccio de Dades de la UE",
+        "r1Title": "Esquema Nacional de Seguretat (ENS)",
+        "r1Desc": "Requisits de seguretat aplicables als sistemes d'informacio que gestionen dades tributaries i duaneres"
+      },
+      "luciIA": {
+        "f0Name": "Deteccio d'anomalies",
+        "f0Desc": "LUCI monitoritza l'activitat dels usuaris i alerta davant comportaments inusuals o possibles bretxes de seguretat",
+        "f1Name": "Recomanacions de seguretat",
+        "f1Desc": "Suggereix millores en la configuracio de seguretat basant-se en les millors practiques del sector",
+        "f2Name": "Informe d'activitat",
+        "f2Desc": "Genera informes automatics d'activitat per usuari, modul i periode per facilitar l'auditoria"
+      }
+    },
+    "settings": {
+      "title": "Configuracio",
+      "description": "Personalitza la configuracio del teu compte, preferencies de notificacions i integracions",
+      "uso": {
+        "s0Title": "Dades de l'empresa",
+        "s0Text": "Configura les dades de la teva empresa: nom, NIF, EORI, adreca i dades de contacte per a les declaracions duaneres",
+        "s1Title": "Notificacions",
+        "s1Text": "Defineix les alertes que vols rebre per email i a la plataforma: terminis, inspeccions, requeriments i canvis de canal",
+        "s2Title": "Seguretat del compte",
+        "s2Text": "Gestiona la contrasenya, autenticacio de dos factors i les sessions actives del teu compte",
+        "step0": "Accedeix a Configuracio des del menu lateral o la icona de perfil",
+        "step1": "Actualitza les dades de la teva empresa si han canviat",
+        "step2": "Configura les preferencies de notificacions",
+        "step3": "Revisa i actualitza els ajustos de seguretat del teu compte"
+      },
+      "normativa": {
+        "r0Title": "Proteccio de dades (RGPD)",
+        "r0Desc": "Les teves dades es tracten conforme al RGPD. Pots exercir els teus drets d'acces, rectificacio i supressio",
+        "r1Title": "Esquema Nacional de Seguretat (ENS)",
+        "r1Desc": "La plataforma compleix amb els requisits de l'ENS per a la proteccio de sistemes d'informacio"
+      },
+      "luciIA": {
+        "f0Name": "Configuracio assistida",
+        "f0Desc": "LUCI t'ajuda a configurar correctament tots els parametres basant-se en el teu perfil d'operacions",
+        "f1Name": "Validacio de dades",
+        "f1Desc": "Verifica automaticament la validesa del NIF, EORI i altres identificadors al configurar-los"
+      }
+    },
+    "billing": {
+      "title": "Facturacio i Subscripcio",
+      "description": "Gestiona el teu pla de subscripcio, metode de pagament i historial de factures de LUCI",
+      "uso": {
+        "s0Title": "Pla de subscripcio",
+        "s0Text": "Consulta el teu pla actual (Professional, Business o Enterprise), les funcionalitats incloses i els limits d'us",
+        "s1Title": "Factures i pagaments",
+        "s1Text": "Descarrega les teves factures mensuals, actualitza el metode de pagament i consulta l'historial de transaccions",
+        "step0": "Accedeix a la seccio Facturacio des del menu lateral",
+        "step1": "Revisa el teu pla actual i les opcions de millora disponibles",
+        "step2": "Actualitza el teu metode de pagament si es necessari",
+        "step3": "Descarrega les factures per a la teva comptabilitat"
+      },
+      "normativa": {
+        "r0Title": "Obligacions de facturacio (RD 1619/2012)",
+        "r0Desc": "Reglament que regula les obligacions de facturacio, incloent el contingut obligatori de les factures"
+      },
+      "luciIA": {
+        "f0Name": "Recomanacio de pla",
+        "f0Desc": "LUCI analitza el teu volum d'operacions i recomana el pla mes adequat per a les teves necessitats",
+        "f1Name": "Alertes de consum",
+        "f1Desc": "Rep notificacions quan t'acostis als limits del teu pla per evitar interrupcions del servei"
+      }
+    },
+    "guarantees": {
+      "title": "Garanties Duaneres",
+      "description": "Gestiona les garanties globals, individuals i GRN necessaries per a les teves operacions duaneres",
+      "uso": {
+        "s0Title": "Registre de garanties",
+        "s0Text": "Consulta i registra totes les teves garanties duaneres: garantia global, garanties individuals, GRN i el seu estat de vigencia",
+        "s1Title": "Control de saldo",
+        "s1Text": "Monitoritza el saldo disponible de les teves garanties globals i rep alertes quan s'acosti al limit",
+        "step0": "Accedeix a la seccio Garanties des del menu lateral",
+        "step1": "Consulta les garanties actives i el seu saldo disponible",
+        "step2": "Registra noves garanties o renova les existents",
+        "step3": "Configura alertes de saldo minim per evitar bloqueigs"
+      },
+      "normativa": {
+        "r0Title": "Garantia duanera (CDU Art. 89-100)",
+        "r0Desc": "Marc legal per a la constitucio, gestio i alliberament de garanties en l'ambit duaner",
+        "r1Title": "Garantia global (CDU Art. 95)",
+        "r1Desc": "Requisits i condicions per constituir una garantia global que cobreixi varies operacions duaneres",
+        "r2Title": "Modalitats de garantia (AD Art. 51-55)",
+        "r2Desc": "Formes admeses de garantia: diposit en efectiu, fiador, titol de garantia i altres instruments"
+      },
+      "luciIA": {
+        "f0Name": "Calcul de garantia necessaria",
+        "f0Desc": "LUCI calcula automaticament l'import de garantia necessari per a cada operacio segons la mercaderia i el regim",
+        "f1Name": "Alertes de saldo",
+        "f1Desc": "Monitoritza el consum de la teva garantia global i alerta quan el saldo disponible es insuficient per a properes operacions",
+        "f2Name": "Optimitzacio de garanties",
+        "f2Desc": "Analitza el teu historial per suggerir el tipus i quantia de garantia mes eficient per al teu perfil d'operacions"
+      }
+    },
+    "specialRegimes": {
+      "title": "Regims Especials",
+      "description": "Gestiona operacions sota regims duaners especials: diposit, perfeccionament, destinacio final i admissio temporal",
+      "uso": {
+        "s0Title": "Tipus de regims",
+        "s0Text": "Consulta els diferents regims especials disponibles: diposit duaner, perfeccionament actiu/passiu, admissio temporal i destinacio final",
+        "s1Title": "Control d'autoritzacions",
+        "s1Text": "Gestiona les autoritzacions de regims especials: sol·licituds, vigencia, condicions i obligacions de liquidacio",
+        "step0": "Accedeix a la seccio Regims Especials des del menu lateral",
+        "step1": "Selecciona el tipus de regim que necessites gestionar",
+        "step2": "Consulta les autoritzacions vigents i les seves condicions",
+        "step3": "Gestiona les liquidacions i ultimacions dins del termini"
+      },
+      "normativa": {
+        "r0Title": "Regims especials (CDU Art. 210-262)",
+        "r0Desc": "Marc legal complet per als regims especials: diposit, zones franques, perfeccionament, admissio temporal i destinacio final",
+        "r1Title": "Autoritzacio de regims (CDU Art. 211)",
+        "r1Desc": "Requisits i procediment per obtenir autoritzacio de la duana per operar sota regims especials",
+        "r2Title": "Perfeccionament (CDU Art. 255-258)",
+        "r2Desc": "Regim que permet importar o exportar mercaderies per a la seva transformacio amb suspensio o devolucio de drets"
+      },
+      "luciIA": {
+        "f0Name": "Recomanacio de regim",
+        "f0Desc": "LUCI analitza la teva operacio i recomana el regim especial mes avantatjos segons la mercaderia i la destinacio",
+        "f1Name": "Control de terminis",
+        "f1Desc": "Monitoritza automaticament els terminis d'ultimacio i liquidacio de cada autoritzacio activa",
+        "f2Name": "Calcul de benefici fiscal",
+        "f2Desc": "Estima l'estalvi fiscal d'utilitzar un regim especial front al despatx a lliure practica directa"
+      }
+    },
+    "exciseDuties": {
+      "title": "Impostos Especials",
+      "description": "Gestiona les obligacions relatives a impostos especials: alcohol, tabac, hidrocarburs i electricitat",
+      "uso": {
+        "s0Title": "Liquidacio d'impostos especials",
+        "s0Text": "Calcula i liquida els impostos especials aplicables a mercaderies subjectes: begudes alcoholiques, tabac, hidrocarburs i electricitat",
+        "s1Title": "Regim de diposit fiscal",
+        "s1Text": "Gestiona les operacions en diposit fiscal amb suspensio d'impostos especials i els documents d'acompanyament (e-DA)",
+        "step0": "Accedeix a la seccio Impostos Especials des del menu lateral",
+        "step1": "Identifica si la teva mercaderia esta subjecta a impostos especials",
+        "step2": "Calcula la quota tributaria segons el tipus i quantitat",
+        "step3": "Genera la liquidacio i els documents d'acompanyament"
+      },
+      "normativa": {
+        "r0Title": "Llei d'Impostos Especials (Llei 38/1992)",
+        "r0Desc": "Norma basica espanyola que regula els impostos especials sobre alcohol, tabac i hidrocarburs",
+        "r1Title": "Directiva d'Impostos Especials (Dir. 2020/262)",
+        "r1Desc": "Marc harmonitzat de la UE per a la circulacio i control de productes subjectes a impostos especials",
+        "r2Title": "Reglament d'IIEE (RD 1165/1995)",
+        "r2Desc": "Desenvolupament reglamentari de la Llei d'Impostos Especials amb detall de procediments i obligacions formals"
+      },
+      "luciIA": {
+        "f0Name": "Deteccio automatica",
+        "f0Desc": "LUCI identifica automaticament si la teva mercaderia esta subjecta a impostos especials a partir del seu codi TARIC",
+        "f1Name": "Calcul de quotes",
+        "f1Desc": "Calcula automaticament l'import d'impostos especials segons el tipus de producte, grau alcoholic o poder calorific",
+        "f2Name": "Documents e-DA",
+        "f2Desc": "Genera els documents electronics d'acompanyament necessaris per a la circulacio intracomunitaria"
+      }
+    },
+    "oea": {
+      "title": "Operador Economic Autoritzat (OEA)",
+      "description": "Gestiona la teva certificacio OEA i compleix amb els requisits de simplificacio duanera i seguretat",
+      "uso": {
+        "s0Title": "Estat de certificacio OEA",
+        "s0Text": "Consulta l'estat de la teva certificacio OEA (AEOC per a simplificacions duaneres, AEOS per a seguretat, o combinat AEOF)",
+        "s1Title": "Autodiagnostic OEA",
+        "s1Text": "Avalua el grau de compliment de la teva empresa amb els criteris OEA i obte un pla d'accio per millorar",
+        "step0": "Accedeix a la seccio OEA des del menu lateral",
+        "step1": "Revisa el teu estat actual de certificacio i vigencia",
+        "step2": "Executa l'autodiagnostic per avaluar el teu compliment",
+        "step3": "Implementa les millores suggerides i documenta les evidencies"
+      },
+      "normativa": {
+        "r0Title": "Certificacio OEA (CDU Art. 38-39)",
+        "r0Desc": "Requisits i beneficis de l'estatus d'Operador Economic Autoritzat al territori duaner de la UE",
+        "r1Title": "Criteris OEA (AD Art. 24-30)",
+        "r1Desc": "Criteris detallats que s'han de complir per obtenir i mantenir la certificacio OEA",
+        "r2Title": "Procediment de concessio (AE Art. 26-31)",
+        "r2Desc": "Procediment de sol·licitud, avaluacio i concessio del certificat OEA per les autoritats duaneres"
+      },
+      "luciIA": {
+        "f0Name": "Avaluacio de compliment",
+        "f0Desc": "LUCI avalua automaticament el teu grau de compliment amb els criteris OEA basant-se en les teves operacions",
+        "f1Name": "Pla de millora",
+        "f1Desc": "Genera un pla d'accio personalitzat amb les arees de millora prioritaries per obtenir o mantenir la certificacio",
+        "f2Name": "Monitoritzacio continua",
+        "f2Desc": "Supervisa constantment el compliment dels criteris OEA i alerta si detecta desviacions"
+      }
+    },
+    "preferences": {
+      "title": "Preferencies Aranzelaries i Origen",
+      "description": "Gestiona certificats d'origen, preferencies aranzelaries i acords comercials per reduir els drets d'importacio",
+      "uso": {
+        "s0Title": "Acords comercials",
+        "s0Text": "Consulta els acords comercials de la UE amb tercers paisos i les preferencies aranzelaries que ofereixen per a les teves mercaderies",
+        "s1Title": "Certificats d'origen",
+        "s1Text": "Gestiona els certificats d'origen preferencial (EUR.1, EUR-MED, declaracio en factura, REX) necessaris per aplicar preferencies",
+        "step0": "Accedeix a la seccio Preferencies des del menu lateral",
+        "step1": "Busca l'acord comercial aplicable segons el pais d'origen",
+        "step2": "Verifica els requisits d'origen per a la teva mercaderia",
+        "step3": "Adjunta el certificat d'origen valid per aplicar la preferencia"
+      },
+      "normativa": {
+        "r0Title": "Origen de les mercaderies (CDU Art. 56-65)",
+        "r0Desc": "Normes generals per determinar l'origen no preferencial i preferencial de les mercaderies",
+        "r1Title": "Protocols d'origen",
+        "r1Desc": "Regles d'origen especifiques incloses en cada acord comercial de la UE amb tercers paisos",
+        "r2Title": "Proves d'origen (Reg. 2015/2446 Art. 37-70)",
+        "r2Desc": "Tipus de prova d'origen acceptats: certificats EUR.1, declaracions en factura, sistema REX i altres"
+      },
+      "luciIA": {
+        "f0Name": "Deteccio de preferencies",
+        "f0Desc": "LUCI identifica automaticament si la teva mercaderia pot beneficiar-se d'una preferencia aranzelaria segons el seu origen",
+        "f1Name": "Verificacio d'origen",
+        "f1Desc": "Analitza si es compleixen les regles d'origen especifiques de l'acord comercial per aplicar la preferencia",
+        "f2Name": "Estalvi estimat",
+        "f2Desc": "Calcula l'estalvi potencial en aranzels al aplicar preferencies front al tipus de dret general"
+      }
+    },
+    "quotas": {
+      "title": "Contingents Aranzelaris",
+      "description": "Consulta i gestiona contingents aranzelaris de la UE que permeten importar a tipus reduits dins de volums limitats",
+      "uso": {
+        "s0Title": "Consultar contingents",
+        "s0Text": "Busca contingents aranzelaris oberts per codi TARIC o pais d'origen, amb el seu saldo disponible i tipus de dret reduit",
+        "s1Title": "Sol·licitar contingent",
+        "s1Text": "Sol·licita la imputacio a un contingent aranzelari en la teva declaracio d'importacio per beneficiar-te del tipus reduit",
+        "step0": "Accedeix a la seccio Contingents des del menu lateral",
+        "step1": "Busca contingents disponibles per a la teva mercaderia i origen",
+        "step2": "Verifica el saldo restant del contingent",
+        "step3": "Inclou la sol·licitud de contingent en la teva declaracio d'importacio"
+      },
+      "normativa": {
+        "r0Title": "Contingents aranzelaris (CDU Art. 56(4))",
+        "r0Desc": "Base legal per a l'aplicacio de contingents aranzelaris que permeten importar a tipus reduits dins de volums fixats",
+        "r1Title": "Gestio de contingents",
+        "r1Desc": "La Comissio Europea gestiona els contingents per ordre cronologic d'admissio de les declaracions (first come, first served)"
+      },
+      "luciIA": {
+        "f0Name": "Cerca de contingents",
+        "f0Desc": "LUCI busca automaticament contingents disponibles per a la teva mercaderia i et notifica si hi ha saldo",
+        "f1Name": "Alerta d'obertura",
+        "f1Desc": "Rep notificacions quan s'obrin nous contingents o es renovi el saldo de contingents existents",
+        "f2Name": "Estimacio de saldo",
+        "f2Desc": "Analitza la velocitat de consum del contingent per estimar si hi haura saldo disponible per a la teva operacio"
+      }
+    },
+    "integrations": {
+      "title": "Integracions",
+      "description": "Configura i gestiona les connexions amb sistemes externs: AEAT, TARIC, proveïdors logistics i ERPs",
+      "uso": {
+        "s0Title": "Connexio amb l'AEAT",
+        "s0Text": "Configura la connexio amb la Seu Electronica de l'AEAT mitjancant certificat digital per a l'enviament i recepcio de declaracions",
+        "s1Title": "Integracions de tercers",
+        "s1Text": "Connecta LUCI amb el teu ERP, sistema de gestio de magatzem o proveïdor logistic per automatitzar el flux de dades",
+        "step0": "Accedeix a la seccio Integracions des del menu lateral",
+        "step1": "Selecciona el sistema que vols connectar",
+        "step2": "Configura les credencials i parametres de connexio",
+        "step3": "Prova la connexio i activa la sincronitzacio automatica"
+      },
+      "normativa": {
+        "r0Title": "Serveis web AEAT",
+        "r0Desc": "Especificacions tecniques dels serveis web de l'AEAT per a l'intercanvi electronic de declaracions duaneres",
+        "r1Title": "Interoperabilitat (Reg. 2019/1010)",
+        "r1Desc": "Requisits d'interoperabilitat dels sistemes duaners nacionals amb els sistemes centrals de la UE"
+      },
+      "luciIA": {
+        "f0Name": "Diagnostic de connexio",
+        "f0Desc": "LUCI verifica automaticament l'estat de les connexions i diagnostica problemes de comunicacio amb l'AEAT",
+        "f1Name": "Mapatge intel·ligent de dades",
+        "f1Desc": "Assisteix en el mapatge de camps entre el teu ERP i el format requerit per les declaracions duaneres",
+        "f2Name": "Monitoritzacio d'integracions",
+        "f2Desc": "Supervisa el funcionament de totes les integracions actives i alerta davant fallades de sincronitzacio"
+      }
+    },
+    "aeatCertificates": {
+      "title": "Certificats Digitals AEAT",
+      "description": "Gestiona els certificats digitals necessaris per a la comunicacio electronica amb l'Agencia Tributaria",
+      "uso": {
+        "s0Title": "Instal·lar certificat",
+        "s0Text": "Puja el teu certificat digital (FNMT, DNIe o certificat de representant) en format .p12 o .pfx per habilitar l'enviament de declaracions",
+        "s1Title": "Estat del certificat",
+        "s1Text": "Consulta la validesa, data de caducitat i el titular del certificat digital actualment configurat al sistema",
+        "step0": "Accedeix a la seccio Certificats AEAT des del menu lateral",
+        "step1": "Fes clic a Pujar Certificat i selecciona l'arxiu .p12",
+        "step2": "Introdueix la contrasenya del certificat per validar-lo",
+        "step3": "Verifica que el certificat s'ha instal·lat correctament"
+      },
+      "normativa": {
+        "r0Title": "Certificats electronics (RD 1065/2007)",
+        "r0Desc": "Requisits per a la identificacio i autenticacio electronica en les relacions amb l'administracio tributaria",
+        "r1Title": "Serveis de confianca (Llei 6/2020)",
+        "r1Desc": "Regulacio dels serveis electronics de confianca, incloent la signatura electronica i els certificats qualificats"
+      },
+      "luciIA": {
+        "f0Name": "Verificacio automatica",
+        "f0Desc": "LUCI verifica automaticament la validesa del certificat digital, incloent la cadena de confianca i la data de caducitat",
+        "f1Name": "Alerta de caducitat",
+        "f1Desc": "Rep notificacions amb 30, 15 i 7 dies d'antelacio abans que caduqui el teu certificat digital",
+        "f2Name": "Diagnostic de problemes",
+        "f2Desc": "Detecta i suggereix solucions per a problemes comuns de certificats: format incorrecte, contrasenya errada o certificat revocat"
+      }
+    },
+    "aeatMonitor": {
+      "title": "Monitor d'Estat AEAT",
+      "description": "Monitoritza en temps real la disponibilitat dels serveis web de l'AEAT i l'estat dels enviaments",
+      "uso": {
+        "s0Title": "Estat dels serveis",
+        "s0Text": "Consulta la disponibilitat de cada servei web de l'AEAT (VUA, ICS2, NCTS, ENS) amb indicadors d'estat en temps real",
+        "s1Title": "Historial d'enviaments",
+        "s1Text": "Revisa l'historial de comunicacions amb l'AEAT: enviaments exitosos, errors, temps de resposta i reintents automatics",
+        "step0": "Accedeix a la seccio Monitor AEAT des del menu lateral",
+        "step1": "Revisa l'estat actual de cada servei web de l'AEAT",
+        "step2": "Consulta l'historial d'enviaments i respostes recents",
+        "step3": "Configura alertes per quan un servei no estigui disponible"
+      },
+      "normativa": {
+        "r0Title": "Disponibilitat de la Seu Electronica",
+        "r0Desc": "L'AEAT publica el calendari de disponibilitat dels seus serveis web i les finestres de manteniment programat"
+      },
+      "luciIA": {
+        "f0Name": "Monitoritzacio proactiva",
+        "f0Desc": "LUCI comprova periodicament la disponibilitat dels serveis AEAT i programa reintents automatics en cas de caiguda",
+        "f1Name": "Prediccio de disponibilitat",
+        "f1Desc": "Analitza patrons historics de disponibilitat per recomanar els millors horaris per enviar declaracions",
+        "f2Name": "Diagnostic d'errors",
+        "f2Desc": "Interpreta els codis d'error de l'AEAT i suggereix accions correctives especifiques per a cada tipus de rebuig"
+      }
+    },
+    "mlInsights": {
+      "title": "Machine Learning Insights",
+      "description": "Analisi avancada amb intel·ligencia artificial: deteccio de frau, classificacio automatica i prediccio de canals",
+      "uso": {
+        "s0Title": "Models d'IA actius",
+        "s0Text": "Consulta els models de machine learning actius al teu compte: classificacio aranzelaria, prediccio de canal, deteccio de frau i auto-resposta",
+        "s1Title": "Metriques de rendiment",
+        "s1Text": "Revisa la precisio, recall i F1-score de cada model, aixi com la seva evolucio temporal i casos d'exit",
+        "step0": "Accedeix a la seccio ML Insights des del menu lateral",
+        "step1": "Revisa els models actius i el seu estat d'entrenament",
+        "step2": "Consulta les metriques de rendiment de cada model",
+        "step3": "Ajusta els llindars de confianca segons les teves necessitats"
+      },
+      "normativa": {
+        "r0Title": "Reglament d'IA de la UE (Reg. 2024/1689)",
+        "r0Desc": "Marc legal europeu per a la intel·ligencia artificial, classificant els sistemes per nivell de risc i establint obligacions",
+        "r1Title": "Decisions automatitzades (RGPD Art. 22)",
+        "r1Desc": "Dret a no ser objecte de decisions basades unicament en el tractament automatitzat, incloent l'elaboracio de perfils"
+      },
+      "luciIA": {
+        "f0Name": "Classificacio per ML",
+        "f0Desc": "Model entrenat amb milions de declaracions que suggereix codis TARIC amb alta precisio",
+        "f1Name": "Deteccio de frau",
+        "f1Desc": "Identifica patrons anomals en declaracions que poden indicar infravaloracio, classificacio incorrecta o altres irregularitats",
+        "f2Name": "Prediccio de canal",
+        "f2Desc": "Prediu el canal d'inspeccio probable basant-se en multiples variables: mercaderia, origen, operador i tendencies historiques",
+        "f3Name": "Auto-resposta a requeriments",
+        "f3Desc": "Genera automaticament esborranys de resposta a requeriments tipus basant-se en l'expedient i respostes anteriors exitoses"
+      }
+    },
+    "rulesEngine": {
+      "title": "Motor de Regles",
+      "description": "Configura regles automatitzades per validar, classificar i processar les teves operacions duaneres",
+      "uso": {
+        "s0Title": "Crear regles personalitzades",
+        "s0Text": "Defineix regles automatitzades amb condicions i accions: si la mercaderia compleix X criteri, aplicar Y accio automaticament",
+        "s1Title": "Gestio de regles actives",
+        "s1Text": "Consulta, edita i desactiva les regles configurades. Revisa l'historial d'execucio i els resultats de cada regla",
+        "step0": "Accedeix a la seccio Motor de Regles des del menu lateral",
+        "step1": "Fes clic a Nova Regla i defineix les condicions",
+        "step2": "Configura les accions a executar quan es compleixin les condicions",
+        "step3": "Activa la regla i monitoritza la seva execucio en les properes operacions"
+      },
+      "normativa": {
+        "r0Title": "Factors de risc (CDU Titol II)",
+        "r0Desc": "Criteris i factors de risc que les autoritats duaneres han de considerar en l'analisi de riscos",
+        "r1Title": "Controls basats en risc (CDU Art. 46)",
+        "r1Desc": "Marc per a l'analisi de riscos sistematic que permet aplicar controls proporcionats i eficacos"
+      },
+      "luciIA": {
+        "f0Name": "Suggeriment de regles",
+        "f0Desc": "LUCI analitza la teva operativa i suggereix regles automatitzades que optimitzin els teus processos mes frequents",
+        "f1Name": "Deteccio de conflictes",
+        "f1Desc": "Identifica automaticament si una nova regla pot entrar en conflicte amb regles existents",
+        "f2Name": "Optimitzacio continua",
+        "f2Desc": "Avalua el rendiment de cada regla i suggereix ajustos per millorar la seva eficacia basant-se en els resultats"
+      }
+    }
   },
   "admin": {
     "dashboard": "Dashboard",

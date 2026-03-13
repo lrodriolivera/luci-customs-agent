@@ -109,6 +109,7 @@
     "aeatIntegrations": "AEAT e Integracoes",
     "aeatCertificates": "Certificados AEAT",
     "aeatMonitor": "Monitor AEAT",
+    "nlCustoms": "Alfandegas NL",
     "integrations": "Integracoes",
     "administration": "Administracao",
     "analytics": "Analytics",
@@ -2273,7 +2274,946 @@
     "howToUse": "Como utilizar",
     "regulation": "Regulamentacao",
     "luciAi": "LUCI IA",
-    "steps": "Passos"
+    "steps": "Passos",
+    "dashboard": {
+      "title": "Panel de Control",
+      "description": "Vista general del estado de tus operaciones aduaneras, expedientes activos y metricas clave",
+      "uso": {
+        "s0Title": "Vista general de operaciones",
+        "s0Text": "El dashboard muestra un resumen en tiempo real de todos tus expedientes, declaraciones pendientes, alertas activas y estado de conexion con la AEAT",
+        "s1Title": "Widgets y metricas",
+        "s1Text": "Personaliza los widgets del panel para ver las metricas que mas te interesan: volumen de operaciones, tiempos medios de despacho, canales asignados y mas",
+        "step0": "Accede al panel de control desde el menu principal",
+        "step1": "Revisa las tarjetas de resumen con las metricas del periodo",
+        "step2": "Consulta las alertas y notificaciones pendientes",
+        "step3": "Haz clic en cualquier metrica para ver el detalle completo"
+      },
+      "normativa": {
+        "r0Title": "Codigo Aduanero de la Union",
+        "r0Desc": "Marco normativo general para todas las operaciones aduaneras en la UE (Reg. 952/2013)",
+        "r1Title": "Reglamento de Ordenacion Aduanera",
+        "r1Desc": "Normativa nacional que desarrolla el CAU en Espana, regulando la organizacion y procedimientos aduaneros"
+      },
+      "luciIA": {
+        "f0Name": "Resumen inteligente",
+        "f0Desc": "LUCI analiza automaticamente tus operaciones y genera un resumen ejecutivo con los puntos de atencion mas relevantes",
+        "f1Name": "Alertas predictivas",
+        "f1Desc": "Detecta posibles incidencias antes de que ocurran analizando patrones en tus declaraciones y plazos",
+        "f2Name": "Recomendaciones diarias",
+        "f2Desc": "Recibe sugerencias personalizadas para optimizar tus procesos aduaneros basadas en el analisis de tu operativa"
+      }
+    },
+    "expeditions": {
+      "title": "Gestion de Expedientes",
+      "description": "Crea, gestiona y da seguimiento a todos tus expedientes de importacion y exportacion",
+      "uso": {
+        "s0Title": "Crear un expediente",
+        "s0Text": "Inicia un nuevo expediente indicando el tipo de operacion (importacion/exportacion), datos del operador y descripcion de la mercancia",
+        "s1Title": "Seguimiento del expediente",
+        "s1Text": "Consulta el estado de cada expediente en tiempo real: documentos adjuntos, declaraciones asociadas, canal asignado y comunicaciones con la AEAT",
+        "s2Title": "Documentacion adjunta",
+        "s2Text": "Adjunta facturas, packing lists, certificados de origen, licencias y cualquier documento necesario para el despacho aduanero",
+        "step0": "Accede a la seccion Expedientes desde el menu lateral",
+        "step1": "Haz clic en Nuevo Expediente y selecciona el tipo de operacion",
+        "step2": "Completa los datos del operador, mercancia y documentos",
+        "step3": "Guarda el expediente y asocia las declaraciones necesarias"
+      },
+      "normativa": {
+        "r0Title": "Declaraciones aduaneras (CAU Art. 158-187)",
+        "r0Desc": "Regula los distintos tipos de declaraciones aduaneras, sus requisitos y los procedimientos de despacho",
+        "r1Title": "Presentacion electronica (CAU Art. 15)",
+        "r1Desc": "Obligacion de presentacion electronica de todas las declaraciones y documentos ante las autoridades aduaneras",
+        "r2Title": "Documentos de acompanamiento (AD Art. 143-152)",
+        "r2Desc": "Requisitos sobre documentos que deben acompanar a las mercancias y las declaraciones aduaneras"
+      },
+      "luciIA": {
+        "f0Name": "Creacion asistida",
+        "f0Desc": "LUCI te guia paso a paso en la creacion del expediente, sugiriendo datos basados en operaciones anteriores similares",
+        "f1Name": "Deteccion de documentos faltantes",
+        "f1Desc": "Analiza automaticamente el expediente y alerta si falta algun documento obligatorio segun el tipo de mercancia y origen",
+        "f2Name": "Clasificacion automatica",
+        "f2Desc": "Sugiere automaticamente el codigo TARIC adecuado a partir de la descripcion de la mercancia"
+      }
+    },
+    "declarations": {
+      "title": "Declaraciones Aduaneras H1",
+      "description": "Gestiona declaraciones de importacion completas (H1) para su envio a la AEAT mediante el sistema VUA/DIVA",
+      "uso": {
+        "s0Title": "Crear declaracion H1",
+        "s0Text": "Genera una declaracion H1 completa con todos los datos requeridos: intervinientes, mercancias, valor, tributos y documentos de acompanamiento",
+        "s1Title": "Partidas de mercancia",
+        "s1Text": "Anade una o varias partidas con su codigo TARIC, peso, valor, pais de origen, regimen aduanero y documentos asociados",
+        "s2Title": "Envio a la AEAT",
+        "s2Text": "Una vez completada, envia la declaracion directamente a la AEAT y recibe el MRN (Movement Reference Number) de confirmacion",
+        "step0": "Crea un expediente o selecciona uno existente",
+        "step1": "Haz clic en Nueva Declaracion H1 y rellena los datos generales",
+        "step2": "Anade las partidas de mercancia con sus codigos TARIC y valores",
+        "step3": "Adjunta los documentos requeridos (factura, DV1, certificados)",
+        "step4": "Valida y envia la declaracion a la AEAT"
+      },
+      "normativa": {
+        "r0Title": "Declaraciones de importacion (CAU Art. 158-187)",
+        "r0Desc": "Marco legal para las declaraciones de importacion, incluyendo contenido del Anexo B columna H1 del CAU",
+        "r1Title": "Datasets de importacion (AD Art. 143)",
+        "r1Desc": "Define los elementos de datos requeridos para cada tipo de declaracion de importacion",
+        "r2Title": "Valor en aduana (CAU Art. 70-74)",
+        "r2Desc": "Metodos de valoracion aduanera para determinar la base imponible de los derechos de importacion"
+      },
+      "luciIA": {
+        "f0Name": "Autocompletado inteligente",
+        "f0Desc": "LUCI rellena automaticamente campos basandose en la informacion del expediente y operaciones anteriores",
+        "f1Name": "Validacion pre-envio",
+        "f1Desc": "Verifica que todos los campos obligatorios estan completos y son coherentes antes de enviar a la AEAT",
+        "f2Name": "Calculo automatico de tributos",
+        "f2Desc": "Calcula automaticamente aranceles, IVA e impuestos especiales a partir del codigo TARIC y el valor declarado",
+        "f3Name": "Prediccion de canal",
+        "f3Desc": "Estima el canal probable (verde, naranja, rojo) basandose en el analisis de la mercancia y el historial del operador"
+      }
+    },
+    "h7": {
+      "title": "Declaraciones H7 - Envios de Bajo Valor",
+      "description": "Gestiona declaraciones simplificadas para importaciones de e-commerce con valor inferior a 150 EUR",
+      "uso": {
+        "s0Title": "Crear declaracion H7",
+        "s0Text": "Rellena los datos del envio: remitente, destinatario, mercancia y valor declarado. El dataset es super-reducido respecto al H1",
+        "s1Title": "Importar manifiesto",
+        "s1Text": "Sube un fichero CSV con multiples envios y la IA clasificara automaticamente cada linea, generando declaraciones H7 individuales",
+        "step0": "Accede a la seccion H7 E-commerce desde el menu lateral",
+        "step1": "Haz clic en Nueva H7 o Importar Manifiesto",
+        "step2": "Completa los datos requeridos o sube tu fichero CSV",
+        "step3": "Envia la declaracion a la AEAT y recibe el MRN"
+      },
+      "normativa": {
+        "r0Title": "Codigo Aduanero de la Union (CAU Art. 143a)",
+        "r0Desc": "Establece el dataset super-reducido para envios de bajo valor hasta 150 EUR",
+        "r1Title": "Reglamento (UE) 2019/1143",
+        "r1Desc": "Modifica el Reglamento Delegado para incluir la columna H7 del Anexo B con los datos simplificados",
+        "r2Title": "Directiva (UE) 2017/2455 - Paquete IVA e-commerce",
+        "r2Desc": "Obligacion de declaracion aduanera para todos los envios, eliminando la exencion de 22 EUR"
+      },
+      "luciIA": {
+        "f0Name": "Clasificacion automatica",
+        "f0Desc": "La IA clasifica automaticamente las mercancias asignando codigos HS de 6 digitos a partir de la descripcion",
+        "f1Name": "Procesamiento de manifiesto",
+        "f1Desc": "Sube un CSV completo y LUCI generara declaraciones H7 para cada envio elegible del manifiesto",
+        "f2Name": "Validacion inteligente",
+        "f2Desc": "Detecta automaticamente envios que superan 150 EUR y requieren declaracion H1 completa"
+      }
+    },
+    "ens": {
+      "title": "Declaraciones ENS - Declaracion Sumaria de Entrada",
+      "description": "Gestiona declaraciones sumarias de entrada (ENS/ICS2) para mercancias que ingresan al territorio aduanero de la UE",
+      "uso": {
+        "s0Title": "Crear declaracion ENS",
+        "s0Text": "Introduce los datos del transportista, remitente, destinatario, itinerario y descripcion de la mercancia para la notificacion previa de llegada",
+        "s1Title": "Seguimiento de ENS",
+        "s1Text": "Monitoriza el estado de tus declaraciones ENS: aceptadas, rechazadas o pendientes de evaluacion de riesgos por la aduana",
+        "step0": "Accede a la seccion ENS desde el menu lateral",
+        "step1": "Haz clic en Nueva ENS y selecciona el modo de transporte",
+        "step2": "Completa los datos de intervinientes, itinerario y mercancia",
+        "step3": "Envia la declaracion y consulta el MRN asignado"
+      },
+      "normativa": {
+        "r0Title": "Declaracion sumaria de entrada (CAU Art. 127-130)",
+        "r0Desc": "Obligacion de presentar declaracion sumaria antes de la introduccion de mercancias en el territorio aduanero de la UE",
+        "r1Title": "Sistema ICS2 (Reg. 2019/1010)",
+        "r1Desc": "Nuevo sistema de control de importaciones que implementa la declaracion previa de carga en tres fases",
+        "r2Title": "Analisis de riesgos (CAU Art. 46-47)",
+        "r2Desc": "Marco para el analisis de riesgos aduaneros y los controles basados en la informacion previa de la mercancia"
+      },
+      "luciIA": {
+        "f0Name": "Generacion automatica de ENS",
+        "f0Desc": "LUCI genera la declaracion ENS a partir de los datos del conocimiento de embarque o carta de porte",
+        "f1Name": "Validacion de itinerarios",
+        "f1Desc": "Verifica automaticamente la coherencia de los codigos de pais, puertos y aduanas del itinerario declarado",
+        "f2Name": "Alertas de rechazo",
+        "f2Desc": "Detecta errores frecuentes antes del envio para reducir el riesgo de rechazo por la AEAT"
+      }
+    },
+    "channels": {
+      "title": "Circuitos Aduaneros",
+      "description": "Consulta y gestiona los canales de inspeccion asignados a tus declaraciones (verde, naranja, rojo)",
+      "uso": {
+        "s0Title": "Consultar canales asignados",
+        "s0Text": "Visualiza el canal asignado a cada declaracion despues del envio: verde (levante directo), naranja (control documental) o rojo (reconocimiento fisico)",
+        "s1Title": "Gestion de incidencias de canal",
+        "s1Text": "Cuando una declaracion recibe canal naranja o rojo, gestiona la respuesta a los requerimientos de la aduana desde esta seccion",
+        "step0": "Accede a la seccion Circuitos desde el menu lateral",
+        "step1": "Filtra por tipo de canal, fecha o estado del expediente",
+        "step2": "Revisa las declaraciones con canal naranja o rojo pendientes",
+        "step3": "Atiende los requerimientos adjuntando la documentacion solicitada"
+      },
+      "normativa": {
+        "r0Title": "Control aduanero (CAU Art. 188-193)",
+        "r0Desc": "Facultades de la aduana para realizar controles documentales y reconocimientos fisicos de las mercancias",
+        "r1Title": "Gestion de riesgos (CAU Art. 46)",
+        "r1Desc": "Sistema de analisis de riesgos que determina la asignacion de canal a cada declaracion"
+      },
+      "luciIA": {
+        "f0Name": "Prediccion de canal",
+        "f0Desc": "LUCI predice el canal probable antes del envio analizando la mercancia, origen, operador y patrones historicos",
+        "f1Name": "Alertas en tiempo real",
+        "f1Desc": "Recibe notificaciones inmediatas cuando se asigna un canal a tus declaraciones",
+        "f2Name": "Estadisticas de canales",
+        "f2Desc": "Analiza la distribucion historica de canales para identificar tendencias y optimizar tus operaciones"
+      }
+    },
+    "requirements": {
+      "title": "Requerimientos de la AEAT",
+      "description": "Gestiona y responde a los requerimientos de documentacion e informacion de la Agencia Tributaria",
+      "uso": {
+        "s0Title": "Ver requerimientos pendientes",
+        "s0Text": "Consulta todos los requerimientos recibidos de la AEAT, clasificados por urgencia, tipo y plazo de respuesta",
+        "s1Title": "Responder a requerimientos",
+        "s1Text": "Prepara y envia la respuesta al requerimiento adjuntando los documentos solicitados dentro del plazo establecido",
+        "step0": "Accede a la seccion Requerimientos desde el menu lateral",
+        "step1": "Revisa los requerimientos pendientes ordenados por fecha limite",
+        "step2": "Prepara la documentacion solicitada y redacta la respuesta",
+        "step3": "Envia la respuesta a la AEAT dentro del plazo"
+      },
+      "normativa": {
+        "r0Title": "Requerimientos aduaneros (CAU Art. 188)",
+        "r0Desc": "Facultad de la aduana para solicitar documentos e informacion adicional durante el despacho de mercancias",
+        "r1Title": "Obligacion de colaboracion (LGT Art. 93)",
+        "r1Desc": "Deber de aportar documentacion e informacion requerida por la administracion tributaria en plazo",
+        "r2Title": "Plazos administrativos (Ley 39/2015 Art. 68)",
+        "r2Desc": "Regulacion de los plazos para subsanar deficiencias y aportar documentacion en procedimientos administrativos"
+      },
+      "luciIA": {
+        "f0Name": "Borrador de respuesta",
+        "f0Desc": "LUCI genera un borrador de respuesta al requerimiento basandose en la documentacion disponible en el expediente",
+        "f1Name": "Deteccion de documentos",
+        "f1Desc": "Identifica automaticamente que documentos del expediente son relevantes para responder al requerimiento",
+        "f2Name": "Alerta de plazos",
+        "f2Desc": "Notifica con antelacion cuando se acerca la fecha limite para responder a un requerimiento"
+      }
+    },
+    "deadlines": {
+      "title": "Control de Plazos",
+      "description": "Monitoriza y gestiona todos los plazos criticos de tus operaciones aduaneras para evitar sanciones",
+      "uso": {
+        "s0Title": "Calendario de plazos",
+        "s0Text": "Visualiza todos los plazos activos en un calendario: vencimientos de declaraciones temporales, respuestas a requerimientos, renovacion de garantias y mas",
+        "s1Title": "Configurar alertas",
+        "s1Text": "Define con cuantos dias de antelacion quieres recibir alertas para cada tipo de plazo (email y notificacion en plataforma)",
+        "step0": "Accede a la seccion Plazos desde el menu lateral",
+        "step1": "Revisa el calendario con todos los plazos activos",
+        "step2": "Configura las alertas de antelacion segun tus necesidades",
+        "step3": "Atiende los plazos proximos a vencer para evitar sanciones"
+      },
+      "normativa": {
+        "r0Title": "Plazos de despacho (CAU Art. 108)",
+        "r0Desc": "Plazos para la presentacion de declaraciones aduaneras y puesta a disposicion de las mercancias",
+        "r1Title": "Deposito temporal (CAU Art. 172)",
+        "r1Desc": "Plazos maximos de permanencia de mercancias en deposito temporal antes de asignar un destino aduanero",
+        "r2Title": "Plazos administrativos (Ley 39/2015 Art. 21)",
+        "r2Desc": "Obligacion de resolver los procedimientos administrativos dentro de los plazos legalmente establecidos"
+      },
+      "luciIA": {
+        "f0Name": "Calendario inteligente",
+        "f0Desc": "LUCI calcula automaticamente todos los plazos a partir de las fechas de tus operaciones y la normativa aplicable",
+        "f1Name": "Alertas predictivas",
+        "f1Desc": "Prioriza los plazos segun el riesgo de incumplimiento considerando la carga de trabajo y los tiempos habituales",
+        "f2Name": "Sugerencias de accion",
+        "f2Desc": "Recomienda acciones concretas para cumplir cada plazo basandose en el estado actual del expediente"
+      }
+    },
+    "inspections": {
+      "title": "Inspecciones Aduaneras",
+      "description": "Gestiona las inspecciones fisicas y documentales requeridas por la aduana para tus mercancias",
+      "uso": {
+        "s0Title": "Inspecciones pendientes",
+        "s0Text": "Consulta las declaraciones que requieren inspeccion fisica (canal rojo) o documental (canal naranja), con fecha y ubicacion programada",
+        "s1Title": "Gestion de resultados",
+        "s1Text": "Registra los resultados de cada inspeccion: conformidad, incidencias detectadas y acciones correctivas necesarias",
+        "step0": "Accede a la seccion Inspecciones desde el menu lateral",
+        "step1": "Revisa las inspecciones programadas y su ubicacion",
+        "step2": "Prepara la documentacion necesaria para la inspeccion",
+        "step3": "Registra el resultado una vez finalizada la inspeccion"
+      },
+      "normativa": {
+        "r0Title": "Controles aduaneros (CAU Art. 188-193)",
+        "r0Desc": "Marco legal para el reconocimiento fisico de mercancias y los controles documentales por parte de la aduana",
+        "r1Title": "Procedimiento de reconocimiento (RD 1073/2014)",
+        "r1Desc": "Regulacion del procedimiento de reconocimiento fisico en las aduanas espanolas",
+        "r2Title": "Toma de muestras (CAU Art. 189)",
+        "r2Desc": "Procedimiento para la toma de muestras durante el reconocimiento fisico de las mercancias"
+      },
+      "luciIA": {
+        "f0Name": "Preparacion de inspeccion",
+        "f0Desc": "LUCI genera un checklist personalizado con los documentos y acciones necesarias para cada tipo de inspeccion",
+        "f1Name": "Historial de inspecciones",
+        "f1Desc": "Analiza el historial de inspecciones para identificar patrones y reducir la frecuencia de canales rojo y naranja",
+        "f2Name": "Asistente en tiempo real",
+        "f2Desc": "Durante la inspeccion, consulta a LUCI cualquier duda sobre la mercancia, clasificacion o documentacion"
+      }
+    },
+    "communications": {
+      "title": "Comunicaciones AEAT",
+      "description": "Gestiona todas las notificaciones y comunicaciones electronicas con la Agencia Tributaria",
+      "uso": {
+        "s0Title": "Bandeja de comunicaciones",
+        "s0Text": "Consulta todas las notificaciones recibidas de la AEAT: resoluciones, requerimientos, informacion de canal y levante de mercancias",
+        "s1Title": "Envio de documentacion",
+        "s1Text": "Envia respuestas y documentacion adicional a la AEAT directamente desde la plataforma de forma segura",
+        "step0": "Accede a la seccion Comunicaciones desde el menu lateral",
+        "step1": "Revisa las comunicaciones recibidas ordenadas por fecha",
+        "step2": "Abre cada comunicacion para ver el contenido completo",
+        "step3": "Responde o adjunta documentacion segun sea necesario"
+      },
+      "normativa": {
+        "r0Title": "Notificaciones electronicas (Ley 39/2015 Art. 40-44)",
+        "r0Desc": "Regulacion de las notificaciones electronicas obligatorias en los procedimientos administrativos",
+        "r1Title": "Relacion electronica obligatoria (Ley 39/2015 Art. 14)",
+        "r1Desc": "Obligacion de relacionarse electronicamente con la administracion para determinados colectivos, incluyendo representantes aduaneros"
+      },
+      "luciIA": {
+        "f0Name": "Resumen automatico",
+        "f0Desc": "LUCI resume automaticamente el contenido de cada comunicacion destacando las acciones requeridas y los plazos",
+        "f1Name": "Clasificacion inteligente",
+        "f1Desc": "Clasifica automaticamente las comunicaciones por tipo (requerimiento, levante, notificacion) y prioridad",
+        "f2Name": "Respuesta asistida",
+        "f2Desc": "Genera borradores de respuesta para agilizar la atencion a las comunicaciones de la AEAT"
+      }
+    },
+    "classification": {
+      "title": "Clasificacion Arancelaria TARIC",
+      "description": "Consulta y clasifica mercancias segun la nomenclatura combinada y el arancel integrado TARIC de la UE",
+      "uso": {
+        "s0Title": "Buscar codigo arancelario",
+        "s0Text": "Busca codigos TARIC por descripcion de la mercancia, numero de capitulo o codigo arancelario parcial",
+        "s1Title": "Navegacion por capitulos",
+        "s1Text": "Navega por la estructura jerarquica del arancel: secciones, capitulos, partidas, subpartidas y codigos TARIC de 10 digitos",
+        "s2Title": "Medidas y restricciones",
+        "s2Text": "Consulta las medidas arancelarias, antidumping, contingentes, preferencias y restricciones aplicables a cada codigo",
+        "step0": "Accede a la seccion Clasificacion TARIC desde el menu lateral",
+        "step1": "Introduce la descripcion de la mercancia o navega por capitulos",
+        "step2": "Selecciona el codigo TARIC que mejor se ajuste a tu mercancia",
+        "step3": "Consulta las medidas y restricciones aplicables al codigo seleccionado"
+      },
+      "normativa": {
+        "r0Title": "Clasificacion de mercancias (CAU Art. 56-57)",
+        "r0Desc": "Normas para la clasificacion arancelaria de mercancias en la nomenclatura combinada de la UE",
+        "r1Title": "Reglas Generales de Interpretacion (RGI 1-6)",
+        "r1Desc": "Las seis reglas que determinan la clasificacion correcta de cualquier mercancia en el Sistema Armonizado",
+        "r2Title": "Nomenclatura Combinada (Reg. 2658/87)",
+        "r2Desc": "Reglamento base que establece la nomenclatura arancelaria y estadistica de la UE, actualizado anualmente"
+      },
+      "luciIA": {
+        "f0Name": "Clasificacion por IA",
+        "f0Desc": "Describe la mercancia en lenguaje natural y LUCI sugerira los codigos TARIC mas probables con su nivel de confianza",
+        "f1Name": "Analisis de imagen",
+        "f1Desc": "Sube una foto del producto y la IA ayudara a identificar la partida arancelaria correspondiente",
+        "f2Name": "Comparador de codigos",
+        "f2Desc": "Compara las diferencias entre codigos TARIC similares para elegir la clasificacion correcta"
+      }
+    },
+    "regulations": {
+      "title": "Normativa Aduanera",
+      "description": "Consulta la legislacion aduanera actualizada de la UE y espanola aplicable a tus operaciones",
+      "uso": {
+        "s0Title": "Buscador de normativa",
+        "s0Text": "Busca articulos, reglamentos y directivas por palabra clave, numero de articulo o materia (clasificacion, valor, origen, etc.)",
+        "s1Title": "Normativa por materia",
+        "s1Text": "Navega la normativa organizada por tematicas: CAU, Actos Delegados, Actos de Ejecucion, legislacion nacional y convenios internacionales",
+        "step0": "Accede a la seccion Normativa desde el menu lateral",
+        "step1": "Utiliza el buscador o navega por categorias tematicas",
+        "step2": "Selecciona el articulo o reglamento para ver su contenido",
+        "step3": "Consulta las notas explicativas y jurisprudencia relacionada"
+      },
+      "normativa": {
+        "r0Title": "Codigo Aduanero de la Union (Reg. 952/2013)",
+        "r0Desc": "Texto refundido del CAU, norma basica que regula todas las operaciones aduaneras en la Union Europea",
+        "r1Title": "Actos Delegados (Reg. 2015/2446)",
+        "r1Desc": "Reglamento delegado que complementa el CAU con disposiciones detalladas sobre procedimientos aduaneros",
+        "r2Title": "Actos de Ejecucion (Reg. 2015/2447)",
+        "r2Desc": "Reglamento de ejecucion que establece normas tecnicas y formatos para la aplicacion del CAU",
+        "r3Title": "Ordenacion del comercio exterior (RD 1073/2014)",
+        "r3Desc": "Normativa nacional que adapta y desarrolla el CAU en el ambito espanol"
+      },
+      "luciIA": {
+        "f0Name": "Consulta por IA",
+        "f0Desc": "Pregunta a LUCI sobre cualquier aspecto normativo en lenguaje natural y recibiras una respuesta fundamentada con referencias legales",
+        "f1Name": "Alertas de cambios normativos",
+        "f1Desc": "Recibe notificaciones cuando se publiquen modificaciones normativas que afecten a tus operaciones habituales",
+        "f2Name": "Interpretacion contextual",
+        "f2Desc": "LUCI contextualiza la normativa aplicable segun el tipo de operacion, mercancia y paises involucrados"
+      }
+    },
+    "queries": {
+      "title": "Consultas Tributarias",
+      "description": "Realiza consultas vinculantes y no vinculantes a la AEAT sobre cuestiones aduaneras y tributarias",
+      "uso": {
+        "s0Title": "Nueva consulta",
+        "s0Text": "Redacta y envia consultas tributarias a la AEAT sobre clasificacion, valor, origen u otras materias aduaneras",
+        "s1Title": "Historial de consultas",
+        "s1Text": "Consulta el estado y las respuestas de tus consultas anteriores, incluyendo las Informaciones Arancelarias Vinculantes (IAV)",
+        "step0": "Accede a la seccion Consultas desde el menu lateral",
+        "step1": "Haz clic en Nueva Consulta y selecciona el tipo",
+        "step2": "Redacta la consulta detallando la cuestion tributaria",
+        "step3": "Envia la consulta y espera la resolucion de la AEAT"
+      },
+      "normativa": {
+        "r0Title": "Consultas tributarias (RD 1065/2007)",
+        "r0Desc": "Procedimiento para la formulacion de consultas tributarias escritas ante la administracion",
+        "r1Title": "Caracter reservado de los datos (Ley 58/2003 Art. 95)",
+        "r1Desc": "Proteccion de los datos tributarios obtenidos por la administracion en el ejercicio de sus funciones"
+      },
+      "luciIA": {
+        "f0Name": "Redaccion asistida",
+        "f0Desc": "LUCI ayuda a redactar consultas tributarias con el formato y la fundamentacion juridica adecuada",
+        "f1Name": "Busqueda de precedentes",
+        "f1Desc": "Busca consultas y resoluciones similares en la base de datos de la DGT y jurisprudencia relevante",
+        "f2Name": "Seguimiento de resoluciones",
+        "f2Desc": "Monitoriza el estado de tus consultas y te notifica cuando se publique la resolucion"
+      }
+    },
+    "pue": {
+      "title": "PUE - Puesto de Inspeccion Fronterizo",
+      "description": "Gestiona los controles sanitarios, fitosanitarios y veterinarios en los Puestos de Inspeccion Fronterizo",
+      "uso": {
+        "s0Title": "Solicitud de inspeccion PUE",
+        "s0Text": "Presenta la solicitud de inspeccion fronteriza para mercancias sujetas a controles sanitarios, fitosanitarios o veterinarios (DSCE/DSPE)",
+        "s1Title": "Seguimiento de controles",
+        "s1Text": "Monitoriza el estado de las inspecciones en el PUE: analisis de laboratorio, resultados y autorizacion de entrada",
+        "step0": "Accede a la seccion PUE desde el menu lateral",
+        "step1": "Haz clic en Nueva Solicitud y selecciona el tipo de control",
+        "step2": "Completa los datos de la mercancia y los documentos sanitarios",
+        "step3": "Envia la solicitud y monitoriza el resultado de la inspeccion"
+      },
+      "normativa": {
+        "r0Title": "Controles oficiales (RD 330/2008)",
+        "r0Desc": "Normativa nacional sobre control sanitario del comercio exterior de productos alimenticios y animales",
+        "r1Title": "Sistema TRACES (Reg. 2019/1013)",
+        "r1Desc": "Reglamento que establece el uso del sistema TRACES-NT para la gestion electronica de controles fronterizos",
+        "r2Title": "Controles oficiales UE (Reg. 2017/625)",
+        "r2Desc": "Marco armonizado de la UE para controles oficiales en la cadena alimentaria, sanidad vegetal y animal"
+      },
+      "luciIA": {
+        "f0Name": "Deteccion de requisitos PUE",
+        "f0Desc": "LUCI identifica automaticamente si tu mercancia requiere control sanitario o fitosanitario segun su codigo TARIC",
+        "f1Name": "Documentacion automatica",
+        "f1Desc": "Genera los formularios DSCE/DSPE pre-rellenados a partir de los datos del expediente",
+        "f2Name": "Alertas de resultado",
+        "f2Desc": "Recibe notificaciones inmediatas cuando se publique el resultado de la inspeccion en el PUE"
+      }
+    },
+    "transit": {
+      "title": "Transito Aduanero - NCTS",
+      "description": "Gestiona declaraciones de transito comunitario e internacional a traves del sistema NCTS",
+      "uso": {
+        "s0Title": "Crear declaracion de transito",
+        "s0Text": "Genera declaraciones T1 (transito externo) o T2 (transito interno) con todos los datos requeridos por el NCTS",
+        "s1Title": "Seguimiento de transitos",
+        "s1Text": "Monitoriza en tiempo real el estado de tus transitos: en curso, presentados en destino, ultimados o con incidencias",
+        "step0": "Accede a la seccion Transito desde el menu lateral",
+        "step1": "Haz clic en Nuevo Transito y selecciona T1 o T2",
+        "step2": "Completa los datos de aduana de partida, destino, itinerario y mercancias",
+        "step3": "Envia la declaracion y monitoriza el transito hasta su ultimacion"
+      },
+      "normativa": {
+        "r0Title": "Regimen de transito (CAU Art. 226-236)",
+        "r0Desc": "Marco legal para el transito aduanero comunitario e internacional de mercancias",
+        "r1Title": "Convenio TIR",
+        "r1Desc": "Convenio internacional que facilita el transporte de mercancias por carretera bajo precinto aduanero",
+        "r2Title": "Convenio de Transito Comun",
+        "r2Desc": "Acuerdo que extiende el regimen de transito comunitario a paises AELC y otros paises adheridos"
+      },
+      "luciIA": {
+        "f0Name": "Generacion automatica",
+        "f0Desc": "LUCI genera la declaracion de transito a partir de los datos del DUA de importacion o exportacion previo",
+        "f1Name": "Calculo de garantia",
+        "f1Desc": "Calcula automaticamente el importe de garantia necesario segun las mercancias y la ruta de transito",
+        "f2Name": "Monitorizacion inteligente",
+        "f2Desc": "Detecta posibles retrasos o incidencias en el transito y alerta antes de que se superen los plazos"
+      }
+    },
+    "calculator": {
+      "title": "Calculadora de Aranceles e Impuestos",
+      "description": "Calcula los derechos de importacion, IVA e impuestos especiales aplicables a tus operaciones",
+      "uso": {
+        "s0Title": "Calcular tributos de importacion",
+        "s0Text": "Introduce el codigo TARIC, pais de origen, valor en aduana y peso para obtener un desglose completo de aranceles, IVA e impuestos especiales",
+        "s1Title": "Simulaciones y comparativas",
+        "s1Text": "Compara el coste tributario entre diferentes origenes, regimenes preferenciales o clasificaciones arancelarias alternativas",
+        "step0": "Accede a la Calculadora desde el menu lateral",
+        "step1": "Introduce el codigo TARIC y el pais de origen de la mercancia",
+        "step2": "Indica el valor en aduana, peso y unidades suplementarias",
+        "step3": "Obtien el desglose de aranceles, IVA e impuestos aplicables"
+      },
+      "normativa": {
+        "r0Title": "Arancel aduanero comun (CAU Art. 56)",
+        "r0Desc": "Los derechos de importacion se calculan segun el arancel aduanero comun de la UE aplicable a la clasificacion de la mercancia",
+        "r1Title": "TARIC - Arancel Integrado de la UE",
+        "r1Desc": "Base de datos integrada que recoge todas las medidas arancelarias, antidumping, preferencias y contingentes",
+        "r2Title": "IVA a la importacion (Ley 37/1992)",
+        "r2Desc": "Ley del IVA espanola que regula la tributacion en la importacion de bienes, incluyendo tipos y exenciones"
+      },
+      "luciIA": {
+        "f0Name": "Calculo inteligente",
+        "f0Desc": "LUCI aplica automaticamente preferencias, contingentes y medidas especiales vigentes al calcular los tributos",
+        "f1Name": "Optimizacion fiscal",
+        "f1Desc": "Sugiere regimenes aduaneros alternativos o preferencias aplicables que puedan reducir la carga tributaria",
+        "f2Name": "Historico de calculos",
+        "f2Desc": "Guarda y compara calculos anteriores para analizar la evolucion de costes de tus importaciones"
+      }
+    },
+    "assistant": {
+      "title": "Asistente LUCI IA",
+      "description": "Chat inteligente que responde a tus consultas sobre aduanas, normativa, clasificacion y procedimientos",
+      "uso": {
+        "s0Title": "Consultar a LUCI",
+        "s0Text": "Escribe tu pregunta en lenguaje natural sobre cualquier tema aduanero: clasificacion, valor, origen, regimenes, procedimientos o normativa",
+        "s1Title": "Consultas contextuales",
+        "s1Text": "Desde cualquier expediente o declaracion, abre LUCI para obtener ayuda especifica sobre esa operacion con contexto completo",
+        "step0": "Haz clic en el icono de LUCI o accede a la seccion Asistente",
+        "step1": "Escribe tu pregunta o selecciona una sugerencia rapida",
+        "step2": "Revisa la respuesta con las referencias normativas incluidas",
+        "step3": "Continua la conversacion para profundizar o aclara tus dudas"
+      },
+      "normativa": {
+        "r0Title": "Base normativa completa (CAU)",
+        "r0Desc": "LUCI tiene acceso al Codigo Aduanero de la Union completo, Actos Delegados y Actos de Ejecucion como base de conocimiento",
+        "r1Title": "Legislacion nacional",
+        "r1Desc": "Incluye la Ley General Tributaria, normativa aduanera espanola y resoluciones de la DGT"
+      },
+      "luciIA": {
+        "f0Name": "Chat en lenguaje natural",
+        "f0Desc": "Pregunta cualquier cosa sobre aduanas como si hablaras con un experto: LUCI entiende el contexto y responde con precision",
+        "f1Name": "Referencias normativas",
+        "f1Desc": "Cada respuesta incluye las referencias legales exactas (articulo, reglamento) para que puedas verificar la informacion",
+        "f2Name": "Contexto del expediente",
+        "f2Desc": "Al consultar desde un expediente, LUCI analiza los datos especificos de tu operacion para dar respuestas personalizadas",
+        "f3Name": "Aprendizaje continuo",
+        "f3Desc": "LUCI mejora sus respuestas con cada interaccion, adaptandose a tu tipo de operativa y preguntas frecuentes"
+      }
+    },
+    "analytics": {
+      "title": "Analitica y Reportes",
+      "description": "Visualiza estadisticas, KPIs y genera informes detallados de tus operaciones aduaneras",
+      "uso": {
+        "s0Title": "Dashboard analitico",
+        "s0Text": "Consulta metricas clave: volumen de operaciones, tiempos medios de despacho, distribucion de canales, costes y tendencias",
+        "s1Title": "Generacion de informes",
+        "s1Text": "Genera informes personalizados por periodo, tipo de operacion, mercancia o cliente para presentar a la direccion o a la aduana",
+        "step0": "Accede a la seccion Analitica desde el menu lateral",
+        "step1": "Selecciona el periodo y las metricas que quieres analizar",
+        "step2": "Explora los graficos interactivos y las tablas de datos",
+        "step3": "Exporta los informes en formato PDF o Excel segun necesites"
+      },
+      "normativa": {
+        "r0Title": "Reporting interno y compliance",
+        "r0Desc": "Las metricas ayudan a cumplir con las obligaciones de control interno y auditorias aduaneras"
+      },
+      "luciIA": {
+        "f0Name": "Insights automaticos",
+        "f0Desc": "LUCI detecta automaticamente anomalias, tendencias y oportunidades de mejora en tus operaciones",
+        "f1Name": "Informe ejecutivo con IA",
+        "f1Desc": "Genera informes ejecutivos con resumen narrativo, destacando los puntos mas relevantes del periodo",
+        "f2Name": "Prediccion de tendencias",
+        "f2Desc": "Utiliza modelos predictivos para anticipar volumenes, costes y posibles incidencias futuras"
+      }
+    },
+    "admin": {
+      "title": "Panel de Administracion",
+      "description": "Gestiona usuarios, roles, permisos y configuracion general del sistema LUCI",
+      "uso": {
+        "s0Title": "Gestion de usuarios",
+        "s0Text": "Crea, edita y elimina usuarios del sistema. Asigna roles (administrador, supervisor, agente, consultor) y controla los permisos de cada perfil",
+        "s1Title": "Auditoria del sistema",
+        "s1Text": "Consulta el registro de actividad completo: accesos, acciones realizadas, modificaciones y eventos de seguridad",
+        "s2Title": "Configuracion del sistema",
+        "s2Text": "Configura los parametros generales: datos de empresa, zona horaria, formatos, integraciones con AEAT y politicas de seguridad",
+        "step0": "Accede al Panel de Administracion desde el menu lateral",
+        "step1": "Gestiona los usuarios y asigna los roles adecuados",
+        "step2": "Revisa el registro de auditoria periodicamente",
+        "step3": "Configura los parametros del sistema segun las necesidades de tu organizacion"
+      },
+      "normativa": {
+        "r0Title": "Proteccion de datos (RGPD)",
+        "r0Desc": "El tratamiento de datos personales debe cumplir el Reglamento General de Proteccion de Datos de la UE",
+        "r1Title": "Esquema Nacional de Seguridad (ENS)",
+        "r1Desc": "Requisitos de seguridad aplicables a los sistemas de informacion que gestionan datos tributarios y aduaneros"
+      },
+      "luciIA": {
+        "f0Name": "Deteccion de anomalias",
+        "f0Desc": "LUCI monitoriza la actividad de los usuarios y alerta ante comportamientos inusuales o posibles brechas de seguridad",
+        "f1Name": "Recomendaciones de seguridad",
+        "f1Desc": "Sugiere mejoras en la configuracion de seguridad basandose en las mejores practicas del sector",
+        "f2Name": "Informe de actividad",
+        "f2Desc": "Genera informes automaticos de actividad por usuario, modulo y periodo para facilitar la auditoria"
+      }
+    },
+    "settings": {
+      "title": "Configuracion",
+      "description": "Personaliza la configuracion de tu cuenta, preferencias de notificaciones e integraciones",
+      "uso": {
+        "s0Title": "Datos de la empresa",
+        "s0Text": "Configura los datos de tu empresa: nombre, NIF, EORI, direccion y datos de contacto para las declaraciones aduaneras",
+        "s1Title": "Notificaciones",
+        "s1Text": "Define las alertas que quieres recibir por email y en la plataforma: plazos, inspecciones, requerimientos y cambios de canal",
+        "s2Title": "Seguridad de la cuenta",
+        "s2Text": "Gestiona la contrasena, autenticacion de dos factores y las sesiones activas de tu cuenta",
+        "step0": "Accede a Configuracion desde el menu lateral o el icono de perfil",
+        "step1": "Actualiza los datos de tu empresa si han cambiado",
+        "step2": "Configura las preferencias de notificaciones",
+        "step3": "Revisa y actualiza los ajustes de seguridad de tu cuenta"
+      },
+      "normativa": {
+        "r0Title": "Proteccion de datos (RGPD)",
+        "r0Desc": "Tus datos se tratan conforme al RGPD. Puedes ejercer tus derechos de acceso, rectificacion y supresion",
+        "r1Title": "Esquema Nacional de Seguridad (ENS)",
+        "r1Desc": "La plataforma cumple con los requisitos del ENS para la proteccion de sistemas de informacion"
+      },
+      "luciIA": {
+        "f0Name": "Configuracion asistida",
+        "f0Desc": "LUCI te ayuda a configurar correctamente todos los parametros basandose en tu perfil de operaciones",
+        "f1Name": "Validacion de datos",
+        "f1Desc": "Verifica automaticamente la validez del NIF, EORI y otros identificadores al configurarlos"
+      }
+    },
+    "billing": {
+      "title": "Facturacion y Suscripcion",
+      "description": "Gestiona tu plan de suscripcion, metodo de pago e historial de facturas de LUCI",
+      "uso": {
+        "s0Title": "Plan de suscripcion",
+        "s0Text": "Consulta tu plan actual (Professional, Business o Enterprise), las funcionalidades incluidas y los limites de uso",
+        "s1Title": "Facturas y pagos",
+        "s1Text": "Descarga tus facturas mensuales, actualiza el metodo de pago y consulta el historial de transacciones",
+        "step0": "Accede a la seccion Facturacion desde el menu lateral",
+        "step1": "Revisa tu plan actual y las opciones de mejora disponibles",
+        "step2": "Actualiza tu metodo de pago si es necesario",
+        "step3": "Descarga las facturas para tu contabilidad"
+      },
+      "normativa": {
+        "r0Title": "Obligaciones de facturacion (RD 1619/2012)",
+        "r0Desc": "Reglamento que regula las obligaciones de facturacion, incluyendo el contenido obligatorio de las facturas"
+      },
+      "luciIA": {
+        "f0Name": "Recomendacion de plan",
+        "f0Desc": "LUCI analiza tu volumen de operaciones y recomienda el plan mas adecuado para tus necesidades",
+        "f1Name": "Alertas de consumo",
+        "f1Desc": "Recibe notificaciones cuando te acerques a los limites de tu plan para evitar interrupciones del servicio"
+      }
+    },
+    "guarantees": {
+      "title": "Garantias Aduaneras",
+      "description": "Gestiona las garantias globales, individuales y GRN necesarias para tus operaciones aduaneras",
+      "uso": {
+        "s0Title": "Registro de garantias",
+        "s0Text": "Consulta y registra todas tus garantias aduaneras: garantia global, garantias individuales, GRN y su estado de vigencia",
+        "s1Title": "Control de saldo",
+        "s1Text": "Monitoriza el saldo disponible de tus garantias globales y recibe alertas cuando se acerque al limite",
+        "step0": "Accede a la seccion Garantias desde el menu lateral",
+        "step1": "Consulta las garantias activas y su saldo disponible",
+        "step2": "Registra nuevas garantias o renueva las existentes",
+        "step3": "Configura alertas de saldo minimo para evitar bloqueos"
+      },
+      "normativa": {
+        "r0Title": "Garantia aduanera (CAU Art. 89-100)",
+        "r0Desc": "Marco legal para la constitucion, gestion y liberacion de garantias en el ambito aduanero",
+        "r1Title": "Garantia global (CAU Art. 95)",
+        "r1Desc": "Requisitos y condiciones para constituir una garantia global que cubra varias operaciones aduaneras",
+        "r2Title": "Modalidades de garantia (AD Art. 51-55)",
+        "r2Desc": "Formas admitidas de garantia: deposito en efectivo, fiador, titulo de garantia y otros instrumentos"
+      },
+      "luciIA": {
+        "f0Name": "Calculo de garantia necesaria",
+        "f0Desc": "LUCI calcula automaticamente el importe de garantia necesario para cada operacion segun la mercancia y el regimen",
+        "f1Name": "Alertas de saldo",
+        "f1Desc": "Monitoriza el consumo de tu garantia global y alerta cuando el saldo disponible es insuficiente para proximas operaciones",
+        "f2Name": "Optimizacion de garantias",
+        "f2Desc": "Analiza tu historial para sugerir el tipo y cuantia de garantia mas eficiente para tu perfil de operaciones"
+      }
+    },
+    "specialRegimes": {
+      "title": "Regimenes Especiales",
+      "description": "Gestiona operaciones bajo regimenes aduaneros especiales: deposito, perfeccionamiento, destino final y admision temporal",
+      "uso": {
+        "s0Title": "Tipos de regimenes",
+        "s0Text": "Consulta los diferentes regimenes especiales disponibles: deposito aduanero, perfeccionamiento activo/pasivo, admision temporal y destino final",
+        "s1Title": "Control de autorizaciones",
+        "s1Text": "Gestiona las autorizaciones de regimenes especiales: solicitudes, vigencia, condiciones y obligaciones de liquidacion",
+        "step0": "Accede a la seccion Regimenes Especiales desde el menu lateral",
+        "step1": "Selecciona el tipo de regimen que necesitas gestionar",
+        "step2": "Consulta las autorizaciones vigentes y sus condiciones",
+        "step3": "Gestiona las liquidaciones y ultimaciones dentro del plazo"
+      },
+      "normativa": {
+        "r0Title": "Regimenes especiales (CAU Art. 210-262)",
+        "r0Desc": "Marco legal completo para los regimenes especiales: deposito, zonas francas, perfeccionamiento, admision temporal y destino final",
+        "r1Title": "Autorizacion de regimenes (CAU Art. 211)",
+        "r1Desc": "Requisitos y procedimiento para obtener autorizacion de la aduana para operar bajo regimenes especiales",
+        "r2Title": "Perfeccionamiento (CAU Art. 255-258)",
+        "r2Desc": "Regimen que permite importar o exportar mercancias para su transformacion con suspension o devolucion de derechos"
+      },
+      "luciIA": {
+        "f0Name": "Recomendacion de regimen",
+        "f0Desc": "LUCI analiza tu operacion y recomienda el regimen especial mas ventajoso segun la mercancia y el destino",
+        "f1Name": "Control de plazos",
+        "f1Desc": "Monitoriza automaticamente los plazos de ultimacion y liquidacion de cada autorizacion activa",
+        "f2Name": "Calculo de beneficio fiscal",
+        "f2Desc": "Estima el ahorro fiscal de utilizar un regimen especial frente al despacho a libre practica directa"
+      }
+    },
+    "exciseDuties": {
+      "title": "Impuestos Especiales",
+      "description": "Gestiona las obligaciones relativas a impuestos especiales: alcohol, tabaco, hidrocarburos y electricidad",
+      "uso": {
+        "s0Title": "Liquidacion de impuestos especiales",
+        "s0Text": "Calcula y liquida los impuestos especiales aplicables a mercancias sujetas: bebidas alcoholicas, tabaco, hidrocarburos y electricidad",
+        "s1Title": "Regimen de deposito fiscal",
+        "s1Text": "Gestiona las operaciones en deposito fiscal con suspension de impuestos especiales y los documentos de acompanamiento (e-DA)",
+        "step0": "Accede a la seccion Impuestos Especiales desde el menu lateral",
+        "step1": "Identifica si tu mercancia esta sujeta a impuestos especiales",
+        "step2": "Calcula la cuota tributaria segun el tipo y cantidad",
+        "step3": "Genera la liquidacion y los documentos de acompanamiento"
+      },
+      "normativa": {
+        "r0Title": "Ley de Impuestos Especiales (Ley 38/1992)",
+        "r0Desc": "Norma basica espanola que regula los impuestos especiales sobre alcohol, tabaco e hidrocarburos",
+        "r1Title": "Directiva de Impuestos Especiales (Dir. 2020/262)",
+        "r1Desc": "Marco armonizado de la UE para la circulacion y control de productos sujetos a impuestos especiales",
+        "r2Title": "Reglamento de IIEE (RD 1165/1995)",
+        "r2Desc": "Desarrollo reglamentario de la Ley de Impuestos Especiales con detalle de procedimientos y obligaciones formales"
+      },
+      "luciIA": {
+        "f0Name": "Deteccion automatica",
+        "f0Desc": "LUCI identifica automaticamente si tu mercancia esta sujeta a impuestos especiales a partir de su codigo TARIC",
+        "f1Name": "Calculo de cuotas",
+        "f1Desc": "Calcula automaticamente el importe de impuestos especiales segun el tipo de producto, grado alcoholico o poder calorifico",
+        "f2Name": "Documentos e-DA",
+        "f2Desc": "Genera los documentos electronicos de acompanamiento necesarios para la circulacion intracomunitaria"
+      }
+    },
+    "oea": {
+      "title": "Operador Economico Autorizado (OEA)",
+      "description": "Gestiona tu certificacion OEA y cumple con los requisitos de simplificacion aduanera y seguridad",
+      "uso": {
+        "s0Title": "Estado de certificacion OEA",
+        "s0Text": "Consulta el estado de tu certificacion OEA (AEOC para simplificaciones aduaneras, AEOS para seguridad, o combinado AEOF)",
+        "s1Title": "Autodiagnostico OEA",
+        "s1Text": "Evalua el grado de cumplimiento de tu empresa con los criterios OEA y obtien un plan de accion para mejorar",
+        "step0": "Accede a la seccion OEA desde el menu lateral",
+        "step1": "Revisa tu estado actual de certificacion y vigencia",
+        "step2": "Ejecuta el autodiagnostico para evaluar tu cumplimiento",
+        "step3": "Implementa las mejoras sugeridas y documenta las evidencias"
+      },
+      "normativa": {
+        "r0Title": "Certificacion OEA (CAU Art. 38-39)",
+        "r0Desc": "Requisitos y beneficios del estatus de Operador Economico Autorizado en el territorio aduanero de la UE",
+        "r1Title": "Criterios OEA (AD Art. 24-30)",
+        "r1Desc": "Criterios detallados que deben cumplirse para obtener y mantener la certificacion OEA",
+        "r2Title": "Procedimiento de concesion (AE Art. 26-31)",
+        "r2Desc": "Procedimiento de solicitud, evaluacion y concesion del certificado OEA por las autoridades aduaneras"
+      },
+      "luciIA": {
+        "f0Name": "Evaluacion de cumplimiento",
+        "f0Desc": "LUCI evalua automaticamente tu grado de cumplimiento con los criterios OEA basandose en tus operaciones",
+        "f1Name": "Plan de mejora",
+        "f1Desc": "Genera un plan de accion personalizado con las areas de mejora prioritarias para obtener o mantener la certificacion",
+        "f2Name": "Monitorizacion continua",
+        "f2Desc": "Supervisa constantemente el cumplimiento de los criterios OEA y alerta si detecta desviaciones"
+      }
+    },
+    "preferences": {
+      "title": "Preferencias Arancelarias y Origen",
+      "description": "Gestiona certificados de origen, preferencias arancelarias y acuerdos comerciales para reducir los derechos de importacion",
+      "uso": {
+        "s0Title": "Acuerdos comerciales",
+        "s0Text": "Consulta los acuerdos comerciales de la UE con terceros paises y las preferencias arancelarias que ofrecen para tus mercancias",
+        "s1Title": "Certificados de origen",
+        "s1Text": "Gestiona los certificados de origen preferencial (EUR.1, EUR-MED, declaracion en factura, REX) necesarios para aplicar preferencias",
+        "step0": "Accede a la seccion Preferencias desde el menu lateral",
+        "step1": "Busca el acuerdo comercial aplicable segun el pais de origen",
+        "step2": "Verifica los requisitos de origen para tu mercancia",
+        "step3": "Adjunta el certificado de origen valido para aplicar la preferencia"
+      },
+      "normativa": {
+        "r0Title": "Origen de las mercancias (CAU Art. 56-65)",
+        "r0Desc": "Normas generales para determinar el origen no preferencial y preferencial de las mercancias",
+        "r1Title": "Protocolos de origen",
+        "r1Desc": "Reglas de origen especificas incluidas en cada acuerdo comercial de la UE con terceros paises",
+        "r2Title": "Pruebas de origen (Reg. 2015/2446 Art. 37-70)",
+        "r2Desc": "Tipos de prueba de origen aceptados: certificados EUR.1, declaraciones en factura, sistema REX y otros"
+      },
+      "luciIA": {
+        "f0Name": "Deteccion de preferencias",
+        "f0Desc": "LUCI identifica automaticamente si tu mercancia puede beneficiarse de una preferencia arancelaria segun su origen",
+        "f1Name": "Verificacion de origen",
+        "f1Desc": "Analiza si se cumplen las reglas de origen especificas del acuerdo comercial para aplicar la preferencia",
+        "f2Name": "Ahorro estimado",
+        "f2Desc": "Calcula el ahorro potencial en aranceles al aplicar preferencias frente al tipo de derecho general"
+      }
+    },
+    "quotas": {
+      "title": "Contingentes Arancelarios",
+      "description": "Consulta y gestiona contingentes arancelarios de la UE que permiten importar a tipos reducidos dentro de volumenes limitados",
+      "uso": {
+        "s0Title": "Consultar contingentes",
+        "s0Text": "Busca contingentes arancelarios abiertos por codigo TARIC o pais de origen, con su saldo disponible y tipo de derecho reducido",
+        "s1Title": "Solicitar contingente",
+        "s1Text": "Solicita la imputacion a un contingente arancelario en tu declaracion de importacion para beneficiarte del tipo reducido",
+        "step0": "Accede a la seccion Contingentes desde el menu lateral",
+        "step1": "Busca contingentes disponibles para tu mercancia y origen",
+        "step2": "Verifica el saldo restante del contingente",
+        "step3": "Incluye la solicitud de contingente en tu declaracion de importacion"
+      },
+      "normativa": {
+        "r0Title": "Contingentes arancelarios (CAU Art. 56(4))",
+        "r0Desc": "Base legal para la aplicacion de contingentes arancelarios que permiten importar a tipos reducidos dentro de volumenes fijados",
+        "r1Title": "Gestion de contingentes",
+        "r1Desc": "La Comision Europea gestiona los contingentes por orden cronologico de admision de las declaraciones (first come, first served)"
+      },
+      "luciIA": {
+        "f0Name": "Busqueda de contingentes",
+        "f0Desc": "LUCI busca automaticamente contingentes disponibles para tu mercancia y te notifica si hay saldo",
+        "f1Name": "Alerta de apertura",
+        "f1Desc": "Recibe notificaciones cuando se abren nuevos contingentes o se renueva el saldo de contingentes existentes",
+        "f2Name": "Estimacion de saldo",
+        "f2Desc": "Analiza la velocidad de consumo del contingente para estimar si habra saldo disponible para tu operacion"
+      }
+    },
+    "integrations": {
+      "title": "Integraciones",
+      "description": "Configura y gestiona las conexiones con sistemas externos: AEAT, TARIC, proveedores logisticos y ERPs",
+      "uso": {
+        "s0Title": "Conexion con la AEAT",
+        "s0Text": "Configura la conexion con la Sede Electronica de la AEAT mediante certificado digital para el envio y recepcion de declaraciones",
+        "s1Title": "Integraciones de terceros",
+        "s1Text": "Conecta LUCI con tu ERP, sistema de gestion de almacen o proveedor logistico para automatizar el flujo de datos",
+        "step0": "Accede a la seccion Integraciones desde el menu lateral",
+        "step1": "Selecciona el sistema que deseas conectar",
+        "step2": "Configura las credenciales y parametros de conexion",
+        "step3": "Prueba la conexion y activa la sincronizacion automatica"
+      },
+      "normativa": {
+        "r0Title": "Servicios web AEAT",
+        "r0Desc": "Especificaciones tecnicas de los servicios web de la AEAT para el intercambio electronico de declaraciones aduaneras",
+        "r1Title": "Interoperabilidad (Reg. 2019/1010)",
+        "r1Desc": "Requisitos de interoperabilidad de los sistemas aduaneros nacionales con los sistemas centrales de la UE"
+      },
+      "luciIA": {
+        "f0Name": "Diagnostico de conexion",
+        "f0Desc": "LUCI verifica automaticamente el estado de las conexiones y diagnostica problemas de comunicacion con la AEAT",
+        "f1Name": "Mapeo inteligente de datos",
+        "f1Desc": "Asiste en el mapeo de campos entre tu ERP y el formato requerido por las declaraciones aduaneras",
+        "f2Name": "Monitorizacion de integraciones",
+        "f2Desc": "Supervisa el funcionamiento de todas las integraciones activas y alerta ante fallos de sincronizacion"
+      }
+    },
+    "aeatCertificates": {
+      "title": "Certificados Digitales AEAT",
+      "description": "Gestiona los certificados digitales necesarios para la comunicacion electronica con la Agencia Tributaria",
+      "uso": {
+        "s0Title": "Instalar certificado",
+        "s0Text": "Sube tu certificado digital (FNMT, DNIe o certificado de representante) en formato .p12 o .pfx para habilitar el envio de declaraciones",
+        "s1Title": "Estado del certificado",
+        "s1Text": "Consulta la validez, fecha de caducidad y el titular del certificado digital actualmente configurado en el sistema",
+        "step0": "Accede a la seccion Certificados AEAT desde el menu lateral",
+        "step1": "Haz clic en Subir Certificado y selecciona el archivo .p12",
+        "step2": "Introduce la contrasena del certificado para validarlo",
+        "step3": "Verifica que el certificado se ha instalado correctamente"
+      },
+      "normativa": {
+        "r0Title": "Certificados electronicos (RD 1065/2007)",
+        "r0Desc": "Requisitos para la identificacion y autenticacion electronica en las relaciones con la administracion tributaria",
+        "r1Title": "Servicios de confianza (Ley 6/2020)",
+        "r1Desc": "Regulacion de los servicios electronicos de confianza, incluyendo la firma electronica y los certificados cualificados"
+      },
+      "luciIA": {
+        "f0Name": "Verificacion automatica",
+        "f0Desc": "LUCI verifica automaticamente la validez del certificado digital, incluyendo la cadena de confianza y la fecha de caducidad",
+        "f1Name": "Alerta de caducidad",
+        "f1Desc": "Recibe notificaciones con 30, 15 y 7 dias de antelacion antes de que caduque tu certificado digital",
+        "f2Name": "Diagnostico de problemas",
+        "f2Desc": "Detecta y sugiere soluciones para problemas comunes de certificados: formato incorrecto, contrasena erronea o certificado revocado"
+      }
+    },
+    "aeatMonitor": {
+      "title": "Monitor de Estado AEAT",
+      "description": "Monitoriza en tiempo real la disponibilidad de los servicios web de la AEAT y el estado de los envios",
+      "uso": {
+        "s0Title": "Estado de los servicios",
+        "s0Text": "Consulta la disponibilidad de cada servicio web de la AEAT (VUA, ICS2, NCTS, ENS) con indicadores de estado en tiempo real",
+        "s1Title": "Historial de envios",
+        "s1Text": "Revisa el historial de comunicaciones con la AEAT: envios exitosos, errores, tiempos de respuesta y reintentos automaticos",
+        "step0": "Accede a la seccion Monitor AEAT desde el menu lateral",
+        "step1": "Revisa el estado actual de cada servicio web de la AEAT",
+        "step2": "Consulta el historial de envios y respuestas recientes",
+        "step3": "Configura alertas para cuando un servicio no este disponible"
+      },
+      "normativa": {
+        "r0Title": "Disponibilidad de la Sede Electronica",
+        "r0Desc": "La AEAT publica el calendario de disponibilidad de sus servicios web y las ventanas de mantenimiento programado"
+      },
+      "luciIA": {
+        "f0Name": "Monitorizacion proactiva",
+        "f0Desc": "LUCI comprueba periodicamente la disponibilidad de los servicios AEAT y programa reintentos automaticos en caso de caida",
+        "f1Name": "Prediccion de disponibilidad",
+        "f1Desc": "Analiza patrones historicos de disponibilidad para recomendar los mejores horarios para enviar declaraciones",
+        "f2Name": "Diagnostico de errores",
+        "f2Desc": "Interpreta los codigos de error de la AEAT y sugiere acciones correctivas especificas para cada tipo de rechazo"
+      }
+    },
+    "mlInsights": {
+      "title": "Machine Learning Insights",
+      "description": "Analisis avanzado con inteligencia artificial: deteccion de fraude, clasificacion automatica y prediccion de canales",
+      "uso": {
+        "s0Title": "Modelos de IA activos",
+        "s0Text": "Consulta los modelos de machine learning activos en tu cuenta: clasificacion arancelaria, prediccion de canal, deteccion de fraude y auto-respuesta",
+        "s1Title": "Metricas de rendimiento",
+        "s1Text": "Revisa la precision, recall y F1-score de cada modelo, asi como su evolucion temporal y casos de exito",
+        "step0": "Accede a la seccion ML Insights desde el menu lateral",
+        "step1": "Revisa los modelos activos y su estado de entrenamiento",
+        "step2": "Consulta las metricas de rendimiento de cada modelo",
+        "step3": "Ajusta los umbrales de confianza segun tus necesidades"
+      },
+      "normativa": {
+        "r0Title": "Reglamento de IA de la UE (Reg. 2024/1689)",
+        "r0Desc": "Marco legal europeo para la inteligencia artificial, clasificando los sistemas por nivel de riesgo y estableciendo obligaciones",
+        "r1Title": "Decisiones automatizadas (RGPD Art. 22)",
+        "r1Desc": "Derecho a no ser objeto de decisiones basadas unicamente en el tratamiento automatizado, incluyendo la elaboracion de perfiles"
+      },
+      "luciIA": {
+        "f0Name": "Clasificacion por ML",
+        "f0Desc": "Modelo entrenado con millones de declaraciones que sugiere codigos TARIC con alta precision",
+        "f1Name": "Deteccion de fraude",
+        "f1Desc": "Identifica patrones anomalos en declaraciones que pueden indicar infravaloraccion, clasificacion incorrecta u otras irregularidades",
+        "f2Name": "Prediccion de canal",
+        "f2Desc": "Predice el canal de inspeccion probable basandose en multiples variables: mercancia, origen, operador y tendencias historicas",
+        "f3Name": "Auto-respuesta a requerimientos",
+        "f3Desc": "Genera automaticamente borradores de respuesta a requerimientos tipo basandose en el expediente y respuestas anteriores exitosas"
+      }
+    },
+    "rulesEngine": {
+      "title": "Motor de Reglas",
+      "description": "Configura reglas automatizadas para validar, clasificar y procesar tus operaciones aduaneras",
+      "uso": {
+        "s0Title": "Crear reglas personalizadas",
+        "s0Text": "Define reglas automatizadas con condiciones y acciones: si la mercancia cumple X criterio, aplicar Y accion automaticamente",
+        "s1Title": "Gestion de reglas activas",
+        "s1Text": "Consulta, edita y desactiva las reglas configuradas. Revisa el historial de ejecucion y los resultados de cada regla",
+        "step0": "Accede a la seccion Motor de Reglas desde el menu lateral",
+        "step1": "Haz clic en Nueva Regla y define las condiciones",
+        "step2": "Configura las acciones a ejecutar cuando se cumplan las condiciones",
+        "step3": "Activa la regla y monitoriza su ejecucion en las proximas operaciones"
+      },
+      "normativa": {
+        "r0Title": "Factores de riesgo (CAU Titulo II)",
+        "r0Desc": "Criterios y factores de riesgo que las autoridades aduaneras deben considerar en el analisis de riesgos",
+        "r1Title": "Controles basados en riesgo (CAU Art. 46)",
+        "r1Desc": "Marco para el analisis de riesgos sistematico que permite aplicar controles proporcionados y eficaces"
+      },
+      "luciIA": {
+        "f0Name": "Sugerencia de reglas",
+        "f0Desc": "LUCI analiza tu operativa y sugiere reglas automatizadas que optimicen tus procesos mas frecuentes",
+        "f1Name": "Deteccion de conflictos",
+        "f1Desc": "Identifica automaticamente si una nueva regla puede entrar en conflicto con reglas existentes",
+        "f2Name": "Optimizacion continua",
+        "f2Desc": "Evalua el rendimiento de cada regla y sugiere ajustes para mejorar su eficacia basandose en los resultados"
+      }
+    }
   },
   "admin": {
     "dashboard": "Dashboard",

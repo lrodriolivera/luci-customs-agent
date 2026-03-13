@@ -109,6 +109,7 @@
     "aeatIntegrations": "AEAT & Integrations",
     "aeatCertificates": "AEAT Certificates",
     "aeatMonitor": "AEAT Monitor",
+    "nlCustoms": "NL Customs",
     "integrations": "Integrations",
     "administration": "Administration",
     "analytics": "Analytics",
@@ -2273,7 +2274,946 @@
     "howToUse": "How to use",
     "regulation": "Regulation",
     "luciAi": "LUCI AI",
-    "steps": "Steps"
+    "steps": "Steps",
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Overview of your customs operations status, active files and key metrics",
+      "uso": {
+        "s0Title": "Operations overview",
+        "s0Text": "The dashboard shows a real-time summary of all your files, pending declarations, active alerts and AEAT connection status",
+        "s1Title": "Widgets and metrics",
+        "s1Text": "Customize the dashboard widgets to view your most relevant metrics: operation volume, average clearance times, assigned channels and more",
+        "step0": "Access the dashboard from the main menu",
+        "step1": "Review the summary cards with period metrics",
+        "step2": "Check pending alerts and notifications",
+        "step3": "Click on any metric to see the full detail"
+      },
+      "normativa": {
+        "r0Title": "Union Customs Code",
+        "r0Desc": "General regulatory framework for all customs operations in the EU (Reg. 952/2013)",
+        "r1Title": "Customs Organisation Regulation",
+        "r1Desc": "National regulation that implements the UCC in Spain, governing the organisation and customs procedures"
+      },
+      "luciIA": {
+        "f0Name": "Smart summary",
+        "f0Desc": "LUCI automatically analyses your operations and generates an executive summary with the most relevant action items",
+        "f1Name": "Predictive alerts",
+        "f1Desc": "Detects potential issues before they occur by analysing patterns in your declarations and deadlines",
+        "f2Name": "Daily recommendations",
+        "f2Desc": "Receive personalised suggestions to optimise your customs processes based on your operational analysis"
+      }
+    },
+    "expeditions": {
+      "title": "File Management",
+      "description": "Create, manage and track all your import and export files",
+      "uso": {
+        "s0Title": "Create a file",
+        "s0Text": "Start a new file specifying the operation type (import/export), operator data and goods description",
+        "s1Title": "File tracking",
+        "s1Text": "Check the status of each file in real time: attached documents, associated declarations, assigned channel and AEAT communications",
+        "s2Title": "Attached documentation",
+        "s2Text": "Attach invoices, packing lists, certificates of origin, licences and any document required for customs clearance",
+        "step0": "Access the Files section from the side menu",
+        "step1": "Click New File and select the operation type",
+        "step2": "Complete the operator, goods and document details",
+        "step3": "Save the file and associate the required declarations"
+      },
+      "normativa": {
+        "r0Title": "Customs declarations (UCC Art. 158-187)",
+        "r0Desc": "Regulates the different types of customs declarations, their requirements and clearance procedures",
+        "r1Title": "Electronic submission (UCC Art. 15)",
+        "r1Desc": "Obligation to electronically submit all declarations and documents to customs authorities",
+        "r2Title": "Accompanying documents (DA Art. 143-152)",
+        "r2Desc": "Requirements for documents that must accompany goods and customs declarations"
+      },
+      "luciIA": {
+        "f0Name": "Assisted creation",
+        "f0Desc": "LUCI guides you step by step in creating the file, suggesting data based on similar previous operations",
+        "f1Name": "Missing document detection",
+        "f1Desc": "Automatically analyses the file and alerts if any mandatory document is missing based on the goods type and origin",
+        "f2Name": "Automatic classification",
+        "f2Desc": "Automatically suggests the appropriate TARIC code from the goods description"
+      }
+    },
+    "declarations": {
+      "title": "H1 Customs Declarations",
+      "description": "Manage full import declarations (H1) for submission to AEAT via the VUA/DIVA system",
+      "uso": {
+        "s0Title": "Create H1 declaration",
+        "s0Text": "Generate a complete H1 declaration with all required data: parties, goods, value, duties and accompanying documents",
+        "s1Title": "Goods items",
+        "s1Text": "Add one or more items with their TARIC code, weight, value, country of origin, customs procedure and associated documents",
+        "s2Title": "Submit to AEAT",
+        "s2Text": "Once completed, submit the declaration directly to AEAT and receive the MRN (Movement Reference Number) confirmation",
+        "step0": "Create a file or select an existing one",
+        "step1": "Click New H1 Declaration and fill in the general data",
+        "step2": "Add goods items with their TARIC codes and values",
+        "step3": "Attach the required documents (invoice, DV1, certificates)",
+        "step4": "Validate and submit the declaration to AEAT"
+      },
+      "normativa": {
+        "r0Title": "Import declarations (UCC Art. 158-187)",
+        "r0Desc": "Legal framework for import declarations, including content of Annex B column H1 of the UCC",
+        "r1Title": "Import datasets (DA Art. 143)",
+        "r1Desc": "Defines the data elements required for each type of import declaration",
+        "r2Title": "Customs value (UCC Art. 70-74)",
+        "r2Desc": "Customs valuation methods for determining the tax base for import duties"
+      },
+      "luciIA": {
+        "f0Name": "Smart autofill",
+        "f0Desc": "LUCI automatically fills fields based on file information and previous operations",
+        "f1Name": "Pre-submission validation",
+        "f1Desc": "Verifies that all mandatory fields are complete and consistent before submitting to AEAT",
+        "f2Name": "Automatic duty calculation",
+        "f2Desc": "Automatically calculates tariffs, VAT and special taxes from the TARIC code and declared value",
+        "f3Name": "Channel prediction",
+        "f3Desc": "Estimates the probable channel (green, orange, red) based on goods analysis and operator history"
+      }
+    },
+    "h7": {
+      "title": "H7 Declarations - Low Value Shipments",
+      "description": "Manage simplified declarations for e-commerce imports valued under EUR 150",
+      "uso": {
+        "s0Title": "Create H7 declaration",
+        "s0Text": "Fill in the shipment data: sender, recipient, goods and declared value. The dataset is super-reduced compared to H1",
+        "s1Title": "Import manifest",
+        "s1Text": "Upload a CSV file with multiple shipments and the AI will automatically classify each line, generating individual H7 declarations",
+        "step0": "Access the H7 E-commerce section from the side menu",
+        "step1": "Click New H7 or Import Manifest",
+        "step2": "Complete the required data or upload your CSV file",
+        "step3": "Submit the declaration to AEAT and receive the MRN"
+      },
+      "normativa": {
+        "r0Title": "Union Customs Code (UCC Art. 143a)",
+        "r0Desc": "Establishes the super-reduced dataset for low value shipments up to EUR 150",
+        "r1Title": "Regulation (EU) 2019/1143",
+        "r1Desc": "Amends the Delegated Regulation to include column H7 of Annex B with simplified data",
+        "r2Title": "Directive (EU) 2017/2455 - VAT e-commerce package",
+        "r2Desc": "Obligation for customs declaration on all shipments, removing the EUR 22 exemption"
+      },
+      "luciIA": {
+        "f0Name": "Automatic classification",
+        "f0Desc": "AI automatically classifies goods assigning 6-digit HS codes from the description",
+        "f1Name": "Manifest processing",
+        "f1Desc": "Upload a complete CSV and LUCI will generate H7 declarations for each eligible shipment",
+        "f2Name": "Smart validation",
+        "f2Desc": "Automatically detects shipments exceeding EUR 150 that require a full H1 declaration"
+      }
+    },
+    "ens": {
+      "title": "ENS - Entry Summary Declaration",
+      "description": "Manage entry summary declarations (ENS/ICS2) for goods entering the EU customs territory",
+      "uso": {
+        "s0Title": "Create ENS declaration",
+        "s0Text": "Enter carrier, sender, recipient, routing and goods description data for the pre-arrival notification",
+        "s1Title": "ENS tracking",
+        "s1Text": "Monitor the status of your ENS declarations: accepted, rejected or pending risk assessment by customs",
+        "step0": "Access the ENS section from the side menu",
+        "step1": "Click New ENS and select the transport mode",
+        "step2": "Complete the parties, routing and goods data",
+        "step3": "Submit the declaration and check the assigned MRN"
+      },
+      "normativa": {
+        "r0Title": "Entry summary declaration (UCC Art. 127-130)",
+        "r0Desc": "Obligation to file a summary declaration before introducing goods into the EU customs territory",
+        "r1Title": "ICS2 System (Reg. 2019/1010)",
+        "r1Desc": "New import control system implementing advance cargo declaration in three phases",
+        "r2Title": "Risk analysis (UCC Art. 46-47)",
+        "r2Desc": "Framework for customs risk analysis and controls based on advance cargo information"
+      },
+      "luciIA": {
+        "f0Name": "Automatic ENS generation",
+        "f0Desc": "LUCI generates the ENS declaration from bill of lading or waybill data",
+        "f1Name": "Routing validation",
+        "f1Desc": "Automatically verifies the consistency of country codes, ports and customs offices in the declared routing",
+        "f2Name": "Rejection alerts",
+        "f2Desc": "Detects common errors before submission to reduce the risk of AEAT rejection"
+      }
+    },
+    "channels": {
+      "title": "Customs Channels",
+      "description": "View and manage inspection channels assigned to your declarations (green, orange, red)",
+      "uso": {
+        "s0Title": "Check assigned channels",
+        "s0Text": "View the channel assigned to each declaration after submission: green (immediate release), orange (document check) or red (physical inspection)",
+        "s1Title": "Channel incident management",
+        "s1Text": "When a declaration receives an orange or red channel, manage the response to customs requirements from this section",
+        "step0": "Access the Channels section from the side menu",
+        "step1": "Filter by channel type, date or file status",
+        "step2": "Review declarations with pending orange or red channels",
+        "step3": "Respond to requirements by attaching the requested documentation"
+      },
+      "normativa": {
+        "r0Title": "Customs control (UCC Art. 188-193)",
+        "r0Desc": "Customs authority powers to carry out document checks and physical inspections of goods",
+        "r1Title": "Risk management (UCC Art. 46)",
+        "r1Desc": "Risk analysis system that determines channel assignment for each declaration"
+      },
+      "luciIA": {
+        "f0Name": "Channel prediction",
+        "f0Desc": "LUCI predicts the probable channel before submission by analysing goods, origin, operator and historical patterns",
+        "f1Name": "Real-time alerts",
+        "f1Desc": "Receive immediate notifications when a channel is assigned to your declarations",
+        "f2Name": "Channel statistics",
+        "f2Desc": "Analyse historical channel distribution to identify trends and optimise your operations"
+      }
+    },
+    "requirements": {
+      "title": "AEAT Requirements",
+      "description": "Manage and respond to documentation and information requirements from the Tax Agency",
+      "uso": {
+        "s0Title": "View pending requirements",
+        "s0Text": "Check all requirements received from AEAT, classified by urgency, type and response deadline",
+        "s1Title": "Respond to requirements",
+        "s1Text": "Prepare and submit the response to the requirement, attaching the requested documents within the established deadline",
+        "step0": "Access the Requirements section from the side menu",
+        "step1": "Review pending requirements sorted by deadline",
+        "step2": "Prepare the requested documentation and draft the response",
+        "step3": "Submit the response to AEAT within the deadline"
+      },
+      "normativa": {
+        "r0Title": "Customs requirements (UCC Art. 188)",
+        "r0Desc": "Customs authority power to request additional documents and information during goods clearance",
+        "r1Title": "Cooperation obligation (LGT Art. 93)",
+        "r1Desc": "Duty to provide documentation and information required by the tax administration within the deadline",
+        "r2Title": "Administrative deadlines (Law 39/2015 Art. 68)",
+        "r2Desc": "Regulation of deadlines for correcting deficiencies and providing documentation in administrative procedures"
+      },
+      "luciIA": {
+        "f0Name": "Response draft",
+        "f0Desc": "LUCI generates a draft response to the requirement based on the documentation available in the file",
+        "f1Name": "Document detection",
+        "f1Desc": "Automatically identifies which file documents are relevant to respond to the requirement",
+        "f2Name": "Deadline alerts",
+        "f2Desc": "Notifies in advance when the deadline for responding to a requirement is approaching"
+      }
+    },
+    "deadlines": {
+      "title": "Deadline Management",
+      "description": "Monitor and manage all critical deadlines in your customs operations to avoid penalties",
+      "uso": {
+        "s0Title": "Deadline calendar",
+        "s0Text": "View all active deadlines in a calendar: temporary declaration expiries, requirement responses, guarantee renewals and more",
+        "s1Title": "Configure alerts",
+        "s1Text": "Define how many days in advance you want to receive alerts for each deadline type (email and platform notification)",
+        "step0": "Access the Deadlines section from the side menu",
+        "step1": "Review the calendar with all active deadlines",
+        "step2": "Configure advance alerts according to your needs",
+        "step3": "Address upcoming deadlines to avoid penalties"
+      },
+      "normativa": {
+        "r0Title": "Clearance deadlines (UCC Art. 108)",
+        "r0Desc": "Deadlines for submitting customs declarations and making goods available",
+        "r1Title": "Temporary storage (UCC Art. 172)",
+        "r1Desc": "Maximum periods for goods to remain in temporary storage before assigning a customs-approved treatment",
+        "r2Title": "Administrative deadlines (Law 39/2015 Art. 21)",
+        "r2Desc": "Obligation to resolve administrative procedures within the legally established deadlines"
+      },
+      "luciIA": {
+        "f0Name": "Smart calendar",
+        "f0Desc": "LUCI automatically calculates all deadlines from your operation dates and applicable regulations",
+        "f1Name": "Predictive alerts",
+        "f1Desc": "Prioritises deadlines by non-compliance risk considering workload and usual processing times",
+        "f2Name": "Action suggestions",
+        "f2Desc": "Recommends specific actions to meet each deadline based on the current file status"
+      }
+    },
+    "inspections": {
+      "title": "Customs Inspections",
+      "description": "Manage physical and documentary inspections required by customs for your goods",
+      "uso": {
+        "s0Title": "Pending inspections",
+        "s0Text": "Check declarations requiring physical inspection (red channel) or documentary check (orange channel), with scheduled date and location",
+        "s1Title": "Results management",
+        "s1Text": "Record each inspection result: compliance, detected issues and required corrective actions",
+        "step0": "Access the Inspections section from the side menu",
+        "step1": "Review scheduled inspections and their location",
+        "step2": "Prepare the necessary documentation for the inspection",
+        "step3": "Record the result once the inspection is completed"
+      },
+      "normativa": {
+        "r0Title": "Customs controls (UCC Art. 188-193)",
+        "r0Desc": "Legal framework for physical examination of goods and documentary checks by customs",
+        "r1Title": "Examination procedure (RD 1073/2014)",
+        "r1Desc": "Regulation of the physical examination procedure at Spanish customs",
+        "r2Title": "Sampling (UCC Art. 189)",
+        "r2Desc": "Procedure for taking samples during physical examination of goods"
+      },
+      "luciIA": {
+        "f0Name": "Inspection preparation",
+        "f0Desc": "LUCI generates a customised checklist with the documents and actions needed for each inspection type",
+        "f1Name": "Inspection history",
+        "f1Desc": "Analyses inspection history to identify patterns and reduce the frequency of red and orange channels",
+        "f2Name": "Real-time assistant",
+        "f2Desc": "During the inspection, ask LUCI any question about the goods, classification or documentation"
+      }
+    },
+    "communications": {
+      "title": "AEAT Communications",
+      "description": "Manage all electronic notifications and communications with the Tax Agency",
+      "uso": {
+        "s0Title": "Communications inbox",
+        "s0Text": "Check all notifications received from AEAT: resolutions, requirements, channel information and goods release",
+        "s1Title": "Documentation submission",
+        "s1Text": "Send responses and additional documentation to AEAT directly from the platform securely",
+        "step0": "Access the Communications section from the side menu",
+        "step1": "Review received communications sorted by date",
+        "step2": "Open each communication to view the full content",
+        "step3": "Respond or attach documentation as needed"
+      },
+      "normativa": {
+        "r0Title": "Electronic notifications (Law 39/2015 Art. 40-44)",
+        "r0Desc": "Regulation of mandatory electronic notifications in administrative procedures",
+        "r1Title": "Mandatory electronic interaction (Law 39/2015 Art. 14)",
+        "r1Desc": "Obligation to interact electronically with the administration for certain groups, including customs representatives"
+      },
+      "luciIA": {
+        "f0Name": "Automatic summary",
+        "f0Desc": "LUCI automatically summarises each communication highlighting required actions and deadlines",
+        "f1Name": "Smart classification",
+        "f1Desc": "Automatically classifies communications by type (requirement, release, notification) and priority",
+        "f2Name": "Assisted response",
+        "f2Desc": "Generates response drafts to speed up handling of AEAT communications"
+      }
+    },
+    "classification": {
+      "title": "TARIC Tariff Classification",
+      "description": "Look up and classify goods according to the EU Combined Nomenclature and TARIC integrated tariff",
+      "uso": {
+        "s0Title": "Search tariff code",
+        "s0Text": "Search TARIC codes by goods description, chapter number or partial tariff code",
+        "s1Title": "Chapter navigation",
+        "s1Text": "Navigate the hierarchical tariff structure: sections, chapters, headings, subheadings and 10-digit TARIC codes",
+        "s2Title": "Measures and restrictions",
+        "s2Text": "Check tariff measures, anti-dumping duties, quotas, preferences and restrictions applicable to each code",
+        "step0": "Access the TARIC Classification section from the side menu",
+        "step1": "Enter the goods description or browse by chapters",
+        "step2": "Select the TARIC code that best fits your goods",
+        "step3": "Check the measures and restrictions applicable to the selected code"
+      },
+      "normativa": {
+        "r0Title": "Goods classification (UCC Art. 56-57)",
+        "r0Desc": "Rules for tariff classification of goods in the EU Combined Nomenclature",
+        "r1Title": "General Rules of Interpretation (GRI 1-6)",
+        "r1Desc": "The six rules that determine the correct classification of any goods in the Harmonised System",
+        "r2Title": "Combined Nomenclature (Reg. 2658/87)",
+        "r2Desc": "Base regulation establishing the EU tariff and statistical nomenclature, updated annually"
+      },
+      "luciIA": {
+        "f0Name": "AI classification",
+        "f0Desc": "Describe goods in natural language and LUCI will suggest the most probable TARIC codes with confidence levels",
+        "f1Name": "Image analysis",
+        "f1Desc": "Upload a product photo and the AI will help identify the corresponding tariff heading",
+        "f2Name": "Code comparator",
+        "f2Desc": "Compare differences between similar TARIC codes to choose the correct classification"
+      }
+    },
+    "regulations": {
+      "title": "Customs Regulations",
+      "description": "Access up-to-date EU and Spanish customs legislation applicable to your operations",
+      "uso": {
+        "s0Title": "Regulation search",
+        "s0Text": "Search articles, regulations and directives by keyword, article number or subject (classification, value, origin, etc.)",
+        "s1Title": "Regulations by subject",
+        "s1Text": "Browse regulations organised by topic: UCC, Delegated Acts, Implementing Acts, national legislation and international conventions",
+        "step0": "Access the Regulations section from the side menu",
+        "step1": "Use the search bar or browse by topic categories",
+        "step2": "Select the article or regulation to view its content",
+        "step3": "Check explanatory notes and related case law"
+      },
+      "normativa": {
+        "r0Title": "Union Customs Code (Reg. 952/2013)",
+        "r0Desc": "Consolidated text of the UCC, the basic regulation governing all customs operations in the European Union",
+        "r1Title": "Delegated Acts (Reg. 2015/2446)",
+        "r1Desc": "Delegated regulation supplementing the UCC with detailed provisions on customs procedures",
+        "r2Title": "Implementing Acts (Reg. 2015/2447)",
+        "r2Desc": "Implementing regulation establishing technical rules and formats for UCC application",
+        "r3Title": "Foreign trade regulation (RD 1073/2014)",
+        "r3Desc": "National regulation adapting and developing the UCC in Spain"
+      },
+      "luciIA": {
+        "f0Name": "AI-powered search",
+        "f0Desc": "Ask LUCI about any regulatory matter in natural language and receive a well-founded answer with legal references",
+        "f1Name": "Regulatory change alerts",
+        "f1Desc": "Receive notifications when regulatory changes are published that affect your usual operations",
+        "f2Name": "Contextual interpretation",
+        "f2Desc": "LUCI contextualises applicable regulations based on the operation type, goods and countries involved"
+      }
+    },
+    "queries": {
+      "title": "Tax Queries",
+      "description": "Submit binding and non-binding queries to AEAT on customs and tax matters",
+      "uso": {
+        "s0Title": "New query",
+        "s0Text": "Draft and submit tax queries to AEAT on classification, value, origin or other customs matters",
+        "s1Title": "Query history",
+        "s1Text": "Check the status and responses of your previous queries, including Binding Tariff Information (BTI)",
+        "step0": "Access the Queries section from the side menu",
+        "step1": "Click New Query and select the type",
+        "step2": "Draft the query detailing the tax question",
+        "step3": "Submit the query and await the AEAT resolution"
+      },
+      "normativa": {
+        "r0Title": "Tax queries (RD 1065/2007)",
+        "r0Desc": "Procedure for submitting written tax queries to the administration",
+        "r1Title": "Data confidentiality (Law 58/2003 Art. 95)",
+        "r1Desc": "Protection of tax data obtained by the administration in the exercise of its functions"
+      },
+      "luciIA": {
+        "f0Name": "Assisted drafting",
+        "f0Desc": "LUCI helps draft tax queries with the proper format and legal reasoning",
+        "f1Name": "Precedent search",
+        "f1Desc": "Searches for similar queries and rulings in the DGT database and relevant case law",
+        "f2Name": "Resolution tracking",
+        "f2Desc": "Monitors the status of your queries and notifies you when the resolution is published"
+      }
+    },
+    "pue": {
+      "title": "BIP - Border Inspection Post",
+      "description": "Manage sanitary, phytosanitary and veterinary controls at Border Inspection Posts",
+      "uso": {
+        "s0Title": "BIP inspection request",
+        "s0Text": "Submit a border inspection request for goods subject to sanitary, phytosanitary or veterinary controls (CHED/DSCE)",
+        "s1Title": "Control tracking",
+        "s1Text": "Monitor the status of BIP inspections: laboratory analysis, results and entry authorisation",
+        "step0": "Access the BIP section from the side menu",
+        "step1": "Click New Request and select the control type",
+        "step2": "Complete the goods data and sanitary documents",
+        "step3": "Submit the request and monitor the inspection result"
+      },
+      "normativa": {
+        "r0Title": "Official controls (RD 330/2008)",
+        "r0Desc": "National regulation on sanitary control of foreign trade in food and animal products",
+        "r1Title": "TRACES system (Reg. 2019/1013)",
+        "r1Desc": "Regulation establishing the use of TRACES-NT for electronic management of border controls",
+        "r2Title": "EU official controls (Reg. 2017/625)",
+        "r2Desc": "Harmonised EU framework for official controls in the food chain, plant and animal health"
+      },
+      "luciIA": {
+        "f0Name": "BIP requirement detection",
+        "f0Desc": "LUCI automatically identifies if your goods require sanitary or phytosanitary control based on their TARIC code",
+        "f1Name": "Automatic documentation",
+        "f1Desc": "Generates pre-filled CHED/DSCE forms from the file data",
+        "f2Name": "Result alerts",
+        "f2Desc": "Receive immediate notifications when the BIP inspection result is published"
+      }
+    },
+    "transit": {
+      "title": "Customs Transit - NCTS",
+      "description": "Manage Community and international transit declarations through the NCTS system",
+      "uso": {
+        "s0Title": "Create transit declaration",
+        "s0Text": "Generate T1 (external transit) or T2 (internal transit) declarations with all data required by NCTS",
+        "s1Title": "Transit tracking",
+        "s1Text": "Monitor your transits in real time: in progress, arrived at destination, discharged or with incidents",
+        "step0": "Access the Transit section from the side menu",
+        "step1": "Click New Transit and select T1 or T2",
+        "step2": "Complete the departure/destination offices, routing and goods data",
+        "step3": "Submit the declaration and monitor the transit until discharge"
+      },
+      "normativa": {
+        "r0Title": "Transit procedure (UCC Art. 226-236)",
+        "r0Desc": "Legal framework for Community and international customs transit of goods",
+        "r1Title": "TIR Convention",
+        "r1Desc": "International convention facilitating road transport of goods under customs seal",
+        "r2Title": "Common Transit Convention",
+        "r2Desc": "Agreement extending the Community transit regime to EFTA countries and other contracting parties"
+      },
+      "luciIA": {
+        "f0Name": "Automatic generation",
+        "f0Desc": "LUCI generates the transit declaration from previous import or export customs declaration data",
+        "f1Name": "Guarantee calculation",
+        "f1Desc": "Automatically calculates the guarantee amount required based on the goods and transit route",
+        "f2Name": "Intelligent monitoring",
+        "f2Desc": "Detects potential delays or incidents in transit and alerts before deadlines are exceeded"
+      }
+    },
+    "calculator": {
+      "title": "Tariff and Tax Calculator",
+      "description": "Calculate import duties, VAT and special taxes applicable to your operations",
+      "uso": {
+        "s0Title": "Calculate import duties",
+        "s0Text": "Enter the TARIC code, country of origin, customs value and weight to get a full breakdown of tariffs, VAT and special taxes",
+        "s1Title": "Simulations and comparisons",
+        "s1Text": "Compare the tax cost between different origins, preferential regimes or alternative tariff classifications",
+        "step0": "Access the Calculator from the side menu",
+        "step1": "Enter the TARIC code and country of origin",
+        "step2": "Specify the customs value, weight and supplementary units",
+        "step3": "Get the breakdown of applicable tariffs, VAT and taxes"
+      },
+      "normativa": {
+        "r0Title": "Common Customs Tariff (UCC Art. 56)",
+        "r0Desc": "Import duties are calculated according to the EU Common Customs Tariff applicable to the goods classification",
+        "r1Title": "TARIC - EU Integrated Tariff",
+        "r1Desc": "Integrated database containing all tariff measures, anti-dumping duties, preferences and quotas",
+        "r2Title": "Import VAT (Law 37/1992)",
+        "r2Desc": "Spanish VAT law regulating taxation on import of goods, including rates and exemptions"
+      },
+      "luciIA": {
+        "f0Name": "Smart calculation",
+        "f0Desc": "LUCI automatically applies current preferences, quotas and special measures when calculating duties",
+        "f1Name": "Tax optimisation",
+        "f1Desc": "Suggests alternative customs procedures or applicable preferences that may reduce the tax burden",
+        "f2Name": "Calculation history",
+        "f2Desc": "Save and compare previous calculations to analyse the cost evolution of your imports"
+      }
+    },
+    "assistant": {
+      "title": "LUCI AI Assistant",
+      "description": "Intelligent chat that answers your questions about customs, regulations, classification and procedures",
+      "uso": {
+        "s0Title": "Ask LUCI",
+        "s0Text": "Type your question in natural language about any customs topic: classification, value, origin, regimes, procedures or regulations",
+        "s1Title": "Contextual queries",
+        "s1Text": "From any file or declaration, open LUCI to get specific help on that operation with full context",
+        "step0": "Click the LUCI icon or access the Assistant section",
+        "step1": "Type your question or select a quick suggestion",
+        "step2": "Review the answer with included regulatory references",
+        "step3": "Continue the conversation to dig deeper or clarify your doubts"
+      },
+      "normativa": {
+        "r0Title": "Full regulatory base (UCC)",
+        "r0Desc": "LUCI has access to the complete Union Customs Code, Delegated Acts and Implementing Acts as its knowledge base",
+        "r1Title": "National legislation",
+        "r1Desc": "Includes the General Tax Law, Spanish customs regulations and DGT rulings"
+      },
+      "luciIA": {
+        "f0Name": "Natural language chat",
+        "f0Desc": "Ask anything about customs as if talking to an expert: LUCI understands context and responds accurately",
+        "f1Name": "Regulatory references",
+        "f1Desc": "Each answer includes exact legal references (article, regulation) so you can verify the information",
+        "f2Name": "File context",
+        "f2Desc": "When querying from a file, LUCI analyses the specific data of your operation to give personalised answers",
+        "f3Name": "Continuous learning",
+        "f3Desc": "LUCI improves its answers with each interaction, adapting to your operation type and frequently asked questions"
+      }
+    },
+    "analytics": {
+      "title": "Analytics and Reports",
+      "description": "View statistics, KPIs and generate detailed reports of your customs operations",
+      "uso": {
+        "s0Title": "Analytics dashboard",
+        "s0Text": "Check key metrics: operation volume, average clearance times, channel distribution, costs and trends",
+        "s1Title": "Report generation",
+        "s1Text": "Generate customised reports by period, operation type, goods or client for management or customs presentation",
+        "step0": "Access the Analytics section from the side menu",
+        "step1": "Select the period and metrics you want to analyse",
+        "step2": "Explore the interactive charts and data tables",
+        "step3": "Export reports in PDF or Excel format as needed"
+      },
+      "normativa": {
+        "r0Title": "Internal reporting and compliance",
+        "r0Desc": "Metrics help comply with internal control obligations and customs audits"
+      },
+      "luciIA": {
+        "f0Name": "Automatic insights",
+        "f0Desc": "LUCI automatically detects anomalies, trends and improvement opportunities in your operations",
+        "f1Name": "AI executive report",
+        "f1Desc": "Generates executive reports with narrative summary, highlighting the most relevant points of the period",
+        "f2Name": "Trend prediction",
+        "f2Desc": "Uses predictive models to anticipate volumes, costs and potential future incidents"
+      }
+    },
+    "admin": {
+      "title": "Administration Panel",
+      "description": "Manage users, roles, permissions and general LUCI system configuration",
+      "uso": {
+        "s0Title": "User management",
+        "s0Text": "Create, edit and delete system users. Assign roles (administrator, supervisor, agent, consultant) and control permissions for each profile",
+        "s1Title": "System audit",
+        "s1Text": "View the complete activity log: accesses, actions performed, modifications and security events",
+        "s2Title": "System configuration",
+        "s2Text": "Configure general parameters: company details, timezone, formats, AEAT integrations and security policies",
+        "step0": "Access the Administration Panel from the side menu",
+        "step1": "Manage users and assign appropriate roles",
+        "step2": "Review the audit log periodically",
+        "step3": "Configure system parameters according to your organisation's needs"
+      },
+      "normativa": {
+        "r0Title": "Data protection (GDPR)",
+        "r0Desc": "Personal data processing must comply with the EU General Data Protection Regulation",
+        "r1Title": "National Security Framework (ENS)",
+        "r1Desc": "Security requirements applicable to information systems managing tax and customs data"
+      },
+      "luciIA": {
+        "f0Name": "Anomaly detection",
+        "f0Desc": "LUCI monitors user activity and alerts to unusual behaviour or potential security breaches",
+        "f1Name": "Security recommendations",
+        "f1Desc": "Suggests security configuration improvements based on industry best practices",
+        "f2Name": "Activity report",
+        "f2Desc": "Generates automatic activity reports by user, module and period to facilitate auditing"
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Customise your account settings, notification preferences and integrations",
+      "uso": {
+        "s0Title": "Company details",
+        "s0Text": "Configure your company data: name, tax ID, EORI, address and contact details for customs declarations",
+        "s1Title": "Notifications",
+        "s1Text": "Define which alerts you want to receive by email and on the platform: deadlines, inspections, requirements and channel changes",
+        "s2Title": "Account security",
+        "s2Text": "Manage your password, two-factor authentication and active sessions for your account",
+        "step0": "Access Settings from the side menu or profile icon",
+        "step1": "Update your company details if they have changed",
+        "step2": "Configure notification preferences",
+        "step3": "Review and update your account security settings"
+      },
+      "normativa": {
+        "r0Title": "Data protection (GDPR)",
+        "r0Desc": "Your data is processed in accordance with GDPR. You can exercise your rights of access, rectification and erasure",
+        "r1Title": "National Security Framework (ENS)",
+        "r1Desc": "The platform complies with ENS requirements for information system protection"
+      },
+      "luciIA": {
+        "f0Name": "Assisted configuration",
+        "f0Desc": "LUCI helps you correctly configure all parameters based on your operational profile",
+        "f1Name": "Data validation",
+        "f1Desc": "Automatically verifies the validity of tax ID, EORI and other identifiers when configured"
+      }
+    },
+    "billing": {
+      "title": "Billing and Subscription",
+      "description": "Manage your LUCI subscription plan, payment method and invoice history",
+      "uso": {
+        "s0Title": "Subscription plan",
+        "s0Text": "Check your current plan (Professional, Business or Enterprise), included features and usage limits",
+        "s1Title": "Invoices and payments",
+        "s1Text": "Download your monthly invoices, update your payment method and check transaction history",
+        "step0": "Access the Billing section from the side menu",
+        "step1": "Review your current plan and available upgrade options",
+        "step2": "Update your payment method if needed",
+        "step3": "Download invoices for your accounting"
+      },
+      "normativa": {
+        "r0Title": "Invoicing obligations (RD 1619/2012)",
+        "r0Desc": "Regulation governing invoicing obligations, including mandatory invoice content"
+      },
+      "luciIA": {
+        "f0Name": "Plan recommendation",
+        "f0Desc": "LUCI analyses your operation volume and recommends the most suitable plan for your needs",
+        "f1Name": "Usage alerts",
+        "f1Desc": "Receive notifications when you approach your plan limits to avoid service interruptions"
+      }
+    },
+    "guarantees": {
+      "title": "Customs Guarantees",
+      "description": "Manage comprehensive, individual and GRN guarantees required for your customs operations",
+      "uso": {
+        "s0Title": "Guarantee register",
+        "s0Text": "View and register all your customs guarantees: comprehensive guarantee, individual guarantees, GRN and their validity status",
+        "s1Title": "Balance monitoring",
+        "s1Text": "Monitor the available balance of your comprehensive guarantees and receive alerts when approaching the limit",
+        "step0": "Access the Guarantees section from the side menu",
+        "step1": "Check active guarantees and their available balance",
+        "step2": "Register new guarantees or renew existing ones",
+        "step3": "Configure minimum balance alerts to avoid blocks"
+      },
+      "normativa": {
+        "r0Title": "Customs guarantee (UCC Art. 89-100)",
+        "r0Desc": "Legal framework for the constitution, management and release of guarantees in customs",
+        "r1Title": "Comprehensive guarantee (UCC Art. 95)",
+        "r1Desc": "Requirements and conditions for constituting a comprehensive guarantee covering multiple customs operations",
+        "r2Title": "Guarantee modalities (DA Art. 51-55)",
+        "r2Desc": "Accepted forms of guarantee: cash deposit, guarantor, guarantee certificate and other instruments"
+      },
+      "luciIA": {
+        "f0Name": "Required guarantee calculation",
+        "f0Desc": "LUCI automatically calculates the guarantee amount required for each operation based on goods and regime",
+        "f1Name": "Balance alerts",
+        "f1Desc": "Monitors your comprehensive guarantee consumption and alerts when available balance is insufficient for upcoming operations",
+        "f2Name": "Guarantee optimisation",
+        "f2Desc": "Analyses your history to suggest the most efficient guarantee type and amount for your operational profile"
+      }
+    },
+    "specialRegimes": {
+      "title": "Special Procedures",
+      "description": "Manage operations under special customs procedures: warehousing, processing, end-use and temporary admission",
+      "uso": {
+        "s0Title": "Procedure types",
+        "s0Text": "View the different special procedures available: customs warehousing, inward/outward processing, temporary admission and end-use",
+        "s1Title": "Authorisation management",
+        "s1Text": "Manage special procedure authorisations: applications, validity, conditions and discharge obligations",
+        "step0": "Access the Special Procedures section from the side menu",
+        "step1": "Select the procedure type you need to manage",
+        "step2": "Check current authorisations and their conditions",
+        "step3": "Manage discharges and settlements within the deadline"
+      },
+      "normativa": {
+        "r0Title": "Special procedures (UCC Art. 210-262)",
+        "r0Desc": "Complete legal framework for special procedures: warehousing, free zones, processing, temporary admission and end-use",
+        "r1Title": "Procedure authorisation (UCC Art. 211)",
+        "r1Desc": "Requirements and procedure for obtaining customs authorisation to operate under special procedures",
+        "r2Title": "Processing (UCC Art. 255-258)",
+        "r2Desc": "Procedure allowing import or export of goods for processing with duty suspension or repayment"
+      },
+      "luciIA": {
+        "f0Name": "Procedure recommendation",
+        "f0Desc": "LUCI analyses your operation and recommends the most advantageous special procedure based on goods and destination",
+        "f1Name": "Deadline management",
+        "f1Desc": "Automatically monitors discharge and settlement deadlines for each active authorisation",
+        "f2Name": "Tax benefit calculation",
+        "f2Desc": "Estimates the tax savings from using a special procedure compared to direct release for free circulation"
+      }
+    },
+    "exciseDuties": {
+      "title": "Excise Duties",
+      "description": "Manage excise duty obligations: alcohol, tobacco, hydrocarbons and electricity",
+      "uso": {
+        "s0Title": "Excise duty settlement",
+        "s0Text": "Calculate and settle excise duties on liable goods: alcoholic beverages, tobacco, hydrocarbons and electricity",
+        "s1Title": "Tax warehouse regime",
+        "s1Text": "Manage operations in tax warehouses with excise duty suspension and accompanying documents (e-AD)",
+        "step0": "Access the Excise Duties section from the side menu",
+        "step1": "Identify if your goods are subject to excise duties",
+        "step2": "Calculate the tax amount based on type and quantity",
+        "step3": "Generate the settlement and accompanying documents"
+      },
+      "normativa": {
+        "r0Title": "Excise Duties Act (Law 38/1992)",
+        "r0Desc": "Spanish base law regulating excise duties on alcohol, tobacco and hydrocarbons",
+        "r1Title": "Excise Duties Directive (Dir. 2020/262)",
+        "r1Desc": "Harmonised EU framework for the movement and control of products subject to excise duty",
+        "r2Title": "Excise Duties Regulation (RD 1165/1995)",
+        "r2Desc": "Implementing regulation of the Excise Duties Act with detailed procedures and formal obligations"
+      },
+      "luciIA": {
+        "f0Name": "Automatic detection",
+        "f0Desc": "LUCI automatically identifies if your goods are subject to excise duties from their TARIC code",
+        "f1Name": "Duty calculation",
+        "f1Desc": "Automatically calculates excise duty amounts based on product type, alcohol content or calorific value",
+        "f2Name": "e-AD documents",
+        "f2Desc": "Generates electronic accompanying documents required for intra-Community movement"
+      }
+    },
+    "oea": {
+      "title": "Authorised Economic Operator (AEO)",
+      "description": "Manage your AEO certification and comply with customs simplification and security requirements",
+      "uso": {
+        "s0Title": "AEO certification status",
+        "s0Text": "Check your AEO certification status (AEOC for customs simplifications, AEOS for security, or combined AEOF)",
+        "s1Title": "AEO self-assessment",
+        "s1Text": "Evaluate your company's degree of compliance with AEO criteria and get an action plan for improvement",
+        "step0": "Access the AEO section from the side menu",
+        "step1": "Review your current certification status and validity",
+        "step2": "Run the self-assessment to evaluate your compliance",
+        "step3": "Implement suggested improvements and document the evidence"
+      },
+      "normativa": {
+        "r0Title": "AEO certification (UCC Art. 38-39)",
+        "r0Desc": "Requirements and benefits of Authorised Economic Operator status in the EU customs territory",
+        "r1Title": "AEO criteria (DA Art. 24-30)",
+        "r1Desc": "Detailed criteria that must be met to obtain and maintain AEO certification",
+        "r2Title": "Granting procedure (IA Art. 26-31)",
+        "r2Desc": "Application, assessment and granting procedure for the AEO certificate by customs authorities"
+      },
+      "luciIA": {
+        "f0Name": "Compliance assessment",
+        "f0Desc": "LUCI automatically evaluates your degree of compliance with AEO criteria based on your operations",
+        "f1Name": "Improvement plan",
+        "f1Desc": "Generates a personalised action plan with priority improvement areas for obtaining or maintaining certification",
+        "f2Name": "Continuous monitoring",
+        "f2Desc": "Constantly supervises AEO criteria compliance and alerts if deviations are detected"
+      }
+    },
+    "preferences": {
+      "title": "Tariff Preferences and Origin",
+      "description": "Manage certificates of origin, tariff preferences and trade agreements to reduce import duties",
+      "uso": {
+        "s0Title": "Trade agreements",
+        "s0Text": "View EU trade agreements with third countries and the tariff preferences they offer for your goods",
+        "s1Title": "Certificates of origin",
+        "s1Text": "Manage preferential origin certificates (EUR.1, EUR-MED, invoice declaration, REX) needed to apply preferences",
+        "step0": "Access the Preferences section from the side menu",
+        "step1": "Search the applicable trade agreement by country of origin",
+        "step2": "Verify origin requirements for your goods",
+        "step3": "Attach a valid certificate of origin to apply the preference"
+      },
+      "normativa": {
+        "r0Title": "Origin of goods (UCC Art. 56-65)",
+        "r0Desc": "General rules for determining the non-preferential and preferential origin of goods",
+        "r1Title": "Origin protocols",
+        "r1Desc": "Specific rules of origin included in each EU trade agreement with third countries",
+        "r2Title": "Proof of origin (Reg. 2015/2446 Art. 37-70)",
+        "r2Desc": "Accepted types of proof of origin: EUR.1 certificates, invoice declarations, REX system and others"
+      },
+      "luciIA": {
+        "f0Name": "Preference detection",
+        "f0Desc": "LUCI automatically identifies if your goods can benefit from a tariff preference based on their origin",
+        "f1Name": "Origin verification",
+        "f1Desc": "Analyses whether the specific origin rules of the trade agreement are met to apply the preference",
+        "f2Name": "Estimated savings",
+        "f2Desc": "Calculates potential tariff savings when applying preferences compared to the general duty rate"
+      }
+    },
+    "quotas": {
+      "title": "Tariff Quotas",
+      "description": "Check and manage EU tariff quotas allowing import at reduced rates within limited volumes",
+      "uso": {
+        "s0Title": "Check quotas",
+        "s0Text": "Search open tariff quotas by TARIC code or country of origin, with available balance and reduced duty rate",
+        "s1Title": "Request quota",
+        "s1Text": "Request allocation to a tariff quota in your import declaration to benefit from the reduced rate",
+        "step0": "Access the Quotas section from the side menu",
+        "step1": "Search available quotas for your goods and origin",
+        "step2": "Verify the remaining quota balance",
+        "step3": "Include the quota request in your import declaration"
+      },
+      "normativa": {
+        "r0Title": "Tariff quotas (UCC Art. 56(4))",
+        "r0Desc": "Legal basis for applying tariff quotas allowing import at reduced rates within fixed volumes",
+        "r1Title": "Quota management",
+        "r1Desc": "The European Commission manages quotas in chronological order of declaration acceptance (first come, first served)"
+      },
+      "luciIA": {
+        "f0Name": "Quota search",
+        "f0Desc": "LUCI automatically searches for available quotas for your goods and notifies you if there is balance",
+        "f1Name": "Opening alerts",
+        "f1Desc": "Receive notifications when new quotas open or existing quota balances are renewed",
+        "f2Name": "Balance estimation",
+        "f2Desc": "Analyses quota consumption speed to estimate whether balance will be available for your operation"
+      }
+    },
+    "integrations": {
+      "title": "Integrations",
+      "description": "Configure and manage connections with external systems: AEAT, TARIC, logistics providers and ERPs",
+      "uso": {
+        "s0Title": "AEAT connection",
+        "s0Text": "Configure the connection with the AEAT Electronic Office using a digital certificate for sending and receiving declarations",
+        "s1Title": "Third-party integrations",
+        "s1Text": "Connect LUCI with your ERP, warehouse management system or logistics provider to automate data flow",
+        "step0": "Access the Integrations section from the side menu",
+        "step1": "Select the system you want to connect",
+        "step2": "Configure the credentials and connection parameters",
+        "step3": "Test the connection and activate automatic synchronisation"
+      },
+      "normativa": {
+        "r0Title": "AEAT web services",
+        "r0Desc": "Technical specifications for AEAT web services for electronic exchange of customs declarations",
+        "r1Title": "Interoperability (Reg. 2019/1010)",
+        "r1Desc": "Interoperability requirements for national customs systems with EU central systems"
+      },
+      "luciIA": {
+        "f0Name": "Connection diagnostics",
+        "f0Desc": "LUCI automatically checks connection status and diagnoses communication problems with AEAT",
+        "f1Name": "Smart data mapping",
+        "f1Desc": "Assists in mapping fields between your ERP and the format required by customs declarations",
+        "f2Name": "Integration monitoring",
+        "f2Desc": "Supervises all active integrations and alerts to synchronisation failures"
+      }
+    },
+    "aeatCertificates": {
+      "title": "AEAT Digital Certificates",
+      "description": "Manage digital certificates required for electronic communication with the Tax Agency",
+      "uso": {
+        "s0Title": "Install certificate",
+        "s0Text": "Upload your digital certificate (FNMT, DNIe or representative certificate) in .p12 or .pfx format to enable declaration submission",
+        "s1Title": "Certificate status",
+        "s1Text": "Check the validity, expiry date and holder of the digital certificate currently configured in the system",
+        "step0": "Access the AEAT Certificates section from the side menu",
+        "step1": "Click Upload Certificate and select the .p12 file",
+        "step2": "Enter the certificate password to validate it",
+        "step3": "Verify the certificate has been installed correctly"
+      },
+      "normativa": {
+        "r0Title": "Electronic certificates (RD 1065/2007)",
+        "r0Desc": "Requirements for electronic identification and authentication in relations with the tax administration",
+        "r1Title": "Trust services (Law 6/2020)",
+        "r1Desc": "Regulation of electronic trust services, including electronic signatures and qualified certificates"
+      },
+      "luciIA": {
+        "f0Name": "Automatic verification",
+        "f0Desc": "LUCI automatically verifies digital certificate validity, including the trust chain and expiry date",
+        "f1Name": "Expiry alert",
+        "f1Desc": "Receive notifications 30, 15 and 7 days before your digital certificate expires",
+        "f2Name": "Problem diagnostics",
+        "f2Desc": "Detects and suggests solutions for common certificate issues: wrong format, incorrect password or revoked certificate"
+      }
+    },
+    "aeatMonitor": {
+      "title": "AEAT Status Monitor",
+      "description": "Monitor AEAT web service availability in real time and submission status",
+      "uso": {
+        "s0Title": "Service status",
+        "s0Text": "Check the availability of each AEAT web service (VUA, ICS2, NCTS, ENS) with real-time status indicators",
+        "s1Title": "Submission history",
+        "s1Text": "Review the AEAT communication history: successful submissions, errors, response times and automatic retries",
+        "step0": "Access the AEAT Monitor section from the side menu",
+        "step1": "Check the current status of each AEAT web service",
+        "step2": "View recent submission and response history",
+        "step3": "Configure alerts for when a service is unavailable"
+      },
+      "normativa": {
+        "r0Title": "Electronic Office availability",
+        "r0Desc": "AEAT publishes the availability schedule of its web services and planned maintenance windows"
+      },
+      "luciIA": {
+        "f0Name": "Proactive monitoring",
+        "f0Desc": "LUCI periodically checks AEAT service availability and schedules automatic retries in case of downtime",
+        "f1Name": "Availability prediction",
+        "f1Desc": "Analyses historical availability patterns to recommend the best times to submit declarations",
+        "f2Name": "Error diagnostics",
+        "f2Desc": "Interprets AEAT error codes and suggests specific corrective actions for each rejection type"
+      }
+    },
+    "mlInsights": {
+      "title": "Machine Learning Insights",
+      "description": "Advanced AI analysis: fraud detection, automatic classification and channel prediction",
+      "uso": {
+        "s0Title": "Active AI models",
+        "s0Text": "View the machine learning models active in your account: tariff classification, channel prediction, fraud detection and auto-response",
+        "s1Title": "Performance metrics",
+        "s1Text": "Review precision, recall and F1-score for each model, along with their temporal evolution and success cases",
+        "step0": "Access the ML Insights section from the side menu",
+        "step1": "Review active models and their training status",
+        "step2": "Check performance metrics for each model",
+        "step3": "Adjust confidence thresholds according to your needs"
+      },
+      "normativa": {
+        "r0Title": "EU AI Regulation (Reg. 2024/1689)",
+        "r0Desc": "European legal framework for artificial intelligence, classifying systems by risk level and establishing obligations",
+        "r1Title": "Automated decisions (GDPR Art. 22)",
+        "r1Desc": "Right not to be subject to decisions based solely on automated processing, including profiling"
+      },
+      "luciIA": {
+        "f0Name": "ML classification",
+        "f0Desc": "Model trained on millions of declarations that suggests TARIC codes with high accuracy",
+        "f1Name": "Fraud detection",
+        "f1Desc": "Identifies anomalous patterns in declarations that may indicate undervaluation, incorrect classification or other irregularities",
+        "f2Name": "Channel prediction",
+        "f2Desc": "Predicts the probable inspection channel based on multiple variables: goods, origin, operator and historical trends",
+        "f3Name": "Auto-response to requirements",
+        "f3Desc": "Automatically generates draft responses to standard requirements based on file data and previous successful responses"
+      }
+    },
+    "rulesEngine": {
+      "title": "Rules Engine",
+      "description": "Configure automated rules to validate, classify and process your customs operations",
+      "uso": {
+        "s0Title": "Create custom rules",
+        "s0Text": "Define automated rules with conditions and actions: if the goods meet X criteria, automatically apply Y action",
+        "s1Title": "Active rules management",
+        "s1Text": "View, edit and deactivate configured rules. Review execution history and results for each rule",
+        "step0": "Access the Rules Engine section from the side menu",
+        "step1": "Click New Rule and define the conditions",
+        "step2": "Configure the actions to execute when conditions are met",
+        "step3": "Activate the rule and monitor its execution on upcoming operations"
+      },
+      "normativa": {
+        "r0Title": "Risk factors (UCC Title II)",
+        "r0Desc": "Criteria and risk factors that customs authorities must consider in risk analysis",
+        "r1Title": "Risk-based controls (UCC Art. 46)",
+        "r1Desc": "Framework for systematic risk analysis enabling proportionate and effective controls"
+      },
+      "luciIA": {
+        "f0Name": "Rule suggestions",
+        "f0Desc": "LUCI analyses your operations and suggests automated rules to optimise your most frequent processes",
+        "f1Name": "Conflict detection",
+        "f1Desc": "Automatically identifies if a new rule may conflict with existing rules",
+        "f2Name": "Continuous optimisation",
+        "f2Desc": "Evaluates each rule's performance and suggests adjustments to improve effectiveness based on results"
+      }
+    }
   },
   "admin": {
     "dashboard": "Dashboard",
