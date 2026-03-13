@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { h7API } from '../../services/api'
 import toast from 'react-hot-toast'
+import ManifestUploader from './ManifestUploader'
 import {
   ShoppingCartIcon,
   TruckIcon,
@@ -16,7 +17,8 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   ArrowDownTrayIcon,
-  ArrowUpTrayIcon
+  ArrowUpTrayIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline'
 
 // STATUS_CONFIG is defined inside the component to use t()
@@ -94,6 +96,7 @@ export default function H7DeclarationList() {
   const [showFilters, setShowFilters] = useState(false)
   const [showNewForm, setShowNewForm] = useState(false)
   const [showBatchDECO, setShowBatchDECO] = useState(false)
+  const [showManifest, setShowManifest] = useState(false)
   const [batchSelected, setBatchSelected] = useState([])
   const [batchSubmitting, setBatchSubmitting] = useState(false)
 
@@ -182,6 +185,13 @@ export default function H7DeclarationList() {
           <p className="text-gray-600">{t('h7.subtitle')}</p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => setShowManifest(true)}
+            className="btn-secondary flex items-center gap-2 bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100"
+          >
+            <DocumentTextIcon className="h-5 w-5" />
+            Importar Manifiesto
+          </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="btn-secondary flex items-center gap-2"
@@ -439,6 +449,17 @@ export default function H7DeclarationList() {
           </div>
         )}
       </div>
+
+      {/* Manifest Uploader Modal */}
+      {showManifest && (
+        <ManifestUploader
+          onClose={() => setShowManifest(false)}
+          onCreated={() => {
+            loadDeclarations()
+            loadStats()
+          }}
+        />
+      )}
 
       {/* New H7 Modal */}
       {showNewForm && (

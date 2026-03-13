@@ -28,7 +28,7 @@ let specialRegimeRoutes, dashboardRoutes, transitRoutes, rulesEngineRoutes, exci
 let deadlineRoutes, inspectionRoutes, communicationRoutes, integrationRoutes;
 let aeatRealRoutes, analyticsRoutes, tenantRoutes, mlRoutes, workflowRoutes;
 let publicApiRoutes, paymentRoutes, regulationRoutes, adminRoutes;
-let ensRoutes, queryRoutes, pueRoutes, certificateRoutes;
+let ensRoutes, queryRoutes, pueRoutes, certificateRoutes, manifestRoutes;
 
 try {
   authRoutes = require('./routes/auth');
@@ -69,6 +69,7 @@ try {
   queryRoutes = require('./routes/queries');
   pueRoutes = require('./routes/pue');
   certificateRoutes = require('./routes/certificates');
+  try { manifestRoutes = require('./routes/manifest'); } catch(e) { console.error('Manifest routes not loaded:', e.message); }
 } catch (err) {
   console.error('Error loading routes:', err.message);
 }
@@ -239,6 +240,7 @@ if (ensRoutes) app.use('/api/ens', ensRoutes);
 if (queryRoutes) app.use('/api/queries', queryRoutes);
 if (pueRoutes) app.use('/api/pue', pueRoutes);
 if (certificateRoutes) app.use('/api/certificates', certificateRoutes);
+if (manifestRoutes) app.use('/api/manifest', manifestRoutes);
 
 // Email test endpoint (admin only)
 app.post('/api/email/test', async (req, res) => {

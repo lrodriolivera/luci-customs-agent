@@ -1124,6 +1124,16 @@ export const nlCustomsAPI = {
     api.post(`/api/declarations/${expeditionId}/validate-v2`, { declarationType })
 }
 
+// Manifest (cargo manifest upload + AI classification)
+export const manifestAPI = {
+  upload: (formData) => api.post('/api/manifest/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000
+  }),
+  createBatch: (data) => api.post('/api/manifest/create-h7-batch', data),
+  downloadTemplate: () => api.get('/api/manifest/template', { responseType: 'blob' }),
+}
+
 // Tenant EORI
 export const tenantEoriAPI = {
   get: () => api.get('/api/tenant/eori'),
