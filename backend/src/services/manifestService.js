@@ -79,8 +79,10 @@ class ManifestService {
       'direccion': 'recipientAddress', 'address': 'recipientAddress',
       'recipient_address': 'recipientAddress',
       'ciudad': 'recipientCity', 'city': 'recipientCity', 'localidad': 'recipientCity',
+      'recipient_city': 'recipientCity', 'ciudad_destinatario': 'recipientCity',
       'codigo_postal': 'recipientPostal', 'cp': 'recipientPostal',
       'postal_code': 'recipientPostal', 'zip': 'recipientPostal',
+      'recipient_postal': 'recipientPostal', 'cp_destinatario': 'recipientPostal',
 
       // Goods
       'description': 'description', 'descripcion': 'description',
@@ -152,25 +154,35 @@ class ManifestService {
         `${i + idx + 1}. "${r.description}" (origen: ${r.senderCountry || 'desconocido'}, valor: ${r.value || '?'} EUR)`
       ).join('\n');
 
-      const prompt = `Eres un experto clasificador aduanero. Clasifica estas mercancias con su codigo HS de 6 digitos para declaracion H7 de bajo valor.
+      const prompt = `Clasifica estas mercancias con codigo HS 6 digitos. Responde SOLO JSON array, sin markdown ni explicaciones.
 
-Mercancias:
 ${descriptions}
 
-Responde SOLO con formato JSON array, sin explicaciones:
-[{"line": ${i + 1}, "hsCode": "610910", "description_normalized": "Camisetas de algodon", "eligible_h7": true, "reason": ""}]
-
-Si el valor supera 150 EUR, pon eligible_h7: false y reason: "Valor supera 150 EUR, requiere H1".
-Si es mercancia restringida (armas, medicamentos, etc), pon eligible_h7: false y reason explicando.`;
+Formato exacto: [{"line":1,"hsCode":"610910","description_normalized":"Camisetas algodon","eligible_h7":true,"reason":""}]
+Si valor>150EUR: eligible_h7=false, reason="Valor supera 150 EUR". Si restringida: eligible_h7=false con razon.`;
 
       try {
-        const response = await this.aiService.askLuci(prompt, 'es');
-        const responseText = response.message || response;
+        // Use callClaude directly for structured JSON responses (not askLuci which uses chat system prompt)
+        const response = await this.aiService.callClaude(
+          'claude-haiku-4-5-20251001',
+          'Eres un clasificador aduanero experto. Responde SIEMPRE en formato JSON array valido, sin markdown ni explicaciones.',
+          prompt,
+          { timeout: 30000 }
+        );
+        const responseText = response.content || response.message || response;
 
-        // Parse AI response - extract JSON
-        const jsonMatch = String(responseText).match(/\[[\s\S]*\]/);
+        // Parse AI response - extract JSON (handle markdown code blocks)
+        let textToParse = String(responseText);
+        // Remove markdown code blocks if present
+        const codeBlockMatch = textToParse.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (codeBlockMatch) {
+          textToParse = codeBlockMatch[1].trim();
+        }
+        const jsonMatch = textToParse.match(/\[[\s\S]*\]/);
+        logger.info(`Manifest AI batch ${i}: response length ${String(responseText).length}, JSON found: ${!!jsonMatch}`);
         if (jsonMatch) {
           const classifications = JSON.parse(jsonMatch[0]);
+          logger.info(`Manifest AI batch ${i}: ${classifications.length} items classified, first HS: ${classifications[0]?.hsCode}`);
           results.push(...classifications);
         } else {
           // Fallback: mark as unclassified
@@ -214,7 +226,13 @@ Si es mercancia restringida (armas, medicamentos, etc), pon eligible_h7: false y
 
     // Step 2: Classify with AI
     logger.info('Manifest: Classifying with AI...');
-    const classifications = await this.classifyWithAI(parsed.rows);
+    const classificationsArray = await this.classifyWithAI(parsed.rows);
+
+    // Build lookup by line number for reliable matching
+    const classificationsByLine = {};
+    classificationsArray.forEach(c => {
+      if (c.line) classificationsByLine[c.line] = c;
+    });
 
     // Step 3: Generate H7 declarations data
     const h7Declarations = [];
@@ -223,8 +241,15 @@ Si es mercancia restringida (armas, medicamentos, etc), pon eligible_h7: false y
 
     for (let i = 0; i < parsed.rows.length; i++) {
       const row = parsed.rows[i];
-      const classification = classifications[i] || {};
+      // Match by line number (from AI) or by array position as fallback
+      const classification = classificationsByLine[row.lineNumber] || classificationsByLine[i + 1] || classificationsArray[i] || {};
       const value = parseFloat(row.value) || 0;
+
+      // Override eligibility based on value (in case AI missed it)
+      if (value > 150 && classification.eligible_h7 !== false) {
+        classification.eligible_h7 = false;
+        classification.reason = 'Valor supera 150 EUR, requiere H1';
+      }
 
       if (!classification.eligible_h7) {
         h1Required.push({
