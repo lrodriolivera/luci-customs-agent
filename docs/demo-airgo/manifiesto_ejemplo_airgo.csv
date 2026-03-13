@@ -1,0 +1,28 @@
+tracking,sender_name,sender_country,recipient_name,recipient_id,recipient_address,recipient_city,recipient_postal,description,quantity,value,weight
+AWB-AG-001,Shenzhen Mobile Accessories Ltd,CN,Juan Garcia Lopez,12345678A,Calle Gran Via 42,Madrid,28013,Funda protectora silicona para smartphone Samsung Galaxy,3,12.99,0.3
+AWB-AG-002,Tokyo Fashion Export Co Ltd,JP,Maria Lopez Fernandez,87654321B,Av Diagonal 156,Barcelona,08018,Camiseta algodon estampada mujer talla M,2,24.99,0.4
+AWB-AG-003,Guangzhou Electronics Co,CN,Pedro Martinez Ruiz,11223344C,Calle Serrano 88,Madrid,28006,Auriculares bluetooth inalambricos con estuche de carga,1,35.50,0.2
+AWB-AG-004,Dongguan Toy Factory,CN,Ana Rodriguez Perez,55667788D,Calle Valencia 23,Valencia,46002,Juguete educativo de madera para ninos 3-5 anos,4,8.75,1.2
+AWB-AG-005,Shanghai Beauty Products,CN,Laura Sanchez Gil,99887766E,Paseo de Gracia 70,Barcelona,08008,Set de brochas maquillaje profesional 12 piezas,1,19.99,0.3
+AWB-AG-006,Yiwu Accessories Trading,CN,Carlos Fernandez Diaz,44332211F,Calle Alcala 200,Madrid,28028,Gafas de sol polarizadas UV400 unisex,2,14.50,0.15
+AWB-AG-007,Hangzhou Tech Gadgets,CN,Sofia Gomez Torres,33221100G,Av de la Constitución 5,Sevilla,41001,Soporte movil coche con carga inalambrica Qi,1,22.00,0.25
+AWB-AG-008,Shenzhen LED Light Co,CN,David Ruiz Martin,66554433H,Gran Via de les Corts Catalanes 600,Barcelona,08007,Tira LED RGB 5 metros con mando a distancia,1,18.75,0.5
+AWB-AG-009,Ningbo Kitchen Supplies,CN,Elena Navarro Jimenez,77889900I,Calle Larios 4,Malaga,29005,Set utensilios cocina silicona 8 piezas resistente calor,1,29.99,0.8
+AWB-AG-010,Bangkok Textile Export,TH,Pablo Moreno Castro,11002233J,Calle Colon 15,Valencia,46004,Fular seda natural estampado floral mujer,1,42.00,0.1
+AWB-AG-011,Seoul K-Beauty Co,KR,Marta Diaz Lopez,22334455K,Calle Preciados 28,Madrid,28013,Kit skincare coreano 5 pasos hidratante facial,1,38.50,0.4
+AWB-AG-012,Istanbul Leather Goods,TR,Javier Gil Hernandez,33445566L,Rambla Catalunya 45,Barcelona,08007,Cartera piel genuina hombre con proteccion RFID,1,45.00,0.3
+AWB-AG-013,Mumbai Textiles Export,IN,Carmen Ortiz Vega,44556677M,Av Libertad 10,Zaragoza,50004,Bufanda pashmina lana merino 200x60cm,2,15.00,0.2
+AWB-AG-014,Shenzhen Smart Home,CN,Roberto Perez Molina,55667788N,Calle Mayor 1,Bilbao,48001,Enchufe inteligente WiFi compatible Alexa/Google Home,3,9.99,0.6
+AWB-AG-015,Guangzhou Bag Factory,CN,Isabel Torres Ramos,66778899O,Calle Tetuan 22,Sevilla,41002,Mochila antirrobo impermeable con puerto USB,1,32.50,0.7
+AWB-AG-016,Shenzhen Fitness Equipment,CN,Miguel Angel Soto,77889900P,Av Meridiana 350,Barcelona,08027,Bandas elasticas fitness set 5 resistencias con bolsa,1,14.99,0.4
+AWB-AG-017,Yiwu Home Decor Trading,CN,Teresa Garcia Luna,88990011Q,Calle Arenal 7,Madrid,28013,Lampara escritorio LED regulable con cargador inalambrico,1,28.00,0.9
+AWB-AG-018,Dongguan Watch Factory,CN,Fernando Lopez Roca,99001122R,Passeig de Gracia 100,Barcelona,08008,Reloj inteligente deportivo con GPS y monitor cardiaco,1,89.99,0.15
+AWB-AG-019,Shanghai Pet Supplies,CN,Lucia Hernandez Vega,11223345S,Calle San Fernando 4,Alicante,03001,Arnés perro ajustable reflectante talla L,2,11.50,0.3
+AWB-AG-020,Zhejiang Stationery Co,CN,Alberto Martin Cruz,22334456T,Gran Via 1,Madrid,28013,Set rotuladores acuarela 48 colores profesional,1,18.00,0.5
+AWB-AG-021,Shenzhen Audio Tech,CN,Natalia Ruiz Gomez,33445567U,Ronda Universidad 10,Barcelona,08007,Altavoz bluetooth portatil resistente al agua IPX7,1,45.99,0.6
+AWB-AG-022,Guangzhou Sports Equipment,CN,Daniel Jimenez Ortiz,44556678V,Av de Andalucia 15,Cordoba,14005,Comba speed rope profesional mango aluminio,2,8.50,0.2
+AWB-AG-023,Tokyo Camera Accessories,JP,Cristina Perez Navarro,55667789W,Calle San Vicente 12,Valencia,46002,Tripode flexible para movil y camara con bluetooth,1,19.99,0.4
+AWB-AG-024,Seoul Electronics,KR,Alejandro Vega Diaz,66778890X,Av Diagonal 400,Barcelona,08037,Cargador rapido USB-C 65W GaN con cable incluido,2,24.99,0.3
+AWB-AG-025,Ningbo Outdoor Gear,CN,Sara Martinez Lopez,77889901Y,Calle Sierpes 30,Sevilla,41004,Botella termica acero inoxidable 750ml doble pared,3,12.99,1.0
+AWB-AG-026,Shenzhen Computer Parts,CN,Importaciones Premium SL,B98765432,Pol Industrial Norte Nave 12,Madrid,28042,Lote 50 discos duros SSD 256GB para servidores,50,180.00,15.0
+AWB-AG-027,Taipei Electronics Corp,TW,Tech Distribuciones SA,A12345678,Av Tecnologia 1,Barcelona,08019,Componentes PCB y chips semiconductores industriales,100,250.00,8.0
