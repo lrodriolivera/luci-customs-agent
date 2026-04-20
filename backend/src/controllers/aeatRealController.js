@@ -15,6 +15,7 @@ const {
 } = require('../services/aeat');
 const { Expedition } = require('../models');
 const aiService = require('../services/aiService');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 // ============================================
 // GESTIÓN DE CERTIFICADOS DIGITALES
@@ -344,13 +345,7 @@ const submitH1Declaration = async (req, res) => {
     }
 
     const expedition = await Expedition.findById(expeditionId).populate('documents');
-
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (!expedition.declaration?.xmlContent) {
       return res.status(400).json({
@@ -454,13 +449,7 @@ const submitH7Declaration = async (req, res) => {
     }
 
     const expedition = await Expedition.findById(expeditionId).populate('documents');
-
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     // Enviar a AEAT
     const result = await aeatRealService.submitH7Declaration(
@@ -524,13 +513,7 @@ const submitAESDeclaration = async (req, res) => {
     }
 
     const expedition = await Expedition.findById(expeditionId).populate('documents');
-
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const result = await aeatRealService.submitAESDeclaration(
       expedition.declaration.xmlContent,
@@ -590,13 +573,7 @@ const submitNCTSDeclaration = async (req, res) => {
     }
 
     const expedition = await Expedition.findById(expeditionId);
-
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const result = await aeatRealService.submitNCTSDeclaration(
       expedition.declaration.xmlContent,
@@ -648,13 +625,7 @@ const submitICS2Declaration = async (req, res) => {
     }
 
     const expedition = await Expedition.findById(expeditionId);
-
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const result = await aeatRealService.submitICS2Declaration(
       expedition.declaration.xmlContent,

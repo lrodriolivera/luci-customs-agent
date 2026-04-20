@@ -508,4 +508,6 @@ ExpeditionSchema.statics.getStats = async function(userId = null) {
   }, {});
 };
 
+require('../utils/softDelete')(ExpeditionSchema);
+
 module.exports = mongoose.model('Expedition', ExpeditionSchema);

@@ -17,16 +17,34 @@ class ManifestService {
    * recipient_address, recipient_city, recipient_postal,
    * description, quantity, value, weight, origin_country
    */
-  parseCSV(buffer, delimiter = ',') {
-    const content = buffer.toString('utf-8');
-    const lines = content.split('\n').filter(l => l.trim());
+  parseCSV(buffer, delimiter = null) {
+    // Remove BOM if present
+    let content = buffer.toString('utf-8');
+    if (content.charCodeAt(0) === 0xFEFF) content = content.slice(1);
+
+    const lines = content.split(/\r?\n/).filter(l => l.trim());
 
     if (lines.length < 2) {
       throw new Error('El manifiesto debe tener al menos una cabecera y una linea de datos');
     }
 
-    // Parse header
-    const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase().replace(/['"]/g, ''));
+    // Auto-detect delimiter from first line if not specified
+    if (!delimiter) {
+      const firstLine = lines[0];
+      const tabCount = (firstLine.match(/\t/g) || []).length;
+      const semiCount = (firstLine.match(/;/g) || []).length;
+      const commaCount = (firstLine.match(/,/g) || []).length;
+      if (tabCount > commaCount && tabCount > semiCount) delimiter = '\t';
+      else if (semiCount > commaCount) delimiter = ';';
+      else delimiter = ',';
+    }
+
+    // Parse header - normalize: lowercase, trim, remove quotes and accents
+    const headers = lines[0].split(delimiter).map(h =>
+      h.trim().toLowerCase()
+        .replace(/['"]/g, '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // remove accents
+    );
 
     // Map common header names to our standard fields
     const headerMap = this._mapHeaders(headers);
@@ -58,50 +76,110 @@ class ManifestService {
    */
   _mapHeaders(headers) {
     const mappings = {
-      // Tracking
+      // Tracking / Reference (many naming conventions)
       'tracking': 'tracking', 'awb': 'tracking', 'numero_seguimiento': 'tracking',
       'tracking_number': 'tracking', 'num_seguimiento': 'tracking', 'referencia': 'tracking',
-      'hawb': 'tracking', 'shipment_id': 'tracking',
+      'hawb': 'tracking', 'shipment_id': 'tracking', 'envio': 'tracking',
+      'n_envio': 'tracking', 'numero_envio': 'tracking', 'num_envio': 'tracking',
+      'albaran': 'tracking', 'expedicion': 'tracking', 'shipment': 'tracking',
+      'parcel_id': 'tracking', 'package_id': 'tracking', 'ref': 'tracking',
+      'numero_paquete': 'tracking', 'id_envio': 'tracking', 'cod_seguimiento': 'tracking',
+      'codigo_seguimiento': 'tracking', 'barcode': 'tracking', 'codigo_barras': 'tracking',
+      'mawb': 'tracking', 'master_awb': 'tracking', 'house_awb': 'tracking',
 
-      // Sender
+      // Sender / Remitente
       'sender': 'senderName', 'remitente': 'senderName', 'sender_name': 'senderName',
       'nombre_remitente': 'senderName', 'exportador': 'senderName', 'shipper': 'senderName',
+      'vendedor': 'senderName', 'seller': 'senderName', 'proveedor': 'senderName',
+      'supplier': 'senderName', 'from': 'senderName', 'de': 'senderName',
+      'nombre_exportador': 'senderName', 'shipper_name': 'senderName',
       'sender_country': 'senderCountry', 'pais_remitente': 'senderCountry',
       'pais_origen': 'senderCountry', 'origin': 'senderCountry', 'origen': 'senderCountry',
-      'country_of_origin': 'senderCountry',
+      'country_of_origin': 'senderCountry', 'pais_exportador': 'senderCountry',
+      'origin_country': 'senderCountry', 'from_country': 'senderCountry',
+      'pais_procedencia': 'senderCountry', 'procedencia': 'senderCountry',
 
-      // Recipient
+      // Recipient / Destinatario
       'recipient': 'recipientName', 'destinatario': 'recipientName',
       'recipient_name': 'recipientName', 'nombre_destinatario': 'recipientName',
       'consignee': 'recipientName', 'importador': 'recipientName',
+      'comprador': 'recipientName', 'buyer': 'recipientName', 'cliente': 'recipientName',
+      'customer': 'recipientName', 'para': 'recipientName', 'to': 'recipientName',
+      'nombre_importador': 'recipientName', 'consignee_name': 'recipientName',
       'recipient_id': 'recipientId', 'nif': 'recipientId', 'nie': 'recipientId',
       'nif_destinatario': 'recipientId', 'dni': 'recipientId', 'tax_id': 'recipientId',
+      'cif': 'recipientId', 'documento': 'recipientId', 'id_fiscal': 'recipientId',
+      'nif_nie': 'recipientId', 'nif_cif': 'recipientId', 'vat': 'recipientId',
+      'vat_number': 'recipientId', 'nif_importador': 'recipientId',
       'direccion': 'recipientAddress', 'address': 'recipientAddress',
-      'recipient_address': 'recipientAddress',
+      'recipient_address': 'recipientAddress', 'domicilio': 'recipientAddress',
+      'calle': 'recipientAddress', 'street': 'recipientAddress',
+      'direccion_destinatario': 'recipientAddress', 'direccion_entrega': 'recipientAddress',
+      'delivery_address': 'recipientAddress',
       'ciudad': 'recipientCity', 'city': 'recipientCity', 'localidad': 'recipientCity',
       'recipient_city': 'recipientCity', 'ciudad_destinatario': 'recipientCity',
+      'poblacion': 'recipientCity', 'municipio': 'recipientCity', 'town': 'recipientCity',
+      'ciudad_entrega': 'recipientCity',
       'codigo_postal': 'recipientPostal', 'cp': 'recipientPostal',
       'postal_code': 'recipientPostal', 'zip': 'recipientPostal',
       'recipient_postal': 'recipientPostal', 'cp_destinatario': 'recipientPostal',
+      'zipcode': 'recipientPostal', 'zip_code': 'recipientPostal', 'postal': 'recipientPostal',
+      'cod_postal': 'recipientPostal',
+      'pais_destino': 'recipientCountry', 'destination_country': 'recipientCountry',
+      'recipient_country': 'recipientCountry', 'pais_destinatario': 'recipientCountry',
+      'destino': 'recipientCountry', 'country': 'recipientCountry',
+      'destination': 'recipientCountry', 'to_country': 'recipientCountry',
 
-      // Goods
+      // Goods description
       'description': 'description', 'descripcion': 'description',
       'mercancia': 'description', 'goods': 'description', 'contenido': 'description',
       'goods_description': 'description', 'desc_mercancia': 'description',
+      'producto': 'description', 'articulo': 'description', 'item': 'description',
+      'detalle': 'description', 'concepto': 'description', 'nombre_producto': 'description',
+      'item_description': 'description', 'product': 'description',
+      'descripcion_mercancia': 'description', 'desc': 'description',
+      'naturaleza': 'description', 'tipo_mercancia': 'description',
+
+      // Quantity
       'quantity': 'quantity', 'cantidad': 'quantity', 'qty': 'quantity',
-      'unidades': 'quantity', 'piezas': 'quantity',
+      'unidades': 'quantity', 'piezas': 'quantity', 'items': 'quantity',
+      'num_articulos': 'quantity', 'bultos': 'quantity', 'packages': 'quantity',
+      'pieces': 'quantity', 'units': 'quantity', 'numero_bultos': 'quantity',
+      'n_bultos': 'quantity', 'num_paquetes': 'quantity',
+
+      // Value / Importe (critical - many naming conventions)
       'value': 'value', 'valor': 'value', 'valor_eur': 'value',
       'customs_value': 'value', 'valor_declarado': 'value', 'amount': 'value',
+      'importe': 'value', 'precio': 'value', 'price': 'value',
+      'total': 'value', 'total_value': 'value', 'valor_total': 'value',
+      'total_eur': 'value', 'importe_eur': 'value', 'valor_factura': 'value',
+      'invoice_value': 'value', 'declared_value': 'value', 'unit_value': 'value',
+      'valor_unitario': 'value', 'precio_unitario': 'value', 'unit_price': 'value',
+      'valor_intrinseco': 'value', 'intrinsic_value': 'value', 'monto': 'value',
+      'coste': 'value', 'cost': 'value', 'invoice_amount': 'value',
+      'valor_aduanero': 'value', 'customs_amount': 'value',
+
+      // Weight
       'weight': 'weight', 'peso': 'weight', 'peso_kg': 'weight',
-      'gross_weight': 'weight', 'peso_bruto': 'weight',
+      'gross_weight': 'weight', 'peso_bruto': 'weight', 'kg': 'weight',
+      'weight_kg': 'weight', 'peso_total': 'weight', 'total_weight': 'weight',
       'net_weight': 'netWeight', 'peso_neto': 'netWeight',
 
-      // Classification
+      // Classification (optional - AI classifies if missing)
       'hs_code': 'hsCode', 'taric': 'hsCode', 'codigo_hs': 'hsCode',
       'tariff_code': 'hsCode', 'codigo_taric': 'hsCode', 'arancel': 'hsCode',
+      'partida_arancelaria': 'hsCode', 'commodity_code': 'hsCode',
+      'cod_arancel': 'hsCode', 'hs': 'hsCode', 'sa': 'hsCode',
+      'nomenclatura': 'hsCode', 'cod_nc': 'hsCode',
 
       // IOSS
       'ioss': 'iossNumber', 'ioss_number': 'iossNumber', 'numero_ioss': 'iossNumber',
+      'ioss_id': 'iossNumber', 'cod_ioss': 'iossNumber',
+
+      // Carrier / Transportista
+      'carrier': 'carrier', 'transportista': 'carrier', 'courier': 'carrier',
+      'empresa_transporte': 'carrier', 'carrier_name': 'carrier',
+      'operador': 'carrier', 'mensajero': 'carrier',
     };
 
     const result = {};
@@ -291,7 +369,7 @@ Si valor>150EUR: eligible_h7=false, reason="Valor supera 150 EUR". Si restringid
             street: row.recipientAddress || '',
             city: row.recipientCity || '',
             postalCode: row.recipientPostal || '',
-            country: 'ES'
+            country: row.recipientCountry || 'ES'
           }
         },
         items: [{

@@ -191,7 +191,8 @@ export default function TaricTreeBrowser({ onCodeSelect }) {
         <div className="flex-1 relative">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
-            type="text"
+            type="search"
+            aria-label="Buscar código TARIC por descripción"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por descripcion o codigo..."
@@ -348,6 +349,16 @@ export default function TaricTreeBrowser({ onCodeSelect }) {
                         {isLeafLevel && item.duties?.thirdCountry != null && (
                           <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
                             {item.duties.thirdCountry}%
+                          </span>
+                        )}
+                        {item.seasonal && (
+                          <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded flex items-center gap-0.5" title="Arancel estacional - varia segun fecha">
+                            ☀ Estacional
+                          </span>
+                        )}
+                        {item.dutyRate != null && !isLeafLevel && (
+                          <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                            {item.dutyRate}%
                           </span>
                         )}
                         {isLeafLevel && item.hasMeasures && (

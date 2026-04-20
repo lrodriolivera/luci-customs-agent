@@ -7,11 +7,12 @@ const logger = require('../config/logger');
 const TaricCode = require('../models/TaricCode');
 const TaricAICache = require('../models/TaricAICache');
 const aiService = require('./aiService');
+const { getCache } = require('./cacheService');
 const { getSeasonalTariff, hasSeasonalTariff } = require('../data/seasonalTariffs');
 
-// Cache en memoria para aranceles (1 hora)
-const dutyCache = new Map();
-const CACHE_TTL = 60 * 60 * 1000; // 1 hora
+// Shared cache (Redis if available, in-memory fallback). Shared across PM2 workers.
+const dutyCache = getCache();
+const CACHE_TTL_SECONDS = 60 * 60; // 1 hora
 
 /**
  * Obtener informacion completa de aranceles para un codigo TARIC
@@ -21,11 +22,11 @@ async function getDutyInfo(taricCode, origin = null) {
   const normalizedCode = normalizeCode(taricCode);
   const cacheKey = `duty_${normalizedCode}_${origin || 'all'}`;
 
-  // 1. Verificar cache en memoria
-  const memoryCached = dutyCache.get(cacheKey);
-  if (memoryCached && Date.now() - memoryCached.timestamp < CACHE_TTL) {
-    logger.debug(`Duty info from memory cache: ${normalizedCode}`);
-    return { ...memoryCached.data, source: 'memory_cache' };
+  // 1. Verificar cache compartido (Redis en prod, memoria en dev)
+  const shared = await dutyCache.get(cacheKey);
+  if (shared) {
+    logger.debug(`Duty info from shared cache: ${normalizedCode}`);
+    return { ...shared, source: 'shared_cache' };
   }
 
   // 2. Buscar en BD local
@@ -48,8 +49,8 @@ async function getDutyInfo(taricCode, origin = null) {
       lastVerified: localData.lastUpdated
     };
 
-    // Guardar en cache memoria
-    dutyCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    // Guardar en cache compartido
+    await dutyCache.set(cacheKey, result, CACHE_TTL_SECONDS);
     return result;
   }
 
@@ -70,7 +71,7 @@ async function getDutyInfo(taricCode, origin = null) {
       lastVerified: aiCached.updatedAt
     };
 
-    dutyCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    await dutyCache.set(cacheKey, result, CACHE_TTL_SECONDS);
     return result;
   }
 
@@ -83,8 +84,8 @@ async function getDutyInfo(taricCode, origin = null) {
         model: 'claude-sonnet-4-20250514'
       });
 
-      // Guardar en cache memoria
-      dutyCache.set(cacheKey, { data: aiResult, timestamp: Date.now() });
+      // Guardar en cache compartido
+      await dutyCache.set(cacheKey, aiResult, CACHE_TTL_SECONDS);
 
       // Actualizar BD local si no existe
       await updateLocalDatabase(normalizedCode, aiResult);
@@ -451,64 +452,103 @@ function getVATRateByChapter(taricCode) {
   const code = taricCode.replace(/[\s.]/g, '');
   const chapter = code.substring(0, 2);
   const heading = code.substring(0, 4);
+  const subheading = code.substring(0, 6);
 
-  // 4% Superreducido - Productos de primera necesidad (Art. 91.Dos Ley 37/1992)
+  // === 4% SUPERREDUCIDO - Art. 91.Dos Ley 37/1992 + RDL 20/2022 ===
+  // "Pan comun, harinas panificables, leche, quesos, huevos, frutas, verduras,
+  //  hortalizas, legumbres, tuberculos y cereales, que tengan la condicion de
+  //  productos naturales de acuerdo con el Codigo Alimentario"
   const superReduced = {
-    // Pan comun, harinas panificables, leche, quesos, huevos, frutas, verduras,
-    // cereales, legumbres (productos basicos sin transformar)
-    headings: ['0407', '0408', '0401', '0402', '0403', '0404', '1001', '1002', '1003', '1004', '1005'],
-    // Medicamentos de uso humano
-    chapters: ['30']
-  };
-
-  // 10% Reducido - Alimentos en general (Art. 91.Uno Ley 37/1992)
-  const reduced = {
     chapters: [
-      '01', // Animales vivos
-      '02', // Carnes
-      '03', // Pescados
-      '04', // Lacteos, huevos, miel
-      '05', // Otros productos de origen animal
-      '06', // Plantas vivas
-      '07', // Legumbres, hortalizas
-      '08', // Frutas
-      '09', // Cafe, te, especias
-      '10', // Cereales
-      '11', // Molineria
-      '12', // Semillas oleaginosas
-      '13', // Gomas, resinas
-      '14', // Materias trenzables
-      '15', // Grasas y aceites
-      '16', // Preparaciones de carne/pescado
-      '19', // Preparaciones de cereales
-      '20', // Preparaciones de legumbres/frutas
-      '21', // Preparaciones alimenticias diversas
-      '23', // Residuos industria alimentaria, piensos
+      '07',  // Legumbres, hortalizas, raices y tuberculos (productos naturales frescos)
+      '08',  // Frutas y frutos comestibles (productos naturales frescos)
+      '10',  // Cereales (productos naturales)
+      '30',  // Productos farmaceuticos de uso humano
+    ],
+    headings: [
+      // Leche y productos lacteos basicos
+      '0401', // Leche y nata sin concentrar
+      '0402', // Leche y nata concentradas
+      '0403', // Suero de mantequilla, yogur
+      '0404', // Lactosuero
+      // Huevos
+      '0407', // Huevos de ave con cascara
+      '0408', // Huevos sin cascara
+      // Pan y harinas panificables
+      '1101', // Harina de trigo
+      '1102', // Harina de cereales (excepto trigo)
+      '1905', // Pan, galletas (solo pan comun - partida generica)
+    ],
+    subheadings: [
+      '190510', // Pan crujiente (Knackebrot)
+      '190520', // Pan de especias
+      '190590', // Los demas panes (pan comun)
     ]
   };
 
-  // Verificar superreducido por capitulo
-  if (superReduced.chapters.includes(chapter)) {
-    return { rate: 4, type: 'super_reduced', description: 'IVA superreducido (Ley 37/1992 Art. 91.Dos)' };
+  // === 10% REDUCIDO - Art. 91.Uno Ley 37/1992 ===
+  // Sustancias o productos utilizados habitual e idoneamente para la
+  // nutricion humana o animal, incluidas las bebidas no alcoholicas
+  const reduced = {
+    chapters: [
+      '01', // Animales vivos (para alimentacion)
+      '02', // Carnes y despojos comestibles
+      '03', // Pescados, crustaceos, moluscos
+      '04', // Lacteos, huevos, miel (lo no cubierto por 4%)
+      '05', // Otros productos de origen animal
+      '06', // Plantas vivas, flores cortadas
+      '09', // Cafe, te, yerba mate, especias
+      '11', // Productos de molineria (lo no cubierto por 4%)
+      '12', // Semillas oleaginosas, frutos diversos, plantas industriales
+      '13', // Gomas, resinas y demas jugos
+      '14', // Materias trenzables
+      '15', // Grasas y aceites (incluido aceite de oliva)
+      '16', // Preparaciones de carne, pescado, crustaceos
+      '17', // Azucares y articulos de confiteria
+      '18', // Cacao y sus preparaciones
+      '19', // Preparaciones a base de cereales (lo no cubierto por 4%)
+      '20', // Preparaciones de hortalizas, frutas u otros frutos
+      '21', // Preparaciones alimenticias diversas
+      '22', // Bebidas, liquidos alcoholicos y vinagre (solo no alcoholicas: 2201, 2202)
+      '23', // Residuos industria alimentaria, piensos
+    ],
+    headings: [
+      '2201', // Agua mineral y gaseada
+      '2202', // Agua con adicion de azucar, bebidas no alcoholicas
+    ]
+  };
+
+  // Verificar superreducido por subpartida especifica
+  if (superReduced.subheadings && superReduced.subheadings.includes(subheading)) {
+    return { rate: 4, type: 'super_reduced', description: 'IVA superreducido 4% - Productos primera necesidad (Art. 91.Dos Ley 37/1992)' };
   }
 
-  // Verificar superreducido por partida especifica
+  // Verificar superreducido por partida (heading)
   if (superReduced.headings.includes(heading)) {
-    return { rate: 4, type: 'super_reduced', description: 'IVA superreducido (Ley 37/1992 Art. 91.Dos)' };
+    return { rate: 4, type: 'super_reduced', description: 'IVA superreducido 4% - Productos primera necesidad (Art. 91.Dos Ley 37/1992)' };
+  }
+
+  // Verificar superreducido por capitulo
+  if (superReduced.chapters.includes(chapter)) {
+    return { rate: 4, type: 'super_reduced', description: 'IVA superreducido 4% - Productos primera necesidad (Art. 91.Dos Ley 37/1992)' };
+  }
+
+  // Verificar reducido por partida especifica (ej: agua y bebidas no alcoholicas)
+  if (reduced.headings.includes(heading)) {
+    return { rate: 10, type: 'reduced', description: 'IVA reducido 10% - Alimentos y bebidas (Art. 91.Uno Ley 37/1992)' };
   }
 
   // Verificar reducido por capitulo
   if (reduced.chapters.includes(chapter)) {
-    return { rate: 10, type: 'reduced', description: 'IVA reducido - Alimentos (Ley 37/1992 Art. 91.Uno)' };
+    // Excepciones dentro de capitulos reducidos: bebidas alcoholicas cap 22 (headings 2203-2208) van al 21%
+    if (chapter === '22' && !['2201', '2202'].includes(heading)) {
+      return { rate: 21, type: 'standard', description: 'IVA general 21% - Bebidas alcoholicas (Art. 90 Ley 37/1992)' };
+    }
+    return { rate: 10, type: 'reduced', description: 'IVA reducido 10% - Alimentos (Art. 91.Uno Ley 37/1992)' };
   }
 
-  // Agua (2201)
-  if (heading === '2201') {
-    return { rate: 10, type: 'reduced', description: 'IVA reducido - Agua (Ley 37/1992 Art. 91.Uno)' };
-  }
-
-  // 21% General - Todo lo demas
-  return { rate: 21, type: 'standard', description: 'IVA general (Ley 37/1992 Art. 90)' };
+  // 21% General - Todo lo demas (Art. 90 Ley 37/1992)
+  return { rate: 21, type: 'standard', description: 'IVA general 21% (Art. 90 Ley 37/1992)' };
 }
 
 function normalizeCode(code) {
@@ -527,13 +567,14 @@ function getEstimatedDuty(taricCode) {
     '04': { rate: 9, vat: 10, desc: 'Lacteos, huevos' },
 
     // Productos vegetales
-    '07': { rate: 10.4, vat: 10, desc: 'Legumbres, hortalizas' },
-    '08': { rate: 8, vat: 10, desc: 'Frutas' },
+    '07': { rate: 10.4, vat: 4, desc: 'Legumbres, hortalizas' },
+    '08': { rate: 8, vat: 4, desc: 'Frutas' },
+    '10': { rate: 0, vat: 4, desc: 'Cereales' },
 
     // Productos alimenticios
     '16': { rate: 15, vat: 10, desc: 'Preparaciones de carne' },
-    '17': { rate: 35, vat: 21, desc: 'Azucares' },
-    '18': { rate: 8, vat: 21, desc: 'Cacao' },
+    '17': { rate: 35, vat: 10, desc: 'Azucares' },
+    '18': { rate: 8, vat: 10, desc: 'Cacao' },
     '19': { rate: 9, vat: 10, desc: 'Preparaciones de cereales' },
     '20': { rate: 17, vat: 10, desc: 'Preparaciones de legumbres' },
     '21': { rate: 12, vat: 10, desc: 'Preparaciones alimenticias' },

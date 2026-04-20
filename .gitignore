@@ -75,3 +75,18 @@ credentials.json
 service-account.json
 *secret*
 *credential*
+
+# Cypress / Playwright artifacts (generated on each run)
+frontend/cypress/videos/
+frontend/cypress/screenshots/
+frontend/cypress/results/
+frontend/playwright-report/
+frontend/test-results/
+
+# Bundle analyzer output
+frontend/dist/stats.html
+
+# Large binary documents (use LFS or share separately)
+*.pptx
+*.xlsx
+*.docx

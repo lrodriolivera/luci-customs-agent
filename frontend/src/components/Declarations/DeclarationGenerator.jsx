@@ -35,8 +35,8 @@ export default function DeclarationGenerator() {
   useEffect(() => {
     const fetchExpeditions = async () => {
       try {
-        const response = await expeditionsAPI.list({ status: 'PROCESSING,DOCS_RECEIVED,VALIDATING' })
-        setExpeditions(response.data.expeditions || [])
+        const response = await expeditionsAPI.list({})
+        setExpeditions(response.data.data?.expeditions || response.data.expeditions || [])
       } catch (error) {
         console.error('Error fetching expeditions:', error)
       } finally {

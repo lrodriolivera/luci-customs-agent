@@ -17,6 +17,36 @@ const upload = multer({
 
 router.use(auth);
 
+/**
+ * @openapi
+ * /api/manifest/upload:
+ *   post:
+ *     tags: [h7]
+ *     summary: Subir CSV de manifiesto (e-commerce) y clasificar con IA
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               manifest: { type: string, format: binary }
+ *               delimiter: { type: string }
+ *               carrier: { type: string }
+ *               iossNumber: { type: string }
+ *     responses:
+ *       200:
+ *         description: Resultados de clasificación IA por fila
+ *
+ * /api/manifest/create-h7-batch:
+ *   post:
+ *     tags: [h7]
+ *     summary: Crear declaraciones H7 en batch a partir de resultados clasificados
+ *
+ * /api/manifest/template:
+ *   get:
+ *     tags: [h7]
+ *     summary: Descargar plantilla CSV de manifiesto
+ */
 // POST /api/manifest/upload - Upload and process manifest
 router.post('/upload', upload.single('manifest'), async (req, res) => {
   try {
@@ -56,7 +86,8 @@ router.post('/create-h7-batch', async (req, res) => {
     try { H7Declaration = require('../models/H7Declaration'); } catch(e) {}
 
     const results = [];
-    for (const decl of h7Declarations) {
+    for (let i = 0; i < h7Declarations.length; i++) {
+      const decl = h7Declarations[i];
       try {
         if (H7Declaration) {
           // Generate reference
@@ -70,11 +101,21 @@ router.post('/create-h7-batch', async (req, res) => {
           const netWeight = parseFloat(decl.items?.[0]?.netWeight) || parseFloat(decl.totals?.grossWeight) || 0.1;
           const grossWeight = parseFloat(decl.totals?.grossWeight) || netWeight || 0.1;
 
+          // Auto-generate N337 reference for G4 (obligatorio aereos desde 9/Mar/2026)
+          const g4Ref = `G4-${Date.now().toString(36).toUpperCase()}-${(i + 1).toString().padStart(3, '0')}`;
+
           const h7Doc = new H7Declaration({
             reference: ref,
             trackingNumber: decl.trackingNumber,
             carrier: { code: carrierCode, name: decl.carrier?.name || carrierCode },
             iossNumber: decl.iossNumber || undefined,
+            // Documento previo G4 (N337) - cumplimiento 9/Mar/2026
+            documentoPrevio: {
+              tipo: 'N337',
+              referencia: decl.documentoPrevioRef || g4Ref,
+              descripcion: 'Deposito temporal G4 - generado automaticamente'
+            },
+            garantiaGRN: decl.garantiaGRN || '',
             sender: {
               name: decl.sender?.name || 'REMITENTE DESCONOCIDO',
               address: {

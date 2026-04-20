@@ -333,10 +333,11 @@ export default function ChannelDashboard() {
                     <tr key={exp._id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <Link
-                          to={`/expeditions/${exp._id}`}
+                          to={exp.type === 'h7' ? `/h7/${exp._id}` : `/expeditions/${exp._id}`}
                           className="font-medium text-blue-600 hover:text-blue-700"
                         >
                           {exp.expeditionId || exp.reference || (exp._id || '').slice(-8)}
+                          {exp.type === 'h7' && <span className="ml-1.5 text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">H7</span>}
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
@@ -362,7 +363,7 @@ export default function ChannelDashboard() {
                       </td>
                       <td className="px-4 py-3">
                         <Link
-                          to={`/expeditions/${exp._id}`}
+                          to={exp.type === 'h7' ? `/h7/${exp._id}` : `/expeditions/${exp._id}`}
                           className="text-sm text-blue-600 hover:text-blue-700"
                         >
                           {t('common.viewDetail')}

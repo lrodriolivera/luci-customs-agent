@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+const jwtService = require('../utils/jwtService');
 const { User } = require('../models');
 
 /**
@@ -17,8 +17,8 @@ const auth = async (req, res, next) => {
 
     const token = authHeader.replace('Bearer ', '');
 
-    // Verificar token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Verificar token (valida iss/aud; acepta legacy si JWT_LEGACY_MODE=true)
+    const decoded = jwtService.verify(token);
 
     // Buscar usuario
     const user = await User.findById(decoded.id);
@@ -117,7 +117,7 @@ const optionalAuth = async (req, res, next) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwtService.verify(token);
     const user = await User.findById(decoded.id);
 
     if (user && user.isActive) {

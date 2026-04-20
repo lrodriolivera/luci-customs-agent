@@ -9,8 +9,14 @@ const { Expedition, Requirement, Guarantee, SpecialRegime, ParaduaneroControl } 
 const logger = require('../config/logger');
 
 /**
- * GET /api/dashboard/alerts
- * Obtener todas las alertas activas del sistema
+ * @openapi
+ * /api/dashboard/alerts:
+ *   get:
+ *     tags: [expeditions]
+ *     summary: Alertas consolidadas del tenant (requerimientos vencidos, canales rojo/naranja, garantías bajas)
+ *     responses:
+ *       200:
+ *         description: Alertas ordenadas por severidad (critical → warning → info)
  */
 router.get('/alerts', async (req, res) => {
   try {
@@ -225,8 +231,11 @@ router.get('/alerts', async (req, res) => {
 });
 
 /**
- * GET /api/dashboard/stats
- * Obtener estadisticas consolidadas del dashboard
+ * @openapi
+ * /api/dashboard/stats:
+ *   get:
+ *     tags: [expeditions]
+ *     summary: KPIs consolidados del tenant (expedientes, requerimientos, garantías)
  */
 router.get('/stats', async (req, res) => {
   try {

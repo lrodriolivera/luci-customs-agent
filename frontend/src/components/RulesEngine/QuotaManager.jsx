@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { countriesGrouped } from '../../data/countries'
 import {
   ChartBarIcon,
   ExclamationTriangleIcon,
@@ -117,18 +118,7 @@ export default function QuotaManager() {
     }
   }
 
-  const countries = [
-    { code: 'AR', name: 'Argentina' },
-    { code: 'BR', name: 'Brasil' },
-    { code: 'CA', name: 'Canadá' },
-    { code: 'CL', name: 'Chile' },
-    { code: 'CN', name: 'China' },
-    { code: 'JP', name: 'Japón' },
-    { code: 'MX', name: 'México' },
-    { code: 'PY', name: 'Paraguay' },
-    { code: 'UY', name: 'Uruguay' },
-    { code: 'US', name: 'Estados Unidos' }
-  ]
+  const countries = countriesGrouped.flatMap(g => g.options.map(c => ({ code: c.code, name: c.label })))
 
   const getStatusBadge = (status) => {
     switch (status) {

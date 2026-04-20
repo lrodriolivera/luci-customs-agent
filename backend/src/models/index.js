@@ -26,8 +26,10 @@ const PUERequest = require('./PUERequest');
 const TaricSearchHistory = require('./TaricSearchHistory');
 const TaricAICache = require('./TaricAICache');
 const Tenant = require('./Tenant');
+const AuditLog = require('./AuditLog');
 
 module.exports = {
+  AuditLog,
   User,
   Expedition,
   ChatMessage,

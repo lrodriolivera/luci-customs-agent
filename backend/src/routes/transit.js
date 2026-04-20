@@ -13,19 +13,46 @@ router.use(requireAuth);
 
 // === RUTAS PRINCIPALES ===
 
+/**
+ * @openapi
+ * /api/transit:
+ *   get:
+ *     tags: [declarations]
+ *     summary: Listar operaciones de tránsito T1/T2/TIR (NCTS)
+ *   post:
+ *     tags: [declarations]
+ *     summary: Crear operación de tránsito
+ */
 // Listar transitos
 router.get('/', transitController.list);
 
-// Estadisticas
+/**
+ * @openapi
+ * /api/transit/stats:
+ *   get:
+ *     tags: [declarations]
+ *     summary: KPIs tránsitos (activos, vencidos)
+ */
 router.get('/stats', transitController.getStats);
 
-// Transitos vencidos
+/**
+ * @openapi
+ * /api/transit/overdue:
+ *   get:
+ *     tags: [declarations]
+ *     summary: Tránsitos con plazo vencido
+ */
 router.get('/overdue', transitController.getOverdue);
 
-// Crear nuevo transito
 router.post('/', transitController.create);
 
-// Obtener detalle
+/**
+ * @openapi
+ * /api/transit/{id}:
+ *   get:
+ *     tags: [declarations]
+ *     summary: Detalle de tránsito (tenant-guarded)
+ */
 router.get('/:id', transitController.getById);
 
 // Actualizar transito

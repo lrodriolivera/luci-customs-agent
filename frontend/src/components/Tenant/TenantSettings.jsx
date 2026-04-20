@@ -685,379 +685,24 @@ const TenantSettings = () => {
 
         {/* Customs / Country Configuration Tab */}
         {activeTab === 'customs' && (
-          <div className="space-y-6">
-            <h2 className="text-lg font-medium text-gray-900">Configuracion de Pais y Aduanas</h2>
-            <p className="text-sm text-gray-500">
-              Selecciona el pais y sistema aduanero con el que opera tu organizacion.
-            </p>
-
-            {/* Country Selector */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Pais de operacion
-                </label>
-                <select
-                  value={tenant?.customsConfig?.country || 'ES'}
-                  onChange={(e) => {
-                    const country = e.target.value;
-                    const systemMap = { ES: 'AEAT', NL: 'DMS/DECO' };
-                    setTenant(prev => ({
-                      ...prev,
-                      customsConfig: {
-                        ...prev.customsConfig,
-                        country,
-                        system: systemMap[country] || 'AEAT'
-                      }
-                    }));
-                  }}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                >
-                  <option value="ES">Espana</option>
-                  <option value="NL">Paises Bajos</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sistema aduanero
-                </label>
-                <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-700">
-                  {tenant?.customsConfig?.country === 'NL' ? (
-                    <span className="flex items-center gap-2">
-                      <span className="text-lg">🇳🇱</span>
-                      <span className="font-medium">DMS / DECO</span>
-                      <span className="text-xs text-gray-500">(Douane Management Systeem)</span>
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <span className="text-lg">🇪🇸</span>
-                      <span className="font-medium">AEAT</span>
-                      <span className="text-xs text-gray-500">(Agencia Estatal de Administracion Tributaria)</span>
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* EORI Number */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Numero EORI
-              </label>
-              <input
-                type="text"
-                value={tenant?.customsConfig?.eori || ''}
-                onChange={(e) => setTenant(prev => ({
-                  ...prev,
-                  customsConfig: { ...prev.customsConfig, eori: e.target.value }
-                }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                placeholder={tenant?.customsConfig?.country === 'NL' ? 'NL123456789012' : 'ES12345678901234'}
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Identificador unico para operadores economicos registrados en la UE.
-              </p>
-            </div>
-
-            {/* Environment Selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Entorno
-              </label>
-              <div className="flex gap-4">
-                <label className={`flex-1 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                  tenant?.customsConfig?.environment === 'test'
-                    ? 'border-amber-400 bg-amber-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}>
-                  <input
-                    type="radio"
-                    name="environment"
-                    value="test"
-                    checked={tenant?.customsConfig?.environment === 'test'}
-                    onChange={(e) => setTenant(prev => ({
-                      ...prev,
-                      customsConfig: { ...prev.customsConfig, environment: e.target.value }
-                    }))}
-                    className="sr-only"
-                  />
-                  <span className="font-medium text-gray-900">Test / Pre-produccion</span>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Entorno de pruebas. Las declaraciones no tienen efecto legal.
-                  </p>
-                </label>
-
-                <label className={`flex-1 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                  tenant?.customsConfig?.environment === 'production'
-                    ? 'border-green-400 bg-green-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}>
-                  <input
-                    type="radio"
-                    name="environment"
-                    value="production"
-                    checked={tenant?.customsConfig?.environment === 'production'}
-                    onChange={(e) => setTenant(prev => ({
-                      ...prev,
-                      customsConfig: { ...prev.customsConfig, environment: e.target.value }
-                    }))}
-                    className="sr-only"
-                  />
-                  <span className="font-medium text-gray-900">Produccion</span>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Entorno real. Las declaraciones se envian oficialmente.
-                  </p>
-                </label>
-              </div>
-            </div>
-
-            {/* EORI per Country Section */}
-            <div className="border-t pt-6">
-              <h3 className="font-medium text-gray-900 mb-4">EORI por pais</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                Configura el numero EORI para cada pais donde operas.
-              </p>
-
-              <div className="space-y-3">
-                {[
-                  { code: 'ES', name: 'Espana', flag: 'ES', placeholder: 'ESB22477020' },
-                  { code: 'NL', name: 'Paises Bajos', flag: 'NL', placeholder: 'NL123456789012' }
-                ].map(country => (
-                  <div key={country.code} className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-700 w-32 flex items-center gap-2">
-                      <span className="text-lg">{country.code === 'ES' ? 'ES' : 'NL'}</span>
-                      {country.name}
-                    </span>
-                    <input
-                      type="text"
-                      value={eoriNumbers[country.code] || ''}
-                      onChange={(e) => setEoriNumbers(prev => ({ ...prev, [country.code]: e.target.value }))}
-                      className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                      placeholder={country.placeholder}
-                    />
-                  </div>
-                ))}
-                <button
-                  onClick={async () => {
-                    setEoriSaving(true);
-                    try {
-                      await api.put('/api/tenant/eori', { eoriNumbers });
-                      setMessage({ type: 'success', text: 'EORI actualizado correctamente' });
-                      setTimeout(() => setMessage(null), 3000);
-                    } catch (err) {
-                      setMessage({ type: 'error', text: err.response?.data?.error || 'Error guardando EORI' });
-                    } finally {
-                      setEoriSaving(false);
-                    }
-                  }}
-                  disabled={eoriSaving}
-                  className="px-4 py-2 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2"
-                >
-                  {eoriSaving && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
-                  Guardar EORI
-                </button>
-              </div>
-            </div>
-
-            {/* Certificate Section */}
-            <div className="border-t pt-6">
-              <h3 className="font-medium text-gray-900 mb-4">Certificado digital</h3>
-
-              {/* Current cert status */}
-              <div className="p-4 border border-gray-200 rounded-lg mb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${
-                      certInfo || tenant?.customsConfig?.certificateStatus === 'configured'
-                        ? 'bg-green-100'
-                        : 'bg-gray-100'
-                    }`}>
-                      <ShieldCheckIcon className={`h-6 w-6 ${
-                        certInfo || tenant?.customsConfig?.certificateStatus === 'configured'
-                          ? 'text-green-600'
-                          : 'text-gray-400'
-                      }`} />
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-900">
-                        {tenant?.customsConfig?.country === 'NL'
-                          ? 'Certificado PKIoverheid / eHerkenning'
-                          : 'Certificado FNMT / Digital'}
-                      </span>
-                      {certInfo ? (
-                        <div className="text-sm text-green-600 space-y-0.5">
-                          <p>Emitido a: {certInfo.issuedTo || 'N/A'}</p>
-                          <p>Emisor: {certInfo.issuer || 'N/A'}</p>
-                          {certInfo.validUntil && (
-                            <p>Valido hasta: {new Date(certInfo.validUntil).toLocaleDateString()}</p>
-                          )}
-                        </div>
-                      ) : tenant?.customsConfig?.certificateStatus === 'configured' ? (
-                        <p className="text-sm text-green-600">
-                          Configurado - Valido hasta {tenant?.customsConfig?.certificateExpiry || 'N/A'}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-gray-500">No configurado</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {(certInfo || tenant?.customsConfig?.certificateStatus === 'configured') ? (
-                      <>
-                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                          Activo
-                        </span>
-                        <button
-                          onClick={async () => {
-                            if (!confirm('Eliminar el certificado? Esta accion no se puede deshacer.')) return;
-                            try {
-                              const country = tenant?.customsConfig?.country || 'ES';
-                              await api.delete(`/api/certificates/${country}`);
-                              setCertInfo(null);
-                              setTenant(prev => ({
-                                ...prev,
-                                customsConfig: { ...prev.customsConfig, certificateStatus: null }
-                              }));
-                              setMessage({ type: 'success', text: 'Certificado eliminado' });
-                              setTimeout(() => setMessage(null), 3000);
-                            } catch (err) {
-                              setMessage({ type: 'error', text: 'Error eliminando certificado' });
-                            }
-                          }}
-                          className="px-3 py-1.5 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
-                        >
-                          Eliminar
-                        </button>
-                      </>
-                    ) : (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">
-                        Pendiente
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Upload form */}
-              <div className="p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Subir certificado (.p12 / .pfx)</h4>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Archivo de certificado</label>
-                    <input
-                      type="file"
-                      accept=".p12,.pfx"
-                      onChange={(e) => setCertFile(e.target.files[0])}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Password del certificado</label>
-                    <input
-                      type="password"
-                      value={certPassword}
-                      onChange={(e) => setCertPassword(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                      placeholder="Contrasena del archivo .p12"
-                    />
-                  </div>
-                  <button
-                    onClick={async () => {
-                      if (!certFile || !certPassword) {
-                        setMessage({ type: 'error', text: 'Selecciona un archivo y escribe la password' });
-                        return;
-                      }
-                      setCertUploading(true);
-                      try {
-                        const formData = new FormData();
-                        formData.append('certificate', certFile);
-                        formData.append('password', certPassword);
-                        formData.append('country', tenant?.customsConfig?.country || 'ES');
-
-                        const res = await api.post('/api/certificates/upload', formData, {
-                          headers: { 'Content-Type': 'multipart/form-data' }
-                        });
-
-                        if (res.data?.success) {
-                          setCertInfo(res.data.certificate?.metadata || {});
-                          setCertFile(null);
-                          setCertPassword('');
-                          setTenant(prev => ({
-                            ...prev,
-                            customsConfig: { ...prev.customsConfig, certificateStatus: 'configured' }
-                          }));
-                          setMessage({ type: 'success', text: 'Certificado subido correctamente' });
-                        } else {
-                          setMessage({ type: 'error', text: res.data?.error || 'Error subiendo certificado' });
-                        }
-                      } catch (err) {
-                        setMessage({ type: 'error', text: err.response?.data?.error || 'Error subiendo certificado' });
-                      } finally {
-                        setCertUploading(false);
-                        setTimeout(() => setMessage(null), 5000);
-                      }
-                    }}
-                    disabled={certUploading || !certFile || !certPassword}
-                    className="px-4 py-2 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {certUploading ? (
-                      <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <ArrowUpTrayIcon className="h-4 w-4" />
-                    )}
-                    Subir certificado
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Connection Status */}
-            <div className="p-4 rounded-lg bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <SignalIcon className={`h-5 w-5 ${
-                    tenant?.customsConfig?.certificateStatus === 'configured' && tenant?.customsConfig?.eori
-                      ? 'text-green-500'
-                      : 'text-gray-400'
-                  }`} />
-                  <div>
-                    <span className="text-sm font-medium text-gray-700">Estado de conexion aduanera</span>
-                  </div>
-                </div>
-                {tenant?.customsConfig?.certificateStatus === 'configured' && tenant?.customsConfig?.eori ? (
-                  <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    Configurado y listo
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1.5 text-sm text-gray-500">
-                    <span className="w-2 h-2 rounded-full bg-gray-400"></span>
-                    Pendiente de configuracion
-                  </span>
-                )}
-              </div>
-
-              {/* Checklist */}
-              <div className="mt-3 space-y-2">
-                {[
-                  { label: 'Pais seleccionado', done: !!tenant?.customsConfig?.country },
-                  { label: 'EORI configurado', done: !!tenant?.customsConfig?.eori },
-                  { label: 'Certificado subido', done: tenant?.customsConfig?.certificateStatus === 'configured' },
-                  { label: 'Entorno seleccionado', done: !!tenant?.customsConfig?.environment }
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-sm">
-                    {item.done ? (
-                      <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <span className="h-4 w-4 rounded-full border-2 border-gray-300 inline-block"></span>
-                    )}
-                    <span className={item.done ? 'text-gray-700' : 'text-gray-400'}>{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <CustomsTab
+            tenant={tenant}
+            setTenant={setTenant}
+            eoriNumbers={eoriNumbers}
+            setEoriNumbers={setEoriNumbers}
+            eoriSaving={eoriSaving}
+            setEoriSaving={setEoriSaving}
+            certFile={certFile}
+            setCertFile={setCertFile}
+            certPassword={certPassword}
+            setCertPassword={setCertPassword}
+            certUploading={certUploading}
+            setCertUploading={setCertUploading}
+            certInfo={certInfo}
+            setCertInfo={setCertInfo}
+            message={message}
+            setMessage={setMessage}
+          />
         )}
 
         {/* Integrations Tab */}
@@ -1126,5 +771,338 @@ const TenantSettings = () => {
     </div>
   );
 };
+
+// Multi-country customs configuration sub-component
+function CustomsTab({ tenant, setTenant, eoriNumbers, setEoriNumbers, eoriSaving, setEoriSaving,
+  certFile, setCertFile, certPassword, setCertPassword, certUploading, setCertUploading,
+  certInfo, setCertInfo, message, setMessage }) {
+
+  const availableCountries = [
+    { code: 'ES', name: 'Espana', system: 'AEAT', systemFull: 'Agencia Estatal de Administracion Tributaria', flag: '\u{1F1EA}\u{1F1F8}', placeholder: 'ESB22477020', certLabel: 'Certificado FNMT / Digital' },
+    { code: 'NL', name: 'Paises Bajos', system: 'DMS/DECO', systemFull: 'Douane Management Systeem', flag: '\u{1F1F3}\u{1F1F1}', placeholder: 'NL123456789012', certLabel: 'Certificado PKIoverheid / eHerkenning' },
+    { code: 'BE', name: 'Belgica', system: 'PLDA', systemFull: 'Paperless Douane en Accijnzen', flag: '\u{1F1E7}\u{1F1EA}', disabled: true, label: 'Proximamente' },
+    { code: 'DE', name: 'Alemania', system: 'ATLAS', systemFull: 'Automatisiertes Tarif- und Lokales Zoll-Abwicklungssystem', flag: '\u{1F1E9}\u{1F1EA}', disabled: true, label: 'Proximamente' },
+    { code: 'FR', name: 'Francia', system: 'DELTA', systemFull: 'Dedouanement En Ligne par Traitement Automatise', flag: '\u{1F1EB}\u{1F1F7}', disabled: true, label: 'Proximamente' },
+  ];
+
+  // Enabled countries state (stored in localStorage)
+  const [enabledCountries, setEnabledCountries] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('customsCountries') || '[]');
+      if (stored.length > 0) return stored.map(c => c.code);
+    } catch {}
+    return [tenant?.customsConfig?.country || 'ES'];
+  });
+
+  // Per-country config state
+  const [countryConfigs, setCountryConfigs] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('customsCountryConfigs') || '{}');
+      if (Object.keys(stored).length > 0) return stored;
+    } catch {}
+    return {
+      ES: { eori: tenant?.customsConfig?.eori || '', environment: tenant?.customsConfig?.environment || 'test' },
+      NL: { eori: eoriNumbers?.NL || '', environment: 'test' },
+    };
+  });
+
+  const toggleCountry = (code) => {
+    setEnabledCountries(prev => {
+      const next = prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code];
+      // Save to localStorage
+      const countriesData = next.map(c => {
+        const info = availableCountries.find(ac => ac.code === c);
+        return { code: c, name: info?.name, system: info?.system, flag: info?.flag };
+      });
+      localStorage.setItem('customsCountries', JSON.stringify(countriesData));
+      return next;
+    });
+  };
+
+  const updateCountryConfig = (code, key, value) => {
+    setCountryConfigs(prev => {
+      const next = { ...prev, [code]: { ...prev[code], [key]: value } };
+      localStorage.setItem('customsCountryConfigs', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const saveAllConfigs = async () => {
+    setEoriSaving(true);
+    try {
+      const eoriMap = {};
+      enabledCountries.forEach(code => {
+        eoriMap[code] = countryConfigs[code]?.eori || '';
+      });
+      await api.put('/api/tenant/eori', { eoriNumbers: eoriMap });
+      setMessage({ type: 'success', text: 'Configuracion de paises guardada correctamente' });
+      setTimeout(() => setMessage(null), 3000);
+    } catch (err) {
+      setMessage({ type: 'error', text: err.response?.data?.error || 'Error guardando configuracion' });
+    } finally {
+      setEoriSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-lg font-medium text-gray-900">Configuracion de Paises y Aduanas</h2>
+      <p className="text-sm text-gray-500">
+        Activa los paises donde opera tu organizacion. Cada pais tiene su propia configuracion de EORI, certificado y entorno.
+      </p>
+
+      {/* Country toggles */}
+      <div className="space-y-3">
+        {availableCountries.map(country => {
+          const isEnabled = enabledCountries.includes(country.code);
+          const config = countryConfigs[country.code] || {};
+
+          return (
+            <div key={country.code} className={`border rounded-lg overflow-hidden transition-colors ${
+              country.disabled ? 'border-gray-100 bg-gray-50 opacity-60' :
+              isEnabled ? 'border-violet-200 bg-white' : 'border-gray-200 bg-white'
+            }`}>
+              {/* Country header with toggle */}
+              <div className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{country.flag}</span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-900">{country.name}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+                        {country.system}
+                      </span>
+                      {country.label && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+                          {country.label}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">{country.systemFull}</p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isEnabled}
+                    onChange={() => !country.disabled && toggleCountry(country.code)}
+                    disabled={country.disabled}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600 peer-disabled:opacity-50"></div>
+                </label>
+              </div>
+
+              {/* Expanded config for enabled countries */}
+              {isEnabled && !country.disabled && (
+                <div className="border-t border-gray-100 p-4 bg-gray-50/50 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* EORI */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        EORI ({country.code})
+                      </label>
+                      <input
+                        type="text"
+                        value={config.eori || ''}
+                        onChange={(e) => updateCountryConfig(country.code, 'eori', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        placeholder={country.placeholder}
+                      />
+                    </div>
+
+                    {/* Environment */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Entorno
+                      </label>
+                      <select
+                        value={config.environment || 'test'}
+                        onChange={(e) => updateCountryConfig(country.code, 'environment', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                      >
+                        <option value="test">Test / Pre-produccion</option>
+                        <option value="production">Produccion</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Certificate status */}
+                  <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-white">
+                    <div className="flex items-center gap-3">
+                      <ShieldCheckIcon className={`h-5 w-5 ${
+                        (country.code === (tenant?.customsConfig?.country) && tenant?.customsConfig?.certificateStatus === 'configured')
+                          ? 'text-green-500' : 'text-gray-400'
+                      }`} />
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">{country.certLabel}</span>
+                        <p className="text-xs text-gray-500">
+                          {(country.code === (tenant?.customsConfig?.country) && tenant?.customsConfig?.certificateStatus === 'configured')
+                            ? 'Configurado'
+                            : 'No configurado'}
+                        </p>
+                      </div>
+                    </div>
+                    {(country.code === (tenant?.customsConfig?.country) && tenant?.customsConfig?.certificateStatus === 'configured') ? (
+                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Activo</span>
+                    ) : (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-medium">Pendiente</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Certificate Upload (shared) */}
+      <div className="border-t pt-6">
+        <h3 className="font-medium text-gray-900 mb-4">Subir certificado digital</h3>
+        <div className="p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Pais del certificado</label>
+              <select
+                value={tenant?.customsConfig?.country || 'ES'}
+                onChange={(e) => {
+                  const country = e.target.value;
+                  const systemMap = { ES: 'AEAT', NL: 'DMS/DECO' };
+                  setTenant(prev => ({
+                    ...prev,
+                    customsConfig: { ...prev.customsConfig, country, system: systemMap[country] || 'AEAT' }
+                  }));
+                }}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              >
+                {enabledCountries.map(code => {
+                  const info = availableCountries.find(c => c.code === code);
+                  return <option key={code} value={code}>{info?.flag} {info?.name} ({info?.system})</option>;
+                })}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Archivo de certificado (.p12 / .pfx)</label>
+              <input
+                type="file"
+                accept=".p12,.pfx"
+                onChange={(e) => setCertFile(e.target.files[0])}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Password del certificado</label>
+              <input
+                type="password"
+                value={certPassword}
+                onChange={(e) => setCertPassword(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                placeholder="Contrasena del archivo .p12"
+              />
+            </div>
+            <button
+              onClick={async () => {
+                if (!certFile || !certPassword) {
+                  setMessage({ type: 'error', text: 'Selecciona un archivo y escribe la password' });
+                  return;
+                }
+                setCertUploading(true);
+                try {
+                  const formData = new FormData();
+                  formData.append('certificate', certFile);
+                  formData.append('password', certPassword);
+                  formData.append('country', tenant?.customsConfig?.country || 'ES');
+
+                  const res = await api.post('/api/certificates/upload', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                  });
+
+                  if (res.data?.success) {
+                    setCertInfo(res.data.certificate?.metadata || {});
+                    setCertFile(null);
+                    setCertPassword('');
+                    setTenant(prev => ({
+                      ...prev,
+                      customsConfig: { ...prev.customsConfig, certificateStatus: 'configured' }
+                    }));
+                    setMessage({ type: 'success', text: 'Certificado subido correctamente' });
+                  } else {
+                    setMessage({ type: 'error', text: res.data?.error || 'Error subiendo certificado' });
+                  }
+                } catch (err) {
+                  setMessage({ type: 'error', text: err.response?.data?.error || 'Error subiendo certificado' });
+                } finally {
+                  setCertUploading(false);
+                  setTimeout(() => setMessage(null), 5000);
+                }
+              }}
+              disabled={certUploading || !certFile || !certPassword}
+              className="px-4 py-2 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              {certUploading ? (
+                <ArrowPathIcon className="h-4 w-4 animate-spin" />
+              ) : (
+                <ArrowUpTrayIcon className="h-4 w-4" />
+              )}
+              Subir certificado
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Save all button */}
+      <div className="flex justify-end pt-4 border-t">
+        <button
+          onClick={saveAllConfigs}
+          disabled={eoriSaving}
+          className="px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2"
+        >
+          {eoriSaving && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
+          Guardar configuracion de paises
+        </button>
+      </div>
+
+      {/* Connection Status per country */}
+      <div className="p-4 rounded-lg bg-gray-50">
+        <div className="flex items-center gap-3 mb-3">
+          <SignalIcon className="h-5 w-5 text-gray-500" />
+          <span className="text-sm font-medium text-gray-700">Estado de conexion por pais</span>
+        </div>
+        <div className="space-y-2">
+          {enabledCountries.map(code => {
+            const info = availableCountries.find(c => c.code === code);
+            const config = countryConfigs[code] || {};
+            const hasEori = !!config.eori;
+            const hasCert = code === (tenant?.customsConfig?.country) && tenant?.customsConfig?.certificateStatus === 'configured';
+            const isReady = hasEori && hasCert;
+
+            return (
+              <div key={code} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                <div className="flex items-center gap-2">
+                  <span>{info?.flag}</span>
+                  <span className="text-sm font-medium text-gray-700">{info?.name} ({info?.system})</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500">{config.environment === 'production' ? 'Produccion' : 'Test'}</span>
+                  {isReady ? (
+                    <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
+                      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                      Listo
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                      <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                      Pendiente
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default TenantSettings;

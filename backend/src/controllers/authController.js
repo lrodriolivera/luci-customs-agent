@@ -74,6 +74,7 @@ const register = async (req, res) => {
     }
 
     logger.info(`Nuevo usuario registrado: ${email}, tenant: ${slug}`);
+    req.audit?.({ action: 'register', resource: 'User', resourceId: user._id, metadata: { email, tenantId: tenant._id, slug } });
 
     res.status(201).json({
       success: true,
@@ -86,6 +87,7 @@ const register = async (req, res) => {
       try { await Tenant.findByIdAndDelete(tenant._id); } catch (e) { /* ignore */ }
     }
     logger.error('Error en registro:', error);
+    req.audit?.({ action: 'register', resource: 'User', success: false, errorMessage: error.message, metadata: { email: req.body?.email } });
     res.status(500).json({
       success: false,
       error: 'Error al registrar usuario'
@@ -104,6 +106,9 @@ const login = async (req, res) => {
     // Buscar usuario y verificar credenciales
     const user = await User.findByCredentials(email, password);
     if (!user) {
+      const auditReq = Object.assign({}, req, { user: null });
+      auditReq.audit = req.audit;
+      req.audit?.({ action: 'login_failed', resource: 'User', success: false, errorMessage: 'Credenciales invalidas', metadata: { email } });
       return res.status(401).json({
         success: false,
         error: 'Credenciales invalidas'
@@ -118,6 +123,8 @@ const login = async (req, res) => {
     const token = user.generateAuthToken();
 
     logger.info(`Usuario login: ${email}`);
+    req.user = user;
+    req.audit?.({ action: 'login', resource: 'User', resourceId: user._id });
 
     res.json({
       success: true,
@@ -253,6 +260,7 @@ const logout = async (req, res) => {
     // En un sistema con blacklist de tokens, aqui se invalidaria
     // Por ahora solo respondemos OK (el cliente debe eliminar el token)
     logger.info(`Usuario logout: ${req.user.email}`);
+    req.audit?.({ action: 'logout', resource: 'User', resourceId: req.user._id });
 
     res.json({
       success: true,

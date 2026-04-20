@@ -81,7 +81,12 @@ const listUsers = async (req, res) => {
   try {
     const { status, role, search } = req.query;
 
+    // Tenant isolation: non-superadmin admins only see their own tenant's users.
+    const { isSuperAdmin } = require('../utils/tenantGuard');
     let query = {};
+    if (!isSuperAdmin(req.user) && req.user?.tenantId) {
+      query.tenantId = req.user.tenantId;
+    }
 
     if (status === 'active') {
       query.isActive = true;
@@ -128,10 +133,8 @@ const listUsers = async (req, res) => {
 const getUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
-
-    if (!user) {
-      return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
-    }
+    const { ensureSameTenant } = require('../utils/tenantGuard');
+    if (!ensureSameTenant(user, req, res, { resource: 'Usuario' })) return;
 
     res.json({
       success: true,
@@ -241,10 +244,8 @@ const createUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-
-    if (!user) {
-      return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
-    }
+    const { ensureSameTenant } = require('../utils/tenantGuard');
+    if (!ensureSameTenant(user, req, res, { resource: 'Usuario' })) return;
 
     const { name, role, status, password } = req.body;
 
@@ -298,22 +299,24 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-
-    if (!user) {
-      return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
-    }
+    const { ensureSameTenant, isSuperAdmin } = require('../utils/tenantGuard');
+    if (!ensureSameTenant(user, req, res, { resource: 'Usuario' })) return;
 
     // Prevenir eliminación del propio usuario o último admin
     if (req.user && req.user.id === req.params.id) {
       return res.status(400).json({ success: false, error: 'No puedes eliminar tu propio usuario' });
     }
 
-    const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
+    // Tenant-scoped admin count
+    const adminCountQuery = { role: 'admin', isActive: true };
+    if (!isSuperAdmin(req.user) && req.user?.tenantId) adminCountQuery.tenantId = req.user.tenantId;
+    const adminCount = await User.countDocuments(adminCountQuery);
     if (user.role === 'admin' && adminCount <= 1) {
       return res.status(400).json({ success: false, error: 'No se puede eliminar el último administrador' });
     }
 
-    await User.findByIdAndDelete(req.params.id);
+    // Use soft delete (GDPR) instead of hard delete
+    await user.softDelete(req.user?._id);
 
     // Log de auditoría
     addAuditLog(req.user?.id || 'system', req.user?.name || 'Sistema', 'USER_DELETE', 'users',
@@ -331,10 +334,8 @@ const deleteUser = async (req, res) => {
 const resetUserPassword = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-
-    if (!user) {
-      return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
-    }
+    const { ensureSameTenant } = require('../utils/tenantGuard');
+    if (!ensureSameTenant(user, req, res, { resource: 'Usuario' })) return;
 
     // Generar nueva contraseña temporal
     const newPassword = crypto.randomBytes(6).toString('hex');

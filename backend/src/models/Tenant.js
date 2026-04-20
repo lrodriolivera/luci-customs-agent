@@ -202,12 +202,16 @@ const TenantSchema = new mongoose.Schema({
     default: TENANT_STATUS.PENDING
   },
 
-  // Business info
+  // Business info. nif/eori are plaintext for backward compat; encryption/hash
+  // is handled transparently by the pre-save hook below when PII_ENCRYPTION_KEY
+  // is set. nif_hash/eori_hash support equality lookups on encrypted data.
   businessInfo: {
     type: { type: String, enum: ['customs_agent', 'importer', 'exporter', 'carrier', 'other'], default: 'customs_agent' },
     nif: { type: String },
+    nifHash: { type: String, index: true },
     eori: { type: String },
-    rea: { type: String }, // Registro Especial de Agentes
+    eoriHash: { type: String, index: true },
+    rea: { type: String },
     oeaCertification: { type: String },
     address: AddressSchema
   },
@@ -312,8 +316,59 @@ TenantSchema.pre('save', function(next) {
       .replace(/^-|-$/g, '');
   }
 
+  // PII hashes (deterministic) for equality lookups + optional encryption.
+  // Hashes are computed from the plaintext BEFORE encryption so lookups still work.
+  try {
+    const { hash, enabled: hashEnabled } = require('../utils/piiHash');
+    const { encrypt, enabled: encEnabled, isEncrypted } = require('../utils/piiCrypto');
+
+    if (this.businessInfo) {
+      const nifChanged = this.isModified('businessInfo.nif') && this.businessInfo.nif;
+      const eoriChanged = this.isModified('businessInfo.eori') && this.businessInfo.eori;
+
+      if (nifChanged && hashEnabled()) {
+        // Avoid re-hashing ciphertext if the field is already encrypted
+        const plain = isEncrypted(this.businessInfo.nif)
+          ? require('../utils/piiCrypto').decrypt(this.businessInfo.nif)
+          : this.businessInfo.nif;
+        this.businessInfo.nifHash = hash(plain);
+      }
+      if (eoriChanged && hashEnabled()) {
+        const plain = isEncrypted(this.businessInfo.eori)
+          ? require('../utils/piiCrypto').decrypt(this.businessInfo.eori)
+          : this.businessInfo.eori;
+        this.businessInfo.eoriHash = hash(plain);
+      }
+
+      // Encrypt only when explicitly enabled via env (gradual rollout-friendly)
+      if (process.env.ENCRYPT_PII === 'true' && encEnabled()) {
+        if (nifChanged && !isEncrypted(this.businessInfo.nif)) {
+          this.businessInfo.nif = encrypt(this.businessInfo.nif);
+        }
+        if (eoriChanged && !isEncrypted(this.businessInfo.eori)) {
+          this.businessInfo.eori = encrypt(this.businessInfo.eori);
+        }
+      }
+    }
+  } catch (_) { /* non-blocking */ }
+
   next();
 });
+
+// Post-find hooks: transparent decrypt when reading. Pass-through if value
+// doesn't have the `v1:` prefix (legacy plaintext).
+function decryptBusinessInfo(doc) {
+  if (!doc || !doc.businessInfo) return;
+  try {
+    const { decrypt, isEncrypted } = require('../utils/piiCrypto');
+    if (isEncrypted(doc.businessInfo.nif))  doc.businessInfo.nif  = decrypt(doc.businessInfo.nif);
+    if (isEncrypted(doc.businessInfo.eori)) doc.businessInfo.eori = decrypt(doc.businessInfo.eori);
+  } catch (_) { /* ignore */ }
+}
+
+TenantSchema.post('init', function() { decryptBusinessInfo(this); });
+TenantSchema.post('findOne', function(doc) { if (doc) decryptBusinessInfo(doc); });
+TenantSchema.post('find', function(docs) { if (Array.isArray(docs)) docs.forEach(decryptBusinessInfo); });
 
 // Instance methods
 TenantSchema.methods.isActive = function() {

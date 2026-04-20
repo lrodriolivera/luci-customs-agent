@@ -11,31 +11,88 @@ const exciseDutiesService = require('./exciseDutiesService');
 const quotaService = require('./quotaService');
 const preferencesService = require('./preferencesService');
 
-// Tratados de Libre Comercio y Preferencias
+// Tratados de Libre Comercio y Preferencias - Ref: TARIC S.A.U. Oct 2023 + actualizaciones 2024-2026
+// Fuente: Sede AEAT, EUR-Lex, BOE
 const FTA_AGREEMENTS = {
-  // Acuerdos UE vigentes 2024-2026
-  'CETA': { countries: ['CA'], type: 'fta', origin_rules: 'product_specific' },
-  'JEFTA': { countries: ['JP'], type: 'fta', origin_rules: 'product_specific' },
-  'EU-UK': { countries: ['GB'], type: 'fta', origin_rules: 'product_specific' },
-  'EU-MERCOSUR': { countries: ['AR', 'BR', 'UY', 'PY'], type: 'fta', origin_rules: 'regional' },
-  'EU-MEXICO': { countries: ['MX'], type: 'fta', origin_rules: 'product_specific' },
-  'EU-CHILE': { countries: ['CL'], type: 'fta', origin_rules: 'product_specific' },
-  'EU-KOREA': { countries: ['KR'], type: 'fta', origin_rules: 'product_specific' },
-  'EU-VIETNAM': { countries: ['VN'], type: 'fta', origin_rules: 'product_specific' },
+  // === ACUERDOS BILATERALES UE ===
+  'EU-Albania':       { countries: ['AL'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Andorra-Agri':  { countries: ['AD'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific', note: 'Solo productos agricolas' },
+  'EU-Andorra-Ind':   { countries: ['AD'], type: 'customs_union', proofImport: 'T2L', proofExport: 'T2L', origin_rules: 'customs_union', note: 'Productos industriales' },
+  'EU-Algeria':       { countries: ['DZ'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Bosnia':        { countries: ['BA'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Cameroon':      { countries: ['CM'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'CETA':             { countries: ['CA'], type: 'fta', proofImport: 'DeclaracionOrigen', proofExport: 'REX', origin_rules: 'product_specific', note: 'Business number del exportador' },
+  'EU-CeutaMelilla':  { countries: ['XC', 'XL'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Chile':         { countries: ['CL'], type: 'fta', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Colombia':      { countries: ['CO'], type: 'fta', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Korea':         { countries: ['KR'], type: 'fta', proofImport: 'DeclaracionOrigen', proofExport: 'DeclaracionOrigen', origin_rules: 'product_specific' },
+  'EU-CoteDIvoire':   { countries: ['CI'], type: 'bilateral', proofImport: 'REX', proofExport: 'REX', origin_rules: 'product_specific' },
+  'EU-Ecuador':       { countries: ['EC'], type: 'fta', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Egypt':         { countries: ['EG'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Georgia':       { countries: ['GE'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Ghana':         { countries: ['GH'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'REX', origin_rules: 'product_specific' },
+  'EU-Israel':        { countries: ['IL'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Jordan':        { countries: ['JO'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'JEFTA':            { countries: ['JP'], type: 'fta', proofImport: 'DeclaracionOrigen', proofExport: 'DeclaracionOrigen', origin_rules: 'product_specific' },
+  'EU-Kenya':         { countries: ['KE'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'REX', origin_rules: 'product_specific' },
+  'EU-Kosovo':        { countries: ['XK'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Lebanon':       { countries: ['LB'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Mexico':        { countries: ['MX'], type: 'fta', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Moldova':       { countries: ['MD'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Montenegro':    { countries: ['ME'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Morocco':       { countries: ['MA'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-NewZealand':    { countries: ['NZ'], type: 'fta', proofImport: 'DeclaracionOrigen', proofExport: 'DeclaracionOrigen', origin_rules: 'product_specific' },
+  'EU-NorthMacedonia':{ countries: ['MK'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EEA':              { countries: ['IS', 'LI', 'NO'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific', note: 'Productos industriales y agricolas transformados' },
+  'EU-Palestine':     { countries: ['PS'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Peru':          { countries: ['PE'], type: 'fta', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Singapore':     { countries: ['SG'], type: 'fta', proofImport: 'DeclaracionOrigen', proofExport: 'DeclaracionOrigen', origin_rules: 'product_specific' },
+  'EU-Serbia':        { countries: ['RS'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-SouthAfrica':   { countries: ['ZA', 'BW', 'LS', 'SZ', 'NA', 'MZ'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'regional', note: 'SADC EPA' },
+  'EU-Switzerland':   { countries: ['CH'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Tunisia':       { countries: ['TN'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Turkey':        { countries: ['TR'], type: 'customs_union', proofImport: 'ATR', proofExport: 'ATR', origin_rules: 'customs_union', note: 'Union aduanera productos industriales; EUR.1 para agricolas' },
+  'EU-UK':            { countries: ['GB'], type: 'fta', proofImport: 'DeclaracionOrigen', proofExport: 'DeclaracionOrigen', origin_rules: 'product_specific', note: 'TCA - Exportador registrado REX' },
+  'EU-Ukraine':       { countries: ['UA'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  'EU-Vietnam':       { countries: ['VN'], type: 'fta', proofImport: 'EUR.1', proofExport: 'REX', origin_rules: 'product_specific' },
+  // Centroamerica
+  'EU-CentralAmerica': { countries: ['GT', 'HN', 'NI', 'SV', 'CR', 'PA'], type: 'fta', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  // San Marino
+  'EU-SanMarino':     { countries: ['SM'], type: 'customs_union', proofImport: 'T2L', proofExport: 'T2L', origin_rules: 'customs_union' },
+  // MERCOSUR (pendiente ratificacion completa)
+  'EU-MERCOSUR':      { countries: ['AR', 'BR', 'UY', 'PY'], type: 'fta', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'regional', note: 'Pendiente ratificacion' },
+
+  // === SPG (Sistema de Preferencias Generalizadas) ===
   'GSP': {
-    countries: ['IN', 'PK', 'BD', 'LK', 'PH', 'ID', 'TH', 'KH', 'LA', 'MM', 'NP', 'BO', 'CO', 'EC', 'PE', 'VE', 'EG', 'MA', 'TN', 'DZ', 'NG', 'GH', 'KE', 'TZ', 'UG'],
+    countries: ['IN', 'PK', 'BD', 'LK', 'PH', 'ID', 'TH', 'KH', 'LA', 'MM', 'NP',
+      'BO', 'CO', 'EC', 'PE', 'VE', 'EG', 'MA', 'TN', 'DZ', 'NG', 'GH', 'KE', 'TZ', 'UG',
+      'CN', 'UZ', 'KG', 'TJ', 'NG', 'SN', 'BJ', 'TG', 'NE', 'BF', 'ML', 'GN', 'SL',
+      'LR', 'CI', 'ET', 'DJ', 'ER', 'SO', 'MG', 'MU', 'SC', 'MV', 'PG', 'FJ'],
     type: 'gsp',
-    origin_rules: 'simple'
+    proofImport: 'REX',
+    proofExport: 'REX',
+    origin_rules: 'simple',
+    note: 'Form A o REX (exportador registrado)'
   },
   'GSP_PLUS': {
-    countries: ['PK', 'BD', 'LK', 'PH', 'KH', 'LA', 'BO', 'CO', 'EC', 'PE', 'VE'],
+    countries: ['PK', 'LK', 'PH', 'KH', 'LA', 'MN', 'UZ', 'KG', 'TJ',
+      'BO', 'EC', 'PE', 'PY', 'GT', 'HN', 'NI', 'SV', 'CV', 'AM', 'GE'],
     type: 'gsp_plus',
-    origin_rules: 'simple'
+    proofImport: 'REX',
+    proofExport: 'REX',
+    origin_rules: 'simple',
+    note: 'Preferencia adicional por compromisos DDHH/laborales/medioambientales'
   },
   'EBA': {
-    countries: ['BD', 'KH', 'LA', 'MM', 'NP', 'AF', 'YE', 'SD', 'ET', 'UG', 'TZ', 'RW', 'BI', 'MZ', 'MW', 'ZM'],
+    countries: ['BD', 'KH', 'LA', 'MM', 'NP', 'AF', 'YE', 'SD', 'ET', 'UG', 'TZ',
+      'RW', 'BI', 'MZ', 'MW', 'ZM', 'ML', 'NE', 'BF', 'TD', 'CF', 'CD', 'SS', 'SO',
+      'ER', 'DJ', 'GM', 'GW', 'SL', 'LR', 'TG', 'BJ', 'SN', 'MR', 'HT', 'TL', 'KI',
+      'TV', 'SB', 'VU', 'WS', 'LS', 'SZ'],
     type: 'eba',
-    origin_rules: 'simple'
+    proofImport: 'REX',
+    proofExport: 'REX',
+    origin_rules: 'simple',
+    note: 'Todo Menos Armas - Paises menos adelantados (0% arancel excepto armas)'
   }
 };
 
@@ -448,42 +505,46 @@ class RulesEngine {
     const preferences = {
       available: false,
       agreements: [],
+      proofOfOrigin: [],
       certificate: null,
       preferential: 0,
       savings: 0
     };
 
-    // Buscar acuerdos aplicables
+    // Buscar acuerdos aplicables por pais de origen
     for (const [name, agreement] of Object.entries(FTA_AGREEMENTS)) {
       if (agreement.countries.includes(origin)) {
         preferences.available = true;
-        preferences.agreements.push({
+        const entry = {
           name,
           type: agreement.type,
-          originRules: agreement.origin_rules
-        });
+          originRules: agreement.origin_rules,
+          proofImport: agreement.proofImport || 'EUR.1',
+          proofExport: agreement.proofExport || 'EUR.1'
+        };
+        if (agreement.note) entry.note = agreement.note;
+        preferences.agreements.push(entry);
 
-        // Determinar certificado necesario
-        preferences.certificate = this.getCertificateType(agreement.type);
+        // Recopilar pruebas de origen necesarias (sin duplicados)
+        const proof = agreement.proofImport || 'EUR.1';
+        if (!preferences.proofOfOrigin.includes(proof)) {
+          preferences.proofOfOrigin.push(proof);
+        }
+        preferences.certificate = proof;
       }
     }
 
+    // Enriquecer con info de Exportador Autorizado / REX si aplica
+    if (preferences.agreements.some(a => a.proofImport === 'REX' || a.proofExport === 'REX')) {
+      preferences.requiresREX = true;
+      preferences.rexNote = 'El exportador debe estar registrado en el sistema REX (Registered Exporter) para emitir declaraciones de origen';
+    }
+    if (preferences.agreements.some(a => a.type === 'customs_union')) {
+      preferences.customsUnion = true;
+      preferences.customsUnionNote = 'Union aduanera: se utiliza certificado ATR para productos industriales o T2L para libre circulacion';
+    }
+
     return preferences;
-  }
-
-  /**
-   * Obtener tipo de certificado de origen
-   */
-  getCertificateType(agreementType) {
-    const certificates = {
-      'fta': 'EUR.1 / Statement on Origin',
-      'gsp': 'Form A',
-      'gsp_plus': 'Form A',
-      'eba': 'Form A (EBA)',
-      'pan_euro_med': 'EUR.1 / EUR-MED'
-    };
-
-    return certificates[agreementType] || 'EUR.1';
   }
 
   /**

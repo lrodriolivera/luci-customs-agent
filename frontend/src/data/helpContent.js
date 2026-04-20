@@ -354,6 +354,8 @@ const getHelpContent = () => ({
       },
       normativa: {
         regulations: [
+          { code: 'Reg. (UE) 2026/382', title: 'Supresion franquicia aduanera 150 EUR', description: 'Elimina la exencion de derechos de aduana para envios de escaso valor (≤150 EUR). Entra en vigor el 1 de julio de 2026. Medida transitoria: derecho fijo de 3 EUR por articulo para envios IOSS y postales (julio 2026 - julio 2028). Despues se aplicara el Arancel Aduanero Comun segun clasificacion TARIC.', url: 'https://eur-lex.europa.eu/legal-content/ES/TXT/HTML/?uri=OJ:L_202600382' },
+          { code: 'AEAT 9/Mar/2026', title: 'Cierre DSDT aereas - Obligatorio G4 y documento previo N337', description: 'Desde el 9 de marzo de 2026 se cierra el alta de nuevas DSDT en recintos aereos via EDIFACT MANREP. Los operadores deben usar G3v2, G4, G5v2 y ATMNot. Las declaraciones H7 deben referenciar el G4 con documento previo N337. Desde el 10 de marzo, la desconsolidacion de G4 solo es posible en ubicaciones configuradas como "Admite DSDT = Si". Los operadores que no se adapten pueden tener mercancia bloqueada. LUCI ya soporta N337 y referencia G4 automaticamente.', url: 'https://sede.agenciatributaria.gob.es/Sede/aduanas/novedades.html' },
           { code: 'CAU Art. 143a', title: t('help.h7.normativa.r0Title'), description: t('help.h7.normativa.r0Desc'), url: 'https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32013R0952' },
           { code: 'Reg. 2019/1143', title: t('help.h7.normativa.r1Title'), description: t('help.h7.normativa.r1Desc'), url: 'https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32019R1143' },
           { code: 'Dir. 2017/2455', title: t('help.h7.normativa.r2Title'), description: t('help.h7.normativa.r2Desc'), url: 'https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32017L2455' }
@@ -363,7 +365,9 @@ const getHelpContent = () => ({
         features: [
           { name: t('help.h7.luciIA.f0Name'), description: t('help.h7.luciIA.f0Desc') },
           { name: t('help.h7.luciIA.f1Name'), description: t('help.h7.luciIA.f1Desc') },
-          { name: t('help.h7.luciIA.f2Name'), description: t('help.h7.luciIA.f2Desc') }
+          { name: t('help.h7.luciIA.f2Name'), description: t('help.h7.luciIA.f2Desc') },
+          { name: 'Soporte N337 y G4', description: 'LUCI genera automaticamente la referencia al documento previo N337 (G4 deposito temporal) en las declaraciones H7, cumpliendo con el cambio operativo del 9 de marzo de 2026.' },
+          { name: 'Derecho fijo 3 EUR (preparado)', description: 'El sistema esta preparado para aplicar automaticamente el derecho fijo de 3 EUR/articulo cuando entre en vigor el Reglamento (UE) 2026/382 el 1 de julio de 2026.' }
         ]
       }
     }

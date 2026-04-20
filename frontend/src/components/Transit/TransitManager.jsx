@@ -1037,11 +1037,39 @@ export default function TransitManager() {
                           <h4 className="font-medium text-gray-700">Fechas</h4>
                           <div className="text-sm space-y-1">
                             <p><span className="text-gray-500">Declaracion:</span> {formatDate(transit.dates?.declaration)}</p>
-                            <p><span className="text-gray-500">Liberacion:</span> {formatDate(transit.dates?.releaseAtDeparture)}</p>
+                            <p><span className="text-gray-500">Liberacion partida:</span> {formatDate(transit.dates?.releaseAtDeparture)}</p>
                             <p><span className="text-gray-500">Llegada:</span> {formatDate(transit.dates?.actualArrival)}</p>
-                            <p><span className="text-gray-500">Limite:</span> {formatDate(transit.deadlines?.arrivalDeadline)}</p>
+                            <p><span className="text-gray-500">Entrega mercancia:</span> {formatDate(transit.dates?.goodsRelease)}</p>
+                            <p><span className="text-gray-500">Ultimacion:</span> <span className={transit.dates?.completion ? 'font-semibold text-green-700' : 'text-gray-400'}>{formatDate(transit.dates?.completion) || 'Pendiente'}</span></p>
+                            <p><span className="text-gray-500">Limite llegada:</span> <span className={transit.deadlines?.arrivalDeadline && new Date(transit.deadlines.arrivalDeadline) < new Date() ? 'text-red-600 font-semibold' : ''}>{formatDate(transit.deadlines?.arrivalDeadline)}</span></p>
                           </div>
                         </div>
+
+                        {/* Precintos / Seals */}
+                        {transit.transport?.seals?.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-gray-700 flex items-center gap-1">
+                            <ShieldCheckIcon className="w-4 h-4 text-blue-600" />
+                            Precintos ({transit.transport.seals.length})
+                          </h4>
+                          <div className="text-sm space-y-1">
+                            {transit.transport.seals.map((seal, si) => (
+                              <div key={si} className={`flex items-center gap-2 px-2 py-1 rounded ${seal.intactOnArrival === false ? 'bg-red-50' : 'bg-gray-50'}`}>
+                                <span className={`w-2 h-2 rounded-full ${seal.intactOnArrival === false ? 'bg-red-500' : seal.intactOnArrival === true ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                <span className="font-mono font-medium">{seal.number}</span>
+                                <span className="text-gray-400">|</span>
+                                <span className="text-gray-500">{seal.sealType === 'customs' ? 'Aduanero' : seal.sealType === 'carrier' ? 'Transportista' : seal.sealType === 'oea' ? 'OEA' : seal.sealType}</span>
+                                {seal.affixedBy && <span className="text-gray-400">por {seal.affixedBy}</span>}
+                                {seal.intactOnArrival === false && <span className="text-red-600 font-semibold text-xs">ROTO</span>}
+                                {seal.intactOnArrival === true && <span className="text-green-600 text-xs">Intacto</span>}
+                              </div>
+                            ))}
+                          </div>
+                          {transit.transport.sealCount && (
+                            <p className="text-xs text-gray-500">Total precintos declarados: {transit.transport.sealCount}</p>
+                          )}
+                        </div>
+                        )}
 
                         {/* Actions */}
                         <div className="space-y-2">
@@ -1151,7 +1179,8 @@ function TransitCreateForm({ onClose, onCreated }) {
     principal: { eori: '', name: '', address: { street: '', city: '', postalCode: '', country: 'ES' } },
     departureOffice: { code: '', name: '', country: 'ES' },
     destinationOffice: { code: '', name: '', country: '' },
-    transport: { mode: '3' },
+    transport: { mode: '3', vehicleId: '', nationality: '' },
+    seals: [{ number: '', sealType: 'customs', affixedBy: '' }],
     guarantee: { type: '1', grn: '' },
     route: { countries: [] },
     goodsItems: [{ itemNumber: 1, description: '', taricCode: '', grossWeight: 0, packages: { count: 1, type: 'CT' } }]
@@ -1428,6 +1457,106 @@ function TransitCreateForm({ onClose, onCreated }) {
               </div>
             </div>
           )}
+
+          {/* Transport Details */}
+          <div>
+            <h3 className="font-medium mb-2">Identificacion medio de transporte</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="Matricula / ID vehiculo"
+                value={formData.transport.vehicleId}
+                onChange={(e) => setFormData(f => ({
+                  ...f,
+                  transport: { ...f.transport, vehicleId: e.target.value }
+                }))}
+                className="w-full border rounded-lg px-3 py-2"
+              />
+              <input
+                type="text"
+                placeholder="Nacionalidad (ej: ES)"
+                maxLength={2}
+                value={formData.transport.nationality}
+                onChange={(e) => setFormData(f => ({
+                  ...f,
+                  transport: { ...f.transport, nationality: e.target.value.toUpperCase() }
+                }))}
+                className="w-full border rounded-lg px-3 py-2"
+              />
+            </div>
+          </div>
+
+          {/* Precintos / Seals */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-medium flex items-center gap-1">
+                <ShieldCheckIcon className="w-4 h-4 text-blue-600" />
+                Precintos del transito
+              </h3>
+              <button
+                type="button"
+                onClick={() => setFormData(f => ({
+                  ...f,
+                  seals: [...f.seals, { number: '', sealType: 'customs', affixedBy: '' }]
+                }))}
+                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+              >
+                <PlusIcon className="w-3.5 h-3.5" /> Agregar precinto
+              </button>
+            </div>
+            {formData.seals.map((seal, idx) => (
+              <div key={idx} className="grid grid-cols-4 gap-2 mb-2">
+                <input
+                  type="text"
+                  placeholder={`Precinto ${idx + 1} - Numero`}
+                  value={seal.number}
+                  onChange={(e) => {
+                    const seals = [...formData.seals]
+                    seals[idx] = { ...seals[idx], number: e.target.value }
+                    setFormData(f => ({ ...f, seals }))
+                  }}
+                  className="border rounded-lg px-3 py-2 text-sm"
+                />
+                <select
+                  value={seal.sealType}
+                  onChange={(e) => {
+                    const seals = [...formData.seals]
+                    seals[idx] = { ...seals[idx], sealType: e.target.value }
+                    setFormData(f => ({ ...f, seals }))
+                  }}
+                  className="border rounded-lg px-3 py-2 text-sm"
+                >
+                  <option value="customs">Aduanero</option>
+                  <option value="carrier">Transportista</option>
+                  <option value="shipper">Expedidor</option>
+                  <option value="oea">OEA (precinto especial)</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Colocado por"
+                  value={seal.affixedBy}
+                  onChange={(e) => {
+                    const seals = [...formData.seals]
+                    seals[idx] = { ...seals[idx], affixedBy: e.target.value }
+                    setFormData(f => ({ ...f, seals }))
+                  }}
+                  className="border rounded-lg px-3 py-2 text-sm"
+                />
+                {formData.seals.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData(f => ({
+                      ...f,
+                      seals: f.seals.filter((_, i) => i !== idx)
+                    }))}
+                    className="text-red-400 hover:text-red-600 flex items-center justify-center"
+                  >
+                    <XMarkIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t">

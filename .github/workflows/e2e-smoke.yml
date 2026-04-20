@@ -1,0 +1,83 @@
+name: E2E Smoke (Cypress)
+
+on:
+  # After deploy completes
+  workflow_run:
+    workflows: ["Test & Deploy"]
+    types: [completed]
+    branches: [master]
+  # Manual trigger
+  workflow_dispatch:
+  # Nightly to catch regressions in prod (AEAT, DB state, Anthropic changes)
+  schedule:
+    - cron: '0 4 * * *'  # 04:00 UTC daily
+
+jobs:
+  smoke:
+    name: Smoke tests against aduanas.strixai.es
+    runs-on: ubuntu-latest
+    # Only run after a successful deploy (or manual/scheduled)
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Setup SSH key (to clear rate-limit on prod Redis)
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H aduanas.strixai.es >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Clear rate-limit keys in prod Redis
+        run: |
+          ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.es \
+            'redis-cli keys "rl:*" | xargs -r redis-cli del' || true
+
+      - name: Run batch-final smoke (13 API tests)
+        working-directory: frontend
+        run: |
+          npx cypress run \
+            --spec cypress/e2e/smoke-batch-final.cy.js \
+            --config specPattern=cypress/e2e/smoke-batch-final.cy.js,video=false \
+            --browser electron --headless
+
+      - name: Clear rate-limit again before next suite
+        run: |
+          ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.es \
+            'redis-cli keys "rl:*" | xargs -r redis-cli del' || true
+
+      - name: Run UI flows smoke (13 UI + API tests)
+        working-directory: frontend
+        run: |
+          npx cypress run \
+            --spec cypress/e2e/smoke-ui-flows.cy.js \
+            --config specPattern=cypress/e2e/smoke-ui-flows.cy.js,video=false \
+            --browser electron --headless
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots-${{ github.run_id }}
+          path: frontend/cypress/screenshots
+          retention-days: 7
+
+      - name: Upload videos on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos-${{ github.run_id }}
+          path: frontend/cypress/videos
+          retention-days: 7

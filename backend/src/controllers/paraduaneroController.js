@@ -6,6 +6,7 @@
 const { ParaduaneroControl, Expedition } = require('../models');
 const logger = require('../config/logger');
 const paraduaneroService = require('../services/paraduaneroService');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 /**
  * Analizar expediente para determinar controles necesarios
@@ -16,12 +17,7 @@ exports.analyzeExpedition = async (req, res) => {
     const { expeditionId } = req.params;
 
     const expedition = await Expedition.findById(expeditionId);
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const requiredControls = await paraduaneroService.analyzeExpedition(expedition);
 
@@ -153,12 +149,7 @@ exports.getById = async (req, res) => {
       .populate('expeditionId', 'expeditionId client goods transport')
       .populate('createdBy', 'name email');
 
-    if (!control) {
-      return res.status(404).json({
-        success: false,
-        error: 'Control no encontrado'
-      });
-    }
+    if (!ensureSameTenant(control, req, res, { resource: 'Control' })) return;
 
     res.json({
       success: true,
@@ -183,12 +174,7 @@ exports.update = async (req, res) => {
     const updateData = req.body;
 
     const control = await ParaduaneroControl.findById(id);
-    if (!control) {
-      return res.status(404).json({
-        success: false,
-        error: 'Control no encontrado'
-      });
-    }
+    if (!ensureSameTenant(control, req, res, { resource: 'Control' })) return;
 
     // Campos permitidos para actualizar
     const allowedFields = ['notes', 'internalNotes', 'priority', 'authority', 'deadline'];
@@ -397,12 +383,7 @@ exports.changeStatus = async (req, res) => {
     const { status, reason } = req.body;
 
     const control = await ParaduaneroControl.findById(id);
-    if (!control) {
-      return res.status(404).json({
-        success: false,
-        error: 'Control no encontrado'
-      });
-    }
+    if (!ensureSameTenant(control, req, res, { resource: 'Control' })) return;
 
     const oldStatus = control.status;
     control.status = status;

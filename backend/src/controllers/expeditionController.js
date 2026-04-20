@@ -3,6 +3,7 @@ const logger = require('../config/logger');
 const documentChecklists = require('../utils/documentChecklists');
 const emailService = require('../services/emailService');
 const aiService = require('../services/aiService');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 /**
  * Crear nuevo expediente
@@ -279,12 +280,7 @@ const getById = async (req, res) => {
       .populate('documents.uploadedBy', 'name')
       .populate('documents.validatedBy', 'name');
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     // Tenant isolation check
     if (req.user.tenantId && expedition.tenantId && expedition.tenantId.toString() !== req.user.tenantId.toString()) {
@@ -313,12 +309,7 @@ const update = async (req, res) => {
   try {
     const expedition = await Expedition.findById(req.params.id);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     // Campos actualizables
     const allowedUpdates = [
@@ -373,12 +364,7 @@ const remove = async (req, res) => {
   try {
     const expedition = await Expedition.findById(req.params.id);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     // Solo se pueden eliminar expedientes en estado draft o cancelled
     if (!['draft', 'cancelled'].includes(expedition.status)) {
@@ -414,12 +400,7 @@ const getChecklist = async (req, res) => {
   try {
     const expedition = await Expedition.findById(req.params.id);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     // Si no tiene checklist, generarlo
     if (!expedition.documentChecklist || expedition.documentChecklist.length === 0) {
@@ -484,12 +465,7 @@ const regenerateChecklist = async (req, res) => {
   try {
     const expedition = await Expedition.findById(req.params.id);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const checklist = documentChecklists.getChecklist(
       expedition.operationType,
@@ -536,12 +512,7 @@ const sendPortalLink = async (req, res) => {
   try {
     const expedition = await Expedition.findById(req.params.id);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const clientEmail = req.body.email || expedition.client.contact?.email;
 
@@ -668,12 +639,7 @@ const aiSuggestDocuments = async (req, res) => {
   try {
     const expedition = await Expedition.findById(req.params.id);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     logger.info(`AI: Analizando documentos faltantes para ${expedition.expeditionId}`);
 
@@ -709,12 +675,7 @@ const aiAnalyzeRisk = async (req, res) => {
   try {
     const expedition = await Expedition.findById(req.params.id);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     logger.info(`AI: Analizando riesgo para ${expedition.expeditionId}`);
 
@@ -760,12 +721,7 @@ const aiSuggestTaric = async (req, res) => {
   try {
     const expedition = await Expedition.findById(req.params.id);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (!expedition.goods || expedition.goods.length === 0) {
       return res.status(400).json({
@@ -816,12 +772,7 @@ const aiDetectInconsistencies = async (req, res) => {
   try {
     const expedition = await Expedition.findById(req.params.id);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     logger.info(`AI: Detectando inconsistencias para ${expedition.expeditionId}`);
 
@@ -858,12 +809,7 @@ const aiFullAnalysis = async (req, res) => {
   try {
     const expedition = await Expedition.findById(req.params.id);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     logger.info(`AI: Análisis completo para ${expedition.expeditionId}`);
 
@@ -957,12 +903,7 @@ const getAiAnalysis = async (req, res) => {
     const expedition = await Expedition.findById(req.params.id)
       .select('expeditionId aiAnalysis');
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     res.json({
       success: true,
@@ -993,12 +934,7 @@ const applyTaricSuggestion = async (req, res) => {
 
     const expedition = await Expedition.findById(id);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const index = parseInt(itemIndex);
     if (index < 0 || index >= expedition.goods.length) {

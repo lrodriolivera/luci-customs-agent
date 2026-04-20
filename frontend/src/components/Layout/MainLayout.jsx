@@ -65,7 +65,9 @@ const navGroups = [
     items: [
       { path: '/classification', icon: TagIcon, labelKey: 'nav.taricClassification' },
       { path: '/declarations', icon: DocumentTextIcon, labelKey: 'nav.declarationsH1' },
+      { path: '/declarations/h1/new', icon: DocumentTextIcon, labelKey: 'nav.newH1' },
       { path: '/h7', icon: ShoppingCartIcon, labelKey: 'nav.h7Ecommerce' },
+      { path: '/h7/new', icon: ShoppingCartIcon, labelKey: 'nav.newH7' },
       { path: '/ens', icon: DocumentTextIcon, labelKey: 'nav.ensIcs2' },
       { path: '/pue', icon: ClipboardDocumentCheckIcon, labelKey: 'nav.pueSoivre' },
     ]
@@ -112,6 +114,7 @@ const navGroups = [
     items: [
       { path: '/aeat/certificates', icon: KeyIcon, labelKey: 'nav.aeatCertificates' },
       { path: '/aeat/monitor', icon: SignalIcon, labelKey: 'nav.aeatMonitor' },
+      { path: '/nl-customs', icon: GlobeAltIcon, labelKey: 'nav.nlCustoms' },
       { path: '/integrations', icon: CloudIcon, labelKey: 'nav.integrations' },
     ]
   },
@@ -122,7 +125,6 @@ const navGroups = [
     items: [
       { path: '/analytics', icon: ChartBarIcon, labelKey: 'nav.analytics' },
       { path: '/settings', icon: Cog6ToothIcon, labelKey: 'nav.settings' },
-      { path: '/billing', icon: CreditCardIcon, labelKey: 'nav.billing' },
       { path: '/ml-insights', icon: SparklesIcon, labelKey: 'nav.mlInsights' },
       { path: '/admin', icon: UserGroupIcon, labelKey: 'nav.adminPanel' },
     ]
@@ -292,8 +294,9 @@ export default function MainLayout() {
           <button
             className="lg:hidden p-1 text-slate-400 hover:text-white"
             onClick={() => setSidebarOpen(false)}
+            aria-label="Cerrar menú"
           >
-            <XMarkIcon className="w-6 h-6" />
+            <XMarkIcon className="w-6 h-6" aria-hidden="true" />
           </button>
           <button
             className={`hidden lg:flex p-1 text-slate-500 hover:text-slate-300 hover:bg-slate-700 rounded transition-all ${isExpanded ? '' : 'absolute -right-3 top-5 bg-slate-800 border border-slate-600 shadow-lg'}`}
@@ -383,8 +386,9 @@ export default function MainLayout() {
             <button
               className="lg:hidden p-2 text-gray-500 hover:text-gray-700 -ml-2"
               onClick={() => setSidebarOpen(true)}
+              aria-label="Abrir menú"
             >
-              <Bars3Icon className="w-6 h-6" />
+              <Bars3Icon className="w-6 h-6" aria-hidden="true" />
             </button>
           </div>
 

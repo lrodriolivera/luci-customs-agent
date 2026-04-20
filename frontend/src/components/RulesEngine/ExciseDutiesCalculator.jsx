@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { exciseAPI } from '../../services/api'
 import {
   BeakerIcon,
   ExclamationCircleIcon,
@@ -38,17 +39,8 @@ export default function ExciseDutiesCalculator() {
     setCalculation(null)
 
     try {
-      const response = await fetch('http://localhost:5001/api/excise/detect', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          taricCode: formData.taricCode
-        })
-      })
-
-      const data = await response.json()
+      const response = await exciseAPI.detect({ taricCode: formData.taricCode })
+      const data = response.data
 
       if (data.success) {
         setDetection(data.data)
@@ -80,23 +72,16 @@ export default function ExciseDutiesCalculator() {
     setCalculation(null)
 
     try {
-      const response = await fetch('http://localhost:5001/api/excise/calculate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          taricCode: formData.taricCode,
-          description: formData.description,
-          quantity: parseFloat(formData.quantity),
-          unit: formData.unit,
-          alcoholContent: formData.alcoholContent ? parseFloat(formData.alcoholContent) : undefined,
-          price: formData.price ? parseFloat(formData.price) : undefined,
-          productType: formData.productType || undefined
-        })
+      const response = await exciseAPI.calculate({
+        taricCode: formData.taricCode,
+        description: formData.description,
+        quantity: parseFloat(formData.quantity),
+        unit: formData.unit,
+        alcoholContent: formData.alcoholContent ? parseFloat(formData.alcoholContent) : undefined,
+        price: formData.price ? parseFloat(formData.price) : undefined,
+        productType: formData.productType || undefined
       })
-
-      const data = await response.json()
+      const data = response.data
 
       if (data.success) {
         setCalculation(data.data)

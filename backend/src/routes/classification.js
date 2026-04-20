@@ -4,12 +4,60 @@ const classificationController = require('../controllers/classificationControlle
 const { auth, optionalAuth } = require('../middleware/auth');
 const { classificationValidators } = require('../middleware/validators');
 
-// Rutas publicas (con auth opcional para tracking)
+/**
+ * @openapi
+ * /api/classification/search:
+ *   get:
+ *     tags: [classification]
+ *     summary: Buscar códigos TARIC por texto libre
+ *     security: []
+ *     parameters:
+ *       - { in: query, name: q, required: true, schema: { type: string } }
+ *       - { in: query, name: lang, schema: { type: string, enum: [es, en] } }
+ *       - { in: query, name: limit, schema: { type: integer, default: 20 } }
+ */
 router.get('/chapters', classificationController.getChapters);
 router.get('/search', classificationController.searchTaric);
+
+/**
+ * @openapi
+ * /api/classification/tree:
+ *   get:
+ *     tags: [classification]
+ *     summary: Árbol jerárquico de capítulos/partidas/CN/TARIC
+ *     security: []
+ */
 router.get('/tree', classificationController.getTreeData);
+
+/**
+ * @openapi
+ * /api/classification/taric/{code}:
+ *   get:
+ *     tags: [classification]
+ *     summary: Detalle de un código TARIC (descripción, arancel MFN, VAT, medidas)
+ *     security: []
+ *     parameters:
+ *       - { in: path, name: code, required: true, schema: { type: string, pattern: '^[0-9]{8,10}$' } }
+ */
 router.get('/taric/:code', classificationValidators.getByCode, classificationController.getTaricInfo);
 
+/**
+ * @openapi
+ * /api/classification/suggest:
+ *   post:
+ *     tags: [classification]
+ *     summary: Sugerir código TARIC usando IA a partir de descripción de producto
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [description]
+ *             properties:
+ *               description: { type: string }
+ *               expeditionId: { type: string }
+ *               language: { type: string }
+ */
 // Rutas que requieren autenticacion
 router.post('/suggest', auth, classificationValidators.suggest, classificationController.suggestTaricCode);
 router.post('/validate', auth, classificationController.validateClassification);
@@ -22,6 +70,14 @@ router.get('/preferences/:origin', auth, classificationController.getPreferences
 router.post('/seed', auth, classificationController.seedTaricDatabase);
 
 // ==================== AI ENDPOINTS - LUCI Integration ====================
+
+/**
+ * @openapi
+ * /api/classification/ai/full-analysis:
+ *   post:
+ *     tags: [classification]
+ *     summary: Análisis completo IA (clasificación + arancel + docs + validación)
+ */
 
 // POST /api/classification/ai/improve-with-feedback - Mejorar con feedback histórico
 router.post('/ai/improve-with-feedback', auth, classificationController.aiImproveWithFeedback);

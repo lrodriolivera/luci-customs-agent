@@ -11,11 +11,13 @@ const { auth } = require('../middleware/auth');
 // All routes require authentication
 router.use(auth);
 
-// ==========================================
-// CATALOG / INFO ROUTES
-// ==========================================
-
-// GET /api/pue/stats - Estadisticas PUE
+/**
+ * @openapi
+ * /api/pue/stats:
+ *   get:
+ *     tags: [declarations]
+ *     summary: Estadísticas PUE (Punto Único de Entrada)
+ */
 router.get('/stats', pueController.getStats);
 
 // GET /api/pue/types - Tipos de PUE disponibles
@@ -105,13 +107,22 @@ router.get('/declaration/:mrn', pueController.getByDeclaration);
 // CRUD OPERATIONS
 // ==========================================
 
-// GET /api/pue - Listar solicitudes
+/**
+ * @openapi
+ * /api/pue:
+ *   get:
+ *     tags: [declarations]
+ *     summary: Listar solicitudes PUE (ROHS, COM, ECO, CAL) del tenant
+ *   post:
+ *     tags: [declarations]
+ *     summary: Crear solicitud PUE
+ * /api/pue/{id}:
+ *   get:
+ *     tags: [declarations]
+ *     summary: Detalle PUE (tenant-guarded)
+ */
 router.get('/', pueController.list);
-
-// POST /api/pue - Crear solicitud
 router.post('/', pueController.create);
-
-// GET /api/pue/:id - Obtener por ID
 router.get('/:id', pueController.getById);
 
 // PUT /api/pue/:id - Actualizar solicitud

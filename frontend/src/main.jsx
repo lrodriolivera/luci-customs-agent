@@ -13,8 +13,15 @@ if (import.meta.env.VITE_SENTRY_DSN) {
   Sentry.init({
     dsn: import.meta.env.VITE_SENTRY_DSN,
     environment: import.meta.env.MODE,
-    tracesSampleRate: 0.1,
-    release: '1.0.0'
+    tracesSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 0,
+    replaysSessionSampleRate: 0,
+    replaysOnErrorSampleRate: 1.0,
+    release: import.meta.env.VITE_APP_VERSION || '1.0.0',
+    ignoreErrors: [
+      'ResizeObserver loop limit exceeded',
+      'Network Error',
+      'Non-Error promise rejection captured'
+    ]
   })
 }
 

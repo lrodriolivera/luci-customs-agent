@@ -111,15 +111,13 @@ UserSchema.methods.comparePassword = async function(candidatePassword) {
 
 // Generate JWT
 UserSchema.methods.generateAuthToken = function() {
-  return jwt.sign(
-    {
-      id: this._id,
-      email: this.email,
-      role: this.role
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-  );
+  const jwtService = require('../utils/jwtService');
+  return jwtService.sign({
+    id: this._id,
+    email: this.email,
+    role: this.role,
+    tenantId: this.tenantId ? String(this.tenantId) : undefined
+  });
 };
 
 // Get public profile
@@ -147,5 +145,8 @@ UserSchema.statics.findByCredentials = async function(email, password) {
 
   return user;
 };
+
+// Soft-delete plugin (adds deletedAt/deletedBy + auto-filter on find)
+require('../utils/softDelete')(UserSchema);
 
 module.exports = mongoose.model('User', UserSchema);

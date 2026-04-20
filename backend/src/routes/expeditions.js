@@ -10,7 +10,41 @@ router.use(auth);
 // Estadisticas (antes de :id para evitar conflicto)
 router.get('/stats', expeditionController.getStats);
 
-// CRUD de expedientes
+/**
+ * @openapi
+ * /api/expeditions:
+ *   get:
+ *     tags: [expeditions]
+ *     summary: Listar expedientes (tenant-scoped, paginado)
+ *     parameters:
+ *       - { in: query, name: status, schema: { type: string } }
+ *       - { in: query, name: country, schema: { type: string, enum: [ES, NL] } }
+ *       - { in: query, name: limit, schema: { type: integer, default: 20 } }
+ *       - { in: query, name: page, schema: { type: integer, default: 1 } }
+ *     responses:
+ *       200: { description: Lista paginada }
+ *   post:
+ *     tags: [expeditions]
+ *     summary: Crear expediente
+ *     responses:
+ *       201: { description: Creado }
+ *
+ * /api/expeditions/{id}:
+ *   get:
+ *     tags: [expeditions]
+ *     summary: Obtener expediente (tenant-guarded)
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string } }
+ *     responses:
+ *       200: { description: Expediente }
+ *       404: { description: No encontrado o pertenece a otro tenant }
+ *   put:
+ *     tags: [expeditions]
+ *     summary: Actualizar expediente
+ *   delete:
+ *     tags: [expeditions]
+ *     summary: Eliminar expediente (soft-delete)
+ */
 router.get('/', expeditionValidators.list, expeditionController.list);
 router.post('/', requirePermission('canCreateExpeditions'), expeditionValidators.create, expeditionController.create);
 router.get('/:id', expeditionValidators.getById, expeditionController.getById);

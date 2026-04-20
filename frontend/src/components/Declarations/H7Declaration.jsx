@@ -9,13 +9,9 @@ import { declarationsAPI } from '../../services/api'
 const H7Declaration = ({ expedition, onUpdate }) => {
   const { t } = useTranslation()
 
-  // Multi-country support
-  const isNL = (() => {
-    try {
-      const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
-      return storedUser?.tenant?.customsConfig?.country === 'NL'
-    } catch { return false }
-  })()
+  // Multi-country support: read from dashboard country selector
+  const activeCountry = localStorage.getItem('activeCustomsCountry') || 'ES'
+  const isNL = activeCountry === 'NL'
 
   const [loading, setLoading] = useState(false)
   const [eligibility, setEligibility] = useState(null)

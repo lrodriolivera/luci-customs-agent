@@ -1,4 +1,5 @@
 import axios from 'axios'
+import * as Sentry from '@sentry/react'
 import i18n from '../i18n/i18n'
 
 const api = axios.create({
@@ -16,6 +17,13 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+    try {
+      Sentry.addBreadcrumb({
+        category: 'http',
+        message: `${config.method?.toUpperCase()} ${config.url}`,
+        level: 'info'
+      })
+    } catch (_) { /* ignore */ }
     return config
   },
   (error) => Promise.reject(error)
@@ -25,10 +33,18 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && !error.config?.url?.includes('/refresh-token')) {
+    const status = error.response?.status
+    if (status === 401 && !error.config?.url?.includes('/refresh-token')) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'
+    }
+    if (status >= 500) {
+      try {
+        Sentry.captureException(error, {
+          tags: { type: 'api_error', status, url: error.config?.url }
+        })
+      } catch (_) { /* ignore */ }
     }
     return Promise.reject(error)
   }
@@ -1138,6 +1154,14 @@ export const manifestAPI = {
 export const tenantEoriAPI = {
   get: () => api.get('/api/tenant/eori'),
   update: (eoriNumbers) => api.put('/api/tenant/eori', { eoriNumbers })
+}
+
+export const exciseAPI = {
+  detect: (data) => api.post('/api/excise/detect', data),
+  calculate: (data) => api.post('/api/excise/calculate', data),
+  calculateTotal: (data) => api.post('/api/excise/calculate-total', data),
+  getCategories: () => api.get('/api/excise/categories'),
+  getRates: () => api.get('/api/excise/rates')
 }
 
 export default api

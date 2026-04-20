@@ -29,15 +29,26 @@ export default function Dashboard() {
   const { t } = useTranslation()
   const { user } = useAuth()
 
-  // Multi-country: read tenant customs config (default ES/AEAT)
-  const customsCountry = (() => {
+  // Multi-country: configurable countries with active selector
+  const configuredCountries = (() => {
     try {
-      const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
-      return storedUser?.tenant?.customsConfig?.country || 'ES'
-    } catch { return 'ES' }
+      const stored = JSON.parse(localStorage.getItem('customsCountries') || '[]')
+      if (stored.length > 0) return stored
+    } catch {}
+    return [
+      { code: 'ES', name: 'Espana', system: 'AEAT', flag: '\u{1F1EA}\u{1F1F8}' },
+      { code: 'NL', name: 'Paises Bajos', system: 'DMS/DECO', flag: '\u{1F1F3}\u{1F1F1}' },
+    ]
   })()
-  const customsSystem = customsCountry === 'NL' ? 'DMS/DECO' : 'AEAT'
-  const countryFlag = customsCountry === 'NL' ? '\u{1F1F3}\u{1F1F1}' : '\u{1F1EA}\u{1F1F8}'
+
+  const [activeCountry, setActiveCountry] = useState(
+    localStorage.getItem('activeCustomsCountry') || 'ES'
+  )
+
+  const handleCountryChange = (code) => {
+    setActiveCountry(code)
+    localStorage.setItem('activeCustomsCountry', code)
+  }
 
   const quickActions = [
     { path: '/classification', icon: TagIcon, label: t('dashboard.taricClassification'), desc: t('dashboard.aiTariff'), color: 'from-sky-500 to-blue-600', bg: 'bg-sky-50 group-hover:bg-sky-100' },
@@ -167,10 +178,22 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            {/* Country Badge */}
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
-              <span>{countryFlag}</span>
-              <span className="text-white text-sm font-medium">{customsSystem}</span>
+            {/* Country Selector Pills */}
+            <div className="flex gap-2">
+              {configuredCountries.map(c => (
+                <button
+                  key={c.code}
+                  onClick={() => handleCountryChange(c.code)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    activeCountry === c.code
+                      ? 'bg-white/20 text-white ring-2 ring-sky-400 backdrop-blur-sm'
+                      : 'bg-white/5 text-slate-400 hover:bg-white/10 backdrop-blur-sm border border-white/10'
+                  }`}
+                >
+                  <span>{c.flag}</span>
+                  <span>{c.system}</span>
+                </button>
+              ))}
             </div>
             <Link to="/expeditions/new" className="bg-white/10 backdrop-blur-sm text-white border border-white/20 font-medium px-5 py-2.5 rounded-xl hover:bg-white/20 transition-all flex items-center gap-2 text-sm">
               <PlusIcon className="w-4 h-4" />

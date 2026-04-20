@@ -1,6 +1,7 @@
 const { Expedition } = require('../models');
 const logger = require('../config/logger');
 const aiService = require('../services/aiService');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 const h1Generator = require('../services/forms/h1Generator');
 const aesGenerator = require('../services/forms/aesGenerator');
 const h7Generator = require('../services/forms/h7Generator');
@@ -19,12 +20,7 @@ const generateH1 = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId)
       .populate('documents');
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (expedition.operationType !== 'import') {
       return res.status(400).json({
@@ -130,12 +126,7 @@ const generateAES = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId)
       .populate('documents');
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (expedition.operationType !== 'export') {
       return res.status(400).json({
@@ -207,12 +198,7 @@ const getXML = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (!expedition.declaration || !expedition.declaration.xmlContent) {
       return res.status(404).json({
@@ -245,12 +231,7 @@ const updateDeclaration = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (!expedition.declaration) {
       return res.status(404).json({
@@ -326,12 +307,7 @@ const submitDeclaration = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (!expedition.declaration || !expedition.declaration.xmlContent) {
       return res.status(400).json({
@@ -535,22 +511,128 @@ const submitDeclaration = async (req, res) => {
  */
 const generateH1Direct = async (req, res) => {
   try {
-    const { expeditionId, regime, additionalProcedure, preference } = req.body;
+    const body = req.body;
+    let expedition;
 
-    const expedition = await Expedition.findById(expeditionId);
+    if (body.expeditionId) {
+      // Modo clasico: usar expediente existente
+      expedition = await Expedition.findById(body.expeditionId);
+      if (!expedition) {
+        return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
+      }
+    } else {
+      // Modo directo desde formulario H1: crear expediente automaticamente
+      const tenantId = req.user?.tenantId;
+      const expId = `EXP-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase()}`;
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
+      // Mapear items del formulario a goods del expediente
+      const goods = (body.items || []).map((item, idx) => ({
+        itemNumber: idx + 1,
+        description: item.description || '',
+        taricCode: (item.taricCode || '').padEnd(10, '0'),
+        hsCode: (item.taricCode || '').substring(0, 6),
+        originCountry: item.countryOfOrigin || body.dispatchCountry?.code || '',
+        quantity: parseInt(item.supplementaryUnits) || parseInt(item.packageCount) || 1,
+        unit: 'KG',
+        grossWeight: parseFloat(item.grossWeight) || 0,
+        netWeight: parseFloat(item.netWeight) || 0,
+        supplementaryUnits: item.supplementaryUnits || '',
+        invoiceValue: parseFloat(item.itemPrice) || 0,
+        currency: body.currency || 'EUR',
+        statisticalValue: parseFloat(item.statisticalValue) || parseFloat(item.itemPrice) || 0,
+        packages: {
+          quantity: parseInt(item.packageCount) || 1,
+          type: item.packageType || 'CT',
+          marks: item.marks || 'N/M'
+        },
+        dutyRate: 0,
+        dutyAmount: 0,
+        vatRate: 21,
+        vatAmount: 0
+      }));
+
+      // Calcular totales
+      const totalGrossWeight = goods.reduce((s, g) => s + g.grossWeight, 0);
+      const totalNetWeight = goods.reduce((s, g) => s + g.netWeight, 0);
+      const totalValue = goods.reduce((s, g) => s + g.invoiceValue, 0);
+      const totalPackages = goods.reduce((s, g) => s + g.packages.quantity, 0);
+
+      // Determinar transporte
+      const transportModeMap = { '1': 'maritime', '2': 'rail', '3': 'road', '4': 'air', '5': 'postal' };
+
+      expedition = new Expedition({
+        expeditionId: expId,
+        tenantId,
+        country: 'ES',
+        operationType: 'import',
+        transportMode: transportModeMap[body.borderTransportMode] || 'air',
+        status: 'documents_validated',
+        priority: 'normal',
+        client: {
+          companyName: body.recipient?.name || '',
+          nif: (body.recipient?.eori || '').replace(/^ES/, ''),
+          eori: body.recipient?.eori || '',
+          address: {
+            street: body.recipient?.address || '',
+            city: body.recipient?.city || '',
+            postalCode: body.recipient?.postalCode || '',
+            country: body.recipient?.country || 'ES'
+          }
+        },
+        exporter: {
+          companyName: body.sender?.name || '',
+          address: body.sender?.address || '',
+          city: body.sender?.city || '',
+          country: body.sender?.country || ''
+        },
+        goods,
+        goodsSummary: {
+          totalItems: goods.length,
+          totalPackages,
+          totalGrossWeight,
+          totalNetWeight,
+          totalValue
+        },
+        calculations: {
+          invoiceTotal: parseFloat(body.totalInvoiceAmount) || totalValue,
+          invoiceCurrency: body.currency || 'EUR',
+          exchangeRate: parseFloat(body.exchangeRate) || 1,
+          invoiceTotalEur: parseFloat(body.totalInvoiceAmount) || totalValue,
+          customsValue: parseFloat(body.totalStatisticalValue) || parseFloat(body.totalInvoiceAmount) || totalValue,
+          totalDuties: (body.taxes || []).filter(t => t.classCode === 'A00').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0),
+          totalVat: (body.taxes || []).filter(t => t.classCode === 'B00').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0),
+          totalTaxes: (body.taxes || []).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0)
+        },
+        transport: {
+          documentNumber: body.referenceNumber || '',
+          vehicleId: body.transportIdAtDeparture || '',
+          vehicleNationality: body.borderTransportNationality || '',
+          arrivalPort: body.customsOffice || ''
+        },
+        declaration: {
+          type: 'H1',
+          declarationType: body.declarationAdditional || 'A',
+          regime: (body.items?.[0]?.procedure || '4000').substring(0, 2),
+          additionalProcedure: (body.items?.[0]?.procedure || '4000').substring(2, 4),
+          preference: body.items?.[0]?.preference || '100',
+          customsOffice: body.customsOffice || 'ES002801',
+          status: 'draft'
+        },
+        timeline: [{
+          action: 'expedition_created',
+          description: 'Expediente creado desde formulario H1 directo',
+          userId: req.user?._id,
+          performedBy: req.user?.name || 'Sistema',
+          timestamp: new Date()
+        }]
       });
+
+      await expedition.save();
+      logger.info(`Expediente creado desde H1 directo: ${expId}`);
     }
 
     if (expedition.operationType !== 'import') {
-      return res.status(400).json({
-        success: false,
-        error: 'H1 solo es aplicable para importaciones'
-      });
+      return res.status(400).json({ success: false, error: 'H1 solo es aplicable para importaciones' });
     }
 
     // Calcular totales si no existen
@@ -564,22 +646,26 @@ const generateH1Direct = async (req, res) => {
       };
     }
 
+    const regime = body.items?.[0]?.procedure?.substring(0, 2) || expedition.declaration?.regime || '40';
+    const additionalProcedure = body.items?.[0]?.procedure?.substring(2, 4) || expedition.declaration?.additionalProcedure || '00';
+    const preference = body.items?.[0]?.preference || expedition.declaration?.preference || '100';
+
     // Generar H1 directamente con h1Generator
     const h1Declaration = h1Generator.generate(expedition, {
-      regime: regime || expedition.declaration?.regime || '40',
-      additionalProcedure: additionalProcedure || '000',
-      preference: preference || expedition.declaration?.preference || '100'
+      regime,
+      additionalProcedure,
+      preference
     });
 
     // Actualizar expediente
     expedition.declaration = {
       type: 'H1',
-      declarationType: 'A',
+      declarationType: body.declarationAdditional || 'A',
       lrn: h1Declaration.lrn,
-      regime: regime || '40',
-      additionalProcedure: additionalProcedure || '000',
-      preference: preference || '100',
-      customsOffice: h1Declaration.data.declarationHeader.customsOfficePresentation,
+      regime,
+      additionalProcedure,
+      preference,
+      customsOffice: h1Declaration.data.declarationHeader?.customsOfficePresentation || body.customsOffice || 'ES002801',
       declarationDate: new Date(),
       status: 'draft',
       xmlContent: h1Declaration.xml,
@@ -596,7 +682,7 @@ const generateH1Direct = async (req, res) => {
       userId: req.user?._id,
       performedBy: req.user?.name || 'Sistema',
       timestamp: new Date(),
-      metadata: { lrn: h1Declaration.lrn, regime: regime || '40' }
+      metadata: { lrn: h1Declaration.lrn, regime }
     });
 
     await expedition.save();
@@ -606,6 +692,9 @@ const generateH1Direct = async (req, res) => {
     res.json({
       success: true,
       data: {
+        _id: expedition._id,
+        id: expedition._id,
+        expeditionId: expedition.expeditionId,
         declaration: expedition.declaration,
         h1Data: h1Declaration.data,
         xml: h1Declaration.xml,
@@ -633,12 +722,7 @@ const getDeclarationSummary = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (!expedition.declaration) {
       return res.status(404).json({
@@ -712,12 +796,7 @@ const checkH7Eligibility = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const eligibility = h7Generator.isEligibleForH7(expedition);
 
@@ -754,12 +833,7 @@ const generateH7 = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId)
       .populate('documents');
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (expedition.operationType !== 'import') {
       return res.status(400).json({
@@ -868,12 +942,7 @@ const submitH7 = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (!expedition.declaration || expedition.declaration.type !== 'H7') {
       return res.status(400).json({
@@ -1092,12 +1161,7 @@ const aiValidateDeclaration = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId)
       .populate('documents');
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const type = declarationType || expedition.declaration?.type || 'H1';
     logger.info(`AI: Validando declaración ${type} para ${expedition.expeditionId}`);
@@ -1130,12 +1194,7 @@ const aiDetectErrors = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId)
       .populate('documents');
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const type = declarationType || expedition.declaration?.type || 'H1';
     logger.info(`AI: Detectando errores en declaración ${type} para ${expedition.expeditionId}`);
@@ -1167,12 +1226,7 @@ const aiSuggestRegime = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId)
       .populate('documents');
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (expedition.operationType !== 'import') {
       return res.status(400).json({
@@ -1211,12 +1265,7 @@ const aiPredictChannel = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId)
       .populate('documents');
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const type = declarationType || expedition.declaration?.type || 'H1';
     logger.info(`AI: Prediciendo canal para ${expedition.expeditionId}`);
@@ -1257,12 +1306,7 @@ const aiFullDeclarationAnalysis = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId)
       .populate('documents');
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const type = declarationType || expedition.declaration?.type ||
                  (expedition.operationType === 'import' ? 'H1' : 'AES');
@@ -1319,12 +1363,7 @@ const getAiDeclarationAnalysis = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId)
       .select('expeditionId declaration aiAnalysis');
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     res.json({
       success: true,
@@ -1358,12 +1397,7 @@ const applyRegimeSuggestion = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (!expedition.declaration) {
       // Si no hay declaración, crear una básica

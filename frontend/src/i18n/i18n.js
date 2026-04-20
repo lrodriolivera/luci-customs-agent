@@ -1,14 +1,7 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
-
-import es from './locales/es.json'
-import ca from './locales/ca.json'
-import va from './locales/va.json'
-import en from './locales/en.json'
-import fr from './locales/fr.json'
-import it from './locales/it.json'
-import pt from './locales/pt.json'
+import HttpBackend from 'i18next-http-backend'
 
 export const languages = [
   { code: 'es', name: 'Espanol', flag: 'ES' },
@@ -21,25 +14,25 @@ export const languages = [
 ]
 
 i18n
+  .use(HttpBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    resources: {
-      es: { translation: es },
-      ca: { translation: ca },
-      va: { translation: va },
-      en: { translation: en },
-      fr: { translation: fr },
-      it: { translation: it },
-      pt: { translation: pt }
-    },
     fallbackLng: 'es',
+    supportedLngs: languages.map(l => l.code),
+    load: 'languageOnly',
     interpolation: {
       escapeValue: false
     },
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage']
+    },
+    backend: {
+      loadPath: '/locales/{{lng}}.json'
+    },
+    react: {
+      useSuspense: false
     }
   })
 

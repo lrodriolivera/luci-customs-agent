@@ -8,8 +8,8 @@ const logger = require('../config/logger');
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
-const SONNET_MODEL = 'claude-sonnet-4-6-20250514';
-const OPUS_MODEL = 'claude-opus-4-6-20250514';
+const SONNET_MODEL = 'claude-sonnet-4-20250514';
+const OPUS_MODEL = 'claude-opus-4-20250514';
 
 // Mapa de idiomas para instrucciones al modelo
 const LANGUAGE_INSTRUCTIONS = {

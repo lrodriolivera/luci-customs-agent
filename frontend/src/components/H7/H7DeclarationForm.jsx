@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router-dom'
 import { declarationsAPI, expeditionsAPI } from '../../services/api'
+import EU2026382Banner from './EU2026382Banner'
 import {
   DocumentTextIcon,
   CurrencyEuroIcon,
@@ -20,13 +21,17 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
   const navigate = useNavigate()
   const expeditionId = propExpeditionId || params.expeditionId
 
-  // Multi-country support
-  const isNL = (() => {
-    try {
-      const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
-      return storedUser?.tenant?.customsConfig?.country === 'NL'
-    } catch { return false }
-  })()
+  // Multi-country support: read from dashboard country selector
+  const [activeCountry, setActiveCountryState] = useState(
+    localStorage.getItem('activeCustomsCountry') || 'ES'
+  )
+  const isNL = activeCountry === 'NL'
+
+  const switchCountry = () => {
+    const next = activeCountry === 'ES' ? 'NL' : 'ES'
+    setActiveCountryState(next)
+    localStorage.setItem('activeCustomsCountry', next)
+  }
 
   const [expedition, setExpedition] = useState(null)
   const [eligibility, setEligibility] = useState(null)
@@ -41,6 +46,8 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
   const [formData, setFormData] = useState({
     iossNumber: '',
     customsOffice: 'ES000101', // Valencia por defecto
+    documentoPrevioTipo: 'N337',  // Obligatorio aereos desde 9/Mar/2026
+    documentoPrevioRef: '',
     forceGenerate: false
   })
 
@@ -90,6 +97,11 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
         expeditionId,
         iossNumber: formData.iossNumber || undefined,
         customsOffice: formData.customsOffice,
+        documentoPrevio: {
+          tipo: formData.documentoPrevioTipo || 'N337',
+          referencia: formData.documentoPrevioRef || '',
+          descripcion: 'Deposito temporal G4'
+        },
         forceGenerate: formData.forceGenerate
       })
 
@@ -147,6 +159,9 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
 
   return (
     <div className="space-y-6">
+      {/* EU 2026/382 Regulatory Notice */}
+      <EU2026382Banner variant="inline" />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -158,11 +173,19 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
             <p className="text-sm text-gray-500">{t('h7.lowValueImport')}</p>
           </div>
           {/* Country indicator */}
-          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-            isNL ? 'bg-orange-50 text-orange-700' : 'bg-blue-50 text-blue-700'
-          }`}>
-            <span>{isNL ? '\u{1F1F3}\u{1F1F1}' : '\u{1F1EA}\u{1F1F8}'}</span>
-            <span>{isNL ? 'DECO' : 'AEAT'}</span>
+          <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+              isNL ? 'bg-orange-50 text-orange-700' : 'bg-blue-50 text-blue-700'
+            }`}>
+              <span>{isNL ? '\u{1F1F3}\u{1F1F1}' : '\u{1F1EA}\u{1F1F8}'}</span>
+              <span>{isNL ? 'DECO' : 'AEAT'}</span>
+            </div>
+            <button
+              onClick={switchCountry}
+              className="text-xs text-sky-600 hover:text-sky-700 font-medium"
+            >
+              Cambiar a {isNL ? 'ES' : 'NL'}
+            </button>
           </div>
         </div>
         {isH7Submitted && (
@@ -299,6 +322,55 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
                       <li>Codigo mercancia: 6 digitos (HS6, no TARIC 10 digitos)</li>
                       <li>El numero IOSS es recomendado para envios e-commerce</li>
                     </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Documento Previo G4 - N337 (obligatorio aereos desde 9/Mar/2026) */}
+            {!isNL && (
+              <div className="md:col-span-2">
+                <div className="p-4 bg-sky-50 border border-sky-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <DocumentTextIcon className="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-sky-800 mb-2">
+                        Documento Previo G4 (N337)
+                        <span className="ml-2 px-2 py-0.5 bg-sky-200 text-sky-800 text-xs rounded-full font-medium">
+                          Obligatorio aereos desde 9/Mar/2026
+                        </span>
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-sky-700 mb-1">Tipo documento</label>
+                          <select
+                            name="documentoPrevioTipo"
+                            value={formData.documentoPrevioTipo || 'N337'}
+                            onChange={handleInputChange}
+                            className="input text-sm"
+                            disabled={isH7Generated}
+                          >
+                            <option value="N337">N337 - Deposito temporal G4</option>
+                            <option value="5025">5025 - Activacion PreH7 desde G3</option>
+                          </select>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-xs font-medium text-sky-700 mb-1">Referencia G4 / MRN deposito temporal</label>
+                          <input
+                            type="text"
+                            name="documentoPrevioRef"
+                            value={formData.documentoPrevioRef || ''}
+                            onChange={handleInputChange}
+                            className="input text-sm"
+                            placeholder="Ej: G4-2801-2026-00001 o MRN del G4"
+                            disabled={isH7Generated}
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-sky-600 mt-2">
+                        Ref: AEAT ADU-F-37/26, ADU-F-42/26 - Cierre DSDT en recintos aereos. Obligatorio referenciar G4 con N337 en declaraciones posteriores.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>

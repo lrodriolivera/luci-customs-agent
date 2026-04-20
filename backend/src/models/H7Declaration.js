@@ -94,6 +94,17 @@ const H7DeclarationSchema = new mongoose.Schema({
   destinationCountry: { type: String, default: 'ES' },
   customsSystem: { type: String, enum: ['AEAT', 'DECO'], default: 'AEAT' },
 
+  // === DOCUMENTO PREVIO G4 (obligatorio aereos desde 9/Mar/2026) ===
+  // Ref: AEAT ADU-F-37/26, ADU-F-42/26 - Cierre DSDT aereas
+  documentoPrevio: {
+    tipo: { type: String, enum: ['N337', '5025', ''], default: '' },  // N337=G4 deposito temporal, 5025=PreH7 desde G3
+    referencia: { type: String, default: '' },                         // MRN del G4 o referencia G3
+    descripcion: { type: String, default: '' },                        // Descripcion libre
+  },
+
+  // === GARANTIA ===
+  garantiaGRN: { type: String, default: '' },  // Jose Antonio: 26ESAGL2800000054
+
   // NL correction workflow
   correctionRequired: { type: Boolean, default: false },
   correctionDeadline: { type: Date },
@@ -195,10 +206,10 @@ const H7DeclarationSchema = new mongoose.Schema({
       type: String,
       required: true
     },
-    // NIF/NIE del destinatario (requerido en Espana)
+    // NIF/NIE del destinatario (opcional - particulares sin NIF = ImportadorParticular 'P')
     taxId: {
       type: String,
-      required: true
+      default: ''
     },
     address: {
       street: {
@@ -362,11 +373,19 @@ const H7DeclarationSchema = new mongoose.Schema({
   // Fecha de levante
   releasedAt: Date,
 
+  // Canal/circuito asignado por AEAT
+  channel: {
+    type: String,
+    enum: ['green', 'yellow', 'orange', 'red']
+  },
+
   // Respuesta de AEAT
   aeatResponse: {
     code: String,
     message: String,
     timestamp: Date,
+    csv: String,
+    channel: String,
     errors: [{
       field: String,
       code: String,
@@ -600,5 +619,7 @@ H7DeclarationSchema.statics.getStats = async function(filters = {}) {
     }
   };
 };
+
+require('../utils/softDelete')(H7DeclarationSchema);
 
 module.exports = mongoose.model('H7Declaration', H7DeclarationSchema);

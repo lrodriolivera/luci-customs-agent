@@ -2,6 +2,16 @@
  * H7 XML Builder - Declaracion simplificada de importacion (bajo valor <= 150 EUR)
  * Schema: DeclaSimpliImporV1Ent.xsd (mismos tipos que H1: ImportaTiposDeDatos.xsd)
  * Endpoint: /wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.DeclaSimpliImporV1SOAP
+ *
+ * CAMBIOS 9/Mar/2026:
+ *   - Soporte documento previo N337 (referencia G4 deposito temporal)
+ *   - Soporte documento previo 5025 (activacion PreH7 desde G3)
+ *   - DSDT cerradas en recintos aereos → obligatorio G3v2/G4
+ *
+ * PENDIENTE 1/Jul/2026 (Reglamento UE 2026/382):
+ *   - Supresion franquicia aduanera 150 EUR
+ *   - Derecho fijo transitorio 3 EUR/articulo (IOSS/postal)
+ *   - Nuevo tributo A00 = 3.00 EUR por articulo (no porcentual)
  */
 
 const { generateTransactionId } = require('./queryXmlBuilder');
@@ -29,6 +39,14 @@ function buildH7ImportXML(data) {
     iossNumber = '',
     // Transporte
     modoTransporte = '4',
+    // Documento previo (G4/DSDT reference) - obligatorio desde 9/Mar/2026 en aereos
+    // N337 = referencia G4 deposito temporal, 5025 = activacion PreH7 desde G3
+    documentoPrevioTipo = '',
+    documentoPrevioRef = '',
+    // Garantia
+    garantiaGRN = '',
+    // Reglamento UE 2026/382 - derecho fijo transitorio (desde 1/Jul/2026)
+    aplicarDerechoFijo2026 = false,
     // Partidas
     partidas = [],
     test = true
@@ -64,7 +82,19 @@ function buildH7ImportXML(data) {
       ${(p.documentos || [{ tipo: p.docTipo || 'N380', referencia: p.docRef || 'FACTURA-001' }]).map(d => `<C44DocumentosYCertificados>
         <C44Tipo>${d.tipo}</C44Tipo>
         <C44Referencia>${d.referencia}</C44Referencia>
-      </C44DocumentosYCertificados>`).join('\n      ')}
+      </C44DocumentosYCertificados>`).join('\n      ')}${documentoPrevioTipo ? `
+      <C44DocumentosYCertificados>
+        <C44Tipo>${documentoPrevioTipo}</C44Tipo>
+        <C44Referencia>${documentoPrevioRef}</C44Referencia>
+      </C44DocumentosYCertificados>` : ''}${aplicarDerechoFijo2026 ? `
+      <C47TributoDeclarado>
+        <C47TributoClase>A00</C47TributoClase>
+        <C47TributoBaseImponible>1.000</C47TributoBaseImponible>
+        <C47TributoTipoImpositivo>3.000000</C47TributoTipoImpositivo>
+        <C47TributoIndicadorMaxMinNor>NO</C47TributoIndicadorMaxMinNor>
+        <C47TributoUnidadFiscal>EUR</C47TributoUnidadFiscal>
+        <C47TributoCuota>3.00</C47TributoCuota>
+      </C47TributoDeclarado>` : `
       <C47TributoDeclarado>
         <C47TributoClase>A00</C47TributoClase>
         <C47TributoBaseImponible>${Number(p.valorFactura || 0).toFixed(3)}</C47TributoBaseImponible>
@@ -72,7 +102,7 @@ function buildH7ImportXML(data) {
         <C47TributoIndicadorMaxMinNor>NO</C47TributoIndicadorMaxMinNor>
         <C47TributoUnidadFiscal>%</C47TributoUnidadFiscal>
         <C47TributoCuota>0.00</C47TributoCuota>
-      </C47TributoDeclarado>
+      </C47TributoDeclarado>`}
       <C47TributoDeclarado>
         <C47TributoClase>B00</C47TributoClase>
         <C47TributoBaseImponible>${Number(p.valorFactura || 0).toFixed(3)}</C47TributoBaseImponible>
@@ -96,7 +126,7 @@ function buildH7ImportXML(data) {
       <C06TotalBultos>${totalBultos}</C06TotalBultos>
       <C08Importador>
         <C08ImportadorNID>${destinatarioNIF}</C08ImportadorNID>
-        <C08ImportadorParticular></C08ImportadorParticular>
+        <C08ImportadorParticular>${!destinatarioNIF ? 'P' : ''}</C08ImportadorParticular>
         <C08ImportadorRazonSocial>${destinatarioNombre}</C08ImportadorRazonSocial>
         <C08ImportadorDireccion>${destinatarioDireccion}</C08ImportadorDireccion>
         <C08ImportadorPoblacion>${destinatarioPoblacion}</C08ImportadorPoblacion>
@@ -116,7 +146,7 @@ function buildH7ImportXML(data) {
       <C30LocalizacionMercancias>${localizacionMercancias || 'ES' + aduanaDespacho.replace(/^ES/, '').substring(0, 6) + 'LUCI01'}</C30LocalizacionMercancias>
       <CBImporteTotalTributos>${partidas.reduce((s, p) => s + Number(p.valorFactura || 0) * 0.21, 0).toFixed(2)}</CBImporteTotalTributos>
       <CBmodalidadDePago>R</CBmodalidadDePago>
-      <CBgarantiaGRN>${data.garantiaGRN || ''}</CBgarantiaGRN>${partidasXML}
+      <CBgarantiaGRN>${garantiaGRN}</CBgarantiaGRN>${partidasXML}
     </ent:DeclaSimpliImporV1Ent>
   </soapenv:Body>
 </soapenv:Envelope>`;

@@ -10,7 +10,13 @@ const { requireAuth } = require('../middleware/auth');
 // Todas las rutas requieren autenticacion
 router.use(requireAuth);
 
-// Estadisticas y datos auxiliares
+/**
+ * @openapi
+ * /api/ens/stats:
+ *   get:
+ *     tags: [declarations]
+ *     summary: KPIs ENS (Declaraciones Sumarias de Entrada, ICS2)
+ */
 router.get('/stats', ensController.getStats);
 router.get('/entry-offices', ensController.getEntryOffices);
 router.get('/deadlines', ensController.getDeadlines);
@@ -30,6 +36,23 @@ router.post('/batch', ensController.processBatch);
 router.get('/search/container/:container', ensController.searchByContainer);
 router.get('/search/bol/:bol', ensController.searchByBOL);
 
+/**
+ * @openapi
+ * /api/ens:
+ *   get:
+ *     tags: [declarations]
+ *     summary: Listar declaraciones ENS/ICS2 del tenant
+ *   post:
+ *     tags: [declarations]
+ *     summary: Crear ENS
+ * /api/ens/{id}:
+ *   get:
+ *     tags: [declarations]
+ *     summary: Detalle ENS (tenant-guarded)
+ *   put:
+ *     tags: [declarations]
+ *     summary: Actualizar ENS
+ */
 // CRUD
 router.get('/', ensController.list);
 router.post('/', ensController.create);

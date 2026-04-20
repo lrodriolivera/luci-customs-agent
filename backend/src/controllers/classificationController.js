@@ -2,6 +2,7 @@ const { TaricCode, Expedition, TaricSearchHistory, TaricAICache } = require('../
 const logger = require('../config/logger');
 const aiService = require('../services/aiService');
 const taricService = require('../services/taricService');
+const { hasSeasonalTariff, getSeasonalTariff } = require('../data/seasonalTariffs');
 
 /**
  * Sugerir codigo TARIC basado en descripcion
@@ -382,7 +383,7 @@ const searchTaric = async (req, res) => {
         results = await TaricCode.find({
           'breakdown.chapter': chapterCode,
           isActive: true,
-          level: { $gt: 2 }
+          level: { $gte: 4 }
         }).sort({ code: 1 }).limit(parseInt(limit)).lean();
 
         // Si no hay datos en DB, generar partidas con IA
@@ -418,7 +419,7 @@ const searchTaric = async (req, res) => {
           results = await TaricCode.find({
             code: { $regex: `^${prefix}` },
             isActive: true,
-            level: { $gt: 2 }
+            level: { $gte: 4 }
           }).sort({ code: 1 }).limit(parseInt(limit)).lean();
 
           // Si no hay resultados por prefijo, intentar con IA
@@ -454,7 +455,7 @@ const searchTaric = async (req, res) => {
         results = await TaricCode.find({
           'description.es': { $regex: q, $options: 'i' },
           isActive: true,
-          level: { $gt: 2 }
+          level: { $gte: 4 }
         }).sort({ code: 1 }).limit(parseInt(limit)).lean();
       }
     } else if (chapter) {
@@ -463,11 +464,22 @@ const searchTaric = async (req, res) => {
       results = await TaricCode.getChapters();
     }
 
+    // Enriquecer resultados con info estacional
+    const enrichedResults = (results || []).map(r => {
+      const code = r.code || '';
+      const seasonal = hasSeasonalTariff(code);
+      if (seasonal) {
+        const seasonalInfo = getSeasonalTariff(code);
+        return { ...r, seasonal: true, seasonalInfo: seasonalInfo ? { periodLabel: seasonalInfo.periodLabel, currentRate: seasonalInfo.currentRate, hasEntryPrice: seasonalInfo.hasEntryPrice } : null };
+      }
+      return r;
+    });
+
     res.json({
       success: true,
       data: {
-        results: results || [],
-        count: (results || []).length,
+        results: enrichedResults,
+        count: enrichedResults.length,
         source
       }
     });
@@ -1158,12 +1170,13 @@ const getTreeData = async (req, res) => {
     const { parent } = req.query;
 
     if (!parent) {
-      // Capitulos: siempre desde DB (98 placeholders + reales)
+      // Capitulos: desde DB (todos los niveles, incluidos placeholders level=2)
       const chapters = await TaricCode.aggregate([
-        { $match: { isActive: true, level: { $gt: 2 } } },
+        { $match: { isActive: true } },
         { $group: {
           _id: '$breakdown.chapter',
-          count: { $sum: 1 }
+          count: { $sum: 1 },
+          sampleDesc: { $first: '$description.es' }
         }},
         { $sort: { _id: 1 } }
       ]);
@@ -1171,9 +1184,10 @@ const getTreeData = async (req, res) => {
         success: true,
         data: {
           level: 'chapters',
-          results: chapters.map(c => ({
+          results: chapters.filter(c => c._id).map(c => ({
             code: c._id,
-            count: c.count
+            count: c.count,
+            description: c.sampleDesc
           }))
         }
       });
@@ -1196,7 +1210,7 @@ const getTreeData = async (req, res) => {
 
       // 1. Intentar desde DB
       const dbResults = await TaricCode.aggregate([
-        { $match: { [config.field]: parentNorm, isActive: true, level: { $gt: 2 } } },
+        { $match: { [config.field]: parentNorm, isActive: true, level: { $gte: 4 } } },
         { $group: {
           _id: config.group,
           count: { $sum: 1 },
@@ -1212,11 +1226,50 @@ const getTreeData = async (req, res) => {
             level: config.level,
             parentCode: parentNorm,
             source: 'database',
-            results: dbResults.map(r => ({
-              code: r._id,
-              count: r.count,
-              description: r.sampleDesc
-            }))
+            results: dbResults.filter(r => r._id).map(r => {
+              const code10 = (r._id || '').padEnd(10, '0');
+              const seasonal = hasSeasonalTariff(code10);
+              const entry = { code: r._id, count: r.count, description: r.sampleDesc };
+              if (seasonal) entry.seasonal = true;
+              return entry;
+            })
+          }
+        });
+      }
+
+      // 1b. No hay resultados agrupados por nivel intermedio.
+      // Buscar directamente los codigos leaf (level 10) del capitulo/partida
+      // y agrupar por el campo correspondiente para mostrar subgrupos
+      const leafResults = await TaricCode.find({
+        [config.field]: parentNorm,
+        isActive: true,
+        isLeaf: true
+      }).sort({ code: 1 }).lean();
+
+      if (leafResults.length > 0) {
+        // Agrupar los leaf codes por el nivel siguiente
+        const groupField = config.level === 'headings' ? 'heading' : config.level === 'subheadings' ? 'subheading' : 'cnCode';
+        const groups = {};
+        for (const r of leafResults) {
+          const key = r.breakdown?.[groupField] || r.code.substring(0, groupField === 'heading' ? 4 : groupField === 'subheading' ? 6 : 8);
+          if (!groups[key]) {
+            groups[key] = { count: 0, description: r.description?.es || '', dutyRate: r.duties?.thirdCountry };
+          }
+          groups[key].count++;
+        }
+        return res.json({
+          success: true,
+          data: {
+            level: config.level,
+            parentCode: parentNorm,
+            source: 'database',
+            results: Object.entries(groups).sort(([a],[b]) => a.localeCompare(b)).map(([code, info]) => {
+              const seasonal = hasSeasonalTariff(code.padEnd(10, '0'));
+              const entry = { code, count: info.count, description: info.description };
+              if (seasonal) entry.seasonal = true;
+              if (info.dutyRate != null) entry.dutyRate = info.dutyRate;
+              return entry;
+            })
           }
         });
       }

@@ -1,10 +1,11 @@
 import React from 'react'
+import * as Sentry from '@sentry/react'
 import i18n from '../i18n/i18n'
 
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props)
-    this.state = { hasError: false, error: null }
+    this.state = { hasError: false, error: null, eventId: null }
   }
 
   static getDerivedStateFromError(error) {
@@ -12,9 +13,15 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.error('ErrorBoundary caught:', error, errorInfo)
     }
+    try {
+      const eventId = Sentry.captureException(error, {
+        contexts: { react: { componentStack: errorInfo?.componentStack } }
+      })
+      this.setState({ eventId })
+    } catch (_) { /* Sentry may be disabled */ }
   }
 
   render() {

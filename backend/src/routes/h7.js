@@ -10,6 +10,46 @@ const { requireAuth } = require('../middleware/auth');
 // Todas las rutas requieren autenticacion
 router.use(requireAuth);
 
+/**
+ * @openapi
+ * /api/h7:
+ *   get:
+ *     tags: [h7]
+ *     summary: Listar declaraciones H7 (DECO/bajo valor <=150 EUR) del tenant
+ *     parameters:
+ *       - { in: query, name: status, schema: { type: string } }
+ *       - { in: query, name: channel, schema: { type: string, enum: [green, orange, red] } }
+ *   post:
+ *     tags: [h7]
+ *     summary: Crear declaración H7
+ *
+ * /api/h7/stats:
+ *   get:
+ *     tags: [h7]
+ *     summary: Estadísticas H7 del tenant (total, por canal, por estado)
+ *
+ * /api/h7/batch:
+ *   post:
+ *     tags: [h7]
+ *     summary: Procesamiento masivo de H7 (manifiesto CSV)
+ *
+ * /api/h7/{id}:
+ *   get:
+ *     tags: [h7]
+ *     summary: Detalle H7 (tenant-scoped)
+ *   put:
+ *     tags: [h7]
+ *     summary: Actualizar H7
+ *   delete:
+ *     tags: [h7]
+ *     summary: Eliminar H7 (soft-delete)
+ *
+ * /api/h7/{id}/submit:
+ *   post:
+ *     tags: [h7]
+ *     summary: Enviar H7 a AEAT (ES) o DECO (NL)
+ */
+
 // Estadisticas
 router.get('/stats', h7Controller.getStats);
 

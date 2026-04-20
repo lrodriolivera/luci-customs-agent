@@ -6,6 +6,7 @@
 const { Expedition, Requirement } = require('../models');
 const logger = require('../config/logger');
 const channelService = require('../services/channelService');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 /**
  * Obtener estado del canal de un expediente
@@ -18,12 +19,7 @@ const getChannelStatus = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId)
       .populate('documents');
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (!expedition.declaration?.channel) {
       return res.status(400).json({
@@ -133,6 +129,7 @@ const getChannelConfigs = async (req, res) => {
 const getChannelStats = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
+    const tenantId = req.user?.tenantId;
 
     const dateFilter = {};
     if (startDate) dateFilter.$gte = new Date(startDate);
@@ -141,6 +138,7 @@ const getChannelStats = async (req, res) => {
     const matchStage = {
       'declaration.channel': { $exists: true, $ne: null }
     };
+    if (tenantId) matchStage.tenantId = tenantId;
 
     if (Object.keys(dateFilter).length > 0) {
       matchStage['declaration.channelAssignedAt'] = dateFilter;
@@ -183,6 +181,25 @@ const getChannelStats = async (req, res) => {
         channelStats.total += s.count;
       }
     });
+
+    // Also count H7 declarations with channel
+    try {
+      const H7Declaration = require('../models/H7Declaration');
+      const h7Match = { channel: { $exists: true, $ne: null } };
+      if (tenantId) h7Match.tenantId = tenantId;
+
+      const h7Stats = await H7Declaration.aggregate([
+        { $match: h7Match },
+        { $group: { _id: '$channel', count: { $sum: 1 } } }
+      ]);
+
+      h7Stats.forEach(s => {
+        if (s._id && channelStats[s._id] !== undefined) {
+          channelStats[s._id].count += s.count;
+          channelStats.total += s.count;
+        }
+      });
+    } catch (e) { /* H7Declaration model may not exist */ }
 
     // Calcular porcentajes
     if (channelStats.total > 0) {
@@ -227,12 +244,7 @@ const processChannelManually = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (!expedition.declaration?.mrn) {
       return res.status(400).json({
@@ -272,12 +284,7 @@ const getLevante = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (!expedition.declaration?.levanteDate) {
       return res.status(400).json({
@@ -331,10 +338,12 @@ const getLevante = async (req, res) => {
 const getChannelExpeditions = async (req, res) => {
   try {
     const tenantId = req.user?.tenantId;
-    const query = { 'declaration.channel': { $exists: true, $ne: null } };
-    if (tenantId) query.tenantId = tenantId;
 
-    const expeditions = await Expedition.find(query)
+    // 1. Expeditions with channel
+    const expQuery = { 'declaration.channel': { $exists: true, $ne: null } };
+    if (tenantId) expQuery.tenantId = tenantId;
+
+    const expeditions = await Expedition.find(expQuery)
       .select('expeditionId status client.companyName declaration.channel declaration.mrn declaration.channelAssignedAt declaration.submittedAt createdAt')
       .sort({ createdAt: -1 })
       .limit(100)
@@ -343,12 +352,44 @@ const getChannelExpeditions = async (req, res) => {
     const result = expeditions.map(exp => ({
       _id: exp._id,
       expeditionId: exp.expeditionId,
+      type: 'expedition',
       status: exp.status,
       clientName: exp.client?.companyName || '-',
       channel: exp.declaration?.channel,
       mrn: exp.declaration?.mrn || '-',
       channelDate: exp.declaration?.channelAssignedAt || exp.declaration?.submittedAt || exp.createdAt
     }));
+
+    // 2. H7 declarations with channel
+    try {
+      const H7Declaration = require('../models/H7Declaration');
+      const h7Query = { channel: { $exists: true, $ne: null } };
+      if (tenantId) h7Query.tenantId = tenantId;
+
+      const h7Decls = await H7Declaration.find(h7Query)
+        .select('reference trackingNumber status channel mrn recipient.name aeatResponse.channel submittedAt createdAt')
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .lean();
+
+      h7Decls.forEach(h7 => {
+        result.push({
+          _id: h7._id,
+          expeditionId: h7.reference,
+          type: 'h7',
+          status: h7.status,
+          clientName: h7.recipient?.name || '-',
+          channel: h7.channel || h7.aeatResponse?.channel,
+          mrn: h7.mrn || '-',
+          channelDate: h7.submittedAt || h7.createdAt
+        });
+      });
+    } catch (e) {
+      // H7Declaration model may not exist
+    }
+
+    // Sort combined results by date
+    result.sort((a, b) => new Date(b.channelDate || 0) - new Date(a.channelDate || 0));
 
     res.json({ success: true, data: result });
   } catch (error) {

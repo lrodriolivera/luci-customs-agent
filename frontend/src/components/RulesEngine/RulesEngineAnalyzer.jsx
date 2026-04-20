@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { countriesGrouped } from '../../data/countries'
 import {
   BeakerIcon,
   ShieldCheckIcon,
@@ -98,21 +99,7 @@ export default function RulesEngineAnalyzer() {
     }
   }
 
-  const countries = [
-    { code: 'CN', name: 'China' },
-    { code: 'US', name: 'Estados Unidos' },
-    { code: 'JP', name: 'Japón' },
-    { code: 'CA', name: 'Canadá' },
-    { code: 'GB', name: 'Reino Unido' },
-    { code: 'BR', name: 'Brasil' },
-    { code: 'AR', name: 'Argentina' },
-    { code: 'MX', name: 'México' },
-    { code: 'CL', name: 'Chile' },
-    { code: 'IN', name: 'India' },
-    { code: 'ES', name: 'España' },
-    { code: 'FR', name: 'Francia' },
-    { code: 'DE', name: 'Alemania' }
-  ]
+  const countries = countriesGrouped.flatMap(g => g.options.map(c => ({ code: c.code, name: c.label })))
 
   const getSeverityColor = (severity) => {
     switch (severity) {

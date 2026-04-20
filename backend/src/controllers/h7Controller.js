@@ -112,7 +112,8 @@ exports.getStats = async (req, res) => {
  */
 exports.create = async (req, res) => {
   try {
-    const result = await h7Service.createDeclaration(req.body, req.user._id);
+    const data = { ...req.body, tenantId: req.user.tenantId || req.user.organizationId };
+    const result = await h7Service.createDeclaration(data, req.user._id);
 
     if (!result.success) {
       return res.status(400).json({
@@ -180,10 +181,12 @@ exports.createFromExpedition = async (req, res) => {
  */
 exports.get = async (req, res) => {
   try {
-    const declaration = await H7Declaration.findOne({
-      _id: req.params.id,
-      createdBy: req.user._id
-    }).populate('expedition', 'reference status');
+    const query = { _id: req.params.id };
+    if (req.user.tenantId) {
+      query.tenantId = req.user.tenantId;
+    }
+    const declaration = await H7Declaration.findOne(query)
+      .populate('expedition', 'reference status');
 
     if (!declaration) {
       return res.status(404).json({
@@ -349,8 +352,9 @@ exports.submit = async (req, res) => {
     if (!result.success) {
       return res.status(400).json({
         success: false,
-        message: 'Error al enviar declaracion',
-        errors: result.errors
+        message: result.error || 'Error al enviar declaracion',
+        errors: result.errors,
+        aeatCode: result.aeatCode
       });
     }
 

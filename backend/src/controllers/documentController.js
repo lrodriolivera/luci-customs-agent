@@ -2,6 +2,7 @@ const { Expedition } = require('../models');
 const logger = require('../config/logger');
 const aiService = require('../services/aiService');
 const { fileUtils } = require('../middleware/upload');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 /**
  * Subir documento a un expediente
@@ -20,12 +21,7 @@ const upload = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     // Crear documento
     const document = {
@@ -91,12 +87,7 @@ const getDocument = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const document = expedition.documents.id(docId);
 
@@ -136,12 +127,7 @@ const validateDocument = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const document = expedition.documents.id(docId);
 
@@ -232,12 +218,7 @@ const getExtractedData = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const document = expedition.documents.id(docId);
 
@@ -283,12 +264,7 @@ const deleteDocument = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const document = expedition.documents.id(docId);
 
@@ -351,12 +327,7 @@ const validateAll = async (req, res) => {
 
     const expedition = await Expedition.findById(expeditionId);
 
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const pendingDocs = expedition.documents.filter(d => d.status === 'pending');
 

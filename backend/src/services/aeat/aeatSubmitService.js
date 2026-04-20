@@ -120,6 +120,7 @@ async function _sendToAEAT(soapXML, endpoint) {
   });
 
   logger.info(`[AEAT-SUBMIT] Respuesta HTTP ${response.status}, ${response.data.length} bytes`);
+  logger.info(`[AEAT-SUBMIT-RAW] ${response.data.substring(0, 2000)}`);
   return _parseAEATResponse(response.data);
 }
 
@@ -138,7 +139,12 @@ async function submitH1(expedition) {
 /**
  * Enviar declaracion H7 bajo valor
  */
-async function submitH7(h7Declaration) {
+async function submitH7(h7Declaration, tenant) {
+  // Use tenant EORI as declarant (required by AEAT)
+  // AEAT C14DeclaranteNID expects full EORI format (e.g., "ESB22477020")
+  const declaranteNIF = tenant?.businessInfo?.eori || tenant?.businessInfo?.nif || tenant?.eori || tenant?.nif || h7Declaration.declarantNIF || '';
+  const declaranteNombre = tenant?.companyName || tenant?.name || h7Declaration.declarantName || '';
+
   const soapXML = buildH7ImportXML({
     test: process.env.AEAT_ENVIRONMENT !== 'production',
     aduanaDespacho: h7Declaration.customsOffice?.replace('ES', '') || '002801',
@@ -150,8 +156,19 @@ async function submitH7(h7Declaration) {
     destinatarioDireccion: h7Declaration.recipient?.address?.street || '',
     destinatarioPoblacion: h7Declaration.recipient?.address?.city || '',
     destinatarioCP: h7Declaration.recipient?.address?.postalCode || '',
+    declaranteNIF: declaranteNIF,
+    declaranteNombre: declaranteNombre,
     emailDespacho: h7Declaration.recipient?.email || 'despacho@strixai.es',
     iossNumber: h7Declaration.iossNumber || '',
+    // Garantia GRN (Jose Antonio: 26ESAGL2800000054 para despacho a consumo)
+    garantiaGRN: h7Declaration.garantiaGRN || tenant?.customsConfig?.garantiaGRN || '',
+    // Ubicacion mercancias PRE (Jose Antonio: 2801AAAAAC para aduana 2801)
+    localizacionMercancias: h7Declaration.localizacionMercancias || tenant?.customsConfig?.localizacionMercancias || '',
+    // Documento previo G4 (obligatorio aereos desde 9/Mar/2026)
+    documentoPrevioTipo: h7Declaration.documentoPrevio?.tipo || h7Declaration.documentoPrevioTipo || '',
+    documentoPrevioRef: h7Declaration.documentoPrevio?.referencia || h7Declaration.documentoPrevioRef || '',
+    // Reglamento UE 2026/382 - derecho fijo 3 EUR/articulo (desde 1/Jul/2026)
+    aplicarDerechoFijo2026: h7Declaration.aplicarDerechoFijo2026 || false,
     partidas: (h7Declaration.items || []).map(it => ({
       descripcion: it.description,
       taricCode: it.taricCode,
@@ -159,7 +176,9 @@ async function submitH7(h7Declaration) {
       pesobruto: it.netWeight || 0.5,
       pesoneto: it.netWeight || 0.3,
       bultos: 1,
-      valorFactura: it.totalValue || it.unitValue || 0
+      valorFactura: it.totalValue || it.unitValue || 0,
+      // Documentos por partida (N380 factura, N337 G4 ref, etc.)
+      documentos: it.documentos || [{ tipo: 'N380', referencia: it.invoiceRef || 'FACTURA-001' }]
     }))
   });
   return _sendToAEAT(soapXML, '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.DeclaSimpliImporV1SOAP');

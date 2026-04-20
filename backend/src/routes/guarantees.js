@@ -10,6 +10,35 @@ const { requireAuth } = require('../middleware/auth');
 // Todas las rutas requieren autenticacion
 router.use(requireAuth);
 
+/**
+ * @openapi
+ * /api/guarantees:
+ *   get:
+ *     tags: [admin]
+ *     summary: Listar garantías aduaneras del tenant
+ *   post:
+ *     tags: [admin]
+ *     summary: Registrar nueva garantía (GRN)
+ * /api/guarantees/stats:
+ *   get:
+ *     tags: [admin]
+ *     summary: KPIs garantías (activas, saldo disponible, por vencer)
+ * /api/guarantees/alerts:
+ *   get:
+ *     tags: [admin]
+ *     summary: Alertas de garantías (saldo bajo, vencimientos)
+ * /api/guarantees/calculate:
+ *   post:
+ *     tags: [admin]
+ *     summary: Calcular garantía requerida por una operación
+ * /api/guarantees/{id}:
+ *   get:
+ *     tags: [admin]
+ *     summary: Detalle de garantía
+ *   put:
+ *     tags: [admin]
+ *     summary: Actualizar garantía
+ */
 // Estadisticas y alertas
 router.get('/stats', guaranteeController.getStats);
 router.get('/alerts', guaranteeController.getAlerts);

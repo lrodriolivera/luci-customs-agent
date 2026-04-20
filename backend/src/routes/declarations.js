@@ -7,6 +7,56 @@ const { declarationValidators } = require('../middleware/validators');
 // Todas las rutas requieren autenticacion
 router.use(auth);
 
+/**
+ * @openapi
+ * /api/declarations/supported-countries:
+ *   get:
+ *     tags: [declarations]
+ *     summary: Países soportados por el factory multi-country (ES, NL)
+ *
+ * /api/declarations/h1/generate:
+ *   post:
+ *     tags: [declarations]
+ *     summary: Generar declaración H1 (importación completa)
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [expeditionId]
+ *             properties:
+ *               expeditionId: { type: string }
+ *               regime: { type: string, description: '40, 42, 44, 51, 53' }
+ *               additionalProcedure: { type: string }
+ *               preference: { type: string }
+ *
+ * /api/declarations/aes/generate:
+ *   post:
+ *     tags: [declarations]
+ *     summary: Generar declaración AES (exportación)
+ *
+ * /api/declarations/h7/generate:
+ *   post:
+ *     tags: [declarations]
+ *     summary: Generar H7 (bajo valor ≤150 EUR) desde expediente
+ *
+ * /api/declarations/h7/submit/{expeditionId}:
+ *   post:
+ *     tags: [declarations]
+ *     summary: Enviar H7 a AEAT (ES) o DECO (NL)
+ *     parameters:
+ *       - { in: path, name: expeditionId, required: true, schema: { type: string } }
+ *
+ * /api/declarations/batch-submit-nl:
+ *   post:
+ *     tags: [declarations]
+ *     summary: Batch DECO Netherlands (hasta 5.000 declaraciones)
+ *
+ * /api/declarations/{id}/submit-v2:
+ *   post:
+ *     tags: [declarations]
+ *     summary: Envío multi-país (ES/NL) con routing automático por tenant.country
+ */
 // GET /api/declarations/supported-countries
 router.get('/supported-countries', (req, res) => {
   const { CustomsServiceFactory } = require('../services/customs');

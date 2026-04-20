@@ -106,8 +106,10 @@ export default function DutyCalculator() {
           <form onSubmit={handleCalculate} className="card space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="label">{t('calculator.taricCode')} *</label>
+                <label className="label" htmlFor="calc-taric-code">{t('calculator.taricCode')} *</label>
                 <input
+                  id="calc-taric-code"
+                  data-testid="calc-taric"
                   type="text"
                   value={formData.taricCode}
                   onChange={(e) => handleChange('taricCode', e.target.value)}
@@ -124,6 +126,8 @@ export default function DutyCalculator() {
                 <div className="relative">
                   <CurrencyEuroIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
+                    id="calc-value"
+                    data-testid="calc-value"
                     type="number"
                     step="0.01"
                     value={formData.value}
@@ -136,8 +140,10 @@ export default function DutyCalculator() {
               </div>
 
               <div>
-                <label className="label">{t('calculator.originCountry')} *</label>
+                <label className="label" htmlFor="calc-origin">{t('calculator.originCountry')} *</label>
                 <select
+                  id="calc-origin"
+                  data-testid="calc-origin"
                   value={formData.origin}
                   onChange={(e) => handleChange('origin', e.target.value)}
                   className="input"
@@ -205,6 +211,7 @@ export default function DutyCalculator() {
 
             <button
               type="submit"
+              data-testid="calc-submit"
               disabled={calculating}
               className="btn-primary flex items-center justify-center gap-2 w-full md:w-auto"
             >

@@ -6,7 +6,10 @@
 // Set test environment variables
 process.env.NODE_ENV = 'test';
 process.env.AEAT_MODE = 'simulation';
-process.env.JWT_SECRET = 'test-secret-key';
+// Must be >=32 chars and NOT a known placeholder (enforced by jwtService)
+process.env.JWT_SECRET = 'test-secret-key-for-jest-ci-32chars-min-length-a1b2c3';
+process.env.JWT_ISSUER = 'luci-customs-agent';
+process.env.JWT_AUDIENCE = 'luci-api';
 process.env.MONGODB_URI = 'mongodb://localhost:27017/luci-test';
 
 // Increase timeout for integration tests

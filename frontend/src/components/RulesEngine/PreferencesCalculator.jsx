@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
+import { countriesGrouped } from '../../data/countries'
 import {
   GlobeAltIcon,
   DocumentCheckIcon,
@@ -133,22 +134,7 @@ export default function PreferencesCalculator() {
     }
   }
 
-  const countries = [
-    { code: 'CA', name: 'Canadá', agreement: 'CETA' },
-    { code: 'JP', name: 'Japón', agreement: 'JEFTA' },
-    { code: 'GB', name: 'Reino Unido', agreement: 'EU-UK' },
-    { code: 'MX', name: 'México', agreement: 'EU-MEXICO' },
-    { code: 'CL', name: 'Chile', agreement: 'EU-CHILE' },
-    { code: 'KR', name: 'Corea del Sur', agreement: 'EU-KOREA' },
-    { code: 'VN', name: 'Vietnam', agreement: 'EU-VIETNAM' },
-    { code: 'AR', name: 'Argentina', agreement: 'EU-MERCOSUR' },
-    { code: 'BR', name: 'Brasil', agreement: 'EU-MERCOSUR' },
-    { code: 'UY', name: 'Uruguay', agreement: 'EU-MERCOSUR' },
-    { code: 'PY', name: 'Paraguay', agreement: 'EU-MERCOSUR' },
-    { code: 'IN', name: 'India', agreement: 'GSP' },
-    { code: 'PK', name: 'Pakistán', agreement: 'GSP+' },
-    { code: 'BD', name: 'Bangladesh', agreement: 'EBA' }
-  ]
+  const countries = countriesGrouped.flatMap(g => g.options.map(c => ({ code: c.code, name: c.label })))
 
   const certificates = [
     { code: 'EUR1', name: 'EUR.1 - Certificado de circulación' },

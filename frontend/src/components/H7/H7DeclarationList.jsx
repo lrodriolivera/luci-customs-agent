@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { h7API } from '../../services/api'
 import toast from 'react-hot-toast'
 import ManifestUploader from './ManifestUploader'
+import EU2026382Banner from './EU2026382Banner'
 import {
   ShoppingCartIcon,
   TruckIcon,
@@ -178,6 +179,9 @@ export default function H7DeclarationList() {
 
   return (
     <div className="space-y-6">
+      {/* EU 2026/382 Regulatory Banner */}
+      <EU2026382Banner variant="full" />
+
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -208,13 +212,13 @@ export default function H7DeclarationList() {
               Batch DECO
             </button>
           )}
-          <button
-            onClick={() => setShowNewForm(true)}
+          <Link
+            to="/h7/new"
             className="btn-primary flex items-center gap-2"
           >
             <PlusIcon className="h-5 w-5" />
             {isNL ? 'Nueva DECO' : t('h7.new')}
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -335,12 +339,9 @@ export default function H7DeclarationList() {
           <div className="text-center py-12">
             <ShoppingCartIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500">{t('h7.noDeclarations')}</p>
-            <button
-              onClick={() => setShowNewForm(true)}
-              className="btn-primary mt-4"
-            >
+            <Link to="/h7/new" className="btn-primary mt-4 inline-block">
               {t('h7.createFirst')}
-            </button>
+            </Link>
           </div>
         ) : (
           <div className="overflow-x-auto">

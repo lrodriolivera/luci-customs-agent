@@ -6,6 +6,7 @@
 const transitService = require('../services/transitService');
 const aiService = require('../services/aiService');
 const { Transit, Expedition } = require('../models');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 const transitController = {
   /**
@@ -422,12 +423,7 @@ const transitController = {
         owner: req.user._id
       });
 
-      if (!transit) {
-        return res.status(404).json({
-          success: false,
-          error: 'Tránsito no encontrado'
-        });
-      }
+      if (!ensureSameTenant(transit, req, res, { resource: 'Tránsito' })) return;
 
       const result = await aiService.validateTransitRoute(transit);
 
@@ -456,12 +452,7 @@ const transitController = {
         owner: req.user._id
       });
 
-      if (!transit) {
-        return res.status(404).json({
-          success: false,
-          error: 'Tránsito no encontrado'
-        });
-      }
+      if (!ensureSameTenant(transit, req, res, { resource: 'Tránsito' })) return;
 
       // Obtener datos históricos
       const completedTransits = await Transit.find({
@@ -505,12 +496,7 @@ const transitController = {
         owner: req.user._id
       });
 
-      if (!transit) {
-        return res.status(404).json({
-          success: false,
-          error: 'Tránsito no encontrado'
-        });
-      }
+      if (!ensureSameTenant(transit, req, res, { resource: 'Tránsito' })) return;
 
       // Construir perfil del operador
       const operatorProfile = {
@@ -549,12 +535,7 @@ const transitController = {
         owner: req.user._id
       });
 
-      if (!transit) {
-        return res.status(404).json({
-          success: false,
-          error: 'Tránsito no encontrado'
-        });
-      }
+      if (!ensureSameTenant(transit, req, res, { resource: 'Tránsito' })) return;
 
       // Obtener expediente relacionado
       let expedition = null;
@@ -626,12 +607,7 @@ const transitController = {
         owner: req.user._id
       });
 
-      if (!transit) {
-        return res.status(404).json({
-          success: false,
-          error: 'Tránsito no encontrado'
-        });
-      }
+      if (!ensureSameTenant(transit, req, res, { resource: 'Tránsito' })) return;
 
       if (transit.status !== 'draft') {
         return res.status(400).json({
@@ -686,7 +662,7 @@ transitController.notifyArrival = async (req, res) => {
     const aeatSubmitService = require('../services/aeat/aeatSubmitService');
 
     const transit = await Transit.findById(req.params.id);
-    if (!transit) return res.status(404).json({ success: false, error: 'Transito no encontrado' });
+    if (!ensureSameTenant(transit, req, res, { resource: 'Tránsito' })) return;
     if (!transit.mrn) return res.status(400).json({ success: false, error: 'El transito no tiene MRN' });
 
     const result = await aeatSubmitService.submitNCTSArrival({
@@ -717,7 +693,7 @@ transitController.notifyUnloading = async (req, res) => {
     const aeatSubmitService = require('../services/aeat/aeatSubmitService');
 
     const transit = await Transit.findById(req.params.id);
-    if (!transit) return res.status(404).json({ success: false, error: 'Transito no encontrado' });
+    if (!ensureSameTenant(transit, req, res, { resource: 'Tránsito' })) return;
     if (!transit.mrn) return res.status(400).json({ success: false, error: 'El transito no tiene MRN' });
 
     const result = await aeatSubmitService.submitNCTSUnloading({

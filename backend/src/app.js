@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
@@ -29,6 +30,7 @@ let deadlineRoutes, inspectionRoutes, communicationRoutes, integrationRoutes;
 let aeatRealRoutes, analyticsRoutes, tenantRoutes, mlRoutes, workflowRoutes;
 let publicApiRoutes, paymentRoutes, regulationRoutes, adminRoutes;
 let ensRoutes, queryRoutes, pueRoutes, certificateRoutes, manifestRoutes;
+let auditRoutes, gdprRoutes;
 
 try {
   authRoutes = require('./routes/auth');
@@ -70,6 +72,8 @@ try {
   pueRoutes = require('./routes/pue');
   certificateRoutes = require('./routes/certificates');
   try { manifestRoutes = require('./routes/manifest'); } catch(e) { console.error('Manifest routes not loaded:', e.message); }
+  auditRoutes = require('./routes/audit');
+  try { gdprRoutes = require('./routes/gdpr'); } catch(e) { console.error('GDPR routes not loaded:', e.message); }
 } catch (err) {
   console.error('Error loading routes:', err.message);
 }
@@ -82,8 +86,35 @@ app.set('trust proxy', 1);
 // Connect to MongoDB
 connectDB();
 
-// Security middleware
-app.use(helmet());
+// Security middleware - helmet with CSP tuned for LUCI (Stripe + Sentry + self)
+app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      'default-src': ["'self'"],
+      'script-src': ["'self'", "'unsafe-inline'", 'https://js.stripe.com'],
+      'style-src': ["'self'", "'unsafe-inline'"],
+      'img-src': ["'self'", 'data:', 'blob:', 'https:'],
+      'connect-src': ["'self'", 'https://api.stripe.com', 'https://*.sentry.io', 'https://*.ingest.sentry.io', 'wss:', 'https:'],
+      'frame-src': ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
+      'font-src': ["'self'", 'data:'],
+      'object-src': ["'none'"],
+      'base-uri': ["'self'"],
+      'form-action': ["'self'"]
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
+
+// Compression (skip for already-compressed content)
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) return false;
+    return compression.filter(req, res);
+  },
+  threshold: 1024
+}));
 
 // CORS configuration
 const allowedOrigins = [
@@ -109,11 +140,31 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Tenant-Slug']
 }));
 
-// Rate limiting - global
+// Rate limiting - distributed via Redis when available, per-worker otherwise
+let rateLimitStore;
+if (process.env.CACHE_BACKEND === 'redis' || process.env.RATELIMIT_BACKEND === 'redis') {
+  try {
+    const { default: RedisStore } = require('rate-limit-redis');
+    const { getRedisClient } = require('./services/cacheService');
+    const client = getRedisClient();
+    if (client) {
+      rateLimitStore = new RedisStore({
+        sendCommand: (...args) => client.call(...args),
+        prefix: 'rl:'
+      });
+      logger.info('Rate limit: distributed (Redis)');
+    }
+  } catch (err) {
+    logger.warn('rate-limit-redis not available, using in-memory store', { error: err.message });
+  }
+}
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 500,
-  message: { success: false, error: 'Demasiadas solicitudes, por favor intente mas tarde' }
+  store: rateLimitStore,
+  message: { success: false, error: 'Demasiadas solicitudes, por favor intente mas tarde' },
+  skip: (req) => /^\/api\/auth\/(login|register|forgot-password)$/.test(req.path)
 });
 app.use('/api/', limiter);
 
@@ -121,6 +172,7 @@ app.use('/api/', limiter);
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  store: rateLimitStore,
   message: { success: false, error: 'Demasiados intentos. Espere 15 minutos.' },
   standardHeaders: true,
   legacyHeaders: false
@@ -151,11 +203,48 @@ app.post('/api/payments/webhook',
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Request metrics (request ID + latency + per-endpoint counters)
+const { requestMetrics, snapshot: metricsSnapshot } = require('./middleware/metrics');
+app.use(requestMetrics);
+
+// Audit helper (req.audit())
+const auditService = require('./services/auditService');
+app.use(auditService.middleware);
+
 // Logging
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
 // Static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// OpenAPI docs (dev + admin)
+if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_API_DOCS === 'true') {
+  try {
+    const swaggerUi = require('swagger-ui-express');
+    const openapiSpec = require('./config/openapi');
+    app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
+      customSiteTitle: 'LUCI API Docs',
+      customCss: '.swagger-ui .topbar { display: none }'
+    }));
+    app.get('/api/openapi.json', (req, res) => res.json(openapiSpec));
+  } catch (e) {
+    logger.warn('Swagger UI not available:', e.message);
+  }
+}
+
+// Metrics snapshot (admin only) — prefixed /api so Nginx proxies it
+app.get('/api/internal/metrics', async (req, res) => {
+  try {
+    const jwtService = require('./utils/jwtService');
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'Token requerido' });
+    const decoded = jwtService.verify(authHeader.split(' ')[1]);
+    if (decoded.role !== 'admin') return res.status(403).json({ error: 'Solo admin' });
+    res.json(metricsSnapshot());
+  } catch (e) {
+    res.status(401).json({ error: 'Token invalido' });
+  }
+});
 
 // Health check
 app.get('/health', async (req, res) => {
@@ -241,35 +330,45 @@ if (queryRoutes) app.use('/api/queries', queryRoutes);
 if (pueRoutes) app.use('/api/pue', pueRoutes);
 if (certificateRoutes) app.use('/api/certificates', certificateRoutes);
 if (manifestRoutes) app.use('/api/manifest', manifestRoutes);
+if (auditRoutes) app.use('/api/audit', auditRoutes);
+if (gdprRoutes) app.use('/api/gdpr', gdprRoutes);
 
-// Email test endpoint (admin only)
-app.post('/api/email/test', async (req, res) => {
-  try {
-    // Verify JWT token and admin role
-    const jwt = require('jsonwebtoken');
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ success: false, error: 'Token requerido' });
+// Email test endpoint (admin only, non-production only)
+if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_EMAIL_TEST === 'true') {
+  app.post('/api/email/test', async (req, res) => {
+    try {
+      const jwtService = require('./utils/jwtService');
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ success: false, error: 'Token requerido' });
+      }
+      const decoded = jwtService.verify(authHeader.split(' ')[1]);
+      if (decoded.role !== 'admin') {
+        return res.status(403).json({ success: false, error: 'Solo administradores' });
+      }
+      const emailService = require('./services/emailService');
+      const { to } = req.body;
+      const result = await emailService.sendTestEmail(to || decoded.email);
+      res.json({ success: true, data: result });
+    } catch (error) {
+      logger.error('Email test error:', error.message);
+      res.status(500).json({ success: false, error: error.message });
     }
-    const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
-    if (decoded.role !== 'admin') {
-      return res.status(403).json({ success: false, error: 'Solo administradores' });
-    }
-    const emailService = require('./services/emailService');
-    const { to } = req.body;
-    const result = await emailService.sendTestEmail(to || decoded.email);
-    res.json({ success: true, data: result });
-  } catch (error) {
-    logger.error('Email test error:', error.message);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+  });
+}
 
 // Initialize workflow service
 const workflowService = require('./services/workflow');
 workflowService.initialize().catch(err => {
   logger.error('Failed to initialize workflow service:', err);
 });
+
+// Initialize BullMQ workers (opt-in to avoid duplication in cluster)
+try {
+  require('./workers/classificationWorker').start();
+} catch (err) {
+  logger.warn('classificationWorker not started', { error: err.message });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
