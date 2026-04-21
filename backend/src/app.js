@@ -140,17 +140,19 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Tenant-Slug']
 }));
 
-// Rate limiting - distributed via Redis when available, per-worker otherwise
-let rateLimitStore;
+// Rate limiting - distributed via Redis when available, per-worker otherwise.
+// Each limiter gets its own Store instance with a distinct prefix; sharing a
+// single Store across limiters triggers ERR_ERL_DOUBLE_COUNT in v7.
+let makeRateLimitStore = () => undefined;
 if (process.env.CACHE_BACKEND === 'redis' || process.env.RATELIMIT_BACKEND === 'redis') {
   try {
     const { default: RedisStore } = require('rate-limit-redis');
     const { getRedisClient } = require('./services/cacheService');
     const client = getRedisClient();
     if (client) {
-      rateLimitStore = new RedisStore({
+      makeRateLimitStore = (prefix) => new RedisStore({
         sendCommand: (...args) => client.call(...args),
-        prefix: 'rl:'
+        prefix
       });
       logger.info('Rate limit: distributed (Redis)');
     }
@@ -162,7 +164,7 @@ if (process.env.CACHE_BACKEND === 'redis' || process.env.RATELIMIT_BACKEND === '
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 500,
-  store: rateLimitStore,
+  store: makeRateLimitStore('rl:general:'),
   message: { success: false, error: 'Demasiadas solicitudes, por favor intente mas tarde' },
   skip: (req) => /^\/api\/auth\/(login|register|forgot-password)$/.test(req.path)
 });
@@ -172,7 +174,7 @@ app.use('/api/', limiter);
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  store: rateLimitStore,
+  store: makeRateLimitStore('rl:auth:'),
   message: { success: false, error: 'Demasiados intentos. Espere 15 minutos.' },
   standardHeaders: true,
   legacyHeaders: false
