@@ -166,7 +166,8 @@ const limiter = rateLimit({
   max: 500,
   store: makeRateLimitStore('rl:general:'),
   message: { success: false, error: 'Demasiadas solicitudes, por favor intente mas tarde' },
-  skip: (req) => /^\/api\/auth\/(login|register|forgot-password)$/.test(req.path)
+  skip: (req) => req.path === '/api/health' ||
+    /^\/api\/auth\/(login|register|forgot-password)$/.test(req.path)
 });
 app.use('/api/', limiter);
 
@@ -248,13 +249,33 @@ app.get('/api/internal/metrics', async (req, res) => {
   }
 });
 
-// Health check
-app.get('/health', async (req, res) => {
+// Health check. Nginx proxies /api/* to this backend, so /api/health is
+// reachable externally; the legacy /health path is swallowed by the SPA
+// fallback and is kept only for direct (localhost) probes.
+async function healthHandler(req, res) {
   const mongoose = require('mongoose');
   const mongoState = mongoose.connection.readyState;
   const mongoStatus = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
 
-  const healthy = mongoState === 1;
+  let redisStatus = 'disabled';
+  try {
+    const { getRedisClient } = require('./services/cacheService');
+    const client = getRedisClient && getRedisClient();
+    if (client) {
+      const pong = await Promise.race([
+        client.ping(),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 500))
+      ]);
+      redisStatus = pong === 'PONG' ? 'connected' : 'degraded';
+    }
+  } catch (err) {
+    redisStatus = 'error';
+  }
+
+  const mongoOk = mongoState === 1;
+  const redisOk = redisStatus === 'connected' || redisStatus === 'disabled';
+  const healthy = mongoOk && redisOk;
+
   res.status(healthy ? 200 : 503).json({
     status: healthy ? 'OK' : 'DEGRADED',
     service: 'LUCI Customs Agent',
@@ -263,9 +284,13 @@ app.get('/health', async (req, res) => {
     uptime: Math.floor(process.uptime()),
     memory: Math.round(process.memoryUsage().rss / 1024 / 1024) + 'MB',
     mongo: mongoStatus[mongoState] || 'unknown',
+    redis: redisStatus,
     node: process.version
   });
-});
+}
+
+app.get('/health', healthHandler);
+app.get('/api/health', healthHandler);
 
 // Contact form (public, rate limited)
 app.post('/api/contact', authLimiter, express.json(), async (req, res) => {

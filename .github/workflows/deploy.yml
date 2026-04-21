@@ -121,12 +121,15 @@ jobs:
       - name: Verify deployment
         run: |
           sleep 5
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://aduanas.strixai.es/api/auth/login \
-            -H "Content-Type: application/json" -d '{"email":"test","password":"test"}')
-          if [ "$STATUS" = "401" ] || [ "$STATUS" = "400" ]; then
-            echo "Deployment verified (API responding: HTTP $STATUS)"
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" https://aduanas.strixai.es/api/health)
+          STATUS=$(echo "$RESPONSE" | tail -1 | cut -d: -f2)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          if [ "$STATUS" = "200" ] && echo "$BODY" | grep -q '"status":"OK"'; then
+            echo "Deployment verified (/api/health OK):"
+            echo "$BODY"
           else
-            echo "WARNING: Unexpected response: HTTP $STATUS — rolling back"
+            echo "WARNING: health check failed (HTTP $STATUS) — rolling back"
+            echo "$BODY"
             ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.es \
               "sudo tar xzf ${{ env.BACKUP }} -C / && pm2 reload luci-backend"
             exit 1
