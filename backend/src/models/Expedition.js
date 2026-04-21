@@ -143,7 +143,7 @@ const DeclarationSchema = new mongoose.Schema({
   xmlContent: String, // Generated XML for AEAT
   responseXml: String,
   errors: [String]
-}, { _id: false });
+}, { _id: false, suppressReservedKeysWarning: true });
 
 const CalculationsSchema = new mongoose.Schema({
   invoiceTotal: Number,
@@ -407,7 +407,8 @@ const ExpeditionSchema = new mongoose.Schema({
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  toObject: { virtuals: true },
+  suppressReservedKeysWarning: true
 });
 
 // Indexes

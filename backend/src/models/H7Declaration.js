@@ -456,7 +456,8 @@ const H7DeclarationSchema = new mongoose.Schema({
   }]
 
 }, {
-  timestamps: true
+  timestamps: true,
+  suppressReservedKeysWarning: true
 });
 
 // Indices
