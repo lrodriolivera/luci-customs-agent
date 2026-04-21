@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaData xmlns="urn:wco:datamodel:WCO:DECO.AdditionalMessage:2"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:wco:datamodel:WCO:DECO.AdditionalMessage:2 DECO.AdditionalMessage_2p00.xsd">
+  <WCOTypeCode>123456</WCOTypeCode>
+  <CommunicationMetaData>
+    <ApplicationReferenceID>XXXXXXXXXX</ApplicationReferenceID>
+    <CommunicationsAgreementID>XXXXXXXXXX</CommunicationsAgreementID>
+    <PreparationDateTime formatCode="304">20200723143432Z</PreparationDateTime>
+    <Recipient>
+      <ID>XXXXXXXXXXXXXXXXX</ID>
+    </Recipient>
+    <Sender>
+      <ID>XXXXXXXXXXXXXXXXX</ID>
+    </Sender>
+  </CommunicationMetaData>
+  <Declaration>
+    <FunctionalReferenceID>XXXXXXXXXX</FunctionalReferenceID>
+    <ID>XXXXXXXXXX</ID>
+    <IssueDateTime formatCode="304">20200723143432Z</IssueDateTime>
+    <DeclarationOffice>
+      <ID>XXXXXXXXXX</ID>
+    </DeclarationOffice>
+    <AdditionalInformation>
+      <SequenceNumeric>23</SequenceNumeric>
+      <StatementCode>XXXXXXXXXX</StatementCode>
+      <StatementDescription>XXXXXXXXXX</StatementDescription>
+      <StatementTypeCode>ADE</StatementTypeCode>
+    </AdditionalInformation>
+    <Agent>
+      <ID>XXXXXXXXXX</ID>
+      <FunctionCode>90</FunctionCode>
+      <Contact>
+        <Name>XXXXXXXXXX</Name>
+        <Communication>
+          <SequenceNumeric>23</SequenceNumeric>
+          <ID>XXXXXXXXXX</ID>
+          <TypeCode>TM</TypeCode>
+        </Communication>
+      </Contact>
+    </Agent>
+    <Declarant>
+      <Name>XXXXXXXXXX</Name>
+      <ID>XXXXXXXXXX</ID>
+      <Address>
+        <CityName>XXXXXXXXXX</CityName>
+        <CountryCode>KZ</CountryCode>
+        <Line>XXXXXXXXXX</Line>
+        <PostcodeID>XXXXXXXXXX</PostcodeID>
+      </Address>
+      <Contact>
+        <Name>XXXXXXXXXX</Name>
+        <Communication>
+          <SequenceNumeric>23</SequenceNumeric>
+          <ID>XXXXXXXXXX</ID>
+          <TypeCode>AB</TypeCode>
+        </Communication>
+      </Contact>
+    </Declarant>
+  </Declaration>
+</MetaData>

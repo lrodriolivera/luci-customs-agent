@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:simpleType name="string3">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="3" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	
+	<xsd:simpleType name="string8">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="8" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="string15">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="15" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="string60">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="60" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	
+	<xsd:simpleType name="string512">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="512" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="string1024">
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="1024" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:element name="bnm" type="string60">
+		</xsd:element>
+	<xsd:element name="byz" type="string512">
+        </xsd:element>
+    <xsd:element name="cbk">
+    	<xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="bnm"/>
+                <xsd:element ref="tbl" minOccurs="1" maxOccurs="unbounded"/>
+            </xsd:sequence>
+    	</xsd:complexType>
+    </xsd:element>
+    <xsd:element name="cls">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="kopregel"/>
+                <xsd:element ref="cbk" minOccurs="1" maxOccurs="unbounded"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="ecd" type="string8"/>
+    <xsd:element name="elm">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="ecd"/>
+                <xsd:element ref="oms"/>
+                <xsd:element ref="wet"/>
+                <xsd:element ref="byz"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="kopregel">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="verwerking"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="oms" type="string60"/>
+    <xsd:element name="tbl">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="tnr"/>
+                <xsd:element ref="tnm"/>
+                <xsd:element maxOccurs="unbounded" minOccurs="1" ref="elm"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="tnm" type="string15"/>
+    <xsd:element name="tnr" type="string3"/>
+    <xsd:element name="verwerking" type="xsd:date"/>
+    <xsd:element name="wet" type="string1024"/>
+</xsd:schema>

@@ -1,0 +1,801 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns="urn:wco:datamodel:WCO:DECO.AdditionalMessage:2"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:ds="urn:wco:datamodel:WCO:DMSDECO.OverallModel_DS:2"
+    targetNamespace="urn:wco:datamodel:WCO:DECO.AdditionalMessage:2"
+    elementFormDefault="qualified">
+  <xs:import namespace="urn:wco:datamodel:WCO:DMSDECO.OverallModel_DS:2" schemaLocation="DECO.OverallModel_DS_2p00.xsd"/>
+  <xs:element name="MetaData">
+    <xs:annotation>
+      <xs:documentation>
+        <DictionaryEntryName>Document Meta Data. Details</DictionaryEntryName>
+        <WCOClassID>NA</WCOClassID>
+        <WCOClassName>DocumentMetaData</WCOClassName>
+        <WCODescription>Meta data to be used related to the document</WCODescription>
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="WCOTypeCode" type="ds:MetaDataWCOTypeCodeType">
+          <xs:annotation>
+            <xs:documentation>
+              <DictionaryEntryName>Document Meta Data. WCO Type. Code</DictionaryEntryName>
+              <NamedComplexType>DocumentMetaDataWCOTypeCodeType</NamedComplexType>
+              <XMLTag>WCOTypeCode</XMLTag>
+              <TDEDUID>NA</TDEDUID>
+              <WCOClassID>NA</WCOClassID>
+              <WCOClassName>DocumentMetaData</WCOClassName>
+              <WCOAttributeID>NA</WCOAttributeID>
+              <WCOAttributeName>WCO Type</WCOAttributeName>
+              <WCOFormat>an..6</WCOFormat>
+              <WCOCodeRemarks>WCO code list</WCOCodeRemarks>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="CommunicationMetaData">
+          <xs:annotation>
+            <xs:documentation>
+              <DictionaryEntryName>Communication Meta Data. Details</DictionaryEntryName>
+              <WCOClassID>NA</WCOClassID>
+              <WCOClassName>CommunicationMetaData</WCOClassName>
+              <WCODescription>Meta data to be used for communication purposes</WCODescription>
+            </xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="ApplicationReferenceID" type="ds:CommunicationMetaDataApplicationReferenceIDType">
+                <xs:annotation>
+                  <xs:documentation>
+                    <DictionaryEntryName>Communication Meta Data. Application Reference. Identifier</DictionaryEntryName>
+                    <NamedComplexType>CommunicationMetaDataApplicationReferenceIDType</NamedComplexType>
+                    <XMLTag>ApplicationReferenceID</XMLTag>
+                    <TDEDUID>NA</TDEDUID>
+                    <WCOClassID>NA</WCOClassID>
+                    <WCOClassName>CommunicationMetaData</WCOClassName>
+                    <WCOAttributeID>NA</WCOAttributeID>
+                    <WCOAttributeName>Application Reference</WCOAttributeName>
+                    <WCODescription>Identification of the application area assigned by the sender, to which the messages in the interchange relate e.g. the message identifier if all the messages in the interchange are of the same type</WCODescription>
+                    <WCOFormat>an..35</WCOFormat>
+                  </xs:documentation>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="CommunicationsAgreementID" type="ds:CommunicationMetaDataCommunicationsAgreementIDType" minOccurs="0">
+                <xs:annotation>
+                  <xs:documentation>
+                    <DictionaryEntryName>Communication Meta Data. Communications Agreement. Identifier</DictionaryEntryName>
+                    <NamedComplexType>CommunicationMetaDataCommunicationsAgreementIDType</NamedComplexType>
+                    <XMLTag>CommunicationsAgreementID</XMLTag>
+                    <TDEDUID>NA</TDEDUID>
+                    <WCOClassID>NA</WCOClassID>
+                    <WCOClassName>CommunicationMetaData</WCOClassName>
+                    <WCOAttributeID>NA</WCOAttributeID>
+                    <WCOAttributeName>Communications Agreement</WCOAttributeName>
+                    <WCODescription>Identification by name or code of the type of agreement under which the interchange takes place</WCODescription>
+                    <WCOFormat>an..35</WCOFormat>
+                  </xs:documentation>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="PreparationDateTime" type="ds:CommunicationMetaDataPreparationDateTimeType">
+                <xs:annotation>
+                  <xs:documentation>
+                    <DictionaryEntryName>Communication Meta Data. Preparation. Date Time</DictionaryEntryName>
+                    <NamedComplexType>CommunicationMetaDataPreparationDateTimeType</NamedComplexType>
+                    <XMLTag>PreparationDateTime</XMLTag>
+                    <TDEDUID>NA</TDEDUID>
+                    <WCOClassID>NA</WCOClassID>
+                    <WCOClassName>CommunicationMetaData</WCOClassName>
+                    <WCOAttributeID>NA</WCOAttributeID>
+                    <WCOAttributeName>Preparation date and time</WCOAttributeName>
+                    <WCODescription>Local date and time when an interchange or a functional group was prepared</WCODescription>
+                    <WCOFormat>an..35</WCOFormat>
+                  </xs:documentation>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="Recipient">
+                <xs:annotation>
+                  <xs:documentation>
+                    <DictionaryEntryName>Recipient. Details</DictionaryEntryName>
+                    <WCOClassID>NA</WCOClassID>
+                    <WCOClassName>Recipient</WCOClassName>
+                    <WCODescription>Details related to the recipient of a message (technical information)</WCODescription>
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="ID" type="ds:RecipientIdentificationIDType">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <TDEDUID>3039</TDEDUID>
+                          <TDEDName>Party. Identifier</TDEDName>
+                          <DictionaryEntryName>Recipient. Identification. Identifier</DictionaryEntryName>
+                          <NamedComplexType>RecipientIdentificationIDType</NamedComplexType>
+                          <XMLTag>ID</XMLTag>
+                          <WCOClassID>NA</WCOClassID>
+                          <WCOClassName>Recipient</WCOClassName>
+                          <WCOAttributeID>NA</WCOAttributeID>
+                          <WCOAttributeName>Recipient identification</WCOAttributeName>
+                          <WCODescription>Identifier of the (message) recipient</WCODescription>
+                          <WCOFormat>an..35</WCOFormat>
+                        </xs:documentation>
+                      </xs:annotation>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="Sender">
+                <xs:annotation>
+                  <xs:documentation>
+                    <DictionaryEntryName>Sender. Details</DictionaryEntryName>
+                    <WCOClassID>NA</WCOClassID>
+                    <WCOClassName>Sender</WCOClassName>
+                    <WCODescription>Details related to the sender of a message (technical information)</WCODescription>
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="ID" type="ds:SenderIdentificationIDType">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <TDEDUID>3039</TDEDUID>
+                          <TDEDName>Party. Identifier</TDEDName>
+                          <DictionaryEntryName>Sender. Identification. Identifier</DictionaryEntryName>
+                          <NamedComplexType>SenderIdentificationIDType</NamedComplexType>
+                          <XMLTag>ID</XMLTag>
+                          <WCOClassID>NA</WCOClassID>
+                          <WCOClassName>Sender</WCOClassName>
+                          <WCOAttributeID>NA</WCOAttributeID>
+                          <WCOAttributeName>Sender identification</WCOAttributeName>
+                          <WCODescription>Identifier of the (message) sender</WCODescription>
+                          <WCOFormat>an..35</WCOFormat>
+                        </xs:documentation>
+                      </xs:annotation>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Declaration">
+          <xs:annotation>
+            <xs:documentation>
+              <DictionaryEntryName>Content Information Structure. Details</DictionaryEntryName>
+              <WCOClassID>42A</WCOClassID>
+              <WCOClassName>Declaration</WCOClassName>
+              <WCODescription>Any statement or action, in any form prescribed or accepted by the Governmental Agency, giving information or particulars required by the Governmental Agency</WCODescription>
+            </xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="FunctionalReferenceID" type="ds:DeclarationFunctionalReferenceIDType" minOccurs="0">
+                <xs:annotation>
+                  <xs:documentation>
+                    <TDEDUID>1154</TDEDUID>
+                    <TDEDName>Reference. Identifier</TDEDName>
+                    <DictionaryEntryName>Declaration. Functional Reference. Identifier</DictionaryEntryName>
+                    <NamedComplexType>DeclarationFunctionalReferenceIDType</NamedComplexType>
+                    <XMLTag>FunctionalReferenceID</XMLTag>
+                    <DictionaryEntryName>InterGov. Functional Reference. Identifier</DictionaryEntryName>
+                    <NamedComplexType>InterGovFunctionalReferenceIDType</NamedComplexType>
+                    <XMLTag>FunctionalReferenceID</XMLTag>
+                    <DictionaryEntryName>Response. Functional Reference. Identifier</DictionaryEntryName>
+                    <NamedComplexType>ResponseFunctionalReferenceIDType</NamedComplexType>
+                    <XMLTag>FunctionalReferenceID</XMLTag>
+                    <WCOClassID>42A</WCOClassID>
+                    <WCOClassName>Declaration</WCOClassName>
+                    <WCOAttributeID>D026</WCOAttributeID>
+                    <WCOAttributeName>Functional reference number</WCOAttributeName>
+                    <WCODescription>Reference number identifying a specific information exchange</WCODescription>
+                    <WCOFormat>an..70</WCOFormat>
+                    <AnnexBInfoDENo>12 09 000 000</AnnexBInfoDENo>
+                    <AnnexBInfoDEName>LRN</AnnexBInfoDEName>
+                    <AnnexBInfoDEFormat>an..22</AnnexBInfoDEFormat>
+                  </xs:documentation>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="ID" type="ds:DeclarationIdentificationIDType" minOccurs="0">
+                <xs:annotation>
+                  <xs:documentation>
+                    <TDEDUID>1004</TDEDUID>
+                    <TDEDName>Document. Identifier</TDEDName>
+                    <DictionaryEntryName>Declaration. Identification. Identifier</DictionaryEntryName>
+                    <NamedComplexType>DeclarationIdentificationIDType</NamedComplexType>
+                    <XMLTag>ID</XMLTag>
+                    <DictionaryEntryName>InterGov. Identification. Identifier</DictionaryEntryName>
+                    <NamedComplexType>InterGovIdentificationIDType</NamedComplexType>
+                    <XMLTag>ID</XMLTag>
+                    <DictionaryEntryName>LPCO. Identification. Identifier</DictionaryEntryName>
+                    <NamedComplexType>LPCOIdentificationIDType</NamedComplexType>
+                    <XMLTag>ID</XMLTag>
+                    <DictionaryEntryName>Response. Identification. Identifier</DictionaryEntryName>
+                    <NamedComplexType>ResponseIdentificationIDType</NamedComplexType>
+                    <XMLTag>ID</XMLTag>
+                    <WCOClassID>42A</WCOClassID>
+                    <WCOClassName>Declaration</WCOClassName>
+                    <WCOAttributeID>D014</WCOAttributeID>
+                    <WCOAttributeName>Document reference number</WCOAttributeName>
+                    <WCODescription>Reference number identifying a specific document</WCODescription>
+                    <WCOFormat>an..70</WCOFormat>
+                  </xs:documentation>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="IssueDateTime" type="ds:DeclarationIssueDateTimeType" minOccurs="0">
+                <xs:annotation>
+                  <xs:documentation>
+                    <TDEDUID>2380</TDEDUID>
+                    <TDEDName>Date Or Time Or Period. Text</TDEDName>
+                    <DictionaryEntryName>Declaration. Issue. Date Time</DictionaryEntryName>
+                    <NamedComplexType>DeclarationIssueDateTimeType</NamedComplexType>
+                    <XMLTag>IssueDateTime</XMLTag>
+                    <DictionaryEntryName>LPCO. Issue. Date Time</DictionaryEntryName>
+                    <NamedComplexType>LPCOIssueDateTimeType</NamedComplexType>
+                    <XMLTag>IssueDateTime</XMLTag>
+                    <DictionaryEntryName>Response. Issue. Date Time</DictionaryEntryName>
+                    <NamedComplexType>ResponseIssueDateTimeType</NamedComplexType>
+                    <XMLTag>IssueDateTime</XMLTag>
+                    <WCOClassID>42A</WCOClassID>
+                    <WCOClassName>Declaration</WCOClassName>
+                    <WCOAttributeID>D011</WCOAttributeID>
+                    <WCOAttributeName>Document issuing date</WCOAttributeName>
+                    <WCODescription>Date at which a document was issued and when appropriate, signed or otherwise authenticated</WCODescription>
+                    <WCOFormat>an..35</WCOFormat>
+                  </xs:documentation>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="DeclarationOffice" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                  <xs:documentation>
+                    <DictionaryEntryName>Declaration Office. Details</DictionaryEntryName>
+                    <WCOClassID>10C</WCOClassID>
+                    <WCOClassName>DeclarationOffice</WCOClassName>
+                    <WCODescription>Details identifying the government office at which a declaration is lodged</WCODescription>
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="ID" type="ds:DeclarationOfficeIdentificationIDType" minOccurs="0">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <TDEDUID>3225</TDEDUID>
+                          <TDEDName>Location.Identifier</TDEDName>
+                          <DictionaryEntryName>Declaration Office. Identification. Identifier</DictionaryEntryName>
+                          <NamedComplexType>DeclarationOfficeIdentificationIDType</NamedComplexType>
+                          <XMLTag>ID</XMLTag>
+                          <WCOClassID>10C</WCOClassID>
+                          <WCOClassName>DeclarationOffice</WCOClassName>
+                          <WCOAttributeID>G013</WCOAttributeID>
+                          <WCOAttributeName>Office of declaration, coded</WCOAttributeName>
+                          <WCODescription>To identify a location at which a declaration is lodged</WCODescription>
+                          <WCOFormat>an..17</WCOFormat>
+                          <WCOCodeRemarks>UN/LOCODE (an..5) + user codes (an..12)</WCOCodeRemarks>
+                          <AnnexBInfoDENo>17 02 001 000</AnnexBInfoDENo>
+                          <AnnexBInfoDEName>Customs office of export</AnnexBInfoDEName>
+                          <AnnexBInfoDEFormat>an8</AnnexBInfoDEFormat>
+                        </xs:documentation>
+                      </xs:annotation>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="AdditionalInformation" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                  <xs:documentation>
+                    <DictionaryEntryName>Additional Information. Details</DictionaryEntryName>
+                    <WCOClassID>03A</WCOClassID>
+                    <WCOClassName>AdditionalInformation</WCOClassName>
+                    <WCODescription>Special request to government from declarant to take or not to take action</WCODescription>
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="SequenceNumeric" type="ds:AdditionalInformationSequenceNumericType" minOccurs="0">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <TDEDUID>1050</TDEDUID>
+                          <TDEDName>Sequence. Position.Identifier</TDEDName>
+                          <DictionaryEntryName>Additional Information. Sequence. Numeric</DictionaryEntryName>
+                          <NamedComplexType>AdditionalInformationSequenceNumericType</NamedComplexType>
+                          <XMLTag>SequenceNumeric</XMLTag>
+                          <WCOClassID>03A</WCOClassID>
+                          <WCOClassName>AdditionalInformation</WCOClassName>
+                          <WCOAttributeID>006</WCOAttributeID>
+                          <WCOAttributeName>Sequence number</WCOAttributeName>
+                          <WCODescription>Number indicating the position in a sequence</WCODescription>
+                          <WCOFormat>n..5</WCOFormat>
+                        </xs:documentation>
+                      </xs:annotation>
+                    </xs:element>
+                    <xs:element name="StatementCode" type="ds:AdditionalInformationStatementCodeType" minOccurs="0">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <TDEDUID>4441</TDEDUID>
+                          <TDEDName>FreeText.Code</TDEDName>
+                          <DictionaryEntryName>Additional Information. Statement. Code</DictionaryEntryName>
+                          <NamedComplexType>AdditionalInformationStatementCodeType</NamedComplexType>
+                          <XMLTag>StatementCode</XMLTag>
+                          <WCOClassID>03A</WCOClassID>
+                          <WCOClassName>AdditionalInformation</WCOClassName>
+                          <WCOAttributeID>226</WCOAttributeID>
+                          <WCOAttributeName>Additional statement code</WCOAttributeName>
+                          <WCODescription>Coded form of an additional statement</WCODescription>
+                          <WCOFormat>an..17</WCOFormat>
+                          <WCOCodeRemarks>User codes</WCOCodeRemarks>
+                        </xs:documentation>
+                      </xs:annotation>
+                    </xs:element>
+                    <xs:element name="StatementDescription" type="ds:AdditionalInformationStatementDescriptionTextType" minOccurs="0">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <TDEDUID>4440</TDEDUID>
+                          <TDEDName>FreeText.Text</TDEDName>
+                          <DictionaryEntryName>Additional Information. Statement Description. Text</DictionaryEntryName>
+                          <NamedComplexType>AdditionalInformationStatementDescriptionTextType</NamedComplexType>
+                          <XMLTag>StatementDescription</XMLTag>
+                          <WCOClassID>03A</WCOClassID>
+                          <WCOClassName>AdditionalInformation</WCOClassName>
+                          <WCOAttributeID>225</WCOAttributeID>
+                          <WCOAttributeName>Additional statement text</WCOAttributeName>
+                          <WCODescription>Description of an additional statement</WCODescription>
+                          <WCOFormat>an..512</WCOFormat>
+                        </xs:documentation>
+                      </xs:annotation>
+                    </xs:element>
+                    <xs:element name="StatementTypeCode" type="ds:AdditionalInformationStatementTypeCodeType" minOccurs="0">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <TDEDUID>4451</TDEDUID>
+                          <TDEDName>Free Text. Subject.Code</TDEDName>
+                          <DictionaryEntryName>Additional Information. Statement Type. Code</DictionaryEntryName>
+                          <NamedComplexType>AdditionalInformationStatementTypeCodeType</NamedComplexType>
+                          <XMLTag>StatementTypeCode</XMLTag>
+                          <WCOClassID>03A</WCOClassID>
+                          <WCOClassName>AdditionalInformation</WCOClassName>
+                          <WCOAttributeID>369</WCOAttributeID>
+                          <WCOAttributeName>Additional statement type</WCOAttributeName>
+                          <WCODescription>Code qualifying the subject of the additional statement</WCODescription>
+                          <WCOFormat>an..3</WCOFormat>
+                          <WCOCodeRemarks>EDIFACT codes (4451)</WCOCodeRemarks>
+                        </xs:documentation>
+                      </xs:annotation>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="Agent" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                  <xs:documentation>
+                    <DictionaryEntryName>Agent. Details</DictionaryEntryName>
+                    <WCOClassID>05A</WCOClassID>
+                    <WCOClassName>Agent</WCOClassName>
+                    <WCODescription>Person authorised to act on behalf of another party</WCODescription>
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="ID" type="ds:AgentIdentificationIDType" minOccurs="0">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <TDEDUID>3039</TDEDUID>
+                          <TDEDName>Party. Identifier</TDEDName>
+                          <DictionaryEntryName>Agent. Identification. Identifier</DictionaryEntryName>
+                          <NamedComplexType>AgentIdentificationIDType</NamedComplexType>
+                          <XMLTag>ID</XMLTag>
+                          <WCOClassID>05A</WCOClassID>
+                          <WCOClassName>Agent</WCOClassName>
+                          <WCOAttributeID>R004</WCOAttributeID>
+                          <WCOAttributeName>Agent, coded</WCOAttributeName>
+                          <WCODescription>Identification of a party authorised to act on behalf of another party</WCODescription>
+                          <WCOFormat>an..35</WCOFormat>
+                          <WCOCodeRemarks>International codes (e.g. DUNS, EAN) or user codes</WCOCodeRemarks>
+                          <AnnexBInfoDENo>13 06 017 000</AnnexBInfoDENo>
+                          <AnnexBInfoDEName>Identification number</AnnexBInfoDEName>
+                          <AnnexBInfoDEFormat>an..17</AnnexBInfoDEFormat>
+                        </xs:documentation>
+                      </xs:annotation>
+                    </xs:element>
+                    <xs:element name="FunctionCode" type="ds:AgentFunctionCodeType" minOccurs="0">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <TDEDUID>4405</TDEDUID>
+                          <TDEDName>Status.Code</TDEDName>
+                          <DictionaryEntryName>Agent. Function. Code</DictionaryEntryName>
+                          <NamedComplexType>AgentFunctionCodeType</NamedComplexType>
+                          <XMLTag>FunctionCode</XMLTag>
+                          <WCOClassID>05A</WCOClassID>
+                          <WCOClassName>Agent</WCOClassName>
+                          <WCOAttributeID>102</WCOAttributeID>
+                          <WCOAttributeName>Agent status, coded</WCOAttributeName>
+                          <WCODescription>The capacity in which the agent is acting</WCODescription>
+                          <WCOFormat>an..3</WCOFormat>
+                          <WCOCodeRemarks>EDIFACT codes (4405)</WCOCodeRemarks>
+                          <AnnexBInfoDENo>13 06 030 000</AnnexBInfoDENo>
+                          <AnnexBInfoDEName>Status</AnnexBInfoDEName>
+                          <AnnexBInfoDEFormat>n1</AnnexBInfoDEFormat>
+                        </xs:documentation>
+                      </xs:annotation>
+                    </xs:element>
+                    <xs:element name="Contact" minOccurs="0" maxOccurs="unbounded">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <DictionaryEntryName>Contact. Details</DictionaryEntryName>
+                          <WCOClassID>34A</WCOClassID>
+                          <WCOClassName>Contact</WCOClassName>
+                          <WCODescription>Contact information of a department or employee</WCODescription>
+                        </xs:documentation>
+                      </xs:annotation>
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Name" type="ds:ContactNameTextType" minOccurs="0">
+                            <xs:annotation>
+                              <xs:documentation>
+                                <TDEDUID>3412</TDEDUID>
+                                <TDEDName>Contact.Name.Text</TDEDName>
+                                <DictionaryEntryName>Contact. Name. Text</DictionaryEntryName>
+                                <NamedComplexType>ContactNameTextType</NamedComplexType>
+                                <XMLTag>Name</XMLTag>
+                                <WCOClassID>34A</WCOClassID>
+                                <WCOClassName>Contact</WCOClassName>
+                                <WCOAttributeID>246</WCOAttributeID>
+                                <WCOAttributeName>Department or employee - Contact name</WCOAttributeName>
+                                <WCODescription>Name of a department or employee</WCODescription>
+                                <WCOFormat>an..70</WCOFormat>
+                                <AnnexBInfoDENo>13 06 074 016</AnnexBInfoDENo>
+                                <AnnexBInfoDEName>Name</AnnexBInfoDEName>
+                                <AnnexBInfoDEFormat>an..70</AnnexBInfoDEFormat>
+                              </xs:documentation>
+                            </xs:annotation>
+                          </xs:element>
+                          <xs:element name="Communication" minOccurs="0" maxOccurs="unbounded">
+                            <xs:annotation>
+                              <xs:documentation>
+                                <DictionaryEntryName>Communication. Details</DictionaryEntryName>
+                                <WCOClassID>25A</WCOClassID>
+                                <WCOClassName>Communication</WCOClassName>
+                                <WCODescription>Details of communication including number and number type</WCODescription>
+                              </xs:documentation>
+                            </xs:annotation>
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="SequenceNumeric" type="ds:CommunicationSequenceNumericType" minOccurs="0">
+                                  <xs:annotation>
+                                    <xs:documentation>
+                                      <TDEDUID>1050</TDEDUID>
+                                      <TDEDName>Sequence. Position.Identifier</TDEDName>
+                                      <DictionaryEntryName>Communication. Sequence. Numeric</DictionaryEntryName>
+                                      <NamedComplexType>CommunicationSequenceNumericType</NamedComplexType>
+                                      <XMLTag>SequenceNumeric</XMLTag>
+                                      <WCOClassID>25A</WCOClassID>
+                                      <WCOClassName>Communication</WCOClassName>
+                                      <WCOAttributeID>006</WCOAttributeID>
+                                      <WCOAttributeName>Sequence number</WCOAttributeName>
+                                      <WCODescription>Number indicating the position in a sequence</WCODescription>
+                                      <WCOFormat>n..5</WCOFormat>
+                                    </xs:documentation>
+                                  </xs:annotation>
+                                </xs:element>
+                                <xs:element name="ID" type="ds:CommunicationIdentificationIDType" minOccurs="0">
+                                  <xs:annotation>
+                                    <xs:documentation>
+                                      <TDEDUID>3148</TDEDUID>
+                                      <TDEDName>Communication.Address.Identifier</TDEDName>
+                                      <DictionaryEntryName>Communication. Identification. Identifier</DictionaryEntryName>
+                                      <NamedComplexType>CommunicationIdentificationIDType</NamedComplexType>
+                                      <XMLTag>ID</XMLTag>
+                                      <WCOClassID>25A</WCOClassID>
+                                      <WCOClassName>Communication</WCOClassName>
+                                      <WCOAttributeID>240</WCOAttributeID>
+                                      <WCOAttributeName>Communication number</WCOAttributeName>
+                                      <WCODescription>To identify a communication address</WCODescription>
+                                      <WCOFormat>an..256</WCOFormat>
+                                      <AnnexBInfoDENo>13 06 074 075</AnnexBInfoDENo>
+                                      <AnnexBInfoDEName>Phone number</AnnexBInfoDEName>
+                                      <AnnexBInfoDEFormat>an..35</AnnexBInfoDEFormat>
+                                      <AnnexBInfoDENo>13 06 074 076</AnnexBInfoDENo>
+                                      <AnnexBInfoDEName>E-mail address</AnnexBInfoDEName>
+                                      <AnnexBInfoDEFormat>an..256</AnnexBInfoDEFormat>
+                                    </xs:documentation>
+                                  </xs:annotation>
+                                </xs:element>
+                                <xs:element name="TypeCode" type="ds:CommunicationTypeCodeType" minOccurs="0">
+                                  <xs:annotation>
+                                    <xs:documentation>
+                                      <TDEDUID>3155</TDEDUID>
+                                      <TDEDName>Communication.MeansType.Code</TDEDName>
+                                      <DictionaryEntryName>Communication. Type. Code</DictionaryEntryName>
+                                      <NamedComplexType>CommunicationTypeCodeType</NamedComplexType>
+                                      <XMLTag>TypeCode</XMLTag>
+                                      <WCOClassID>25A</WCOClassID>
+                                      <WCOClassName>Communication</WCOClassName>
+                                      <WCOAttributeID>253</WCOAttributeID>
+                                      <WCOAttributeName>Communication number type</WCOAttributeName>
+                                      <WCODescription>To identify the type of communication address</WCODescription>
+                                      <WCOFormat>an..3</WCOFormat>
+                                      <WCOCodeRemarks>EDIFACT codes (3155)</WCOCodeRemarks>
+                                      <AnnexBInfoDENo>13 06 074 075</AnnexBInfoDENo>
+                                      <AnnexBInfoDEName>Phone number</AnnexBInfoDEName>
+                                      <AnnexBInfoDEFormat>an..3</AnnexBInfoDEFormat>
+                                      <AnnexBInfoDENo>13 06 074 076</AnnexBInfoDENo>
+                                      <AnnexBInfoDEName>E-mail address</AnnexBInfoDEName>
+                                      <AnnexBInfoDEFormat>an..3</AnnexBInfoDEFormat>
+                                    </xs:documentation>
+                                  </xs:annotation>
+                                </xs:element>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="Declarant" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                  <xs:documentation>
+                    <DictionaryEntryName>Declarant. Details</DictionaryEntryName>
+                    <WCOClassID>57B</WCOClassID>
+                    <WCOClassName>Declarant</WCOClassName>
+                    <WCODescription>A party who makes a declaration to an official body or - where legally permitted - in whose name, or on whose behalf, a declaration to an official body is made</WCODescription>
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Name" type="ds:DeclarantNameTextType" minOccurs="0">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <TDEDUID>3036</TDEDUID>
+                          <TDEDName>Party.Name.Text</TDEDName>
+                          <DictionaryEntryName>Declarant. Name. Text</DictionaryEntryName>
+                          <NamedComplexType>DeclarantNameTextType</NamedComplexType>
+                          <XMLTag>Name</XMLTag>
+                          <WCOClassID>57B</WCOClassID>
+                          <WCOClassName>Declarant</WCOClassName>
+                          <WCOAttributeID>R124</WCOAttributeID>
+                          <WCOAttributeName>Declarant name</WCOAttributeName>
+                          <WCODescription>Name of a party who makes a declaration to an official body or - where legally permitted - in whose name, or on whose behalf, a declaration to an official body is made</WCODescription>
+                          <WCOFormat>an..70</WCOFormat>
+                          <AnnexBInfoDENo>13 05 016 000</AnnexBInfoDENo>
+                          <AnnexBInfoDEName>Name</AnnexBInfoDEName>
+                          <AnnexBInfoDEFormat>an..70</AnnexBInfoDEFormat>
+                        </xs:documentation>
+                      </xs:annotation>
+                    </xs:element>
+                    <xs:element name="ID" type="ds:DeclarantIdentificationIDType" minOccurs="0">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <TDEDUID>3039</TDEDUID>
+                          <TDEDName>Party. Identifier</TDEDName>
+                          <DictionaryEntryName>Declarant. Identification. Identifier</DictionaryEntryName>
+                          <NamedComplexType>DeclarantIdentificationIDType</NamedComplexType>
+                          <XMLTag>ID</XMLTag>
+                          <WCOClassID>57B</WCOClassID>
+                          <WCOClassName>Declarant</WCOClassName>
+                          <WCOAttributeID>R123</WCOAttributeID>
+                          <WCOAttributeName>Declarant, coded</WCOAttributeName>
+                          <WCODescription>Identification of a party who makes a declaration to an official body or - where legally permitted - in whose name, or on whose behalf, a declaration to an official body is made</WCODescription>
+                          <WCOFormat>an..35</WCOFormat>
+                          <WCOCodeRemarks>International codes (e.g. DUNS, EAN) or user codes</WCOCodeRemarks>
+                          <AnnexBInfoDENo>13 05 017 000</AnnexBInfoDENo>
+                          <AnnexBInfoDEName>Identification number</AnnexBInfoDEName>
+                          <AnnexBInfoDEFormat>an..17</AnnexBInfoDEFormat>
+                        </xs:documentation>
+                      </xs:annotation>
+                    </xs:element>
+                    <xs:element name="Address" minOccurs="0" maxOccurs="unbounded">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <DictionaryEntryName>Address. Details</DictionaryEntryName>
+                          <WCOClassID>04A</WCOClassID>
+                          <WCOClassName>Address</WCOClassName>
+                          <WCODescription>Details relating to an address</WCODescription>
+                        </xs:documentation>
+                      </xs:annotation>
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="CityName" type="ds:AddressCityNameTextType" minOccurs="0">
+                            <xs:annotation>
+                              <xs:documentation>
+                                <TDEDUID>3164</TDEDUID>
+                                <TDEDName>Address.City.Name</TDEDName>
+                                <DictionaryEntryName>Address. City. Text</DictionaryEntryName>
+                                <NamedComplexType>AddressCityTextType</NamedComplexType>
+                                <XMLTag>City</XMLTag>
+                                <WCOClassID>04A</WCOClassID>
+                                <WCOClassName>Address</WCOClassName>
+                                <WCOAttributeID>241</WCOAttributeID>
+                                <WCOAttributeName>City name</WCOAttributeName>
+                                <WCODescription>Name of a city</WCODescription>
+                                <WCOFormat>an..35</WCOFormat>
+                                <AnnexBInfoDENo>13 05 018 022</AnnexBInfoDENo>
+                                <AnnexBInfoDEName>City</AnnexBInfoDEName>
+                                <AnnexBInfoDEFormat>an..35</AnnexBInfoDEFormat>
+                              </xs:documentation>
+                            </xs:annotation>
+                          </xs:element>
+                          <xs:element name="CountryCode" type="ds:AddressCountryCodeType" minOccurs="0">
+                            <xs:annotation>
+                              <xs:documentation>
+                                <TDEDUID>3207</TDEDUID>
+                                <TDEDName>Country.Identifier</TDEDName>
+                                <DictionaryEntryName>Address. Country. Code</DictionaryEntryName>
+                                <NamedComplexType>AddressCountryCodeType</NamedComplexType>
+                                <XMLTag>CountryCode</XMLTag>
+                                <WCOClassID>04A</WCOClassID>
+                                <WCOClassName>Address</WCOClassName>
+                                <WCOAttributeID>242</WCOAttributeID>
+                                <WCOAttributeName>Country, coded</WCOAttributeName>
+                                <WCODescription>Identification of the name of the country or other geographical entity as specified in ISO 3166 and UN/ECE Rec 3</WCODescription>
+                                <WCOFormat>a2</WCOFormat>
+                                <WCOCodeRemarks>EDIFACT codes (3207) = ISO 3166-1 2-alpha code</WCOCodeRemarks>
+                                <AnnexBInfoDENo>13 05 018 020</AnnexBInfoDENo>
+                                <AnnexBInfoDEName>Country</AnnexBInfoDEName>
+                                <AnnexBInfoDEFormat>a2</AnnexBInfoDEFormat>
+                              </xs:documentation>
+                            </xs:annotation>
+                          </xs:element>
+                          <xs:element name="Line" type="ds:AddressLineTextType" minOccurs="0">
+                            <xs:annotation>
+                              <xs:documentation>
+                                <TDEDUID>3042</TDEDUID>
+                                <TDEDName>Postal.DeliveryPoint.Text</TDEDName>
+                                <DictionaryEntryName>Address. Line. Text</DictionaryEntryName>
+                                <NamedComplexType>AddressLineTextType</NamedComplexType>
+                                <XMLTag>Line</XMLTag>
+                                <WCOClassID>04A</WCOClassID>
+                                <WCOClassName>Address</WCOClassName>
+                                <WCOAttributeID>239</WCOAttributeID>
+                                <WCOAttributeName>Street and number/P.O. Box</WCOAttributeName>
+                                <WCODescription>Specification of the postal delivery point such as street and number or post office box</WCODescription>
+                                <WCOFormat>an..256</WCOFormat>
+                                <AnnexBInfoDENo>13 05 018 019</AnnexBInfoDENo>
+                                <AnnexBInfoDEName>Street and number</AnnexBInfoDEName>
+                                <AnnexBInfoDEFormat>an..70</AnnexBInfoDEFormat>
+                              </xs:documentation>
+                            </xs:annotation>
+                          </xs:element>
+                          <xs:element name="PostcodeID" type="ds:AddressPostcodeIDType" minOccurs="0">
+                            <xs:annotation>
+                              <xs:documentation>
+                                <TDEDUID>3251</TDEDUID>
+                                <TDEDName>Postal.Identifier</TDEDName>
+                                <DictionaryEntryName>Address. Postcode. Identifier</DictionaryEntryName>
+                                <NamedComplexType>AddressPostcodeIDType</NamedComplexType>
+                                <XMLTag>PostcodeID</XMLTag>
+                                <WCOClassID>04A</WCOClassID>
+                                <WCOClassName>Address</WCOClassName>
+                                <WCOAttributeID>245</WCOAttributeID>
+                                <WCOAttributeName>Postcode identification</WCOAttributeName>
+                                <WCODescription>Code specifying a postal zone or address</WCODescription>
+                                <WCOFormat>an..17</WCOFormat>
+                                <WCOCodeRemarks>User codes</WCOCodeRemarks>
+                                <AnnexBInfoDENo>13 05 018 021</AnnexBInfoDENo>
+                                <AnnexBInfoDEName>Postcode</AnnexBInfoDEName>
+                                <AnnexBInfoDEFormat>an..17</AnnexBInfoDEFormat>
+                              </xs:documentation>
+                            </xs:annotation>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="Contact" minOccurs="0" maxOccurs="unbounded">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <DictionaryEntryName>Contact. Details</DictionaryEntryName>
+                          <WCOClassID>34A</WCOClassID>
+                          <WCOClassName>Contact</WCOClassName>
+                          <WCODescription>Contact information of a department or employee</WCODescription>
+                        </xs:documentation>
+                      </xs:annotation>
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Name" type="ds:ContactNameTextType" minOccurs="0">
+                            <xs:annotation>
+                              <xs:documentation>
+                                <TDEDUID>3412</TDEDUID>
+                                <TDEDName>Contact.Name.Text</TDEDName>
+                                <DictionaryEntryName>Contact. Name. Text</DictionaryEntryName>
+                                <NamedComplexType>ContactNameTextType</NamedComplexType>
+                                <XMLTag>Name</XMLTag>
+                                <WCOClassID>34A</WCOClassID>
+                                <WCOClassName>Contact</WCOClassName>
+                                <WCOAttributeID>246</WCOAttributeID>
+                                <WCOAttributeName>Department or employee - Contact name</WCOAttributeName>
+                                <WCODescription>Name of a department or employee</WCODescription>
+                                <WCOFormat>an..70</WCOFormat>
+                                <AnnexBInfoDENo>13 05 074 016</AnnexBInfoDENo>
+                                <AnnexBInfoDEName>Name</AnnexBInfoDEName>
+                                <AnnexBInfoDEFormat>an..70</AnnexBInfoDEFormat>
+                              </xs:documentation>
+                            </xs:annotation>
+                          </xs:element>
+                          <xs:element name="Communication" minOccurs="0" maxOccurs="unbounded">
+                            <xs:annotation>
+                              <xs:documentation>
+                                <DictionaryEntryName>Communication. Details</DictionaryEntryName>
+                                <WCOClassID>25A</WCOClassID>
+                                <WCOClassName>Communication</WCOClassName>
+                                <WCODescription>Details of communication including number and number type</WCODescription>
+                              </xs:documentation>
+                            </xs:annotation>
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="SequenceNumeric" type="ds:CommunicationSequenceNumericType" minOccurs="0">
+                                  <xs:annotation>
+                                    <xs:documentation>
+                                      <TDEDUID>1050</TDEDUID>
+                                      <TDEDName>Sequence. Position.Identifier</TDEDName>
+                                      <DictionaryEntryName>Communication. Sequence. Numeric</DictionaryEntryName>
+                                      <NamedComplexType>CommunicationSequenceNumericType</NamedComplexType>
+                                      <XMLTag>SequenceNumeric</XMLTag>
+                                      <WCOClassID>25A</WCOClassID>
+                                      <WCOClassName>Communication</WCOClassName>
+                                      <WCOAttributeID>006</WCOAttributeID>
+                                      <WCOAttributeName>Sequence number</WCOAttributeName>
+                                      <WCODescription>Number indicating the position in a sequence</WCODescription>
+                                      <WCOFormat>n..5</WCOFormat>
+                                    </xs:documentation>
+                                  </xs:annotation>
+                                </xs:element>
+                                <xs:element name="ID" type="ds:CommunicationIdentificationIDType" minOccurs="0">
+                                  <xs:annotation>
+                                    <xs:documentation>
+                                      <TDEDUID>3148</TDEDUID>
+                                      <TDEDName>Communication.Address.Identifier</TDEDName>
+                                      <DictionaryEntryName>Communication. Identification. Identifier</DictionaryEntryName>
+                                      <NamedComplexType>CommunicationIdentificationIDType</NamedComplexType>
+                                      <XMLTag>ID</XMLTag>
+                                      <WCOClassID>25A</WCOClassID>
+                                      <WCOClassName>Communication</WCOClassName>
+                                      <WCOAttributeID>240</WCOAttributeID>
+                                      <WCOAttributeName>Communication number</WCOAttributeName>
+                                      <WCODescription>To identify a communication address</WCODescription>
+                                      <WCOFormat>an..256</WCOFormat>
+                                      <AnnexBInfoDENo>13 05 074 075</AnnexBInfoDENo>
+                                      <AnnexBInfoDEName>Phone number</AnnexBInfoDEName>
+                                      <AnnexBInfoDEFormat>an..35</AnnexBInfoDEFormat>
+                                      <AnnexBInfoDENo>13 05 074 076</AnnexBInfoDENo>
+                                      <AnnexBInfoDEName>E-mail address</AnnexBInfoDEName>
+                                      <AnnexBInfoDEFormat>an..256</AnnexBInfoDEFormat>
+                                    </xs:documentation>
+                                  </xs:annotation>
+                                </xs:element>
+                                <xs:element name="TypeCode" type="ds:CommunicationTypeCodeType" minOccurs="0">
+                                  <xs:annotation>
+                                    <xs:documentation>
+                                      <TDEDUID>3155</TDEDUID>
+                                      <TDEDName>Communication.MeansType.Code</TDEDName>
+                                      <DictionaryEntryName>Communication. Type. Code</DictionaryEntryName>
+                                      <NamedComplexType>CommunicationTypeCodeType</NamedComplexType>
+                                      <XMLTag>TypeCode</XMLTag>
+                                      <WCOClassID>25A</WCOClassID>
+                                      <WCOClassName>Communication</WCOClassName>
+                                      <WCOAttributeID>253</WCOAttributeID>
+                                      <WCOAttributeName>Communication number type</WCOAttributeName>
+                                      <WCODescription>To identify the type of communication address</WCODescription>
+                                      <WCOFormat>an..3</WCOFormat>
+                                      <WCOCodeRemarks>EDIFACT codes (3155)</WCOCodeRemarks>
+                                      <AnnexBInfoDENo>13 05 074 075</AnnexBInfoDENo>
+                                      <AnnexBInfoDEName>Phone number</AnnexBInfoDEName>
+                                      <AnnexBInfoDEFormat>an..3</AnnexBInfoDEFormat>
+                                      <AnnexBInfoDENo>13 05 074 076</AnnexBInfoDENo>
+                                      <AnnexBInfoDEName>E-mail address</AnnexBInfoDEName>
+                                      <AnnexBInfoDEFormat>an..3</AnnexBInfoDEFormat>
+                                    </xs:documentation>
+                                  </xs:annotation>
+                                </xs:element>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

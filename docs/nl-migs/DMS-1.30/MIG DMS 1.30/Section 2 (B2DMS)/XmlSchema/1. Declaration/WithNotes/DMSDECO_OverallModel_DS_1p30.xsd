@@ -1,0 +1,2303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:ds="urn:wco:datamodel:WCO:DMSDECO.OverallModel_DS:1"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:clm5ISO42173A="urn:un:unece:uncefact:codelist:standard:ISO:ISO3AlphaCurrencyCode:2012-08-31"
+    targetNamespace="urn:wco:datamodel:WCO:DMSDECO.OverallModel_DS:1"
+    elementFormDefault="qualified">
+  <xs:import namespace="urn:un:unece:uncefact:codelist:standard:ISO:ISO3AlphaCurrencyCode:2012-08-31" schemaLocation="ISO3AlphaCurrencyCode_2012-08-31.xsd"/>
+  <xs:simpleType name="AdditionalDocumentIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="AdditionalDocumentTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,6}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AdditionalInformationCCQualifierCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CCQualifierCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="AdditionalInformationLimitDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AdditionalInformationSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="AdditionalInformationStatementCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AdditionalInformationStatementCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AdditionalInformationStatementCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="AdditionalInformationStatementDescriptionTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AdditionalInformationStatementDescriptionTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AdditionalInformationStatementDescriptionTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,512}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="AdditionalInformationStatementTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AdditionalInformationStatementTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AdditionalInformationStatementTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="AdditionalProcedureCCQualifierCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CCQualifierCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AdditionalProcedureProcedureCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,7}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AdditionalProcedureProcedureCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AdditionalProcedureProcedureCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AdditionalProcedureSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AdditionalReferenceCCQualifierCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CCQualifierCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="AdditionalReferenceIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AdditionalDocumentIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AdditionalReferenceSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AdditionalReferenceTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AdditionalDocumentTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="AddressCityNameTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AddressCityNameTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AddressCityNameTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="AddressCountryCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AddressCountryCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AddressCountryCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="AddressLineTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AddressLineTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AddressLineTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,256}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AddressPostcodeIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AddressPostcodeIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AddressPostcodeIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AddressStreetNumberIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AddressStreetNumberIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AddressStreetNumberIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AEOMutualRecognitionPartyIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AEOMutualRecognitionPartyIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AEOMutualRecognitionPartyIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="AEOMutualRecognitionPartyRoleCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AEOMutualRecognitionPartyRoleCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AEOMutualRecognitionPartyRoleCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AEOMutualRecognitionPartySequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="AgentFunctionCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AgentFunctionCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AgentFunctionCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="AgentIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AgentIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AgentIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="AmendmentChangeReasonCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AmendmentChangeReasonCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AmendmentChangeReasonCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="AppealOfficeIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AppealOfficeIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AppealOfficeIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ArrivalTransportMeansIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ArrivalTransportMeansIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ArrivalTransportMeansIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ArrivalTransportMeansIdentificationTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ArrivalTransportMeansIdentificationTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ArrivalTransportMeansIdentificationTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ArrivalTransportMeansModeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[0-9]{1}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ArrivalTransportMeansModeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ArrivalTransportMeansModeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="AuthorisationHolderIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AuthorisationHolderIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AuthorisationHolderIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AuthorisationIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AdditionalDocumentIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="AuthorisationSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AuthorisationTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AdditionalDocumentTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="BankAccountIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:BankAccountIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="BankAccountIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="BankReferenceIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:BankReferenceIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="BankReferenceIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="BorderTransportMeansIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:BorderTransportMeansIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="BorderTransportMeansIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="BorderTransportMeansIdentificationTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="BorderTransportMeansIdentificationTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:BorderTransportMeansIdentificationTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="BorderTransportMeansModeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[0-9]{1}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="BorderTransportMeansModeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:BorderTransportMeansModeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="BorderTransportMeansRegistrationNationalityCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="BorderTransportMeansRegistrationNationalityCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:BorderTransportMeansRegistrationNationalityCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="BuyerIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:BuyerIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="BuyerIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="BuyerNameTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:BuyerNameTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="BuyerNameTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="CarrierIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CarrierIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="CarrierIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="CarrierNameTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CarrierNameTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="CarrierNameTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="CCQualifierCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ChargeDeductionChargesTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ChargeDeductionChargesTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ChargeDeductionChargesTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ChargeDeductionOtherChargeDeductionAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ChargeDeductionOtherChargeDeductionAmountType_S">
+        <xs:attribute name="currencyID" type="clm5ISO42173A:ISO3AlphaCurrencyCodeContentType" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ChargeDeductionOtherChargeDeductionAmountType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ChargeDeductionSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ClassificationCCQualifierCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CCQualifierCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ClassificationIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ClassificationIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ClassificationIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,18}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ClassificationIdentificationTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ClassificationIdentificationTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ClassificationIdentificationTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ClassificationSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="CommodityDescriptionTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CommodityDescriptionTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="CommodityDescriptionTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,512}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="CommunicationIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CommunicationIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="CommunicationIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,256}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="CommunicationMetaDataApplicationReferenceIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CommunicationMetaDataApplicationReferenceIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="CommunicationMetaDataApplicationReferenceIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="CommunicationMetaDataCommunicationsAgreementIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CommunicationMetaDataCommunicationsAgreementIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="CommunicationMetaDataCommunicationsAgreementIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="CommunicationMetaDataPreparationDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_304_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="304"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="CommunicationSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="CommunicationTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="CommunicationTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CommunicationTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ConsigneeIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ConsigneeIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ConsigneeIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ConsigneeNameTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ConsigneeNameTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ConsigneeNameTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ConsignmentContainerCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ConsignmentContainerCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ConsignmentContainerCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ConsignmentTotalGrossMassMeasureType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ConsignmentTotalGrossMassMeasureType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ConsignmentTotalGrossMassMeasureType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="6"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ConsignorIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ConsignorIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ConsignorIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ConsignorNameTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ConsignorNameTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ConsignorNameTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ContactNameTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ContactNameTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ContactNameTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ContactOfficeIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ContactOfficeIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ContactOfficeIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ControlDetailsCorrectedAttributeValueTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ControlDetailsCorrectedAttributeValueTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ControlDetailsCorrectedAttributeValueTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,512}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ControlInspectionStartDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ControlLimitDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ControlResultDescriptionTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ControlResultDescriptionTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ControlResultDescriptionTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,512}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ControlResultEffectiveDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ControlResultExaminationImageBinaryObjectType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ControlResultExaminationImageBinaryObjectType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ControlResultExaminationImageBinaryObjectType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,512}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ControlResultExitDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ControlResultGoodsItemNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ControlResultIdentificationCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ControlResultIdentificationCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ControlResultIdentificationCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ControlResultSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ControlSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ControlTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ControlTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ControlTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="CurrencyExchangeCurrencyTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="CurrencyExchangeCurrencyTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CurrencyExchangeCurrencyTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="CurrencyExchangeRateNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0"/>
+      <xs:totalDigits value="12"/>
+      <xs:fractionDigits value="5"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="CustomsOfficeIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CustomsOfficeIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="CustomsOfficeIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="CustomsValuationFreightChargeAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CustomsValuationFreightChargeAmountType_S">
+        <xs:attribute name="currencyID" type="clm5ISO42173A:ISO3AlphaCurrencyCodeContentType" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="CustomsValuationFreightChargeAmountType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="CustomsValuationMethodCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="CustomsValuationMethodCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CustomsValuationMethodCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DangerousGoodsSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DangerousGoodsUNDGIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DangerousGoodsUNDGIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DangerousGoodsUNDGIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,4}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DateTimeType_102_S">
+    <xs:restriction base="ds:DateTimeType_S">
+      <xs:pattern value="[1-9][0-9][0-9][0-9](([0][13578])([0][1-9]|[1-2][0-9]|[3][0-1])|([0][469])([0][1-9]|[1-2][0-9]|[3][0])|([0][2])([0][1-9]|[1-2][0-9])|([1][0|2])([0][1-9]|[1-2][0-9]|[3][0-1])|([1][1])([0][1-9]|[1-2][0-9]|[3][0]))"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DateTimeType_304_S">
+    <xs:restriction base="ds:DateTimeType_S">
+      <xs:pattern value="[1-9][0-9][0-9][0-9](([0][13578])([0][1-9]|[1-2][0-9]|[3][0-1])|([0][469])([0][1-9]|[1-2][0-9]|[3][0])|([0][2])([0][1-9]|[1-2][0-9])|([1][0|2])([0][1-9]|[1-2][0-9]|[3][0-1])|([1][1])([0][1-9]|[1-2][0-9]|[3][0]))(([2][0-3]|[0][0-9]|[1][0-9])([0-5][0-9])([0-5][0-9]))(Z|[+\-][01][0-9])"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DateTimeType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DeclarantIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DeclarantIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DeclarantIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DeclarantNameTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DeclarantNameTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DeclarantNameTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DeclarationAcceptanceDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="DeclarationEffectiveDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="DeclarationExpirationDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+              <xs:maxLength value="3"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="DeclarationFunctionalReferenceIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DeclarationFunctionalReferenceIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DeclarationFunctionalReferenceIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DeclarationIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DeclarationIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DeclarationIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DeclarationIssueDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_304_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="304"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DeclarationLanguageCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DeclarationLanguageCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DeclarationLanguageCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="DeclarationOfficeIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DeclarationOfficeIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DeclarationOfficeIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DeclarationPresentationDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_304_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="304"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="DeclarationRejectionDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_304_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="304"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DeclarationSecurityCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[0-9]{1}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DeclarationSecurityCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DeclarationSecurityCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DeclarationSpecificCircumstancesCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DeclarationSpecificCircumstancesCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DeclarationSpecificCircumstancesCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DeclarationTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,6}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DeclarationTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DeclarationTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="DeclarationVersionIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DeclarationVersionIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DeclarationVersionIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,9}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DeferredPaymentIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AdditionalDocumentIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="DepartureTransportMeansIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DepartureTransportMeansIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DepartureTransportMeansIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DepartureTransportMeansIdentificationTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DepartureTransportMeansIdentificationTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DepartureTransportMeansIdentificationTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DepartureTransportMeansModeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[0-9]{1}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DepartureTransportMeansModeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DepartureTransportMeansModeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DepartureTransportMeansRegistrationNationalityCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DepartureTransportMeansRegistrationNationalityCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DepartureTransportMeansRegistrationNationalityCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DepartureTransportMeansSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DestinationCCQualifierCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CCQualifierCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DestinationCountryCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DestinationCountryCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DestinationCountryCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="DestinationOfficeIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DestinationOfficeIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DestinationOfficeIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DestinationRegionIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DestinationRegionIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DestinationRegionIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,9}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DomesticDutyTaxPartyIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DomesticDutyTaxPartyIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DomesticDutyTaxPartyIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DomesticDutyTaxPartyRoleCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DomesticDutyTaxPartyRoleCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DomesticDutyTaxPartyRoleCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DomesticDutyTaxPartySequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DutyTaxFeeAdValoremTaxBaseAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DutyTaxFeeAdValoremTaxBaseAmountType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DutyTaxFeeAdValoremTaxBaseAmountType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DutyTaxFeeCCQualifierCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CCQualifierCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="DutyTaxFeeDeductAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DutyTaxFeeDeductAmountType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DutyTaxFeeDeductAmountType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DutyTaxFeeDutyRegimeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DutyTaxFeeDutyRegimeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DutyTaxFeeDutyRegimeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DutyTaxFeeQuotaOrderIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DutyTaxFeeSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DutyTaxFeeSpecificTaxBaseQuantityType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DutyTaxFeeSpecificTaxBaseQuantityType_S">
+        <xs:attribute name="unitCode" type="xs:string" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="DutyTaxFeeSpecificTaxBaseQuantityType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="6"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DutyTaxFeeTaxAmountType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DutyTaxFeeTaxRateNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0"/>
+      <xs:totalDigits value="17"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DutyTaxFeeTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="DutyTaxFeeTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DutyTaxFeeTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="EconomicOperatorIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:EconomicOperatorIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="EconomicOperatorIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ErrorDescriptionTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ErrorDescriptionTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ErrorDescriptionTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,512}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ErrorOriginalAttributeValueTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ErrorOriginalAttributeValueTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ErrorOriginalAttributeValueTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,512}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ErrorSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ErrorValidationCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,8}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ErrorValidationCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ErrorValidationCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ExitOfficeIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ExitOfficeIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ExitOfficeIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ExportCountryCountryCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ExportCountryCountryCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ExportCountryCountryCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ExporterIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ExporterIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ExporterIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ExporterNameTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ExporterNameTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ExporterNameTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="FreightPaymentMethodCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="FreightPaymentMethodCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:FreightPaymentMethodCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="GoodsLocationAdditionalIdentifierIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsLocationAdditionalIdentifierIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GoodsLocationAdditionalIdentifierIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,4}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GoodsLocationAuthorizationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsLocationAuthorizationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GoodsLocationAuthorizationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GoodsLocationIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsLocationIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GoodsLocationIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="GoodsLocationIdentificationTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{1}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GoodsLocationIdentificationTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsLocationIdentificationTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="GoodsLocationLatitudeIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsLocationLatitudeIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GoodsLocationLatitudeIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[+\-]?([0-8]?[0-9]\.[0-9]{5,7}|90.000000?0?)"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GoodsLocationLongitudeIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsLocationLongitudeIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GoodsLocationLongitudeIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[+\-]?((0?[0-9]?|1[0-7])[0-9]\.[0-9]{5,7}|180.000000?0?)"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="GoodsLocationTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GoodsLocationTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsLocationTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="GoodsMeasureGrossMassMeasureType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsMeasureGrossMassMeasureType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GoodsMeasureGrossMassMeasureType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="6"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GoodsMeasureNetNetWeightMeasureType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsMeasureNetNetWeightMeasureType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GoodsMeasureNetNetWeightMeasureType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="6"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GoodsMeasureTariffQuantityType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsMeasureTariffQuantityType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GoodsMeasureTariffQuantityType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="6"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="GoodsReferenceGoodsItemNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="GoodsReferenceSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GoodsShipmentAcceptanceDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GoodsShipmentDispatchCountryCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GoodsShipmentDispatchCountryCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsShipmentDispatchCountryCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="GoodsShipmentExitDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="GoodsShipmentInvoiceAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsShipmentInvoiceAmountType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GoodsShipmentInvoiceAmountType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="GoodsShipmentInvoiceCurrencyCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GoodsShipmentInvoiceCurrencyCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsShipmentInvoiceCurrencyCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GoodsShipmentSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="GoodsShipmentTransactionNatureCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[0-9]{1,2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GoodsShipmentTransactionNatureCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GoodsShipmentTransactionNatureCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="GovernmentAgencyGoodsItemAcceptanceDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="GovernmentAgencyGoodsItemCustomsValueAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GovernmentAgencyGoodsItemCustomsValueAmountType_S">
+        <xs:attribute name="currencyID" type="clm5ISO42173A:ISO3AlphaCurrencyCodeContentType" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GovernmentAgencyGoodsItemCustomsValueAmountType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="GovernmentAgencyGoodsItemDispatchCountryCodeContentType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Z]{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GovernmentAgencyGoodsItemDispatchCountryCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GovernmentAgencyGoodsItemDispatchCountryCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GovernmentAgencyGoodsItemSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GovernmentAgencyGoodsItemStatisticalValueAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GovernmentAgencyGoodsItemStatisticalValueAmountType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GovernmentAgencyGoodsItemStatisticalValueAmountType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="GovernmentAgencyGoodsItemTransactionNatureCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[0-9]{1,2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GovernmentAgencyGoodsItemTransactionNatureCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GovernmentAgencyGoodsItemTransactionNatureCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GovernmentProcedureCurrentCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,7}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GovernmentProcedureCurrentCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GovernmentProcedureCurrentCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GovernmentProcedurePreviousCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,7}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GovernmentProcedurePreviousCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GovernmentProcedurePreviousCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="GuaranteeOfficeIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:GuaranteeOfficeIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GuaranteeOfficeIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="GuaranteeReferenceAccessCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ObligationGuaranteeAccessCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="GuaranteeReferenceAmountAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ObligationGuaranteeAmountAmountType_S">
+        <xs:attribute name="currencyID" type="clm5ISO42173A:ISO3AlphaCurrencyCodeContentType" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="GuaranteeReferenceCCQualifierCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CCQualifierCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="GuaranteeReferenceIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ObligationGuaranteeIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="GuaranteeReferenceReferenceIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ObligationGuaranteeReferenceIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="GuaranteeReferenceSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ImporterIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ImporterIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ImporterIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ImporterNameTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ImporterNameTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ImporterNameTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="InvoiceLineItemChargeAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:InvoiceLineItemChargeAmountType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="InvoiceLineItemChargeAmountType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ItineraryRoutingCountryCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ItineraryRoutingCountryCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ItineraryRoutingCountryCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ItinerarySequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="MetaDataWCOTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,6}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="MetaDataWCOTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:MetaDataWCOTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ObligationGuaranteeAccessCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,4}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ObligationGuaranteeAmountAmountType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ObligationGuaranteeIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ObligationGuaranteeReferenceIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ObligationGuaranteeReferenceIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ObligationGuaranteeReferenceIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ObligationGuaranteeSecurityDetailsCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ObligationGuaranteeSecurityDetailsCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ObligationGuaranteeSecurityDetailsCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ObligationGuaranteeSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="OriginCountryCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="OriginCountryCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:OriginCountryCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="OriginRegionIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:OriginRegionIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="OriginRegionIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,9}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="OriginSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="OriginTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="OriginTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:OriginTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="PackagingMarksNumbersIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:PackagingMarksNumbersIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="PackagingMarksNumbersIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,512}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="PackagingQuantityQuantityType">
+    <xs:simpleContent>
+      <xs:extension base="ds:PackagingQuantityQuantityType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="PackagingQuantityQuantityType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,8}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="PackagingSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="PackagingTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="PackagingTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:PackagingTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="PayerIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:PayerIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="PayerIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="PaymentDueDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="PaymentMethodCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{1}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="PaymentMethodCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:PaymentMethodCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="PaymentPaymentAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:PaymentPaymentAmountType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="PaymentPaymentAmountType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="PaymentReferenceIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:PaymentReferenceIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="PaymentReferenceIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="PaymentTaxAssessedAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:PaymentTaxAssessedAmountType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="PaymentTaxAssessedAmountType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="PointerLocationTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:PointerLocationTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="PointerLocationTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,512}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="PointerSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="PresentationOfficeIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:PresentationOfficeIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="PresentationOfficeIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="PreviousDocumentCCQualifierCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CCQualifierCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="PreviousDocumentIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:PreviousDocumentIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="PreviousDocumentIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="PreviousDocumentLineNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,6}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="PreviousDocumentSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="PreviousDocumentTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,6}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="PreviousDocumentTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:PreviousDocumentTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="RecipientIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:RecipientIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="RecipientIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="RequestedDocumentCCQualifierCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CCQualifierCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="RequestedDocumentDescriptionTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:RequestedDocumentDescriptionTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="RequestedDocumentDescriptionTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,512}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="RequestedDocumentSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="RequestedDocumentTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,6}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="RequestedDocumentTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:RequestedDocumentTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ResponseBusinessRejectionTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ResponseBusinessRejectionTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ResponseBusinessRejectionTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="ResponseFunctionCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[0-9]{1,2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ResponseFunctionCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ResponseFunctionCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="SealIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:SealIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="SealIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="SealSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="SellerIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:SellerIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="SellerIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="SellerNameTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:SellerNameTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="SellerNameTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="SenderIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:SenderIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="SenderIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="StatusEffectiveDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_304_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="304"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="StatusNameCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="StatusNameCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:StatusNameCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="StatusReleaseDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="StatusSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="SubmitterNameTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:SubmitterNameTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="SubmitterNameTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="SupervisingOfficeIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:SupervisingOfficeIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="SupervisingOfficeIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="SupportingDocumentCCQualifierCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:CCQualifierCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="SupportingDocumentExpirationDateTimeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DateTimeType_102_S">
+        <xs:attribute name="formatCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="102"/>
+              <xs:maxLength value="3"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="SupportingDocumentIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AdditionalDocumentIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="SupportingDocumentLineNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="SupportingDocumentSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="SupportingDocumentTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:AdditionalDocumentTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="SuretyIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:SuretyIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="SuretyIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="TaxBaseAdValoremTaxBaseAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DutyTaxFeeAdValoremTaxBaseAmountType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="TaxBaseSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="TaxBaseSpecificTaxBaseQuantityType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DutyTaxFeeSpecificTaxBaseQuantityType_S">
+        <xs:attribute name="unitCode" type="xs:string" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="TaxBaseTaxAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DutyTaxFeeTaxAmountType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="TaxBaseTaxRateNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0"/>
+      <xs:totalDigits value="17"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="TaxCalculationDutyRegimeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DutyTaxFeeDutyRegimeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="TaxCalculationQuotaOrderIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:DutyTaxFeeQuotaOrderIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="TaxCalculationTaxAssessedAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:PaymentTaxAssessedAmountType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="TradeTermsConditionCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="TradeTermsConditionCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:TradeTermsConditionCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="TradeTermsCountryCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[A-Z]{2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="TradeTermsCountryCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:TradeTermsCountryCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="TradeTermsDescriptionTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:TradeTermsDescriptionTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="TradeTermsDescriptionTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="TradeTermsLocationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:TradeTermsLocationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="TradeTermsLocationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="TradeTermsLocationNameTextType">
+    <xs:simpleContent>
+      <xs:extension base="ds:TradeTermsLocationNameTextType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="TradeTermsLocationNameTextType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,256}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="TransportContractDocumentIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:TransportContractDocumentIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="TransportContractDocumentIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,70}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="TransportContractDocumentSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="TransportContractDocumentTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,6}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="TransportContractDocumentTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:TransportContractDocumentTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="TransportEquipmentIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:TransportEquipmentIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="TransportEquipmentIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,17}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="TransportEquipmentSealsAffixedQuantityType">
+    <xs:simpleContent>
+      <xs:extension base="ds:TransportEquipmentSealsAffixedQuantityType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="TransportEquipmentSealsAffixedQuantityType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,4}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="TransportEquipmentSequenceNumericType">
+    <xs:restriction base="xs:decimal">
+      <xs:pattern value="[0-9]{1,5}"/>
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="UCRTraderAssignedReferenceIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:UCRTraderAssignedReferenceIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="UCRTraderAssignedReferenceIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ValuationAdjustmentAdditionCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,4}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ValuationAdjustmentAdditionCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:ValuationAdjustmentAdditionCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="WarehouseIdentificationIDType">
+    <xs:simpleContent>
+      <xs:extension base="ds:WarehouseIdentificationIDType_S"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="WarehouseIdentificationIDType_S">
+    <xs:restriction base="xs:string">
+      <xs:pattern value=".{1,35}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="WarehouseTypeCodeContentType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value=".{1,3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="WarehouseTypeCodeType">
+    <xs:simpleContent>
+      <xs:extension base="ds:WarehouseTypeCodeContentType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="WriteOffAmountAmountType">
+    <xs:simpleContent>
+      <xs:extension base="ds:WriteOffAmountAmountType_S">
+        <xs:attribute name="currencyID" type="clm5ISO42173A:ISO3AlphaCurrencyCodeContentType" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="WriteOffAmountAmountType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="WriteOffQuantityQuantityType">
+    <xs:simpleContent>
+      <xs:extension base="ds:WriteOffQuantityQuantityType_S">
+        <xs:attribute name="unitCode" type="xs:string" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="WriteOffQuantityQuantityType_S">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="16"/>
+      <xs:fractionDigits value="6"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
