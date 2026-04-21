@@ -1,0 +1,9 @@
+tracking,sender_name,sender_country,recipient_name,recipient_id,address,city,postal_code,country,description,hs_code,quantity,value,weight,carrier
+AGX-H1-001,Shanghai Industrial Electronics Co Ltd,CN,Importaciones Mediterraneo SL,B76543210,Poligono Industrial Norte Nave 12,Madrid,28850,ES,Ordenadores portatiles Lenovo ThinkPad T14s AMD Ryzen 7,847130,25,18750.00,37.5,DHL
+AGX-H1-002,Shenzhen Mobile Technology Group,CN,TechDistrib Espana SA,A12345678,Av de la Industria 40,Barcelona,08040,ES,Smartphones Samsung Galaxy A55 5G 128GB,851762,50,12500.00,15.0,FEDEX
+AGX-H1-003,Guangzhou Textile Manufacturing Corp,CN,Moda Express Distribucion SL,B87654321,Centro Logistico Coslada Nave 8,Madrid,28820,ES,Camisetas algodon 100% estampadas surtido tallas S-XL,610910,2000,8500.00,450.0,CORREOS
+AGX-H1-004,Mumbai Pharmaceutical Exports Pvt Ltd,IN,Farmadist Iberica SA,A23456789,Parque Empresarial Cristalia Edif 7,Madrid,28033,ES,Paracetamol comprimidos 500mg caja 20 unidades,300490,5000,15000.00,250.0,DHL
+AGX-H1-005,Bordeaux Grands Crus Negociants,FR,Bodega Select Import SL,B34567890,Calle Ribera del Loira 28,Madrid,28042,ES,Vino tinto Bordeaux AOC 2022 botellas 750ml,220421,600,21600.00,540.0,SEUR
+AGX-H1-006,Tokyo Precision Instruments KK,JP,Optica Profesional Iberica SL,B45678901,Poligono Tres Cantos Nave 3,Madrid,28760,ES,Lentes opticas oftalmicas progresivas Nikon,900130,200,28000.00,12.0,UPS
+AGX-H1-007,Istanbul Marble Export AS,TR,Marmoles y Granitos del Sur SA,A56789012,Poligono Industrial La Isla Parcela 22,Sevilla,41700,ES,Baldosas marmol blanco Carrara 60x60cm pulido,680221,500,17500.00,8500.0,TNT
+AGX-H1-008,Sao Paulo Coffee Traders Ltda,BR,Cafe Premium Importacion SL,B67890123,Centro de Negocios Alameda Park,Valencia,46023,ES,Cafe verde en grano arabica Santos tipo 2/3,090111,10000,42000.00,10200.0,CORREOS

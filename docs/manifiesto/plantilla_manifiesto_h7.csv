@@ -1,0 +1,3 @@
+tracking,sender_name,sender_country,recipient_name,recipient_id,recipient_address,recipient_city,recipient_postal,description,quantity,value,weight
+AWB-001,Shenzhen Electronics Ltd,CN,Juan Garcia,12345678A,Calle Mayor 10,Madrid,28001,Funda movil silicona,2,15.99,0.3
+AWB-002,Tokyo Fashion Co,JP,Maria Lopez,87654321B,Av Diagonal 100,Barcelona,08001,Camiseta algodon estampada,1,29.99,0.2

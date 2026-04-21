@@ -1,0 +1,6 @@
+tracking,sender_name,sender_country,recipient_name,recipient_nif,address,city,postal_code,country,description,hs_code,quantity,value,weight,carrier
+PKG-N337-001,Shenzhen Wei Electronics,CN,Maria Garcia Lopez,,Gran Via 45,Madrid,28013,ES,Placas PCB electronicas,847130,2,90.00,1.2,CORREOS
+PKG-N337-002,Tokyo Smart Devices Co,JP,Juan Martinez Ruiz,12345678A,Calle Alcala 100,Madrid,28009,ES,Fundas telefono movil,392690,10,55.00,0.8,DHL
+PKG-N337-003,Istanbul Textiles Export,TR,Ana Lopez Fernandez,,Av Diagonal 200,Barcelona,08018,ES,Camisetas algodon,610910,5,60.00,1.5,CORREOS
+PKG-N337-004,Guangzhou Light Factory,CN,Pedro Sanchez Villa,B87654321,Paseo Castellana 50,Madrid,28046,ES,Lamparas LED decorativas,940540,3,105.00,2.1,UPS
+PKG-N337-005,Seoul Beauty Corp,KR,Laura Torres Diaz,,Rambla Catalunya 30,Barcelona,08007,ES,Cremas cosmeticas,330499,8,120.00,1.8,CORREOS
