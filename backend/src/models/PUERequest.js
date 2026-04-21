@@ -326,7 +326,7 @@ const ResponseSchema = new mongoose.Schema({
     code: String,
     message: String
   }]
-}, { _id: false });
+}, { _id: false, suppressReservedKeysWarning: true });
 
 // Esquema principal PUERequest
 const PUERequestSchema = new mongoose.Schema({
