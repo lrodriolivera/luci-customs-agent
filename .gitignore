@@ -89,4 +89,12 @@ frontend/dist/stats.html
 # Large binary documents (use LFS or share separately)
 *.pptx
 *.xlsx
+*.xls
 *.docx
+*.doc
+*.zip
+
+# Root-level ad-hoc scripts (use backend/scripts/ instead)
+/scrape-taric.js
+/package.json
+/package-lock.json
