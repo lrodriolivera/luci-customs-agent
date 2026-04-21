@@ -50,6 +50,7 @@ jobs:
             tests/piiHash.test.js \
             tests/auditService.test.js \
             tests/tenantPiiRoundtrip.test.js \
+            tests/h7XmlBuilder.test.js \
             --no-coverage --forceExit
 
       - name: Build frontend
