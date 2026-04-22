@@ -25,16 +25,20 @@ const transitService = {
       }
     }
 
-    // Validar garantia si se especifica
+    // Validar garantia si se especifica.
+    // Excepcion en entorno no-produccion (PRE/dev): permitir GRN sin registro local
+    // porque AEAT PRE acepta una GRN de prueba compartida (26ES000280... de Jose Antonio).
     if (data.guarantee?.grn) {
+      const isProduction = process.env.AEAT_ENVIRONMENT === 'production';
       const guarantee = await Guarantee.findOne({
         grn: data.guarantee.grn,
         owner: userId
       });
       if (!guarantee) {
-        throw new Error('Garantia no encontrada');
-      }
-      if (guarantee.status !== 'active') {
+        if (isProduction) {
+          throw new Error('Garantia no encontrada');
+        }
+      } else if (guarantee.status !== 'active') {
         throw new Error('Garantia no esta activa');
       }
     }

@@ -282,8 +282,10 @@ exports.submit = async (req, res) => {
     if (!result.success) {
       return res.status(400).json({
         success: false,
-        message: 'Error al enviar declaracion',
-        errors: result.errors
+        message: result.error || 'Error al enviar declaracion',
+        error: result.error,
+        errors: result.errors,
+        aeatResponse: result.details
       });
     }
 

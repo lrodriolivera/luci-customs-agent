@@ -142,8 +142,8 @@ async function submitH1(expedition) {
 async function submitH7(h7Declaration, tenant) {
   // Use tenant EORI as declarant (required by AEAT)
   // AEAT C14DeclaranteNID expects full EORI format (e.g., "ESB22477020")
-  const declaranteNIF = tenant?.businessInfo?.eori || tenant?.businessInfo?.nif || tenant?.eori || tenant?.nif || h7Declaration.declarantNIF || '';
-  const declaranteNombre = tenant?.companyName || tenant?.name || h7Declaration.declarantName || '';
+  const declaranteNIF = tenant?.businessInfo?.eori || tenant?.businessInfo?.nif || tenant?.eori || tenant?.nif || h7Declaration.declarantNIF || process.env.DECLARANTE_EORI || '';
+  const declaranteNombre = tenant?.companyName || tenant?.name || h7Declaration.declarantName || process.env.DECLARANTE_NOMBRE || '';
 
   const soapXML = buildH7ImportXML({
     test: process.env.AEAT_ENVIRONMENT !== 'production',
@@ -191,18 +191,49 @@ async function submitAES(expedition) {
   const client = expedition.client || {};
   const goods = expedition.goods || [];
   const decl = expedition.declaration || {};
+  const transport = expedition.transport || {};
+  const isPRE = process.env.AEAT_ENVIRONMENT !== 'production';
+  // AEAT authorisationNumber debe tener 4-10 chars (error 1860). Usar codigo aduana puro.
+  const aesLocationDefault = isPRE ? 'ES002801' : '';
+  // Resolver pais destino: address.country > country (legacy) > 'US' (export por defecto fuera UE)
+  const consigneeCountry = expedition.consignee?.address?.country
+    || expedition.consignee?.country
+    || '';
+  const destCountry = expedition.destination?.country || consigneeCountry || 'US';
 
   const soapXML = buildAESExportXML({
-    test: process.env.AEAT_ENVIRONMENT !== 'production',
+    test: isPRE,
     lrn: decl.lrn || '',
     customsOfficeExport: decl.customsOffice || 'ES002801',
     customsOfficeExit: decl.customsOffice || 'ES002801',
-    exporterEORI: client.eori || '',
-    exporterName: client.companyName || '',
+    exporterEORI: client.eori || process.env.DECLARANTE_EORI || 'ESB22477020',
+    exporterName: client.companyName || process.env.DECLARANTE_NOMBRE || 'STRIX AI SL',
     exporterStreet: client.address?.street || '',
     exporterCity: client.address?.city || '',
     exporterPostcode: client.address?.postalCode || '',
-    destinationCountry: expedition.destination?.country || '',
+    declarantEORI: process.env.DECLARANTE_EORI || 'ESB22477020',
+    declarantName: process.env.DECLARANTE_NOMBRE || 'STRIX AI SL',
+    consigneeEORI: expedition.consignee?.eori || '',
+    consigneeName: expedition.consignee?.companyName || '',
+    consigneeStreet: expedition.consignee?.address?.street || '',
+    consigneeCity: expedition.consignee?.address?.city || '',
+    consigneePostcode: expedition.consignee?.address?.postalCode || '00000',
+    consigneeCountry: consigneeCountry || destCountry,
+    destinationCountry: destCountry,
+    incotermCode: decl.incoterm || 'FOB',
+    incotermLocation: decl.incotermLocation || client.address?.city || 'Valencia',
+    incotermCountry: decl.incotermCountry || 'ES',
+    modeOfTransportAtBorder: String(transport.mode || '3'),
+    inlandModeOfTransport: String(transport.mode || '3'),
+    departureTransportType: transport.transportType || '30',
+    departureTransportId: transport.vehicleId || transport.plateNumber || 'TRANSPORT-AES',
+    departureTransportCountry: transport.country || 'ES',
+    activeBorderTransportType: transport.transportType || '30',
+    activeBorderTransportId: transport.vehicleId || transport.plateNumber || 'TRANSPORT-AES',
+    activeBorderTransportCountry: transport.country || 'ES',
+    transportDocType: decl.transportDocType || 'N730',
+    transportDocRef: decl.transportDocRef || ('TD-' + Date.now().toString().slice(-10)),
+    locationAuthorisationNumber: decl.locationAuthorisationNumber || aesLocationDefault,
     goodsItems: goods.map(g => ({
       description: g.description,
       taricCode: g.taricCode,
@@ -210,7 +241,15 @@ async function submitAES(expedition) {
       netWeight: g.netWeight || 0,
       packages: g.numberOfPackages || 1,
       value: g.invoiceValue || g.value || 0,
-      statisticalValue: g.statisticalValue || g.invoiceValue || 0
+      statisticalValue: g.statisticalValue || g.invoiceValue || 0,
+      countryOfOrigin: g.countryOfOrigin || g.originCountry || 'ES',
+      regionOfDispatch: g.regionOfDispatch || '28',
+      invoiceRef: g.invoiceRef || decl.invoiceRef || 'INV-AES-001',
+      // AEAT error 2149: Taric exige supplementaryUnits para algunos codigos (p.ej. 8471*).
+      // Enviar siempre que exista cantidad (>0), AEAT lo valida por TARIC.
+      supplementaryUnits: g.supplementaryUnits != null
+        ? g.supplementaryUnits
+        : (g.quantity > 0 ? Number(g.quantity) : undefined)
     }))
   });
   return _sendToAEAT(soapXML, '/wlpl/ADEX-JDIT/ws/aes/CC515CV1SOAP');
@@ -222,31 +261,46 @@ async function submitAES(expedition) {
 async function submitNCTS(transit) {
   const principal = transit.principal || {};
   const guarantee = transit.guarantee || {};
+  const holderEORI = principal.eori || process.env.DECLARANTE_EORI || 'ESB22477020';
+  const isPRE = process.env.AEAT_ENVIRONMENT !== 'production';
+  // Datos Jose Antonio AEAT PRE (2/Mar/2026): solo aplicar en entorno test
+  const nctsGuaranteeGRNDefault = isPRE ? '26ES0002800000010' : '';
+  const nctsAuthDefault = isPRE ? 'ESACR02026000002' : '';
+  const nctsLocationDefault = isPRE ? 'ES002801AAAAAC' : '';
 
   const soapXML = buildNCTSTransitXML({
-    test: process.env.AEAT_ENVIRONMENT !== 'production',
+    test: isPRE,
     lrn: transit.lrn || '',
     transitType: transit.transitType || 'T1',
     officeOfDeparture: transit.departureOffice?.code || 'ES002801',
     officeOfDestination: transit.destinationOffice?.code || '',
     transitOffices: (transit.transitOffices || []).map((o, i) => ({ sequence: i + 1, code: o.code })),
-    holderEORI: principal.eori || '',
-    holderName: principal.name || '',
+    holderEORI: holderEORI,
+    holderName: principal.name || process.env.DECLARANTE_NOMBRE || 'STRIX AI SL',
     holderStreet: principal.address?.street || '',
-    holderCity: principal.address?.city || '',
+    holderCity: principal.address?.city || 'Valencia',
     holderPostcode: principal.address?.postalCode || '',
     holderCountry: principal.address?.country || 'ES',
+    declarantEORI: holderEORI,
     guaranteeType: guarantee.type || '1',
-    guaranteeGRN: guarantee.grn || '',
-    guaranteeAccessCode: guarantee.accessCode || '',
+    guaranteeGRN: guarantee.grn || nctsGuaranteeGRNDefault,
+    guaranteeAccessCode: guarantee.accessCode || '0000',
+    authorisationNumber: transit.authorisationNumber || nctsAuthDefault,
+    locationAuthorisationNumber: transit.locationAuthorisationNumber || nctsLocationDefault,
+    placeOfLoadingCountry: transit.placeOfLoading?.country || 'ES',
+    placeOfLoadingLocation: transit.placeOfLoading?.location || principal.address?.city || 'Valencia',
+    referenceNumberUCR: transit.referenceNumberUCR || transit.lrn || ('UCR' + Date.now().toString().slice(-14)),
     consignment: {
       transportMode: transit.transport?.mode || '3',
       goodsItems: (transit.goodsItems || []).map(g => ({
         description: g.description,
         taricCode: g.taricCode,
         grossWeight: g.grossWeight || 0,
+        netWeight: g.netWeight || g.grossWeight || 0,
         packages: g.packages?.count || 1,
-        packageType: g.packages?.packageType || 'CT'
+        packageType: g.packages?.packageType || 'CT',
+        countryOfDispatch: g.countryOfDispatch || 'ES',
+        countryOfDestination: g.countryOfDestination || (transit.destinationOffice?.code || '').substring(0, 2) || 'FR'
       }))
     }
   });
