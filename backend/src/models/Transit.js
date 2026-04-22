@@ -189,7 +189,8 @@ const transitSchema = new mongoose.Schema({
       marks: String
     },
     previousDocuments: [{
-      type: String,
+      // Nested `type` confunde a mongoose con un type-descriptor si no se anida.
+      type: { type: String },
       reference: String,
       date: Date
     }],
