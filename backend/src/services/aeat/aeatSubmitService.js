@@ -66,20 +66,25 @@ function _parseAEATResponse(responseData) {
   // Detectar tipo de mensaje (para AES/NCTS/ENS que usan formato diferente)
   const msgType = (body.match(/<MesTypMES20>([^<]+)</) || body.match(/<messageType>([^<]+)</) || [])[1];
   const tipoResp = (body.match(/<tipoRespuesta>([^<]+)</) || [])[1];
+  // AES: circuitoAEAT + estadoAES estan en <DatosRespuestaCorrecta>
+  const circuitoAES = (body.match(/<circuitoAEAT>([^<]+)</) || [])[1];
+  const estadoAES = (body.match(/<estadoAES>([^<]+)</) || [])[1];
 
   const channelMap = { V: 'green', N: 'orange', R: 'red', verde: 'green', naranja: 'orange', rojo: 'red' };
 
-  // Exito: H1/H7 usan CodigoRespuesta 0/1/2, ENS usa CC328A, AES usa CC528C, NCTS usa CC028C
+  // Exito: H1/H7 usan CodigoRespuesta 0/1/2, ENS usa CC328A, AES usa RE515C/CC528C,
+  // NCTS usa CC028C. AES real tambien marca <tipoRespuesta>OK</tipoRespuesta>.
   const isSuccess = code === '0' || code === '1' || code === '2' || code === '0000'
-    || msgType === 'CC328A' || msgType === 'CC528C' || msgType === 'CC028C';
+    || msgType === 'CC328A' || msgType === 'CC528C' || msgType === 'CC028C' || msgType === 'RE515C'
+    || tipoResp === 'OK';
 
   return {
     success: isSuccess,
     code: code || tipoResp || msgType,
     mrn: mrn || null,
     csv: csv || null,
-    channel: channelMap[circuito] || channelMap[circuito?.toLowerCase()] || null,
-    estado: estado || null,
+    channel: channelMap[circuito] || channelMap[circuito?.toLowerCase()] || channelMap[circuitoAES] || null,
+    estado: estado || estadoAES || null,
     error: isSuccess ? null : (error || xmlError || ensError || funcError || fault || null),
     rawResponse: body
   };
