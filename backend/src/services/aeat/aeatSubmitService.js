@@ -280,9 +280,11 @@ async function submitNCTS(transit) {
   const holderEORI = principal.eori || process.env.DECLARANTE_EORI || 'ESB22477020';
   const isPRE = process.env.AEAT_ENVIRONMENT !== 'production';
   // Datos Jose Antonio AEAT PRE (2/Mar/2026): solo aplicar en entorno test
+  // Datos Jose Antonio AEAT PRE: GRN 26ES0002800000010, autorizacion expedicion
+  // ESACR02026000002, ubicacion verde 2801AAAAAC (10 chars, sin prefijo ES).
   const nctsGuaranteeGRNDefault = isPRE ? '26ES0002800000010' : '';
   const nctsAuthDefault = isPRE ? 'ESACR02026000002' : '';
-  const nctsLocationDefault = isPRE ? 'ES002801AAAAAC' : '';
+  const nctsLocationDefault = isPRE ? '2801AAAAAC' : '';
 
   const soapXML = buildNCTSTransitXML({
     test: isPRE,
@@ -306,8 +308,14 @@ async function submitNCTS(transit) {
     placeOfLoadingCountry: transit.placeOfLoading?.country || 'ES',
     placeOfLoadingLocation: transit.placeOfLoading?.location || principal.address?.city || 'Valencia',
     referenceNumberUCR: transit.referenceNumberUCR || transit.lrn || ('UCR' + Date.now().toString().slice(-14)),
+    // Consignee a nivel de HouseConsignment (AEAT regla CSRDT009: si no hay Consignee
+    // en Consignment, debe haber uno por HouseConsignment).
+    consigneeEORI: transit.consigneeEORI || transit.consignee?.eori || '',
+    consigneeName: transit.consigneeName || transit.consignee?.name || '',
     consignment: {
       transportMode: transit.transport?.mode || '3',
+      consigneeEORI: transit.consigneeEORI || transit.consignee?.eori || '',
+      consigneeName: transit.consigneeName || transit.consignee?.name || '',
       goodsItems: (transit.goodsItems || []).map(g => ({
         description: g.description,
         taricCode: g.taricCode,
@@ -316,7 +324,7 @@ async function submitNCTS(transit) {
         packages: g.packages?.count || 1,
         packageType: g.packages?.packageType || 'CT',
         countryOfDispatch: g.countryOfDispatch || 'ES',
-        countryOfDestination: g.countryOfDestination || (transit.destinationOffice?.code || '').substring(0, 2) || 'FR'
+        countryOfDestination: g.countryOfDestination || (transit.destinationOffice?.code || '').substring(0, 2) || 'ES'
       }))
     }
   });
