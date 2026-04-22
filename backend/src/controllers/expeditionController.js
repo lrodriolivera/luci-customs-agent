@@ -162,7 +162,9 @@ const create = async (req, res) => {
     logger.error('Error creando expediente:', error);
     res.status(500).json({
       success: false,
-      error: 'Error al crear expediente'
+      error: 'Error al crear expediente',
+      message: error.message,
+      details: error.errors || undefined
     });
   }
 };

@@ -302,7 +302,9 @@ function expeditionToH1Data(expedition) {
       preferencia: decl.preference || '100',
       regimen: decl.regime || '40',
       regimenPrecedente: '00',
-      codigoAdicional: (decl.additionalProcedure && decl.additionalProcedure !== '000') ? decl.additionalProcedure : 'F44',
+      // AEAT PRE rechaza F44 con regimen 40/00 (error 2077 "incompatible").
+      // F48 (IVA normal, autoliquidacion) es el codigo adicional estable en PRE.
+      codigoAdicional: (decl.additionalProcedure && decl.additionalProcedure !== '000') ? decl.additionalProcedure : 'F48',
       documentos: [
         { tipo: 'N380', referencia: expedition.expeditionId || 'FACTURA-001' },
         { tipo: 'N730', referencia: 'CMR-' + (expedition.expeditionId || '001') },
