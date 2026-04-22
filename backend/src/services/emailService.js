@@ -24,9 +24,11 @@ class EmailService {
     this.appUrl = process.env.FRONTEND_URL || 'https://aduanas.strixai.es';
 
     // Initialize SES if credentials available
+    // SES production access aprobado en us-east-1 (case 177676372400012, 22/Abr/2026);
+    // eu-west-1 denegado. SES_REGION se mantiene separada de AWS_REGION general.
     if (SESClient && process.env.AWS_ACCESS_KEY_ID) {
       this.sesClient = new SESClient({
-        region: process.env.AWS_REGION || 'eu-west-1',
+        region: process.env.SES_REGION || 'us-east-1',
         credentials: {
           accessKeyId: process.env.AWS_ACCESS_KEY_ID,
           secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
@@ -333,7 +335,7 @@ class EmailService {
       <p style="color:#495057;">Este es un email de prueba del servicio de notificaciones de LUCI.</p>
       <p style="color:#495057;">Si recibes este email, la configuracion de SES es correcta.</p>
       <table width="100%" cellpadding="8" cellspacing="0" style="border:1px solid #dee2e6;border-radius:4px;margin:16px 0;">
-        <tr style="background-color:#f8f9fa;"><td style="font-weight:bold;color:#495057;border-bottom:1px solid #dee2e6;">Region</td><td style="color:#212529;border-bottom:1px solid #dee2e6;">${process.env.AWS_REGION || 'eu-west-1'}</td></tr>
+        <tr style="background-color:#f8f9fa;"><td style="font-weight:bold;color:#495057;border-bottom:1px solid #dee2e6;">Region</td><td style="color:#212529;border-bottom:1px solid #dee2e6;">${process.env.SES_REGION || 'us-east-1'}</td></tr>
         <tr><td style="font-weight:bold;color:#495057;border-bottom:1px solid #dee2e6;">From</td><td style="color:#212529;border-bottom:1px solid #dee2e6;">${this.fromEmail}</td></tr>
         <tr style="background-color:#f8f9fa;"><td style="font-weight:bold;color:#495057;">Timestamp</td><td style="color:#212529;">${new Date().toISOString()}</td></tr>
       </table>
