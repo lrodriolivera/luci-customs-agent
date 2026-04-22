@@ -317,16 +317,22 @@ async function submitNCTS(transit) {
       transportMode: transit.transport?.mode || '3',
       consigneeEORI: transit.consigneeEORI || transit.consignee?.eori || holderEORI,
       consigneeName: transit.consigneeName || transit.consignee?.name || principal.name || 'STRIX AI SL',
-      goodsItems: (transit.goodsItems || []).map(g => ({
-        description: g.description,
-        taricCode: g.taricCode,
-        grossWeight: g.grossWeight || 0,
-        netWeight: g.netWeight || g.grossWeight || 0,
-        packages: g.packages?.count || 1,
-        packageType: g.packages?.packageType || 'CT',
-        countryOfDispatch: g.countryOfDispatch || 'ES',
-        countryOfDestination: g.countryOfDestination || (transit.destinationOffice?.code || '').substring(0, 2) || 'ES'
-      }))
+      goodsItems: (transit.goodsItems || []).map(g => {
+        const prevDoc = (g.previousDocuments && g.previousDocuments[0]) || {};
+        return {
+          description: g.description,
+          taricCode: g.taricCode,
+          grossWeight: g.grossWeight || 0,
+          netWeight: g.netWeight || g.grossWeight || 0,
+          packages: g.packages?.count || 1,
+          packageType: g.packages?.packageType || 'CT',
+          countryOfDispatch: g.countryOfDispatch || 'ES',
+          countryOfDestination: g.countryOfDestination || (transit.destinationOffice?.code || '').substring(0, 2) || 'ES',
+          previousDocumentType: prevDoc.type || '',
+          previousDocumentRef: prevDoc.reference || '',
+          previousDocumentItem: prevDoc.goodsItemNumber || '1'
+        };
+      })
     }
   });
   return _sendToAEAT(soapXML, '/wlpl/ADTR-JDIT/ws/ncts5/CC015CV1SOAP');
