@@ -117,6 +117,12 @@ const transitSchema = new mongoose.Schema({
     country: String
   },
 
+  // Datos AEAT adicionales (se envian al builder NCTS)
+  consigneeEORI: String,
+  consigneeName: String,
+  locationAuthorisationNumber: String,
+  authorisationNumber: String,
+
   // Aduanas de transito (paso por fronteras)
   transitOffices: [{
     sequence: Number,
