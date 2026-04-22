@@ -47,7 +47,10 @@ async function _getCertificate() {
 function _parseAEATResponse(responseData) {
   const body = typeof responseData === 'string' ? responseData : '';
   const code = (body.match(/<CodigoRespuesta>(\d+)</) || [])[1];
-  const mrn = (body.match(/<MRN>([^<]+)</) || body.match(/<NumeroReferenciaDUA>([^<]+)</) || body.match(/<DocNumHEA5>([^<]+)</) || [])[1];
+  const mrn = (body.match(/<MRN>([^<]+)</)
+    || body.match(/<NumeroDeReferenciaAsignado>([^<]+)</)
+    || body.match(/<NumeroReferenciaDUA>([^<]+)</)
+    || body.match(/<DocNumHEA5>([^<]+)</) || [])[1];
   const error = (body.match(/<DescripcionError>([^<]+)</) || body.match(/<DescripcionRespuesta>([^<]+)</) || body.match(/<errorDescription>([^<]+)</) || [])[1];
   const fault = (body.match(/<faultstring>([^<]+)</) || [])[1];
   const csv = (body.match(/<CSV>([^<]+)</) || body.match(/Código Seguro de Verificación ([A-Z0-9]+)/) || [])[1];
@@ -424,11 +427,29 @@ async function submitENS(ensDeclaration) {
  * Enviar solicitud PUE SOIVRE
  */
 async function submitPUE(pueRequest) {
+  // SOIVRE MRNPartida = MRN(18) + partida(4) + claveZeta(1) = 23 chars exactos.
+  // LUCI almacena claveZeta de 5 chars (partida 4 + zeta 1), ya es el sufijo esperado.
+  // Si el MRN trae sufijo de tipo (H1/H7), quedarnos con los primeros 18 chars.
+  const rawMRN = pueRequest.declarationMRN || '';
+  const mrn18 = rawMRN.slice(0, 18);
+  const claveSuffix = (pueRequest.claveZeta || '00001').padStart(5, '0').slice(-5);
+  const mrnPartida23 = mrn18 + claveSuffix;
+
+  // CodCice / CodPi pueden venir como objeto o como string directo (por ejemplo
+  // desde un test E2E). Tolerar ambos formatos.
+  const cice = typeof pueRequest.codCice === 'string'
+    ? pueRequest.codCice
+    : (pueRequest.codCice?.code || '');
+  const pi = typeof pueRequest.codPi === 'string'
+    ? pueRequest.codPi
+    : (pueRequest.codPi?.code || '');
+
   const soapXML = buildSOIVREAltaXML({
     test: process.env.AEAT_ENVIRONMENT !== 'production',
-    mrnPartidaClaveZeta: (pueRequest.declarationMRN || '') + (pueRequest.claveZeta || ''),
-    codCice: pueRequest.codCice?.code || '',
-    codPi: pueRequest.codPi?.code || '',
+    mrnPartida: mrnPartida23,
+    tipoDocumento: pueRequest.tipoDocumento || 'DUA',
+    codCice: cice,
+    codPi: pi,
     unidadesMercancia: pueRequest.merchandiseUnit || 'PCE',
     cantidadMercancia: pueRequest.merchandiseQuantity || 0,
     correoElectronico: pueRequest.contactEmail || '',
