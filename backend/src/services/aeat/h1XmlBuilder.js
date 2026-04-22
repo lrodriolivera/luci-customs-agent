@@ -145,8 +145,8 @@ function buildH1ImportXML(data) {
       <C36Reduccion>${(p.preferencia || '100').substring(1) || '00'}</C36Reduccion>
       <C37RegimenAduanero>
         <C371RegimenSolicitado>${p.regimen || '40'}</C371RegimenSolicitado>
-        <C371RegimenPrecedente>${p.regimenPrecedente || '00'}</C371RegimenPrecedente>
-        <C372CodigoAdicional>${p.codigoAdicional || '000'}</C372CodigoAdicional>
+        <C371RegimenPrecedente>${p.regimenPrecedente || '00'}</C371RegimenPrecedente>${(p.codigoAdicional && p.codigoAdicional !== '000') ? `
+        <C372CodigoAdicional>${p.codigoAdicional}</C372CodigoAdicional>` : ''}
       </C37RegimenAduanero>
       <C38MasaNetaEnKg>${Number(p.pesoneto || 0).toFixed(3)}</C38MasaNetaEnKg>
       ${p.unidadesSuplementarias ? `<C41UnidadesSuplementarias>
@@ -302,9 +302,10 @@ function expeditionToH1Data(expedition) {
       preferencia: decl.preference || '100',
       regimen: decl.regime || '40',
       regimenPrecedente: '00',
-      // AEAT PRE rechaza F44 con regimen 40/00 (error 2077 "incompatible").
-      // F48 (IVA normal, autoliquidacion) es el codigo adicional estable en PRE.
-      codigoAdicional: (decl.additionalProcedure && decl.additionalProcedure !== '000') ? decl.additionalProcedure : 'F48',
+      // AEAT PRE rechaza F44/F48 con regimen 40/00 en algunos TARIC (error 2077
+      // "codigo adicional incompatible"). Default vacio '000': sin codigo adicional
+      // el builder omite la etiqueta y PRE acepta importacion ordinaria libre practica.
+      codigoAdicional: (decl.additionalProcedure && decl.additionalProcedure !== '000') ? decl.additionalProcedure : '000',
       documentos: [
         { tipo: 'N380', referencia: expedition.expeditionId || 'FACTURA-001' },
         { tipo: 'N730', referencia: 'CMR-' + (expedition.expeditionId || '001') },
