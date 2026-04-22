@@ -193,8 +193,10 @@ async function submitAES(expedition) {
   const decl = expedition.declaration || {};
   const transport = expedition.transport || {};
   const isPRE = process.env.AEAT_ENVIRONMENT !== 'production';
-  // AEAT authorisationNumber debe tener 4-10 chars (error 1860). Usar codigo aduana puro.
-  const aesLocationDefault = isPRE ? 'ES002801' : '';
+  // AEAT PRE registrada por Jose Antonio (2/Mar/2026): ubicacion verde H1/AES
+  // '2801AAAAAC' (10 chars, sin prefijo ES). El recinto 'ES002801' NO existe en la
+  // tabla de autorizaciones PRE (error 5026 "recinto indicado NO existe").
+  const aesLocationDefault = isPRE ? '2801AAAAAC' : '';
   // Resolver pais destino: address.country > country (legacy) > 'US' (export por defecto fuera UE)
   const consigneeCountry = expedition.consignee?.address?.country
     || expedition.consignee?.country
