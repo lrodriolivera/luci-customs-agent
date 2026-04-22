@@ -203,11 +203,20 @@ async function submitAES(expedition) {
     || '';
   const destCountry = expedition.destination?.country || consigneeCountry || 'US';
 
+  const officeExport = decl.customsOffice || 'ES002801';
+  const officeExit = decl.officeOfExit || officeExport;
+  // Exportacion directa: misma oficina exportacion y salida (AEAT prohibe
+  // DepartureTransportMeans en ese caso, regla 1293).
+  const directExport = decl.directExport !== undefined
+    ? Boolean(decl.directExport)
+    : (officeExport === officeExit);
+
   const soapXML = buildAESExportXML({
     test: isPRE,
     lrn: decl.lrn || '',
-    customsOfficeExport: decl.customsOffice || 'ES002801',
-    customsOfficeExit: decl.customsOffice || 'ES002801',
+    directExport,
+    customsOfficeExport: officeExport,
+    customsOfficeExit: officeExit,
     exporterEORI: client.eori || process.env.DECLARANTE_EORI || 'ESB22477020',
     exporterName: client.companyName || process.env.DECLARANTE_NOMBRE || 'STRIX AI SL',
     exporterStreet: client.address?.street || '',
