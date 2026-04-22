@@ -309,13 +309,14 @@ async function submitNCTS(transit) {
     placeOfLoadingLocation: transit.placeOfLoading?.location || principal.address?.city || 'Valencia',
     referenceNumberUCR: transit.referenceNumberUCR || transit.lrn || ('UCR' + Date.now().toString().slice(-14)),
     // Consignee a nivel de HouseConsignment (AEAT regla CSRDT009: si no hay Consignee
-    // en Consignment, debe haber uno por HouseConsignment).
-    consigneeEORI: transit.consigneeEORI || transit.consignee?.eori || '',
-    consigneeName: transit.consigneeName || transit.consignee?.name || '',
+    // en Consignment, debe haber uno por HouseConsignment). Fallback al principal
+    // si el transit no trae consignee separado: en T1/T2 es habitual que coincidan.
+    consigneeEORI: transit.consigneeEORI || transit.consignee?.eori || holderEORI,
+    consigneeName: transit.consigneeName || transit.consignee?.name || principal.name || 'STRIX AI SL',
     consignment: {
       transportMode: transit.transport?.mode || '3',
-      consigneeEORI: transit.consigneeEORI || transit.consignee?.eori || '',
-      consigneeName: transit.consigneeName || transit.consignee?.name || '',
+      consigneeEORI: transit.consigneeEORI || transit.consignee?.eori || holderEORI,
+      consigneeName: transit.consigneeName || transit.consignee?.name || principal.name || 'STRIX AI SL',
       goodsItems: (transit.goodsItems || []).map(g => ({
         description: g.description,
         taricCode: g.taricCode,
@@ -392,8 +393,8 @@ async function submitENS(ensDeclaration) {
         country: rootConsignee.address?.country || rootConsignee.country || 'ES'
       },
       goodsDescription: ensDeclaration.goods[0].description || cons.goodsDescription || '',
-      commodityCode: ensDeclaration.goods[0].commodityCode || ensDeclaration.goods[0].taricCode || '',
-      marksOfPackages: ensDeclaration.goods[0].marksOfPackages || 'N/M'
+      commodityCode: ensDeclaration.goods[0].commodityCode || ensDeclaration.goods[0].taricCode || ensDeclaration.goods[0].hsCode || '',
+      marksOfPackages: ensDeclaration.goods[0].marksOfPackages || ensDeclaration.goods[0].packages?.marks || 'N/M'
     }];
   }
 
