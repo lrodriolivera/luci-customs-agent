@@ -27,19 +27,24 @@ const create = async (req, res) => {
       internalNotes
     } = req.body;
 
-    // Transform client structure if needed (frontend sends flat structure)
+    // Transform client structure if needed (frontend sends flat structure, API can send nested)
     if (client) {
-      // Map frontend client structure to backend expected structure
-      const transformedClient = {
-        companyName: client.companyName,
-        nif: client.nif?.toUpperCase(),
-        eori: client.eori || (client.nif ? `ES${client.nif.toUpperCase()}` : ''),
-        address: client.address ? {
+      let clientAddress;
+      if (client.address && typeof client.address === 'string') {
+        clientAddress = {
           street: client.address,
           city: client.city || '',
           postalCode: client.postalCode || '',
           country: client.country || 'ES'
-        } : undefined,
+        };
+      } else if (client.address && typeof client.address === 'object') {
+        clientAddress = client.address;
+      }
+      const transformedClient = {
+        companyName: client.companyName,
+        nif: client.nif?.toUpperCase(),
+        eori: client.eori || (client.nif ? `ES${client.nif.toUpperCase()}` : ''),
+        address: clientAddress,
         contact: {
           name: client.contactPerson || client.contact?.name || '',
           email: client.email || client.contact?.email || '',
@@ -73,16 +78,19 @@ const create = async (req, res) => {
     }
 
     // Transform importer structure similarly
-    if (importer && importer.address && typeof importer.address === 'string') {
-      importer = {
-        ...importer,
-        address: importer.address ? {
-          street: importer.address,
-          city: importer.city || '',
-          postalCode: importer.postalCode || '',
-          country: importer.country || ''
-        } : undefined
-      };
+    if (importer && importer.address) {
+      if (typeof importer.address === 'string') {
+        importer = {
+          ...importer,
+          address: {
+            street: importer.address,
+            city: importer.city || '',
+            postalCode: importer.postalCode || '',
+            country: importer.country || ''
+          }
+        };
+      }
+      // si ya es objeto, dejarlo tal cual (lo acepta AddressSchema directamente)
     }
 
     // Transform incoterm if sent as string
