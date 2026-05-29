@@ -613,7 +613,7 @@ const PUERequestDetail = () => {
                 return (
                   <TimelineItem key={idx}>
                     <TimelineSeparator>
-                      <TimelineDot color={cfg.color || 'grey'} />
+                      <TimelineDot color={statusConfig[history.status]?.dotColor || (statusConfig[history.status]?.color === 'default' ? 'grey' : statusConfig[history.status]?.color) || 'grey'} />
                       {idx < request.statusHistory.length - 1 && <TimelineConnector />}
                     </TimelineSeparator>
                     <TimelineContent>

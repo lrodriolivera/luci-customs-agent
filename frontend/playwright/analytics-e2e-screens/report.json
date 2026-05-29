@@ -1,0 +1,190 @@
+{
+  "timestamp": "2026-05-04T14:55:30.544Z",
+  "total_findings": 36,
+  "critical": 0,
+  "high": 0,
+  "medium": 1,
+  "low": 35,
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Analytics y BI\""
+    },
+    {
+      "cat": "subtitle-literal",
+      "sev": "low",
+      "msg": "Literal \"analyticsPage.subtitle\" visible: false"
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "tab",
+      "sev": "low",
+      "msg": "Tab \"Vision General\" visible: true"
+    },
+    {
+      "cat": "tab",
+      "sev": "low",
+      "msg": "Tab \"KPIs\" visible: true"
+    },
+    {
+      "cat": "tab",
+      "sev": "low",
+      "msg": "Tab \"Financiero\" visible: true"
+    },
+    {
+      "cat": "tab",
+      "sev": "low",
+      "msg": "Tab \"Cumplimiento\" visible: true"
+    },
+    {
+      "cat": "ai-btn",
+      "sev": "low",
+      "msg": "Boton \"Centro de Analisis IA\" visible: true"
+    },
+    {
+      "cat": "period-options",
+      "sev": "low",
+      "msg": "Opciones select periodo: 8 (esperado 8)"
+    },
+    {
+      "cat": "period-text",
+      "sev": "low",
+      "msg": "Primera opcion texto: \"Hoy\""
+    },
+    {
+      "cat": "rt-label",
+      "sev": "low",
+      "msg": "Indicador \"En tiempo real\" visible: true"
+    },
+    {
+      "cat": "rt-aeat",
+      "sev": "low",
+      "msg": "Indicador AEAT visible: true"
+    },
+    {
+      "cat": "rt-declaraciones",
+      "sev": "low",
+      "msg": "Etiqueta \"Declaraciones activas\" visible: true"
+    },
+    {
+      "cat": "overview-card",
+      "sev": "low",
+      "msg": "Card \"Declaraciones\" visible: true"
+    },
+    {
+      "cat": "overview-card",
+      "sev": "low",
+      "msg": "Card \"Valor Aduanero\" visible: true"
+    },
+    {
+      "cat": "overview-card",
+      "sev": "low",
+      "msg": "Card \"Cumplimiento\" visible: true"
+    },
+    {
+      "cat": "overview-card",
+      "sev": "low",
+      "msg": "Card \"Tiempo Medio\" visible: true"
+    },
+    {
+      "cat": "overview-charts",
+      "sev": "low",
+      "msg": "Charts visibles: 2"
+    },
+    {
+      "cat": "luci-insights-card",
+      "sev": "low",
+      "msg": "Card \"Insights de LUCI\" visible: true (puede no aparecer si no hay datos del backend)"
+    },
+    {
+      "cat": "kpi-health",
+      "sev": "low",
+      "msg": "Heading \"Salud del Sistema\" visible: true"
+    },
+    {
+      "cat": "kpi-score",
+      "sev": "low",
+      "msg": "Score numerico: \"74\""
+    },
+    {
+      "cat": "financial-card",
+      "sev": "low",
+      "msg": "Card \"Derechos Calculados\" visible: true"
+    },
+    {
+      "cat": "financial-card",
+      "sev": "low",
+      "msg": "Card \"Derechos Pagados\" visible: true"
+    },
+    {
+      "cat": "financial-card",
+      "sev": "low",
+      "msg": "Card \"Ahorros Potenciales\" visible: true"
+    },
+    {
+      "cat": "financial-guarantee",
+      "sev": "low",
+      "msg": "\"Utilizacion de Garantias\" visible: true"
+    },
+    {
+      "cat": "compliance-card",
+      "sev": "low",
+      "msg": "Card \"Tasa de Error\" visible: true"
+    },
+    {
+      "cat": "compliance-card",
+      "sev": "low",
+      "msg": "Card \"Tasa de Rechazo\" visible: true"
+    },
+    {
+      "cat": "compliance-card",
+      "sev": "low",
+      "msg": "Card \"Envios a Tiempo\" visible: true"
+    },
+    {
+      "cat": "compliance-card",
+      "sev": "low",
+      "msg": "Card \"Tasa de Inspeccion\" visible: true"
+    },
+    {
+      "cat": "compliance-completeness",
+      "sev": "low",
+      "msg": "\"Completitud Documental\" visible: true"
+    },
+    {
+      "cat": "period-change",
+      "sev": "low",
+      "msg": "Llamadas dashboard tras cambiar periodo: 1, last status=200"
+    },
+    {
+      "cat": "period-value",
+      "sev": "low",
+      "msg": "Valor seleccionado: this_month"
+    },
+    {
+      "cat": "ai-modal-header",
+      "sev": "medium",
+      "msg": "Modal header IA visible: false"
+    },
+    {
+      "cat": "ai-tabs",
+      "sev": "low",
+      "msg": "Tabs IA encontradas: 6/6"
+    },
+    {
+      "cat": "ai-insights-call",
+      "sev": "low",
+      "msg": "POST /ai/insights llamadas: 1, status=200, dataKeys=executiveSummary,keyInsights,trends,anomalies,opportunities,risks,recommendations,nextPeriodForecast,model,tokensUsed,generatedAt"
+    },
+    {
+      "cat": "refresh-btn",
+      "sev": "low",
+      "msg": "Refresh -> 2 calls, statuses=200,200"
+    }
+  ]
+}

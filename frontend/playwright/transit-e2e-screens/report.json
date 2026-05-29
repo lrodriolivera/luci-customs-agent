@@ -1,0 +1,97 @@
+{
+  "generatedAt": "2026-05-04T13:16:28.482Z",
+  "timestamp": 1777900502750,
+  "firstTransitId": "69e8dbe0567bcfd5e75fec13",
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Transitos NCTS\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "new-btn",
+      "sev": "low",
+      "msg": "Boton Nuevo Transito visible: true"
+    },
+    {
+      "cat": "stats-cards",
+      "sev": "medium",
+      "msg": "Stats labels visibles: 2"
+    },
+    {
+      "cat": "filter-selects",
+      "sev": "low",
+      "msg": "Selects filtros: 2"
+    },
+    {
+      "cat": "list-rows",
+      "sev": "low",
+      "msg": "Filas/cards en lista: 2"
+    },
+    {
+      "cat": "ncts-refs",
+      "sev": "low",
+      "msg": "Referencias NCTS-* visibles: true"
+    },
+    {
+      "cat": "t1-badges",
+      "sev": "low",
+      "msg": "Badges T1 visibles: true"
+    },
+    {
+      "cat": "filter-T1",
+      "sev": "low",
+      "msg": "HTTP 200, count=15"
+    },
+    {
+      "cat": "filter-status",
+      "sev": "low",
+      "msg": "HTTP 200, count=15"
+    },
+    {
+      "cat": "new-form",
+      "sev": "low",
+      "msg": "Form Nuevo Transito visible: true"
+    },
+    {
+      "cat": "ai-btn",
+      "sev": "low",
+      "msg": "Boton IA/Asistente visible: true"
+    },
+    {
+      "cat": "ai-panel-opened",
+      "sev": "low",
+      "msg": "Panel IA abierto: true"
+    },
+    {
+      "cat": "ai-validate",
+      "sev": "low",
+      "msg": "Tab Validar Ruta ejecutado"
+    },
+    {
+      "cat": "ai-incidents-tab",
+      "sev": "low",
+      "msg": "Tab Predecir Incidencias visible"
+    },
+    {
+      "cat": "ai-guarantee-tab",
+      "sev": "low",
+      "msg": "Tab Sugerir Garantia visible"
+    },
+    {
+      "cat": "ai-full-tab",
+      "sev": "low",
+      "msg": "Tab Analisis Completo visible"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final dashboard /transit"
+    }
+  ]
+}

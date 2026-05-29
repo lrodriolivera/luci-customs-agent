@@ -1,0 +1,90 @@
+{
+  "generatedAt": "2026-04-29T18:28:24.496Z",
+  "createdH7Id": "69f24d7767c21d69270db3f9",
+  "createdH7DeclarationId": "LUCI-MOK-005",
+  "aeatMrn": "26ES19938245448511H7",
+  "aeatChannel": "green",
+  "manifestRows": 5,
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1=\"Declaraciones H7\""
+    },
+    {
+      "cat": "stats-cards",
+      "sev": "low",
+      "msg": "Stats: [78 · 2076,10 € · 320,80 € · 6]"
+    },
+    {
+      "cat": "action-buttons",
+      "sev": "low",
+      "msg": "Botones: import=true new=true"
+    },
+    {
+      "cat": "list-rows",
+      "sev": "low",
+      "msg": "H7 declarations en lista: 5"
+    },
+    {
+      "cat": "csv-uploaded",
+      "sev": "low",
+      "msg": "CSV cargado: 5 envíos"
+    },
+    {
+      "cat": "next-btn-text",
+      "sev": "low",
+      "msg": "Botón siguiente: \"Clasificar con IA (5 envios)\""
+    },
+    {
+      "cat": "process-clicked",
+      "sev": "low",
+      "msg": "Click en botón siguiente"
+    },
+    {
+      "cat": "create-btn-text",
+      "sev": "low",
+      "msg": "Botón clickeado: \"Crear 5 declaraciones H7\""
+    },
+    {
+      "cat": "manifest-success",
+      "sev": "low",
+      "msg": "Mensajes éxito creación: 7"
+    },
+    {
+      "cat": "list-after",
+      "sev": "low",
+      "msg": "Filas tras manifiesto: 10"
+    },
+    {
+      "cat": "lucimok-rows",
+      "sev": "low",
+      "msg": "Filas con LUCI-MOK: 10"
+    },
+    {
+      "cat": "new-h7-btn",
+      "sev": "medium",
+      "msg": "Botón \"Nueva H7\" / \"Crear primera\" no visible"
+    },
+    {
+      "cat": "h7-from-manifest",
+      "sev": "low",
+      "msg": "H7 del manifiesto: _id=69f24d7767c21d69270db3f9 number=LUCI-MOK-005"
+    },
+    {
+      "cat": "h7-aeat",
+      "sev": "low",
+      "msg": "H7 submit AEAT: HTTP 200 mrn=26ES19938245448511H7 channel=green"
+    },
+    {
+      "cat": "h7-final",
+      "sev": "low",
+      "msg": "Final: status=released mrn=26ES19938245448511H7 channel=green"
+    },
+    {
+      "cat": "assistant-renders",
+      "sev": "low",
+      "msg": "Asistente OK: errorBoundary=false inputs=1"
+    }
+  ]
+}

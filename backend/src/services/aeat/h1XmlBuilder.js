@@ -291,9 +291,17 @@ function expeditionToH1Data(expedition) {
     partidas: goods.map(g => ({
       descripcion: g.description || '',
       taricCode: g.taricCode || g.tariffCode || g.hsCode || '',
-      paisOrigen: g.countryOfOrigin || g.origin || '',
+      paisOrigen: g.countryOfOrigin || g.originCountry || g.origin || '',
       pesobruto: g.grossWeight || 0,
       pesoneto: g.netWeight || 0,
+      // Unidades suplementarias (casilla 41) — TARICs como 8471.30 las exigen.
+      // Lee supplementaryUnits del schema; cae a quantity si unit/quantityUnit indica piezas.
+      unidadesSuplementarias: g.supplementaryUnits
+        ?? g.supplementaryUnitsQuantity
+        ?? ((g.unit === 'PCS' || g.unit === 'NAR' || g.quantityUnit === 'PCS' || g.quantityUnit === 'NAR') ? g.quantity : null),
+      unidadesCodigo: g.supplementaryUnitType
+        || g.supplementaryUnitCode
+        || ((g.unit === 'PCS' || g.unit === 'NAR' || g.quantityUnit === 'PCS' || g.quantityUnit === 'NAR') ? 'NAR' : null),
       bultos: g.numberOfPackages || 1,
       tipoBulto: 'CT',
       marcas: g.shippingMarks || 'S/M',

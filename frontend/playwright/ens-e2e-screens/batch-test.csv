@@ -1,0 +1,3 @@
+transportMode;entryOfficeCode;expectedArrivalDate;expectedArrivalTime;carrierEORI;carrierName;transportIdentification;transportNationality;billOfLading;containerNumber;sealNumber;grossMass;numberOfPackages;goodsDescription;consignorEORI;consignorName;consigneeEORI;consigneeName
+ROAD;ES009999;2026-05-08;10:00;ESB22477020;STRIX AI SL;BATCH1777886911407A;ES;BL-BATCH-1777886911407-A;;;800;50;Mercancia batch A;CN1234567890;Sender CN;ESB22477020;STRIX AI SL
+RAIL;ES009999;2026-05-08;12:00;ESB22477020;STRIX AI SL;BATCH1777886911407B;ES;BL-BATCH-1777886911407-B;;;1200;75;Mercancia batch B;CN1234567890;Sender CN;ESB22477020;STRIX AI SL

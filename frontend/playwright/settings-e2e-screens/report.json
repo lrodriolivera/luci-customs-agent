@@ -1,0 +1,215 @@
+{
+  "timestamp": "2026-05-04T17:01:09.428Z",
+  "total_findings": 41,
+  "critical": 0,
+  "high": 0,
+  "medium": 0,
+  "low": 41,
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Configuracion de Organizacion\""
+    },
+    {
+      "cat": "subtitle-literal",
+      "sev": "low",
+      "msg": "Literal \"settings.subtitle\" visible: false"
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "tabs-count",
+      "sev": "low",
+      "msg": "Tabs visibles: 8/8"
+    },
+    {
+      "cat": "save-btn",
+      "sev": "low",
+      "msg": "Boton Guardar Cambios visible: true"
+    },
+    {
+      "cat": "general-orgname",
+      "sev": "low",
+      "msg": "Org name input: \"STRIX AI SL\""
+    },
+    {
+      "cat": "general-eori",
+      "sev": "low",
+      "msg": "Label EORI visible: true"
+    },
+    {
+      "cat": "general-status",
+      "sev": "low",
+      "msg": "Estado cuenta visible: true"
+    },
+    {
+      "cat": "general-mock-data",
+      "sev": "low",
+      "msg": "Datos del tenant son MOCK hardcoded: false (orgName=\"STRIX AI SL\", deberia cargar tenant real desde API)"
+    },
+    {
+      "cat": "branding-color",
+      "sev": "low",
+      "msg": "Color picker visible: true"
+    },
+    {
+      "cat": "branding-file-input",
+      "sev": "low",
+      "msg": "Input file logo: 1"
+    },
+    {
+      "cat": "branding-color-change",
+      "sev": "low",
+      "msg": "Color tras cambio: #3b82f6"
+    },
+    {
+      "cat": "defaults-selects",
+      "sev": "low",
+      "msg": "Selects en Defaults: 4 (esperado >=4)"
+    },
+    {
+      "cat": "defaults-currency",
+      "sev": "low",
+      "msg": "Moneda tras cambio: USD"
+    },
+    {
+      "cat": "notif-toggles",
+      "sev": "low",
+      "msg": "Toggles en Notifications: 4"
+    },
+    {
+      "cat": "notif-toggle-change",
+      "sev": "low",
+      "msg": "Toggle 1 cambio true -> false"
+    },
+    {
+      "cat": "security-mfa",
+      "sev": "low",
+      "msg": "MFA toggle visible: true"
+    },
+    {
+      "cat": "security-timeout",
+      "sev": "low",
+      "msg": "sessionTimeout valor: 480"
+    },
+    {
+      "cat": "security-ip",
+      "sev": "low",
+      "msg": "IP whitelist textarea visible: true"
+    },
+    {
+      "cat": "security-pw-policy",
+      "sev": "low",
+      "msg": "Heading politica contrasena visible: true"
+    },
+    {
+      "cat": "roles-rows",
+      "sev": "low",
+      "msg": "Filas roles: 5 (esperado 5: admin/manager/agente/operator/viewer)"
+    },
+    {
+      "cat": "role",
+      "sev": "low",
+      "msg": "Rol \"Administrador\" visible: true"
+    },
+    {
+      "cat": "role",
+      "sev": "low",
+      "msg": "Rol \"Gestor\" visible: true"
+    },
+    {
+      "cat": "role",
+      "sev": "low",
+      "msg": "Rol \"Agente Aduanero\" visible: true"
+    },
+    {
+      "cat": "role",
+      "sev": "low",
+      "msg": "Rol \"Operador\" visible: true"
+    },
+    {
+      "cat": "role",
+      "sev": "low",
+      "msg": "Rol \"Visualizador\" visible: true"
+    },
+    {
+      "cat": "roles-create-btn",
+      "sev": "low",
+      "msg": "Boton crear rol custom visible: true"
+    },
+    {
+      "cat": "country",
+      "sev": "low",
+      "msg": "Pais \"Espana\" visible: true"
+    },
+    {
+      "cat": "country",
+      "sev": "low",
+      "msg": "Pais \"Paises Bajos\" visible: true"
+    },
+    {
+      "cat": "country",
+      "sev": "low",
+      "msg": "Pais \"Belgica\" visible: true"
+    },
+    {
+      "cat": "country",
+      "sev": "low",
+      "msg": "Pais \"Alemania\" visible: true"
+    },
+    {
+      "cat": "country",
+      "sev": "low",
+      "msg": "Pais \"Francia\" visible: true"
+    },
+    {
+      "cat": "proximamente",
+      "sev": "low",
+      "msg": "Etiquetas \"Proximamente\": 3/3"
+    },
+    {
+      "cat": "customs-cert-btn",
+      "sev": "low",
+      "msg": "Boton \"Subir certificado\" visible: true"
+    },
+    {
+      "cat": "customs-save",
+      "sev": "low",
+      "msg": "PUT /api/tenant/eori: 1 llamadas, status=200"
+    },
+    {
+      "cat": "customs-connection",
+      "sev": "low",
+      "msg": "Estado de conexion por pais visible: true"
+    },
+    {
+      "cat": "integration-card",
+      "sev": "low",
+      "msg": "Card \"AEAT\" visible: true"
+    },
+    {
+      "cat": "integration-card",
+      "sev": "low",
+      "msg": "Card \"API\" visible: true"
+    },
+    {
+      "cat": "integration-card",
+      "sev": "low",
+      "msg": "Card \"Webhook\" visible: true"
+    },
+    {
+      "cat": "integration-buttons",
+      "sev": "low",
+      "msg": "Botones Gestionar=true, Configurar=true"
+    },
+    {
+      "cat": "save-feedback",
+      "sev": "low",
+      "msg": "Mensaje feedback save: true"
+    }
+  ]
+}

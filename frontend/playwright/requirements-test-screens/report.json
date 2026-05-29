@@ -1,0 +1,550 @@
+{
+  "generatedAt": "2026-04-29T13:53:05.103Z",
+  "apiData": {
+    "stats": {
+      "total": 15,
+      "pending": 5,
+      "inProgress": 6,
+      "resolved": 4,
+      "byStatus": {
+        "in_progress": 6,
+        "resolved": 4,
+        "pending": 2,
+        "awaiting_client": 3
+      },
+      "byChannel": {
+        "red": 5,
+        "orange": 10
+      },
+      "overdue": 11,
+      "urgentCount": 11,
+      "overdueCount": 11,
+      "urgentRequirements": [
+        {
+          "_id": "69a0671f2611de0ca6bc5e6e",
+          "expeditionId": "69a0671f2611de0ca6bc5e27",
+          "requirementNumber": "REQ-TST-2026-00006",
+          "mrn": "2026ES00432326",
+          "requirementType": "classification",
+          "issuingAuthority": "AEAT",
+          "channel": "orange",
+          "status": "pending",
+          "priority": "high",
+          "deadline": "2026-03-01T04:20:16.772Z",
+          "subject": "Requerimiento classification - EXP-TST-0117",
+          "description": "Requerimiento de classification para expediente EXP-TST-0117",
+          "requestedItems": [
+            {
+              "itemType": "document",
+              "description": "Documentacion solicitada para classification",
+              "mandatory": true,
+              "provided": false,
+              "_id": "69a0671f2611de0ca6bc5e6f"
+            }
+          ],
+          "createdBy": "69a0652405dd2bcaa3028ddb",
+          "createdAt": "2026-02-09T17:32:54.201Z",
+          "receivedAt": "2026-02-26T15:30:39.120Z",
+          "responses": [],
+          "timeline": [],
+          "notifications": [],
+          "__v": 0,
+          "updatedAt": "2026-02-26T15:30:39.135Z",
+          "daysUntilDeadline": -59,
+          "isOverdue": true,
+          "completionPercentage": 0,
+          "id": "69a0671f2611de0ca6bc5e6e"
+        },
+        {
+          "_id": "69a0671f2611de0ca6bc5e78",
+          "expeditionId": "69a0671e2611de0ca6bc5dfa",
+          "requirementNumber": "REQ-TST-2026-00011",
+          "mrn": "2026ES00390559",
+          "requirementType": "certificate",
+          "issuingAuthority": "AEAT",
+          "channel": "orange",
+          "status": "in_progress",
+          "priority": "high",
+          "deadline": "2026-03-01T21:19:27.212Z",
+          "subject": "Requerimiento certificate - EXP-TST-0102",
+          "description": "Requerimiento de certificate para expediente EXP-TST-0102",
+          "requestedItems": [
+            {
+              "itemType": "document",
+              "description": "Documentacion solicitada para certificate",
+              "mandatory": true,
+              "provided": false,
+              "_id": "69a0671f2611de0ca6bc5e79"
+            }
+          ],
+          "createdBy": "69a0652405dd2bcaa3028ddb",
+          "createdAt": "2026-02-23T23:29:55.473Z",
+          "receivedAt": "2026-02-26T15:30:39.121Z",
+          "responses": [],
+          "timeline": [],
+          "notifications": [],
+          "__v": 0,
+          "updatedAt": "2026-02-26T15:30:39.135Z",
+          "daysUntilDeadline": -58,
+          "isOverdue": true,
+          "completionPercentage": 0,
+          "id": "69a0671f2611de0ca6bc5e78"
+        },
+        {
+          "_id": "69a0671f2611de0ca6bc5e68",
+          "expeditionId": "69a0671e2611de0ca6bc5e0f",
+          "requirementNumber": "REQ-TST-2026-00003",
+          "mrn": "2026ES00847733",
+          "requirementType": "classification",
+          "issuingAuthority": "AEAT",
+          "channel": "orange",
+          "status": "in_progress",
+          "priority": "high",
+          "deadline": "2026-03-01T23:42:56.608Z",
+          "subject": "Requerimiento classification - EXP-TST-0109",
+          "description": "Requerimiento de classification para expediente EXP-TST-0109",
+          "requestedItems": [
+            {
+              "itemType": "document",
+              "description": "Documentacion solicitada para classification",
+              "mandatory": true,
+              "provided": false,
+              "_id": "69a0671f2611de0ca6bc5e69"
+            }
+          ],
+          "createdBy": "69a0652405dd2bcaa3028ddb",
+          "createdAt": "2026-02-07T21:34:30.938Z",
+          "receivedAt": "2026-02-26T15:30:39.118Z",
+          "responses": [],
+          "timeline": [],
+          "notifications": [],
+          "__v": 0,
+          "updatedAt": "2026-02-26T15:30:39.134Z",
+          "daysUntilDeadline": -58,
+          "isOverdue": true,
+          "completionPercentage": 0,
+          "id": "69a0671f2611de0ca6bc5e68"
+        },
+        {
+          "_id": "69a0671f2611de0ca6bc5e74",
+          "expeditionId": "69a0671f2611de0ca6bc5e27",
+          "requirementNumber": "REQ-TST-2026-00009",
+          "mrn": "2026ES00432326",
+          "requirementType": "physical",
+          "issuingAuthority": "AEAT",
+          "channel": "red",
+          "status": "in_progress",
+          "priority": "high",
+          "deadline": "2026-03-02T01:41:58.099Z",
+          "subject": "Requerimiento physical - EXP-TST-0117",
+          "description": "Requerimiento de physical para expediente EXP-TST-0117",
+          "requestedItems": [
+            {
+              "itemType": "physical_inspection",
+              "description": "Documentacion solicitada para physical",
+              "mandatory": true,
+              "provided": false,
+              "_id": "69a0671f2611de0ca6bc5e75"
+            }
+          ],
+          "createdBy": "69a0652405dd2bcaa3028ddb",
+          "createdAt": "2026-02-08T14:34:51.198Z",
+          "receivedAt": "2026-02-26T15:30:39.121Z",
+          "responses": [
+            {
+              "aeatSubmission": {
+                "submitted": false
+              },
+              "responseNumber": 1,
+              "submittedBy": "69a0652405dd2bcaa3028ddb",
+              "responseType": "documentary",
+              "notes": "QQQQQ",
+              "documents": [],
+              "_id": "69a578e5ad507d4eb9db8654",
+              "submittedAt": "2026-03-02T11:47:49.067Z"
+            }
+          ],
+          "timeline": [
+            {
+              "action": "response_added",
+              "description": "Respuesta #1 agregada",
+              "performedBy": "69a0652405dd2bcaa3028ddb",
+              "metadata": {
+                "responseNumber": 1,
+                "responseType": "documentary"
+              },
+              "_id": "69a578e5ad507d4eb9db8655",
+              "timestamp": "2026-03-02T11:47:49.067Z",
+              "id": "69a578e5ad507d4eb9db8655"
+            }
+          ],
+          "notifications": [],
+          "__v": 1,
+          "updatedAt": "2026-03-02T11:47:49.069Z",
+          "firstResponseAt": "2026-03-02T11:47:49.067Z",
+          "daysUntilDeadline": -58,
+          "isOverdue": true,
+          "completionPercentage": 0,
+          "id": "69a0671f2611de0ca6bc5e74"
+        },
+        {
+          "_id": "69a0671f2611de0ca6bc5e7c",
+          "expeditionId": "69a0671f2611de0ca6bc5e21",
+          "requirementNumber": "REQ-TST-2026-00013",
+          "mrn": "2026ES00392438",
+          "requirementType": "valuation",
+          "issuingAuthority": "AEAT",
+          "channel": "orange",
+          "status": "in_progress",
+          "priority": "high",
+          "deadline": "2026-03-04T15:22:01.709Z",
+          "subject": "Requerimiento valuation - EXP-TST-0115",
+          "description": "Requerimiento de valuation para expediente EXP-TST-0115",
+          "requestedItems": [
+            {
+              "itemType": "document",
+              "description": "Documentacion solicitada para valuation",
+              "mandatory": true,
+              "provided": false,
+              "_id": "69a0671f2611de0ca6bc5e7d"
+            }
+          ],
+          "createdBy": "69a0652405dd2bcaa3028ddb",
+          "createdAt": "2026-02-04T22:28:30.004Z",
+          "receivedAt": "2026-02-26T15:30:39.122Z",
+          "responses": [],
+          "timeline": [],
+          "notifications": [],
+          "__v": 0,
+          "updatedAt": "2026-02-26T15:30:39.135Z",
+          "daysUntilDeadline": -55,
+          "isOverdue": true,
+          "completionPercentage": 0,
+          "id": "69a0671f2611de0ca6bc5e7c"
+        }
+      ],
+      "overdueRequirements": [
+        {
+          "_id": "69a0671f2611de0ca6bc5e6e",
+          "expeditionId": "69a0671f2611de0ca6bc5e27",
+          "requirementNumber": "REQ-TST-2026-00006",
+          "mrn": "2026ES00432326",
+          "requirementType": "classification",
+          "issuingAuthority": "AEAT",
+          "channel": "orange",
+          "status": "pending",
+          "priority": "high",
+          "deadline": "2026-03-01T04:20:16.772Z",
+          "subject": "Requerimiento classification - EXP-TST-0117",
+          "description": "Requerimiento de classification para expediente EXP-TST-0117",
+          "requestedItems": [
+            {
+              "itemType": "document",
+              "description": "Documentacion solicitada para classification",
+              "mandatory": true,
+              "provided": false,
+              "_id": "69a0671f2611de0ca6bc5e6f"
+            }
+          ],
+          "createdBy": "69a0652405dd2bcaa3028ddb",
+          "createdAt": "2026-02-09T17:32:54.201Z",
+          "receivedAt": "2026-02-26T15:30:39.120Z",
+          "responses": [],
+          "timeline": [],
+          "notifications": [],
+          "__v": 0,
+          "updatedAt": "2026-02-26T15:30:39.135Z",
+          "daysUntilDeadline": -59,
+          "isOverdue": true,
+          "completionPercentage": 0,
+          "id": "69a0671f2611de0ca6bc5e6e"
+        },
+        {
+          "_id": "69a0671f2611de0ca6bc5e78",
+          "expeditionId": "69a0671e2611de0ca6bc5dfa",
+          "requirementNumber": "REQ-TST-2026-00011",
+          "mrn": "2026ES00390559",
+          "requirementType": "certificate",
+          "issuingAuthority": "AEAT",
+          "channel": "orange",
+          "status": "in_progress",
+          "priority": "high",
+          "deadline": "2026-03-01T21:19:27.212Z",
+          "subject": "Requerimiento certificate - EXP-TST-0102",
+          "description": "Requerimiento de certificate para expediente EXP-TST-0102",
+          "requestedItems": [
+            {
+              "itemType": "document",
+              "description": "Documentacion solicitada para certificate",
+              "mandatory": true,
+              "provided": false,
+              "_id": "69a0671f2611de0ca6bc5e79"
+            }
+          ],
+          "createdBy": "69a0652405dd2bcaa3028ddb",
+          "createdAt": "2026-02-23T23:29:55.473Z",
+          "receivedAt": "2026-02-26T15:30:39.121Z",
+          "responses": [],
+          "timeline": [],
+          "notifications": [],
+          "__v": 0,
+          "updatedAt": "2026-02-26T15:30:39.135Z",
+          "daysUntilDeadline": -58,
+          "isOverdue": true,
+          "completionPercentage": 0,
+          "id": "69a0671f2611de0ca6bc5e78"
+        },
+        {
+          "_id": "69a0671f2611de0ca6bc5e68",
+          "expeditionId": "69a0671e2611de0ca6bc5e0f",
+          "requirementNumber": "REQ-TST-2026-00003",
+          "mrn": "2026ES00847733",
+          "requirementType": "classification",
+          "issuingAuthority": "AEAT",
+          "channel": "orange",
+          "status": "in_progress",
+          "priority": "high",
+          "deadline": "2026-03-01T23:42:56.608Z",
+          "subject": "Requerimiento classification - EXP-TST-0109",
+          "description": "Requerimiento de classification para expediente EXP-TST-0109",
+          "requestedItems": [
+            {
+              "itemType": "document",
+              "description": "Documentacion solicitada para classification",
+              "mandatory": true,
+              "provided": false,
+              "_id": "69a0671f2611de0ca6bc5e69"
+            }
+          ],
+          "createdBy": "69a0652405dd2bcaa3028ddb",
+          "createdAt": "2026-02-07T21:34:30.938Z",
+          "receivedAt": "2026-02-26T15:30:39.118Z",
+          "responses": [],
+          "timeline": [],
+          "notifications": [],
+          "__v": 0,
+          "updatedAt": "2026-02-26T15:30:39.134Z",
+          "daysUntilDeadline": -58,
+          "isOverdue": true,
+          "completionPercentage": 0,
+          "id": "69a0671f2611de0ca6bc5e68"
+        },
+        {
+          "_id": "69a0671f2611de0ca6bc5e74",
+          "expeditionId": "69a0671f2611de0ca6bc5e27",
+          "requirementNumber": "REQ-TST-2026-00009",
+          "mrn": "2026ES00432326",
+          "requirementType": "physical",
+          "issuingAuthority": "AEAT",
+          "channel": "red",
+          "status": "in_progress",
+          "priority": "high",
+          "deadline": "2026-03-02T01:41:58.099Z",
+          "subject": "Requerimiento physical - EXP-TST-0117",
+          "description": "Requerimiento de physical para expediente EXP-TST-0117",
+          "requestedItems": [
+            {
+              "itemType": "physical_inspection",
+              "description": "Documentacion solicitada para physical",
+              "mandatory": true,
+              "provided": false,
+              "_id": "69a0671f2611de0ca6bc5e75"
+            }
+          ],
+          "createdBy": "69a0652405dd2bcaa3028ddb",
+          "createdAt": "2026-02-08T14:34:51.198Z",
+          "receivedAt": "2026-02-26T15:30:39.121Z",
+          "responses": [
+            {
+              "aeatSubmission": {
+                "submitted": false
+              },
+              "responseNumber": 1,
+              "submittedBy": "69a0652405dd2bcaa3028ddb",
+              "responseType": "documentary",
+              "notes": "QQQQQ",
+              "documents": [],
+              "_id": "69a578e5ad507d4eb9db8654",
+              "submittedAt": "2026-03-02T11:47:49.067Z"
+            }
+          ],
+          "timeline": [
+            {
+              "action": "response_added",
+              "description": "Respuesta #1 agregada",
+              "performedBy": "69a0652405dd2bcaa3028ddb",
+              "metadata": {
+                "responseNumber": 1,
+                "responseType": "documentary"
+              },
+              "_id": "69a578e5ad507d4eb9db8655",
+              "timestamp": "2026-03-02T11:47:49.067Z",
+              "id": "69a578e5ad507d4eb9db8655"
+            }
+          ],
+          "notifications": [],
+          "__v": 1,
+          "updatedAt": "2026-03-02T11:47:49.069Z",
+          "firstResponseAt": "2026-03-02T11:47:49.067Z",
+          "daysUntilDeadline": -58,
+          "isOverdue": true,
+          "completionPercentage": 0,
+          "id": "69a0671f2611de0ca6bc5e74"
+        },
+        {
+          "_id": "69a0671f2611de0ca6bc5e7c",
+          "expeditionId": "69a0671f2611de0ca6bc5e21",
+          "requirementNumber": "REQ-TST-2026-00013",
+          "mrn": "2026ES00392438",
+          "requirementType": "valuation",
+          "issuingAuthority": "AEAT",
+          "channel": "orange",
+          "status": "in_progress",
+          "priority": "high",
+          "deadline": "2026-03-04T15:22:01.709Z",
+          "subject": "Requerimiento valuation - EXP-TST-0115",
+          "description": "Requerimiento de valuation para expediente EXP-TST-0115",
+          "requestedItems": [
+            {
+              "itemType": "document",
+              "description": "Documentacion solicitada para valuation",
+              "mandatory": true,
+              "provided": false,
+              "_id": "69a0671f2611de0ca6bc5e7d"
+            }
+          ],
+          "createdBy": "69a0652405dd2bcaa3028ddb",
+          "createdAt": "2026-02-04T22:28:30.004Z",
+          "receivedAt": "2026-02-26T15:30:39.122Z",
+          "responses": [],
+          "timeline": [],
+          "notifications": [],
+          "__v": 0,
+          "updatedAt": "2026-02-26T15:30:39.135Z",
+          "daysUntilDeadline": -55,
+          "isOverdue": true,
+          "completionPercentage": 0,
+          "id": "69a0671f2611de0ca6bc5e7c"
+        }
+      ]
+    },
+    "listCount": 15
+  },
+  "findings": [
+    {
+      "cat": "api-stats",
+      "sev": "low",
+      "msg": "stats: total=15 pending=5 inProgress=6 resolved=4 overdue=11"
+    },
+    {
+      "cat": "api-list",
+      "sev": "low",
+      "msg": "list: 15 requerimientos"
+    },
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1=\"Requerimientos AEAT\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "stats-counts-ui",
+      "sev": "low",
+      "msg": "Counts UI: [15, 5, 6, 4]"
+    },
+    {
+      "cat": "stats-match",
+      "sev": "low",
+      "msg": "4/4 stats coinciden con API"
+    },
+    {
+      "cat": "table-rows",
+      "sev": "low",
+      "msg": "Filas tabla: 15 (API: 15)"
+    },
+    {
+      "cat": "first-req",
+      "sev": "low",
+      "msg": "Primer requerimiento REQ-TST-2026-00008 visible: true"
+    },
+    {
+      "cat": "filter-pending",
+      "sev": "low",
+      "msg": "Filtro estado=pending: 15 → 2"
+    },
+    {
+      "cat": "filter-resolved",
+      "sev": "low",
+      "msg": "Filtro estado=resolved: 4"
+    },
+    {
+      "cat": "filter-channel-orange",
+      "sev": "low",
+      "msg": "Filtro canal=orange: 10 (API byChannel.orange=10)"
+    },
+    {
+      "cat": "filter-channel-red",
+      "sev": "low",
+      "msg": "Filtro canal=red: 5 (API byChannel.red=5)"
+    },
+    {
+      "cat": "clear-btn",
+      "sev": "low",
+      "msg": "Boton Limpiar visible cuando hay filtros: true"
+    },
+    {
+      "cat": "clear-result",
+      "sev": "low",
+      "msg": "Click Limpiar: 5 → 15"
+    },
+    {
+      "cat": "filter-type-doc",
+      "sev": "low",
+      "msg": "Filtro tipo=documentary: 2"
+    },
+    {
+      "cat": "refresh",
+      "sev": "low",
+      "msg": "Click Actualizar OK"
+    },
+    {
+      "cat": "deadline-indicators",
+      "sev": "low",
+      "msg": "UI muestra: Vencido x15, Hoy x0, API overdue=11"
+    },
+    {
+      "cat": "calendar-icons",
+      "sev": "low",
+      "msg": "Iconos en filas: 73"
+    },
+    {
+      "cat": "row-links-count",
+      "sev": "low",
+      "msg": "Links únicos a expeditions: 5 (sample 5)"
+    },
+    {
+      "cat": "row-links-summary",
+      "sev": "low",
+      "msg": "5/5 links sirven 200"
+    },
+    {
+      "cat": "row-nav",
+      "sev": "low",
+      "msg": "Click fila → /expeditions/69a0671f2611de0ca6bc5e27 (esperado /expeditions/69a0671f2611de0ca6bc5e27)"
+    },
+    {
+      "cat": "assistant-cta",
+      "sev": "low",
+      "msg": "CTA asistente visible: true"
+    },
+    {
+      "cat": "assistant-renders",
+      "sev": "low",
+      "msg": "Asistente OK (no crash, inputs=1)"
+    }
+  ]
+}

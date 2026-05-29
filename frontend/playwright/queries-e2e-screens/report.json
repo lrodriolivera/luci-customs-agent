@@ -1,0 +1,116 @@
+{
+  "generatedAt": "2026-05-04T12:29:39.588Z",
+  "timestamp": 1777897710254,
+  "results": [
+    {
+      "test": "mrn",
+      "queryId": "QMRN-MOR6EID3F9VN",
+      "count": 2
+    },
+    {
+      "test": "eori",
+      "count": 0
+    },
+    {
+      "test": "container",
+      "count": 2
+    }
+  ],
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Consultas ADDS-JDIT\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "stats-cards",
+      "sev": "low",
+      "msg": "Total=true Exitosas=true Fallidas=true Recientes=true"
+    },
+    {
+      "cat": "tabs-visible",
+      "sev": "low",
+      "msg": "NuevaConsulta=true Historial=true"
+    },
+    {
+      "cat": "type-B/L",
+      "sev": "low",
+      "msg": "Boton tipo Conocimiento: true"
+    },
+    {
+      "cat": "type-Container",
+      "sev": "low",
+      "msg": "Boton tipo Contenedor: true"
+    },
+    {
+      "cat": "type-Location",
+      "sev": "low",
+      "msg": "Boton tipo Ubicacion: true"
+    },
+    {
+      "cat": "type-Docs",
+      "sev": "low",
+      "msg": "Boton tipo Documentos: true"
+    },
+    {
+      "cat": "type-MRN",
+      "sev": "low",
+      "msg": "Boton tipo MRN: true"
+    },
+    {
+      "cat": "type-EORI",
+      "sev": "low",
+      "msg": "Boton tipo EORI: true"
+    },
+    {
+      "cat": "search-btn",
+      "sev": "low",
+      "msg": "Boton Buscar visible: true"
+    },
+    {
+      "cat": "mrn-query-http",
+      "sev": "low",
+      "msg": "HTTP 200, count=2, queryId=QMRN-MOR6EID3F9VN"
+    },
+    {
+      "cat": "mrn-ui-result",
+      "sev": "low",
+      "msg": "Alert resultados visible: true"
+    },
+    {
+      "cat": "http-error",
+      "sev": "critical",
+      "msg": "500 POST /api/queries/eori"
+    },
+    {
+      "cat": "eori-query-http",
+      "sev": "critical",
+      "msg": "HTTP 500, count=0"
+    },
+    {
+      "cat": "container-query-http",
+      "sev": "low",
+      "msg": "HTTP 200, count=2"
+    },
+    {
+      "cat": "history-http",
+      "sev": "medium",
+      "msg": "HTTP undefined, count=0, total=0"
+    },
+    {
+      "cat": "history-headers",
+      "sev": "low",
+      "msg": "Headers tabla historial: 8 (esperado 8: ID/Tipo/Parametros/Estado/Resultados/Fecha/Tiempo/Acciones)"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final dashboard /queries con stats actualizadas"
+    }
+  ]
+}

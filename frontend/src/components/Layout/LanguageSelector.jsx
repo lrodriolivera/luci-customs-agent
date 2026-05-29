@@ -41,7 +41,7 @@ export default function LanguageSelector({ variant = 'header' }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
-  const currentLang = languages.find(l => l.code === i18n.language) || languages[0]
+  const currentLang = languages.find(l => l.code === i18n.resolvedLanguage) || languages[0]
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -74,7 +74,7 @@ export default function LanguageSelector({ variant = 'header' }) {
                 key={lang.code}
                 onClick={() => changeLang(lang.code)}
                 className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
-                  lang.code === i18n.language
+                  lang.code === i18n.resolvedLanguage
                     ? 'bg-sky-500/20 text-white'
                     : 'text-slate-300 hover:bg-slate-700'
                 }`}
@@ -106,7 +106,7 @@ export default function LanguageSelector({ variant = 'header' }) {
               key={lang.code}
               onClick={() => changeLang(lang.code)}
               className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
-                lang.code === i18n.language
+                lang.code === i18n.resolvedLanguage
                   ? 'bg-sky-50 text-sky-700 font-medium'
                   : 'text-gray-700 hover:bg-gray-50'
               }`}

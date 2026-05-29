@@ -1,0 +1,90 @@
+{
+  "generatedAt": "2026-05-04T13:02:15.780Z",
+  "timestamp": 1777899648860,
+  "created": {
+    "id": "69f89887d545c224d5f781b0",
+    "reference": "IP-E2E-1777899648860"
+  },
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Regimenes Especiales\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "header-buttons",
+      "sev": "low",
+      "msg": "Refresh=true AsistenteIA=true NuevoRegimen=true"
+    },
+    {
+      "cat": "regime-types",
+      "sev": "low",
+      "msg": "Tipos regimen visibles: 5/5 (IP/TA/CW/T1/T2)"
+    },
+    {
+      "cat": "summary-cards",
+      "sev": "low",
+      "msg": "Total=true Ultimados=true Suspendidos=true PorVencer=true"
+    },
+    {
+      "cat": "create-api",
+      "sev": "low",
+      "msg": "POST /api/special-regimes HTTP 201 ref=IP-E2E-1777899648860"
+    },
+    {
+      "cat": "new-in-list",
+      "sev": "low",
+      "msg": "Regimen IP-E2E-1777899648860 visible: true"
+    },
+    {
+      "cat": "stats-updated",
+      "sev": "low",
+      "msg": "Total Regimenes incluye conteo > 0: true"
+    },
+    {
+      "cat": "filter-ip",
+      "sev": "low",
+      "msg": "Click card IP, requests=1"
+    },
+    {
+      "cat": "filter-status",
+      "sev": "low",
+      "msg": "Filtro estado=draft aplicado"
+    },
+    {
+      "cat": "ai-modal",
+      "sev": "low",
+      "msg": "Modal RegimeAdvisor visible: true"
+    },
+    {
+      "cat": "ai-form-field",
+      "sev": "low",
+      "msg": "Campo Tipo Operacion: true"
+    },
+    {
+      "cat": "ai-analyze-btn",
+      "sev": "low",
+      "msg": "Boton Analizar: true"
+    },
+    {
+      "cat": "new-modal",
+      "sev": "low",
+      "msg": "Modal Nuevo Regimen visible: true"
+    },
+    {
+      "cat": "ai-analyze-http",
+      "sev": "medium",
+      "msg": "HTTP - (analisis IA puede tardar 10-60s)"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final dashboard /special-regimes"
+    }
+  ]
+}

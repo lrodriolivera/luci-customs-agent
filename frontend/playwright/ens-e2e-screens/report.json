@@ -1,0 +1,225 @@
+{
+  "generatedAt": "2026-05-04T09:30:17.248Z",
+  "timestamp": 1777886911407,
+  "created": {
+    "ROAD": {
+      "id": "69f8670267c21d69270dbc80",
+      "reference": "ENS-2026-000033",
+      "lrn": "LUCIMOR004N2OUI80D"
+    },
+    "RAIL": {
+      "id": "69f8670467c21d69270dbc86",
+      "reference": "ENS-2026-000034",
+      "lrn": "LUCIMOR005JT5G8GOU",
+      "mrn": "26ES009999Z0000677",
+      "status": "accepted"
+    },
+    "AIR": {
+      "id": "69f86707b824b23085bfd92a",
+      "reference": "ENS-2026-000035",
+      "lrn": "LUCIMOR007ZTE1IJ6R",
+      "status": "draft"
+    },
+    "SEA": {
+      "id": "69f8670867c21d69270dbc94",
+      "reference": "ENS-2026-000036",
+      "lrn": "LUCIMOR008Q5Z1NSH1",
+      "status": "draft"
+    }
+  },
+  "mrnSummary": {
+    "ROAD": {},
+    "RAIL": {
+      "mrn": "26ES009999Z0000677",
+      "status": "accepted"
+    },
+    "AIR": {
+      "status": "draft"
+    },
+    "SEA": {
+      "status": "draft"
+    }
+  },
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1 ENS: \"Declaraciones ENS (ICS2)\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "new-btn",
+      "sev": "low",
+      "msg": "Boton \"Nueva ENS\" visible: true"
+    },
+    {
+      "cat": "batch-btn",
+      "sev": "low",
+      "msg": "Boton \"Importar Lote\" visible: true"
+    },
+    {
+      "cat": "stats-cards",
+      "sev": "low",
+      "msg": "Cards de stats visibles: 4"
+    },
+    {
+      "cat": "filters",
+      "sev": "low",
+      "msg": "Inputs de filtros: 5"
+    },
+    {
+      "cat": "table-headers",
+      "sev": "low",
+      "msg": "Headers de tabla ENS: 11"
+    },
+    {
+      "cat": "stepper-steps",
+      "sev": "low",
+      "msg": "Stepper steps: 5 (esperado 5)"
+    },
+    {
+      "cat": "transport-cards",
+      "sev": "low",
+      "msg": "Cards modos transporte: 8"
+    },
+    {
+      "cat": "mode-carretera",
+      "sev": "low",
+      "msg": "Modo carretera visible: true"
+    },
+    {
+      "cat": "mode-ferrocarril",
+      "sev": "low",
+      "msg": "Modo ferrocarril visible: true"
+    },
+    {
+      "cat": "mode-aereo",
+      "sev": "low",
+      "msg": "Modo aereo visible: true"
+    },
+    {
+      "cat": "mode-maritim",
+      "sev": "low",
+      "msg": "Modo maritim visible: true"
+    },
+    {
+      "cat": "road-step1-filled",
+      "sev": "low",
+      "msg": "Step 1 carrier inputs llenos: 8/8"
+    },
+    {
+      "cat": "road-step2-filled",
+      "sev": "low",
+      "msg": "Step 2 consignment inputs llenos: 7/8"
+    },
+    {
+      "cat": "road-step3-filled",
+      "sev": "low",
+      "msg": "Step 3 goods inputs llenos: 3/6"
+    },
+    {
+      "cat": "road-save-send-clicked",
+      "sev": "low",
+      "msg": "Click \"Guardar y Enviar\" UI"
+    },
+    {
+      "cat": "road-ui-fallback",
+      "sev": "medium",
+      "msg": "UI no creo ROAD, fallback a API"
+    },
+    {
+      "cat": "road-result",
+      "sev": "low",
+      "msg": "ROAD id=69f8670267c21d69270dbc80 ref=ENS-2026-000033 mrn=undefined status=undefined"
+    },
+    {
+      "cat": "rail-create-submit",
+      "sev": "low",
+      "msg": "RAIL id=69f8670467c21d69270dbc86 ref=ENS-2026-000034 mrn=26ES009999Z0000677 status=accepted httpSubmit=200"
+    },
+    {
+      "cat": "air-create-submit",
+      "sev": "high",
+      "msg": "AIR id=69f86707b824b23085bfd92a ref=ENS-2026-000035 mrn=undefined status=draft httpSubmit=400"
+    },
+    {
+      "cat": "sea-create-submit",
+      "sev": "high",
+      "msg": "SEA id=69f8670867c21d69270dbc94 ref=ENS-2026-000036 mrn=undefined status=draft httpSubmit=400"
+    },
+    {
+      "cat": "list-road",
+      "sev": "low",
+      "msg": "ROAD ENS-2026-000033 visible en lista: true"
+    },
+    {
+      "cat": "list-rail",
+      "sev": "low",
+      "msg": "RAIL ENS-2026-000034 visible en lista: true"
+    },
+    {
+      "cat": "list-air",
+      "sev": "low",
+      "msg": "AIR ENS-2026-000035 visible en lista: true"
+    },
+    {
+      "cat": "list-sea",
+      "sev": "low",
+      "msg": "SEA ENS-2026-000036 visible en lista: true"
+    },
+    {
+      "cat": "filter-sea",
+      "sev": "low",
+      "msg": "Filtro modo SEA aplicado"
+    },
+    {
+      "cat": "detail-h1",
+      "sev": "low",
+      "msg": "Detail title: \"ENS-2026-000034\""
+    },
+    {
+      "cat": "detail-mrn-visible",
+      "sev": "low",
+      "msg": "MRN 26ES009999Z0000677 visible en detail UI: true"
+    },
+    {
+      "cat": "detail-ref-visible",
+      "sev": "low",
+      "msg": "Ref ENS-2026-000034 visible: true"
+    },
+    {
+      "cat": "detail-target",
+      "sev": "low",
+      "msg": "Target detail: mode=RAIL mrn=26ES009999Z0000677 status=accepted"
+    },
+    {
+      "cat": "batch-stepper",
+      "sev": "low",
+      "msg": "Batch stepper steps: 3 (esperado 3: Subir, Validar, Procesar)"
+    },
+    {
+      "cat": "batch-template-btn",
+      "sev": "low",
+      "msg": "Boton descarga template visible: true"
+    },
+    {
+      "cat": "batch-dropzone",
+      "sev": "medium",
+      "msg": "Drop zone visible: false"
+    },
+    {
+      "cat": "batch-parsed-rows",
+      "sev": "low",
+      "msg": "Filas parseadas en preview: 22"
+    },
+    {
+      "cat": "search-result",
+      "sev": "low",
+      "msg": "Busqueda \"ENS-2026-000033\": 1 fila(s)"
+    }
+  ]
+}

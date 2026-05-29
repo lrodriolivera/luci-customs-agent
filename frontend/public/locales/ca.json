@@ -73,7 +73,8 @@
     "from": "Des de",
     "to": "Fins a",
     "total": "Total",
-    "subtotal": "Subtotal"
+    "subtotal": "Subtotal",
+    "refresh": "Actualitzar"
   },
   "nav": {
     "skipToContent": "Saltar al contingut principal",
@@ -125,7 +126,9 @@
     "logout": "Tancar Sessio",
     "user": "Usuari",
     "admin": "Administrador",
-    "customsAgent": "Agent Duaner"
+    "customsAgent": "Agent Duaner",
+    "help": "Ajuda",
+    "userManual": "Manual d'usuari"
   },
   "auth": {
     "login": "Iniciar Sessio",
@@ -2080,7 +2083,9 @@
     "mutualRecognition": "Reconeixement Mutu",
     "customsSimplifications": "Simplificacions Duaneres",
     "securityProtection": "Seguretat i Proteccio",
-    "complete": "Complet (OEAC + OEAS)"
+    "complete": "Complet (OEAC + OEAS)",
+    "newApplication": "Nova Sol·licitud",
+    "newApplicationOEA": "Nova Sol·licitud OEA"
   },
   "regulations": {
     "title": "Cercador de Normativa",
@@ -3336,7 +3341,45 @@
     "trends": "Tendencies",
     "executiveReport": "Informe Executiu",
     "kpiAnalysis": "KPI Analysis",
-    "fullAnalysis": "Analisi Completa"
+    "fullAnalysis": "Analisi Completa",
+    "title": "Analitica i BI",
+    "subtitle": "Tauler d'intel.ligencia de negoci i analisi avancada",
+    "aiAnalysisCenter": "Centre d'Analisi IA",
+    "advancedAnalytics": "Analisi avancada amb LUCI",
+    "analyzingWithAI": "Analitzant amb IA...",
+    "mainInsights": "Insights Principals",
+    "recommendations": "Recomanacions",
+    "luciSummary": "Resum de LUCI",
+    "expected": "Esperat",
+    "actual": "Actual",
+    "deviation": "Desviacio",
+    "suggestedAction": "Accio suggerida",
+    "predictions": "Prediccions",
+    "confidence": "Confianca",
+    "seasonalPatterns": "Patrons Estacionals",
+    "peakPeriods": "Periodes pic",
+    "trendAlerts": "Alertes de Tendencia",
+    "keyMetrics": "Metriques Clau",
+    "periodAchievements": "Assoliments del Periode",
+    "attentionAreas": "Arees d'Atencio",
+    "strategicRecommendations": "Recomanacions Estrategiques",
+    "kpiDeviations": "Desviacions de KPI",
+    "rootCauses": "Causes Arrel",
+    "improvementActions": "Accions de Millora",
+    "expectedImpact": "Impacte esperat",
+    "fullLuciAnalysis": "Analisi Completa de LUCI",
+    "score": "Puntuacio",
+    "criticalItems": "Elements Critics",
+    "recommendedActions": "Accions Recomanades",
+    "today": "Avui",
+    "yesterday": "Ahir",
+    "last7Days": "Ultims 7 dies",
+    "last30Days": "Ultims 30 dies",
+    "thisMonth": "Aquest mes",
+    "lastMonth": "Mes passat",
+    "thisQuarter": "Aquest trimestre",
+    "thisYear": "Aquest any",
+    "errorLoadingDashboard": "Error carregant el dashboard"
   },
   "errorBoundary": {
     "description": "S'ha produit un error inesperat. Si us plau, torneu a carregar la pagina.",

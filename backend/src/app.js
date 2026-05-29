@@ -30,7 +30,7 @@ let deadlineRoutes, inspectionRoutes, communicationRoutes, integrationRoutes;
 let aeatRealRoutes, analyticsRoutes, tenantRoutes, mlRoutes, workflowRoutes;
 let publicApiRoutes, paymentRoutes, regulationRoutes, adminRoutes;
 let ensRoutes, queryRoutes, pueRoutes, certificateRoutes, manifestRoutes;
-let auditRoutes, gdprRoutes;
+let auditRoutes, gdprRoutes, emailRoutes;
 
 try {
   authRoutes = require('./routes/auth');
@@ -74,6 +74,7 @@ try {
   try { manifestRoutes = require('./routes/manifest'); } catch(e) { console.error('Manifest routes not loaded:', e.message); }
   auditRoutes = require('./routes/audit');
   try { gdprRoutes = require('./routes/gdpr'); } catch(e) { console.error('GDPR routes not loaded:', e.message); }
+  try { emailRoutes = require('./routes/email'); } catch(e) { console.error('Email routes not loaded:', e.message); }
 } catch (err) {
   console.error('Error loading routes:', err.message);
 }
@@ -359,6 +360,7 @@ if (certificateRoutes) app.use('/api/certificates', certificateRoutes);
 if (manifestRoutes) app.use('/api/manifest', manifestRoutes);
 if (auditRoutes) app.use('/api/audit', auditRoutes);
 if (gdprRoutes) app.use('/api/gdpr', gdprRoutes);
+if (emailRoutes) app.use('/api/email', emailRoutes);
 
 // Email test endpoint (admin only, non-production only)
 if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_EMAIL_TEST === 'true') {

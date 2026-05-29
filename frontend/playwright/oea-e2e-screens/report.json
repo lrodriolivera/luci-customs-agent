@@ -1,0 +1,81 @@
+{
+  "generatedAt": "2026-05-04T12:51:48.950Z",
+  "timestamp": 1777899051854,
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Operador Economico Autorizado\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "tabs-visible",
+      "sev": "low",
+      "msg": "Cert=true Benef=true Simpl=true RecMut=true"
+    },
+    {
+      "cat": "stats-cards",
+      "sev": "low",
+      "msg": "Stats cards encontradas: 5/5"
+    },
+    {
+      "cat": "oea-tipos",
+      "sev": "low",
+      "msg": "Badges OEAC/OEAS/OEAF visibles: true"
+    },
+    {
+      "cat": "new-btn-translated",
+      "sev": "low",
+      "msg": "Boton \"Nueva Solicitud\" traducido visible: true"
+    },
+    {
+      "cat": "no-literal-key",
+      "sev": "low",
+      "msg": "Literal \"oea.newApplication\" presente en UI: false (esperado false)"
+    },
+    {
+      "cat": "cards-count",
+      "sev": "low",
+      "msg": "Cards visibles: 9"
+    },
+    {
+      "cat": "tab-beneficios",
+      "sev": "low",
+      "msg": "Tab Beneficios renderizado"
+    },
+    {
+      "cat": "tab-simplif-http",
+      "sev": "medium",
+      "msg": "HTTP undefined, count=0"
+    },
+    {
+      "cat": "tab-mutual-http",
+      "sev": "medium",
+      "msg": "HTTP undefined, count=0"
+    },
+    {
+      "cat": "h3-translated",
+      "sev": "low",
+      "msg": "h3 \"Nueva Solicitud OEA\" visible: true"
+    },
+    {
+      "cat": "no-literal-h3",
+      "sev": "low",
+      "msg": "Literal \"oea.newApplicationOEA\" en h3: false (esperado false)"
+    },
+    {
+      "cat": "form-field",
+      "sev": "low",
+      "msg": "Campo \"Nombre Empresa\" visible: true"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final dashboard /oea"
+    }
+  ]
+}

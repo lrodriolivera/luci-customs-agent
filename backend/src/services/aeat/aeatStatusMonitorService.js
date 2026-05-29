@@ -13,12 +13,128 @@ const EventEmitter = require('events');
 const logger = require('../../config/logger');
 const aeatRealService = require('./aeatRealService');
 
+/**
+ * RedisBackedMap — API tipo Map (.get/.set/.delete/.values/.size) respaldada por Redis.
+ *
+ * Razón: el service guardaba `trackedDeclarations` como `new Map()` en memoria del proceso.
+ * En pm2 cluster (2 workers) cada uno tenía su propio Map y los datos no se compartían: las
+ * declaraciones añadidas en worker A no eran visibles desde worker B, y se perdían tras un
+ * `pm2 reload`. Ahora respaldamos en Redis con prefix configurable + TTL 30 días + index Set
+ * para enumerar. Si Redis no está disponible, fallback in-memory (graceful degradation).
+ *
+ * Las llamadas son ASYNCS (Redis es I/O). Los callers ya usaban `await` o estaban en metodos
+ * async, así que el cambio es compatible con los await existentes.
+ */
+class RedisBackedMap {
+  constructor({ keyPrefix, indexKey, ttlSeconds = 30 * 24 * 3600 }) {
+    this.keyPrefix = keyPrefix;
+    this.indexKey = indexKey;
+    this.ttlSeconds = ttlSeconds;
+    this.fallback = new Map();
+    try {
+      const { getRedisClient } = require('../cacheService');
+      this.client = getRedisClient();
+    } catch (err) {
+      this.client = null;
+    }
+  }
+  _key(id) { return `${this.keyPrefix}${id}`; }
+
+  async get(id) {
+    if (!this.client) return this.fallback.get(id);
+    try {
+      const raw = await this.client.get(this._key(id));
+      return raw ? JSON.parse(raw) : undefined;
+    } catch (err) {
+      logger.warn('RedisBackedMap.get fallback', { id, error: err.message });
+      return this.fallback.get(id);
+    }
+  }
+
+  async set(id, value) {
+    if (!this.client) { this.fallback.set(id, value); return value; }
+    try {
+      await this.client.set(this._key(id), JSON.stringify(value), 'EX', this.ttlSeconds);
+      await this.client.sadd(this.indexKey, id);
+      return value;
+    } catch (err) {
+      logger.warn('RedisBackedMap.set fallback', { id, error: err.message });
+      this.fallback.set(id, value);
+      return value;
+    }
+  }
+
+  async delete(id) {
+    if (!this.client) return this.fallback.delete(id);
+    try {
+      const removed = await this.client.del(this._key(id));
+      await this.client.srem(this.indexKey, id);
+      return removed > 0;
+    } catch (err) {
+      logger.warn('RedisBackedMap.delete fallback', { id, error: err.message });
+      return this.fallback.delete(id);
+    }
+  }
+
+  async values() {
+    if (!this.client) return Array.from(this.fallback.values());
+    try {
+      const ids = await this.client.smembers(this.indexKey);
+      if (!ids.length) return [];
+      const keys = ids.map(id => this._key(id));
+      const raws = await this.client.mget(keys);
+      const result = [];
+      const stale = [];
+      raws.forEach((raw, i) => {
+        if (raw) {
+          try { result.push(JSON.parse(raw)); } catch {}
+        } else {
+          // Entrada en index pero no en key (TTL expirado): limpiar index
+          stale.push(ids[i]);
+        }
+      });
+      if (stale.length) await this.client.srem(this.indexKey, ...stale).catch(() => {});
+      return result;
+    } catch (err) {
+      logger.warn('RedisBackedMap.values fallback', { error: err.message });
+      return Array.from(this.fallback.values());
+    }
+  }
+
+  async size() {
+    if (!this.client) return this.fallback.size;
+    try {
+      return await this.client.scard(this.indexKey);
+    } catch {
+      return this.fallback.size;
+    }
+  }
+
+  async clear() {
+    if (!this.client) { this.fallback.clear(); return; }
+    try {
+      const ids = await this.client.smembers(this.indexKey);
+      if (ids.length) {
+        await this.client.del(...ids.map(id => this._key(id)));
+      }
+      await this.client.del(this.indexKey);
+    } catch (err) {
+      logger.warn('RedisBackedMap.clear fallback', { error: err.message });
+      this.fallback.clear();
+    }
+  }
+}
+
 class AEATStatusMonitorService extends EventEmitter {
   constructor() {
     super();
 
-    // Declaraciones en seguimiento
-    this.trackedDeclarations = new Map();
+    // Declaraciones en seguimiento (respaldado por Redis para compartir entre workers pm2)
+    this.trackedDeclarations = new RedisBackedMap({
+      keyPrefix: 'aeat:tracked:',
+      indexKey: 'aeat:tracked:index',
+      ttlSeconds: 30 * 24 * 3600
+    });
 
     // Configuración de polling
     this.pollingConfig = {
@@ -54,27 +170,42 @@ class AEATStatusMonitorService extends EventEmitter {
 
   /**
    * Agregar declaración al seguimiento
+   *
+   * Acepta dos firmas (mantenemos retrocompat con el controller existente):
+   *   - trackDeclaration(mrn, 'H1', { expeditionId, ... })   firma "string + metadata"
+   *   - trackDeclaration(mrn, { declarationType: 'H1', expeditionId, ... })   firma "objeto unico"
+   *     (es la que usa aeatRealController internamente al enviar declaraciones)
+   *
+   * Para evitar `type: [object Object]` (bug 4/May/2026) normalizamos.
    */
-  trackDeclaration(mrn, declarationType, metadata = {}) {
+  async trackDeclaration(mrn, declarationTypeOrMeta, metadata = {}) {
+    let declarationType = declarationTypeOrMeta;
+    let meta = metadata;
+    if (declarationTypeOrMeta && typeof declarationTypeOrMeta === 'object') {
+      // Llamada con objeto unico - extraer declarationType y mantener resto como metadata
+      const { declarationType: dt, ...rest } = declarationTypeOrMeta;
+      declarationType = dt || 'UNKNOWN';
+      meta = { ...rest, ...metadata };
+    }
     const tracking = {
       mrn,
-      type: declarationType,
+      type: typeof declarationType === 'string' ? declarationType : 'UNKNOWN',
       addedAt: new Date().toISOString(),
       lastChecked: null,
       currentStatus: 'PENDING',
       channel: null,
       statusHistory: [],
-      metadata,
+      metadata: meta,
       alerts: [],
       luciPredictions: null
     };
 
-    this.trackedDeclarations.set(mrn, tracking);
+    await this.trackedDeclarations.set(mrn, tracking);
 
-    logger.info(`StatusMonitor: Agregada declaración al seguimiento`, { mrn, type: declarationType });
+    logger.info(`StatusMonitor: Agregada declaración al seguimiento`, { mrn, type: tracking.type });
 
-    // Generar predicción LUCI inicial
-    this._generateInitialPrediction(tracking);
+    // Generar predicción LUCI inicial (no espera para no bloquear el response)
+    Promise.resolve(this._generateInitialPrediction(tracking)).catch(() => {});
 
     return {
       success: true,
@@ -87,8 +218,8 @@ class AEATStatusMonitorService extends EventEmitter {
   /**
    * Remover declaración del seguimiento
    */
-  untrackDeclaration(mrn) {
-    const existed = this.trackedDeclarations.delete(mrn);
+  async untrackDeclaration(mrn) {
+    const existed = await this.trackedDeclarations.delete(mrn);
 
     return {
       success: existed,
@@ -100,15 +231,15 @@ class AEATStatusMonitorService extends EventEmitter {
   /**
    * Obtener estado de declaración
    */
-  getTrackedDeclaration(mrn) {
-    return this.trackedDeclarations.get(mrn);
+  async getTrackedDeclaration(mrn) {
+    return await this.trackedDeclarations.get(mrn);
   }
 
   /**
    * Listar declaraciones en seguimiento
    */
-  listTrackedDeclarations(filters = {}) {
-    let declarations = Array.from(this.trackedDeclarations.values());
+  async listTrackedDeclarations(filters = {}) {
+    let declarations = await this.trackedDeclarations.values();
 
     // Aplicar filtros
     if (filters.type) {
@@ -164,15 +295,13 @@ class AEATStatusMonitorService extends EventEmitter {
     );
 
     logger.info('StatusMonitor: Polling iniciado', {
-      interval: this.pollingConfig.intervalMs,
-      declarations: this.trackedDeclarations.size
+      interval: this.pollingConfig.intervalMs
     });
 
     return {
       success: true,
       message: 'Polling iniciado',
-      intervalMs: this.pollingConfig.intervalMs,
-      trackedCount: this.trackedDeclarations.size
+      intervalMs: this.pollingConfig.intervalMs
     };
   }
 
@@ -197,7 +326,7 @@ class AEATStatusMonitorService extends EventEmitter {
    * Actualizar estado de una declaración específica
    */
   async refreshDeclarationStatus(mrn, certificateId, password) {
-    const tracking = this.trackedDeclarations.get(mrn);
+    const tracking = await this.trackedDeclarations.get(mrn);
 
     if (!tracking) {
       return {
@@ -252,6 +381,9 @@ class AEATStatusMonitorService extends EventEmitter {
 
         // Actualizar predicciones LUCI
         tracking.luciPredictions = await this._updatePredictions(tracking, result);
+
+        // Persistir cambios en Redis
+        await this.trackedDeclarations.set(mrn, tracking);
 
         return {
           success: true,
@@ -340,6 +472,11 @@ class AEATStatusMonitorService extends EventEmitter {
       recommendations: this._generateRiskRecommendations(riskFactors, channelProbabilities),
       confidence: Math.min(95, 70 + (Object.keys(metadata).length * 3))
     };
+
+    // Persistir prediccion inicial en Redis
+    if (tracking.mrn) {
+      await this.trackedDeclarations.set(tracking.mrn, tracking).catch(() => {});
+    }
 
     return tracking.luciPredictions;
   }
@@ -699,13 +836,14 @@ class AEATStatusMonitorService extends EventEmitter {
   // ============== UTILIDADES ==============
 
   async _pollAllDeclarations() {
-    if (!this.pollingConfig.enabled || this.trackedDeclarations.size === 0) {
-      return;
-    }
+    if (!this.pollingConfig.enabled) return;
 
-    logger.info(`StatusMonitor: Polling ${this.trackedDeclarations.size} declaraciones`);
+    const declarations = await this.trackedDeclarations.values();
+    if (declarations.length === 0) return;
 
-    for (const [mrn, tracking] of this.trackedDeclarations) {
+    logger.info(`StatusMonitor: Polling ${declarations.length} declaraciones`);
+
+    for (const tracking of declarations) {
       // No consultar declaraciones completadas
       if (tracking.currentStatus === 'RELEASED' || tracking.currentStatus === 'REJECTED') {
         continue;
@@ -713,7 +851,7 @@ class AEATStatusMonitorService extends EventEmitter {
 
       try {
         await this.refreshDeclarationStatus(
-          mrn,
+          tracking.mrn,
           this.pollingConfig.certificateId,
           this.pollingConfig.password
         );
@@ -722,7 +860,7 @@ class AEATStatusMonitorService extends EventEmitter {
         await this._delay(500);
 
       } catch (error) {
-        logger.error(`StatusMonitor: Error polling ${mrn}`, { error: error.message });
+        logger.error(`StatusMonitor: Error polling ${tracking.mrn}`, { error: error.message });
       }
     }
   }
@@ -748,13 +886,14 @@ class AEATStatusMonitorService extends EventEmitter {
   /**
    * Obtener información del servicio
    */
-  getInfo() {
+  async getInfo() {
+    const trackedCount = await this.trackedDeclarations.size();
     return {
       service: 'AEAT Status Monitor Service',
       version: '6.1.0',
       pollingEnabled: this.pollingConfig.enabled,
       pollingInterval: this.pollingConfig.intervalMs,
-      trackedDeclarations: this.trackedDeclarations.size,
+      trackedDeclarations: trackedCount,
       features: [
         'Seguimiento automático de declaraciones',
         'Predicción de canal con LUCI',
@@ -768,14 +907,15 @@ class AEATStatusMonitorService extends EventEmitter {
   /**
    * Obtener alertas activas
    */
-  getActiveAlerts() {
+  async getActiveAlerts() {
     const alerts = [];
+    const declarations = await this.trackedDeclarations.values();
 
-    for (const [mrn, tracking] of this.trackedDeclarations) {
-      for (const alert of tracking.alerts) {
+    for (const tracking of declarations) {
+      for (const alert of (tracking.alerts || [])) {
         if (alert.level === 'critical' || alert.level === 'warning') {
           alerts.push({
-            mrn,
+            mrn: tracking.mrn,
             type: tracking.type,
             ...alert
           });
@@ -795,6 +935,60 @@ class AEATStatusMonitorService extends EventEmitter {
       warning: alerts.filter(a => a.level === 'warning').length,
       alerts
     };
+  }
+
+  /**
+   * Predice el canal de inspeccion AEAT (verde/naranja/rojo/amarillo) para una
+   * operacion antes de presentarla. Reusa el motor de predicciones ML
+   * (analytics/predictionsService.predictChannel) que evalua origen/TARIC/valor
+   * con histórico del tenant.
+   *
+   * Llamado desde POST /api/aeat-real/monitoring/predict-channel
+   */
+  async predictInspectionChannel({ operationData = {}, goods = [], transport = {} } = {}) {
+    try {
+      const predictionsService = require('../analytics/predictionsService');
+
+      const declarationData = {
+        type: operationData.operationType === 'export' ? 'export' : 'import',
+        originCountry: operationData.originCountry,
+        destinationCountry: operationData.destinationCountry || 'ES',
+        customsValue: operationData.customsValue || 0,
+        transportMode: transport.mode || transport.modeAtBorder,
+        goods: goods.map(g => ({
+          taricCode: g.taricCode || g.commodityCode,
+          customsValue: g.customsValue || 0,
+          quantity: g.quantity || 1
+        }))
+      };
+
+      const result = await predictionsService.predictChannel(declarationData);
+      return {
+        ...result,
+        predictedAt: new Date().toISOString(),
+        method: 'historical_ml',
+        sample: { operationData, goodsCount: goods.length }
+      };
+    } catch (err) {
+      // Fallback heuristico simple si el motor ML falla: usa origen + TARIC
+      const isHighRiskOrigin = ['CN', 'IR', 'KP', 'RU', 'BY', 'AF', 'IQ', 'LY', 'SY', 'YE'].includes(operationData?.originCountry);
+      const taric = goods?.[0]?.taricCode || '';
+      const isSensitive = /^(2402|2403|3004|2208|9302|9303|0106|4403|9404)/.test(taric);
+      let channel = 'green';
+      let probability = 0.7;
+      if (isHighRiskOrigin && isSensitive) { channel = 'red'; probability = 0.85; }
+      else if (isHighRiskOrigin || isSensitive) { channel = 'orange'; probability = 0.65; }
+      return {
+        channel,
+        probability,
+        reasoning: `Fallback heuristico: origen ${isHighRiskOrigin ? 'alto riesgo' : 'normal'}, TARIC ${isSensitive ? 'sensible' : 'estandar'}`,
+        confidence: 'low',
+        method: 'heuristic_fallback',
+        predictedAt: new Date().toISOString(),
+        warning: 'Motor ML no disponible, usando regla heuristica',
+        error: err.message
+      };
+    }
   }
 }
 

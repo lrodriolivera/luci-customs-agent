@@ -100,8 +100,8 @@ function buildNCTSTransitXML(data) {
               <ent:PreviousDocument>
                 <ent:sequenceNumber>1</ent:sequenceNumber>
                 <ent:type>${g.previousDocumentType}</ent:type>
-                <ent:referenceNumber>${g.previousDocumentRef}</ent:referenceNumber>${g.previousDocumentType === 'NMRN' ? `
-                <ent:goodsItemNumber>${parseInt(g.previousDocumentItem || '1', 10)}</ent:goodsItemNumber>
+                <ent:referenceNumber>${g.previousDocumentRef}</ent:referenceNumber>
+                <ent:goodsItemNumber>${parseInt(g.previousDocumentItem || '1', 10)}</ent:goodsItemNumber>${g.previousDocumentType === 'NMRN' ? `
                 <ent:measurementUnitAndQualifier>KGM</ent:measurementUnitAndQualifier>
                 <ent:quantity>${Number(g.netWeight || g.grossWeight || 1).toFixed(3)}</ent:quantity>` : ''}
               </ent:PreviousDocument>` : ''}

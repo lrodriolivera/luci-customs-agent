@@ -1,0 +1,114 @@
+{
+  "generatedAt": "2026-04-29T09:51:34.615Z",
+  "apiData": {
+    "expeditionsTotal": null,
+    "expeditionsCount": 5,
+    "alertsTotal": 18,
+    "alertsCritical": 16,
+    "alertsWarning": 2,
+    "cacheEntries": 0,
+    "cacheHits": 0
+  },
+  "findings": [
+    {
+      "category": "api-expeditions",
+      "severity": "low",
+      "message": "expeditions: total=?, items=5"
+    },
+    {
+      "category": "api-alerts",
+      "severity": "low",
+      "message": "alerts: total=18, critical=16, warning=2"
+    },
+    {
+      "category": "api-cache",
+      "severity": "low",
+      "message": "cache: entries=0, hits=0"
+    },
+    {
+      "category": "login-form",
+      "severity": "low",
+      "message": "Login input#email visible=true"
+    },
+    {
+      "category": "hero",
+      "severity": "low",
+      "message": "greeting=\"Buenos dias\" name=\"Luis Rodriguez\" date=\"miércoles, 29 de abril de 2026\""
+    },
+    {
+      "category": "kpi-render",
+      "severity": "low",
+      "message": "KPI values: [\"111\",\"41\",\"48\",\"22\"]"
+    },
+    {
+      "category": "kpi-total-mismatch",
+      "severity": "high",
+      "message": "UI Total=111 vs API pagination.total=106"
+    },
+    {
+      "category": "qa-classification",
+      "severity": "low",
+      "message": "/classification → status=200 url-ok=true title=true"
+    },
+    {
+      "category": "qa-calculator",
+      "severity": "low",
+      "message": "/calculator → status=200 url-ok=true title=true"
+    },
+    {
+      "category": "qa-pue",
+      "severity": "low",
+      "message": "/pue → status=200 url-ok=true title=true"
+    },
+    {
+      "category": "qa-declarations",
+      "severity": "low",
+      "message": "/declarations → status=200 url-ok=true title=true"
+    },
+    {
+      "category": "alerts-items",
+      "severity": "low",
+      "message": "Items en sidebar alertas (links a requirements/guarantees): 6"
+    },
+    {
+      "category": "recent-exp-count",
+      "severity": "low",
+      "message": "API expeditions=5, UI links a expedition detail=5"
+    },
+    {
+      "category": "ai-engine-stats",
+      "severity": "low",
+      "message": "taricCodesTotal=21946, aiQueriesLast30d=0"
+    },
+    {
+      "category": "platform-real",
+      "severity": "low",
+      "message": "Backend reporta taricCodesTotal=21946, taricChapters=97"
+    },
+    {
+      "category": "assistant-cta",
+      "severity": "low",
+      "message": "CTA visible"
+    },
+    {
+      "category": "assistant-page",
+      "severity": "low",
+      "message": "Assistant page inputs (textarea/text)=1"
+    },
+    {
+      "category": "new-exp-btn",
+      "severity": "low",
+      "message": "Boton \"Nueva Expedicion\" hero visible=true"
+    },
+    {
+      "category": "new-exp-form",
+      "severity": "low",
+      "message": "Form fields en /expeditions/new=11"
+    },
+    {
+      "category": "sidebar-count",
+      "severity": "low",
+      "message": "Sidebar links encontrados: 33"
+    }
+  ]
+}

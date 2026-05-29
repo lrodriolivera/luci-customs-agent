@@ -2082,6 +2082,8 @@
     "title": "Operador Economico Autorizado",
     "subtitle": "Gestion de certificaciones OEA (OEAC/OEAS/OEAF)",
     "newRequest": "Nueva Solicitud",
+    "newApplication": "Nueva Solicitud",
+    "newApplicationOEA": "Nueva Solicitud OEA",
     "certifications": "Certificaciones",
     "benefits": "Beneficios",
     "simplifications": "Simplificaciones",

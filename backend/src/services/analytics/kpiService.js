@@ -829,19 +829,61 @@ function _getOverallTrends(kpis) {
 
 async function _getLuciKPIAnalysis(kpiData) {
   try {
-    const analysis = await aiService.analyzeWithLuci({
-      type: 'kpi_analysis',
+    const criticalKPIs = kpiData.all.filter(k => k.status === 'critical');
+    const warningKPIs = kpiData.all.filter(k => k.status === 'warning');
+
+    // Construir kpiData + targets para analyzeKPIDeviations
+    const kpiPayload = {
       summary: kpiData.summary,
-      criticalKPIs: kpiData.all.filter(k => k.status === 'critical'),
-      warningKPIs: kpiData.all.filter(k => k.status === 'warning')
+      criticalKPIs,
+      warningKPIs
+    };
+    const targets = {};
+    [...criticalKPIs, ...warningKPIs].forEach(k => {
+      if (k.target !== undefined) targets[k.name || k.kpiId] = k.target;
     });
 
+    const analysis = await aiService.analyzeKPIDeviations(kpiPayload, targets);
+
+    // Normalizar shapes (analyzeKPIDeviations devuelve overallPerformance/deviations/quickWins/strategicInitiatives)
+    const norm = (v) => {
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') {
+        return v.action || v.initiative || v.recommendation || v.description || v.cause || v.risk || v.text || '';
+      }
+      return '';
+    };
+
+    const summary = analysis.overallPerformance?.summary ||
+                    analysis.executiveSummary ||
+                    analysis.summary ||
+                    'KPIs dentro de parámetros normales.';
+
+    // Priorities: combinar quickWins + strategicInitiatives
+    const priorities = [
+      ...(Array.isArray(analysis.quickWins) ? analysis.quickWins : []),
+      ...(Array.isArray(analysis.strategicInitiatives) ? analysis.strategicInitiatives : []),
+      ...(Array.isArray(analysis.improvementActions) ? analysis.improvementActions : []),
+      ...(Array.isArray(analysis.recommendations) ? analysis.recommendations : [])
+    ].map(norm).filter(Boolean);
+
+    // Risks: rootCauses extraídos de deviations + risks/warnings top-level
+    const risks = [
+      ...(Array.isArray(analysis.deviations)
+        ? analysis.deviations.flatMap(d => (Array.isArray(d.rootCauses) ? d.rootCauses : []))
+        : []),
+      ...(Array.isArray(analysis.rootCauses) ? analysis.rootCauses : []),
+      ...(Array.isArray(analysis.risks) ? analysis.risks : []),
+      ...(Array.isArray(analysis.warnings) ? analysis.warnings : [])
+    ].map(norm).filter(Boolean);
+
     return {
-      summary: analysis.summary || 'KPIs dentro de parámetros normales.',
-      priorities: analysis.recommendations || [],
-      risks: analysis.warnings || []
+      summary,
+      priorities,
+      risks
     };
   } catch (error) {
+    logger.warn(`[KPIs] Could not get LUCI KPI analysis: ${error.message}`);
     return null;
   }
 }

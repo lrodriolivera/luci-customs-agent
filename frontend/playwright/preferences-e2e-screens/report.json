@@ -1,0 +1,175 @@
+{
+  "generatedAt": "2026-05-04T11:03:54.565Z",
+  "timestamp": 1777892527069,
+  "results": [
+    {
+      "id": "CETA-CA-laptops",
+      "httpStatus": 200,
+      "eligible": true,
+      "agreementsCount": 1,
+      "recommendedName": "EU-Canada Comprehensive Economic and Trade Agreement",
+      "savings": 1500
+    },
+    {
+      "id": "GSP-BD-textiles",
+      "httpStatus": 200,
+      "eligible": true,
+      "agreementsCount": 2,
+      "recommendedName": "GSP+ (Special incentive arrangement)",
+      "savings": 960
+    },
+    {
+      "id": "Mexico-colchones",
+      "httpStatus": 200,
+      "eligible": true,
+      "agreementsCount": 1,
+      "recommendedName": "EU-Mexico Free Trade Agreement (Modernized)",
+      "savings": 500
+    },
+    {
+      "id": "Turkey-CU",
+      "httpStatus": 200,
+      "eligible": true,
+      "agreementsCount": 1,
+      "recommendedName": "Pan-Euro-Mediterranean",
+      "savings": 500
+    }
+  ],
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Calculadora de Preferencias Arancelarias\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "tabs-visible",
+      "sev": "low",
+      "msg": "Eleg=true Cert=true Rec=true"
+    },
+    {
+      "cat": "default-tab-eleg",
+      "sev": "low",
+      "msg": "Tab eligibility activo (input TARIC visible): true"
+    },
+    {
+      "cat": "select-found",
+      "sev": "low",
+      "msg": "Select pref-origin visible: true"
+    },
+    {
+      "cat": "optgroups",
+      "sev": "low",
+      "msg": "Optgroups en combobox: 2 (esperado 2: Mas comunes + Todos los paises)"
+    },
+    {
+      "cat": "options-count",
+      "sev": "low",
+      "msg": "Total opciones: 195 (esperado ~196)"
+    },
+    {
+      "cat": "options-real-names",
+      "sev": "low",
+      "msg": "Opciones rotas \"()\": 0 (esperado 0). Opciones con nombre real: 195/195"
+    },
+    {
+      "cat": "country-CN",
+      "sev": "low",
+      "msg": "Pais CN muestra \"China (CN)\" (esperado nombre con /China/)"
+    },
+    {
+      "cat": "country-TR",
+      "sev": "low",
+      "msg": "Pais TR muestra \"Turquia (TR)\" (esperado nombre con /Turqu/)"
+    },
+    {
+      "cat": "country-CA",
+      "sev": "low",
+      "msg": "Pais CA muestra \"Canada (CA)\" (esperado nombre con /Canad/)"
+    },
+    {
+      "cat": "country-BD",
+      "sev": "low",
+      "msg": "Pais BD muestra \"Bangladesh (BD)\" (esperado nombre con /Bangladesh/i)"
+    },
+    {
+      "cat": "CETA-CA-laptops-http",
+      "sev": "low",
+      "msg": "HTTP 200, eligible=true, agreements=1"
+    },
+    {
+      "cat": "CETA-CA-laptops-agreement",
+      "sev": "low",
+      "msg": "Acuerdo recomendado: \"EU-Canada Comprehensive Economic and Trade Agreement\" (esperaba /Canada|CETA/i)"
+    },
+    {
+      "cat": "CETA-CA-laptops-ui-result",
+      "sev": "low",
+      "msg": "UI muestra resultado preferencia: true"
+    },
+    {
+      "cat": "GSP-BD-textiles-http",
+      "sev": "low",
+      "msg": "HTTP 200, eligible=true, agreements=2"
+    },
+    {
+      "cat": "GSP-BD-textiles-agreement",
+      "sev": "low",
+      "msg": "Acuerdo recomendado: \"GSP+ (Special incentive arrangement)\" (esperaba /GSP/i)"
+    },
+    {
+      "cat": "GSP-BD-textiles-ui-result",
+      "sev": "low",
+      "msg": "UI muestra resultado preferencia: true"
+    },
+    {
+      "cat": "Mexico-colchones-http",
+      "sev": "low",
+      "msg": "HTTP 200, eligible=true, agreements=1"
+    },
+    {
+      "cat": "Mexico-colchones-agreement",
+      "sev": "low",
+      "msg": "Acuerdo recomendado: \"EU-Mexico Free Trade Agreement (Modernized)\" (esperaba /Mexico|Mexic/i)"
+    },
+    {
+      "cat": "Mexico-colchones-ui-result",
+      "sev": "low",
+      "msg": "UI muestra resultado preferencia: true"
+    },
+    {
+      "cat": "Turkey-CU-http",
+      "sev": "low",
+      "msg": "HTTP 200, eligible=true, agreements=1"
+    },
+    {
+      "cat": "Turkey-CU-agreement",
+      "sev": "low",
+      "msg": "Acuerdo recomendado: \"Pan-Euro-Mediterranean\" (esperaba /Turk|Pan-Euro|ATR/i)"
+    },
+    {
+      "cat": "Turkey-CU-ui-result",
+      "sev": "low",
+      "msg": "UI muestra resultado preferencia: true"
+    },
+    {
+      "cat": "cert-validate",
+      "sev": "low",
+      "msg": "HTTP 200 valid=true issues=0 warnings=1"
+    },
+    {
+      "cat": "recs-visible",
+      "sev": "low",
+      "msg": "Contenido tab recomendaciones visible: true"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura resultado completo Bangladesh GSP+ textiles 8000 EUR"
+    }
+  ]
+}

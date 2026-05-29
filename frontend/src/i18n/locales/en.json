@@ -2074,6 +2074,8 @@
     "title": "Authorized Economic Operator",
     "subtitle": "AEO certification management (AEOC/AEOS/AEOF)",
     "newRequest": "New Request",
+    "newApplication": "New Application",
+    "newApplicationOEA": "New OEA Application",
     "certifications": "Certifications",
     "benefits": "Benefits",
     "simplifications": "Simplifications",

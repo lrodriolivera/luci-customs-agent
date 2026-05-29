@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-05-04T13:40:30.383Z",
+  "timestamp": 1777901978758,
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Monitor de Estado AEAT\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "subtitle",
+      "sev": "low",
+      "msg": "Subtitulo LUCI visible: true"
+    },
+    {
+      "cat": "header-buttons",
+      "sev": "low",
+      "msg": "Predecir=true Actualizar=true"
+    },
+    {
+      "cat": "cert-loaded",
+      "sev": "low",
+      "msg": "Info certificado/mTLS visible: true"
+    },
+    {
+      "cat": "supported-decl",
+      "sev": "low",
+      "msg": "Declaraciones soportadas visibles: true"
+    },
+    {
+      "cat": "tracked-section",
+      "sev": "low",
+      "msg": "Sección Monitorizadas: true"
+    },
+    {
+      "cat": "form-fields",
+      "sev": "low",
+      "msg": "Inputs form predict: 3"
+    },
+    {
+      "cat": "predict-http",
+      "sev": "low",
+      "msg": "HTTP 200 canal=green confidence=low"
+    },
+    {
+      "cat": "predict-probs",
+      "sev": "low",
+      "msg": "Probabilidades: green=64% orange=16% red=12% yellow=8%"
+    },
+    {
+      "cat": "predict-ui-result",
+      "sev": "low",
+      "msg": "Resultado canal visible UI: true"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final dashboard /aeat/monitor"
+    }
+  ]
+}

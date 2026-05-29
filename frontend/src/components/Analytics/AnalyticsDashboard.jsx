@@ -132,7 +132,7 @@ function AnalyticsAIPanel({ period, onClose }) {
             <h4 className="font-medium text-indigo-800 mb-2">{t('analyticsPage.recommendations')}</h4>
             <ul className="space-y-1 text-sm text-indigo-700">
               {data.recommendations.map((rec, idx) => (
-                <li key={idx}>• {rec}</li>
+                <li key={idx}>• {typeof rec === 'string' ? rec : rec.action || rec.rationale || JSON.stringify(rec)}</li>
               ))}
             </ul>
           </div>
@@ -829,7 +829,7 @@ export default function AnalyticsDashboard() {
             className="input-field text-sm py-2"
           >
             {TIME_PERIODS.map((p) => (
-              <option key={p.value} value={p.value}>{p.label}</option>
+              <option key={p.value} value={p.value}>{t(p.labelKey) || p.label}</option>
             ))}
           </select>
 
@@ -1066,7 +1066,7 @@ export default function AnalyticsDashboard() {
                       <h4 className="font-medium text-gray-900">Recomendaciones:</h4>
                       <ul className="list-disc list-inside space-y-1 text-gray-600">
                         {dashboardData.luciInsights.recommendations.map((rec, idx) => (
-                          <li key={idx}>{rec}</li>
+                          <li key={idx}>{typeof rec === 'string' ? rec : rec.action || rec.rationale || JSON.stringify(rec)}</li>
                         ))}
                       </ul>
                     </div>

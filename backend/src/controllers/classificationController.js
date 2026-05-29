@@ -1012,17 +1012,29 @@ const getSearchStats = async (req, res) => {
  */
 const getCacheStats = async (req, res) => {
   try {
-    const stats = await taricService.getAICacheStats();
+    const [aiCache, taricCount, chaptersAgg, aiQueries30d] = await Promise.all([
+      taricService.getAICacheStats(),
+      TaricCode.countDocuments({}).catch(() => 0),
+      TaricCode.distinct('breakdown.chapter').catch(() => []),
+      TaricSearchHistory.countDocuments({
+        searchedAt: { $gte: new Date(Date.now() - 30 * 86400000) }
+      }).catch(() => 0)
+    ]);
 
     res.json({
       success: true,
-      data: stats || {
-        totalEntries: 0,
-        totalHits: 0,
-        avgHits: 0,
-        validatedCount: 0,
-        avgQuality: 0,
-        topCodes: []
+      data: {
+        // AI cache (mantenido por compat)
+        totalEntries: aiCache?.totalEntries || 0,
+        totalHits: aiCache?.totalHits || 0,
+        avgHits: aiCache?.avgHits || 0,
+        validatedCount: aiCache?.validatedCount || 0,
+        avgQuality: aiCache?.avgQuality || 0,
+        topCodes: aiCache?.topCodes || [],
+        // Datos reales de la BD
+        taricCodesTotal: taricCount,
+        taricChapters: Array.isArray(chaptersAgg) ? chaptersAgg.length : 0,
+        aiQueriesLast30d: aiQueries30d
       }
     });
 

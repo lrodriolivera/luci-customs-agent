@@ -285,7 +285,33 @@ const { auth } = require('../middleware/auth');
  * GET /api/tenant/eori
  * Get EORI numbers for all countries
  */
-router.get('/tenant/eori', requireTenant, async (req, res) => {
+/**
+ * GET /api/tenant/me
+ * Devuelve el tenant del usuario autenticado leído de MongoDB (no del Map demo).
+ */
+router.get('/tenant/me', auth, extractTenant({ required: false }), requireTenant, async (req, res) => {
+  try {
+    const tenant = await Tenant.findById(req.tenantId).lean();
+    if (!tenant) return res.status(404).json({ success: false, error: 'Tenant no encontrado' });
+    res.json({
+      success: true,
+      data: {
+        id: String(tenant._id),
+        name: tenant.name,
+        slug: tenant.slug,
+        status: tenant.status,
+        businessInfo: tenant.businessInfo || {},
+        subscription: tenant.subscription || {},
+        customsConfig: tenant.customsConfig || {},
+        settings: tenant.settings || {}
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.get('/tenant/eori', auth, extractTenant({ required: false }), requireTenant, async (req, res) => {
   try {
     const tenant = await Tenant.findById(req.tenantId);
     if (!tenant) return res.status(404).json({ success: false, error: 'Tenant no encontrado' });
@@ -307,7 +333,7 @@ router.get('/tenant/eori', requireTenant, async (req, res) => {
  * Update EORI numbers per country
  * Body: { eoriNumbers: { ES: 'ESxxx', NL: 'NLxxx' } }
  */
-router.put('/tenant/eori', requireTenant, adminOnly, async (req, res) => {
+router.put('/tenant/eori', auth, extractTenant({ required: false }), requireTenant, adminOnly, async (req, res) => {
   try {
     const { eoriNumbers } = req.body;
     if (!eoriNumbers || typeof eoriNumbers !== 'object') {
@@ -337,16 +363,23 @@ router.put('/tenant/eori', requireTenant, adminOnly, async (req, res) => {
     if (!tenant.customsConfig) tenant.customsConfig = {};
     if (!tenant.customsConfig.eoriNumbers) tenant.customsConfig.eoriNumbers = {};
 
-    // Merge with existing
+    // Merge con los EORI existentes
+    const merged = { ...(tenant.customsConfig.eoriNumbers || {}) };
     for (const [country, eori] of Object.entries(eoriNumbers)) {
-      tenant.customsConfig.eoriNumbers[country] = eori;
+      merged[country] = eori;
     }
 
-    await tenant.save();
+    // Update directo en MongoDB (sin .save() para no revalidar campos legacy
+    // como slug que pueden faltar en tenants creados antes del schema actual).
+    await Tenant.updateOne(
+      { _id: req.tenantId },
+      { $set: { 'customsConfig.eoriNumbers': merged } },
+      { runValidators: false }
+    );
 
     res.json({
       success: true,
-      data: { eoriNumbers: tenant.customsConfig.eoriNumbers }
+      data: { eoriNumbers: merged }
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

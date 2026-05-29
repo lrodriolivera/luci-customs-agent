@@ -14,7 +14,7 @@ const UserSchema = new mongoose.Schema({
 
   password: {
     type: String,
-    required: [true, 'La contrasena es obligatoria'],
+    required: false,
     minlength: [6, 'La contrasena debe tener al menos 6 caracteres'],
     select: false
   },
@@ -23,6 +23,17 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: [true, 'El nombre es obligatorio'],
     trim: true
+  },
+
+  givenName: { type: String, trim: true },
+  familyName: { type: String, trim: true },
+  apellido2: { type: String, trim: true },
+
+  cognitoSub: {
+    type: String,
+    unique: true,
+    sparse: true,
+    index: true
   },
 
   role: {
@@ -126,6 +137,9 @@ UserSchema.methods.toPublicJSON = function() {
     id: this._id,
     email: this.email,
     name: this.name,
+    givenName: this.givenName,
+    familyName: this.familyName,
+    apellido2: this.apellido2,
     role: this.role,
     profile: this.profile,
     permissions: this.permissions,

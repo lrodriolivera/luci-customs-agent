@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-05-04T17:20:15.744Z",
+  "total_findings": 23,
+  "critical": 0,
+  "high": 0,
+  "medium": 0,
+  "low": 23,
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"ML Insights\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "tabs-count",
+      "sev": "low",
+      "msg": "Tabs visibles: 6/6"
+    },
+    {
+      "cat": "refresh-btn",
+      "sev": "low",
+      "msg": "Boton Actualizar visible: true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Clasificaciones\" visible: true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Analisis Fraude\" visible: true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Predicciones\" visible: true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Recomendaciones\" visible: true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Auto-Respuestas\" visible: true"
+    },
+    {
+      "cat": "system-health",
+      "sev": "low",
+      "msg": "Estado Sistema ML visible: true"
+    },
+    {
+      "cat": "confidence",
+      "sev": "low",
+      "msg": "Confianza Modelos visible: true"
+    },
+    {
+      "cat": "confidence-bar",
+      "sev": "low",
+      "msg": "Barra \"Clasificacion TARIC\": true"
+    },
+    {
+      "cat": "confidence-bar",
+      "sev": "low",
+      "msg": "Barra \"Prediccion de Circuito\": true"
+    },
+    {
+      "cat": "confidence-bar",
+      "sev": "low",
+      "msg": "Barra \"Deteccion de Fraude\": true"
+    },
+    {
+      "cat": "classify-call",
+      "sev": "low",
+      "msg": "POST /classify: 1 llamadas, status=200, hasResult=true"
+    },
+    {
+      "cat": "classify-result",
+      "sev": "low",
+      "msg": "Resultado TARIC visible: true"
+    },
+    {
+      "cat": "fraud-call",
+      "sev": "low",
+      "msg": "POST /fraud/analyze: 1 llamadas, status=200, riskLevel=undefined"
+    },
+    {
+      "cat": "fraud-result",
+      "sev": "low",
+      "msg": "Card riesgo visible: true"
+    },
+    {
+      "cat": "channel-call",
+      "sev": "low",
+      "msg": "POST /predict-channel: 1 llamadas, status=200, channel=undefined"
+    },
+    {
+      "cat": "channel-result",
+      "sev": "low",
+      "msg": "Card circuito visible: true"
+    },
+    {
+      "cat": "recs-call",
+      "sev": "low",
+      "msg": "POST /recommendations: 1 llamadas, status=200"
+    },
+    {
+      "cat": "templates-call",
+      "sev": "low",
+      "msg": "GET /auto-response/templates: 1, status=200, count=9"
+    },
+    {
+      "cat": "stats-refresh",
+      "sev": "low",
+      "msg": "GET /api/ml/stats: 1, status=200"
+    }
+  ]
+}

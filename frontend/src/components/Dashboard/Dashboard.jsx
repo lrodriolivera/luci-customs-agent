@@ -68,7 +68,7 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await expeditionsAPI.list({ limit: 5 })
-        const expeditions = response.data.expeditions || []
+        const expeditions = response.data.data?.expeditions || response.data.expeditions || []
         setRecentExpeditions(expeditions)
         setStats({
           total: response.data.total || expeditions.length,
@@ -383,7 +383,7 @@ export default function Dashboard() {
                     </div>
                     <span className="text-sm text-gray-600">{t('dashboard.countries')}</span>
                   </div>
-                  <span className="text-sm font-semibold text-gray-900">195</span>
+                  <span className="text-sm font-semibold text-gray-900">{cacheStats?.taricCodesTotal || 21946}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
@@ -392,7 +392,7 @@ export default function Dashboard() {
                     </div>
                     <span className="text-sm text-gray-600">{t('dashboard.taricChapters')}</span>
                   </div>
-                  <span className="text-sm font-semibold text-gray-900">98</span>
+                  <span className="text-sm font-semibold text-gray-900">{cacheStats?.taricChapters || 97}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">

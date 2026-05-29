@@ -43,45 +43,16 @@ const TenantSettings = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Simulated data - replace with API calls
-      setTenant({
-        id: 'tenant-1',
-        name: 'Agencia Aduanera Demo',
-        slug: 'demo-agency',
-        status: 'active',
-        businessInfo: {
-          type: 'customs_agent',
-          nif: 'B12345678',
-          eori: 'ES12345678901234',
-          rea: '12345',
-          address: {
-            street: 'Calle Principal 123',
-            city: 'Barcelona',
-            postalCode: '08001',
-            province: 'Barcelona',
-            country: 'ES'
-          }
-        },
-        subscription: {
-          plan: 'professional',
-          status: 'active',
-          currentPeriodEnd: '2026-02-20'
-        },
-        customsConfig: {
-          country: 'ES',
-          system: 'AEAT',
-          eori: 'ES12345678901234',
-          environment: 'test',
-          certificateStatus: 'configured',
-          certificateExpiry: '2027-10-14'
-        }
-      });
+      const tenantRes = await api.get('/api/tenant');
+      if (tenantRes.data.success || tenantRes.data.data || tenantRes.data._id) {
+        setTenant(tenantRes.data.data || tenantRes.data);
+      }
 
       setSettings({
         branding: {
           logo: null,
           primaryColor: '#8B5CF6',
-          companyName: 'Agencia Aduanera Demo'
+          companyName: tenantRes.data.data?.name || tenantRes.data.name || ''
         },
         defaults: {
           declarationOffice: 'ES004101',

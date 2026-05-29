@@ -1,0 +1,147 @@
+{
+  "generatedAt": "2026-05-04T11:30:37.012Z",
+  "timestamp": 1777894149133,
+  "results": [
+    {
+      "id": "alcohol-cerveza",
+      "taric": "2203000010",
+      "category": "ALCOHOL",
+      "applicable": true,
+      "amount": 5.5,
+      "calculation": "1000 L × 5% × 0.11 €/L/grado"
+    },
+    {
+      "id": "tobacco-cigarrillos",
+      "taric": "2402200010",
+      "category": "TOBACCO",
+      "applicable": true,
+      "amount": 18800,
+      "calculation": "Max((100.00 × 29.25 €) + (5000 € × 0.55), 100.00 × 188 €)"
+    },
+    {
+      "id": "hydrocarbons-diesel",
+      "taric": "2710192100",
+      "category": "HYDROCARBONS",
+      "applicable": true,
+      "amount": 3310,
+      "calculation": "10000 L / 1000 × 331 €/1000L"
+    }
+  ],
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Calculadora de Impuestos Especiales (SILICIE)\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "detect-form",
+      "sev": "low",
+      "msg": "Form Detectar visible: true"
+    },
+    {
+      "cat": "silicie-info",
+      "sev": "low",
+      "msg": "Panel info SILICIE visible: true"
+    },
+    {
+      "cat": "detect-btn",
+      "sev": "low",
+      "msg": "Boton Detectar visible: true"
+    },
+    {
+      "cat": "no-sujeto-laptops-detect-http",
+      "sev": "low",
+      "msg": "Detect HTTP 200 subject=false category=-"
+    },
+    {
+      "cat": "no-sujeto-laptops-no-subject-ui",
+      "sev": "low",
+      "msg": "UI muestra \"no sujeto\": true"
+    },
+    {
+      "cat": "alcohol-cerveza-detect-http",
+      "sev": "low",
+      "msg": "Detect HTTP 200 subject=true category=ALCOHOL"
+    },
+    {
+      "cat": "alcohol-cerveza-calc-form-appears",
+      "sev": "low",
+      "msg": "Form Calcular aparece: true"
+    },
+    {
+      "cat": "alcohol-cerveza-calc-http",
+      "sev": "low",
+      "msg": "Calc HTTP 200 amount=5.5"
+    },
+    {
+      "cat": "alcohol-cerveza-amount-math",
+      "sev": "low",
+      "msg": "Amount=5.5 EUR (esperado 5.5). Calc: 1000 L × 5% × 0.11 €/L/grado"
+    },
+    {
+      "cat": "alcohol-cerveza-ui-amount",
+      "sev": "low",
+      "msg": "Amount visible en UI: true"
+    },
+    {
+      "cat": "tobacco-cigarrillos-detect-http",
+      "sev": "low",
+      "msg": "Detect HTTP 200 subject=true category=TOBACCO"
+    },
+    {
+      "cat": "tobacco-cigarrillos-calc-form-appears",
+      "sev": "low",
+      "msg": "Form Calcular aparece: true"
+    },
+    {
+      "cat": "tobacco-cigarrillos-calc-http",
+      "sev": "low",
+      "msg": "Calc HTTP 200 amount=18800"
+    },
+    {
+      "cat": "tobacco-cigarrillos-amount-math",
+      "sev": "low",
+      "msg": "Amount=18800 EUR (esperado 18800). Calc: Max((100.00 × 29.25 €) + (5000 € × 0.55), 100.00 × 188 €)"
+    },
+    {
+      "cat": "tobacco-cigarrillos-ui-amount",
+      "sev": "low",
+      "msg": "Amount visible en UI: true"
+    },
+    {
+      "cat": "hydrocarbons-diesel-detect-http",
+      "sev": "low",
+      "msg": "Detect HTTP 200 subject=true category=HYDROCARBONS"
+    },
+    {
+      "cat": "hydrocarbons-diesel-calc-form-appears",
+      "sev": "low",
+      "msg": "Form Calcular aparece: true"
+    },
+    {
+      "cat": "hydrocarbons-diesel-calc-http",
+      "sev": "low",
+      "msg": "Calc HTTP 200 amount=3310"
+    },
+    {
+      "cat": "hydrocarbons-diesel-amount-math",
+      "sev": "low",
+      "msg": "Amount=3310 EUR (esperado 3310). Calc: 10000 L / 1000 × 331 €/1000L"
+    },
+    {
+      "cat": "hydrocarbons-diesel-ui-amount",
+      "sev": "low",
+      "msg": "Amount visible en UI: true"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final tabaco con specific+proportional+minimum"
+    }
+  ]
+}

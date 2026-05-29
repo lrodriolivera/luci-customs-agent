@@ -95,7 +95,10 @@ export default function ChannelDashboard() {
 
       // Cargar estadisticas
       try {
-        const statsResponse = await channelsAPI.getStats({ startDate: startDate?.toISOString(), endDate: endDate.toISOString() })
+        const statsParams = startDate
+          ? { startDate: startDate.toISOString(), endDate: endDate.toISOString() }
+          : {}
+        const statsResponse = await channelsAPI.getStats(statsParams)
         setStats(statsResponse.data?.data || statsResponse.data)
       } catch (e) {
         console.error('Error loading stats:', e)

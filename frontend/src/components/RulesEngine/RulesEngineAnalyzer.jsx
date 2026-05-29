@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { countriesGrouped } from '../../data/countries'
+import api from '../../services/api'
 import {
   BeakerIcon,
   ShieldCheckIcon,
@@ -68,22 +69,16 @@ export default function RulesEngineAnalyzer() {
     setAnalysis(null)
 
     try {
-      const response = await fetch('http://localhost:5001/api/rules/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...formData,
-          goods: formData.goods.map(g => ({
-            ...g,
-            quantity: parseFloat(g.quantity) || 0,
-            customsValue: parseFloat(g.customsValue) || 0
-          }))
-        })
+      const response = await api.post('/api/rules/analyze', {
+        ...formData,
+        goods: formData.goods.map(g => ({
+          ...g,
+          quantity: parseFloat(g.quantity) || 0,
+          customsValue: parseFloat(g.customsValue) || 0
+        }))
       })
 
-      const data = await response.json()
+      const data = response.data
 
       if (data.success) {
         setAnalysis(data.data)
@@ -99,7 +94,7 @@ export default function RulesEngineAnalyzer() {
     }
   }
 
-  const countries = countriesGrouped.flatMap(g => g.options.map(c => ({ code: c.code, name: c.label })))
+  const countries = countriesGrouped.flatMap(g => g.options.map(c => ({ code: c.code, name: c.label || c.name })))
 
   const getSeverityColor = (severity) => {
     switch (severity) {
@@ -415,7 +410,7 @@ export default function RulesEngineAnalyzer() {
                     {analysis.documentation.map((doc, idx) => (
                       <li key={idx} className="flex items-start">
                         <CheckCircleIcon className="h-5 w-5 text-green-600 mr-2 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">{doc.type || doc}</span>
+                        <span className="text-sm text-gray-700">{typeof doc === 'string' ? doc : doc.type || doc.name || JSON.stringify(doc)}</span>
                       </li>
                     ))}
                   </ul>

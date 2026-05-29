@@ -1,0 +1,194 @@
+{
+  "generatedAt": "2026-04-29T14:23:08.228Z",
+  "reference": [
+    {
+      "desc": "Ordenadores portatiles DELL Latitude para uso comercial",
+      "material": "plastico y aluminio",
+      "use": "ofimatica empresarial",
+      "expectedChapter": "84"
+    },
+    {
+      "desc": "Camisetas de algodon manga corta para hombre adulto",
+      "material": "algodon 100%",
+      "use": "vestir uso diario",
+      "expectedChapter": "61"
+    }
+  ],
+  "lookups": [
+    {
+      "code": "8471300000",
+      "expChap": "84",
+      "expHead": "8471",
+      "expDuty": 0
+    },
+    {
+      "code": "6109100090",
+      "expChap": "61",
+      "expHead": "6109",
+      "expDuty": 12
+    },
+    {
+      "code": "9404211000",
+      "expChap": "94",
+      "expHead": "9404",
+      "expDuty": 3.7
+    }
+  ],
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1=\"Clasificacion TARIC\""
+    },
+    {
+      "cat": "tabs-count",
+      "sev": "low",
+      "msg": "Tabs visibles: 4/4"
+    },
+    {
+      "cat": "lookup-laptops-code",
+      "sev": "low",
+      "msg": "Código mostrado: \"8471300000\" esperado \"8471300000\""
+    },
+    {
+      "cat": "lookup-laptops-duty",
+      "sev": "low",
+      "msg": "Arancel 0% visible: false"
+    },
+    {
+      "cat": "lookup-laptops-desc",
+      "sev": "low",
+      "msg": "Descripción contiene \"portátiles\" (CAU oficial): true"
+    },
+    {
+      "cat": "lookup-camisetas-code",
+      "sev": "low",
+      "msg": "Código: \"6109100090\" esperado \"6109100090\""
+    },
+    {
+      "cat": "lookup-camisetas-duty",
+      "sev": "medium",
+      "msg": "Arancel 12% (MFN textiles cap. 61 según TARIC EU): false"
+    },
+    {
+      "cat": "lookup-colchones-code",
+      "sev": "low",
+      "msg": "Código: \"9404211000\" esperado \"9404211000\""
+    },
+    {
+      "cat": "lookup-colchones-duty",
+      "sev": "low",
+      "msg": "Arancel 3.7% (MFN cap. 94 según TARIC EU): false"
+    },
+    {
+      "cat": "lookup-cap84-headings",
+      "sev": "low",
+      "msg": "Drill-down cap 84: 86 headings (CAU cap. 84 = \"Reactores nucleares, calderas, máquinas\")"
+    },
+    {
+      "cat": "lookup-cap84-title",
+      "sev": "low",
+      "msg": "Título oficial cap 84 visible: true"
+    },
+    {
+      "cat": "lookup-invalid-handle",
+      "sev": "low",
+      "msg": "Código inválido: encontrado=true errMsg=true"
+    },
+    {
+      "cat": "tree-chapters",
+      "sev": "low",
+      "msg": "Capítulos visibles en árbol: 142"
+    },
+    {
+      "cat": "tree-drilldown",
+      "sev": "low",
+      "msg": "Drill-down cap 84 OK"
+    },
+    {
+      "cat": "basic-laptops-codes",
+      "sev": "low",
+      "msg": "IA sugirió 2 códigos: [8471300000, 8471410000]"
+    },
+    {
+      "cat": "basic-laptops-chapter",
+      "sev": "low",
+      "msg": "Top \"8471300000\" inicia con cap 84: true"
+    },
+    {
+      "cat": "basic-camisetas-codes",
+      "sev": "low",
+      "msg": "Sugerencias: [6109100000, 6109100010, 6109909000]"
+    },
+    {
+      "cat": "basic-camisetas-chapter",
+      "sev": "low",
+      "msg": "Top \"6109100000\" inicia con cap 61 (textiles): true"
+    },
+    {
+      "cat": "advanced-tab-click",
+      "sev": "low",
+      "msg": "Click tab: \"Avanzado IA\""
+    },
+    {
+      "cat": "advanced-tab-active",
+      "sev": "low",
+      "msg": "Tab activo: \"Avanzado IA\""
+    },
+    {
+      "cat": "advanced-buttons",
+      "sev": "low",
+      "msg": "Botones en form: 2 (esperado 2: Clasificar + Análisis Completo IA)"
+    },
+    {
+      "cat": "advanced-btn-text",
+      "sev": "low",
+      "msg": "Segundo botón texto: \"Analisis Completo IA\""
+    },
+    {
+      "cat": "advanced-result",
+      "sev": "low",
+      "msg": "Full-analysis result visible: true"
+    },
+    {
+      "cat": "advanced-codes",
+      "sev": "low",
+      "msg": "Códigos en análisis avanzado: [8471300000, 8471300000, 8471410000]"
+    },
+    {
+      "cat": "bd-8471300000",
+      "sev": "low",
+      "msg": "8471300000: chap=84 duty=0% desc=\"Máquinas automáticas para tratamiento de datos, portátiles, \""
+    },
+    {
+      "cat": "bd-6109100090",
+      "sev": "low",
+      "msg": "6109100090: chap=61 duty=12% desc=\"Las demás\""
+    },
+    {
+      "cat": "bd-9404211000",
+      "sev": "low",
+      "msg": "9404211000: chap=94 duty=3.7% desc=\"De caucho\""
+    },
+    {
+      "cat": "bd-consistency",
+      "sev": "low",
+      "msg": "Consistencia capítulos: 3/3"
+    },
+    {
+      "cat": "bd-total",
+      "sev": "low",
+      "msg": "BD: 21946 códigos TARIC (memoria 21,946), 97 capítulos (CAU oficial: 97)"
+    },
+    {
+      "cat": "bd-chapters",
+      "sev": "low",
+      "msg": "Endpoint /chapters: 96 capítulos"
+    },
+    {
+      "cat": "assistant-renders",
+      "sev": "low",
+      "msg": "Asistente OK: errorBoundary=false inputs=1"
+    }
+  ]
+}

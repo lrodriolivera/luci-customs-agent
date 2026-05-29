@@ -1,0 +1,192 @@
+{
+  "generatedAt": "2026-05-04T10:03:04.808Z",
+  "timestamp": 1777888866605,
+  "created": {
+    "SOIVRE": {
+      "id": "69f86ea867c21d69270dc2d8",
+      "reference": "PUE-COM-2026-000021",
+      "aeatError": "La etiqueta 'Valor' de alguna de las especificidades introducidas no es correcta. - 1230"
+    },
+    "ROHS_RAEE": {
+      "id": "69f86ebb67c21d69270dc312",
+      "reference": "PUE-ROHS-2026-000022"
+    }
+  },
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"PUE - Punto Unico de Entrada\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "subtitle",
+      "sev": "low",
+      "msg": "Subtitulo SOIVRE visible: true"
+    },
+    {
+      "cat": "header-buttons",
+      "sev": "low",
+      "msg": "Actualizar=true Nueva Solicitud=true"
+    },
+    {
+      "cat": "stats-cards",
+      "sev": "low",
+      "msg": "Cards stats: 5 (esperado 5: Total + ROHS/COM/ECO/CAL)"
+    },
+    {
+      "cat": "tabs-count",
+      "sev": "low",
+      "msg": "Tabs: 5 (esperado 5)"
+    },
+    {
+      "cat": "tab-ROHS",
+      "sev": "low",
+      "msg": "Tab ROHS visible: true"
+    },
+    {
+      "cat": "tab-COM",
+      "sev": "low",
+      "msg": "Tab COM visible: true"
+    },
+    {
+      "cat": "tab-ECO",
+      "sev": "low",
+      "msg": "Tab ECO visible: true"
+    },
+    {
+      "cat": "tab-CAL",
+      "sev": "low",
+      "msg": "Tab CAL visible: true"
+    },
+    {
+      "cat": "table-headers",
+      "sev": "low",
+      "msg": "Headers tabla PUE: 9"
+    },
+    {
+      "cat": "tab-ROHS-rows",
+      "sev": "low",
+      "msg": "Tab ROHS renderiza 18 filas"
+    },
+    {
+      "cat": "tab-COM-rows",
+      "sev": "low",
+      "msg": "Tab COM renderiza 2 filas"
+    },
+    {
+      "cat": "tab-ECO-rows",
+      "sev": "low",
+      "msg": "Tab ECO renderiza 1 filas"
+    },
+    {
+      "cat": "tab-CAL-rows",
+      "sev": "low",
+      "msg": "Tab CAL renderiza 1 filas"
+    },
+    {
+      "cat": "dialog-title",
+      "sev": "low",
+      "msg": "Dialog title: \"Nueva Solicitud PUE SOIVRE\""
+    },
+    {
+      "cat": "stepper-steps",
+      "sev": "low",
+      "msg": "Stepper steps: 6 (esperado 5-6)"
+    },
+    {
+      "cat": "step0-elements",
+      "sev": "low",
+      "msg": "Step 0: MRN=true ClaveZeta=true Buscar=true"
+    },
+    {
+      "cat": "step0-flow-radios",
+      "sev": "low",
+      "msg": "Flow radios: SOIVRE=true ROHS=true"
+    },
+    {
+      "cat": "mrn-fields-filled",
+      "sev": "low",
+      "msg": "Campos MRN llenos: 2/2"
+    },
+    {
+      "cat": "autofill-panel",
+      "sev": "low",
+      "msg": "Panel autofill visible: true"
+    },
+    {
+      "cat": "autofill-importer",
+      "sev": "low",
+      "msg": "Importador STRIX AI auto-fill: true"
+    },
+    {
+      "cat": "autofill-taric",
+      "sev": "low",
+      "msg": "TARIC 9404211000 auto-fill: true"
+    },
+    {
+      "cat": "autofill-flow",
+      "sev": "low",
+      "msg": "Chip flujo sugerido: true"
+    },
+    {
+      "cat": "http-error",
+      "sev": "critical",
+      "msg": "500 POST /api/pue"
+    },
+    {
+      "cat": "soivre-api-create",
+      "sev": "low",
+      "msg": "SOIVRE API id=69f86ea867c21d69270dc2d8 ref=PUE-COM-2026-000021"
+    },
+    {
+      "cat": "soivre-aeat-result",
+      "sev": "high",
+      "msg": "SOIVRE AEAT: La etiqueta 'Valor' de alguna de las especificidades introducidas no es correcta. - 1230"
+    },
+    {
+      "cat": "rohs-stepper-steps",
+      "sev": "low",
+      "msg": "Stepper ROHS_RAEE: 5 pasos (esperado 5, sin Docs)"
+    },
+    {
+      "cat": "rohs-api-create",
+      "sev": "low",
+      "msg": "ROHS_RAEE API id=69f86ebb67c21d69270dc312 ref=PUE-ROHS-2026-000022"
+    },
+    {
+      "cat": "rohs-aeat-result",
+      "sev": "high",
+      "msg": "ROHS_RAEE AEAT: OK"
+    },
+    {
+      "cat": "list-SOIVRE",
+      "sev": "low",
+      "msg": "SOIVRE PUE-COM-2026-000021 en lista: true"
+    },
+    {
+      "cat": "list-ROHS_RAEE",
+      "sev": "low",
+      "msg": "ROHS_RAEE PUE-ROHS-2026-000022 en lista: true"
+    },
+    {
+      "cat": "detail-h1",
+      "sev": "medium",
+      "msg": "Detail title: \"undefined\""
+    },
+    {
+      "cat": "detail-no-crash",
+      "sev": "low",
+      "msg": "Detail crash: false"
+    },
+    {
+      "cat": "search-result",
+      "sev": "low",
+      "msg": "Busqueda \"PUE-COM-2026-000021\": 1 fila(s)"
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "generatedAt": "2026-04-29T11:49:25.358Z",
+  "createdMongoId": "69f1efc967fc93d8e04e04e7",
+  "createdExpId": "EXP-2026-056D4896",
+  "findings": [
+    {
+      "cat": "login",
+      "sev": "low",
+      "msg": "auth ok user=luis.rodriguez@strixai.es role=admin"
+    },
+    {
+      "cat": "list-h1",
+      "sev": "low",
+      "msg": "h1=\"Expedientes\""
+    },
+    {
+      "cat": "list-new-btn",
+      "sev": "low",
+      "msg": "Boton \"Nueva Expedicion\" visible"
+    },
+    {
+      "cat": "list-rows",
+      "sev": "low",
+      "msg": "Filas en tabla: 20"
+    },
+    {
+      "cat": "filter-evaluate",
+      "sev": "low",
+      "msg": "evaluate: {\"ok\":true,\"target\":\"pending_documents\",\"options\":[\"\",\"draft\",\"pending_documents\",\"documents_received\",\"validating_documents\",\"ready_for_declaration\",\"completed\"]}"
+    },
+    {
+      "cat": "filter-result",
+      "sev": "low",
+      "msg": "Filtro: 20 → 2"
+    },
+    {
+      "cat": "search",
+      "sev": "low",
+      "msg": "Busqueda \"EXP-2026\": 20 filas"
+    },
+    {
+      "cat": "wizard-step-count",
+      "sev": "low",
+      "msg": "Indicador de pasos: 5 circulos"
+    },
+    {
+      "cat": "wizard-op-buttons",
+      "sev": "low",
+      "msg": "Botones IMPORT/EXPORT visibles"
+    },
+    {
+      "cat": "wizard-country",
+      "sev": "low",
+      "msg": "Selector ES/NL visible"
+    },
+    {
+      "cat": "create-ok",
+      "sev": "low",
+      "msg": "Expediente creado: _id=69f1efc967fc93d8e04e04e7 expeditionId=EXP-2026-056D4896"
+    },
+    {
+      "cat": "detail-id-visible",
+      "sev": "low",
+      "msg": "expeditionId visible en detail: true"
+    },
+    {
+      "cat": "detail-goods-visible",
+      "sev": "low",
+      "msg": "Mercancias visibles en detail: true"
+    },
+    {
+      "cat": "detail-checklist",
+      "sev": "low",
+      "msg": "Sidebar checklist visible: true"
+    },
+    {
+      "cat": "upload-commercial_invoice",
+      "sev": "low",
+      "msg": "Upload commercial_invoice: HTTP 200"
+    },
+    {
+      "cat": "upload-packing_list",
+      "sev": "low",
+      "msg": "Upload packing_list: HTTP 200"
+    },
+    {
+      "cat": "upload-bill_of_lading",
+      "sev": "low",
+      "msg": "Upload bill_of_lading: HTTP 200"
+    },
+    {
+      "cat": "upload-certificate_origin",
+      "sev": "low",
+      "msg": "Upload certificate_origin: HTTP 200"
+    },
+    {
+      "cat": "upload-summary",
+      "sev": "low",
+      "msg": "Documentos subidos: 4/4"
+    },
+    {
+      "cat": "detail-docs-rendered",
+      "sev": "low",
+      "msg": "Docs visibles en UI: 4/4"
+    },
+    {
+      "cat": "ai-buttons-count",
+      "sev": "low",
+      "msg": "Botones IA visibles en detail: 2"
+    },
+    {
+      "cat": "ai-suggest-docs",
+      "sev": "low",
+      "msg": "POST ai/suggest-documents → 200"
+    },
+    {
+      "cat": "ai-full-analysis",
+      "sev": "low",
+      "msg": "POST ai/full-analysis → 200"
+    },
+    {
+      "cat": "ai-full-fields",
+      "sev": "low",
+      "msg": "Keys: expeditionId, analyzedAt, documents, risk, classification, inconsistencies, overallReadiness"
+    },
+    {
+      "cat": "detail-links-summary",
+      "sev": "low",
+      "msg": "35/35 links sirven 200, 0 rotos"
+    },
+    {
+      "cat": "assistant-typed",
+      "sev": "low",
+      "msg": "setValue ok=true"
+    },
+    {
+      "cat": "list-shows-new",
+      "sev": "low",
+      "msg": "Expediente EXP-2026-056D4896 aparece en lista tras buscar: true"
+    }
+  ]
+}

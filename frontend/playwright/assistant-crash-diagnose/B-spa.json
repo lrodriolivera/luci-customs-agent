@@ -1,0 +1,10 @@
+{
+  "errors": [],
+  "caps": [],
+  "boundary": {
+    "message": "Minified React error #300; visit https://reactjs.org/docs/error-decoder.html?invariant=300 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+    "stack": "Error: Minified React error #300; visit https://reactjs.org/docs/error-decoder.html?invariant=300 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at Eh (https://aduanas.strixai.es/assets/vendor-BJAHjSxm.js:38:17202)\n    at Bf (https://aduanas.strixai.es/assets/vendor-BJAHjSxm.js:40:3117)\n    at k1 (https://aduanas.strixai.es/assets/vendor-BJAHjSxm.js:40:44782)\n    at w1 (https://aduanas.strixai.es/assets/vendor-BJAHjSxm.js:40:39744)\n    at jk (https://aduanas.strixai.es/assets/vendor-BJAHjSxm.js:40:39672)\n    at uu (https://aduanas.strixai.es/assets/vendor-BJAHjSxm.js:40:39525)\n    at Gv (https://aduanas.strixai.es/assets/vendor-BJAHjSxm.js:40:36640)\n    at qo (https://aduanas.strixai.es/assets/vendor-BJAHjSxm.js:38:3274)\n    at https://aduanas.strixai.es/assets/vendor-BJAHjSxm.js:40:34224",
+    "componentStack": "\n    at Xt (https://aduanas.strixai.es/assets/index-C6ur_xts.js:2:84157)\n    at div\n    at Gt (https://aduanas.strixai.es/assets/index-C6ur_xts.js:2:95150)\n    at Ws (https://aduanas.strixai.es/assets/index-C6ur_xts.js:8:35936)\n    at IE (https://aduanas.strixai.es/assets/vendor-BJAHjSxm.js:58:4006)\n    at d6 (https://aduanas.strixai.es/assets/vendor-BJAHjSxm.js:58:7984)\n    at Suspense\n    at Ys\n    at Rt (https://aduanas.strixai.es/assets/index-C6ur_xts.js:2:38165)\n    at BE (https://aduanas.strixai.es/assets/vendor-BJAHjSxm.js:58:7368)\n    at f6 (https://aduanas.strixai.es/assets/vendor-BJAHjSxm.js:67:874)\n    at Zs (https://aduanas.strixai.es/assets/index-C6ur_xts.js:8:39215)",
+    "at": "2026-04-29T11:13:31.403Z"
+  }
+}

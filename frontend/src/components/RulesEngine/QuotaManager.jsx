@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { countriesGrouped } from '../../data/countries'
+import api from '../../services/api'
 import {
   ChartBarIcon,
   ExclamationTriangleIcon,
@@ -38,8 +39,8 @@ export default function QuotaManager() {
   const fetchAllQuotas = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:5001/api/quotas/list')
-      const data = await response.json()
+      const response = await api.get('/api/quotas/list')
+      const data = response.data
 
       if (data.success) {
         setQuotas(data.data.quotas)
@@ -57,8 +58,8 @@ export default function QuotaManager() {
   const fetchCriticalQuotas = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:5001/api/quotas/critical')
-      const data = await response.json()
+      const response = await api.get('/api/quotas/critical')
+      const data = response.data
 
       if (data.success) {
         setCritical(data.data.quotas)
@@ -85,27 +86,21 @@ export default function QuotaManager() {
     setAvailability(null)
 
     try {
-      const response = await fetch('http://localhost:5001/api/quotas/check-availability', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          taricCode: formData.taricCode,
-          originCountry: formData.originCountry,
-          quantity: parseFloat(formData.quantity),
-          unit: formData.unit
-        })
+      const response = await api.post('/api/quotas/check-availability', {
+        taricCode: formData.taricCode,
+        originCountry: formData.originCountry,
+        quantity: parseFloat(formData.quantity),
+        unit: formData.unit
       })
 
-      const data = await response.json()
+      const data = response.data
 
       if (data.success) {
         setAvailability(data.data)
         if (data.data.found && data.data.count > 0) {
           toast.success(`${data.data.count} contingente(s) encontrado(s)`)
         } else {
-          toast.info('No se encontraron contingentes para este producto')
+          toast('No se encontraron contingentes para este producto')
         }
       } else {
         toast.error(data.error || 'Error al verificar disponibilidad')
@@ -118,7 +113,7 @@ export default function QuotaManager() {
     }
   }
 
-  const countries = countriesGrouped.flatMap(g => g.options.map(c => ({ code: c.code, name: c.label })))
+  const countries = countriesGrouped.flatMap(g => g.options.map(c => ({ code: c.code, name: c.label || c.name })))
 
   const getStatusBadge = (status) => {
     switch (status) {

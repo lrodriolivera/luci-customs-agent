@@ -42,13 +42,6 @@ export default function Login() {
     })
   }
 
-  // Demo credentials helper
-  const fillDemoCredentials = () => {
-    setFormData({
-      email: 'admin@strixai.es',
-      password: 'admin123'
-    })
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-luci-light via-white to-blue-50 flex items-center justify-center p-4">
@@ -129,19 +122,6 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Demo Mode Notice */}
-          <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-            <p className="text-sm text-yellow-800 text-center">
-              <strong>{t('auth.demoMode')}:</strong> {t('auth.demoClick')}
-            </p>
-            <button
-              type="button"
-              onClick={fillDemoCredentials}
-              className="w-full mt-2 text-sm text-yellow-700 hover:text-yellow-900 underline"
-            >
-              {t('auth.demoCredentials')}
-            </button>
-          </div>
 
           <p className="mt-4 text-center text-sm text-gray-600">
             {t('auth.noAccount')}{' '}

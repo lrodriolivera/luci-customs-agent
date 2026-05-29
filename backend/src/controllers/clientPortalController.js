@@ -179,10 +179,10 @@ const createPayment = async (req, res) => {
       });
     }
 
-    // Create new payment
+    // Create new payment — Expedition uses tenantId, not organizationId
     const payment = await paymentService.createExpeditionPayment(
       expedition._id,
-      expedition.organizationId
+      expedition.tenantId || expedition.organizationId
     );
 
     res.status(201).json({

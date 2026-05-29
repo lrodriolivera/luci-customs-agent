@@ -1,0 +1,154 @@
+{
+  "generatedAt": "2026-05-04T10:21:08.976Z",
+  "timestamp": 1777889926393,
+  "results": [
+    {
+      "id": "colchones-TR-MFN",
+      "httpStatus": 200,
+      "customsValue": 10000,
+      "dutyAmount": 370,
+      "dutyRate": 3.7,
+      "vatAmount": 2177.7,
+      "vatRate": 21,
+      "totalToPay": 12547.7,
+      "source": "shared_cache",
+      "confidence": 95
+    },
+    {
+      "id": "laptops-CN-ITA",
+      "httpStatus": 200,
+      "customsValue": 5000,
+      "dutyAmount": 0,
+      "dutyRate": 0,
+      "vatAmount": 1050,
+      "vatRate": 21,
+      "totalToPay": 6050,
+      "source": "shared_cache",
+      "confidence": 95
+    },
+    {
+      "id": "textiles-BD-MFN",
+      "httpStatus": 200,
+      "customsValue": 8000,
+      "dutyAmount": 960,
+      "dutyRate": 12,
+      "vatAmount": 1881.6,
+      "vatRate": 21,
+      "totalToPay": 10841.6,
+      "source": "shared_cache",
+      "confidence": 95
+    }
+  ],
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Calculadora de Derechos\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "form-fields",
+      "sev": "low",
+      "msg": "taric=true value=true origin=true submit=true"
+    },
+    {
+      "cat": "all-selects",
+      "sev": "low",
+      "msg": "Selectores totales: 3 (esperado >=3: origen + preferencia + incoterm)"
+    },
+    {
+      "cat": "origin-optgroups",
+      "sev": "low",
+      "msg": "Optgroups origen: 2 (esperado 2)"
+    },
+    {
+      "cat": "origin-countries",
+      "sev": "low",
+      "msg": "Total opciones pais: 195"
+    },
+    {
+      "cat": "incoterm-panel",
+      "sev": "medium",
+      "msg": "Panel info incoterm CIF: false"
+    },
+    {
+      "cat": "validation-toast",
+      "sev": "low",
+      "msg": "Toast validacion form vacio: true"
+    },
+    {
+      "cat": "colchones-TR-MFN-http",
+      "sev": "low",
+      "msg": "HTTP 200, source=shared_cache, confidence=95%"
+    },
+    {
+      "cat": "colchones-TR-MFN-math",
+      "sev": "low",
+      "msg": "duty=370 (esperado 370) rate=3.7% (esp 3.7%) total=12547.7 (esp 12547.7)"
+    },
+    {
+      "cat": "colchones-TR-MFN-ui-total",
+      "sev": "low",
+      "msg": "Total visible en UI: true"
+    },
+    {
+      "cat": "laptops-CN-ITA-http",
+      "sev": "low",
+      "msg": "HTTP 200, source=shared_cache, confidence=95%"
+    },
+    {
+      "cat": "laptops-CN-ITA-math",
+      "sev": "low",
+      "msg": "duty=0 (esperado 0) rate=0% (esp 0%) total=6050 (esp 6050)"
+    },
+    {
+      "cat": "laptops-CN-ITA-ui-total",
+      "sev": "low",
+      "msg": "Total visible en UI: true"
+    },
+    {
+      "cat": "textiles-BD-MFN-http",
+      "sev": "low",
+      "msg": "HTTP 200, source=shared_cache, confidence=95%"
+    },
+    {
+      "cat": "textiles-BD-MFN-math",
+      "sev": "low",
+      "msg": "duty=960 (esperado 960) rate=12% (esp 12%) total=10841.6 (esp 10841.6)"
+    },
+    {
+      "cat": "textiles-BD-MFN-ui-total",
+      "sev": "low",
+      "msg": "Total visible en UI: true"
+    },
+    {
+      "cat": "incoterm-EXW",
+      "sev": "medium",
+      "msg": "Panel info EXW: false"
+    },
+    {
+      "cat": "incoterm-DDP",
+      "sev": "medium",
+      "msg": "Panel info DDP: false"
+    },
+    {
+      "cat": "preference-spg",
+      "sev": "low",
+      "msg": "Calculo con preferencia SPG ejecutado"
+    },
+    {
+      "cat": "seasonal-test",
+      "sev": "low",
+      "msg": "Probado calculo con fechas distintas (efecto estacional si aplica)"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura resultado completo colchones TR 10k"
+    }
+  ]
+}

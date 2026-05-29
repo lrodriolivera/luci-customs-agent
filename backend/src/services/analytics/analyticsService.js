@@ -718,24 +718,49 @@ async function _calculateTrends(metrics, period) {
 
 async function _getLuciInsights(metrics) {
   try {
-    const analysis = await aiService.analyzeWithLuci({
-      type: 'dashboard_metrics',
-      metrics: {
-        declarations: metrics.operations.totalDeclarations,
-        channels: metrics.channels,
-        compliance: metrics.compliance,
-        financial: metrics.financial
-      }
+    const analyticsData = {
+      operations: metrics.operations,
+      channels: metrics.channels,
+      compliance: metrics.compliance,
+      financial: metrics.financial
+    };
+
+    const analysis = await aiService.generateAutomaticInsights(analyticsData, {
+      period: 'last_30_days',
+      operationType: 'all',
+      comparison: false
     });
 
+    // Normalizar shapes (executiveSummary/summary, keyInsights/insights)
+    const summary = analysis.executiveSummary || analysis.summary;
+    const keyInsights = analysis.keyInsights || analysis.insights || [];
+    const opportunities = analysis.opportunities || [];
+    const risks = analysis.risks || [];
+    const recsRaw = analysis.recommendations || [];
+
+    // Recomendaciones como strings legibles (manejar tanto strings como objetos)
+    const recommendations = recsRaw.map(rec => {
+      if (typeof rec === 'string') return rec;
+      return rec.action || rec.recommendation || rec.description || JSON.stringify(rec);
+    });
+
+    // Alertas: keyInsights de tipo risk + risks
+    const alerts = [
+      ...keyInsights.filter(i => i.type === 'risk' || i.impact === 'HIGH').map(i => i.title || i.description),
+      ...risks.map(r => r.risk || r.description || (typeof r === 'string' ? r : ''))
+    ].filter(Boolean);
+
+    // Oportunidades: del backend o keyInsights de tipo opportunity
+    const oppList = [
+      ...opportunities.map(o => o.description || o.area || (typeof o === 'string' ? o : '')),
+      ...keyInsights.filter(i => i.type === 'opportunity').map(i => i.title || i.description)
+    ].filter(Boolean);
+
     return {
-      summary: analysis.summary || 'Operaciones dentro de parámetros normales.',
-      recommendations: analysis.recommendations || [],
-      alerts: analysis.warnings || [],
-      opportunities: [
-        'Potencial ahorro en preferencias arancelarias no utilizadas',
-        'Optimización de tiempos de procesamiento en H7'
-      ]
+      summary: summary || 'Operaciones dentro de parámetros normales.',
+      recommendations,
+      alerts,
+      opportunities: oppList
     };
   } catch (error) {
     logger.warn(`[Analytics] Could not get LUCI insights: ${error.message}`);

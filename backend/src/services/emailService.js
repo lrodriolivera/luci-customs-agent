@@ -4,18 +4,24 @@
  */
 
 const logger = require('../config/logger');
+const unsubscribeToken = require('../utils/unsubscribeToken');
 
-let SESClient, SendEmailCommand;
+let SESClient, SendEmailCommand, SendRawEmailCommand;
 try {
   const ses = require('@aws-sdk/client-ses');
   SESClient = ses.SESClient;
   SendEmailCommand = ses.SendEmailCommand;
+  SendRawEmailCommand = ses.SendRawEmailCommand;
 } catch (e) {
   logger.warn('AWS SES SDK not installed - email via SES unavailable');
 }
 
+let suppressionService = null;
+try { suppressionService = require('./suppressionService'); } catch (e) { /* optional */ }
+
 const BRAND_COLOR = '#0284c7'; // bg-luci
 const APP_NAME = 'LUCI';
+const CONFIG_SET = process.env.SES_CONFIGURATION_SET || 'luci-feedback-v1';
 
 class EmailService {
   constructor() {
@@ -63,31 +69,95 @@ class EmailService {
       return { success: false, reason: 'not_configured' };
     }
 
-    const params = {
-      Source: `${APP_NAME} <${this.fromEmail}>`,
-      Destination: {
-        ToAddresses: Array.isArray(to) ? to : [to]
-      },
-      Message: {
-        Subject: { Data: subject, Charset: 'UTF-8' },
-        Body: {}
-      }
-    };
-
-    if (emailHtml) params.Message.Body.Html = { Data: emailHtml, Charset: 'UTF-8' };
-    if (emailText) params.Message.Body.Text = { Data: emailText, Charset: 'UTF-8' };
-    if (!emailHtml && !emailText) {
-      params.Message.Body.Text = { Data: subject, Charset: 'UTF-8' };
+    const recipients = Array.isArray(to) ? to : [to];
+    const allowed = await this._filterSuppressed(recipients);
+    if (allowed.length === 0) {
+      logger.info('Email skipped (all recipients suppressed)', { to: recipients, subject });
+      return { success: false, reason: 'suppressed', skipped: recipients };
     }
+    const skipped = recipients.filter((r) => !allowed.includes(r));
+
+    if (!emailHtml && !emailText) emailText = subject;
 
     try {
-      const result = await this.sesClient.send(new SendEmailCommand(params));
-      logger.info(`Email sent: to=${to}, subject=${subject}, messageId=${result.MessageId}`);
-      return { success: true, messageId: result.MessageId };
+      const raw = this._buildRawMessage({
+        from: `${APP_NAME} <${this.fromEmail}>`,
+        to: allowed,
+        subject,
+        html: emailHtml,
+        text: emailText
+      });
+      const params = { RawMessage: { Data: Buffer.from(raw) } };
+      if (CONFIG_SET) params.ConfigurationSetName = CONFIG_SET;
+
+      const result = await this.sesClient.send(new SendRawEmailCommand(params));
+      logger.info(`Email sent: to=${allowed.join(',')}, subject=${subject}, messageId=${result.MessageId}`);
+      return { success: true, messageId: result.MessageId, skipped };
     } catch (error) {
       logger.error(`SES send error: ${error.message}`, { to, subject });
       return { success: false, error: error.message };
     }
+  }
+
+  async _filterSuppressed(recipients) {
+    if (!suppressionService) return recipients;
+    const result = [];
+    for (const r of recipients) {
+      try {
+        const blocked = await suppressionService.isSuppressed(r);
+        if (!blocked) result.push(r);
+      } catch (err) {
+        result.push(r);
+      }
+    }
+    return result;
+  }
+
+  _buildRawMessage({ from, to, subject, html, text }) {
+    const boundary = `----=_LUCI_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+    const primary = to[0];
+    const unsubUrl = `${this.appUrl}/api/email/unsubscribe?token=${unsubscribeToken.sign(primary)}`;
+    const unsubMailto = `mailto:unsubscribe@strixai.es?subject=unsubscribe%20${encodeURIComponent(primary)}`;
+
+    const headers = [
+      `From: ${from}`,
+      `To: ${to.join(', ')}`,
+      `Subject: ${this._encodeHeader(subject)}`,
+      `MIME-Version: 1.0`,
+      `List-Unsubscribe: <${unsubMailto}>, <${unsubUrl}>`,
+      `List-Unsubscribe-Post: List-Unsubscribe=One-Click`,
+      `Precedence: bulk`,
+      `Auto-Submitted: auto-generated`,
+      `Content-Type: multipart/alternative; boundary="${boundary}"`
+    ];
+
+    const parts = [];
+    if (text) {
+      parts.push(
+        `--${boundary}`,
+        `Content-Type: text/plain; charset=UTF-8`,
+        `Content-Transfer-Encoding: base64`,
+        ``,
+        Buffer.from(text, 'utf8').toString('base64').replace(/(.{76})/g, '$1\r\n')
+      );
+    }
+    if (html) {
+      parts.push(
+        `--${boundary}`,
+        `Content-Type: text/html; charset=UTF-8`,
+        `Content-Transfer-Encoding: base64`,
+        ``,
+        Buffer.from(html, 'utf8').toString('base64').replace(/(.{76})/g, '$1\r\n')
+      );
+    }
+    parts.push(`--${boundary}--`, ``);
+
+    return headers.join('\r\n') + '\r\n\r\n' + parts.join('\r\n');
+  }
+
+  _encodeHeader(value) {
+    if (/^[\x20-\x7E]*$/.test(value)) return value;
+    return `=?UTF-8?B?${Buffer.from(value, 'utf8').toString('base64')}?=`;
   }
 
   // --------------- HTML Layout ---------------

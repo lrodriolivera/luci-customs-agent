@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { User, Tenant } = require('../models');
 const logger = require('../config/logger');
+const cognitoService = require('../utils/cognitoService');
 
 /**
  * Registro de nuevo usuario
@@ -437,6 +438,277 @@ const resetPassword = async (req, res) => {
   }
 };
 
+/**
+ * Cognito session - verify access token and return user profile
+ * POST /api/auth/session
+ */
+const cognitoSession = async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+    if (!accessToken) {
+      return res.status(400).json({ success: false, error: 'accessToken es obligatorio' });
+    }
+
+    const decoded = await cognitoService.verifyAccessToken(accessToken);
+    let user = await User.findOne({ cognitoSub: decoded.sub, isActive: true });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'Usuario no encontrado. Completa el registro primero.',
+      });
+    }
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    logger.info(`Cognito session: ${user.email}`);
+    req.audit?.({ action: 'cognito_session', resource: 'User', resourceId: user._id });
+
+    res.json({
+      success: true,
+      data: { user: user.toPublicJSON() },
+    });
+  } catch (error) {
+    logger.error('Error en cognito session:', error);
+    res.status(401).json({ success: false, error: 'Token invalido' });
+  }
+};
+
+/**
+ * Register sync - called by Post Confirmation Lambda
+ * POST /api/auth/register-sync
+ */
+const registerSync = async (req, res) => {
+  try {
+    const secret = req.header('X-Register-Sync-Secret');
+    if (!secret || secret !== process.env.REGISTER_SYNC_SECRET) {
+      return res.status(403).json({ success: false, error: 'Forbidden' });
+    }
+
+    const { cognitoSub, email, givenName, familyName, apellido2, companyName } = req.body;
+
+    if (!cognitoSub || !email) {
+      return res.status(400).json({ success: false, error: 'cognitoSub y email son obligatorios' });
+    }
+
+    const existing = await User.findOne({ cognitoSub });
+    if (existing) {
+      return res.json({ success: true, data: { userId: existing._id, tenantId: existing.tenantId } });
+    }
+
+    // If user exists by email but without cognitoSub, link them
+    const existingByEmail = await User.findOne({ email, cognitoSub: { $exists: false } });
+    if (!existingByEmail) {
+      // Also check for null cognitoSub
+      const existingByEmail2 = await User.findOne({ email, cognitoSub: null });
+      if (existingByEmail2) {
+        existingByEmail2.cognitoSub = cognitoSub;
+        existingByEmail2.givenName = givenName;
+        existingByEmail2.familyName = familyName;
+        existingByEmail2.apellido2 = apellido2;
+        await existingByEmail2.save();
+        logger.info(`Register sync: linked existing user ${email} to cognitoSub ${cognitoSub}`);
+        return res.json({ success: true, data: { userId: existingByEmail2._id, tenantId: existingByEmail2.tenantId, linked: true } });
+      }
+    }
+    if (existingByEmail) {
+      existingByEmail.cognitoSub = cognitoSub;
+      existingByEmail.givenName = givenName;
+      existingByEmail.familyName = familyName;
+      existingByEmail.apellido2 = apellido2;
+      await existingByEmail.save();
+      logger.info(`Register sync: linked existing user ${email} to cognitoSub ${cognitoSub}`);
+      return res.json({ success: true, data: { userId: existingByEmail._id, tenantId: existingByEmail.tenantId, linked: true } });
+    }
+
+    const fullName = [givenName, familyName, apellido2].filter(Boolean).join(' ');
+
+    const baseSlug = (companyName || 'empresa')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    let slug = baseSlug;
+    if (await Tenant.findOne({ slug })) {
+      slug = `${baseSlug}-${Date.now().toString(36)}`;
+    }
+
+    const tenant = new Tenant({
+      name: companyName || fullName,
+      slug,
+      status: 'active',
+      subscription: { plan: 'professional', status: 'active', startDate: new Date() },
+      limits: Tenant.getDefaultLimits ? Tenant.getDefaultLimits('professional') : {},
+      primaryContact: { name: fullName, email },
+    });
+    await tenant.save();
+
+    const user = new User({
+      email,
+      name: fullName,
+      givenName,
+      familyName,
+      apellido2,
+      cognitoSub,
+      role: 'admin',
+      tenantId: tenant._id,
+      organizationId: tenant._id,
+      profile: { company: companyName },
+      permissions: {
+        canCreateExpeditions: true,
+        canDeleteExpeditions: true,
+        canApproveDeclarations: true,
+        canManageUsers: true,
+        canAccessReports: true,
+        canManageCertificates: true,
+        canSignDeclarations: true,
+        canUploadDocuments: true,
+        canConfigureSystem: true,
+      },
+    });
+    await user.save();
+
+    // Update Cognito user with tenantId
+    try {
+      await cognitoService.adminUpdateAttributes(cognitoSub, {
+        'custom:tenantId': String(tenant._id),
+        'custom:role': 'admin',
+      });
+    } catch (cognitoErr) {
+      logger.warn('Could not update Cognito attributes:', cognitoErr.message);
+    }
+
+    logger.info(`Register sync: ${email}, tenant: ${slug}, cognitoSub: ${cognitoSub}`);
+
+    res.status(201).json({
+      success: true,
+      data: { userId: user._id, tenantId: tenant._id, slug },
+    });
+  } catch (error) {
+    logger.error('Error en register-sync:', error.message);
+    res.status(500).json({ success: false, error: 'Error en register-sync' });
+  }
+};
+
+/**
+ * Admin invite - create user in Cognito with temporary password
+ * POST /api/auth/admin/invite
+ */
+const adminInvite = async (req, res) => {
+  try {
+    const { email, givenName, familyName, apellido2, role = 'agent' } = req.body;
+
+    if (!email || !givenName || !familyName) {
+      return res.status(400).json({ success: false, error: 'email, givenName y familyName son obligatorios' });
+    }
+
+    const tempPassword = crypto.randomBytes(12).toString('base64').slice(0, 12) + 'A1!';
+
+    const cognitoResult = await cognitoService.adminCreateUser(
+      email, givenName, familyName, apellido2, tempPassword
+    );
+
+    const cognitoSub = cognitoResult.User.Attributes.find(a => a.Name === 'sub')?.Value;
+    const fullName = [givenName, familyName, apellido2].filter(Boolean).join(' ');
+
+    const user = new User({
+      email,
+      name: fullName,
+      givenName,
+      familyName,
+      apellido2,
+      cognitoSub,
+      role,
+      tenantId: req.user.tenantId,
+      organizationId: req.user.tenantId,
+      permissions: {
+        canCreateExpeditions: true,
+        canUploadDocuments: true,
+        canAccessReports: role === 'admin' || role === 'supervisor',
+        canDeleteExpeditions: role === 'admin',
+        canApproveDeclarations: role === 'admin' || role === 'supervisor',
+        canManageUsers: role === 'admin',
+        canManageCertificates: role === 'admin',
+        canSignDeclarations: role === 'admin',
+        canConfigureSystem: role === 'admin',
+      },
+    });
+    await user.save();
+
+    await cognitoService.adminUpdateAttributes(cognitoSub, {
+      'custom:tenantId': String(req.user.tenantId),
+      'custom:role': role,
+    });
+
+    logger.info(`Admin invited user: ${email} (role: ${role}) by ${req.user.email}`);
+    req.audit?.({ action: 'admin_invite', resource: 'User', resourceId: user._id, metadata: { email, role } });
+
+    res.status(201).json({ success: true, data: user.toPublicJSON() });
+  } catch (error) {
+    logger.error('Error en admin invite:', error);
+    const msg = error.name === 'UsernameExistsException'
+      ? 'El usuario ya existe en el sistema'
+      : 'Error al invitar usuario';
+    res.status(error.name === 'UsernameExistsException' ? 409 : 500).json({ success: false, error: msg });
+  }
+};
+
+/**
+ * Admin disable user
+ * POST /api/auth/admin/disable/:id
+ */
+const adminDisableUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+    }
+
+    if (user.cognitoSub) {
+      await cognitoService.adminDisableUser(user.cognitoSub);
+    }
+
+    user.isActive = false;
+    await user.save();
+
+    logger.info(`Admin disabled user: ${user.email} by ${req.user.email}`);
+    req.audit?.({ action: 'admin_disable_user', resource: 'User', resourceId: user._id });
+
+    res.json({ success: true, data: user.toPublicJSON() });
+  } catch (error) {
+    logger.error('Error disabling user:', error);
+    res.status(500).json({ success: false, error: 'Error al desactivar usuario' });
+  }
+};
+
+/**
+ * Change password via Cognito
+ * PUT /api/auth/change-password
+ */
+const cognitoChangePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const accessToken = req.token;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, error: 'currentPassword y newPassword son obligatorios' });
+    }
+
+    await cognitoService.changePassword(accessToken, currentPassword, newPassword);
+
+    logger.info(`Cognito password changed: ${req.user.email}`);
+    res.json({ success: true, message: 'Contrasena actualizada correctamente' });
+  } catch (error) {
+    logger.error('Error changing cognito password:', error);
+    const msg = error.name === 'NotAuthorizedException'
+      ? 'Contrasena actual incorrecta'
+      : 'Error al cambiar contrasena';
+    res.status(400).json({ success: false, error: msg });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -448,5 +720,10 @@ module.exports = {
   listUsers,
   updateUser,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  cognitoSession,
+  registerSync,
+  adminInvite,
+  adminDisableUser,
+  cognitoChangePassword,
 };

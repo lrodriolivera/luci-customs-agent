@@ -1,0 +1,91 @@
+{
+  "generatedAt": "2026-05-04T12:40:55.533Z",
+  "timestamp": 1777898393427,
+  "created": {
+    "id": "69f893a4d545c224d5f780ea",
+    "name": "E2E Guarantee 1777898393427",
+    "reference": "CGU-2026-00003"
+  },
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Garantias Aduaneras\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "header-buttons",
+      "sev": "low",
+      "msg": "AnalisisIA=true Calculadora=true NuevaGarantia=true"
+    },
+    {
+      "cat": "stats-cards",
+      "sev": "low",
+      "msg": "Activas=true Total=true Disponible=true Consumido=true"
+    },
+    {
+      "cat": "filter-selects",
+      "sev": "low",
+      "msg": "Selects filtros: 2"
+    },
+    {
+      "cat": "empty-or-list",
+      "sev": "low",
+      "msg": "Estado vacio visible: true (depende del tenant)"
+    },
+    {
+      "cat": "create-api",
+      "sev": "low",
+      "msg": "POST /api/guarantees HTTP 201 id=69f893a4d545c224d5f780ea"
+    },
+    {
+      "cat": "new-in-list",
+      "sev": "low",
+      "msg": "Garantia \"E2E Guarantee 1777898393427\" visible en lista UI: true"
+    },
+    {
+      "cat": "stats-updated",
+      "sev": "low",
+      "msg": "Importe Total 250.000 EUR visible: true"
+    },
+    {
+      "cat": "filters-applied",
+      "sev": "low",
+      "msg": "Filtros status=draft + type=CGU aplicados"
+    },
+    {
+      "cat": "new-modal",
+      "sev": "low",
+      "msg": "Modal Nueva Garantia visible: true"
+    },
+    {
+      "cat": "calc-modal",
+      "sev": "low",
+      "msg": "Modal Calculadora visible: true"
+    },
+    {
+      "cat": "ai-panel",
+      "sev": "low",
+      "msg": "Panel AI visible: true"
+    },
+    {
+      "cat": "detail-modal",
+      "sev": "low",
+      "msg": "Modal Detalles visible: true"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final dashboard /guarantees"
+    },
+    {
+      "cat": "cleanup",
+      "sev": "low",
+      "msg": "POST /cancel HTTP 200"
+    }
+  ]
+}

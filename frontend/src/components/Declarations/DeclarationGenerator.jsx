@@ -247,7 +247,12 @@ export default function DeclarationGenerator() {
               </p>
             ) : (
               <div className="space-y-2 max-h-60 overflow-y-auto">
-                {expeditions.map((exp) => (
+                {expeditions.filter(exp => {
+                  const opType = (exp.operationType || '').toLowerCase()
+                  if (declarationType === 'H1') return opType === 'import'
+                  if (declarationType === 'AES') return opType === 'export'
+                  return true
+                }).map((exp) => (
                   <div
                     key={exp._id}
                     onClick={() => setSelectedExpedition(exp)}
@@ -262,8 +267,8 @@ export default function DeclarationGenerator() {
                         <p className="font-medium">{exp.expeditionId}</p>
                         <p className="text-sm text-gray-500">{exp.client?.companyName}</p>
                       </div>
-                      <span className={`badge ${exp.operationType === 'IMPORT' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
-                        {exp.operationType === 'IMPORT' ? t('common.import') : t('common.export')}
+                      <span className={`badge ${exp.operationType === 'import' || exp.operationType === 'IMPORT' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
+                        {exp.operationType === 'import' || exp.operationType === 'IMPORT' ? t('common.import') : t('common.export')}
                       </span>
                     </div>
                   </div>

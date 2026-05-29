@@ -783,7 +783,7 @@ const trackDeclaration = async (req, res) => {
  */
 const getTrackedDeclarations = async (req, res) => {
   try {
-    const tracked = aeatStatusMonitorService.listTrackedDeclarations();
+    const tracked = await aeatStatusMonitorService.listTrackedDeclarations();
 
     res.json({
       success: true,
@@ -842,7 +842,7 @@ const getActiveAlerts = async (req, res) => {
   try {
     const { severity, unacknowledgedOnly } = req.query;
 
-    const alerts = aeatStatusMonitorService.getActiveAlerts({
+    const alerts = await aeatStatusMonitorService.getActiveAlerts({
       severity,
       unacknowledgedOnly: unacknowledgedOnly === 'true'
     });
@@ -1041,7 +1041,7 @@ const getServiceStatus = async (req, res) => {
       sslStatus: serviceInfo.sslStatus,
       simulationMode: serviceInfo.simulationMode,
       certificatesLoaded: (await certificateService.listCertificates()).certificates?.length || 0,
-      activeMonitoring: aeatStatusMonitorService.listTrackedDeclarations?.()?.length || 0,
+      activeMonitoring: ((await aeatStatusMonitorService.listTrackedDeclarations?.()) || {}).total || 0,
       activeAlerts: aeatStatusMonitorService.alerts?.length || 0,
       timestamp: new Date().toISOString()
     };

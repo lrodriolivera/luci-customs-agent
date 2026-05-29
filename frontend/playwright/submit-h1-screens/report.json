@@ -1,0 +1,21 @@
+{
+  "expedition": {
+    "mongoId": "69f235f9b824b23085bfcf23",
+    "expeditionId": "EXP-2026-MOKAF2T9"
+  },
+  "aeatResponse": {
+    "status": "ready_for_declaration",
+    "simulated": false
+  },
+  "uiTexts": {},
+  "apiCalls": [
+    {
+      "status": 400,
+      "url": "/api/declarations/69f235f9b824b23085bfcf23/submit",
+      "response": {
+        "success": false,
+        "error": "Partida(1).MASA NETA (CAS 38). Masa neta no numerica o inferior a 0"
+      }
+    }
+  ]
+}

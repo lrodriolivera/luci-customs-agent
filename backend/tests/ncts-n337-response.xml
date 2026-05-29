@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><CC015CV1Sal xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC015CV1Sal.xsd" Id="20260424181608859026">
+	<messageSender>NTA.ES</messageSender>
+	<messageRecipient>ESB22477020</messageRecipient>
+	<preparationDateAndTime>2026-04-24T18:16:11</preparationDateAndTime>
+	<messageIdentification>20260424181608859026</messageIdentification>
+	<messageType>RE015C</messageType>
+	<correlationIdentifier>20260424121607603632298</correlationIdentifier>
+	<ControlRespuesta>
+		<tipoRespuesta>OK</tipoRespuesta>
+		<codigoRespuesta>L</codigoRespuesta>
+	</ControlRespuesta>
+	<DatosRespuestaCorrecta>
+		<LRN>LRN-N337-2026042412</LRN>
+		<MRN>26ES002801500473J5</MRN>
+		<fechaHoraAlta>2026-04-24T18:16:09</fechaHoraAlta>
+		<fechaAdmision>2026-04-24</fechaAdmision>
+		<circuitoExpedicion>V</circuitoExpedicion>
+		<fechaLevante>2026-04-24</fechaLevante>
+		<CSVDeclaracionElectronica>79VAZ58BCNCF67J6</CSVDeclaracionElectronica>
+		<CSVdeDAT>M58MNTM5JUGH6B9U</CSVdeDAT>
+		<fechaLimiteLlegada>2026-04-30</fechaLimiteLlegada>
+		<estado>DE</estado>
+	</DatosRespuestaCorrecta>
+</CC015CV1Sal>
+
+</env:Body></env:Envelope>

@@ -513,21 +513,42 @@ async function _generateExecutiveSummary(report, reportData) {
 
 async function _getLuciReportInsights(type, reportData) {
   try {
-    const analysis = await aiService.analyzeWithLuci({
-      type: 'report_generation',
+    const analyticsData = {
       reportType: type,
-      metrics: {
-        operations: reportData.dashboard?.operations,
-        financial: reportData.financial?.summary,
-        compliance: reportData.compliance?.summary
-      }
+      operations: reportData.dashboard?.operations,
+      financial: reportData.financial?.summary,
+      compliance: reportData.compliance?.summary
+    };
+
+    const analysis = await aiService.generateExecutiveReport(analyticsData, {
+      period: reportData.period || 'last_30_days',
+      audience: 'Dirección general',
+      focus: type
     });
 
+    // Normalizar shapes y manejar string|objeto
+    const norm = (v) => {
+      if (typeof v === 'string') return v;
+      if (Array.isArray(v)) return v.map(norm).filter(Boolean);
+      if (v && typeof v === 'object') {
+        return v.action || v.recommendation || v.description || v.risk || v.text || '';
+      }
+      return '';
+    };
+
+    const summary = analysis.executiveSummary || analysis.summary || 'Análisis completado.';
+    const keyFindings = (Array.isArray(analysis.recommendations) ? analysis.recommendations : [])
+      .map(norm).filter(Boolean);
+    const risksIdentified = (Array.isArray(analysis.risks) ? analysis.risks : [])
+      .map(norm).filter(Boolean);
+    const actionItems = (Array.isArray(analysis.strategicRecommendations) ? analysis.strategicRecommendations : [])
+      .map(norm).filter(Boolean);
+
     return {
-      summary: analysis.summary || 'Análisis completado.',
-      keyFindings: analysis.recommendations || [],
-      risksIdentified: analysis.warnings || [],
-      actionItems: []
+      summary,
+      keyFindings,
+      risksIdentified,
+      actionItems
     };
   } catch (error) {
     logger.warn(`[Reports] Could not get LUCI insights: ${error.message}`);

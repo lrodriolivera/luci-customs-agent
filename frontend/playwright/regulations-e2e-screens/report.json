@@ -1,0 +1,90 @@
+{
+  "generatedAt": "2026-05-04T11:47:56.450Z",
+  "timestamp": 1777895204974,
+  "results": [
+    {
+      "test": "todos",
+      "query": "arancel",
+      "status": 200
+    },
+    {
+      "test": "eurlex",
+      "query": "952/2013",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "test": "boe",
+      "query": "tributaria",
+      "status": 200,
+      "count": 1
+    }
+  ],
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Buscador de Normativa\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "tabs-visible",
+      "sev": "low",
+      "msg": "Todos=true EUR-Lex=true BOE=true"
+    },
+    {
+      "cat": "search-input",
+      "sev": "low",
+      "msg": "Input busqueda visible: true"
+    },
+    {
+      "cat": "cau-catalog",
+      "sev": "low",
+      "msg": "Catalogo CAU visible: true"
+    },
+    {
+      "cat": "boe-catalog",
+      "sev": "low",
+      "msg": "Catalogo BOE LGT visible: true"
+    },
+    {
+      "cat": "validation-toast",
+      "sev": "low",
+      "msg": "Toast validacion vacio: true"
+    },
+    {
+      "cat": "search-todos-http",
+      "sev": "low",
+      "msg": "HTTP 200 eurlex=- boe=-"
+    },
+    {
+      "cat": "search-eurlex-http",
+      "sev": "low",
+      "msg": "HTTP 200 results=1"
+    },
+    {
+      "cat": "search-boe-http",
+      "sev": "low",
+      "msg": "HTTP 200 results=1"
+    },
+    {
+      "cat": "analysis-panel",
+      "sev": "medium",
+      "msg": "Panel \"Analisis con LUCI\" visible: false"
+    },
+    {
+      "cat": "suggested-questions",
+      "sev": "low",
+      "msg": "Preguntas sugeridas visibles: true"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final con catalogos CAU + BOE completos"
+    }
+  ]
+}

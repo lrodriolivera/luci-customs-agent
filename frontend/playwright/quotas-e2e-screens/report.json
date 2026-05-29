@@ -1,0 +1,132 @@
+{
+  "generatedAt": "2026-05-04T11:41:02.484Z",
+  "timestamp": 1777894796707,
+  "results": [
+    {
+      "id": "AR-vacuno",
+      "httpStatus": 200,
+      "found": true,
+      "count": 2,
+      "firstQuotaDesc": "Carne de vacuno de alta calidad",
+      "firstQuotaUtil": 72.11
+    },
+    {
+      "id": "CN-laptops",
+      "httpStatus": 200,
+      "found": false,
+      "count": 0
+    }
+  ],
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Gestion de Contingentes Arancelarios\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "tabs-visible",
+      "sev": "low",
+      "msg": "Buscar=true Todos=true Criticos=true"
+    },
+    {
+      "cat": "default-form",
+      "sev": "low",
+      "msg": "Form Verificar Disponibilidad visible: true"
+    },
+    {
+      "cat": "select-found",
+      "sev": "low",
+      "msg": "Select quotas-origin visible: true"
+    },
+    {
+      "cat": "optgroups",
+      "sev": "low",
+      "msg": "Optgroups: 2 (esperado 2)"
+    },
+    {
+      "cat": "options",
+      "sev": "low",
+      "msg": "Total opciones: 194 (esperado ~195)"
+    },
+    {
+      "cat": "options-broken",
+      "sev": "low",
+      "msg": "Opciones rotas \"()\": 0"
+    },
+    {
+      "cat": "spotcheck",
+      "sev": "low",
+      "msg": "AR=\"Argentina (AR)\" CN=\"China (CN)\""
+    },
+    {
+      "cat": "AR-vacuno-http",
+      "sev": "low",
+      "msg": "HTTP 200, found=true, count=2"
+    },
+    {
+      "cat": "AR-vacuno-found-match",
+      "sev": "low",
+      "msg": "found=true (esperado true)"
+    },
+    {
+      "cat": "AR-vacuno-ui-quota",
+      "sev": "low",
+      "msg": "Card contingente visible UI: true"
+    },
+    {
+      "cat": "CN-laptops-http",
+      "sev": "low",
+      "msg": "HTTP 200, found=false, count=0"
+    },
+    {
+      "cat": "CN-laptops-found-match",
+      "sev": "low",
+      "msg": "found=false (esperado false)"
+    },
+    {
+      "cat": "CN-laptops-ui-no-match",
+      "sev": "low",
+      "msg": "UI muestra \"no encontrados\": true"
+    },
+    {
+      "cat": "table-headers",
+      "sev": "low",
+      "msg": "Headers tabla: 5"
+    },
+    {
+      "cat": "table-rows",
+      "sev": "low",
+      "msg": "Filas en tabla: 11 (esperado ~11)"
+    },
+    {
+      "cat": "vacuno-row",
+      "sev": "low",
+      "msg": "Fila vacuno visible: true"
+    },
+    {
+      "cat": "critical-cards",
+      "sev": "low",
+      "msg": "Cards criticos visibles: 4 (esperado ~4)"
+    },
+    {
+      "cat": "leche-card",
+      "sev": "low",
+      "msg": "Card leche desnatada visible: true"
+    },
+    {
+      "cat": "reserva-warning",
+      "sev": "low",
+      "msg": "Warning \"reserva urgente\" visible: true"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final AR vacuno con detalle contingente + ahorro"
+    }
+  ]
+}

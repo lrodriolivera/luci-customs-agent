@@ -73,7 +73,8 @@
     "from": "Da",
     "to": "A",
     "total": "Totale",
-    "subtotal": "Subtotale"
+    "subtotal": "Subtotale",
+    "refresh": "Aggiorna"
   },
   "nav": {
     "skipToContent": "Vai al contenuto principale",
@@ -125,7 +126,9 @@
     "logout": "Esci",
     "user": "Utente",
     "admin": "Amministratore",
-    "customsAgent": "Agente Doganale"
+    "customsAgent": "Agente Doganale",
+    "help": "Aiuto",
+    "userManual": "Manuale utente"
   },
   "auth": {
     "login": "Accedi",
@@ -2080,7 +2083,9 @@
     "mutualRecognition": "Riconoscimento Reciproco",
     "customsSimplifications": "Semplificazioni Doganali",
     "securityProtection": "Sicurezza e Protezione",
-    "complete": "Completo (OEAC + OEAS)"
+    "complete": "Completo (OEAC + OEAS)",
+    "newApplication": "Nuova Domanda",
+    "newApplicationOEA": "Nuova Domanda AEO"
   },
   "regulations": {
     "title": "Ricerca Normativa",
@@ -3336,7 +3341,45 @@
     "trends": "Tendenze",
     "executiveReport": "Report Esecutivo",
     "kpiAnalysis": "Analisi KPI",
-    "fullAnalysis": "Analisi Completa"
+    "fullAnalysis": "Analisi Completa",
+    "title": "Analytics e BI",
+    "subtitle": "Dashboard di business intelligence e analisi avanzate",
+    "aiAnalysisCenter": "Centro di Analisi IA",
+    "advancedAnalytics": "Analisi avanzata con LUCI",
+    "analyzingWithAI": "Analisi con IA...",
+    "mainInsights": "Insights Principali",
+    "recommendations": "Raccomandazioni",
+    "luciSummary": "Riepilogo LUCI",
+    "expected": "Atteso",
+    "actual": "Attuale",
+    "deviation": "Deviazione",
+    "suggestedAction": "Azione suggerita",
+    "predictions": "Predizioni",
+    "confidence": "Confidenza",
+    "seasonalPatterns": "Modelli Stagionali",
+    "peakPeriods": "Periodi di picco",
+    "trendAlerts": "Avvisi di Tendenza",
+    "keyMetrics": "Metriche Chiave",
+    "periodAchievements": "Risultati del Periodo",
+    "attentionAreas": "Aree di Attenzione",
+    "strategicRecommendations": "Raccomandazioni Strategiche",
+    "kpiDeviations": "Deviazioni dei KPI",
+    "rootCauses": "Cause Radice",
+    "improvementActions": "Azioni di Miglioramento",
+    "expectedImpact": "Impatto atteso",
+    "fullLuciAnalysis": "Analisi Completa LUCI",
+    "score": "Punteggio",
+    "criticalItems": "Elementi Critici",
+    "recommendedActions": "Azioni Raccomandate",
+    "today": "Oggi",
+    "yesterday": "Ieri",
+    "last7Days": "Ultimi 7 giorni",
+    "last30Days": "Ultimi 30 giorni",
+    "thisMonth": "Questo mese",
+    "lastMonth": "Mese scorso",
+    "thisQuarter": "Questo trimestre",
+    "thisYear": "Quest'anno",
+    "errorLoadingDashboard": "Errore nel caricamento del dashboard"
   },
   "errorBoundary": {
     "title": "Qualcosa e andato storto",

@@ -84,37 +84,39 @@ class PaymentService {
    */
   calculatePaymentItems(expedition) {
     const items = [];
+    const calc = expedition.calculations || {};
+    // calculationController writes totalDuties/totalVat/totalSpecialTaxes; legacy aliases also tolerated
+    const duty = calc.totalDuties ?? calc.dutyTotal ?? 0;
+    const vat = calc.totalVat ?? calc.vatTotal ?? 0;
+    const special = calc.totalSpecialTaxes ?? calc.specialTaxTotal ?? 0;
 
-    // Add duties if calculated
-    if (expedition.calculations?.dutyTotal > 0) {
+    if (duty > 0) {
       items.push({
         description: `Derechos de aduana - ${expedition.expeditionId}`,
         type: 'duty',
-        amount: expedition.calculations.dutyTotal,
+        amount: duty,
         currency: 'EUR',
         reference: expedition.declaration?.mrn || expedition.expeditionId,
         expeditionId: expedition._id
       });
     }
 
-    // Add VAT if calculated
-    if (expedition.calculations?.vatTotal > 0) {
+    if (vat > 0) {
       items.push({
         description: `IVA Importacion - ${expedition.expeditionId}`,
         type: 'vat',
-        amount: expedition.calculations.vatTotal,
+        amount: vat,
         currency: 'EUR',
         reference: expedition.declaration?.mrn || expedition.expeditionId,
         expeditionId: expedition._id
       });
     }
 
-    // Add special taxes if any
-    if (expedition.calculations?.specialTaxTotal > 0) {
+    if (special > 0) {
       items.push({
         description: `Impuestos especiales - ${expedition.expeditionId}`,
         type: 'special_tax',
-        amount: expedition.calculations.specialTaxTotal,
+        amount: special,
         currency: 'EUR',
         reference: expedition.expeditionId,
         expeditionId: expedition._id

@@ -131,7 +131,9 @@ export default function MLInsights() {
       setLoading(true)
       const response = await mlAPI.fraud.analyze(fraudInput)
       if (response.data.success) {
-        setFraudResult(response.data)
+        const raw = response.data?.data || response.data
+        const overallRiskLevel = raw.overallRiskLevel || raw.riskLevel || raw.overall_risk_level
+        setFraudResult({ ...raw, overallRiskLevel })
         toast.success('Analisis completado')
       }
     } catch (error) {
@@ -148,7 +150,13 @@ export default function MLInsights() {
       setLoading(true)
       const response = await mlAPI.channel.predict(channelInput)
       if (response.data.success) {
-        setChannelResult(response.data)
+        const raw = response.data?.prediction || response.data?.data || response.data
+        const channelMap = { green: 'verde', yellow: 'naranja', orange: 'naranja', red: 'rojo' }
+        const rawChannel = raw.predictedChannel || raw.channel || ''
+        const predictedChannel = channelMap[rawChannel] || rawChannel
+        const rawConfidence = raw.confidence ?? raw.confidenceScore ?? 0
+        const confidence = rawConfidence <= 1 ? Math.round(rawConfidence * 100) : rawConfidence
+        setChannelResult({ ...raw, predictedChannel, confidence })
         toast.success('Prediccion completada')
       }
     } catch (error) {

@@ -47,7 +47,7 @@ export default function ExciseDutiesCalculator() {
         if (data.data.subject) {
           toast.success(`Producto sujeto a Impuestos Especiales: ${data.data.categoryName}`)
         } else {
-          toast.info('Producto no sujeto a Impuestos Especiales')
+          toast('Producto no sujeto a Impuestos Especiales')
         }
       } else {
         toast.error(data.error || 'Error al detectar')
@@ -88,7 +88,7 @@ export default function ExciseDutiesCalculator() {
         if (data.data.applicable) {
           toast.success(`Impuesto calculado: ${data.data.amount} EUR`)
         } else {
-          toast.info('No aplican impuestos especiales')
+          toast('No aplican impuestos especiales')
         }
       } else {
         toast.error(data.error || 'Error al calcular')

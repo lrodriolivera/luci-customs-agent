@@ -1,0 +1,177 @@
+{
+  "generatedAt": "2026-04-29T13:35:29.592Z",
+  "expedition": {
+    "_id": "69f208beb824b23085bfc65d",
+    "expeditionId": "EXP-2026-674017EF",
+    "mrn": "26ES00280130001TT1",
+    "channel": "green"
+  },
+  "portal": {
+    "token": "500916d4-93ac-4049-b0bd-07aaed27c976",
+    "url": "https://aduanas.strixai.es/portal/500916d4-93ac-4049-b0bd-07aaed27c976"
+  },
+  "paymentId": "PAY-MOK3KVGZ-7KSMRQ",
+  "docIds": 4,
+  "findings": [
+    {
+      "cat": "create",
+      "sev": "low",
+      "msg": "Created _id=69f208beb824b23085bfc65d expId=EXP-2026-674017EF"
+    },
+    {
+      "cat": "upload-commercial_invoice",
+      "sev": "low",
+      "msg": "HTTP 200"
+    },
+    {
+      "cat": "upload-packing_list",
+      "sev": "low",
+      "msg": "HTTP 200"
+    },
+    {
+      "cat": "upload-bill_of_lading",
+      "sev": "low",
+      "msg": "HTTP 200"
+    },
+    {
+      "cat": "upload-certificate_origin",
+      "sev": "low",
+      "msg": "HTTP 200"
+    },
+    {
+      "cat": "validated",
+      "sev": "low",
+      "msg": "Docs validados: 4/4"
+    },
+    {
+      "cat": "h1-generate",
+      "sev": "low",
+      "msg": "POST h1/generate → 200"
+    },
+    {
+      "cat": "h1-result",
+      "sev": "low",
+      "msg": "XML 10139 bytes, LRN=26ES6A25F0FCBFFA44CE"
+    },
+    {
+      "cat": "aeat-button",
+      "sev": "low",
+      "msg": "Boton \"Enviar a AEAT\" visible: true"
+    },
+    {
+      "cat": "aeat-submit",
+      "sev": "low",
+      "msg": "POST /declarations/69f208beb824b23085bfc65d/submit → 200"
+    },
+    {
+      "cat": "aeat-mrn",
+      "sev": "low",
+      "msg": "MRN: 26ES00280130001TT1"
+    },
+    {
+      "cat": "aeat-channel",
+      "sev": "low",
+      "msg": "Canal: green"
+    },
+    {
+      "cat": "aeat-simulated",
+      "sev": "low",
+      "msg": "simulated=false"
+    },
+    {
+      "cat": "mrn-in-ui",
+      "sev": "low",
+      "msg": "MRN 26ES00280130001TT1 visible en UI: true"
+    },
+    {
+      "cat": "portal-token",
+      "sev": "low",
+      "msg": "Portal token extracted: 500916d4... URL=https://aduanas.strixai.es/portal/500916d4-93ac-4049-b0bd-07aaed27c976"
+    },
+    {
+      "cat": "portal-get",
+      "sev": "low",
+      "msg": "GET /api/portal/:token (no auth) → 200"
+    },
+    {
+      "cat": "portal-data",
+      "sev": "low",
+      "msg": "Portal devuelve expedientId=EXP-2026-674017EF, docs=undefined, status=green_channel"
+    },
+    {
+      "cat": "portal-upload",
+      "sev": "low",
+      "msg": "POST /portal/:token/documents → 200"
+    },
+    {
+      "cat": "portal-upload-ok",
+      "sev": "low",
+      "msg": "Doc del cliente subido OK"
+    },
+    {
+      "cat": "portal-render",
+      "sev": "low",
+      "msg": "h1/h2 portal: \"Portal de Cliente\""
+    },
+    {
+      "cat": "calc-duties",
+      "sev": "low",
+      "msg": "POST /calculation/duties → 200"
+    },
+    {
+      "cat": "calc-result",
+      "sev": "low",
+      "msg": "customsValue=10400 duties=351.5 VAT=2068.82 totalToPay=12820.32"
+    },
+    {
+      "cat": "payments-list",
+      "sev": "low",
+      "msg": "GET /portal/:token/payments → 200"
+    },
+    {
+      "cat": "payments-count",
+      "sev": "low",
+      "msg": "0 pagos existentes"
+    },
+    {
+      "cat": "payment-create",
+      "sev": "low",
+      "msg": "POST /portal/:token/payments → 201"
+    },
+    {
+      "cat": "payment-id",
+      "sev": "low",
+      "msg": "paymentId=PAY-MOK3KVGZ-7KSMRQ totalAmount=2420.32€ items=2"
+    },
+    {
+      "cat": "payment-status",
+      "sev": "low",
+      "msg": "GET payment/PAY-MOK3KVGZ-7KSMRQ → 200"
+    },
+    {
+      "cat": "payment-status-info",
+      "sev": "low",
+      "msg": "Status: pending, amount: undefined"
+    },
+    {
+      "cat": "payment-checkout",
+      "sev": "low",
+      "msg": "POST checkout → 200 "
+    },
+    {
+      "cat": "payment-checkout-url",
+      "sev": "medium",
+      "msg": "Checkout URL: undefined"
+    },
+    {
+      "cat": "final-status-badge",
+      "sev": "low",
+      "msg": "Estado UI: \"Canal Verde\""
+    },
+    {
+      "cat": "final-expedition",
+      "sev": "low",
+      "msg": "status=green_channel mrn=26ES00280130001TT1 channel=green docs=5 payments=0 timeline=14"
+    }
+  ]
+}

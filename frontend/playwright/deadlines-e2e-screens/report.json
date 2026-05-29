@@ -1,0 +1,115 @@
+{
+  "generatedAt": "2026-05-04T12:12:40.405Z",
+  "timestamp": 1777896690848,
+  "created": {
+    "id": "69f88d23b824b23085bfe32b",
+    "title": "E2E Test Deadline 1777896690848"
+  },
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Gestor de Plazos\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "tabs-visible",
+      "sev": "low",
+      "msg": "Dashboard=true ListaCompleta=true"
+    },
+    {
+      "cat": "stats-cards",
+      "sev": "low",
+      "msg": "Vencidos=true Hoy=true Semana=true Pendientes=true"
+    },
+    {
+      "cat": "header-buttons",
+      "sev": "low",
+      "msg": "Actualizar=true NuevoPlazo=true"
+    },
+    {
+      "cat": "por-categoria",
+      "sev": "low",
+      "msg": "Sección \"Por Categoria\" visible: true"
+    },
+    {
+      "cat": "urgent-section",
+      "sev": "low",
+      "msg": "Sección \"Plazos Urgentes\" visible: true"
+    },
+    {
+      "cat": "overdue-section",
+      "sev": "low",
+      "msg": "Sección \"Plazos Vencidos\" visible: true"
+    },
+    {
+      "cat": "status-badges",
+      "sev": "low",
+      "msg": "Status badges visibles: 32"
+    },
+    {
+      "cat": "filters-selects",
+      "sev": "low",
+      "msg": "Selects de filtros: 2 (esperado 2: status + category)"
+    },
+    {
+      "cat": "limpiar-btn",
+      "sev": "low",
+      "msg": "Boton \"Limpiar filtros\" visible: true"
+    },
+    {
+      "cat": "table-headers",
+      "sev": "low",
+      "msg": "Headers tabla: 6 (esperado 6: Plazo / Categoria / Vencimiento / Dias / Estado / Acciones)"
+    },
+    {
+      "cat": "table-rows",
+      "sev": "low",
+      "msg": "Filas tabla: 20"
+    },
+    {
+      "cat": "filter-overdue-http",
+      "sev": "low",
+      "msg": "HTTP 200, count=4"
+    },
+    {
+      "cat": "filter-cat-http",
+      "sev": "low",
+      "msg": "HTTP 200, count=8"
+    },
+    {
+      "cat": "create-modal",
+      "sev": "low",
+      "msg": "Modal de creacion visible: true"
+    },
+    {
+      "cat": "create-api",
+      "sev": "low",
+      "msg": "POST /api/deadlines HTTP 201 id=69f88d23b824b23085bfe32b"
+    },
+    {
+      "cat": "new-in-list",
+      "sev": "medium",
+      "msg": "Nuevo plazo \"E2E Test Deadline 1777896690848\" visible en lista: false"
+    },
+    {
+      "cat": "extend-modal",
+      "sev": "low",
+      "msg": "Modal Extender visible: true"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final dashboard /deadlines"
+    },
+    {
+      "cat": "cleanup",
+      "sev": "low",
+      "msg": "POST /complete HTTP 200"
+    }
+  ]
+}

@@ -86,9 +86,12 @@ const extractTenant = (options = {}) => {
         });
       }
 
-      // Attach tenant to request
+      // Attach tenant to request.
+      // tenantService es Map in-memory (datos demo); si el tenant no esta ahi pero
+      // tenemos un ObjectId del JWT, propagar igualmente para que las rutas que
+      // hacen Tenant.findById(req.tenantId) sobre MongoDB funcionen.
       req.tenant = tenant;
-      req.tenantId = tenant?.id || null;
+      req.tenantId = tenant?.id || tenantId || null;
 
       // Inject country from tenant config (for multi-country routing)
       if (tenant?.customsConfig?.country) {
@@ -106,10 +109,13 @@ const extractTenant = (options = {}) => {
 };
 
 /**
- * Require tenant to be present
+ * Require tenant to be present.
+ * Acepta tanto el tenant in-memory (req.tenant) como el ObjectId MongoDB
+ * propagado desde el JWT (req.tenantId), porque LUCI usa Tenant.findById en
+ * BD real y no todos los users existen en el Map demo de tenantService.
  */
 const requireTenant = (req, res, next) => {
-  if (!req.tenant) {
+  if (!req.tenant && !req.tenantId) {
     return res.status(400).json({
       success: false,
       error: 'Tenant context required',
@@ -323,7 +329,7 @@ const scopeQuery = (req, res, next) => {
  * Admin only middleware
  */
 const adminOnly = (req, res, next) => {
-  if (!req.tenant || !req.user) {
+  if (!req.user) {
     return res.status(401).json({
       success: false,
       error: 'Authentication required',
@@ -331,10 +337,20 @@ const adminOnly = (req, res, next) => {
     });
   }
 
-  const rolesResult = rbacService.getUserRoles(req.tenantId, req.user.id);
-  const isAdmin = rolesResult.roles?.some(r =>
-    r.id === 'super_admin' || r.id === 'tenant_admin'
-  );
+  // Caso 1: tenant in-memory (rbacService) presente -> consulta sus roles RBAC
+  let isAdmin = false;
+  if (req.tenant) {
+    const rolesResult = rbacService.getUserRoles(req.tenantId, req.user.id);
+    isAdmin = !!rolesResult.roles?.some(r =>
+      r.id === 'super_admin' || r.id === 'tenant_admin'
+    );
+  }
+
+  // Caso 2: sin tenant in-memory pero con req.tenantId (MongoDB) -> usar User.role
+  // ('admin' / 'supervisor' tienen privilegio admin en LUCI real).
+  if (!isAdmin && req.tenantId) {
+    isAdmin = req.user.role === 'admin' || req.user.role === 'supervisor';
+  }
 
   if (!isAdmin) {
     return res.status(403).json({

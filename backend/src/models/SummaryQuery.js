@@ -224,10 +224,10 @@ const SummaryQuerySchema = new mongoose.Schema({
     // Certificado usado
     certificateAlias: String,
 
-    // Entorno (sandbox/production)
+    // Entorno (sandbox/production/pre/test - PRE de AEAT y entornos adicionales)
     environment: {
       type: String,
-      enum: ['sandbox', 'production']
+      enum: ['sandbox', 'production', 'pre', 'test']
     }
   },
 
@@ -248,12 +248,13 @@ SummaryQuerySchema.index({ 'searchParams.mrn': 1 });
 SummaryQuerySchema.index({ queryStatus: 1 });
 SummaryQuerySchema.index({ executedAt: -1 });
 
-// Generar queryId automatico
-SummaryQuerySchema.pre('save', function(next) {
+// Generar queryId automatico ANTES de la validacion (pre('save') corre tras validate(),
+// asi que queryId required fallaba antes de poder asignarlo).
+SummaryQuerySchema.pre('validate', function(next) {
   if (!this.queryId) {
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-    this.queryId = `Q${this.queryType.replace('QInt', '')}-${timestamp}${random}`;
+    this.queryId = `Q${(this.queryType || 'GEN').replace('QInt', '')}-${timestamp}${random}`;
   }
   next();
 });

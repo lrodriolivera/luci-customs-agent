@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><pu:ROHSSolicitudCertificadoV1Sal xmlns:pu="https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/ad44/jdit/ws/rohs/ROHSSolicitudCertificadoV1Sal.xsd"><SegmentosDeServicio fecha="20260424" hora="123853" Id="20260424123853778698829"></SegmentosDeServicio><MRNPartida>26ES002801500473J500010</MRNPartida><CodigoRespuesta>1128</CodigoRespuesta><DescripcionRespuesta>El MRN proporcionado no existe. - 1230</DescripcionRespuesta></pu:ROHSSolicitudCertificadoV1Sal>
+</env:Body></env:Envelope>

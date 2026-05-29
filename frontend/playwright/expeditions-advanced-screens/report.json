@@ -1,0 +1,159 @@
+{
+  "generatedAt": "2026-04-29T11:59:20.912Z",
+  "uiCreated": {
+    "_id": "69f1f231adb11278e00b3774",
+    "expId": "EXP-2026-2595D338"
+  },
+  "apiCreated": {
+    "_id": "69f1f2358bab069609e96cf5",
+    "expId": "EXP-2026-33A6E515"
+  },
+  "uploadedDocIds": 4,
+  "findings": [
+    {
+      "cat": "step1-filled",
+      "sev": "low",
+      "msg": "Campos rellenados: 11, errores=[]"
+    },
+    {
+      "cat": "step1-next",
+      "sev": "low",
+      "msg": "click Siguiente: true"
+    },
+    {
+      "cat": "step2-filled",
+      "sev": "low",
+      "msg": "Step 2 campos rellenados: 7"
+    },
+    {
+      "cat": "step3-filled",
+      "sev": "low",
+      "msg": "Step 3 campos rellenados: 3"
+    },
+    {
+      "cat": "step3-submit",
+      "sev": "low",
+      "msg": "Click Crear: true"
+    },
+    {
+      "cat": "ui-create-redirect",
+      "sev": "low",
+      "msg": "URL post-submit: https://aduanas.strixai.es/expeditions/69f1f231adb11278e00b3774"
+    },
+    {
+      "cat": "ui-create-ok",
+      "sev": "low",
+      "msg": "Expediente creado por UI: _id=69f1f231adb11278e00b3774 expeditionId=EXP-2026-2595D338"
+    },
+    {
+      "cat": "api-create",
+      "sev": "low",
+      "msg": "_id=69f1f2358bab069609e96cf5 expId=EXP-2026-33A6E515"
+    },
+    {
+      "cat": "upload-commercial_invoice",
+      "sev": "low",
+      "msg": "HTTP 200"
+    },
+    {
+      "cat": "upload-packing_list",
+      "sev": "low",
+      "msg": "HTTP 200"
+    },
+    {
+      "cat": "upload-bill_of_lading",
+      "sev": "low",
+      "msg": "HTTP 200"
+    },
+    {
+      "cat": "upload-certificate_origin",
+      "sev": "low",
+      "msg": "HTTP 200"
+    },
+    {
+      "cat": "docs-collected",
+      "sev": "low",
+      "msg": "Docs uploaded: 4"
+    },
+    {
+      "cat": "validate-commercial_invoice",
+      "sev": "low",
+      "msg": "HTTP 200, status=validated, body="
+    },
+    {
+      "cat": "validate-packing_list",
+      "sev": "low",
+      "msg": "HTTP 200, status=validated, body="
+    },
+    {
+      "cat": "validate-bill_of_lading",
+      "sev": "low",
+      "msg": "HTTP 200, status=validated, body="
+    },
+    {
+      "cat": "validate-certificate_origin",
+      "sev": "low",
+      "msg": "HTTP 200, status=validated, body="
+    },
+    {
+      "cat": "validate-summary",
+      "sev": "low",
+      "msg": "Documentos validados: 4/4"
+    },
+    {
+      "cat": "ui-validated-badges",
+      "sev": "low",
+      "msg": "Badges \"Validado/Validated\" en UI: 4"
+    },
+    {
+      "cat": "h1-button",
+      "sev": "low",
+      "msg": "Boton \"Generar H1\" visible: true"
+    },
+    {
+      "cat": "h1-result-ui",
+      "sev": "low",
+      "msg": "Texto post-H1: \"Declaracion H1 Generada\""
+    },
+    {
+      "cat": "h1-api",
+      "sev": "low",
+      "msg": "POST h1/generate → 200"
+    },
+    {
+      "cat": "h1-xml",
+      "sev": "low",
+      "msg": "XML generado: 9980 bytes, LRN=26ES20FCD0BE00EB4CBE"
+    },
+    {
+      "cat": "portal-button",
+      "sev": "low",
+      "msg": "Boton portal visible: true"
+    },
+    {
+      "cat": "portal-url-ui",
+      "sev": "low",
+      "msg": "Texto portal: \"Enviar Portal\""
+    },
+    {
+      "cat": "portal-api",
+      "sev": "low",
+      "msg": "POST send-portal-link → 200"
+    },
+    {
+      "cat": "portal-url",
+      "sev": "low",
+      "msg": "Portal URL: https://aduanas.strixai.es/portal/5c8f4811-18a0-49cc-93a9-4950c053a050"
+    },
+    {
+      "cat": "portal-message",
+      "sev": "low",
+      "msg": "message=\"Link enviado correctamente\""
+    },
+    {
+      "cat": "final-status",
+      "sev": "low",
+      "msg": "Estado final UI: \"declaration_draft\""
+    }
+  ]
+}

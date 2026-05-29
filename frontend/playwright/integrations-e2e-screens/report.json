@@ -1,0 +1,176 @@
+{
+  "timestamp": "2026-05-04T14:30:58.191Z",
+  "total_findings": 32,
+  "critical": 0,
+  "high": 0,
+  "medium": 0,
+  "low": 32,
+  "findings": [
+    {
+      "cat": "api-list",
+      "sev": "low",
+      "msg": "Integraciones disponibles: AEAT, VUA, TRACES, NCTS"
+    },
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Integraciones\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "tab",
+      "sev": "low",
+      "msg": "Tab \"Dashboard\" visible: true"
+    },
+    {
+      "cat": "tab",
+      "sev": "low",
+      "msg": "Tab \"VUA\" visible: true"
+    },
+    {
+      "cat": "tab",
+      "sev": "low",
+      "msg": "Tab \"TRACES\" visible: true"
+    },
+    {
+      "cat": "tab",
+      "sev": "low",
+      "msg": "Tab \"NCTS\" visible: true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Total\" visible: true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Activas\" visible: true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Simulacion\" visible: true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Error\" visible: true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Inactivas\" visible: true"
+    },
+    {
+      "cat": "integration-card",
+      "sev": "low",
+      "msg": "Card AEAT visible: true"
+    },
+    {
+      "cat": "integration-card",
+      "sev": "low",
+      "msg": "Card VUA visible: true"
+    },
+    {
+      "cat": "integration-card",
+      "sev": "low",
+      "msg": "Card TRACES visible: true"
+    },
+    {
+      "cat": "integration-card",
+      "sev": "low",
+      "msg": "Card NCTS visible: true"
+    },
+    {
+      "cat": "stats-heading",
+      "sev": "low",
+      "msg": "Heading \"Estadisticas de Uso\" visible: true"
+    },
+    {
+      "cat": "stats-totals",
+      "sev": "low",
+      "msg": "Fila Total en tfoot visible: true"
+    },
+    {
+      "cat": "test-connectivity",
+      "sev": "low",
+      "msg": "Llamadas /test: 1, status=200, code=AEAT"
+    },
+    {
+      "cat": "modal-title",
+      "sev": "low",
+      "msg": "Modal con titulo \"AEAT - ...\" visible: true"
+    },
+    {
+      "cat": "modal-conexion",
+      "sev": "low",
+      "msg": "Bloque \"Estado de Conexion\" visible: true"
+    },
+    {
+      "cat": "modal-timestamp",
+      "sev": "low",
+      "msg": "Etiqueta \"Ultima Verificacion\" visible: true"
+    },
+    {
+      "cat": "vua-heading",
+      "sev": "low",
+      "msg": "Heading VUA visible: true"
+    },
+    {
+      "cat": "vua-sections",
+      "sev": "low",
+      "msg": "Servicios=true, Autoridades=true"
+    },
+    {
+      "cat": "vua-data",
+      "sev": "low",
+      "msg": "Services API count=14, Authorities API count=6"
+    },
+    {
+      "cat": "traces-heading",
+      "sev": "low",
+      "msg": "Heading TRACES NT visible: true"
+    },
+    {
+      "cat": "traces-sections",
+      "sev": "low",
+      "msg": "Tipos CHED=true, BCPs=true"
+    },
+    {
+      "cat": "traces-data",
+      "sev": "low",
+      "msg": "CHED types=4, BCPs=12"
+    },
+    {
+      "cat": "ncts-heading",
+      "sev": "low",
+      "msg": "Heading NCTS Phase 5 visible: true"
+    },
+    {
+      "cat": "ncts-sections",
+      "sev": "low",
+      "msg": "Transit=true, Guarantee=true, Aduanas=true"
+    },
+    {
+      "cat": "ncts-data",
+      "sev": "low",
+      "msg": "TransitTypes=5, GuaranteeTypes=10, OfficesDeparture=7"
+    },
+    {
+      "cat": "refresh-btn",
+      "sev": "low",
+      "msg": "Refresh icon clicked=true, reloads=3"
+    }
+  ],
+  "integrationCodes": [
+    "AEAT",
+    "VUA",
+    "TRACES",
+    "NCTS"
+  ]
+}

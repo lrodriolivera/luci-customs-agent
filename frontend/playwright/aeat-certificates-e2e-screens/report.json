@@ -1,0 +1,112 @@
+{
+  "generatedAt": "2026-05-04T13:28:08.853Z",
+  "timestamp": 1777901211662,
+  "certFile": "/home/rypcloud/Documentos/Logistic/POC/luci-customs-agent/Certificados/copia firma strix 70073780W_JENIFER_ROMERO__R__B22477020_.p12",
+  "findings": [
+    {
+      "cat": "cert-file",
+      "sev": "low",
+      "msg": "Archivo .p12 disponible (7385 bytes)"
+    },
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Certificados Digitales AEAT\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "subtitle",
+      "sev": "low",
+      "msg": "Subtitulo FNMT: true"
+    },
+    {
+      "cat": "import-btn",
+      "sev": "low",
+      "msg": "Boton Importar Certificado: true"
+    },
+    {
+      "cat": "expired-toggle",
+      "sev": "low",
+      "msg": "Toggle Incluir expirados: true"
+    },
+    {
+      "cat": "empty-state",
+      "sev": "medium",
+      "msg": "Estado vacio visible: false"
+    },
+    {
+      "cat": "include-expired-http",
+      "sev": "low",
+      "msg": "HTTP 200, url incluye includeExpired=true: true"
+    },
+    {
+      "cat": "modal-fields",
+      "sev": "low",
+      "msg": "File=true Password=true Type=true"
+    },
+    {
+      "cat": "modal-actions",
+      "sev": "low",
+      "msg": "Submit=true Cancel=true"
+    },
+    {
+      "cat": "file-uploaded",
+      "sev": "low",
+      "msg": "Archivo .p12 cargado en input file"
+    },
+    {
+      "cat": "validation-no-password",
+      "sev": "low",
+      "msg": "Toast validacion sin password: true"
+    },
+    {
+      "cat": "import-success",
+      "sev": "low",
+      "msg": "POST /import HTTP 200 subject=\"70073780W JENIFER ROMERO (R: B22477020)\" valid_until=2027-10-14 days=528"
+    },
+    {
+      "cat": "cert-info",
+      "sev": "low",
+      "msg": "Cert detectado: 70073780W JENIFER ROMERO (R: B22477020) | issuer=AC RepresentaciÃ³n | type=FNMT_PF | validFor=H1,H7,AES,NCTS"
+    },
+    {
+      "cat": "cert-in-list-ui",
+      "sev": "medium",
+      "msg": "Cert \"STRIX-AI-JENIFER-E2E\" visible en lista UI: false"
+    },
+    {
+      "cat": "http-error",
+      "sev": "critical",
+      "msg": "500 GET /api/aeat-real/certificates/STRIX-AI-JENIFER"
+    },
+    {
+      "cat": "ai-panel",
+      "sev": "medium",
+      "msg": "Panel Analisis LUCI visible: false"
+    },
+    {
+      "cat": "detail-info",
+      "sev": "medium",
+      "msg": "Detalles cert visibles: false"
+    },
+    {
+      "cat": "verify-toast",
+      "sev": "low",
+      "msg": "Toast verificacion visible: true"
+    },
+    {
+      "cat": "cleanup-delete",
+      "sev": "low",
+      "msg": "DELETE HTTP 200"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final dashboard /aeat/certificates"
+    }
+  ]
+}

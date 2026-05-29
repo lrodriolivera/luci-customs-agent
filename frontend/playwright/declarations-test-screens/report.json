@@ -1,0 +1,84 @@
+{
+  "generatedAt": "2026-04-29T16:31:35.553Z",
+  "testExpedition": {
+    "_id": "69f208beb824b23085bfc65d",
+    "expeditionId": "EXP-2026-674017EF"
+  },
+  "findings": [
+    {
+      "cat": "test-expedition",
+      "sev": "low",
+      "msg": "Test expedition: EXP-2026-674017EF status=ready_for_declaration mrn=none"
+    },
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1=\"Generador de Declaraciones\""
+    },
+    {
+      "cat": "country-badge",
+      "sev": "low",
+      "msg": "Badge España AEAT visible: true"
+    },
+    {
+      "cat": "type-buttons",
+      "sev": "low",
+      "msg": "Botones tipo: H1=true AES=true"
+    },
+    {
+      "cat": "expeditions-list",
+      "sev": "low",
+      "msg": "Expediciones seleccionables en listado: 50"
+    },
+    {
+      "cat": "h1-options",
+      "sev": "low",
+      "msg": "Opciones H1 (regimen) visibles: true"
+    },
+    {
+      "cat": "http-error",
+      "sev": "critical",
+      "msg": "500 POST /api/declarations/h1/generate-direct"
+    },
+    {
+      "cat": "h1-generated-ui",
+      "sev": "low",
+      "msg": "H1 generado en UI: LRN=false XML=true"
+    },
+    {
+      "cat": "http-error",
+      "sev": "critical",
+      "msg": "500 POST /api/declarations/h1/generate-direct"
+    },
+    {
+      "cat": "send-aeat-btn",
+      "sev": "medium",
+      "msg": "Botón \"Enviar a AEAT\" no visible (puede requerir docs validados)"
+    },
+    {
+      "cat": "aes-export-count",
+      "sev": "low",
+      "msg": "Tras click AES, expediciones export visibles: 35"
+    },
+    {
+      "cat": "aes-form",
+      "sev": "low",
+      "msg": "AES form: exports visibles=35"
+    },
+    {
+      "cat": "http-error",
+      "sev": "high",
+      "msg": "400 POST /api/declarations/aes/generate"
+    },
+    {
+      "cat": "aes-generated",
+      "sev": "low",
+      "msg": "AES generado en UI: true"
+    },
+    {
+      "cat": "assistant-renders",
+      "sev": "low",
+      "msg": "Asistente OK: errorBoundary=false inputs=1"
+    }
+  ]
+}

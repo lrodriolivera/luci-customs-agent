@@ -1,0 +1,155 @@
+{
+  "timestamp": "2026-05-04T17:28:04.185Z",
+  "total_findings": 29,
+  "critical": 0,
+  "high": 0,
+  "medium": 0,
+  "low": 29,
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Panel de Administracion\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "tab",
+      "sev": "low",
+      "msg": "Tab /Dashboard/i: true"
+    },
+    {
+      "cat": "tab",
+      "sev": "low",
+      "msg": "Tab /Usuarios|Users/i: true"
+    },
+    {
+      "cat": "tab",
+      "sev": "low",
+      "msg": "Tab /Configuracion|Settings/i: true"
+    },
+    {
+      "cat": "tab",
+      "sev": "low",
+      "msg": "Tab /Auditoria|Audit/i: true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Total Usuarios\": true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Actividad\": true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Estado AEAT\": true"
+    },
+    {
+      "cat": "stat-card",
+      "sev": "low",
+      "msg": "Card \"Asistente IA\": true"
+    },
+    {
+      "cat": "users-by-role",
+      "sev": "low",
+      "msg": "Usuarios por Rol visible: true"
+    },
+    {
+      "cat": "users-api",
+      "sev": "low",
+      "msg": "API calls users/roles: 2, /api/admin/roles=4, /api/admin/users=11"
+    },
+    {
+      "cat": "users-search",
+      "sev": "low",
+      "msg": "Search input: true"
+    },
+    {
+      "cat": "users-new-btn",
+      "sev": "low",
+      "msg": "Boton Nuevo Usuario: true"
+    },
+    {
+      "cat": "users-table",
+      "sev": "low",
+      "msg": "Filas tabla usuarios: 11"
+    },
+    {
+      "cat": "modal-inputs",
+      "sev": "low",
+      "msg": "Inputs modal usuario: 3"
+    },
+    {
+      "cat": "settings-api",
+      "sev": "low",
+      "msg": "GET /api/admin/settings: 1, status=200"
+    },
+    {
+      "cat": "settings-general",
+      "sev": "low",
+      "msg": "Heading General visible: true"
+    },
+    {
+      "cat": "settings-save-btn",
+      "sev": "low",
+      "msg": "Botones Guardar: 4"
+    },
+    {
+      "cat": "settings-notif",
+      "sev": "low",
+      "msg": "Heading Notificaciones: true"
+    },
+    {
+      "cat": "settings-toggles",
+      "sev": "low",
+      "msg": "Toggles totales: 5"
+    },
+    {
+      "cat": "audit-api",
+      "sev": "low",
+      "msg": "API calls audit: 2, /api/admin/audit/stats(stats), /api/admin/audit(0)"
+    },
+    {
+      "cat": "audit-card",
+      "sev": "low",
+      "msg": "Card \"Eventos\": true"
+    },
+    {
+      "cat": "audit-card",
+      "sev": "low",
+      "msg": "Card \"Ultimos 7\": true"
+    },
+    {
+      "cat": "audit-card",
+      "sev": "low",
+      "msg": "Card \"Modulo Mas Activo\": true"
+    },
+    {
+      "cat": "audit-card",
+      "sev": "low",
+      "msg": "Card \"Usuario Mas Activo\": true"
+    },
+    {
+      "cat": "audit-table",
+      "sev": "low",
+      "msg": "Filas tabla audit: 0"
+    },
+    {
+      "cat": "audit-filters",
+      "sev": "low",
+      "msg": "Selects filtros audit: 2"
+    },
+    {
+      "cat": "audit-filter-reload",
+      "sev": "low",
+      "msg": "Recarga audit tras filtro: 1 llamadas, status=200"
+    }
+  ]
+}

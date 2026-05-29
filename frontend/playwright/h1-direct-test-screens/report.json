@@ -1,0 +1,56 @@
+{
+  "generatedAt": "2026-04-29T16:42:10.829Z",
+  "formFields": 38,
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1=\"Nueva Declaracion H1 - DUA Importacion\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "sections",
+      "sev": "low",
+      "msg": "Secciones h2 visibles: 11 (esperado >= 5: tipo, expedidor, destinatario, declarante, transporte, aduana, partidas, casilla 47, totales)"
+    },
+    {
+      "cat": "expected-sections",
+      "sev": "low",
+      "msg": "Secciones específicas detectadas: 8/9"
+    },
+    {
+      "cat": "validation-toast",
+      "sev": "low",
+      "msg": "Toast validación form vacío: \"8 Destinatario\""
+    },
+    {
+      "cat": "form-fill",
+      "sev": "low",
+      "msg": "Campos llenos: 38/38 (errores: )"
+    },
+    {
+      "cat": "item-fill",
+      "sev": "medium",
+      "msg": "Campos partida 1 llenados: 2"
+    },
+    {
+      "cat": "submit-redirect",
+      "sev": "medium",
+      "msg": "URL post-submit: /declarations/h1/new"
+    },
+    {
+      "cat": "submit-toast",
+      "sev": "medium",
+      "msg": "Toast éxito visible: false"
+    },
+    {
+      "cat": "assistant-renders",
+      "sev": "low",
+      "msg": "Asistente OK: errorBoundary=false inputs=1"
+    }
+  ]
+}

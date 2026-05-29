@@ -1,0 +1,112 @@
+{
+  "generatedAt": "2026-04-30T12:42:16.754Z",
+  "formFields": 28,
+  "itemFields": 6,
+  "createdH7Id": "69f34e05b824b23085bfd302",
+  "createdH7Tracking": "LUCI-H7-NEW-1777552883773",
+  "aeatMrn": "26ES17590081436606H7",
+  "aeatChannel": "green",
+  "aeatStatus": "released",
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1=\"Nueva Declaracion H7\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "eu-banner",
+      "sev": "low",
+      "msg": "Banner Reg. (UE) 2026/382 visible: true"
+    },
+    {
+      "cat": "sections",
+      "sev": "low",
+      "msg": "Secciones h2 visibles: 5 (esperado >= 5: envio, remitente, destinatario, articulos, totales)"
+    },
+    {
+      "cat": "required-labels",
+      "sev": "low",
+      "msg": "Labels con asterisco *: 14"
+    },
+    {
+      "cat": "submit-btn",
+      "sev": "low",
+      "msg": "Submit btn text: \"Crear declaracion H7\""
+    },
+    {
+      "cat": "validation-toast",
+      "sev": "low",
+      "msg": "Toast validacion form vacio: \"Declaracion simplificada para envios de bajo valor (max 150 EUR)\""
+    },
+    {
+      "cat": "form-header-fill",
+      "sev": "low",
+      "msg": "Header llenos: 27/28 (errores: currency)"
+    },
+    {
+      "cat": "item-fill",
+      "sev": "low",
+      "msg": "Articulo 1 campos llenos: 6/6"
+    },
+    {
+      "cat": "summary-intrinsic",
+      "sev": "low",
+      "msg": "Resumen valor intrinseco: Valor intrinseco31.98 EUR"
+    },
+    {
+      "cat": "summary-customs",
+      "sev": "low",
+      "msg": "Resumen valor aduana: Valor en aduana (CIF)37.97 EUR"
+    },
+    {
+      "cat": "h7-create",
+      "sev": "low",
+      "msg": "POST /api/h7 -> HTTP 201 _id=69f34e05b824b23085bfd302 tracking=LUCI-H7-NEW-1777552883773"
+    },
+    {
+      "cat": "h7-redirect",
+      "sev": "low",
+      "msg": "URL post-submit: /h7/69f34e05b824b23085bfd302"
+    },
+    {
+      "cat": "h7-toast",
+      "sev": "medium",
+      "msg": "Toast exito visible: false"
+    },
+    {
+      "cat": "detail-h1",
+      "sev": "low",
+      "msg": "Detail h1: \"H7-2026-000085\""
+    },
+    {
+      "cat": "h7-send-clicked",
+      "sev": "low",
+      "msg": "Boton \"Enviar a AEAT\" clickeado"
+    },
+    {
+      "cat": "h7-aeat-submit",
+      "sev": "low",
+      "msg": "POST /submit HTTP 200 mrn=26ES17590081436606H7 channel=green status=released simulated=undefined"
+    },
+    {
+      "cat": "h7-final-state",
+      "sev": "low",
+      "msg": "Final: status=released mrn=26ES17590081436606H7 channel=green simulated=undefined"
+    },
+    {
+      "cat": "mrn-banner",
+      "sev": "low",
+      "msg": "MRN visible en UI: true"
+    },
+    {
+      "cat": "green-channel-ui",
+      "sev": "low",
+      "msg": "Indicador canal/levante visible: true"
+    }
+  ]
+}

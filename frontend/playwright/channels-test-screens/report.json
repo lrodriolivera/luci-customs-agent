@@ -1,0 +1,160 @@
+{
+  "generatedAt": "2026-04-29T13:46:04.292Z",
+  "apiData": {
+    "stats": {
+      "green": {
+        "count": 30,
+        "avgHours": null,
+        "percentage": 79
+      },
+      "yellow": {
+        "count": 0,
+        "avgHours": null
+      },
+      "orange": {
+        "count": 5,
+        "avgHours": null,
+        "percentage": 13
+      },
+      "red": {
+        "count": 3,
+        "avgHours": null,
+        "percentage": 8
+      },
+      "total": 38
+    },
+    "expeditionsCount": 38
+  },
+  "findings": [
+    {
+      "cat": "api-stats",
+      "sev": "low",
+      "msg": "stats: green=30 yellow=0 orange=5 red=3 total=38"
+    },
+    {
+      "cat": "api-expeditions",
+      "sev": "low",
+      "msg": "expeditions: 38 items"
+    },
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1=\"Dashboard de Circuitos\""
+    },
+    {
+      "cat": "country-badge",
+      "sev": "low",
+      "msg": "Badge AEAT/ES visible: true"
+    },
+    {
+      "cat": "date-select",
+      "sev": "low",
+      "msg": "Selector fecha visible: true"
+    },
+    {
+      "cat": "cards-counts-ui",
+      "sev": "low",
+      "msg": "Counts UI: [30, 0, 5, 3]"
+    },
+    {
+      "cat": "cards-match",
+      "sev": "low",
+      "msg": "4/4 cards coinciden con API"
+    },
+    {
+      "cat": "summary-cards",
+      "sev": "low",
+      "msg": "total=true attention=true avg=true"
+    },
+    {
+      "cat": "summary-total",
+      "sev": "low",
+      "msg": "Total card: UI=38 = API 38"
+    },
+    {
+      "cat": "table-rows",
+      "sev": "low",
+      "msg": "Filas tabla: 38, API expeditions: 38"
+    },
+    {
+      "cat": "first-mrn",
+      "sev": "low",
+      "msg": "MRN 26ES00280130001TT1 visible: true"
+    },
+    {
+      "cat": "filter-green",
+      "sev": "low",
+      "msg": "Click green: 38 → 30 filas"
+    },
+    {
+      "cat": "filter-clear",
+      "sev": "low",
+      "msg": "Click \"Ver todo\": 30 → 38 (esperado 38)"
+    },
+    {
+      "cat": "filter-orange",
+      "sev": "low",
+      "msg": "Filtro naranja: 5 filas (API esperado 5)"
+    },
+    {
+      "cat": "filter-red",
+      "sev": "low",
+      "msg": "Filtro rojo: 3 filas (API esperado 3)"
+    },
+    {
+      "cat": "filter-today",
+      "sev": "low",
+      "msg": "Filtro fecha \"today\": 38 → 38"
+    },
+    {
+      "cat": "refresh-btn",
+      "sev": "low",
+      "msg": "Botón refresh OK"
+    },
+    {
+      "cat": "legend",
+      "sev": "low",
+      "msg": "Sección leyenda visible: true"
+    },
+    {
+      "cat": "legend-channels",
+      "sev": "low",
+      "msg": "Etiquetas leyenda: 4/4 visibles"
+    },
+    {
+      "cat": "row-links-count",
+      "sev": "low",
+      "msg": "Links de tabla únicos: 5 (sample 5)"
+    },
+    {
+      "cat": "row-links-summary",
+      "sev": "low",
+      "msg": "5/5 links sirven 200"
+    },
+    {
+      "cat": "row-nav",
+      "sev": "low",
+      "msg": "Click fila → /expeditions/69f208beb824b23085bfc65d (esperado /expeditions/69f208beb824b23085bfc65d)"
+    },
+    {
+      "cat": "assistant-cta",
+      "sev": "low",
+      "msg": "Asistente CTA visible: true"
+    },
+    {
+      "cat": "assistant-renders",
+      "sev": "low",
+      "msg": "Asistente carga sin error boundary: inputs=1"
+    },
+    {
+      "cat": "nl-badge",
+      "sev": "low",
+      "msg": "Badge NL visible cuando country=NL: true"
+    },
+    {
+      "cat": "nl-interp",
+      "sev": "low",
+      "msg": "Interpretación NL (00/10/11) visible: true"
+    }
+  ]
+}

@@ -426,6 +426,14 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               )}
             </Grid>
 
+            {formData.transportMode && formData.transportMode !== 'RAIL' && (
+              <Grid item xs={12}>
+                <Alert severity="warning">
+                  Atención: solo RAIL acepta ENS legacy en AEAT. Las declaraciones de carretera, aéreo y marítimo (excepto RO-RO) deben presentarse mediante ICS2.
+                </Alert>
+              </Grid>
+            )}
+
             <Grid item xs={12} md={6}>
               <Autocomplete
                 options={filteredOffices}

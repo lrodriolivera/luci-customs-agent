@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-05-04T12:04:48.570Z",
+  "timestamp": 1777896234163,
+  "findings": [
+    {
+      "cat": "h1-bug-fix",
+      "sev": "low",
+      "msg": "h1: \"Inspecciones Aduaneras\" (esperado \"Inspecciones Aduaneras\", NO el literal \"inspections.title\")"
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "tabs-visible",
+      "sev": "low",
+      "msg": "Dashboard=true Lista=true Calendario=true"
+    },
+    {
+      "cat": "stats-cards",
+      "sev": "low",
+      "msg": "Hoy=true Pendientes=true EnCurso=true Semana=true"
+    },
+    {
+      "cat": "header-buttons",
+      "sev": "low",
+      "msg": "Actualizar=true NuevaInspeccion=true"
+    },
+    {
+      "cat": "por-tipo",
+      "sev": "low",
+      "msg": "Sección por tipo visible: true"
+    },
+    {
+      "cat": "tipos-visibles",
+      "sev": "low",
+      "msg": "Scanner=true Documental=true Fisica=true"
+    },
+    {
+      "cat": "filters-selects",
+      "sev": "low",
+      "msg": "Selects de filtros: 2 (esperado >=2)"
+    },
+    {
+      "cat": "table-headers",
+      "sev": "low",
+      "msg": "Headers tabla: 7"
+    },
+    {
+      "cat": "table-rows",
+      "sev": "low",
+      "msg": "Filas tabla: 10"
+    },
+    {
+      "cat": "filter-status-http",
+      "sev": "low",
+      "msg": "HTTP 200, count=3"
+    },
+    {
+      "cat": "filter-type-http",
+      "sev": "low",
+      "msg": "HTTP 200, count=2"
+    },
+    {
+      "cat": "create-modal",
+      "sev": "low",
+      "msg": "Modal Crear visible: true"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final dashboard /inspections"
+    }
+  ]
+}

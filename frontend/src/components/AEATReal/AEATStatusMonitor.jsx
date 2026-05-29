@@ -324,7 +324,11 @@ export default function AEATStatusMonitor() {
                     {decl.channel ? getChannelBadge(decl.channel) : '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(decl.lastChecked).toLocaleString('es-ES')}
+                    {decl.lastChecked && new Date(decl.lastChecked).getTime() > 0
+                      ? new Date(decl.lastChecked).toLocaleString('es-ES')
+                      : decl.addedAt
+                        ? `Añadida: ${new Date(decl.addedAt).toLocaleString('es-ES')}`
+                        : '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
@@ -381,7 +385,13 @@ export default function AEATStatusMonitor() {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-500">Última Verificación</label>
-                    <p className="text-sm text-gray-900">{new Date(selectedDeclaration.lastChecked).toLocaleString('es-ES')}</p>
+                    <p className="text-sm text-gray-900">
+                      {selectedDeclaration.lastChecked && new Date(selectedDeclaration.lastChecked).getTime() > 0
+                        ? new Date(selectedDeclaration.lastChecked).toLocaleString('es-ES')
+                        : selectedDeclaration.addedAt
+                          ? `Añadida: ${new Date(selectedDeclaration.addedAt).toLocaleString('es-ES')}`
+                          : '-'}
+                    </p>
                   </div>
                 </div>
 

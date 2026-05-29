@@ -108,13 +108,14 @@ router.get('/alerts', async (req, res) => {
       const available = g.balance?.available ?? 0;
       const amount = g.amount || 1;
       const percentUsed = Math.round((1 - available / amount) * 100);
+      const grn = g.guaranteeNumber || g.GRN || g.referenceNumber || `Garantia ${String(g._id).slice(-6)}`;
       alerts.push({
         id: g._id,
         type: 'guarantee_low_balance',
         severity: available < amount * 0.1 ? 'critical' : 'warning',
         title: 'Garantia con saldo bajo',
-        message: `${g.guaranteeNumber}: ${percentUsed}% utilizado`,
-        guaranteeNumber: g.guaranteeNumber,
+        message: `${grn}: ${percentUsed}% utilizado`,
+        guaranteeNumber: grn,
         available: available,
         total: amount,
         link: `/guarantees/${g._id}`,
@@ -131,13 +132,14 @@ router.get('/alerts', async (req, res) => {
 
     expiringGuarantees.forEach(g => {
       const daysLeft = Math.ceil((new Date(g.expirationDate) - now) / (1000 * 60 * 60 * 24));
+      const grn = g.guaranteeNumber || g.GRN || g.referenceNumber || `Garantia ${String(g._id).slice(-6)}`;
       alerts.push({
         id: g._id,
         type: 'guarantee_expiring',
         severity: daysLeft <= 7 ? 'critical' : 'warning',
         title: 'Garantia por vencer',
-        message: `${g.guaranteeNumber} vence en ${daysLeft} dias`,
-        guaranteeNumber: g.guaranteeNumber,
+        message: `${grn} vence en ${daysLeft} dias`,
+        guaranteeNumber: grn,
         expirationDate: g.expirationDate,
         link: `/guarantees/${g._id}`,
         createdAt: g.updatedAt

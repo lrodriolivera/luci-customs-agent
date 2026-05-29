@@ -26,9 +26,6 @@ export default function FloatingAssistant() {
     })
   }, [i18n.language])
 
-  // Don't show on the assistant page itself or landing
-  if (location.pathname === '/assistant' || location.pathname === '/landing') return null
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -39,6 +36,9 @@ export default function FloatingAssistant() {
       setTimeout(() => inputRef.current?.focus(), 100)
     }
   }, [isOpen, messages])
+
+  // Don't show on the assistant page itself or landing
+  if (location.pathname === '/assistant' || location.pathname === '/landing') return null
 
   const handleSend = async (e) => {
     e.preventDefault()

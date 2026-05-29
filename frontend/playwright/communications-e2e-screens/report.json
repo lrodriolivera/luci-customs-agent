@@ -1,0 +1,86 @@
+{
+  "generatedAt": "2026-05-04T12:20:14.461Z",
+  "timestamp": 1777897150718,
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Comunicaciones con Inspectores\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "tabs-visible",
+      "sev": "low",
+      "msg": "Dashboard=true Todas=true Recursos=true"
+    },
+    {
+      "cat": "new-btn",
+      "sev": "low",
+      "msg": "Boton Nueva Comunicacion visible: true"
+    },
+    {
+      "cat": "stats-cards",
+      "sev": "medium",
+      "msg": "Pendientes=true Vencidos=false PteResp=true Recursos=true"
+    },
+    {
+      "cat": "por-categoria",
+      "sev": "low",
+      "msg": "Por Categoria: true"
+    },
+    {
+      "cat": "por-estado",
+      "sev": "medium",
+      "msg": "Por Estado: false"
+    },
+    {
+      "cat": "filters-selects",
+      "sev": "low",
+      "msg": "Selects de filtros: 3 (esperado 3: status + category + type)"
+    },
+    {
+      "cat": "table-headers",
+      "sev": "low",
+      "msg": "Headers tabla: 6 (esperado 6: Comunicacion / Tipo / Autoridad / Plazo / Estado / Acciones)"
+    },
+    {
+      "cat": "table-rows",
+      "sev": "low",
+      "msg": "Filas tabla: 15"
+    },
+    {
+      "cat": "limpiar-btn",
+      "sev": "low",
+      "msg": "Boton Limpiar: true"
+    },
+    {
+      "cat": "filter-status-http",
+      "sev": "low",
+      "msg": "HTTP 200, count=7"
+    },
+    {
+      "cat": "filter-cat-http",
+      "sev": "low",
+      "msg": "HTTP 200, count=8"
+    },
+    {
+      "cat": "tab-appeals-http",
+      "sev": "low",
+      "msg": "HTTP 200, count=8 (esperado ~8)"
+    },
+    {
+      "cat": "create-modal",
+      "sev": "low",
+      "msg": "Modal crear visible (matches=3)"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final dashboard /communications"
+    }
+  ]
+}

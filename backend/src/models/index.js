@@ -27,9 +27,11 @@ const TaricSearchHistory = require('./TaricSearchHistory');
 const TaricAICache = require('./TaricAICache');
 const Tenant = require('./Tenant');
 const AuditLog = require('./AuditLog');
+const EmailSuppression = require('./EmailSuppression');
 
 module.exports = {
   AuditLog,
+  EmailSuppression,
   User,
   Expedition,
   ChatMessage,

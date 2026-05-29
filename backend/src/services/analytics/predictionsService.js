@@ -724,58 +724,137 @@ function _generateTrendHighlights(trends) {
   return highlights;
 }
 
+function _normalizeRecommendations(recsRaw) {
+  if (!Array.isArray(recsRaw)) return [];
+  return recsRaw
+    .map(rec => {
+      if (typeof rec === 'string') return rec;
+      if (!rec || typeof rec !== 'object') return '';
+      return rec.action ||
+             rec.recommendation ||
+             rec.description ||
+             rec.prediction ||
+             rec.cause ||
+             rec.message ||
+             rec.metric ||
+             rec.text ||
+             '';
+    })
+    .filter(Boolean);
+}
+
 async function _getLuciVolumeInsights(predictions, options) {
   try {
-    const analysis = await aiService.analyzeWithLuci({
+    const analyticsData = {
       type: 'volume_prediction',
       predictions: predictions.slice(0, 7),
       summary: {
         total: predictions.reduce((s, p) => s + p.predictedVolume, 0),
         average: predictions.reduce((s, p) => s + p.predictedVolume, 0) / predictions.length
       }
+    };
+
+    const analysis = await aiService.generateAutomaticInsights(analyticsData, {
+      period: options?.horizon ? `${options.horizon} dias` : 'proxima semana',
+      operationType: 'volume forecast'
     });
 
+    const summary = analysis.executiveSummary || analysis.summary || 'Previsión de volumen dentro de parámetros normales.';
+    const recommendations = _normalizeRecommendations(analysis.recommendations);
+    const resourcePlanning = (analysis.opportunities || [])
+      .map(o => o.description || o.area || (typeof o === 'string' ? o : ''))
+      .filter(Boolean);
+
     return {
-      summary: analysis.summary || 'Previsión de volumen dentro de parámetros normales.',
-      recommendations: analysis.recommendations || [],
-      resourcePlanning: ['Mantener capacidad operativa actual']
+      summary,
+      recommendations,
+      resourcePlanning: resourcePlanning.length > 0 ? resourcePlanning : ['Mantener capacidad operativa actual']
     };
   } catch (error) {
+    logger.warn(`[Predictions] Could not get LUCI volume insights: ${error.message}`);
     return null;
   }
 }
 
 async function _getLuciAnomalyInsights(anomalies) {
   try {
-    const analysis = await aiService.analyzeWithLuci({
-      type: 'anomaly_analysis',
-      anomalies: anomalies.slice(0, 5)
-    });
+    // detectAnomaliesAI devuelve summary OBJETO (con topPriority) + anomalies + alertsGenerated
+    const analysis = await aiService.detectAnomaliesAI({
+      detectedAnomalies: anomalies.slice(0, 5),
+      context: 'Anomalías ya detectadas por algoritmo. Generar insights y recomendaciones de acción.'
+    }, {});
+
+    // El summary del prompt es un objeto {criticalCount, highCount, ..., topPriority}.
+    // Para mantener API string-friendly, extraer topPriority como summary.
+    let summary;
+    if (typeof analysis.summary === 'string') {
+      summary = analysis.summary;
+    } else if (analysis.summary && typeof analysis.summary === 'object') {
+      summary = analysis.summary.topPriority ||
+        `Anomalías detectadas: ${analysis.summary.criticalCount || 0} críticas, ${analysis.summary.highCount || 0} altas, ${analysis.summary.mediumCount || 0} medias.`;
+    } else {
+      summary = analysis.executiveSummary || `Se han detectado ${anomalies.length} anomalías.`;
+    }
+
+    // Recomendaciones: combinar recommendedActions[] de cada anomalía + alertsGenerated
+    const recsRaw = [
+      ...(Array.isArray(analysis.anomalies)
+        ? analysis.anomalies.flatMap(a => Array.isArray(a.recommendedActions) ? a.recommendedActions : [a.recommendedAction || a.suggestedAction])
+        : []),
+      ...(Array.isArray(analysis.alertsGenerated) ? analysis.alertsGenerated : []),
+      ...(Array.isArray(analysis.recommendations) ? analysis.recommendations : [])
+    ].filter(Boolean);
+    const recommendations = _normalizeRecommendations(recsRaw);
 
     return {
-      summary: analysis.summary || `Se han detectado ${anomalies.length} anomalías.`,
-      recommendations: analysis.recommendations || ['Investigar anomalías detectadas'],
+      summary,
+      recommendations: recommendations.length > 0 ? recommendations : ['Investigar anomalías detectadas'],
       priority: anomalies.some(a => a.severity > 2) ? 'high' : 'medium'
     };
   } catch (error) {
+    logger.warn(`[Predictions] Could not get LUCI anomaly insights: ${error.message}`);
     return null;
   }
 }
 
 async function _getLuciTrendInsights(trends, forecasts) {
   try {
-    const analysis = await aiService.analyzeWithLuci({
-      type: 'trend_analysis',
+    // predictTrendsAI devuelve predictions[], keyPredictions[], recommendations[], limitations[], modelConfidence
+    const analysis = await aiService.predictTrendsAI({
       trends,
       forecasts
-    });
+    }, 30);
+
+    // Construir summary a partir de keyPredictions o fallback
+    let summary = analysis.executiveSummary || analysis.summary;
+    if (!summary && Array.isArray(analysis.keyPredictions) && analysis.keyPredictions.length > 0) {
+      const first = analysis.keyPredictions[0];
+      summary = first.description || first.prediction || first.text;
+    }
+    if (!summary && analysis.modelConfidence) {
+      summary = `Tendencias analizadas con confianza ${analysis.modelConfidence}. ${analysis.predictions?.length || 0} métricas proyectadas.`;
+    }
+    summary = summary || 'Tendencias analizadas correctamente.';
+
+    const keyInsights = _normalizeRecommendations([
+      ...(Array.isArray(analysis.keyPredictions) ? analysis.keyPredictions : []),
+      ...(Array.isArray(analysis.recommendations) ? analysis.recommendations : []),
+      ...(Array.isArray(analysis.insights) ? analysis.insights : [])
+    ]);
+
+    const actionItems = _normalizeRecommendations([
+      ...(Array.isArray(analysis.inflectionPoints) ? analysis.inflectionPoints : []),
+      ...(Array.isArray(analysis.alerts) ? analysis.alerts : []),
+      ...(Array.isArray(analysis.limitations) ? analysis.limitations : [])
+    ]);
 
     return {
-      summary: analysis.summary || 'Tendencias analizadas correctamente.',
-      keyInsights: analysis.recommendations || [],
-      actionItems: []
+      summary,
+      keyInsights,
+      actionItems
     };
   } catch (error) {
+    logger.warn(`[Predictions] Could not get LUCI trend insights: ${error.message}`);
     return null;
   }
 }

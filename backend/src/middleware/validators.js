@@ -184,7 +184,10 @@ const documentValidators = {
   ],
 
   validate: [
-    param('id')
+    param('expeditionId')
+      .isMongoId()
+      .withMessage('ID de expediente invalido'),
+    param('docId')
       .isMongoId()
       .withMessage('ID de documento invalido'),
     handleValidationErrors

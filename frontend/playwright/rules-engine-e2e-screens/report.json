@@ -1,0 +1,212 @@
+{
+  "generatedAt": "2026-05-04T11:19:17.262Z",
+  "timestamp": 1777893479108,
+  "results": [
+    {
+      "id": "CN-laptops",
+      "httpStatus": 200,
+      "eligible": true,
+      "alerts": 0,
+      "warnings": 1,
+      "tariff": 1500,
+      "vat": 10815,
+      "total": 12315,
+      "docs": 4,
+      "quotas": 0,
+      "recs": 0
+    },
+    {
+      "id": "BD-textiles",
+      "httpStatus": 200,
+      "eligible": true,
+      "alerts": 0,
+      "warnings": 0,
+      "tariff": 960,
+      "vat": 1881.6,
+      "total": 2841.6,
+      "docs": 4,
+      "quotas": 0,
+      "recs": 0
+    },
+    {
+      "id": "TR-colchones",
+      "httpStatus": 200,
+      "eligible": true,
+      "alerts": 0,
+      "warnings": 0,
+      "tariff": 500,
+      "vat": 2205,
+      "total": 2705,
+      "docs": 4,
+      "quotas": 0,
+      "recs": 0
+    }
+  ],
+  "findings": [
+    {
+      "cat": "h1",
+      "sev": "low",
+      "msg": "h1: \"Motor de Reglas Aduaneras\""
+    },
+    {
+      "cat": "no-crash",
+      "sev": "low",
+      "msg": "Error boundary: false"
+    },
+    {
+      "cat": "form-labels",
+      "sev": "low",
+      "msg": "tipo=true origen=true destino=true"
+    },
+    {
+      "cat": "action-buttons",
+      "sev": "low",
+      "msg": "Agregar=true Analizar=true"
+    },
+    {
+      "cat": "empty-state",
+      "sev": "low",
+      "msg": "Estado vacio visible: true"
+    },
+    {
+      "cat": "select-rules-origin",
+      "sev": "low",
+      "msg": "Select rules-origin visible: true"
+    },
+    {
+      "cat": "rules-origin-optgroups",
+      "sev": "low",
+      "msg": "Optgroups rules-origin: 2 (esperado 2)"
+    },
+    {
+      "cat": "rules-origin-options",
+      "sev": "low",
+      "msg": "Total opciones rules-origin: 194 (esperado ~195)"
+    },
+    {
+      "cat": "rules-origin-broken",
+      "sev": "low",
+      "msg": "Opciones rotas \"()\" en rules-origin: 0"
+    },
+    {
+      "cat": "rules-origin-spotcheck",
+      "sev": "low",
+      "msg": "rules-origin: CN=\"China (CN)\" TR=\"Turquia (TR)\""
+    },
+    {
+      "cat": "select-rules-destination",
+      "sev": "low",
+      "msg": "Select rules-destination visible: true"
+    },
+    {
+      "cat": "rules-destination-optgroups",
+      "sev": "low",
+      "msg": "Optgroups rules-destination: 2 (esperado 2)"
+    },
+    {
+      "cat": "rules-destination-options",
+      "sev": "low",
+      "msg": "Total opciones rules-destination: 194 (esperado ~195)"
+    },
+    {
+      "cat": "rules-destination-broken",
+      "sev": "low",
+      "msg": "Opciones rotas \"()\" en rules-destination: 0"
+    },
+    {
+      "cat": "rules-destination-spotcheck",
+      "sev": "low",
+      "msg": "rules-destination: CN=\"China (CN)\" TR=\"Turquia (TR)\""
+    },
+    {
+      "cat": "add-product",
+      "sev": "low",
+      "msg": "Productos tras Agregar: 2"
+    },
+    {
+      "cat": "remove-product",
+      "sev": "low",
+      "msg": "Productos tras Eliminar: 1"
+    },
+    {
+      "cat": "CN-laptops-http",
+      "sev": "low",
+      "msg": "HTTP 200, eligible=true, tariff=1500, total=12315"
+    },
+    {
+      "cat": "CN-laptops-tariff-range",
+      "sev": "low",
+      "msg": "Arancel 1500 EUR (rango esperado 0-5000)"
+    },
+    {
+      "cat": "CN-laptops-ui-resumen",
+      "sev": "low",
+      "msg": "Resumen visible: true"
+    },
+    {
+      "cat": "CN-laptops-ui-impuestos",
+      "sev": "low",
+      "msg": "Impuestos visible: true"
+    },
+    {
+      "cat": "CN-laptops-ui-docs",
+      "sev": "low",
+      "msg": "Documentacion visible: true"
+    },
+    {
+      "cat": "BD-textiles-http",
+      "sev": "low",
+      "msg": "HTTP 200, eligible=true, tariff=960, total=2841.6"
+    },
+    {
+      "cat": "BD-textiles-tariff-range",
+      "sev": "low",
+      "msg": "Arancel 960 EUR (rango esperado 100-2000)"
+    },
+    {
+      "cat": "BD-textiles-ui-resumen",
+      "sev": "low",
+      "msg": "Resumen visible: true"
+    },
+    {
+      "cat": "BD-textiles-ui-impuestos",
+      "sev": "low",
+      "msg": "Impuestos visible: true"
+    },
+    {
+      "cat": "BD-textiles-ui-docs",
+      "sev": "low",
+      "msg": "Documentacion visible: true"
+    },
+    {
+      "cat": "TR-colchones-http",
+      "sev": "low",
+      "msg": "HTTP 200, eligible=true, tariff=500, total=2705"
+    },
+    {
+      "cat": "TR-colchones-tariff-range",
+      "sev": "low",
+      "msg": "Arancel 500 EUR (rango esperado 0-1500)"
+    },
+    {
+      "cat": "TR-colchones-ui-resumen",
+      "sev": "low",
+      "msg": "Resumen visible: true"
+    },
+    {
+      "cat": "TR-colchones-ui-impuestos",
+      "sev": "low",
+      "msg": "Impuestos visible: true"
+    },
+    {
+      "cat": "TR-colchones-ui-docs",
+      "sev": "low",
+      "msg": "Documentacion visible: true"
+    },
+    {
+      "cat": "final-capture",
+      "sev": "low",
+      "msg": "Captura final BD textiles con resumen + impuestos + documentacion"
+    }
+  ]
+}

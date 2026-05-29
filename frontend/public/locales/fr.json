@@ -73,7 +73,8 @@
     "from": "Du",
     "to": "Au",
     "total": "Total",
-    "subtotal": "Sous-total"
+    "subtotal": "Sous-total",
+    "refresh": "Actualiser"
   },
   "nav": {
     "skipToContent": "Aller au contenu principal",
@@ -125,7 +126,9 @@
     "logout": "Deconnexion",
     "user": "Utilisateur",
     "admin": "Administrateur",
-    "customsAgent": "Agent en Douane"
+    "customsAgent": "Agent en Douane",
+    "help": "Aide",
+    "userManual": "Manuel utilisateur"
   },
   "auth": {
     "login": "Connexion",
@@ -2080,7 +2083,9 @@
     "mutualRecognition": "Reconnaissance Mutuelle",
     "customsSimplifications": "Simplifications Douanieres",
     "securityProtection": "Surete et Securite",
-    "complete": "Complet (OEAC + OEAS)"
+    "complete": "Complet (OEAC + OEAS)",
+    "newApplication": "Nouvelle Demande",
+    "newApplicationOEA": "Nouvelle Demande OEA"
   },
   "regulations": {
     "title": "Recherche de Reglementation",
@@ -3336,7 +3341,45 @@
     "trends": "Tendances",
     "executiveReport": "Rapport Executif",
     "kpiAnalysis": "Analyse KPI",
-    "fullAnalysis": "Analyse Complete"
+    "fullAnalysis": "Analyse Complete",
+    "title": "Analytics et BI",
+    "subtitle": "Tableau de bord d'intelligence d'affaires et analyses avancees",
+    "aiAnalysisCenter": "Centre d'Analyse IA",
+    "advancedAnalytics": "Analyses avancees avec LUCI",
+    "analyzingWithAI": "Analyse avec IA...",
+    "mainInsights": "Insights Principaux",
+    "recommendations": "Recommandations",
+    "luciSummary": "Resume LUCI",
+    "expected": "Attendu",
+    "actual": "Actuel",
+    "deviation": "Deviation",
+    "suggestedAction": "Action suggeree",
+    "predictions": "Predictions",
+    "confidence": "Confiance",
+    "seasonalPatterns": "Modeles Saisonniers",
+    "peakPeriods": "Periodes de pointe",
+    "trendAlerts": "Alertes de Tendance",
+    "keyMetrics": "Metriques Cles",
+    "periodAchievements": "Realisations de la Periode",
+    "attentionAreas": "Zones d'Attention",
+    "strategicRecommendations": "Recommandations Strategiques",
+    "kpiDeviations": "Deviations des KPI",
+    "rootCauses": "Causes Racines",
+    "improvementActions": "Actions d'Amelioration",
+    "expectedImpact": "Impact attendu",
+    "fullLuciAnalysis": "Analyse Complete LUCI",
+    "score": "Score",
+    "criticalItems": "Elements Critiques",
+    "recommendedActions": "Actions Recommandees",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "last7Days": "7 derniers jours",
+    "last30Days": "30 derniers jours",
+    "thisMonth": "Ce mois",
+    "lastMonth": "Mois dernier",
+    "thisQuarter": "Ce trimestre",
+    "thisYear": "Cette annee",
+    "errorLoadingDashboard": "Erreur de chargement du tableau de bord"
   },
   "errorBoundary": {
     "title": "Quelque chose s'est mal passe",
