@@ -1,6 +1,7 @@
 import axios from 'axios'
 import * as Sentry from '@sentry/react'
 import i18n from '../i18n/i18n'
+import * as cognitoService from './cognitoService'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
@@ -10,12 +11,22 @@ const api = axios.create({
   }
 })
 
-// Request interceptor
+// Request interceptor — Cognito token primero, legacy fallback
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+  async (config) => {
+    if (!config.headers.Authorization) {
+      if (cognitoService.isConfigured()) {
+        try {
+          const accessToken = await cognitoService.getAccessToken()
+          config.headers.Authorization = `Bearer ${accessToken}`
+        } catch (_) {
+          const token = localStorage.getItem('token')
+          if (token) config.headers.Authorization = `Bearer ${token}`
+        }
+      } else {
+        const token = localStorage.getItem('token')
+        if (token) config.headers.Authorization = `Bearer ${token}`
+      }
     }
     try {
       Sentry.addBreadcrumb({
@@ -32,9 +43,19 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     const status = error.response?.status
-    if (status === 401 && !error.config?.url?.includes('/refresh-token')) {
+    const originalRequest = error.config
+
+    if (status === 401 && !originalRequest._retry && !originalRequest?.url?.includes('/session')) {
+      originalRequest._retry = true
+      if (cognitoService.isConfigured()) {
+        try {
+          const accessToken = await cognitoService.getAccessToken()
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`
+          return api(originalRequest)
+        } catch (_) { /* session expired */ }
+      }
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'
@@ -50,26 +71,8 @@ api.interceptors.response.use(
   }
 )
 
-// Auto-refresh token every 6 hours (JWT expires in 7 days)
-let refreshInterval = null
-const startTokenRefresh = () => {
-  if (refreshInterval) clearInterval(refreshInterval)
-  refreshInterval = setInterval(async () => {
-    const token = localStorage.getItem('token')
-    if (!token) return
-    try {
-      const res = await api.post('/api/auth/refresh-token')
-      if (res.data?.success && res.data?.data?.token) {
-        localStorage.setItem('token', res.data.data.token)
-        localStorage.setItem('user', JSON.stringify(res.data.data.user))
-      }
-    } catch { /* silent fail */ }
-  }, 6 * 60 * 60 * 1000) // 6 hours
-}
-if (localStorage.getItem('token')) startTokenRefresh()
-
-// Export for AuthContext to call after login/register
-export const initTokenRefresh = () => startTokenRefresh()
+// Export vacío para compatibilidad con imports existentes
+export const initTokenRefresh = () => {}
 
 // API Methods
 
@@ -897,7 +900,7 @@ export const tenantAPI = {
 // Analytics & BI (Fase 6.2)
 export const analyticsAPI = {
   // Dashboard & Metrics
-  getDashboard: (period) => api.get('/api/analytics/dashboard', { params: { period } }),
+  getDashboard: (period) => api.get('/api/analytics/dashboard', { params: { period }, timeout: 120000 }),
   getRealTime: () => api.get('/api/analytics/realtime'),
   getDeclarations: (period) => api.get('/api/analytics/declarations', { params: { period } }),
   getFinancial: (period) => api.get('/api/analytics/financial', { params: { period } }),
