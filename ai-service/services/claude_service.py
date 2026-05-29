@@ -1,6 +1,6 @@
 """
-Claude Service - Integration with Anthropic Claude API
-Uses Sonnet 4 for chat and Opus 4.5 for complex tasks
+Claude Service - Integration with Claude via AWS Bedrock
+Uses Sonnet 4 for chat and Opus 4.6 for complex tasks
 """
 
 import os
@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Optional, List, Dict, Any
 
-import anthropic
+import boto3
 
 logger = logging.getLogger(__name__)
 
@@ -93,23 +93,30 @@ RESPONDE EN JSON con estructura completa para H1."""
 
 
 class ClaudeService:
-    """Service for interacting with Claude API"""
+    """Service for interacting with Claude via AWS Bedrock"""
 
     def __init__(self):
-        self.api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.client = None
+        access_key = os.getenv("BEDROCK_ACCESS_KEY_ID")
+        secret_key = os.getenv("BEDROCK_SECRET_ACCESS_KEY")
+        region = os.getenv("BEDROCK_REGION", "us-east-1")
 
-        if self.api_key:
-            self.client = anthropic.Anthropic(api_key=self.api_key)
-            logger.info("Claude service initialized with API key")
+        if access_key and secret_key:
+            self.client = boto3.client(
+                "bedrock-runtime",
+                region_name=region,
+                aws_access_key_id=access_key,
+                aws_secret_access_key=secret_key
+            )
+            logger.info(f"Bedrock client initialized (region: {region})")
         else:
-            logger.warning("ANTHROPIC_API_KEY not set - running in mock mode")
+            self.client = None
+            logger.warning("BEDROCK_ACCESS_KEY_ID / BEDROCK_SECRET_ACCESS_KEY not set - running in mock mode")
 
-        self.sonnet_model = os.getenv("DEFAULT_CHAT_MODEL", "claude-sonnet-4-20250514")
-        self.opus_model = os.getenv("DEFAULT_COMPLEX_MODEL", "claude-opus-4-20250514")
+        self.sonnet_model = os.getenv("DEFAULT_CHAT_MODEL", "us.anthropic.claude-sonnet-4-20250514-v1:0")
+        self.opus_model = os.getenv("DEFAULT_COMPLEX_MODEL", "us.anthropic.claude-opus-4-6-v1")
 
     def is_configured(self) -> bool:
-        """Check if Claude API is configured"""
+        """Check if Bedrock client is configured"""
         return self.client is not None
 
     async def _call_claude(
@@ -119,28 +126,28 @@ class ClaudeService:
         user_message: str,
         max_tokens: int = 4096
     ) -> Dict[str, Any]:
-        """Make a call to Claude API"""
+        """Make a call to Claude via Bedrock Converse API"""
 
         if not self.client:
             return self._mock_response(user_message)
 
         try:
-            response = self.client.messages.create(
-                model=model,
-                max_tokens=max_tokens,
-                system=system_prompt,
-                messages=[{"role": "user", "content": user_message}]
+            response = self.client.converse(
+                modelId=model,
+                system=[{"text": system_prompt}],
+                messages=[{"role": "user", "content": [{"text": user_message}]}],
+                inferenceConfig={"maxTokens": max_tokens}
             )
 
             return {
-                "content": response.content[0].text,
+                "content": response["output"]["message"]["content"][0]["text"],
                 "model": model,
-                "tokens_used": response.usage.input_tokens + response.usage.output_tokens,
-                "stop_reason": response.stop_reason
+                "tokens_used": response["usage"]["inputTokens"] + response["usage"]["outputTokens"],
+                "stop_reason": response["stopReason"]
             }
 
         except Exception as e:
-            logger.error(f"Claude API error: {e}")
+            logger.error(f"Bedrock API error: {e}")
             raise
 
     def _mock_response(self, message: str) -> Dict[str, Any]:

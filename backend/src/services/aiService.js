@@ -1,15 +1,15 @@
 /**
- * Servicio de IA - Integracion con Claude API
+ * Servicio de IA - Integracion con Claude via AWS Bedrock
  * Usa Claude Sonnet 4.6 para chat y Claude Opus 4.6 para tareas complejas
  */
 
-const axios = require('axios');
+const { BedrockRuntimeClient, ConverseCommand } = require('@aws-sdk/client-bedrock-runtime');
 const logger = require('../config/logger');
 
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
-const SONNET_MODEL = 'claude-sonnet-4-20250514';
-const OPUS_MODEL = 'claude-opus-4-20250514';
+const BEDROCK_REGION = process.env.BEDROCK_REGION || 'us-east-1';
+const HAIKU_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0';
+const SONNET_MODEL = 'us.anthropic.claude-sonnet-4-20250514-v1:0';
+const OPUS_MODEL = 'us.anthropic.claude-opus-4-6-v1';
 
 // Mapa de idiomas para instrucciones al modelo
 const LANGUAGE_INSTRUCTIONS = {
@@ -183,9 +183,18 @@ const SIMPLE_PATTERNS = /^(si|no|ok|vale|entendido|gracias|claro|perfecto|de acu
 
 class AIService {
   constructor() {
-    this.apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!this.apiKey) {
-      logger.warn('ANTHROPIC_API_KEY no configurada - AI Service funcionara en modo mock');
+    const accessKeyId = process.env.BEDROCK_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.BEDROCK_SECRET_ACCESS_KEY;
+
+    if (!accessKeyId || !secretAccessKey) {
+      logger.warn('BEDROCK_ACCESS_KEY_ID / BEDROCK_SECRET_ACCESS_KEY no configuradas - AI Service funcionara en modo mock');
+      this.client = null;
+    } else {
+      this.client = new BedrockRuntimeClient({
+        region: BEDROCK_REGION,
+        credentials: { accessKeyId, secretAccessKey }
+      });
+      logger.info(`Bedrock client inicializado (region: ${BEDROCK_REGION})`);
     }
   }
 
@@ -217,44 +226,34 @@ class AIService {
   }
 
   /**
-   * Llamada base a Claude API
+   * Llamada base a Claude via Bedrock Converse API
    */
   async callClaude(model, systemPrompt, userMessage, options = {}) {
-    if (!this.apiKey) {
+    if (!this.client) {
       return this.mockResponse(userMessage);
     }
 
     try {
-      const response = await axios.post(
-        ANTHROPIC_API_URL,
-        {
-          model,
-          max_tokens: options.maxTokens || 4096,
-          system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
-          messages: [
-            { role: 'user', content: userMessage }
-          ]
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': this.apiKey,
-            'anthropic-version': '2023-06-01',
-            'anthropic-beta': 'prompt-caching-2024-07-31'
-          },
-          timeout: options.timeout || 60000
+      const command = new ConverseCommand({
+        modelId: model,
+        system: [{ text: systemPrompt }],
+        messages: [{ role: 'user', content: [{ text: userMessage }] }],
+        inferenceConfig: {
+          maxTokens: options.maxTokens || 4096
         }
-      );
+      });
+
+      const response = await this.client.send(command);
 
       return {
-        content: response.data.content[0].text,
+        content: response.output.message.content[0].text,
         model,
-        tokensUsed: response.data.usage?.input_tokens + response.data.usage?.output_tokens,
-        stopReason: response.data.stop_reason
+        tokensUsed: (response.usage?.inputTokens || 0) + (response.usage?.outputTokens || 0),
+        stopReason: response.stopReason
       };
 
     } catch (error) {
-      logger.error('Error llamando a Claude:', error.response?.data || error.message);
+      logger.error('Error llamando a Claude via Bedrock:', error.message);
       throw new Error('Error en servicio de IA');
     }
   }
