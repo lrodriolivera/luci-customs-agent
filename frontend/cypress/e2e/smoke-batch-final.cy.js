@@ -1,9 +1,9 @@
 /**
- * Smoke E2E — valida los cambios desplegados hoy (20/04/2026).
+ * Smoke E2E — valida los cambios desplegados (batch final).
  *
- * Estrategia: el UI login es el PRIMER test (consume 1 slot del rate-limiter).
- * El token del UI login se reusa para las siguientes pruebas API → solo
- * consumimos 1 slot de /api/auth/login para toda la suite (max 10/15min).
+ * Estrategia: login vía API legacy (AUTH_MODE=dual lo soporta) para obtener
+ * un token JWT rápido y sin depender del flujo Cognito UI.
+ * El token se reusa para todas las pruebas API de la suite.
  */
 
 const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' }
@@ -13,21 +13,22 @@ function auth() {
   return { Authorization: `Bearer ${sharedToken}` }
 }
 
-describe('Smoke E2E - batch final 2026-04-20', () => {
+describe('Smoke E2E - batch final', () => {
 
-  it('01 - UI login completo (consume 1 slot del rate-limiter)', () => {
-    cy.visit('/login')
-    cy.get('input[id="email"]', { timeout: 15000 }).should('be.visible').clear().type(TEST_USER.email)
-    cy.get('input[id="password"]').clear().type(TEST_USER.password)
-    cy.intercept('POST', '/api/auth/login').as('loginReq')
-    cy.get('button[type="submit"]').click()
-    cy.wait('@loginReq').then((i) => {
-      expect(i.response.statusCode, 'login status').to.eq(200)
-      sharedToken = i.response.body?.data?.token
+  it('01 - API login legacy (AUTH_MODE=dual) obtiene JWT válido', () => {
+    cy.request({
+      method: 'POST',
+      url: '/api/auth/login',
+      body: TEST_USER,
+      failOnStatusCode: false
+    }).then((r) => {
+      if (r.status === 429) {
+        throw new Error('Rate-limited. Limpia Redis y reintenta.')
+      }
+      expect(r.status, 'login status').to.eq(200)
+      sharedToken = r.body?.data?.token
       expect(sharedToken).to.be.a('string')
     })
-    cy.url({ timeout: 20000 }).should('not.include', '/login')
-    cy.window().its('localStorage.token').should('exist')
   })
 
   it('02 - Lazy-load i18n sirve los 7 idiomas', () => {
