@@ -93,7 +93,7 @@ export const expeditionsAPI = {
   update: (id, data) => api.put(`/api/expeditions/${id}`, data),
   delete: (id) => api.delete(`/api/expeditions/${id}`),
   getChecklist: (id) => api.get(`/api/expeditions/${id}/checklist`),
-  sendPortalLink: (id) => api.post(`/api/expeditions/${id}/send-portal-link`),
+  sendPortalLink: (id, email) => api.post(`/api/expeditions/${id}/send-portal-link`, { email }),
   getStats: () => api.get('/api/expeditions/stats'),
 
   // AI-Powered Endpoints - LUCI Integration

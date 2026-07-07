@@ -570,15 +570,20 @@ export default function ExpeditionDetail() {
   }, [id, navigate, t])
 
   const handleSendPortalLink = async () => {
+    let clientEmail = expedition?.client?.contact?.email
+    if (!clientEmail) {
+      clientEmail = window.prompt('Email del cliente para enviar el link del portal:')
+      if (!clientEmail) return
+    }
     try {
-      const response = await expeditionsAPI.sendPortalLink(id)
+      const response = await expeditionsAPI.sendPortalLink(id, clientEmail)
       const data = response.data?.data || response.data
       const url = data?.portalUrl || response.data?.portalUrl
       setPortalLink(url)
       setShowPortalModal(true)
       toast.success(t('expeditions.portalGenerated'))
     } catch (error) {
-      toast.error(t('expeditions.portalError'))
+      toast.error(error.response?.data?.error || t('expeditions.portalError'))
     }
   }
 

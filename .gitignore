@@ -75,6 +75,10 @@ credentials.json
 service-account.json
 *secret*
 *credential*
+Credenciale_Bedrock/
+
+# Backup env files
+*.env.bak*
 
 # Cypress / Playwright artifacts (generated on each run)
 frontend/cypress/videos/
