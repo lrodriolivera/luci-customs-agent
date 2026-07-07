@@ -7,20 +7,27 @@ const paraduaneroService = require('../../src/services/paraduaneroService');
 
 // Mock dependencies
 jest.mock('../../src/config/logger');
-jest.mock('../../src/models', () => ({
-  Expedition: {
-    findById: jest.fn(),
-    save: jest.fn()
-  },
-  ParaduaneroControl: {
-    findOne: jest.fn(),
-    find: jest.fn(),
-    findById: jest.fn(),
-    countDocuments: jest.fn(),
-    aggregate: jest.fn()
-  },
-  Document: {}
-}));
+jest.mock('../../src/models', () => {
+  function ParaduaneroControlMock(data) {
+    Object.assign(this, data);
+    this.save = jest.fn().mockResolvedValue(this);
+    this.controlNumber = `CTRL-${Date.now()}`;
+  }
+  ParaduaneroControlMock.findOne = jest.fn();
+  ParaduaneroControlMock.find = jest.fn();
+  ParaduaneroControlMock.findById = jest.fn();
+  ParaduaneroControlMock.countDocuments = jest.fn();
+  ParaduaneroControlMock.aggregate = jest.fn();
+
+  return {
+    Expedition: {
+      findById: jest.fn(),
+      save: jest.fn()
+    },
+    ParaduaneroControl: ParaduaneroControlMock,
+    Document: {}
+  };
+});
 
 const { Expedition, ParaduaneroControl } = require('../../src/models');
 

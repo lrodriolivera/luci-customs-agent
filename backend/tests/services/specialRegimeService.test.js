@@ -430,9 +430,9 @@ describe('Special Regime Service', () => {
     });
 
     test('should calculate partial duties for temporary admission (regime 53)', async () => {
-      // Use dates that will give us 6 months difference
-      const startDate = new Date('2024-01-01T00:00:00Z');
-      const dischargeDate = new Date('2024-07-01T00:00:00Z'); // Exactly 6 months later
+      // Use dynamic dates: startDate is 6 months before now
+      const startDate = new Date();
+      startDate.setMonth(startDate.getMonth() - 6);
 
       const mockRegime = {
         regimeCode: '53',
@@ -452,11 +452,7 @@ describe('Special Regime Service', () => {
         discharge: null,
         statusHistory: [],
         canBeDischarge: jest.fn().mockReturnValue(true),
-        save: jest.fn().mockImplementation(function() {
-          // Simulate discharge setting the date
-          this.dischargeDate = dischargeDate;
-          return Promise.resolve(true);
-        })
+        save: jest.fn().mockResolvedValue(true)
       };
 
       SpecialRegime.findById.mockResolvedValue(mockRegime);

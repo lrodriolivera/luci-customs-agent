@@ -276,7 +276,7 @@ class H7Service {
 
     // Tasa de gestion
     const carrierCode = data.carrier?.code || 'OTHER';
-    const handlingFee = H7_CONFIG.handlingFees[carrierCode] || H7_CONFIG.handlingFees.OTHER;
+    const handlingFee = H7_CONFIG.handlingFees[carrierCode] ?? H7_CONFIG.handlingFees.OTHER;
 
     // Verificar si IVA prepagado via IOSS
     const vatPrepaid = !!data.iossNumber && /^IM\d{10}$/.test(data.iossNumber);

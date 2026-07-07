@@ -395,8 +395,9 @@ exports.submitToAEAT = async (req, res) => {
     const response = requirement.responses[responseIndex];
 
     // Enviar documentacion a AEAT real
-    const certs = certificateService.listCertificates();
-    const certAlias = certs.length > 0 ? certs[0].alias : null;
+    const certResult = await certificateService.listCertificates();
+    const certs = certResult.certificates || [];
+    const certAlias = certs.length > 0 ? (certs[0].metadata?.alias || certs[0].id) : null;
 
     const docs = (response.attachments || []).map(att => ({
       name: att.fileName || att.name,

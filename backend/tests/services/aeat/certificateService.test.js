@@ -162,10 +162,10 @@ describe('Certificate Service', () => {
   });
 
   describe('List Certificates', () => {
-    test('should return array of certificates', async () => {
-      const certificates = await certificateService.listCertificates();
-      // listCertificates returns an array (could be empty)
-      expect(Array.isArray(certificates)).toBe(true);
+    test('should return object with certificates array', async () => {
+      const result = await certificateService.listCertificates();
+      expect(result.success).toBe(true);
+      expect(Array.isArray(result.certificates)).toBe(true);
     });
 
     test('should include certificate info in list', async () => {
@@ -180,9 +180,9 @@ describe('Certificate Service', () => {
         metadata: {}
       });
 
-      const certificates = await certificateService.listCertificates();
-      expect(certificates.length).toBeGreaterThanOrEqual(1);
-      const testCert = certificates.find(c => c.id === 'test-id');
+      const result = await certificateService.listCertificates();
+      expect(result.certificates.length).toBeGreaterThanOrEqual(1);
+      const testCert = result.certificates.find(c => c.id === 'test-id');
       expect(testCert).toBeDefined();
     });
   });
@@ -241,10 +241,11 @@ describe('Certificate Service', () => {
         subject: { CN: 'Test' }
       });
 
-      const alerts = await certificateService.getRenewalAlerts();
-      expect(Array.isArray(alerts)).toBe(true);
-      expect(alerts.length).toBeGreaterThan(0);
-      expect(alerts[0].level).toBe('warning');
+      const result = await certificateService.getRenewalAlerts();
+      expect(result.success).toBe(true);
+      expect(Array.isArray(result.alerts)).toBe(true);
+      expect(result.alerts.length).toBeGreaterThan(0);
+      expect(result.alerts[0].level).toBe('warning');
     });
   });
 });

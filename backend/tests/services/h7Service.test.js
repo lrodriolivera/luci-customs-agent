@@ -19,6 +19,37 @@ jest.mock('../../src/models', () => ({
   }
 }));
 
+// Mock aeatSubmitService
+jest.mock('../../src/services/aeat/aeatSubmitService', () => ({
+  submitH7: jest.fn().mockResolvedValue({
+    success: true,
+    mrn: '26ES12345678901234H7',
+    channel: 'green',
+    code: '0',
+    estado: 'Aceptada',
+    csv: 'CSV123TEST'
+  })
+}));
+
+// Mock Tenant model (required inline in submitToAEAT)
+jest.mock('../../src/models/Tenant', () => ({
+  findById: jest.fn().mockResolvedValue({ customsConfig: { country: 'ES' } })
+}));
+
+// Mock CustomsServiceFactory (required inline in submitToAEAT)
+jest.mock('../../src/services/customs', () => ({
+  CustomsServiceFactory: {
+    getServiceForTenant: jest.fn().mockReturnValue({
+      submitDeclaration: jest.fn().mockResolvedValue({
+        success: true,
+        mrn: '26NL12345678901234H7',
+        channel: 'green',
+        code: '0'
+      })
+    })
+  }
+}));
+
 const h7Service = require('../../src/services/h7Service');
 const { H7Declaration, Expedition } = require('../../src/models');
 
@@ -420,9 +451,22 @@ describe('H7 Service', () => {
   });
 
   describe('submitToAEAT', () => {
-    // Mock H7Declaration.findById for these tests
+    const aeatSubmitService = require('../../src/services/aeat/aeatSubmitService');
+    const Tenant = require('../../src/models/Tenant');
+
+    // Mock H7Declaration.findById and restore aeatSubmitService/Tenant mocks
+    // (resetMocks: true in jest.config clears implementations between tests)
     beforeEach(() => {
       H7Declaration.findById = jest.fn();
+      aeatSubmitService.submitH7.mockResolvedValue({
+        success: true,
+        mrn: '26ES12345678901234H7',
+        channel: 'green',
+        code: '0',
+        estado: 'Aceptada',
+        csv: 'CSV123TEST'
+      });
+      Tenant.findById.mockResolvedValue({ customsConfig: { country: 'ES' } });
     });
 
     test('should submit valid H7 declaration', async () => {

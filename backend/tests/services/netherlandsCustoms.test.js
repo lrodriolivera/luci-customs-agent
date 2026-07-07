@@ -512,15 +512,14 @@ describe('NetherlandsCustomsService', () => {
       const xml = service._buildDECOXml(data);
 
       expect(xml).toContain('<?xml version="1.0"');
-      expect(xml).toContain('<TypeCode>IM</TypeCode>');
-      expect(xml).toContain('<AdditionalDeclarationTypeCode>C</AdditionalDeclarationTypeCode>');
+      expect(xml).toContain('<TypeCode>154</TypeCode>');
       expect(xml).toContain('<ID>NL123456789</ID>');
       expect(xml).toContain('<ID>610910</ID>');
       expect(xml).toContain('<Description>T-shirt</Description>');
-      expect(xml).toContain('<GoodsItemQuantity>1</GoodsItemQuantity>');
-      expect(xml).toContain('urn:wco:datamodel:WCO:DEC-DMS:2');
+      expect(xml).toContain('<QuantityQuantity>1</QuantityQuantity>');
+      expect(xml).toContain('urn:wco:datamodel:WCO:DECO.Declaration:2');
       expect(xml).toContain('<CountryCode>CN</CountryCode>');
-      expect(xml).toContain('<CurrentCode>C</CurrentCode>');
+      expect(xml).toContain('<WCOTypeCode>DECO</WCOTypeCode>');
     });
 
     test('should escape XML special characters', () => {
@@ -555,7 +554,7 @@ describe('NetherlandsCustomsService', () => {
         currency: 'EUR',
       };
       const xml = service._buildDECOXml(data);
-      expect(xml).toContain('<AdditionalFiscalReference>');
+      expect(xml).toContain('<DomesticDutyTaxParty>');
       expect(xml).toContain('IMNL000000123');
       expect(xml).toContain('<RoleCode>FR5</RoleCode>');
     });

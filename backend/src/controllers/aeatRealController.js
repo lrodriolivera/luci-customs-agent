@@ -140,8 +140,9 @@ const getCertificateInfo = async (req, res) => {
   try {
     const { alias } = req.params;
 
-    const certificates = await certificateService.listCertificates();
-    const certificate = certificates.find(c => c.alias === alias);
+    const result = await certificateService.listCertificates();
+    const certificates = result.certificates || [];
+    const certificate = certificates.find(c => (c.metadata?.alias || c.id) === alias);
 
     if (!certificate) {
       return res.status(404).json({

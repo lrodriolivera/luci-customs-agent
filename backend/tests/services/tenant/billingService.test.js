@@ -41,8 +41,10 @@ describe('Billing Service', () => {
 
     test('should define PLAN_PRICING', () => {
       expect(billingService.PLAN_PRICING).toBeDefined();
-      expect(billingService.PLAN_PRICING.free).toBeDefined();
+      expect(billingService.PLAN_PRICING.starter).toBeDefined();
       expect(billingService.PLAN_PRICING.professional).toBeDefined();
+      expect(billingService.PLAN_PRICING.business).toBeDefined();
+      expect(billingService.PLAN_PRICING.enterprise).toBeDefined();
     });
   });
 
@@ -61,7 +63,7 @@ describe('Billing Service', () => {
 
       expect(result.success).toBe(true);
       expect(result.subscription.billingCycle).toBe('yearly');
-      expect(result.subscription.price).toBe(490); // Yearly price for starter
+      expect(result.subscription.price).toBe(0); // Yearly price for starter (free plan)
     });
 
     test('should set trial for paid plans', () => {

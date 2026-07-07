@@ -21,7 +21,8 @@ const { buildQueryImportXML } = require('./queryXmlBuilder');
 
 // Helper: obtener certificado activo
 async function _getCertificate() {
-  const certs = certificateService.listCertificates();
+  const result = await certificateService.listCertificates();
+  const certs = result.certificates || [];
   if (certs.length > 0) return certs[0];
 
   // Intentar importar del .env

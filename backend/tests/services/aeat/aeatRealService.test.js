@@ -113,13 +113,12 @@ describe('AEAT Real Service', () => {
 
     test('should pass validation for valid XML with required fields', async () => {
       const validXml = `<?xml version="1.0"?>
-        <CC515C>
-          <DeclarationOffice>ES002801</DeclarationOffice>
-          <Declarant><ID>B12345678</ID></Declarant>
-          <GoodsShipment><Item>1</Item></GoodsShipment>
-          <CustomsValue>10000</CustomsValue>
-          <CommodityCode>8517120000</CommodityCode>
-        </CC515C>`;
+        <ImportacionCompletaV1Ent>
+          <C14Declarante><NIF>B12345678</NIF></C14Declarante>
+          <Partida><NumeroPartida>1</NumeroPartida></Partida>
+          <C42ValorFactura>10000</C42ValorFactura>
+          <C3312CodigoPosicionTaric>8517120000</C3312CodigoPosicionTaric>
+        </ImportacionCompletaV1Ent>`;
 
       const result = await aeatRealService._luciPreSubmitValidation(
         validXml,

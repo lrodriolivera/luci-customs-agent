@@ -3,6 +3,11 @@
  * Phase 6.1: Intelligent Status Monitoring Tests
  */
 
+// Mock cacheService to prevent Redis connection
+jest.mock('../../../src/services/cacheService', () => ({
+  getRedisClient: jest.fn().mockReturnValue(null)
+}));
+
 // Mock logger
 jest.mock('../../../src/config/logger', () => ({
   info: jest.fn(),
@@ -36,50 +41,59 @@ jest.mock('../../../src/services/aeat/aeatRealService', () => ({
 const aeatStatusMonitorService = require('../../../src/services/aeat/aeatStatusMonitorService');
 
 describe('AEAT Status Monitor Service', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
-    // Clear tracked declarations
-    aeatStatusMonitorService.trackedDeclarations = new Map();
+    // Clear tracked declarations using the RedisBackedMap's clear method (falls back to in-memory)
+    await aeatStatusMonitorService.trackedDeclarations.clear();
   });
 
   describe('Declaration Tracking', () => {
-    test('should track a declaration', () => {
-      const result = aeatStatusMonitorService.trackDeclaration('26ESTEST123456', 'H1', {
+    test('should track a declaration', async () => {
+      const result = await aeatStatusMonitorService.trackDeclaration('26ESTEST123456', 'H1', {
         expeditionId: 'exp-001',
         userId: 'user-001'
       });
 
       expect(result).toBeDefined();
       expect(result.mrn).toBe('26ESTEST123456');
+      expect(result.success).toBe(true);
+      expect(result.tracking).toBeDefined();
+      expect(result.tracking.type).toBe('H1');
     });
 
-    test('should list tracked declarations', () => {
-      aeatStatusMonitorService.trackDeclaration('MRN1', 'H1', {});
-      aeatStatusMonitorService.trackDeclaration('MRN2', 'AES', {});
+    test('should list tracked declarations', async () => {
+      await aeatStatusMonitorService.trackDeclaration('MRN1', 'H1', {});
+      await aeatStatusMonitorService.trackDeclaration('MRN2', 'AES', {});
 
-      const tracked = aeatStatusMonitorService.listTrackedDeclarations();
+      const result = await aeatStatusMonitorService.listTrackedDeclarations();
 
-      expect(Array.isArray(tracked)).toBe(true);
-      expect(tracked.length).toBeGreaterThanOrEqual(2);
+      expect(result).toHaveProperty('total');
+      expect(result).toHaveProperty('declarations');
+      expect(result).toHaveProperty('summary');
+      expect(result).toHaveProperty('luciAnalysis');
+      expect(result.total).toBeGreaterThanOrEqual(2);
+      expect(Array.isArray(result.declarations)).toBe(true);
     });
 
-    test('should get specific declaration tracking info', () => {
-      aeatStatusMonitorService.trackDeclaration('TEST-MRN', 'H1', {});
+    test('should get specific declaration tracking info', async () => {
+      await aeatStatusMonitorService.trackDeclaration('TEST-MRN', 'H1', {});
 
-      const result = aeatStatusMonitorService.getTrackedDeclaration('TEST-MRN');
+      const result = await aeatStatusMonitorService.getTrackedDeclaration('TEST-MRN');
 
       expect(result).toBeDefined();
       expect(result.mrn).toBe('TEST-MRN');
     });
 
-    test('should untrack a declaration', () => {
-      aeatStatusMonitorService.trackDeclaration('MRN-TO-REMOVE', 'H1', {});
-      expect(aeatStatusMonitorService.getTrackedDeclaration('MRN-TO-REMOVE')).toBeDefined();
+    test('should untrack a declaration', async () => {
+      await aeatStatusMonitorService.trackDeclaration('MRN-TO-REMOVE', 'H1', {});
+      const tracked = await aeatStatusMonitorService.getTrackedDeclaration('MRN-TO-REMOVE');
+      expect(tracked).toBeDefined();
 
-      const result = aeatStatusMonitorService.untrackDeclaration('MRN-TO-REMOVE');
+      const result = await aeatStatusMonitorService.untrackDeclaration('MRN-TO-REMOVE');
 
       expect(result.success).toBe(true);
-      expect(aeatStatusMonitorService.getTrackedDeclaration('MRN-TO-REMOVE')).toBeUndefined();
+      const afterRemove = await aeatStatusMonitorService.getTrackedDeclaration('MRN-TO-REMOVE');
+      expect(afterRemove).toBeUndefined();
     });
   });
 
@@ -110,15 +124,16 @@ describe('AEAT Status Monitor Service', () => {
   });
 
   describe('Alert Management', () => {
-    test('should get active alerts from tracked declarations', () => {
+    test('should get active alerts from tracked declarations', async () => {
       // Track a declaration first
-      aeatStatusMonitorService.trackDeclaration('TEST-MRN', 'H1', {});
+      await aeatStatusMonitorService.trackDeclaration('TEST-MRN', 'H1', {});
 
-      // getActiveAlerts may return array or object with alerts
-      const alerts = aeatStatusMonitorService.getActiveAlerts();
-      const alertsArray = Array.isArray(alerts) ? alerts : (alerts.alerts || []);
+      // getActiveAlerts returns { total, critical, warning, alerts }
+      const result = await aeatStatusMonitorService.getActiveAlerts();
 
-      expect(Array.isArray(alertsArray)).toBe(true);
+      expect(result).toHaveProperty('total');
+      expect(result).toHaveProperty('alerts');
+      expect(Array.isArray(result.alerts)).toBe(true);
     });
   });
 
@@ -160,8 +175,8 @@ describe('AEAT Status Monitor Service', () => {
   });
 
   describe('Service Info', () => {
-    test('should return service information', () => {
-      const info = aeatStatusMonitorService.getInfo();
+    test('should return service information', async () => {
+      const info = await aeatStatusMonitorService.getInfo();
 
       expect(info).toBeDefined();
       expect(info).toHaveProperty('service');
@@ -171,18 +186,18 @@ describe('AEAT Status Monitor Service', () => {
   });
 
   describe('Filtering Tracked Declarations', () => {
-    beforeEach(() => {
-      aeatStatusMonitorService.trackedDeclarations = new Map();
-      aeatStatusMonitorService.trackDeclaration('MRN-H1', 'H1', {});
-      aeatStatusMonitorService.trackDeclaration('MRN-AES', 'AES', {});
+    beforeEach(async () => {
+      await aeatStatusMonitorService.trackedDeclarations.clear();
+      await aeatStatusMonitorService.trackDeclaration('MRN-H1', 'H1', {});
+      await aeatStatusMonitorService.trackDeclaration('MRN-AES', 'AES', {});
     });
 
-    test('should filter by type', () => {
-      const h1Only = aeatStatusMonitorService.listTrackedDeclarations({ type: 'H1' });
+    test('should filter by type', async () => {
+      const result = await aeatStatusMonitorService.listTrackedDeclarations({ type: 'H1' });
 
-      expect(h1Only.length).toBeGreaterThanOrEqual(1);
+      expect(result.declarations.length).toBeGreaterThanOrEqual(1);
       // Check that at least one result has type H1
-      const hasH1 = h1Only.some(d => d.type === 'H1');
+      const hasH1 = result.declarations.some(d => d.type === 'H1');
       expect(hasH1).toBe(true);
     });
   });
