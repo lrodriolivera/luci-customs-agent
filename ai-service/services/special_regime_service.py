@@ -10,6 +10,8 @@ from typing import Optional, List, Dict, Any
 
 import anthropic
 
+from services.bedrock_client import create_bedrock_anthropic_client
+
 logger = logging.getLogger(__name__)
 
 # System prompts para regimenes especiales
@@ -156,16 +158,21 @@ class SpecialRegimeService:
 
     def __init__(self):
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.client = None
+        self.client = create_bedrock_anthropic_client()
 
-        if self.api_key:
+        if self.client:
+            logger.info("Special Regime AI Service initialized with Bedrock")
+            self.sonnet_model = os.getenv("DEFAULT_CHAT_MODEL", "us.anthropic.claude-sonnet-4-20250514-v1:0")
+            self.opus_model = os.getenv("DEFAULT_COMPLEX_MODEL", "us.anthropic.claude-opus-4-6-v1")
+        elif self.api_key:
             self.client = anthropic.Anthropic(api_key=self.api_key)
             logger.info("Special Regime AI Service initialized")
+            self.sonnet_model = os.getenv("DEFAULT_CHAT_MODEL", "claude-sonnet-4-20250514")
+            self.opus_model = os.getenv("DEFAULT_COMPLEX_MODEL", "claude-opus-4-20250514")
         else:
-            logger.warning("ANTHROPIC_API_KEY not set - running in mock mode")
-
-        self.sonnet_model = os.getenv("DEFAULT_CHAT_MODEL", "claude-sonnet-4-20250514")
-        self.opus_model = os.getenv("DEFAULT_COMPLEX_MODEL", "claude-opus-4-20250514")
+            logger.warning("BEDROCK_*/ANTHROPIC_API_KEY not set - running in mock mode")
+            self.sonnet_model = None
+            self.opus_model = None
 
     async def _call_claude(
         self,

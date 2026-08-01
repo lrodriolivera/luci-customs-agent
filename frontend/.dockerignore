@@ -1,0 +1,14 @@
+# Vite hornea las VITE_* en el bundle en tiempo de build; el .env no debe
+# entrar en el contexto para no arrastrar valores que no tocan a este entorno.
+.env
+.env.*
+!.env.example
+
+node_modules
+dist
+.git
+coverage
+playwright-report
+test-results
+cypress/videos
+cypress/screenshots

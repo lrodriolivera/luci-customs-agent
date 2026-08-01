@@ -11,6 +11,8 @@ from typing import Optional, Dict, Any, List
 
 import anthropic
 
+from services.bedrock_client import create_bedrock_anthropic_client
+
 logger = logging.getLogger(__name__)
 
 # System prompt for TARIC classification
@@ -102,15 +104,18 @@ class ClassificationService:
 
     def __init__(self):
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.client = None
+        self.client = create_bedrock_anthropic_client()
 
-        if self.api_key:
+        if self.client:
+            logger.info("Classification service initialized with Bedrock")
+            self.model = os.getenv("DEFAULT_COMPLEX_MODEL", "us.anthropic.claude-sonnet-4-20250514-v1:0")
+        elif self.api_key:
             self.client = anthropic.Anthropic(api_key=self.api_key)
             logger.info("Classification service initialized with Claude API")
+            self.model = os.getenv("DEFAULT_COMPLEX_MODEL", "claude-sonnet-4-20250514")
         else:
-            logger.warning("ANTHROPIC_API_KEY not set - classification will use fallback mode")
-
-        self.model = os.getenv("DEFAULT_COMPLEX_MODEL", "claude-sonnet-4-20250514")
+            logger.warning("BEDROCK_*/ANTHROPIC_API_KEY not set - classification will use fallback mode")
+            self.model = None
 
     async def classify(
         self,

@@ -1,0 +1,21 @@
+# El .env llega por env_file del compose en tiempo de ejecucion; copiarlo
+# ademas dentro de la imagen hornea las credenciales en una capa que
+# sobrevive al contenedor y viaja con cualquier copia de la imagen.
+.env
+.env.*
+!.env.example
+
+node_modules
+venv
+__pycache__
+*.pyc
+.git
+logs
+coverage
+uploads
+data
+tests
+Certificados
+*.p12
+*.pem
+*.key

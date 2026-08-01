@@ -1,0 +1,51 @@
+# LUCI Customs Agent — clasificación aduanera + AEAT (F4.5). Migrado desde EC2 luci-customs-prod
+# (eu-west-1) el 2026-07-15 tras la suspensión de la cuenta AWS. Dockerizado.
+# IA: Bedrock con cuenta UMMIA (405894862059). Auth: JWT_LEGACY_MODE (sin Cognito).
+# BD nueva (el Mongo del EC2 se perdió; TARIC se re-importa con los scripts del backend).
+# Cert FNMT (AEAT) montado read-only. El túnel sirve aduanas.strixai.es → frontend.
+services:
+  luci-mongo:
+    image: mongo:7
+    container_name: luci-mongo
+    restart: unless-stopped
+    volumes:
+      - ./data/mongo:/data/db
+    networks: [homelab]
+
+  luci-redis:
+    image: redis:7-alpine
+    container_name: luci-redis
+    restart: unless-stopped
+    networks: [homelab]
+
+  luci-ai:
+    build: { context: ./ai-service }
+    image: homelab/luci-ai:latest
+    container_name: luci-ai
+    restart: unless-stopped
+    env_file: [./ai-service/.env]
+    networks: [homelab]
+
+  luci-backend:
+    build: { context: ./backend }
+    image: homelab/luci-backend:latest
+    container_name: luci-backend
+    restart: unless-stopped
+    depends_on: [luci-mongo, luci-redis, luci-ai]
+    env_file: [./backend/.env]
+    volumes:
+      - ./certs/strixai_fnmt.p12:/app/certs/strixai_fnmt.p12:ro
+      - ./data/uploads:/app/uploads
+    networks: [homelab]
+
+  luci-frontend:
+    build: { context: ./frontend }
+    image: homelab/luci-frontend:latest
+    container_name: luci-frontend
+    restart: unless-stopped
+    depends_on: [luci-backend]
+    networks: [homelab]
+
+networks:
+  homelab:
+    external: true
