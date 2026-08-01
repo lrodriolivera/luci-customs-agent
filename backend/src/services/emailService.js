@@ -16,8 +16,22 @@ try {
   logger.warn('AWS SES SDK not installed - email via SES unavailable');
 }
 
+let nodemailer = null;
+try {
+  nodemailer = require('nodemailer');
+} catch (e) {
+  logger.warn('Nodemailer not installed - email via SMTP unavailable');
+}
+
 let suppressionService = null;
 try { suppressionService = require('./suppressionService'); } catch (e) { /* optional */ }
+
+/** Extrae la direccion de un "Nombre <dir@dominio>" o devuelve la entrada si ya es desnuda. */
+function parseAddress(value) {
+  if (!value) return null;
+  const match = value.match(/<([^>]+)>/);
+  return (match ? match[1] : value).trim();
+}
 
 const BRAND_COLOR = '#0284c7'; // bg-luci
 const APP_NAME = 'LUCI';
@@ -41,8 +55,21 @@ class EmailService {
         }
       });
       logger.info('Email service: SES initialized');
+    } else if (nodemailer && process.env.SMTP_HOST && process.env.SMTP_USER) {
+      const port = parseInt(process.env.SMTP_PORT) || 465;
+      this.smtpTransport = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port,
+        // 465 es TLS implicito; 587 arranca en claro y sube por STARTTLS
+        secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : port === 465,
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+      });
+      // EMAIL_FROM puede venir como "Nombre <dir@dominio>"; el envelope SMTP y la
+      // cabecera From (que ya antepone APP_NAME) necesitan la direccion desnuda.
+      this.fromEmail = parseAddress(process.env.EMAIL_FROM) || this.fromEmail;
+      logger.info(`Email service: SMTP initialized (${process.env.SMTP_HOST}:${port}, from=${this.fromEmail})`);
     } else {
-      logger.warn('Email service: SES not configured, emails will be logged only');
+      logger.warn('Email service: no SES/SMTP configured, emails will be logged only');
     }
   }
 
@@ -64,8 +91,8 @@ class EmailService {
       emailText = text;
     }
 
-    if (!this.sesClient) {
-      logger.warn(`Email not sent (SES not configured): to=${to}, subject=${subject}`);
+    if (!this.sesClient && !this.smtpTransport) {
+      logger.warn(`Email not sent (no SES/SMTP configured): to=${to}, subject=${subject}`);
       return { success: false, reason: 'not_configured' };
     }
 
@@ -87,6 +114,12 @@ class EmailService {
         html: emailHtml,
         text: emailText
       });
+      if (this.smtpTransport) {
+        const result = await this.smtpTransport.sendMail({ raw, envelope: { from: this.fromEmail, to: allowed } });
+        logger.info(`Email sent via SMTP: to=${allowed.join(',')}, subject=${subject}, messageId=${result.messageId}`);
+        return { success: true, messageId: result.messageId, skipped };
+      }
+
       const params = { RawMessage: { Data: Buffer.from(raw) } };
       if (CONFIG_SET) params.ConfigurationSetName = CONFIG_SET;
 
@@ -94,7 +127,7 @@ class EmailService {
       logger.info(`Email sent: to=${allowed.join(',')}, subject=${subject}, messageId=${result.MessageId}`);
       return { success: true, messageId: result.MessageId, skipped };
     } catch (error) {
-      logger.error(`SES send error: ${error.message}`, { to, subject });
+      logger.error(`Email send error: ${error.message}`, { to, subject });
       return { success: false, error: error.message };
     }
   }

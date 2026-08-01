@@ -167,6 +167,9 @@ async function submitH7(h7Declaration, tenant) {
     destinatarioCP: h7Declaration.recipient?.address?.postalCode || '',
     declaranteNIF: declaranteNIF,
     declaranteNombre: declaranteNombre,
+    // AEAT rechaza representacion '2' cuando declarante e importador son el mismo NIF
+    formaRepresentacion: h7Declaration.formaRepresentacion ||
+      (declaranteNIF && declaranteNIF.replace(/^ES/, '') === (h7Declaration.recipient?.taxId || '').replace(/^ES/, '') ? '1' : '2'),
     emailDespacho: h7Declaration.recipient?.email || 'despacho@strixai.es',
     iossNumber: h7Declaration.iossNumber || '',
     // Garantia GRN (Jose Antonio: 26ESAGL2800000054 para despacho a consumo)
