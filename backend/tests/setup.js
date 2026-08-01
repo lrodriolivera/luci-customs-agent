@@ -15,6 +15,18 @@ process.env.MONGODB_URI = 'mongodb://localhost:27017/luci-test';
 // Increase timeout for integration tests
 jest.setTimeout(10000);
 
+// Mongoose bufferea las operaciones cuando no hay conexion y las rechaza al
+// agotarse bufferTimeoutMS, que por defecto son los mismos 10000ms del
+// testTimeout de arriba. Con ambos valores empatados, el rechazo llega justo
+// cuando Jest esta desmontando el entorno y estalla como un
+// "ReferenceError: ... after the Jest environment has been torn down" en un
+// fichero que muchas veces no es el culpable. Bajarlo a la mitad hace que la
+// operacion falle dentro del test, con el mensaje real de Mongoose y el
+// nombre de la suite que la lanzo.
+// Solo afecta a los tests: en produccion no se toca (y ademas connectDB()
+// hace process.exit(1) si Mongo no responde, asi que nunca se bufferea).
+require('mongoose').set('bufferTimeoutMS', 5000);
+
 // Mock console methods to reduce noise in tests
 global.console = {
   ...console,
