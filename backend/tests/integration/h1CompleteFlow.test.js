@@ -1073,13 +1073,18 @@ describe('H1 Complete Flow Integration Tests', () => {
     });
 
     test('should calculate processing time metrics', () => {
+      // Las tres fechas se derivan del mismo instante. Con un Date.now() por
+      // linea el reloj avanza entre medias, y basta 1ms para que Math.ceil
+      // redondee 2 dias exactos a 3 y el test falle de forma intermitente.
+      const now = Date.now();
+      const DAY = 24 * 60 * 60 * 1000;
       const expedition = {
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+        createdAt: new Date(now - 5 * DAY), // 5 days ago
         declaration: {
-          submittedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
+          submittedAt: new Date(now - 3 * DAY) // 3 days ago
         },
         levante: {
-          releaseDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
+          releaseDate: new Date(now - 2 * DAY) // 2 days ago
         }
       };
 
