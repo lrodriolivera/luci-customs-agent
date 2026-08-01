@@ -298,11 +298,15 @@ describe('Guarantee Service', () => {
   });
 
   describe('Payment Deferral', () => {
+    // Ambas fechas se anclan al mismo instante. Tomarlas por separado
+    // (new Date() y luego Date.now()) deja que el reloj avance entre medias,
+    // y basta 1ms para que la diferencia sea 10d+1ms y Math.ceil devuelva 11.
     test('should support 10-day deferral', () => {
+      const now = Date.now();
       const deferral = {
         type: '10_days',
-        operationDate: new Date(),
-        dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+        operationDate: new Date(now),
+        dueDate: new Date(now + 10 * 24 * 60 * 60 * 1000),
         amount: 5000,
         status: 'pending'
       };
@@ -315,10 +319,11 @@ describe('Guarantee Service', () => {
     });
 
     test('should support 30-day deferral', () => {
+      const now = Date.now();
       const deferral = {
         type: '30_days',
-        operationDate: new Date(),
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        operationDate: new Date(now),
+        dueDate: new Date(now + 30 * 24 * 60 * 60 * 1000),
         amount: 15000,
         status: 'pending'
       };
