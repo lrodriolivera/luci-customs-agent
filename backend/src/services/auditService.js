@@ -1,5 +1,9 @@
+const mongoose = require('mongoose');
 const AuditLog = require('../models/AuditLog');
 const logger = require('../config/logger');
+
+// mongoose.connection.readyState === 1 significa "connected".
+const MONGOOSE_CONNECTED = 1;
 
 const SENSITIVE_KEYS = new Set(['password', 'token', 'authorization', 'cookie', 'apiKey', 'secret']);
 
@@ -34,6 +38,14 @@ async function log(opts = {}) {
       logger.warn('auditService.log called without action/resource');
       return;
     }
+    // Sin conexion, Mongoose encola la escritura en un buffer que se resuelve
+    // "cuando conecte" y que mantiene vivo el proceso indefinidamente si eso
+    // no llega a pasar. Descartar aqui es preferible: la auditoria es
+    // best-effort y no debe retener el event loop al apagar.
+    if (mongoose.connection.readyState !== MONGOOSE_CONNECTED) {
+      logger.warn(`auditService.log skipped (mongo not connected): ${action} ${resource}`);
+      return;
+    }
     const entry = {
       action,
       resource,
@@ -64,6 +76,13 @@ async function log(opts = {}) {
 /**
  * Express middleware. Attaches req.audit(opts) helper so controllers can call:
  *   req.audit({ action: 'login', resource: 'User', resourceId: user._id });
+ *
+ * Devuelve la promesa de log() para que quien necesite garantizar que la
+ * entrada quedo escrita pueda esperarla:
+ *   await req.audit({ action: 'delete', resource: 'Expedition' });
+ * Ignorarla sigue siendo seguro: log() nunca rechaza (captura sus errores).
+ * Sin este retorno la escritura quedaba huerfana y sobrevivia al proceso que
+ * la lanzo, que es como se colgaba Jest al desmontar el entorno.
  */
 function middleware(req, res, next) {
   req.audit = (opts) => log({ req, ...opts });
