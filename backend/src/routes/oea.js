@@ -8,6 +8,11 @@
 const express = require('express');
 const router = express.Router();
 const oeaController = require('../controllers/oeaController');
+const { auth } = require('../middleware/auth');
+
+// Todas las rutas requieren autenticacion: exponian datos de clientes
+// (NIF, EORI, MRN, expedientes, inspecciones) a cualquiera sin token.
+router.use(auth);
 
 // ============================================
 // Information & Catalog Routes

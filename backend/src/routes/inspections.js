@@ -6,6 +6,11 @@
 const express = require('express');
 const router = express.Router();
 const inspectionController = require('../controllers/inspectionController');
+const { auth } = require('../middleware/auth');
+
+// Todas las rutas requieren autenticacion: exponian datos de clientes
+// (NIF, EORI, MRN, expedientes, inspecciones) a cualquiera sin token.
+router.use(auth);
 
 // Rutas de consulta (antes de las rutas con parámetros)
 router.get('/today', inspectionController.getToday);

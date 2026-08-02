@@ -6,6 +6,12 @@ const express = require('express');
 const router = express.Router();
 const guaranteeController = require('../controllers/guaranteeController');
 const { requireAuth } = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
+
+// Explicito, no por accidente: sin esto el 401 solo llegaba porque el
+// controller reventaba al leer req.user._id, y cualquier ruta que no lo
+// tocara quedaria abierta.
+router.use(auth);
 
 // Todas las rutas requieren autenticacion
 router.use(requireAuth);
