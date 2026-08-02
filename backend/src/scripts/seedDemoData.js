@@ -88,7 +88,7 @@ const customsOffices = [
 
 // ==================== Seed Functions ====================
 
-async function seedExpeditions() {
+async function seedExpeditions(tenantId) {
   console.log('Creando expedientes...');
 
   const statuses = ['draft', 'pending_documents', 'documents_received', 'documents_validated', 'declaration_submitted', 'green_channel', 'orange_channel', 'red_channel', 'levante', 'completed'];
@@ -107,6 +107,7 @@ async function seedExpeditions() {
     const hasChannel = ['green_channel', 'orange_channel', 'red_channel', 'levante', 'completed'].includes(status);
 
     const expedition = new Expedition({
+      tenantId,
       expeditionId: `EXP-2026-${String(i + 100).padStart(4, '0')}`,
       operationType: randomItem(['import', 'export']),
       transportMode: randomItem(transportModes),
@@ -515,7 +516,7 @@ async function seedGuarantees(demoUserId) {
   return guarantees;
 }
 
-async function seedH7Declarations(demoUserId) {
+async function seedH7Declarations(demoUserId, tenantId) {
   console.log('Creando declaraciones H7...');
 
   const carriers = [
@@ -542,6 +543,7 @@ async function seedH7Declarations(demoUserId) {
     const originCountry = randomItem(['CN', 'US', 'UK', 'HK', 'KR', 'JP']);
 
     const h7 = new H7Declaration({
+      tenantId,
       createdBy: demoUserId,
       operationType: 'B2C',
       trackingNumber: `${carrier.code}${randomNumber(100000000, 999999999)}`,
@@ -615,7 +617,7 @@ async function seedH7Declarations(demoUserId) {
   return h7Declarations;
 }
 
-async function seedTransits(demoUserId) {
+async function seedTransits(demoUserId, tenantId) {
   console.log('Creando tránsitos NCTS...');
 
   const transitTypes = ['T1', 'T2', 'T2F', 'TIR'];
@@ -640,6 +642,7 @@ async function seedTransits(demoUserId) {
     const product = randomItem(products);
 
     const transit = new Transit({
+      tenantId,
       owner: demoUserId,
       mrn: status !== 'draft' ? generateMRN() : undefined,
       lrn: generateLRN(),
@@ -1158,6 +1161,17 @@ async function seedAll() {
     const demoUserId = demoUser._id;
     console.log(`✓ Usuario demo: ${demoUser.email} (${demoUserId})\n`);
 
+    // Los listados filtran por query.tenantId = req.user.tenantId, asi que sin
+    // esto los datos sembrados quedan invisibles en la UI aunque existan en la
+    // BD. Ya paso: 191 documentos huerfanos en produccion (2/Ago/2026).
+    const demoTenantId = demoUser.tenantId;
+    if (!demoTenantId) {
+      console.warn('⚠ El usuario demo no tiene tenantId: los datos no se veran en la UI.');
+      console.warn('  Ejecuta antes createSuperAdmin.js, que crea el tenant de testing.\n');
+    } else {
+      console.log(`✓ Tenant demo: ${demoTenantId}\n`);
+    }
+
     // Clear existing data
     console.log('Limpiando datos existentes...');
     await Promise.all([
@@ -1175,13 +1189,13 @@ async function seedAll() {
     console.log('✓ Datos anteriores eliminados\n');
 
     // Seed data
-    const expeditions = await seedExpeditions();
+    const expeditions = await seedExpeditions(demoTenantId);
     const requirements = await seedRequirements(expeditions);
     await seedDeadlines(expeditions);
     await seedInspections(expeditions);
     await seedGuarantees(demoUserId);
-    await seedH7Declarations(demoUserId);
-    await seedTransits(demoUserId);
+    await seedH7Declarations(demoUserId, demoTenantId);
+    await seedTransits(demoUserId, demoTenantId);
     await seedSpecialRegimes(demoUserId);
     await seedOEA(demoUserId);
     await seedCommunications(demoUserId, expeditions, requirements);
