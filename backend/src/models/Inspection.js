@@ -368,6 +368,11 @@ const InspectionSchema = new mongoose.Schema({
   assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
+  // Aislamiento multi-tenant. Se hereda de la expedicion inspeccionada, que es
+  // su unico dueno posible: sin este campo no habia nada que comparar y
+  // cualquiera con el id podia operar sobre inspecciones de otro cliente.
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },
+
   // Cliente
   client: {
     name: String,

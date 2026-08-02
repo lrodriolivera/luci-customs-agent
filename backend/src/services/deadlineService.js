@@ -10,7 +10,34 @@
  */
 
 const Deadline = require('../models/Deadline');
+const User = require('../models/User');
+const Expedition = require('../models/Expedition');
 const logger = require('../config/logger');
+
+/**
+ * Carga el documento comprobando que es del tenant de quien lo pide.
+ * El tenantId se anadio al schema y se derivo de la expedicion, que es su
+ * unico dueno posible. Mismo error que cuando no existe, para no confirmar
+ * ids de otro tenant. Sin userId (jobs) no se comprueba; los documentos
+ * legacy sin tenantId siguen pasando.
+ */
+async function _loadOwnedDeadline(id, userId) {
+  const doc = await Deadline.findById(id);
+  if (!doc) {
+    throw new Error('Deadline no encontrado');
+  }
+  // El tenant se resuelve desde el usuario en vez de exigirlo en las 19 firmas
+  // y sus 47 llamadores. Una consulta extra por operacion de escritura, que es
+  // asumible frente a propagar el parametro por toda la cadena.
+  if (userId && doc.tenantId) {
+    const user = await User.findById(userId).select('tenantId').lean();
+    if (user?.tenantId && String(doc.tenantId) !== String(user.tenantId)) {
+      throw new Error('Deadline no encontrado');
+    }
+  }
+  return doc;
+}
+
 
 // Configuración de tipos de deadline
 const DEADLINE_CONFIG = {
@@ -272,6 +299,12 @@ class DeadlineService {
         createdBy: userId,
         source: data.source || 'manual'
       };
+
+      // El tenant se hereda de la expedicion de references, nunca del payload.
+      if (!deadlineData.tenantId && deadlineData.references?.expeditionId) {
+        const exp = await Expedition.findById(deadlineData.references.expeditionId).select('tenantId').lean();
+        if (exp?.tenantId) deadlineData.tenantId = exp.tenantId;
+      }
 
       const deadline = new Deadline(deadlineData);
       deadline.calculateNextAlert();
@@ -665,10 +698,7 @@ class DeadlineService {
    * Actualizar deadline
    */
   async update(id, data, userId = null) {
-    const deadline = await Deadline.findById(id);
-    if (!deadline) {
-      throw new Error('Deadline no encontrado');
-    }
+    const deadline = await _loadOwnedDeadline(id, userId);
 
     Object.assign(deadline, data);
     deadline.calculateNextAlert();
@@ -682,10 +712,7 @@ class DeadlineService {
    * Completar deadline
    */
   async complete(id, notes = '', userId = null) {
-    const deadline = await Deadline.findById(id);
-    if (!deadline) {
-      throw new Error('Deadline no encontrado');
-    }
+    const deadline = await _loadOwnedDeadline(id, userId);
 
     await deadline.complete(userId, notes);
     logger.info(`Deadline completado: ${id}`);
@@ -696,10 +723,7 @@ class DeadlineService {
    * Extender plazo
    */
   async extend(id, newDate, reason, userId = null) {
-    const deadline = await Deadline.findById(id);
-    if (!deadline) {
-      throw new Error('Deadline no encontrado');
-    }
+    const deadline = await _loadOwnedDeadline(id, userId);
 
     await deadline.extend(new Date(newDate), reason, userId);
     deadline.calculateNextAlert();
@@ -713,10 +737,7 @@ class DeadlineService {
    * Cancelar deadline
    */
   async cancel(id, reason, userId = null) {
-    const deadline = await Deadline.findById(id);
-    if (!deadline) {
-      throw new Error('Deadline no encontrado');
-    }
+    const deadline = await _loadOwnedDeadline(id, userId);
 
     await deadline.cancel(reason, userId);
     logger.info(`Deadline cancelado: ${id}`);
@@ -727,10 +748,7 @@ class DeadlineService {
    * Eliminar deadline (soft delete)
    */
   async delete(id) {
-    const deadline = await Deadline.findById(id);
-    if (!deadline) {
-      throw new Error('Deadline no encontrado');
-    }
+    const deadline = await _loadOwnedDeadline(id, userId);
 
     deadline.active = false;
     await deadline.save();

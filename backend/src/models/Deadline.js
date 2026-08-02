@@ -216,6 +216,10 @@ const DeadlineSchema = new mongoose.Schema({
   // Quién creó el deadline
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
+  // Aislamiento multi-tenant. Se hereda de la expedicion de references, que es
+  // su unico dueno posible: sin este campo no habia nada que comparar.
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },
+
   // Origen del deadline (automático o manual)
   source: {
     type: String,

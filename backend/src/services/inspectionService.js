@@ -10,9 +10,36 @@
  */
 
 const Inspection = require('../models/Inspection');
+const User = require('../models/User');
+const Expedition = require('../models/Expedition');
 const Deadline = require('../models/Deadline');
 const deadlineService = require('./deadlineService');
 const logger = require('../config/logger');
+
+/**
+ * Carga el documento comprobando que es del tenant de quien lo pide.
+ * El tenantId se anadio al schema y se derivo de la expedicion, que es su
+ * unico dueno posible. Mismo error que cuando no existe, para no confirmar
+ * ids de otro tenant. Sin userId (jobs) no se comprueba; los documentos
+ * legacy sin tenantId siguen pasando.
+ */
+async function _loadOwnedInspection(id, userId) {
+  const doc = await Inspection.findById(id);
+  if (!doc) {
+    throw new Error('Inspección no encontrada');
+  }
+  // El tenant se resuelve desde el usuario en vez de exigirlo en las 19 firmas
+  // y sus 47 llamadores. Una consulta extra por operacion de escritura, que es
+  // asumible frente a propagar el parametro por toda la cadena.
+  if (userId && doc.tenantId) {
+    const user = await User.findById(userId).select('tenantId').lean();
+    if (user?.tenantId && String(doc.tenantId) !== String(user.tenantId)) {
+      throw new Error('Inspección no encontrada');
+    }
+  }
+  return doc;
+}
+
 
 // Tipos de inspección y sus características
 const INSPECTION_TYPES = {
@@ -176,6 +203,13 @@ class InspectionService {
         createdBy: userId
       };
 
+      // El tenant se hereda de la expedicion inspeccionada, nunca del payload:
+      // sin esto la inspeccion nace sin dueno y el guard la deja pasar.
+      if (!inspectionData.tenantId && inspectionData.expeditionId) {
+        const exp = await Expedition.findById(inspectionData.expeditionId).select('tenantId').lean();
+        if (exp?.tenantId) inspectionData.tenantId = exp.tenantId;
+      }
+
       const inspection = new Inspection(inspectionData);
       await inspection.save();
 
@@ -326,10 +360,7 @@ class InspectionService {
    * Programar inspección
    */
   async schedule(id, schedulingData, userId = null) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     await inspection.schedule(schedulingData, userId);
 
@@ -344,10 +375,7 @@ class InspectionService {
    * Confirmar inspección
    */
   async confirm(id, confirmationNumber, userId = null) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     await inspection.confirm(confirmationNumber, userId);
 
@@ -359,10 +387,7 @@ class InspectionService {
    * Iniciar inspección
    */
   async start(id, userId = null) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     await inspection.start(userId);
 
@@ -374,10 +399,7 @@ class InspectionService {
    * Completar inspección
    */
   async complete(id, resultData, userId = null) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     await inspection.complete(resultData, userId);
 
@@ -398,10 +420,7 @@ class InspectionService {
    * Añadir participante
    */
   async addParticipant(id, participantData) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     await inspection.addParticipant(participantData);
     return inspection;
@@ -411,10 +430,7 @@ class InspectionService {
    * Añadir evidencia (foto, documento)
    */
   async addEvidence(id, evidenceData) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     await inspection.addEvidence(evidenceData);
     logger.info(`Evidencia añadida a inspección: ${inspection.inspectionNumber}`);
@@ -425,10 +441,7 @@ class InspectionService {
    * Añadir item inspeccionado
    */
   async addInspectedItem(id, itemData) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     await inspection.addInspectedItem(itemData);
     return inspection;
@@ -438,10 +451,7 @@ class InspectionService {
    * Registrar hallazgo/discrepancia
    */
   async registerFinding(id, findingData, userId = null) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     inspection.findings = {
       ...inspection.findings,
@@ -464,10 +474,7 @@ class InspectionService {
    * Añadir muestra tomada
    */
   async addSample(id, sampleData) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     inspection.samples.push({
       ...sampleData,
@@ -483,10 +490,7 @@ class InspectionService {
    * Actualizar resultado de muestra
    */
   async updateSampleResult(id, sampleId, resultData) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     const sample = inspection.samples.id(sampleId);
     if (!sample) {
@@ -506,10 +510,7 @@ class InspectionService {
    * Generar acta de inspección
    */
   async generateReport(id, reportData, userId = null) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     // Generar número de acta
     const year = new Date().getFullYear();
@@ -528,10 +529,7 @@ class InspectionService {
    * Añadir acción resultante
    */
   async addResultingAction(id, actionData) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     await inspection.addResultingAction(actionData);
     return inspection;
@@ -541,10 +539,7 @@ class InspectionService {
    * Cancelar inspección
    */
   async cancel(id, reason, userId = null) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     inspection.status = 'cancelled';
     inspection.internalNotes = (inspection.internalNotes || '') + `\nCancelada: ${reason}`;
@@ -574,10 +569,7 @@ class InspectionService {
    * Reprogramar inspección
    */
   async reschedule(id, newSchedulingData, reason, userId = null) {
-    const inspection = await Inspection.findById(id);
-    if (!inspection) {
-      throw new Error('Inspección no encontrada');
-    }
+    const inspection = await _loadOwnedInspection(id, userId);
 
     const oldDate = inspection.scheduling?.scheduledDate;
 
