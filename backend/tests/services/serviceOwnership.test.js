@@ -13,10 +13,13 @@ const mockComm = { findById: jest.fn() };
 const mockENS = { findById: jest.fn() };
 const mockControl = { findById: jest.fn() };
 
-jest.mock('../../src/models/SpecialRegime', () => mockRegime, { virtual: true });
-jest.mock('../../src/models/InspectorCommunication', () => mockComm, { virtual: true });
-jest.mock('../../src/models/ENSDeclaration', () => mockENS, { virtual: true });
-jest.mock('../../src/models/ParaduaneroControl', () => mockControl, { virtual: true });
+// Sin { virtual: true }: esos modulos SI existen, y con esa opcion jest no
+// sustituia el real. En CI el mock no se aplicaba y las llamadas llegaban a
+// Mongoose, que esperaba los 5s de bufferTimeoutMS y fallaba con otro error.
+jest.mock('../../src/models/SpecialRegime', () => mockRegime);
+jest.mock('../../src/models/InspectorCommunication', () => mockComm);
+jest.mock('../../src/models/ENSDeclaration', () => mockENS);
+jest.mock('../../src/models/ParaduaneroControl', () => mockControl);
 jest.mock('../../src/models', () => ({
   SpecialRegime: mockRegime,
   InspectorCommunication: mockComm,
