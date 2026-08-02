@@ -517,9 +517,9 @@ const generateH1Direct = async (req, res) => {
     if (body.expeditionId) {
       // Modo clasico: usar expediente existente
       expedition = await Expedition.findById(body.expeditionId);
-      if (!expedition) {
-        return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
-      }
+      // Sin esto se podria generar un H1 sobre el expediente de otro tenant
+      // pasando su id en el body. ensureSameTenant ya cubre el 404.
+      if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
     } else {
       // Modo directo desde formulario H1: crear expediente automaticamente
       const tenantId = req.user?.tenantId;
@@ -1454,9 +1454,12 @@ const cancelDeclaration = async (req, res) => {
     const aeatSubmitService = require('../services/aeat/aeatSubmitService');
 
     const expedition = await Expedition.findById(req.params.expeditionId);
-    if (!expedition) {
-      return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
-    }
+
+    // Anular es irreversible y esta ruta solo exige el permiso
+    // canApproveDeclarations, que es de tenant: sin esta comprobacion, quien lo
+    // tenga podria anular ante la AEAT la declaracion de otro cliente conociendo
+    // su expeditionId. ensureSameTenant ya devuelve 404 si no existe.
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (!expedition.declaration?.mrn) {
       return res.status(400).json({ success: false, error: 'La declaracion no tiene MRN asignado' });
@@ -1469,6 +1472,9 @@ const cancelDeclaration = async (req, res) => {
       aduanaDespacho: expedition.declaration?.customsOffice || ''
     });
 
+    // Los expedientes antiguos pueden no tener timeline; sin esto el push
+    // lanzaria y la anulacion ya enviada a AEAT no quedaria registrada.
+    if (!expedition.timeline) expedition.timeline = [];
     expedition.timeline.push({
       action: 'declaration_cancelled',
       description: `Anulacion enviada a AEAT. ${result.success ? 'Aceptada' : 'Rechazada: ' + result.error}`,
@@ -1486,8 +1492,10 @@ const cancelDeclaration = async (req, res) => {
 
     res.json({ success: true, data: result });
   } catch (error) {
+    // El detalle va al log, no al cliente: error.message puede llevar rutas,
+    // cadenas de conexion o respuestas crudas de AEAT.
     logger.error('Error cancelling declaration:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: 'Error al anular la declaracion' });
   }
 };
 

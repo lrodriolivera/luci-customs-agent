@@ -63,9 +63,9 @@ function expedienteListo(overrides = {}) {
 function app(user = USER) {
   const a = express();
   a.use(express.json());
-  a.post('/api/declarations/:expeditionId/submit',
-    (req, _res, next) => { req.user = user; req.tenantId = user.tenantId; next(); },
-    declarationController.submitDeclaration);
+  const inyectaUsuario = (req, _res, next) => { req.user = user; req.tenantId = user.tenantId; next(); };
+  a.post('/api/declarations/:expeditionId/submit', inyectaUsuario, declarationController.submitDeclaration);
+  a.post('/api/declarations/:expeditionId/cancel', inyectaUsuario, declarationController.cancelDeclaration);
   return a;
 }
 
@@ -205,5 +205,100 @@ describe('declarationController.submitDeclaration', () => {
       expect(res.status).toBe(400);
       expect(res.body.error).toBe('Rechazada');
     });
+  });
+});
+
+describe('declarationController.cancelDeclaration', () => {
+  /** Expediente ya presentado, con MRN, susceptible de anularse. */
+  function expedientePresentado(overrides = {}) {
+    return expedienteListo({
+      status: 'green_channel',
+      declaration: { type: 'H1', xmlContent: '<xml/>', status: 'submitted', mrn: '26ES00280112345678' },
+      ...overrides
+    });
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCancelH1.mockResolvedValue({ success: true, code: '0' });
+  });
+
+  test('404 al anular un expediente de otro tenant, sin llamar a AEAT', async () => {
+    // Anular es irreversible: la ruta solo exige canApproveDeclarations, que es
+    // un permiso de tenant, asi que sin el guard se podria anular la
+    // declaracion de otro cliente conociendo su expeditionId.
+    mockExpedition.findById.mockResolvedValue(expedientePresentado({ tenantId: 't2' }));
+
+    const res = await request(app()).post('/api/declarations/e1/cancel').send({ reason: '1' });
+
+    expect(res.status).toBe(404);
+    expect(mockCancelH1).not.toHaveBeenCalled();
+  });
+
+  test('404 si el expediente no existe', async () => {
+    mockExpedition.findById.mockResolvedValue(null);
+
+    const res = await request(app()).post('/api/declarations/e1/cancel');
+
+    expect(res.status).toBe(404);
+    expect(mockCancelH1).not.toHaveBeenCalled();
+  });
+
+  test('400 si la declaracion no tiene MRN', async () => {
+    mockExpedition.findById.mockResolvedValue(expedienteListo());
+
+    const res = await request(app()).post('/api/declarations/e1/cancel');
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/MRN/);
+    expect(mockCancelH1).not.toHaveBeenCalled();
+  });
+
+  test('anula y marca el expediente como cancelado', async () => {
+    const exp = expedientePresentado();
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).post('/api/declarations/e1/cancel').send({ reason: '1' });
+
+    expect(res.status).toBe(200);
+    expect(mockCancelH1).toHaveBeenCalledWith(expect.objectContaining({ mrn: '26ES00280112345678', reason: '1' }));
+    expect(exp.status).toBe('cancelled');
+    expect(exp.declaration.cancelledAt).toBeInstanceOf(Date);
+  });
+
+  test('si AEAT rechaza la anulacion, el expediente NO queda cancelado', async () => {
+    mockCancelH1.mockResolvedValue({ success: false, error: 'MRN ya anulado' });
+    const exp = expedientePresentado();
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    await request(app()).post('/api/declarations/e1/cancel');
+
+    expect(exp.status).toBe('green_channel');
+    expect(exp.declaration.cancelledAt).toBeUndefined();
+    // Pero el intento debe quedar registrado.
+    expect(exp.timeline.some(t => t.action === 'declaration_cancelled')).toBe(true);
+  });
+
+  test('registra la anulacion aunque el expediente no tuviera timeline', async () => {
+    // Los expedientes antiguos pueden no tenerlo; el push lanzaria y la
+    // anulacion ya enviada a AEAT quedaria sin rastro.
+    const exp = expedientePresentado({ timeline: undefined });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).post('/api/declarations/e1/cancel');
+
+    expect(res.status).toBe(200);
+    expect(exp.timeline).toHaveLength(1);
+  });
+
+  test('un error interno no se filtra al cliente', async () => {
+    mockCancelH1.mockRejectedValue(new Error('connect ECONNREFUSED prewww1.aeat.es:443'));
+    mockExpedition.findById.mockResolvedValue(expedientePresentado());
+
+    const res = await request(app()).post('/api/declarations/e1/cancel');
+
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe('Error al anular la declaracion');
+    expect(JSON.stringify(res.body)).not.toMatch(/ECONNREFUSED|aeat\.es/);
   });
 });
