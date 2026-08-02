@@ -210,13 +210,21 @@ const list = async (req, res) => {
     if (assignedTo) {
       query.assignedTo = assignedTo;
     }
+    // La busqueda y la restriccion por rol son dos condiciones OR
+    // independientes. Asignarlas ambas a query.$or hacia que la segunda pisara
+    // a la primera y el texto buscado se ignorara para los no-admin; se
+    // combinan con $and para que ambas tengan que cumplirse.
+    const andConditions = [];
+
     if (search) {
-      query.$or = [
-        { expeditionId: new RegExp(search, 'i') },
-        { 'client.companyName': new RegExp(search, 'i') },
-        { 'client.nif': new RegExp(search, 'i') },
-        { clientReference: new RegExp(search, 'i') }
-      ];
+      andConditions.push({
+        $or: [
+          { expeditionId: new RegExp(search, 'i') },
+          { 'client.companyName': new RegExp(search, 'i') },
+          { 'client.nif': new RegExp(search, 'i') },
+          { clientReference: new RegExp(search, 'i') }
+        ]
+      });
     }
 
     // Scope by tenant (all roles)
@@ -226,10 +234,16 @@ const list = async (req, res) => {
 
     // Non-admins only see their own expeditions
     if (req.user.role !== 'admin') {
-      query.$or = [
-        { assignedTo: req.user._id },
-        { createdBy: req.user._id }
-      ];
+      andConditions.push({
+        $or: [
+          { assignedTo: req.user._id },
+          { createdBy: req.user._id }
+        ]
+      });
+    }
+
+    if (andConditions.length > 0) {
+      query.$and = andConditions;
     }
 
     const sort = {};

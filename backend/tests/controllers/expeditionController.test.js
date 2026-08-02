@@ -80,12 +80,13 @@ describe('expeditionController.list', () => {
   describe('visibilidad por rol', () => {
     test('el admin ve todas las del tenant, sin restriccion por usuario', async () => {
       await request(appConUsuario(ADMIN)).get('/api/expeditions');
+      expect(filtro().$and).toBeUndefined();
       expect(filtro().$or).toBeUndefined();
     });
 
     test('un operador solo ve las suyas (asignadas o creadas)', async () => {
       await request(appConUsuario(OPERADOR)).get('/api/expeditions');
-      expect(filtro().$or).toEqual([
+      expect(filtro().$and[0].$or).toEqual([
         { assignedTo: 'user1' },
         { createdBy: 'user1' }
       ]);
@@ -106,23 +107,35 @@ describe('expeditionController.list', () => {
 
     test('search busca por id, empresa, NIF y referencia (admin)', async () => {
       await request(appConUsuario(ADMIN)).get('/api/expeditions?search=ACME');
-      const campos = filtro().$or.map(c => Object.keys(c)[0]);
+      const campos = filtro().$and[0].$or.map(c => Object.keys(c)[0]);
       expect(campos).toEqual(['expeditionId', 'client.companyName', 'client.nif', 'clientReference']);
     });
 
-    // BUG CONOCIDO: search y la restriccion por rol usan ambos query.$or, y la
-    // segunda pisa a la primera. Para un no-admin el texto buscado se ignora y
-    // el listado devuelve todas sus expediciones. No hay fuga entre tenants
-    // (tenantId sigue aplicando), pero el buscador miente.
-    // Este test fija el comportamiento ACTUAL; cambiarlo al arreglar el bug.
-    test('search se pierde para un no-admin (bug conocido)', async () => {
+    // Regresion: search y la restriccion por rol usaban ambos query.$or y la
+    // segunda pisaba a la primera, asi que para un no-admin el texto buscado
+    // se ignoraba y el listado devolvia todas sus expediciones.
+    test('un no-admin conserva la busqueda Y la restriccion por rol', async () => {
       await request(appConUsuario(OPERADOR)).get('/api/expeditions?search=ACME');
 
-      const serializado = JSON.stringify(filtro().$or);
-      expect(serializado).not.toContain('ACME');
-      expect(filtro().$or).toEqual([{ assignedTo: 'user1' }, { createdBy: 'user1' }]);
-      // Lo que importa: el aislamiento por tenant NO se ve afectado.
+      const [busqueda, porRol] = filtro().$and;
+      // JSON.stringify serializa un RegExp como {}, hay que mirar el source.
+      expect(busqueda.$or[0].expeditionId.source).toBe('ACME');
+      expect(busqueda.$or).toHaveLength(4);
+      expect(porRol.$or).toEqual([{ assignedTo: 'user1' }, { createdBy: 'user1' }]);
       expect(filtro().tenantId).toBe('t1');
+    });
+
+    test('sin search, un no-admin solo lleva la condicion de rol', async () => {
+      await request(appConUsuario(OPERADOR)).get('/api/expeditions');
+      expect(filtro().$and).toHaveLength(1);
+      expect(filtro().$and[0].$or[0]).toEqual({ assignedTo: 'user1' });
+    });
+
+    test('un admin sin search no genera $and vacio', async () => {
+      // Un $and: [] hace que Mongo lance error, asi que solo debe aparecer
+      // cuando hay al menos una condicion.
+      await request(appConUsuario(ADMIN)).get('/api/expeditions');
+      expect(filtro().$and).toBeUndefined();
     });
   });
 
