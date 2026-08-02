@@ -12,6 +12,24 @@
 const SpecialRegime = require('../models/SpecialRegime');
 const Guarantee = require('../models/Guarantee');
 
+/**
+ * Carga el documento comprobando que pertenece a quien lo pide.
+ * Las escrituras pasaban el id directo al servicio sin mirar owner.
+ * Mismo error que cuando no existe, para no confirmar ids de otra cuenta.
+ * Sin userId (jobs) no se comprueba; los documentos legacy sin owner pasan.
+ */
+async function _loadOwnedRegime(id, userId) {
+  const doc = await SpecialRegime.findById(id);
+  if (!doc) {
+    throw new Error('Regimen no encontrado');
+  }
+  if (userId && doc.owner && String(doc.owner) !== String(userId)) {
+    throw new Error('Regimen no encontrado');
+  }
+  return doc;
+}
+
+
 // Plazos maximos por defecto (en meses) segun CAU
 const DEFAULT_DEADLINES = {
   '51': 12,   // Perfeccionamiento activo: 12 meses (prorrogable)
@@ -109,10 +127,7 @@ const specialRegimeService = {
    * Autorizar regimen
    */
   async authorize(regimeId, authorizationData, userId) {
-    const regime = await SpecialRegime.findById(regimeId);
-    if (!regime) {
-      throw new Error('Regimen no encontrado');
-    }
+    const regime = await _loadOwnedRegime(regimeId, userId);
 
     if (!['draft', 'pending'].includes(regime.status)) {
       throw new Error('Solo se pueden autorizar regimenes en borrador o pendientes');
@@ -152,10 +167,7 @@ const specialRegimeService = {
    * Activar regimen (iniciar uso)
    */
   async activate(regimeId, userId) {
-    const regime = await SpecialRegime.findById(regimeId);
-    if (!regime) {
-      throw new Error('Regimen no encontrado');
-    }
+    const regime = await _loadOwnedRegime(regimeId, userId);
 
     if (regime.status !== 'authorized') {
       throw new Error('Solo se pueden activar regimenes autorizados');
@@ -243,10 +255,7 @@ const specialRegimeService = {
    * Solicitar prorroga
    */
   async requestExtension(regimeId, extensionData, userId) {
-    const regime = await SpecialRegime.findById(regimeId);
-    if (!regime) {
-      throw new Error('Regimen no encontrado');
-    }
+    const regime = await _loadOwnedRegime(regimeId, userId);
 
     if (regime.status !== 'active') {
       throw new Error('Solo se pueden prorrogar regimenes activos');
@@ -306,10 +315,7 @@ const specialRegimeService = {
    * Ultimar regimen (discharge)
    */
   async discharge(regimeId, dischargeData, userId) {
-    const regime = await SpecialRegime.findById(regimeId);
-    if (!regime) {
-      throw new Error('Regimen no encontrado');
-    }
+    const regime = await _loadOwnedRegime(regimeId, userId);
 
     if (!regime.canBeDischarge()) {
       throw new Error('Este regimen no puede ser ultimado en su estado actual');
@@ -417,10 +423,7 @@ const specialRegimeService = {
    * Anadir mercancia al regimen
    */
   async addGoods(regimeId, goodsData, userId) {
-    const regime = await SpecialRegime.findById(regimeId);
-    if (!regime) {
-      throw new Error('Regimen no encontrado');
-    }
+    const regime = await _loadOwnedRegime(regimeId, userId);
 
     if (!['draft', 'authorized', 'active'].includes(regime.status)) {
       throw new Error('No se pueden anadir mercancias en el estado actual');
@@ -455,10 +458,7 @@ const specialRegimeService = {
    * Registrar salida parcial de mercancia (para deposito)
    */
   async partialExit(regimeId, exitData, userId) {
-    const regime = await SpecialRegime.findById(regimeId);
-    if (!regime) {
-      throw new Error('Regimen no encontrado');
-    }
+    const regime = await _loadOwnedRegime(regimeId, userId);
 
     if (regime.regimeCode !== '71') {
       throw new Error('Salida parcial solo disponible para deposito aduanero');
@@ -518,10 +518,7 @@ const specialRegimeService = {
    * Actualizar estado de transito
    */
   async updateTransitStatus(regimeId, transitUpdate, userId) {
-    const regime = await SpecialRegime.findById(regimeId);
-    if (!regime) {
-      throw new Error('Regimen no encontrado');
-    }
+    const regime = await _loadOwnedRegime(regimeId, userId);
 
     if (!['T1', 'T2', 'TIR'].includes(regime.regimeCode)) {
       throw new Error('Esta operacion solo aplica a transitos');

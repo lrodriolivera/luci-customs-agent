@@ -429,10 +429,7 @@ class GuaranteeService {
    * Reconocer alerta
    */
   async acknowledgeAlert(guaranteeId, alertId, userId) {
-    const guarantee = await Guarantee.findById(guaranteeId);
-    if (!guarantee) {
-      throw new Error('Garantia no encontrada');
-    }
+    const guarantee = await _loadOwnedGuarantee(guaranteeId, userId);
 
     const alert = guarantee.alerts.id(alertId);
     if (!alert) {

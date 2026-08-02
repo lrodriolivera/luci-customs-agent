@@ -14,6 +14,24 @@ const Deadline = require('../models/Deadline');
 const deadlineService = require('./deadlineService');
 const logger = require('../config/logger');
 
+/**
+ * Carga el documento comprobando que pertenece a quien lo pide.
+ * Las escrituras pasaban el id directo al servicio sin mirar createdBy.
+ * Mismo error que cuando no existe, para no confirmar ids de otra cuenta.
+ * Sin userId (jobs) no se comprueba; los documentos legacy sin createdBy pasan.
+ */
+async function _loadOwnedComm(id, userId) {
+  const doc = await InspectorCommunication.findById(id);
+  if (!doc) {
+    throw new Error('Comunicación no encontrada');
+  }
+  if (userId && doc.createdBy && String(doc.createdBy) !== String(userId)) {
+    throw new Error('Comunicación no encontrada');
+  }
+  return doc;
+}
+
+
 // Tipos de comunicación y sus características
 const COMMUNICATION_TYPES = {
   requirement_response: {
@@ -377,10 +395,7 @@ class InspectorCommunicationService {
    * Añadir mensaje a comunicación
    */
   async addMessage(id, messageData, userId = null) {
-    const communication = await InspectorCommunication.findById(id);
-    if (!communication) {
-      throw new Error('Comunicación no encontrada');
-    }
+    const communication = await _loadOwnedComm(id, userId);
 
     await communication.addMessage(messageData, userId);
 
@@ -392,10 +407,7 @@ class InspectorCommunicationService {
    * Añadir argumento a alegación/recurso
    */
   async addArgument(id, argumentData) {
-    const communication = await InspectorCommunication.findById(id);
-    if (!communication) {
-      throw new Error('Comunicación no encontrada');
-    }
+    const communication = await _loadOwnedComm(id, userId);
 
     await communication.addArgument(argumentData);
     return communication;
@@ -405,10 +417,7 @@ class InspectorCommunicationService {
    * Enviar comunicación
    */
   async submit(id, userId = null) {
-    const communication = await InspectorCommunication.findById(id);
-    if (!communication) {
-      throw new Error('Comunicación no encontrada');
-    }
+    const communication = await _loadOwnedComm(id, userId);
 
     if (communication.status !== 'approved' && communication.status !== 'draft') {
       throw new Error('La comunicación debe estar aprobada o en borrador para enviar');
@@ -424,10 +433,7 @@ class InspectorCommunicationService {
    * Marcar como entregada
    */
   async markDelivered(id, confirmationNumber, userId = null) {
-    const communication = await InspectorCommunication.findById(id);
-    if (!communication) {
-      throw new Error('Comunicación no encontrada');
-    }
+    const communication = await _loadOwnedComm(id, userId);
 
     await communication.markDelivered(confirmationNumber, userId);
 
@@ -439,10 +445,7 @@ class InspectorCommunicationService {
    * Registrar respuesta recibida
    */
   async receiveResponse(id, responseData, userId = null) {
-    const communication = await InspectorCommunication.findById(id);
-    if (!communication) {
-      throw new Error('Comunicación no encontrada');
-    }
+    const communication = await _loadOwnedComm(id, userId);
 
     await communication.receiveResponse(responseData, userId);
 
@@ -454,10 +457,7 @@ class InspectorCommunicationService {
    * Resolver comunicación
    */
   async resolve(id, resolutionData, userId = null) {
-    const communication = await InspectorCommunication.findById(id);
-    if (!communication) {
-      throw new Error('Comunicación no encontrada');
-    }
+    const communication = await _loadOwnedComm(id, userId);
 
     await communication.resolve(resolutionData, userId);
 
@@ -482,10 +482,7 @@ class InspectorCommunicationService {
    * Archivar comunicación
    */
   async archive(id, userId = null) {
-    const communication = await InspectorCommunication.findById(id);
-    if (!communication) {
-      throw new Error('Comunicación no encontrada');
-    }
+    const communication = await _loadOwnedComm(id, userId);
 
     await communication.archive(userId);
 
@@ -497,10 +494,7 @@ class InspectorCommunicationService {
    * Actualizar estado
    */
   async updateStatus(id, status, notes = '', userId = null) {
-    const communication = await InspectorCommunication.findById(id);
-    if (!communication) {
-      throw new Error('Comunicación no encontrada');
-    }
+    const communication = await _loadOwnedComm(id, userId);
 
     communication.status = status;
 
@@ -518,10 +512,7 @@ class InspectorCommunicationService {
    * Aprobar comunicación para envío
    */
   async approve(id, userId = null) {
-    const communication = await InspectorCommunication.findById(id);
-    if (!communication) {
-      throw new Error('Comunicación no encontrada');
-    }
+    const communication = await _loadOwnedComm(id, userId);
 
     communication.status = 'approved';
     communication.approvedBy = userId;

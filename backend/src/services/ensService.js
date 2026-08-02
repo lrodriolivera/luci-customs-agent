@@ -15,6 +15,24 @@ const ensGenerator = require('./forms/ensGenerator');
 const aeatSubmitService = require('./aeat/aeatSubmitService');
 const logger = require('../config/logger');
 
+/**
+ * Carga una declaracion ENS comprobando que pertenece a quien la pide.
+ * Las escrituras (submitToAEAT, amend, cancel, notifyArrival) pasaban el id
+ * directo sin mirar createdBy. Mismo error que cuando no existe, para no
+ * confirmar ids de otra cuenta. Sin userId (jobs) no se comprueba.
+ */
+async function _loadOwnedENS(id, userId) {
+  const doc = await ENSDeclaration.findById(id);
+  if (!doc) {
+    throw new Error('Declaracion no encontrada');
+  }
+  if (userId && doc.createdBy && String(doc.createdBy) !== String(userId)) {
+    throw new Error('Declaracion no encontrada');
+  }
+  return doc;
+}
+
+
 // Configuracion ENS
 const ENS_CONFIG = {
   // Plazos segun modo de transporte (horas antes de llegada)
@@ -248,10 +266,7 @@ class ENSService {
    * Enviar a AEAT
    */
   async submitToAEAT(declarationId, userId, certificateAlias) {
-    const declaration = await ENSDeclaration.findById(declarationId);
-    if (!declaration) {
-      throw new Error('Declaracion no encontrada');
-    }
+    const declaration = await _loadOwnedENS(declarationId, userId);
 
     if (declaration.status !== 'draft' && declaration.status !== 'validated') {
       throw new Error(`No se puede enviar declaracion en estado ${declaration.status}`);
@@ -383,10 +398,7 @@ class ENSService {
    * Rectificar declaracion ENS
    */
   async amendDeclaration(declarationId, amendments, userId) {
-    const declaration = await ENSDeclaration.findById(declarationId);
-    if (!declaration) {
-      throw new Error('Declaracion no encontrada');
-    }
+    const declaration = await _loadOwnedENS(declarationId, userId);
 
     const amendableStatuses = ['submitted', 'accepted'];
     if (!amendableStatuses.includes(declaration.status)) {
@@ -461,10 +473,7 @@ class ENSService {
    * Anular declaracion ENS
    */
   async cancelDeclaration(declarationId, reason, userId) {
-    const declaration = await ENSDeclaration.findById(declarationId);
-    if (!declaration) {
-      throw new Error('Declaracion no encontrada');
-    }
+    const declaration = await _loadOwnedENS(declarationId, userId);
 
     const cancellableStatuses = ['draft', 'validated', 'submitted', 'accepted'];
     if (!cancellableStatuses.includes(declaration.status)) {
@@ -500,10 +509,7 @@ class ENSService {
    * Notificar llegada
    */
   async notifyArrival(declarationId, arrivalData, userId) {
-    const declaration = await ENSDeclaration.findById(declarationId);
-    if (!declaration) {
-      throw new Error('Declaracion no encontrada');
-    }
+    const declaration = await _loadOwnedENS(declarationId, userId);
 
     if (declaration.status !== 'accepted' && declaration.status !== 'amended') {
       throw new Error(`No se puede notificar llegada en estado ${declaration.status}`);

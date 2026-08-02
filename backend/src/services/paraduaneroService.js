@@ -12,6 +12,23 @@
 const logger = require('../config/logger');
 const { Expedition, ParaduaneroControl, Document } = require('../models');
 
+/**
+ * Carga un control paraduanero comprobando que pertenece a quien lo pide.
+ * Mismo error que cuando no existe, para no confirmar ids de otra cuenta.
+ * Sin userId (jobs) no se comprueba; los legacy sin createdBy pasan.
+ */
+async function _loadOwnedControl(id, userId) {
+  const doc = await ParaduaneroControl.findById(id);
+  if (!doc) {
+    throw new Error('Control no encontrado');
+  }
+  if (userId && doc.createdBy && String(doc.createdBy) !== String(userId)) {
+    throw new Error('Control no encontrado');
+  }
+  return doc;
+}
+
+
 // Reglas de controles por capitulo TARIC
 const TARIC_CONTROL_RULES = {
   // Capitulo 01: Animales vivos
@@ -373,10 +390,7 @@ class ParaduaneroService {
    * Marcar documento como proporcionado
    */
   async markDocumentProvided(controlId, documentCode, documentId, userId) {
-    const control = await ParaduaneroControl.findById(controlId);
-    if (!control) {
-      throw new Error('Control no encontrado');
-    }
+    const control = await _loadOwnedControl(controlId, userId);
 
     const doc = control.requiredDocuments.find(d => d.code === documentCode);
     if (!doc) {
@@ -411,10 +425,7 @@ class ParaduaneroService {
    * Programar inspeccion
    */
   async scheduleInspection(controlId, inspectionData, userId) {
-    const control = await ParaduaneroControl.findById(controlId);
-    if (!control) {
-      throw new Error('Control no encontrado');
-    }
+    const control = await _loadOwnedControl(controlId, userId);
 
     control.inspection.scheduled = true;
     control.inspection.scheduledDate = inspectionData.scheduledDate;
@@ -437,10 +448,7 @@ class ParaduaneroService {
    * Registrar resultado de inspeccion
    */
   async recordInspectionResult(controlId, resultData, userId) {
-    const control = await ParaduaneroControl.findById(controlId);
-    if (!control) {
-      throw new Error('Control no encontrado');
-    }
+    const control = await _loadOwnedControl(controlId, userId);
 
     control.inspection.result = {
       inspectionDate: new Date(),
@@ -501,10 +509,7 @@ class ParaduaneroService {
    * Emitir certificado
    */
   async issueCertificate(controlId, certificateData, userId) {
-    const control = await ParaduaneroControl.findById(controlId);
-    if (!control) {
-      throw new Error('Control no encontrado');
-    }
+    const control = await _loadOwnedControl(controlId, userId);
 
     if (!['approved', 'conditional'].includes(control.status)) {
       throw new Error('Solo se pueden emitir certificados para controles aprobados');

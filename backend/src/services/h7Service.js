@@ -13,6 +13,24 @@ const { H7Declaration, Expedition } = require('../models');
 const aeatSubmitService = require('./aeat/aeatSubmitService');
 const logger = require('../config/logger');
 
+/**
+ * Carga el documento comprobando que pertenece a quien lo pide.
+ * Las escrituras pasaban el id directo al servicio sin mirar createdBy.
+ * Mismo error que cuando no existe, para no confirmar ids de otra cuenta.
+ * Sin userId (jobs) no se comprueba; los documentos legacy sin createdBy pasan.
+ */
+async function _loadOwnedH7(id, userId) {
+  const doc = await H7Declaration.findById(id);
+  if (!doc) {
+    throw new Error('Declaracion no encontrada');
+  }
+  if (userId && doc.createdBy && String(doc.createdBy) !== String(userId)) {
+    throw new Error('Declaracion no encontrada');
+  }
+  return doc;
+}
+
+
 // VAT rates per country
 const VAT_RATES = {
   ES: { standard: 21, reduced: 10, superReduced: 4 },
@@ -410,10 +428,7 @@ class H7Service {
    * Enviar declaracion a AEAT
    */
   async submitToAEAT(declarationId, userId) {
-    const declaration = await H7Declaration.findById(declarationId);
-    if (!declaration) {
-      throw new Error('Declaracion no encontrada');
-    }
+    const declaration = await _loadOwnedH7(declarationId, userId);
 
     if (declaration.status !== 'draft' && declaration.status !== 'pending') {
       throw new Error(`No se puede enviar declaracion en estado ${declaration.status}`);
