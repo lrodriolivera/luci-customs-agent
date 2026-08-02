@@ -8,6 +8,7 @@ const pueGenerator = require('../services/forms/pueGenerator');
 const aiService = require('../services/aiService');
 const { PUERequest } = require('../models');
 const logger = require('../config/logger');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 /**
  * GET /api/pue/stats
@@ -265,7 +266,12 @@ exports.list = async (req, res) => {
  */
 exports.create = async (req, res) => {
   try {
-    const result = await pueService.createRequest(req.body, req.user._id);
+    // El tenant se toma del usuario autenticado, nunca del body: sin esto la
+    // solicitud nace sin tenantId y ensureSameTenant la dejaria pasar desde
+    // cualquier tenant (permite documentos sin tenant por compatibilidad).
+    const result = await pueService.createRequest(
+      { ...req.body, tenantId: req.user.tenantId }, req.user._id
+    );
 
     if (!result.success) {
       return res.status(400).json(result);
@@ -499,12 +505,9 @@ exports.linkToDeclaration = async (req, res) => {
     }
 
     const request = await PUERequest.findById(id);
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        error: 'Solicitud no encontrada'
-      });
-    }
+    // Sin esto se podria operar sobre la solicitud PUE de otro tenant
+    // conociendo su id. ensureSameTenant ya responde 404 si no existe.
+    if (!ensureSameTenant(request, req, res, { resource: 'Solicitud' })) return;
 
     request.declarationMRN = mrn;
     request.statusHistory.push({
@@ -536,13 +539,9 @@ exports.queryStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const request = await PUERequest.findById(id);
-
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        error: 'Solicitud no encontrada'
-      });
-    }
+    // Sin esto se podria operar sobre la solicitud PUE de otro tenant
+    // conociendo su id. ensureSameTenant ya responde 404 si no existe.
+    if (!ensureSameTenant(request, req, res, { resource: 'Solicitud' })) return;
 
     if (!request.pueReference) {
       return res.status(400).json({
@@ -574,13 +573,9 @@ exports.getXML = async (req, res) => {
   try {
     const { id } = req.params;
     const request = await PUERequest.findById(id);
-
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        error: 'Solicitud no encontrada'
-      });
-    }
+    // Sin esto se podria operar sobre la solicitud PUE de otro tenant
+    // conociendo su id. ensureSameTenant ya responde 404 si no existe.
+    if (!ensureSameTenant(request, req, res, { resource: 'Solicitud' })) return;
 
     // Generate fresh XML if not present or requested
     const xml = req.query.regenerate === 'true' || !request.generatedXML
@@ -894,12 +889,9 @@ exports.aiPredictInspection = async (req, res) => {
     const { id } = req.params;
 
     const request = await PUERequest.findById(id);
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        error: 'Solicitud PUE no encontrada'
-      });
-    }
+    // Sin esto se podria operar sobre la solicitud PUE de otro tenant
+    // conociendo su id. ensureSameTenant ya responde 404 si no existe.
+    if (!ensureSameTenant(request, req, res, { resource: 'Solicitud' })) return;
 
     // Obtener historial del operador
     let operatorHistory = null;
@@ -956,12 +948,9 @@ exports.aiSuggestDocuments = async (req, res) => {
     const { id } = req.params;
 
     const request = await PUERequest.findById(id);
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        error: 'Solicitud PUE no encontrada'
-      });
-    }
+    // Sin esto se podria operar sobre la solicitud PUE de otro tenant
+    // conociendo su id. ensureSameTenant ya responde 404 si no existe.
+    if (!ensureSameTenant(request, req, res, { resource: 'Solicitud' })) return;
 
     const suggestions = await aiService.suggestPUEDocuments(request);
 
@@ -990,12 +979,9 @@ exports.aiGetRecommendations = async (req, res) => {
     const { inspectionType = 'documental' } = req.body;
 
     const request = await PUERequest.findById(id);
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        error: 'Solicitud PUE no encontrada'
-      });
-    }
+    // Sin esto se podria operar sobre la solicitud PUE de otro tenant
+    // conociendo su id. ensureSameTenant ya responde 404 si no existe.
+    if (!ensureSameTenant(request, req, res, { resource: 'Solicitud' })) return;
 
     const recommendations = await aiService.generatePUERecommendations(request, inspectionType);
 
@@ -1023,12 +1009,9 @@ exports.aiFullAnalysis = async (req, res) => {
     const { id } = req.params;
 
     const request = await PUERequest.findById(id);
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        error: 'Solicitud PUE no encontrada'
-      });
-    }
+    // Sin esto se podria operar sobre la solicitud PUE de otro tenant
+    // conociendo su id. ensureSameTenant ya responde 404 si no existe.
+    if (!ensureSameTenant(request, req, res, { resource: 'Solicitud' })) return;
 
     // Ejecutar todos los analisis en paralelo
     const [prediction, documents, recommendations] = await Promise.all([

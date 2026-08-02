@@ -6,6 +6,7 @@ const { ENSDeclaration, Expedition } = require('../models');
 const ensService = require('../services/ensService');
 const aiService = require('../services/aiService');
 const logger = require('../config/logger');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 /**
  * Listar declaraciones ENS
@@ -666,12 +667,8 @@ exports.aiAnalyzeExpedition = async (req, res) => {
 
     // Obtener expediente
     const expedition = await Expedition.findById(expeditionId);
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        message: 'Expediente no encontrado'
-      });
-    }
+    // Sin esto se podria operar sobre la ENS de otro tenant conociendo su id.
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     // Llamar a IA para analizar y generar datos ENS
     const analysis = await aiService.analyzeENSData(expedition, existingData || {});
@@ -737,12 +734,7 @@ exports.aiPredictRejection = async (req, res) => {
     let declaration;
     if (ensId) {
       declaration = await ENSDeclaration.findById(ensId);
-      if (!declaration) {
-        return res.status(404).json({
-          success: false,
-          message: 'Declaracion ENS no encontrada'
-        });
-      }
+      if (!ensureSameTenant(declaration, req, res, { resource: 'Declaracion ENS' })) return;
     } else if (ensData) {
       declaration = ensData;
     } else {
@@ -800,12 +792,8 @@ exports.aiGetSuggestions = async (req, res) => {
   try {
     const declaration = await ENSDeclaration.findById(req.params.id);
 
-    if (!declaration) {
-      return res.status(404).json({
-        success: false,
-        message: 'Declaracion no encontrada'
-      });
-    }
+    // Sin esto se podria operar sobre la ENS de otro tenant conociendo su id.
+    if (!ensureSameTenant(declaration, req, res, { resource: 'Declaracion' })) return;
 
     // Obtener validacion y prediccion en paralelo
     const [validation, prediction] = await Promise.all([
@@ -850,9 +838,8 @@ exports.amend = async (req, res) => {
     const aeatSubmitService = require('../services/aeat/aeatSubmitService');
 
     const declaration = await ENSDeclaration.findById(req.params.id);
-    if (!declaration) {
-      return res.status(404).json({ success: false, error: 'Declaracion ENS no encontrada' });
-    }
+    // Sin esto se podria operar sobre la ENS de otro tenant conociendo su id.
+    if (!ensureSameTenant(declaration, req, res, { resource: 'Declaracion ENS' })) return;
     if (!declaration.mrn) {
       return res.status(400).json({ success: false, error: 'La declaracion no tiene MRN asignado' });
     }
