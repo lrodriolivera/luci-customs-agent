@@ -8,6 +8,29 @@
 const OEA = require('../models/OEA');
 const logger = require('../config/logger');
 
+/**
+ * Carga una certificacion OEA comprobando que pertenece a quien la pide.
+ *
+ * Las rutas de escritura pasaban el id directo al servicio, que hacia findById
+ * sin mirar createdBy: con el id de una OEA ajena se podia aprobarla,
+ * suspenderla, revocarla o registrarle incidencias. Se lanza el mismo error que
+ * cuando no existe, para no confirmar que el id es valido en otra cuenta.
+ *
+ * Sin userId (jobs, migraciones) no se comprueba, y las OEA legacy sin
+ * createdBy siguen accesibles para no romper el historico.
+ */
+async function _loadOwnedOEA(id, userId) {
+  const oea = await OEA.findById(id);
+  if (!oea) {
+    throw new Error('Certificacion OEA no encontrada');
+  }
+  if (userId && oea.createdBy && String(oea.createdBy) !== String(userId)) {
+    throw new Error('Certificacion OEA no encontrada');
+  }
+  return oea;
+}
+
+
 // OEA Benefits catalog
 const OEA_BENEFITS = {
   OEAC: [
@@ -246,10 +269,7 @@ class OEAService {
     logger.info(`[OEAService] Updating OEA: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       // Update allowed fields
       const allowedUpdates = [
@@ -295,10 +315,7 @@ class OEAService {
     logger.info(`[OEAService] Submitting OEA for review: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       if (oea.certification.status !== 'pending') {
         throw new Error(`No se puede enviar a revision en estado: ${oea.certification.status}`);
@@ -359,10 +376,7 @@ class OEAService {
     logger.info(`[OEAService] Approving OEA: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       if (oea.certification.status !== 'under_review') {
         throw new Error(`No se puede aprobar en estado: ${oea.certification.status}`);
@@ -452,10 +466,7 @@ class OEAService {
     logger.info(`[OEAService] Suspending OEA: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       if (oea.certification.status !== 'approved') {
         throw new Error(`No se puede suspender en estado: ${oea.certification.status}`);
@@ -503,10 +514,7 @@ class OEAService {
     logger.info(`[OEAService] Revoking OEA: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       oea.certification.status = 'revoked';
 
@@ -550,10 +558,7 @@ class OEAService {
     logger.info(`[OEAService] Initiating reevaluation for OEA: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       if (!['approved', 'incident'].includes(oea.certification.status)) {
         throw new Error(`No se puede iniciar reevaluacion en estado: ${oea.certification.status}`);
@@ -597,10 +602,7 @@ class OEAService {
     logger.info(`[OEAService] Registering incident for OEA: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       if (oea.certification.status !== 'approved') {
         throw new Error(`No se puede registrar incidencia en estado: ${oea.certification.status}`);
@@ -654,10 +656,7 @@ class OEAService {
     logger.info(`[OEAService] Resolving incident for OEA: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       if (!oea.incidents || !oea.incidents[incidentIndex]) {
         throw new Error('Incidencia no encontrada');
@@ -700,10 +699,7 @@ class OEAService {
     logger.info(`[OEAService] Initiating renewal for OEA: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       if (oea.certification.status !== 'approved') {
         throw new Error('Solo se pueden renovar certificaciones activas');
@@ -734,10 +730,7 @@ class OEAService {
     logger.info(`[OEAService] Completing renewal for OEA: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       if (oea.certification.status !== 'renewal_pending') {
         throw new Error('La certificacion no esta en proceso de renovacion');
@@ -791,10 +784,7 @@ class OEAService {
     logger.info(`[OEAService] Adding audit to OEA: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       oea.audits.push({
         ...auditData,
@@ -843,10 +833,7 @@ class OEAService {
     logger.info(`[OEAService] Updating requirement ${requirementKey} for OEA: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       if (!oea.requirements[requirementKey]) {
         throw new Error(`Requisito no valido: ${requirementKey}`);
@@ -881,10 +868,7 @@ class OEAService {
     logger.info(`[OEAService] Adding compliance record to OEA: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       // Determine compliance status based on metrics
       let status = 'compliant';
@@ -939,10 +923,7 @@ class OEAService {
     logger.info(`[OEAService] Granting simplification ${simplificationCode} to OEA: ${id}`);
 
     try {
-      const oea = await OEA.findById(id);
-      if (!oea) {
-        throw new Error('Certificacion OEA no encontrada');
-      }
+      const oea = await _loadOwnedOEA(id, userId);
 
       if (oea.certification.status !== 'approved') {
         throw new Error('Solo se pueden otorgar simplificaciones a certificaciones activas');
@@ -1050,6 +1031,12 @@ class OEAService {
    */
   async list(filters = {}, options = {}) {
     const query = {};
+
+    // Sin esto el listado devolvia TODAS las certificaciones OEA del sistema a
+    // cualquier usuario, con NIF, EORI y representante legal de cada empresa.
+    if (filters.userId) {
+      query.createdBy = filters.userId;
+    }
 
     if (filters.status) {
       query['certification.status'] = filters.status;
@@ -1164,10 +1151,7 @@ class OEAService {
    * Acknowledge alert
    */
   async acknowledgeAlert(id, alertId, userId) {
-    const oea = await OEA.findById(id);
-    if (!oea) {
-      throw new Error('Certificacion OEA no encontrada');
-    }
+    const oea = await _loadOwnedOEA(id, userId);
 
     const alert = oea.alerts.id(alertId);
     if (!alert) {
@@ -1186,10 +1170,7 @@ class OEAService {
    * Resolve alert
    */
   async resolveAlert(id, alertId, userId) {
-    const oea = await OEA.findById(id);
-    if (!oea) {
-      throw new Error('Certificacion OEA no encontrada');
-    }
+    const oea = await _loadOwnedOEA(id, userId);
 
     const alert = oea.alerts.id(alertId);
     if (!alert) {

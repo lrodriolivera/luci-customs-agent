@@ -57,7 +57,7 @@ exports.list = async (req, res) => {
     const { status, type, search, page, limit } = req.query;
 
     const result = await oeaService.list(
-      { status, type, search },
+      { status, type, search, userId: req.user?._id },
       { page: parseInt(page) || 1, limit: parseInt(limit) || 20 }
     );
 

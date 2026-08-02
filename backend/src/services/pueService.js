@@ -8,6 +8,29 @@
 const { PUERequest } = require('../models');
 const aeatSubmitService = require('./aeat/aeatSubmitService');
 const logger = require('../config/logger');
+
+/**
+ * Carga una solicitud PUE comprobando que pertenece a quien la pide.
+ *
+ * Las escrituras pasaban el id directo al servicio, que hacia findById sin
+ * mirar createdBy: con el id de una solicitud ajena se podia enviarla a AEAT,
+ * cancelarla o emitirle el certificado. Mismo error que cuando no existe, para
+ * no confirmar ids validos de otra cuenta.
+ *
+ * Sin userId (jobs) no se comprueba; las solicitudes legacy sin createdBy
+ * siguen accesibles.
+ */
+async function _loadOwnedRequest(requestId, userId) {
+  const request = await PUERequest.findById(requestId);
+  if (!request) {
+    throw new Error('Solicitud no encontrada');
+  }
+  if (userId && request.createdBy && String(request.createdBy) !== String(userId)) {
+    throw new Error('Solicitud no encontrada');
+  }
+  return request;
+}
+
 const crypto = require('crypto');
 
 // Configuracion PUE
@@ -370,10 +393,7 @@ class PUEService {
    */
   async submitToAEAT(requestId, userId, certAlias) {
     try {
-      const request = await PUERequest.findById(requestId);
-      if (!request) {
-        throw new Error('Solicitud no encontrada');
-      }
+      const request = await _loadOwnedRequest(requestId, userId);
 
       if (!['draft', 'validated'].includes(request.status)) {
         throw new Error(`No se puede enviar solicitud en estado ${request.status}`);
@@ -515,10 +535,7 @@ class PUEService {
    */
   async addDocument(requestId, documentData, userId) {
     try {
-      const request = await PUERequest.findById(requestId);
-      if (!request) {
-        throw new Error('Solicitud no encontrada');
-      }
+      const request = await _loadOwnedRequest(requestId, userId);
 
       request.addDocument(documentData, userId);
 
@@ -546,10 +563,7 @@ class PUEService {
    */
   async scheduleInspection(requestId, inspectionData, userId) {
     try {
-      const request = await PUERequest.findById(requestId);
-      if (!request) {
-        throw new Error('Solicitud no encontrada');
-      }
+      const request = await _loadOwnedRequest(requestId, userId);
 
       request.inspection = {
         scheduled: true,
@@ -588,10 +602,7 @@ class PUEService {
    */
   async recordInspectionResult(requestId, resultData, userId) {
     try {
-      const request = await PUERequest.findById(requestId);
-      if (!request) {
-        throw new Error('Solicitud no encontrada');
-      }
+      const request = await _loadOwnedRequest(requestId, userId);
 
       request.recordInspectionResult(
         resultData.result,
@@ -637,10 +648,7 @@ class PUEService {
    */
   async issueCertificate(requestId, certificateData, userId) {
     try {
-      const request = await PUERequest.findById(requestId);
-      if (!request) {
-        throw new Error('Solicitud no encontrada');
-      }
+      const request = await _loadOwnedRequest(requestId, userId);
 
       if (!['approved', 'approved_conditions'].includes(request.status)) {
         throw new Error('Solo se puede emitir certificado para solicitudes aprobadas');
@@ -698,10 +706,7 @@ class PUEService {
    */
   async cancelRequest(requestId, reason, userId) {
     try {
-      const request = await PUERequest.findById(requestId);
-      if (!request) {
-        throw new Error('Solicitud no encontrada');
-      }
+      const request = await _loadOwnedRequest(requestId, userId);
 
       const nonCancellableStates = ['approved', 'approved_conditions', 'cancelled', 'expired'];
       if (nonCancellableStates.includes(request.status)) {
@@ -896,10 +901,7 @@ class PUEService {
    * Actualizar solicitud
    */
   async update(id, updateData, userId) {
-    const request = await PUERequest.findById(id);
-    if (!request) {
-      throw new Error('Solicitud no encontrada');
-    }
+    const request = await _loadOwnedRequest(id, userId);
 
     if (!['draft', 'pending_documents'].includes(request.status)) {
       throw new Error(`No se puede modificar solicitud en estado ${request.status}`);
