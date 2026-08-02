@@ -3,6 +3,7 @@ const logger = require('../config/logger');
 const aiService = require('../services/aiService');
 const taricService = require('../services/taricService');
 const { hasSeasonalTariff, getSeasonalTariff } = require('../data/seasonalTariffs');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 /**
  * Sugerir codigo TARIC basado en descripcion
@@ -15,7 +16,9 @@ const suggestTaricCode = async (req, res) => {
     // Obtener contexto del expediente si se proporciona
     let expeditionContext = null;
     if (expeditionId) {
+      // .lean() devuelve objeto plano, sirve igual para comprobar el tenant.
       expeditionContext = await Expedition.findById(expeditionId).lean();
+      if (!ensureSameTenant(expeditionContext, req, res, { resource: 'Expediente' })) return;
     }
 
     // Llamar al servicio de IA para clasificacion
@@ -28,6 +31,7 @@ const suggestTaricCode = async (req, res) => {
     // Si hay expediente e itemIndex, guardar sugerencias
     if (expeditionId && itemIndex !== undefined) {
       const expedition = await Expedition.findById(expeditionId);
+      if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
       if (expedition) {
         expedition.aiAnalysis = expedition.aiAnalysis || {};
         expedition.aiAnalysis.classificationSuggestions = expedition.aiAnalysis.classificationSuggestions || [];
@@ -555,13 +559,9 @@ const applyClassification = async (req, res) => {
     const { expeditionId, itemIndex, taricCode, hsCode } = req.body;
 
     const expedition = await Expedition.findById(expeditionId);
-
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    // Escribe el codigo TARIC en el expediente: sin guard se podia modificar
+    // la clasificacion de otro cliente conociendo su id.
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     if (!expedition.goods[itemIndex]) {
       return res.status(404).json({

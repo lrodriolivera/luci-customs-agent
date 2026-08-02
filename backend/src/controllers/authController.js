@@ -335,8 +335,14 @@ const updateUser = async (req, res) => {
       }
     });
 
-    const user = await User.findByIdAndUpdate(
-      id,
+    // El filtro incluye el tenant del solicitante: requireRole('admin') es un
+    // rol DE TENANT, asi que sin esto un admin podia cambiar el rol y los
+    // permisos de un usuario de otro cliente conociendo su id.
+    const filtro = { _id: id };
+    if (req.user.tenantId) filtro.tenantId = req.user.tenantId;
+
+    const user = await User.findOneAndUpdate(
+      filtro,
       allowedUpdates,
       { new: true, runValidators: true }
     );
@@ -661,7 +667,13 @@ const adminInvite = async (req, res) => {
 const adminDisableUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id);
+
+    // Acotado al tenant del solicitante, igual que listUsers: 'admin' es un rol
+    // de tenant y sin esto se podia desactivar a un usuario de otro cliente.
+    const filtro = { _id: id };
+    if (req.user.tenantId) filtro.tenantId = req.user.tenantId;
+
+    const user = await User.findOne(filtro);
     if (!user) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
     }

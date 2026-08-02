@@ -2,6 +2,7 @@ const { TaricCode, Expedition } = require('../models');
 const logger = require('../config/logger');
 const axios = require('axios');
 const dutyCalculationService = require('../services/dutyCalculationService');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 // Cache para tipos de cambio (se actualiza cada hora)
 let exchangeRatesCache = {
@@ -186,6 +187,9 @@ const calculateTotal = async (req, res) => {
     let expedition = null;
     if (expeditionId) {
       expedition = await Expedition.findById(expeditionId);
+      // Del expediente se leen las mercancias (taric, valor, origen): sin guard
+      // se podia calcular —y por tanto ver— la carga de otro cliente.
+      if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
     }
 
     // Usar items del body o del expediente
