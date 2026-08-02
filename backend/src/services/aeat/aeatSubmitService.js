@@ -7,6 +7,7 @@
 const logger = require('../../config/logger');
 const aeatRealService = require('./aeatRealService');
 const certificateService = require('./certificateService');
+const aeatTransport = require('./aeatTransport');
 const { buildH1ImportXML, expeditionToH1Data } = require('./h1XmlBuilder');
 const { buildH7ImportXML } = require('./h7XmlBuilder');
 const { buildAESExportXML } = require('./aesXmlBuilder');
@@ -95,41 +96,10 @@ function _parseAEATResponse(responseData) {
 }
 
 // Helper: enviar SOAP directo (sin firma XAdES por ahora, para simplificar)
+// El transporte (mTLS + axios) vive en aeatTransport para que los tests del
+// mapeo de datos puedan mockearlo sin certificado ni red.
 async function _sendToAEAT(soapXML, endpoint) {
-  const https = require('https');
-  const axios = require('axios');
-  const forge = require('node-forge');
-  const fs = require('fs');
-  const path = require('path');
-
-  const certPath = path.resolve(process.cwd(), process.env.AEAT_CERTIFICATE_PATH || '');
-  if (!fs.existsSync(certPath)) {
-    throw new Error('Certificado AEAT no encontrado: ' + certPath);
-  }
-
-  const p12 = fs.readFileSync(certPath);
-  const asn1 = forge.asn1.fromDer(forge.util.createBuffer(p12));
-  const parsed = forge.pkcs12.pkcs12FromAsn1(asn1, process.env.AEAT_CERTIFICATE_PASSWORD);
-  const cert = forge.pki.certificateToPem(parsed.getBags({ bagType: forge.pki.oids.certBag })[forge.pki.oids.certBag][0].cert);
-  const key = forge.pki.privateKeyToPem(parsed.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag })[forge.pki.oids.pkcs8ShroudedKeyBag][0].key);
-
-  const isProd = process.env.AEAT_ENVIRONMENT === 'production';
-  const baseUrl = isProd ? 'https://www1.agenciatributaria.gob.es' : 'https://prewww1.aeat.es';
-  const url = baseUrl + endpoint;
-
-  const agent = new https.Agent({ cert, key, rejectUnauthorized: false });
-
-  logger.info(`[AEAT-SUBMIT] Enviando a ${url}`);
-
-  const response = await axios.post(url, soapXML, {
-    httpsAgent: agent,
-    headers: { 'Content-Type': 'text/xml;charset=UTF-8' },
-    timeout: parseInt(process.env.AEAT_TIMEOUT) || 30000,
-    validateStatus: () => true
-  });
-
-  logger.info(`[AEAT-SUBMIT] Respuesta HTTP ${response.status}, ${response.data.length} bytes`);
-  logger.info(`[AEAT-SUBMIT-RAW] ${response.data.substring(0, 2000)}`);
+  const response = await aeatTransport.sendSoap(soapXML, endpoint);
   return _parseAEATResponse(response.data);
 }
 
