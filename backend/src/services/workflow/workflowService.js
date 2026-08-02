@@ -500,6 +500,13 @@ class WorkflowService {
       const Model = modelMap[entityType];
       if (Model) {
         entityData = await Model.findById(entityId);
+        // El workflow ya se busco acotado a organizationId, pero la entidad
+        // sobre la que se ejecuta no: sin esto se podia lanzar un workflow
+        // propio contra el expediente o requerimiento de otro cliente.
+        if (entityData && organizationId && entityData.tenantId &&
+            String(entityData.tenantId) !== String(organizationId)) {
+          throw new Error('Entidad no encontrada');
+        }
       }
     }
 

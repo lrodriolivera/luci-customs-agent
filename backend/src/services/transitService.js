@@ -4,6 +4,28 @@
  */
 
 const { Transit, Guarantee, Expedition } = require('../models');
+const User = require('../models/User');
+
+/**
+ * Carga una expedicion comprobando que es del tenant de quien la pide.
+ * Sin esto se podia crear un documento a partir del expediente de otro cliente,
+ * copiando sus mercancias, valores y datos de cliente. El tenant se resuelve
+ * desde el userId que la funcion ya recibe.
+ */
+async function _loadOwnedExpedition(expeditionId, userId) {
+  const expedition = await Expedition.findById(expeditionId);
+  if (!expedition) {
+    throw new Error('Expediente no encontrado');
+  }
+  if (userId && expedition.tenantId) {
+    const user = await User.findById(userId).select('tenantId').lean();
+    if (user?.tenantId && String(expedition.tenantId) !== String(user.tenantId)) {
+      throw new Error('Expediente no encontrado');
+    }
+  }
+  return expedition;
+}
+
 const aeatSubmitService = require('./aeat/aeatSubmitService');
 const logger = require('../config/logger');
 
@@ -19,10 +41,7 @@ const transitService = {
 
     // Vincular expedicion si existe
     if (data.expeditionId) {
-      const expedition = await Expedition.findById(data.expeditionId);
-      if (!expedition) {
-        throw new Error('Expediente no encontrado');
-      }
+      await _loadOwnedExpedition(data.expeditionId, userId);
     }
 
     // Validar garantia si se especifica.

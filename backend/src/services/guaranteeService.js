@@ -772,15 +772,17 @@ class GuaranteeService {
       throw new Error('OEA service not available');
     }
 
+    // Ambos extremos del vinculo, no solo la garantia: enganchar la OEA de otro
+    // cliente aplicaria su reduccion de garantia a esta cuenta.
     const [guarantee, oea] = await Promise.all([
-      Guarantee.findById(guaranteeId),
+      _loadOwnedGuarantee(guaranteeId, userId),
       oeaService.getById(oeaId)
     ]);
 
-    if (!guarantee) {
-      throw new Error('Garantia no encontrada');
-    }
     if (!oea) {
+      throw new Error('Certificacion OEA no encontrada');
+    }
+    if (userId && oea.createdBy && String(oea.createdBy) !== String(userId)) {
       throw new Error('Certificacion OEA no encontrada');
     }
 

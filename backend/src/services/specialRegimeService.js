@@ -202,13 +202,18 @@ const specialRegimeService = {
    * Vincular garantia al regimen
    */
   async linkGuarantee(regimeId, guaranteeId, userId) {
+    // Ambos extremos del vinculo se comprueban: sin esto se podia enganchar la
+    // garantia de otro cliente a un regimen propio (consumiendo su saldo) o el
+    // regimen ajeno a una garantia propia.
     const [regime, guarantee] = await Promise.all([
-      SpecialRegime.findById(regimeId),
+      _loadOwnedRegime(regimeId, userId),
       Guarantee.findById(guaranteeId)
     ]);
 
-    if (!regime) throw new Error('Regimen no encontrado');
     if (!guarantee) throw new Error('Garantia no encontrada');
+    if (userId && guarantee.owner && String(guarantee.owner) !== String(userId)) {
+      throw new Error('Garantia no encontrada');
+    }
 
     // Verificar que la garantia tiene saldo suficiente
     if (guarantee.balance.available < regime.totals.totalGuaranteed) {
