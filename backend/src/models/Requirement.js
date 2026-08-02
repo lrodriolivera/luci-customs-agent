@@ -258,6 +258,11 @@ const RequirementSchema = new mongoose.Schema({
   assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
+  // Aislamiento multi-tenant. Se deriva de la expedicion a la que pertenece el
+  // requerimiento; sin este campo ensureSameTenant no puede comprobar nada y
+  // cualquiera con el id podia leer requerimientos de otro cliente.
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },
+
   // Timeline de eventos
   timeline: [{
     action: String,

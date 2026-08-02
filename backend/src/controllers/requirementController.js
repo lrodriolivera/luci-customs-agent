@@ -106,12 +106,7 @@ exports.getRequirementById = async (req, res) => {
       .populate('createdBy', 'name email')
       .populate('responses.submittedBy', 'name email');
 
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     res.json({
       success: true,
@@ -150,14 +145,11 @@ exports.createRequirement = async (req, res) => {
       priority
     } = req.body;
 
-    // Verificar que existe el expediente
+    // Verificar que existe el expediente y que es del tenant del usuario: sin
+    // esto se podian crear requerimientos colgando del expediente de otro
+    // cliente. ensureSameTenant ya responde 404 si no existe.
     const expedition = await Expedition.findById(expeditionId);
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        message: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     // Calcular deadline si no se proporciona (por defecto 10 dias habiles)
     let deadlineDate = deadline ? new Date(deadline) : null;
@@ -169,6 +161,8 @@ exports.createRequirement = async (req, res) => {
     // Crear requerimiento
     const requirement = new Requirement({
       expeditionId,
+      // El tenant se hereda de la expedicion, que es su unico dueño posible.
+      tenantId: expedition.tenantId,
       mrn: mrn || expedition.declaration?.mrn,
       lrn: lrn || expedition.declaration?.lrn,
       requirementType,
@@ -238,12 +232,7 @@ exports.updateRequirement = async (req, res) => {
     protectedFields.forEach(field => delete updates[field]);
 
     const requirement = await Requirement.findById(id);
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     // Actualizar campos
     Object.assign(requirement, updates);
@@ -284,12 +273,7 @@ exports.addResponse = async (req, res) => {
     const { responseType, notes, documents } = req.body;
 
     const requirement = await Requirement.findById(id);
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     // Verificar que el requerimiento esta en un estado que permite respuestas
     const allowedStatuses = ['pending', 'in_progress', 'awaiting_client', 'response_ready'];
@@ -336,12 +320,7 @@ exports.markItemProvided = async (req, res) => {
     const { documentId } = req.body;
 
     const requirement = await Requirement.findById(id);
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     await requirement.markItemProvided(itemId, documentId);
 
@@ -377,12 +356,7 @@ exports.submitToAEAT = async (req, res) => {
     const { responseIndex } = req.body;
 
     const requirement = await Requirement.findById(id).populate('expeditionId');
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     // Verificar que existe la respuesta
     if (!requirement.responses[responseIndex]) {
@@ -467,12 +441,7 @@ exports.scheduleInspection = async (req, res) => {
     } = req.body;
 
     const requirement = await Requirement.findById(id);
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     if (requirement.channel !== 'red') {
       return res.status(400).json({
@@ -522,12 +491,7 @@ exports.recordInspectionResult = async (req, res) => {
     } = req.body;
 
     const requirement = await Requirement.findById(id);
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     if (!requirement.physicalInspection?.scheduled) {
       return res.status(400).json({
@@ -603,12 +567,7 @@ exports.resolveRequirement = async (req, res) => {
     } = req.body;
 
     const requirement = await Requirement.findById(id);
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     await requirement.resolve({
       status,
@@ -740,12 +699,7 @@ exports.generateAIResponse = async (req, res) => {
     const { id } = req.params;
 
     const requirement = await Requirement.findById(id).populate('expeditionId');
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     // Obtener servicio de IA
     const aiService = require('../services/aiService');
@@ -785,6 +739,7 @@ exports.generateAIResponse = async (req, res) => {
 // ===========================================
 
 const aiService = require('../services/aiService');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 /**
  * Analizar documentación solicitada con IA
@@ -795,12 +750,7 @@ exports.aiAnalyzeDocuments = async (req, res) => {
     const { id } = req.params;
 
     const requirement = await Requirement.findById(id).populate('expeditionId');
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     logger.info(`AI: Analizando documentos solicitados para ${requirement.requirementNumber}`);
 
@@ -830,12 +780,7 @@ exports.aiSuggestArguments = async (req, res) => {
     const { id } = req.params;
 
     const requirement = await Requirement.findById(id).populate('expeditionId');
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     logger.info(`AI: Sugiriendo argumentación legal para ${requirement.requirementNumber}`);
 
@@ -865,12 +810,7 @@ exports.aiAnalyzeRisk = async (req, res) => {
     const { id } = req.params;
 
     const requirement = await Requirement.findById(id).populate('expeditionId');
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     logger.info(`AI: Analizando riesgo para ${requirement.requirementNumber}`);
 
@@ -900,12 +840,7 @@ exports.aiFullAnalysis = async (req, res) => {
     const { id } = req.params;
 
     const requirement = await Requirement.findById(id).populate('expeditionId');
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     logger.info(`AI: Análisis completo para ${requirement.requirementNumber}`);
 
@@ -948,12 +883,7 @@ exports.aiDraftResponse = async (req, res) => {
     const { id } = req.params;
 
     const requirement = await Requirement.findById(id).populate('expeditionId');
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: 'Requerimiento no encontrado'
-      });
-    }
+    if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
     logger.info(`AI: Generando borrador de respuesta para ${requirement.requirementNumber}`);
 
