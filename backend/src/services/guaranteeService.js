@@ -64,6 +64,30 @@ try {
   oeaService = null;
 }
 
+/**
+ * Carga una garantia comprobando que pertenece a quien la pide.
+ *
+ * Las rutas POST /:id/(activate|consume|release|renew|suspend|cancel) pasaban
+ * el id directo al servicio, que hacia findById sin mirar el propietario: con
+ * el id de una garantia ajena se podia consumir su saldo o cancelarla. El
+ * controller si filtraba por owner en las lecturas (findOne({_id, owner})),
+ * pero las escrituras se saltaban esa comprobacion.
+ *
+ * Se lanza el mismo 'Garantia no encontrada' que cuando no existe, para no
+ * revelar que el id es valido en otra cuenta.
+ */
+async function _loadOwnedGuarantee(guaranteeId, userId) {
+  const guarantee = await Guarantee.findById(guaranteeId);
+  if (!guarantee) {
+    throw new Error('Garantia no encontrada');
+  }
+  // userId ausente => llamada interna (jobs, migraciones), no se comprueba.
+  if (userId && guarantee.owner && String(guarantee.owner) !== String(userId)) {
+    throw new Error('Garantia no encontrada');
+  }
+  return guarantee;
+}
+
 class GuaranteeService {
 
   /**
@@ -110,10 +134,7 @@ class GuaranteeService {
    * Activar garantia (tras aprobacion AEAT)
    */
   async activateGuarantee(guaranteeId, grn, authData, userId) {
-    const guarantee = await Guarantee.findById(guaranteeId);
-    if (!guarantee) {
-      throw new Error('Garantia no encontrada');
-    }
+    const guarantee = await _loadOwnedGuarantee(guaranteeId, userId);
 
     if (guarantee.status !== 'draft' && guarantee.status !== 'pending') {
       throw new Error(`No se puede activar garantia en estado ${guarantee.status}`);
@@ -225,10 +246,7 @@ class GuaranteeService {
    * Consumir garantia para operacion
    */
   async consumeGuarantee(guaranteeId, amount, reference, description, userId) {
-    const guarantee = await Guarantee.findById(guaranteeId);
-    if (!guarantee) {
-      throw new Error('Garantia no encontrada');
-    }
+    const guarantee = await _loadOwnedGuarantee(guaranteeId, userId);
 
     try {
       const newBalance = guarantee.consume(amount, reference, description, userId);
@@ -257,10 +275,7 @@ class GuaranteeService {
    * Liberar garantia (operacion finalizada)
    */
   async releaseGuarantee(guaranteeId, amount, reference, description, userId) {
-    const guarantee = await Guarantee.findById(guaranteeId);
-    if (!guarantee) {
-      throw new Error('Garantia no encontrada');
-    }
+    const guarantee = await _loadOwnedGuarantee(guaranteeId, userId);
 
     const newBalance = guarantee.release(amount, reference, description, userId);
     await guarantee.save();
@@ -290,10 +305,7 @@ class GuaranteeService {
    * Vincular garantia a expediente
    */
   async linkToExpedition(guaranteeId, expeditionId, amount, userId) {
-    const guarantee = await Guarantee.findById(guaranteeId);
-    if (!guarantee) {
-      throw new Error('Garantia no encontrada');
-    }
+    const guarantee = await _loadOwnedGuarantee(guaranteeId, userId);
 
     // Verificar disponibilidad
     if (amount > guarantee.availableAmount) {
@@ -334,10 +346,7 @@ class GuaranteeService {
    * Liberar garantia de expediente
    */
   async releaseFromExpedition(guaranteeId, expeditionId, userId) {
-    const guarantee = await Guarantee.findById(guaranteeId);
-    if (!guarantee) {
-      throw new Error('Garantia no encontrada');
-    }
+    const guarantee = await _loadOwnedGuarantee(guaranteeId, userId);
 
     // Buscar vinculacion
     const link = guarantee.linkedExpeditions.find(
@@ -443,10 +452,7 @@ class GuaranteeService {
    * Renovar garantia
    */
   async renewGuarantee(guaranteeId, newValidUntil, newAmount, userId) {
-    const guarantee = await Guarantee.findById(guaranteeId);
-    if (!guarantee) {
-      throw new Error('Garantia no encontrada');
-    }
+    const guarantee = await _loadOwnedGuarantee(guaranteeId, userId);
 
     const oldValidUntil = guarantee.validUntil;
     const oldAmount = guarantee.totalAmount;
@@ -496,10 +502,7 @@ class GuaranteeService {
    * Suspender garantia
    */
   async suspendGuarantee(guaranteeId, reason, userId) {
-    const guarantee = await Guarantee.findById(guaranteeId);
-    if (!guarantee) {
-      throw new Error('Garantia no encontrada');
-    }
+    const guarantee = await _loadOwnedGuarantee(guaranteeId, userId);
 
     guarantee.status = 'suspended';
     guarantee.statusHistory.push({
@@ -523,10 +526,7 @@ class GuaranteeService {
    * Cancelar garantia
    */
   async cancelGuarantee(guaranteeId, reason, userId) {
-    const guarantee = await Guarantee.findById(guaranteeId);
-    if (!guarantee) {
-      throw new Error('Garantia no encontrada');
-    }
+    const guarantee = await _loadOwnedGuarantee(guaranteeId, userId);
 
     // Verificar que no tenga consumos activos
     if (guarantee.consumedAmount > 0) {
