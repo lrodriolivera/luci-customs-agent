@@ -6,6 +6,7 @@
  */
 
 const { analyticsService, reportsService, kpiService, predictionsService } = require('../services/analytics');
+const realMetrics = require('../services/analytics/realMetricsService');
 const aiService = require('../services/aiService');
 const logger = require('../config/logger');
 
@@ -17,22 +18,39 @@ const logger = require('../config/logger');
  */
 async function getDashboardMetrics(req, res) {
   try {
-    const { period, startDate, endDate, includeInsights } = req.query;
+    const { startDate, endDate } = req.query;
 
-    const result = await analyticsService.getDashboardMetrics(
-      period || 'last_30_days',
-      { startDate, endDate, includeInsights: includeInsights !== 'false' }
-    );
+    // Agregaciones reales sobre la BD. Antes esto devolvia
+    // _generateMetricValue(150, 300) declaraciones cuando en la base habia 35,
+    // y la cifra cambiaba en cada recarga. Las secciones que no se pueden
+    // calcular hoy vienen con { disponible: false, motivo }, nunca con un
+    // numero inventado.
+    const data = await realMetrics.cuadroDeMando(req.user?.tenantId, {
+      desde: startDate,
+      hasta: endDate
+    });
 
-    if (!result.success) {
-      return res.status(400).json(result);
-    }
-
-    res.json(result);
+    res.json({ success: true, data });
   } catch (error) {
     logger.error(`[AnalyticsController] Dashboard error: ${error.message}`);
     res.status(500).json({ success: false, error: error.message });
   }
+}
+
+/**
+ * Responde 501 a una metrica que aun no se puede calcular.
+ *
+ * Se usa en vez de devolver un 200 con ceros o con datos simulados: un numero
+ * falso en un panel acaba en una reunion con un cliente. El motivo va en la
+ * respuesta y esta escrito para leerse sin contexto.
+ */
+function noImplementado(res, motivo) {
+  return res.status(501).json({
+    success: false,
+    error: 'Metrica no disponible',
+    reason: motivo,
+    code: 'NOT_IMPLEMENTED'
+  });
 }
 
 /**
@@ -75,14 +93,28 @@ async function getDeclarationAnalytics(req, res) {
  */
 async function getFinancialAnalytics(req, res) {
   try {
-    const { period, startDate, endDate, includeInsights } = req.query;
+    const { startDate, endDate } = req.query;
+    const rango = { desde: startDate, hasta: endDate };
+    const tenantId = req.user?.tenantId;
 
-    const result = await analyticsService.getFinancialAnalytics(
-      period || 'last_30_days',
-      { startDate, endDate, includeInsights: includeInsights !== 'false' }
-    );
+    const [derechos, recaudacion, valor] = await Promise.all([
+      realMetrics.derechosLiquidados(tenantId, rango),
+      realMetrics.recaudacionCobrada(tenantId, rango),
+      realMetrics.valorMercancia(tenantId, rango)
+    ]);
 
-    res.json(result);
+    // Lo LIQUIDADO si se calcula (sale de las declaraciones). Lo COBRADO no,
+    // mientras no haya pagos registrados: sin ese dato la analitica financiera
+    // no significa nada, asi que el endpoint entero responde 501 en vez de
+    // devolver medias verdades.
+    if (!recaudacion.disponible) {
+      return noImplementado(res, recaudacion.motivo);
+    }
+
+    res.json({
+      success: true,
+      data: { simulated: false, derechosLiquidados: derechos, recaudacion, valorMercancia: valor }
+    });
   } catch (error) {
     logger.error(`[AnalyticsController] Financial analytics error: ${error.message}`);
     res.status(500).json({ success: false, error: error.message });
@@ -548,15 +580,15 @@ async function dismissKPIAlert(req, res) {
  */
 async function predictVolume(req, res) {
   try {
-    const { horizon, granularity, baseVolume } = req.body;
-
-    const result = await predictionsService.predictVolume({
-      horizon: horizon || 30,
-      granularity: granularity || 'daily',
-      baseVolume
-    });
-
-    res.json(result);
+    // predictionsService.predictVolume construye la serie con
+    // baseVolume * seasonalFactor * dayFactor * (0.9 + Math.random() * 0.2):
+    // no es un pronostico, es ruido alrededor de un valor que ademas entra por
+    // el body. Presentarlo con un "nivel de confianza" es peor que no darlo.
+    //
+    // Para proyectar de verdad hacen falta al menos 90 dias de historico; en la
+    // base hay declaraciones desde mayo de 2026, pero sin volumen suficiente
+    // por dia. Se reactivara cuando lo haya.
+    return noImplementado(res, realMetrics.NO_DISPONIBLE.SIN_HISTORICO);
   } catch (error) {
     logger.error(`[AnalyticsController] Predict volume error: ${error.message}`);
     res.status(500).json({ success: false, error: error.message });
@@ -615,10 +647,13 @@ async function predictInspection(req, res) {
  */
 async function predictProcessingTime(req, res) {
   try {
-    const declarationData = req.body;
-
-    const result = await predictionsService.predictProcessingTime(declarationData || {});
-    res.json(result);
+    // baseTime * (0.9 + Math.random() * 0.2), con la confianza tambien
+    // aleatoria (_getConfidenceLevel(75 + Math.random() * 15)).
+    //
+    // El tiempo REAL de despacho si se mide y esta en el cuadro de mando:
+    // GET /api/analytics/dashboard -> tiempos.mediaHoras, calculado de
+    // submittedAt a releasedAt. Eso es un dato; esto era una simulacion.
+    return noImplementado(res, realMetrics.NO_DISPONIBLE.SIN_MODELO);
   } catch (error) {
     logger.error(`[AnalyticsController] Predict processing time error: ${error.message}`);
     res.status(500).json({ success: false, error: error.message });

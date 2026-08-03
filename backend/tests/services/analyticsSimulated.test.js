@@ -1,17 +1,23 @@
 /**
- * El modulo de analytics devuelve datos SIMULADOS, no agregados de la BD.
+ * analyticsService SIGUE siendo simulado, pero YA NO LO SIRVE NINGUN ENDPOINT.
  *
- * Detectado el 3/Ago/2026 al cubrirlo con tests. Los cuatro servicios de
- * analytics usan Math.random() (11 usos en total) y la UI los consume desde
- * frontend/src/services/api.js presentandolos como analitica real: en
- * produccion el dashboard decia 153-255 declaraciones cuando en la BD hay 35,
- * y la cifra cambiaba en cada llamada.
+ * Los cuatro servicios de src/services/analytics/ generan sus metricas con
+ * Math.random() (171 usos de _generateMetricValue solo en analyticsService). En
+ * produccion el dashboard decia 153-255 declaraciones cuando en la BD hay 35, y
+ * la cifra cambiaba en cada llamada.
  *
- * Estos tests NO validan que las metricas sean correctas —no pueden serlo
- * mientras se generen al azar—. Fijan que:
- *   1. la respuesta se declara simulada, para que el consumidor lo sepa
- *   2. el dia que se implementen las agregaciones reales, el test falle y
- *      obligue a quitar el flag conscientemente
+ * Desde el commit que introdujo realMetricsService, el controlador no llama a este servicio para las metricas:
+ *
+ *   GET /api/analytics/dashboard  -> realMetricsService, agregaciones reales
+ *   GET /api/analytics/financial  -> 501 mientras no haya pagos registrados
+ *   POST /predictions/volume      -> 501, era ruido con nivel de confianza
+ *
+ * Este fichero se conserva a proposito: analyticsService sigue en el arbol y
+ * otras partes podrian volver a llamarlo. Los tests fijan que, si eso pasa, lo
+ * que se obtiene son datos simulados y estan declarados como tales.
+ *
+ * Las metricas reales se prueban en tests/services/realMetrics.test.js y
+ * tests/controllers/analyticsNotSimulated.test.js.
  */
 
 jest.mock('../../src/services/aiService', () => ({}));
@@ -56,5 +62,33 @@ describe('analytics: los datos son simulados y se declaran como tales', () => {
 
     expect(new Date(r.data.period.start).getUTCMonth()).toBe(0);
     expect(new Date(r.data.period.end).getUTCMonth()).toBe(0);
+  });
+});
+
+describe('el endpoint del dashboard ya NO usa este servicio', () => {
+  const fs = require('fs');
+  const path = require('path');
+
+  const CONTROLADOR = fs.readFileSync(
+    path.join(__dirname, '../../src/controllers/analyticsController.js'), 'utf8'
+  );
+
+  test('getDashboardMetrics llama a realMetrics, no a analyticsService', () => {
+    const cuerpo = CONTROLADOR.slice(
+      CONTROLADOR.indexOf('async function getDashboardMetrics'),
+      CONTROLADOR.indexOf('function noImplementado')
+    );
+
+    expect(cuerpo).toMatch(/realMetrics\.cuadroDeMando/);
+    expect(cuerpo).not.toMatch(/analyticsService\.getDashboardMetrics/);
+  });
+
+  test('getFinancialAnalytics tampoco', () => {
+    const cuerpo = CONTROLADOR.slice(
+      CONTROLADOR.indexOf('async function getFinancialAnalytics'),
+      CONTROLADOR.indexOf('async function getComplianceAnalytics')
+    );
+
+    expect(cuerpo).not.toMatch(/analyticsService\.getFinancialAnalytics/);
   });
 });
