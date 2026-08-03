@@ -25,6 +25,9 @@ const deadlineController = {
       } = req.query;
 
       const filters = {};
+      // El tenant sale SIEMPRE del token, nunca de req.query: el resto de este
+      // filtro lo construye el cliente y seria trivial de suplantar.
+      if (req.user?.tenantId) filters.tenantId = req.user.tenantId;
       if (status) filters.status = status;
       if (category) filters.category = category;
       if (deadlineType) filters.deadlineType = deadlineType;

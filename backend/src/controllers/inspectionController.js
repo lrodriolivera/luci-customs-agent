@@ -25,6 +25,9 @@ const inspectionController = {
       } = req.query;
 
       const filters = {};
+      // El tenant sale SIEMPRE del token, nunca de req.query: el resto de este
+      // filtro lo construye el cliente y seria trivial de suplantar.
+      if (req.user?.tenantId) filters.tenantId = req.user.tenantId;
       if (status) filters.status = status;
       if (inspectionType) filters.inspectionType = inspectionType;
       if (authorityType) filters['authority.type'] = authorityType;
