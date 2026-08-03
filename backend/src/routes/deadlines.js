@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const deadlineController = require('../controllers/deadlineController');
-const { auth } = require('../middleware/auth');
+const { auth, requireRole } = require('../middleware/auth');
 
 // Todas las rutas requieren autenticacion: exponian datos de clientes
 // (NIF, EORI, MRN, expedientes, inspecciones) a cualquiera sin token.
@@ -23,9 +23,12 @@ router.get('/types', deadlineController.getTypes);
 router.get('/categories', deadlineController.getCategories);
 router.get('/info', deadlineController.getInfo);
 
-// Acciones del sistema
-router.post('/process-alerts', deadlineController.processAlerts);
-router.post('/sync', deadlineController.sync);
+// Acciones del sistema. Solo admin: no reciben ningun identificador, asi que
+// actuan sobre los plazos de TODOS los tenants. processAlerts hace addAlert() y
+// save() sobre cada plazo vencido del sistema. El propio service dice que en
+// produccion irian como job programado, no lanzadas por un usuario.
+router.post('/process-alerts', requireRole('admin'), deadlineController.processAlerts);
+router.post('/sync', requireRole('admin'), deadlineController.sync);
 
 // CRUD básico
 router.get('/', deadlineController.list);
