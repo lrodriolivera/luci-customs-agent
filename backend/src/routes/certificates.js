@@ -5,7 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { auth } = require('../middleware/auth');
+const { auth, requireRole } = require('../middleware/auth');
 const certificateManager = require('../services/customs/common/certificateManager');
 const logger = require('../config/logger');
 
@@ -31,7 +31,8 @@ const upload = multer({
  * Upload a .p12/.pfx certificate
  * Body (multipart): certificate (file), password (string), country (string)
  */
-router.post('/upload', upload.single('certificate'), async (req, res) => {
+// Solo admin: sustituye el certificado con el que el tenant firma ante la AEAT.
+router.post('/upload', requireRole('admin'), upload.single('certificate'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'No se ha proporcionado un archivo de certificado' });
@@ -104,7 +105,8 @@ router.get('/', async (req, res) => {
  * DELETE /api/certificates/:country
  * Delete certificate for a specific country
  */
-router.delete('/:country', async (req, res) => {
+// Solo admin: sin certificado el tenant no puede presentar ninguna declaracion.
+router.delete('/:country', requireRole('admin'), async (req, res) => {
   try {
     const tenantId = req.user.tenantId?.toString() || req.user._id.toString();
     const country = req.params.country.toUpperCase();
