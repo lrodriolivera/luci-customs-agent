@@ -78,6 +78,50 @@ router.get('/:expeditionId', async (req, res) => {
   }
 });
 
+// Va ANTES de POST '/:expeditionId': ese comodin captura cualquier primer
+// segmento, y con '/ask-luci' declarado despues Express lo resolvia contra el,
+// buscando un expediente con id "ask-luci". Preguntar a LUCI sin expediente
+// devolvia "Error al enviar mensaje" en produccion.
+/**
+ * Preguntar a LUCI (sin contexto de expediente)
+ * POST /api/chat/ask-luci
+ */
+router.post('/ask-luci', async (req, res) => {
+  try {
+    const { question, language } = req.body;
+
+    if (!question || question.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'La pregunta no puede estar vacia'
+      });
+    }
+
+    const startTime = Date.now();
+    const response = await aiService.askLuci(question, language || 'es');
+    const processingTime = Date.now() - startTime;
+
+    res.json({
+      success: true,
+      data: {
+        question,
+        answer: response.message,
+        sources: response.sources,
+        confidence: response.confidence,
+        model: response.model,
+        processingTime
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error preguntando a LUCI:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al procesar pregunta'
+    });
+  }
+});
+
 /**
  * Enviar mensaje como agente
  * POST /api/chat/:expeditionId
@@ -182,46 +226,6 @@ router.get('/:expeditionId/unread', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Error al obtener mensajes no leidos'
-    });
-  }
-});
-
-/**
- * Preguntar a LUCI (sin contexto de expediente)
- * POST /api/chat/ask-luci
- */
-router.post('/ask-luci', async (req, res) => {
-  try {
-    const { question, language } = req.body;
-
-    if (!question || question.trim().length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'La pregunta no puede estar vacia'
-      });
-    }
-
-    const startTime = Date.now();
-    const response = await aiService.askLuci(question, language || 'es');
-    const processingTime = Date.now() - startTime;
-
-    res.json({
-      success: true,
-      data: {
-        question,
-        answer: response.message,
-        sources: response.sources,
-        confidence: response.confidence,
-        model: response.model,
-        processingTime
-      }
-    });
-
-  } catch (error) {
-    logger.error('Error preguntando a LUCI:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al procesar pregunta'
     });
   }
 });

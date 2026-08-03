@@ -6,6 +6,22 @@ const { upload, handleUploadError } = require('../middleware/upload');
 const { portalValidators } = require('../middleware/validators');
 const { authenticate, requireRole } = require('../middleware/auth');
 
+// ==================== API Key Management (authenticated users) ====================
+//
+// Van ANTES de las rutas de portal porque estas empiezan por '/:token', que
+// captura cualquier primer segmento: con '/api-keys' declarado despues, Express
+// resolvia GET /api/portal/api-keys contra '/:token' y el validador rechazaba
+// "api-keys" como token, dejando la ruta inalcanzable.
+
+// Create API key
+router.post('/api-keys', authenticate, requireRole('admin'), clientPortalController.createApiKey);
+
+// List API keys
+router.get('/api-keys', authenticate, requireRole('admin'), clientPortalController.listApiKeys);
+
+// Revoke API key
+router.delete('/api-keys/:keyId', authenticate, requireRole('admin'), clientPortalController.revokeApiKey);
+
 // ==================== Public Portal Routes (token-based auth) ====================
 
 // Obtener expediente
@@ -129,16 +145,5 @@ router.get('/:token/summary-pdf', portalValidators.getByToken, async (req, res) 
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
-// ==================== API Key Management (authenticated users) ====================
-
-// Create API key
-router.post('/api-keys', authenticate, requireRole('admin'), clientPortalController.createApiKey);
-
-// List API keys
-router.get('/api-keys', authenticate, requireRole('admin'), clientPortalController.listApiKeys);
-
-// Revoke API key
-router.delete('/api-keys/:keyId', authenticate, requireRole('admin'), clientPortalController.revokeApiKey);
 
 module.exports = router;
