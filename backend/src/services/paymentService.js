@@ -377,8 +377,11 @@ class PaymentService {
    * Update expedition after successful payment
    */
   async updateExpeditionAfterPayment(payment) {
+    // items no es obligatorio en el schema y createManualPayment lo toma de
+    // data.items: un pago manual creado sin items reventaba aqui, DESPUES de
+    // haberse marcado como completado, dejando un 500 al confirmarlo.
     const expeditionIds = [...new Set(
-      payment.items
+      (payment.items || [])
         .filter(item => item.expeditionId)
         .map(item => item.expeditionId.toString())
     )];
@@ -465,8 +468,13 @@ class PaymentService {
   /**
    * Confirm manual payment
    */
-  async confirmManualPayment(paymentId, userId) {
-    const payment = await Payment.findOne({ paymentId });
+  async confirmManualPayment(paymentId, userId, organizationId = null) {
+    // Acotado al tenant: requireRole('admin') es un rol de tenant, asi que sin
+    // esto un admin podia marcar como pagado el cobro de otro cliente.
+    const filtro = { paymentId };
+    if (organizationId) filtro.organizationId = organizationId;
+
+    const payment = await Payment.findOne(filtro);
     if (!payment) {
       throw new Error('Payment not found');
     }
@@ -490,8 +498,15 @@ class PaymentService {
   /**
    * Process refund
    */
-  async refundPayment(paymentId, amount, reason, userId) {
-    const payment = await Payment.findOne({ paymentId });
+  async refundPayment(paymentId, amount, reason, userId, organizationId = null) {
+    // La ruta solo exige requireRole('admin'), que es un rol DE TENANT: sin
+    // acotar por organizationId, un admin podia reembolsar el pago de otro
+    // cliente conociendo su paymentId. Mismo error que si no existiera, para no
+    // confirmar ids ajenos.
+    const filtro = { paymentId };
+    if (organizationId) filtro.organizationId = organizationId;
+
+    const payment = await Payment.findOne(filtro);
     if (!payment) {
       throw new Error('Payment not found');
     }

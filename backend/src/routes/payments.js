@@ -191,7 +191,8 @@ router.post('/:paymentId/confirm', authenticate, requireRole('admin'), async (re
   try {
     const payment = await paymentService.confirmManualPayment(
       req.params.paymentId,
-      req.user._id
+      req.user._id,
+      req.user.tenantId || req.user.organizationId
     );
 
     res.json({
@@ -217,7 +218,8 @@ router.post('/:paymentId/refund', authenticate, requireRole('admin'), async (req
       req.params.paymentId,
       amount,
       reason,
-      req.user._id
+      req.user._id,
+      req.user.tenantId || req.user.organizationId
     );
 
     res.json({
