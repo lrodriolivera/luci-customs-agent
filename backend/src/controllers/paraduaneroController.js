@@ -87,6 +87,9 @@ exports.list = async (req, res) => {
     } = req.query;
 
     const filter = {};
+    // Aislamiento por tenant: ParaduaneroControl hereda el tenant de su
+    // expediente; sin este filtro el listado mezcla clientes.
+    if (req.user?.tenantId) filter.tenantId = req.user.tenantId;
     if (status) filter.status = status;
     if (controlType) filter.controlType = controlType;
     if (priority) filter.priority = priority;

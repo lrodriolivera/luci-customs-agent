@@ -17,6 +17,10 @@
  *   5. Recorrer solo controllers y     -> 9 rutas con logica inline permitian
  *      services                           descargar el PDF de la declaracion
  *                                         de otro cliente y leer su chat
+ *   6. Mirar accesos por id y no      -> getRequirements, paraduanero.list y
+ *      LISTADOS                          getH7Stats devolvian datos de todos
+ *                                        los clientes (oeaService.list ya lo
+ *                                        habia adelantado)
  *
  * Este test recorre controllers y services buscando el patron, para que el
  * sexto no dependa de que alguien tropiece con el. Su equivalente para rutas
@@ -126,6 +130,35 @@ describe('aislamiento por propiedad: guardia permanente', () => {
   test('ningun service resuelve por id sin comprobar la propiedad', () => {
     const hallazgos = ficheros(path.join(SRC, 'services'), 'services')
       .flatMap(([p, etiqueta]) => analizar(p, etiqueta));
+
+    expect(hallazgos).toEqual([]);
+  });
+
+  test('ningun listado de controller consulta sin acotar por propietario', () => {
+    // Sexto punto ciego: Model.find(filter) donde el filtro se construye sin
+    // tenantId/organizationId devuelve los datos de todos los clientes. No lo
+    // detectaba el barrido de accesos por id.
+    const hallazgos = [];
+
+    for (const [ruta, etiqueta] of ficheros(path.join(SRC, 'controllers'), 'controllers')) {
+      const lineas = fs.readFileSync(ruta, 'utf8').split('\n');
+      let inicioFuncion = 0;
+      let nombreFuncion = '(top-level)';
+
+      lineas.forEach((linea, i) => {
+        const decl = linea.match(/^(?:exports\.(\w+)|const (\w+) =)/);
+        if (decl) {
+          inicioFuncion = i;
+          nombreFuncion = decl[1] || decl[2];
+        }
+        if (!/\w+\.find\(\s*(filter|query)\s*\)/.test(linea)) return;
+
+        const ventana = lineas.slice(inicioFuncion, i + 3).join('\n');
+        if (COMPRUEBA_PROPIEDAD.test(ventana)) return;
+
+        hallazgos.push(`${etiqueta}:${nombreFuncion} (L${i + 1})`);
+      });
+    }
 
     expect(hallazgos).toEqual([]);
   });

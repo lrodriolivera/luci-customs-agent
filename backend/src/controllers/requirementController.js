@@ -29,6 +29,11 @@ exports.getRequirements = async (req, res) => {
     // Construir filtro
     const filter = {};
 
+    // Aislamiento por tenant: sin esto el listado devuelve los requerimientos
+    // de todos los clientes. El campo se anadio al schema en 1a41c3c pero el
+    // listado no lo usaba.
+    if (req.user?.tenantId) filter.tenantId = req.user.tenantId;
+
     if (status) {
       filter.status = Array.isArray(status) ? { $in: status } : status;
     }

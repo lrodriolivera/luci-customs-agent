@@ -1079,6 +1079,9 @@ const getH7Stats = async (req, res) => {
 
     const query = { 'declaration.type': 'H7' };
 
+    // Sin esto las estadisticas agregan las expediciones de TODOS los clientes.
+    if (req.user?.tenantId) query.tenantId = req.user.tenantId;
+
     if (startDate || endDate) {
       query['declaration.declarationDate'] = {};
       if (startDate) query['declaration.declarationDate'].$gte = new Date(startDate);
