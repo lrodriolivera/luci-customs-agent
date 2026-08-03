@@ -223,7 +223,13 @@ Los tres puntos que quedaron abiertos al cerrar la auditoría se resolvieron el 
 
 ### 1. El rol `super_admin` usaba tres cadenas distintas — `e29b130`
 
-`tenantGuard` comprobaba `'superadmin'` (sin guion), `tenantMiddleware` exigía `'super_admin'`, y el enum de `User.role` no admitía ninguna de las dos. `/api/v1/tenants` —crear, suspender y borrar organizaciones— era **inalcanzable**.
+`tenantGuard` comprobaba `'superadmin'` (sin guion), `tenantMiddleware` exigía `'super_admin'`, y el enum de `User.role` no admitía ninguna de las dos. `/api/tenants` —crear, suspender y borrar organizaciones— era **inalcanzable**.
+
+> **Corrección:** este informe decía antes `/api/v1/tenants`. La ruta real es **`/api/tenants`**: `tenant.js` se monta en `/api`, mientras que `/api/v1` es `publicApi.js`, que espera una API key y responde `INVALID_API_KEY` a un JWT.
+
+**Había una segunda causa**, encontrada al verificar el fix contra producción — `dfb4a96`. `tenant.js` montaba `extractTenant` y `attachTenantContext` pero **no `auth`**, de modo que `req.user` nunca se rellenaba. `superAdminOnly` comprueba `if (!req.user) return 401` *antes* de mirar el rol, así que las 9 rutas devolvían `AUTH_REQUIRED` incluso con un token válido. El `require` de `auth` estaba en la línea 282, después de esas rutas, y solo se aplicaba a `/tenant/me`.
+
+Unificar el rol no bastaba: hacían falta las dos cosas. `auth` se aplica **por ruta** y no como `router.use` porque más abajo en el mismo fichero hay catálogos deliberadamente públicos (`/tenant/plans`, `/tenant/permissions/info`, `/tenant/roles/builtin`) que un `router.use` habría cerrado sin querer.
 
 Fallaba cerrado, así que nunca fue un agujero. El peligro estaba en la dirección contraria: bastaba que alguien "arreglase" una de las tres para que las otras dos concedieran acceso sin querer.
 
