@@ -6,6 +6,14 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
+const { auth, requireRole } = require('../middleware/auth');
+
+// TODAS las rutas de administracion exigen sesion y rol admin. Sin esto el
+// panel entero era publico: /users listaba emails, nombres, roles y permisos
+// de todos los usuarios sin token, y las rutas de escritura permitian crear,
+// modificar y borrar usuarios o resetear sus contrasenas.
+router.use(auth);
+router.use(requireRole('admin'));
 
 /**
  * @openapi

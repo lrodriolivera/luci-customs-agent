@@ -6,6 +6,10 @@
 const express = require('express');
 const router = express.Router();
 const integrationController = require('../controllers/integrationController');
+const { auth } = require('../middleware/auth');
+
+// Expone datos operativos y de clientes: exige sesion.
+router.use(auth);
 
 // ============================================
 // General Integration Routes

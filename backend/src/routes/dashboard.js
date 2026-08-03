@@ -7,6 +7,10 @@ const express = require('express');
 const router = express.Router();
 const { Expedition, Requirement, Guarantee, SpecialRegime, ParaduaneroControl } = require('../models');
 const logger = require('../config/logger');
+const { auth } = require('../middleware/auth');
+
+// Expone datos operativos y de clientes: exige sesion.
+router.use(auth);
 
 /**
  * @openapi

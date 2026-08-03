@@ -6,6 +6,10 @@
 const express = require('express');
 const router = express.Router();
 const analyticsController = require('../controllers/analyticsController');
+const { auth } = require('../middleware/auth');
+
+// Expone datos operativos y de clientes: exige sesion.
+router.use(auth);
 
 // Middleware for permission checking
 const requirePermission = (permission) => (req, res, next) => {

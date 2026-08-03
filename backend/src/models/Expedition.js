@@ -490,8 +490,12 @@ ExpeditionSchema.statics.findByClient = function(nif) {
   return this.find({ 'client.nif': nif }).sort({ createdAt: -1 });
 };
 
-ExpeditionSchema.statics.getStats = async function(userId = null) {
-  const match = userId ? { assignedTo: userId } : {};
+ExpeditionSchema.statics.getStats = async function(userId = null, tenantId = null) {
+  // Sin tenantId, un admin agregaba las expediciones de TODOS los clientes:
+  // el match vacio no acota nada.
+  const match = {};
+  if (userId) match.assignedTo = userId;
+  if (tenantId) match.tenantId = tenantId;
 
   const stats = await this.aggregate([
     { $match: match },

@@ -41,6 +41,20 @@ jest.mock('../../src/models', () => ({
   }
 }));
 
+// El router exige auth desde que se cerro /api/dashboard, que respondia sin
+// token (ver commit de rutas admin/analytics/dashboard/integrations/ml). Aqui
+// se sustituye por un middleware que inyecta un usuario, para seguir probando
+// la logica del dashboard y no la autenticacion.
+jest.mock('../../src/middleware/auth', () => ({
+  auth: (req, _res, next) => {
+    req.user = { _id: 'u1', role: 'admin', tenantId: 't1' };
+    req.tenantId = 't1';
+    next();
+  },
+  authenticate: (req, _res, next) => next(),
+  requireRole: () => (req, _res, next) => next()
+}));
+
 const request = require('supertest');
 const express = require('express');
 const dashboardRoutes = require('../../src/routes/dashboard');

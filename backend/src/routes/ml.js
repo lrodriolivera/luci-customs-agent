@@ -7,6 +7,10 @@
 const express = require('express');
 const router = express.Router();
 const mlController = require('../controllers/mlController');
+const { auth } = require('../middleware/auth');
+
+// Expone datos operativos y de clientes: exige sesion.
+router.use(auth);
 
 // ==================== Channel Prediction ====================
 

@@ -606,13 +606,17 @@ const sendPortalLink = async (req, res) => {
 const getStats = async (req, res) => {
   try {
     const userId = req.user.role === 'admin' ? null : req.user._id;
-    const stats = await Expedition.getStats(userId);
+    // El admin ve todo SU tenant, no el de todos: 'admin' es rol de tenant.
+    const tenantId = req.user.tenantId || null;
+    const stats = await Expedition.getStats(userId, tenantId);
 
     // Estadisticas adicionales
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const query = userId ? { assignedTo: userId } : {};
+    const query = {};
+    if (userId) query.assignedTo = userId;
+    if (tenantId) query.tenantId = tenantId;
 
     const [createdToday, pendingDocuments, readyForDeclaration] = await Promise.all([
       Expedition.countDocuments({ ...query, createdAt: { $gte: today } }),

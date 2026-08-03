@@ -18,6 +18,14 @@ const RUTAS_DIR = path.join(__dirname, '../../src/routes');
 
 /** Routers que sirven datos de cliente y por tanto nunca pueden ser publicos. */
 const RUTAS_PROTEGIDAS = [
+  // Cerradas el 3/Ago: respondian 200 SIN TOKEN en sus SUBrutas. El barrido
+  // anterior probo /api/<router> (la raiz), que devuelve 404, y las dio por
+  // protegidas — de ahi que se escaparan.
+  'admin.js',          // /users listaba emails, roles y permisos de todos
+  'analytics.js',      // 13 subrutas de metricas
+  'dashboard.js',      // /stats con la operativa real de clientes
+  'integrations.js',   // estado de AEAT, VUA, TRACES, NCTS
+  'ml.js',             // estadisticas de fraude y clasificacion
   'oea.js',
   'inspections.js',
   'deadlines.js',
