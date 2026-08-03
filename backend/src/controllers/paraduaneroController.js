@@ -47,6 +47,11 @@ exports.createControls = async (req, res) => {
   try {
     const { expeditionId } = req.params;
 
+    // Sin este guard se podian crear controles paraduaneros colgando del
+    // expediente de otro cliente.
+    const expedition = await Expedition.findById(expeditionId);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+
     const createdControls = await paraduaneroService.createControlsForExpedition(
       expeditionId,
       req.user

@@ -84,6 +84,11 @@ const reevaluateChannel = async (req, res) => {
   try {
     const { expeditionId } = req.params;
 
+    // El servicio carga el expediente por id sin comprobar nada: sin este guard
+    // se podia reevaluar el canal del expediente de otro cliente.
+    const expedition = await Expedition.findById(expeditionId);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+
     const result = await channelService.reevaluateYellowChannel(expeditionId, req.user);
 
     res.json({
