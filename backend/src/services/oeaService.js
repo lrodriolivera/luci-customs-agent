@@ -347,6 +347,12 @@ class OEAService {
   /**
    * Validate OEA application completeness
    */
+  /**
+   * MUERTO: la asignacion a oeaServiceInstance.validateApplication (al final
+   * del fichero) sobrescribe este metodo en la instancia exportada, que es la
+   * unica que se usa. Se conserva por si algun dia se instancia la clase, pero
+   * las comprobaciones vivas estan alli.
+   */
   validateApplication(oea) {
     const errors = [];
 
@@ -1218,6 +1224,25 @@ oeaServiceInstance.validateApplication = function(data) {
   }
   if (!['OEAC', 'OEAS', 'OEAF'].includes(data.certification?.type)) {
     errors.push({ field: 'certification.type', message: 'Tipo de certificacion invalido' });
+  }
+
+  // Estas cuatro comprobaciones vivian en PDFGenerator.validateApplication (el
+  // metodo de la clase, linea ~350), pero esta asignacion lo sobrescribe en la
+  // instancia exportada: submitForReview llama this.validateApplication y
+  // resolvia AQUI, asi que nunca se ejecutaban. Resultado: una solicitud sin
+  // direccion, sin contacto y sin representante legal pasaba a revision y la
+  // AEAT la habria rechazado.
+  if (!data.organization?.address?.city) {
+    errors.push({ field: 'organization.address', message: 'Direccion incompleta' });
+  }
+  if (!data.organization?.contact?.name) {
+    errors.push({ field: 'organization.contact.name', message: 'Contacto requerido' });
+  }
+  if (!data.organization?.contact?.email) {
+    errors.push({ field: 'organization.contact.email', message: 'Email de contacto requerido' });
+  }
+  if (!data.organization?.legalRepresentative?.name) {
+    errors.push({ field: 'organization.legalRepresentative', message: 'Representante legal requerido' });
   }
 
   return {

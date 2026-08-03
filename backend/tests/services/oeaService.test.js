@@ -63,12 +63,20 @@ describe('OEA Service', () => {
   });
 
   describe('validateApplication', () => {
+    // Los fixtures se completaron con direccion, contacto y representante legal:
+    // antes solo llevaban nombre, NIF y EORI y aun asi esperaban valid=true,
+    // fijando un bug —habia dos validateApplication y la que se ejecutaba no
+    // comprobaba esos campos, asi que una solicitud incompleta pasaba a
+    // revision en la AEAT—.
     test('should validate complete organization data', () => {
       const data = {
         organization: {
           name: 'Test Company S.A.',
           nif: 'A12345678',
-          eori: 'ESA12345678000'
+          eori: 'ESA12345678000',
+          address: { street: 'Calle 1', city: 'Madrid', postalCode: '28001' },
+          contact: { name: 'Contacto', email: 'c@ejemplo.es' },
+          legalRepresentative: { name: 'Representante Legal' }
         },
         certification: {
           type: 'OEAC'
@@ -158,7 +166,10 @@ describe('OEA Service', () => {
           organization: {
             name: 'Test Company',
             nif: 'A12345678',
-            eori: 'ESA12345678000'
+            eori: 'ESA12345678000',
+            address: { street: 'Calle 1', city: 'Madrid', postalCode: '28001' },
+            contact: { name: 'Contacto', email: 'c@ejemplo.es' },
+            legalRepresentative: { name: 'Representante Legal' }
           },
           certification: { type }
         };
