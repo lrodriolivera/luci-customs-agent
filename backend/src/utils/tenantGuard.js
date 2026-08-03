@@ -13,6 +13,8 @@
  * false. We use 404 (not 403) to avoid leaking existence across tenants.
  */
 
+const { esSuperAdmin } = require('../constants/roles');
+
 function extractTenantId(doc) {
   if (!doc) return null;
   const raw = doc.tenantId || doc.organizationId;
@@ -20,9 +22,10 @@ function extractTenantId(doc) {
   return typeof raw === 'object' ? String(raw) : raw;
 }
 
-function isSuperAdmin(user) {
-  return user?.role === 'superadmin' || user?.isSuperAdmin === true;
-}
+// Delegado en src/constants/roles.js: esta funcion comprobaba 'superadmin' SIN
+// guion bajo, mientras tenantMiddleware exigia 'super_admin' CON el. Dos
+// puertas distintas al mismo privilegio.
+const isSuperAdmin = esSuperAdmin;
 
 function ensureSameTenant(doc, req, res, { resource = 'Resource' } = {}) {
   if (!doc) {

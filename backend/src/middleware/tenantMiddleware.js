@@ -8,6 +8,7 @@
 const logger = require('../config/logger');
 const tenantService = require('../services/tenant/tenantService');
 const rbacService = require('../services/tenant/rbacService');
+const { esSuperAdmin, ROLES } = require('../constants/roles');
 
 /**
  * Extract tenant from request
@@ -342,7 +343,7 @@ const adminOnly = (req, res, next) => {
   if (req.tenant) {
     const rolesResult = rbacService.getUserRoles(req.tenantId, req.user.id);
     isAdmin = !!rolesResult.roles?.some(r =>
-      r.id === 'super_admin' || r.id === 'tenant_admin'
+      r.id === ROLES.SUPER_ADMIN || r.id === 'tenant_admin'
     );
   }
 
@@ -375,11 +376,12 @@ const superAdminOnly = (req, res, next) => {
     });
   }
 
-  // Super admin can work across tenants
-  const isSuperAdmin = req.user.role === 'super_admin' ||
-    req.user.roles?.includes('super_admin');
-
-  if (!isSuperAdmin) {
+  // Super admin can work across tenants.
+  // La comprobacion vive en src/constants/roles.js: aqui se exigia
+  // 'super_admin' mientras tenantGuard aceptaba 'superadmin', y ninguna de las
+  // dos figuraba en el enum de User.role, de modo que este middleware rechazaba
+  // a todo el mundo y /api/v1/tenants era inalcanzable.
+  if (!esSuperAdmin(req.user)) {
     return res.status(403).json({
       success: false,
       error: 'Super administrator access required',
@@ -407,7 +409,7 @@ const checkOwnership = (getOwnerId) => {
     // Admins bypass ownership check
     const rolesResult = rbacService.getUserRoles(req.tenantId, req.user.id);
     const isAdmin = rolesResult.roles?.some(r =>
-      r.id === 'super_admin' || r.id === 'tenant_admin' || r.id === 'manager'
+      r.id === ROLES.SUPER_ADMIN || r.id === 'tenant_admin' || r.id === 'manager'
     );
 
     if (isAdmin) {

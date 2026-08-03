@@ -88,18 +88,25 @@ describe('tenantMiddleware.superAdminOnly', () => {
     expect(next).toHaveBeenCalled();
   });
 
-  // El string del rol NO esta unificado en el codigo:
-  //   tenantMiddleware espera 'super_admin'
-  //   utils/tenantGuard espera 'superadmin' (o el flag isSuperAdmin)
-  //   el enum de User solo admite admin/supervisor/agent/viewer
-  // Es decir, hoy no existe ningun usuario capaz de pasar este middleware, y
-  // las rutas /api/v1/tenants son inalcanzables. Este test fija el
-  // comportamiento ACTUAL para que se vea al unificarlo.
-  test("'superadmin' sin guion bajo NO pasa (inconsistente con tenantGuard)", () => {
+  // Este test fijaba la INCONSISTENCIA: tenantMiddleware exigia 'super_admin',
+  // tenantGuard aceptaba 'superadmin' sin guion bajo, y el enum de User no
+  // admitia ninguno de los dos, de modo que /api/v1/tenants era inalcanzable.
+  // Unificado en src/constants/roles.js, la forma heredada ya se reconoce: por
+  // eso ahora se espera lo contrario. Ver tests/security/superAdminRole.test.js.
+  test("'superadmin' sin guion bajo tambien pasa (forma heredada)", () => {
+    const next = jest.fn();
+
+    superAdminOnly({ user: { role: 'superadmin' } }, mockRes(), next);
+
+    expect(next).toHaveBeenCalled();
+  });
+
+  test('un admin de tenant sigue sin pasar: es rol de organizacion', () => {
+    // Unificar no puede significar abrir la puerta.
     const res = mockRes();
     const next = jest.fn();
 
-    superAdminOnly({ user: { role: 'superadmin' } }, res, next);
+    superAdminOnly({ user: { role: 'admin' } }, res, next);
 
     expect(res.statusCode).toBe(403);
     expect(next).not.toHaveBeenCalled();

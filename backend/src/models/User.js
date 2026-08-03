@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { TODOS: ROLES_VALIDOS, AGENT } = require('../constants/roles');
 
 const UserSchema = new mongoose.Schema({
   email: {
@@ -36,10 +37,13 @@ const UserSchema = new mongoose.Schema({
     index: true
   },
 
+  // super_admin es rol de PLATAFORMA (cruza tenants); el resto son de TENANT.
+  // Sin super_admin en el enum, superAdminOnly exigia un rol que nadie podia
+  // tener y /api/v1/tenants quedaba inalcanzable. Ver src/constants/roles.js.
   role: {
     type: String,
-    enum: ['admin', 'supervisor', 'agent', 'viewer'],
-    default: 'agent'
+    enum: ROLES_VALIDOS,
+    default: AGENT
   },
 
   // Datos profesionales

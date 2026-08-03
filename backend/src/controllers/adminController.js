@@ -81,7 +81,9 @@ const listUsers = async (req, res) => {
   try {
     const { status, role, search } = req.query;
 
-    // Tenant isolation: non-superadmin admins only see their own tenant's users.
+    // Tenant isolation: un 'admin' es administrador de SU organizacion, no de
+    // la plataforma, asi que solo ve los usuarios de su tenant. Unicamente
+    // super_admin (rol de plataforma) los ve todos. Ver src/constants/roles.js.
     const { isSuperAdmin } = require('../utils/tenantGuard');
     let query = {};
     if (!isSuperAdmin(req.user) && req.user?.tenantId) {

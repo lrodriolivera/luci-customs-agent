@@ -51,6 +51,10 @@ const ACTIONS = {
  */
 const BUILT_IN_ROLES = {
   // Super admin - full access
+  // Rol RBAC de plataforma. La cadena es la misma que ROLES.SUPER_ADMIN de
+  // src/constants/roles.js: son dos espacios de nombres (id de rol RBAC vs
+  // campo User.role) que DEBEN coincidir, porque tenantMiddleware compara
+  // ambos contra el mismo valor.
   super_admin: {
     id: 'super_admin',
     name: 'Super Administrador',
