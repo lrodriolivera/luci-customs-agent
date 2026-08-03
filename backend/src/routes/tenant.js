@@ -16,6 +16,7 @@ const {
   superAdminOnly,
   attachTenantContext
 } = require('../middleware/tenantMiddleware');
+const { auth } = require('../middleware/auth');
 
 // Apply tenant extraction to all routes
 router.use(extractTenant({ required: false }));
@@ -25,32 +26,43 @@ router.use(attachTenantContext);
 // SUPER ADMIN - TENANT MANAGEMENT
 // =====================================================
 
+// GESTION DE TENANTS (super admin)
+//
+// `auth` va en cada ruta, no como router.use, porque mas abajo hay catalogos
+// deliberadamente publicos (/tenant/plans, /tenant/permissions/info,
+// /tenant/roles/builtin) que un router.use cerraria sin querer.
+//
+// Sin `auth`, req.user nunca se rellena y superAdminOnly comprueba
+// `if (!req.user) return 401` ANTES de mirar el rol: estas 9 rutas devolvian
+// 401 AUTH_REQUIRED incluso con un token valido. Junto con las tres cadenas
+// divergentes del rol, era la segunda razon por la que la gestion de tenants
+// resultaba inalcanzable.
 // Create tenant (super admin)
-router.post('/tenants', superAdminOnly, tenantController.createTenant);
+router.post('/tenants', auth, superAdminOnly, tenantController.createTenant);
 
 // List all tenants (super admin)
-router.get('/tenants', superAdminOnly, tenantController.listTenants);
+router.get('/tenants', auth, superAdminOnly, tenantController.listTenants);
 
 // Get tenant by ID (super admin)
-router.get('/tenants/:id', superAdminOnly, tenantController.getTenant);
+router.get('/tenants/:id', auth, superAdminOnly, tenantController.getTenant);
 
 // Get tenant by slug (super admin)
-router.get('/tenants/slug/:slug', superAdminOnly, tenantController.getTenantBySlug);
+router.get('/tenants/slug/:slug', auth, superAdminOnly, tenantController.getTenantBySlug);
 
 // Update tenant (super admin)
-router.put('/tenants/:id', superAdminOnly, tenantController.updateTenant);
+router.put('/tenants/:id', auth, superAdminOnly, tenantController.updateTenant);
 
 // Delete tenant (super admin)
-router.delete('/tenants/:id', superAdminOnly, tenantController.deleteTenant);
+router.delete('/tenants/:id', auth, superAdminOnly, tenantController.deleteTenant);
 
 // Activate tenant (super admin)
-router.post('/tenants/:id/activate', superAdminOnly, tenantController.activateTenant);
+router.post('/tenants/:id/activate', auth, superAdminOnly, tenantController.activateTenant);
 
 // Suspend tenant (super admin)
-router.post('/tenants/:id/suspend', superAdminOnly, tenantController.suspendTenant);
+router.post('/tenants/:id/suspend', auth, superAdminOnly, tenantController.suspendTenant);
 
 // Cancel tenant (super admin)
-router.post('/tenants/:id/cancel', superAdminOnly, tenantController.cancelTenant);
+router.post('/tenants/:id/cancel', auth, superAdminOnly, tenantController.cancelTenant);
 
 // =====================================================
 // CURRENT TENANT CONTEXT
@@ -279,7 +291,6 @@ router.get(
 // =====================================================
 
 const Tenant = require('../models/Tenant');
-const { auth } = require('../middleware/auth');
 
 /**
  * GET /api/tenant/eori

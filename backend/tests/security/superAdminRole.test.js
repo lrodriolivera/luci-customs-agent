@@ -155,6 +155,66 @@ describe('el modelo User admite el rol', () => {
   });
 });
 
+describe('las rutas de tenants reciben req.user', () => {
+  // SEGUNDA causa de que /api/tenants fuera inalcanzable, encontrada al
+  // verificar el fix en produccion: unificar el rol no bastaba.
+  //
+  // tenant.js montaba extractTenant y attachTenantContext, pero NO `auth`, de
+  // modo que req.user nunca se rellenaba. superAdminOnly comprueba `if
+  // (!req.user) return 401` ANTES de mirar el rol, asi que las 9 rutas
+  // superAdminOnly devolvian 401 AUTH_REQUIRED incluso con un token valido.
+  //
+  // Medido en produccion: GET /api/tenants con JWT de admin ->
+  //   {"error":"Authentication required","code":"AUTH_REQUIRED"}
+  //
+  // `auth` se importaba en la linea 282, DESPUES de declarar esas rutas, y
+  // solo se aplicaba a /tenant/me.
+  const fs = require('fs');
+  const path = require('path');
+
+  const TENANT_JS = fs.readFileSync(
+    path.join(__dirname, '../../src/routes/tenant.js'), 'utf8'
+  );
+
+  test('TODAS las rutas superAdminOnly llevan auth delante', () => {
+    // auth va por ruta y no como router.use porque mas abajo en el mismo
+    // fichero hay catalogos deliberadamente publicos (/tenant/plans,
+    // /tenant/permissions/info, /tenant/roles/builtin) que un router.use
+    // cerraria sin querer.
+    const conSuperAdmin = TENANT_JS.split('\n').filter(l => /superAdminOnly/.test(l) && /^router\./.test(l));
+
+    expect(conSuperAdmin.length).toBeGreaterThanOrEqual(9);
+    for (const linea of conSuperAdmin) {
+      expect(linea).toMatch(/\bauth\s*,\s*superAdminOnly/);
+    }
+  });
+
+  test('auth se importa antes de usarse', () => {
+    // Estaba en la linea 282, DESPUES de esas rutas: usarlo arriba sin mover el
+    // require rompe por TDZ al arrancar el servidor, no en los tests de ruta.
+    const posImport = TENANT_JS.search(/const\s*\{[^}]*\bauth\b[^}]*\}\s*=\s*require\(['"]\.\.\/middleware\/auth/);
+    const posUso = TENANT_JS.search(/\bauth\s*,\s*superAdminOnly/);
+
+    expect(posImport).toBeGreaterThan(-1);
+    expect(posImport).toBeLessThan(posUso);
+  });
+
+  test('los catalogos publicos siguen sin exigir token', () => {
+    // No es un descuido: se comprobo que responden 200 sin token en produccion
+    // y este cambio no debe alterarlo.
+    for (const ruta of ['/tenant/plans', '/tenant/permissions/info', '/tenant/roles/builtin']) {
+      const linea = TENANT_JS.split('\n').find(l => l.includes(`'${ruta}'`));
+
+      expect(linea).toBeDefined();
+      expect(linea).not.toMatch(/\bauth\b/);
+    }
+  });
+
+  test('el router carga sin error', () => {
+    expect(() => require('../../src/routes/tenant')).not.toThrow();
+  });
+});
+
 describe('no quedan cadenas sueltas en el codigo', () => {
   const fs = require('fs');
   const path = require('path');
