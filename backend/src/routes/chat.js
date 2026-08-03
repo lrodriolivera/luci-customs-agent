@@ -4,6 +4,7 @@ const { ChatMessage, Expedition } = require('../models');
 const { auth } = require('../middleware/auth');
 const aiService = require('../services/aiService');
 const logger = require('../config/logger');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 // Todas las rutas requieren autenticacion
 router.use(auth);
@@ -49,12 +50,7 @@ router.get('/:expeditionId', async (req, res) => {
     const { limit = 50, before } = req.query;
 
     const expedition = await Expedition.findById(expeditionId);
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res)) return;
 
     const messages = await ChatMessage.getConversation(
       expedition._id,
@@ -92,12 +88,7 @@ router.post('/:expeditionId', async (req, res) => {
     const { content, useAI, language } = req.body;
 
     const expedition = await Expedition.findById(expeditionId);
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res)) return;
 
     // Guardar mensaje del agente
     const agentMessage = new ChatMessage({
@@ -177,12 +168,7 @@ router.get('/:expeditionId/unread', async (req, res) => {
     const { expeditionId } = req.params;
 
     const expedition = await Expedition.findById(expeditionId);
-    if (!expedition) {
-      return res.status(404).json({
-        success: false,
-        error: 'Expediente no encontrado'
-      });
-    }
+    if (!ensureSameTenant(expedition, req, res)) return;
 
     const count = await ChatMessage.getUnreadCount(expedition._id, 'agent');
 

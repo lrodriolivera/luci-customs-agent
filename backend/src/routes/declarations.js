@@ -177,6 +177,7 @@ router.post('/:expeditionId/cancel', requirePermission('canApproveDeclarations')
 
 const pdfGenerator = require('../services/pdfGenerator');
 const { Expedition, H7Declaration, ENSDeclaration } = require('../models');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 /**
  * @route GET /api/declarations/:expeditionId/pdf
@@ -185,7 +186,7 @@ const { Expedition, H7Declaration, ENSDeclaration } = require('../models');
 router.get('/:expeditionId/pdf', async (req, res) => {
   try {
     const expedition = await Expedition.findById(req.params.expeditionId).lean();
-    if (!expedition) return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
+    if (!ensureSameTenant(expedition, req, res)) return;
 
     const isDraft = req.query.preview === 'true';
     const isExport = expedition.operationType === 'export' || expedition.operationType === 'EXPORT';
@@ -212,7 +213,7 @@ router.get('/:expeditionId/pdf', async (req, res) => {
 router.get('/h7/:id/pdf', async (req, res) => {
   try {
     const h7 = await H7Declaration.findById(req.params.id).lean();
-    if (!h7) return res.status(404).json({ success: false, error: 'Declaracion H7 no encontrada' });
+    if (!ensureSameTenant(h7, req, res)) return;
 
     const isDraft = req.query.preview === 'true';
     const pdfBuffer = await pdfGenerator.generateH7PDF(h7, { draft: isDraft });
@@ -233,7 +234,7 @@ router.get('/h7/:id/pdf', async (req, res) => {
 router.get('/ens/:id/pdf', async (req, res) => {
   try {
     const ens = await ENSDeclaration.findById(req.params.id).lean();
-    if (!ens) return res.status(404).json({ success: false, error: 'Declaracion ENS no encontrada' });
+    if (!ensureSameTenant(ens, req, res)) return;
 
     const isDraft = req.query.preview === 'true';
     const pdfBuffer = await pdfGenerator.generateENSPDF(ens, { draft: isDraft });
@@ -254,7 +255,7 @@ router.get('/ens/:id/pdf', async (req, res) => {
 router.get('/:expeditionId/summary-pdf', async (req, res) => {
   try {
     const expedition = await Expedition.findById(req.params.expeditionId).lean();
-    if (!expedition) return res.status(404).json({ success: false, error: 'Expediente no encontrado' });
+    if (!ensureSameTenant(expedition, req, res)) return;
 
     const pdfBuffer = await pdfGenerator.generateExpeditionSummaryPDF(expedition);
 

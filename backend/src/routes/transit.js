@@ -117,11 +117,12 @@ router.post('/:id/ai/apply-suggestion', transitController.aiApplySuggestion);
 // === PDF ===
 const pdfGenerator = require('../services/pdfGenerator');
 const { Transit } = require('../models');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 router.get('/:id/pdf', async (req, res) => {
   try {
     const transit = await Transit.findById(req.params.id).lean();
-    if (!transit) return res.status(404).json({ success: false, error: 'Transito no encontrado' });
+    if (!ensureSameTenant(transit, req, res)) return;
     const isDraft = req.query.preview === 'true';
     const pdfBuffer = await pdfGenerator.generateNCTSPDF(transit, { draft: isDraft });
     res.setHeader('Content-Type', 'application/pdf');

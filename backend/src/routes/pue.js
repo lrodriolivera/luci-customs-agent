@@ -194,11 +194,12 @@ router.post('/:id/ai/full-analysis', pueController.aiFullAnalysis);
 // === PDF ===
 const pdfGenerator = require('../services/pdfGenerator');
 const { PUERequest } = require('../models');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 router.get('/:id/pdf', async (req, res) => {
   try {
     const pue = await PUERequest.findById(req.params.id).lean();
-    if (!pue) return res.status(404).json({ success: false, error: 'Solicitud PUE no encontrada' });
+    if (!ensureSameTenant(pue, req, res)) return;
     const isDraft = req.query.preview === 'true';
     const pdfBuffer = await pdfGenerator.generatePUESOIVREPDF(pue, { draft: isDraft });
     const flowType = pue.flowType === 'ROHS_RAEE' ? 'ROHS' : 'SOIVRE';
