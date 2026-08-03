@@ -246,7 +246,7 @@ El tiempo real de despacho no se pierde: está en `dashboard → tiempos.mediaHo
 
 **Trampa encontrada:** `aggregate()` **no** castea el `tenantId` — `countDocuments()` y `find()` sí lo hacen usando el esquema, pero el `$match` va contra el documento crudo. Medido: `countDocuments` → 35, `aggregate` → 0 sobre los mismos datos. En un panel, ese cero se lee como "no hay actividad", no como un error.
 
-### 3. `requireRole('admin')` es rol de tenant, no de plataforma — `<este commit>`
+### 3. `requireRole('admin')` es rol de tenant, no de plataforma — `2d61f3a`
 
 Un `admin` administra **su organización**, no el sistema. La consecuencia práctica se pasa por alto con facilidad: `requireRole('admin')` **no acota la ruta a ningún tenant**, solo dice "quien llame ha de ser admin de alguno". Si el handler opera sobre todos, sigue haciéndolo — con la falsa sensación de estar protegido.
 
