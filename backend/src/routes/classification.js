@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const classificationController = require('../controllers/classificationController');
-const { auth, optionalAuth } = require('../middleware/auth');
+const { auth, requireRole } = require('../middleware/auth');
 const { classificationValidators } = require('../middleware/validators');
 
 /**
@@ -67,7 +67,10 @@ router.post('/apply', auth, classificationController.applyClassification);
 router.post('/calculate-duties', auth, classificationController.calculateDuties);
 router.get('/required-documents/:code', auth, classificationController.getRequiredDocuments);
 router.get('/preferences/:origin', auth, classificationController.getPreferences);
-router.post('/seed', auth, classificationController.seedTaricDatabase);
+// Operacion global sobre el catalogo TARIC (21.946 codigos): rol admin, no
+// basta con estar autenticado. Es upsert, no borra, pero afecta a todos los
+// tenants por igual.
+router.post('/seed', auth, requireRole('admin'), classificationController.seedTaricDatabase);
 
 // ==================== AI ENDPOINTS - LUCI Integration ====================
 
@@ -112,6 +115,7 @@ router.get('/cache-stats', auth, classificationController.getCacheStats);
 router.put('/history/:searchId/mark-used', auth, classificationController.markSearchAsUsed);
 
 // DELETE /api/classification/cache/clean - Limpiar cache antiguo
-router.delete('/cache/clean', auth, classificationController.cleanOldCache);
+// Purga la cache de IA de TODOS los tenants: rol admin.
+router.delete('/cache/clean', auth, requireRole('admin'), classificationController.cleanOldCache);
 
 module.exports = router;

@@ -667,9 +667,11 @@ const calculateDuties = async (req, res) => {
 
   } catch (error) {
     logger.error('Error calculando derechos:', error);
+    // El detalle va al log, no al cliente: el resto del controller ya devuelve
+    // mensajes genericos y error.message puede llevar rutas o respuestas de API.
     res.status(500).json({
       success: false,
-      error: error.message || 'Error al calcular derechos de importacion'
+      error: 'Error al calcular derechos de importacion'
     });
   }
 };
@@ -1056,8 +1058,13 @@ const markSearchAsUsed = async (req, res) => {
     const { searchId } = req.params;
     const { expeditionId } = req.body;
 
-    const search = await TaricSearchHistory.findByIdAndUpdate(
-      searchId,
+    // Acotado al tenant: sin esto cualquier usuario autenticado podia marcar
+    // como usada la busqueda de otro cliente conociendo su id.
+    const filtro = { _id: searchId };
+    if (req.user?.tenantId) filtro.tenantId = req.user.tenantId;
+
+    const search = await TaricSearchHistory.findOneAndUpdate(
+      filtro,
       {
         wasUsed: true,
         expeditionId
