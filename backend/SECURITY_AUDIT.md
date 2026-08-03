@@ -15,7 +15,8 @@
 | Rutas con autenticación | **650** (92%) |
 | Rutas públicas por diseño | **54** (8%) — catálogos de referencia, ver abajo |
 | Hallazgos corregidos | **8**, un commit cada uno |
-| Tests al cerrar | **1732** en verde (86 suites) |
+| Pendientes cerrados después | **3** — ver la sección al final |
+| Tests al cerrar | **1797** en verde (90 suites) |
 
 Ningún hallazgo de esta tanda era una fuga de datos de cliente explotable hoy: los cinco anteriores (`b40a1ea`, `140b743`, `6612892`, `ef596b4`, `94f8bbc`) ya habían cerrado esa clase de problema. Lo que queda son **puertas de autorización que faltaban** y **funciones rotas en silencio**, incluida una regresión introducida por el propio barrido anterior.
 
@@ -85,7 +86,7 @@ async delete(id) {                        // <- sin userId
 
 `reportsService` guarda los informes en un `new Map()` global compartido por todos los tenants. `listReports` **sí** filtraba por `generatedBy`, pero `getReport`, `downloadReport` y `deleteReport` accedían por id sin comprobar nada.
 
-Asimetría clásica: el listado acotado, los accesos directos abiertos. Conociendo el id —secuencial con marca de tiempo, no un secreto— se podía leer, descargar o **borrar** el informe de cualquier otro. Hoy esos informes se alimentan de métricas simuladas (flag `simulated`, `7a084e4`), así que no exponen operativa real todavía.
+Asimetría clásica: el listado acotado, los accesos directos abiertos. Conociendo el id —secuencial con marca de tiempo, no un secreto— se podía leer, descargar o **borrar** el informe de cualquier otro. Cuando se escribió esto, los informes se alimentaban de métricas simuladas; **desde `40b168b` llevan datos reales**, así que el aislamiento que corrige este commit pasó a proteger operativa de verdad.
 
 `getReport` devuelve el **mismo** error para "no existe" y "no es tuyo": distinguirlos permitiría confirmar por sondeo que un id ajeno existe.
 
@@ -207,8 +208,12 @@ Estos tests fallan si el patrón reaparece, incluso en un router que se añada d
 | `tests/routes/apiKeyIssuanceRole.test.js` | Divergencia entre los dos routers que emiten API keys |
 | `tests/services/ownershipParamWired.test.js` | Comprobaciones de propiedad que usan un `userId` fuera de ámbito |
 | `tests/services/reportOwnership.test.js` | Acceso a informes ajenos |
+| `tests/security/superAdminRole.test.js` | Que reaparezca una cuarta variante del rol de super admin |
+| `tests/security/adminIsTenantRole.test.js` | Rutas admin de alcance global sin revisar |
+| `tests/services/realMetrics.test.js` | Que el `tenantId` llegue como cadena a una agregación |
+| `tests/controllers/analyticsNotSimulated.test.js` | Que analytics vuelva a devolver datos inventados |
 
-213 tests de guardia en total (11 suites).
+275 tests de guardia en total (15 suites).
 
 ---
 
