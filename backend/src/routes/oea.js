@@ -8,7 +8,7 @@
 const express = require('express');
 const router = express.Router();
 const oeaController = require('../controllers/oeaController');
-const { auth } = require('../middleware/auth');
+const { auth, requireRole } = require('../middleware/auth');
 
 // Todas las rutas requieren autenticacion: exponian datos de clientes
 // (NIF, EORI, MRN, expedientes, inspecciones) a cualquiera sin token.
@@ -65,14 +65,19 @@ router.put('/:id', oeaController.update);
 // POST /api/oea/:id/submit - Submit for review
 router.post('/:id/submit', oeaController.submitForReview);
 
+// Conceder o retirar la certificacion exige rol: el service solo comprueba
+// PROPIEDAD, asi que sin esto un usuario aprobaba su PROPIA OEA, y aprobar
+// activa todos los beneficios y fija la reduccion de garantia (hasta el 100%).
+// En el mundo real la concede la AEAT tras auditoria, no el propio operador.
+
 // POST /api/oea/:id/approve - Approve certification
-router.post('/:id/approve', oeaController.approve);
+router.post('/:id/approve', requireRole('admin', 'supervisor'), oeaController.approve);
 
 // POST /api/oea/:id/suspend - Suspend certification
-router.post('/:id/suspend', oeaController.suspend);
+router.post('/:id/suspend', requireRole('admin', 'supervisor'), oeaController.suspend);
 
 // POST /api/oea/:id/revoke - Revoke certification
-router.post('/:id/revoke', oeaController.revoke);
+router.post('/:id/revoke', requireRole('admin', 'supervisor'), oeaController.revoke);
 
 // POST /api/oea/:id/renewal/initiate - Initiate renewal
 router.post('/:id/renewal/initiate', oeaController.initiateRenewal);
