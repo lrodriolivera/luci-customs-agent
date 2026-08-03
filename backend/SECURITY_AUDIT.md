@@ -212,13 +212,61 @@ Estos tests fallan si el patrón reaparece, incluso en un router que se añada d
 
 ---
 
-## Pendiente, no corregido aquí
+## Los tres pendientes: CERRADOS
 
-Requiere decisión de negocio o queda fuera del alcance de esta auditoría:
+Los tres puntos que quedaron abiertos al cerrar la auditoría se resolvieron el mismo día.
 
-- **El rol `super_admin` usa tres cadenas distintas** en el código, de modo que `/api/v1/tenants` es inalcanzable (401). Falla cerrado, no es un agujero, pero la gestión de tenants no funciona por API.
-- **Analytics devuelve datos simulados** (`Math.random()`) marcados con el flag `simulated`. Las agregaciones reales están pendientes. Cuando se implementen, los informes de `reportsService` pasarán a llevar operativa real: el aislamiento que corrige `8f7f210` es previo a ese momento, no posterior.
-- **`requireRole('admin')` es un rol de tenant, no del sistema.** Un `admin` administra su organización, no la plataforma. Está bien así, pero conviene tenerlo presente al leer los `requireRole('admin')` de este informe: no conceden acceso entre tenants.
+### 1. El rol `super_admin` usaba tres cadenas distintas — `e29b130`
+
+`tenantGuard` comprobaba `'superadmin'` (sin guion), `tenantMiddleware` exigía `'super_admin'`, y el enum de `User.role` no admitía ninguna de las dos. `/api/v1/tenants` —crear, suspender y borrar organizaciones— era **inalcanzable**.
+
+Fallaba cerrado, así que nunca fue un agujero. El peligro estaba en la dirección contraria: bastaba que alguien "arreglase" una de las tres para que las otras dos concedieran acceso sin querer.
+
+`src/constants/roles.js` es ahora la fuente única. **Nadie tiene el rol asignado**, por decisión explícita: el sistema queda coherente y el endpoint devuelve **403** —ya no 401— hasta que se conceda a mano.
+
+```js
+db.users.updateOne({ email: '...' }, { $set: { role: 'super_admin' } })
+```
+
+### 2. Analytics devolvía `Math.random()` — `40b168b`
+
+171 usos de `_generateMetricValue(min, max)` construían el cuadro de mando; la UI los presentaba como analítica real. `realMetricsService` los sustituye por agregaciones **acotadas por tenant**.
+
+Cifras reales que devuelve hoy: 50 declaraciones (35 H7 + 15 NCTS), canales 2/3/3, 515,76 € de IVA liquidado, 323,9 h de despacho medio sobre muestra de 8.
+
+Lo que **no** se puede calcular responde **HTTP 501** con un motivo legible, en vez de un 200 con ceros:
+
+| Endpoint | Motivo |
+|---|---|
+| `GET /analytics/financial` | 0 pagos registrados: no hay recaudación cobrada |
+| `POST /predictions/volume` | Era `baseVolume * (0.9 + Math.random()*0.2)` |
+| `POST /predictions/processing-time` | Ídem, con la *confianza* también aleatoria |
+
+El tiempo real de despacho no se pierde: está en `dashboard → tiempos.mediaHoras`, medido de `submittedAt` a `releasedAt`. Las comprobaciones son en tiempo de ejecución: en cuanto se registre el primer pago, la recaudación se calcula sola.
+
+**Trampa encontrada:** `aggregate()` **no** castea el `tenantId` — `countDocuments()` y `find()` sí lo hacen usando el esquema, pero el `$match` va contra el documento crudo. Medido: `countDocuments` → 35, `aggregate` → 0 sobre los mismos datos. En un panel, ese cero se lee como "no hay actividad", no como un error.
+
+### 3. `requireRole('admin')` es rol de tenant, no de plataforma — `<este commit>`
+
+Un `admin` administra **su organización**, no el sistema. La consecuencia práctica se pasa por alto con facilidad: `requireRole('admin')` **no acota la ruta a ningún tenant**, solo dice "quien llame ha de ser admin de alguno". Si el handler opera sobre todos, sigue haciéndolo — con la falsa sensación de estar protegido.
+
+Al proteger una ruta hay que decidir dos cosas por separado:
+
+1. **Quién** puede llamarla → `requireRole`
+2. **Sobre qué datos** actúa → filtrar por `req.user.tenantId` en el handler
+
+Auditados los **30 usos**. De los 17 sin identificador de recurso, 13 acotan correctamente dentro del handler (`audit`, `auth/users`, `payments`, `portal/api-keys`, `publicApi/keys`, `certificates/upload`, `requirements`, `workflows`). Los **4 de alcance global** quedan justificados uno a uno:
+
+| Ruta | Por qué se acepta |
+|---|---|
+| `POST /deadlines/process-alerts` | Escribe alertas en plazos de todos los tenants, pero el llamante no llega a verlos |
+| `POST /deadlines/sync` | Hoy es un stub |
+| `DELETE /classification/cache/clean` | La caché de clasificaciones IA no tiene `tenantId`: cachea el catálogo TARIC, común a todos. Borrarla solo obliga a recalcular |
+| `POST /classification/seed` | Recarga el catálogo TARIC oficial de la UE, común a todos |
+
+Ninguna expone datos de un cliente a otro. Cuando haya varios clientes en producción conviene moverlas a `super_admin` o a un job programado.
+
+La distinción queda documentada en `src/middleware/auth.js` (donde la ve quien usa el middleware) y en `src/constants/roles.js`. `tests/security/adminIsTenantRole.test.js` falla si aparece una ruta admin de alcance global sin revisar.
 
 ---
 

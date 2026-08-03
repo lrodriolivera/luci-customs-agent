@@ -76,6 +76,28 @@ const auth = async (req, res, next) => {
   }
 };
 
+/**
+ * Exige que el usuario tenga uno de estos roles.
+ *
+ * ┌─ OJO ────────────────────────────────────────────────────────────────────┐
+ * │ 'admin' es un rol de TENANT, no de plataforma. Un admin de LUCI          │
+ * │ administra SU organizacion, no el sistema. El rol de plataforma es       │
+ * │ 'super_admin' y se comprueba con superAdminOnly (tenantMiddleware).      │
+ * └──────────────────────────────────────────────────────────────────────────┘
+ *
+ * La consecuencia practica es facil de pasar por alto: requireRole('admin') NO
+ * acota la ruta a ningun tenant. Solo dice "quien llame ha de ser admin de
+ * alguno". Si el handler opera sobre todos los tenants, sigue haciendolo -- con
+ * la falsa sensacion de estar protegido.
+ *
+ * Al proteger una ruta hay que decidir las dos cosas por separado:
+ *   1. QUIEN puede llamarla        -> requireRole
+ *   2. SOBRE QUE datos actua       -> filtrar por req.user.tenantId en el handler
+ *
+ * Las rutas admin de alcance global que existen hoy estan inventariadas y
+ * justificadas en tests/security/adminIsTenantRole.test.js, que falla si
+ * aparece una nueva sin revisar.
+ */
 const requireRole = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {
