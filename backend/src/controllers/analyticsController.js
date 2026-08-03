@@ -220,7 +220,7 @@ async function generateReport(req, res) {
 async function getReport(req, res) {
   try {
     const { id } = req.params;
-    const result = reportsService.getReport(id);
+    const result = reportsService.getReport(id, req.user?.id);
 
     if (!result.success) {
       return res.status(404).json(result);
@@ -265,7 +265,7 @@ async function downloadReport(req, res) {
     const { id } = req.params;
     const { format } = req.query;
 
-    const result = await reportsService.exportReport(id, format || 'pdf');
+    const result = await reportsService.exportReport(id, format || 'pdf', req.user?.id);
 
     if (!result.success) {
       return res.status(404).json(result);
@@ -287,7 +287,7 @@ async function downloadReport(req, res) {
 async function deleteReport(req, res) {
   try {
     const { id } = req.params;
-    const result = reportsService.deleteReport(id);
+    const result = reportsService.deleteReport(id, req.user?.id);
 
     if (!result.success) {
       return res.status(404).json(result);

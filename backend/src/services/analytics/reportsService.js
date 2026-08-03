@@ -169,11 +169,29 @@ async function generateReport(type, options = {}) {
 }
 
 /**
+ * ¿Puede este usuario acceder a este informe?
+ *
+ * generatedReports es un Map global compartido por todos los tenants del
+ * proceso. listReports ya filtraba por generatedBy, pero los accesos por id no
+ * comprobaban nada: conociendo el id -- secuencial con marca de tiempo, no un
+ * secreto -- se leia o borraba el informe de cualquier otro cliente.
+ *
+ * Un userId ausente no restringe: los informes programados se generan con
+ * generatedBy 'system' y los procesos internos los consultan sin usuario.
+ */
+function _esSuyo(report, userId) {
+  if (!userId) return true;
+  return report.generatedBy === userId || report.generatedBy === 'system';
+}
+
+/**
  * Get report by ID
  */
-function getReport(reportId) {
+function getReport(reportId, userId) {
   const report = generatedReports.get(reportId);
-  if (!report) {
+  // Mismo error para "no existe" y "no es tuyo": distinguirlos permitiria
+  // confirmar por sondeo que un id ajeno existe.
+  if (!report || !_esSuyo(report, userId)) {
     return { success: false, error: 'Report not found' };
   }
   return { success: true, report };
@@ -228,8 +246,9 @@ function listReports(filters = {}) {
 /**
  * Delete a report
  */
-function deleteReport(reportId) {
-  if (!generatedReports.has(reportId)) {
+function deleteReport(reportId, userId) {
+  const report = generatedReports.get(reportId);
+  if (!report || !_esSuyo(report, userId)) {
     return { success: false, error: 'Report not found' };
   }
   generatedReports.delete(reportId);
@@ -240,8 +259,8 @@ function deleteReport(reportId) {
 /**
  * Export report to specified format
  */
-async function exportReport(reportId, format) {
-  const reportResult = getReport(reportId);
+async function exportReport(reportId, format, userId) {
+  const reportResult = getReport(reportId, userId);
   if (!reportResult.success) {
     return reportResult;
   }
