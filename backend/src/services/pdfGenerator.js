@@ -32,6 +32,14 @@ const fmt = (val) => {
 const fmtMoney = (val) => val != null && val !== 0 ? `${Number(val).toLocaleString('es-ES', { minimumFractionDigits: 2 })} EUR` : '0,00 EUR';
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
 const fmtPct = (val) => val != null ? `${val}%` : '-';
+// La descripcion de una mercancia puede llegar como objeto {es, en}: es la
+// forma en que la guarda el catalogo TARIC, y si se copia tal cual al
+// expediente el PDF reventaba con "(...).substring is not a function".
+const fmtDesc = (val) => {
+  if (val == null) return '';
+  if (typeof val === 'object') return String(val.es || val.en || Object.values(val)[0] || '');
+  return String(val);
+};
 
 class PDFGenerator {
 
@@ -302,7 +310,7 @@ class PDFGenerator {
       const cells = [
         String(i + 1),
         fmt(g.taricCode),
-        (g.description || '').substring(0, 22),
+        fmtDesc(g.description).substring(0, 22),
         fmt(g.countryOfOrigin || originCountry),
         g.grossWeight ? `${g.grossWeight}` : '-',
         g.netWeight ? `${g.netWeight}` : '-',
@@ -476,7 +484,7 @@ class PDFGenerator {
     this._drawSection(doc, 'PARTIDAS');
     const headers = ['Nro', 'TARIC', 'Descripcion', 'Peso Neto', 'Valor Estadistico', 'Pais Destino'];
     const rows = goods.map((g, i) => [
-      i + 1, fmt(g.taricCode), (g.description || '').substring(0, 25),
+      i + 1, fmt(g.taricCode), fmtDesc(g.description).substring(0, 25),
       g.netWeight ? `${g.netWeight} kg` : '-', fmtMoney(g.invoiceValue || g.value),
       fmt(g.countryOfDestination || expedition.destination?.country)
     ]);
@@ -593,7 +601,7 @@ class PDFGenerator {
       this._drawSection(doc, 'MERCANCIAS');
       const headers = ['Nro', 'Codigo', 'Descripcion', 'Cantidad', 'Valor'];
       const rows = expedition.goods.map((g, i) => [
-        i + 1, fmt(g.taricCode), (g.description || '').substring(0, 30),
+        i + 1, fmt(g.taricCode), fmtDesc(g.description).substring(0, 30),
         `${g.quantity || '-'} ${g.unit || ''}`, fmtMoney(g.invoiceValue || g.value)
       ]);
       this._drawTable(doc, headers, rows);
@@ -692,7 +700,7 @@ class PDFGenerator {
     this._drawSection(doc, 'MERCANCIAS');
     const headers = ['Nro', 'TARIC', 'Descripcion', 'Peso Bruto', 'Bultos', 'Origen'];
     const rows = goodsItems.map((g, i) => [
-      g.itemNumber || i + 1, fmt(g.taricCode), (g.description || '').substring(0, 25),
+      g.itemNumber || i + 1, fmt(g.taricCode), fmtDesc(g.description).substring(0, 25),
       g.grossWeight ? `${g.grossWeight} kg` : '-', fmt(g.packages?.count), fmt(g.countryOfOrigin)
     ]);
     if (rows.length === 0) rows.push([1, '-', 'Sin partidas', '-', '-', '-']);
@@ -808,7 +816,7 @@ class PDFGenerator {
       this._drawSection(doc, 'PARTIDAS');
       const headers = ['Nro', 'TARIC', 'Descripcion', 'Cantidad', 'Peso', 'Origen'];
       const rows = goods.map((g, i) => [
-        g.sequenceNumber || i + 1, fmt(g.taricCode), (g.description || '').substring(0, 25),
+        g.sequenceNumber || i + 1, fmt(g.taricCode), fmtDesc(g.description).substring(0, 25),
         `${g.quantity || '-'} ${g.unitOfMeasure || ''}`, g.grossMass ? `${g.grossMass} kg` : '-', fmt(g.countryOfOrigin)
       ]);
       this._drawTable(doc, headers, rows);
