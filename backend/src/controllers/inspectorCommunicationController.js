@@ -202,7 +202,8 @@ const inspectorCommunicationController = {
     try {
       const communication = await inspectorCommunicationService.addArgument(
         req.params.id,
-        req.body
+        req.body,
+        req.user._id
       );
 
       res.json({

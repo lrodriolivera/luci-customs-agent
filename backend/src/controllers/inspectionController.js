@@ -206,7 +206,7 @@ const inspectionController = {
    */
   async addParticipant(req, res) {
     try {
-      const inspection = await inspectionService.addParticipant(req.params.id, req.body);
+      const inspection = await inspectionService.addParticipant(req.params.id, req.body, req.user._id);
 
       res.json({
         success: true,
@@ -227,7 +227,7 @@ const inspectionController = {
    */
   async addEvidence(req, res) {
     try {
-      const inspection = await inspectionService.addEvidence(req.params.id, req.body);
+      const inspection = await inspectionService.addEvidence(req.params.id, req.body, req.user._id);
 
       res.json({
         success: true,
@@ -248,7 +248,7 @@ const inspectionController = {
    */
   async addItem(req, res) {
     try {
-      const inspection = await inspectionService.addInspectedItem(req.params.id, req.body);
+      const inspection = await inspectionService.addInspectedItem(req.params.id, req.body, req.user._id);
 
       res.json({
         success: true,
@@ -291,7 +291,7 @@ const inspectionController = {
    */
   async addSample(req, res) {
     try {
-      const inspection = await inspectionService.addSample(req.params.id, req.body);
+      const inspection = await inspectionService.addSample(req.params.id, req.body, req.user._id);
 
       res.json({
         success: true,
@@ -315,7 +315,8 @@ const inspectionController = {
       const inspection = await inspectionService.updateSampleResult(
         req.params.id,
         req.params.sampleId,
-        req.body
+        req.body,
+        req.user._id
       );
 
       res.json({
@@ -359,7 +360,7 @@ const inspectionController = {
    */
   async addAction(req, res) {
     try {
-      const inspection = await inspectionService.addResultingAction(req.params.id, req.body);
+      const inspection = await inspectionService.addResultingAction(req.params.id, req.body, req.user._id);
 
       res.json({
         success: true,

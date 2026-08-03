@@ -419,7 +419,7 @@ class InspectionService {
   /**
    * Añadir participante
    */
-  async addParticipant(id, participantData) {
+  async addParticipant(id, participantData, userId) {
     const inspection = await _loadOwnedInspection(id, userId);
 
     await inspection.addParticipant(participantData);
@@ -429,7 +429,7 @@ class InspectionService {
   /**
    * Añadir evidencia (foto, documento)
    */
-  async addEvidence(id, evidenceData) {
+  async addEvidence(id, evidenceData, userId) {
     const inspection = await _loadOwnedInspection(id, userId);
 
     await inspection.addEvidence(evidenceData);
@@ -440,7 +440,7 @@ class InspectionService {
   /**
    * Añadir item inspeccionado
    */
-  async addInspectedItem(id, itemData) {
+  async addInspectedItem(id, itemData, userId) {
     const inspection = await _loadOwnedInspection(id, userId);
 
     await inspection.addInspectedItem(itemData);
@@ -473,7 +473,7 @@ class InspectionService {
   /**
    * Añadir muestra tomada
    */
-  async addSample(id, sampleData) {
+  async addSample(id, sampleData, userId) {
     const inspection = await _loadOwnedInspection(id, userId);
 
     inspection.samples.push({
@@ -489,7 +489,7 @@ class InspectionService {
   /**
    * Actualizar resultado de muestra
    */
-  async updateSampleResult(id, sampleId, resultData) {
+  async updateSampleResult(id, sampleId, resultData, userId) {
     const inspection = await _loadOwnedInspection(id, userId);
 
     const sample = inspection.samples.id(sampleId);
@@ -528,7 +528,7 @@ class InspectionService {
   /**
    * Añadir acción resultante
    */
-  async addResultingAction(id, actionData) {
+  async addResultingAction(id, actionData, userId) {
     const inspection = await _loadOwnedInspection(id, userId);
 
     await inspection.addResultingAction(actionData);

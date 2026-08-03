@@ -747,7 +747,7 @@ class DeadlineService {
   /**
    * Eliminar deadline (soft delete)
    */
-  async delete(id) {
+  async delete(id, userId) {
     const deadline = await _loadOwnedDeadline(id, userId);
 
     deadline.active = false;

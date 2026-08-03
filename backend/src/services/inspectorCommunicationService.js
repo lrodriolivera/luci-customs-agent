@@ -406,7 +406,7 @@ class InspectorCommunicationService {
   /**
    * Añadir argumento a alegación/recurso
    */
-  async addArgument(id, argumentData) {
+  async addArgument(id, argumentData, userId) {
     const communication = await _loadOwnedComm(id, userId);
 
     await communication.addArgument(argumentData);

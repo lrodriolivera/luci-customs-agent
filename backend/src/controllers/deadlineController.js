@@ -216,7 +216,7 @@ const deadlineController = {
    */
   async delete(req, res) {
     try {
-      await deadlineService.delete(req.params.id);
+      await deadlineService.delete(req.params.id, req.user._id);
 
       res.json({
         success: true,
