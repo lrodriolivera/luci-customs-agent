@@ -8,7 +8,7 @@ const express = require('express');
 const router = express.Router();
 const publicApiController = require('../controllers/publicApiController');
 const { authenticateApiKey, requirePermission } = require('../middleware/apiKeyAuth');
-const { auth: jwtAuth } = require('../middleware/auth');
+const { auth: jwtAuth, requireRole } = require('../middleware/auth');
 const { ClientApiKey } = require('../models');
 const logger = require('../config/logger');
 
@@ -19,7 +19,12 @@ const logger = require('../config/logger');
  * @desc Generate a new API key (requires JWT login, not API key)
  * @access JWT Authenticated (admin)
  */
-router.post('/keys', jwtAuth, async (req, res) => {
+// El (admin) de la cabecera estaba documentado pero no implementado: solo se
+// aplicaba jwtAuth. Una API key no caduca con la sesion -- sobrevive al cambio
+// de contrasena y a la baja del empleado -- y por defecto lleva permisos de
+// escritura, asi que emitirla es un acto administrativo. Mismo rol que
+// POST /api/portal/api-keys, que emite el mismo recurso.
+router.post('/keys', jwtAuth, requireRole('admin'), async (req, res) => {
   try {
     const { name, permissions, ipWhitelist, expiresInDays } = req.body;
 
