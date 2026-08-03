@@ -207,6 +207,13 @@ app.post('/api/payments/webhook',
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Saneo de errores salientes: los controllers responden con error.message en
+// 448 catch, que en produccion filtra CastError de Mongoose con el nombre del
+// modelo, cadenas de conexion y rutas del servidor. Va antes que las rutas
+// para envolver res.json.
+const { sanitizeErrors } = require('./middleware/sanitizeErrors');
+app.use(sanitizeErrors);
+
 // Request metrics (request ID + latency + per-endpoint counters)
 const { requestMetrics, snapshot: metricsSnapshot } = require('./middleware/metrics');
 app.use(requestMetrics);
