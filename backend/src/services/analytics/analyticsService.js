@@ -156,8 +156,14 @@ async function getDashboardMetrics(period = TIME_PERIODS.LAST_30_DAYS, options =
   try {
     const dateRange = getDateRange(period, options.startDate, options.endDate);
 
-    // Simulated metrics (in production, aggregate from database)
+    // ATENCION: estas metricas son SIMULADAS con _generateMetricValue, no salen
+    // de la base de datos. La UI las consume (frontend/src/services/api.js) y
+    // las presenta como analitica real: en produccion devuelve ~150-300
+    // declaraciones cuando en la BD hay 35, y el numero cambia en cada llamada.
+    // El flag simulated permite al consumidor distinguirlas mientras no se
+    // implementen las agregaciones reales.
     const metrics = {
+      simulated: true,
       period: {
         name: period,
         start: dateRange.start,
