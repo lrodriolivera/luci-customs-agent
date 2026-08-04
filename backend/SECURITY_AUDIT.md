@@ -308,3 +308,11 @@ Fix: la forma anidada `type: { type: String }` fuerza a Mongoose a tratarlo como
 Se escapó de la auditoría anterior porque los tests de `paymentService` mockeaban el modelo `Payment`: el mock aceptaba el objeto sin validar el esquema, así que el test pasaba sin ejercitar el save real. Salió al **no mockear la dependencia inmediata** y guardar contra Mongo de verdad. Cubierto con regresión en `tests/services/paymentService.db.test.js` (`a1ee5b1`).
 
 El guard de organización de `confirmManualPayment`/`refundPayment` (ver hallazgo `ef596b4` arriba) queda además fijado con test: un admin de otra organización recibe el mismo "not found" que si el pago no existiera.
+
+### `rulesEngine.getApplicableAgreements` llamaba a un método inexistente: 500 en `GET /api/rules/agreements/:pais`
+
+`getApplicableAgreements(countryCode)` (motor de reglas) construía cada acuerdo con `certificate: this.getCertificateType(agreement.type)`, pero `getCertificateType` **no estaba definido** en la clase `RulesEngine` ni se heredaba de ninguna parte. Consecuencia: para **cualquier país con un acuerdo comercial** (JP, CA, TR, GB, VN… es decir, el caso útil), el método lanzaba `TypeError: this.getCertificateType is not a function` y el endpoint `GET /api/rules/agreements/:countryCode` (`rulesEngineController.js:107`) respondía **500**. Solo funcionaba, por casualidad, con países sin ningún acuerdo (array vacío → nunca se entraba al `.push`).
+
+Fix: se implementa `getCertificateType(type)`, que mapea el tipo de acuerdo a su certificado de origen característico de forma coherente con los `proofImport` ya presentes en `FTA_AGREEMENTS` (bilateral→EUR.1, fta→DeclaracionOrigen, gsp/gsp_plus/eba→REX, customs_union→ATR; por defecto EUR.1). No se inventa dato nuevo: es el mismo criterio que ya aplica `checkPreferences`.
+
+Salió al escribir tests de `rulesEngine` (0% de cobertura): la función pura nunca se había ejecutado en ninguna prueba. Cubierto con regresión en `tests/services/rulesEngine.test.js`.

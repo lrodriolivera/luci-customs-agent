@@ -724,6 +724,24 @@ class RulesEngine {
   }
 
   /**
+   * Certificado de origen caracteristico segun el tipo de acuerdo.
+   * Coherente con los proofImport de FTA_AGREEMENTS: bilateral usa EUR.1,
+   * las FTA modernas declaracion de origen, GSP/EBA el sistema REX y las
+   * uniones aduaneras ATR (o T2L para libre circulacion).
+   */
+  getCertificateType(type) {
+    const certByType = {
+      bilateral: 'EUR.1',
+      fta: 'DeclaracionOrigen',
+      gsp: 'REX',
+      gsp_plus: 'REX',
+      eba: 'REX',
+      customs_union: 'ATR'
+    };
+    return certByType[type] || 'EUR.1';
+  }
+
+  /**
    * Validar si operacion cumple requisitos
    */
   validateCompliance(operation, providedDocuments = []) {
