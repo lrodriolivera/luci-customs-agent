@@ -81,9 +81,13 @@ const PaymentSchema = new mongoose.Schema({
     refundId: String
   },
 
-  // Payment method details (from Stripe)
+  // Payment method details (from Stripe o alta manual).
+  // OJO: el campo interno se llama `type`. Escrito como `type: String`, Mongoose
+  // interpreta TODO el bloque como un SchemaType String y descarta brand/last4;
+  // ademas rompe el alta manual, que asigna un objeto { type: 'bank_transfer' }.
+  // La forma anidada `type: { type: String }` fuerza a tratarlo como subdocumento.
   paymentMethod: {
-    type: String, // card, bank_transfer, etc.
+    type: { type: String }, // card, bank_transfer, etc.
     brand: String, // visa, mastercard, etc.
     last4: String,
     expiryMonth: Number,
