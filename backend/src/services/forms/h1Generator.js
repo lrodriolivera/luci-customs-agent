@@ -1392,7 +1392,12 @@ class H1Generator {
    */
   escapeXml(str) {
     if (!str) return '';
-    return str
+    // String() y no str.replace directo: si el campo llega numerico -- una
+    // razon social como "12345 SL" o un codigo postal en la casilla de ciudad --
+    // .replace no existe y la generacion del DUA entero reventaba con
+    // "str.replace is not a function". Para cadenas el comportamiento es el
+    // mismo de antes.
+    return String(str)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
