@@ -102,3 +102,6 @@ frontend/dist/stats.html
 /scrape-taric.js
 /package.json
 /package-lock.json
+
+# Dependencias solo-tests instaladas fuera de node_modules (mongodb-memory-server)
+backend/.test-deps/
