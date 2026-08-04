@@ -3,6 +3,10 @@
  * Phase 6.3: Multi-Tenancy Support
  *
  * HTTP endpoints for tenant, RBAC, and billing management
+ *
+ * OJO: las ocho funciones de ESCRITURA de tenantService son async. Sin `await`,
+ * `result` es una Promise, `result.success` es undefined y el controlador
+ * responde 400 aunque la accion SI se haya ejecutado. Ver los tests.
  */
 
 const logger = require('../config/logger');
@@ -20,7 +24,7 @@ const billingService = require('../services/tenant/billingService');
  */
 exports.createTenant = async (req, res) => {
   try {
-    const result = tenantService.createTenant(req.body);
+    const result = await tenantService.createTenant(req.body);
 
     if (!result.success) {
       return res.status(400).json(result);
@@ -105,7 +109,7 @@ exports.listTenants = async (req, res) => {
  */
 exports.updateTenant = async (req, res) => {
   try {
-    const result = tenantService.updateTenant(req.params.id, req.body);
+    const result = await tenantService.updateTenant(req.params.id, req.body);
 
     if (!result.success) {
       return res.status(404).json(result);
@@ -124,7 +128,7 @@ exports.updateTenant = async (req, res) => {
  */
 exports.deleteTenant = async (req, res) => {
   try {
-    const result = tenantService.deleteTenant(req.params.id);
+    const result = await tenantService.deleteTenant(req.params.id);
 
     if (!result.success) {
       return res.status(404).json(result);
@@ -143,7 +147,7 @@ exports.deleteTenant = async (req, res) => {
  */
 exports.activateTenant = async (req, res) => {
   try {
-    const result = tenantService.activateTenant(req.params.id);
+    const result = await tenantService.activateTenant(req.params.id);
 
     if (!result.success) {
       return res.status(400).json(result);
@@ -162,7 +166,7 @@ exports.activateTenant = async (req, res) => {
  */
 exports.suspendTenant = async (req, res) => {
   try {
-    const result = tenantService.suspendTenant(req.params.id, req.body.reason);
+    const result = await tenantService.suspendTenant(req.params.id, req.body.reason);
 
     if (!result.success) {
       return res.status(400).json(result);
@@ -181,7 +185,7 @@ exports.suspendTenant = async (req, res) => {
  */
 exports.cancelTenant = async (req, res) => {
   try {
-    const result = tenantService.cancelTenant(req.params.id, req.body.reason);
+    const result = await tenantService.cancelTenant(req.params.id, req.body.reason);
 
     if (!result.success) {
       return res.status(400).json(result);
@@ -243,7 +247,7 @@ exports.updateTenantSettings = async (req, res) => {
       return res.status(400).json({ success: false, error: 'No tenant context' });
     }
 
-    const result = tenantService.updateSettings(req.tenantId, req.body);
+    const result = await tenantService.updateSettings(req.tenantId, req.body);
 
     if (!result.success) {
       return res.status(400).json(result);
@@ -303,7 +307,7 @@ exports.changeTenantPlan = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Plan is required' });
     }
 
-    const result = tenantService.changePlan(req.tenantId, plan);
+    const result = await tenantService.changePlan(req.tenantId, plan);
 
     if (!result.success) {
       return res.status(400).json(result);
