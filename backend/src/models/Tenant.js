@@ -11,6 +11,13 @@ const mongoose = require('mongoose');
  * Subscription plan types
  */
 const PLAN_TYPES = {
+  // FREE/STARTER son planes reales que el codigo de negocio usa (onboarding
+  // gratuito en paymentService.createSubscriptionCheckout y el default de la
+  // suscripcion apuntaba a PLAN_TYPES.FREE), pero faltaban en el enum: guardar
+  // plan='starter' o plan='free' reventaba con ValidationError y el plan
+  // gratuito no podia activarse.
+  FREE: 'free',
+  STARTER: 'starter',
   PROFESSIONAL: 'professional',
   BUSINESS: 'business',
   ENTERPRISE: 'enterprise'

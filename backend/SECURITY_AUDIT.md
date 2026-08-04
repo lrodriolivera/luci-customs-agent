@@ -316,3 +316,15 @@ El guard de organización de `confirmManualPayment`/`refundPayment` (ver hallazg
 Fix: se implementa `getCertificateType(type)`, que mapea el tipo de acuerdo a su certificado de origen característico de forma coherente con los `proofImport` ya presentes en `FTA_AGREEMENTS` (bilateral→EUR.1, fta→DeclaracionOrigen, gsp/gsp_plus/eba→REX, customs_union→ATR; por defecto EUR.1). No se inventa dato nuevo: es el mismo criterio que ya aplica `checkPreferences`.
 
 Salió al escribir tests de `rulesEngine` (0% de cobertura): la función pura nunca se había ejecutado en ninguna prueba. Cubierto con regresión en `tests/services/rulesEngine.test.js`.
+
+### El enum de `subscription.plan` no incluía `free`/`starter`: el plan gratuito no podía activarse
+
+`Tenant.SubscriptionSchema.plan` tenía `enum: Object.values(PLAN_TYPES)` con `PLAN_TYPES = { PROFESSIONAL, BUSINESS, ENTERPRISE }` — sin `free` ni `starter`. Pero el código de negocio usa ambos: `paymentService.createSubscriptionCheckout(user, 'free')` asigna `tenant.subscription.plan = 'starter'` y guarda, y el propio `default` del schema apuntaba a `PLAN_TYPES.FREE` (que era `undefined`). Consecuencia: activar el plan gratuito de onboarding reventaba con `ValidationError: 'starter' is not a valid enum value` y **el tenant nunca quedaba en plan gratuito**.
+
+Fix: añadir `FREE: 'free'` y `STARTER: 'starter'` a `PLAN_TYPES`, con lo que el enum los admite y `default: PLAN_TYPES.FREE` deja de ser `undefined`. Salió al cubrir `paymentService` contra Mongo real (el enum del modelo es la fuente de verdad); con el modelo mockeado el `save` no validaba el enum. Cubierto en `tests/services/paymentService.extra.db.test.js`.
+
+### `Expedition.calculations` descartaba el estado de cobro (`paid`/`paidAt`/`paymentId`)
+
+`paymentService.updateExpeditionAfterPayment` marca la expedición como pagada escribiendo `expedition.calculations.paid = true`, `.paidAt` y `.paymentId` al confirmar un cobro. Pero `CalculationsSchema` (subdocumento con `_id: false`, modo estricto) **no declaraba esos tres campos**, así que Mongoose los descartaba en silencio: el `timeline` anotaba el pago pero `calculations.paid` nunca persistía. La expedición seguía figurando como no pagada tras confirmar el cobro.
+
+Fix: declarar `paid: Boolean`, `paidAt: Date`, `paymentId: String` en `CalculationsSchema`. Salió al no mockear el modelo `Expedition` y comprobar el estado persistido tras `confirmManualPayment`. Cubierto en `tests/services/paymentService.extra.db.test.js`.

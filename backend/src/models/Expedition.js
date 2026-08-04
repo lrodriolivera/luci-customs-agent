@@ -160,7 +160,13 @@ const CalculationsSchema = new mongoose.Schema({
   totalTaxes: Number,
   guaranteeRequired: Number,
   calculatedAt: Date,
-  calculatedBy: String // 'manual' or 'ai'
+  calculatedBy: String, // 'manual' or 'ai'
+  // Estado de cobro. paymentService.updateExpeditionAfterPayment escribe estos
+  // tres campos al confirmar un pago; sin declararlos, el subdocumento estricto
+  // (_id: false) los descartaba y la expedicion nunca quedaba marcada como pagada.
+  paid: Boolean,
+  paidAt: Date,
+  paymentId: String
 }, { _id: false });
 
 const ExpeditionSchema = new mongoose.Schema({
