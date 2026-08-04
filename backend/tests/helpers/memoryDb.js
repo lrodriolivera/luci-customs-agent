@@ -44,10 +44,12 @@ function usarBaseDeDatosEnMemoria({ limpiarEntreTests = true } = {}) {
     });
   }
 
+  // Timeout holgado: bajo --coverage y con varias suites .db corriendo en
+  // paralelo, parar el mongod compite por CPU/IO y supera los 10s por defecto.
   afterAll(async () => {
     await mongoose.disconnect();
     if (mongod) await mongod.stop();
-  });
+  }, 60000);
 }
 
 module.exports = { usarBaseDeDatosEnMemoria };
