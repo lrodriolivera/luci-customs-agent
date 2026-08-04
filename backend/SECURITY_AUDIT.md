@@ -328,3 +328,23 @@ Fix: añadir `FREE: 'free'` y `STARTER: 'starter'` a `PLAN_TYPES`, con lo que el
 `paymentService.updateExpeditionAfterPayment` marca la expedición como pagada escribiendo `expedition.calculations.paid = true`, `.paidAt` y `.paymentId` al confirmar un cobro. Pero `CalculationsSchema` (subdocumento con `_id: false`, modo estricto) **no declaraba esos tres campos**, así que Mongoose los descartaba en silencio: el `timeline` anotaba el pago pero `calculations.paid` nunca persistía. La expedición seguía figurando como no pagada tras confirmar el cobro.
 
 Fix: declarar `paid: Boolean`, `paidAt: Date`, `paymentId: String` en `CalculationsSchema`. Salió al no mockear el modelo `Expedition` y comprobar el estado persistido tras `confirmManualPayment`. Cubierto en `tests/services/paymentService.extra.db.test.js`.
+
+### `DeclarationSchema` descartaba `h7Data`/`vatCalculation`: estadísticas H7 basura y canal mal asignado
+
+Mismo patrón de subdocumento estricto, esta vez en la declaración aduanera H7. `generateH7` guarda en la declaración `h7Data` (datos IOSS, valor intrínseco del envío) y `vatCalculation` (IVA a pagar); `submitH7` los lee para decidir el canal, y escribe `levanteNumber`. Pero `DeclarationSchema` (`_id: false`, estricto) **no declaraba `h7Data`, `vatCalculation`, `levanteNumber`, `h1Data` ni `aeatResponse`**, así que Mongoose los descartaba al guardar. Consecuencias reales, todas en el flujo H7 (paquetería e-commerce de bajo valor, el caso de uso más frecuente):
+
+- **`getH7Stats`** lee `declaration.h7Data.iossData` y `.shipment.intrinsicValue`: al no persistir, devolvía siempre `withIOSS: 0` y `totalValue: 0` — las estadísticas H7 eran basura.
+- **`submitH7`** decide el canal con `declaration.vatCalculation?.totalToPay`: como siempre valía 0, **toda H7 sin IOSS obtenía canal verde (despacho inmediato) aunque hubiera IVA pendiente de cobro**, saltándose la retención hasta liquidación.
+- **`aeatResponse`** (código, CSV, canal de la respuesta AEAT) no quedaba guardado en ningún envío, H1 ni H7.
+
+Fix: declarar esos campos como `Mixed`/`String`/`Date` en `DeclarationSchema`.
+
+### El canal `yellow` del H7 no estaba en el enum: HTTP 500 al enviar una H7 con IVA pendiente
+
+Defecto latente que afloró al arreglar el anterior. Con `vatCalculation` ya persistido, la rama de canal amarillo de `submitH7` pasó a ser alcanzable: asigna `declaration.channel = 'yellow'` y `expedition.status = 'yellow_channel'`. Pero el enum de `DeclarationSchema.channel` era `['green','orange','red']` y el de `ExpeditionSchema.status` no incluía `yellow_channel`. Resultado: `save()` lanzaba `ValidationError` → **HTTP 500, y la H7 con IVA pendiente nunca quedaba registrada como enviada**. Es decir, el H7 reventaba precisamente cuando había IVA que cobrar.
+
+Fix: añadir `'yellow'` al enum de `channel` y `'yellow_channel'` al enum de `status`.
+
+### El análisis IA de la declaración no persistía (`aiAnalysis.channelPrediction`/`declarationAnalysis`)
+
+`aiPredictChannel` y `aiFullDeclarationAnalysis` guardan su resultado en `expedition.aiAnalysis.channelPrediction` y `.declarationAnalysis`. El objeto `aiAnalysis` del `ExpeditionSchema` es estricto y **no declaraba esos dos campos**, así que se descartaban: `getAiDeclarationAnalysis` devolvía siempre `hasAnalysis: false` aunque el análisis ya se hubiera ejecutado (y facturado a Bedrock). Fix: declararlos como `Mixed`. Los cuatro hallazgos anteriores salieron al cubrir `declarationController` sin mockear el modelo `Expedition` y comprobar el estado persistido; cubiertos en `tests/controllers/declarationController.extra.db.test.js`.

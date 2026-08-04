@@ -136,13 +136,31 @@ const DeclarationSchema = new mongoose.Schema({
   customsCountry: { type: String },
   customsSystem: { type: String }, // 'AEAT', 'DMS', 'DECO'
   channel: {
+    // 'yellow' es el canal propio del H7 (bajo valor): IVA pendiente de pago.
+    // submitH7 lo asignaba pero el enum no lo admitia -> ValidationError -> 500.
     type: String,
-    enum: ['green', 'orange', 'red']
+    enum: ['green', 'yellow', 'orange', 'red']
   },
   levanteDate: Date,
   xmlContent: String, // Generated XML for AEAT
   responseXml: String,
-  errors: [String]
+  errors: [String],
+  // Campos que el controller escribe tras generar/enviar la declaracion y que
+  // el subdocumento estricto (_id:false) descartaba silenciosamente:
+  //  - h7Data/vatCalculation: salida del generador H7. Sin persistirlos,
+  //    getH7Stats leia siempre withIOSS=0/totalValue=0 (estadisticas basura) y
+  //    submitH7 nunca veia IVA pendiente -> asignaba canal verde a toda H7 sin
+  //    IOSS, despachando sin exigir el pago del IVA.
+  //  - h1Data: bloque de datos H1 de generateH1Direct.
+  //  - levanteNumber: numero de levante H7; se perdia al guardar.
+  //  - aeatResponse: respuesta completa de AEAT (codigo, CSV, canal).
+  //  - cancelledAt: sello de anulacion.
+  h7Data: mongoose.Schema.Types.Mixed,
+  vatCalculation: mongoose.Schema.Types.Mixed,
+  h1Data: mongoose.Schema.Types.Mixed,
+  aeatResponse: mongoose.Schema.Types.Mixed,
+  levanteNumber: String,
+  cancelledAt: Date
 }, { _id: false, suppressReservedKeysWarning: true });
 
 const CalculationsSchema = new mongoose.Schema({
@@ -230,6 +248,7 @@ const ExpeditionSchema = new mongoose.Schema({
       'declaration_draft',
       'declaration_submitted',
       'green_channel',
+      'yellow_channel', // canal H7 (bajo valor) con IVA pendiente
       'orange_channel',
       'red_channel',
       'levante',
@@ -390,6 +409,12 @@ const ExpeditionSchema = new mongoose.Schema({
     }],
     recommendations: [String],
     documentValidation: mongoose.Schema.Types.Mixed,
+    // channelPrediction/declarationAnalysis: los escriben aiPredictChannel y
+    // aiFullDeclarationAnalysis. Sin declararlos, el objeto estricto los
+    // descartaba y getAiDeclarationAnalysis devolvia siempre hasAnalysis=false
+    // aunque el analisis IA ya se hubiera ejecutado (y facturado a Bedrock).
+    channelPrediction: mongoose.Schema.Types.Mixed,
+    declarationAnalysis: mongoose.Schema.Types.Mixed,
     lastAnalysisAt: Date
   },
 
