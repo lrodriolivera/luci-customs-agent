@@ -28,14 +28,18 @@ const mockAiService = {
   improveClassificationWithFeedback: jest.fn(),
   suggestBasedOnHistory: jest.fn(),
   crossValidateWithRegulations: jest.fn(),
-  fullTaricAnalysis: jest.fn()
+  fullTaricAnalysis: jest.fn(),
+  recordClassificationFeedback: jest.fn()
 };
 const mockTaricService = {
   calculateDuties: jest.fn(),
   getRequiredDocuments: jest.fn(),
   getAvailablePreferences: jest.fn(),
   seedCommonCodes: jest.fn(),
-  recordSearch: jest.fn()
+  recordSearch: jest.fn(),
+  getUserSearchHistory: jest.fn(),
+  getMostSearchedCodes: jest.fn(),
+  getAICacheStats: jest.fn()
 };
 
 jest.mock('../../src/models', () => ({
@@ -296,5 +300,130 @@ describe('classificationController.validateClassification', () => {
       .post('/r').send({ taricCode: '8471300000', customsValue: 1000 });
 
     expect(res.body.data.dutyCalculation.vatRate).toBe(21);
+  });
+});
+
+describe('classificationController: mas endpoints de IA (validacion de entrada)', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test('aiSuggestFromHistory exige descripcion de producto (400)', async () => {
+    const res = await request(app(ctrl.aiSuggestFromHistory)).post('/r').send({});
+
+    expect(res.status).toBe(400);
+    expect(mockAiService.suggestBasedOnHistory).not.toHaveBeenCalled();
+  });
+
+  test('aiSuggestFromHistory delega en el servicio con los defaults', async () => {
+    mockAiService.suggestBasedOnHistory.mockResolvedValue({ suggestions: ['x'] });
+
+    const res = await request(app(ctrl.aiSuggestFromHistory))
+      .post('/r').send({ productDescription: 'Camisetas de algodon' });
+
+    expect(res.status).toBe(200);
+    // Sin historial ni perfil, el controller pasa [] y {} por defecto.
+    expect(mockAiService.suggestBasedOnHistory).toHaveBeenCalledWith('Camisetas de algodon', [], {});
+  });
+
+  test('aiRecordFeedback exige ambos campos (400)', async () => {
+    const res = await request(app(ctrl.aiRecordFeedback)).post('/r').send({ feedback: 'ok' });
+
+    expect(res.status).toBe(400);
+  });
+
+  test('aiRecordFeedback registra el feedback cuando llega completo', async () => {
+    mockAiService.recordClassificationFeedback.mockResolvedValue({ recorded: true });
+
+    const res = await request(app(ctrl.aiRecordFeedback))
+      .post('/r').send({ classificationData: { taricCode: 'x' }, feedback: 'correcto' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.recorded).toBe(true);
+  });
+});
+
+describe('classificationController: utilidades del catalogo', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test('getRequiredDocuments devuelve los documentos del servicio', async () => {
+    mockTaricService.getRequiredDocuments.mockResolvedValue([{ code: 'N851' }]);
+
+    const res = await request(app(ctrl.getRequiredDocuments, 'get', '/r/:code'))
+      .get('/r/6109100010').query({ origin: 'CN' });
+
+    expect(res.status).toBe(200);
+    expect(mockTaricService.getRequiredDocuments).toHaveBeenCalledWith('6109100010', 'CN');
+    expect(res.body.data).toEqual([{ code: 'N851' }]);
+  });
+
+  test('getPreferences devuelve el origen y sus preferencias', async () => {
+    mockTaricService.getAvailablePreferences.mockReturnValue([{ code: '300' }]);
+
+    const res = await request(app(ctrl.getPreferences, 'get', '/r/:origin')).get('/r/CN');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.origin).toBe('CN');
+    expect(res.body.data.preferences).toEqual([{ code: '300' }]);
+  });
+
+  test('calculateDuties aplica la preferencia 100 por defecto', async () => {
+    mockTaricService.calculateDuties.mockResolvedValue({ dutyRate: 12 });
+
+    await request(app(ctrl.calculateDuties))
+      .post('/r').send({ taricCode: '6109100010', customsValue: 1000, origin: 'CN' });
+
+    const arg = mockTaricService.calculateDuties.mock.calls[0][0];
+    expect(arg.preference).toBe('100');
+  });
+
+  test('un fallo del servicio de aranceles devuelve 500', async () => {
+    mockTaricService.calculateDuties.mockRejectedValue(new Error('boom'));
+
+    const res = await request(app(ctrl.calculateDuties))
+      .post('/r').send({ taricCode: 'x', customsValue: 1 });
+
+    expect(res.status).toBe(500);
+    expect(res.body.success).toBe(false);
+  });
+});
+
+describe('classificationController: historial y cache', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test('getSearchHistory acota por el usuario autenticado', async () => {
+    mockTaricService.getUserSearchHistory.mockResolvedValue([{ code: 'x' }]);
+
+    const res = await request(app(ctrl.getSearchHistory, 'get')).get('/r').query({ limit: 5 });
+
+    expect(res.status).toBe(200);
+    // El primer argumento es el _id del usuario: no debe agregar el de otros.
+    expect(mockTaricService.getUserSearchHistory).toHaveBeenCalledWith(USER._id, 5);
+    expect(res.body.data.count).toBe(1);
+  });
+
+  test('getMostSearched acota por el tenant del usuario', async () => {
+    mockTaricService.getMostSearchedCodes.mockResolvedValue([{ code: 'y', hits: 3 }]);
+
+    const res = await request(app(ctrl.getMostSearched, 'get')).get('/r').query({ days: 7, limit: 10 });
+
+    expect(res.status).toBe(200);
+    expect(mockTaricService.getMostSearchedCodes).toHaveBeenCalledWith(TENANT_A, 7, 10);
+  });
+
+  test('getSearchStats devuelve ceros cuando no hay busquedas', async () => {
+    mockSearchHistory.getSearchStats.mockResolvedValue([]);
+
+    const res = await request(app(ctrl.getSearchStats, 'get')).get('/r').query({ days: 30 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.totalSearches).toBe(0);
+  });
+
+  test('cleanOldCache borra las entradas antiguas', async () => {
+    mockAICache.cleanOldCache.mockResolvedValue({ deletedCount: 4 });
+
+    const res = await request(app(ctrl.cleanOldCache, 'delete')).delete('/r').query({ daysOld: 90 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.deletedCount).toBe(4);
   });
 });
