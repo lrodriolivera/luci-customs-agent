@@ -286,3 +286,25 @@ La distinción queda documentada en `src/middleware/auth.js` (donde la ve quien 
 Durante la auditoría probé `POST /api/portal/api-keys` **contra producción** para confirmar que la ruta era alcanzable, y con ello creé una API key real (`lca_729ad42e`). La revoqué diez segundos después, con cero usos, y la dejé en la colección `clientapikeys` con estado `revoked` como registro de auditoría en lugar de borrarla.
 
 El impacto fue nulo, pero el método era incorrecto: **las pruebas de escritura van contra un entorno local**, no contra producción. Queda anotado.
+
+---
+
+## Anexo — hallazgos de la campaña de cobertura (4 de agosto de 2026)
+
+Al subir la cobertura de tests contra una BD en memoria (no producción) salieron bugs reales. Se corrigen y se anotan aquí porque tocan dinero o aislamiento.
+
+### `bfacd22` — `Payment.paymentMethod` era un String: ningún cobro manual podía guardarse
+
+El esquema declaraba:
+
+```js
+paymentMethod: { type: String, brand: String, last4: String, ... }
+```
+
+Mongoose interpreta ese `type: String` como el **SchemaType del bloque entero**, no como un subcampo llamado `type`. Consecuencia: `brand`/`last4` se descartan en silencio y, sobre todo, `createManualPayment` —que asigna `{ type: 'bank_transfer' }`— revienta con `ValidationError: Cast to string failed for value "{ type: 'bank_transfer' }"`. **Ningún pago manual por transferencia podía guardarse.** El alta por Stripe (`handleCheckoutComplete`) sufría lo mismo al asignar el objeto de método de pago.
+
+Fix: la forma anidada `type: { type: String }` fuerza a Mongoose a tratarlo como subdocumento.
+
+Se escapó de la auditoría anterior porque los tests de `paymentService` mockeaban el modelo `Payment`: el mock aceptaba el objeto sin validar el esquema, así que el test pasaba sin ejercitar el save real. Salió al **no mockear la dependencia inmediata** y guardar contra Mongo de verdad. Cubierto con regresión en `tests/services/paymentService.db.test.js` (`a1ee5b1`).
+
+El guard de organización de `confirmManualPayment`/`refundPayment` (ver hallazgo `ef596b4` arriba) queda además fijado con test: un admin de otra organización recibe el mismo "not found" que si el pago no existiera.
