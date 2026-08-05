@@ -398,12 +398,17 @@ async function getComplianceAnalytics(period = TIME_PERIODS.LAST_30_DAYS, option
   try {
     const dateRange = getDateRange(period, options.startDate, options.endDate);
 
+    // El riskLevel debe derivarse del MISMO overallScore que se muestra: antes
+    // se generaban dos valores aleatorios distintos y el nivel de riesgo podia
+    // contradecir la puntuacion mostrada.
+    const overallScore = _generateMetricValue(85, 98);
+
     const analytics = {
       period: { name: period, start: dateRange.start, end: dateRange.end },
 
       summary: {
-        overallScore: _generateMetricValue(85, 98),
-        riskLevel: _getRiskLevel(_generateMetricValue(85, 98)),
+        overallScore,
+        riskLevel: _getRiskLevel(overallScore),
         trend: _generateMetricValue(-2, 5)
       },
 
