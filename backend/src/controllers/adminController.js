@@ -4,6 +4,7 @@
  * Usa MongoDB para persistencia de datos
  */
 
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const logger = require('../config/logger');
 const crypto = require('crypto');
@@ -186,12 +187,25 @@ const createUser = async (req, res) => {
       return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres' });
     }
 
+    // El usuario nuevo hereda el tenant del admin que lo crea. Sin esto quedaba
+    // huerfano (tenantId undefined): no aparecia en el listUsers de nadie —que
+    // acota por tenant— y ademas ensureSameTenant lo dejaba tocar a CUALQUIER
+    // admin (legacy-allow para docs sin tenant). Misma familia de fuga que la
+    // escalada corregida en authController.updateUser. super_admin (rol de
+    // plataforma) puede indicar el tenant explicitamente en el body.
+    const { isSuperAdmin } = require('../utils/tenantGuard');
+    const tenantId = isSuperAdmin(req.user)
+      ? (req.body.tenantId || req.user?.tenantId)
+      : req.user?.tenantId;
+
     // Crear usuario
     const newUser = new User({
       email: email.toLowerCase(),
       name,
       role,
       password: userPassword,
+      tenantId,
+      organizationId: tenantId,
       isActive: true,
       permissions: {
         canCreateExpeditions: ['admin', 'supervisor', 'agent'].includes(role),
@@ -510,11 +524,23 @@ const getAuditStats = async (req, res) => {
 
 const getDashboardStats = async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
-    const activeUsers = await User.countDocuments({ isActive: true });
+    // Los conteos se acotan al tenant del admin: un 'admin' es administrador de
+    // SU organizacion, no de la plataforma, asi que no debe ver el numero de
+    // usuarios de otros clientes. Solo super_admin ve el total global. El match
+    // de la agregacion necesita el ObjectId casteado a mano (aggregate no lo
+    // castea, misma trampa que en analytics).
+    const { isSuperAdmin } = require('../utils/tenantGuard');
+    const scope = {};
+    if (!isSuperAdmin(req.user) && req.user?.tenantId) {
+      scope.tenantId = new mongoose.Types.ObjectId(req.user.tenantId);
+    }
+
+    const totalUsers = await User.countDocuments(scope);
+    const activeUsers = await User.countDocuments({ ...scope, isActive: true });
 
     // Usuarios por rol
     const usersByRole = await User.aggregate([
+      { $match: scope },
       { $group: { _id: '$role', count: { $sum: 1 } } }
     ]);
 
