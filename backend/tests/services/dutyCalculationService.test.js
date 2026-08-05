@@ -14,14 +14,20 @@
 
 const mockCache = { get: jest.fn(), set: jest.fn(), del: jest.fn() };
 
-jest.mock('../../src/services/aiService', () => ({}));
+jest.mock('../../src/services/aiService', () => ({ callClaude: jest.fn() }));
 jest.mock('../../src/services/cacheService', () => ({ getCache: () => mockCache }));
-jest.mock('../../src/models/TaricCode', () => ({ findOne: jest.fn() }));
+jest.mock('../../src/models/TaricCode', () => ({ findOne: jest.fn(), findOneAndUpdate: jest.fn() }));
 jest.mock('../../src/models/TaricAICache', () => ({ getFromCache: jest.fn(), saveToCache: jest.fn() }));
 
 const TaricCode = require('../../src/models/TaricCode');
 const TaricAICache = require('../../src/models/TaricAICache');
-const { getDutyInfo } = require('../../src/services/dutyCalculationService');
+const aiService = require('../../src/services/aiService');
+const {
+  getDutyInfo,
+  calculateDutiesWithAI,
+  getArancelesFromAI,
+  validateDutyRate
+} = require('../../src/services/dutyCalculationService');
 
 /** Simula que el codigo existe en la BD local con un arancel conocido. */
 function enBDLocal(code, dutyRate = 12) {
@@ -156,5 +162,266 @@ describe('dutyCalculationService', () => {
       expect(await ivaDe('0805.10.00.00')).toBe(await ivaDe('0805100000'));
       expect(await ivaDe('0805 10 00 00')).toBe(4);
     });
+  });
+});
+
+/**
+ * calculateDutiesWithAI es el calculo final: sobre la informacion de aranceles
+ * aplica estacionalidad, preferencias, antidumping, arancel especifico/mixto e
+ * IVA por capitulo, y produce los totales que se liquidan ante la AEAT.
+ *
+ * Se hace que getArancelesFromAI (via aiService.callClaude) devuelva el JSON que
+ * cada rama necesita; getSeasonalTariff usa los datos REALES de
+ * src/data/seasonalTariffs (no se mockea: es logica bajo prueba). Cada caso usa
+ * un codigo distinto y el cache esta vacio por el beforeEach de arriba mas el de
+ * aqui, para que no se acarreen resultados entre tests.
+ */
+function iaDevuelve(json) {
+  // getArancelesFromAI espera { content } del cliente Claude.
+  aiService.callClaude.mockResolvedValue({ content: JSON.stringify(json) });
+}
+
+describe('calculateDutiesWithAI', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCache.get.mockResolvedValue(null);
+    mockCache.set.mockResolvedValue(undefined);
+    TaricCode.findOne.mockResolvedValue(null);       // sin BD local -> rama IA
+    TaricCode.findOneAndUpdate.mockResolvedValue({});
+    TaricAICache.getFromCache.mockResolvedValue(null);
+    TaricAICache.saveToCache.mockResolvedValue({});
+  });
+
+  describe('ad valorem e IVA por capitulo', () => {
+    test('cap 84 al 0%: IVA 21%, base sin arancel, totales cuadran', async () => {
+      iaDevuelve({ dutyRateNumeric: 0, dutyType: 'ad_valorem', description_es: 'Servidor' });
+
+      const r = await calculateDutiesWithAI({ taricCode: '8471300000', customsValue: 1000, origin: 'CN' });
+
+      expect(r.duties.adValoremDuty).toBe(0);
+      expect(r.vat.rate).toBe(21);
+      expect(r.vat.base).toBe(1000);
+      expect(r.vat.amount).toBe(210);
+      expect(r.totalToPay).toBe(1210);
+    });
+
+    test('textil cap 61 al 12%: el IVA grava customsValue + arancel', async () => {
+      iaDevuelve({ dutyRateNumeric: 12, dutyType: 'ad_valorem' });
+
+      const r = await calculateDutiesWithAI({ taricCode: '6109100010', customsValue: 1000, origin: 'IN' });
+
+      expect(r.duties.adValoremDuty).toBe(120);
+      expect(r.duties.totalDuty).toBe(120);
+      expect(r.vat.base).toBe(1120);
+      expect(r.vat.amount).toBe(235.2);
+      expect(r.totalToPay).toBe(1355.2);
+    });
+  });
+
+  describe('preferencias arancelarias', () => {
+    test('SPG (200): aplica la tasa reducida y calcula la reduccion', async () => {
+      iaDevuelve({
+        dutyRateNumeric: 12,
+        dutyType: 'ad_valorem',
+        preferences: [{ agreement: 'SPG Vietnam', countries: ['VN'], rate: 0, certificate: 'FORM A' }]
+      });
+
+      const r = await calculateDutiesWithAI({ taricCode: '6203420000', customsValue: 1000, origin: 'VN', preference: '200' });
+
+      expect(r.preferenceApplied.reduction).toBe(12);
+      expect(r.duties.effectiveDutyRate).toBe(0);
+    });
+
+    test('por pais (countries incluye origin) aunque el codigo de preferencia no case', async () => {
+      iaDevuelve({
+        dutyRateNumeric: 10,
+        dutyType: 'ad_valorem',
+        preferences: [{ agreement: 'Acuerdo bilateral', countries: ['MX'], rate: 2.5 }]
+      });
+
+      const r = await calculateDutiesWithAI({ taricCode: '8703230000', customsValue: 1000, origin: 'MX', preference: '300' });
+
+      expect(r.duties.effectiveDutyRate).toBe(2.5);
+      expect(r.preferenceApplied.reduction).toBe(7.5);
+    });
+
+    test('preference=100 (erga omnes) ignora las preferencias', async () => {
+      iaDevuelve({
+        dutyRateNumeric: 12,
+        dutyType: 'ad_valorem',
+        preferences: [{ agreement: 'SPG', countries: ['VN'], rate: 0 }]
+      });
+
+      const r = await calculateDutiesWithAI({ taricCode: '6109909000', customsValue: 1000, origin: 'VN', preference: '100' });
+
+      expect(r.preferenceApplied).toBeNull();
+      expect(r.duties.effectiveDutyRate).toBe(12);
+    });
+  });
+
+  describe('antidumping', () => {
+    test('suma el antidumping cuando aplica al origen y avisa', async () => {
+      iaDevuelve({
+        dutyRateNumeric: 0,
+        dutyType: 'ad_valorem',
+        antidumping: { applies: true, countries: ['CN'], additionalRate: 30 }
+      });
+
+      const r = await calculateDutiesWithAI({ taricCode: '7307930000', customsValue: 1000, origin: 'CN' });
+
+      expect(r.duties.antidumpingDuty).toBe(300);
+      expect(r.duties.totalDuty).toBe(300);
+      expect(r.warnings.some(w => /antidumping/i.test(w))).toBe(true);
+    });
+
+    test('no suma antidumping si el origen no esta en la lista', async () => {
+      iaDevuelve({
+        dutyRateNumeric: 0,
+        dutyType: 'ad_valorem',
+        antidumping: { applies: true, countries: ['CN'], additionalRate: 30 }
+      });
+
+      const r = await calculateDutiesWithAI({ taricCode: '7307910000', customsValue: 1000, origin: 'TR' });
+
+      expect(r.duties.antidumpingDuty).toBe(0);
+    });
+  });
+
+  describe('arancel especifico y mixto', () => {
+    test('specific por kg usa netWeight/1000', async () => {
+      iaDevuelve({ dutyRateNumeric: 0, dutyType: 'specific', specificDuty: { amount: 50, unit: 'EUR/1000 kg' } });
+
+      const r = await calculateDutiesWithAI({ taricCode: '1701140000', customsValue: 1000, origin: 'BR', netWeight: 2000 });
+
+      expect(r.duties.specificDuty).toBe(100);
+      expect(r.duties.totalDuty).toBe(100);
+    });
+
+    test('specific por unidad (p/st) usa quantity', async () => {
+      iaDevuelve({ dutyRateNumeric: 0, dutyType: 'specific', specificDuty: { amount: 3, unit: 'EUR/p/st' } });
+
+      const r = await calculateDutiesWithAI({ taricCode: '8506100000', customsValue: 1000, origin: 'CN', quantity: 40 });
+
+      expect(r.duties.specificDuty).toBe(120);
+    });
+
+    test('specific por hl usa quantity/100', async () => {
+      iaDevuelve({ dutyRateNumeric: 0, dutyType: 'specific', specificDuty: { amount: 10, unit: 'EUR/hl' } });
+
+      const r = await calculateDutiesWithAI({ taricCode: '2204210000', customsValue: 1000, origin: 'CL', quantity: 500 });
+
+      expect(r.duties.specificDuty).toBe(50);
+    });
+
+    test('mixed toma el mayor entre ad valorem y especifico', async () => {
+      iaDevuelve({ dutyRateNumeric: 5, dutyType: 'mixed', specificDuty: { amount: 80, unit: 'EUR/100 kg' } });
+
+      // 2005 (conservas de hortalizas) NO es estacional: la tasa de la IA se respeta.
+      const r = await calculateDutiesWithAI({ taricCode: '2005800000', customsValue: 1000, origin: 'BR', netWeight: 1000 });
+
+      expect(r.duties.adValoremDuty).toBe(50);
+      expect(r.duties.specificDuty).toBe(80);
+      expect(r.duties.totalDuty).toBe(80);
+    });
+  });
+
+  describe('arancel estacional (datos reales)', () => {
+    test('tomate (0702) en enero: usa la tasa estacional y avisa de estacional + precio de entrada', async () => {
+      // getArancelesFromAI daria 20%, pero la estacional del periodo debe ganar.
+      iaDevuelve({ dutyRateNumeric: 20, dutyType: 'ad_valorem' });
+
+      const r = await calculateDutiesWithAI({
+        taricCode: '0702000000',
+        customsValue: 1000,
+        origin: 'MA',
+        importDate: '2026-01-15'
+      });
+
+      expect(r.seasonal).not.toBeNull();
+      expect(r.seasonal.isSeasonal).toBe(true);
+      expect(r.duties.effectiveDutyRate).toBe(8.8);
+      expect(r.warnings.some(w => /estacional/i.test(w))).toBe(true);
+      expect(r.warnings.some(w => /precios de entrada/i.test(w))).toBe(true);
+    });
+  });
+
+  describe('warnings de cuota, unidad suplementaria y confianza', () => {
+    test('quota, supplementaryUnit y confidence<90 producen sus avisos', async () => {
+      iaDevuelve({
+        dutyRateNumeric: 5,
+        dutyType: 'ad_valorem',
+        quota: { applies: true, description: 'Contingente 2026' },
+        supplementaryUnit: { required: true, description: 'Numero de pares' },
+        confidence: 70
+      });
+
+      const r = await calculateDutiesWithAI({ taricCode: '6403590000', customsValue: 1000, origin: 'VN' });
+
+      expect(r.warnings.some(w => /contingente/i.test(w))).toBe(true);
+      expect(r.warnings.some(w => /suplementarias/i.test(w))).toBe(true);
+      expect(r.warnings.some(w => /estimado/i.test(w))).toBe(true);
+      expect(r.confidence).toBe(70);
+    });
+  });
+
+  describe('fallback estimado por capitulo', () => {
+    test('codigo desconocido cae al estimado (5% / IVA 21% por defecto)', async () => {
+      aiService.callClaude.mockResolvedValue({ content: 'no es json' });
+
+      const r = await calculateDutiesWithAI({ taricCode: '9999999999', customsValue: 100, origin: 'CN' });
+
+      expect(r.duties.effectiveDutyRate).toBe(5);
+      expect(r.vat.rate).toBe(21);
+      expect(r.source).toBe('estimated');
+    });
+  });
+});
+
+describe('getArancelesFromAI', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCache.get.mockResolvedValue(null);
+    TaricCode.findOne.mockResolvedValue(null);
+    TaricAICache.getFromCache.mockResolvedValue(null);
+  });
+
+  test('parsea JSON envuelto en bloque markdown y usa dutyRateNumeric', async () => {
+    aiService.callClaude.mockResolvedValue({
+      content: '```json\n{"dutyRateNumeric": 8, "dutyType": "ad_valorem", "description_es": "X"}\n```'
+    });
+
+    const r = await getArancelesFromAI('6109100010');
+
+    expect(r.dutyRate).toBe(8);
+    expect(r.vatRate).toBe(21);
+    expect(r.source).toBe('ai_realtime');
+  });
+
+  test('devuelve null si la IA no incluye dutyRate', async () => {
+    aiService.callClaude.mockResolvedValue({ content: '{"description_es": "X"}' });
+    expect(await getArancelesFromAI('6109100010')).toBeNull();
+  });
+
+  test('devuelve null si la respuesta no es JSON', async () => {
+    aiService.callClaude.mockResolvedValue({ content: 'texto libre' });
+    expect(await getArancelesFromAI('6109100010')).toBeNull();
+  });
+});
+
+describe('validateDutyRate', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test('devuelve el JSON de validacion de la IA', async () => {
+    aiService.callClaude.mockResolvedValue({ content: '{"isCorrect": true, "correctRate": 12, "confidence": 90}' });
+
+    const r = await validateDutyRate('6109100010', 12);
+
+    expect(r.isCorrect).toBe(true);
+    expect(r.correctRate).toBe(12);
+  });
+
+  test('devuelve null si la IA falla al parsear', async () => {
+    aiService.callClaude.mockResolvedValue({ content: 'no json' });
+    expect(await validateDutyRate('6109100010', 12)).toBeNull();
   });
 });
