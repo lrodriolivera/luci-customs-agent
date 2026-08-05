@@ -578,9 +578,24 @@ class VUAService {
           continue;
         }
 
+        // Buscar el serviceType key correcto a partir del code
+        const serviceCode = authorityConfig.services[0];
+        const serviceTypeKey = Object.keys(VUA_CONFIG.services).find(
+          key => VUA_CONFIG.services[key].code === serviceCode
+        );
+
+        if (!serviceTypeKey) {
+          results.push({
+            authority,
+            success: false,
+            error: `Servicio no encontrado para código ${serviceCode}`
+          });
+          continue;
+        }
+
         // Enviar a cada autoridad
         const result = await this.submitDocument({
-          serviceType: authorityConfig.services[0],
+          serviceType: serviceTypeKey,
           operatorNIF: declarationData.operatorNIF,
           operatorName: declarationData.operatorName,
           customsOffice: declarationData.customsOffice,
