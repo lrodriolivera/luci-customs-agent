@@ -13,6 +13,10 @@ module.exports = {
     'src/**/*.js',
     '!src/app.js',
     '!src/config/**',
+    // Scripts CLI de operación (seed de datos, createIndexes, createSuperAdmin,
+    // backfill/cifrado de PII): se ejecutan a mano fuera del ciclo de la app, no
+    // son código servido. Mismo criterio que app.js/config: fuera del denominador.
+    '!src/scripts/**',
     '!**/node_modules/**',
     '!**/tests/**'
   ],
