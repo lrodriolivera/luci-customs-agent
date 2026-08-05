@@ -231,13 +231,24 @@ describe('handleEvent', () => {
 
   test('dispara los workflows que escuchan el evento', async () => {
     await crearWorkflow({ enabled: true, status: 'active', trigger: { type: 'event', event: 'expedition.created' } });
-    await svc.handleEvent('expedition.created', { organizationId: ORG, entityType: 'expedition', entityId: 'x', data: {} });
-    // executeWorkflow es fire-and-forget y hace un findById async antes de llamar
-    // al engine: esperamos a que se resuelva con reintentos cortos.
-    for (let i = 0; i < 20 && engine.executeWorkflow.mock.calls.length === 0; i++) {
-      await new Promise((r) => setImmediate(r));
+    // handleEvent llama a this.executeWorkflow (el REAL, no el engine) de forma
+    // fire-and-forget; ese método hace un findById async y luego delega en el
+    // engine. Esperar por polling es flaky bajo carga (la batería completa lo
+    // destapó). En su lugar, espiamos executeWorkflow del propio servicio para
+    // resolver una promesa en cuanto se invoca, y la await de forma determinista.
+    let invocado;
+    const señal = new Promise((r) => { invocado = r; });
+    const spy = jest.spyOn(svc, 'executeWorkflow').mockImplementation(() => {
+      invocado();
+      return Promise.resolve({ executionId: 'e', status: 'completed' });
+    });
+    try {
+      await svc.handleEvent('expedition.created', { organizationId: ORG, entityType: 'expedition', entityId: 'x', data: {} });
+      await señal; // resuelve cuando handleEvent invoca executeWorkflow
+      expect(spy).toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
     }
-    expect(engine.executeWorkflow).toHaveBeenCalled();
   });
 
   test('no falla si ningún workflow escucha el evento', async () => {
