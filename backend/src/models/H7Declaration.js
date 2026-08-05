@@ -585,6 +585,9 @@ H7DeclarationSchema.statics.getStats = async function(filters = {}) {
 
   if (filters.carrier) match['carrier.code'] = filters.carrier;
   if (filters.createdBy) match.createdBy = new mongoose.Types.ObjectId(filters.createdBy);
+  // aggregate() NO castea el tenantId: hay que forzar el ObjectId o el $match
+  // no encaja y devuelve 0 (mismo problema que ya se documento en analytics).
+  if (filters.tenantId) match.tenantId = new mongoose.Types.ObjectId(filters.tenantId);
 
   const stats = await this.aggregate([
     { $match: match },

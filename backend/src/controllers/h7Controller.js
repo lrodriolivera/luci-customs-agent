@@ -84,10 +84,13 @@ exports.list = async (req, res) => {
  */
 exports.getStats = async (req, res) => {
   try {
-    // Los admins ven estadisticas de todas las declaraciones
-    const queryParams = req.user.role === 'admin'
-      ? { ...req.query }
-      : { ...req.query, createdBy: req.user._id };
+    // Las estadisticas SIEMPRE se acotan al tenant del usuario. Un admin es
+    // administrador de SU tenant, no de la plataforma: sin este tenantId veia
+    // los agregados H7 (valor en aduana, aranceles, transportistas) de todas
+    // las organizaciones. El agent ademas queda acotado a lo que el crea.
+    const queryParams = { ...req.query };
+    if (req.user.tenantId) queryParams.tenantId = req.user.tenantId;
+    if (req.user.role !== 'admin') queryParams.createdBy = req.user._id;
 
     const stats = await h7Service.getStats(queryParams);
 
