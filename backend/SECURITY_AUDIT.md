@@ -348,3 +348,24 @@ Fix: añadir `'yellow'` al enum de `channel` y `'yellow_channel'` al enum de `st
 ### El análisis IA de la declaración no persistía (`aiAnalysis.channelPrediction`/`declarationAnalysis`)
 
 `aiPredictChannel` y `aiFullDeclarationAnalysis` guardan su resultado en `expedition.aiAnalysis.channelPrediction` y `.declarationAnalysis`. El objeto `aiAnalysis` del `ExpeditionSchema` es estricto y **no declaraba esos dos campos**, así que se descartaban: `getAiDeclarationAnalysis` devolvía siempre `hasAnalysis: false` aunque el análisis ya se hubiera ejecutado (y facturado a Bedrock). Fix: declararlos como `Mixed`. Los cuatro hallazgos anteriores salieron al cubrir `declarationController` sin mockear el modelo `Expedition` y comprobar el estado persistido; cubiertos en `tests/controllers/declarationController.extra.db.test.js`.
+
+### `TaricCode.supplementaryUnit` colapsaba a String requerido: el catálogo no podía guardar unidades suplementarias
+
+Mismo patrón de clave reservada de Mongoose que `Payment.paymentMethod` (`bfacd22`). El subdocumento se declaró así:
+
+```js
+supplementaryUnit: {
+  required: { type: Boolean, default: false },
+  type: String,          // <-- `type` es palabra reservada
+  description: String
+}
+```
+
+Con `type: String`, Mongoose interpreta el subobjeto completo **no como un subdocumento sino como un `SchemaString`**, y la clave `required: {...}` (truthy) lo marca como **requerido**. Consecuencias reales:
+
+- Guardar `supplementaryUnit: { required, type, description }` — que es exactamente lo que produce `taricService` (los defaults del catálogo TARIC: `8471*` p/st, calzado `pa`, litros `l`, etc.) — reventaba con `ValidationError: Cast to string failed for value "{ required: ..., type: 'p/st', ... }"`.
+- Guardar un TaricCode **sin** `supplementaryUnit` fallaba con `Path 'supplementaryUnit' is required`.
+
+Es decir: **ningún código TARIC podía persistirse con su información de unidades suplementarias**. AEAT exige `supplementaryUnits` para varios códigos (error 2149, p.ej. portátiles 8471*), así que el catálogo perdía ese dato y las declaraciones de esos códigos quedaban expuestas al rechazo.
+
+Fix: envolver la clave reservada en `type: { type: String }` para que sea un campo del subdocumento y no el SchemaType. Salió al cubrir `classificationController` contra Mongo real (creando fichas TARIC de verdad); con el modelo mockeado el `save` nunca validaba. Cubierto con regresión en `tests/controllers/classificationController.extra.db.test.js`.

@@ -77,10 +77,18 @@ const TaricCodeSchema = new mongoose.Schema({
     unit: String
   }],
 
-  // Unidades suplementarias requeridas
+  // Unidades suplementarias requeridas.
+  // OJO: `type` es palabra reservada de Mongoose. Declarado como `type: String`
+  // (SchemaType), Mongoose colapsaba TODO el subobjeto a un SchemaString y, ademas,
+  // la clave `required: {...}` (truthy) lo marcaba como requerido. Efecto real:
+  // guardar `supplementaryUnit: { required, type, description }` -que es lo que
+  // escribe taricService- reventaba con "Cast to string failed" y el campo NO se
+  // persistia. AEAT exige supplementaryUnits para varios codigos (error 2149,
+  // p.ej. 8471*), asi que el catalogo perdia ese dato. Fix: envolver `type` en
+  // { type: String } para que sea un campo del subdocumento, no el SchemaType.
   supplementaryUnit: {
     required: { type: Boolean, default: false },
-    type: String, // p/st (piezas), pa (pares), l (litros), etc.
+    type: { type: String }, // p/st (piezas), pa (pares), l (litros), etc.
     description: String
   },
 
