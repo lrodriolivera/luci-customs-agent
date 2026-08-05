@@ -686,7 +686,11 @@ class RegulationService {
       let excerpt = '';
 
       for (const pattern of articlePatterns) {
-        const match = doc.content.match(pattern);
+        // OJO: String.match con flag /g devuelve un array de coincidencias SIN
+        // propiedad .index, por lo que "match.index !== undefined" era siempre
+        // falso y searchArticle NUNCA encontraba nada (found:false para todo
+        // articulo, incluso existiendo). Se usa RegExp.exec, que si expone .index.
+        const match = pattern.exec(doc.content);
         if (match && match.index !== undefined) {
           found = true;
           // Extract surrounding text (context)
