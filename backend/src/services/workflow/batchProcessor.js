@@ -576,9 +576,13 @@ class BatchProcessor {
 // Instancia singleton
 const batchProcessor = new BatchProcessor();
 
-// Limpieza periodica de jobs antiguos (cada hora)
-setInterval(() => {
+// Limpieza periodica de jobs antiguos (cada hora).
+// .unref() para que este intervalo no mantenga vivo el event loop: sin el, el
+// proceso (y Jest) no puede terminar de forma limpia aunque no quede otro
+// trabajo pendiente. La limpieza sigue ejecutandose mientras la app viva.
+const _cleanupInterval = setInterval(() => {
   batchProcessor.cleanupOldJobs(24);
 }, 60 * 60 * 1000);
+if (typeof _cleanupInterval.unref === 'function') _cleanupInterval.unref();
 
 module.exports = batchProcessor;
