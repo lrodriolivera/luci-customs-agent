@@ -5,7 +5,9 @@ const logger = require('../config/logger');
 // mongoose.connection.readyState === 1 significa "connected".
 const MONGOOSE_CONNECTED = 1;
 
-const SENSITIVE_KEYS = new Set(['password', 'token', 'authorization', 'cookie', 'apiKey', 'secret']);
+// Las claves se comparan con k.toLowerCase(), asi que TODAS deben ir en
+// minusculas o nunca coincidiran (apiKey en camelCase jamas se redactaba).
+const SENSITIVE_KEYS = new Set(['password', 'token', 'authorization', 'cookie', 'apikey', 'secret']);
 
 function scrub(obj) {
   if (!obj || typeof obj !== 'object') return obj;
