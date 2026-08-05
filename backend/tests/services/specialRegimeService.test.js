@@ -253,11 +253,9 @@ describe('Special Regime Service', () => {
         _id: 'guar123',
         reference: 'GRN-001',
         grn: 'ES123456789',
-        balance: {
-          total: 50000,
-          used: 10000,
-          available: 40000
-        },
+        totalAmount: 50000,
+        consumedAmount: 10000,
+        availableAmount: 40000,
         movements: [],
         save: jest.fn().mockResolvedValue(true)
       };
@@ -267,8 +265,8 @@ describe('Special Regime Service', () => {
 
       const result = await specialRegimeService.linkGuarantee('regime123', 'guar123', 'user123');
 
-      expect(mockGuarantee.balance.used).toBe(15000); // 10000 + 5000
-      expect(mockGuarantee.balance.available).toBe(35000); // 40000 - 5000
+      expect(mockGuarantee.consumedAmount).toBe(15000); // 10000 + 5000
+      expect(mockGuarantee.availableAmount).toBe(35000); // 50000 - 15000
       expect(mockRegime.guarantee).toBeDefined();
       expect(mockRegime.guarantee.guaranteeId).toBe('guar123');
       expect(mockGuarantee.save).toHaveBeenCalled();
@@ -281,9 +279,10 @@ describe('Special Regime Service', () => {
       };
 
       const mockGuarantee = {
-        balance: {
-          available: 10000
-        }
+        totalAmount: 50000,
+        consumedAmount: 40000,
+        availableAmount: 10000,
+        movements: []
       };
 
       SpecialRegime.findById.mockResolvedValue(mockRegime);
@@ -397,10 +396,9 @@ describe('Special Regime Service', () => {
     test('should release guarantee on discharge', async () => {
       const mockGuarantee = {
         _id: 'guar123',
-        balance: {
-          used: 10000,
-          available: 40000
-        },
+        totalAmount: 50000,
+        consumedAmount: 10000,
+        availableAmount: 40000,
         movements: [],
         save: jest.fn().mockResolvedValue(true)
       };
@@ -424,8 +422,8 @@ describe('Special Regime Service', () => {
 
       await specialRegimeService.discharge('regime123', { type: 'export' }, 'user123');
 
-      expect(mockGuarantee.balance.used).toBe(5000); // 10000 - 5000
-      expect(mockGuarantee.balance.available).toBe(45000); // 40000 + 5000
+      expect(mockGuarantee.consumedAmount).toBe(5000); // 10000 - 5000
+      expect(mockGuarantee.availableAmount).toBe(45000); // 50000 - 5000
       expect(mockGuarantee.save).toHaveBeenCalled();
     });
 

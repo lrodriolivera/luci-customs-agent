@@ -61,14 +61,20 @@ const specialRegimeService = {
     if (data.deadlineDate) {
       deadlineDate = new Date(data.deadlineDate);
     } else {
-      const defaultMonths = DEFAULT_DEADLINES[data.regimeCode] || 12;
-      if (defaultMonths > 0) {
-        deadlineDate = new Date(startDate);
-        deadlineDate.setMonth(deadlineDate.getMonth() + defaultMonths);
-      } else {
-        // Para transito, usar dias
+      // OJO: los transitos (T1/T2/TIR) tienen deadline 0 en la tabla y se
+      // calculan por dias. Con `|| 12` ese 0 se convertia en 12 meses y la rama
+      // de dias nunca se alcanzaba. Se distingue "cero" (transito, por dias),
+      // "null" (deposito 71 sin limite -> fallback 12 meses, como antes) y
+      // "no definido" (12 meses por defecto).
+      const configured = DEFAULT_DEADLINES[data.regimeCode];
+      if (configured === 0) {
+        // Transito: usar dias
         deadlineDate = new Date(startDate);
         deadlineDate.setDate(deadlineDate.getDate() + (data.transitDays || 8));
+      } else {
+        const defaultMonths = (configured === undefined || configured === null) ? 12 : configured;
+        deadlineDate = new Date(startDate);
+        deadlineDate.setMonth(deadlineDate.getMonth() + defaultMonths);
       }
     }
 
@@ -215,25 +221,22 @@ const specialRegimeService = {
       throw new Error('Garantia no encontrada');
     }
 
-    // Verificar que la garantia tiene saldo suficiente
-    if (guarantee.balance.available < regime.totals.totalGuaranteed) {
-      throw new Error(`Saldo insuficiente en garantia. Disponible: ${guarantee.balance.available}, Requerido: ${regime.totals.totalGuaranteed}`);
+    // Verificar que la garantia tiene saldo suficiente. El modelo Guarantee usa
+    // availableAmount/consumedAmount (no un subdoc `balance`, que no existe).
+    if (guarantee.availableAmount < regime.totals.totalGuaranteed) {
+      throw new Error(`Saldo insuficiente en garantia. Disponible: ${guarantee.availableAmount}, Requerido: ${regime.totals.totalGuaranteed}`);
     }
 
     // Afectar importe en la garantia
-    guarantee.balance.used += regime.totals.totalGuaranteed;
-    guarantee.balance.available -= regime.totals.totalGuaranteed;
+    guarantee.consumedAmount += regime.totals.totalGuaranteed;
+    guarantee.availableAmount = guarantee.totalAmount - guarantee.consumedAmount;
 
-    // Si existe el metodo de movimientos
-    if (guarantee.movements) {
-      guarantee.movements.push({
-        type: 'affectation',
-        amount: regime.totals.totalGuaranteed,
-        reference: regime.reference,
-        description: `Afectacion regimen ${regime.regimeCode} - ${regime.reference}`,
-        date: new Date()
-      });
-    }
+    guarantee.movements.push({
+      type: 'consumption',
+      amount: -regime.totals.totalGuaranteed,
+      description: `Afectacion regimen ${regime.regimeCode} - ${regime.reference}`,
+      balanceAfter: guarantee.availableAmount
+    });
 
     await guarantee.save();
 
@@ -371,18 +374,15 @@ const specialRegimeService = {
     if (!guarantee) return;
 
     const amount = regime.guarantee.amount || 0;
-    guarantee.balance.used = Math.max(0, guarantee.balance.used - amount);
-    guarantee.balance.available += amount;
+    guarantee.consumedAmount = Math.max(0, guarantee.consumedAmount - amount);
+    guarantee.availableAmount = guarantee.totalAmount - guarantee.consumedAmount;
 
-    if (guarantee.movements) {
-      guarantee.movements.push({
-        type: 'release',
-        amount,
-        reference: regime.reference,
-        description: `Liberacion regimen ${regime.reference}`,
-        date: new Date()
-      });
-    }
+    guarantee.movements.push({
+      type: 'release',
+      amount,
+      description: `Liberacion regimen ${regime.reference}`,
+      balanceAfter: guarantee.availableAmount
+    });
 
     await guarantee.save();
 
@@ -445,9 +445,9 @@ const specialRegimeService = {
       const additionalAmount = suspendedDuties.total;
       const guarantee = await Guarantee.findById(regime.guarantee.guaranteeId);
 
-      if (guarantee && guarantee.balance.available >= additionalAmount) {
-        guarantee.balance.used += additionalAmount;
-        guarantee.balance.available -= additionalAmount;
+      if (guarantee && guarantee.availableAmount >= additionalAmount) {
+        guarantee.consumedAmount += additionalAmount;
+        guarantee.availableAmount = guarantee.totalAmount - guarantee.consumedAmount;
         regime.guarantee.amount += additionalAmount;
         await guarantee.save();
       } else {
@@ -500,8 +500,8 @@ const specialRegimeService = {
       const releaseAmount = (1 - proportion) * (regime.guarantee.amount || 0);
       const guarantee = await Guarantee.findById(regime.guarantee.guaranteeId);
       if (guarantee) {
-        guarantee.balance.used = Math.max(0, guarantee.balance.used - releaseAmount);
-        guarantee.balance.available += releaseAmount;
+        guarantee.consumedAmount = Math.max(0, guarantee.consumedAmount - releaseAmount);
+        guarantee.availableAmount = guarantee.totalAmount - guarantee.consumedAmount;
         regime.guarantee.amount -= releaseAmount;
         await guarantee.save();
       }
