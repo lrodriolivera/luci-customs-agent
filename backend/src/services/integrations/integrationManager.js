@@ -620,6 +620,7 @@ class IntegrationManager {
         code: integration.code,
         operation: integration.operation,
         success: result.success,
+        pending: result.pending,
         reference: result.vuaReference || result.reference || result.mrn,
         status: result.status,
         message: result.message
