@@ -484,6 +484,113 @@ describe('endpoints IA (delegadores con guard de tenant)', () => {
   });
 });
 
+describe('queryStatus: guard de tenant + estado en AEAT', () => {
+  test('400 si la solicitud propia aun no tiene pueReference', async () => {
+    const user = await usuario();
+    const sol = await crearSolicitud({ user });
+    const res = crearRes();
+    await ctrl.queryStatus({ params: { id: sol._id }, user }, res);
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(/no ha sido enviada/);
+  });
+
+  test('404 sobre solicitud de otro tenant', async () => {
+    const dueno = await usuario();
+    const sol = await crearSolicitud({ user: dueno });
+    const res = crearRes();
+    await ctrl.queryStatus({ params: { id: sol._id }, user: await usuario() }, res);
+    expect(res.statusCode).toBe(404);
+  });
+
+  test('consulta el estado cuando ya hay pueReference', async () => {
+    const user = await usuario();
+    const sol = await crearSolicitud({ user, extra: { pueReference: 'PUE-REF-1' } });
+    jest.spyOn(require('../../src/services/pueService'), 'queryStatus')
+      .mockResolvedValue({ estado: 'ACEPTADA' });
+    const res = crearRes();
+    await ctrl.queryStatus({ params: { id: sol._id }, user }, res);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.estado).toBe('ACEPTADA');
+    require('../../src/services/pueService').queryStatus.mockRestore();
+  });
+});
+
+describe('getUpcomingDeadlines', () => {
+  test('devuelve las solicitudes con vencimiento proximo', async () => {
+    const res = crearRes();
+    await ctrl.getUpcomingDeadlines({ query: { days: '10' } }, res);
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body.data)).toBe(true);
+  });
+});
+
+describe('delegadores por id: catch 500 con id invalido (CastError)', () => {
+  test('getByExpedition 500', async () => {
+    const res = crearRes();
+    await ctrl.getByExpedition({ params: { id: 'no-es-objectid' } }, res);
+    expect(res.statusCode).toBe(500);
+  });
+
+  test('getByDeclaration devuelve [] para MRN sin coincidencias', async () => {
+    const res = crearRes();
+    await ctrl.getByDeclaration({ params: { mrn: '25ESXXXX' } }, res);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data).toEqual([]);
+  });
+});
+
+describe('AI reales (delegan en aiService mockeado)', () => {
+  test('aiDetermineType éxito', async () => {
+    aiService.determinePUEType.mockResolvedValue({ types: ['ROHS'] });
+    const res = crearRes();
+    await ctrl.aiDetermineType({ body: { goods: [{ description: 'x' }], context: {} }, user: await usuario() }, res);
+    expect(res.body.data.types).toEqual(['ROHS']);
+  });
+
+  test('aiAnalyzeGoods éxito', async () => {
+    aiService.analyzeGoodsForPUE.mockResolvedValue({ requiresPUE: true });
+    const res = crearRes();
+    await ctrl.aiAnalyzeGoods({ body: { description: 'aparato', taricCode: '85171200' }, user: await usuario() }, res);
+    expect(res.body.data.requiresPUE).toBe(true);
+  });
+
+  test('aiPredictInspection calcula operatorHistory con el historial del operador', async () => {
+    const user = await usuario();
+    // Historial previo del mismo operador (misma eori), 2 de 3 aprobadas.
+    await crearSolicitud({ user, status: 'approved' });
+    await crearSolicitud({ user, status: 'approved_conditions' });
+    await crearSolicitud({ user, status: 'rejected' });
+    const sol = await crearSolicitud({ user });
+    aiService.predictInspectionOutcome.mockResolvedValue({ predictions: { approved: 70 } });
+
+    const res = crearRes();
+    await ctrl.aiPredictInspection({ params: { id: sol._id }, body: {}, user }, res);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.operatorHistory.totalRequests).toBeGreaterThanOrEqual(3);
+    // 2 aprobadas de 3 con historial => 66.7%
+    expect(res.body.data.operatorHistory.approvalRate).toBe('66.7');
+  });
+
+  test('aiSuggestDocuments éxito', async () => {
+    const user = await usuario();
+    const sol = await crearSolicitud({ user });
+    aiService.suggestPUEDocuments.mockResolvedValue({ requiredDocuments: [] });
+    const res = crearRes();
+    await ctrl.aiSuggestDocuments({ params: { id: sol._id }, body: {}, user }, res);
+    expect(res.statusCode).toBe(200);
+  });
+
+  test('aiGetRecommendations éxito', async () => {
+    const user = await usuario();
+    const sol = await crearSolicitud({ user });
+    aiService.generatePUERecommendations.mockResolvedValue({ checklist: [] });
+    const res = crearRes();
+    await ctrl.aiGetRecommendations({ params: { id: sol._id }, body: { inspectionType: 'fisica' }, user }, res);
+    expect(res.statusCode).toBe(200);
+    expect(aiService.generatePUERecommendations).toHaveBeenCalledWith(expect.anything(), 'fisica');
+  });
+});
+
 describe('handlers puros de catalogos (contra el servicio real)', () => {
   test('getTypes devuelve los 4 tipos', async () => {
     const res = crearRes();
