@@ -227,6 +227,17 @@ const ExpeditionSchema = new mongoose.Schema({
   cvbReleaseId: { type: String },
   cvbStatus: { type: String, enum: ['pending', 'released', 'rejected', null] },
 
+  // Garantia aduanera vinculada al expediente. La escribe guaranteeService
+  // (linkToExpedition / releaseFromExpedition) y la lee la generacion del H1
+  // (h1Generator) y el mapeo UCC. Sin declararla, el $set de esos campos se
+  // descartaba silenciosamente (schema estricto) y el H1 nunca reflejaba la
+  // garantia realmente vinculada.
+  guarantee: {
+    id: { type: mongoose.Schema.Types.ObjectId, ref: 'Guarantee' },
+    amount: { type: Number },
+    status: { type: String, enum: ['active', 'released', null] }
+  },
+
   // Operation type
   operationType: {
     type: String,
