@@ -299,12 +299,12 @@ exports.getById = async (req, res) => {
     const { id } = req.params;
     const request = await pueService.getById(id);
 
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        error: 'Solicitud no encontrada'
-      });
-    }
+    // Sin este guard cualquier usuario autenticado podia leer la solicitud PUE
+    // de otro tenant conociendo su id: getById delega en un findById plano sin
+    // acotar por tenant. Misma fuga que ya se detecto en getAiAnalysis del
+    // expedienteController. ensureSameTenant responde 404 si no existe o si es
+    // de otro tenant (y deja pasar al super admin).
+    if (!ensureSameTenant(request, req, res, { resource: 'Solicitud' })) return;
 
     res.json({
       success: true,
