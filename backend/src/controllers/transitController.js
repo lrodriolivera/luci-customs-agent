@@ -661,8 +661,12 @@ transitController.notifyArrival = async (req, res) => {
     const { Transit } = require('../models');
     const aeatSubmitService = require('../services/aeat/aeatSubmitService');
 
-    const transit = await Transit.findById(req.params.id);
-    if (!ensureSameTenant(transit, req, res, { resource: 'Tránsito' })) return;
+    // Los transitos se aislan por owner (no llevan tenantId), asi que
+    // ensureSameTenant (que lee tenantId) hacia de no-op y dejaba que cualquier
+    // usuario notificara la llegada de un transito ajeno. Se acota por owner
+    // como el resto del modulo.
+    const transit = await Transit.findOne({ _id: req.params.id, owner: req.user._id });
+    if (!transit) return res.status(404).json({ success: false, error: 'Transito no encontrado' });
     if (!transit.mrn) return res.status(400).json({ success: false, error: 'El transito no tiene MRN' });
 
     const result = await aeatSubmitService.submitNCTSArrival({
@@ -692,8 +696,10 @@ transitController.notifyUnloading = async (req, res) => {
     const { Transit } = require('../models');
     const aeatSubmitService = require('../services/aeat/aeatSubmitService');
 
-    const transit = await Transit.findById(req.params.id);
-    if (!ensureSameTenant(transit, req, res, { resource: 'Tránsito' })) return;
+    // Mismo aislamiento por owner que notifyArrival: ensureSameTenant no acotaba
+    // porque los transitos no llevan tenantId.
+    const transit = await Transit.findOne({ _id: req.params.id, owner: req.user._id });
+    if (!transit) return res.status(404).json({ success: false, error: 'Transito no encontrado' });
     if (!transit.mrn) return res.status(400).json({ success: false, error: 'El transito no tiene MRN' });
 
     const result = await aeatSubmitService.submitNCTSUnloading({

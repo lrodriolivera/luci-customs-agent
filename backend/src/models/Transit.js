@@ -45,7 +45,8 @@ const transitSchema = new mongoose.Schema({
       'accepted',           // Aceptada, MRN asignado
       'released',           // Mercancias liberadas en partida
       'in_transit',         // En transito
-      'arrived',            // Llegada notificada
+      'arrived',            // Llegada notificada (CC007)
+      'unloaded',           // Descarga notificada (CC044)
       'control_requested',  // Control solicitado por destino
       'goods_released',     // Mercancia entregada en destino
       'discrepancy',        // Discrepancia detectada
