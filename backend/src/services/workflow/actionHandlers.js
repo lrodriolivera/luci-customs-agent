@@ -62,13 +62,17 @@ const actionHandlers = {
 
     const message = new ChatMessage({
       expedition: context.entityId,
-      sender: 'system',
+      // BUG CORREGIDO: sender 'system' y messageType 'system_notification' no son
+      // valores válidos del enum. ChatMessage.sender acepta 'client'|'agent'|'luci'
+      // y messageType acepta 'text'|'document_request'|'document_received'|
+      // 'validation_result'|'system'. Usamos 'luci' y 'system' respectivamente.
+      sender: 'luci',
       senderInfo: {
         name: 'LUCI (Automatico)',
         email: 'luci@strixai.es'
       },
       content: config.messageContent || config.notificationBody,
-      messageType: 'system_notification'
+      messageType: 'system'
     });
 
     await message.save();
@@ -111,7 +115,12 @@ const actionHandlers = {
       entity.timeline.push({
         action: 'status_change',
         description: `Estado cambiado de ${previousStatus} a ${newStatus} por workflow`,
-        performedBy: 'workflow'
+        // BUG CORREGIDO: este handler sirve a Expedition y Requirement, cuyos
+        // timeline.performedBy tienen tipos distintos (String en Expedition,
+        // ObjectId en Requirement). El literal 'workflow' rompía el save() de
+        // Requirement (Cast a ObjectId). null es válido en ambos schemas; la
+        // traza de que fue el workflow queda en description.
+        performedBy: null
       });
     }
 
@@ -220,8 +229,11 @@ const actionHandlers = {
     dueDate.setDate(dueDate.getDate() + (deadlineDays || 7));
 
     const deadline = new Deadline({
+      // BUG CORREGIDO: category 'workflow' no existe en el enum del modelo
+      // Deadline; usamos 'other' que sí es válido. deadlineType || 'other' ya
+      // era correcto ('other' está en el enum de deadlineType).
       deadlineType: deadlineType || 'other',
-      category: 'workflow',
+      category: 'other',
       title: deadlineTitle || 'Deadline creado por workflow',
       dueDate,
       references: {
