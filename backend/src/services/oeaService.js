@@ -388,8 +388,14 @@ class OEAService {
         throw new Error(`No se puede aprobar en estado: ${oea.certification.status}`);
       }
 
-      // Generate OEA number
-      const oeaNumber = this.generateOEANumber(oea.certification.type, oea.organization.nif);
+      // Generate OEA number.
+      // this.generateOEANumber es la version reasignada en la instancia
+      // (linea ~1302), cuya firma es (type, EORI): usa eori.substring(0,2) como
+      // codigo de pais. Pasarle el NIF (p.ej. "B12345678") producia numeros con
+      // prefijo de pais invalido ("B1OEAC...") en vez de "ESOEAC..." — el numero
+      // OEA es un identificador oficial ante AEAT. Se pasa el EORI, que ya
+      // empieza por el codigo ISO de pais.
+      const oeaNumber = this.generateOEANumber(oea.certification.type, oea.organization.eori);
 
       // Calculate expiration (5 years)
       const expirationDate = new Date();
