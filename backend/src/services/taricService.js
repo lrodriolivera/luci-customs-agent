@@ -370,11 +370,13 @@ class TaricService {
     // Calcular arancel especifico si aplica
     if (codeInfo.duties?.specific) {
       const spec = codeInfo.duties.specific;
-      if (spec.unit.includes('kg') && netWeight) {
+      // spec.unit puede faltar; sin el ?. un TARIC con specific.amount sin unit
+      // lanzaba TypeError y reventaba el cálculo de derechos (500).
+      if (spec.unit?.includes('kg') && netWeight) {
         specificDuty = (netWeight / 1000) * spec.amount;
-      } else if (spec.unit.includes('hl') && quantity) {
+      } else if (spec.unit?.includes('hl') && quantity) {
         specificDuty = (quantity / 100) * spec.amount;
-      } else if (spec.unit.includes('p/st') && quantity) {
+      } else if (spec.unit?.includes('p/st') && quantity) {
         specificDuty = quantity * spec.amount;
       }
     }
