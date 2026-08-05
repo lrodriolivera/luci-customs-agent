@@ -117,8 +117,10 @@ class WorkflowService {
     // Verificar horario laboral si aplica
     if (workflow.trigger.config?.onlyBusinessHours) {
       const hour = now.getHours();
-      const start = workflow.trigger.config.businessHoursStart || 9;
-      const end = workflow.trigger.config.businessHoursEnd || 18;
+      // ?? en vez de || para no descartar el valor 0 (medianoche) como si no
+      // estuviera configurado: businessHoursStart: 0 es una ventana valida.
+      const start = workflow.trigger.config.businessHoursStart ?? 9;
+      const end = workflow.trigger.config.businessHoursEnd ?? 18;
       if (hour < start || hour >= end) return false;
 
       // Verificar dia laboral (L-V)
