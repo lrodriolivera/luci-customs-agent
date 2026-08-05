@@ -18,17 +18,21 @@ const mockGetDutyInfo = jest.fn();
 const mockCalcDuties = jest.fn();
 const mockGetExchangeAxios = jest.fn();
 
+const mockValidateDuty = jest.fn();
+const mockClearCache = jest.fn();
+
 jest.mock('../../src/services/dutyCalculationService', () => ({
   getDutyInfo: (...a) => mockGetDutyInfo(...a),
   calculateDutiesWithAI: (...a) => mockCalcDuties(...a),
-  validateDutyRate: jest.fn(),
-  clearMemoryCache: jest.fn()
-}));
+  validateDutyRate: (...a) => mockValidateDuty(...a),
+  clearMemoryCache: (...a) => mockClearCache(...a)
+}), { virtual: false });
 
 jest.mock('axios', () => ({ get: (...a) => mockGetExchangeAxios(...a) }));
 
-// Expedition se usa en calculateTotal con expeditionId; lo cubrimos con el
-// caso de items directos (sin expediente) para no arrastrar Mongoose aqui.
+// Expedition se usa en calculateTotal con expeditionId; ese camino (Mongoose
+// real + guard de tenant + persistencia) se ejercita en el fichero companion
+// calculationController.db.test.js. Aqui se cubre el camino de items directos.
 jest.mock('../../src/models', () => ({
   Expedition: { findById: jest.fn() },
   TaricCode: {}
@@ -48,6 +52,8 @@ beforeEach(() => {
   mockGetDutyInfo.mockReset();
   mockCalcDuties.mockReset();
   mockGetExchangeAxios.mockReset();
+  mockValidateDuty.mockReset();
+  mockClearCache.mockReset();
 });
 
 describe('calculateVat: base imponible del IVA de importacion', () => {
@@ -101,6 +107,18 @@ describe('calculateVat: base imponible del IVA de importacion', () => {
     await ctrl.calculateVat({ body: { customsValue: 333.33, dutyAmount: 0 } }, res);
 
     expect(res.body.data.vatAmount).toBe(70);
+  });
+
+  test('un fallo obteniendo el capitulo IVA devuelve 500', async () => {
+    // Si la consulta del tipo por capitulo revienta, el handler no propaga la
+    // excepcion: responde 500 con mensaje generico.
+    mockGetDutyInfo.mockRejectedValue(new Error('BD caida'));
+    const res = crearRes();
+
+    await ctrl.calculateVat({ body: { taricCode: '8471300000', customsValue: 100 } }, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body.success).toBe(false);
   });
 
   test('normaliza el codigo TARIC antes de buscar el capitulo', async () => {
@@ -229,6 +247,17 @@ describe('calculateTotal: valor en aduana (CIF) y totales', () => {
 
     expect(res.statusCode).toBe(400);
   });
+
+  test('una entrada que revienta el bucle devuelve 500, no cuelga', async () => {
+    // items no iterable (numero): la validacion .length !== 0 lo deja pasar y
+    // el for...of lanza TypeError, que el catch externo convierte en 500.
+    const res = crearRes();
+
+    await ctrl.calculateTotal({ body: { items: 5 } }, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body.success).toBe(false);
+  });
 });
 
 describe('getExchangeRate: endpoint de tipo de cambio', () => {
@@ -246,5 +275,208 @@ describe('getExchangeRate: endpoint de tipo de cambio', () => {
     await ctrl.getExchangeRate({ query: { from: 'eur', to: 'EUR' } }, res);
 
     expect(res.body.data.rate).toBe(1);
+  });
+
+  test('una moneda no textual devuelve 500 (no revienta el handler)', async () => {
+    // from/to numericos: .toUpperCase() lanza y el catch responde 500.
+    const res = crearRes();
+
+    await ctrl.getExchangeRate({ query: { from: 123, to: 456 } }, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body.success).toBe(false);
+  });
+
+  test('obtiene la tasa desde la API del BCE (EUR -> USD)', async () => {
+    // El endpoint devuelve EUR base; para EUR->USD la tasa es la del destino.
+    mockGetExchangeAxios.mockResolvedValue({ data: { rates: { USD: 1.1, GBP: 0.85 } } });
+    const res = crearRes();
+
+    await ctrl.getExchangeRate({ query: { from: 'EUR', to: 'USD' } }, res);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.rate).toBe(1.1);
+    expect(res.body.data.from).toBe('EUR');
+    expect(res.body.data.to).toBe('USD');
+  });
+
+  test('cruza dos divisas no-EUR usando la base EUR del BCE', async () => {
+    // USD->GBP = rate[GBP] / rate[USD] = 0.85 / 1.1.
+    mockGetExchangeAxios.mockResolvedValue({ data: { rates: { USD: 1.1, GBP: 0.85 } } });
+    const res = crearRes();
+
+    await ctrl.getExchangeRate({ query: { from: 'USD', to: 'GBP' } }, res);
+
+    expect(res.body.data.rate).toBeCloseTo(0.85 / 1.1, 5);
+  });
+
+  test('calcula la tasa hacia EUR como inverso (USD -> EUR)', async () => {
+    // to === EUR => 1 / rate[from]. Con USD 1.1 => 0.9090...
+    // Nota: reutiliza el cache poblado por el test anterior (mismo modulo).
+    mockGetExchangeAxios.mockResolvedValue({ data: { rates: { USD: 1.1 } } });
+    const res = crearRes();
+
+    await ctrl.getExchangeRate({ query: { from: 'USD', to: 'EUR' } }, res);
+
+    expect(res.body.data.rate).toBeCloseTo(1 / 1.1, 5);
+  });
+});
+
+describe('getDutyInfo: informacion de aranceles del servicio', () => {
+  test('devuelve la info cuando el servicio la resuelve', async () => {
+    mockGetDutyInfo.mockResolvedValue({ dutyRate: 4.7, vatRate: 21, description: 'CPU' });
+    const res = crearRes();
+
+    await ctrl.getDutyInfo({ params: { taricCode: '8471300000' }, query: { origin: 'CN' } }, res);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.dutyRate).toBe(4.7);
+    expect(mockGetDutyInfo).toHaveBeenCalledWith('8471300000', 'CN');
+  });
+
+  test('sin origin pasa null al servicio', async () => {
+    mockGetDutyInfo.mockResolvedValue({ dutyRate: 0 });
+    const res = crearRes();
+
+    await ctrl.getDutyInfo({ params: { taricCode: '8471300000' }, query: {} }, res);
+
+    expect(mockGetDutyInfo).toHaveBeenCalledWith('8471300000', null);
+  });
+
+  test('devuelve 404 cuando el servicio no encuentra info', async () => {
+    mockGetDutyInfo.mockResolvedValue(null);
+    const res = crearRes();
+
+    await ctrl.getDutyInfo({ params: { taricCode: '0000000000' }, query: {} }, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
+
+  test('un fallo del servicio devuelve 500', async () => {
+    mockGetDutyInfo.mockRejectedValue(new Error('Bedrock caido'));
+    const res = crearRes();
+
+    await ctrl.getDutyInfo({ params: { taricCode: '8471300000' }, query: {} }, res);
+
+    expect(res.statusCode).toBe(500);
+  });
+});
+
+describe('validateDutyRate: validacion de un arancel', () => {
+  test('exige taricCode y currentRate', async () => {
+    const res = crearRes();
+
+    await ctrl.validateDutyRate({ body: { taricCode: '8471300000' } }, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(mockValidateDuty).not.toHaveBeenCalled();
+  });
+
+  test('acepta currentRate = 0 (no es entrada faltante)', async () => {
+    // currentRate === 0 es un tipo valido (exento); solo undefined es faltante.
+    mockValidateDuty.mockResolvedValue({ isValid: true, suggestedRate: 0 });
+    const res = crearRes();
+
+    await ctrl.validateDutyRate({ body: { taricCode: '8471300000', currentRate: 0 } }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.isValid).toBe(true);
+    expect(mockValidateDuty).toHaveBeenCalledWith('8471300000', 0, undefined);
+  });
+
+  test('devuelve la validacion del servicio', async () => {
+    mockValidateDuty.mockResolvedValue({ isValid: false, suggestedRate: 4.7 });
+    const res = crearRes();
+
+    await ctrl.validateDutyRate(
+      { body: { taricCode: '8471300000', currentRate: 10, origin: 'CN' } },
+      res
+    );
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.isValid).toBe(false);
+    expect(mockValidateDuty).toHaveBeenCalledWith('8471300000', 10, 'CN');
+  });
+
+  test('si el servicio no puede validar (null) devuelve 500', async () => {
+    mockValidateDuty.mockResolvedValue(null);
+    const res = crearRes();
+
+    await ctrl.validateDutyRate({ body: { taricCode: 'x', currentRate: 5 } }, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body.success).toBe(false);
+  });
+
+  test('un fallo del servicio devuelve 500', async () => {
+    mockValidateDuty.mockRejectedValue(new Error('timeout'));
+    const res = crearRes();
+
+    await ctrl.validateDutyRate({ body: { taricCode: 'x', currentRate: 5 } }, res);
+
+    expect(res.statusCode).toBe(500);
+  });
+});
+
+describe('clearCache: limpieza del cache de aranceles', () => {
+  test('invoca clearMemoryCache y confirma', async () => {
+    mockClearCache.mockReturnValue(undefined);
+    const res = crearRes();
+
+    await ctrl.clearCache({}, res);
+
+    expect(mockClearCache).toHaveBeenCalledTimes(1);
+    expect(res.body.success).toBe(true);
+    expect(res.body.message).toMatch(/limpiado/i);
+  });
+
+  test('un fallo al limpiar devuelve 500', async () => {
+    mockClearCache.mockImplementation(() => { throw new Error('cache roto'); });
+    const res = crearRes();
+
+    await ctrl.clearCache({}, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body.success).toBe(false);
+  });
+});
+
+describe('calculateTotal: recopilacion de avisos de los items', () => {
+  test('propaga los warnings del servicio prefijados con el TARIC', async () => {
+    mockCalcDuties.mockResolvedValue({
+      description: 'x', duties: { totalDuty: 10, effectiveDutyRate: 1 },
+      vat: { amount: 20, rate: 21 }, source: 'db', confidence: 90,
+      warnings: ['medida antidumping vigente']
+    });
+    const res = crearRes();
+
+    await ctrl.calculateTotal(
+      { body: { items: [{ taricCode: '7208', value: 1000, currency: 'EUR' }] } },
+      res
+    );
+
+    expect(res.body.data.warnings).toContain('7208: medida antidumping vigente');
+  });
+
+  test('convierte la divisa de un item antes de agregar', async () => {
+    // Ejercita la rama item.currency !== 'EUR' del bucle de calculateTotal:
+    // el valor de factura se recibe convertido a EUR (no en la divisa original).
+    mockGetExchangeAxios.mockResolvedValue({ data: { rates: { USD: 1.1 } } });
+    mockCalcDuties.mockResolvedValue({
+      description: 'x', duties: { totalDuty: 0, effectiveDutyRate: 0 },
+      vat: { amount: 0, rate: 21 }, source: 'db', confidence: 90
+    });
+    const res = crearRes();
+
+    await ctrl.calculateTotal(
+      { body: { items: [{ taricCode: 'x', value: 1000, currency: 'USD' }] } },
+      res
+    );
+
+    // 1000 USD convertidos a EUR (tasa activa) != 1000: se aplico conversion.
+    expect(res.body.data.summary.invoiceTotal).toBeLessThan(1000);
+    expect(res.body.data.summary.invoiceTotal).toBeGreaterThan(0);
+    expect(mockCalcDuties.mock.calls[0][0].customsValue).toBeLessThan(1000);
   });
 });
