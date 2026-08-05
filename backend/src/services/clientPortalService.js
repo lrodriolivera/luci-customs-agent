@@ -22,7 +22,7 @@ class ClientPortalService {
   /**
    * Create new expedition from client portal (self-service)
    */
-  async createExpeditionFromPortal(organizationId, clientData, operationData) {
+  async createExpeditionFromPortal(tenantId, clientData, operationData) {
     // Validate required fields
     if (!clientData.companyName) {
       throw new Error('Company name is required');
@@ -39,16 +39,25 @@ class ClientPortalService {
 
     const expedition = new Expedition({
       expeditionId,
-      organizationId,
+      // El ExpeditionSchema declara `tenantId` (ref Tenant), NO `organizationId`:
+      // escribir organizationId hacia que Mongoose (strict) lo descartara -> el
+      // expediente self-service quedaba SIN tenant (huerfano, fuera del
+      // aislamiento multi-tenant). Se persiste con el nombre real del campo.
+      tenantId,
       operationType: operationData.operationType,
       transportMode: operationData.transportMode || 'maritime',
       status: 'draft',
 
-      // Client info
+      // Client info.
+      // OJO: el ClientSchema define `nif` (REQUERIDO) y `eori`, no `taxId`/
+      // `eoriNumber`. Escribir taxId/eoriNumber hacia que Mongoose (strict) los
+      // descartara en silencio -> el expediente self-service quedaba sin NIF ni
+      // EORI del cliente (datos obligatorios para aduanas) y, al ser nif
+      // requerido, el save fallaba. Se mapea al nombre real del campo.
       client: {
         companyName: clientData.companyName,
-        taxId: clientData.taxId,
-        eoriNumber: clientData.eoriNumber,
+        nif: clientData.taxId || clientData.nif,
+        eori: clientData.eoriNumber || clientData.eori,
         contact: {
           name: clientData.contactName,
           email: clientData.email,
@@ -104,10 +113,13 @@ class ClientPortalService {
           clientEmail: clientData.email,
           source: 'portal_self_service'
         }
-      }],
+      }]
 
-      // Mark as created by client
-      createdBy: 'portal_self_service'
+      // NOTA: `createdBy` es un ObjectId (ref User) y en el alta self-service no
+      // hay usuario de plataforma. Antes se le asignaba el string
+      // 'portal_self_service', que rompia el save con "Cast to ObjectId failed"
+      // -> NINGUN expediente self-service podia crearse. La marca de origen ya
+      // queda en clientPortal y en timeline[].metadata.source.
     });
 
     await expedition.save();
@@ -303,10 +315,13 @@ class ClientPortalService {
       return this.getExpeditionStats(expedition);
     }
 
-    // Get all client's expeditions
+    // Get all client's expeditions. Acotar por tenantId (el campo real): filtrar
+    // por organizationId -inexistente- daba `{ organizationId: undefined }`, que
+    // Mongo ignora -> se agregaban expedientes del MISMO email de CUALQUIER
+    // tenant (fuga de datos entre organizaciones distintas).
     const expeditions = await Expedition.find({
       'client.contact.email': clientEmail,
-      organizationId: expedition.organizationId
+      tenantId: expedition.tenantId
     }).sort({ createdAt: -1 });
 
     return this.calculateClientStats(expeditions, clientEmail);
@@ -381,8 +396,11 @@ class ClientPortalService {
 
       // Financial totals
       if (exp.calculations) {
-        totalDuties += exp.calculations.dutyTotal || 0;
-        totalVat += exp.calculations.vatTotal || 0;
+        // El CalculationsSchema declara totalDuties/totalVat, no dutyTotal/
+        // vatTotal: leer los nombres inexistentes daba siempre 0 en los totales
+        // financieros del cliente.
+        totalDuties += exp.calculations.totalDuties || 0;
+        totalVat += exp.calculations.totalVat || 0;
       }
 
       // Processing time for completed
@@ -453,11 +471,14 @@ class ClientPortalService {
   /**
    * Get client history by email
    */
-  async getClientHistory(organizationId, clientEmail, options = {}) {
+  async getClientHistory(tenantId, clientEmail, options = {}) {
     const { limit = 50, skip = 0, status, operationType } = options;
 
+    // tenantId es el campo real del ExpeditionSchema; filtrar por organizationId
+    // (inexistente) devolvia SIEMPRE 0 -> el historial del cliente en el portal
+    // salia vacio.
     const query = {
-      organizationId,
+      tenantId,
       'client.contact.email': clientEmail
     };
 
@@ -622,8 +643,8 @@ class ClientPortalService {
       })),
       totals: {
         invoiceValue: expedition.calculations?.invoiceTotalEur,
-        duties: expedition.calculations?.dutyTotal,
-        vat: expedition.calculations?.vatTotal,
+        duties: expedition.calculations?.totalDuties,
+        vat: expedition.calculations?.totalVat,
         total: expedition.calculations?.totalToPay
       },
       generatedAt: new Date(),
@@ -707,9 +728,9 @@ class ClientPortalService {
       hasPendingPayment: true,
       needsPaymentCreation: true,
       breakdown: {
-        duties: expedition.calculations.dutyTotal || 0,
-        vat: expedition.calculations.vatTotal || 0,
-        specialTaxes: expedition.calculations.specialTaxTotal || 0,
+        duties: expedition.calculations.totalDuties || 0,
+        vat: expedition.calculations.totalVat || 0,
+        specialTaxes: expedition.calculations.totalSpecialTaxes || 0,
         total: expedition.calculations.totalToPay,
         currency: 'EUR'
       },

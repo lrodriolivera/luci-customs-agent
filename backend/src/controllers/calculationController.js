@@ -336,6 +336,7 @@ const calculateTotal = async (req, res) => {
         totalVat,
         totalSpecialTaxes,
         totalTaxes,
+        totalToPay,
         guaranteeRequired,
         calculatedAt: new Date(),
         calculatedBy: 'ai'

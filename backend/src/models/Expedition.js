@@ -176,6 +176,11 @@ const CalculationsSchema = new mongoose.Schema({
   totalVat: Number,
   totalSpecialTaxes: Number,
   totalTaxes: Number,
+  // Importe total a pagar (valor en aduana + tributos). calculationController lo
+  // calcula pero no lo persistia porque el schema no lo declaraba: el portal
+  // cliente (getPendingPayments) lo leia y siempre valia undefined -> nunca se
+  // mostraba un pago pendiente aunque hubiera aranceles/IVA calculados.
+  totalToPay: Number,
   guaranteeRequired: Number,
   calculatedAt: Date,
   calculatedBy: String, // 'manual' or 'ai'

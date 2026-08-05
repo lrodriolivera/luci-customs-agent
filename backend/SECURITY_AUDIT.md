@@ -392,3 +392,38 @@ const match = userId ? { assignedTo: mongoose.Types.ObjectId(userId) } : {};
 ```
 
 En Mongoose 7 / driver actual, `mongoose.Types.ObjectId` es una clase ES6 y **no se puede invocar sin `new`**: lanza `TypeError: Class constructor ObjectId cannot be invoked without 'new'`. El endpoint `GET /api/requirements/stats?userId=...` (dashboard de requerimientos filtrado por operador) **devolvía HTTP 500** siempre que se pasaba `userId`. Sin `userId` funcionaba (rama `{}`), por eso pasaba desapercibido. Fix: `new mongoose.Types.ObjectId(userId)`. Salió al cubrir `getStats` con un `userId` real contra Mongo en memoria.
+
+### Portal cliente: `taxId`/`eoriNumber` descartados y `createdBy` string → el alta self-service nunca guardaba NIF/EORI (y fallaba)
+
+`createExpeditionFromPortal` (alta de expediente por el propio cliente desde el portal) mapeaba los datos del cliente a campos que **no existen** en el `ClientSchema` del `Expedition`:
+
+```js
+client: {
+  companyName: clientData.companyName,
+  taxId: clientData.taxId,          // <-- el schema declara `nif` (REQUERIDO), no taxId
+  eoriNumber: clientData.eoriNumber // <-- el schema declara `eori`, no eoriNumber
+},
+createdBy: 'portal_self_service'    // <-- createdBy es ObjectId ref User: cast fail
+```
+
+El subdocumento `client` es estricto, así que Mongoose descartaba `taxId`/`eoriNumber` en silencio. Como `nif` es **requerido**, el `save` fallaba con `ValidationError`. Además `createdBy` es un `ObjectId` (ref `User`) y asignarle el string `'portal_self_service'` daba `CastError`. Consecuencia: **el alta de expedientes self-service nunca funcionó** — o reventaba, o (si el NIF llegaba por otra vía) guardaba el expediente sin NIF ni EORI, datos obligatorios para la declaración aduanera. Fix: mapear a `nif: clientData.taxId || clientData.nif`, `eori: clientData.eoriNumber || clientData.eori`, y eliminar el `createdBy` con string. Salió al cubrir el servicio contra Mongo real (con el modelo mockeado el `save` no validaba). Cubierto en `tests/services/clientPortalService.db.test.js`.
+
+### Portal cliente: `calculations.dutyTotal`/`vatTotal` no existen → importes siempre 0 (pagos, levante, estadísticas)
+
+Varias funciones del portal leían los importes del expediente con nombres de campo **inexistentes** en el `CalculationsSchema` (que declara `totalDuties`/`totalVat`/`totalSpecialTaxes`, no `dutyTotal`/`vatTotal`/`specialTaxTotal`):
+
+- `getPendingPayments` → `breakdown.duties`/`vat` leían `dutyTotal`/`vatTotal` → el desglose del pago pendiente mostraba **0 EUR de aranceles e IVA** al cliente aunque hubiera importe que cobrar.
+- `calculateClientStats` → totales financieros del cliente siempre **0**.
+- `generateLevanteDocument` → el documento de levante descargable salía con importes **0**.
+
+Además el `CalculationsSchema` (`_id: false`, estricto) **no declaraba `totalToPay`**, que `calculationController.calculateTotal` calcula y asigna: se descartaba al guardar, así que `getPendingPayments` nunca veía un `total` a cobrar. Fix: añadir `totalToPay: Number` al `CalculationsSchema`, persistirlo en `calculationController`, y corregir las lecturas del servicio a `totalDuties`/`totalVat`/`totalSpecialTaxes`. Salió al cubrir el servicio contra Mongo real. Cubierto en `tests/services/clientPortalService.db.test.js`.
+
+### 🚨 Portal cliente: `organizationId` no existe en el `Expedition` (usa `tenantId`) → fuga de datos entre organizaciones y historial vacío
+
+`clientPortalService` escribía y consultaba los expedientes por `organizationId`, pero el `ExpeditionSchema` **no tiene ese campo**: el aislamiento multi-tenant del expediente va por `tenantId` (ref `Tenant`). Tres consecuencias, la primera de aislamiento:
+
+1. **`createExpeditionFromPortal`** escribía `organizationId` → Mongoose (estricto) lo descartaba → el expediente self-service quedaba **sin `tenantId`** (huérfano, fuera del aislamiento multi-tenant).
+2. **`getClientStats`** filtraba `{ 'client.contact.email': email, organizationId: expedition.organizationId }`. Como `expedition.organizationId` es `undefined` (nunca se guardó), el filtro quedaba en `{ organizationId: undefined }`, que Mongo trata como "campo ausente" y **no filtra** → agregaba las estadísticas de **todos los expedientes con ese email de CUALQUIER tenant**. Un cliente con el mismo email de contacto en dos organizaciones veía mezclados los importes, canales y volúmenes de ambas: **fuga de datos entre organizaciones**.
+3. **`getClientHistory`** filtraba por `organizationId` (un `ObjectId`) sobre un campo inexistente → `countDocuments`/`find` devolvían **0 siempre** → el historial del cliente en el portal salía **permanentemente vacío**. El controller además pasaba `expedition.organizationId` (undefined), reforzando el 0.
+
+Fix: usar `tenantId` en los tres puntos del servicio (`createExpeditionFromPortal`, `getClientStats`, `getClientHistory`) y pasar `expedition.tenantId` desde `clientPortalController.getClientHistory`. Salió al cubrir el servicio contra Mongo real y comprobar el conteo por organización (un expediente del mismo email en otro tenant se colaba en las estadísticas). Cubierto con regresión de aislamiento en `tests/services/clientPortalService.db.test.js`.

@@ -337,7 +337,7 @@ const getClientHistory = async (req, res) => {
     }
 
     const history = await clientPortalService.getClientHistory(
-      expedition.organizationId,
+      expedition.tenantId, // el campo real; organizationId no existe en el schema -> historial vacio
       clientEmail,
       {
         limit: parseInt(limit) || 50,
