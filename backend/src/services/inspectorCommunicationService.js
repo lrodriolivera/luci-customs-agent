@@ -559,10 +559,14 @@ class InspectorCommunicationService {
       overdue: overdue.slice(0, 10),
       recentResolved,
       summary: {
-        totalPending: stats.byStatus.draft || 0 +
-                      stats.byStatus.pending_review || 0 +
-                      stats.byStatus.approved || 0 +
-                      stats.byStatus.awaiting_response || 0,
+        // BUG FIX: precedencia de operadores. En JS '+' liga más fuerte que '||',
+        // así que 'a || 0 + b || 0 + ...' se evaluaba como 'a || (0+b) || ...' y
+        // devolvía el primer operando truthy en vez de la SUMA. Cada término debe
+        // ir entre paréntesis para sumar los pendientes de todos los estados.
+        totalPending: (stats.byStatus.draft || 0) +
+                      (stats.byStatus.pending_review || 0) +
+                      (stats.byStatus.approved || 0) +
+                      (stats.byStatus.awaiting_response || 0),
         overdue: stats.overdue,
         pendingResponse: stats.pendingResponse,
         totalAppeals: (stats.byCategory.appeal || 0)
