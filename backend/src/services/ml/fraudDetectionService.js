@@ -243,7 +243,8 @@ function detectMisclassification(data) {
   }
 
   // Check for suspicious code patterns
-  const code6 = taricCode.substring(0, 7);
+  // Extract first 4 digits + dot + next 2 digits to match MISCLASSIFICATION_RISK_CODES format
+  const code6 = taricCode.substring(0, 4) + '.' + taricCode.substring(4, 6);
   const relatedCodes = MISCLASSIFICATION_RISK_CODES[code6];
 
   if (relatedCodes) {
