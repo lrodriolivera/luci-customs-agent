@@ -239,16 +239,21 @@ exports.updateRequirement = async (req, res) => {
     const requirement = await Requirement.findById(id);
     if (!ensureSameTenant(requirement, req, res, { resource: 'Requerimiento' })) return;
 
+    // Capturar el estado ANTES de aplicar los cambios: Object.assign muta
+    // requirement.status en el acto, asi que comparar despues nunca detectaba el
+    // cambio y el evento de timeline no se anadia jamas (se perdia la traza).
+    const estadoAnterior = requirement.status;
+
     // Actualizar campos
     Object.assign(requirement, updates);
 
     // Agregar timeline si cambio el estado
-    if (updates.status && updates.status !== requirement.status) {
+    if (updates.status && updates.status !== estadoAnterior) {
       requirement.timeline.push({
         action: 'status_changed',
         description: `Estado cambiado a ${updates.status}`,
         performedBy: req.user._id,
-        metadata: { oldStatus: requirement.status, newStatus: updates.status }
+        metadata: { oldStatus: estadoAnterior, newStatus: updates.status }
       });
     }
 

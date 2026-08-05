@@ -455,7 +455,10 @@ RequirementSchema.statics.findUrgent = function() {
 };
 
 RequirementSchema.statics.getStats = async function(userId = null) {
-  const match = userId ? { assignedTo: mongoose.Types.ObjectId(userId) } : {};
+  // `new` obligatorio: en Mongoose 7 invocar ObjectId como funcion lanza
+  // "Class constructor ObjectId cannot be invoked without 'new'". Sin el, pasar
+  // userId reventaba getStats con 500; solo "funcionaba" el caso sin userId.
+  const match = userId ? { assignedTo: new mongoose.Types.ObjectId(userId) } : {};
 
   const stats = await this.aggregate([
     { $match: match },

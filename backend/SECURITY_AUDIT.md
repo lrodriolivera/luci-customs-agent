@@ -369,3 +369,26 @@ Con `type: String`, Mongoose interpreta el subobjeto completo **no como un subdo
 Es decir: **ningún código TARIC podía persistirse con su información de unidades suplementarias**. AEAT exige `supplementaryUnits` para varios códigos (error 2149, p.ej. portátiles 8471*), así que el catálogo perdía ese dato y las declaraciones de esos códigos quedaban expuestas al rechazo.
 
 Fix: envolver la clave reservada en `type: { type: String }` para que sea un campo del subdocumento y no el SchemaType. Salió al cubrir `classificationController` contra Mongo real (creando fichas TARIC de verdad); con el modelo mockeado el `save` nunca validaba. Cubierto con regresión en `tests/controllers/classificationController.extra.db.test.js`.
+
+### `updateRequirement`: el evento de timeline por cambio de estado no se disparaba nunca (traza perdida)
+
+`updateRequirement` (requirements de AEAT: canal naranja/rojo, inspecciones, resoluciones) comparaba el estado tras haberlo mutado:
+
+```js
+Object.assign(requirement, updates);
+if (updates.status && updates.status !== requirement.status) { // <-- ya mutado
+  requirement.timeline.push({ action: 'status_changed', ... });
+}
+```
+
+Como `Object.assign` ya había escrito `updates.status` sobre `requirement.status`, la comparación `updates.status !== requirement.status` era **siempre falsa**. Resultado: al cambiar el estado de un requerimiento por PUT (p.ej. `pending → in_progress`), **el evento `status_changed` nunca se añadía al timeline**. Se perdía la traza de auditoría de qué operador cambió el estado y cuándo — justo la información que hay que poder acreditar ante AEAT en un requerimiento. Fix: capturar `const estadoAnterior = requirement.status;` antes del `Object.assign` y comparar contra esa copia. Salió al cubrir `updateRequirement` contra Mongo real y comprobar el `timeline` persistido.
+
+### `Requirement.getStats`: `mongoose.Types.ObjectId(userId)` sin `new` → HTTP 500 en las estadísticas por usuario
+
+El static `getStats(userId)` construía el `$match` así:
+
+```js
+const match = userId ? { assignedTo: mongoose.Types.ObjectId(userId) } : {};
+```
+
+En Mongoose 7 / driver actual, `mongoose.Types.ObjectId` es una clase ES6 y **no se puede invocar sin `new`**: lanza `TypeError: Class constructor ObjectId cannot be invoked without 'new'`. El endpoint `GET /api/requirements/stats?userId=...` (dashboard de requerimientos filtrado por operador) **devolvía HTTP 500** siempre que se pasaba `userId`. Sin `userId` funcionaba (rama `{}`), por eso pasaba desapercibido. Fix: `new mongoose.Types.ObjectId(userId)`. Salió al cubrir `getStats` con un `userId` real contra Mongo en memoria.
