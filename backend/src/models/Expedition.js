@@ -131,7 +131,7 @@ const DeclarationSchema = new mongoose.Schema({
   submittedAt: Date,
   status: {
     type: String,
-    enum: ['draft', 'pending', 'submitted', 'accepted', 'rejected', 'amendment_required', 'correction_required', 'amendment_pending']
+    enum: ['draft', 'pending', 'submitted', 'accepted', 'rejected', 'amendment_required', 'correction_required', 'amendment_pending', 'submission_error']
   },
   customsCountry: { type: String },
   customsSystem: { type: String }, // 'AEAT', 'DMS', 'DECO'
