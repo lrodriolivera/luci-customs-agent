@@ -295,7 +295,8 @@ describe('OEA Controller', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(oeaService.getByEORI).toHaveBeenCalledWith('ESA12345678000');
+      // getByEORI(eori, userId): sin auth en este test, userId llega undefined.
+      expect(oeaService.getByEORI).toHaveBeenCalledWith('ESA12345678000', undefined);
     });
   });
 
@@ -313,7 +314,8 @@ describe('OEA Controller', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(oeaService.getByNIF).toHaveBeenCalledWith('A12345678');
+      // getByNIF(nif, userId): sin auth en este test, userId llega undefined.
+      expect(oeaService.getByNIF).toHaveBeenCalledWith('A12345678', undefined);
     });
   });
 
