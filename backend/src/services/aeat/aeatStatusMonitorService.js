@@ -923,10 +923,12 @@ class AEATStatusMonitorService extends EventEmitter {
       }
     }
 
-    // Ordenar por nivel y fecha
+    // Ordenar por nivel (critical primero). OJO: usar ?? y no ||, porque el
+    // indice de 'critical' es 0 y `0 || 99` daria 99, hundiendo las alertas
+    // criticas al final de la lista en vez de subirlas arriba.
     alerts.sort((a, b) => {
       const levelOrder = { critical: 0, warning: 1, info: 2, success: 3 };
-      return (levelOrder[a.level] || 99) - (levelOrder[b.level] || 99);
+      return (levelOrder[a.level] ?? 99) - (levelOrder[b.level] ?? 99);
     });
 
     return {
