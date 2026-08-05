@@ -268,7 +268,9 @@ class AESGenerator {
     controls.forEach(control => {
       if (control.license === 'required') {
         const docType = this._getControlDocumentType(control.control);
-        if (!additionalDocs.includes(docType)) {
+        // additionalDocs contiene objetos {type,...}; comparar por .type, no el
+        // array entero contra un string (includes nunca casaba → duplicados).
+        if (!additionalDocs.some(d => d.type === docType)) {
           additionalDocs.push({
             type: docType,
             reason: `Requerido para ${control.description}`,
