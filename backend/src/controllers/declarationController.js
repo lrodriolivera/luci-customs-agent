@@ -865,7 +865,7 @@ const generateH7 = async (req, res) => {
 
     // Generar H7
     const h7Declaration = h7Generator.generate(expedition, {
-      iossNumber: iossNumber || expedition.ecommerce?.iossNumber,
+      iossNumber: iossNumber || expedition.iossNumber || expedition.ecommerce?.iossNumber,
       customsOffice,
       forceGenerate
     });
@@ -884,11 +884,13 @@ const generateH7 = async (req, res) => {
       vatCalculation: h7Declaration.data.vatCalculation
     };
 
-    // Guardar datos IOSS si se proporcionaron
-    if (iossNumber && !expedition.ecommerce) {
-      expedition.ecommerce = { iossNumber };
-    } else if (iossNumber) {
-      expedition.ecommerce.iossNumber = iossNumber;
+    // Guardar el numero IOSS en el campo declarado del schema. Antes se escribia
+    // a expedition.ecommerce.iossNumber, pero el schema de Expedition es estricto
+    // y NO declara `ecommerce`: la asignacion se descartaba silenciosamente al
+    // guardar y el IOSS del body nunca se persistia. El campo real es
+    // expedition.iossNumber (declarado en el modelo).
+    if (iossNumber) {
+      expedition.iossNumber = iossNumber;
     }
 
     expedition.status = 'ready_for_declaration';
