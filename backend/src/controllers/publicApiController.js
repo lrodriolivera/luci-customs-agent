@@ -4,8 +4,13 @@
  * REST API for client ERP integrations
  */
 
+const mongoose = require('mongoose');
 const { Expedition, Payment } = require('../models');
 const logger = require('../config/logger');
+
+// aggregate() no castea los tipos como find(): hay que forzar el ObjectId en $match.
+const toObjectId = (id) =>
+  id instanceof mongoose.Types.ObjectId ? id : new mongoose.Types.ObjectId(id);
 
 // ==================== Expeditions ====================
 
@@ -25,7 +30,7 @@ const listExpeditions = async (req, res) => {
       sort = '-createdAt'
     } = req.query;
 
-    const query = { organizationId: req.organizationId };
+    const query = { tenantId: req.organizationId };
 
     if (status) query.status = status;
     if (operationType) query.operationType = operationType;
@@ -84,7 +89,7 @@ const getExpedition = async (req, res) => {
 
     const expedition = await Expedition.findOne({
       expeditionId,
-      organizationId: req.organizationId
+      tenantId: req.organizationId
     });
 
     if (!expedition) {
@@ -104,8 +109,8 @@ const getExpedition = async (req, res) => {
         status: expedition.status,
         client: {
           companyName: expedition.client?.companyName,
-          taxId: expedition.client?.taxId,
-          eoriNumber: expedition.client?.eoriNumber
+          taxId: expedition.client?.nif,
+          eoriNumber: expedition.client?.eori
         },
         goods: expedition.goods.map(g => ({
           itemNumber: g.itemNumber,
@@ -128,8 +133,8 @@ const getExpedition = async (req, res) => {
         } : null,
         calculations: expedition.calculations ? {
           invoiceTotal: expedition.calculations.invoiceTotalEur,
-          dutyTotal: expedition.calculations.dutyTotal,
-          vatTotal: expedition.calculations.vatTotal,
+          dutyTotal: expedition.calculations.totalDuties,
+          vatTotal: expedition.calculations.totalVat,
           totalToPay: expedition.calculations.totalToPay,
           paid: expedition.calculations.paid
         } : null,
@@ -199,14 +204,14 @@ const createExpedition = async (req, res) => {
 
     const expedition = new Expedition({
       expeditionId,
-      organizationId: req.organizationId,
+      tenantId: req.organizationId,
       operationType,
       transportMode: transportMode || 'maritime',
       status: 'draft',
       client: {
         companyName: client.companyName,
-        taxId: client.taxId,
-        eoriNumber: client.eoriNumber,
+        nif: client.taxId,
+        eori: client.eoriNumber,
         contact: client.contact || {},
         address: client.address || {}
       },
@@ -225,7 +230,8 @@ const createExpedition = async (req, res) => {
       })),
       origin: origin || {},
       destination: destination || { country: 'ES' },
-      incoterm: incoterm || 'CIF',
+      // incoterm en el schema es { code, place }; la API acepta un string simple.
+      incoterm: typeof incoterm === 'string' ? { code: incoterm } : (incoterm || { code: 'CIF' }),
       transport: transport || {},
       clientNotes: notes,
       clientPortal: {
@@ -242,8 +248,7 @@ const createExpedition = async (req, res) => {
           apiKeyPrefix: req.apiKey?.keyPrefix,
           source: 'public_api'
         }
-      }],
-      createdBy: 'api'
+      }]
     });
 
     await expedition.save();
@@ -282,7 +287,7 @@ const updateExpedition = async (req, res) => {
 
     const expedition = await Expedition.findOne({
       expeditionId,
-      organizationId: req.organizationId
+      tenantId: req.organizationId
     });
 
     if (!expedition) {
@@ -323,9 +328,14 @@ const updateExpedition = async (req, res) => {
           }));
         } else if (field === 'client') {
           expedition.client = {
-            ...expedition.client,
+            ...expedition.client.toObject(),
             ...updates.client
           };
+        } else if (field === 'incoterm') {
+          // incoterm en el schema es { code, place }; la API acepta un string simple.
+          expedition.incoterm = typeof updates.incoterm === 'string'
+            ? { code: updates.incoterm }
+            : updates.incoterm;
         } else {
           expedition[field] = updates[field];
         }
@@ -370,7 +380,7 @@ const getExpeditionStatus = async (req, res) => {
 
     const expedition = await Expedition.findOne({
       expeditionId,
-      organizationId: req.organizationId
+      tenantId: req.organizationId
     }).select('expeditionId status declaration documentCompletion timeline');
 
     if (!expedition) {
@@ -429,7 +439,7 @@ const listDocuments = async (req, res) => {
 
     const expedition = await Expedition.findOne({
       expeditionId,
-      organizationId: req.organizationId
+      tenantId: req.organizationId
     }).select('expeditionId documents documentChecklist');
 
     if (!expedition) {
@@ -483,7 +493,7 @@ const getDeclaration = async (req, res) => {
 
     const expedition = await Expedition.findOne({
       expeditionId,
-      organizationId: req.organizationId
+      tenantId: req.organizationId
     }).select('expeditionId declaration calculations');
 
     if (!expedition) {
@@ -519,8 +529,8 @@ const getDeclaration = async (req, res) => {
           levanteDate: expedition.declaration.levanteDate
         },
         calculations: expedition.calculations ? {
-          dutyTotal: expedition.calculations.dutyTotal,
-          vatTotal: expedition.calculations.vatTotal,
+          dutyTotal: expedition.calculations.totalDuties,
+          vatTotal: expedition.calculations.totalVat,
           totalToPay: expedition.calculations.totalToPay,
           paid: expedition.calculations.paid
         } : null
@@ -636,7 +646,8 @@ const getStats = async (req, res) => {
     if (fromDate) dateQuery.$gte = new Date(fromDate);
     if (toDate) dateQuery.$lte = new Date(toDate);
 
-    const expeditionQuery = { organizationId: req.organizationId };
+    const orgObjectId = toObjectId(req.organizationId);
+    const expeditionQuery = { tenantId: orgObjectId };
     if (Object.keys(dateQuery).length) {
       expeditionQuery.createdAt = dateQuery;
     }
@@ -665,7 +676,7 @@ const getStats = async (req, res) => {
 
     // Payment stats
     const paymentStats = await Payment.aggregate([
-      { $match: { organizationId: req.organizationId, status: 'completed', ...(Object.keys(dateQuery).length ? { paidAt: dateQuery } : {}) } },
+      { $match: { organizationId: orgObjectId, status: 'completed', ...(Object.keys(dateQuery).length ? { paidAt: dateQuery } : {}) } },
       {
         $group: {
           _id: null,
