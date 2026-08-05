@@ -168,6 +168,43 @@ class AEATRealService {
         operation: 'ConsENSV3',
         description: 'Consulta estado de declaracion ENS'
       },
+      ICS2_ENS_ARRIVAL: {
+        code: 'ICS2_ENS_ARRIVAL',
+        name: 'Notificación Llegada ENS ICS2',
+        path: '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.IE347V5SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/aden/enswsv5/IE347V5.wsdl',
+        operation: 'IE347V5',
+        messageType: 'IE347',
+        description: 'Notificacion de llegada de declaracion sumaria de entrada'
+      },
+      ICS2_ENS_CANCEL: {
+        code: 'ICS2_ENS_CANCEL',
+        name: 'Anulación ENS ICS2',
+        path: '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.IE314V5SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/aden/enswsv5/IE314V5.wsdl',
+        operation: 'IE314V5',
+        messageType: 'IE314',
+        description: 'Anulacion de declaracion sumaria de entrada'
+      },
+
+      // === H7 (Bajo Valor - Obsoleto desde 2026, pero mantenido para referencia) ===
+      H7_SUBMIT: {
+        code: 'H7_SUBMIT',
+        name: 'Presentación DUA H7 (Bajo Valor)',
+        path: '/wlpl/inwinvoc/es.aeat.dit.adu.adh7.ws.H7SubmitV1SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adh7/ws/H7SubmitV1.wsdl',
+        operation: 'H7SubmitV1',
+        messageType: 'H7Submit',
+        description: 'Declaracion de bajo valor H7'
+      },
+      H7_QUERY: {
+        code: 'H7_QUERY',
+        name: 'Consulta DUA H7',
+        path: '/wlpl/inwinvoc/es.aeat.dit.adu.adh7.ws.H7QueryV1SOAP',
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adh7/ws/H7QueryV1.wsdl',
+        operation: 'H7QueryV1',
+        description: 'Consulta estado de declaracion H7'
+      },
 
       // === SOIVRE ===
       SOIVRE_SUBMIT: {
@@ -1580,6 +1617,29 @@ class AEATRealService {
       messageType: s.messageType,
       guideVersion: s.guideVersion
     }));
+  }
+
+  /**
+   * Procesar respuesta de envío de documentos
+   */
+  _processDocumentsResponse(response) {
+    const body = response.body;
+
+    // Extraer indicador de éxito
+    const successMatch = body.match(/<aeat:Success>([^<]+)<\/aeat:Success>/i);
+    const success = successMatch ? successMatch[1].toLowerCase() === 'true' : false;
+
+    // Extraer mensaje
+    const msgMatch = body.match(/<aeat:Message>([^<]+)<\/aeat:Message>/i);
+    const message = msgMatch ? msgMatch[1] : null;
+
+    return {
+      success,
+      message: message || (success ? 'Documentos enviados correctamente' : 'Error al enviar documentos'),
+      timestamp: new Date().toISOString(),
+      simulated: response.simulated || false,
+      rawResponse: body
+    };
   }
 }
 
