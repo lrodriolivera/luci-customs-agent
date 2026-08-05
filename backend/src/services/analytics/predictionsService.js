@@ -622,7 +622,10 @@ function _getDutyRate(commodityCode) {
   };
 
   const chapter = commodityCode.substring(0, 2);
-  return rates[chapter] || 4.5;
+  // Ojo: usar ?? y no ||. Los capítulos 84/85 tienen tipo 0% legítimo y `||`
+  // los trataría como falsy, devolviendo 4,5% sobre mercancía en realidad
+  // exenta (máquinas y electrónica, el grueso del volumen).
+  return rates[chapter] ?? 4.5;
 }
 
 function _calculatePotentialSavings(data) {
