@@ -412,6 +412,14 @@ const ENSDeclarationSchema = new mongoose.Schema({
     processedAt: Date
   },
 
+  // Resultado de la rectificacion IE313 que escribe ensController.amend tras el
+  // envio a AEAT (aeatSubmitService.submitENSAmendment). Sin declararlos, el
+  // esquema estricto los descartaba silenciosamente: la ENS quedaba en estado
+  // 'amended' pero SIN el MRN oficial devuelto por la enmienda ni la fecha, de
+  // modo que se perdia la referencia AEAT resultante de la rectificacion.
+  amendmentMRN: String,
+  amendedAt: Date,
+
   // === DOCUMENTOS ADJUNTOS ===
 
   documents: [{
