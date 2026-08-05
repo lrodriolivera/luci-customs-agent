@@ -1,314 +1,304 @@
 /**
- * Tests for Channel Service
- * Testing customs control circuits (Verde, Amarillo, Naranja, Rojo)
- * Based on PLAN_AGENTE_ADUANAS_COMPLETO.md - Section 4.2
+ * channelService — asignacion de circuito de inspeccion AEAT (verde/amarillo/
+ * naranja/rojo) sobre Mongo REAL en memoria. Es logica de negocio critica: el
+ * canal decide si la mercancia se levanta automaticamente, si se retiene, y si
+ * se crea un requerimiento oficial (naranja/rojo) con plazo legal.
+ *
+ * La version ANTERIOR de este fichero mockeaba `Expedition` con un objeto vacio
+ * y no llamaba nunca al servicio: todos sus expects operaban sobre objetos
+ * literales inventados en el propio test. Por eso channelService.js figuraba al
+ * 0% de cobertura pese a "tener tests" — es justo el antipatron que hay que
+ * evitar (tests que pasan sin ejecutar la logica bajo prueba). Se sustituye por
+ * esta suite, que ejercita el flujo completo con los modelos Expedition/
+ * Requirement REALES: processChannelAssignment corre entero y Requirement.save()
+ * valida DE VERDAD los enums del modelo (ahi es donde saldria un valor fuera de
+ * enum que tumba el canal en produccion con ValidationError).
+ *
+ * UNICA frontera mockeada: emailService.sendEmail (red de correo). Todo lo demas
+ * se ejecuta real. No se mockea el codigo bajo prueba.
  */
 
-jest.mock('../../src/config/logger', () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn()
+const emailService = require('../../src/services/emailService');
+jest.mock('../../src/services/emailService', () => ({
+  sendEmail: jest.fn().mockResolvedValue({ messageId: 'test' })
 }));
 
-const mockExpeditionFindById = jest.fn();
-const mockExpeditionSave = jest.fn();
+const { usarBaseDeDatosEnMemoria } = require('../helpers/memoryDb');
+const channelService = require('../../src/services/channelService');
+const { Expedition, Requirement } = require('../../src/models');
+const mongoose = require('mongoose');
 
-jest.mock('../../src/models', () => ({
-  Expedition: {
-    findById: mockExpeditionFindById
-  }
-}));
+usarBaseDeDatosEnMemoria();
 
-describe('Channel Service', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+beforeEach(() => {
+  // resetMocks:true limpia la implementacion; se reinstala en cada test.
+  emailService.sendEmail.mockResolvedValue({ messageId: 'test' });
+});
+
+const usuario = { _id: new mongoose.Types.ObjectId(), name: 'Operador Test' };
+
+/** Crea y persiste un expediente valido con la mercancia/documentos indicados. */
+async function crearExpediente(overrides = {}) {
+  // Un good valido: itemNumber/description/quantity/invoiceValue son required.
+  const goodBase = { itemNumber: 1, description: 'Portatil', taricCode: '8471300000', originCountry: 'CN', grossWeight: 10, quantity: 1, invoiceValue: 500 };
+  const base = {
+    operationType: 'import',
+    transportMode: 'maritime',
+    client: {
+      companyName: 'ACME Importaciones SL',
+      nif: 'B12345678',
+      eori: 'ESB12345678',
+      contact: { email: 'cliente@acme.es', name: 'Juan Perez' }
+    },
+    declaration: {
+      type: 'H1',
+      mrn: '26ES00281212345678',
+      customsOffice: 'ES002801',
+      preference: '100'
+    },
+    goods: [goodBase],
+    documents: [],
+    ...overrides
+  };
+  // Rellenar los required de cada good si el override los omitio.
+  base.goods = base.goods.map((g, i) => ({ itemNumber: i + 1, quantity: 1, invoiceValue: 500, ...g }));
+  return Expedition.create(base);
+}
+
+describe('processChannelAssignment — validaciones de entrada', () => {
+  test('expediente inexistente lanza error', async () => {
+    await expect(
+      channelService.processChannelAssignment(new mongoose.Types.ObjectId(), 'green', {}, usuario)
+    ).rejects.toThrow(/no encontrado/i);
   });
 
-  describe('Channel Types', () => {
-    const channels = ['green', 'yellow', 'orange', 'red'];
+  test('canal no reconocido lanza error', async () => {
+    const exp = await crearExpediente();
+    await expect(
+      channelService.processChannelAssignment(exp._id, 'purple', {}, usuario)
+    ).rejects.toThrow(/Canal no reconocido/i);
+  });
+});
 
-    test.each(channels)('should recognize %s channel', (channel) => {
-      expect(channels).toContain(channel);
-    });
+describe('Canal Verde — levante automatico', () => {
+  test('genera levante, fija estado green_channel y notifica al cliente', async () => {
+    const exp = await crearExpediente();
+    const r = await channelService.processChannelAssignment(exp._id, 'green', {}, usuario);
 
-    test('green channel should represent 90% of operations', () => {
-      // Based on plan statistics
-      const expectedPercentage = 90;
-      expect(expectedPercentage).toBe(90);
+    expect(r.channel).toBe('green');
+    expect(r.success).toBe(true);
+    expect(r.levanteNumber).toMatch(/^LEV\d{4}[A-Z0-9]{6}$/);
+    expect(r.levanteDocument.mrn).toBe('26ES00281212345678');
+    expect(r.actions).toContain('Levante generado');
+
+    // Persistio el estado y el canal
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.status).toBe('green_channel');
+    expect(guardado.declaration.channel).toBe('green');
+    expect(guardado.declaration.channelAssignedAt).toBeInstanceOf(Date);
+    expect(guardado.timeline.some(t => t.action === 'channel_assigned')).toBe(true);
+
+    // Notifico al cliente
+    expect(emailService.sendEmail).toHaveBeenCalledTimes(1);
+    expect(emailService.sendEmail.mock.calls[0][0].to).toBe('cliente@acme.es');
+  });
+});
+
+describe('Canal Amarillo — certificados pendientes', () => {
+  test('identifica certificados pendientes segun el TARIC (electronica cap 85)', async () => {
+    // El portatil (8471...) es cap 84, no dispara certificados. Usamos un cap 85.
+    const exp = await crearExpediente({
+      goods: [{ description: 'Telefono', taricCode: '8517120000', originCountry: 'CN', grossWeight: 2 }]
     });
+    const r = await channelService.processChannelAssignment(exp._id, 'yellow', {}, usuario);
+
+    expect(r.channel).toBe('yellow');
+    expect(r.success).toBe(true);
+    // Cap 85 -> declaracion CE de conformidad pendiente
+    expect(r.pendingCertificates.some(c => c.code === 'C057')).toBe(true);
+    expect(r.message).toMatch(/CANAL AMARILLO/);
+
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.status).toBe('yellow_channel');
   });
 
-  describe('Green Channel (Canal Verde)', () => {
-    test('should process automatic release', () => {
-      const expedition = {
-        _id: 'exp123',
-        status: 'pending',
-        declaration: {
-          mrn: '26ES00000001234567',
-          channel: null
-        }
-      };
-
-      // Simulate channel assignment
-      expedition.declaration.channel = 'green';
-      expedition.declaration.channelAssignedAt = new Date();
-      expedition.status = 'green_channel';
-
-      expect(expedition.declaration.channel).toBe('green');
-      expect(expedition.status).toBe('green_channel');
+  test('producto sanitario (cap 02) marca certificado sanitario obligatorio pendiente', async () => {
+    const exp = await crearExpediente({
+      goods: [{ description: 'Carne', taricCode: '0201100000', originCountry: 'AR', grossWeight: 500 }]
     });
-
-    test('should generate release certificate (levante)', () => {
-      const levante = {
-        expeditionId: 'exp123',
-        mrn: '26ES00000001234567',
-        releaseDate: new Date(),
-        releaseType: 'automatic',
-        channel: 'green',
-        certificate: {
-          number: 'LEV-2026-001234',
-          generatedAt: new Date(),
-          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        }
-      };
-
-      expect(levante.releaseType).toBe('automatic');
-      expect(levante.certificate.number).toMatch(/^LEV-/);
-    });
-
-    test('should notify client immediately', () => {
-      const notification = {
-        type: 'channel_assigned',
-        channel: 'green',
-        message: 'Su expediente ha recibido levante automático (Canal Verde)',
-        timestamp: new Date(),
-        requiresAction: false
-      };
-
-      expect(notification.requiresAction).toBe(false);
-      expect(notification.channel).toBe('green');
-    });
+    const r = await channelService.processChannelAssignment(exp._id, 'yellow', {}, usuario);
+    const sanitario = r.pendingCertificates.find(c => c.code === 'C620');
+    expect(sanitario).toBeDefined();
+    expect(sanitario.mandatory).toBe(true);
+    expect(sanitario.authority).toBe('MAPA');
   });
 
-  describe('Yellow Channel (Canal Amarillo)', () => {
-    test('should identify missing certificates', () => {
-      const expedition = {
-        declaration: {
-          channel: 'yellow'
-        },
-        documents: [
-          { type: 'invoice', status: 'validated' },
-          { type: 'bl', status: 'validated' }
-        ],
-        requiredCertificates: ['EUR.1', 'Certificado sanitario']
-      };
-
-      const missingCertificates = expedition.requiredCertificates.filter(
-        cert => !expedition.documents.some(doc => doc.type === cert)
-      );
-
-      expect(missingCertificates).toHaveLength(2);
-      expect(missingCertificates).toContain('EUR.1');
+  test('con preferencia distinta de 100 exige certificado de origen pendiente', async () => {
+    const exp = await crearExpediente({
+      declaration: { type: 'H1', mrn: '26ES00281299999999', customsOffice: 'ES002801', preference: '300' },
+      goods: [{ description: 'Portatil', taricCode: '8471300000', originCountry: 'JP', grossWeight: 10 }]
     });
+    const r = await channelService.processChannelAssignment(exp._id, 'yellow', {}, usuario);
+    expect(r.pendingCertificates.some(c => c.code === 'U069')).toBe(true);
+  });
+});
 
-    test('should allow certificate upload', () => {
-      const expedition = {
-        documents: [],
-        status: 'yellow_channel'
-      };
+describe('Canal Naranja — requerimiento documental', () => {
+  test('crea un Requirement documentary persistido con plazo de 10 dias habiles', async () => {
+    const exp = await crearExpediente();
+    const aeatResponse = { aeatResponse: { description: 'Aporte factura y origen' } };
+    const r = await channelService.processChannelAssignment(exp._id, 'orange', aeatResponse, usuario);
 
-      const newCertificate = {
-        type: 'EUR.1',
-        filename: 'eur1_certificate.pdf',
-        uploadedAt: new Date(),
-        status: 'pending_validation'
-      };
+    expect(r.channel).toBe('orange');
+    expect(r.success).toBe(true);
+    expect(r.requirementId).toBeDefined();
 
-      expedition.documents.push(newCertificate);
+    // El Requirement se guardo DE VERDAD (valida los enums del modelo)
+    const req = await Requirement.findById(r.requirementId);
+    expect(req).not.toBeNull();
+    expect(req.requirementType).toBe('documentary');
+    expect(req.channel).toBe('orange');
+    expect(req.status).toBe('pending');
+    expect(req.requirementNumber).toBeTruthy();
+    // Plazo estrictamente en el futuro (10 dias habiles)
+    expect(req.deadline.getTime()).toBeGreaterThan(Date.now());
+    // Items base: factura, packing list, transporte
+    const codes = req.requestedItems.map(i => i.code);
+    expect(codes).toEqual(expect.arrayContaining(['N380', 'N714', 'N785']));
 
-      expect(expedition.documents).toHaveLength(1);
-      expect(expedition.documents[0].type).toBe('EUR.1');
-    });
-
-    test('should re-evaluate automatically after upload', () => {
-      const expedition = {
-        status: 'yellow_channel',
-        documents: [
-          { type: 'EUR.1', status: 'validated' },
-          { type: 'Certificado sanitario', status: 'validated' }
-        ],
-        requiredCertificates: ['EUR.1', 'Certificado sanitario']
-      };
-
-      const allCertificatesPresent = expedition.requiredCertificates.every(
-        cert => expedition.documents.some(
-          doc => doc.type === cert && doc.status === 'validated'
-        )
-      );
-
-      if (allCertificatesPresent) {
-        expedition.status = 'green_channel';
-      }
-
-      expect(expedition.status).toBe('green_channel');
-    });
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.status).toBe('orange_channel');
   });
 
-  describe('Orange Channel (Canal Naranja)', () => {
-    test('should create associated requirement', () => {
-      const expedition = {
-        _id: 'exp456',
-        declaration: {
-          mrn: '26ES00000001234568',
-          channel: 'orange'
-        }
-      };
+  test('usa la descripcion por defecto si AEAT no envia una', async () => {
+    const exp = await crearExpediente();
+    const r = await channelService.processChannelAssignment(exp._id, 'orange', {}, usuario);
+    const req = await Requirement.findById(r.requirementId);
+    expect(req.description).toMatch(/revision de la documentacion/i);
+  });
+});
 
-      const requirement = {
-        expeditionId: expedition._id,
-        mrn: expedition.declaration.mrn,
-        requirementType: 'documentary',
-        status: 'pending',
-        requestedDocuments: ['Factura detallada', 'Certificado de origen'],
-        deadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-        channel: 'orange'
-      };
+describe('Canal Rojo — inspeccion fisica', () => {
+  test('crea un Requirement physical persistido, retiene la mercancia y programa inspeccion', async () => {
+    const exp = await crearExpediente();
+    const r = await channelService.processChannelAssignment(exp._id, 'red', { inspectionType: 'partial' }, usuario);
 
-      expect(requirement.channel).toBe('orange');
-      expect(requirement.requirementType).toBe('documentary');
+    expect(r.channel).toBe('red');
+    expect(r.success).toBe(true);
+    expect(r.schedulingRequired).toBe(true);
+    expect(r.inspectionType).toBe('physical');
+
+    // El Requirement rojo se guardo DE VERDAD: enums de priority/itemType validos
+    const req = await Requirement.findById(r.requirementId);
+    expect(req).not.toBeNull();
+    expect(req.requirementType).toBe('physical');
+    expect(req.channel).toBe('red');
+    expect(req.physicalInspection.scheduled).toBe(false);
+    expect(req.physicalInspection.inspectionType).toBe('partial');
+
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.status).toBe('red_channel');
+  });
+});
+
+describe('reevaluateYellowChannel', () => {
+  test('sin certificados pendientes, sube a verde y autoriza levante', async () => {
+    // Portatil cap 84 de origen UE (FR): no dispara certificados por TARIC ni
+    // exige certificado de origen (origen comunitario). Sin pendientes -> verde.
+    const exp = await crearExpediente({
+      goods: [{ description: 'Portatil', taricCode: '8471300000', originCountry: 'FR', grossWeight: 10, itemNumber: 1, quantity: 1, invoiceValue: 500 }]
     });
+    // Dejar el expediente en canal amarillo
+    exp.declaration.channel = 'yellow';
+    exp.status = 'yellow_channel';
+    await exp.save();
 
-    test('should track response submission', () => {
-      const requirement = {
-        status: 'pending',
-        responses: []
-      };
+    const r = await channelService.reevaluateYellowChannel(exp._id, usuario);
+    expect(r.success).toBe(true);
+    expect(r.newChannel).toBe('green');
 
-      const response = {
-        date: new Date(),
-        documents: ['doc1', 'doc2'],
-        notes: 'Se adjunta documentación solicitada'
-      };
-
-      requirement.responses.push(response);
-      requirement.status = 'responded';
-
-      expect(requirement.status).toBe('responded');
-      expect(requirement.responses).toHaveLength(1);
-    });
-
-    test('should follow until resolution', () => {
-      const statuses = ['pending', 'in_progress', 'responded', 'resolved'];
-
-      let currentIndex = 0;
-      const requirement = { status: statuses[currentIndex] };
-
-      // Simulate workflow
-      while (currentIndex < statuses.length - 1) {
-        currentIndex++;
-        requirement.status = statuses[currentIndex];
-      }
-
-      expect(requirement.status).toBe('resolved');
-    });
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.declaration.channel).toBe('green');
+    expect(guardado.status).toBe('green_channel');
+    expect(guardado.declaration.levanteNumber).toMatch(/^LEV/);
+    expect(guardado.timeline.some(t => t.action === 'channel_upgraded')).toBe(true);
   });
 
-  describe('Red Channel (Canal Rojo)', () => {
-    test('should coordinate appointment with customs office', () => {
-      const inspection = {
-        expeditionId: 'exp789',
-        channel: 'red',
-        appointment: {
-          scheduledDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-          location: 'Recinto Aduanero Barcelona - Muelle Sur',
-          inspectorAssigned: 'INS-001',
-          estimatedDuration: 120 // minutes
-        },
-        status: 'scheduled'
-      };
-
-      expect(inspection.appointment.scheduledDate).toBeInstanceOf(Date);
-      expect(inspection.status).toBe('scheduled');
+  test('con certificados aun pendientes, se mantiene en amarillo', async () => {
+    const exp = await crearExpediente({
+      goods: [{ description: 'Telefono', taricCode: '8517120000', originCountry: 'CN', grossWeight: 2 }]
     });
+    exp.declaration.channel = 'yellow';
+    exp.status = 'yellow_channel';
+    await exp.save();
 
-    test('should prepare physical file checklist', () => {
-      const checklist = {
-        expeditionId: 'exp789',
-        items: [
-          { item: 'Declaración DUA impresa', required: true, completed: false },
-          { item: 'Factura comercial original', required: true, completed: false },
-          { item: 'Conocimiento de embarque (BL)', required: true, completed: false },
-          { item: 'Certificados de origen', required: true, completed: false },
-          { item: 'Ficha técnica del producto', required: false, completed: false },
-          { item: 'Muestras para análisis', required: false, completed: false }
-        ]
-      };
-
-      const requiredItems = checklist.items.filter(i => i.required);
-      expect(requiredItems).toHaveLength(4);
-    });
-
-    test('should record inspection result', () => {
-      const inspectionResult = {
-        expeditionId: 'exp789',
-        inspectionDate: new Date(),
-        inspector: 'INS-001',
-        result: 'approved',
-        findings: [],
-        notes: 'Mercancía conforme a declaración',
-        photos: ['photo1.jpg', 'photo2.jpg'],
-        nextAction: 'release'
-      };
-
-      expect(inspectionResult.result).toBe('approved');
-      expect(inspectionResult.nextAction).toBe('release');
-    });
-
-    test('should handle inspection incidents', () => {
-      const inspectionResult = {
-        expeditionId: 'exp789',
-        result: 'with_incidents',
-        findings: [
-          {
-            type: 'quantity_mismatch',
-            description: 'Cantidad declarada: 100 unidades. Cantidad verificada: 95 unidades',
-            severity: 'minor'
-          }
-        ],
-        nextAction: 'rectification_required'
-      };
-
-      expect(inspectionResult.result).toBe('with_incidents');
-      expect(inspectionResult.findings).toHaveLength(1);
-      expect(inspectionResult.nextAction).toBe('rectification_required');
-    });
+    const r = await channelService.reevaluateYellowChannel(exp._id, usuario);
+    expect(r.success).toBe(false);
+    expect(r.stillPending.length).toBeGreaterThan(0);
+    expect(r.message).toMatch(/Aun faltan/i);
   });
 
-  describe('Channel Prediction ML (Ref: Plan 6.5)', () => {
-    test('should predict channel assignment', () => {
-      const expeditionData = {
-        origin: 'CN',
-        taricCode: '8471300000',
-        value: 50000,
-        importerHistory: {
-          totalOperations: 100,
-          greenChannelRate: 0.92,
-          incidentsLast12Months: 1
-        },
-        productRiskLevel: 'medium'
-      };
+  test('un expediente que no esta en canal amarillo lanza error', async () => {
+    const exp = await crearExpediente();
+    await expect(channelService.reevaluateYellowChannel(exp._id, usuario))
+      .rejects.toThrow(/no esta en canal amarillo/i);
+  });
+});
 
-      // Simulated ML prediction
-      const prediction = {
-        predictedChannel: 'green',
-        confidence: 0.87,
-        riskFactors: ['new_supplier', 'high_value'],
-        recommendations: ['Verificar factura', 'Confirmar certificados']
-      };
-
-      expect(['green', 'yellow', 'orange', 'red']).toContain(prediction.predictedChannel);
-      expect(prediction.confidence).toBeGreaterThan(0.5);
+describe('notificacion al cliente — robustez', () => {
+  test('sin email de cliente no lanza (no interrumpe el flujo del canal)', async () => {
+    const exp = await crearExpediente({
+      client: { companyName: 'Sin Email SL', nif: 'B00000001', contact: {} }
     });
+    // El canal verde debe completar aunque no haya a quien notificar
+    const r = await channelService.processChannelAssignment(exp._id, 'green', {}, usuario);
+    expect(r.success).toBe(true);
+    expect(emailService.sendEmail).not.toHaveBeenCalled();
+  });
+
+  test('si el envio de email falla, el canal igualmente se procesa (error tragado a proposito)', async () => {
+    emailService.sendEmail.mockRejectedValueOnce(new Error('SMTP caido'));
+    const exp = await crearExpediente();
+    const r = await channelService.processChannelAssignment(exp._id, 'green', {}, usuario);
+    expect(r.success).toBe(true);
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.status).toBe('green_channel');
+  });
+});
+
+describe('helpers de configuracion y documentos', () => {
+  test('getChannelConfig devuelve la config del canal o null', () => {
+    expect(channelService.getChannelConfig('red').label).toBe('Canal Rojo');
+    expect(channelService.getChannelConfig('inexistente')).toBeNull();
+  });
+
+  test('getAllChannels devuelve los cuatro circuitos', () => {
+    const all = channelService.getAllChannels();
+    expect(Object.keys(all).sort()).toEqual(['green', 'orange', 'red', 'yellow']);
+  });
+
+  test('_calculateDeadline salta fines de semana (dia habil, nunca sabado/domingo)', () => {
+    const d = channelService._calculateDeadline(1);
+    expect(d.getDay()).not.toBe(0);
+    expect(d.getDay()).not.toBe(6);
+  });
+
+  test('_requiresOriginCertificate detecta origen extracomunitario', () => {
+    const expExtra = { declaration: {}, goods: [{ originCountry: 'CN' }] };
+    const expUE = { declaration: {}, goods: [{ originCountry: 'FR' }] };
+    expect(channelService._requiresOriginCertificate(expExtra)).toBe(true);
+    expect(channelService._requiresOriginCertificate(expUE)).toBe(false);
+  });
+
+  test('_getTaricSpecificDocuments: textil (cap 61) exige composicion', () => {
+    const items = channelService._getTaricSpecificDocuments({ goods: [{ taricCode: '6109100000' }] });
+    expect(items.some(i => i.code === 'Y923')).toBe(true);
+  });
+
+  test('_hasDocument reconoce un documento validado', () => {
+    const exp = { documents: [{ type: 'commercial_invoice', status: 'validated' }] };
+    expect(channelService._hasDocument(exp, 'commercial_invoice')).toBe(true);
+    expect(channelService._hasDocument(exp, 'packing_list')).toBe(false);
+    expect(channelService._hasDocument({ documents: [] }, 'commercial_invoice')).toBe(false);
   });
 });

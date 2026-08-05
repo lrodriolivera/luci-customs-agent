@@ -262,11 +262,14 @@ class ChannelService {
       requestedItems,
       priority: 'high',
       createdBy: user?._id,
+      // El timeline de Requirement usa `action` (no `event`) y `performedBy` es
+      // un ObjectId (ref User), no un nombre. Meter user.name (string) en
+      // performedBy reventaba el save con "Cast to ObjectId failed" y tumbaba
+      // TODA asignacion de canal naranja con un usuario real.
       timeline: [{
-        event: 'created',
+        action: 'created',
         description: 'Requerimiento creado automaticamente por asignacion de canal naranja',
-        userId: user?._id,
-        performedBy: user?.name || 'Sistema',
+        performedBy: user?._id,
         timestamp: new Date()
       }]
     });
@@ -297,7 +300,10 @@ class ChannelService {
       description: 'Inspeccion fisica requerida por la autoridad aduanera. Se debe programar cita en el recinto.',
       deadline,
       requestedItems,
-      priority: 'critical',
+      // El enum de priority es ['low','normal','high','urgent']: 'critical' no
+      // existe y reventaba el save de TODO canal rojo con ValidationError. La
+      // inspeccion fisica es la maxima urgencia disponible.
+      priority: 'urgent',
       physicalInspection: {
         scheduled: false,
         inspectionType: aeatResponse.inspectionType || 'complete',
@@ -308,11 +314,12 @@ class ChannelService {
         }
       },
       createdBy: user?._id,
+      // Mismo bug que en el requerimiento documental: `action` (no `event`) y
+      // performedBy como ObjectId, no como nombre de usuario.
       timeline: [{
-        event: 'created',
+        action: 'created',
         description: 'Requerimiento creado automaticamente por asignacion de canal rojo',
-        userId: user?._id,
-        performedBy: user?.name || 'Sistema',
+        performedBy: user?._id,
         timestamp: new Date()
       }]
     });
@@ -372,10 +379,14 @@ class ChannelService {
       items.push(...taricSpecificDocs);
     }
 
-    // Documentos para inspeccion fisica
+    // Documentos para inspeccion fisica.
+    // itemType debe ser uno del enum de RequestedItemSchema
+    // (['document','clarification','valuation_proof','origin_proof',
+    // 'classification_proof','physical_inspection','sample','other']). Usar
+    // 'presence'/'action' reventaba el save del canal rojo con ValidationError.
     if (requirementType === 'physical') {
       items.push({
-        itemType: 'presence',
+        itemType: 'physical_inspection',
         code: 'PHYSICAL',
         description: 'Presencia de la mercancia en recinto',
         mandatory: true,
@@ -391,7 +402,7 @@ class ChannelService {
       });
 
       items.push({
-        itemType: 'action',
+        itemType: 'other',
         code: 'CITA',
         description: 'Programar cita con inspector',
         mandatory: true,

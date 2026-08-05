@@ -142,6 +142,10 @@ const DeclarationSchema = new mongoose.Schema({
     enum: ['green', 'yellow', 'orange', 'red']
   },
   levanteDate: Date,
+  // Sello temporal de asignacion de canal. channelService lo escribe al procesar
+  // la respuesta de AEAT, pero el subdocumento estricto (_id:false) lo descartaba
+  // por no estar declarado -> se perdia la traza de cuando se asigno el circuito.
+  channelAssignedAt: Date,
   xmlContent: String, // Generated XML for AEAT
   responseXml: String,
   errors: [String],

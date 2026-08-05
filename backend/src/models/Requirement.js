@@ -71,6 +71,12 @@ const RequestedItemSchema = new mongoose.Schema({
   },
   description: { type: String, required: true },
   documentType: String, // Si es tipo 'document', cual documento
+  // Codigo oficial del documento/accion solicitado (N380, C400, PHYSICAL...).
+  // channelService lo escribe en todos los items, pero el schema no lo declaraba
+  // y el subdocumento lo descartaba: los requerimientos quedaban sin el codigo
+  // AEAT de lo solicitado.
+  code: String,
+  authority: String, // Organismo emisor del documento requerido (MAPA, SOIVRE...)
   mandatory: { type: Boolean, default: true },
   provided: { type: Boolean, default: false },
   providedAt: Date,
@@ -81,6 +87,10 @@ const RequestedItemSchema = new mongoose.Schema({
 // Schema para inspeccion fisica (canal rojo)
 const PhysicalInspectionSchema = new mongoose.Schema({
   scheduled: { type: Boolean, default: false },
+  // Tipo de inspeccion solicitada (complete/partial/documental...). channelService
+  // lo fija desde la respuesta de AEAT, pero el subdocumento lo descartaba por no
+  // estar declarado -> se perdia el alcance de la inspeccion en canal rojo.
+  inspectionType: { type: String, default: 'complete' },
   scheduledDate: Date,
   scheduledTime: String,
   location: {
