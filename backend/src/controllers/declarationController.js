@@ -1364,7 +1364,7 @@ const getAiDeclarationAnalysis = async (req, res) => {
     const { expeditionId } = req.params;
 
     const expedition = await Expedition.findById(expeditionId)
-      .select('expeditionId declaration aiAnalysis');
+      .select('expeditionId declaration aiAnalysis tenantId'); // BUG FIX: incluir tenantId para que ensureSameTenant funcione
 
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
