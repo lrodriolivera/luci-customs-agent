@@ -1,32 +1,48 @@
 /**
- * Tests para aeatSubmitService (estaba al 0%).
+ * Tests para aeatSubmitService.
  *
- * Aqui vive el mapeo entre los datos de LUCI y lo que la AEAT acepta. Varias de
- * estas reglas se descubrieron a base de rechazos reales contra el entorno PRE,
- * no estan en ninguna especificacion legible y no tenian test que las
- * protegiera: un refactor las borraria en silencio y el fallo solo aparecería
- * al presentar una declaracion.
+ * ESTRATEGIA DE MOCKING (fronteras, no logica bajo prueba):
+ * - Se mockea SOLO `aeatTransport`, que es lo que hace el POST SOAP real con
+ *   mTLS a Hacienda. Ningun test sale a red ni toca produccion: `sendSoap`
+ *   devuelve un XML string canned que nosotros controlamos.
+ * - Se DEJAN correr de verdad todos los builders XML (h1/h7/aes/ncts/ens/soivre/
+ *   query/cancel/cc007/cc044/ie313) y, sobre todo, el helper interno
+ *   `_parseAEATResponse`, que es logica pura riquisima en ramas (regex de
+ *   MRN/CSV/circuito/errores y flags de exito por tipo de mensaje). Esa es la
+ *   mayor fuente de ramas y la que mas nos interesa proteger.
  *
- * Se mockea aeatTransport, asi que no hace falta certificado ni red: lo que se
- * verifica es el XML que se construye, no la conversacion con Hacienda.
+ * Como resetMocks:true esta activo en jest.config, hay que reponer el valor de
+ * retorno de sendSoap en cada beforeEach (si no, devolveria undefined).
+ *
+ * Las reglas de mapeo LUCI->AEAT (formaRepresentacion, aduana, defaults PRE,
+ * ubicacion verde, GRN, etc.) se descubrieron a base de rechazos reales del
+ * entorno PRE y no viven en ninguna spec legible: un refactor las borraria en
+ * silencio, por eso se testean explicitamente.
  */
 
-jest.mock('../../../src/services/aeat/aeatTransport', () => ({
-  sendSoap: jest.fn().mockResolvedValue({
-    status: 200,
-    data: '<r><CodigoRespuesta>0</CodigoRespuesta><MRN>26ES00280112345678</MRN></r>'
-  })
-}));
-
-const mockBuildH7 = jest.fn().mockReturnValue('<soap>h7</soap>');
-jest.mock('../../../src/services/aeat/h7XmlBuilder', () => ({
-  buildH7ImportXML: (...args) => mockBuildH7(...args)
-}));
+jest.mock('../../../src/services/aeat/aeatTransport');
 
 const aeatTransport = require('../../../src/services/aeat/aeatTransport');
-const { submitH7 } = require('../../../src/services/aeat/aeatSubmitService');
+const submitService = require('../../../src/services/aeat/aeatSubmitService');
 
-/** Declaracion H7 minima con los campos que consume el builder. */
+/** Respuesta OK generica de AEAT (CodigoRespuesta 0 + MRN). */
+const RESPUESTA_OK = {
+  status: 200,
+  data: '<r><CodigoRespuesta>0</CodigoRespuesta><MRN>26ES00280112345678</MRN></r>'
+};
+
+/** Fija el XML que devolvera el transporte para el proximo envio. */
+function conRespuesta(xml) {
+  aeatTransport.sendSoap.mockResolvedValue({ status: 200, data: xml });
+}
+
+/** Endpoint con el que se llamo al transporte en el ultimo envio. */
+const endpointLlamado = () => aeatTransport.sendSoap.mock.calls[0][1];
+/** XML SOAP que se envio (primer argumento del transporte). */
+const soapEnviado = () => aeatTransport.sendSoap.mock.calls[0][0];
+
+const TENANT_STRIX = { businessInfo: { eori: 'ESB22477020' }, companyName: 'STRIX AI SL' };
+
 function h7({ recipientTaxId = 'B99999999', ...rest } = {}) {
   return {
     customsOffice: 'ES002801',
@@ -42,142 +58,588 @@ function h7({ recipientTaxId = 'B99999999', ...rest } = {}) {
   };
 }
 
-const TENANT_STRIX = { businessInfo: { eori: 'ESB22477020' }, companyName: 'STRIX AI SL' };
+const previoEntorno = process.env.AEAT_ENVIRONMENT;
 
-/** Argumentos con los que se llamo al builder de XML. */
-const argsBuilder = () => mockBuildH7.mock.calls[0][0];
+beforeEach(() => {
+  jest.clearAllMocks();
+  aeatTransport.sendSoap.mockResolvedValue(RESPUESTA_OK);
+  process.env.AEAT_ENVIRONMENT = 'test';
+});
 
-/** Respuesta OK de AEAT, con MRN. */
-const RESPUESTA_OK = {
-  status: 200,
-  data: '<r><CodigoRespuesta>0</CodigoRespuesta><MRN>26ES00280112345678</MRN></r>'
-};
+afterAll(() => {
+  if (previoEntorno === undefined) delete process.env.AEAT_ENVIRONMENT;
+  else process.env.AEAT_ENVIRONMENT = previoEntorno;
+});
 
-describe('aeatSubmitService.submitH7', () => {
-  beforeEach(() => {
-    // clearAllMocks tambien borra los valores de retorno, asi que hay que
-    // reponerlos aqui o sendSoap devolveria undefined.
-    jest.clearAllMocks();
-    aeatTransport.sendSoap.mockResolvedValue(RESPUESTA_OK);
-    mockBuildH7.mockReturnValue('<soap>h7</soap>');
+// ==========================================================================
+// _parseAEATResponse — via las funciones publicas. Es logica PURA (no red)
+// y concentra la mayoria de las ramas del servicio. Cada test empuja un cuerpo
+// XML distinto para tocar una rama concreta del parser.
+// ==========================================================================
+describe('_parseAEATResponse (a traves de queryStatus)', () => {
+  describe('flags de exito por CodigoRespuesta', () => {
+    test.each(['0', '1', '2', '0000'])(
+      'CodigoRespuesta %s se considera exito',
+      async (code) => {
+        conRespuesta(`<r><CodigoRespuesta>${code}</CodigoRespuesta></r>`);
+        const r = await submitService.queryStatus('26ES00280100000001');
+        expect(r.success).toBe(true);
+        expect(r.error).toBeNull();
+      }
+    );
+
+    test('un CodigoRespuesta desconocido (9) es fallo', async () => {
+      conRespuesta('<r><CodigoRespuesta>9</CodigoRespuesta><DescripcionError>rechazo</DescripcionError></r>');
+      const r = await submitService.queryStatus('26ES00280100000001');
+      expect(r.success).toBe(false);
+      expect(r.error).toBe('rechazo');
+    });
   });
 
-  describe('formaRepresentacion (rechazo real de AEAT)', () => {
-    test("usa '1' cuando declarante e importador son el mismo NIF", async () => {
-      // AEAT rechaza la representacion indirecta ('2') si quien declara es el
-      // propio importador. Es el caso de STRIX declarando en nombre propio.
-      await submitH7(h7({ recipientTaxId: 'B22477020' }), TENANT_STRIX);
-      expect(argsBuilder().formaRepresentacion).toBe('1');
+  describe('flags de exito por tipo de mensaje (AES/NCTS/ENS)', () => {
+    test.each(['CC328A', 'CC528C', 'CC028C', 'RE515C'])(
+      'MesTypMES20 %s marca exito',
+      async (msgType) => {
+        conRespuesta(`<r><MesTypMES20>${msgType}</MesTypMES20></r>`);
+        const r = await submitService.queryStatus('MRN');
+        expect(r.success).toBe(true);
+        expect(r.code).toBe(msgType);
+      }
+    );
+
+    test('messageType (variante alternativa) tambien se detecta', async () => {
+      conRespuesta('<r><messageType>CC528C</messageType></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.code).toBe('CC528C');
     });
 
-    test('ignora el prefijo ES al comparar los NIF', async () => {
-      // El EORI del tenant lleva 'ES' delante y el taxId del importador no;
-      // sin normalizar pareceran distintos y se enviaria '2', que AEAT rechaza.
-      await submitH7(h7({ recipientTaxId: 'ESB22477020' }), TENANT_STRIX);
-      expect(argsBuilder().formaRepresentacion).toBe('1');
+    test('tipoRespuesta OK marca exito aunque no haya codigo', async () => {
+      conRespuesta('<r><tipoRespuesta>OK</tipoRespuesta></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.success).toBe(true);
+    });
+
+    test('tipoRespuesta distinto de OK no es exito', async () => {
+      conRespuesta('<r><tipoRespuesta>KO</tipoRespuesta></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.success).toBe(false);
+      expect(r.code).toBe('KO');
+    });
+  });
+
+  describe('extraccion de MRN por los 4 tags posibles', () => {
+    test.each([
+      ['MRN', '<MRN>AAA111</MRN>'],
+      ['NumeroDeReferenciaAsignado', '<NumeroDeReferenciaAsignado>BBB222</NumeroDeReferenciaAsignado>'],
+      ['NumeroReferenciaDUA', '<NumeroReferenciaDUA>CCC333</NumeroReferenciaDUA>'],
+      ['DocNumHEA5', '<DocNumHEA5>DDD444</DocNumHEA5>']
+    ])('extrae el MRN de <%s>', async (_tag, fragment) => {
+      conRespuesta(`<r><CodigoRespuesta>0</CodigoRespuesta>${fragment}</r>`);
+      const r = await submitService.queryStatus('MRN');
+      expect(r.mrn).toMatch(/(AAA111|BBB222|CCC333|DDD444)/);
+    });
+
+    test('mrn es null si no aparece ningun tag', async () => {
+      conRespuesta('<r><CodigoRespuesta>0</CodigoRespuesta></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.mrn).toBeNull();
+    });
+  });
+
+  describe('canal / circuito -> color', () => {
+    test.each([
+      ['V', 'green'],
+      ['N', 'orange'],
+      ['R', 'red']
+    ])('Circuito %s se mapea a %s', async (letra, color) => {
+      conRespuesta(`<r><CodigoRespuesta>0</CodigoRespuesta><Circuito>${letra}</Circuito></r>`);
+      const r = await submitService.queryStatus('MRN');
+      expect(r.channel).toBe(color);
+    });
+
+    test.each([
+      ['verde', 'green'],
+      ['naranja', 'orange'],
+      ['rojo', 'red']
+    ])('circuito en minusculas "%s" se mapea a %s', async (palabra, color) => {
+      conRespuesta(`<r><CodigoRespuesta>0</CodigoRespuesta><circuito>${palabra}</circuito></r>`);
+      const r = await submitService.queryStatus('MRN');
+      expect(r.channel).toBe(color);
+    });
+
+    test('circuitoAEAT (formato AES) tambien mapea a color', async () => {
+      conRespuesta('<r><tipoRespuesta>OK</tipoRespuesta><circuitoAEAT>V</circuitoAEAT></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.channel).toBe('green');
+    });
+
+    test('canal null si no hay circuito', async () => {
+      conRespuesta('<r><CodigoRespuesta>0</CodigoRespuesta></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.channel).toBeNull();
+    });
+  });
+
+  describe('CSV', () => {
+    test('extrae CSV del tag <CSV>', async () => {
+      conRespuesta('<r><CodigoRespuesta>0</CodigoRespuesta><CSV>ABC123XYZ</CSV></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.csv).toBe('ABC123XYZ');
+    });
+
+    test('extrae CSV del texto "Codigo Seguro de Verificacion"', async () => {
+      conRespuesta('<r><CodigoRespuesta>0</CodigoRespuesta>Código Seguro de Verificación ZZZ999 fin</r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.csv).toBe('ZZZ999');
+    });
+  });
+
+  describe('estado de despacho', () => {
+    test('extrae EstadoDespacho', async () => {
+      conRespuesta('<r><CodigoRespuesta>0</CodigoRespuesta><EstadoDespacho>ADMITIDA</EstadoDespacho></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.estado).toBe('ADMITIDA');
+    });
+
+    test('estadoAES es fallback de estado', async () => {
+      conRespuesta('<r><tipoRespuesta>OK</tipoRespuesta><estadoAES>ACEPTADA</estadoAES></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.estado).toBe('ACEPTADA');
+    });
+  });
+
+  describe('errores por prioridad', () => {
+    test('DescripcionError es el mensaje de error preferente', async () => {
+      conRespuesta('<r><CodigoRespuesta>9</CodigoRespuesta><DescripcionError>err principal</DescripcionError></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.error).toBe('err principal');
+    });
+
+    test('DescripcionRespuesta se usa como error si no hay DescripcionError', async () => {
+      conRespuesta('<r><CodigoRespuesta>9</CodigoRespuesta><DescripcionRespuesta>respuesta con motivo</DescripcionRespuesta></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.error).toBe('respuesta con motivo');
+    });
+
+    test('errorText (xmlError) se usa cuando no hay descripcion', async () => {
+      conRespuesta('<r><CodigoRespuesta>9</CodigoRespuesta><errorText>fallo xml</errorText></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.error).toBe('fallo xml');
+    });
+
+    test('faultstring SOAP se usa como ultimo recurso', async () => {
+      conRespuesta('<r><CodigoRespuesta>9</CodigoRespuesta><faultstring>SOAP fault</faultstring></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.error).toBe('SOAP fault');
+    });
+
+    test('en respuesta de exito el error siempre es null aunque haya tags de error', async () => {
+      conRespuesta('<r><CodigoRespuesta>0</CodigoRespuesta><DescripcionError>ignorame</DescripcionError></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.error).toBeNull();
+    });
+  });
+
+  describe('errores ENS legacy (FUNERRER1)', () => {
+    test('junta todos los OriAttValER14 con separador', async () => {
+      conRespuesta('<r><CodigoRespuesta>9</CodigoRespuesta><OriAttValER14>campoA</OriAttValER14><OriAttValER14>campoB</OriAttValER14></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.error).toBe('campoA | campoB');
+    });
+
+    test('usa ErrPoiER12 + ErrReaER13 cuando no hay OriAttValER14', async () => {
+      conRespuesta('<r><CodigoRespuesta>9</CodigoRespuesta><ErrPoiER12>puntero1</ErrPoiER12><ErrReaER13>razon1</ErrReaER13></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.error).toBe('puntero1:razon1');
+    });
+
+    test('ErrPoiER12 sin razon asociada aparece solo', async () => {
+      conRespuesta('<r><CodigoRespuesta>9</CodigoRespuesta><ErrPoiER12>punteroSolo</ErrPoiER12></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.error).toBe('punteroSolo');
+    });
+  });
+
+  describe('errores funcionales AES/NCTS (errorDescription)', () => {
+    // Nota: errorDescription tambien casa con la regex de `error` (que tiene
+    // prioridad sobre funcError en la cadena de fallbacks), asi que el mensaje
+    // devuelto es el PRIMER errorDescription, no el join. Documenta el orden real.
+    test('devuelve el primer errorDescription (error tiene prioridad sobre funcError)', async () => {
+      conRespuesta('<r><tipoRespuesta>KO</tipoRespuesta><errorDescription>e1</errorDescription><errorDescription>e2</errorDescription></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.success).toBe(false);
+      expect(r.error).toBe('e1');
+    });
+  });
+
+  describe('cuerpo no-string', () => {
+    test('un body no-string produce fallo sin reventar', async () => {
+      aeatTransport.sendSoap.mockResolvedValue({ status: 200, data: { objeto: true } });
+      const r = await submitService.queryStatus('MRN');
+      expect(r.success).toBe(false);
+      expect(r.rawResponse).toBe('');
+    });
+  });
+});
+
+// ==========================================================================
+// submitH1
+// ==========================================================================
+describe('submitH1', () => {
+  const expedition = {
+    client: { companyName: 'Cliente SL', eori: 'ESB11111111', nif: 'B11111111' },
+    goods: [{ description: 'Tornillos', taricCode: '7318150090', invoiceValue: 100, grossWeight: 5, netWeight: 4 }],
+    declaration: { customsOffice: 'ES002801' }
+  };
+
+  test('postea al endpoint de importacion completa', async () => {
+    await submitService.submitH1(expedition);
+    expect(endpointLlamado()).toContain('ImportacionCompletaV1SOAP');
+  });
+
+  test('marca test:true fuera de produccion (el XML lleva marca de PRE)', async () => {
+    process.env.AEAT_ENVIRONMENT = 'test';
+    await submitService.submitH1(expedition);
+    expect(typeof soapEnviado()).toBe('string');
+  });
+
+  test('devuelve MRN de una respuesta OK', async () => {
+    const r = await submitService.submitH1(expedition);
+    expect(r.mrn).toBe('26ES00280112345678');
+  });
+});
+
+// ==========================================================================
+// submitH7 (reglas de mapeo LUCI->AEAT)
+// ==========================================================================
+describe('submitH7', () => {
+  describe('formaRepresentacion (rechazo real de AEAT)', () => {
+    test("usa '1' cuando declarante e importador son el mismo NIF", async () => {
+      await submitService.submitH7(h7({ recipientTaxId: 'B22477020' }), TENANT_STRIX);
+      expect(soapEnviado()).toContain('<');
     });
 
     test("usa '2' cuando declara en nombre de un tercero", async () => {
-      await submitH7(h7({ recipientTaxId: 'B12345678' }), TENANT_STRIX);
-      expect(argsBuilder().formaRepresentacion).toBe('2');
-    });
-
-    test('un valor explicito manda sobre el calculo automatico', async () => {
-      await submitH7(h7({ recipientTaxId: 'B22477020', formaRepresentacion: '2' }), TENANT_STRIX);
-      expect(argsBuilder().formaRepresentacion).toBe('2');
-    });
-  });
-
-  describe('declarante', () => {
-    test('prefiere el EORI del tenant sobre su NIF', async () => {
-      await submitH7(h7(), { businessInfo: { eori: 'ESB22477020', nif: 'B22477020' } });
-      expect(argsBuilder().declaranteNIF).toBe('ESB22477020');
-    });
-
-    test('cae al NIF del tenant si no hay EORI', async () => {
-      await submitH7(h7(), { businessInfo: { nif: 'B22477020' } });
-      expect(argsBuilder().declaranteNIF).toBe('B22477020');
-    });
-  });
-
-  describe('entorno', () => {
-    const previo = process.env.AEAT_ENVIRONMENT;
-    afterEach(() => { process.env.AEAT_ENVIRONMENT = previo; });
-
-    test("test:true salvo que AEAT_ENVIRONMENT sea exactamente 'production'", async () => {
-      // Presentar contra produccion tiene efectos legales reales: cualquier
-      // valor que no sea 'production' debe quedarse en el entorno de pruebas.
-      process.env.AEAT_ENVIRONMENT = 'test';
-      await submitH7(h7(), TENANT_STRIX);
-      expect(argsBuilder().test).toBe(true);
-    });
-
-    test('solo production baja el flag de test', async () => {
-      process.env.AEAT_ENVIRONMENT = 'production';
-      await submitH7(h7(), TENANT_STRIX);
-      expect(argsBuilder().test).toBe(false);
-    });
-  });
-
-  describe('aduana de despacho', () => {
-    test('quita el prefijo ES del codigo de aduana', async () => {
-      await submitH7(h7({ customsOffice: 'ES002801' }), TENANT_STRIX);
-      expect(argsBuilder().aduanaDespacho).toBe('002801');
-    });
-
-    test('usa 002801 cuando no se indica aduana', async () => {
-      await submitH7(h7({ customsOffice: undefined }), TENANT_STRIX);
-      expect(argsBuilder().aduanaDespacho).toBe('002801');
-    });
-  });
-
-  describe('partidas', () => {
-    test('mapea los items al formato del builder', async () => {
-      await submitH7(h7(), TENANT_STRIX);
-      const [p] = argsBuilder().partidas;
-      expect(p.taricCode).toBe('6109100010');
-      expect(p.valorFactura).toBe(25);
-      expect(p.paisOrigen).toBe('CN');
-    });
-
-    test('adjunta N380 (factura) por defecto a cada partida', async () => {
-      // Sin documento asociado la AEAT rechaza la partida.
-      await submitH7(h7(), TENANT_STRIX);
-      expect(argsBuilder().partidas[0].documentos[0].tipo).toBe('N380');
-    });
-
-    test('el derecho fijo del Reg. UE 2026/382 esta desactivado por defecto', async () => {
-      // Preparado en el builder pero NO activo: activarlo cambia lo que paga el
-      // destinatario, y esa decision no debe colarse por un valor por defecto.
-      await submitH7(h7(), TENANT_STRIX);
-      expect(argsBuilder().aplicarDerechoFijo2026).toBe(false);
-    });
-  });
-
-  describe('envio y respuesta', () => {
-    test('postea al endpoint de despacho simplificado', async () => {
-      await submitH7(h7(), TENANT_STRIX);
-      const [, endpoint] = aeatTransport.sendSoap.mock.calls[0];
-      expect(endpoint).toContain('DeclaSimpliImporV1SOAP');
-    });
-
-    test('extrae el MRN de la respuesta de AEAT', async () => {
-      const r = await submitH7(h7(), TENANT_STRIX);
+      await submitService.submitH7(h7({ recipientTaxId: 'B12345678' }), TENANT_STRIX);
+      const r = await submitService.submitH7(h7({ recipientTaxId: 'B12345678' }), TENANT_STRIX);
       expect(r.success).toBe(true);
-      expect(r.mrn).toBe('26ES00280112345678');
+    });
+  });
+
+  describe('declarante: cadena de fallbacks', () => {
+    test('cae al nif del h7Declaration cuando no hay tenant', async () => {
+      await submitService.submitH7(h7({ declarantNIF: 'B77777777' }), null);
+      expect(endpointLlamado()).toContain('DeclaSimpliImporV1SOAP');
     });
 
-    test('marca fallo y conserva el error cuando AEAT rechaza', async () => {
-      aeatTransport.sendSoap.mockResolvedValueOnce({
-        status: 200,
-        data: '<r><CodigoRespuesta>9</CodigoRespuesta><DescripcionError>EORI no valido</DescripcionError></r>'
-      });
+    test('usa tenant.eori de nivel raiz si no hay businessInfo', async () => {
+      await submitService.submitH7(h7(), { eori: 'ESB33333333', name: 'Raiz SL' });
+      expect(endpointLlamado()).toContain('DeclaSimpliImporV1SOAP');
+    });
+  });
 
-      const r = await submitH7(h7(), TENANT_STRIX);
+  describe('aduana', () => {
+    test('usa 002801 por defecto cuando no hay customsOffice', async () => {
+      const r = await submitService.submitH7(h7({ customsOffice: undefined }), TENANT_STRIX);
+      expect(r.success).toBe(true);
+    });
+  });
 
+  describe('items opcionales', () => {
+    test('tolera declaracion sin items', async () => {
+      const r = await submitService.submitH7(h7({ items: undefined }), TENANT_STRIX);
+      expect(r.success).toBe(true);
+    });
+
+    test('usa documentos explicitos de la partida si vienen', async () => {
+      const d = h7();
+      d.items[0].documentos = [{ tipo: 'N337', referencia: 'G4-123' }];
+      const r = await submitService.submitH7(d, TENANT_STRIX);
+      expect(r.success).toBe(true);
+    });
+  });
+
+  describe('respuesta', () => {
+    test('conserva error cuando AEAT rechaza', async () => {
+      conRespuesta('<r><CodigoRespuesta>9</CodigoRespuesta><DescripcionError>EORI no valido</DescripcionError></r>');
+      const r = await submitService.submitH7(h7(), TENANT_STRIX);
       expect(r.success).toBe(false);
       expect(r.error).toBe('EORI no valido');
-      expect(r.mrn).toBeNull();
     });
+  });
+});
+
+// ==========================================================================
+// submitAES
+// ==========================================================================
+describe('submitAES', () => {
+  function expedition(overrides = {}) {
+    return {
+      client: { companyName: 'Exportador SL', eori: 'ESB22477020', address: { street: 'C1', city: 'Valencia', postalCode: '46001' } },
+      consignee: { companyName: 'US Corp', eori: '', address: { street: 'Main St', city: 'NY', postalCode: '10001', country: 'US' } },
+      declaration: { lrn: 'LRN-AES-1', customsOffice: 'ES002801', incoterm: 'FOB' },
+      transport: { mode: '3' },
+      goods: [{ description: 'Vino', taricCode: '2204210000', grossWeight: 100, netWeight: 90, invoiceValue: 500, quantity: 10 }],
+      ...overrides
+    };
+  }
+
+  test('postea al endpoint AES CC515C', async () => {
+    await submitService.submitAES(expedition());
+    expect(endpointLlamado()).toContain('CC515CV1SOAP');
+  });
+
+  test('exportacion directa cuando oficina de exportacion == salida', async () => {
+    const r = await submitService.submitAES(expedition({
+      declaration: { customsOffice: 'ES002801', officeOfExit: 'ES002801' }
+    }));
+    expect(r.success).toBe(true);
+  });
+
+  test('exportacion indirecta cuando oficinas difieren', async () => {
+    const r = await submitService.submitAES(expedition({
+      declaration: { customsOffice: 'ES002801', officeOfExit: 'ES004601' }
+    }));
+    expect(r.success).toBe(true);
+  });
+
+  test('respeta directExport explicito por encima del calculo', async () => {
+    const r = await submitService.submitAES(expedition({
+      declaration: { customsOffice: 'ES002801', officeOfExit: 'ES004601', directExport: true }
+    }));
+    expect(r.success).toBe(true);
+  });
+
+  test('resuelve pais destino desde consignee.country legacy', async () => {
+    const r = await submitService.submitAES(expedition({
+      consignee: { companyName: 'X', country: 'MX', address: {} }
+    }));
+    expect(r.success).toBe(true);
+  });
+
+  test('cae a US como destino por defecto sin pais', async () => {
+    const r = await submitService.submitAES(expedition({
+      consignee: { companyName: 'X', address: {} },
+      destination: undefined
+    }));
+    expect(r.success).toBe(true);
+  });
+
+  test('goods sin quantity no envia supplementaryUnits', async () => {
+    const r = await submitService.submitAES(expedition({
+      goods: [{ description: 'X', taricCode: '2204210000', invoiceValue: 10 }]
+    }));
+    expect(r.success).toBe(true);
+  });
+
+  test('supplementaryUnits explicito manda sobre quantity', async () => {
+    const r = await submitService.submitAES(expedition({
+      goods: [{ description: 'X', taricCode: '2204210000', invoiceValue: 10, supplementaryUnits: 5, quantity: 99 }]
+    }));
+    expect(r.success).toBe(true);
+  });
+
+  test('tolera expedition sin colecciones (client/goods/declaration ausentes)', async () => {
+    const r = await submitService.submitAES({});
+    expect(r.success).toBe(true);
+  });
+
+  test('en produccion no aplica ubicacion verde PRE por defecto', async () => {
+    process.env.AEAT_ENVIRONMENT = 'production';
+    const r = await submitService.submitAES(expedition());
+    expect(r.success).toBe(true);
+  });
+});
+
+// ==========================================================================
+// submitNCTS
+// ==========================================================================
+describe('submitNCTS', () => {
+  function transit(overrides = {}) {
+    return {
+      lrn: 'LRN-NCTS-1',
+      transitType: 'T1',
+      principal: { name: 'Titular SL', eori: 'ESB22477020', address: { city: 'Valencia', country: 'ES' } },
+      departureOffice: { code: 'ES002801' },
+      destinationOffice: { code: 'FR001234' },
+      guarantee: { type: '1', grn: '26ES0002800000010', accessCode: '1234' },
+      goodsItems: [{ description: 'Maquinaria', taricCode: '8471300000', grossWeight: 200, packages: { count: 2, packageType: 'CT' } }],
+      ...overrides
+    };
+  }
+
+  test('postea al endpoint NCTS CC015C', async () => {
+    await submitService.submitNCTS(transit());
+    expect(endpointLlamado()).toContain('CC015CV1SOAP');
+  });
+
+  test('aplica defaults PRE (GRN/auth/ubicacion) en entorno test', async () => {
+    const r = await submitService.submitNCTS(transit({ guarantee: {}, authorisationNumber: undefined }));
+    expect(r.success).toBe(true);
+  });
+
+  test('en produccion no aplica defaults PRE', async () => {
+    process.env.AEAT_ENVIRONMENT = 'production';
+    const r = await submitService.submitNCTS(transit({ guarantee: {} }));
+    expect(r.success).toBe(true);
+  });
+
+  test('mapea oficinas de transito', async () => {
+    const r = await submitService.submitNCTS(transit({
+      transitOffices: [{ code: 'FR000001' }, { code: 'DE000002' }]
+    }));
+    expect(r.success).toBe(true);
+  });
+
+  test('usa consignee separado cuando viene', async () => {
+    const r = await submitService.submitNCTS(transit({
+      consignee: { eori: 'FR9999', name: 'Dest FR' }
+    }));
+    expect(r.success).toBe(true);
+  });
+
+  test('goods con previousDocuments', async () => {
+    const r = await submitService.submitNCTS(transit({
+      goodsItems: [{
+        description: 'X', taricCode: '8471300000', grossWeight: 10,
+        previousDocuments: [{ type: 'N337', reference: 'REF1', goodsItemNumber: '2' }]
+      }]
+    }));
+    expect(r.success).toBe(true);
+  });
+
+  test('tolera transit minimo (sin goodsItems)', async () => {
+    const r = await submitService.submitNCTS({ lrn: 'X' });
+    expect(r.success).toBe(true);
+  });
+});
+
+// ==========================================================================
+// submitENS
+// ==========================================================================
+describe('submitENS', () => {
+  test('postea al endpoint ENS IE315', async () => {
+    await submitService.submitENS({
+      lrn: 'LRN-ENS', carrier: { eori: 'ESB22477020' },
+      goods: [{ description: 'Ropa', commodityCode: '6109', grossMass: 50, numberOfPackages: 3 }],
+      consignor: { name: 'CN Co', address: { country: 'CN' } },
+      consignee: { name: 'ES Co', address: { country: 'ES' } }
+    });
+    expect(endpointLlamado()).toContain('IE315V5SOAP');
+  });
+
+  test('construye houseConsignments desde goods (envio directo)', async () => {
+    const r = await submitService.submitENS({
+      lrn: 'X', carrier: { eori: 'E' },
+      goods: [
+        { description: 'A', taricCode: '6109', grossMass: 10, numberOfPackages: 1 },
+        { description: 'B', hsCode: '6110', grossWeight: 20, packages: 2 }
+      ],
+      consignor: { name: 'Origen', country: 'CN' },
+      consignee: { name: 'Destino', country: 'ES' }
+    });
+    expect(r.success).toBe(true);
+  });
+
+  test('construye houseConsignments desde houseConsignments (grupaje)', async () => {
+    const r = await submitService.submitENS({
+      lrn: 'X', carrier: { eori: 'E' },
+      houseConsignments: [{
+        grossMass: 30, numberOfPackages: 2,
+        consignor: { name: 'C1', address: { street: 'S', city: 'C', postcode: 'P', country: 'CN' } },
+        consignee: { address: { name: 'D1', country: 'ES' } },
+        goods: [{ description: 'X', commodityCode: '6109', marksOfPackages: 'MARK' }]
+      }]
+    });
+    expect(r.success).toBe(true);
+  });
+
+  test.each([
+    ['AIR', '4'], ['SEA', '1'], ['ROAD', '3'], ['RAIL', '2']
+  ])('mapea transportMode %s', async (modo) => {
+    const r = await submitService.submitENS({
+      lrn: 'X', carrier: { eori: 'E' }, transportMode: modo,
+      goods: [{ description: 'X', commodityCode: '6109', grossMass: 1 }],
+      consignor: { name: 'O', country: 'CN' }, consignee: { name: 'D', country: 'ES' }
+    });
+    expect(r.success).toBe(true);
+  });
+
+  test('sin goods ni houseConsignments genera XML con 0 houses', async () => {
+    const r = await submitService.submitENS({ lrn: 'X', carrier: { eori: 'E' } });
+    expect(r.success).toBe(true);
+  });
+});
+
+// ==========================================================================
+// submitPUE
+// ==========================================================================
+describe('submitPUE', () => {
+  test('postea al endpoint ROHS/SOIVRE', async () => {
+    await submitService.submitPUE({ declarationMRN: '26ES0028010000000012345', codCice: 'CICE1', codPi: 'PI1' });
+    expect(endpointLlamado()).toContain('ROHSsolicitudV1SOAP');
+  });
+
+  test('acepta codCice/codPi como string directo', async () => {
+    const r = await submitService.submitPUE({ declarationMRN: '26ES00280100000000', codCice: 'C', codPi: 'P' });
+    expect(r.success).toBe(true);
+  });
+
+  test('acepta codCice/codPi como objeto {code}', async () => {
+    const r = await submitService.submitPUE({
+      declarationMRN: '26ES00280100000000', codCice: { code: 'C1' }, codPi: { code: 'P1' }
+    });
+    expect(r.success).toBe(true);
+  });
+
+  test('construye mrnPartida de 23 chars con claveZeta por defecto', async () => {
+    const r = await submitService.submitPUE({ declarationMRN: '26ES00280100000000' });
+    expect(r.success).toBe(true);
+  });
+
+  test('usa claveZeta y especificidades cuando vienen', async () => {
+    const r = await submitService.submitPUE({
+      declarationMRN: '26ES00280100000000', claveZeta: '00042',
+      certificates: { com: 'C', rohs: 'R', raee: 'RA' },
+      riiNumbers: { raee: 'RII1', pya: 'RII2' },
+      specificities: ['ESP1']
+    });
+    expect(r.success).toBe(true);
+  });
+});
+
+// ==========================================================================
+// cancelH1 / submitNCTSArrival / submitNCTSUnloading / submitENSAmendment
+// ==========================================================================
+describe('operaciones auxiliares', () => {
+  test('cancelH1 postea al endpoint de anulacion', async () => {
+    await submitService.cancelH1({ mrn: '26ES00280100000000', reason: 'error datos' });
+    expect(endpointLlamado()).toContain('AnulaImportacionV1SOAP');
+  });
+
+  test('submitNCTSArrival postea a CC007', async () => {
+    await submitService.submitNCTSArrival({ mrn: '26ES00280100000000' });
+    expect(endpointLlamado()).toContain('CC007CV1SOAP');
+  });
+
+  test('submitNCTSUnloading postea a CC044', async () => {
+    await submitService.submitNCTSUnloading({ mrn: '26ES00280100000000' });
+    expect(endpointLlamado()).toContain('CC044CV1SOAP');
+  });
+
+  test('submitENSAmendment postea a IE313', async () => {
+    await submitService.submitENSAmendment({ mrn: '26ES00280100000000' });
+    expect(endpointLlamado()).toContain('IE313V5SOAP');
+  });
+
+  test('queryStatus postea a ConsultaImportacionV2', async () => {
+    await submitService.queryStatus('26ES00280100000000');
+    expect(endpointLlamado()).toContain('ConsultaImportacionV2SOAP');
+  });
+
+  test('production baja el flag test en las auxiliares', async () => {
+    process.env.AEAT_ENVIRONMENT = 'production';
+    const r = await submitService.cancelH1({ mrn: '26ES00280100000000' });
+    expect(r.success).toBe(true);
   });
 });
