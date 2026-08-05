@@ -448,6 +448,28 @@ describe('H7 Service', () => {
       expect(result.success).toBe(false);
       expect(result.errors).toBeDefined();
     });
+
+    test('should propagate unexpected errors from save operation', async () => {
+      const data = {
+        trackingNumber: 'TEST-ERROR',
+        operationType: 'B2C',
+        items: [{ totalValue: 50, netWeight: 0.5 }],
+        sender: { address: { country: 'CN' } },
+        carrier: { code: 'DHL' }
+      };
+
+      const mockDeclaration = {
+        calculateDuties: jest.fn(),
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        save: jest.fn().mockRejectedValue(new Error('Database connection failed'))
+      };
+
+      H7Declaration.mockImplementation(() => mockDeclaration);
+
+      await expect(
+        h7Service.createDeclaration(data, 'user123')
+      ).rejects.toThrow('Database connection failed');
+    });
   });
 
   describe('submitToAEAT', () => {
@@ -636,7 +658,7 @@ describe('H7 Service', () => {
   });
 
   describe('processBatch', () => {
-    test('should process multiple declarations', async () => {
+    test('should process multiple declarations successfully', async () => {
       const declarations = [
         {
           trackingNumber: 'TRACK001',
@@ -654,23 +676,31 @@ describe('H7 Service', () => {
         }
       ];
 
-      // Mock successful creation
-      const mockDeclaration = {
-        reference: 'H7-BATCH-001',
-        calculateDuties: jest.fn(),
-        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
-        save: jest.fn().mockResolvedValue(true)
-      };
+      // Mock successful creation with proper reference for each
+      let callCount = 0;
+      H7Declaration.mockImplementation(() => {
+        callCount++;
+        return {
+          reference: `H7-BATCH-00${callCount}`,
+          calculateDuties: jest.fn(),
+          validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+          save: jest.fn().mockResolvedValue(true)
+        };
+      });
 
       const result = await h7Service.processBatch(declarations, 'user123');
 
       expect(result).toMatchObject({
         batchId: expect.stringContaining('BATCH-'),
         total: 2,
-        successful: expect.any(Number),
-        failed: expect.any(Number)
+        successful: 2,
+        failed: 0
       });
       expect(result.declarations).toHaveLength(2);
+      expect(result.declarations[0].status).toBe('created');
+      expect(result.declarations[0].reference).toBe('H7-BATCH-001');
+      expect(result.declarations[1].status).toBe('created');
+      expect(result.declarations[1].reference).toBe('H7-BATCH-002');
     });
 
     test('should handle mix of successful and failed declarations', async () => {
@@ -689,10 +719,67 @@ describe('H7 Service', () => {
         }
       ];
 
+      // First declaration succeeds, second fails due to value limit
+      H7Declaration.mockImplementation(() => ({
+        reference: 'H7-BATCH-001',
+        calculateDuties: jest.fn(),
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        save: jest.fn().mockResolvedValue(true)
+      }));
+
       const result = await h7Service.processBatch(declarations, 'user123');
 
       expect(result.total).toBe(2);
-      expect(result.failed).toBeGreaterThan(0);
+      expect(result.successful).toBe(1);
+      expect(result.failed).toBe(1);
+      expect(result.declarations[0].status).toBe('created');
+      expect(result.declarations[1].status).toBe('failed');
+    });
+
+    test('should handle unexpected errors during batch processing', async () => {
+      const declarations = [
+        {
+          trackingNumber: 'TRACK-OK',
+          items: [{ totalValue: 50, netWeight: 0.5 }],
+          sender: { address: { country: 'CN' } },
+          carrier: { code: 'DHL' }
+        },
+        {
+          trackingNumber: 'TRACK-ERROR',
+          items: [{ totalValue: 30, netWeight: 0.3 }],
+          sender: { address: { country: 'CN' } },
+          carrier: { code: 'UPS' }
+        }
+      ];
+
+      // First succeeds, second throws unexpected error
+      let callCount = 0;
+      H7Declaration.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return {
+            reference: 'H7-BATCH-OK',
+            calculateDuties: jest.fn(),
+            validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+            save: jest.fn().mockResolvedValue(true)
+          };
+        } else {
+          return {
+            calculateDuties: jest.fn(),
+            validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+            save: jest.fn().mockRejectedValue(new Error('Unexpected database error'))
+          };
+        }
+      });
+
+      const result = await h7Service.processBatch(declarations, 'user123');
+
+      expect(result.total).toBe(2);
+      expect(result.successful).toBe(1);
+      expect(result.failed).toBe(1);
+      expect(result.declarations[0].status).toBe('created');
+      expect(result.declarations[1].status).toBe('error');
+      expect(result.declarations[1].error).toContain('Unexpected database error');
     });
   });
 
@@ -783,6 +870,496 @@ TRACK002,30`;
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('excede limite H7');
+    });
+
+    test('should enforce tenant isolation when loading expedition', async () => {
+      const User = require('../../src/models/User');
+
+      const mockExpedition = {
+        _id: 'exp123',
+        tenantId: 'tenant-A',
+        goods: [{ value: 50 }]
+      };
+
+      const mockUser = {
+        tenantId: 'tenant-B' // Different tenant
+      };
+
+      Expedition.findById.mockResolvedValue(mockExpedition);
+      User.findById = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          lean: jest.fn().mockResolvedValue(mockUser)
+        })
+      });
+
+      await expect(
+        h7Service.createFromExpedition('exp123', 'user123')
+      ).rejects.toThrow('Expediente no encontrado');
+    });
+
+    test('should allow expedition access when tenants match', async () => {
+      const User = require('../../src/models/User');
+
+      const mockExpedition = {
+        _id: 'exp123',
+        tenantId: 'tenant-A',
+        reference: 'EXP-001',
+        goods: [{ value: 50, description: 'Test', weight: 0.5 }],
+        origin: { country: 'CN' },
+        importer: { name: 'Test', taxId: '12345678Z' },
+        transport: { carrier: 'DHL' },
+        totals: { grossWeight: 0.6, netWeight: 0.5, packages: 1 }
+      };
+
+      const mockUser = {
+        tenantId: 'tenant-A' // Same tenant
+      };
+
+      Expedition.findById.mockResolvedValue(mockExpedition);
+      User.findById = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          lean: jest.fn().mockResolvedValue(mockUser)
+        })
+      });
+
+      const mockH7 = {
+        calculateDuties: jest.fn(),
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        save: jest.fn().mockResolvedValue(true)
+      };
+      H7Declaration.mockImplementation(() => mockH7);
+
+      const result = await h7Service.createFromExpedition('exp123', 'user123');
+      expect(result.success).toBe(true);
+    });
+
+    test('should throw error when expedition does not exist', async () => {
+      Expedition.findById.mockResolvedValue(null);
+
+      await expect(
+        h7Service.createFromExpedition('non-existent', 'user123')
+      ).rejects.toThrow('Expediente no encontrado');
+    });
+
+    test('should allow expedition without tenantId (legacy)', async () => {
+      const User = require('../../src/models/User');
+
+      const mockExpedition = {
+        _id: 'exp-legacy',
+        // No tenantId (legacy expedition)
+        reference: 'EXP-LEGACY',
+        goods: [{ value: 50, description: 'Test', weight: 0.5 }],
+        origin: { country: 'CN' },
+        importer: { name: 'Test', taxId: '12345678Z' },
+        transport: { carrier: 'DHL' },
+        totals: { grossWeight: 0.6, netWeight: 0.5, packages: 1 }
+      };
+
+      Expedition.findById.mockResolvedValue(mockExpedition);
+
+      const mockH7 = {
+        calculateDuties: jest.fn(),
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        save: jest.fn().mockResolvedValue(true)
+      };
+      H7Declaration.mockImplementation(() => mockH7);
+
+      const result = await h7Service.createFromExpedition('exp-legacy', 'user123');
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('_loadOwnedH7 (via submitToAEAT)', () => {
+    const aeatSubmitService = require('../../src/services/aeat/aeatSubmitService');
+    const Tenant = require('../../src/models/Tenant');
+
+    beforeEach(() => {
+      H7Declaration.findById = jest.fn();
+      aeatSubmitService.submitH7.mockResolvedValue({
+        success: true,
+        mrn: '26ES12345678901234H7',
+        channel: 'green',
+        code: '0',
+        estado: 'Aceptada',
+        csv: 'CSV123TEST'
+      });
+      Tenant.findById.mockResolvedValue({ customsConfig: { country: 'ES' } });
+    });
+
+    test('should enforce ownership check - reject declaration from different user', async () => {
+      const mockDeclaration = {
+        _id: 'h7-123',
+        createdBy: 'user-A',
+        status: 'draft'
+      };
+
+      H7Declaration.findById.mockResolvedValue(mockDeclaration);
+
+      await expect(
+        h7Service.submitToAEAT('h7-123', 'user-B') // Different user
+      ).rejects.toThrow('Declaracion no encontrada');
+    });
+
+    test('should allow access when user matches createdBy', async () => {
+      const mockDeclaration = {
+        _id: 'h7-123',
+        reference: 'H7-2024-001',
+        createdBy: 'user-A',
+        status: 'draft',
+        totals: { customsValue: 50 },
+        vatPrepaid: false,
+        duties: { totalDue: 10.50 },
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        calculateDuties: jest.fn(),
+        statusHistory: [],
+        save: jest.fn().mockResolvedValue(true)
+      };
+
+      H7Declaration.findById.mockResolvedValue(mockDeclaration);
+
+      const result = await h7Service.submitToAEAT('h7-123', 'user-A');
+      expect(result.success).toBe(true);
+    });
+
+    test('should allow access when no userId provided (jobs)', async () => {
+      const mockDeclaration = {
+        _id: 'h7-123',
+        reference: 'H7-2024-001',
+        createdBy: 'user-A',
+        status: 'draft',
+        totals: { customsValue: 50 },
+        vatPrepaid: false,
+        duties: { totalDue: 10.50 },
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        calculateDuties: jest.fn(),
+        statusHistory: [],
+        save: jest.fn().mockResolvedValue(true)
+      };
+
+      H7Declaration.findById.mockResolvedValue(mockDeclaration);
+
+      const result = await h7Service.submitToAEAT('h7-123'); // No userId
+      expect(result.success).toBe(true);
+    });
+
+    test('should allow access when declaration has no createdBy (legacy)', async () => {
+      const mockDeclaration = {
+        _id: 'h7-123',
+        reference: 'H7-2024-001',
+        // createdBy undefined (legacy document)
+        status: 'draft',
+        totals: { customsValue: 50 },
+        vatPrepaid: false,
+        duties: { totalDue: 10.50 },
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        calculateDuties: jest.fn(),
+        statusHistory: [],
+        save: jest.fn().mockResolvedValue(true)
+      };
+
+      H7Declaration.findById.mockResolvedValue(mockDeclaration);
+
+      const result = await h7Service.submitToAEAT('h7-123', 'any-user');
+      expect(result.success).toBe(true);
+    });
+
+    test('should throw error when H7 declaration does not exist', async () => {
+      H7Declaration.findById.mockResolvedValue(null);
+
+      await expect(
+        h7Service.submitToAEAT('non-existent', 'user123')
+      ).rejects.toThrow('Declaracion no encontrada');
+    });
+  });
+
+  describe('Additional edge cases', () => {
+    test('checkH7Eligibility - should calculate value from totals.intrinsicValue when no items', () => {
+      const data = {
+        totals: { intrinsicValue: 80 },
+        sender: { address: { country: 'CN' } }
+      };
+
+      const result = h7Service.checkH7Eligibility(data);
+
+      expect(result.eligible).toBe(true);
+      expect(result.calculatedValue).toBe(80);
+    });
+
+    test('calculateValues - should apply NL reduced VAT (9%)', () => {
+      const data = {
+        country: 'NL',
+        items: [{
+          taricCode: '0201100000', // Meat - reduced VAT in NL
+          totalValue: 50,
+          netWeight: 1
+        }],
+        carrier: { code: 'DHL' }
+      };
+
+      const result = h7Service.calculateValues(data);
+
+      expect(result.duties.vat.rate).toBe(9);
+    });
+
+    test('calculateValues - should use standard VAT for NL when code not in reduced list', () => {
+      const data = {
+        country: 'NL',
+        items: [{
+          taricCode: '9999000000', // Generic - standard VAT
+          totalValue: 50,
+          netWeight: 1
+        }],
+        carrier: { code: 'DHL' }
+      };
+
+      const result = h7Service.calculateValues(data);
+
+      expect(result.duties.vat.rate).toBe(21); // NL standard
+    });
+
+    test('createDeclaration - should reject when model validation fails', async () => {
+      const data = {
+        trackingNumber: 'TEST123',
+        operationType: 'B2C',
+        items: [{ totalValue: 50, netWeight: 0.5 }],
+        sender: { address: { country: 'CN' } },
+        carrier: { code: 'DHL' }
+      };
+
+      const mockDeclaration = {
+        calculateDuties: jest.fn(),
+        validateH7Eligibility: jest.fn().mockReturnValue({
+          eligible: false,
+          errors: [{ code: 'VALIDATION_ERROR', message: 'Missing required field' }]
+        }),
+        save: jest.fn()
+      };
+
+      H7Declaration.mockImplementation(() => mockDeclaration);
+
+      const result = await h7Service.createDeclaration(data, 'user123');
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toBeDefined();
+      expect(mockDeclaration.save).not.toHaveBeenCalled();
+    });
+
+    test('submitToAEAT - should return errors when validation fails', async () => {
+      const mockDeclaration = {
+        _id: 'h7-123',
+        status: 'draft',
+        validateH7Eligibility: jest.fn().mockReturnValue({
+          eligible: false,
+          errors: [{ code: 'VALUE_EXCEEDED', message: 'Value too high' }]
+        }),
+        calculateDuties: jest.fn(),
+        save: jest.fn()
+      };
+
+      H7Declaration.findById.mockResolvedValue(mockDeclaration);
+
+      const result = await h7Service.submitToAEAT('h7-123', 'user123');
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toBeDefined();
+      expect(mockDeclaration.save).not.toHaveBeenCalled();
+    });
+
+    test('submitToAEAT - PRE NIF error fallback to simulation', async () => {
+      const aeatSubmitService = require('../../src/services/aeat/aeatSubmitService');
+      const Tenant = require('../../src/models/Tenant');
+
+      // Simulate AEAT PRE NIF validation error
+      aeatSubmitService.submitH7.mockResolvedValue({
+        success: false,
+        error: 'Error 1040: NIF incorrecto',
+        code: '1040'
+      });
+
+      const originalEnv = process.env.AEAT_ENVIRONMENT;
+      process.env.AEAT_ENVIRONMENT = 'test'; // PRE mode
+
+      const mockDeclaration = {
+        _id: 'h7-123',
+        reference: 'H7-2024-001',
+        status: 'draft',
+        totals: { customsValue: 50 },
+        vatPrepaid: false,
+        duties: { totalDue: 10.50 },
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        calculateDuties: jest.fn(),
+        statusHistory: [],
+        save: jest.fn().mockResolvedValue(true)
+      };
+
+      H7Declaration.findById.mockResolvedValue(mockDeclaration);
+      Tenant.findById.mockResolvedValue({ customsConfig: { country: 'ES' } });
+
+      const result = await h7Service.submitToAEAT('h7-123', 'user123');
+
+      expect(result.success).toBe(true); // Fallback simulation
+      expect(result.data.mrn).toMatch(/\d{2}ES\d+H7/);
+      expect(mockDeclaration.status).toBe('released');
+
+      process.env.AEAT_ENVIRONMENT = originalEnv; // Restore
+    });
+
+    test('submitToAEAT - PRE NIF error (301) fallback to simulation', async () => {
+      const aeatSubmitService = require('../../src/services/aeat/aeatSubmitService');
+      const Tenant = require('../../src/models/Tenant');
+
+      aeatSubmitService.submitH7.mockResolvedValue({
+        success: false,
+        error: 'Error 301: identificación incorrecta',
+        code: '301'
+      });
+
+      const originalEnv = process.env.AEAT_ENVIRONMENT;
+      process.env.AEAT_ENVIRONMENT = 'test';
+
+      const mockDeclaration = {
+        reference: 'H7-2024-002',
+        status: 'draft',
+        totals: { customsValue: 50 },
+        vatPrepaid: false,
+        duties: { totalDue: 10.50 },
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        calculateDuties: jest.fn(),
+        statusHistory: [],
+        save: jest.fn().mockResolvedValue(true)
+      };
+
+      H7Declaration.findById.mockResolvedValue(mockDeclaration);
+      Tenant.findById.mockResolvedValue({ customsConfig: { country: 'ES' } });
+
+      const result = await h7Service.submitToAEAT('h7-123', 'user123');
+
+      expect(result.success).toBe(true);
+      expect(mockDeclaration.save).toHaveBeenCalled();
+
+      process.env.AEAT_ENVIRONMENT = originalEnv;
+    });
+
+    test('submitToAEAT - PRE mode but non-NIF error should fail', async () => {
+      const aeatSubmitService = require('../../src/services/aeat/aeatSubmitService');
+      const Tenant = require('../../src/models/Tenant');
+
+      aeatSubmitService.submitH7.mockResolvedValue({
+        success: false,
+        error: 'Error 4404: Valor incorrecto',
+        code: '4404'
+      });
+
+      const originalEnv = process.env.AEAT_ENVIRONMENT;
+      process.env.AEAT_ENVIRONMENT = 'test';
+
+      const mockDeclaration = {
+        status: 'draft',
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        calculateDuties: jest.fn(),
+        save: jest.fn()
+      };
+
+      H7Declaration.findById.mockResolvedValue(mockDeclaration);
+      Tenant.findById.mockResolvedValue({ customsConfig: { country: 'ES' } });
+
+      const result = await h7Service.submitToAEAT('h7-123', 'user123');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('4404');
+      expect(mockDeclaration.save).not.toHaveBeenCalled();
+
+      process.env.AEAT_ENVIRONMENT = originalEnv;
+    });
+
+    test('mapCarrier - should return OTHER when carrierName is null/undefined', () => {
+      const result1 = h7Service.mapCarrier(null);
+      const result2 = h7Service.mapCarrier(undefined);
+      const result3 = h7Service.mapCarrier('');
+
+      expect(result1).toBe('OTHER');
+      expect(result2).toBe('OTHER');
+      expect(result3).toBe('OTHER');
+    });
+
+    test('mapCarrier - should map all known carriers case-insensitive', () => {
+      expect(h7Service.mapCarrier('correos')).toBe('CORREOS');
+      expect(h7Service.mapCarrier('dhl express')).toBe('DHL');
+      expect(h7Service.mapCarrier('UPS Ground')).toBe('UPS');
+      expect(h7Service.mapCarrier('fedex international')).toBe('FEDEX');
+      expect(h7Service.mapCarrier('tnt overnight')).toBe('TNT');
+      expect(h7Service.mapCarrier('gls spain')).toBe('GLS');
+      expect(h7Service.mapCarrier('seur 24h')).toBe('SEUR');
+      expect(h7Service.mapCarrier('mrw urgente')).toBe('MRW');
+      expect(h7Service.mapCarrier('amazon logistics')).toBe('AMAZON');
+      expect(h7Service.mapCarrier('unknown carrier')).toBe('OTHER');
+    });
+
+    test('generateMRN - should generate valid H7 MRN format', () => {
+      const mrn = h7Service.generateMRN();
+
+      expect(mrn).toMatch(/^\d{2}ES\d{14}H7$/);
+      expect(mrn).toContain('ES');
+      expect(mrn).toContain('H7');
+    });
+
+    test('getStats - should delegate to H7Declaration model', async () => {
+      H7Declaration.getStats = jest.fn().mockResolvedValue({
+        total: 100,
+        submitted: 80,
+        released: 70
+      });
+
+      const filters = { startDate: '2024-01-01', endDate: '2024-12-31' };
+      const stats = await h7Service.getStats(filters);
+
+      expect(H7Declaration.getStats).toHaveBeenCalledWith(filters);
+      expect(stats.total).toBe(100);
+    });
+
+    test('submitToAEAT - should use CustomsServiceFactory for non-ES tenant', async () => {
+      const { CustomsServiceFactory } = require('../../src/services/customs');
+      const Tenant = require('../../src/models/Tenant');
+
+      const mockTenant = {
+        _id: 'tenant-NL',
+        customsConfig: { country: 'NL' }
+      };
+
+      const mockCustomsService = {
+        submitDeclaration: jest.fn().mockResolvedValue({
+          success: true,
+          mrn: '26NL98765432109876H7',
+          channel: 'green',
+          code: '0'
+        })
+      };
+
+      Tenant.findById.mockResolvedValue(mockTenant);
+      CustomsServiceFactory.getServiceForTenant.mockReturnValue(mockCustomsService);
+
+      const mockDeclaration = {
+        _id: 'h7-nl-001',
+        reference: 'H7-NL-2024-001',
+        tenantId: 'tenant-NL',
+        status: 'draft',
+        totals: { customsValue: 50 },
+        vatPrepaid: false,
+        duties: { totalDue: 10.50 },
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        calculateDuties: jest.fn(),
+        statusHistory: [],
+        save: jest.fn().mockResolvedValue(true)
+      };
+
+      H7Declaration.findById.mockResolvedValue(mockDeclaration);
+
+      const result = await h7Service.submitToAEAT('h7-nl-001', 'user-nl');
+
+      expect(CustomsServiceFactory.getServiceForTenant).toHaveBeenCalledWith(mockTenant);
+      expect(mockCustomsService.submitDeclaration).toHaveBeenCalledWith(mockDeclaration, 'H7');
+      expect(result.success).toBe(true);
+      expect(result.data.mrn).toBe('26NL98765432109876H7');
     });
   });
 });
