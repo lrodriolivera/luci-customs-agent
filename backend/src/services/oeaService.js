@@ -1018,24 +1018,48 @@ class OEAService {
   }
 
   /**
-   * Get OEA by ID
+   * Get OEA by ID.
+   *
+   * Acotado por createdBy: sin esto, cualquier usuario autenticado que conociera
+   * (o enumerara) el id de una OEA ajena recibia la certificacion completa de
+   * otra empresa (NIF, EORI, representante legal). Se devuelve null igual que si
+   * no existiera, para no confirmar el id en otra cuenta. userId ausente
+   * (jobs/migraciones) y OEA legacy sin createdBy siguen accesibles.
    */
-  async getById(id) {
-    return OEA.findById(id);
+  async getById(id, userId = null) {
+    const oea = await OEA.findById(id);
+    if (!oea) return null;
+    if (userId && oea.createdBy && String(oea.createdBy) !== String(userId)) {
+      return null;
+    }
+    return oea;
   }
 
   /**
-   * Get OEA by EORI
+   * Get OEA by EORI. Acotado por createdBy (ver getById): el EORI es un
+   * identificador empresarial y sin filtro se podia consultar la OEA de otra
+   * empresa por su EORI.
    */
-  async getByEORI(eori) {
-    return OEA.findByEORI(eori);
+  async getByEORI(eori, userId = null) {
+    const oea = await OEA.findByEORI(eori);
+    if (!oea) return null;
+    if (userId && oea.createdBy && String(oea.createdBy) !== String(userId)) {
+      return null;
+    }
+    return oea;
   }
 
   /**
-   * Get OEA by NIF
+   * Get OEA by NIF. Acotado por createdBy (ver getById): el NIF es un dato
+   * fiscal personal; sin filtro se filtraba la OEA de otra empresa por su NIF.
    */
-  async getByNIF(nif) {
-    return OEA.findOne({ 'organization.nif': nif });
+  async getByNIF(nif, userId = null) {
+    const oea = await OEA.findOne({ 'organization.nif': nif });
+    if (!oea) return null;
+    if (userId && oea.createdBy && String(oea.createdBy) !== String(userId)) {
+      return null;
+    }
+    return oea;
   }
 
   /**

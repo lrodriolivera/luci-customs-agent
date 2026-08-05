@@ -206,7 +206,7 @@ exports.getMutualRecognition = async (req, res) => {
 exports.getById = async (req, res) => {
   try {
     const { id } = req.params;
-    const oea = await oeaService.getById(id);
+    const oea = await oeaService.getById(id, req.user?._id || req.user?.id);
 
     if (!oea) {
       return res.status(404).json({
@@ -236,7 +236,7 @@ exports.getById = async (req, res) => {
 exports.getByEORI = async (req, res) => {
   try {
     const { eori } = req.params;
-    const oea = await oeaService.getByEORI(eori);
+    const oea = await oeaService.getByEORI(eori, req.user?._id || req.user?.id);
 
     if (!oea) {
       return res.status(404).json({
@@ -266,7 +266,7 @@ exports.getByEORI = async (req, res) => {
 exports.getByNIF = async (req, res) => {
   try {
     const { nif } = req.params;
-    const oea = await oeaService.getByNIF(nif);
+    const oea = await oeaService.getByNIF(nif, req.user?._id || req.user?.id);
 
     if (!oea) {
       return res.status(404).json({
