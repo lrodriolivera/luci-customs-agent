@@ -132,7 +132,9 @@ class NetherlandsCustomsService extends BaseCustomsService {
     }
 
     // Send via Digipoort
-    return this._sendViaDigipoort(xml, 'DMS4.NL');
+    // Pasar el tipo (no-H7) para que _parseDigipoortResponse etiquete la respuesta
+    // como 'DMS 4.0' y no como 'DECO' (bug: sin esto usaba el default 'H7').
+    return this._sendViaDigipoort(xml, 'DMS4.NL', 'H1');
   }
 
   /**
@@ -618,7 +620,7 @@ class NetherlandsCustomsService extends BaseCustomsService {
   /**
    * Send XML to Dutch Customs via Digipoort
    */
-  async _sendViaDigipoort(xml, processId) {
+  async _sendViaDigipoort(xml, processId, declarationType = 'H7') {
     // Digipoort uses SOAP with PKIoverheid certificate (mutual TLS)
     // Similar to AEAT but different envelope structure
 
@@ -666,7 +668,7 @@ class NetherlandsCustomsService extends BaseCustomsService {
         }
       );
 
-      return this._parseDigipoortResponse(response.data);
+      return this._parseDigipoortResponse(response.data, declarationType);
     } catch (error) {
       logger.error(`NL Digipoort error: ${error.message}`);
       return { success: false, error: error.message };
