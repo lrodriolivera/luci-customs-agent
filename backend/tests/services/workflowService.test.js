@@ -215,7 +215,10 @@ describe('shouldRunScheduledWorkflow', () => {
         config: { onlyBusinessHours: true, businessHoursStart: 0, businessHoursEnd: 24 }
       }
     };
-    // Con la ventana horaria abierta, el resultado depende del día actual.
+    // Con businessHoursStart:0 y businessHoursEnd:24 la ventana horaria queda
+    // totalmente abierta (0<=hour<24 siempre), asi que la hora del reloj NO
+    // influye y el resultado depende solo del dia. Requiere que el service use
+    // ?? (no ||), o el 0 se trataria como "no configurado" → start=9.
     const day = new Date().getDay();
     const esperado = !(day === 0 || day === 6);
     expect(svc.shouldRunScheduledWorkflow(wf)).toBe(esperado);
