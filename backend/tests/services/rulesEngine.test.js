@@ -15,8 +15,39 @@ jest.mock('../../src/services/exciseDutiesService', () => ({
   detectExciseProduct: jest.fn()
 }));
 
+// preferencesService y quotaService son servicios YA cubiertos por sus propias
+// baterias; aqui se mockean como fronteras para poder ejercitar cada rama de
+// analyzeOperation (preferencia con/sin ahorro, warnings, contingentes criticos,
+// caida al fallback simple) sin depender de sus tablas internas.
+jest.mock('../../src/services/preferencesService', () => ({
+  checkEligibility: jest.fn()
+}));
+jest.mock('../../src/services/quotaService', () => ({
+  checkQuotaAvailability: jest.fn(),
+  calculateQuotaSavings: jest.fn()
+}));
+
 const exciseDutiesService = require('../../src/services/exciseDutiesService');
+const preferencesService = require('../../src/services/preferencesService');
+const quotaService = require('../../src/services/quotaService');
 const rulesEngine = require('../../src/services/rulesEngine');
+
+/**
+ * Valores por defecto neutros para las fronteras. Cada test que necesite un
+ * comportamiento distinto los sobrescribe. Como jest.config tiene
+ * resetMocks:true, hay que re-armarlos en cada beforeEach.
+ */
+function armarFronterasNeutras() {
+  exciseDutiesService.calculateTotalExciseDuties.mockReturnValue({
+    total: 0, byCategory: {}, items: []
+  });
+  preferencesService.checkEligibility.mockResolvedValue({
+    eligible: false, agreements: [], recommended: null,
+    savings: 0, requirements: [], warnings: []
+  });
+  quotaService.checkQuotaAvailability.mockReturnValue({ found: false, quotas: [] });
+  quotaService.calculateQuotaSavings.mockReturnValue({ applicable: false });
+}
 
 describe('checkSanctions', () => {
   test('un pais sin sanciones no esta sancionado', () => {
@@ -295,5 +326,350 @@ describe('getCertificateType', () => {
 
   test('un tipo desconocido cae a EUR.1', () => {
     expect(rulesEngine.getCertificateType('desconocido')).toBe('EUR.1');
+  });
+});
+
+describe('checkExciseDuty', () => {
+  test('delega la deteccion de impuestos especiales en el servicio completo', () => {
+    exciseDutiesService.detectExciseProduct.mockReturnValue({ isExcise: true, category: 'alcohol' });
+
+    const r = rulesEngine.checkExciseDuty('22030000');
+
+    expect(exciseDutiesService.detectExciseProduct).toHaveBeenCalledWith('22030000');
+    expect(r).toEqual({ isExcise: true, category: 'alcohol' });
+  });
+});
+
+describe('determineParacustomsControls (ramas restantes)', () => {
+  test('fruta fresca (cap. 08) exige control fitosanitario del MAPA', async () => {
+    const c = await rulesEngine.determineParacustomsControls({ goods: [{ taricCode: '08051000' }] });
+    const fito = c.find(x => x.type === 'phytosanitary');
+
+    expect(fito).toBeTruthy();
+    expect(fito.authority).toBe('MAPA');
+    expect(fito.documents).toContain('C633 - Certificado Fitosanitario');
+  });
+
+  test('conservas de pescado (cap. 16) exigen control sanitario de SANIDAD', async () => {
+    const c = await rulesEngine.determineParacustomsControls({ goods: [{ taricCode: '16041400' }] });
+    const food = c.find(x => x.type === 'food_safety');
+
+    expect(food).toBeTruthy();
+    expect(food.authority).toBe('SANIDAD');
+    expect(food.required).toBe(true);
+  });
+
+  test('sin mercancias no hay controles', async () => {
+    expect(await rulesEngine.determineParacustomsControls({})).toEqual([]);
+  });
+});
+
+describe('determineDocumentation (permisos)', () => {
+  const baseAnalysis = { preferences: {}, controls: { paracustoms: [] }, permits: [] };
+
+  test('cada permiso especial anade un documento C990 con su autoridad y obligatoriedad', () => {
+    const docs = rulesEngine.determineDocumentation({}, {
+      ...baseAnalysis,
+      permits: [{ authority: 'Defensa', required: true }]
+    });
+
+    const permisoDoc = docs.find(d => d.code === 'C990');
+    expect(permisoDoc).toBeTruthy();
+    expect(permisoDoc.name).toBe('Permiso Defensa');
+    expect(permisoDoc.mandatory).toBe(true);
+    expect(permisoDoc.authority).toBe('Defensa');
+  });
+});
+
+describe('analyzeOperation', () => {
+  beforeEach(() => {
+    armarFronterasNeutras();
+  });
+
+  test('operacion limpia de importacion: elegible, con impuestos y documentacion basica', async () => {
+    const analysis = await rulesEngine.analyzeOperation({
+      id: 'OP-1',
+      type: 'import',
+      originCountry: 'US',
+      goods: [{ taricCode: '84713000', description: 'Ordenador', customsValue: 1000, quantity: 1 }]
+    });
+
+    expect(analysis.summary.eligible).toBe(true);
+    expect(analysis.controls.sanctions).toBeNull();
+    // Import -> se calculan aranceles e impuestos
+    expect(analysis.tariff).not.toBeNull();
+    expect(analysis.taxes.vat.rate).toBe(0.21);
+    // Documentacion basica siempre presente
+    expect(analysis.documentation.map(d => d.code)).toEqual(expect.arrayContaining(['N380', 'N703', 'N730']));
+    // El resumen incluye la documentacion obligatoria
+    expect(analysis.summary.requirements.some(r => r.category === 'documentation')).toBe(true);
+    expect(analysis.operationId).toBe('OP-1');
+  });
+
+  test('origen con embargo total: no elegible y alerta critica de sanciones', async () => {
+    const analysis = await rulesEngine.analyzeOperation({
+      type: 'import',
+      originCountry: 'KP',
+      goods: [{ taricCode: '84713000', customsValue: 500 }]
+    });
+
+    expect(analysis.summary.eligible).toBe(false);
+    expect(analysis.controls.sanctions.sanctioned).toBe(true);
+    expect(analysis.summary.alerts.some(a => a.code === 'SANCTIONS' && a.severity === 'critical')).toBe(true);
+  });
+
+  test('producto prohibido: no elegible, alerta PROHIBITED y permiso requerido', async () => {
+    const analysis = await rulesEngine.analyzeOperation({
+      type: 'import',
+      originCountry: 'US',
+      goods: [{ taricCode: '93012000', description: 'Fusil', customsValue: 800 }]
+    });
+
+    expect(analysis.summary.eligible).toBe(false);
+    expect(analysis.summary.alerts.some(a => a.code === 'PROHIBITED')).toBe(true);
+    const permiso = analysis.permits.find(p => p.authority === 'Defensa');
+    expect(permiso).toBeTruthy();
+    expect(permiso.required).toBe(true);
+    expect(permiso.type).toBe('prohibited');
+  });
+
+  test('producto controlado (no prohibido): registra permiso pero sigue elegible', async () => {
+    // 2939 (alcaloides) -> controlled / AEMPS / required, restriction != prohibited
+    const analysis = await rulesEngine.analyzeOperation({
+      type: 'import',
+      originCountry: 'US',
+      goods: [{ taricCode: '29391000', description: 'Alcaloide', customsValue: 300 }]
+    });
+
+    expect(analysis.summary.eligible).toBe(true);
+    expect(analysis.summary.alerts.some(a => a.code === 'PROHIBITED')).toBe(false);
+    expect(analysis.permits.some(p => p.authority === 'AEMPS')).toBe(true);
+  });
+
+  test('exportacion de producto de doble uso: warning DUAL_USE y control registrado', async () => {
+    const analysis = await rulesEngine.analyzeOperation({
+      type: 'export',
+      originCountry: 'ES',
+      goods: [{ taricCode: '85423100', description: 'Circuito integrado' }]
+    });
+
+    expect(analysis.controls.dual_use.isDualUse).toBe(true);
+    expect(analysis.summary.warnings.some(w => w.code === 'DUAL_USE')).toBe(true);
+    // Export no calcula aranceles ni consulta preferencias
+    expect(analysis.tariff).toBeNull();
+    expect(preferencesService.checkEligibility).not.toHaveBeenCalled();
+  });
+
+  test('preferencia con ahorro emite recomendacion cost_saving y conserva los datos ricos', async () => {
+    // Regresion del bug corregido: antes analyzeOperation empujaba a
+    // analysis.summary.recommendations (inexistente) -> TypeError capturado por
+    // el catch de preferencias -> degradaba al fallback con savings=0 y perdia
+    // la recomendacion en silencio. El fix apunta el push a analysis.recommendations
+    // (el array real de la raiz). Ahora la recomendacion SI se emite y los datos
+    // de preferencesService se conservan.
+    preferencesService.checkEligibility.mockResolvedValue({
+      eligible: true,
+      agreements: [{ certificate: 'EUR.1', name: 'EU-Chile' }],
+      recommended: { certificate: 'EUR.1', name: 'EU-Chile' },
+      savings: 123.456,
+      requirements: [],
+      warnings: []
+    });
+
+    const analysis = await rulesEngine.analyzeOperation({
+      type: 'import',
+      originCountry: 'CL',
+      goods: [{ taricCode: '08051000', customsValue: 1000 }]
+    });
+
+    // Se conservan los datos ricos de preferencesService (no cae al fallback).
+    expect(analysis.preferences.available).toBe(true);
+    expect(analysis.preferences.savings).toBe(123.456);
+    // La recomendacion de ahorro se emite en la raiz del analysis.
+    const rec = analysis.recommendations.find(r => r.type === 'cost_saving');
+    expect(rec).toBeTruthy();
+    expect(rec.message).toContain('123.46');
+    // Sin ANALYSIS_ERROR: el camino ya no revienta.
+    expect(analysis.summary.alerts.some(a => a.code === 'ANALYSIS_ERROR')).toBe(false);
+  });
+
+  test('warnings de preferencias se propagan al resumen', async () => {
+    preferencesService.checkEligibility.mockResolvedValue({
+      eligible: false, agreements: [], recommended: null, savings: 0, requirements: [],
+      warnings: [{ code: 'NO_AGREEMENTS', message: 'Sin acuerdo' }]
+    });
+
+    const analysis = await rulesEngine.analyzeOperation({
+      type: 'import',
+      originCountry: 'US',
+      goods: [{ taricCode: '84713000', customsValue: 100 }]
+    });
+
+    expect(analysis.summary.warnings.some(w => w.code === 'NO_AGREEMENTS')).toBe(true);
+  });
+
+  test('si preferencesService falla, cae al fallback checkPreferences (simple)', async () => {
+    preferencesService.checkEligibility.mockRejectedValue(new Error('servicio caido'));
+
+    const analysis = await rulesEngine.analyzeOperation({
+      type: 'import',
+      originCountry: 'JP', // JEFTA -> el fallback simple encuentra acuerdo
+      goods: [{ taricCode: '84713000', customsValue: 100 }]
+    });
+
+    // El fallback (checkPreferences) devuelve la forma con agreements[]
+    expect(analysis.preferences.available).toBe(true);
+    expect(analysis.preferences.agreements.some(a => a.name === 'JEFTA')).toBe(true);
+  });
+
+  test('contingente con ahorro emite recomendacion quota_savings sin reventar', async () => {
+    // Regresion del mismo bug: la rama de contingente empujaba a
+    // summary.recommendations (inexistente) -> ANALYSIS_ERROR. Tras el fix la
+    // recomendacion quota_savings se emite en analysis.recommendations.
+    quotaService.checkQuotaAvailability.mockReturnValue({
+      found: true,
+      quotas: [{
+        orderNumber: '09.1234',
+        available: true,
+        critical: true,
+        duty: { savings: 5 },
+        volume: { utilizationPercent: 95 }
+      }]
+    });
+    quotaService.calculateQuotaSavings.mockReturnValue({
+      applicable: true,
+      recommendation: 'Usar contingente 09.1234',
+      savings: 250
+    });
+
+    const analysis = await rulesEngine.analyzeOperation({
+      type: 'import',
+      originCountry: 'AR',
+      goods: [{ taricCode: '02013000', description: 'Carne', customsValue: 1000, quantity: 500, unit: 'kg' }]
+    });
+
+    expect(analysis.quotas.length).toBeGreaterThan(0);
+    expect(analysis.quotas[0].taricCode).toBe('02013000');
+    const rec = analysis.recommendations.find(r => r.type === 'quota_savings');
+    expect(rec).toBeTruthy();
+    expect(rec.quota).toBe('09.1234');
+    expect(rec.savings).toBe(250);
+    expect(analysis.summary.alerts.some(a => a.code === 'ANALYSIS_ERROR')).toBe(false);
+  });
+
+  test('contingente encontrado pero sin ahorro ni criticidad: se lista sin recomendaciones', async () => {
+    quotaService.checkQuotaAvailability.mockReturnValue({
+      found: true,
+      quotas: [{
+        orderNumber: '09.5555',
+        available: true,
+        critical: false,
+        duty: { savings: 0 },
+        volume: { utilizationPercent: 10 }
+      }]
+    });
+
+    const analysis = await rulesEngine.analyzeOperation({
+      type: 'import',
+      originCountry: 'AR',
+      goods: [{ taricCode: '02013000', customsValue: 1000, quantity: 100 }]
+    });
+
+    // Sin ahorro (savings=0) ni criticidad no se llega al push de recomendacion,
+    // por lo que no se invoca calculateQuotaSavings.
+    expect(analysis.quotas.length).toBe(1);
+    expect(analysis.quotas[0].orderNumber).toBe('09.5555');
+    expect(analysis.summary.alerts.some(a => a.code === 'ANALYSIS_ERROR')).toBe(false);
+    expect(quotaService.calculateQuotaSavings).not.toHaveBeenCalled();
+  });
+
+  test('contingente critico sin ahorro: avisa con warning QUOTA_CRITICAL', async () => {
+    // Con savings=0 no se emite recomendacion, y se alcanza la rama de
+    // criticidad que avisa con QUOTA_CRITICAL.
+    quotaService.checkQuotaAvailability.mockReturnValue({
+      found: true,
+      quotas: [{
+        orderNumber: '09.7777',
+        available: true,
+        critical: true,
+        duty: { savings: 0 },
+        volume: { utilizationPercent: 98 }
+      }]
+    });
+
+    const analysis = await rulesEngine.analyzeOperation({
+      type: 'import',
+      originCountry: 'AR',
+      goods: [{ taricCode: '02013000', customsValue: 1000, quantity: 100 }]
+    });
+
+    const w = analysis.summary.warnings.find(x => x.code === 'QUOTA_CRITICAL');
+    expect(w).toBeTruthy();
+    expect(w.message).toContain('09.7777');
+    expect(w.message).toContain('98%');
+    expect(analysis.summary.alerts.some(a => a.code === 'ANALYSIS_ERROR')).toBe(false);
+  });
+
+  test('operacion sin mercancias no rompe y sigue siendo elegible', async () => {
+    const analysis = await rulesEngine.analyzeOperation({ type: 'import', originCountry: 'US' });
+
+    expect(analysis.summary.eligible).toBe(true);
+    expect(analysis.controls.paracustoms).toEqual([]);
+  });
+
+  test('un error interno se captura y se registra como alerta ANALYSIS_ERROR', async () => {
+    // Forzar un fallo dentro del try: calculateTotalExciseDuties lanza durante
+    // calculateTaxes (import). analyzeOperation debe capturarlo, no propagarlo.
+    exciseDutiesService.calculateTotalExciseDuties.mockImplementation(() => {
+      throw new Error('excise roto');
+    });
+
+    const analysis = await rulesEngine.analyzeOperation({
+      type: 'import',
+      originCountry: 'US',
+      goods: [{ taricCode: '84713000', customsValue: 100 }]
+    });
+
+    expect(analysis.summary.alerts.some(a => a.code === 'ANALYSIS_ERROR' && a.message === 'excise roto')).toBe(true);
+  });
+});
+
+describe('validateCompliance', () => {
+  beforeEach(() => {
+    armarFronterasNeutras();
+  });
+
+  test('valida documentos y permisos obligatorios (regresion: ahora espera analyzeOperation)', async () => {
+    // Regresion del bug corregido: validateCompliance llamaba a analyzeOperation
+    // SIN await -> analysis era una Promise y analysis.documentation undefined ->
+    // TypeError en el primer .filter. Con el fix (async + await) el metodo
+    // funciona y evalua los documentos/permisos obligatorios reales.
+    const compliance = await rulesEngine.validateCompliance(
+      { type: 'import', originCountry: 'US', goods: [{ taricCode: '84713000', customsValue: 100 }] },
+      []
+    );
+    expect(compliance).toHaveProperty('compliant');
+    expect(Array.isArray(compliance.missing)).toBe(true);
+  });
+
+  test('marca no conforme si faltan documentos obligatorios; conforme si se aportan', async () => {
+    // Un origen con control paraduanero fuerza documentacion obligatoria; sin
+    // aportarla -> no conforme; aportando todos los codigos -> conforme.
+    const operacion = {
+      type: 'import',
+      originCountry: 'CN',
+      goods: [{ taricCode: '93012000', customsValue: 1000, quantity: 1 }] // armas: control estricto
+    };
+    const sinDocs = await rulesEngine.validateCompliance(operacion, []);
+    const analysis = await rulesEngine.analyzeOperation(operacion);
+    const obligatorios = analysis.documentation.filter(d => d.mandatory).map(d => d.code);
+
+    if (obligatorios.length > 0) {
+      expect(sinDocs.compliant).toBe(false);
+      expect(sinDocs.missing.some(m => m.type === 'document')).toBe(true);
+    }
+    // Aportando todos los documentos obligatorios ya no faltan documentos.
+    const conDocs = await rulesEngine.validateCompliance(operacion, obligatorios);
+    expect(conDocs.missing.filter(m => m.type === 'document')).toHaveLength(0);
   });
 });

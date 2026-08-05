@@ -268,7 +268,7 @@ exports.validateCompliance = async (req, res) => {
       });
     }
 
-    const compliance = rulesEngine.validateCompliance(operation, providedDocuments || []);
+    const compliance = await rulesEngine.validateCompliance(operation, providedDocuments || []);
 
     res.json({
       success: true,

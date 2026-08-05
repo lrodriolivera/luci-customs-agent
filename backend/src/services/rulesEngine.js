@@ -245,7 +245,7 @@ class RulesEngine {
           };
 
           if (analysis.preferences.available && analysis.preferences.savings > 0) {
-            analysis.summary.recommendations.push({
+            analysis.recommendations.push({
               type: 'cost_saving',
               message: `Preferencia arancelaria disponible: ahorro de ${analysis.preferences.savings.toFixed(2)} EUR`,
               action: 'Solicitar certificado ' + analysis.preferences.certificate,
@@ -296,7 +296,7 @@ class RulesEngine {
               );
 
               if (savingsCalc.applicable) {
-                analysis.summary.recommendations.push({
+                analysis.recommendations.push({
                   type: 'quota_savings',
                   message: savingsCalc.recommendation,
                   quota: bestQuota.orderNumber,
@@ -744,8 +744,8 @@ class RulesEngine {
   /**
    * Validar si operacion cumple requisitos
    */
-  validateCompliance(operation, providedDocuments = []) {
-    const analysis = this.analyzeOperation(operation);
+  async validateCompliance(operation, providedDocuments = []) {
+    const analysis = await this.analyzeOperation(operation);
     const compliance = {
       compliant: true,
       missing: [],
