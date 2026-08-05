@@ -497,11 +497,16 @@ const regenerateChecklist = async (req, res) => {
       expedition.goods
     );
 
-    // Mantener estado de documentos ya recibidos
+    // Mantener estado de documentos ya recibidos. Se serializa el subdocumento a
+    // objeto plano con toObject(): hacer spread de un subdocumento Mongoose
+    // (`{ ...item, ...subdoc }`) NO expone sus paths (received/validated/documentId)
+    // como propiedades enumerables, asi que el merge perdia siempre `received:true`
+    // y cada regeneracion del checklist marcaba como no recibido un documento que
+    // el cliente ya habia subido.
     const existingDocs = {};
     expedition.documentChecklist.forEach(item => {
       if (item.received) {
-        existingDocs[item.documentType] = item;
+        existingDocs[item.documentType] = typeof item.toObject === 'function' ? item.toObject() : item;
       }
     });
 
@@ -679,6 +684,7 @@ const aiSuggestDocuments = async (req, res) => {
       ...analysis,
       analyzedAt: new Date()
     };
+    expedition.aiAnalysis.lastAnalysisAt = new Date();
     await expedition.save();
 
     res.json({
@@ -725,6 +731,7 @@ const aiAnalyzeRisk = async (req, res) => {
       }));
     }
 
+    expedition.aiAnalysis.lastAnalysisAt = new Date();
     await expedition.save();
 
     res.json({
@@ -812,6 +819,7 @@ const aiDetectInconsistencies = async (req, res) => {
       ...analysis,
       analyzedAt: new Date()
     };
+    expedition.aiAnalysis.lastAnalysisAt = new Date();
 
     await expedition.save();
 
@@ -928,8 +936,12 @@ const aiFullAnalysis = async (req, res) => {
  */
 const getAiAnalysis = async (req, res) => {
   try {
+    // tenantId es imprescindible en el select: ensureSameTenant lo lee del doc y,
+    // si no viene, lo trata como legacy-sin-tenant y DEJA PASAR -> un usuario de
+    // otro tenant podia leer el analisis IA (y el expeditionId) de expedientes
+    // ajenos por /ai/analysis. Fuga de datos entre organizaciones.
     const expedition = await Expedition.findById(req.params.id)
-      .select('expeditionId aiAnalysis');
+      .select('expeditionId aiAnalysis tenantId');
 
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 

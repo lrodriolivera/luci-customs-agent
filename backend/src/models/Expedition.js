@@ -408,7 +408,10 @@ const ExpeditionSchema = new mongoose.Schema({
       reasoning: String
     }],
     riskFlags: [{
-      type: String,
+      type: { type: String }, // `type` es clave reservada: sin envolver, Mongoose
+      // colapsaba cada elemento a un SchemaString ([String]) y guardar los flags
+      // como objetos {type,severity,description} (lo que hace aiAnalyzeRisk al
+      // detectar criticalIssues) reventaba con CastError -> HTTP 500.
       severity: String, // low, medium, high
       description: String
     }],
@@ -420,6 +423,14 @@ const ExpeditionSchema = new mongoose.Schema({
     // aunque el analisis IA ya se hubiera ejecutado (y facturado a Bedrock).
     channelPrediction: mongoose.Schema.Types.Mixed,
     declarationAnalysis: mongoose.Schema.Types.Mixed,
+    // Mismo patron para los analisis IA del expedienteController: sin declarar
+    // estos campos, el objeto estricto los descartaba al guardar y getAiAnalysis
+    // nunca podia recuperar el resultado (facturado a Bedrock) -> el analisis se
+    // perdia tras responder al cliente una sola vez.
+    documentSuggestions: mongoose.Schema.Types.Mixed,
+    riskAnalysis: mongoose.Schema.Types.Mixed,
+    inconsistencies: mongoose.Schema.Types.Mixed,
+    fullAnalysis: mongoose.Schema.Types.Mixed,
     lastAnalysisAt: Date
   },
 
