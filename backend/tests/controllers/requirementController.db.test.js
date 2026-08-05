@@ -37,6 +37,11 @@ jest.mock('../../src/services/aiService', () => ({
   analyzeRequirementRisk: jest.fn(),
   fullRequirementAnalysis: jest.fn()
 }));
+jest.mock('../../src/config/logger', () => ({
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn()
+}));
 
 const Requirement = require('../../src/models/Requirement');
 const Expedition = require('../../src/models/Expedition');
@@ -554,6 +559,676 @@ describe('requirementController (BD real)', () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body.data).toHaveLength(2);
+    });
+  });
+
+  // --- getRequirements: ramas de filtros sin cubrir --------------------------
+
+  describe('getRequirements - filtros adicionales', () => {
+    it('filtra por channel', async () => {
+      const user = usuario(TENANT_A);
+      await crearRequerimiento(TENANT_A, { channel: 'orange' });
+      await crearRequerimiento(TENANT_A, { channel: 'red' });
+
+      const res = crearRes();
+      await controller.getRequirements({ query: { channel: 'red' }, user }, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0].channel).toBe('red');
+    });
+
+    it('filtra por requirementType', async () => {
+      const user = usuario(TENANT_A);
+      await crearRequerimiento(TENANT_A, { channel: 'orange' });
+      await Requirement.create({
+        expeditionId: new mongoose.Types.ObjectId(),
+        tenantId: TENANT_A,
+        mrn: 'M-VAL',
+        requirementType: 'valuation',
+        channel: 'orange',
+        subject: 'Cuestionamiento valor',
+        description: 'Se cuestiona el valor',
+        deadline: new Date('2026-12-31')
+      });
+
+      const res = crearRes();
+      await controller.getRequirements({ query: { requirementType: 'valuation' }, user }, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0].requirementType).toBe('valuation');
+    });
+
+    it('filtra por expeditionId', async () => {
+      const user = usuario(TENANT_A);
+      const expId = new mongoose.Types.ObjectId();
+      await crearRequerimiento(TENANT_A, { expeditionId: expId });
+      await crearRequerimiento(TENANT_A, { expeditionId: new mongoose.Types.ObjectId() });
+
+      const res = crearRes();
+      await controller.getRequirements({ query: { expeditionId: expId.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data).toHaveLength(1);
+      // el populate puede dejar el campo en null si el expediente no existe; lo importante es que filtre
+    });
+
+    it('filtra por assignedTo', async () => {
+      const user = usuario(TENANT_A);
+      const assignedUser = new mongoose.Types.ObjectId();
+      await Requirement.create({
+        expeditionId: new mongoose.Types.ObjectId(),
+        tenantId: TENANT_A,
+        mrn: 'M1',
+        requirementType: 'documentary',
+        channel: 'orange',
+        subject: 'S1',
+        description: 'D1',
+        deadline: new Date('2026-12-31'),
+        assignedTo: assignedUser
+      });
+      await crearRequerimiento(TENANT_A);
+
+      const res = crearRes();
+      await controller.getRequirements({ query: { assignedTo: assignedUser.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data).toHaveLength(1);
+      // el populate puede dejar el campo en null si el User no existe; lo importante es que filtre
+    });
+
+    it('filtra por overdue (vencidos)', async () => {
+      const user = usuario(TENANT_A);
+      // requerimiento vencido (deadline pasado, estado activo)
+      await Requirement.create({
+        expeditionId: new mongoose.Types.ObjectId(),
+        tenantId: TENANT_A,
+        mrn: 'M-OV',
+        requirementType: 'documentary',
+        channel: 'orange',
+        subject: 'Vencido',
+        description: 'Ya paso el deadline',
+        deadline: new Date('2020-01-01'),
+        status: 'pending'
+      });
+      // requerimiento futuro
+      await crearRequerimiento(TENANT_A, { status: 'pending' });
+
+      const res = crearRes();
+      await controller.getRequirements({ query: { overdue: 'true' }, user }, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0].subject).toBe('Vencido');
+    });
+
+    it('filtra por urgent (vencen en 3 dias o menos)', async () => {
+      const user = usuario(TENANT_A);
+      // requerimiento urgente (vence en 2 dias)
+      const urgente = new Date();
+      urgente.setDate(urgente.getDate() + 2);
+      await Requirement.create({
+        expeditionId: new mongoose.Types.ObjectId(),
+        tenantId: TENANT_A,
+        mrn: 'M-URG',
+        requirementType: 'documentary',
+        channel: 'red',
+        subject: 'Urgente',
+        description: 'Vence pronto',
+        deadline: urgente,
+        status: 'pending'
+      });
+      // requerimiento lejano (vence en 30 dias)
+      const lejano = new Date();
+      lejano.setDate(lejano.getDate() + 30);
+      await Requirement.create({
+        expeditionId: new mongoose.Types.ObjectId(),
+        tenantId: TENANT_A,
+        mrn: 'M-LEJ',
+        requirementType: 'documentary',
+        channel: 'orange',
+        subject: 'Lejano',
+        description: 'Vence lejos',
+        deadline: lejano,
+        status: 'pending'
+      });
+
+      const res = crearRes();
+      await controller.getRequirements({ query: { urgent: 'true' }, user }, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0].subject).toBe('Urgente');
+    });
+
+    it('filtra por array de status', async () => {
+      const user = usuario(TENANT_A);
+      await crearRequerimiento(TENANT_A, { status: 'pending' });
+      await crearRequerimiento(TENANT_A, { status: 'resolved' });
+      await crearRequerimiento(TENANT_A, { status: 'rejected' });
+
+      const res = crearRes();
+      await controller.getRequirements({ query: { status: ['pending', 'resolved'] }, user }, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data).toHaveLength(2);
+      expect(res.body.data.every(r => ['pending', 'resolved'].includes(r.status))).toBe(true);
+    });
+  });
+
+  // --- markItemProvided ------------------------------------------------------
+
+  describe('markItemProvided', () => {
+    it('marca un item solicitado como proporcionado', async () => {
+      const user = usuario(TENANT_A);
+      const req = await Requirement.create({
+        expeditionId: new mongoose.Types.ObjectId(),
+        tenantId: TENANT_A,
+        mrn: 'M-ITEM',
+        requirementType: 'documentary',
+        channel: 'orange',
+        subject: 'Items',
+        description: 'Items solicitados',
+        deadline: new Date('2026-12-31'),
+        requestedItems: [
+          { itemType: 'document', description: 'Factura', mandatory: true, provided: false }
+        ]
+      });
+
+      const itemId = req.requestedItems[0]._id;
+      const docId = new mongoose.Types.ObjectId();
+
+      const res = crearRes();
+      await controller.markItemProvided(
+        { params: { id: req._id.toString(), itemId: itemId.toString() }, body: { documentId: docId.toString() }, user },
+        res
+      );
+
+      expect(res.statusCode).toBe(200);
+      const recargado = await Requirement.findById(req._id);
+      expect(recargado.requestedItems[0].provided).toBe(true);
+      expect(String(recargado.requestedItems[0].providedDocumentId)).toBe(docId.toString());
+    });
+
+    it('devuelve 404 si el requerimiento es de otro tenant', async () => {
+      const user = usuario(TENANT_A);
+      const req = await crearRequerimiento(TENANT_B);
+      const itemId = new mongoose.Types.ObjectId();
+
+      const res = crearRes();
+      await controller.markItemProvided(
+        { params: { id: req._id.toString(), itemId: itemId.toString() }, body: {}, user },
+        res
+      );
+
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  // --- AI endpoints ----------------------------------------------------------
+
+  const aiService = require('../../src/services/aiService');
+
+  describe('generateAIResponse (basico)', () => {
+    it('genera una respuesta IA basica (version legacy)', async () => {
+      const user = usuario(TENANT_A);
+      const exp = await crearExpediente(TENANT_A);
+      const req = await crearRequerimiento(TENANT_A, { expeditionId: exp._id });
+
+      aiService.generateRequirementResponse.mockResolvedValue({
+        rawResponse: 'Respuesta sugerida por IA',
+        formalResponse: { body: 'Respuesta formal' },
+        documentsToAttach: ['factura.pdf'],
+        keyPoints: ['punto 1'],
+        risks: ['riesgo 1'],
+        legalArguments: ['argumento 1'],
+        recommendedActions: ['accion 1'],
+        estimatedOutcome: { favorable: 80 },
+        model: 'claude-3-sonnet',
+        tokensUsed: 1500,
+        summary: 'Resumen'
+      });
+
+      const res = crearRes();
+      await controller.generateAIResponse({ params: { id: req._id.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.suggestedResponse).toBeDefined();
+      expect(res.body.data.confidence).toBeGreaterThan(0);
+      expect(aiService.generateRequirementResponse).toHaveBeenCalledWith(expect.anything(), expect.anything());
+    });
+
+    it('devuelve 404 si el requerimiento es de otro tenant', async () => {
+      const user = usuario(TENANT_A);
+      const req = await crearRequerimiento(TENANT_B);
+
+      const res = crearRes();
+      await controller.generateAIResponse({ params: { id: req._id.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('aiAnalyzeDocuments', () => {
+    it('analiza documentos solicitados con IA', async () => {
+      const user = usuario(TENANT_A);
+      const exp = await crearExpediente(TENANT_A);
+      const req = await crearRequerimiento(TENANT_A, { expeditionId: exp._id });
+
+      aiService.analyzeRequestedDocuments.mockResolvedValue({
+        analysis: 'Analisis de documentos',
+        missing: ['certificado origen'],
+        complete: true
+      });
+
+      const res = crearRes();
+      await controller.aiAnalyzeDocuments({ params: { id: req._id.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.analysis).toBeDefined();
+      expect(aiService.analyzeRequestedDocuments).toHaveBeenCalled();
+    });
+
+    it('devuelve 404 si el requerimiento es de otro tenant', async () => {
+      const user = usuario(TENANT_A);
+      const req = await crearRequerimiento(TENANT_B);
+
+      const res = crearRes();
+      await controller.aiAnalyzeDocuments({ params: { id: req._id.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('aiSuggestArguments', () => {
+    it('sugiere argumentacion legal con IA', async () => {
+      const user = usuario(TENANT_A);
+      const exp = await crearExpediente(TENANT_A);
+      const req = await crearRequerimiento(TENANT_A, { expeditionId: exp._id });
+
+      aiService.suggestLegalArguments.mockResolvedValue({
+        arguments: ['Argumento 1', 'Argumento 2'],
+        legalBasis: 'Art. 123 del Reglamento UE'
+      });
+
+      const res = crearRes();
+      await controller.aiSuggestArguments({ params: { id: req._id.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.arguments).toBeDefined();
+      expect(aiService.suggestLegalArguments).toHaveBeenCalled();
+    });
+
+    it('devuelve 404 si el requerimiento es de otro tenant', async () => {
+      const user = usuario(TENANT_A);
+      const req = await crearRequerimiento(TENANT_B);
+
+      const res = crearRes();
+      await controller.aiSuggestArguments({ params: { id: req._id.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('aiAnalyzeRisk', () => {
+    it('analiza riesgo del requerimiento con IA', async () => {
+      const user = usuario(TENANT_A);
+      const exp = await crearExpediente(TENANT_A);
+      const req = await crearRequerimiento(TENANT_A, { expeditionId: exp._id });
+
+      aiService.analyzeRequirementRisk.mockResolvedValue({
+        riskLevel: 'medium',
+        factors: ['factor 1'],
+        mitigation: ['mitigation 1']
+      });
+
+      const res = crearRes();
+      await controller.aiAnalyzeRisk({ params: { id: req._id.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.riskLevel).toBeDefined();
+      expect(aiService.analyzeRequirementRisk).toHaveBeenCalled();
+    });
+
+    it('devuelve 404 si el requerimiento es de otro tenant', async () => {
+      const user = usuario(TENANT_A);
+      const req = await crearRequerimiento(TENANT_B);
+
+      const res = crearRes();
+      await controller.aiAnalyzeRisk({ params: { id: req._id.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('aiFullAnalysis', () => {
+    it('realiza analisis completo con IA y lo registra en timeline', async () => {
+      const user = usuario(TENANT_A);
+      const exp = await crearExpediente(TENANT_A);
+      const req = await crearRequerimiento(TENANT_A, { expeditionId: exp._id });
+
+      aiService.fullRequirementAnalysis.mockResolvedValue({
+        overallReadiness: { score: 85, estimatedOutcome: 'favorable' },
+        risk: { riskLevel: 'low' },
+        complete: true
+      });
+
+      const res = crearRes();
+      await controller.aiFullAnalysis({ params: { id: req._id.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.overallReadiness).toBeDefined();
+      expect(aiService.fullRequirementAnalysis).toHaveBeenCalled();
+
+      // verificar que se registro en timeline
+      const recargado = await Requirement.findById(req._id);
+      const evento = recargado.timeline.find(t => t.action === 'ai_analysis');
+      expect(evento).toBeDefined();
+      expect(evento.metadata.readinessScore).toBe(85);
+    });
+
+    it('devuelve 404 si el requerimiento es de otro tenant', async () => {
+      const user = usuario(TENANT_A);
+      const req = await crearRequerimiento(TENANT_B);
+
+      const res = crearRes();
+      await controller.aiFullAnalysis({ params: { id: req._id.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe('aiDraftResponse', () => {
+    it('genera borrador de respuesta formal con IA', async () => {
+      const user = usuario(TENANT_A);
+      const exp = await crearExpediente(TENANT_A);
+      const req = await crearRequerimiento(TENANT_A, { expeditionId: exp._id });
+
+      aiService.generateRequirementResponse.mockResolvedValue({
+        rawResponse: 'Borrador generado',
+        formalResponse: { body: 'Respuesta formal generada' },
+        model: 'claude-3-opus',
+        tokensUsed: 2000
+      });
+
+      const res = crearRes();
+      await controller.aiDraftResponse({ params: { id: req._id.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.rawResponse).toBeDefined();
+      expect(aiService.generateRequirementResponse).toHaveBeenCalled();
+    });
+
+    it('devuelve 404 si el requerimiento es de otro tenant', async () => {
+      const user = usuario(TENANT_A);
+      const req = await crearRequerimiento(TENANT_B);
+
+      const res = crearRes();
+      await controller.aiDraftResponse({ params: { id: req._id.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
+  // --- Casos de error 500 (bloques catch) ------------------------------------
+
+  describe('manejo de errores 500', () => {
+    it('getRequirements devuelve 500 en error de BD', async () => {
+      const user = usuario(TENANT_A);
+      // forzar error: invalid ObjectId
+      const res = crearRes();
+      await controller.getRequirements({ query: { assignedTo: 'invalid-id' }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toBeDefined();
+    });
+
+    it('getRequirementById devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.getRequirementById({ params: { id: 'invalid-id' }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('createRequirement devuelve 500 en error interno', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      // expeditionId invalido para forzar error
+      await controller.createRequirement(
+        { body: { expeditionId: 'invalid', requirementType: 'documentary', channel: 'orange', subject: 'X', description: 'Y' }, user },
+        res
+      );
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('updateRequirement devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.updateRequirement({ params: { id: 'invalid-id' }, body: {}, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('addResponse devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.addResponse({ params: { id: 'invalid-id' }, body: { responseType: 'documentary', notes: 'x' }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('markItemProvided devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.markItemProvided({ params: { id: 'invalid-id', itemId: 'invalid-item' }, body: {}, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('submitToAEAT devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.submitToAEAT({ params: { id: 'invalid-id' }, body: { responseIndex: 0 }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('scheduleInspection devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.scheduleInspection({ params: { id: 'invalid-id' }, body: {}, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('recordInspectionResult devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.recordInspectionResult({ params: { id: 'invalid-id' }, body: { result: 'approved' }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('resolveRequirement devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.resolveRequirement({ params: { id: 'invalid-id' }, body: { status: 'levante' }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('getStats devuelve 500 en error interno', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.getStats({ query: { userId: 'invalid-id' }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('getByExpedition devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.getByExpedition({ params: { expeditionId: 'invalid-id' }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('generateAIResponse devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.generateAIResponse({ params: { id: 'invalid-id' }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('aiAnalyzeDocuments devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.aiAnalyzeDocuments({ params: { id: 'invalid-id' }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('aiSuggestArguments devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.aiSuggestArguments({ params: { id: 'invalid-id' }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('aiAnalyzeRisk devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.aiAnalyzeRisk({ params: { id: 'invalid-id' }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('aiFullAnalysis devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.aiFullAnalysis({ params: { id: 'invalid-id' }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+
+    it('aiDraftResponse devuelve 500 con id invalido', async () => {
+      const user = usuario(TENANT_A);
+      const res = crearRes();
+      await controller.aiDraftResponse({ params: { id: 'invalid-id' }, user }, res);
+
+      expect(res.statusCode).toBe(500);
+    });
+  });
+
+  // --- Edge cases adicionales para aumentar cobertura de ramas ---------------
+
+  describe('edge cases adicionales', () => {
+    it('getRequirements sin usuario devuelve los requerimientos (sin tenant filter)', async () => {
+      await crearRequerimiento(TENANT_A);
+      await crearRequerimiento(TENANT_B);
+
+      const res = crearRes();
+      // req.user undefined o sin tenantId
+      await controller.getRequirements({ query: {}, user: { _id: new mongoose.Types.ObjectId() } }, res);
+
+      expect(res.statusCode).toBe(200);
+      // sin tenantId, devuelve todos
+      expect(res.body.data.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('getRequirementById devuelve 404 cuando el requerimiento no existe (null)', async () => {
+      const user = usuario(TENANT_A);
+      const idInexistente = new mongoose.Types.ObjectId();
+
+      const res = crearRes();
+      await controller.getRequirementById({ params: { id: idInexistente.toString() }, user }, res);
+
+      expect(res.statusCode).toBe(404);
+    });
+
+    it('createRequirement usa mrn/lrn heredados del expediente cuando no se proveen', async () => {
+      const user = usuario(TENANT_A);
+      const exp = await crearExpediente(TENANT_A);
+
+      const res = crearRes();
+      await controller.createRequirement(
+        {
+          body: {
+            expeditionId: exp._id.toString(),
+            requirementType: 'documentary',
+            channel: 'orange',
+            subject: 'X',
+            description: 'Y'
+            // NO provee mrn ni lrn
+          },
+          user
+        },
+        res
+      );
+
+      expect(res.statusCode).toBe(201);
+      expect(res.body.data.mrn).toBe('25ES00280012345678'); // heredado
+      expect(res.body.data.lrn).toBe('LRN-001'); // heredado
+    });
+
+    it('updateRequirement permite actualizar sin cambiar el estado', async () => {
+      const user = usuario(TENANT_A);
+      const req = await crearRequerimiento(TENANT_A, { status: 'pending', priority: 'normal' });
+
+      const res = crearRes();
+      await controller.updateRequirement(
+        { params: { id: req._id.toString() }, body: { priority: 'urgent', internalNotes: 'Notas internas' }, user },
+        res
+      );
+
+      expect(res.statusCode).toBe(200);
+      const recargado = await Requirement.findById(req._id);
+      expect(recargado.priority).toBe('urgent');
+      expect(recargado.status).toBe('pending'); // sin cambiar
+    });
+
+    it('recordInspectionResult con partial deja el requerimiento sin resolver', async () => {
+      const user = usuario(TENANT_A);
+      const exp = await crearExpediente(TENANT_A);
+      const req = await crearRequerimiento(TENANT_A, { channel: 'red', expeditionId: exp._id });
+      await req.scheduleInspection({ scheduledDate: '2026-09-01' });
+
+      const res = crearRes();
+      await controller.recordInspectionResult(
+        { params: { id: req._id.toString() }, body: { result: 'partial', findings: 'Parcial' }, user },
+        res
+      );
+
+      expect(res.statusCode).toBe(200);
+      const recargado = await Requirement.findById(req._id);
+      // partial no es ni approved ni rejected, no cambia el status del requerimiento
+      expect(recargado.status).not.toBe('resolved');
+      expect(recargado.status).not.toBe('rejected');
+    });
+
+    it('resolveRequirement con status distinto de levante/rejected no toca el expediente', async () => {
+      const user = usuario(TENANT_A);
+      const exp = await crearExpediente(TENANT_A);
+      const req = await crearRequerimiento(TENANT_A, { expeditionId: exp._id });
+
+      const res = crearRes();
+      await controller.resolveRequirement(
+        { params: { id: req._id.toString() }, body: { status: 'pending_payment', notes: 'Pendiente pago' }, user },
+        res
+      );
+
+      expect(res.statusCode).toBe(200);
+      const recargado = await Requirement.findById(req._id);
+      expect(recargado.status).toBe('resolved');
+      const expRecargado = await Expedition.findById(exp._id);
+      // el expediente no cambia a levante ni on_hold
+      expect(expRecargado.status).toBe('declaration_submitted');
     });
   });
 });
