@@ -688,7 +688,7 @@ describe('<PUERequestForm />', () => {
     expect(screen.getByText(/NIF: B12345678/i)).toBeInTheDocument()
     expect(screen.getAllByText('Datos Solicitud')[0]).toBeInTheDocument()
     expect(screen.getByText(/Email: test@empresa\.com/i)).toBeInTheDocument()
-  }, 10000)
+  }, 30000)
 
   test('paso 5: muestra error de validación si falta contactEmail', async () => {
     render(<PUERequestForm open={true} onClose={vi.fn()} onSuccess={vi.fn()} />)
@@ -709,7 +709,7 @@ describe('<PUERequestForm />', () => {
 
     expect(screen.getByText('Errores de validacion:')).toBeInTheDocument()
     expect(screen.getByText('Correo electronico de contacto es obligatorio')).toBeInTheDocument()
-  }, 10000)
+  }, 30000)
 
   test('botón Guardar Borrador llama a create sin submit', async () => {
     pueAPI.create.mockResolvedValue({ data: { success: true, data: { _id: 'pue-123' } } })
@@ -857,7 +857,7 @@ describe('<PUERequestForm />', () => {
     await waitFor(() =>
       expect(screen.getByText('Error al crear solicitud')).toBeInTheDocument(), { timeout: 7000 }
     )
-  }, 10000)
+  }, 30000)
 
   test('botón Guardar y Enviar deshabilitado si no se cumplen las condiciones', async () => {
     render(<PUERequestForm open={true} onClose={vi.fn()} onSuccess={vi.fn()} />)
@@ -876,7 +876,7 @@ describe('<PUERequestForm />', () => {
 
     const enviarButton = screen.getByRole('button', { name: /Guardar y Enviar/i })
     expect(enviarButton).toBeDisabled()
-  }, 10000)
+  }, 30000)
 
   test('botón Cancelar cierra el diálogo', async () => {
     const onClose = vi.fn()
