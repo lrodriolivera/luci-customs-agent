@@ -197,7 +197,7 @@ export default function AdminPanel() {
     }
   }
 
-  const filteredUsers = users.filter(u => {
+  const filteredUsers = (users || []).filter(u => {
     if (userFilter.status && u.status !== userFilter.status) return false
     if (userFilter.role && u.role !== userFilter.role) return false
     if (userFilter.search) {
@@ -314,7 +314,7 @@ export default function AdminPanel() {
             className="border border-gray-300 rounded-lg px-3 py-2"
           >
             <option value="">{t('admin.allRoles')}</option>
-            {roles.map(r => (
+            {(roles || []).map(r => (
               <option key={r.id} value={r.id}>{r.name}</option>
             ))}
           </select>
@@ -850,7 +850,7 @@ export default function AdminPanel() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {auditLogs.map((log) => (
+            {(auditLogs || []).map((log) => (
               <tr key={log.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(log.timestamp).toLocaleString('es-ES')}
@@ -1003,7 +1003,7 @@ function UserModal({ user, roles, onClose, onSave }) {
               onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2"
             >
-              {roles.map(r => (
+              {(roles || []).map(r => (
                 <option key={r.id} value={r.id}>{r.name}</option>
               ))}
             </select>
