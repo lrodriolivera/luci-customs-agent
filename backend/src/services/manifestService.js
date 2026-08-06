@@ -183,10 +183,26 @@ class ManifestService {
       'operador': 'carrier', 'mensajero': 'carrier',
     };
 
+    // El diccionario esta escrito en snake_case, pero un cliente puede traer la
+    // misma columna como "recipient name", "recipient-name" o "recipientName".
+    // Como el parser ya paso las cabeceras a minusculas, camelCase llega sin
+    // separador ("recipientname") y no casaba con nada: la linea fallaba con
+    // "Falta nombre destinatario" aunque el dato estuviera.
+    // Se compara ademas sin separadores, y el diccionario se indexa igual.
+    const sinSeparadores = (s) => s.toLowerCase().replace(/[\s\-._]/g, '');
+
+    const porFormaCompacta = {};
+    Object.keys(mappings).forEach(clave => {
+      porFormaCompacta[sinSeparadores(clave)] = mappings[clave];
+    });
+
     const result = {};
     headers.forEach(h => {
       const normalized = h.toLowerCase().replace(/[\s\-\.]/g, '_');
-      result[h] = mappings[normalized] || mappings[h] || null;
+      result[h] = mappings[normalized]
+        || mappings[h]
+        || porFormaCompacta[sinSeparadores(h)]
+        || null;
     });
     return result;
   }
