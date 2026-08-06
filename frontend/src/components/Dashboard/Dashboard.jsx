@@ -367,12 +367,17 @@ export default function Dashboard() {
                   <h3 className="font-semibold text-white text-sm">{t('dashboard.aiEngine')}</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
+                  {/* Bajo "Codigos TARIC" se mostraba totalEntries, que es el
+                      tamano de la cache de clasificaciones, no el catalogo: con
+                      la cache recien creada la cifra era 0 habiendo 21.946
+                      codigos cargados. Igual con las consultas, que salian de
+                      los aciertos de cache. */}
                   <div className="bg-white/5 rounded-lg p-3">
-                    <p className="text-xl font-bold text-sky-400">{cacheStats?.totalEntries || 0}</p>
+                    <p className="text-xl font-bold text-sky-400">{(cacheStats?.taricCodesTotal ?? 0).toLocaleString('es-ES')}</p>
                     <p className="text-[10px] text-slate-400 mt-0.5">{t('dashboard.taricCodes')}</p>
                   </div>
                   <div className="bg-white/5 rounded-lg p-3">
-                    <p className="text-xl font-bold text-emerald-400">{cacheStats?.totalHits || 0}</p>
+                    <p className="text-xl font-bold text-emerald-400">{cacheStats?.aiQueriesLast30d ?? 0}</p>
                     <p className="text-[10px] text-slate-400 mt-0.5">{t('dashboard.aiQueries')}</p>
                   </div>
                 </div>

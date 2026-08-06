@@ -594,7 +594,8 @@ describe('Dashboard', () => {
             totalEntries: 150,
             totalHits: 320,
             taricCodesTotal: 22000,
-            taricChapters: 98
+            taricChapters: 98,
+            aiQueriesLast30d: 320
           }
         }
       })
@@ -602,7 +603,9 @@ describe('Dashboard', () => {
       renderDashboard()
 
       await waitFor(() => {
-        expect(screen.getByText('150')).toBeTruthy()
+        // El panel muestra el catalogo TARIC y las consultas del ultimo mes,
+        // no el tamano de la cache (que era lo que se enseñaba antes).
+        expect(screen.getByText('22.000')).toBeTruthy()
         expect(screen.getByText('320')).toBeTruthy()
         expect(screen.getByText('22000')).toBeTruthy()
         expect(screen.getByText('98')).toBeTruthy()
@@ -777,4 +780,32 @@ describe('Dashboard', () => {
       })
     })
   })
+
+  describe('Dashboard — panel Motor IA', () => {
+    /**
+     * Bajo "Codigos TARIC" se mostraba totalEntries, que es el tamano de la
+     * cache de clasificaciones y no el catalogo: con la cache recien creada la
+     * cifra era 0 habiendo 21.946 codigos cargados en la base.
+     */
+    it('muestra el catalogo TARIC, no el tamano de la cache', async () => {
+      classificationAPI.getCacheStats.mockResolvedValue({
+        data: { success: true, data: { totalEntries: 0, totalHits: 0, taricCodesTotal: 21946, taricChapters: 97, aiQueriesLast30d: 12 } }
+      })
+
+      renderDashboard()
+
+      expect(await screen.findByText('21.946')).toBeInTheDocument()
+    })
+
+    it('muestra las consultas a la IA del ultimo mes', async () => {
+      classificationAPI.getCacheStats.mockResolvedValue({
+        data: { success: true, data: { totalEntries: 0, totalHits: 0, taricCodesTotal: 21946, aiQueriesLast30d: 12 } }
+      })
+
+      renderDashboard()
+
+      expect(await screen.findByText('12')).toBeInTheDocument()
+    })
+  })
+
 })
