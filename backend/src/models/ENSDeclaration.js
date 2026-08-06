@@ -75,11 +75,15 @@ const GoodsItemSchema = new mongoose.Schema({
     type: String,
     match: /^[A-Z]{2}$/
   },
-  // Documentos asociados a este item
+  // Documentos DECLARADOS a AEAT para este item: usan codigos UCC del anexo B
+  // (N380=factura, N714, N722=CMR, N730, N785=B/L). NO confundir con el
+  // `documents` raiz de la declaracion, que son ficheros ADJUNTOS operativos
+  // (con url/name) y usa etiquetas legibles (CMR/BL/AWB/...). Divergencia
+  // intencionada: distinto proposito, distinto vocabulario. Ver SECURITY_AUDIT.md.
   documents: [{
     type: {
       type: String,
-      enum: ['N380', 'N714', 'N722', 'N730', 'N785', 'OTHER'] // Invoice, B/L, CMR, etc.
+      enum: ['N380', 'N714', 'N722', 'N730', 'N785', 'OTHER'] // codigos UCC anexo B
     },
     reference: String,
     issuedAt: Date
@@ -421,7 +425,9 @@ const ENSDeclarationSchema = new mongoose.Schema({
   amendedAt: Date,
 
   // === DOCUMENTOS ADJUNTOS ===
-
+  // Ficheros que el usuario adjunta en la app (con url/name); NO se declaran a
+  // AEAT. Por eso usan etiquetas legibles (CMR/BL/AWB/...) y no los codigos UCC
+  // del `documents` por-item de GoodsItemSchema. Divergencia intencionada.
   documents: [{
     type: {
       type: String,
