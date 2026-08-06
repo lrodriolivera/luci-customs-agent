@@ -106,7 +106,9 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    const brandingTab = screen.getByRole('button', { name: /settings\.brand/i })
+    // Espera a que el componente salga del spinner y monte las pestañas;
+    // bajo batería con CPU saturada el re-render tras resolver la API tarda.
+    const brandingTab = await screen.findByRole('button', { name: /settings\.brand/i })
     expect(brandingTab).toBeInTheDocument()
     fireEvent.click(brandingTab)
 
@@ -118,7 +120,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.defaults/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.defaults/i }))
     // settings.defaults aparece dos veces: en el botón del tab y en el h2 del contenido
     const matches = screen.getAllByText('settings.defaults')
     expect(matches.length).toBeGreaterThan(0)
@@ -128,7 +130,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.notifications/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.notifications/i }))
     expect(screen.getByText('settings.notificationPrefs')).toBeInTheDocument()
   })
 
@@ -136,7 +138,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.security/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.security/i }))
     expect(screen.getByText('settings.securityConfig')).toBeInTheDocument()
   })
 
@@ -144,7 +146,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.roles/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.roles/i }))
     expect(screen.getByText('settings.rolesPermissions')).toBeInTheDocument()
     // Verifica que los 5 roles hardcodeados se renderizan
     expect(screen.getByText('Administrador')).toBeInTheDocument()
@@ -158,7 +160,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
     expect(screen.getByText('Configuracion de Paises y Aduanas')).toBeInTheDocument()
   })
 
@@ -166,7 +168,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.integrations/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.integrations/i }))
     // settings.integrations aparece dos veces: en el botón y en el h2
     const matches = screen.getAllByText('settings.integrations')
     expect(matches.length).toBeGreaterThan(0)
@@ -226,7 +228,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.brand/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.brand/i }))
 
     const colorInputs = screen.getAllByDisplayValue('#8B5CF6')
     expect(colorInputs.length).toBeGreaterThan(0)
@@ -245,7 +247,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.brand/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.brand/i }))
 
     const nameInput = screen.getByDisplayValue('Demo Org')
     fireEvent.change(nameInput, { target: { value: 'New Brand Name' } })
@@ -258,7 +260,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.defaults/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.defaults/i }))
 
     const officeInput = screen.getByDisplayValue('ES004101')
     fireEvent.change(officeInput, { target: { value: 'ES004102' } })
@@ -270,7 +272,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.defaults/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.defaults/i }))
 
     // Busca el select por la opción seleccionada
     const selects = document.querySelectorAll('select')
@@ -286,7 +288,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.defaults/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.defaults/i }))
 
     const selects = document.querySelectorAll('select')
     const langSelect = Array.from(selects).find(s => s.value === 'es')
@@ -301,7 +303,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.defaults/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.defaults/i }))
 
     const tzSelect = screen.getByDisplayValue('Europe/Madrid')
     fireEvent.change(tzSelect, { target: { value: 'UTC' } })
@@ -313,7 +315,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.defaults/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.defaults/i }))
 
     const dateSelect = screen.getByDisplayValue('DD/MM/YYYY')
     fireEvent.change(dateSelect, { target: { value: 'YYYY-MM-DD' } })
@@ -326,7 +328,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.notifications/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.notifications/i }))
 
     // Busca el checkbox por label (el texto está en item.label)
     const checkboxes = document.querySelectorAll('input[type="checkbox"]')
@@ -341,7 +343,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.notifications/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.notifications/i }))
 
     const checkboxes = document.querySelectorAll('input[type="checkbox"]')
     const deadlineCheckbox = checkboxes[1]
@@ -355,7 +357,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.notifications/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.notifications/i }))
 
     const checkboxes = document.querySelectorAll('input[type="checkbox"]')
     const channelCheckbox = checkboxes[2]
@@ -367,7 +369,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.notifications/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.notifications/i }))
 
     const checkboxes = document.querySelectorAll('input[type="checkbox"]')
     const weeklyCheckbox = checkboxes[3]
@@ -382,7 +384,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.security/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.security/i }))
 
     // Primer checkbox en security tab
     const checkboxes = document.querySelectorAll('input[type="checkbox"]')
@@ -397,7 +399,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.security/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.security/i }))
 
     const timeoutInput = screen.getByDisplayValue('480')
     fireEvent.change(timeoutInput, { target: { value: '600' } })
@@ -409,7 +411,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.security/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.security/i }))
 
     const ipTextarea = document.querySelector('textarea')
     expect(ipTextarea).toBeInTheDocument()
@@ -423,7 +425,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.security/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.security/i }))
 
     expect(screen.getByText('settings.passwordPolicy')).toBeInTheDocument()
     expect(screen.getByDisplayValue('8')).toBeInTheDocument() // minLength
@@ -434,7 +436,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.roles/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.roles/i }))
 
     expect(screen.getByText('Administrador')).toBeInTheDocument()
     expect(screen.getByText('Gestor')).toBeInTheDocument()
@@ -452,7 +454,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.roles/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.roles/i }))
 
     const viewPermButtons = screen.getAllByText('settings.viewPermissions')
     expect(viewPermButtons.length).toBe(5)
@@ -463,7 +465,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.integrations/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.integrations/i }))
 
     expect(screen.getByText('settings.aeatCertificate')).toBeInTheDocument()
     expect(screen.getByText('settings.apiKey')).toBeInTheDocument()
@@ -475,7 +477,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    const saveButton = screen.getByRole('button', { name: /settings\.saveChanges/i })
+    const saveButton = await screen.findByRole('button', { name: /settings\.saveChanges/i })
     fireEvent.click(saveButton)
 
     await waitFor(() => {
@@ -489,7 +491,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    const saveButton = screen.getByRole('button', { name: /settings\.saveChanges/i })
+    const saveButton = await screen.findByRole('button', { name: /settings\.saveChanges/i })
     fireEvent.click(saveButton)
 
     // El handleSave hace un setTimeout de 1000ms antes de mostrar el mensaje
@@ -513,7 +515,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     expect(screen.getByText('Configuracion de Paises y Aduanas')).toBeInTheDocument()
     expect(screen.getByText(/Activa los paises donde opera/i)).toBeInTheDocument()
@@ -523,7 +525,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     expect(screen.getByText('Espana')).toBeInTheDocument()
     expect(screen.getByText('Paises Bajos')).toBeInTheDocument()
@@ -536,7 +538,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     // El toggle de ES está habilitado por defecto (línea 765)
     // Los checkboxes de toggle tienen clase 'sr-only'
@@ -558,7 +560,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     // Busca el toggle de NL (segundo en availableCountries)
     const checkboxes = document.querySelectorAll('input[type="checkbox"]')
@@ -577,7 +579,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     // ES está habilitado por defecto
     const eoriInput = screen.getByPlaceholderText('ESB22477020')
@@ -590,7 +592,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     // Busca el select de entorno (debe haber al menos uno para ES)
     const envSelect = screen.getByDisplayValue('Test / Pre-produccion')
@@ -605,7 +607,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     const saveConfigButton = screen.getByRole('button', { name: /Guardar configuracion de paises/i })
     fireEvent.click(saveConfigButton)
@@ -627,7 +629,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     const saveConfigButton = screen.getByRole('button', { name: /Guardar configuracion de paises/i })
     fireEvent.click(saveConfigButton)
@@ -641,7 +643,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     // certificateStatus: 'configured' en mockTenantData
     expect(screen.getByText('Configurado')).toBeInTheDocument()
@@ -659,7 +661,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     expect(screen.getByText('No configurado')).toBeInTheDocument()
     // "Pendiente" aparece múltiples veces (estado del cert + estado de conexión)
@@ -671,7 +673,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     // Busca el select "Pais del certificado"
     const certCountrySelect = screen.getByDisplayValue(/Espana \(AEAT\)/i)
@@ -682,7 +684,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     const fileInput = document.querySelector('input[type="file"]')
     expect(fileInput).toBeInTheDocument()
@@ -693,7 +695,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     const passwordInput = screen.getByPlaceholderText('Contrasena del archivo .p12')
     expect(passwordInput).toBeInTheDocument()
@@ -707,7 +709,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     const uploadButton = screen.getByRole('button', { name: /Subir certificado/i })
     expect(uploadButton).toBeDisabled()
@@ -726,7 +728,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     const fileInput = document.querySelector('input[type="file"]')
     const file = new File(['dummy'], 'cert.p12', { type: 'application/x-pkcs12' })
@@ -762,7 +764,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     const fileInput = document.querySelector('input[type="file"]')
     const file = new File(['dummy'], 'cert.p12', { type: 'application/x-pkcs12' })
@@ -792,7 +794,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     const fileInput = document.querySelector('input[type="file"]')
     const file = new File(['dummy'], 'cert.p12', { type: 'application/x-pkcs12' })
@@ -818,7 +820,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     expect(screen.getByText('Estado de conexion por pais')).toBeInTheDocument()
     // ES debe estar "Listo" (tiene EORI y cert configurado en mock)
@@ -836,7 +838,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     // Sin EORI ni cert configurado → "Pendiente"
     const pendingLabels = screen.getAllByText('Pendiente')
@@ -847,7 +849,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     // Los países con disabled: true tienen el toggle deshabilitado
     const checkboxes = document.querySelectorAll('input[type="checkbox"]')
@@ -861,7 +863,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     // Activa NL
     const checkboxes = document.querySelectorAll('input[type="checkbox"]')
@@ -881,7 +883,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     const eoriInput = screen.getByPlaceholderText('ESB22477020')
     fireEvent.change(eoriInput, { target: { value: 'ESB11111111' } })
@@ -912,7 +914,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     // No debe crashear; el país por defecto es ES (línea 765)
     expect(screen.getByText('Configuracion de Paises y Aduanas')).toBeInTheDocument()
@@ -935,7 +937,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.brand/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.brand/i }))
 
     // Cambia primaryColor usando el input de texto
     const textInputs = document.querySelectorAll('input[type="text"]')
@@ -956,7 +958,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     const fileInput = document.querySelector('input[type="file"]')
     const file = new File(['dummy'], 'cert.p12', { type: 'application/x-pkcs12' })
@@ -994,7 +996,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     const fileInput = document.querySelector('input[type="file"]')
     const file = new File(['dummy'], 'cert.p12', { type: 'application/x-pkcs12' })
@@ -1026,7 +1028,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /Aduanas/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     // Primero activar NL para que aparezca en el select
     const checkboxes = document.querySelectorAll('input[type="checkbox"].sr-only')
@@ -1047,7 +1049,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.roles/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.roles/i }))
 
     // Todos los roles en el mock son built-in, no debe haber botón delete
     expect(screen.queryByText('common.delete')).not.toBeInTheDocument()
@@ -1058,7 +1060,7 @@ describe('<TenantSettings />', () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('button', { name: /settings\.roles/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /settings\.roles/i }))
 
     // Forzar un rol custom inyectando en el state (hack: usar el contenido renderizado)
     // Como los roles están hardcodeados en loadData, voy a verificar que con roles custom SÍ aparece
