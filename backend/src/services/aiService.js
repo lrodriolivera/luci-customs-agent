@@ -5,8 +5,13 @@
 
 const { BedrockRuntimeClient, ConverseCommand } = require('@aws-sdk/client-bedrock-runtime');
 const logger = require('../config/logger');
+const { getCache } = require('./cacheService');
 
 const BEDROCK_REGION = process.env.BEDROCK_REGION || 'us-east-1';
+
+// Un TARIC no cambia de un dia para otro: 7 dias es conservador y aun asi
+// evita reclasificar el mismo articulo durante toda una campana de importacion.
+const CLASSIFICATION_CACHE_TTL = 7 * 24 * 60 * 60;
 // Los IDs viven en config/bedrockModels para que exista una unica fuente de
 // verdad: cuando estaban repartidos por el codigo, una migracion de modelo
 // dejo tres llamadas apuntando a un modelo inexistente.
@@ -213,6 +218,10 @@ class AIService {
     } else {
       this.fallbackClient = null;
     }
+
+    // Cache compartida (Redis en produccion, memoria como respaldo) para no
+    // reclasificar el mismo articulo en cada expediente.
+    this.classificationCache = getCache();
   }
 
   /**
@@ -394,9 +403,49 @@ CONTEXTO DEL EXPEDIENTE:
   }
 
   /**
+   * Clave de cache de una clasificacion.
+   *
+   * Normaliza la descripcion (mayusculas, acentos y espacios sobrantes) para
+   * que el mismo articulo escrito por dos operarios comparta entrada. Material
+   * y origen entran en la clave porque cambian el resultado: una camiseta de
+   * algodon y una de poliester no son la misma partida, y el origen decide el
+   * arancel aplicable.
+   *
+   * El contexto del expediente NO entra: el transporte no cambia el TARIC de
+   * la mercancia, y meterlo partiria la cache sin motivo.
+   */
+  _classificationCacheKey(description, additionalInfo = {}) {
+    const normalizada = String(description || '')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const material = String(additionalInfo?.material || '').toLowerCase().trim();
+    const origen = String(additionalInfo?.origin || '').toLowerCase().trim();
+
+    const huella = require('crypto')
+      .createHash('sha256')
+      .update(`${normalizada}|${material}|${origen}`)
+      .digest('hex')
+      .substring(0, 32);
+
+    return `taric_class_${huella}`;
+  }
+
+  /**
    * Clasificar producto - Sugerir codigo TARIC
    */
   async classifyProduct({ description, additionalInfo, expeditionContext }) {
+    // Clasificar es la operacion mas cara (Opus, ~2.900 tokens de salida) y en
+    // e-commerce el mismo articulo se repite entre expedientes.
+    const cacheKey = this._classificationCacheKey(description, additionalInfo);
+    const cacheada = await this.classificationCache.get(cacheKey);
+    if (cacheada) {
+      logger.debug(`Clasificacion desde cache: ${cacheKey}`);
+      return cacheada;
+    }
+
     let prompt = `Clasifica el siguiente producto:\n\nDESCRIPCION: ${description}`;
 
     if (additionalInfo) {
@@ -420,7 +469,16 @@ CONTEXTO DEL EXPEDIENTE:
       }
 
       const parsed = JSON.parse(jsonContent);
-      return parsed.suggestions || [];
+      const suggestions = parsed.suggestions || [];
+
+      // Solo se guarda lo aprovechable. Cachear una respuesta vacia o el
+      // 0000000000 del catch dejaria servida una clasificacion invalida
+      // durante dias, y aqui un codigo erroneo es un error aduanero.
+      if (suggestions.length > 0 && suggestions[0].code && suggestions[0].code !== '0000000000') {
+        await this.classificationCache.set(cacheKey, suggestions, CLASSIFICATION_CACHE_TTL);
+      }
+
+      return suggestions;
     } catch (e) {
       // Si no es JSON valido, intentar extraer codigo TARIC del texto
       const codeMatch = result.content.match(/\b(\d{10})\b/);
