@@ -112,8 +112,8 @@ class ClaudeService:
             self.client = None
             logger.warning("BEDROCK_ACCESS_KEY_ID / BEDROCK_SECRET_ACCESS_KEY not set - running in mock mode")
 
-        self.sonnet_model = os.getenv("DEFAULT_CHAT_MODEL", "us.anthropic.claude-sonnet-5")
-        self.opus_model = os.getenv("DEFAULT_COMPLEX_MODEL", "us.anthropic.claude-opus-5")
+        self.sonnet_model = os.getenv("DEFAULT_CHAT_MODEL", "global.anthropic.claude-sonnet-5")
+        self.opus_model = os.getenv("DEFAULT_COMPLEX_MODEL", "global.anthropic.claude-opus-5")
 
     def is_configured(self) -> bool:
         """Check if Bedrock client is configured"""
