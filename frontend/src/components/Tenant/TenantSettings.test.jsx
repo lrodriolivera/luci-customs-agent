@@ -85,16 +85,20 @@ describe('<TenantSettings />', () => {
     api.get.mockResolvedValueOnce({ data: { success: true, data: mockTenantData.data } })
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
-    const matches = screen.getAllByText((content, node) => node?.textContent?.includes('Demo Org'))
-    expect(matches.length).toBeGreaterThan(0)
+    await waitFor(() => {
+      const matches = screen.getAllByText((content, node) => node?.textContent?.includes('Demo Org'))
+      expect(matches.length).toBeGreaterThan(0)
+    })
   })
 
   test('parsea respuesta con data._id directa (sin success ni data anidada)', async () => {
     api.get.mockResolvedValueOnce({ data: mockTenantData.data })
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
-    const matches = screen.getAllByText((content, node) => node?.textContent?.includes('Demo Org'))
-    expect(matches.length).toBeGreaterThan(0)
+    await waitFor(() => {
+      const matches = screen.getAllByText((content, node) => node?.textContent?.includes('Demo Org'))
+      expect(matches.length).toBeGreaterThan(0)
+    })
   })
 
   // ================== TABS NAVIGATION ==================
