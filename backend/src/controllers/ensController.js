@@ -307,42 +307,6 @@ exports.submit = async (req, res) => {
 };
 
 /**
- * Rectificar declaracion ENS
- * POST /api/ens/:id/amend
- */
-exports.amend = async (req, res) => {
-  try {
-    const result = await ensService.amendDeclaration(
-      req.params.id,
-      req.body,
-      req.user._id
-    );
-
-    if (!result.success) {
-      return res.status(400).json({
-        success: false,
-        message: 'Error al rectificar declaracion',
-        errors: result.errors
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Declaracion ENS rectificada',
-      data: result.data
-    });
-
-  } catch (error) {
-    logger.error('Error amending ENS:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al rectificar declaracion ENS',
-      error: error.message
-    });
-  }
-};
-
-/**
  * Anular declaracion ENS
  * POST /api/ens/:id/cancel
  */

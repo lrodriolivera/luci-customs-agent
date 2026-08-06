@@ -555,9 +555,10 @@ describe('aiGetSuggestions', () => {
 });
 
 // ==================== amend (IE313 via aeatSubmitService) ====================
-// OJO: hay DOS exports.amend en el controller; el segundo (IE313) sobreescribe
-// al primero, asi que la ruta /:id/amend monta ESTE. El primer amend (delegador
-// a ensService.amendDeclaration) es codigo muerto inalcanzable via router.
+// exports.amend implementa la rectificacion via IE313 (aeatSubmitService).
+// Nota historica: hubo un segundo exports.amend duplicado (delegaba en
+// ensService.amendDeclaration) que este sobrescribia al cargar el modulo; era
+// codigo muerto y se elimino (fix 6/Ago, ver SECURITY_AUDIT.md).
 
 describe('amend (IE313)', () => {
   test('sin MRN -> 400', async () => {
