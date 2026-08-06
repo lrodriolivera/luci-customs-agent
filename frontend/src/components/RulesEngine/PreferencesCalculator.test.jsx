@@ -24,7 +24,7 @@ vi.mock('../../data/countries', () => ({
   countriesGrouped: [
     {
       group: 'Comunes',
-      options: [
+      countries: [
         { code: 'CA', name: 'Canada', label: 'Canada', agreement: 'CETA' },
         { code: 'CN', name: 'China', label: 'China', agreement: 'None' },
         { code: 'BR', name: 'Brasil', label: 'Brasil', agreement: 'MERCOSUR' },
