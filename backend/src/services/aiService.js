@@ -226,6 +226,22 @@ class AIService {
   }
 
   /**
+   * Extrae el texto de una respuesta Converse.
+   *
+   * El array `content` no es homogeneo entre modelos: Opus 5 activa extended
+   * thinking por defecto, por lo que su primer bloque es `reasoningContent` y
+   * el texto real llega en un bloque posterior. Leer content[0].text a ciegas
+   * devuelve undefined en esos modelos.
+   */
+  _extractText(response) {
+    const blocks = response?.output?.message?.content || [];
+    return blocks
+      .filter(block => typeof block.text === 'string')
+      .map(block => block.text)
+      .join('');
+  }
+
+  /**
    * Llamada base a Claude via Bedrock Converse API
    */
   async callClaude(model, systemPrompt, userMessage, options = {}) {
@@ -246,7 +262,7 @@ class AIService {
       const response = await this.client.send(command);
 
       return {
-        content: response.output.message.content[0].text,
+        content: this._extractText(response),
         model,
         tokensUsed: (response.usage?.inputTokens || 0) + (response.usage?.outputTokens || 0),
         stopReason: response.stopReason
