@@ -105,7 +105,11 @@ class CertificateService {
       if (!validation.valid) {
         return {
           success: false,
-          error: validation.error,
+          // _validateCertificate devuelve el detalle en `errors` (array), no en
+          // `error`: leer validation.error dejaba este campo en undefined y el
+          // cliente no veía el motivo del rechazo. Ver SECURITY_AUDIT.md.
+          error: (validation.errors || []).join('; ') || 'Certificado inválido',
+          errors: validation.errors,
           luciAnalysis: await this._getLuciCertificateAnalysis(certInfo, validation)
         };
       }

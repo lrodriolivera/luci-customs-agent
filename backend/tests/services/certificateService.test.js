@@ -14,13 +14,12 @@
  * como P12. Asi `importCertificate` ejecuta el parseo y el cifrado reales, no un
  * mock. El almacen en memoria del singleton se limpia entre tests.
  *
- * ⚠️ HALLAZGO (documentado en SECURITY_AUDIT.md): cuando _validateCertificate
- * rechaza un cert, importCertificate devuelve `error: validation.error`, pero
- * _validateCertificate expone el detalle en `validation.errors` (array), no en
- * `.error` -> el mensaje de por que se rechazo el certificado se pierde
- * (queda `undefined`). Se fija el comportamiento real (success:false) y se
- * comprueba que el detalle SI llega via luciAnalysis, que es de donde lo lee
- * la UI.
+ * REGRESIÓN (fix 6/Ago, SECURITY_AUDIT.md): antes importCertificate devolvía
+ * `error: validation.error`, pero _validateCertificate expone el detalle en
+ * `validation.errors` (array), no en `.error` -> el motivo del rechazo llegaba
+ * `undefined`. Ahora `error` es el string con los motivos (join) y `errors` es
+ * el array. Los tests de abajo fijan que el motivo real SÍ llega en `error`
+ * (además de en luciAnalysis.summary, que es lo que ya leía la UI).
  */
 
 const forge = require('node-forge');
@@ -124,9 +123,10 @@ describe('importCertificate', () => {
   test('cert de emisor NO FNMT es rechazado por _validateCertificate', async () => {
     const r = await importarCertValido({ issuerCN: 'DigiCert', issuerO: 'DigiCert Inc' });
     expect(r.success).toBe(false);
-    // HALLAZGO: importCertificate lee validation.error (inexistente) -> undefined.
-    // El detalle real SI llega por luciAnalysis.summary, que es lo que ve la UI.
-    expect(r.error).toBeUndefined();
+    // REGRESIÓN: el motivo del rechazo ahora llega en `error` (string) y en
+    // `errors` (array), no solo en luciAnalysis.summary.
+    expect(r.error).toMatch(/Emisor no reconocido/);
+    expect(r.errors).toEqual(expect.arrayContaining([expect.stringMatching(/Emisor no reconocido/)]));
     expect(r.luciAnalysis.summary).toMatch(/Emisor no reconocido/);
     expect(certificateService.certificates.size).toBe(0);
   });
@@ -134,6 +134,7 @@ describe('importCertificate', () => {
   test('cert sin permiso de firma es rechazado', async () => {
     const r = await importarCertValido({ keyUsageSign: false });
     expect(r.success).toBe(false);
+    expect(r.error).toMatch(/no tiene permisos de firma/);
     expect(r.luciAnalysis.summary).toMatch(/no tiene permisos de firma/);
   });
 
