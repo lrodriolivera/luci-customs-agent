@@ -267,9 +267,9 @@ describe('RulesEngineAnalyzer', () => {
   })
 
   it('deshabilita el botón mientras está analizando', async () => {
-    api.post.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({
-      data: { success: true, data: { summary: { eligible: true, alerts: [], warnings: [], recommendations: [] }, taxes: { total: 0 } } }
-    }), 100)))
+    // Promesa que no resuelve durante la aserción: el estado analyzing se mantiene estable
+    let resolvePost
+    api.post.mockImplementation(() => new Promise(resolve => { resolvePost = resolve }))
 
     const { container } = render(<RulesEngineAnalyzer />)
     const taricInput = container.querySelector('input[placeholder="Código TARIC"]')
@@ -287,6 +287,10 @@ describe('RulesEngineAnalyzer', () => {
 
     const disabledButton = screen.getByRole('button', { name: /Analizando.../i })
     expect(disabledButton).toBeDisabled()
+
+    // Resolver para no dejar la promesa colgada tras la aserción
+    resolvePost({ data: { success: true, data: { summary: { eligible: true, alerts: [], warnings: [], recommendations: [] }, taxes: { total: 0 } } } })
+    await waitFor(() => expect(screen.queryByText('Analizando...')).not.toBeInTheDocument())
   })
 
   it('renderiza operación con restricciones (eligible:false)', async () => {
