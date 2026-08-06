@@ -20,7 +20,11 @@ export default function PortalLayout() {
     const fetchExpedition = async () => {
       try {
         const response = await portalAPI.access(token)
-        setExpedition(response.data.expedition)
+        // GET /api/portal/:token responde { success, data: {...} }: el
+        // expediente esta en data.data, no en data.expedition. Leerlo mal
+        // dejaba expedition en undefined, con la cabecera mostrando
+        // "Expediente:" sin numero y las pestañas hijas sin datos.
+        setExpedition(response.data?.data || response.data?.expedition || null)
       } catch (err) {
         setError(err.response?.data?.message || 'Enlace no valido o expirado')
       } finally {

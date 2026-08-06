@@ -268,6 +268,101 @@ class AIService {
   }
 
   /**
+   * Extrae el JSON de una respuesta del modelo.
+   *
+   * El patron repetido por el servicio era:
+   *   const m = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+   *   JSON.parse(m ? m[1] : content)
+   *
+   * y tiene un fallo: exige el ``` de cierre. Cuando la respuesta llega
+   * truncada —el modelo se corta a media frase— no hay valla final, el regex
+   * no casa, se intenta parsear el texto entero con la valla de apertura
+   * incluida y revienta. Observado en produccion el 6/Ago/2026 en
+   * detectInconsistencies: un analisis con 9 inconsistencias reales acababa
+   * en el catch, que lo presentaba como expediente limpio.
+   *
+   * Aqui se acepta la valla sin cerrar y, si el JSON quedo incompleto, se
+   * intenta cerrar los corchetes y llaves que falten para rescatar los
+   * elementos completos en lugar de perder el analisis entero.
+   *
+   * Lanza si no hay nada rescatable: quien llame decide que hacer, pero nunca
+   * debe dar por bueno un analisis que no se pudo leer.
+   */
+  _parseJsonRespuesta(content) {
+    const texto = String(content ?? '').trim();
+
+    // Valla con cierre, valla sin cerrar (respuesta truncada), o sin valla.
+    const conCierre = texto.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const sinCierre = texto.match(/```(?:json)?\s*([\s\S]*)$/);
+    let json = (conCierre ? conCierre[1] : sinCierre ? sinCierre[1] : texto).trim();
+
+    try {
+      return JSON.parse(json);
+    } catch (e) {
+      // Truncado: recortar hasta el ultimo elemento completo y cerrar lo que
+      // quedo abierto. Si tampoco asi es parseable, que lance.
+      const recortado = this._cerrarJsonTruncado(json);
+      return JSON.parse(recortado);
+    }
+  }
+
+  /**
+   * Cierra un JSON que se corto a mitad, para rescatar lo ya completo.
+   *
+   * Recorta hasta el ultimo elemento cerrado y reequilibra llaves y corchetes
+   * contando solo los que estan fuera de una cadena.
+   */
+  _cerrarJsonTruncado(json) {
+    let profundidad = 0;
+    let enCadena = false;
+    let escapado = false;
+    let ultimoCorte = -1;
+    const pila = [];
+
+    for (let i = 0; i < json.length; i++) {
+      const c = json[i];
+
+      if (escapado) { escapado = false; continue; }
+      if (c === '\\') { escapado = true; continue; }
+      if (c === '"') { enCadena = !enCadena; continue; }
+      if (enCadena) continue;
+
+      if (c === '{' || c === '[') {
+        pila.push(c === '{' ? '}' : ']');
+        profundidad++;
+      } else if (c === '}' || c === ']') {
+        pila.pop();
+        profundidad--;
+        // Fin de un elemento dentro de un array: punto de corte seguro.
+        if (profundidad === 2) ultimoCorte = i;
+      }
+    }
+
+    // Cortar tras el ultimo elemento completo, si lo hubo.
+    let recortado = ultimoCorte > 0 ? json.slice(0, ultimoCorte + 1) : json.trimEnd();
+
+    // Una coma o una clave a medias al final no son parseables.
+    recortado = recortado.replace(/,\s*$/, '').replace(/,\s*"[^"]*"?\s*:?\s*$/, '');
+
+    // Recalcular lo que falta por cerrar sobre el texto ya recortado.
+    const pendientes = [];
+    enCadena = false;
+    escapado = false;
+    for (let i = 0; i < recortado.length; i++) {
+      const c = recortado[i];
+      if (escapado) { escapado = false; continue; }
+      if (c === '\\') { escapado = true; continue; }
+      if (c === '"') { enCadena = !enCadena; continue; }
+      if (enCadena) continue;
+      if (c === '{') pendientes.push('}');
+      else if (c === '[') pendientes.push(']');
+      else if (c === '}' || c === ']') pendientes.pop();
+    }
+
+    return recortado + pendientes.reverse().join('');
+  }
+
+  /**
    * ¿El fallo es de la cuenta y no de la peticion?
    *
    * Solo merece la pena reintentar en otra cuenta lo que depende de la cuenta:
@@ -3569,26 +3664,30 @@ Responde en JSON:
     const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.documentValidation, prompt, { maxTokens: 4096 });
 
     try {
-      let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
-
       return {
-        ...JSON.parse(jsonContent),
+        ...this._parseJsonRespuesta(result.content),
         model: 'sonnet-4',
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
     } catch (e) {
+      // Si no se pudo analizar, NO se puede afirmar que el expediente este
+      // limpio. Esta rama devolvia hasInconsistencies:false, totalIssues:0 y
+      // readyForDeclaration:true, asi que un analisis fallido se le presentaba
+      // al agente como un expediente sin problemas y listo para declarar.
+      // Observado en produccion el 6/Ago/2026 sobre un expediente en el que el
+      // modelo si habia detectado 9 inconsistencias, 3 de ellas criticas.
+      logger.warn(`detectInconsistencies: no se pudo parsear la respuesta (${e.message})`);
       return {
-        hasInconsistencies: false,
-        totalIssues: 0,
-        criticalIssues: 0,
+        analysisFailed: true,
+        hasInconsistencies: null,
+        totalIssues: null,
+        criticalIssues: null,
         inconsistencies: [],
-        dataQualityScore: 70,
-        readyForDeclaration: true,
-        blockers: [],
-        warnings: ['Error procesando análisis de inconsistencias'],
+        dataQualityScore: null,
+        readyForDeclaration: false,
+        blockers: ['El análisis automático de inconsistencias no se pudo completar: revise el expediente manualmente'],
+        warnings: [],
         summary: 'No se pudo completar el análisis',
         rawResponse: result.content
       };

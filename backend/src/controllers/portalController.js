@@ -1,5 +1,39 @@
 const { Expedition, ChatMessage } = require('../models');
 const logger = require('../config/logger');
+
+/**
+ * Eventos del timeline que el cliente puede ver en la pestaña "Estado".
+ *
+ * Lista blanca a proposito. El timeline del expediente mezcla los hitos del
+ * despacho con trazas internas: portal_link_sent guarda el correo del
+ * destinatario, ai_analysis la puntuacion del analisis, y los de login/admin
+ * son de la operativa del despacho. Nada de eso es del cliente.
+ *
+ * Aqui solo entran los hitos que responden a la pregunta que trae al cliente
+ * al portal: en que punto esta mi mercancia ante la aduana.
+ */
+const EVENTOS_VISIBLES_CLIENTE = [
+  'expedition_created',
+  'created',
+  'document_uploaded',
+  'document_deleted',
+  'declaration_submitted',
+  'declaration_submitted_aeat',
+  'declaration_cancelled',
+  'aes_submitted_aeat',
+  'channel_assigned',
+  'channel_upgraded',
+  'documentary_review',
+  'physical_inspection',
+  'requirement_created',
+  'response_received',
+  'resolved',
+  'payment_received',
+  'release',
+  'delivered',
+  'completed',
+  'cancelled'
+];
 const aiService = require('../services/aiService');
 
 /**
@@ -53,6 +87,22 @@ const getByToken = async (req, res) => {
       },
       incoterm: expedition.incoterm,
       clientNotes: expedition.clientNotes,
+      // Seguimiento para la pestaña "Estado", que se veia vacia porque
+      // clientView no incluia el timeline.
+      //
+      // Lista blanca, no lista negra: el timeline mezcla hitos del expediente
+      // con trazas internas del despacho —portal_link_sent lleva el correo del
+      // destinatario, ai_analysis la puntuacion del analisis— y volcarlo entero
+      // se las enseñaria al cliente. Un evento nuevo no aparece en el portal
+      // hasta que se añada aqui a proposito, que es el lado seguro por el que
+      // equivocarse.
+      timeline: (expedition.timeline || [])
+        .filter(evento => EVENTOS_VISIBLES_CLIENTE.includes(evento.action))
+        .map(evento => ({
+          action: evento.action,
+          description: evento.description,
+          timestamp: evento.timestamp
+        })),
       createdAt: expedition.createdAt
     };
 

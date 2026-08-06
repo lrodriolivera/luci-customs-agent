@@ -543,6 +543,34 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
   // detectInconsistencies
   // ===========================================
   describe('detectInconsistencies', () => {
+    it('no da luz verde a declarar cuando la respuesta llega truncada', async () => {
+      // Caso real observado en produccion el 6/Ago/2026: el modelo devolvio un
+      // analisis con 9 inconsistencias (3 criticas) pero la respuesta se corto
+      // a media frase, sin cerrar la valla markdown ni el JSON. El regex exige
+      // el ``` de cierre, no lo encontraba, JSON.parse reventaba, y el catch
+      // devolvia hasInconsistencies:false, totalIssues:0 y —lo grave—
+      // readyForDeclaration:true. Al agente se le decia "sin inconsistencias"
+      // y via libre para declarar justo cuando el analisis habia fallado.
+      // Es intermitente: la misma peticion repetida devolvia las 9.
+      callClaudeSpy.mockResolvedValue({
+        content: '```json\n{\n  "hasInconsistencies": true,\n  "totalIssues": 9,\n  "criticalIssues": 3,\n  "inconsistencies": [\n    {\n      "type": "LOGIC_ERROR",\n      "description": "La cantidad declarada (800 KG) supera el peso bru',
+        tokensUsed: 1762,
+        stopReason: 'max_tokens'
+      });
+
+      const resultado = await aiService.detectInconsistencies({
+        expeditionId: 'EXP-TRUNC',
+        operationType: 'import',
+        goods: [{ description: 'Catalogos', taricCode: '4911109000' }]
+      });
+
+      // Lo esencial: no puede afirmar que el expediente esta listo cuando no
+      // ha podido analizarlo.
+      expect(resultado.readyForDeclaration).toBe(false);
+      // Y tiene que decir que fallo, no fingir un analisis limpio.
+      expect(resultado.analysisFailed).toBe(true);
+    });
+
     it('debe parsear respuesta con bloque ```json y detectar inconsistencias', async () => {
       const mockResponse = {
         hasInconsistencies: true,
@@ -693,7 +721,12 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
       expect(result.readyForDeclaration).toBe(true);
     });
 
-    it('debe retornar fallback cuando JSON inválido', async () => {
+    it('no da por limpio el expediente cuando el JSON es invalido', async () => {
+      // Este test afirmaba lo contrario —hasInconsistencies:false, totalIssues:0,
+      // readyForDeclaration:true— y con ello fijaba el comportamiento que causo
+      // el fallo de produccion del 6/Ago/2026: un analisis que no se pudo leer
+      // se le presentaba al agente como un expediente sin problemas y listo
+      // para declarar. Un analisis fallido no es un analisis limpio.
       callClaudeSpy.mockResolvedValue({
         content: '{ broken json',
         tokensUsed: 400
@@ -706,11 +739,12 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
 
       const result = await aiService.detectInconsistencies(expedition);
 
-      expect(result.hasInconsistencies).toBe(false);
-      expect(result.totalIssues).toBe(0);
-      expect(result.dataQualityScore).toBe(70);
-      expect(result.readyForDeclaration).toBe(true);
-      expect(result.warnings).toContain('Error procesando análisis de inconsistencias');
+      expect(result.analysisFailed).toBe(true);
+      // null = "no se sabe", que es la verdad. false seria afirmar que no las hay.
+      expect(result.hasInconsistencies).toBeNull();
+      expect(result.totalIssues).toBeNull();
+      expect(result.readyForDeclaration).toBe(false);
+      expect(result.blockers.join(' ')).toMatch(/manualmente/i);
       expect(result.rawResponse).toBeDefined();
     });
 

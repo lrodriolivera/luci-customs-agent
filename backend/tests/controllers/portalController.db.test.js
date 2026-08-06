@@ -81,6 +81,39 @@ describe('getByToken', () => {
     expect(res.statusCode).toBe(404);
   });
 
+  test('expone el seguimiento al cliente sin filtrar datos internos', async () => {
+    // La pestaña "Estado" del portal se veia vacia: clientView no incluia el
+    // timeline, asi que un expediente con 8 eventos le llegaba al cliente con
+    // cero. Pero el timeline no se puede volcar tal cual: portal_link_sent
+    // lleva el correo del destinatario y ai_analysis la puntuacion interna del
+    // analisis. Solo salen los hitos que son del cliente.
+    const exp = await sembrarExp({});
+    exp.timeline = [
+      { action: 'expedition_created', description: 'Expediente creado', timestamp: new Date() },
+      { action: 'portal_link_sent', description: 'Link del portal enviado a cliente@ejemplo.es', timestamp: new Date() },
+      { action: 'document_uploaded', description: 'Documento commercial_invoice subido por el cliente', timestamp: new Date() },
+      { action: 'ai_analysis', description: 'Análisis IA completado - Puntuación: 70%', timestamp: new Date() }
+    ];
+    await exp.save();
+    const token = exp.clientPortal.token;
+
+    const res = mockRes();
+    await portalController.getByToken(mockReq({ params: { token } }), res);
+
+    const timeline = res.body.data.timeline;
+    const acciones = timeline.map(t => t.action);
+
+    expect(acciones).toContain('expedition_created');
+    expect(acciones).toContain('document_uploaded');
+
+    // Lo que NO debe salir del despacho.
+    expect(acciones).not.toContain('portal_link_sent');
+    expect(acciones).not.toContain('ai_analysis');
+    const texto = JSON.stringify(timeline);
+    expect(texto).not.toMatch(/cliente@ejemplo\.es/);
+    expect(texto).not.toMatch(/Puntuaci/);
+  });
+
   test('devuelve la vista de cliente e incrementa el contador de visitas', async () => {
     const exp = await sembrarExp({
       goods: [{ itemNumber: 1, description: 'Zapatos', quantity: 10, invoiceValue: 500 }],
