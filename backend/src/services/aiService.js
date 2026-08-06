@@ -10,10 +10,10 @@ const BEDROCK_REGION = process.env.BEDROCK_REGION || 'us-east-1';
 // Inference profiles (prefijo us.): Bedrock rechaza los IDs desnudos de estos
 // modelos con "on-demand throughput isn't supported".
 //
-// HAIKU_MODEL apunta a Sonnet 5 de forma temporal: Haiku 4.5 sigue bloqueado en
-// la cuenta a la espera del formulario de caso de uso de Anthropic. Se conserva
-// el nombre de la constante porque la seleccion de modelo compara identidades.
-const HAIKU_MODEL = process.env.BEDROCK_FAST_MODEL || 'us.anthropic.claude-sonnet-5';
+// FAST_MODEL es la ruta barata (chat simple, validacion documental). Apunta a
+// Sonnet 5 por decision de producto (6/Ago/2026): Haiku 4.5 quedo bloqueado en
+// Bedrock tras la migracion y se descarto en lugar de desbloquearlo.
+const FAST_MODEL = process.env.BEDROCK_FAST_MODEL || 'us.anthropic.claude-sonnet-5';
 const SONNET_MODEL = process.env.BEDROCK_SONNET_MODEL || 'us.anthropic.claude-sonnet-5';
 const OPUS_MODEL = process.env.BEDROCK_OPUS_MODEL || 'us.anthropic.claude-opus-5';
 
@@ -184,7 +184,7 @@ FORMATO DE RESPUESTA (JSON):
 }`
 };
 
-// Patrones de mensajes simples que pueden usar Haiku
+// Patrones de mensajes simples que pueden ir por la ruta rapida
 const SIMPLE_PATTERNS = /^(si|no|ok|vale|entendido|gracias|claro|perfecto|de acuerdo|bien|correcto|hecho|listo|yes|oui|sim|d'accord|va bene|certo)[\s!.?]*$/i;
 
 class AIService {
@@ -222,7 +222,7 @@ class AIService {
 
   /**
    * Selecciona modelo optimo segun complejidad del mensaje/contexto
-   * Haiku para: mensajes cortos, confirmaciones, follow-ups, datos ya completos
+   * Ruta rapida para: mensajes cortos, confirmaciones, follow-ups, datos ya completos
    * Sonnet/Opus para: clasificacion, analisis documental, consultas complejas
    */
   _selectModel(message, context = 'chat') {
@@ -234,11 +234,11 @@ class AIService {
       return model;
     }
 
-    // Mensajes cortos o confirmaciones simples -> Haiku
+    // Mensajes cortos o confirmaciones simples -> ruta rapida
     if (typeof message === 'string') {
       if (message.length < 50 || SIMPLE_PATTERNS.test(message.trim())) {
-        logger.info(`AI model: ${HAIKU_MODEL} for ${context} (simple/short message)`);
-        return HAIKU_MODEL;
+        logger.info(`AI model: ${FAST_MODEL} for ${context} (simple/short message)`);
+        return FAST_MODEL;
       }
     }
 
@@ -363,9 +363,9 @@ CONTEXTO DEL EXPEDIENTE:
 
     return {
       message: result.content,
-      model: selectedModel === HAIKU_MODEL ? 'haiku-4.5' : selectedModel === OPUS_MODEL ? 'opus-4' : 'sonnet-4',
+      model: selectedModel === FAST_MODEL ? 'sonnet-5' : selectedModel === OPUS_MODEL ? 'opus-5' : 'sonnet-5',
       tokensUsed: result.tokensUsed,
-      confidence: selectedModel === HAIKU_MODEL ? 75 : 85,
+      confidence: selectedModel === FAST_MODEL ? 75 : 85,
       sources: []
     };
   }
@@ -383,9 +383,9 @@ CONTEXTO DEL EXPEDIENTE:
 
     return {
       message: result.content,
-      model: selectedModel === HAIKU_MODEL ? 'haiku-4.5' : 'sonnet-4',
+      model: 'sonnet-5',
       tokensUsed: result.tokensUsed,
-      confidence: selectedModel === HAIKU_MODEL ? 70 : 80,
+      confidence: selectedModel === FAST_MODEL ? 70 : 80,
       sources: []
     };
   }
@@ -482,7 +482,7 @@ Responde en JSON: { "isValid": boolean, "confidence": number, "reasoning": strin
 Genera datos de ejemplo que se extraerian de este tipo de documento.
 Responde en JSON con el formato especificado en el system prompt.`;
 
-    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.documentValidation, prompt);
+    const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.documentValidation, prompt);
 
     try {
       return JSON.parse(result.content);
@@ -752,7 +752,7 @@ Responde en JSON:
   "readyToSubmit": true/false
 }`;
 
-    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt);
+    const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt);
 
     try {
       let jsonContent = result.content;
@@ -811,7 +811,7 @@ Responde en JSON:
   "confidence": 0-100
 }`;
 
-    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt);
+    const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt);
 
     try {
       let jsonContent = result.content;
@@ -976,7 +976,7 @@ Responde en JSON:
   "estimatedResolutionDays": 0
 }`;
 
-    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt);
+    const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt);
 
     try {
       let jsonContent = result.content;
@@ -1043,7 +1043,7 @@ Responde en JSON:
   "completenessScore": 0-100
 }`;
 
-    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt);
+    const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt);
 
     try {
       let jsonContent = result.content;
@@ -1101,7 +1101,7 @@ Responde en JSON:
   "overallReadiness": 0-100
 }`;
 
-    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt);
+    const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt);
 
     try {
       let jsonContent = result.content;
@@ -1955,7 +1955,7 @@ Responde en JSON:
   "summary": "Resumen del análisis documental"
 }`;
 
-    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.documentValidation, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.documentValidation, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -3505,7 +3505,7 @@ Responde en JSON:
   "summary": "Resumen del análisis de consistencia"
 }`;
 
-    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.documentValidation, prompt, { maxTokens: 4096 });
+    const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.documentValidation, prompt, { maxTokens: 4096 });
 
     try {
       let jsonContent = result.content;
@@ -4394,7 +4394,7 @@ Responde en JSON:
   "followUpQuestions": ["Preguntas de seguimiento sugeridas"]
 }`;
 
-    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatClient('es'), prompt, { maxTokens: 2048 });
+    const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.chatClient('es'), prompt, { maxTokens: 2048 });
 
     try {
       let jsonContent = result.content;
@@ -4475,7 +4475,7 @@ Responde en JSON:
   "confidence": 0-100
 }`;
 
-    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatClient('es'), prompt, { maxTokens: 1500 });
+    const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.chatClient('es'), prompt, { maxTokens: 1500 });
 
     try {
       let jsonContent = result.content;
@@ -4571,7 +4571,7 @@ Responde en JSON:
   }
 }`;
 
-    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatClient('es'), prompt, { maxTokens: 1500 });
+    const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.chatClient('es'), prompt, { maxTokens: 1500 });
 
     try {
       let jsonContent = result.content;
@@ -4699,7 +4699,7 @@ Responde en JSON:
   ]
 }`;
 
-    const result = await this.callClaude(HAIKU_MODEL, SYSTEM_PROMPTS.chatClient('es'), prompt, { maxTokens: 2500 });
+    const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.chatClient('es'), prompt, { maxTokens: 2500 });
 
     try {
       let jsonContent = result.content;
