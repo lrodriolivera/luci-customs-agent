@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { portalAPI, chatAPI } from '../../services/api'
+import { portalAPI } from '../../services/api'
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid'
 
 export default function PortalChat() {
@@ -49,18 +49,19 @@ export default function PortalChat() {
     setLoading(true)
 
     try {
-      // Send message and get AI response
-      const response = await chatAPI.send({
-        message: newMessage,
-        expedition_context: expedition,
-        context_type: 'client'
-      })
+      // chatAPI.send apuntaba a /ai/chat, una ruta que no existe en el backend
+      // (405): el chat del portal respondia "ha ocurrido un error" a cualquier
+      // pregunta. aiEnhancedChat es el endpoint del portal, y ademas resuelve
+      // el contexto del expediente en el servidor a partir del token, sin que
+      // el cliente tenga que enviarlo.
+      const response = await portalAPI.aiEnhancedChat(token, newMessage)
 
+      const payload = response.data?.data || response.data
       const aiMessage = {
         id: Date.now() + 1,
         sender: 'luci',
         senderName: 'LUCI',
-        content: response.data.message,
+        content: payload?.message?.message || payload?.message || payload?.response,
         timestamp: new Date().toISOString()
       }
 
