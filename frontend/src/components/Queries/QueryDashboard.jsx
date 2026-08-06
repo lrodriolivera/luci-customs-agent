@@ -81,9 +81,18 @@ const QueryDashboard = () => {
   })
 
   useEffect(() => {
-    loadHistory()
     loadStats()
   }, [])
+
+  // loadHistory reacciona a los cambios de paginacion. Se hace en un effect
+  // (y NO llamando loadHistory() tras setPagination en los handlers) porque
+  // loadHistory lee pagination.page/limit del closure: llamarlo justo despues
+  // de setPagination usaria el valor ANTERIOR (stale closure) y recargaria la
+  // pagina equivocada. El effect corre tras el re-render, con el estado nuevo.
+  useEffect(() => {
+    loadHistory()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.page, pagination.limit])
 
   const loadHistory = async () => {
     try {
@@ -620,7 +629,6 @@ const QueryDashboard = () => {
             page={pagination.page}
             onPageChange={(e, newPage) => {
               setPagination(prev => ({ ...prev, page: newPage }))
-              loadHistory()
             }}
             rowsPerPage={pagination.limit}
             onRowsPerPageChange={(e) => {
@@ -629,7 +637,6 @@ const QueryDashboard = () => {
                 limit: parseInt(e.target.value, 10),
                 page: 0
               }))
-              loadHistory()
             }}
             rowsPerPageOptions={[10, 25, 50]}
             labelRowsPerPage="Filas por pagina:"

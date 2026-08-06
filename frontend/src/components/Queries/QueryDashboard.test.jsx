@@ -597,8 +597,10 @@ describe('QueryDashboard', () => {
     const nextPageButton = screen.getByLabelText(/Go to next page/i)
     await user.click(nextPageButton)
 
+    // Debe recargar con la pagina NUEVA (page 1 en estado -> page:2 en API por
+    // el +1), no con la anterior. Con el bug de stale closure recargaba page:1.
     await waitFor(() => {
-      expect(queryAPI.getHistory).toHaveBeenCalled()
+      expect(queryAPI.getHistory).toHaveBeenCalledWith({ page: 2, limit: 10 })
     })
   })
 
@@ -622,8 +624,10 @@ describe('QueryDashboard', () => {
     const option25 = screen.getByRole('option', { name: '25' })
     await user.click(option25)
 
+    // Debe recargar con el limit NUEVO (25) y page reseteada a 0 -> page:1 en
+    // API. Con el bug de stale closure recargaba con limit:10.
     await waitFor(() => {
-      expect(queryAPI.getHistory).toHaveBeenCalled()
+      expect(queryAPI.getHistory).toHaveBeenCalledWith({ page: 1, limit: 25 })
     })
   })
 
