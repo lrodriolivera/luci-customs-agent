@@ -111,6 +111,58 @@ describe('requirementController (BD real)', () => {
   // --- createRequirement -----------------------------------------------------
 
   describe('createRequirement', () => {
+    it('responde 400 cuando el expediente aun no tiene MRN, no 500', async () => {
+      // Un requerimiento cuelga siempre de una declaracion ya presentada: la
+      // AEAT solo requiere sobre un MRN existente. El controller heredaba el
+      // mrn del expediente sin comprobar que lo tuviera, asi que sobre un
+      // expediente sin declaracion la peticion llegaba al save de Mongoose y
+      // salia como 500 "Error al crear requerimiento".
+      const user = usuario(TENANT_A);
+      const exp = await crearExpediente(TENANT_A);
+      exp.declaration = undefined;
+      await exp.save();
+
+      const res = crearRes();
+      await controller.createRequirement(
+        {
+          body: {
+            expeditionId: exp._id.toString(),
+            requirementType: 'documentary',
+            channel: 'orange',
+            subject: 'Certificado de origen',
+            description: 'Aporte certificado de origen'
+          },
+          user
+        },
+        res
+      );
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.message).toMatch(/MRN/i);
+    });
+
+    it('responde 400 cuando falta el asunto o la descripcion, no 500', async () => {
+      // subject y description tambien son obligatorios en el modelo y tampoco
+      // se validaban.
+      const user = usuario(TENANT_A);
+      const exp = await crearExpediente(TENANT_A);
+
+      const res = crearRes();
+      await controller.createRequirement(
+        {
+          body: {
+            expeditionId: exp._id.toString(),
+            requirementType: 'documentary',
+            channel: 'orange'
+          },
+          user
+        },
+        res
+      );
+
+      expect(res.statusCode).toBe(400);
+    });
+
     it('responde 400 cuando falta el canal, no 500', async () => {
       // channel es obligatorio (un requerimiento nace de un circuito AEAT), pero
       // no se validaba: la peticion llegaba hasta el save de Mongoose y salia

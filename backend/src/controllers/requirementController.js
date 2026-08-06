@@ -150,10 +150,18 @@ exports.createRequirement = async (req, res) => {
       priority
     } = req.body;
 
-    // El canal es obligatorio —un requerimiento nace de un circuito AEAT— pero
-    // no se validaba: sin el, la peticion reventaba con un TypeError al montar
-    // el timeline, y de haber pasado habria salido como 500 desde el save de
-    // Mongoose. El agente merece saber que le falta un campo, no un 500.
+    // Verificar que existe el expediente y que es del tenant del usuario: sin
+    // esto se podian crear requerimientos colgando del expediente de otro
+    // cliente. ensureSameTenant ya responde 404 si no existe.
+    const expedition = await Expedition.findById(expeditionId);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+
+    // El modelo exige canal, asunto y descripcion, pero no se validaban: sin
+    // canal la peticion reventaba con un TypeError al montar el timeline, y el
+    // resto llegaba hasta el save de Mongoose y salia como un 500 generico. El
+    // agente merece saber que campo le falta. Se comprueba DESPUES del guard de
+    // tenant: quien no es dueño del expediente debe ver un 404, no pistas sobre
+    // que campos acepta el formulario.
     const CANALES = ['orange', 'red', 'yellow'];
     if (!CANALES.includes(channel)) {
       return res.status(400).json({
@@ -161,12 +169,24 @@ exports.createRequirement = async (req, res) => {
         message: `Indique el canal del requerimiento (${CANALES.join(', ')})`
       });
     }
+    if (!subject || !description) {
+      return res.status(400).json({
+        success: false,
+        message: 'Indique el asunto y la descripcion del requerimiento'
+      });
+    }
 
-    // Verificar que existe el expediente y que es del tenant del usuario: sin
-    // esto se podian crear requerimientos colgando del expediente de otro
-    // cliente. ensureSameTenant ya responde 404 si no existe.
-    const expedition = await Expedition.findById(expeditionId);
-    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+    // Un requerimiento cuelga siempre de una declaracion ya presentada: la AEAT
+    // solo requiere sobre un MRN existente. El mrn se heredaba del expediente
+    // sin comprobar que lo tuviera, asi que sobre un expediente sin declaracion
+    // la peticion moria en el save de Mongoose con un 500.
+    const mrnFinal = mrn || expedition.declaration?.mrn;
+    if (!mrnFinal) {
+      return res.status(400).json({
+        success: false,
+        message: 'El expediente aun no tiene MRN: presente la declaracion antes de registrar un requerimiento'
+      });
+    }
 
     // Calcular deadline si no se proporciona (por defecto 10 dias habiles)
     let deadlineDate = deadline ? new Date(deadline) : null;
@@ -180,7 +200,7 @@ exports.createRequirement = async (req, res) => {
       expeditionId,
       // El tenant se hereda de la expedicion, que es su unico dueño posible.
       tenantId: expedition.tenantId,
-      mrn: mrn || expedition.declaration?.mrn,
+      mrn: mrnFinal,
       lrn: lrn || expedition.declaration?.lrn,
       requirementType,
       channel,
