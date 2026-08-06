@@ -3,6 +3,12 @@
 # IA: Bedrock con cuenta UMMIA (405894862059). Auth: JWT_LEGACY_MODE (sin Cognito).
 # BD nueva (el Mongo del EC2 se perdió; TARIC se re-importa con los scripts del backend).
 # Cert FNMT (AEAT) montado read-only. El túnel sirve aduanas.strixai.es → frontend.
+#
+# Healthchecks (1/Ago/2026): "restart: unless-stopped" solo reacciona si el proceso
+# muere. No cubre el fallo más habitual —proceso vivo pero sin servir— ni evita que
+# el backend arranque contra un Mongo que aún no acepta conexiones. Las imágenes de
+# backend y ai-service no traen curl ni wget, así que la sonda usa su propio
+# intérprete (node / python), que siempre está.
 services:
   luci-mongo:
     image: mongo:7
@@ -10,12 +16,24 @@ services:
     restart: unless-stopped
     volumes:
       - ./data/mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     networks: [homelab]
 
   luci-redis:
     image: redis:7-alpine
     container_name: luci-redis
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks: [homelab]
 
   luci-ai:
@@ -24,6 +42,12 @@ services:
     container_name: luci-ai
     restart: unless-stopped
     env_file: [./ai-service/.env]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8003/health',timeout=5).status==200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks: [homelab]
 
   luci-backend:
@@ -31,11 +55,24 @@ services:
     image: homelab/luci-backend:latest
     container_name: luci-backend
     restart: unless-stopped
-    depends_on: [luci-mongo, luci-redis, luci-ai]
+    # service_healthy en mongo/redis: sin esto el backend puede arrancar antes de
+    # que la BD acepte conexiones. Con luci-ai basta service_started, porque el
+    # backend solo lo llama bajo demanda y no lo necesita para levantar.
+    depends_on:
+      luci-mongo: { condition: service_healthy }
+      luci-redis: { condition: service_healthy }
+      luci-ai:    { condition: service_started }
     env_file: [./backend/.env]
     volumes:
       - ./certs/strixai_fnmt.p12:/app/certs/strixai_fnmt.p12:ro
       - ./data/uploads:/app/uploads
+    # /api/health comprueba de verdad mongo y redis, no solo que Express responda.
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:5001/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     networks: [homelab]
 
   luci-frontend:
@@ -43,7 +80,14 @@ services:
     image: homelab/luci-frontend:latest
     container_name: luci-frontend
     restart: unless-stopped
-    depends_on: [luci-backend]
+    depends_on:
+      luci-backend: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks: [homelab]
 
 networks:
