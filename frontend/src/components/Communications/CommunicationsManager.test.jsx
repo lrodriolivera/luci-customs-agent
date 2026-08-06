@@ -64,9 +64,11 @@ describe('<CommunicationsManager />', () => {
 
   test('dashboard con estadísticas vacías muestra ceros', async () => {
     render(<CommunicationsManager />)
-    await waitFor(() => expect(communicationsAPI.getDashboard).toHaveBeenCalled())
+    // findByText espera a que el dashboard termine de renderizar tras resolver
+    // getDashboard; esperar solo a que la API "haya sido llamada" es frágil en
+    // la bateria completa (el setState async puede no haberse vaciado aun).
     // Las cards de stats tienen texto "Pendientes" / "Vencidas" / etc.
-    expect(screen.getByText('Pendientes')).toBeInTheDocument()
+    expect(await screen.findByText('Pendientes')).toBeInTheDocument()
     expect(screen.getByText('Vencidas')).toBeInTheDocument()
     expect(screen.getByText('Esperando Respuesta')).toBeInTheDocument()
     expect(screen.getByText('Recursos Activos')).toBeInTheDocument()
