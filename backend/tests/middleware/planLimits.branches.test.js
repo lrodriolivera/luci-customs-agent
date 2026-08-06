@@ -223,11 +223,16 @@ describe('planLimits middleware - branches', () => {
       expect(next).toHaveBeenCalledWith();
       expect(res.status).not.toHaveBeenCalled();
 
-      // Verificar incremento (el increment es $inc async, puede no estar disponible inmediatamente, pero la lógica fire-and-forget lo lanza)
-      // Para verificar: esperamos un tick
-      await new Promise((resolve) => setImmediate(resolve));
-      const updated = await Tenant.findById(tenantProfessional._id);
-      expect(updated.currentUsage.declarations).toBe(50);
+      // El incremento es $inc fire-and-forget (sin await en el middleware): bajo
+      // carga/paralelismo un solo setImmediate no basta para que la promesa a Mongo
+      // se resuelva. Poll determinista con reintentos hasta ver el valor esperado.
+      let declarations = 49;
+      for (let intento = 0; intento < 50 && declarations !== 50; intento++) {
+        await new Promise((resolve) => setImmediate(resolve));
+        const updated = await Tenant.findById(tenantProfessional._id);
+        declarations = updated.currentUsage.declarations;
+      }
+      expect(declarations).toBe(50);
     });
 
     test('rechaza 429 cuando uso es exactamente el límite', async () => {
