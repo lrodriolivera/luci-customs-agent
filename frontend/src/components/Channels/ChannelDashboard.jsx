@@ -114,7 +114,7 @@ export default function ChannelDashboard() {
         const expData = Array.isArray(d1) ? d1 : Array.isArray(d2) ? d2 : Array.isArray(d3) ? d3 : []
         setExpeditions(expData.map(exp => ({
           ...exp,
-          _channel: exp.channel || 'green',
+          _channel: exp.channel || exp.declaration?.channel || 'green',
           _clientName: exp.clientName || '-',
           _mrn: exp.mrn || '-',
           _channelDate: exp.channelDate || exp.createdAt
