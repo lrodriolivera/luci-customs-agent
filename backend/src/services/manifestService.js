@@ -3,6 +3,7 @@
  * Reads a cargo manifest (CSV/Excel), uses AI to classify goods,
  * and generates H7 declarations for each line item.
  */
+const { FAST } = require('../config/bedrockModels');
 const logger = require('../config/logger');
 
 class ManifestService {
@@ -242,7 +243,7 @@ Si valor>150EUR: eligible_h7=false, reason="Valor supera 150 EUR". Si restringid
       try {
         // Use callClaude directly for structured JSON responses (not askLuci which uses chat system prompt)
         const response = await this.aiService.callClaude(
-          process.env.BEDROCK_FAST_MODEL || 'us.anthropic.claude-sonnet-5',
+          FAST,
           'Eres un clasificador aduanero experto. Responde SIEMPRE en formato JSON array valido, sin markdown ni explicaciones.',
           prompt,
           { timeout: 30000 }

@@ -108,11 +108,11 @@ class ClassificationService:
 
         if self.client:
             logger.info("Classification service initialized with Bedrock")
-            self.model = os.getenv("DEFAULT_COMPLEX_MODEL", "us.anthropic.claude-sonnet-4-20250514-v1:0")
+            self.model = os.getenv("DEFAULT_COMPLEX_MODEL", "us.anthropic.claude-sonnet-5")
         elif self.api_key:
             self.client = anthropic.Anthropic(api_key=self.api_key)
             logger.info("Classification service initialized with Claude API")
-            self.model = os.getenv("DEFAULT_COMPLEX_MODEL", "claude-sonnet-4-20250514")
+            self.model = os.getenv("DEFAULT_COMPLEX_MODEL", "us.anthropic.claude-sonnet-5")
         else:
             logger.warning("BEDROCK_*/ANTHROPIC_API_KEY not set - classification will use fallback mode")
             self.model = None

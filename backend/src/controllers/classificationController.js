@@ -1,6 +1,7 @@
 const { TaricCode, Expedition, TaricSearchHistory, TaricAICache } = require('../models');
 const logger = require('../config/logger');
 const aiService = require('../services/aiService');
+const { SONNET, labelFor } = require('../config/bedrockModels');
 const taricService = require('../services/taricService');
 const { hasSeasonalTariff, getSeasonalTariff } = require('../data/seasonalTariffs');
 const { ensureSameTenant } = require('../utils/tenantGuard');
@@ -289,7 +290,7 @@ const getTaricInfo = async (req, res) => {
 
         // Guardar en cache de IA
         await taricService.saveToAICache(normalizedCode, aiResult, {
-          model: 'claude-sonnet-4-20250514'
+          model: labelFor(SONNET)
         });
 
         // Guardar en historial

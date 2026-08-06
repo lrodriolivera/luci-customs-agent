@@ -7,15 +7,10 @@ const { BedrockRuntimeClient, ConverseCommand } = require('@aws-sdk/client-bedro
 const logger = require('../config/logger');
 
 const BEDROCK_REGION = process.env.BEDROCK_REGION || 'us-east-1';
-// Inference profiles (prefijo us.): Bedrock rechaza los IDs desnudos de estos
-// modelos con "on-demand throughput isn't supported".
-//
-// FAST_MODEL es la ruta barata (chat simple, validacion documental). Apunta a
-// Sonnet 5 por decision de producto (6/Ago/2026): Haiku 4.5 quedo bloqueado en
-// Bedrock tras la migracion y se descarto en lugar de desbloquearlo.
-const FAST_MODEL = process.env.BEDROCK_FAST_MODEL || 'us.anthropic.claude-sonnet-5';
-const SONNET_MODEL = process.env.BEDROCK_SONNET_MODEL || 'us.anthropic.claude-sonnet-5';
-const OPUS_MODEL = process.env.BEDROCK_OPUS_MODEL || 'us.anthropic.claude-opus-5';
+// Los IDs viven en config/bedrockModels para que exista una unica fuente de
+// verdad: cuando estaban repartidos por el codigo, una migracion de modelo
+// dejo tres llamadas apuntando a un modelo inexistente.
+const { OPUS: OPUS_MODEL, SONNET: SONNET_MODEL, FAST: FAST_MODEL } = require('../config/bedrockModels');
 
 // Mapa de idiomas para instrucciones al modelo
 const LANGUAGE_INSTRUCTIONS = {

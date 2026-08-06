@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { SONNET, labelFor } = require('../config/bedrockModels');
 
 /**
  * Modelo para cachear respuestas de IA sobre codigos TARIC
@@ -39,7 +40,7 @@ const TaricAICacheSchema = new mongoose.Schema({
   // Modelo de IA usado
   aiModel: {
     type: String,
-    default: 'claude-sonnet-4-20250514'
+    default: () => labelFor(SONNET)
   },
 
   // Tokens usados en la generacion
@@ -145,7 +146,7 @@ TaricAICacheSchema.statics.saveToCache = async function(code, aiResponse, metada
     {
       code: normalizedCode,
       aiResponse,
-      aiModel: metadata.model || 'claude-sonnet-4-20250514',
+      aiModel: metadata.model || labelFor(SONNET),
       tokensUsed: metadata.tokensUsed || {},
       estimatedCost: metadata.estimatedCost || 0,
       hits: 0,
