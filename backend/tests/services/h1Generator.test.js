@@ -734,7 +734,9 @@ describe('calculateSummary: descripciones por defecto y goods vacio', () => {
   test('regimen/preferencia/aduana desconocidos caen a "Desconocido"', () => {
     const exp = expedicionCompleta(createElectronicsExpedition(), {
       goods: [{ taricCode: '84713000', description: 'PC', regime: '99', preference: '999', invoiceValue: 100 }],
-      goodsSummary: { totalValue: 100 }
+      // El generador exige totales declarables: lo que se prueba aqui son las
+      // descripciones, no los importes.
+      goodsSummary: { totalValue: 100, totalGrossWeight: 5, totalPackages: 1 }
     });
     const s = h1.generate(exp, { customsOffice: 'ES999999' }).summary;
     expect(s.regimeDescription).toBe('Desconocido');

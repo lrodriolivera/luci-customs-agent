@@ -120,6 +120,8 @@ class H1Generator {
    * Generar declaracion H1 completa
    */
   generate(expedition, aiData = {}) {
+    this.assertTotalesDeclarables(expedition);
+
     // Generar LRN unico
     const lrn = this.generateLRN();
 
@@ -152,6 +154,34 @@ class H1Generator {
   /**
    * Generar Local Reference Number (LRN)
    */
+  /**
+   * Un DUA con peso, importe o bultos a cero es una declaracion incorrecta ante
+   * la AEAT, pero el XML sale sintacticamente valido y se presentaba sin un
+   * solo aviso.
+   *
+   * Pasa cuando `goodsSummary` no se calculo: el hook pre-save del expediente
+   * suma `grossWeight` / `invoiceValue` / `packages.quantity` de cada partida,
+   * y si esos campos llegaron con otro nombre Mongoose los descarta en
+   * silencio. El error nombra el expediente y el campo para que el agente sepa
+   * donde mirar.
+   */
+  assertTotalesDeclarables(expedition) {
+    const ref = expedition?.expeditionId || expedition?._id || 'sin identificar';
+    const resumen = expedition?.goodsSummary || {};
+
+    const faltantes = [];
+    if (!(resumen.totalGrossWeight > 0)) faltantes.push('peso bruto total');
+    if (!(resumen.totalValue > 0)) faltantes.push('importe de factura total');
+    if (!(resumen.totalPackages > 0)) faltantes.push('numero de bultos');
+
+    if (faltantes.length > 0) {
+      throw new Error(
+        `No se puede generar el H1 del expediente ${ref}: ${faltantes.join(', ')} a cero. ` +
+        'Revisa que cada partida declare grossWeight, invoiceValue y packages.quantity.'
+      );
+    }
+  }
+
   generateLRN() {
     const year = new Date().getFullYear().toString().slice(-2);
     const uuid = uuidv4().replace(/-/g, '').substring(0, 16).toUpperCase();
