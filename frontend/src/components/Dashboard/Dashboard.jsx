@@ -67,14 +67,25 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // La lista sirve para el panel de recientes; los contadores salen de
+        // /dashboard/stats, que agrega sobre TODA la cuenta. Calcularlos
+        // filtrando estos 5 mostraba "5 expedientes" habiendo 31, y comparaba
+        // los estados en MAYUSCULAS cuando el backend los devuelve en
+        // minusculas: pendientes, en proceso y completados salian siempre a 0.
         const response = await expeditionsAPI.list({ limit: 5 })
         const expeditions = response.data.data?.expeditions || response.data.expeditions || []
         setRecentExpeditions(expeditions)
+
+        const statsResponse = await dashboardAPI.getStats()
+        const resumen = statsResponse.data?.data?.expeditions || {}
+        const porEstado = resumen.byStatus || {}
+        const sumar = (...estados) => estados.reduce((total, e) => total + (porEstado[e] || 0), 0)
+
         setStats({
-          total: response.data.total || expeditions.length,
-          pending: expeditions.filter(e => e.status === 'PENDING_DOCS' || e.status === 'pending_docs').length,
-          inProgress: expeditions.filter(e => ['DOCS_RECEIVED', 'VALIDATING', 'PROCESSING', 'orange_channel', 'red_channel'].includes(e.status)).length,
-          completed: expeditions.filter(e => e.status === 'COMPLETED' || e.status === 'green_channel').length
+          total: resumen.total ?? expeditions.length,
+          pending: sumar('pending_documents', 'documents_received', 'draft'),
+          inProgress: sumar('documents_validated', 'declaration_draft', 'declaration_submitted', 'orange_channel', 'red_channel'),
+          completed: sumar('completed', 'green_channel', 'levante')
         })
       } catch (error) {
         console.error('Error fetching dashboard data:', error)

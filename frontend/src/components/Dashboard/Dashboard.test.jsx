@@ -14,7 +14,7 @@ vi.mock('../../context/AuthContext', () => ({
 
 vi.mock('../../services/api', () => ({
   expeditionsAPI: { list: vi.fn() },
-  dashboardAPI: { getAlerts: vi.fn() },
+  dashboardAPI: { getAlerts: vi.fn(), getStats: vi.fn() },
   classificationAPI: { getCacheStats: vi.fn() }
 }))
 
@@ -35,6 +35,9 @@ describe('Dashboard', () => {
     })
     classificationAPI.getCacheStats.mockResolvedValue({
       data: { success: true, data: {} }
+    })
+    dashboardAPI.getStats.mockResolvedValue({
+      data: { success: true, data: { expeditions: { total: 0, byStatus: {} } } }
     })
   })
 
@@ -125,35 +128,24 @@ describe('Dashboard', () => {
   })
 
   describe('Statistics calculation', () => {
-    it('should calculate stats correctly from expeditions', async () => {
+    it('toma los totales de /dashboard/stats, no de la lista de recientes', async () => {
+      // La lista viene acotada (limit 5); los contadores son de toda la cuenta.
       expeditionsAPI.list.mockResolvedValue({
-        data: {
-          data: {
-            expeditions: [
-              { _id: '1', status: 'PENDING_DOCS', expeditionId: 'E1', operationType: 'IMPORT', createdAt: '2026-08-01T10:00:00Z' },
-              { _id: '2', status: 'pending_docs', expeditionId: 'E2', operationType: 'IMPORT', createdAt: '2026-08-01T10:00:00Z' },
-              { _id: '3', status: 'DOCS_RECEIVED', expeditionId: 'E3', operationType: 'IMPORT', createdAt: '2026-08-01T10:00:00Z' },
-              { _id: '4', status: 'VALIDATING', expeditionId: 'E4', operationType: 'IMPORT', createdAt: '2026-08-01T10:00:00Z' },
-              { _id: '5', status: 'PROCESSING', expeditionId: 'E5', operationType: 'IMPORT', createdAt: '2026-08-01T10:00:00Z' },
-              { _id: '6', status: 'orange_channel', expeditionId: 'E6', operationType: 'IMPORT', createdAt: '2026-08-01T10:00:00Z' },
-              { _id: '7', status: 'red_channel', expeditionId: 'E7', operationType: 'IMPORT', createdAt: '2026-08-01T10:00:00Z' },
-              { _id: '8', status: 'COMPLETED', expeditionId: 'E8', operationType: 'IMPORT', createdAt: '2026-08-01T10:00:00Z' },
-              { _id: '9', status: 'green_channel', expeditionId: 'E9', operationType: 'IMPORT', createdAt: '2026-08-01T10:00:00Z' }
-            ]
-          },
-          total: 9
-        }
+        data: { data: { expeditions: [{ _id: '1', expeditionId: 'E1', status: 'draft', operationType: 'IMPORT', createdAt: '2026-08-01T10:00:00Z' }] } }
+      })
+      dashboardAPI.getStats.mockResolvedValue({
+        data: { success: true, data: { expeditions: {
+          total: 9,
+          byStatus: { pending_documents: 1, documents_received: 1, documents_validated: 2, orange_channel: 2, red_channel: 1, completed: 1, green_channel: 1 }
+        } } }
       })
 
       renderDashboard()
 
       await waitFor(() => {
-        const allTexts = screen.getAllByText(/^[0-9]+$/)
-        const values = allTexts.map(el => el.textContent)
-        expect(values).toContain('9') // total
-        expect(values).toContain('2') // pending
-        expect(values).toContain('5') // inProgress (DOCS_RECEIVED, VALIDATING, PROCESSING, orange_channel, red_channel)
-        expect(values).toContain('2') // completed (COMPLETED + green_channel)
+        const values = screen.getAllByText(/^[0-9]+$/).map(el => el.textContent)
+        expect(values).toContain('9') // total de la cuenta
+        expect(values).toContain('5') // en proceso: validados 2 + naranja 2 + rojo 1
       })
     })
 
@@ -162,9 +154,11 @@ describe('Dashboard', () => {
         data: {
           data: {
             expeditions: [{ _id: '1', expeditionId: 'EXP-PARSE-1', status: 'COMPLETED', operationType: 'IMPORT', createdAt: '2026-08-01T10:00:00Z' }]
-          },
-          total: 1
+          }
         }
+      })
+      dashboardAPI.getStats.mockResolvedValue({
+        data: { success: true, data: { expeditions: { total: 1, byStatus: { completed: 1 } } } }
       })
 
       renderDashboard()
@@ -178,9 +172,11 @@ describe('Dashboard', () => {
     it('should parse data.expeditions structure', async () => {
       expeditionsAPI.list.mockResolvedValue({
         data: {
-          expeditions: [{ _id: '1', expeditionId: 'EXP-PARSE-2', status: 'COMPLETED', operationType: 'IMPORT', createdAt: '2026-08-01T10:00:00Z' }],
-          total: 1
+          expeditions: [{ _id: '1', expeditionId: 'EXP-PARSE-2', status: 'COMPLETED', operationType: 'IMPORT', createdAt: '2026-08-01T10:00:00Z' }]
         }
+      })
+      dashboardAPI.getStats.mockResolvedValue({
+        data: { success: true, data: { expeditions: { total: 1, byStatus: { completed: 1 } } } }
       })
 
       renderDashboard()
@@ -191,7 +187,10 @@ describe('Dashboard', () => {
       })
     })
 
-    it('should use expeditions.length when total is missing', async () => {
+    it('usa el numero de recientes si stats no trae total', async () => {
+      dashboardAPI.getStats.mockResolvedValue({
+        data: { success: true, data: { expeditions: { byStatus: {} } } }
+      })
       expeditionsAPI.list.mockResolvedValue({
         data: {
           data: {
@@ -709,6 +708,73 @@ describe('Dashboard', () => {
       // La limpieza del interval se verifica implícitamente:
       // si no hubiera cleanup, el test dejaría timers activos y causaría warnings
       expect(dashboardAPI.getAlerts).toHaveBeenCalled()
+    })
+  })
+  describe('Dashboard — contadores de expedientes', () => {
+    /**
+     * Las tarjetas se calculaban filtrando la lista de expedientes recientes, que
+     * se pide con limit: 5. Con 31 expedientes en la cuenta la tarjeta mostraba 5,
+     * y los estados se comparaban en MAYUSCULAS ('PENDING_DOCS', 'COMPLETED')
+     * cuando el backend los devuelve en minusculas: ningun filtro casaba y
+     * pendientes, en proceso y completados salian a cero.
+     *
+     * Detectado en las pruebas E2E del 6/Ago/2026 sobre produccion.
+     */
+    const estadisticasReales = {
+      data: {
+        success: true,
+        data: {
+          expeditions: {
+            total: 31,
+            thisMonth: 6,
+            byStatus: {
+              pending_documents: 2,
+              documents_received: 3,
+              documents_validated: 3,
+              declaration_draft: 5,
+              declaration_submitted: 4,
+              green_channel: 2,
+              orange_channel: 3,
+              red_channel: 3,
+              levante: 2,
+              completed: 3,
+              draft: 1
+            }
+          }
+        }
+      }
+    }
+
+    beforeEach(() => {
+      // La lista de recientes sigue viniendo acotada: no es la fuente de los totales.
+      expeditionsAPI.list.mockResolvedValue({
+        data: { data: { expeditions: [{ _id: '1', expeditionId: 'EXP-1', status: 'draft' }] } }
+      })
+      dashboardAPI.getStats.mockResolvedValue(estadisticasReales)
+    })
+
+    it('muestra el total real de la cuenta, no el tamano de la pagina', async () => {
+      renderDashboard()
+
+      expect(await screen.findByText('31')).toBeInTheDocument()
+    })
+
+    it('cuenta los pendientes con los estados que devuelve el backend', async () => {
+      renderDashboard()
+
+      // pending_documents (2) + documents_received (3) = 5
+      await waitFor(() => {
+        expect(dashboardAPI.getStats).toHaveBeenCalled()
+      })
+      expect(screen.queryAllByText('0').length).toBeLessThan(3)
+    })
+
+    it('pide las estadisticas al endpoint que las calcula', async () => {
+      renderDashboard()
+
+      await waitFor(() => {
+        expect(dashboardAPI.getStats).toHaveBeenCalled()
+      })
     })
   })
 })
