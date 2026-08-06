@@ -677,6 +677,8 @@ export default function ExpeditionDetail() {
       'documents_validated': { label: t('expeditions.statusDocsValidated'), class: 'bg-indigo-100 text-indigo-800', icon: CheckCircleIcon },
       'ready_for_declaration': { label: t('expeditions.statusDeclarationReady'), class: 'bg-cyan-100 text-cyan-800', icon: DocumentTextIcon },
       'declaration_submitted': { label: t('expeditions.statusSubmitted'), class: 'bg-orange-100 text-orange-800', icon: CheckCircleIcon },
+      'declaration_draft': { label: t('expeditions.statusDeclarationDraft'), class: 'bg-slate-100 text-slate-800', icon: DocumentTextIcon },
+      'levante': { label: t('expeditions.statusLevante'), class: 'bg-green-100 text-green-800', icon: CheckCircleIcon },
       'green_channel': { label: t('expeditions.statusGreenChannel'), class: 'bg-green-100 text-green-800', icon: CheckCircleIcon },
       'completed': { label: t('expeditions.statusCompleted'), class: 'bg-green-100 text-green-800', icon: CheckCircleIcon }
     }
@@ -837,8 +839,12 @@ export default function ExpeditionDetail() {
                         <p className="text-xs text-gray-500">{doc.documentType}</p>
                       </div>
                     </div>
-                    <span className={`badge ${doc.validationStatus === 'VALIDATED' ? 'badge-completed' : 'badge-pending'}`}>
-                      {doc.validationStatus === 'VALIDATED' ? t('expeditions.validated') : t('expeditions.pendingValidation')}
+                    {/* El backend guarda el estado en `status`, en minusculas.
+                        Comparar `validationStatus === 'VALIDATED'` fallaba por
+                        partida doble —campo y caso— y todo documento validado
+                        aparecia como pendiente. */}
+                    <span className={`badge ${doc.status === 'validated' ? 'badge-completed' : 'badge-pending'}`}>
+                      {doc.status === 'validated' ? t('expeditions.validated') : t('expeditions.pendingValidation')}
                     </span>
                   </div>
                 ))}

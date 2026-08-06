@@ -70,8 +70,9 @@ const mockExpedition = {
     }
   ],
   documents: [
-    { originalName: 'invoice.pdf', documentType: 'invoice', validationStatus: 'VALIDATED' },
-    { originalName: 'origin.pdf', documentType: 'origin', validationStatus: 'PENDING' }
+    // El backend guarda el estado en `status`, en minusculas.
+    { originalName: 'invoice.pdf', documentType: 'invoice', status: 'validated' },
+    { originalName: 'origin.pdf', documentType: 'origin', status: 'pending' }
   ],
   transportMode: 'sea',
   incoterm: { code: 'CIF', place: 'Barcelona' },
