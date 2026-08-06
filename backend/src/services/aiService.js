@@ -202,6 +202,22 @@ class AIService {
       });
       logger.info(`Bedrock client inicializado (region: ${BEDROCK_REGION})`);
     }
+
+    // Cuenta secundaria: opcional. Cubre que la principal se quede sin servicio
+    // por cuota agotada o por perder el acceso (una suspension por impago deja
+    // de servir a mitad de jornada, sin previo aviso).
+    const fallbackKeyId = process.env.BEDROCK_FALLBACK_ACCESS_KEY_ID;
+    const fallbackSecret = process.env.BEDROCK_FALLBACK_SECRET_ACCESS_KEY;
+
+    if (fallbackKeyId && fallbackSecret) {
+      this.fallbackClient = new BedrockRuntimeClient({
+        region: process.env.BEDROCK_FALLBACK_REGION || BEDROCK_REGION,
+        credentials: { accessKeyId: fallbackKeyId, secretAccessKey: fallbackSecret }
+      });
+      logger.info('Bedrock: cuenta de fallback configurada');
+    } else {
+      this.fallbackClient = null;
+    }
   }
 
   /**
@@ -248,6 +264,26 @@ class AIService {
   }
 
   /**
+   * ¿El fallo es de la cuenta y no de la peticion?
+   *
+   * Solo merece la pena reintentar en otra cuenta lo que depende de la cuenta:
+   * cuota agotada, acceso revocado o caida del servicio. Un error de validacion
+   * (modelo mal escrito, prompt invalido) fallaria igual en la segunda y solo
+   * doblaria la latencia antes de dar el mismo error.
+   */
+  _isAccountLevelFailure(error) {
+    return [
+      'ThrottlingException',
+      'TooManyRequestsException',
+      'ServiceQuotaExceededException',
+      'AccessDeniedException',
+      'ServiceUnavailableException',
+      'InternalServerException',
+      'ModelNotReadyException'
+    ].includes(error?.name);
+  }
+
+  /**
    * Llamada base a Claude via Bedrock Converse API
    */
   async callClaude(model, systemPrompt, userMessage, options = {}) {
@@ -268,7 +304,16 @@ class AIService {
         }
       });
 
-      const response = await this.client.send(command);
+      let response;
+      try {
+        response = await this.client.send(command);
+      } catch (primaryError) {
+        if (!this.fallbackClient || !this._isAccountLevelFailure(primaryError)) {
+          throw primaryError;
+        }
+        logger.warn(`Bedrock: la cuenta principal fallo con ${primaryError.name}, reintentando en la de fallback`);
+        response = await this.fallbackClient.send(command);
+      }
 
       return {
         content: this._extractText(response),
