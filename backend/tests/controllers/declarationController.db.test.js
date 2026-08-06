@@ -27,7 +27,12 @@ const { usarBaseDeDatosEnMemoria } = require('../helpers/memoryDb');
 jest.mock('../../src/services/aiService', () => ({
   generateH1Declaration: jest.fn(), generateAESDeclaration: jest.fn()
 }));
-jest.mock('../../src/services/forms/h1Generator', () => ({ generate: jest.fn() }));
+jest.mock('../../src/services/forms/h1Generator', () => ({
+  generate: jest.fn(),
+  // Por defecto los totales son declarables: cada test que quiera probar el
+  // rechazo devuelve el mensaje explicitamente.
+  totalesNoDeclarables: jest.fn(() => null)
+}));
 jest.mock('../../src/services/forms/aesGenerator', () => ({ generate: jest.fn() }));
 jest.mock('../../src/services/forms/h7Generator', () => ({ isEligibleForH7: jest.fn(), generate: jest.fn() }));
 jest.mock('../../src/services/aeatService', () => ({}));
@@ -299,5 +304,25 @@ describe('H7 (bajo valor)', () => {
 
     expect(res.statusCode).toBe(400);
     expect(res.body.error).toMatch(/importaciones/i);
+  });
+});
+
+describe('generateH1: totales de la declaracion', () => {
+  test('no genera el H1 si el peso, el importe o los bultos van a cero', async () => {
+    // Un DUA con valor cero es una declaracion incorrecta ante la AEAT, pero el
+    // XML sale sintacticamente valido: sin esta comprobacion se presentaba sin
+    // un solo aviso. Detectado en las pruebas E2E del 6/Ago/2026.
+    const user = usuario();
+    const exp = await expedienteImportacion(user);
+    h1Generator.totalesNoDeclarables.mockReturnValueOnce(
+      'No se puede generar el H1 del expediente EXP-X: peso bruto total a cero.'
+    );
+    const res = crearRes();
+
+    await ctrl.generateH1({ body: { expeditionId: exp._id }, user }, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(/peso bruto/i);
+    expect(h1Generator.generate).not.toHaveBeenCalled();
   });
 });

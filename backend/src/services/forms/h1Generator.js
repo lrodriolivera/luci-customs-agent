@@ -120,8 +120,6 @@ class H1Generator {
    * Generar declaracion H1 completa
    */
   generate(expedition, aiData = {}) {
-    this.assertTotalesDeclarables(expedition);
-
     // Generar LRN unico
     const lrn = this.generateLRN();
 
@@ -165,8 +163,7 @@ class H1Generator {
    * silencio. El error nombra el expediente y el campo para que el agente sepa
    * donde mirar.
    */
-  assertTotalesDeclarables(expedition) {
-    const ref = expedition?.expeditionId || expedition?._id || 'sin identificar';
+  totalesNoDeclarables(expedition) {
     const resumen = expedition?.goodsSummary || {};
 
     const faltantes = [];
@@ -174,12 +171,11 @@ class H1Generator {
     if (!(resumen.totalValue > 0)) faltantes.push('importe de factura total');
     if (!(resumen.totalPackages > 0)) faltantes.push('numero de bultos');
 
-    if (faltantes.length > 0) {
-      throw new Error(
-        `No se puede generar el H1 del expediente ${ref}: ${faltantes.join(', ')} a cero. ` +
-        'Revisa que cada partida declare grossWeight, invoiceValue y packages.quantity.'
-      );
-    }
+    if (faltantes.length === 0) return null;
+
+    const ref = expedition?.expeditionId || expedition?._id || 'sin identificar';
+    return `No se puede generar el H1 del expediente ${ref}: ${faltantes.join(', ')} a cero. ` +
+      'Revisa que cada partida declare grossWeight, invoiceValue y packages.quantity.';
   }
 
   generateLRN() {

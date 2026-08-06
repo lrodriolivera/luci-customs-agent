@@ -64,6 +64,14 @@ const generateH1 = async (req, res) => {
       preference: preference || '100'
     });
 
+    // Un DUA con peso, importe o bultos a cero es una declaracion incorrecta
+    // ante la AEAT, pero el XML sale sintacticamente valido: sin esta comproba-
+    // cion se presentaba con valor cero y sin un solo aviso.
+    const totalesInvalidos = h1Generator.totalesNoDeclarables(expedition);
+    if (totalesInvalidos) {
+      return res.status(400).json({ success: false, error: totalesInvalidos });
+    }
+
     // Generar estructura H1 completa
     const h1Declaration = h1Generator.generate(expedition, h1Data);
 
@@ -649,6 +657,11 @@ const generateH1Direct = async (req, res) => {
     const regime = body.items?.[0]?.procedure?.substring(0, 2) || expedition.declaration?.regime || '40';
     const additionalProcedure = body.items?.[0]?.procedure?.substring(2, 4) || expedition.declaration?.additionalProcedure || '00';
     const preference = body.items?.[0]?.preference || expedition.declaration?.preference || '100';
+
+    const totalesInvalidosDirecto = h1Generator.totalesNoDeclarables(expedition);
+    if (totalesInvalidosDirecto) {
+      return res.status(400).json({ success: false, error: totalesInvalidosDirecto });
+    }
 
     // Generar H1 directamente con h1Generator
     const h1Declaration = h1Generator.generate(expedition, {

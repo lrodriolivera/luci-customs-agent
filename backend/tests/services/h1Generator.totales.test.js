@@ -40,29 +40,26 @@ const expedicionBase = (overrides = {}) => ({
 });
 
 describe('h1Generator — totales de la declaracion', () => {
-  it('rechaza generar un H1 cuando el peso bruto total es cero', () => {
+  it('senala el peso bruto total a cero', () => {
     const expedicion = expedicionBase();
 
-    expect(() => h1Generator.generate(expedicion))
-      .toThrow(/peso bruto/i);
+    expect(h1Generator.totalesNoDeclarables(expedicion)).toMatch(/peso bruto/i);
   });
 
-  it('rechaza generar un H1 cuando el importe de factura total es cero', () => {
+  it('senala el importe de factura a cero', () => {
     const expedicion = expedicionBase({
       goodsSummary: { totalItems: 1, totalPackages: 20, totalGrossWeight: 120, totalNetWeight: 105, totalValue: 0 }
     });
 
-    expect(() => h1Generator.generate(expedicion))
-      .toThrow(/importe|valor/i);
+    expect(h1Generator.totalesNoDeclarables(expedicion)).toMatch(/importe|valor/i);
   });
 
-  it('rechaza generar un H1 sin bultos declarados', () => {
+  it('senala los bultos a cero', () => {
     const expedicion = expedicionBase({
       goodsSummary: { totalItems: 1, totalPackages: 0, totalGrossWeight: 120, totalNetWeight: 105, totalValue: 12500 }
     });
 
-    expect(() => h1Generator.generate(expedicion))
-      .toThrow(/bulto/i);
+    expect(h1Generator.totalesNoDeclarables(expedicion)).toMatch(/bulto/i);
   });
 
   it('genera el H1 cuando los totales son correctos', () => {
@@ -70,6 +67,7 @@ describe('h1Generator — totales de la declaracion', () => {
       goodsSummary: { totalItems: 1, totalPackages: 20, totalGrossWeight: 120, totalNetWeight: 105, totalValue: 12500 }
     });
 
+    expect(h1Generator.totalesNoDeclarables(expedicion)).toBeNull();
     const h1 = h1Generator.generate(expedicion);
 
     expect(h1.data.declarationHeader.totalGrossMass).toBe(120);
@@ -84,7 +82,6 @@ describe('h1Generator — totales de la declaracion', () => {
     // Un "datos invalidos" generico obliga a adivinar cual de los tres es.
     const expedicion = expedicionBase();
 
-    expect(() => h1Generator.generate(expedicion))
-      .toThrow(/EXP-TEST-0001/);
+    expect(h1Generator.totalesNoDeclarables(expedicion)).toMatch(/EXP-TEST-0001/);
   });
 });

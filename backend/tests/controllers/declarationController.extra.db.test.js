@@ -40,7 +40,12 @@ jest.mock('../../src/services/aiService', () => ({
   predictDeclarationChannel: jest.fn(),
   fullDeclarationAnalysis: jest.fn()
 }));
-jest.mock('../../src/services/forms/h1Generator', () => ({ generate: jest.fn() }));
+jest.mock('../../src/services/forms/h1Generator', () => ({
+  generate: jest.fn(),
+  // Por defecto los totales son declarables: cada test que quiera probar el
+  // rechazo devuelve el mensaje explicitamente.
+  totalesNoDeclarables: jest.fn(() => null)
+}));
 jest.mock('../../src/services/forms/aesGenerator', () => ({ generate: jest.fn() }));
 jest.mock('../../src/services/forms/h7Generator', () => ({ isEligibleForH7: jest.fn(), generate: jest.fn() }));
 jest.mock('../../src/services/aeatService', () => ({}));
