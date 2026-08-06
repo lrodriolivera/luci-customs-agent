@@ -108,7 +108,7 @@ describe('<MLInsights />', () => {
     const user = userEvent.setup()
     render(<MLInsights />)
     await waitFor(() => expect(mlAPI.getStats).toHaveBeenCalledTimes(1))
-    const refreshBtn = screen.getByRole('button', { name: /actualizar/i })
+    const refreshBtn = await screen.findByRole('button', { name: /actualizar/i })
     await user.click(refreshBtn)
     await waitFor(() => expect(mlAPI.getStats).toHaveBeenCalledTimes(2))
   })
