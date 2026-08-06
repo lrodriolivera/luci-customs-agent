@@ -113,7 +113,7 @@ export default function QuotaManager() {
     }
   }
 
-  const countries = countriesGrouped.flatMap(g => g.options.map(c => ({ code: c.code, name: c.label || c.name })))
+  const countries = countriesGrouped.flatMap(g => g.countries.map(c => ({ code: c.code, name: c.label || c.name })))
 
   const getStatusBadge = (status) => {
     switch (status) {
