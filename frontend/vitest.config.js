@@ -10,6 +10,11 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.js'],
     css: false,
+    // La batería completa corre ~1500 tests con userEvent real; bajo esa carga
+    // algunos tests con secuencias de teclado superan el default de 5s de forma
+    // no determinista (en aislamiento terminan en <1s). 15s da margen sin
+    // enmascarar cuelgues reales (bucles infinitos siguen atrapados).
+    testTimeout: 15000,
     include: ['src/**/*.{test,spec}.{js,jsx}'],
     coverage: {
       provider: 'v8',

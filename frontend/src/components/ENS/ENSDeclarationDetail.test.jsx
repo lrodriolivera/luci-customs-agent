@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ENSDeclarationDetail from './ENSDeclarationDetail'
 
@@ -1382,14 +1382,18 @@ describe('ENSDeclarationDetail', () => {
         expect(screen.getByText('ens.arrivalDialogTitle')).toBeInTheDocument()
       })
 
+      // fireEvent.change (un evento por campo) en lugar de user.type
+      // (secuencia de teclas por carácter) para evitar que el test supere el
+      // timeout bajo la carga de la batería completa. El resultado observable
+      // es idéntico en inputs controlados.
       const dateField = screen.getByLabelText('ens.arrivalDate')
-      await user.type(dateField, '2026-08-10')
+      fireEvent.change(dateField, { target: { value: '2026-08-10' } })
 
       const timeField = screen.getByLabelText('ens.arrivalTime')
-      await user.type(timeField, '14:30')
+      fireEvent.change(timeField, { target: { value: '14:30' } })
 
       const remarksField = screen.getByLabelText('ens.remarks')
-      await user.type(remarksField, 'Llegada sin incidencias')
+      fireEvent.change(remarksField, { target: { value: 'Llegada sin incidencias' } })
 
       const notifyButtons = screen.getAllByRole('button', { name: /ens.notifyArrival/ })
       const dialogNotifyButton = notifyButtons[notifyButtons.length - 1]
