@@ -11,16 +11,13 @@
  * filtro por tenant del listado, la agregación de getStats en el controller y
  * los catch → 500.
  *
- * HALLAZGO documentado con un test: ParaduaneroControl NO declara `tenantId` en
- * su schema (ver src/models/ParaduaneroControl.js). El control "hereda" el
- * tenant de su expediente conceptualmente, pero al no persistirlo:
- *   - ensureSameTenant(control) ve docTenant=null y SIEMPRE deja pasar (rama
- *     legacy) → getById/update/changeStatus NO aíslan por tenant.
- *   - list filtra por filter.tenantId, que nunca casa ningún documento real.
- * El test lo verifica de forma explícita para que quede fijado (no lo "arregla"
- * porque tocar el aislamiento aquí es cambio de lógica de negocio y hay dos
- * criterios conviviendo en el producto —tenantId vs owner—; se anota en
- * SECURITY_AUDIT.md).
+ * REGRESIÓN (fix 6/Ago, ver SECURITY_AUDIT.md): ParaduaneroControl AHORA declara
+ * `tenantId` en su schema y lo hereda del expediente al crearse. Antes del fix:
+ *   - ensureSameTenant(control) veía docTenant=null y SIEMPRE dejaba pasar (rama
+ *     legacy) → getById/update/changeStatus NO aislaban por tenant.
+ *   - list filtraba por filter.tenantId, que nunca casaba ningún documento.
+ * Los tests de aislamiento de abajo fijan el comportamiento correcto: un control
+ * de otra organización devuelve 404 y el listado sólo trae los propios.
  *
  * jest.config: resetMocks:true → restaurar en beforeEach.
  */
@@ -66,6 +63,7 @@ async function sembrarExpedition(tenantId = ORG_A) {
 async function sembrarControl(expeditionId, extra = {}) {
   return ParaduaneroControl.create({
     expeditionId,
+    tenantId: ORG_A,
     controlType: 'SOIVRE',
     status: 'pending',
     priority: 'normal',
@@ -164,19 +162,19 @@ describe('paraduaneroController (BD real en memoria)', () => {
       expect(res.body.data.every(c => c.controlType === 'MAPA')).toBe(true);
     });
 
-    test('HALLAZGO: el filtro por tenantId NO acota (el modelo no persiste tenantId)', async () => {
-      // Se siembran controles "de A" y "de B": como ParaduaneroControl no declara
-      // tenantId, filter.tenantId no casa NINGUNO y el listado sale vacío
-      // (ni siquiera devuelve los propios). Esto fija el comportamiento actual.
+    test('REGRESIÓN aislamiento: list sólo trae los controles del propio tenant', async () => {
+      // Se siembran controles de A y de B. Con tenantId ya persistido, el
+      // filtro filter.tenantId = ORG_A debe traer SÓLO los de A y ninguno de B.
       const expA = await sembrarExpedition(ORG_A);
       const expB = await sembrarExpedition(ORG_B);
-      await sembrarControl(expA._id);
-      await sembrarControl(expB._id);
+      await sembrarControl(expA._id, { tenantId: ORG_A });
+      await sembrarControl(expA._id, { tenantId: ORG_A, controlType: 'MAPA' });
+      await sembrarControl(expB._id, { tenantId: ORG_B });
       const res = mockRes();
       await ctrl.list(reqA({ query: {} }), res);
-      // filter.tenantId = ORG_A → 0 documentos porque el campo no existe en la colección
-      expect(res.body.data).toHaveLength(0);
-      expect(res.body.pagination.total).toBe(0);
+      expect(res.body.data).toHaveLength(2);
+      expect(res.body.pagination.total).toBe(2);
+      expect(res.body.data.every(c => String(c.tenantId) === ORG_A)).toBe(true);
     });
 
     test('500 si la query falla (expeditionId no-ObjectId)', async () => {
@@ -220,6 +218,15 @@ describe('paraduaneroController (BD real en memoria)', () => {
       expect(res.statusCode).toBe(404);
     });
 
+    test('REGRESIÓN aislamiento: 404 si el control es de otro tenant', async () => {
+      const exp = await sembrarExpedition(ORG_B);
+      const control = await sembrarControl(exp._id, { tenantId: ORG_B });
+      const res = mockRes();
+      // Usuario de A pidiendo un control de B: debe recibir 404, no los datos.
+      await ctrl.getById(reqA({ params: { id: control._id.toString() } }), res);
+      expect(res.statusCode).toBe(404);
+    });
+
     test('500 si el id no es ObjectId válido', async () => {
       const res = mockRes();
       await ctrl.getById(reqA({ params: { id: 'malformado' } }), res);
@@ -249,6 +256,16 @@ describe('paraduaneroController (BD real en memoria)', () => {
       const res = mockRes();
       await ctrl.update(reqA({ params: { id: new mongoose.Types.ObjectId().toString() }, body: {} }), res);
       expect(res.statusCode).toBe(404);
+    });
+
+    test('REGRESIÓN aislamiento: 404 y NO muta un control de otro tenant', async () => {
+      const exp = await sembrarExpedition(ORG_B);
+      const control = await sembrarControl(exp._id, { tenantId: ORG_B, notes: 'original' });
+      const res = mockRes();
+      await ctrl.update(reqA({ params: { id: control._id.toString() }, body: { notes: 'intento ajeno' } }), res);
+      expect(res.statusCode).toBe(404);
+      const recargado = await ParaduaneroControl.findById(control._id);
+      expect(recargado.notes).toBe('original'); // no se tocó
     });
 
     test('500 si el id es inválido', async () => {
@@ -292,6 +309,16 @@ describe('paraduaneroController (BD real en memoria)', () => {
       const res = mockRes();
       await ctrl.changeStatus(reqA({ params: { id: new mongoose.Types.ObjectId().toString() }, body: { status: 'approved' } }), res);
       expect(res.statusCode).toBe(404);
+    });
+
+    test('REGRESIÓN aislamiento: 404 y NO cambia el estado de un control de otro tenant', async () => {
+      const exp = await sembrarExpedition(ORG_B);
+      const control = await sembrarControl(exp._id, { tenantId: ORG_B, status: 'pending' });
+      const res = mockRes();
+      await ctrl.changeStatus(reqA({ params: { id: control._id.toString() }, body: { status: 'approved' } }), res);
+      expect(res.statusCode).toBe(404);
+      const recargado = await ParaduaneroControl.findById(control._id);
+      expect(recargado.status).toBe('pending'); // no se tocó
     });
 
     test('500 si el id es inválido', async () => {

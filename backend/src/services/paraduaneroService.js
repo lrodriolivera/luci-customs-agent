@@ -326,6 +326,8 @@ class ParaduaneroService {
       // Crear el control
       const control = new ParaduaneroControl({
         expeditionId: expedition._id,
+        // Heredar el tenant del expediente: el control es del mismo cliente.
+        tenantId: expedition.tenantId,
         controlType: controlData.controlType,
         subType: controlData.subType,
         affectedGoods: controlData.affectedGoods,

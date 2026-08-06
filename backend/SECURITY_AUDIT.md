@@ -566,7 +566,7 @@ Impacto: la ENS es la Declaracion Sumaria de Entrada (ICS2). Una rectificacion a
 
 **Corregido** (`fix:`): las 7 consultas/escrituras de Expedition pasan a `tenantId: req.organizationId`; se eliminan `createdBy: 'api'`; `incoterm` acepta string (mapeado a `{ code }`) u objeto en create y update; el mapeo de respuesta lee `nif`/`eori` y `totalDuties`/`totalVat`, y create escribe `nif`/`eori`; el spread de `client` en update usa `.toObject()` (un `{...subdoc}` de Mongoose no expone sus paths); y las `aggregate` castean el id con `new mongoose.Types.ObjectId(...)`. Las consultas de `Payment` (`listPayments`/`getPayment`/`getStats`) se dejan **intactas**: `Payment` SI tiene `organizationId` (ref Tenant, required). Fijado con `tests/controllers/publicApiController.db.test.js` (21 tests contra `Expedition`/`Payment` reales en Mongo en memoria, sin mocks — el controller no tiene dependencias externas), con casos de aislamiento explicitos que siembran expedientes/pagos de la organizacion A y verifican que la organizacion B recibe 404 / listados vacios. Salio al cubrir el modulo (0%→81%L / 67%B / 96%F), sin mockear el controller.
 
-### `ParaduaneroControl` no declara `tenantId` → el listado sale vacío y `ensureSameTenant` sobre el control es un no-op (documentado, no corregido)
+### `ParaduaneroControl` no declaraba `tenantId` → el listado salía vacío y `ensureSameTenant` sobre el control era un no-op (CORREGIDO 6 de agosto de 2026)
 
 `paraduaneroController` gestiona los controles paraduaneros (SOIVRE/MAPA/SANIDAD/MITERD/AEMPS/AESAN). Sus handlers `getById`/`update`/`changeStatus` recuperan el control con `ParaduaneroControl.findById(id)` y aplican `ensureSameTenant(control, req, res, { resource: 'Control' })`; `list` filtra con `filter.tenantId = req.tenantId`. Pero `ParaduaneroControlSchema` **no declara** ningún campo `tenantId` (el control "hereda" el tenant de su `expeditionId`, que sí lo tiene, pero no lo persiste). Consecuencias del modo estricto de Mongoose:
 
@@ -575,7 +575,14 @@ Impacto: la ENS es la Declaracion Sumaria de Entrada (ICS2). Una rectificacion a
 
 Los handlers `analyzeExpedition`/`createControls` **sí** están correctamente acotados: comprueban el `Expedition` (que tiene `tenantId`) antes de tocar los controles, de modo que la creación no fuga.
 
-**No corregido (decisión de negocio pendiente de producto).** Persistir `tenantId` en `ParaduaneroControl` y ajustar el guard es un cambio de modelado con doble filo: el producto ya convive con **dos criterios de aislamiento** (`tenantId` en unos módulos, `owner` en otros) y añadir el campo aquí obliga a un backfill de los controles existentes y a decidir el criterio canónico. Queda **fijado con test** para que el comportamiento actual no cambie sin querer: `tests/controllers/paraduaneroController.db.test.js` incluye el caso "HALLAZGO: el filtro por tenantId NO acota" (siembra controles de dos organizaciones y verifica que `list` devuelve 0 documentos). Recomendación: al consolidar el criterio de aislamiento del producto, declarar `tenantId` en `ParaduaneroControl` (copiándolo del expediente en `createControlsForExpedition`), hacer backfill, y cambiar el guard de `list`/`getById`/`update`/`changeStatus` para acotar de verdad.
+**Corregido (6 de agosto de 2026).** Se optó por el criterio `tenantId` (el que ya usan `Expedition` y el propio guard de este controller), heredándolo del expediente para no introducir un tercer criterio de aislamiento:
+
+1. **Modelo** — `ParaduaneroControlSchema` declara ahora `tenantId` (`ref: 'Tenant'`, indexado). Con el campo declarado, Mongoose ya no lo descarta al guardar ni ignora el filtro en las queries.
+2. **Servicio** — `paraduaneroService.createControlsForExpedition` copia `tenantId: expedition.tenantId` al construir cada control, de modo que todo control nuevo nace acotado a su cliente.
+3. **Backfill** — `scripts/backfillParaduaneroTenant.js` (idempotente, con `--dry-run`) rellena el `tenantId` de los controles antiguos copiándolo de su expediente. Cuenta huérfanos (sin expediente) y expedientes legacy sin tenant como casos que no puede resolver.
+4. **Regresión** — `tests/controllers/paraduaneroController.db.test.js` reemplaza el caso "HALLAZGO" por cuatro tests de aislamiento: `list` sólo devuelve los controles del propio tenant (siembra 2 de A + 1 de B, espera 2), y `getById`/`update`/`changeStatus` devuelven **404 sin mutar** al pedir un control de otra organización. Verificación de discriminancia: con el fix del `src` en stash, los cuatro tests fallan.
+
+Efecto: el guard `ensureSameTenant` ya encuentra `doc.tenantId` y sale de su rama legacy → `getById`/`update`/`changeStatus` aíslan de verdad; `list` filtra por un campo que ahora existe → devuelve los controles propios en lugar de una lista vacía.
 
 ### `aeatRealController` submit handlers: enum incompleto ocultaba errores de AEAT con HTTP 500 (5 de agosto de 2026)
 

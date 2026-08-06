@@ -99,6 +99,15 @@ const ParaduaneroControlSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  // Aislamiento multi-tenant. Se hereda del expediente al crear el control
+  // (ver paraduaneroService.createControlsForExpedition). Sin este campo el
+  // guard ensureSameTenant caia en su rama legacy "sin tenant -> permitido" y
+  // el listado filtraba por un campo inexistente (siempre 0). Ver SECURITY_AUDIT.md.
+  tenantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tenant',
+    index: true
+  },
   controlNumber: {
     type: String,
     unique: true
