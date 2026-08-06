@@ -151,31 +151,36 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
 
   const renderRiskAnalysis = (data) => {
     if (!data) return null
+    const nivelRiesgo = String(data.overallRiskLevel || data.riskLevel || '').toLowerCase()
     return (
       <div className="space-y-4">
         {/* Overall Risk Level */}
+        {/* El backend devuelve overallRiskLevel en MAYUSCULAS (LOW/MEDIUM/HIGH).
+            Se leia `riskLevel` en minusculas, un campo que no existe: todo
+            expediente salia como "Riesgo Bajo" aunque el analisis dijera otra
+            cosa. */}
         <div className={`p-4 rounded-lg ${
-          data.riskLevel === 'high' ? 'bg-red-50 border border-red-200' :
-          data.riskLevel === 'medium' ? 'bg-yellow-50 border border-yellow-200' :
+          nivelRiesgo === 'high' ? 'bg-red-50 border border-red-200' :
+          nivelRiesgo === 'medium' ? 'bg-yellow-50 border border-yellow-200' :
           'bg-green-50 border border-green-200'
         }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldExclamationIcon className={`w-6 h-6 ${
-                data.riskLevel === 'high' ? 'text-red-600' :
-                data.riskLevel === 'medium' ? 'text-yellow-600' :
+                nivelRiesgo === 'high' ? 'text-red-600' :
+                nivelRiesgo === 'medium' ? 'text-yellow-600' :
                 'text-green-600'
               }`} />
               <span className={`font-medium ${
-                data.riskLevel === 'high' ? 'text-red-800' :
-                data.riskLevel === 'medium' ? 'text-yellow-800' :
+                nivelRiesgo === 'high' ? 'text-red-800' :
+                nivelRiesgo === 'medium' ? 'text-yellow-800' :
                 'text-green-800'
               }`}>
-                {t('expeditions.riskLabel')} {data.riskLevel === 'high' ? t('expeditions.riskHigh') : data.riskLevel === 'medium' ? t('expeditions.riskMedium') : t('expeditions.riskLow')}
+                {t('expeditions.riskLabel')} {nivelRiesgo === 'high' ? t('expeditions.riskHigh') : nivelRiesgo === 'medium' ? t('expeditions.riskMedium') : t('expeditions.riskLow')}
               </span>
             </div>
-            {data.score && (
-              <span className="text-2xl font-bold">{data.score}/100</span>
+            {(data.overallRiskScore ?? data.score) != null && (
+              <span className="text-2xl font-bold">{data.overallRiskScore ?? data.score}/100</span>
             )}
           </div>
           {data.summary && <p className="mt-2 text-sm text-gray-600">{data.summary}</p>}
@@ -210,26 +215,36 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
         )}
 
         {/* Channel Prediction */}
-        {data.channelPrediction && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-800 mb-2">{t('expeditions.channelPrediction')}</h4>
-            <div className="flex items-center gap-4">
-              <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                data.channelPrediction.channel === 'green' ? 'bg-green-200 text-green-800' :
-                data.channelPrediction.channel === 'orange' ? 'bg-orange-200 text-orange-800' :
-                'bg-red-200 text-red-800'
-              }`}>
-                {data.channelPrediction.channel === 'green' ? t('expeditions.channelGreen') :
-                 data.channelPrediction.channel === 'orange' ? t('expeditions.channelOrange') : t('expeditions.channelRed')}
-              </span>
-              {data.channelPrediction.probability && (
-                <span className="text-sm text-gray-600">
-                  {(data.channelPrediction.probability * 100).toFixed(0)}% {t('expeditions.probability')}
+        {data.channelPrediction && (() => {
+          // El backend devuelve { green, orange, red, mostLikely } con
+          // porcentajes enteros. Se leia `channel` y `probability`, que no
+          // existen: al no casar ninguna rama caia siempre en el else y
+          // pintaba ROJO — incluso cuando la prediccion era verde.
+          const canal = String(data.channelPrediction.mostLikely || '').toLowerCase()
+          const porcentaje = data.channelPrediction[canal]
+          return (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-800 mb-2">{t('expeditions.channelPrediction')}</h4>
+              <div className="flex items-center gap-4">
+                <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                  canal === 'green' ? 'bg-green-200 text-green-800' :
+                  canal === 'orange' ? 'bg-orange-200 text-orange-800' :
+                  canal === 'red' ? 'bg-red-200 text-red-800' :
+                  'bg-gray-200 text-gray-800'
+                }`}>
+                  {canal === 'green' ? t('expeditions.channelGreen') :
+                   canal === 'orange' ? t('expeditions.channelOrange') :
+                   canal === 'red' ? t('expeditions.channelRed') : '—'}
                 </span>
-              )}
+                {typeof porcentaje === 'number' && (
+                  <span className="text-sm text-gray-600">
+                    {porcentaje}% {t('expeditions.probability')}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Recommendations */}
         {data.recommendations && data.recommendations.length > 0 && (

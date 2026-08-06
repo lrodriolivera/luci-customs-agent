@@ -800,8 +800,10 @@ describe('<ExpeditionDetail />', () => {
       data: {
         success: true,
         data: {
-          riskLevel: 'medium',
-          channelPrediction: { channel: 'orange', probability: 0.6 }
+          // Forma real del backend: nivel en MAYUSCULAS y porcentajes por color.
+          overallRiskLevel: 'MEDIUM',
+          overallRiskScore: 55,
+          channelPrediction: { green: 20, orange: 60, red: 20, mostLikely: 'ORANGE' }
         }
       }
     })
