@@ -4,6 +4,7 @@
  */
 
 const logger = require('../config/logger');
+const { SONNET, labelFor } = require('../config/bedrockModels');
 const TaricCode = require('../models/TaricCode');
 const TaricAICache = require('../models/TaricAICache');
 const aiService = require('./aiService');
@@ -81,7 +82,7 @@ async function getDutyInfo(taricCode, origin = null) {
     if (aiResult) {
       // Guardar en cache de IA
       await TaricAICache.saveToCache(normalizedCode, aiResult, {
-        model: 'claude-sonnet-4-20250514'
+        model: labelFor(SONNET)
       });
 
       // Guardar en cache compartido
@@ -165,7 +166,7 @@ REGLAS:
 
   try {
     const result = await aiService.callClaude(
-      'claude-sonnet-4-20250514',
+      SONNET,
       `Eres un experto en aranceles de la Union Europea. Tu funcion es proporcionar informacion EXACTA y ACTUALIZADA sobre aranceles del TARIC. Los datos deben ser precisos para calculos de importacion reales. Responde SOLO con JSON valido.`,
       prompt
     );
@@ -422,7 +423,7 @@ Responde con JSON:
 
   try {
     const result = await aiService.callClaude(
-      'claude-sonnet-4-20250514',
+      SONNET,
       'Eres un experto en aranceles de la UE. Valida aranceles con precision.',
       prompt
     );
