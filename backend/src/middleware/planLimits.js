@@ -67,7 +67,8 @@ function requireUsage(metric) {
 
       // Check current usage
       const tenant = tenantId ? await Tenant.findById(tenantId) : null;
-      const currentUsage = tenant?.usage?.[metric] || 0;
+      // BUG FIX (6/Ago/2026): usage es array histórico, currentUsage es el contador actual
+      const currentUsage = tenant?.currentUsage?.[metric] || 0;
 
       if (currentUsage >= limit) {
         return res.status(429).json({
@@ -81,7 +82,7 @@ function requireUsage(metric) {
 
       // Increment usage (fire and forget)
       if (tenant) {
-        Tenant.findByIdAndUpdate(tenantId, { $inc: { [`usage.${metric}`]: 1 } }).catch(() => {});
+        Tenant.findByIdAndUpdate(tenantId, { $inc: { [`currentUsage.${metric}`]: 1 } }).catch(() => {});
       }
 
       next();
