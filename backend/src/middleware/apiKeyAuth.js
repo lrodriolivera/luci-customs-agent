@@ -30,7 +30,9 @@ const authenticateApiKey = async (req, res, next) => {
     const keyDoc = await ClientApiKey.findByKey(apiKey);
 
     if (!keyDoc) {
-      logger.warn(`Invalid API key attempt: ${apiKey.substring(0, 12)}...`);
+      // SECURITY FIX (6/Ago/2026): no loguear fragmentos de la API key entrante
+      // (fuga de secreto en logs). Basta el largo para diagnosticar.
+      logger.warn(`Invalid API key attempt (length: ${apiKey.length})`);
       return res.status(401).json({
         success: false,
         error: 'Invalid or expired API key',
