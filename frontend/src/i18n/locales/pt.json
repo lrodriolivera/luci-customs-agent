@@ -456,7 +456,9 @@
     "units": "Uds",
     "nifPlaceholder": "B12345678",
     "eoriPlaceholder": "ES + NIF",
-    "descriptionPlaceholder": "Descreva o produto com detalhe: material, funcao, uso..."
+    "descriptionPlaceholder": "Descreva o produto com detalhe: material, funcao, uso...",
+    "statusDeclarationDraft": "Declaracao Rascunho",
+    "statusLevante": "Levantamento"
   },
   "classification": {
     "title": "Classificacao TARIC",

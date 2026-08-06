@@ -456,7 +456,9 @@
     "units": "Uds",
     "nifPlaceholder": "B12345678",
     "eoriPlaceholder": "ES + NIF",
-    "descriptionPlaceholder": "Descriga el producte amb detall: material, funcio, us..."
+    "descriptionPlaceholder": "Descriga el producte amb detall: material, funcio, us...",
+    "statusDeclarationDraft": "Declaracio Esborrany",
+    "statusLevante": "Alcament"
   },
   "classification": {
     "title": "Classificacio TARIC",

@@ -457,7 +457,9 @@
     "units": "Uds",
     "nifPlaceholder": "B12345678",
     "eoriPlaceholder": "ES + NIF",
-    "descriptionPlaceholder": "Describa el producto con detalle: material, funcion, uso..."
+    "descriptionPlaceholder": "Describa el producto con detalle: material, funcion, uso...",
+    "statusDeclarationDraft": "Declaracion Borrador",
+    "statusLevante": "Levante"
   },
   "classification": {
     "title": "Clasificacion TARIC",
@@ -1606,7 +1608,6 @@
     "eoriNumber": "Numero EORI",
     "contactPerson": "Persona de Contacto *",
     "contactPersonPlaceholder": "Juan Garcia",
-    "contactPersonPlaceholder": "Juan Garcia",
     "emailLabel": "Email *",
     "emailPlaceholder": "juan@miempresa.com",
     "phonePlaceholder": "+34 612 345 678",
@@ -1791,7 +1792,7 @@
   },
   "errorBoundary": {
     "title": "Algo salio mal",
-    "description": "Ha ocurrido un error inesperado. Por favor, recarga la pagina o contacta con soporte.",
+    "description": "Ha ocurrido un error inesperado. Por favor, intenta recargar la pagina.",
     "reload": "Recargar Pagina",
     "goHome": "Ir al Inicio"
   },
@@ -3347,11 +3348,5 @@
     "executiveReport": "Reporte Ejecutivo",
     "kpiAnalysis": "KPI Analysis",
     "fullAnalysis": "Analisis Completo"
-  },
-  "errorBoundary": {
-    "title": "Algo salio mal",
-    "description": "Ha ocurrido un error inesperado. Por favor, intenta recargar la pagina.",
-    "reload": "Recargar Pagina",
-    "goHome": "Ir al Inicio"
   }
 }

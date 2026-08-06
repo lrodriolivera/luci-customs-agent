@@ -456,7 +456,9 @@
     "units": "Units",
     "nifPlaceholder": "B12345678",
     "eoriPlaceholder": "ES + Tax ID",
-    "descriptionPlaceholder": "Describe the product in detail: material, function, use..."
+    "descriptionPlaceholder": "Describe the product in detail: material, function, use...",
+    "statusDeclarationDraft": "Draft Declaration",
+    "statusLevante": "Released"
   },
   "classification": {
     "title": "TARIC Classification",

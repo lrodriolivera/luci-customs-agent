@@ -57,6 +57,8 @@ export default function ExpeditionList() {
       'documents_validated': { label: t('expeditions.statusDocsValidated'), class: 'bg-indigo-100 text-indigo-800' },
       'ready_for_declaration': { label: t('expeditions.statusDeclarationReady'), class: 'bg-cyan-100 text-cyan-800' },
       'declaration_submitted': { label: t('expeditions.statusSubmitted'), class: 'bg-orange-100 text-orange-800' },
+      'declaration_draft': { label: t('expeditions.statusDeclarationDraft'), class: 'bg-slate-100 text-slate-800' },
+      'levante': { label: t('expeditions.statusLevante'), class: 'bg-green-100 text-green-800' },
       'green_channel': { label: t('expeditions.statusGreenChannel'), class: 'bg-green-100 text-green-800' },
       'orange_channel': { label: t('expeditions.statusOrangeChannel'), class: 'bg-orange-100 text-orange-800' },
       'red_channel': { label: t('expeditions.statusRedChannel'), class: 'bg-red-100 text-red-800' },
