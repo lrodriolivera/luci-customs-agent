@@ -23,8 +23,11 @@ describe('_selectModel: que modelo se usa para cada cosa', () => {
   // Es una decision de coste directo: Opus cuesta bastante mas que Haiku por
   // token. Elegir mal en un endpoint muy llamado se nota en la factura.
 
-  test('un mensaje corto de chat va a Haiku', () => {
-    expect(ai._selectModel('hola', 'chat')).toMatch(/haiku/);
+  test('un mensaje corto de chat va a la ruta rapida, no a Opus', () => {
+    // El modelo concreto de la ruta rapida cambia (Haiku 4.5 hoy esta
+    // bloqueado y apunta a Sonnet 5): lo que se fija aqui es que un chat
+    // trivial no acabe pagando Opus.
+    expect(ai._selectModel('hola', 'chat')).not.toMatch(/opus/);
   });
 
   test('un mensaje largo de chat va a Sonnet', () => {
@@ -57,7 +60,7 @@ describe('_selectModel: que modelo se usa para cada cosa', () => {
   });
 
   test('sin contexto explicito se comporta como chat', () => {
-    expect(ai._selectModel('hola')).toMatch(/haiku/);
+    expect(ai._selectModel('hola')).toBe(ai._selectModel('hola', 'chat'));
   });
 
   test('un mensaje que no es cadena no revienta', () => {

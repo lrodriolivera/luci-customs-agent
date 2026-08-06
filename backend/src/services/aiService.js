@@ -7,9 +7,15 @@ const { BedrockRuntimeClient, ConverseCommand } = require('@aws-sdk/client-bedro
 const logger = require('../config/logger');
 
 const BEDROCK_REGION = process.env.BEDROCK_REGION || 'us-east-1';
-const HAIKU_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0';
-const SONNET_MODEL = 'us.anthropic.claude-sonnet-4-20250514-v1:0';
-const OPUS_MODEL = 'us.anthropic.claude-opus-4-6-v1';
+// Inference profiles (prefijo us.): Bedrock rechaza los IDs desnudos de estos
+// modelos con "on-demand throughput isn't supported".
+//
+// HAIKU_MODEL apunta a Sonnet 5 de forma temporal: Haiku 4.5 sigue bloqueado en
+// la cuenta a la espera del formulario de caso de uso de Anthropic. Se conserva
+// el nombre de la constante porque la seleccion de modelo compara identidades.
+const HAIKU_MODEL = process.env.BEDROCK_FAST_MODEL || 'us.anthropic.claude-sonnet-5';
+const SONNET_MODEL = process.env.BEDROCK_SONNET_MODEL || 'us.anthropic.claude-sonnet-5';
+const OPUS_MODEL = process.env.BEDROCK_OPUS_MODEL || 'us.anthropic.claude-opus-5';
 
 // Mapa de idiomas para instrucciones al modelo
 const LANGUAGE_INSTRUCTIONS = {
@@ -255,7 +261,10 @@ class AIService {
         system: [{ text: systemPrompt }],
         messages: [{ role: 'user', content: [{ text: userMessage }] }],
         inferenceConfig: {
-          maxTokens: options.maxTokens || 4096
+          // Opus razona antes de responder y ese razonamiento consume el mismo
+          // presupuesto que la respuesta: con 4096 una clasificacion larga se
+          // trunca a mitad de razonamiento y no llega a emitir texto.
+          maxTokens: options.maxTokens || (model.includes('opus') ? 8192 : 4096)
         }
       });
 

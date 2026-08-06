@@ -125,3 +125,42 @@ describe('aiService.callClaude — extracción de texto por tipo de bloque', () 
     expect(result.stopReason).toBe('end_turn');
   });
 });
+
+describe('aiService.callClaude — presupuesto de tokens por modelo', () => {
+  let originalClient;
+
+  beforeEach(() => { originalClient = aiService.client; });
+  afterEach(() => { aiService.client = originalClient; });
+
+  const captureCommand = () => {
+    const send = jest.fn().mockResolvedValue(textOnlyResponse('ok'));
+    aiService.client = { send };
+    return send;
+  };
+
+  it('reserva presupuesto extra en Opus, que razona antes de responder', async () => {
+    const send = captureCommand();
+
+    await aiService.callClaude('us.anthropic.claude-opus-5', 'sys', 'user');
+
+    const { maxTokens } = send.mock.calls[0][0].input.inferenceConfig;
+    // Medido: 1039 tokens de razonamiento en una clasificacion TARIC corta.
+    expect(maxTokens).toBeGreaterThanOrEqual(8192);
+  });
+
+  it('mantiene el presupuesto por defecto en modelos sin razonamiento', async () => {
+    const send = captureCommand();
+
+    await aiService.callClaude('us.anthropic.claude-sonnet-5', 'sys', 'user');
+
+    expect(send.mock.calls[0][0].input.inferenceConfig.maxTokens).toBe(4096);
+  });
+
+  it('respeta el maxTokens explicito del llamante', async () => {
+    const send = captureCommand();
+
+    await aiService.callClaude('us.anthropic.claude-opus-5', 'sys', 'user', { maxTokens: 2000 });
+
+    expect(send.mock.calls[0][0].input.inferenceConfig.maxTokens).toBe(2000);
+  });
+});
