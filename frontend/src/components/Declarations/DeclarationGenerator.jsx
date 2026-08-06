@@ -104,6 +104,7 @@ export default function DeclarationGenerator() {
       a.href = url
       a.download = `${declarationType}_${selectedExpedition.expeditionId}.xml`
       a.click()
+      window.URL.revokeObjectURL(url)
       toast.success(t('declarations.xmlDownloaded'))
     } catch (error) {
       toast.error(t('declarations.errorExportXml'))
