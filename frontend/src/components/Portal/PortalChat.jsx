@@ -56,12 +56,19 @@ export default function PortalChat() {
       // el cliente tenga que enviarlo.
       const response = await portalAPI.aiEnhancedChat(token, newMessage)
 
+      // La respuesta llega como data.response = { message, tone, language }.
+      // Hay que quedarse con el texto: pasar el objeto entero a content hace
+      // que React reviente al intentar renderizarlo.
       const payload = response.data?.data || response.data
+      const texto = payload?.response?.message
+        || (typeof payload?.response === 'string' ? payload.response : null)
+        || payload?.message
+
       const aiMessage = {
         id: Date.now() + 1,
         sender: 'luci',
         senderName: 'LUCI',
-        content: payload?.message?.message || payload?.message || payload?.response,
+        content: typeof texto === 'string' ? texto : t('portal.chatError'),
         timestamp: new Date().toISOString()
       }
 
