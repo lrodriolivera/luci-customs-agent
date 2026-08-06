@@ -287,10 +287,18 @@ class AIService {
     }
 
     try {
+      // Opus razona antes de responder y ese razonamiento se factura como
+      // salida. Medido en generacion H1: 8.164 tokens de salida por defecto
+      // ('high') frente a 6.277 con 'medium', sin perder ninguna casilla
+      // obligatoria del DUA ni dejar de detectar un antidumping vigente.
+      // Los modelos sin razonamiento por defecto no llevan effort.
+      const effort = options.effort || (model.includes('opus') ? 'medium' : null);
+
       const command = new ConverseCommand({
         modelId: model,
         system: [{ text: systemPrompt }],
         messages: [{ role: 'user', content: [{ text: userMessage }] }],
+        ...(effort ? { additionalModelRequestFields: { output_config: { effort } } } : {}),
         inferenceConfig: {
           // Opus razona antes de responder y ese razonamiento consume el mismo
           // presupuesto que la respuesta: con 4096 una clasificacion larga se

@@ -164,3 +164,45 @@ describe('aiService.callClaude — presupuesto de tokens por modelo', () => {
     expect(send.mock.calls[0][0].input.inferenceConfig.maxTokens).toBe(2000);
   });
 });
+
+describe('aiService.callClaude — nivel de esfuerzo en Opus', () => {
+  let originalClient;
+
+  beforeEach(() => { originalClient = aiService.client; });
+  afterEach(() => { aiService.client = originalClient; });
+
+  const captureCommand = () => {
+    const send = jest.fn().mockResolvedValue(textOnlyResponse('ok'));
+    aiService.client = { send };
+    return send;
+  };
+
+  const effortOf = (send) =>
+    send.mock.calls[0][0].input.additionalModelRequestFields?.output_config?.effort;
+
+  it('pide esfuerzo medio en Opus, que por defecto razona de mas', async () => {
+    // Medido: 8.164 tokens de salida en 'high' frente a 6.277 en 'medium',
+    // sin perder ninguna casilla obligatoria del DUA.
+    const send = captureCommand();
+
+    await aiService.callClaude('global.anthropic.claude-opus-5', 'sys', 'user');
+
+    expect(effortOf(send)).toBe('medium');
+  });
+
+  it('no fija esfuerzo en modelos que no razonan por defecto', async () => {
+    const send = captureCommand();
+
+    await aiService.callClaude('global.anthropic.claude-sonnet-5', 'sys', 'user');
+
+    expect(effortOf(send)).toBeUndefined();
+  });
+
+  it('respeta el esfuerzo que pida el llamante', async () => {
+    const send = captureCommand();
+
+    await aiService.callClaude('global.anthropic.claude-opus-5', 'sys', 'user', { effort: 'high' });
+
+    expect(effortOf(send)).toBe('high');
+  });
+});
