@@ -11,6 +11,7 @@ import {
   XMarkIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline'
+import { esImportacion } from '../../utils/expedition'
 
 export default function PortalDocuments() {
   const { t } = useTranslation()
@@ -87,7 +88,7 @@ export default function PortalDocuments() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{t('portal.uploadTitle')}</h1>
         <p className="text-gray-600 mt-1">
-          {expedition?.operationType === 'IMPORT' ? t('portal.uploadSubtitleImport') : t('portal.uploadSubtitleExport')}
+          {esImportacion(expedition) ? t('portal.uploadSubtitleImport') : t('portal.uploadSubtitleExport')}
         </p>
       </div>
 

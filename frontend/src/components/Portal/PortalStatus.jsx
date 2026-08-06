@@ -8,6 +8,7 @@ import {
   TruckIcon,
   BuildingOfficeIcon
 } from '@heroicons/react/24/outline'
+import { esImportacion, esCompletado } from '../../utils/expedition'
 
 export default function PortalStatus() {
   const { t } = useTranslation()
@@ -63,7 +64,7 @@ export default function PortalStatus() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{t('portal.statusTitle')}</h1>
         <p className="text-gray-600 mt-1">
-          {expedition?.operationType === 'IMPORT' ? t('portal.statusSubtitleImport') : t('portal.statusSubtitleExport')}
+          {esImportacion(expedition) ? t('portal.statusSubtitleImport') : t('portal.statusSubtitleExport')}
         </p>
       </div>
 
@@ -71,7 +72,7 @@ export default function PortalStatus() {
       <div className="card bg-gradient-to-r from-luci to-blue-600 text-white">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center">
-            {expedition?.status === 'COMPLETED' ? (
+            {esCompletado(expedition) ? (
               <CheckCircleIcon className="w-10 h-10" />
             ) : (
               <ClockIcon className="w-10 h-10" />
@@ -185,7 +186,7 @@ export default function PortalStatus() {
           <div>
             <p className="text-sm text-gray-500">{t('common.type')}</p>
             <p className="font-medium">
-              {expedition?.operationType === 'IMPORT' ? t('common.import') : t('common.export')}
+              {esImportacion(expedition) ? t('common.import') : t('common.export')}
             </p>
           </div>
           <div>

@@ -150,6 +150,18 @@ exports.createRequirement = async (req, res) => {
       priority
     } = req.body;
 
+    // El canal es obligatorio —un requerimiento nace de un circuito AEAT— pero
+    // no se validaba: sin el, la peticion reventaba con un TypeError al montar
+    // el timeline, y de haber pasado habria salido como 500 desde el save de
+    // Mongoose. El agente merece saber que le falta un campo, no un 500.
+    const CANALES = ['orange', 'red', 'yellow'];
+    if (!CANALES.includes(channel)) {
+      return res.status(400).json({
+        success: false,
+        message: `Indique el canal del requerimiento (${CANALES.join(', ')})`
+      });
+    }
+
     // Verificar que existe el expediente y que es del tenant del usuario: sin
     // esto se podian crear requerimientos colgando del expediente de otro
     // cliente. ensureSameTenant ya responde 404 si no existe.

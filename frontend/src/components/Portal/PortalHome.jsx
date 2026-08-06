@@ -7,6 +7,7 @@ import {
   ClockIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline'
+import { esImportacion } from '../../utils/expedition'
 
 export default function PortalHome() {
   const { t } = useTranslation()
@@ -44,7 +45,7 @@ export default function PortalHome() {
           {t('portal.welcome')} {expedition?.client?.companyName}
         </h1>
         <p className="opacity-90">
-          {expedition?.operationType === 'IMPORT' ? t('portal.importExpedition') : t('portal.exportExpedition')}: {expedition?.expeditionId}
+          {esImportacion(expedition) ? t('portal.importExpedition') : t('portal.exportExpedition')}: {expedition?.expeditionId}
         </p>
       </div>
 

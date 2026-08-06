@@ -111,6 +111,38 @@ describe('requirementController (BD real)', () => {
   // --- createRequirement -----------------------------------------------------
 
   describe('createRequirement', () => {
+    it('responde 400 cuando falta el canal, no 500', async () => {
+      // channel es obligatorio (un requerimiento nace de un circuito AEAT), pero
+      // no se validaba: la peticion llegaba hasta el save de Mongoose y salia
+      // como 500 "Error al crear requerimiento". Antes incluso reventaba con un
+      // TypeError al hacer channel.toUpperCase() al montar el timeline.
+      const user = usuario(TENANT_A);
+      const exp = await crearExpediente(TENANT_A);
+
+      const res = crearRes();
+      await controller.createRequirement(
+        {
+          body: {
+            expeditionId: exp._id.toString(),
+            requirementType: 'documentary',
+            subject: 'Certificado de origen',
+            description: 'Aporte certificado de origen'
+          },
+          user
+        },
+        res
+      );
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toMatch(/canal/i);
+
+      // Y el expediente no se toca: darlo por naranja pondria en control
+      // documental un despacho al que la AEAT aun no ha asignado circuito.
+      const recargado = await Expedition.findById(exp._id);
+      expect(recargado.status).not.toBe('orange_channel');
+    });
+
     it('crea el requerimiento heredando tenant/mrn del expediente y transiciona a orange_channel', async () => {
       const user = usuario(TENANT_A);
       const exp = await crearExpediente(TENANT_A);
