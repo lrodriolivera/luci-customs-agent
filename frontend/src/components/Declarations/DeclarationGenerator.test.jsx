@@ -532,10 +532,13 @@ describe('DeclarationGenerator', () => {
       fireEvent.click(generateBtn)
 
       await waitFor(() => {
+        // El backend generate-direct usa expeditionId (string) para el modo
+        // "expediente existente"; enviar el objeto 'expedition' hacia que
+        // intentara crear uno nuevo y fallara con 500.
         expect(declarationsAPI.generateH1).toHaveBeenCalledWith({
-          expedition: mockExpeditions[0],
+          expeditionId: mockExpeditions[0]._id,
           regime: '40',
-          additional_procedure: '000',
+          additionalProcedure: '000',
           preference: '100'
         })
       })
@@ -573,8 +576,8 @@ describe('DeclarationGenerator', () => {
 
       await waitFor(() => {
         expect(declarationsAPI.generateAES).toHaveBeenCalledWith({
-          expedition: mockExpeditions[1],
-          export_type: '40'
+          expeditionId: mockExpeditions[1]._id,
+          exportType: '40'
         })
       })
     })

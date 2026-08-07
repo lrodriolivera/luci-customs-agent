@@ -72,16 +72,21 @@ export default function DeclarationGenerator() {
     setGeneratedDeclaration(null)
 
     try {
+      // generate-direct usa el modo "expediente existente" cuando recibe
+      // expeditionId (string). Se enviaba el objeto 'expedition' completo sin
+      // expeditionId, asi que el backend entraba en el modo "formulario directo",
+      // intentaba crear un Expedition nuevo sin client.nif/companyName y fallaba
+      // con 500 (Expedition validation failed). Enviamos el id y camelCase.
       const response = declarationType === 'H1'
         ? await declarationsAPI.generateH1({
-            expedition: selectedExpedition,
+            expeditionId: selectedExpedition._id,
             regime: options.regime,
-            additional_procedure: options.additionalProcedure,
+            additionalProcedure: options.additionalProcedure,
             preference: options.preference
           })
         : await declarationsAPI.generateAES({
-            expedition: selectedExpedition,
-            export_type: options.regime
+            expeditionId: selectedExpedition._id,
+            exportType: options.regime
           })
 
       setGeneratedDeclaration(response.data)
