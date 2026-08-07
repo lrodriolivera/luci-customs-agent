@@ -206,3 +206,106 @@ describe('aiService.callClaude — nivel de esfuerzo en Opus', () => {
     expect(effortOf(send)).toBe('high');
   });
 });
+
+describe('aiService.callClaude — reintento con backoff ante errores transitorios', () => {
+  let originalClient, originalFallback, envPrev;
+
+  beforeEach(() => {
+    originalClient = aiService.client;
+    originalFallback = aiService.fallbackClient;
+    // Sin fallback para que el error transitorio llegue al bucle de reintentos,
+    // no a la cuenta de fallback. Sin espera real (base 0).
+    aiService.fallbackClient = null;
+    envPrev = { base: process.env.BEDROCK_RETRY_BASE_MS, max: process.env.BEDROCK_MAX_RETRIES };
+    process.env.BEDROCK_RETRY_BASE_MS = '0';
+    process.env.BEDROCK_RETRY_MAX_MS = '0';
+  });
+
+  afterEach(() => {
+    aiService.client = originalClient;
+    aiService.fallbackClient = originalFallback;
+    if (envPrev.base === undefined) delete process.env.BEDROCK_RETRY_BASE_MS; else process.env.BEDROCK_RETRY_BASE_MS = envPrev.base;
+    if (envPrev.max === undefined) delete process.env.BEDROCK_MAX_RETRIES; else process.env.BEDROCK_MAX_RETRIES = envPrev.max;
+  });
+
+  const throttling = () => Object.assign(new Error('Too many requests'), { name: 'ThrottlingException' });
+  const ok = () => ({
+    output: { message: { role: 'assistant', content: [{ text: 'ok' }] } },
+    usage: { inputTokens: 1, outputTokens: 1 }, stopReason: 'end_turn'
+  });
+
+  it('reintenta un error transitorio y devuelve el exito del segundo intento', async () => {
+    const send = jest.fn()
+      .mockRejectedValueOnce(throttling())
+      .mockResolvedValueOnce(ok());
+    aiService.client = { send };
+
+    const result = await aiService.callClaude('us.anthropic.claude-sonnet-5', 'sys', 'user');
+
+    expect(result.content).toBe('ok');
+    expect(send).toHaveBeenCalledTimes(2);
+  });
+
+  it('reintenta un 503 aunque el error no tenga name reconocible', async () => {
+    const err503 = Object.assign(new Error('Service Unavailable'), { $metadata: { httpStatusCode: 503 } });
+    const send = jest.fn()
+      .mockRejectedValueOnce(err503)
+      .mockRejectedValueOnce(err503)
+      .mockResolvedValueOnce(ok());
+    aiService.client = { send };
+    process.env.BEDROCK_MAX_RETRIES = '3';
+
+    const result = await aiService.callClaude('us.anthropic.claude-sonnet-5', 'sys', 'user');
+
+    expect(result.content).toBe('ok');
+    expect(send).toHaveBeenCalledTimes(3);
+  });
+
+  it('NO reintenta un error no transitorio (validacion) y lanza de inmediato', async () => {
+    const validation = Object.assign(new Error('bad input'), { name: 'ValidationException', $metadata: { httpStatusCode: 400 } });
+    const send = jest.fn().mockRejectedValue(validation);
+    aiService.client = { send };
+
+    await expect(aiService.callClaude('us.anthropic.claude-sonnet-5', 'sys', 'user'))
+      .rejects.toThrow('Error en servicio de IA');
+    // Un solo intento: no se reintenta un 400.
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it('agota los reintentos y lanza si el error transitorio persiste', async () => {
+    const send = jest.fn().mockRejectedValue(throttling());
+    aiService.client = { send };
+    process.env.BEDROCK_MAX_RETRIES = '3';
+
+    await expect(aiService.callClaude('us.anthropic.claude-sonnet-5', 'sys', 'user'))
+      .rejects.toThrow('Error en servicio de IA');
+    // 3 intentos en total (el original + 2 reintentos).
+    expect(send).toHaveBeenCalledTimes(3);
+  });
+
+  it('respeta BEDROCK_MAX_RETRIES=1 (sin reintentos)', async () => {
+    const send = jest.fn().mockRejectedValue(throttling());
+    aiService.client = { send };
+    process.env.BEDROCK_MAX_RETRIES = '1';
+
+    await expect(aiService.callClaude('us.anthropic.claude-sonnet-5', 'sys', 'user'))
+      .rejects.toThrow('Error en servicio de IA');
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it('el reintento coexiste con el fallback: la cuenta prestada responde en el mismo intento', async () => {
+    // Fallo a nivel de cuenta en la principal → se prueba la de fallback dentro
+    // del MISMO intento, sin gastar reintentos. Se preserva el comportamiento
+    // previo al reintento.
+    const principalSend = jest.fn().mockRejectedValue(throttling());
+    const fallbackSend = jest.fn().mockResolvedValue(ok());
+    aiService.client = { send: principalSend };
+    aiService.fallbackClient = { send: fallbackSend };
+
+    const result = await aiService.callClaude('us.anthropic.claude-sonnet-5', 'sys', 'user');
+
+    expect(result.content).toBe('ok');
+    expect(principalSend).toHaveBeenCalledTimes(1);
+    expect(fallbackSend).toHaveBeenCalledTimes(1);
+  });
+});

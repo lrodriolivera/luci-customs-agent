@@ -401,6 +401,47 @@ class AIService {
   }
 
   /**
+   * Errores transitorios de Bedrock que merecen reintento con espera (no un
+   * fallo definitivo). Cubre throttling, saturacion del servicio, 5xx y
+   * timeouts del modelo/red. Los 503/524 recurrentes que veiamos entran aqui.
+   * NO incluye errores de validacion (400), credenciales ni codigo: esos no se
+   * arreglan reintentando y deben lanzar de inmediato.
+   */
+  _isReintentable(error) {
+    if ([
+      'ThrottlingException',
+      'TooManyRequestsException',
+      'ServiceUnavailableException',
+      'InternalServerException',
+      'ModelNotReadyException',
+      'ModelTimeoutException',
+      'ServiceQuotaExceededException'
+    ].includes(error?.name)) return true;
+    // Errores HTTP 5xx / 429 aunque el SDK no les ponga un name reconocible.
+    const status = error?.$metadata?.httpStatusCode;
+    if (status === 429 || (status >= 500 && status <= 599)) return true;
+    // Errores de red sin respuesta del servidor.
+    return ['TimeoutError', 'ECONNRESET', 'ETIMEDOUT', 'ECONNREFRESET'].includes(error?.name)
+      || ['ECONNRESET', 'ETIMEDOUT'].includes(error?.code);
+  }
+
+  /** Espera con backoff exponencial + jitter para el reintento nº `intento` (0-based). */
+  async _esperarBackoff(intento) {
+    // Bajo Jest no se espera de verdad (salvo que se fije BEDROCK_RETRY_BASE_MS
+    // explicitamente): la logica de reintento se ejercita igual, pero sin pausas
+    // reales que cuelguen la bateria. En produccion el backoff es normal.
+    if (process.env.JEST_WORKER_ID && process.env.BEDROCK_RETRY_BASE_MS === undefined) {
+      return;
+    }
+    const baseMs = parseInt(process.env.BEDROCK_RETRY_BASE_MS || '500', 10);
+    const maxMs = parseInt(process.env.BEDROCK_RETRY_MAX_MS || '8000', 10);
+    const espera = Math.min(baseMs * Math.pow(2, intento), maxMs);
+    // Jitter completo: entre 0 y `espera`, para no sincronizar reintentos.
+    const conJitter = Math.floor(Math.random() * espera);
+    await new Promise(resolve => setTimeout(resolve, conJitter));
+  }
+
+  /**
    * Llamada base a Claude via Bedrock Converse API
    */
   async callClaude(model, systemPrompt, userMessage, options = {}) {
@@ -429,16 +470,44 @@ class AIService {
         }
       });
 
-      let response;
-      try {
-        response = await this.client.send(command);
-      } catch (primaryError) {
-        if (!this.fallbackClient || !this._isAccountLevelFailure(primaryError)) {
-          throw primaryError;
+      // Un intento = probar la cuenta principal y, si falla a nivel de cuenta,
+      // la de fallback. Devuelve la respuesta o lanza el error mas relevante.
+      const enviarUnaVez = async () => {
+        try {
+          return await this.client.send(command);
+        } catch (primaryError) {
+          if (!this.fallbackClient || !this._isAccountLevelFailure(primaryError)) {
+            throw primaryError;
+          }
+          logger.warn(`Bedrock: la cuenta principal fallo con ${primaryError.name}, reintentando en la de fallback`);
+          return await this.fallbackClient.send(command);
         }
-        logger.warn(`Bedrock: la cuenta principal fallo con ${primaryError.name}, reintentando en la de fallback`);
-        response = await this.fallbackClient.send(command);
+      };
+
+      // Reintento con backoff exponencial + jitter para errores transitorios
+      // (throttling, 503, 5xx, timeout). Los 503/524 recurrentes de Bedrock se
+      // reintentan en vez de propagarse como un fallo definitivo al usuario.
+      const maxIntentos = parseInt(process.env.BEDROCK_MAX_RETRIES || '3', 10);
+      let response;
+      let ultimoError;
+      for (let intento = 0; intento < maxIntentos; intento++) {
+        try {
+          response = await enviarUnaVez();
+          if (intento > 0) {
+            logger.info(`Bedrock: exito en el reintento ${intento} para ${model}`);
+          }
+          break;
+        } catch (error) {
+          ultimoError = error;
+          const quedanIntentos = intento < maxIntentos - 1;
+          if (!quedanIntentos || !this._isReintentable(error)) {
+            throw error;
+          }
+          logger.warn(`Bedrock: error transitorio (${error.name || error.code || error.message}) en ${model}, reintento ${intento + 1}/${maxIntentos - 1}`);
+          await this._esperarBackoff(intento);
+        }
       }
+      if (!response) throw ultimoError;
 
       return {
         content: this._extractText(response),

@@ -28,14 +28,23 @@ const awsError = (name, message) => Object.assign(new Error(message || name), { 
 
 describe('aiService.callClaude — fallback entre cuentas', () => {
   let original;
+  let envPrev;
 
   beforeEach(() => {
     original = { client: aiService.client, fallbackClient: aiService.fallbackClient };
+    // Los errores transitorios (ThrottlingException) ahora disparan el reintento
+    // con backoff. Sin esto, los tests que agotan ambas cuentas esperarian varios
+    // segundos reales por reintento y colgarian la bateria. Espera 0.
+    envPrev = { base: process.env.BEDROCK_RETRY_BASE_MS, max: process.env.BEDROCK_RETRY_MAX_MS };
+    process.env.BEDROCK_RETRY_BASE_MS = '0';
+    process.env.BEDROCK_RETRY_MAX_MS = '0';
   });
 
   afterEach(() => {
     aiService.client = original.client;
     aiService.fallbackClient = original.fallbackClient;
+    if (envPrev.base === undefined) delete process.env.BEDROCK_RETRY_BASE_MS; else process.env.BEDROCK_RETRY_BASE_MS = envPrev.base;
+    if (envPrev.max === undefined) delete process.env.BEDROCK_RETRY_MAX_MS; else process.env.BEDROCK_RETRY_MAX_MS = envPrev.max;
   });
 
   it('no toca la cuenta secundaria si la principal responde', async () => {
