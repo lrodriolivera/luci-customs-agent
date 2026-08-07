@@ -412,7 +412,7 @@
     "downloadJson": "Download JSON",
     "submitToAeat": "Submit to AEAT",
     "submittingToAeat": "Submitting to AEAT...",
-    "demoMode": "Demo mode: simulates submission to AEAT Web Services",
+    "demoMode": "Real submission to AEAT's official test environment (PRE). Produces a real PRE MRN; it has no effect in production.",
     "aeatResponse": "AEAT Response",
     "mrnLabel": "MRN (Movement Reference Number)",
     "inspectionChannel": "Inspection Channel",

@@ -416,7 +416,7 @@
     "downloadJson": "Descarregar JSON",
     "submitToAeat": "Enviar para AEAT",
     "submittingToAeat": "A enviar para AEAT...",
-    "demoMode": "Modo demo: simula o envio para os Web Services da AEAT",
+    "demoMode": "Envio real para o ambiente de testes oficial da AEAT (PRE). Gera um MRN real de PRE; não tem efeito em produção.",
     "aeatResponse": "Resposta AEAT",
     "mrnLabel": "MRN (Movement Reference Number)",
     "inspectionChannel": "Canal de Inspecao",
