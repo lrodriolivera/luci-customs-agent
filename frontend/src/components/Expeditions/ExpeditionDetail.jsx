@@ -79,21 +79,27 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
 
   const renderDocumentSuggestions = (data) => {
     if (!data) return null
+    // suggestMissingDocuments (backend) devuelve missingRequired/recommended;
+    // el panel leia requiredDocuments/recommendedDocuments, que no existen en la
+    // respuesta real, asi que la pestaña salia vacia pese a un analisis correcto.
+    // Leemos el nombre real con fallback al antiguo, como en renderRiskAnalysis.
+    const requiredDocs = data.missingRequired || data.requiredDocuments || []
+    const recommendedDocs = data.recommended || data.recommendedDocuments || []
     return (
       <div className="space-y-4">
         {/* Required Documents */}
-        {data.requiredDocuments && data.requiredDocuments.length > 0 && (
+        {requiredDocs.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <h4 className="font-medium text-red-800 mb-3 flex items-center gap-2">
               <ExclamationTriangleIcon className="w-5 h-5" />
               {t('expeditions.requiredMandatoryDocs')}
             </h4>
             <ul className="space-y-2">
-              {data.requiredDocuments.map((doc, idx) => (
+              {requiredDocs.map((doc, idx) => (
                 <li key={idx} className="flex items-start gap-2 text-sm">
                   <span className="text-red-600">•</span>
                   <div>
-                    <p className="font-medium text-red-700">{doc.name || doc.type}</p>
+                    <p className="font-medium text-red-700">{doc.name || doc.type || doc.documentType}</p>
                     {doc.reason && <p className="text-red-600 text-xs">{doc.reason}</p>}
                   </div>
                 </li>
@@ -103,18 +109,18 @@ function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
         )}
 
         {/* Recommended Documents */}
-        {data.recommendedDocuments && data.recommendedDocuments.length > 0 && (
+        {recommendedDocs.length > 0 && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <h4 className="font-medium text-yellow-800 mb-3 flex items-center gap-2">
               <LightBulbIcon className="w-5 h-5" />
               {t('expeditions.recommendedDocs')}
             </h4>
             <ul className="space-y-2">
-              {data.recommendedDocuments.map((doc, idx) => (
+              {recommendedDocs.map((doc, idx) => (
                 <li key={idx} className="flex items-start gap-2 text-sm">
                   <span className="text-yellow-600">•</span>
                   <div>
-                    <p className="font-medium text-yellow-700">{doc.name || doc.type}</p>
+                    <p className="font-medium text-yellow-700">{doc.name || doc.type || doc.documentType}</p>
                     {doc.benefit && <p className="text-yellow-600 text-xs">{doc.benefit}</p>}
                   </div>
                 </li>

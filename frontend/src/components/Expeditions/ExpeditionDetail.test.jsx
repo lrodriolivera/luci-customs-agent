@@ -404,6 +404,33 @@ describe('<ExpeditionDetail />', () => {
     expect(screen.getByText('Faltan documentos obligatorios')).toBeInTheDocument()
   })
 
+  test('panel AI tab documents: muestra los documentos con la forma REAL del backend (missingRequired/recommended)', async () => {
+    // suggestMissingDocuments devuelve missingRequired/recommended, NO
+    // requiredDocuments/recommendedDocuments. El panel leia los segundos, asi
+    // que con la respuesta real de produccion la pestaña salia VACIA aunque el
+    // analisis (200) hubiera detectado documentos que faltan.
+    expeditionsAPI.aiSuggestDocuments.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          missingRequired: [{ documentType: 'COMMERCIAL_INVOICE', name: 'Factura Comercial', reason: 'Obligatoria para el despacho', priority: 'CRITICAL' }],
+          recommended: [{ documentType: 'EUR1', name: 'Certificado EUR.1', benefit: 'Reduce el arancel' }],
+          completenessScore: 40,
+          summary: 'Falta la factura comercial'
+        }
+      }
+    })
+    renderExpeditionDetail()
+    await waitFor(() => screen.getByText('expeditions.aiAnalysis'))
+    fireEvent.click(screen.getByText('expeditions.aiAnalysis'))
+    await waitFor(() => screen.getByText('expeditions.runAnalysis'))
+    fireEvent.click(screen.getByText('expeditions.runAnalysis'))
+    await waitFor(() => expect(expeditionsAPI.aiSuggestDocuments).toHaveBeenCalledWith('exp123'))
+    expect(await screen.findByText('Factura Comercial')).toBeInTheDocument()
+    expect(screen.getByText('Certificado EUR.1')).toBeInTheDocument()
+    expect(screen.getByText('Falta la factura comercial')).toBeInTheDocument()
+  })
+
   test('panel AI tab risk: corre análisis y muestra nivel de riesgo', async () => {
     expeditionsAPI.aiAnalyzeRisk.mockResolvedValue({
       data: {

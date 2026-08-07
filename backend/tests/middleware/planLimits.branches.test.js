@@ -488,10 +488,17 @@ describe('planLimits middleware - branches', () => {
 
       expect(next).toHaveBeenCalledWith();
 
-      // El incremento es fire-and-forget, pero comprobamos que se llamó
-      await new Promise((resolve) => setImmediate(resolve));
-      const t = await Tenant.findById(tenantProfessional._id);
-      expect(t.currentUsage.declarations).toBe(50);
+      // El incremento es $inc fire-and-forget (sin await en el middleware): bajo
+      // carga/paralelismo un solo setImmediate no basta para que la promesa a
+      // Mongo se resuelva, de ahi el flaky que daba 49 en la bateria completa.
+      // Poll determinista con reintentos hasta ver el valor esperado.
+      let declarations = 49;
+      for (let intento = 0; intento < 50 && declarations !== 50; intento++) {
+        await new Promise((resolve) => setImmediate(resolve));
+        const updated = await Tenant.findById(tenantProfessional._id);
+        declarations = updated.currentUsage.declarations;
+      }
+      expect(declarations).toBe(50);
     });
 
     test('requireUsage NO incrementa si límite alcanzado', async () => {
