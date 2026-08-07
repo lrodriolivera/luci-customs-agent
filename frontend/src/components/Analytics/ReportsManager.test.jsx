@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import ReportsManager from './ReportsManager'
@@ -1046,23 +1046,29 @@ describe('ReportsManager', () => {
       })
     })
 
-    it('does not delete when confirm returns false', async () => {
-      const user = userEvent.setup()
-      vi.spyOn(window, 'confirm').mockReturnValue(false)
-      render(<ReportsManager />)
-      await screen.findByText('Reporte Q1')
+    // Abre el modal (clic en Eliminar) y confirma o cancela.
+    const abrirModalDelete = async (user) => {
       const deleteButtons = screen.getAllByTitle('Eliminar')
       await user.click(deleteButtons[0])
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      return screen.getByRole('dialog')
+    }
+
+    it('no elimina si se cancela el modal', async () => {
+      const user = userEvent.setup()
+      render(<ReportsManager />)
+      await screen.findByText('Reporte Q1')
+      const dialog = await abrirModalDelete(user)
+      await user.click(within(dialog).getByText('common.cancel').closest('button'))
       expect(analyticsAPI.reports.delete).not.toHaveBeenCalled()
     })
 
-    it('calls delete API when confirm returns true', async () => {
+    it('llama a delete al confirmar en el modal', async () => {
       const user = userEvent.setup()
-      vi.spyOn(window, 'confirm').mockReturnValue(true)
       render(<ReportsManager />)
       await screen.findByText('Reporte Q1')
-      const deleteButtons = screen.getAllByTitle('Eliminar')
-      await user.click(deleteButtons[0])
+      const dialog = await abrirModalDelete(user)
+      await user.click(within(dialog).getByText('common.confirm').closest('button'))
       await waitFor(() => {
         expect(analyticsAPI.reports.delete).toHaveBeenCalledWith('report-1')
       })
@@ -1070,12 +1076,10 @@ describe('ReportsManager', () => {
 
     it('shows success toast and reloads reports on successful delete', async () => {
       const user = userEvent.setup()
-      vi.spyOn(window, 'confirm').mockReturnValue(true)
       render(<ReportsManager />)
       await screen.findByText('Reporte Q1')
-      vi.clearAllMocks()
-      const deleteButtons = screen.getAllByTitle('Eliminar')
-      await user.click(deleteButtons[0])
+      const dialog = await abrirModalDelete(user)
+      await user.click(within(dialog).getByText('common.confirm').closest('button'))
       await waitFor(() => {
         expect(toast.success).toHaveBeenCalledWith('Informe eliminado')
         expect(analyticsAPI.reports.list).toHaveBeenCalled()
@@ -1084,25 +1088,22 @@ describe('ReportsManager', () => {
 
     it('handles delete error', async () => {
       const user = userEvent.setup()
-      vi.spyOn(window, 'confirm').mockReturnValue(true)
       analyticsAPI.reports.delete.mockRejectedValue(new Error('Delete failed'))
       render(<ReportsManager />)
       await screen.findByText('Reporte Q1')
-      const deleteButtons = screen.getAllByTitle('Eliminar')
-      await user.click(deleteButtons[0])
+      const dialog = await abrirModalDelete(user)
+      await user.click(within(dialog).getByText('common.confirm').closest('button'))
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith('Error eliminando informe')
       })
     })
 
-    it('shows confirm dialog with correct message', async () => {
+    it('muestra el mensaje de confirmacion en el modal', async () => {
       const user = userEvent.setup()
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
       render(<ReportsManager />)
       await screen.findByText('Reporte Q1')
-      const deleteButtons = screen.getAllByTitle('Eliminar')
-      await user.click(deleteButtons[0])
-      expect(confirmSpy).toHaveBeenCalledWith('¿Eliminar este informe?')
+      const dialog = await abrirModalDelete(user)
+      expect(within(dialog).getByText('¿Eliminar este informe?')).toBeInTheDocument()
     })
   })
 

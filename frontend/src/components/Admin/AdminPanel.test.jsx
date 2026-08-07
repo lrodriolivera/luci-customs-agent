@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import AdminPanel from './AdminPanel'
 import api from '../../services/api'
@@ -112,6 +112,16 @@ describe('<AdminPanel />', () => {
     vi.clearAllMocks()
     window.confirm.mockReturnValue(true)
   })
+
+  // El reset/delete abren un modal de confirmación (no confirm() nativo).
+  const confirmarModal = async () => {
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+    fireEvent.click(within(screen.getByRole('dialog')).getByText('common.confirm').closest('button'))
+  }
+  const cancelarModal = async () => {
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+    fireEvent.click(within(screen.getByRole('dialog')).getByText('common.cancel').closest('button'))
+  }
 
   // ================== DASHBOARD TAB ==================
   test('renderiza el panel con la pestaña dashboard por defecto y carga stats', async () => {
@@ -628,6 +638,7 @@ describe('<AdminPanel />', () => {
 
     const resetButtons = screen.getAllByTitle('Restablecer contraseña')
     fireEvent.click(resetButtons[0])
+    await confirmarModal()
 
     await waitFor(() =>
       expect(api.post).toHaveBeenCalledWith('/api/admin/users/u1/reset-password')
@@ -636,7 +647,6 @@ describe('<AdminPanel />', () => {
   })
 
   test('resetear password cancelado no llama a la API', async () => {
-    window.confirm.mockReturnValueOnce(false)
     api.get
       .mockResolvedValueOnce({ data: mockDashboardStats })
       .mockResolvedValueOnce({ data: { users: mockUsers } })
@@ -652,6 +662,7 @@ describe('<AdminPanel />', () => {
 
     const resetButtons = screen.getAllByTitle('Restablecer contraseña')
     fireEvent.click(resetButtons[0])
+    await cancelarModal()
 
     expect(api.post).not.toHaveBeenCalled()
   })
@@ -673,6 +684,7 @@ describe('<AdminPanel />', () => {
 
     const deleteButtons = screen.getAllByTitle('Eliminar')
     fireEvent.click(deleteButtons[0])
+    await confirmarModal()
 
     await waitFor(() => expect(api.delete).toHaveBeenCalledWith('/api/admin/users/u1'))
     expect(toast.success).toHaveBeenCalledWith('admin.userDeleted')
@@ -1419,6 +1431,7 @@ describe('<AdminPanel />', () => {
 
     const resetButtons = screen.getAllByTitle('Restablecer contraseña')
     fireEvent.click(resetButtons[0])
+    await confirmarModal()
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('admin.errorResetPassword'))
   })
@@ -1440,12 +1453,12 @@ describe('<AdminPanel />', () => {
 
     const deleteButtons = screen.getAllByTitle('Eliminar')
     fireEvent.click(deleteButtons[0])
+    await confirmarModal()
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('admin.errorDeletingUser'))
   })
 
   test('eliminar usuario cancelado no llama a la API', async () => {
-    window.confirm.mockReturnValueOnce(false)
     api.get
       .mockResolvedValueOnce({ data: mockDashboardStats })
       .mockResolvedValueOnce({ data: { users: mockUsers } })
@@ -1461,6 +1474,7 @@ describe('<AdminPanel />', () => {
 
     const deleteButtons = screen.getAllByTitle('Eliminar')
     fireEvent.click(deleteButtons[0])
+    await cancelarModal()
 
     expect(api.delete).not.toHaveBeenCalled()
   })

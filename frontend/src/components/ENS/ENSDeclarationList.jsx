@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import ConfirmDialog from '../common/ConfirmDialog'
+import { useConfirm } from '../../hooks/useConfirm'
 import { useNavigate } from 'react-router-dom'
 import {
   Box, Typography, Paper, Grid, Button, TextField, MenuItem,
@@ -32,6 +34,7 @@ import ENSBatchUpload from './ENSBatchUpload'
 
 const ENSDeclarationList = () => {
   const { t } = useTranslation()
+  const { confirm, dialogProps } = useConfirm()
   const navigate = useNavigate()
 
   // Transport mode icons and colors
@@ -154,7 +157,7 @@ const ENSDeclarationList = () => {
   }
 
   const handleSubmitDeclaration = async (id) => {
-    if (!window.confirm(t('ens.confirmSend'))) return
+    if (!await confirm({ message: t('ens.confirmSend') })) return
 
     try {
       const response = await ensAPI.submit(id)
@@ -668,6 +671,7 @@ const ENSDeclarationList = () => {
           loadStats()
         }}
       />
+    <ConfirmDialog {...dialogProps} />
     </Box>
   )
 }

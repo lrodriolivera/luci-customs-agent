@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import ConfirmDialog from '../common/ConfirmDialog'
+import { useConfirm } from '../../hooks/useConfirm'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box, Typography, Paper, Grid, Button, Chip, Card, CardContent,
@@ -33,6 +35,7 @@ import { ensAPI } from '../../services/api'
 
 const ENSDeclarationDetail = () => {
   const { t } = useTranslation()
+  const { confirm, dialogProps } = useConfirm()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -100,7 +103,7 @@ const ENSDeclarationDetail = () => {
   }
 
   const handleSubmit = async () => {
-    if (!window.confirm(t('ens.confirmSend'))) return
+    if (!await confirm({ message: t('ens.confirmSend') })) return
 
     try {
       setActionLoading(true)
@@ -873,6 +876,7 @@ const ENSDeclarationDetail = () => {
           </Button>
         </DialogActions>
       </Dialog>
+    <ConfirmDialog {...dialogProps} />
     </Box>
   )
 }

@@ -6,6 +6,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import ConfirmDialog from '../common/ConfirmDialog';
+import { useConfirm } from '../../hooks/useConfirm';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -439,6 +441,7 @@ const CreateWorkflowModal = ({ templates, events, actions, onClose, onCreate }) 
 
 const WorkflowManager = () => {
   const { t } = useTranslation();
+  const { confirm, dialogProps } = useConfirm();
   const [workflows, setWorkflows] = useState([]);
   const [stats, setStats] = useState(null);
   const [templates, setTemplates] = useState([]);
@@ -508,7 +511,7 @@ const WorkflowManager = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Estas seguro de eliminar este workflow?')) return;
+    if (!await confirm({ message: '¿Estás seguro de eliminar este workflow?', variant: 'danger' })) return;
 
     try {
       const res = await fetch(`${API_BASE}/workflows/${id}`, {
@@ -624,6 +627,7 @@ const WorkflowManager = () => {
           onCreate={handleCreate}
         />
       )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   );
 };

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import ConfirmDialog from '../common/ConfirmDialog'
+import { useConfirm } from '../../hooks/useConfirm'
 import { declarationsAPI } from '../../services/api'
 
 /**
@@ -8,6 +10,7 @@ import { declarationsAPI } from '../../services/api'
  */
 const H7Declaration = ({ expedition, onUpdate }) => {
   const { t } = useTranslation()
+  const { confirm, dialogProps } = useConfirm()
 
   // Multi-country support: read from dashboard country selector
   const activeCountry = localStorage.getItem('activeCustomsCountry') || 'ES'
@@ -60,7 +63,7 @@ const H7Declaration = ({ expedition, onUpdate }) => {
   }
 
   const handleSubmitH7 = async () => {
-    if (!confirm('Enviar declaracion H7 a AEAT?')) return
+    if (!await confirm({ message: '¿Enviar declaración H7 a AEAT?' })) return
 
     setLoading(true)
     setError(null)
@@ -397,6 +400,7 @@ const H7Declaration = ({ expedition, onUpdate }) => {
           </ul>
         </div>
       )}
+    <ConfirmDialog {...dialogProps} />
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ENSDeclarationDetail from './ENSDeclarationDetail'
 
@@ -304,9 +304,8 @@ describe('ENSDeclarationDetail', () => {
       expect(mockNavigate).toHaveBeenCalledWith('/ens/ens-123/edit')
     })
 
-    it('submits declaration with window.confirm true', async () => {
+    it('envia la declaracion al confirmar en el modal', async () => {
       const user = userEvent.setup()
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
       ensAPI.submit.mockResolvedValue({ data: { success: true } })
       const reloadDeclaration = createMockDeclaration({ status: 'submitted' })
       ensAPI.get.mockResolvedValueOnce({
@@ -321,27 +320,27 @@ describe('ENSDeclarationDetail', () => {
       const sendButton = screen.getByRole('button', { name: /ens.sendToAeat/ })
       await user.click(sendButton)
 
-      expect(confirmSpy).toHaveBeenCalledWith('ens.confirmSend')
+      // Modal de confirmación (no confirm() nativo): confirmar.
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      await user.click(within(screen.getByRole('dialog')).getByText('common.confirm').closest('button'))
+
       await waitFor(() => {
         expect(ensAPI.submit).toHaveBeenCalledWith('ens-123')
       })
-
-      confirmSpy.mockRestore()
     })
 
-    it('does not submit when window.confirm returns false', async () => {
+    it('no envia si se cancela el modal', async () => {
       const user = userEvent.setup()
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
       render(<ENSDeclarationDetail />)
       await screen.findByRole('heading', { name: 'ENS-2026-001' })
 
       const sendButton = screen.getByRole('button', { name: /ens.sendToAeat/ })
       await user.click(sendButton)
 
-      expect(confirmSpy).toHaveBeenCalled()
-      expect(ensAPI.submit).not.toHaveBeenCalled()
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      await user.click(within(screen.getByRole('dialog')).getByText('common.cancel').closest('button'))
 
-      confirmSpy.mockRestore()
+      expect(ensAPI.submit).not.toHaveBeenCalled()
     })
 
     it('shows Notify Arrival and Cancel buttons when status is accepted', async () => {
@@ -1126,16 +1125,17 @@ describe('ENSDeclarationDetail', () => {
 
     it('handles submit error gracefully', async () => {
       const user = userEvent.setup()
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
       ensAPI.submit.mockRejectedValue(new Error('Network error'))
       render(<ENSDeclarationDetail />)
       await screen.findByRole('heading', { name: 'ENS-2026-001' })
       const sendButton = screen.getByRole('button', { name: /ens.sendToAeat/ })
       await user.click(sendButton)
+      // Confirmar en el modal.
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      await user.click(within(screen.getByRole('dialog')).getByText('common.confirm').closest('button'))
       await waitFor(() => {
         expect(ensAPI.submit).toHaveBeenCalled()
       })
-      confirmSpy.mockRestore()
     })
 
     it('handles cancel error gracefully', async () => {

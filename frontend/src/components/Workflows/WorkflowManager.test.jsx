@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import WorkflowManager from './WorkflowManager';
@@ -559,7 +559,9 @@ describe('WorkflowManager', () => {
     });
     await user.click(deleteButtons[0]);
 
-    expect(window.confirm).toHaveBeenCalledWith('Estas seguro de eliminar este workflow?');
+    // Ahora aparece el modal de confirmación (no confirm() nativo). Confirmar.
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+    await user.click(within(screen.getByRole('dialog')).getByText('common.confirm').closest('button'));
 
     await waitFor(() => {
       expect(deleteCalled).toBe(true);
@@ -607,7 +609,9 @@ describe('WorkflowManager', () => {
     });
     await user.click(deleteButtons[0]);
 
-    expect(window.confirm).toHaveBeenCalled();
+    // Aparece el modal; cancelar no debe disparar el DELETE.
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+    await user.click(within(screen.getByRole('dialog')).getByText('common.cancel').closest('button'));
 
     // Should not call DELETE
     const deleteCalls = Array.from(global.fetch.mock.calls).filter(call =>

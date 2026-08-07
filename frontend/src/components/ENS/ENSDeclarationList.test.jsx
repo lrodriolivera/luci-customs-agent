@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import ENSDeclarationList from './ENSDeclarationList'
 import { ensAPI } from '../../services/api'
@@ -340,7 +340,6 @@ describe('ENSDeclarationList', () => {
     ensAPI.list.mockResolvedValue(mockListResponse(declarations, 1))
     ensAPI.getStats.mockResolvedValue(mockStatsResponse())
     ensAPI.submit.mockResolvedValue({ data: { success: true } })
-    window.confirm.mockReturnValue(true)
 
     const { container } = render(<ENSDeclarationList />)
 
@@ -351,8 +350,11 @@ describe('ENSDeclarationList', () => {
     const sendButton = sendIcon.closest('button')
     fireEvent.click(sendButton)
 
+    // Modal de confirmación: confirmar.
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+    fireEvent.click(within(screen.getByRole('dialog')).getByText('common.confirm').closest('button'))
+
     await waitFor(() => {
-      expect(window.confirm).toHaveBeenCalledWith('ens.confirmSend')
       expect(ensAPI.submit).toHaveBeenCalledWith('dec-1')
     })
 
@@ -363,11 +365,10 @@ describe('ENSDeclarationList', () => {
     })
   })
 
-  it('no submitea si confirm=false', async () => {
+  it('no submitea si se cancela el modal', async () => {
     const declarations = [mockDeclaration({ status: 'draft' })]
     ensAPI.list.mockResolvedValue(mockListResponse(declarations, 1))
     ensAPI.getStats.mockResolvedValue(mockStatsResponse())
-    window.confirm.mockReturnValue(false)
 
     const { container } = render(<ENSDeclarationList />)
 
@@ -377,9 +378,8 @@ describe('ENSDeclarationList', () => {
     const sendButton = sendIcon.closest('button')
     fireEvent.click(sendButton)
 
-    await waitFor(() => {
-      expect(window.confirm).toHaveBeenCalled()
-    })
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+    fireEvent.click(within(screen.getByRole('dialog')).getByText('common.cancel').closest('button'))
 
     expect(ensAPI.submit).not.toHaveBeenCalled()
   })
@@ -581,7 +581,6 @@ describe('ENSDeclarationList', () => {
     ensAPI.list.mockResolvedValue(mockListResponse(declarations, 1))
     ensAPI.getStats.mockResolvedValue(mockStatsResponse())
     ensAPI.submit.mockRejectedValue(new Error('Submit failed'))
-    window.confirm.mockReturnValue(true)
 
     const { container } = render(<ENSDeclarationList />)
 
@@ -590,6 +589,9 @@ describe('ENSDeclarationList', () => {
     const sendIcon = container.querySelector('svg[data-testid="SendIcon"]')
     const sendButton = sendIcon.closest('button')
     fireEvent.click(sendButton)
+
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+    fireEvent.click(within(screen.getByRole('dialog')).getByText('common.confirm').closest('button'))
 
     await waitFor(() => {
       expect(consoleError).toHaveBeenCalledWith('Error submitting declaration:', expect.any(Error))

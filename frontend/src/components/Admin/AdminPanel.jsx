@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import ConfirmDialog from '../common/ConfirmDialog'
+import { useConfirm } from '../../hooks/useConfirm'
 import {
   UsersIcon,
   Cog6ToothIcon,
@@ -48,6 +50,7 @@ const actionIcons = {
 
 export default function AdminPanel() {
   const { t } = useTranslation()
+  const { confirm, dialogProps } = useConfirm()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [loading, setLoading] = useState(true)
 
@@ -163,7 +166,7 @@ export default function AdminPanel() {
   }
 
   const handleResetPassword = async (userId, userEmail) => {
-    if (!window.confirm(`¿Restablecer contraseña de ${userEmail}?`)) return
+    if (!await confirm({ message: `¿Restablecer contraseña de ${userEmail}?` })) return
     try {
       const res = await api.post(`/api/admin/users/${userId}/reset-password`)
       setTempPassword({
@@ -187,7 +190,7 @@ export default function AdminPanel() {
   }
 
   const handleDeleteUser = async (userId) => {
-    if (!window.confirm('¿Eliminar este usuario?')) return
+    if (!await confirm({ message: '¿Eliminar este usuario?', variant: 'danger' })) return
     try {
       await api.delete(`/api/admin/users/${userId}`)
       setUsers(prev => prev.filter(u => u.id !== userId))
@@ -923,6 +926,7 @@ export default function AdminPanel() {
           {activeTab === 'audit' && renderAudit()}
         </>
       )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   )
 }

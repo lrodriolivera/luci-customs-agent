@@ -24,6 +24,8 @@ import {
 } from '@mui/icons-material'
 import { pueAPI } from '../../services/api'
 import { useTranslation } from 'react-i18next'
+import ConfirmDialog from '../common/ConfirmDialog'
+import { useConfirm } from '../../hooks/useConfirm'
 
 // Status configuration
 const statusConfig = {
@@ -45,6 +47,7 @@ const statusConfig = {
 
 const PUERequestDetail = () => {
   const { t } = useTranslation()
+  const { confirm, dialogProps } = useConfirm()
   const { id } = useParams()
   const navigate = useNavigate()
   const [request, setRequest] = useState(null)
@@ -86,7 +89,7 @@ const PUERequestDetail = () => {
   }
 
   const handleSubmit = async () => {
-    if (!window.confirm('Esta seguro de enviar esta solicitud?')) return
+    if (!await confirm({ message: '¿Está seguro de enviar esta solicitud?' })) return
 
     try {
       setActionLoading(true)
@@ -807,6 +810,7 @@ const PUERequestDetail = () => {
           </Button>
         </DialogActions>
       </Dialog>
+    <ConfirmDialog {...dialogProps} />
     </Box>
   )
 }

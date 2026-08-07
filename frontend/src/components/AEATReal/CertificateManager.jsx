@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import toast from 'react-hot-toast'
+import ConfirmDialog from '../common/ConfirmDialog'
+import { useConfirm } from '../../hooks/useConfirm'
 import {
   KeyIcon,
   ShieldCheckIcon,
@@ -18,6 +20,7 @@ import { useTranslation } from 'react-i18next'
 
 export default function CertificateManager() {
   const { t } = useTranslation()
+  const { confirm, dialogProps } = useConfirm()
   const [certificates, setCertificates] = useState([])
   const [loading, setLoading] = useState(true)
   const [importing, setImporting] = useState(false)
@@ -99,7 +102,7 @@ export default function CertificateManager() {
   }
 
   const handleDelete = async (alias) => {
-    if (!window.confirm(`¿Eliminar el certificado "${alias}"?`)) return
+    if (!await confirm({ message: `¿Eliminar el certificado "${alias}"?`, variant: 'danger' })) return
 
     try {
       const response = await aeatRealAPI.certificates.delete(alias)
@@ -529,6 +532,7 @@ export default function CertificateManager() {
           </div>
         </div>
       )}
+      <ConfirmDialog {...dialogProps} />
     </div>
   )
 }

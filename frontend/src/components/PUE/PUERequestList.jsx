@@ -15,6 +15,8 @@ import {
 } from '@mui/icons-material'
 import { pueAPI } from '../../services/api'
 import { useTranslation } from 'react-i18next'
+import ConfirmDialog from '../common/ConfirmDialog'
+import { useConfirm } from '../../hooks/useConfirm'
 
 // Status configuration
 const statusConfig = {
@@ -44,6 +46,7 @@ const typeColors = {
 
 const PUERequestList = ({ pueType, onRefresh, onCreateNew }) => {
   const { t } = useTranslation()
+  const { confirm, dialogProps } = useConfirm()
   const navigate = useNavigate()
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
@@ -112,7 +115,7 @@ const PUERequestList = ({ pueType, onRefresh, onCreateNew }) => {
   }
 
   const handleSubmit = async (request) => {
-    if (!window.confirm('Esta seguro de enviar esta solicitud a AEAT/SOIVRE?')) return
+    if (!await confirm({ message: '¿Está seguro de enviar esta solicitud a AEAT/SOIVRE?' })) return
 
     try {
       const response = await pueAPI.submit(request._id)
@@ -374,6 +377,7 @@ const PUERequestList = ({ pueType, onRefresh, onCreateNew }) => {
           labelRowsPerPage="Filas por pagina:"
         />
       </Paper>
+    <ConfirmDialog {...dialogProps} />
     </Box>
   )
 }

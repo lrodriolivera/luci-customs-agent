@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import PUERequestDetail from './PUERequestDetail'
 import { pueAPI } from '../../services/api'
@@ -422,7 +422,6 @@ describe('PUERequestDetail', () => {
 
   describe('handleSubmit', () => {
     it('calls pueAPI.submit when confirm is true', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
       pueAPI.get.mockResolvedValue({ data: { success: true, data: mockRequestDraft } })
       pueAPI.submit.mockResolvedValue({ data: { success: true } })
 
@@ -432,14 +431,15 @@ describe('PUERequestDetail', () => {
       const submitButton = screen.getByRole('button', { name: /Enviar a AEAT/ })
       await userEvent.click(submitButton)
 
-      expect(confirmSpy).toHaveBeenCalledWith('Esta seguro de enviar esta solicitud?')
-      expect(pueAPI.submit).toHaveBeenCalledWith('pue-123')
+      // Modal de confirmación (no confirm() nativo): confirmar.
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      await userEvent.click(within(screen.getByRole('dialog')).getByText('common.confirm').closest('button'))
+
+      await waitFor(() => expect(pueAPI.submit).toHaveBeenCalledWith('pue-123'))
       expect(pueAPI.get).toHaveBeenCalledTimes(2) // Initial + reload
-      confirmSpy.mockRestore()
     })
 
     it('does NOT call pueAPI.submit when confirm is false', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
       pueAPI.get.mockResolvedValue({ data: { success: true, data: mockRequestDraft } })
 
       render(<PUERequestDetail />)
@@ -448,13 +448,13 @@ describe('PUERequestDetail', () => {
       const submitButton = screen.getByRole('button', { name: /Enviar a AEAT/ })
       await userEvent.click(submitButton)
 
-      expect(confirmSpy).toHaveBeenCalled()
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      await userEvent.click(within(screen.getByRole('dialog')).getByText('common.cancel').closest('button'))
+
       expect(pueAPI.submit).not.toHaveBeenCalled()
-      confirmSpy.mockRestore()
     })
 
     it('shows alert on submit error', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
       const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
       pueAPI.get.mockResolvedValue({ data: { success: true, data: mockRequestDraft } })
       pueAPI.submit.mockRejectedValue(new Error('Submit error'))
@@ -465,10 +465,12 @@ describe('PUERequestDetail', () => {
       const submitButton = screen.getByRole('button', { name: /Enviar a AEAT/ })
       await userEvent.click(submitButton)
 
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      await userEvent.click(within(screen.getByRole('dialog')).getByText('common.confirm').closest('button'))
+
       await waitFor(() => {
         expect(alertSpy).toHaveBeenCalledWith('Error al enviar la solicitud')
       })
-      confirmSpy.mockRestore()
       alertSpy.mockRestore()
     })
   })

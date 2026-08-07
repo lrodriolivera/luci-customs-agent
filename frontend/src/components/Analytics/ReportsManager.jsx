@@ -22,6 +22,8 @@ import {
 } from '@heroicons/react/24/outline'
 import { analyticsAPI } from '../../services/api'
 import { useTranslation } from 'react-i18next'
+import ConfirmDialog from '../common/ConfirmDialog'
+import { useConfirm } from '../../hooks/useConfirm'
 
 const REPORT_TYPE_ICONS = {
   executive_summary: DocumentChartBarIcon,
@@ -54,6 +56,7 @@ const PERIOD_OPTIONS = [
 
 export default function ReportsManager() {
   const { t } = useTranslation()
+  const { confirm, dialogProps } = useConfirm()
   const [loading, setLoading] = useState(true)
   const [reports, setReports] = useState([])
   const [reportTypes, setReportTypes] = useState([])
@@ -185,7 +188,7 @@ export default function ReportsManager() {
   }
 
   const handleDeleteReport = async (reportId) => {
-    if (!window.confirm('¿Eliminar este informe?')) return
+    if (!await confirm({ message: '¿Eliminar este informe?', variant: 'danger' })) return
 
     try {
       const response = await analyticsAPI.reports.delete(reportId)
@@ -744,6 +747,7 @@ export default function ReportsManager() {
           </div>
         </div>
       )}
+    <ConfirmDialog {...dialogProps} />
     </div>
   )
 }

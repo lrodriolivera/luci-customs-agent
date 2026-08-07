@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import toast from 'react-hot-toast'
 import CertificateManager from './CertificateManager'
 import { aeatRealAPI } from '../../services/api'
@@ -674,7 +674,6 @@ describe('CertificateManager', () => {
       aeatRealAPI.certificates.delete.mockResolvedValue({
         data: { success: true }
       })
-      window.confirm.mockReturnValue(true)
 
       render(<CertificateManager />)
       await screen.findByText('cert-to-delete')
@@ -682,8 +681,11 @@ describe('CertificateManager', () => {
       const deleteButtons = screen.getAllByTitle('Eliminar')
       fireEvent.click(deleteButtons[0])
 
+      // Modal de confirmación (no confirm() nativo): confirmar.
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      fireEvent.click(within(screen.getByRole('dialog')).getByText('common.confirm').closest('button'))
+
       await waitFor(() => {
-        expect(window.confirm).toHaveBeenCalledWith('¿Eliminar el certificado "cert-to-delete"?')
         expect(aeatRealAPI.certificates.delete).toHaveBeenCalledWith('cert-to-delete')
         expect(toast.success).toHaveBeenCalledWith('Certificado eliminado')
       })
@@ -693,17 +695,16 @@ describe('CertificateManager', () => {
       aeatRealAPI.certificates.list.mockResolvedValue({
         data: { success: true, data: [mockCert] }
       })
-      window.confirm.mockReturnValue(false)
-
       render(<CertificateManager />)
       await screen.findByText('cert-to-delete')
 
       const deleteButtons = screen.getAllByTitle('Eliminar')
       fireEvent.click(deleteButtons[0])
 
-      await waitFor(() => {
-        expect(window.confirm).toHaveBeenCalled()
-      })
+      // Cancelar en el modal no debe eliminar.
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      fireEvent.click(within(screen.getByRole('dialog')).getByText('common.cancel').closest('button'))
+
       expect(aeatRealAPI.certificates.delete).not.toHaveBeenCalled()
     })
 
@@ -712,13 +713,15 @@ describe('CertificateManager', () => {
         data: { success: true, data: [mockCert] }
       })
       aeatRealAPI.certificates.delete.mockRejectedValue(new Error('Delete failed'))
-      window.confirm.mockReturnValue(true)
 
       render(<CertificateManager />)
       await screen.findByText('cert-to-delete')
 
       const deleteButtons = screen.getAllByTitle('Eliminar')
       fireEvent.click(deleteButtons[0])
+
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      fireEvent.click(within(screen.getByRole('dialog')).getByText('common.confirm').closest('button'))
 
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith('Error al eliminar certificado')
