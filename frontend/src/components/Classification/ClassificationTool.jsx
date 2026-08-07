@@ -1034,6 +1034,19 @@ export default function ClassificationTool() {
           {/* Advanced AI Analysis Results */}
           {fullAnalysisResult && activeTab === 'advanced' && (
             <div className="space-y-4 mt-6">
+              {/* Aviso: la validacion normativa se omitio por tiempo. El backend
+                  la salta si el analisis se acerca al limite del proxy (evita el
+                  524), pero avisa para que el usuario pueda validar el codigo
+                  aparte con el boton "Validar". */}
+              {fullAnalysisResult.validationSkipped && (
+                <div className="p-3 rounded-lg border border-yellow-200 bg-yellow-50 text-sm text-yellow-800 flex items-start gap-2">
+                  <ExclamationTriangleIcon className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <span>
+                    {t('classification.validationSkippedNotice', 'La validacion normativa se omitio para no exceder el tiempo. Use "Validar" sobre el codigo recomendado para completarla.')}
+                  </span>
+                </div>
+              )}
+
               {/* Final Assessment Card */}
               <div className="card">
                 <div className="flex items-center justify-between mb-4">

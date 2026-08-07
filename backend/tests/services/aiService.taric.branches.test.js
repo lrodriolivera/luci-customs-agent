@@ -911,6 +911,57 @@ describe('fullTaricAnalysis: análisis completo combinado', () => {
     // baseSuggestions es un array sin tokensUsed, cuenta 0
     expect(result.tokensUsed).toBe(1900); // 0 + 400 + 300 + 1200
   });
+
+  test('omite la validacion normativa cuando se agota el presupuesto de tiempo', async () => {
+    // El analisis encadena varias llamadas a Bedrock y el proxy corta a ~100s
+    // (524). Con el presupuesto agotado se saltan las llamadas restantes y se
+    // devuelve lo ya calculado, en vez de arriesgar el timeout. Forzamos el
+    // agotamiento con presupuesto 0.
+    const budgetPrev = process.env.FULL_ANALYSIS_BUDGET_MS;
+    process.env.FULL_ANALYSIS_BUDGET_MS = '0';
+
+    classifyProductSpy.mockResolvedValue([
+      { taricCode: '9503002100', confidence: 80, reasoning: 'Juguete' }
+    ]);
+    suggestBasedOnHistorySpy.mockResolvedValue({ suggestions: [], tokensUsed: 100 });
+
+    const result = await aiService.fullTaricAnalysis(
+      { description: 'Juguete de plastico' },
+      { validateWithRegulations: true }
+    );
+
+    // No se llamo a la validacion normativa (la mas cara).
+    expect(crossValidateWithRegulationsSpy).not.toHaveBeenCalled();
+    // Se marca para que la UI pueda avisar / ofrecer reintento.
+    expect(result.validationSkipped).toBe(true);
+    // Aun asi devuelve las sugerencias ya obtenidas, no un error.
+    expect(result.suggestions).toHaveLength(1);
+    expect(result.finalAssessment.recommendedCode).toBe('9503002100');
+
+    if (budgetPrev === undefined) delete process.env.FULL_ANALYSIS_BUDGET_MS;
+    else process.env.FULL_ANALYSIS_BUDGET_MS = budgetPrev;
+  });
+
+  test('con presupuesto suficiente si ejecuta la validacion normativa', async () => {
+    const budgetPrev = process.env.FULL_ANALYSIS_BUDGET_MS;
+    process.env.FULL_ANALYSIS_BUDGET_MS = '600000'; // 10 min, no se agota
+
+    classifyProductSpy.mockResolvedValue([{ taricCode: '9503002100', confidence: 80 }]);
+    suggestBasedOnHistorySpy.mockResolvedValue({ suggestions: [], tokensUsed: 100 });
+    crossValidateWithRegulationsSpy.mockResolvedValue({ validationResult: { isValid: true }, tokensUsed: 200 });
+
+    const result = await aiService.fullTaricAnalysis(
+      { description: 'Juguete de plastico' },
+      { validateWithRegulations: true }
+    );
+
+    expect(crossValidateWithRegulationsSpy).toHaveBeenCalled();
+    expect(result.validationSkipped).toBe(false);
+    expect(result.analysis.regulationValidation).not.toBeNull();
+
+    if (budgetPrev === undefined) delete process.env.FULL_ANALYSIS_BUDGET_MS;
+    else process.env.FULL_ANALYSIS_BUDGET_MS = budgetPrev;
+  });
 });
 
 describe('recordClassificationFeedback: grabar aprendizajes', () => {

@@ -499,6 +499,36 @@ describe('<ClassificationTool />', () => {
     })
   })
 
+  test('análisis completo IA: avisa cuando se omitió la validación normativa', async () => {
+    // El backend omite la validacion normativa si el analisis se acerca al
+    // limite del proxy (evita el 524) y devuelve validationSkipped:true. La UI
+    // debe avisar para que el usuario complete la validacion con "Validar".
+    classificationAPI.aiFullAnalysis.mockResolvedValue({
+      data: {
+        data: {
+          validationSkipped: true,
+          finalAssessment: { recommendedCode: '9503002100', confidence: 60, confidenceLevel: 'LOW', readyToUse: false, factors: [] },
+          suggestions: [{ taricCode: '9503002100', confidence: 60, reasoning: 'Juguete' }],
+          alerts: [],
+          nextSteps: []
+        }
+      }
+    })
+
+    renderComponent()
+    fireEvent.click(screen.getByRole('button', { name: /classification.advanced/i }))
+    await waitFor(() => {
+      fireEvent.change(screen.getByPlaceholderText('classification.productPlaceholder'), {
+        target: { value: 'Juguete de plastico' }
+      })
+    })
+    fireEvent.click(screen.getByText('classification.fullAnalysisAI'))
+
+    await waitFor(() => {
+      expect(screen.getByText(/validacion normativa se omitio/i)).toBeInTheDocument()
+    })
+  })
+
   test('análisis completo IA con error muestra toast', async () => {
     classificationAPI.aiFullAnalysis.mockRejectedValue(new Error('AI service unavailable'))
 

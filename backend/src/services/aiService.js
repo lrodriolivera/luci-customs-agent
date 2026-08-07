@@ -627,13 +627,21 @@ Responde en JSON: { "isValid": boolean, "confidence": number, "reasoning": strin
     const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.classification, prompt);
 
     try {
-      return JSON.parse(result.content);
+      // _parseJsonRespuesta quita la valla markdown y rescata truncados. Antes
+      // se hacia JSON.parse(result.content) directo: como el modelo responde
+      // con ```json ... ```, reventaba y el catch metia el bloque markdown
+      // crudo en reasoning, que es lo que se veia en "Codigo Validado".
+      return this._parseJsonRespuesta(result.content);
     } catch (e) {
+      // Si de verdad no se pudo parsear, no afirmamos que el codigo sea valido:
+      // marcamos el fallo para que la UI no de un visto bueno inventado.
+      logger.warn(`validateClassification: no se pudo parsear la respuesta (${e.message})`);
       return {
-        isValid: true,
-        confidence: 70,
-        reasoning: result.content,
-        warnings: []
+        isValid: false,
+        confidence: null,
+        reasoning: 'No se pudo validar el codigo automaticamente: revise manualmente',
+        warnings: [],
+        analysisFailed: true
       };
     }
   }
@@ -6071,6 +6079,16 @@ Responde en JSON:
       validateWithRegulations = true
     } = options;
 
+    // Presupuesto de tiempo. El analisis encadena varias llamadas a Bedrock; el
+    // proxy de Cloudflare corta a los ~100s (limite fijo del plan) devolviendo
+    // 524 y dejando al usuario sin nada. Si al llegar a la validacion normativa
+    // —el paso mas caro y prescindible— ya se consumio el presupuesto, se salta
+    // y se devuelven las sugerencias ya obtenidas con un aviso, en vez de
+    // arriesgar el 524. Configurable por si el proxy cambia.
+    const PRESUPUESTO_MS = parseInt(process.env.FULL_ANALYSIS_BUDGET_MS || '80000', 10);
+    const inicio = Date.now();
+    const quedaPresupuesto = () => (Date.now() - inicio) < PRESUPUESTO_MS;
+
     try {
       // 1. Obtener sugerencias base
       const baseSuggestions = await this.classifyProduct({
@@ -6097,13 +6115,21 @@ Responde en JSON:
         feedbackImproved?.improvedSuggestions || []
       );
 
-      // 4. Validar la mejor sugerencia con normativa (si está habilitado)
+      // 4. Validar la mejor sugerencia con normativa (si está habilitado y aún
+      //    queda presupuesto de tiempo antes del corte del proxy).
       let regulationValidation = null;
+      let validationSkipped = false;
       if (validateWithRegulations && consolidatedSuggestions.length > 0) {
-        regulationValidation = await this.crossValidateWithRegulations(
-          consolidatedSuggestions[0],
-          productData
-        );
+        if (quedaPresupuesto()) {
+          regulationValidation = await this.crossValidateWithRegulations(
+            consolidatedSuggestions[0],
+            productData
+          );
+        } else {
+          // Sin margen para otra llamada a Bedrock: devolvemos lo ya calculado.
+          validationSkipped = true;
+          logger.warn('fullTaricAnalysis: se omite la validacion normativa por presupuesto de tiempo agotado');
+        }
       }
 
       // 5. Calcular score final y generar recomendación
@@ -6128,6 +6154,10 @@ Responde en JSON:
           feedbackLearning: feedbackImproved,
           regulationValidation: regulationValidation
         },
+
+        // Se dejo la validacion normativa fuera por tiempo: la UI puede ofrecer
+        // reintentarla puntualmente sin rehacer todo el analisis.
+        validationSkipped,
 
         // Puntuación y recomendación final
         finalAssessment: {
