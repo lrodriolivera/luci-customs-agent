@@ -250,6 +250,8 @@
     "statusDocsValidated": "Docs Validats",
     "statusDeclarationReady": "Llest Declaracio",
     "statusSubmitted": "Presentada",
+    "statusYellowChannel": "Canal Groc",
+    "statusCleared": "Despatxat",
     "statusGreenChannel": "Canal Verd",
     "statusOrangeChannel": "Canal Taronja",
     "statusRedChannel": "Canal Roig",

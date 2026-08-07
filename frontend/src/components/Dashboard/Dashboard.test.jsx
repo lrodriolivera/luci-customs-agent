@@ -117,6 +117,9 @@ describe('Dashboard', () => {
 
     it('should display formatted date in Spanish', async () => {
       const mockDate = new Date('2026-08-06T12:00:00')
+      // Fijar la hora del sistema: sin esto el componente formatea la fecha
+      // real de hoy y el test se rompe cualquier dia distinto al 6/8/2026.
+      vi.setSystemTime(mockDate)
       const expectedDate = mockDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
       renderDashboard()

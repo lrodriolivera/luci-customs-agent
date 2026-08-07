@@ -250,6 +250,8 @@
     "statusDocsValidated": "Docs Valides",
     "statusDeclarationReady": "Declaration Prete",
     "statusSubmitted": "Soumise",
+    "statusYellowChannel": "Canal Jaune",
+    "statusCleared": "Dedouane",
     "statusGreenChannel": "Circuit Vert",
     "statusOrangeChannel": "Circuit Orange",
     "statusRedChannel": "Circuit Rouge",

@@ -250,6 +250,8 @@
     "statusDocsValidated": "Docs Validated",
     "statusDeclarationReady": "Declaration Ready",
     "statusSubmitted": "Submitted",
+    "statusYellowChannel": "Yellow Channel",
+    "statusCleared": "Cleared",
     "statusGreenChannel": "Green Channel",
     "statusOrangeChannel": "Orange Channel",
     "statusRedChannel": "Red Channel",

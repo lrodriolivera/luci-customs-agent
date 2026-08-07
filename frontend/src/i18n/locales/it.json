@@ -250,6 +250,8 @@
     "statusDocsValidated": "Documenti Validati",
     "statusDeclarationReady": "Dichiarazione Pronta",
     "statusSubmitted": "Presentata",
+    "statusYellowChannel": "Canale Giallo",
+    "statusCleared": "Sdoganato",
     "statusGreenChannel": "Canale Verde",
     "statusOrangeChannel": "Canale Arancione",
     "statusRedChannel": "Canale Rosso",
