@@ -545,22 +545,25 @@ describe('api.js — documentsAPI', () => {
 })
 
 describe('api.js — classificationAPI', () => {
-  it('classificationAPI.classify llama a POST /ai/classify', async () => {
+  it('classificationAPI.classify llama a POST /api/classification/suggest', async () => {
+    // Antes apuntaba a /ai/classify, que no existe en el backend y devolvia 405.
     const api = await import('./api.js')
 
     const data = { description: 'Café tostado' }
     await api.classificationAPI.classify(data)
 
-    expect(mockApi.post).toHaveBeenCalledWith('/ai/classify', data)
+    expect(mockApi.post).toHaveBeenCalledWith('/api/classification/suggest', data, { timeout: 90000 })
   })
 
-  it('classificationAPI.validate llama a POST con params en query', async () => {
+  it('classificationAPI.validate llama a POST /api/classification/validate con el cuerpo', async () => {
+    // Antes /ai/validate-classification (405) y con params en query; el backend
+    // lee el cuerpo en camelCase.
     const api = await import('./api.js')
 
     await api.classificationAPI.validate('0901210000', 'Café', 'CO')
 
-    expect(mockApi.post).toHaveBeenCalledWith('/ai/validate-classification', null, {
-      params: { taric_code: '0901210000', description: 'Café', origin: 'CO' }
+    expect(mockApi.post).toHaveBeenCalledWith('/api/classification/validate', {
+      taricCode: '0901210000', description: 'Café', origin: 'CO'
     })
   })
 

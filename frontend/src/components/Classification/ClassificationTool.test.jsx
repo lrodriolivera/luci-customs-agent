@@ -212,12 +212,16 @@ describe('<ClassificationTool />', () => {
   })
 
   test('clasificación básica: envía campos y recibe sugerencias', async () => {
+    // Forma REAL del backend: { success, data: { suggestions, query } }.
     classificationAPI.classify.mockResolvedValue({
       data: {
-        suggestions: [
-          { code: '0901210000', description: 'Coffee, not roasted', confidence: 95, reasoning: 'Based on material' },
-          { code: '0901110000', description: 'Coffee, roasted', confidence: 60 }
-        ]
+        success: true,
+        data: {
+          suggestions: [
+            { code: '0901210000', description: 'Coffee, not roasted', confidence: 95, reasoning: 'Based on material' },
+            { code: '0901110000', description: 'Coffee, roasted', confidence: 60 }
+          ]
+        }
       }
     })
 
@@ -232,10 +236,11 @@ describe('<ClassificationTool />', () => {
     fireEvent.submit(document.querySelector('form'))
 
     await waitFor(() => {
+      // El backend lee additionalInfo (camelCase), no additional_info.
       expect(classificationAPI.classify).toHaveBeenCalledWith(
         expect.objectContaining({
           description: 'Coffee beans imported from Brazil',
-          additional_info: { material: 'Arabica beans' },
+          additionalInfo: { material: 'Arabica beans' },
           language: 'es'
         })
       )
@@ -250,7 +255,7 @@ describe('<ClassificationTool />', () => {
   })
 
   test('clasificación básica: envía todos los campos adicionales', async () => {
-    classificationAPI.classify.mockResolvedValue({ data: { suggestions: [] } })
+    classificationAPI.classify.mockResolvedValue({ data: { success: true, data: { suggestions: [] } } })
     renderComponent()
 
     fireEvent.change(screen.getByPlaceholderText('classification.productPlaceholder'), {
@@ -274,7 +279,7 @@ describe('<ClassificationTool />', () => {
     await waitFor(() => {
       expect(classificationAPI.classify).toHaveBeenCalledWith(
         expect.objectContaining({
-          additional_info: {
+          additionalInfo: {
             material: 'Aluminum',
             use: 'Computing',
             composition: '80% metal, 20% plastic',
@@ -300,8 +305,11 @@ describe('<ClassificationTool />', () => {
   test('muestra warnings en los resultados', async () => {
     classificationAPI.classify.mockResolvedValue({
       data: {
-        suggestions: [{ code: '0901210000', description: 'Coffee', confidence: 85 }],
-        warnings: ['Additional documentation may be required', 'Check origin restrictions']
+        success: true,
+        data: {
+          suggestions: [{ code: '0901210000', description: 'Coffee', confidence: 85 }],
+          warnings: ['Additional documentation may be required', 'Check origin restrictions']
+        }
       }
     })
 
@@ -319,10 +327,11 @@ describe('<ClassificationTool />', () => {
 
   test('validación de código: llama a validate y muestra resultado positivo', async () => {
     classificationAPI.classify.mockResolvedValue({
-      data: { suggestions: [{ code: '0901210000', description: 'Coffee', confidence: 90 }] }
+      data: { success: true, data: { suggestions: [{ code: '0901210000', description: 'Coffee', confidence: 90 }] } }
     })
+    // Forma real del backend: { success, data: { isValid, reasoning } }.
     classificationAPI.validate.mockResolvedValue({
-      data: { is_valid: true, reasoning: 'Code matches product characteristics' }
+      data: { success: true, data: { isValid: true, reasoning: 'Code matches product characteristics' } }
     })
 
     renderComponent()
@@ -352,10 +361,10 @@ describe('<ClassificationTool />', () => {
 
   test('validación de código: resultado negativo muestra error', async () => {
     classificationAPI.classify.mockResolvedValue({
-      data: { suggestions: [{ code: '0901110000', description: 'Coffee', confidence: 70 }] }
+      data: { success: true, data: { suggestions: [{ code: '0901110000', description: 'Coffee', confidence: 70 }] } }
     })
     classificationAPI.validate.mockResolvedValue({
-      data: { is_valid: false, reasoning: 'Code does not match characteristics' }
+      data: { success: true, data: { isValid: false, reasoning: 'Code does not match characteristics' } }
     })
 
     renderComponent()
@@ -377,7 +386,7 @@ describe('<ClassificationTool />', () => {
 
   test('validación con error de API muestra toast', async () => {
     classificationAPI.classify.mockResolvedValue({
-      data: { suggestions: [{ code: '0901210000', description: 'Coffee', confidence: 90 }] }
+      data: { success: true, data: { suggestions: [{ code: '0901210000', description: 'Coffee', confidence: 90 }] } }
     })
     classificationAPI.validate.mockRejectedValue(new Error('Validation failed'))
 
@@ -403,7 +412,7 @@ describe('<ClassificationTool />', () => {
     })
 
     classificationAPI.classify.mockResolvedValue({
-      data: { suggestions: [{ code: '0901210000', description: 'Coffee', confidence: 90 }] }
+      data: { success: true, data: { suggestions: [{ code: '0901210000', description: 'Coffee', confidence: 90 }] } }
     })
 
     renderComponent()

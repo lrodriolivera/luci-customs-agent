@@ -163,13 +163,19 @@ export default function ClassificationTool() {
     try {
       const response = await classificationAPI.classify({
         description,
-        additional_info: Object.fromEntries(
+        // El backend (suggestTaricCode) lee additionalInfo en camelCase; se
+        // enviaba additional_info (snake) y llegaba vacio.
+        additionalInfo: Object.fromEntries(
           Object.entries(additionalInfo).filter(([_, v]) => v)
         ),
         language: 'es'
       })
 
-      setResults(response.data)
+      // La respuesta real es { success, data: { suggestions, query } }. Se
+      // guardaba response.data entero y luego se leia results.suggestions, que
+      // quedaba undefined. Fallback a response.data por si algun test/entorno
+      // devuelve la forma plana.
+      setResults(response.data?.data || response.data)
     } catch (error) {
       toast.error(t('classification.classifyError'))
     } finally {
@@ -257,12 +263,17 @@ export default function ClassificationTool() {
         additionalInfo.origin
       )
 
+      // Respuesta real: { success, data: { isValid, reasoning, ... } }.
+      const validationResult = response.data?.data || response.data
+
       setResults(prev => ({
         ...prev,
-        validationResult: response.data
+        validationResult
       }))
 
-      if (response.data.is_valid) {
+      // El backend devuelve isValid (camelCase); se leia is_valid, que no
+      // existia, asi que un codigo valido nunca disparaba el toast de exito.
+      if (validationResult.isValid ?? validationResult.is_valid) {
         toast.success(t('classification.codeValidatedOk'))
       } else {
         toast.error(t('classification.codeMayNotBeCorrect'))
@@ -985,33 +996,38 @@ export default function ClassificationTool() {
                 ))}
               </div>
 
-              {results.validationResult && (
+              {results.validationResult && (() => {
+                // El backend devuelve isValid (camelCase); se mantiene el
+                // fallback a is_valid por compatibilidad.
+                const esValido = results.validationResult.isValid ?? results.validationResult.is_valid
+                return (
                 <div className={`mt-4 p-4 rounded-lg border ${
-                  results.validationResult.is_valid
+                  esValido
                     ? 'bg-green-50 border-green-200'
                     : 'bg-red-50 border-red-200'
                 }`}>
                   <div className="flex items-start gap-2">
-                    {results.validationResult.is_valid ? (
+                    {esValido ? (
                       <CheckCircleIcon className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                     ) : (
                       <ExclamationTriangleIcon className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                     )}
                     <div>
                       <p className={`font-medium ${
-                        results.validationResult.is_valid ? 'text-green-800' : 'text-red-800'
+                        esValido ? 'text-green-800' : 'text-red-800'
                       }`}>
-                        {results.validationResult.is_valid ? t('classification.codeValidated') : t('classification.reviewRequired')}
+                        {esValido ? t('classification.codeValidated') : t('classification.reviewRequired')}
                       </p>
                       <p className={`text-sm mt-1 ${
-                        results.validationResult.is_valid ? 'text-green-700' : 'text-red-700'
+                        esValido ? 'text-green-700' : 'text-red-700'
                       }`}>
                         {results.validationResult.reasoning}
                       </p>
                     </div>
                   </div>
                 </div>
-              )}
+                )
+              })()}
             </div>
           )}
 

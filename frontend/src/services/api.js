@@ -126,11 +126,14 @@ export const documentsAPI = {
 
 // Classification
 export const classificationAPI = {
-  classify: (data) => api.post('/ai/classify', data),
+  // La ruta real es /api/classification/suggest (POST). Apuntaba a /ai/classify,
+  // que no existe en el backend y devolvia 405, dejando el boton "Clasificar" de
+  // la pestaña Basico sin funcionar. El backend lee additionalInfo (camelCase).
+  classify: (data) => api.post('/api/classification/suggest', data, { timeout: 90000 }),
+  // Igual: /ai/validate-classification no existe (405). La ruta es
+  // /api/classification/validate (POST) y lee el cuerpo, no query params.
   validate: (taricCode, description, origin) =>
-    api.post('/ai/validate-classification', null, {
-      params: { taric_code: taricCode, description, origin }
-    }),
+    api.post('/api/classification/validate', { taricCode, description, origin }),
   search: (query) => api.get('/api/classification/search', { params: { q: query } }),
   searchByChapter: (chapter) => api.get('/api/classification/search', { params: { chapter } }),
   suggest: (data) => api.post('/api/classification/suggest', data, { timeout: 90000 }),
