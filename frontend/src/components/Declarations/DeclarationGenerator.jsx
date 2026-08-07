@@ -31,6 +31,9 @@ export default function DeclarationGenerator() {
   })
   const [regimeInfo, setRegimeInfo] = useState(null)
   const [generatedDeclaration, setGeneratedDeclaration] = useState(null)
+  // Confirmación de envío a AEAT/DMS con modal propio en vez de confirm() nativo
+  // (el nativo bloquea la automatización del navegador y es UX pobre).
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
 
   useEffect(() => {
     const fetchExpeditions = async () => {
@@ -116,10 +119,16 @@ export default function DeclarationGenerator() {
     }
   }
 
-  const handleSubmitToCustoms = async () => {
+  // El botón solo abre el modal de confirmación; el envío real ocurre al
+  // confirmar en el modal (confirmSubmitToCustoms).
+  const handleSubmitToCustoms = () => {
     if (!selectedExpedition) return
-    const systemName = isNL ? 'DMS 4.0' : 'AEAT'
-    if (!confirm(`Enviar ${declarationType} a ${systemName}?`)) return
+    setShowSubmitConfirm(true)
+  }
+
+  const confirmSubmitToCustoms = async () => {
+    setShowSubmitConfirm(false)
+    if (!selectedExpedition) return
 
     setSubmitting(true)
     setAeatResult(null)
@@ -498,6 +507,43 @@ export default function DeclarationGenerator() {
           </div>
         </div>
       </div>
+
+      {/* Modal de confirmación de envío (sustituye al confirm() nativo) */}
+      {showSubmitConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setShowSubmitConfirm(false)}
+        >
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {t('declarations.confirmSubmitTitle', 'Confirmar envío')}
+            </h3>
+            <p className="text-sm text-gray-600 mb-6">
+              {t('declarations.confirmSubmitBody', {
+                type: declarationType,
+                system: isNL ? 'DMS 4.0' : 'AEAT',
+                defaultValue: `¿Enviar ${declarationType} a ${isNL ? 'DMS 4.0' : 'AEAT'}? Esta acción presenta la declaración ante el sistema aduanero.`
+              })}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowSubmitConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                {t('common.cancel', 'Cancelar')}
+              </button>
+              <button
+                onClick={confirmSubmitToCustoms}
+                className="px-4 py-2 text-sm font-medium text-white bg-luci rounded-lg hover:opacity-90"
+              >
+                {isNL ? 'Enviar a DMS 4.0' : t('declarations.sendToAeat')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

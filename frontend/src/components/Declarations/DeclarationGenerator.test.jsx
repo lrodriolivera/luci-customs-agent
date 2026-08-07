@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import DeclarationGenerator from './DeclarationGenerator.jsx'
 
 // Mock react-hot-toast
@@ -763,8 +763,48 @@ describe('DeclarationGenerator', () => {
   })
 
   describe('Submit to customs', () => {
-    beforeEach(() => {
-      global.confirm = vi.fn(() => true)
+    // El envío ya no usa confirm() nativo: abre un modal propio y se confirma
+    // en él. Helper para confirmar el envío pulsando el boton del modal.
+    const confirmarEnvioEnModal = async () => {
+      // El boton original abre el modal (ES: "Enviar a AEAT", NL: "Enviar a DMS 4.0").
+      const abrirBtn = (screen.queryByText('declarations.sendToAeat')
+        || screen.getByText(/Enviar a DMS/)).closest('button')
+      fireEvent.click(abrirBtn)
+      // Aparece el modal de confirmación.
+      await waitFor(() => {
+        expect(screen.getByText('declarations.confirmSubmitTitle')).toBeInTheDocument()
+      })
+      // El boton de confirmar es el del dialog que NO es Cancelar.
+      const dialog = screen.getByRole('dialog')
+      const confirmBtn = within(dialog).getAllByRole('button')
+        .find(b => !within(b).queryByText('common.cancel') && !b.textContent.includes('common.cancel'))
+      fireEvent.click(confirmBtn)
+    }
+
+    test('el envio usa un modal de confirmacion, no confirm() nativo', async () => {
+      // Regresion: se usaba confirm() nativo (bloquea automatizacion, UX pobre).
+      const confirmSpy = vi.fn(() => true)
+      global.confirm = confirmSpy
+      declarationsAPI.generateH1.mockResolvedValue({ data: mockGeneratedDeclaration })
+      declarationsAPI.submit.mockResolvedValue({ data: { mrn: '26ES1', channel: 'green' } })
+
+      render(<DeclarationGenerator />)
+      await waitFor(() => expect(screen.getByText('EXP-001')).toBeInTheDocument())
+      fireEvent.click(screen.getByText('EXP-001').closest('.p-4'))
+      fireEvent.click(screen.getByText(/declarations.generate/).closest('button'))
+      await waitFor(() => expect(screen.getByText('declarations.sendToAeat')).toBeInTheDocument())
+
+      // Pulsar el boton abre el MODAL, no dispara confirm() ni el envio.
+      fireEvent.click(screen.getByText('declarations.sendToAeat').closest('button'))
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      expect(confirmSpy).not.toHaveBeenCalled()
+      expect(declarationsAPI.submit).not.toHaveBeenCalled()
+
+      // Cancelar cierra el modal sin enviar.
+      const dialog = screen.getByRole('dialog')
+      fireEvent.click(within(dialog).getByText('common.cancel').closest('button'))
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+      expect(declarationsAPI.submit).not.toHaveBeenCalled()
     })
 
     test('shows submit button after generation', async () => {
@@ -814,8 +854,7 @@ describe('DeclarationGenerator', () => {
         expect(screen.getByText('declarations.sendToAeat')).toBeInTheDocument()
       })
 
-      const submitBtn = screen.getByText('declarations.sendToAeat').closest('button')
-      fireEvent.click(submitBtn)
+      await confirmarEnvioEnModal()
 
       await waitFor(() => {
         expect(declarationsAPI.submit).toHaveBeenCalledWith('exp1')
@@ -847,8 +886,7 @@ describe('DeclarationGenerator', () => {
         expect(screen.getByText('declarations.sendToAeat')).toBeInTheDocument()
       })
 
-      const submitBtn = screen.getByText('declarations.sendToAeat').closest('button')
-      fireEvent.click(submitBtn)
+      await confirmarEnvioEnModal()
 
       await waitFor(() => {
         expect(toast).toHaveBeenCalledWith('declarations.orangeChannel', { icon: '🟠' })
@@ -878,8 +916,7 @@ describe('DeclarationGenerator', () => {
         expect(screen.getByText('declarations.sendToAeat')).toBeInTheDocument()
       })
 
-      const submitBtn = screen.getByText('declarations.sendToAeat').closest('button')
-      fireEvent.click(submitBtn)
+      await confirmarEnvioEnModal()
 
       await waitFor(() => {
         expect(toast).toHaveBeenCalledWith('declarations.redChannel', { icon: '🔴' })
@@ -911,8 +948,7 @@ describe('DeclarationGenerator', () => {
         expect(screen.getByText('declarations.sendToAeat')).toBeInTheDocument()
       })
 
-      const submitBtn = screen.getByText('declarations.sendToAeat').closest('button')
-      fireEvent.click(submitBtn)
+      await confirmarEnvioEnModal()
 
       await waitFor(() => {
         expect(toast.success).toHaveBeenCalled()
@@ -942,8 +978,7 @@ describe('DeclarationGenerator', () => {
         expect(screen.getByText('declarations.sendToAeat')).toBeInTheDocument()
       })
 
-      const submitBtn = screen.getByText('declarations.sendToAeat').closest('button')
-      fireEvent.click(submitBtn)
+      await confirmarEnvioEnModal()
 
       await waitFor(() => {
         expect(toast.success).toHaveBeenCalledWith('declarations.sentToAeatMrn')
@@ -973,8 +1008,7 @@ describe('DeclarationGenerator', () => {
         expect(screen.getByText('declarations.sendToAeat')).toBeInTheDocument()
       })
 
-      const submitBtn = screen.getByText('declarations.sendToAeat').closest('button')
-      fireEvent.click(submitBtn)
+      await confirmarEnvioEnModal()
 
       await waitFor(() => {
         expect(toast.success).toHaveBeenCalled()
@@ -1005,16 +1039,14 @@ describe('DeclarationGenerator', () => {
         expect(screen.getByText('Enviar a DMS 4.0')).toBeInTheDocument()
       })
 
-      const submitBtn = screen.getByText('Enviar a DMS 4.0').closest('button')
-      fireEvent.click(submitBtn)
+      await confirmarEnvioEnModal()
 
       await waitFor(() => {
         expect(declarationsAPI.submitV2).toHaveBeenCalledWith('exp1')
       })
     })
 
-    test('cancels submission when user declines confirm', async () => {
-      global.confirm.mockReturnValue(false)
+    test('cancela el envio al cerrar el modal', async () => {
       declarationsAPI.generateH1.mockResolvedValue({
         data: mockGeneratedDeclaration
       })
@@ -1034,9 +1066,12 @@ describe('DeclarationGenerator', () => {
         expect(screen.getByText('declarations.sendToAeat')).toBeInTheDocument()
       })
 
-      const submitBtn = screen.getByText('declarations.sendToAeat').closest('button')
-      fireEvent.click(submitBtn)
+      // Abrir el modal y cancelar: no debe enviar.
+      fireEvent.click(screen.getByText('declarations.sendToAeat').closest('button'))
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      fireEvent.click(within(screen.getByRole('dialog')).getByText('common.cancel').closest('button'))
 
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
       expect(declarationsAPI.submit).not.toHaveBeenCalled()
     })
 
@@ -1065,8 +1100,7 @@ describe('DeclarationGenerator', () => {
         expect(screen.getByText('declarations.sendToAeat')).toBeInTheDocument()
       })
 
-      const submitBtn = screen.getByText('declarations.sendToAeat').closest('button')
-      fireEvent.click(submitBtn)
+      await confirmarEnvioEnModal()
 
       await waitFor(() => {
         expect(screen.getByText('declarations.sendingToAeat')).toBeInTheDocument()
@@ -1098,8 +1132,7 @@ describe('DeclarationGenerator', () => {
         expect(screen.getByText('declarations.sendToAeat')).toBeInTheDocument()
       })
 
-      const submitBtn = screen.getByText('declarations.sendToAeat').closest('button')
-      fireEvent.click(submitBtn)
+      await confirmarEnvioEnModal()
 
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith('Custom error message')
@@ -1127,8 +1160,7 @@ describe('DeclarationGenerator', () => {
         expect(screen.getByText('declarations.sendToAeat')).toBeInTheDocument()
       })
 
-      const submitBtn = screen.getByText('declarations.sendToAeat').closest('button')
-      fireEvent.click(submitBtn)
+      await confirmarEnvioEnModal()
 
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith('declarations.errorSendAeat')
@@ -1158,8 +1190,7 @@ describe('DeclarationGenerator', () => {
         expect(screen.getByText('declarations.sendToAeat')).toBeInTheDocument()
       })
 
-      const submitBtn = screen.getByText('declarations.sendToAeat').closest('button')
-      fireEvent.click(submitBtn)
+      await confirmarEnvioEnModal()
 
       await waitFor(() => {
         expect(screen.getByText('declarations.aeatResponse')).toBeInTheDocument()
@@ -1193,8 +1224,7 @@ describe('DeclarationGenerator', () => {
         expect(screen.getByText('Enviar a DMS 4.0')).toBeInTheDocument()
       })
 
-      const submitBtn = screen.getByText('Enviar a DMS 4.0').closest('button')
-      fireEvent.click(submitBtn)
+      await confirmarEnvioEnModal()
 
       await waitFor(() => {
         expect(screen.getByText('Respuesta DMS 4.0')).toBeInTheDocument()
