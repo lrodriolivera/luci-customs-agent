@@ -133,3 +133,29 @@ describe('h7XmlBuilder - AEAT PRE acceptance invariants', () => {
     expect(xml).toMatch(/<C44Tipo>N703<\/C44Tipo>/);
   });
 });
+
+describe('h7XmlBuilder - Reglamento (UE) 2026/382 derecho fijo', () => {
+  test('sin flag: A00 es 0% y el total es solo el IVA (comportamiento pre-2026)', () => {
+    const xml = minimalCall(); // valorFactura 12.50
+    // A00 con tipo 0 y cuota 0.00
+    expect(xml).toMatch(/<C47TributoClase>A00<\/C47TributoClase>\s*<C47TributoBaseImponible>12.500<\/C47TributoBaseImponible>\s*<C47TributoTipoImpositivo>0.000000</);
+    // IVA sobre 12.50 -> 2.63; ImporteTotal = 2.63
+    expect(xml).toMatch(/<C47ImporteTotal>2.63<\/C47ImporteTotal>/);
+  });
+
+  test('con flag: A00 = 3.00 EUR fijo por articulo', () => {
+    const xml = minimalCall({ aplicarDerechoFijo2026: true });
+    expect(xml).toMatch(/<C47TributoClase>A00<\/C47TributoClase>\s*<C47TributoBaseImponible>1.000<\/C47TributoBaseImponible>\s*<C47TributoTipoImpositivo>3.000000<\/C47TributoTipoImpositivo>[\s\S]*?<C47TributoCuota>3.00<\/C47TributoCuota>/);
+  });
+
+  test('con flag: el IVA (B00) se calcula sobre valor + 3 EUR', () => {
+    const xml = minimalCall({ aplicarDerechoFijo2026: true }); // 12.50 + 3 = 15.50
+    // Base IVA 15.500, cuota 15.50*0.21 = 3.255 -> toFixed(2) = 3.25
+    expect(xml).toMatch(/<C47TributoClase>B00<\/C47TributoClase>\s*<C47TributoBaseImponible>15.500<\/C47TributoBaseImponible>[\s\S]*?<C47TributoCuota>3.25<\/C47TributoCuota>/);
+  });
+
+  test('con flag: ImporteTotal incluye derecho fijo + IVA (3.00 + 3.25 = 6.25)', () => {
+    const xml = minimalCall({ aplicarDerechoFijo2026: true });
+    expect(xml).toMatch(/<C47ImporteTotal>6.25<\/C47ImporteTotal>/);
+  });
+});

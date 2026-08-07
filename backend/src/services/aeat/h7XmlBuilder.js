@@ -8,10 +8,11 @@
  *   - Soporte documento previo 5025 (activacion PreH7 desde G3)
  *   - DSDT cerradas en recintos aereos → obligatorio G3v2/G4
  *
- * PENDIENTE 1/Jul/2026 (Reglamento UE 2026/382):
+ * EN VIGOR 1/Jul/2026 (Reglamento UE 2026/382):
  *   - Supresion franquicia aduanera 150 EUR
- *   - Derecho fijo transitorio 3 EUR/articulo (IOSS/postal)
- *   - Nuevo tributo A00 = 3.00 EUR por articulo (no porcentual)
+ *   - Derecho fijo transitorio 3 EUR/articulo (IOSS/postal) hasta 1/Jul/2028
+ *   - Tributo A00 = 3.00 EUR por articulo (no porcentual); IVA B00 sobre valor + A00
+ *   Controlado por el flag `aplicarDerechoFijo2026` (lo fija H7Declaration.calculateDuties).
  */
 
 const { generateTransactionId } = require('./queryXmlBuilder');
@@ -88,6 +89,12 @@ function buildH7ImportXML(data) {
   const partidasXML = partidas.map((p, i) => {
     const marcas = (p.marcas || (p.descripcion || '').substring(0, 35) || 'SIN-MARCA').trim();
     const docs = ensureMandatoryDocs(p);
+    // Reglamento (UE) 2026/382: cuando aplica, el derecho fijo A00 es 3 EUR/articulo
+    // y el IVA (B00) se calcula sobre valor factura + derecho fijo.
+    const valorFactura = Number(p.valorFactura || 0);
+    const derechoFijoCuota = aplicarDerechoFijo2026 ? 3.00 : 0;
+    const vatBase = valorFactura + derechoFijoCuota;
+    const vatCuota = vatBase * 0.21;
     return `
     <Partida>
       <C32NumeroDePartida>${i + 1}</C32NumeroDePartida>
@@ -135,13 +142,13 @@ function buildH7ImportXML(data) {
       </C47TributoDeclarado>`}
       <C47TributoDeclarado>
         <C47TributoClase>B00</C47TributoClase>
-        <C47TributoBaseImponible>${Number(p.valorFactura || 0).toFixed(3)}</C47TributoBaseImponible>
+        <C47TributoBaseImponible>${vatBase.toFixed(3)}</C47TributoBaseImponible>
         <C47TributoTipoImpositivo>21.000000</C47TributoTipoImpositivo>
         <C47TributoIndicadorMaxMinNor>NO</C47TributoIndicadorMaxMinNor>
         <C47TributoUnidadFiscal>%</C47TributoUnidadFiscal>
-        <C47TributoCuota>${(Number(p.valorFactura || 0) * 0.21).toFixed(2)}</C47TributoCuota>
+        <C47TributoCuota>${vatCuota.toFixed(2)}</C47TributoCuota>
       </C47TributoDeclarado>
-      <C47ImporteTotal>${(Number(p.valorFactura || 0) * 0.21).toFixed(2)}</C47ImporteTotal>
+      <C47ImporteTotal>${(derechoFijoCuota + vatCuota).toFixed(2)}</C47ImporteTotal>
     </Partida>`;
   }).join('');
 

@@ -10,6 +10,7 @@ const certificateService = require('./certificateService');
 const aeatTransport = require('./aeatTransport');
 const { buildH1ImportXML, expeditionToH1Data } = require('./h1XmlBuilder');
 const { buildH7ImportXML } = require('./h7XmlBuilder');
+const { aplicaDerechoFijo2026 } = require('../../config/reg2026382');
 const { buildAESExportXML } = require('./aesXmlBuilder');
 const { buildNCTSTransitXML } = require('./nctsXmlBuilder');
 const { buildENSDeclarationXML } = require('./ensXmlBuilder');
@@ -149,8 +150,11 @@ async function submitH7(h7Declaration, tenant) {
     // Documento previo G4 (obligatorio aereos desde 9/Mar/2026)
     documentoPrevioTipo: h7Declaration.documentoPrevio?.tipo || h7Declaration.documentoPrevioTipo || '',
     documentoPrevioRef: h7Declaration.documentoPrevio?.referencia || h7Declaration.documentoPrevioRef || '',
-    // Reglamento UE 2026/382 - derecho fijo 3 EUR/articulo (desde 1/Jul/2026)
-    aplicarDerechoFijo2026: h7Declaration.aplicarDerechoFijo2026 || false,
+    // Reglamento UE 2026/382 - derecho fijo 3 EUR/articulo (desde 1/Jul/2026).
+    // Se respeta el valor calculado; si no viene, se evalua la regla en el momento del envio.
+    aplicarDerechoFijo2026: h7Declaration.aplicarDerechoFijo2026 != null
+      ? h7Declaration.aplicarDerechoFijo2026
+      : aplicaDerechoFijo2026(h7Declaration),
     partidas: (h7Declaration.items || []).map(it => ({
       descripcion: it.description,
       taricCode: it.taricCode,

@@ -10,6 +10,8 @@
  * Regimen: IOSS (Import One-Stop Shop) para IVA prepagado
  */
 const mongoose = require('mongoose');
+// Reglamento (UE) 2026/382: derecho fijo transitorio 3 EUR/articulo (ver config).
+const { REG_2026_382, aplicaDerechoFijo2026 } = require('../config/reg2026382');
 
 // Esquema de articulo individual en el envio
 const H7ItemSchema = new mongoose.Schema({
@@ -166,6 +168,12 @@ const H7DeclarationSchema = new mongoose.Schema({
 
   // Si tiene IOSS, el IVA ya esta pagado
   vatPrepaid: {
+    type: Boolean,
+    default: false
+  },
+
+  // Reglamento (UE) 2026/382: se aplico el derecho fijo transitorio de 3 EUR/articulo
+  aplicarDerechoFijo2026: {
     type: Boolean,
     default: false
   },
@@ -498,15 +506,28 @@ H7DeclarationSchema.pre('save', async function(next) {
 });
 
 // Metodos de instancia
-H7DeclarationSchema.methods.calculateDuties = function() {
+H7DeclarationSchema.methods.calculateDuties = function(fecha = new Date()) {
   const customsValue = this.totals.customsValue;
 
-  // Arancel: generalmente 0% para envios B2C bajo 150 EUR
-  // excepto productos especificos (tabaco, alcohol, etc.)
-  const tariffRate = this.duties.tariff.rate || 0;
-  const tariffAmount = customsValue * (tariffRate / 100);
+  // Arancel. Reglamento (UE) 2026/382: la franquicia de 150 EUR queda suprimida.
+  // Durante el periodo transitorio (1/Jul/2026 -> 1/Jul/2028) se aplica un derecho
+  // fijo de 3 EUR/articulo a los envios IOSS-exentos o postales (<= 150 EUR).
+  let tariffAmount;
+  if (aplicaDerechoFijo2026(this, fecha)) {
+    const numArticulos = Array.isArray(this.items) && this.items.length > 0 ? this.items.length : 1;
+    tariffAmount = REG_2026_382.derechoFijoPorArticulo * numArticulos;
+    this.aplicarDerechoFijo2026 = true;
+    this.duties.tariff.rate = 0; // no es porcentual, es cuota fija
+  } else {
+    // Fuera del supuesto del derecho fijo: arancel porcentual segun la tasa del envio
+    // (0 por defecto; puede venir informada por clasificacion TARIC).
+    const tariffRate = this.duties.tariff.rate || 0;
+    tariffAmount = customsValue * (tariffRate / 100);
+    this.aplicarDerechoFijo2026 = false;
+  }
 
-  // IVA: 21% en Espana (si no prepagado via IOSS)
+  // IVA: 21% en Espana (si no prepagado via IOSS). Base = valor en aduana + arancel.
+  // El antiguo minimis de 22 EUR (exencion de IVA por importe) fue derogado en 2021.
   let vatAmount = 0;
   if (!this.vatPrepaid && !this.duties.vat.prepaid) {
     const vatBase = customsValue + tariffAmount;
@@ -626,4 +647,10 @@ H7DeclarationSchema.statics.getStats = async function(filters = {}) {
 
 require('../utils/softDelete')(H7DeclarationSchema);
 
-module.exports = mongoose.model('H7Declaration', H7DeclarationSchema);
+const H7DeclarationModel = mongoose.model('H7Declaration', H7DeclarationSchema);
+
+// Utilidades del Reglamento (UE) 2026/382 tambien accesibles via el modelo.
+H7DeclarationModel.REG_2026_382 = REG_2026_382;
+H7DeclarationModel.aplicaDerechoFijo2026 = aplicaDerechoFijo2026;
+
+module.exports = H7DeclarationModel;

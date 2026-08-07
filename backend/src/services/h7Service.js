@@ -11,6 +11,7 @@
  */
 const { H7Declaration, Expedition } = require('../models');
 const User = require('../models/User');
+const { REG_2026_382, aplicaDerechoFijo2026 } = require('../config/reg2026382');
 
 /**
  * Carga una expedicion comprobando que es del tenant de quien la pide.
@@ -321,15 +322,38 @@ class H7Service {
     // Verificar si IVA prepagado via IOSS
     const vatPrepaid = !!data.iossNumber && /^IM\d{10}$/.test(data.iossNumber);
 
+    const roundedCustomsValue = Math.round(customsValue * 100) / 100;
+
+    // Reglamento (UE) 2026/382: derecho fijo transitorio 3 EUR/articulo para
+    // envios IOSS-exentos o postales (<= 150 EUR). Reutiliza la logica del modelo.
+    const declaracionParcial = {
+      totals: { intrinsicValue: Math.round(intrinsicValue * 100) / 100, customsValue: roundedCustomsValue },
+      vatPrepaid,
+      duties: { vat: { prepaid: vatPrepaid } },
+      carrier: data.carrier
+    };
+    let tariffAmount = 0;
+    let derechoFijoAplicado = false;
+    if (aplicaDerechoFijo2026(declaracionParcial)) {
+      const numArticulos = items.length > 0 ? items.length : 1;
+      tariffAmount = REG_2026_382.derechoFijoPorArticulo * numArticulos;
+      derechoFijoAplicado = true;
+    }
+
+    // IVA sobre base + arancel (salvo prepago IOSS). Sin umbral minimis de 22 EUR.
+    const vatAmount = vatPrepaid ? 0 : (roundedCustomsValue + tariffAmount) * (vatRate / 100);
+    const totalDue = tariffAmount + vatAmount + handlingFee;
+
     return {
       ...data,
       items,
       vatPrepaid,
+      aplicarDerechoFijo2026: derechoFijoAplicado,
       totals: {
         intrinsicValue: Math.round(intrinsicValue * 100) / 100,
         shippingCost,
         insuranceCost,
-        customsValue: Math.round(customsValue * 100) / 100,
+        customsValue: roundedCustomsValue,
         originalCurrency: data.totals?.originalCurrency || 'EUR',
         exchangeRate: data.totals?.exchangeRate || 1,
         grossWeight: Math.round(grossWeight * 1000) / 1000,
@@ -337,14 +361,14 @@ class H7Service {
         packages: data.totals?.packages || 1
       },
       duties: {
-        tariff: { rate: 0, amount: 0 },  // H7 generalmente exento de arancel
+        tariff: { rate: 0, amount: Math.round(tariffAmount * 100) / 100 },
         vat: {
           rate: vatRate,
-          amount: 0,
+          amount: Math.round(vatAmount * 100) / 100,
           prepaid: vatPrepaid
         },
         handlingFee,
-        totalDue: 0
+        totalDue: Math.round(totalDue * 100) / 100
       }
     };
   }
@@ -532,8 +556,9 @@ class H7Service {
     };
     declaration.channel = aeatResult.channel;
 
-    // En H7, el levante suele ser automatico si canal verde
-    if (aeatResult.channel === 'green' || declaration.totals.customsValue <= 22 || declaration.vatPrepaid) {
+    // En H7, el levante suele ser automatico si canal verde o si el IVA esta prepagado (IOSS).
+    // El antiguo umbral de 22 EUR (minimis de IVA) fue derogado en 2021 y ya no exime.
+    if (aeatResult.channel === 'green' || declaration.vatPrepaid) {
       declaration.status = 'released';
       declaration.releasedAt = new Date();
       declaration.statusHistory.push({

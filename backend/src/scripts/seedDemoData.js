@@ -593,16 +593,21 @@ async function seedH7Declarations(demoUserId, tenantId) {
         netWeight,
         packages: 1
       },
-      duties: {
-        tariff: { rate: 0, amount: 0 },
-        vat: {
-          rate: 21,
-          amount: customsValue > 22 ? parseFloat((customsValue * 0.21).toFixed(2)) : 0,
-          prepaid: false
-        },
-        handlingFee: 0,
-        totalDue: customsValue > 22 ? parseFloat((customsValue * 0.21).toFixed(2)) : 0
-      },
+      // Reglamento (UE) 2026/382 en vigor (1/Jul/2026): franquicia de 150 EUR suprimida.
+      // Derecho fijo 3 EUR/articulo para envios postales (CORREOS) o IOSS-exentos.
+      // Sin umbral minimis de 22 EUR (derogado en 2021): todo envio tributa IVA.
+      duties: (() => {
+        const esPostal = carrier.code === 'CORREOS';
+        const derechoFijo = esPostal ? 3.00 : 0;
+        const vatAmount = parseFloat(((customsValue + derechoFijo) * 0.21).toFixed(2));
+        return {
+          tariff: { rate: 0, amount: derechoFijo },
+          vat: { rate: 21, amount: vatAmount, prepaid: false },
+          handlingFee: 0,
+          totalDue: parseFloat((derechoFijo + vatAmount).toFixed(2))
+        };
+      })(),
+      aplicarDerechoFijo2026: carrier.code === 'CORREOS',
       status,
       submittedAt: status !== 'draft' && status !== 'validating' ? randomDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), new Date()) : undefined,
       releasedAt: status === 'released' ? new Date() : undefined,
