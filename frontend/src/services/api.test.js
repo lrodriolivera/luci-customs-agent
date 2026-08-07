@@ -1499,20 +1499,38 @@ describe('api.js — integrationsAPI', () => {
 })
 
 describe('api.js — knowledgeAPI', () => {
-  it('knowledgeAPI.search llama a GET con query', async () => {
+  it('knowledgeAPI.search llama a GET /api/knowledge/search', async () => {
     const api = await import('./api.js')
 
     await api.knowledgeAPI.search('TARIC')
 
-    expect(mockApi.get).toHaveBeenCalledWith('/ai/knowledge/search', { params: { query: 'TARIC' } })
+    expect(mockApi.get).toHaveBeenCalledWith('/api/knowledge/search', { params: { query: 'TARIC' } })
   })
 
-  it('knowledgeAPI.h1Guidance llama a GET con field', async () => {
+  it('knowledgeAPI.h1Guidance llama a GET /api/knowledge/h1-guidance/:field', async () => {
     const api = await import('./api.js')
 
     await api.knowledgeAPI.h1Guidance('incoterm')
 
-    expect(mockApi.get).toHaveBeenCalledWith('/ai/knowledge/h1-guidance/incoterm')
+    expect(mockApi.get).toHaveBeenCalledWith('/api/knowledge/h1-guidance/incoterm')
+  })
+
+  it('knowledgeAPI.regimeInfo llama a GET /api/knowledge/regime/:code', async () => {
+    // Antes apuntaba a /ai/knowledge/regime/:code, que no existe en el backend
+    // y caia al fallback de la SPA (index.html con 200), panel vacio.
+    const api = await import('./api.js')
+
+    await api.knowledgeAPI.regimeInfo('42')
+
+    expect(mockApi.get).toHaveBeenCalledWith('/api/knowledge/regime/42')
+  })
+
+  it('knowledgeAPI.incotermInfo llama a GET /api/knowledge/incoterm/:code', async () => {
+    const api = await import('./api.js')
+
+    await api.knowledgeAPI.incotermInfo('CIF')
+
+    expect(mockApi.get).toHaveBeenCalledWith('/api/knowledge/incoterm/CIF')
   })
 })
 

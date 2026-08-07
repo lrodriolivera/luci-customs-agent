@@ -23,7 +23,7 @@ const logger = require('./config/logger');
 
 // Import routes
 let authRoutes, expeditionRoutes, documentRoutes, declarationRoutes;
-let portalRoutes, chatRoutes, classificationRoutes, calculationRoutes;
+let portalRoutes, chatRoutes, classificationRoutes, calculationRoutes, knowledgeRoutes;
 let requirementRoutes, channelRoutes, paraduaneroRoutes, h7Routes, guaranteeRoutes;
 let specialRegimeRoutes, dashboardRoutes, transitRoutes, rulesEngineRoutes, exciseDutiesRoutes, quotaRoutes, preferencesRoutes, oeaRoutes;
 let deadlineRoutes, inspectionRoutes, communicationRoutes, integrationRoutes;
@@ -41,6 +41,7 @@ try {
   chatRoutes = require('./routes/chat');
   classificationRoutes = require('./routes/classification');
   calculationRoutes = require('./routes/calculation');
+  knowledgeRoutes = require('./routes/knowledge');
   requirementRoutes = require('./routes/requirements');
   channelRoutes = require('./routes/channels');
   paraduaneroRoutes = require('./routes/paraduanero');
@@ -334,6 +335,7 @@ if (portalRoutes) app.use('/api/portal', portalRoutes);
 if (chatRoutes) app.use('/api/chat', chatRoutes);
 if (classificationRoutes) app.use('/api/classification', classificationRoutes);
 if (calculationRoutes) app.use('/api/calculation', calculationRoutes);
+if (knowledgeRoutes) app.use('/api/knowledge', knowledgeRoutes);
 if (requirementRoutes) app.use('/api/requirements', requirementRoutes);
 if (channelRoutes) app.use('/api/channels', channelRoutes);
 if (paraduaneroRoutes) app.use('/api/paraduanero', paraduaneroRoutes);

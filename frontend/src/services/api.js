@@ -335,13 +335,16 @@ export const chatAPI = {
 }
 
 // Knowledge
+// Las rutas reales viven bajo /api/knowledge. Apuntaban a /ai/knowledge, que no
+// existe en el backend: caian al fallback de la SPA (index.html con 200) y los
+// paneles de régimen/incoterm quedaban vacios sin error visible.
 export const knowledgeAPI = {
-  search: (query) => api.get('/ai/knowledge/search', { params: { query } }),
-  categories: () => api.get('/ai/knowledge/categories'),
-  h1Guidance: (field) => api.get(`/ai/knowledge/h1-guidance/${field}`),
-  documentRequirements: (params) => api.get('/ai/knowledge/document-requirements', { params }),
-  regimeInfo: (code) => api.get(`/ai/knowledge/regime/${code}`),
-  incotermInfo: (incoterm) => api.get(`/ai/knowledge/incoterm/${incoterm}`)
+  search: (query) => api.get('/api/knowledge/search', { params: { query } }),
+  categories: () => api.get('/api/knowledge/categories'),
+  h1Guidance: (field) => api.get(`/api/knowledge/h1-guidance/${field}`),
+  documentRequirements: (params) => api.get('/api/knowledge/document-requirements', { params }),
+  regimeInfo: (code) => api.get(`/api/knowledge/regime/${code}`),
+  incotermInfo: (incoterm) => api.get(`/api/knowledge/incoterm/${incoterm}`)
 }
 
 // Requirements (AEAT/Paraduanero)

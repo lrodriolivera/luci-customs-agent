@@ -210,6 +210,23 @@ describe('DeclarationGenerator', () => {
       expect(aesButton).toHaveClass('border-luci')
     })
 
+    test('el panel informativo cambia a "Sobre AES" al seleccionar AES', async () => {
+      // Antes mostraba siempre "Sobre H1" aunque el tipo fuera AES.
+      render(<DeclarationGenerator />)
+      await waitFor(() => {
+        expect(screen.getByText('EXP-001')).toBeInTheDocument()
+      })
+      // Por defecto H1: panel "Sobre H1".
+      expect(screen.getByText('declarations.aboutH1')).toBeInTheDocument()
+
+      const aesButton = screen.getByText('declarations.aesExport').closest('button')
+      fireEvent.click(aesButton)
+
+      // Tras AES: panel "Sobre AES", no "Sobre H1".
+      expect(screen.getByText('declarations.aboutAES')).toBeInTheDocument()
+      expect(screen.queryByText('declarations.aboutH1')).not.toBeInTheDocument()
+    })
+
     test('shows NL-specific text for H1 when country is NL', async () => {
       localStorage.setItem('activeCustomsCountry', 'NL')
       render(<DeclarationGenerator />)

@@ -472,10 +472,16 @@ export default function DeclarationGenerator() {
           <div className="card">
             <h3 className="font-semibold text-gray-900 mb-3">
               <InformationCircleIcon className="w-5 h-5 inline mr-1 text-luci" />
-              {t('declarations.aboutH1')}
+              {/* El panel informativo mostraba siempre "Sobre H1" aunque el tipo
+                  seleccionado fuera AES. Se adapta al tipo activo. */}
+              {declarationType === 'AES'
+                ? t('declarations.aboutAES', 'Sobre AES')
+                : t('declarations.aboutH1')}
             </h3>
             <p className="text-sm text-gray-600">
-              {t('declarations.h1Info')}
+              {declarationType === 'AES'
+                ? t('declarations.aesInfo', 'El sistema AES (Automated Export System) es el formato de declaracion de exportacion de la UE. Sustituye al antiguo DUA de exportacion para las salidas de mercancia fuera del territorio aduanero de la Union.')
+                : t('declarations.h1Info')}
             </p>
           </div>
 
