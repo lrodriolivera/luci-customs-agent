@@ -447,28 +447,45 @@ RequirementSchema.statics.findPending = function(userId = null) {
   return this.find(query).sort({ deadline: 1 });
 };
 
-RequirementSchema.statics.findOverdue = function() {
-  return this.find({
+RequirementSchema.statics.findOverdue = function(tenantId = null) {
+  const filter = {
     deadline: { $lt: new Date() },
     status: { $nin: ['resolved', 'closed', 'rejected'] }
-  }).sort({ deadline: 1 });
+  };
+  if (tenantId) filter.tenantId = tenantId;
+  return this.find(filter).sort({ deadline: 1 });
 };
 
-RequirementSchema.statics.findUrgent = function() {
+RequirementSchema.statics.findUrgent = function(tenantId = null) {
   const threeDaysFromNow = new Date();
   threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
 
-  return this.find({
+  const filter = {
     deadline: { $lte: threeDaysFromNow },
     status: { $nin: ['resolved', 'closed', 'rejected'] }
-  }).sort({ deadline: 1 });
+  };
+  if (tenantId) filter.tenantId = tenantId;
+  return this.find(filter).sort({ deadline: 1 });
 };
 
-RequirementSchema.statics.getStats = async function(userId = null) {
+RequirementSchema.statics.getStats = async function(options = {}) {
+  // Compatibilidad: antes la firma era getStats(userId). Si llega un string se
+  // interpreta como userId; lo normal ahora es getStats({ tenantId, userId }).
+  const { userId, tenantId } = typeof options === 'string'
+    ? { userId: options }
+    : (options || {});
+
   // `new` obligatorio: en Mongoose 7 invocar ObjectId como funcion lanza
   // "Class constructor ObjectId cannot be invoked without 'new'". Sin el, pasar
   // userId reventaba getStats con 500; solo "funcionaba" el caso sin userId.
-  const match = userId ? { assignedTo: new mongoose.Types.ObjectId(userId) } : {};
+  //
+  // El filtro por tenant es lo que impide que las tarjetas cuenten los
+  // requerimientos de otros clientes: sin el, getStats agregaba sobre toda la
+  // coleccion mientras la lista de abajo si se acotaba, dejando cifras que no
+  // cuadraban y filtrando volumen de negocio ajeno.
+  const match = {};
+  if (tenantId) match.tenantId = new mongoose.Types.ObjectId(tenantId);
+  if (userId) match.assignedTo = new mongoose.Types.ObjectId(userId);
 
   const stats = await this.aggregate([
     { $match: match },

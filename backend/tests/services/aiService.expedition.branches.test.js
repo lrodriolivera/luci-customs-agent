@@ -33,6 +33,30 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
   // analyzeExpeditionRisk
   // ===========================================
   describe('analyzeExpeditionRisk', () => {
+    it('no inventa un canal verde tranquilizador cuando la respuesta llega truncada', async () => {
+      // Observado en produccion el 7/Ago/2026 sobre EXP-2026-0112 (canal ROJO,
+      // inspeccion fisica): analyze-risk respondia 200 pero el analisis habia
+      // fallado. El fallback pintaba "Riesgo Medio 50/100" y "Canal probable
+      // VERDE 60%", justo lo contrario de la realidad. Un fallo no puede
+      // presentarse como una prediccion optimista.
+      callClaudeSpy.mockResolvedValue({
+        content: '```json\n{\n  "overallRiskLevel": "HIGH",\n  "overallRiskScore": 80,\n  "channelPrediction": {\n    "green": 10,\n    "red": 60,\n    "mostLikely": "R',
+        tokensUsed: 1900,
+        stopReason: 'max_tokens'
+      });
+
+      const resultado = await aiService.analyzeExpeditionRisk({
+        expeditionId: 'EXP-2026-0112',
+        operationType: 'import',
+        goods: [{ description: 'Juguetes plastico', taricCode: '9503007000', originCountry: 'CN' }]
+      });
+
+      expect(resultado.analysisFailed).toBe(true);
+      // No afirma un canal probable que no ha calculado.
+      expect(resultado.channelPrediction.mostLikely).toBeNull();
+      expect(resultado.overallRiskScore).toBeNull();
+    });
+
     it('debe parsear respuesta con bloque ```json y retornar análisis completo', async () => {
       const mockResponse = {
         overallRiskLevel: 'HIGH',
@@ -171,7 +195,12 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
       expect(result.channelPrediction.mostLikely).toBe('GREEN');
     });
 
-    it('debe retornar fallback MEDIUM cuando JSON inválido', async () => {
+    it('marca el análisis como fallido cuando el JSON es inválido, sin fingir un riesgo', async () => {
+      // Antes este test fijaba el comportamiento peligroso: ante un JSON
+      // invalido devolvia overallRiskLevel:'MEDIUM' y mostLikely:'GREEN', es
+      // decir, presentaba un fallo como una prediccion concreta y optimista.
+      // Un analisis que no se pudo parsear no puede afirmar ni el nivel de
+      // riesgo ni el canal probable.
       callClaudeSpy.mockResolvedValue({
         content: '```json\n{ invalid json here \n```',
         tokensUsed: 500
@@ -185,10 +214,10 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
 
       const result = await aiService.analyzeExpeditionRisk(expedition);
 
-      expect(result.overallRiskLevel).toBe('MEDIUM');
-      expect(result.overallRiskScore).toBe(50);
-      expect(result.channelPrediction.mostLikely).toBe('GREEN');
-      expect(result.warnings).toContain('Error procesando análisis de riesgo');
+      expect(result.analysisFailed).toBe(true);
+      expect(result.overallRiskLevel).toBeNull();
+      expect(result.overallRiskScore).toBeNull();
+      expect(result.channelPrediction.mostLikely).toBeNull();
       expect(result.rawResponse).toBeDefined();
     });
 
@@ -542,6 +571,60 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
   // ===========================================
   // detectInconsistencies
   // ===========================================
+  describe('suggestMissingDocuments', () => {
+    it('no finge un analisis medio-completo cuando la respuesta llega truncada', async () => {
+      // Observado en produccion el 7/Ago/2026 sobre EXP-2026-0112: el POST a
+      // /ai/suggest-documents respondia 200 pero la UI mostraba "Error
+      // procesando analisis de documentos". El regex ```...``` exigia la valla
+      // de cierre; con la respuesta cortada, JSON.parse reventaba y el catch
+      // devolvia completenessScore:50 con listas vacias — un fallo disfrazado de
+      // "no falta nada, expediente medio completo".
+      callClaudeSpy.mockResolvedValue({
+        content: '```json\n{\n  "missingRequired": [\n    {\n      "documentType": "COMMERCIAL_INVOICE",\n      "name": "Factura Comercial",\n      "reason": "Obligatoria para el desp',
+        tokensUsed: 1801,
+        stopReason: 'max_tokens'
+      });
+
+      const resultado = await aiService.suggestMissingDocuments({
+        expeditionId: 'EXP-2026-0112',
+        operationType: 'import',
+        goods: [{ description: 'Juguetes plastico', taricCode: '9503007000', originCountry: 'CN' }]
+      });
+
+      // No puede afirmar un grado de completitud que no ha calculado.
+      expect(resultado.completenessScore).toBeNull();
+      // Y tiene que declarar que el analisis fallo, no devolver un resumen falso.
+      expect(resultado.analysisFailed).toBe(true);
+    });
+
+    it('parsea una respuesta valida y devuelve los documentos', async () => {
+      const mockResponse = {
+        missingRequired: [
+          { documentType: 'COMMERCIAL_INVOICE', name: 'Factura Comercial', reason: 'Obligatoria', priority: 'CRITICAL' }
+        ],
+        recommended: [],
+        preferentialOrigin: { applicable: false },
+        specialRequirements: [],
+        completenessScore: 40,
+        summary: 'Falta la factura comercial'
+      };
+      callClaudeSpy.mockResolvedValue({
+        content: '```json\n' + JSON.stringify(mockResponse) + '\n```',
+        tokensUsed: 1200
+      });
+
+      const resultado = await aiService.suggestMissingDocuments({
+        expeditionId: 'EXP-OK',
+        operationType: 'import',
+        goods: [{ description: 'Juguetes', taricCode: '9503007000' }]
+      });
+
+      expect(resultado.analysisFailed).toBeUndefined();
+      expect(resultado.completenessScore).toBe(40);
+      expect(resultado.missingRequired).toHaveLength(1);
+    });
+  });
+
   describe('detectInconsistencies', () => {
     it('no da luz verde a declarar cuando la respuesta llega truncada', async () => {
       // Caso real observado en produccion el 6/Ago/2026: el modelo devolvio un

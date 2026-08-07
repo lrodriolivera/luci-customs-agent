@@ -661,17 +661,25 @@ exports.resolveRequirement = async (req, res) => {
 exports.getStats = async (req, res) => {
   try {
     const { userId } = req.query;
+    const tenantId = req.user?.tenantId;
 
-    const stats = await Requirement.getStats(userId);
+    // Las tarjetas contaban los requerimientos de todos los tenants porque
+    // getStats/findUrgent/findOverdue no se acotaban por tenant (la lista de
+    // abajo si). Acotamos aqui para que las cifras cuadren y no se filtre
+    // volumen de otros clientes.
+    const stats = await Requirement.getStats({ userId, tenantId });
 
     // Agregar requerimientos urgentes (vencen en 3 dias)
-    const urgent = await Requirement.findUrgent();
+    const urgent = await Requirement.findUrgent(tenantId);
 
     // Agregar requerimientos vencidos
-    const overdue = await Requirement.findOverdue();
+    const overdue = await Requirement.findOverdue(tenantId);
 
     // Calcular total
-    const total = await Requirement.countDocuments(userId ? { assignedTo: userId } : {});
+    const totalFilter = {};
+    if (tenantId) totalFilter.tenantId = tenantId;
+    if (userId) totalFilter.assignedTo = userId;
+    const total = await Requirement.countDocuments(totalFilter);
 
     // Formatear stats para el frontend
     const byStatus = stats.byStatus || {};

@@ -10,7 +10,13 @@
 const request = require('supertest');
 const express = require('express');
 
-const mockRequirement = { findById: jest.fn() };
+const mockRequirement = {
+  findById: jest.fn(),
+  getStats: jest.fn(),
+  findUrgent: jest.fn(),
+  findOverdue: jest.fn(),
+  countDocuments: jest.fn()
+};
 const mockExpedition = { findById: jest.fn() };
 
 jest.mock('../../src/models/Requirement', () => mockRequirement);
@@ -74,6 +80,32 @@ describe('requirementController: aislamiento por tenant', () => {
 
     expect(res.status).toBe(404);
     expect(doc.save).not.toHaveBeenCalled();
+  });
+
+  describe('estadisticas', () => {
+    // BUG cross-tenant: las tarjetas Total/Pendientes/En Proceso/Resueltos salian
+    // de getStats, que solo filtraba por assignedTo (y el frontend no envia userId),
+    // asi que contaban los requerimientos de TODOS los tenants. La lista de abajo
+    // si filtra por tenant, de ahi el desajuste visible (tarjeta 6 vs tabla del
+    // tenant). getStats debe acotarse por el tenant del usuario igual que la lista.
+    test('getStats se acota al tenant del usuario', async () => {
+      mockRequirement.getStats.mockResolvedValue({ byStatus: {}, byChannel: {}, overdue: 0 });
+      mockRequirement.findUrgent.mockResolvedValue([]);
+      mockRequirement.findOverdue.mockResolvedValue([]);
+      mockRequirement.countDocuments.mockResolvedValue(0);
+
+      const res = await request(app(requirementController.getStats)).get('/r/stats');
+
+      expect(res.status).toBe(200);
+      // El modelo recibe el tenant del usuario, no undefined ni un userId ausente.
+      expect(mockRequirement.getStats).toHaveBeenCalledWith(
+        expect.objectContaining({ tenantId: 't1' })
+      );
+      // El total tambien se cuenta acotado por tenant.
+      expect(mockRequirement.countDocuments).toHaveBeenCalledWith(
+        expect.objectContaining({ tenantId: 't1' })
+      );
+    });
   });
 
   describe('creacion', () => {

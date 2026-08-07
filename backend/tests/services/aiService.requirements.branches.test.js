@@ -1161,7 +1161,12 @@ describe('aiService.declarations - suggestMissingDocuments', () => {
     expect(result.tokensUsed).toBe(140);
   });
 
-  test('fallback cuando JSON es inválido', async () => {
+  test('marca el análisis como fallido cuando el JSON es inválido, sin fingir completitud', async () => {
+    // Antes este test fijaba el fallback peligroso: completenessScore:50 con
+    // listas vacias, que la UI pintaba como "no falta nada, expediente medio
+    // completo". Un analisis que no se pudo parsear no puede afirmar un grado
+    // de completitud. Observado en produccion (EXP-2026-0112) como "200 pero
+    // Error procesando analisis de documentos".
     callClaudeSpy.mockResolvedValue({
       content: '```json\n{invalid\n```',
       tokensUsed: 10
@@ -1171,11 +1176,11 @@ describe('aiService.declarations - suggestMissingDocuments', () => {
 
     const result = await aiService.suggestMissingDocuments(expedition);
 
+    expect(result.analysisFailed).toBe(true);
     expect(result.missingRequired).toEqual([]);
     expect(result.recommended).toEqual([]);
     expect(result.preferentialOrigin.applicable).toBe(false);
-    expect(result.completenessScore).toBe(50);
-    expect(result.summary).toBe('Error procesando análisis de documentos');
+    expect(result.completenessScore).toBeNull();
     expect(result.rawResponse).toBe('```json\n{invalid\n```');
   });
 

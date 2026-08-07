@@ -3268,23 +3268,27 @@ Responde en JSON:
     const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.documentValidation, prompt, { maxTokens: 4096 });
 
     try {
-      let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
-
+      // _parseJsonRespuesta rescata las respuestas truncadas (sin valla de
+      // cierre) que el regex ```...``` no capturaba y hacian caer al fallback.
       return {
-        ...JSON.parse(jsonContent),
+        ...this._parseJsonRespuesta(result.content),
         model: 'opus-4',
         tokensUsed: result.tokensUsed
       };
     } catch (e) {
+      // Si no se pudo parsear, NO se puede afirmar nada del estado documental.
+      // La rama anterior devolvia completenessScore:50 y listas vacias, lo que
+      // se pintaba como "no falta ningun documento y el expediente esta medio
+      // completo": un analisis fallido disfrazado de resultado tranquilizador.
+      logger.warn(`suggestMissingDocuments: no se pudo parsear la respuesta (${e.message})`);
       return {
+        analysisFailed: true,
         missingRequired: [],
         recommended: [],
         preferentialOrigin: { applicable: false },
         specialRequirements: [],
-        completenessScore: 50,
-        summary: 'Error procesando análisis de documentos',
+        completenessScore: null,
+        summary: 'No se pudo completar el análisis documental: revise el expediente manualmente',
         rawResponse: result.content
       };
     }
@@ -3415,29 +3419,29 @@ Responde en JSON:
     const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt, { maxTokens: 4096, timeout: 90000 });
 
     try {
-      let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
-
+      // _parseJsonRespuesta rescata las respuestas truncadas que el regex
+      // ```...``` dejaba caer al fallback.
       return {
-        ...JSON.parse(jsonContent),
+        ...this._parseJsonRespuesta(result.content),
         model: 'opus-4',
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
     } catch (e) {
+      // Un analisis fallido NO puede presentarse como "Riesgo Medio 50/100" y
+      // —lo grave— "Canal probable VERDE 60%". Ese fallback inventaba una
+      // prediccion tranquilizadora: sobre EXP-2026-0112, que estaba en canal
+      // ROJO con inspeccion fisica, mostraba verde. Devolvemos nulos y marcamos
+      // el fallo para que la UI no pinte cifras que el modelo nunca calculo.
+      logger.warn(`analyzeExpeditionRisk: no se pudo parsear la respuesta (${e.message})`);
       return {
-        overallRiskLevel: 'MEDIUM',
-        overallRiskScore: 50,
-        channelPrediction: { green: 60, orange: 30, red: 10, mostLikely: 'GREEN', factors: [] },
-        riskCategories: {
-          documental: { level: 'MEDIUM', score: 50, issues: [], recommendations: [] },
-          classification: { level: 'MEDIUM', score: 50, issues: [], recommendations: [] },
-          valuation: { level: 'MEDIUM', score: 50, issues: [], recommendations: [] },
-          regulatory: { level: 'MEDIUM', score: 50, issues: [], recommendations: [] }
-        },
+        analysisFailed: true,
+        overallRiskLevel: null,
+        overallRiskScore: null,
+        channelPrediction: { green: null, orange: null, red: null, mostLikely: null, factors: [] },
+        riskCategories: {},
         criticalIssues: [],
-        warnings: ['Error procesando análisis de riesgo'],
+        warnings: ['El análisis de riesgo no se pudo completar: revise el expediente manualmente'],
         recommendations: [],
         summary: 'No se pudo completar el análisis de riesgo',
         rawResponse: result.content
