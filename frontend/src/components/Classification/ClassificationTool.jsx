@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { classificationAPI } from '../../services/api'
+import { useSearchParams } from 'react-router-dom'
+import { classificationAPI, expeditionsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import TaricTreeBrowser from './TaricTreeBrowser'
 import TARIC_CHAPTERS from '../../data/taricChapters'
@@ -36,6 +37,7 @@ const getDesc = (d) => {
 
 export default function ClassificationTool() {
   const { t } = useTranslation()
+  const [searchParams] = useSearchParams()
   const [description, setDescription] = useState('')
   const [additionalInfo, setAdditionalInfo] = useState({
     material: '',
@@ -43,6 +45,35 @@ export default function ClassificationTool() {
     origin: '',
     composition: ''
   })
+
+  // Precarga desde un expediente. "Clasificar TARIC" abre esta pantalla con
+  // ?expedition=<id>; ese parametro se ignoraba y el formulario salia vacio.
+  // Precargamos descripcion, material y origen de la primera partida para que
+  // el usuario no tenga que reescribir lo que ya consta en el expediente.
+  useEffect(() => {
+    const expeditionId = searchParams.get('expedition')
+    if (!expeditionId) return
+
+    const precargarExpediente = async () => {
+      try {
+        const response = await expeditionsAPI.get(expeditionId)
+        const expedition = response.data?.data || response.data
+        const partida = expedition?.goods?.[0]
+        if (!partida) return
+
+        if (partida.description) setDescription(partida.description)
+        setAdditionalInfo(prev => ({
+          ...prev,
+          material: partida.material || prev.material,
+          origin: partida.originCountry || prev.origin
+        }))
+      } catch (error) {
+        console.error('Error precargando expediente en la clasificacion:', error)
+      }
+    }
+
+    precargarExpediente()
+  }, [searchParams])
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState(null)
   const [selectedCode, setSelectedCode] = useState(null)

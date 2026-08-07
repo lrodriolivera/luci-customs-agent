@@ -14,12 +14,22 @@ vi.mock('react-hot-toast', () => ({
 
 vi.mock('../../services/api', () => ({
   calculationsAPI: { calculateDuties: vi.fn() },
-  knowledgeAPI: { incotermInfo: vi.fn() }
+  knowledgeAPI: { incotermInfo: vi.fn() },
+  expeditionsAPI: { get: vi.fn() }
 }))
+
+// El precargado desde un expediente lee ?expedition=<id>. Por defecto sin query.
+let searchParamsMock = new URLSearchParams('')
+vi.mock('react-router-dom', () => ({
+  useSearchParams: () => [searchParamsMock, vi.fn()]
+}))
+
+import { expeditionsAPI } from '../../services/api'
 
 describe('<DutyCalculator />', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    searchParamsMock = new URLSearchParams('')
     knowledgeAPI.incotermInfo.mockResolvedValue({ data: { code: 'CIF', description: 'Cost Insurance Freight' } })
   })
 
@@ -118,6 +128,55 @@ describe('<DutyCalculator />', () => {
     fireEvent.change(screen.getByTestId('calc-origin'), { target: { value: 'FR' } })
     fireEvent.submit(document.querySelector('form'))
     await waitFor(() => expect(screen.getByText('calculator.result')).toBeInTheDocument())
+  })
+
+  describe('precarga desde un expediente (?expedition=<id>)', () => {
+    // BUG UX: "Calcular Derechos" abre /calculator?expedition=<id> pero el
+    // formulario salia vacio: nadie leia el query param. El usuario tenia que
+    // reescribir TARIC, valor, origen e incoterm que ya constaban en el
+    // expediente. Ahora se precargan de la primera partida.
+    test('rellena TARIC, valor, origen e incoterm del expediente', async () => {
+      searchParamsMock = new URLSearchParams('expedition=exp-1')
+      expeditionsAPI.get.mockResolvedValue({
+        data: {
+          data: {
+            incoterm: { code: 'FOB' },
+            goods: [
+              { taricCode: '9503007000', invoiceValue: 3395, originCountry: 'CN' }
+            ]
+          }
+        }
+      })
+
+      render(<DutyCalculator />)
+
+      await waitFor(() => expect(expeditionsAPI.get).toHaveBeenCalledWith('exp-1'))
+
+      // Los campos quedan precargados con los datos de la primera partida.
+      await waitFor(() => {
+        expect(screen.getByTestId('calc-taric').value).toBe('9503007000')
+      })
+      expect(screen.getByTestId('calc-value').value).toBe('3395')
+      expect(screen.getByTestId('calc-origin').value).toBe('CN')
+    })
+
+    test('sin query param no llama a la API de expedientes', async () => {
+      render(<DutyCalculator />)
+      await waitFor(() => expect(knowledgeAPI.incotermInfo).toHaveBeenCalled())
+      expect(expeditionsAPI.get).not.toHaveBeenCalled()
+    })
+
+    test('si el expediente falla, el formulario sigue usable', async () => {
+      searchParamsMock = new URLSearchParams('expedition=exp-err')
+      expeditionsAPI.get.mockRejectedValue(new Error('404'))
+
+      render(<DutyCalculator />)
+
+      await waitFor(() => expect(expeditionsAPI.get).toHaveBeenCalled())
+      // No crashea: el titulo sigue presente y los campos vacios.
+      expect(screen.getByText('calculator.title')).toBeInTheDocument()
+      expect(screen.getByTestId('calc-taric').value).toBe('')
+    })
   })
 
   test('cálculo con error de API muestra toast de error', async () => {

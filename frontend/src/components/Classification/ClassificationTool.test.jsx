@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import ClassificationTool from './ClassificationTool'
-import { classificationAPI } from '../../services/api'
+import { classificationAPI, expeditionsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -33,7 +33,8 @@ vi.mock('../../services/api', () => ({
     getSearchHistory: vi.fn(),
     getMostSearched: vi.fn(),
     getCacheStats: vi.fn()
-  }
+  },
+  expeditionsAPI: { get: vi.fn() }
 }))
 
 vi.mock('./TaricTreeBrowser', () => ({
@@ -60,13 +61,46 @@ describe('<ClassificationTool />', () => {
     classificationAPI.getCacheStats.mockResolvedValue({ data: { data: null } })
   })
 
-  const renderComponent = () => {
+  const renderComponent = (initialEntry = '/classification') => {
     return render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <ClassificationTool />
       </MemoryRouter>
     )
   }
+
+  // ==================== PRECARGA DESDE EXPEDIENTE ====================
+  describe('precarga desde un expediente (?expedition=<id>)', () => {
+    // BUG UX: "Clasificar TARIC" abre /classification?expedition=<id> pero el
+    // formulario salia vacio porque nadie leia el query param. Ahora se
+    // precargan descripcion, material y origen de la primera partida.
+    test('rellena descripcion, material y origen del expediente', async () => {
+      expeditionsAPI.get.mockResolvedValue({
+        data: {
+          data: {
+            goods: [
+              { description: 'Juguetes plastico', material: 'plastico', originCountry: 'CN' }
+            ]
+          }
+        }
+      })
+
+      renderComponent('/classification?expedition=exp-1')
+
+      await waitFor(() => expect(expeditionsAPI.get).toHaveBeenCalledWith('exp-1'))
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText('classification.productPlaceholder').value).toBe('Juguetes plastico')
+      })
+      expect(screen.getByPlaceholderText('classification.materialPlaceholder').value).toBe('plastico')
+      expect(screen.getByPlaceholderText('classification.originPlaceholder').value).toBe('CN')
+    })
+
+    test('sin query param no consulta el expediente', async () => {
+      renderComponent()
+      await waitFor(() => expect(screen.getByPlaceholderText('classification.productPlaceholder')).toBeInTheDocument())
+      expect(expeditionsAPI.get).not.toHaveBeenCalled()
+    })
+  })
 
   // ==================== INITIAL RENDER ====================
   test('renderiza el header con título y pestañas', async () => {

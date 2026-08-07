@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { calculationsAPI, knowledgeAPI } from '../../services/api'
+import { useSearchParams } from 'react-router-dom'
+import { calculationsAPI, knowledgeAPI, expeditionsAPI } from '../../services/api'
 import { commonCountries, allCountries } from '../../data/countries'
 import toast from 'react-hot-toast'
 import {
@@ -17,6 +18,7 @@ import {
 
 export default function DutyCalculator() {
   const { t } = useTranslation()
+  const [searchParams] = useSearchParams()
   const [formData, setFormData] = useState({
     taricCode: '',
     value: '',
@@ -28,6 +30,36 @@ export default function DutyCalculator() {
   const [calculating, setCalculating] = useState(false)
   const [result, setResult] = useState(null)
   const [incotermInfo, setIncotermInfo] = useState(null)
+
+  // Precarga desde un expediente. "Calcular Derechos" abre esta pantalla con
+  // ?expedition=<id>; antes ese parametro se ignoraba y el formulario salia
+  // vacio, obligando a reescribir datos que ya constaban en el expediente.
+  // Tomamos la primera partida como referencia del calculo.
+  useEffect(() => {
+    const expeditionId = searchParams.get('expedition')
+    if (!expeditionId) return
+
+    const precargarExpediente = async () => {
+      try {
+        const response = await expeditionsAPI.get(expeditionId)
+        const expedition = response.data?.data || response.data
+        const partida = expedition?.goods?.[0]
+        if (!partida) return
+
+        setFormData(prev => ({
+          ...prev,
+          taricCode: partida.taricCode || prev.taricCode,
+          value: partida.invoiceValue != null ? String(partida.invoiceValue) : prev.value,
+          origin: partida.originCountry || prev.origin,
+          incoterm: expedition.incoterm?.code || prev.incoterm
+        }))
+      } catch (error) {
+        console.error('Error precargando expediente en la calculadora:', error)
+      }
+    }
+
+    precargarExpediente()
+  }, [searchParams])
 
   useEffect(() => {
     const fetchIncotermInfo = async () => {

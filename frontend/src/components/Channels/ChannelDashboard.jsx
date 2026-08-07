@@ -65,6 +65,30 @@ export default function ChannelDashboard() {
   const [selectedChannel, setSelectedChannel] = useState(null)
   const [dateRange, setDateRange] = useState('all')
 
+  // Inicio del rango segun el selector. null = sin limite ("todo").
+  // Se usa tanto para pedir las estadisticas al backend como para filtrar
+  // localmente la tabla y los criticos, de modo que todo el panel hable
+  // del mismo periodo (antes las tarjetas se filtraban pero la tabla no).
+  const rangeStartDate = (range) => {
+    const start = new Date()
+    switch (range) {
+      case 'today':
+        start.setHours(0, 0, 0, 0)
+        return start
+      case 'week':
+        start.setDate(start.getDate() - 7)
+        return start
+      case 'month':
+        start.setMonth(start.getMonth() - 1)
+        return start
+      case 'year':
+        start.setFullYear(start.getFullYear() - 1)
+        return start
+      default:
+        return null
+    }
+  }
+
   useEffect(() => {
     loadData()
   }, [dateRange])
@@ -75,23 +99,7 @@ export default function ChannelDashboard() {
 
       // Calcular fechas segun rango
       const endDate = new Date()
-      let startDate = new Date()
-      switch (dateRange) {
-        case 'today':
-          startDate.setHours(0, 0, 0, 0)
-          break
-        case 'week':
-          startDate.setDate(startDate.getDate() - 7)
-          break
-        case 'month':
-          startDate.setMonth(startDate.getMonth() - 1)
-          break
-        case 'year':
-          startDate.setFullYear(startDate.getFullYear() - 1)
-          break
-        default:
-          startDate = null
-      }
+      const startDate = rangeStartDate(dateRange)
 
       // Cargar estadisticas
       try {
@@ -131,13 +139,26 @@ export default function ChannelDashboard() {
     }
   }
 
-  // Filtrar expedientes por canal seleccionado
-  const filteredExpeditions = selectedChannel
-    ? expeditions.filter(exp => (exp._channel || exp.channel || exp.declaration?.channel) === selectedChannel)
+  // Filtrar por el rango de fechas activo. El selector alimentaba solo a las
+  // tarjetas de estadisticas (via getStats); la tabla y "Requieren atencion"
+  // ignoraban el rango, de modo que "Hoy" ponia las tarjetas a 0 mientras la
+  // tabla seguia mostrando expedientes de meses atras. Ahora todo el panel se
+  // acota al mismo periodo.
+  const rangeStart = rangeStartDate(dateRange)
+  const expeditionsInRange = rangeStart
+    ? expeditions.filter(exp => {
+        const fecha = exp._channelDate ? new Date(exp._channelDate) : null
+        return fecha && fecha >= rangeStart
+      })
     : expeditions
 
+  // Filtrar expedientes por canal seleccionado
+  const filteredExpeditions = selectedChannel
+    ? expeditionsInRange.filter(exp => (exp._channel || exp.channel || exp.declaration?.channel) === selectedChannel)
+    : expeditionsInRange
+
   // Calcular expedientes criticos (canal rojo sin cita, naranja por vencer)
-  const criticalExpeditions = (expeditions || []).filter(exp => {
+  const criticalExpeditions = (expeditionsInRange || []).filter(exp => {
     try {
       const channel = exp._channel || exp.channel || exp.declaration?.channel
       return channel === 'red' || channel === 'orange'

@@ -452,6 +452,73 @@ describe('ChannelDashboard', () => {
     })
   })
 
+  describe('Date range filters the expeditions list', () => {
+    // BUG UX: el selector de fecha filtraba las tarjetas de estadisticas (via
+    // getStats con startDate/endDate) pero NO la tabla ni "Requieren atencion".
+    // Al elegir "Hoy" las tarjetas iban a 0 mientras la tabla seguia mostrando
+    // los expedientes de julio, contradiciendo al propio panel.
+    it('oculta de la tabla los expedientes fuera del rango "hoy"', async () => {
+      const hoy = new Date()
+      const haceUnMes = new Date()
+      haceUnMes.setMonth(haceUnMes.getMonth() - 1)
+
+      channelsAPI.getExpeditions.mockResolvedValue({
+        data: [
+          { _id: 'reciente', channel: 'green', clientName: 'ClienteHoy', mrn: 'MRN-HOY', channelDate: hoy.toISOString() },
+          { _id: 'viejo', channel: 'green', clientName: 'ClienteViejo', mrn: 'MRN-VIEJO', channelDate: haceUnMes.toISOString() }
+        ]
+      })
+
+      renderComponent()
+
+      await waitFor(() => {
+        expect(screen.getByText('ClienteHoy')).toBeInTheDocument()
+      })
+      // Con "todo" (por defecto) ambos aparecen
+      expect(screen.getByText('ClienteViejo')).toBeInTheDocument()
+
+      const select = screen.getByRole('combobox')
+      fireEvent.change(select, { target: { value: 'today' } })
+
+      await waitFor(() => {
+        expect(screen.queryByText('ClienteViejo')).not.toBeInTheDocument()
+      })
+      // El de hoy sigue visible
+      expect(screen.getByText('ClienteHoy')).toBeInTheDocument()
+    })
+
+    it('recalcula "Requieren atencion" segun el rango de fechas', async () => {
+      const hoy = new Date()
+      const haceUnMes = new Date()
+      haceUnMes.setMonth(haceUnMes.getMonth() - 1)
+
+      channelsAPI.getExpeditions.mockResolvedValue({
+        data: [
+          { _id: 'r1', channel: 'red', clientName: 'RojoHoy', mrn: 'M1', channelDate: hoy.toISOString() },
+          { _id: 'r2', channel: 'orange', clientName: 'NaranjaViejo', mrn: 'M2', channelDate: haceUnMes.toISOString() }
+        ]
+      })
+
+      renderComponent()
+
+      await waitFor(() => {
+        expect(screen.getByText('channels.requireAttention')).toBeInTheDocument()
+      })
+      // Con "todo": 2 criticos (rojo + naranja)
+      const seccionTodo = screen.getByText('channels.requireAttention').closest('div').closest('div')
+      expect(within(seccionTodo).getByText('2')).toBeInTheDocument()
+
+      const select = screen.getByRole('combobox')
+      fireEvent.change(select, { target: { value: 'today' } })
+
+      // Con "hoy": solo el rojo de hoy cuenta como critico
+      await waitFor(() => {
+        const seccionHoy = screen.getByText('channels.requireAttention').closest('div').closest('div')
+        expect(within(seccionHoy).getByText('1')).toBeInTheDocument()
+      })
+    })
+  })
+
   describe('Refresh button', () => {
     it('should reload data when clicking refresh button', async () => {
       renderComponent()
