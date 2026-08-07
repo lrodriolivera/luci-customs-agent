@@ -289,20 +289,38 @@ class AIService {
    * debe dar por bueno un analisis que no se pudo leer.
    */
   _parseJsonRespuesta(content) {
+    return JSON.parse(this._extraerJsonString(content));
+  }
+
+  /**
+   * Devuelve el string JSON saneado de una respuesta del modelo, listo para
+   * JSON.parse. Es la version "string" de _parseJsonRespuesta: acepta la valla
+   * markdown con o sin cierre (respuesta truncada) y, si el JSON quedo
+   * incompleto, cierra lo que falte para rescatar los elementos completos.
+   *
+   * Existe para poder migrar los ~40 sitios que hacian
+   *   const jsonMatch = jsonContent.match(/```.../); if (jsonMatch) ...
+   *   JSON.parse(jsonContent)
+   * sustituyendo solo el matcher fragil, sin reescribir cada JSON.parse ni el
+   * uso posterior de jsonContent. Lanza si no hay nada parseable ni rescatable.
+   */
+  _extraerJsonString(content) {
     const texto = String(content ?? '').trim();
 
     // Valla con cierre, valla sin cerrar (respuesta truncada), o sin valla.
     const conCierre = texto.match(/```(?:json)?\s*([\s\S]*?)```/);
     const sinCierre = texto.match(/```(?:json)?\s*([\s\S]*)$/);
-    let json = (conCierre ? conCierre[1] : sinCierre ? sinCierre[1] : texto).trim();
+    const json = (conCierre ? conCierre[1] : sinCierre ? sinCierre[1] : texto).trim();
 
     try {
-      return JSON.parse(json);
+      JSON.parse(json);
+      return json;
     } catch (e) {
       // Truncado: recortar hasta el ultimo elemento completo y cerrar lo que
-      // quedo abierto. Si tampoco asi es parseable, que lance.
+      // quedo abierto. Si tampoco asi es parseable, JSON.parse lanzara aqui.
       const recortado = this._cerrarJsonTruncado(json);
-      return JSON.parse(recortado);
+      JSON.parse(recortado);
+      return recortado;
     }
   }
 
@@ -558,10 +576,7 @@ CONTEXTO DEL EXPEDIENTE:
     try {
       // Limpiar markdown si existe (```json ... ```)
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) {
-        jsonContent = jsonMatch[1].trim();
-      }
+      jsonContent = this._extraerJsonString(jsonContent);
 
       const parsed = JSON.parse(jsonContent);
       const suggestions = parsed.suggestions || [];
@@ -860,8 +875,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -912,8 +926,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return JSON.parse(jsonContent);
     } catch (e) {
@@ -971,8 +984,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return JSON.parse(jsonContent);
     } catch (e) {
@@ -1057,8 +1069,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -1136,8 +1147,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return JSON.parse(jsonContent);
     } catch (e) {
@@ -1203,8 +1213,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return JSON.parse(jsonContent);
     } catch (e) {
@@ -1261,8 +1270,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return JSON.parse(jsonContent);
     } catch (e) {
@@ -1395,8 +1403,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -1551,8 +1558,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -1715,8 +1721,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -1863,8 +1868,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -2007,8 +2011,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -2115,8 +2118,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -2256,8 +2258,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -2389,8 +2390,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -2641,8 +2641,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -2755,8 +2754,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -2888,8 +2886,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -3035,8 +3032,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -3525,8 +3521,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -3781,8 +3776,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -3926,8 +3920,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -4046,8 +4039,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -4175,8 +4167,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -4305,8 +4296,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -4562,8 +4552,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -4643,8 +4632,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -4739,8 +4727,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -4867,8 +4854,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -5091,8 +5077,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -5212,8 +5197,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -5327,8 +5311,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -5460,8 +5443,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -5581,8 +5563,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -5789,8 +5770,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -5903,8 +5883,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -6056,8 +6035,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -6248,8 +6226,7 @@ Responde en JSON:
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
 
       return {
         ...JSON.parse(jsonContent),
@@ -6603,10 +6580,7 @@ Si el código no existe o no es válido, devuelve:
     try {
       let jsonContent = result.content;
       // Limpiar posibles bloques de código markdown
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) {
-        jsonContent = jsonMatch[1].trim();
-      }
+      jsonContent = this._extraerJsonString(jsonContent);
       // Limpiar espacios y saltos de línea extra
       jsonContent = jsonContent.trim();
 
@@ -6686,8 +6660,7 @@ ${config.parentName.toUpperCase()} PADRE: ${parentCode}`;
 
     try {
       let jsonContent = result.content;
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) jsonContent = jsonMatch[1].trim();
+      jsonContent = this._extraerJsonString(jsonContent);
       jsonContent = jsonContent.trim();
 
       const parsed = JSON.parse(jsonContent);
