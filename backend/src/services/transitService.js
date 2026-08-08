@@ -29,6 +29,32 @@ async function _loadOwnedExpedition(expeditionId, userId) {
 const aeatSubmitService = require('./aeat/aeatSubmitService');
 const logger = require('../config/logger');
 
+/**
+ * Traduce los rechazos del CC007 que llegan en jerga interna de AEAT.
+ *
+ * El caso que se repite es el 856: "ADDS_No existe ninguna partida no anulada con
+ * el transito asociado". Significa que en el recinto de destino no hay ninguna
+ * declaracion sumaria de deposito temporal (G4/DSDT) que referencie el transito,
+ * y eso no se arregla desde LUCI: lo declara el almacen al recibir la mercancia.
+ * Sin esta traduccion el usuario solo ve un identificador ADDS y no sabe si el
+ * fallo es suyo, nuestro o del almacen.
+ *
+ * Se CONSERVA el texto original de AEAT, que lleva el MRN y el recinto: es la
+ * unica traza que permite reclamar al almacen o al despacho de destino.
+ */
+function _explicarRechazoCC007(errorAEAT) {
+  const texto = errorAEAT || 'Error en respuesta CC007/AEAT';
+
+  if (/ADDS_No existe ninguna partida/i.test(texto)) {
+    return 'AEAT no encuentra en el recinto de destino ninguna declaracion sumaria '
+      + 'de deposito temporal (G4/DSDT) que referencie este transito. La sumaria la '
+      + 'presenta el almacen de destino al recibir la mercancia: hasta entonces la '
+      + 'llegada no se puede notificar. Respuesta de AEAT: ' + texto;
+  }
+
+  return texto;
+}
+
 const transitService = {
   /**
    * Crear nuevo transito
@@ -359,7 +385,7 @@ const transitService = {
     });
 
     if (!aeatResult.success) {
-      throw new Error(aeatResult.error || 'Error en respuesta CC007/AEAT');
+      throw new Error(_explicarRechazoCC007(aeatResult.error));
     }
 
     // IE160 (Arrival Notification): el CC007 aceptado por AEAT.

@@ -522,6 +522,27 @@ describe('notifyArrival / notifyUnloading: envio real a AEAT + transicion de est
     }));
   });
 
+  /**
+   * El rechazo 856 de AEAT llega como "ADDS_No existe ninguna partida no anulada
+   * con el transito asociado", jerga que no dice al usuario que hacer. Significa
+   * que en el recinto de destino no hay ninguna declaracion sumaria (G4/DSDT) que
+   * referencie el transito, y eso NO se arregla desde LUCI: lo declara el
+   * almacen de deposito temporal cuando recibe la mercancia.
+   */
+  test('traduce el rechazo 856 de AEAT a algo que el usuario pueda accionar', async () => {
+    const owner = OWNER();
+    const t = await enTransito(owner);
+    aeatSubmitService.submitNCTSArrival.mockResolvedValue({
+      success: false,
+      error: '/CC007C/Indicadores007/numeroSumariaRecepcion: ADDS_No existe ninguna partida no anulada con el tránsito asociado: 26ES0008512345678X en el recinto 001300'
+    });
+
+    await expect(transitService.notifyArrival(t._id, {}, owner))
+      .rejects.toThrow(/sumaria|dep[oó]sito temporal/i);
+    // El texto crudo de AEAT se conserva, para no perder trazabilidad.
+    await expect(transitService.notifyArrival(t._id, {}, owner)).rejects.toThrow(/001300/);
+  });
+
   test('notifyArrival exige MRN: sin el no se llama a AEAT', async () => {
     const owner = OWNER();
     // Transito forzado a in_transit sin pasar por submit -> sin MRN.
