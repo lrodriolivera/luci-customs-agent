@@ -158,4 +158,22 @@ describe('h7XmlBuilder - Reglamento (UE) 2026/382 derecho fijo', () => {
     const xml = minimalCall({ aplicarDerechoFijo2026: true });
     expect(xml).toMatch(/<C47ImporteTotal>6.25<\/C47ImporteTotal>/);
   });
+
+  test('sin flag: CBImporteTotalTributos (cabecera) = suma del IVA de las partidas', () => {
+    const xml = minimalCall(); // 12.50 -> IVA 2.63
+    expect(xml).toMatch(/<CBImporteTotalTributos>2.63<\/CBImporteTotalTributos>/);
+  });
+
+  test('con flag: CBImporteTotalTributos (cabecera) incluye el derecho fijo, coherente con las partidas', () => {
+    // Coherencia AEAT: la cabecera debe cuadrar con la suma de C47ImporteTotal de cada partida.
+    // 1 partida de 12.50 con derecho fijo -> 3.00 (A00) + 3.25 (IVA sobre 15.50) = 6.25
+    const xml = minimalCall({ aplicarDerechoFijo2026: true });
+    expect(xml).toMatch(/<CBImporteTotalTributos>6.25<\/CBImporteTotalTributos>/);
+  });
+
+  test('con flag y 2 partidas: la cabecera suma el total de ambas', () => {
+    // 2 partidas de 10.00 con derecho fijo: cada una 3.00 + (13.00*0.21=2.73) = 5.73 -> total 11.46
+    const xml = minimalCall({ aplicarDerechoFijo2026: true, partidas: [minimalPartida({ valorFactura: 10 }), minimalPartida({ valorFactura: 10 })] });
+    expect(xml).toMatch(/<CBImporteTotalTributos>11.46<\/CBImporteTotalTributos>/);
+  });
 });

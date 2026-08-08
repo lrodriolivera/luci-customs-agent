@@ -182,7 +182,14 @@ function buildH7ImportXML(data) {
       <C19TransporteEnContenedores>0</C19TransporteEnContenedores>
       <C221CodigoDivisa>EUR</C221CodigoDivisa>
       <C30LocalizacionMercancias>${localizacionMercancias || 'ES' + aduanaDespacho.replace(/^ES/, '').substring(0, 6) + 'EEEEEE'}</C30LocalizacionMercancias>
-      <CBImporteTotalTributos>${partidas.reduce((s, p) => s + Number(p.valorFactura || 0) * 0.21, 0).toFixed(2)}</CBImporteTotalTributos>
+      <CBImporteTotalTributos>${partidas.reduce((s, p) => {
+        // Debe cuadrar EXACTAMENTE con la suma de <C47ImporteTotal> de cada partida
+        // (coherencia AEAT; C47ImporteTotal ya viene redondeado a 2 decimales por partida):
+        // derecho fijo A00 (si aplica) + IVA B00 sobre (valor factura + derecho fijo).
+        const df = aplicarDerechoFijo2026 ? 3.00 : 0;
+        const iva = (Number(p.valorFactura || 0) + df) * 0.21;
+        return s + Number((df + iva).toFixed(2));
+      }, 0).toFixed(2)}</CBImporteTotalTributos>
       <CBmodalidadDePago>R</CBmodalidadDePago>
       <CBgarantiaGRN>${garantiaGRN}</CBgarantiaGRN>${partidasXML}
     </ent:DeclaSimpliImporV1Ent>
@@ -190,4 +197,146 @@ function buildH7ImportXML(data) {
 </soapenv:Envelope>`;
 }
 
-module.exports = { buildH7ImportXML };
+// ---------------------------------------------------------------------------
+// AltaH7V1Ent — esquema OFICIAL de la AEAT para la declaracion H7 (EUCDM).
+// Sustituye al DeclaSimpliImporV1 (formato tipo H1) que AEAT PRE rechaza con
+// error interno 20009. Endpoint: /wlpl/ADIP-JDIT/ws/AltaH7V1SOAP.
+// IMPORTANTE: en el mensaje de ENTRADA NO se declaran tributos. El derecho fijo
+// A00 (3 EUR/articulo, Reg. 2026/382) y el IVA B00 los LIQUIDA la AEAT y los
+// devuelve en el mensaje de salida (AltaH7V1Sal). Ref: Guia SW H7 V3.17/3.21.
+// ---------------------------------------------------------------------------
+const NS_ALTAH7 = 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/h7/AltaH7V1Ent.xsd';
+
+function esc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
+/**
+ * Construir el XML SOAP de alta de declaracion H7 (AltaH7V1Ent) para la AEAT.
+ */
+function buildAltaH7V1XML(data) {
+  const {
+    test = true,
+    supervisingCustomsOffice = 'ES002801',
+    declaranteNIF = '', declaranteNombre = '', emailDespacho = '',
+    representanteStatus = '2',
+    exportador = {},
+    importador = {},
+    additionalProcedureCode = 'F48',
+    transporte = {},
+    documentos = [],
+    partidas = []
+  } = data;
+
+  const transId = generateTransactionId();
+  const fecha = transId.substring(0, 8);
+  const hora = transId.substring(8, 14);
+  const grossMassTotal = partidas.reduce((s, p) => s + Number(p.pesobruto || p.pesoneto || 0), 0);
+
+  // Documentos de soporte a nivel de declaracion (factura, transporte, previo...).
+  const docsXML = documentos.map(d => `    <SupportingDocument>
+      <suppDoctype>${esc(d.tipo)}</suppDoctype>
+      <suppDoctRefNum>${esc(d.referencia)}</suppDoctRefNum>
+    </SupportingDocument>`).join('\n');
+
+  // TransportDocument es OBLIGATORIO en AltaH7V1 (AEAT errorCode 1000 si falta).
+  // Por defecto se declara el documento previo G4 (5025) usado para activar el (Pre)H7.
+  const transDocType = transporte.tipo || '5025';
+  const transDocRef = transporte.referencia || 'PR000000000ES';
+  const transporteXML = `    <TransportDocument>
+      <transportDocType>${esc(transDocType)}</transportDocType>
+      <transportDocRefNum>${esc(transDocRef)}</transportDocRefNum>
+    </TransportDocument>\n`;
+
+  const partidasXML = partidas.map((p, i) => `    <GoodsItem>
+      <declarationGoodsItemNumber>${i + 1}</declarationGoodsItemNumber>
+      <Value>
+        <amount>${Number(p.valorFactura || 0)}</amount>
+        <currencyCode>EUR</currencyCode>
+      </Value>
+      <Commodity>
+        <descriptionOfGoods>${esc((p.descripcion || '').substring(0, 250))}</descriptionOfGoods>
+        <commodityCode>${esc(p.taricCode)}</commodityCode>
+      </Commodity>
+      <GoodsMeasure>
+        <grossMass>${Number(p.pesobruto || p.pesoneto || 0).toFixed(4)}</grossMass>
+      </GoodsMeasure>
+      <numberOfPackages>${p.bultos || 1}</numberOfPackages>
+    </GoodsItem>`).join('\n');
+
+  const importadorNidXML = importador.nid
+    ? `      <identificationNumber>${esc(importador.nid)}</identificationNumber>\n`
+    : '';
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
+  <soapenv:Body>
+    <n1:AltaH7V1Ent xmlns:n1="${NS_ALTAH7}">
+      <Message>
+        <messageIdentification>${transId}</messageIdentification>
+        <messageRecipient>${test ? 'ES.AEAT.PRUEBAS' : 'ES.AEAT'}</messageRecipient>
+        <preparationDate>${fecha}</preparationDate>
+        <preparationTime>${hora}</preparationTime>
+        <testIndicator>${test ? 'S' : 'N'}</testIndicator>
+      </Message>
+      <Declaration>
+        <supervisingCustomsOffice>${esc(supervisingCustomsOffice)}</supervisingCustomsOffice>
+        <grossMass>${grossMassTotal.toFixed(4)}</grossMass>
+        <Representative>
+          <status>${esc(representanteStatus)}</status>
+        </Representative>
+        <Declarant>
+          <ContactPerson>
+            <name>${esc(declaranteNombre)}</name>
+            <eMailAddress>${esc(emailDespacho || 'despacho@strixai.es')}</eMailAddress>
+          </ContactPerson>
+          <name>${esc(declaranteNombre)}</name>
+          <identificationNumber>${esc(declaranteNIF)}</identificationNumber>
+          <Address>
+            <city>${esc((data.declarante && data.declarante.city) || 'Zaragoza')}</city>
+            <country>${esc((data.declarante && data.declarante.country) || 'ES')}</country>
+            <streetAndNumber>${esc((data.declarante && data.declarante.street) || '.')}</streetAndNumber>
+            <postcode>${esc((data.declarante && data.declarante.postcode) || '.')}</postcode>
+          </Address>
+        </Declarant>
+        <Exporter>
+          <name>${esc(exportador.name)}</name>
+          <Address>
+            <city>${esc(exportador.city)}</city>
+            <country>${esc(exportador.country || 'CN')}</country>
+            <streetAndNumber>${esc(exportador.street || '.')}</streetAndNumber>
+            <postcode>${esc(exportador.postcode || '.')}</postcode>
+          </Address>
+        </Exporter>
+        <Importer>
+${importador.phone ? `          <phoneNumber>${esc(importador.phone)}</phoneNumber>\n` : ''}${importador.email ? `          <eMailAddress>${esc(importador.email)}</eMailAddress>\n` : ''}          <name>${esc(importador.name)}</name>
+${importadorNidXML}          <Address>
+            <city>${esc(importador.city)}</city>
+            <country>${esc(importador.country || 'ES')}</country>
+            <streetAndNumber>${esc(importador.street)}</streetAndNumber>
+            <postcode>${esc(importador.postcode)}</postcode>
+          </Address>
+          <naturalPerson>${esc(importador.naturalPerson || 'S')}</naturalPerson>
+        </Importer>
+${docsXML ? docsXML + '\n' : ''}${transporteXML}        <TranspCostToDest>
+          <amount>${Number(data.transportCost || 0)}</amount>
+          <currencyCode>EUR</currencyCode>
+        </TranspCostToDest>
+        <referenceNumberUCR>${esc(data.referenceNumberUCR || 'V')}</referenceNumberUCR>
+        <AdditionalProcedure>
+          <additionalProcedureCode>${esc(additionalProcedureCode)}</additionalProcedureCode>
+        </AdditionalProcedure>${data.iossNumber ? `
+        <AdditionalFiscalReference>
+          <additionalFiscalRefRole>FR5</additionalFiscalRefRole>
+          <additionalFiscalRefVATId>${esc(data.iossNumber)}</additionalFiscalRefVATId>
+        </AdditionalFiscalReference>` : ''}
+${partidasXML}
+      </Declaration>
+    </n1:AltaH7V1Ent>
+  </soapenv:Body>
+</soapenv:Envelope>`;
+}
+
+module.exports = { buildH7ImportXML, buildAltaH7V1XML };

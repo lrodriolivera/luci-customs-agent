@@ -107,6 +107,28 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
       }
     );
 
+    test('AltaH7V1Sal aceptada (responseCode A) es exito y extrae el MRN', async () => {
+      conRespuesta('<h7:AltaH7V1Sal xmlns:h7="x"><Response><responseCode>A</responseCode></Response><MRN>26ESH7A000067962R8</MRN><documentationRequired>N</documentationRequired></h7:AltaH7V1Sal>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.success).toBe(true);
+      expect(r.mrn).toBe('26ESH7A000067962R8');
+      expect(r.channel).toBe('green');
+      expect(r.error).toBeNull();
+    });
+
+    test('AltaH7V1Sal rechazada (responseCode R) conserva el errorReason', async () => {
+      conRespuesta('<h7:AltaH7V1Sal xmlns:h7="x"><Response><responseCode>R</responseCode></Response><Error><errorReason>Importer.identificationNumber no es valido.</errorReason></Error></h7:AltaH7V1Sal>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.success).toBe(false);
+      expect(r.error).toBe('Importer.identificationNumber no es valido.');
+    });
+
+    test('AltaH7V1Sal con documentationRequired S es canal naranja', async () => {
+      conRespuesta('<h7:AltaH7V1Sal xmlns:h7="x"><Response><responseCode>A</responseCode></Response><MRN>26ESH7A000000001R1</MRN><documentationRequired>S</documentationRequired></h7:AltaH7V1Sal>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.channel).toBe('orange');
+    });
+
     test('messageType (variante alternativa) tambien se detecta', async () => {
       conRespuesta('<r><messageType>CC528C</messageType></r>');
       const r = await submitService.queryStatus('MRN');
@@ -329,12 +351,13 @@ describe('submitH7', () => {
   describe('declarante: cadena de fallbacks', () => {
     test('cae al nif del h7Declaration cuando no hay tenant', async () => {
       await submitService.submitH7(h7({ declarantNIF: 'B77777777' }), null);
-      expect(endpointLlamado()).toContain('DeclaSimpliImporV1SOAP');
+      // H7 usa el esquema oficial AltaH7V1 (endpoint ADIP-JDIT), no DeclaSimpliImpor.
+      expect(endpointLlamado()).toContain('AltaH7V1SOAP');
     });
 
     test('usa tenant.eori de nivel raiz si no hay businessInfo', async () => {
       await submitService.submitH7(h7(), { eori: 'ESB33333333', name: 'Raiz SL' });
-      expect(endpointLlamado()).toContain('DeclaSimpliImporV1SOAP');
+      expect(endpointLlamado()).toContain('AltaH7V1SOAP');
     });
   });
 

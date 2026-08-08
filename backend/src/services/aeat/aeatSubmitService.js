@@ -9,7 +9,7 @@ const aeatRealService = require('./aeatRealService');
 const certificateService = require('./certificateService');
 const aeatTransport = require('./aeatTransport');
 const { buildH1ImportXML, expeditionToH1Data } = require('./h1XmlBuilder');
-const { buildH7ImportXML } = require('./h7XmlBuilder');
+const { buildH7ImportXML, buildAltaH7V1XML } = require('./h7XmlBuilder');
 const { aplicaDerechoFijo2026 } = require('../../config/reg2026382');
 const { buildAESExportXML } = require('./aesXmlBuilder');
 const { buildNCTSTransitXML } = require('./nctsXmlBuilder');
@@ -78,6 +78,26 @@ function _parseAEATResponse(responseData) {
 
   const channelMap = { V: 'green', N: 'orange', R: 'red', verde: 'green', naranja: 'orange', rojo: 'red' };
 
+  // H7 esquema oficial AltaH7V1Sal: <Response><responseCode>A|R</responseCode> + <MRN> + <Error><errorReason>.
+  // A = aceptada, R = rechazada. El canal/documentacion se indica en documentationRequired.
+  const altaH7Response = (body.match(/<Response>[\s\S]*?<responseCode>([^<]+)<\/responseCode>/) || [])[1];
+  const altaH7Error = (body.match(/<errorReason>([^<]+)</) || [])[1];
+  const isAltaH7 = /AltaH7V1Sal/.test(body);
+  if (isAltaH7) {
+    const aceptada = altaH7Response === 'A';
+    return {
+      success: aceptada,
+      code: altaH7Response,
+      mrn: mrn || null,
+      csv: (body.match(/<edeclarationCSVId>([^<]+)</) || [])[1] || null,
+      // documentationRequired 'S' -> canal que exige documentacion (naranja); 'N' -> verde.
+      channel: (body.match(/<documentationRequired>S</) ? 'orange' : 'green'),
+      estado: aceptada ? 'Aceptada' : 'Rechazada',
+      error: aceptada ? null : (altaH7Error || 'Declaracion H7 rechazada por AEAT'),
+      rawResponse: body
+    };
+  }
+
   // Exito: H1/H7 usan CodigoRespuesta 0/1/2, ENS usa CC328A, AES usa RE515C/CC528C,
   // NCTS usa CC028C. AES real tambien marca <tipoRespuesta>OK</tipoRespuesta>.
   const isSuccess = code === '0' || code === '1' || code === '2' || code === '0000'
@@ -120,54 +140,85 @@ async function submitH1(expedition) {
  * Enviar declaracion H7 bajo valor
  */
 async function submitH7(h7Declaration, tenant) {
-  // Use tenant EORI as declarant (required by AEAT)
-  // AEAT C14DeclaranteNID expects full EORI format (e.g., "ESB22477020")
+  // Declarante: EORI/NIF del tenant (representante).
   const declaranteNIF = tenant?.businessInfo?.eori || tenant?.businessInfo?.nif || tenant?.eori || tenant?.nif || h7Declaration.declarantNIF || process.env.DECLARANTE_EORI || '';
   const declaranteNombre = tenant?.companyName || tenant?.name || h7Declaration.declarantName || process.env.DECLARANTE_NOMBRE || '';
 
-  const soapXML = buildH7ImportXML({
+  // Representacion: '2' (directa) si declarante = importador; '3' (indirecta por
+  // representante aduanero) en el resto. AEAT exige que en representacion indirecta
+  // el declarante sea representante aduanero registrado (errorCode 1035); el status
+  // '3' es el del ejemplo oficial que obtiene MRN.
+  const importadorNID = h7Declaration.recipient?.taxId || '';
+  const representanteStatus = h7Declaration.formaRepresentacion ||
+    (declaranteNIF && declaranteNIF.replace(/^ES/, '') === importadorNID.replace(/^ES/, '') ? '2' : '3');
+
+  // Codigo adicional segun modalidad de IVA (Guia H7 V3.17, apdo. 12):
+  //   F48 = IOSS | F49 = acuerdos especiales (SA) | F53 = IVA estandar (tradicional) | C08 = entre particulares.
+  // Nuestro caso habitual (particular, IVA a la importacion, sin IOSS) es F53.
+  const additionalProcedureCode = h7Declaration.additionalProcedureCode ||
+    (h7Declaration.vatPrepaid && /^IM\d{10}$/.test(h7Declaration.iossNumber || '') ? 'F48' : 'F53');
+
+  // Documentos de soporte a nivel de declaracion: factura (N380), documento previo
+  // G4 (N337) si aplica. El derecho fijo A00 y el IVA los liquida la AEAT (no van en la entrada).
+  // NOTA: el documento previo G4 (N337/5025) va en TransportDocument, NO en
+  // SupportingDocument (AEAT errorCode 1107 si se declara N337 aqui).
+  const documentos = [{ tipo: 'N380', referencia: h7Declaration.invoiceRef || 'FACTURA-001' }];
+  const docPrevioTipo = h7Declaration.documentoPrevio?.tipo || h7Declaration.documentoPrevioTipo;
+  const docPrevioRef = h7Declaration.documentoPrevio?.referencia || h7Declaration.documentoPrevioRef;
+  // Regla AEAT 3377/R111: con F48 y representacion indirecta es obligatorio el codigo
+  // 1018 (autorizacion del declarante) en supportingDocuments. En F53 se comprueba a posteriori.
+  if (additionalProcedureCode === 'F48' && representanteStatus !== '1') {
+    documentos.push({ tipo: '1018', referencia: h7Declaration.mandatoRef || docPrevioRef || 'MANDATO-001' });
+  }
+
+  const soapXML = buildAltaH7V1XML({
     test: process.env.AEAT_ENVIRONMENT !== 'production',
-    aduanaDespacho: h7Declaration.customsOffice?.replace('ES', '') || '002801',
-    remitenteNIF: h7Declaration.sender?.eori || '',
-    remitenteNombre: h7Declaration.sender?.name || '',
-    remitentePais: h7Declaration.sender?.address?.country || '',
-    destinatarioNIF: h7Declaration.recipient?.taxId || '',
-    destinatarioNombre: h7Declaration.recipient?.name || '',
-    destinatarioDireccion: h7Declaration.recipient?.address?.street || '',
-    destinatarioPoblacion: h7Declaration.recipient?.address?.city || '',
-    destinatarioCP: h7Declaration.recipient?.address?.postalCode || '',
-    declaranteNIF: declaranteNIF,
-    declaranteNombre: declaranteNombre,
-    // AEAT rechaza representacion '2' cuando declarante e importador son el mismo NIF
-    formaRepresentacion: h7Declaration.formaRepresentacion ||
-      (declaranteNIF && declaranteNIF.replace(/^ES/, '') === (h7Declaration.recipient?.taxId || '').replace(/^ES/, '') ? '1' : '2'),
+    supervisingCustomsOffice: h7Declaration.customsOffice?.startsWith('ES') ? h7Declaration.customsOffice : ('ES' + (h7Declaration.customsOffice || '002801').replace(/^ES/, '')),
+    declaranteNIF,
+    declaranteNombre,
+    declarante: {
+      city: tenant?.businessInfo?.address?.city || tenant?.address?.city || 'Zaragoza',
+      country: tenant?.businessInfo?.address?.country || 'ES',
+      street: tenant?.businessInfo?.address?.street || tenant?.address?.street || 'Calle Ejemplo 1',
+      postcode: tenant?.businessInfo?.address?.postalCode || tenant?.address?.postalCode || '50001'
+    },
     emailDespacho: h7Declaration.recipient?.email || 'despacho@strixai.es',
-    iossNumber: h7Declaration.iossNumber || '',
-    // Garantia GRN (Jose Antonio: 26ESAGL2800000054 para despacho a consumo)
-    garantiaGRN: h7Declaration.garantiaGRN || tenant?.customsConfig?.garantiaGRN || '',
-    // Ubicacion mercancias PRE (Jose Antonio: 2801AAAAAC para aduana 2801)
-    localizacionMercancias: h7Declaration.localizacionMercancias || tenant?.customsConfig?.localizacionMercancias || '',
-    // Documento previo G4 (obligatorio aereos desde 9/Mar/2026)
-    documentoPrevioTipo: h7Declaration.documentoPrevio?.tipo || h7Declaration.documentoPrevioTipo || '',
-    documentoPrevioRef: h7Declaration.documentoPrevio?.referencia || h7Declaration.documentoPrevioRef || '',
-    // Reglamento UE 2026/382 - derecho fijo 3 EUR/articulo (desde 1/Jul/2026).
-    // Se respeta el valor calculado; si no viene, se evalua la regla en el momento del envio.
-    aplicarDerechoFijo2026: h7Declaration.aplicarDerechoFijo2026 != null
-      ? h7Declaration.aplicarDerechoFijo2026
-      : aplicaDerechoFijo2026(h7Declaration),
+    representanteStatus,
+    exportador: {
+      name: h7Declaration.sender?.name || '',
+      city: h7Declaration.sender?.address?.city || '',
+      country: h7Declaration.sender?.address?.country || 'CN',
+      street: h7Declaration.sender?.address?.street || '.',
+      postcode: h7Declaration.sender?.address?.postalCode || '.'
+    },
+    importador: {
+      name: h7Declaration.recipient?.name || '',
+      nid: importadorNID,
+      phone: h7Declaration.recipient?.phone || '',
+      email: h7Declaration.recipient?.email || '',
+      city: h7Declaration.recipient?.address?.city || '',
+      country: h7Declaration.recipient?.address?.country || 'ES',
+      street: h7Declaration.recipient?.address?.street || '',
+      postcode: h7Declaration.recipient?.address?.postalCode || '',
+      // naturalPerson 'S' si es un particular (sin NIF de empresa)
+      naturalPerson: h7Declaration.operationType === 'B2C' || !importadorNID ? 'S' : 'N'
+    },
+    // Codigo adicional de procedimiento: F48 (estandar) / F49 (IOSS) / F53.
+    additionalProcedureCode,
+    // Documento de transporte (obligatorio): documento previo G4 (5025/N337) de activacion del (Pre)H7.
+    transporte: (docPrevioTipo && docPrevioRef)
+      ? { tipo: docPrevioTipo === 'N337' ? '5025' : docPrevioTipo, referencia: docPrevioRef }
+      : {},
+    documentos,
     partidas: (h7Declaration.items || []).map(it => ({
       descripcion: it.description,
       taricCode: it.taricCode,
-      paisOrigen: it.countryOfOrigin || '',
-      pesobruto: it.netWeight || 0.5,
-      pesoneto: it.netWeight || 0.3,
+      pesobruto: it.netWeight || 0.1,
       bultos: 1,
-      valorFactura: it.totalValue || it.unitValue || 0,
-      // Documentos por partida (N380 factura, N337 G4 ref, etc.)
-      documentos: it.documentos || [{ tipo: 'N380', referencia: it.invoiceRef || 'FACTURA-001' }]
+      valorFactura: it.totalValue || it.unitValue || 0
     }))
   });
-  return _sendToAEAT(soapXML, '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.DeclaSimpliImporV1SOAP');
+  return _sendToAEAT(soapXML, '/wlpl/ADIP-JDIT/ws/AltaH7V1SOAP');
 }
 
 /**
