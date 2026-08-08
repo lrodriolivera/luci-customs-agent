@@ -497,6 +497,31 @@ describe('notifyArrival / notifyUnloading: envio real a AEAT + transicion de est
     expect(guardado.messages.some(m => m.type === 'IE160')).toBe(false);
   });
 
+  /**
+   * El CC007 espanol necesita tres datos de recepcion que no son del tránsito
+   * sino del recinto donde llega: la ubicacion autorizada, la autorizacion ACE de
+   * destinatario autorizado y la sumaria de recepcion previa. El servicio los
+   * propaga si el tránsito los trae —quien decide los defaults de PRE es
+   * aeatSubmitService, no este servicio, que no debe saber de entornos.
+   */
+  test('propaga los datos de recepcion del transito al CC007', async () => {
+    const owner = OWNER();
+    const t = await enTransito(owner);
+    const guardado = await Transit.findById(t._id);
+    guardado.locationAuthorisationNumber = '2901MLG005';
+    guardado.authorisationNumber = 'ESACE02026000008';
+    guardado.numeroSumariaRecepcion = '29016000001';
+    await guardado.save();
+
+    await transitService.notifyArrival(t._id, {}, owner);
+
+    expect(aeatSubmitService.submitNCTSArrival).toHaveBeenCalledWith(expect.objectContaining({
+      authorisationNumber: '2901MLG005',
+      authorisationReference: 'ESACE02026000008',
+      numeroSumariaRecepcion: '29016000001'
+    }));
+  });
+
   test('notifyArrival exige MRN: sin el no se llama a AEAT', async () => {
     const owner = OWNER();
     // Transito forzado a in_transit sin pasar por submit -> sin MRN.

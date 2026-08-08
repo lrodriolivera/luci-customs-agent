@@ -123,6 +123,11 @@ const transitSchema = new mongoose.Schema({
   consigneeName: String,
   locationAuthorisationNumber: String,
   authorisationNumber: String,
+  // Sumaria de recepcion previa del recinto de destino, formato ADDS
+  // (recinto + ultimo digito del anyo + 6 digitos). El CC007 la exige cuando el
+  // indicador de tipo de sumaria es 'SP', que es el caso normal de un transito
+  // que termina en un deposito temporal.
+  numeroSumariaRecepcion: String,
 
   // Aduanas de transito (paso por fronteras)
   transitOffices: [{

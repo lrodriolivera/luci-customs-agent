@@ -304,15 +304,46 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
     });
   });
 
-  describe('errores funcionales AES/NCTS (errorDescription)', () => {
-    // Nota: errorDescription tambien casa con la regex de `error` (que tiene
-    // prioridad sobre funcError en la cadena de fallbacks), asi que el mensaje
-    // devuelto es el PRIMER errorDescription, no el join. Documenta el orden real.
-    test('devuelve el primer errorDescription (error tiene prioridad sobre funcError)', async () => {
+  /**
+   * E2E 8/Ago: un CC007 rechazado traia SEIS bloques <FunctionalError> y el
+   * usuario solo veia "Este elemento debe venir vacio." — sin decir QUE
+   * elemento, y con los otros cinco errores tirados. Arreglar el primero y
+   * reenviar solo destapaba el siguiente, un error por viaje a AEAT.
+   *
+   * La causa: `errorDescription` casa tambien con la regex de `error`, que va
+   * antes en la cadena de fallbacks y solo captura la PRIMERA ocurrencia.
+   */
+  describe('errores funcionales AES/NCTS (FunctionalError)', () => {
+    test('devuelve TODOS los errorDescription, no solo el primero', async () => {
       conRespuesta('<r><tipoRespuesta>KO</tipoRespuesta><errorDescription>e1</errorDescription><errorDescription>e2</errorDescription></r>');
       const r = await submitService.queryStatus('MRN');
       expect(r.success).toBe(false);
-      expect(r.error).toBe('e1');
+      expect(r.error).toContain('e1');
+      expect(r.error).toContain('e2');
+    });
+
+    test('acompana cada error con su errorPointer: sin el no se sabe que campo corregir', async () => {
+      conRespuesta('<r><tipoRespuesta>KO</tipoRespuesta>'
+        + '<FunctionalError><errorPointer>/CC007C/TraderAtDestination/communicationLanguageAtDestination</errorPointer>'
+        + '<errorCode>14</errorCode><errorDescription>Este elemento debe venir vacio.</errorDescription>'
+        + '<originalAttributeValue>ES</originalAttributeValue></FunctionalError>'
+        + '<FunctionalError><errorPointer>/CC007C/Consignment/LocationOfGoods/typeOfLocation</errorPointer>'
+        + '<errorCode>14</errorCode><errorDescription>Debe ser \'B\'</errorDescription>'
+        + '<originalAttributeValue>A</originalAttributeValue></FunctionalError></r>');
+      const r = await submitService.queryStatus('MRN');
+
+      expect(r.success).toBe(false);
+      expect(r.error).toContain('communicationLanguageAtDestination');
+      expect(r.error).toContain('Este elemento debe venir vacio.');
+      expect(r.error).toContain('typeOfLocation');
+      expect(r.error).toContain("Debe ser 'B'");
+    });
+
+    test('un FunctionalError sin errorPointer sigue mostrando la descripcion', async () => {
+      conRespuesta('<r><tipoRespuesta>KO</tipoRespuesta>'
+        + '<FunctionalError><errorCode>14</errorCode><errorDescription>Es Obligatorio</errorDescription></FunctionalError></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.error).toContain('Es Obligatorio');
     });
   });
 
@@ -680,8 +711,49 @@ describe('operaciones auxiliares', () => {
   });
 
   test('submitNCTSArrival postea a CC007', async () => {
-    await submitService.submitNCTSArrival({ mrn: '26ES00280100000000' });
+    await submitService.submitNCTSArrival({ mrn: '26ES00280100000000', officeOfDestination: 'ES002901' });
     expect(endpointLlamado()).toContain('CC007CV1SOAP');
+  });
+
+  /**
+   * La ubicacion de recepcion tiene que estar en el MISMO recinto que la aduana
+   * de destino: PRE lo rechaza con errorReason 2074 ("El recinto de la ubicacion
+   * es distinto del CustomsOfficeOfDestinationActual"). El default fijo
+   * '2801AAAAAC' que habia aqui solo valia para destino ES002801 —y encima es una
+   * ubicacion privada de otro operador, que da 2070— asi que se deriva del
+   * recinto de la aduana de destino.
+   */
+  test('el default PRE de ubicacion sale del recinto de la aduana de destino, no fijo', async () => {
+    await submitService.submitNCTSArrival({ mrn: '26ES00280100000000', officeOfDestination: 'ES002901' });
+    const xml = soapEnviado();
+    expect(xml).toContain('<ent:authorisationNumber>2901MLG005</ent:authorisationNumber>');
+    expect(xml).not.toContain('2801AAAAAC');
+  });
+
+  test('respeta la ubicacion que traiga el transito por encima del default', async () => {
+    await submitService.submitNCTSArrival({
+      mrn: '26ES00280100000000', officeOfDestination: 'ES002901', authorisationNumber: '2911ADTPRU'
+    });
+    expect(soapEnviado()).toContain('<ent:authorisationNumber>2911ADTPRU</ent:authorisationNumber>');
+  });
+
+  /**
+   * La autorizacion ACE de destinatario autorizado y la sumaria de recepcion son
+   * datos de PRE que el modelo Transit no tiene todavia: sin defaults el mensaje
+   * ni se construye (el builder lanza). En produccion NO se inventan.
+   */
+  test('rellena la autorizacion ACE y la sumaria de recepcion en PRE', async () => {
+    await submitService.submitNCTSArrival({ mrn: '26ES00280100000000', officeOfDestination: 'ES002901' });
+    const xml = soapEnviado();
+    expect(xml).toContain('<ent:type>C522</ent:type>');
+    expect(xml).toContain('<ent:referenceNumber>ESACE02026000008</ent:referenceNumber>');
+    expect(xml).toMatch(/<ent:numeroSumariaRecepcion>2901\d{7}<\/ent:numeroSumariaRecepcion>/);
+  });
+
+  test('en produccion no inventa autorizacion ni sumaria: falla nombrando el dato', async () => {
+    process.env.AEAT_ENVIRONMENT = 'production';
+    await expect(submitService.submitNCTSArrival({ mrn: '26ES00280100000000', officeOfDestination: 'ES002901' }))
+      .rejects.toThrow(/autorizaci/i);
   });
 
   test('submitNCTSUnloading postea a CC044', async () => {

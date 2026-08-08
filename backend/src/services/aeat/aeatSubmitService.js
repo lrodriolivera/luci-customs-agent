@@ -54,7 +54,11 @@ function _parseAEATResponse(responseData) {
     || body.match(/<NumeroDeReferenciaAsignado>([^<]+)</)
     || body.match(/<NumeroReferenciaDUA>([^<]+)</)
     || body.match(/<DocNumHEA5>([^<]+)</) || [])[1];
-  const error = (body.match(/<DescripcionError>([^<]+)</) || body.match(/<DescripcionRespuesta>([^<]+)</) || body.match(/<errorDescription>([^<]+)</) || [])[1];
+  // OJO: aqui NO se busca <errorDescription>. Esa etiqueta la traen los bloques
+  // <FunctionalError> de AES/NCTS, que se parsean mas abajo con su errorPointer;
+  // incluirla aqui hacia que este match unico (no global) ganase la precedencia y
+  // se perdiesen todos los errores menos el primero, ademas del campo infractor.
+  const error = (body.match(/<DescripcionError>([^<]+)</) || body.match(/<DescripcionRespuesta>([^<]+)</) || [])[1];
   const fault = (body.match(/<faultstring>([^<]+)</) || [])[1];
   const csv = (body.match(/<CSV>([^<]+)</) || body.match(/Código Seguro de Verificación ([A-Z0-9]+)/) || [])[1];
   const circuito = (body.match(/<Circuito>([^<]+)</) || body.match(/<circuito>([^<]+)</) || [])[1];
@@ -82,9 +86,22 @@ function _parseAEATResponse(responseData) {
     : (ensErrors.length > 0
       ? ensErrors.join(' | ')
       : (ensPointers.length > 0 ? ensPointers.map((p, i) => p + (ensReasons[i] ? ':' + ensReasons[i] : '')).join(' | ') : null));
-  // AES/NCTS: extraer errorDescription
+  // AES/NCTS: cada <FunctionalError> describe UN error de regla de negocio con su
+  // errorPointer (la ruta del campo infractor). Se parsea bloque a bloque para no
+  // separar la descripcion de su campo: "Debe ser 'B'" a secas no dice donde.
+  const funcBlocks = [...body.matchAll(/<FunctionalError>([\s\S]*?)<\/FunctionalError>/g)].map(m => m[1]);
+  const _describeFuncError = (bloque) => {
+    const descripcion = (bloque.match(/<errorDescription>([^<]+)</) || [])[1];
+    const puntero = (bloque.match(/<errorPointer>([^<]+)</) || [])[1];
+    if (!descripcion) return null;
+    return puntero ? `${puntero}: ${descripcion}` : descripcion;
+  };
+  const funcDetallados = funcBlocks.map(_describeFuncError).filter(Boolean);
+  // Fallback para respuestas sin envoltorio <FunctionalError> (mocks y variantes).
   const funcErrors = [...body.matchAll(/<errorDescription>([^<]+)</g)].map(m => m[1]);
-  const funcError = funcErrors.length > 0 ? funcErrors.join(' | ') : null;
+  const funcError = funcDetallados.length > 0
+    ? funcDetallados.join(' | ')
+    : (funcErrors.length > 0 ? funcErrors.join(' | ') : null);
 
   // Detectar tipo de mensaje (para AES/NCTS/ENS que usan formato diferente)
   const msgType = (body.match(/<MesTypMES20>([^<]+)</) || body.match(/<messageType>([^<]+)</) || [])[1];
@@ -535,10 +552,46 @@ async function cancelH1(data) {
 }
 
 /**
+ * Ubicaciones de RECEPCION de tránsitos que Hacienda dio de alta en PRE, por
+ * recinto. El CC007 exige que el recinto de la ubicación coincida con el de la
+ * aduana de destino (errorReason 2074), asi que no vale un unico default: la
+ * '2801AAAAAC' del IE015 es de expedicion y ademas es privada de otro operador
+ * (errorReason 2070 si la usamos nosotros).
+ */
+const UBICACIONES_RECEPCION_PRE = {
+  '2901': '2901MLG005',
+  '2911': '2911ADTPRU'
+};
+
+// Autorizacion ACE de destinatario autorizado que Hacienda dio de alta en PRE.
+const AUTORIZACION_RECEPCION_PRE = 'ESACE02026000008';
+
+/**
  * NCTS Arrival notification (CC007)
+ *
+ * Tres datos que el CC007 exige no viven en el tránsito y en PRE se rellenan con
+ * los valores de prueba de Hacienda; en produccion se dejan vacios y el builder
+ * falla nombrando el que falte, en vez de inventar una autorizacion ajena:
+ *   - authorisationNumber: la ubicacion autorizada de llegada, del recinto de la
+ *     aduana de destino (typeOfLocation B + qualifier Y lo hacen obligatorio).
+ *   - authorisationReference: la autorizacion ACE de destinatario autorizado.
+ *   - numeroSumariaRecepcion: la sumaria previa del recinto, formato ADDS
+ *     RRRR + ultimo digito del anyo + 6 digitos.
  */
 async function submitNCTSArrival(data) {
-  data.test = process.env.AEAT_ENVIRONMENT !== 'production';
+  const isPRE = process.env.AEAT_ENVIRONMENT !== 'production';
+  data.test = isPRE;
+
+  // El recinto son los 4 ultimos digitos del codigo de aduana ('ES002901' -> '2901').
+  const recinto = String(data.officeOfDestination || '').slice(-4);
+
+  if (isPRE) {
+    data.authorisationNumber = data.authorisationNumber || UBICACIONES_RECEPCION_PRE[recinto] || '';
+    data.authorisationReference = data.authorisationReference || AUTORIZACION_RECEPCION_PRE;
+    data.numeroSumariaRecepcion = data.numeroSumariaRecepcion
+      || (recinto ? `${recinto}${String(new Date().getFullYear()).slice(-1)}000001` : '');
+  }
+
   const xml = buildCC007ArrivalXML(data);
   logger.info(`[AEAT] NCTS Arrival: MRN=${data.mrn}`);
   return _sendToAEAT(xml, '/wlpl/ADTR-JDIT/ws/ncts5/CC007CV1SOAP');

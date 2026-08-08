@@ -349,7 +349,13 @@ const transitService = {
       officeOfDestination: transit.destinationOffice?.code || '',
       arrivalDate,
       traderEORI: transit.consignee?.eori || transit.principal?.eori || '',
-      traderName: transit.consignee?.name || transit.principal?.name || ''
+      traderName: transit.consignee?.name || transit.principal?.name || '',
+      // Datos de RECEPCION: los tres los exige el CC007 y ninguno se puede
+      // deducir del tránsito, asi que se propagan si el tránsito los trae y es
+      // aeatSubmitService quien pone los de PRE cuando faltan.
+      authorisationNumber: transit.locationAuthorisationNumber || '',
+      authorisationReference: transit.authorisationNumber || '',
+      numeroSumariaRecepcion: transit.numeroSumariaRecepcion || ''
     });
 
     if (!aeatResult.success) {
