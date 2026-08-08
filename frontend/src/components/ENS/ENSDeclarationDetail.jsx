@@ -48,6 +48,11 @@ const ENSDeclarationDetail = () => {
     SEA: { icon: SeaIcon, color: '#00BCD4', label: t('ens.maritime') }
   }
 
+  // Solo el ferrocarril (RAIL) se declara por el canal legacy AEAT (IE315). Marítimo,
+  // aéreo y carretera requieren ICS2 (fase 4, 2026): AEAT rechaza esos modos por el legacy.
+  const ICS2_MODES = ['SEA', 'AIR', 'ROAD']
+  const requiresICS2 = (mode) => ICS2_MODES.includes(String(mode || '').toUpperCase())
+
   // Status configuration
   const statusConfig = {
     draft: { color: 'default', label: t('ens.statusDraft'), icon: EditIcon },
@@ -262,14 +267,28 @@ const ENSDeclarationDetail = () => {
               >
                 {t('common.edit')}
               </Button>
-              <Button
-                variant="contained"
-                startIcon={actionLoading ? <CircularProgress size={20} /> : <SendIcon />}
-                onClick={handleSubmit}
-                disabled={actionLoading}
-              >
-                {t('ens.sendToAeat')}
-              </Button>
+              {requiresICS2(declaration.transportMode) ? (
+                <Tooltip title={t('ens.ics2Required', 'Este modo debe declararse mediante ICS2 (no por el canal AEAT actual)')}>
+                  <span>
+                    <Button
+                      variant="contained"
+                      startIcon={<SendIcon />}
+                      disabled
+                    >
+                      {t('ens.sendToAeat')}
+                    </Button>
+                  </span>
+                </Tooltip>
+              ) : (
+                <Button
+                  variant="contained"
+                  startIcon={actionLoading ? <CircularProgress size={20} /> : <SendIcon />}
+                  onClick={handleSubmit}
+                  disabled={actionLoading}
+                >
+                  {t('ens.sendToAeat')}
+                </Button>
+              )}
             </>
           )}
           {['accepted', 'released'].includes(declaration.status) && (

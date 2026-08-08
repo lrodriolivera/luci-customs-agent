@@ -13,6 +13,7 @@
 const { ENSDeclaration, Expedition } = require('../models');
 const ensGenerator = require('./forms/ensGenerator');
 const aeatSubmitService = require('./aeat/aeatSubmitService');
+const ics2Service = require('./ics2/ics2Service');
 const logger = require('../config/logger');
 
 /**
@@ -282,8 +283,17 @@ class ENSService {
     }
 
     try {
-      // Enviar a AEAT real via aeatSubmitService (usa ensXmlBuilder con formato legacy CC315A)
-      const aeatResult = await aeatSubmitService.submitENS(declaration);
+      // Enrutar por modo de transporte:
+      //  - Ferrocarril (RAIL): canal legacy AEAT (IE315V5 / CC315A). Verificado contra PRE.
+      //  - Marítimo / Aéreo / Carretera: ICS2 (sistema UE). La AEAT rechaza estos modos
+      //    por el legacy con error 92 (fase 4 ICS2, 2026). Ver services/ics2/ics2Service.js.
+      let aeatResult;
+      if (ics2Service.requiereICS2(declaration.transportMode)) {
+        aeatResult = await ics2Service.submitENSviaICS2(declaration);
+      } else {
+        // Enviar a AEAT real via aeatSubmitService (usa ensXmlBuilder con formato legacy CC315A)
+        aeatResult = await aeatSubmitService.submitENS(declaration);
+      }
 
       // Guardar XML y respuesta raw para debugging
       declaration.generatedXML = aeatResult.rawResponse ? 'Enviado via aeatSubmitService' : '';

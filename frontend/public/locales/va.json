@@ -1008,7 +1008,8 @@
     "cancelError": "Error en anul·lar",
     "arrivalNotifiedOk": "Arribada notificada",
     "arrivalError": "Error en notificar l'aplegada",
-    "xmlError": "Error en baixar el XML"
+    "xmlError": "Error en baixar el XML",
+    "ics2Required": "Aquest mode s'ha de declarar mitjançant ICS2 (no pel canal AEAT actual)"
   },
   "h7": {
     "title": "Declaracions H7",

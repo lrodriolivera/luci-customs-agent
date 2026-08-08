@@ -278,16 +278,26 @@ describe('createDeclaration', () => {
 
 describe('submitToAEAT', () => {
   let userId, declId;
+  // Datos de ENS por FERROCARRIL (RAIL): el único modo que va por el canal legacy AEAT.
+  // Marítimo/aéreo/carretera van por ICS2 (ver bloque de enrutamiento más abajo).
+  function datosENSRail(overrides = {}) {
+    return datosENSValidos({
+      transportMode: 'RAIL',
+      entryOffice: { code: 'ES003201', name: 'Canfranc', expectedArrival: enHoras(48) },
+      transportMeans: { identification: 'TREN-100', identificationType: 'TRAIN_NUMBER', modeAtBorder: '2' },
+      ...overrides
+    });
+  }
   beforeEach(async () => {
     const u = await User.create({ email: 'op2@luci.es', name: 'Op', password: 'x'.repeat(60) });
     userId = u._id;
-    const created = await ens.createDeclaration(datosENSValidos(), userId);
+    const created = await ens.createDeclaration(datosENSRail(), userId);
     declId = created.data._id;
     // Reinstalar el fake de la frontera (resetMocks lo borra entre tests).
     aeatSubmitService.submitENS = jest.fn();
   });
 
-  test('AEAT acepta -> estado accepted, MRN, riskAssessment ACK', async () => {
+  test('RAIL: AEAT (legacy) acepta -> estado accepted, MRN, riskAssessment ACK', async () => {
     aeatSubmitService.submitENS.mockResolvedValue({
       success: true, mrn: '26ES00112233445566EN', code: 'AC', estado: 'ACEPTADA', csv: 'CSV123'
     });
@@ -296,18 +306,44 @@ describe('submitToAEAT', () => {
     expect(r.data.mrn).toBe('26ES00112233445566EN');
     expect(r.data.status).toBe('accepted');
     expect(r.data.riskAssessment.status).toBe('ACK');
-    // persistido
+    expect(aeatSubmitService.submitENS).toHaveBeenCalled(); // fue por el canal legacy
     const doc = await ENSDeclaration.findById(declId);
     expect(doc.status).toBe('accepted');
   });
 
-  test('AEAT rechaza -> success:false, no cambia a submitted', async () => {
+  test('RAIL: AEAT rechaza -> success:false, no cambia a submitted', async () => {
     aeatSubmitService.submitENS.mockResolvedValue({ success: false, code: 'RC', error: 'Datos incorrectos' });
     const r = await ens.submitToAEAT(declId, userId);
     expect(r.success).toBe(false);
     expect(r.error).toMatch(/Datos incorrectos/);
     const doc = await ENSDeclaration.findById(declId);
     expect(doc.status).toBe('draft'); // no avanzo
+  });
+
+  test('SEA/AIR/ROAD: NO usa el canal legacy y devuelve error ICS2 mientras esté deshabilitado', async () => {
+    const meansByMode = {
+      SEA: { identification: 'IMO9999999', identificationType: 'VESSEL_IMO', modeAtBorder: '1' },
+      AIR: { identification: 'FL123', identificationType: 'FLIGHT_NUMBER', modeAtBorder: '4' },
+      ROAD: { identification: '1234ABC', identificationType: 'VEHICLE_REGISTRATION', modeAtBorder: '3' }
+    };
+    for (const mode of ['SEA', 'AIR', 'ROAD']) {
+      aeatSubmitService.submitENS.mockClear();
+      const off = mode === 'SEA'
+        ? { code: 'ES002801', name: 'Algeciras', expectedArrival: enHoras(48) }
+        : { code: 'ES009999', name: 'PRE Pruebas', expectedArrival: enHoras(48) };
+      const created = await ens.createDeclaration(datosENSValidos({
+        transportMode: mode,
+        entryOffice: off,
+        transportMeans: meansByMode[mode]
+      }), userId);
+      const r = await ens.submitToAEAT(created.data._id, userId);
+      expect(r.success).toBe(false);
+      expect(r.error).toMatch(/ICS2/i);
+      // Clave: NO se intenta el envío por el canal legacy (que AEAT rechazaría con error 92).
+      expect(aeatSubmitService.submitENS).not.toHaveBeenCalled();
+      const doc = await ENSDeclaration.findById(created.data._id);
+      expect(doc.status).toBe('draft');
+    }
   });
 
   test('otro usuario no puede enviar la declaracion ajena (owner check)', async () => {
@@ -467,13 +503,26 @@ describe('processBatch', () => {
     expect(r.declarations[1].status).toBe('failed');
   });
 
-  test('autoSubmit envia las creadas y anota el MRN', async () => {
+  test('autoSubmit (RAIL) envia por el canal legacy y anota el MRN', async () => {
     aeatSubmitService.submitENS = jest.fn().mockResolvedValue({
       success: true, mrn: '26ES99999999999999EN', code: 'AC'
     });
-    const r = await ens.processBatch([datosENSValidos()], userId, { autoSubmit: true });
+    const railData = datosENSValidos({
+      transportMode: 'RAIL',
+      entryOffice: { code: 'ES003201', name: 'Canfranc', expectedArrival: enHoras(48) },
+      transportMeans: { identification: 'TREN-1', identificationType: 'TRAIN_NUMBER', modeAtBorder: '2' }
+    });
+    const r = await ens.processBatch([railData], userId, { autoSubmit: true });
     expect(r.successful).toBe(1);
     expect(r.declarations[0].mrn).toBe('26ES99999999999999EN');
     expect(r.declarations[0].status).toBe('submitted');
+  });
+
+  test('autoSubmit (SEA) NO envia por legacy: modo requiere ICS2 (deshabilitado)', async () => {
+    aeatSubmitService.submitENS = jest.fn();
+    const r = await ens.processBatch([datosENSValidos()], userId, { autoSubmit: true }); // SEA
+    expect(r.successful).toBe(1); // se crea la declaración
+    expect(r.declarations[0].status).not.toBe('submitted'); // pero NO se envía por legacy
+    expect(aeatSubmitService.submitENS).not.toHaveBeenCalled();
   });
 });

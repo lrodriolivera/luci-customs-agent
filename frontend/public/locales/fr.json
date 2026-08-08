@@ -1009,7 +1009,8 @@
     "cancelError": "Erreur lors de l'annulation",
     "arrivalNotifiedOk": "Arrivée notifiée",
     "arrivalError": "Erreur lors de la notification de l'arrivée",
-    "xmlError": "Erreur lors du téléchargement du XML"
+    "xmlError": "Erreur lors du téléchargement du XML",
+    "ics2Required": "Ce mode doit être déclaré via ICS2 (pas par le canal AEAT actuel)"
   },
   "h7": {
     "title": "Declarations H7",

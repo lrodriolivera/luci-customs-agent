@@ -1006,7 +1006,8 @@
     "cancelError": "Error cancelling",
     "arrivalNotifiedOk": "Arrival notified",
     "arrivalError": "Error notifying arrival",
-    "xmlError": "Error downloading the XML"
+    "xmlError": "Error downloading the XML",
+    "ics2Required": "This mode must be declared via ICS2 (not the current AEAT channel)"
   },
   "h7": {
     "title": "H7 Declarations",

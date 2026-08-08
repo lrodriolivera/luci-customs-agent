@@ -37,7 +37,9 @@ const createMockDeclaration = (overrides = {}) => ({
   mrn: '20ES12345678901234567890123456',
   declarationType: 'ENS',
   status: 'draft',
-  transportMode: 'SEA',
+  // RAIL por defecto: es el único modo que admite envío por el canal legacy AEAT
+  // (los tests de "Enviar a AEAT" ejercitan ese flujo). Marítimo/aéreo/carretera van por ICS2.
+  transportMode: 'RAIL',
   createdAt: '2026-08-01T10:00:00Z',
   updatedAt: '2026-08-02T11:00:00Z',
   entryOffice: {
@@ -216,8 +218,11 @@ describe('ENSDeclarationDetail', () => {
 
   describe('Header rendering', () => {
     it('renders header with reference and transport mode icon', async () => {
+      ensAPI.get.mockResolvedValue({
+        data: { success: true, data: createMockDeclaration({ transportMode: 'SEA', reference: 'ENS-SEA-001' }) }
+      })
       render(<ENSDeclarationDetail />)
-      await screen.findByRole('heading', { name: 'ENS-2026-001' })
+      await screen.findByRole('heading', { name: 'ENS-SEA-001' })
       expect(screen.getByText('ens.maritime')).toBeInTheDocument()
     })
 
@@ -331,6 +336,29 @@ describe('ENSDeclarationDetail', () => {
       await waitFor(() => {
         expect(ensAPI.submit).toHaveBeenCalledWith('ens-123')
       })
+    })
+
+    it('SEA/AIR/ROAD: el botón Enviar a AEAT está deshabilitado (requiere ICS2)', async () => {
+      const user = userEvent.setup()
+      for (const mode of ['SEA', 'AIR', 'ROAD']) {
+        ensAPI.get.mockResolvedValue({
+          data: { success: true, data: createMockDeclaration({ status: 'draft', transportMode: mode }) }
+        })
+        const { unmount } = render(<ENSDeclarationDetail />)
+        await screen.findByRole('heading', { name: 'ENS-2026-001' })
+        const sendButton = screen.getByRole('button', { name: /ens.sendToAeat/ })
+        expect(sendButton).toBeDisabled()
+        unmount()
+      }
+    })
+
+    it('RAIL: el botón Enviar a AEAT está habilitado (canal legacy)', async () => {
+      ensAPI.get.mockResolvedValue({
+        data: { success: true, data: createMockDeclaration({ status: 'draft', transportMode: 'RAIL' }) }
+      })
+      render(<ENSDeclarationDetail />)
+      await screen.findByRole('heading', { name: 'ENS-2026-001' })
+      expect(screen.getByRole('button', { name: /ens.sendToAeat/ })).not.toBeDisabled()
     })
 
     it('no envia si se cancela el modal', async () => {
