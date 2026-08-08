@@ -1571,10 +1571,13 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
 
       const result = await aiService.validateTransitRoute(transit);
 
-      expect(result.routeValidation.isValid).toBe(false);
+      // `null` = no evaluada. Antes era `false`, que afirma que la ruta
+      // declarada NO es valida: un veredicto que nadie habia calculado.
+      expect(result.routeValidation.isValid).toBeNull();
+      expect(result.analysisFailed).toBe(true);
       expect(result.routeValidation.issues).toHaveLength(1);
       expect(result.routeValidation.issues[0].type).toBe('error');
-      expect(result.routeValidation.issues[0].description).toBe('Error en validación IA');
+      expect(result.routeValidation.issues[0].description).toMatch(/No se pudo interpretar/);
       expect(result.riskLevel).toBe('UNKNOWN');
       expect(result.rawResponse).toBe('Not JSON');
     });
@@ -1801,7 +1804,9 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
 
       const result = await aiService.predictTransitIncidents(transit);
 
-      expect(result.overallRiskScore).toBe(50);
+      // `null`, no `50`: un 50 sobre 100 se lee como riesgo medio calculado.
+      expect(result.overallRiskScore).toBeNull();
+      expect(result.analysisFailed).toBe(true);
       expect(result.riskLevel).toBe('UNKNOWN');
       expect(result.incidentPredictions).toEqual([]);
       expect(result.recommendations).toHaveLength(1);
@@ -2058,10 +2063,12 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
 
       const result = await aiService.suggestTransitGuarantee(transit, {});
 
-      expect(result.calculatedAmount.finalAmount).toBe(0);
-      expect(result.recommendedType.code).toBe('1');
-      expect(result.recommendedType.name).toBe('Garantía global');
-      expect(result.recommendations).toContain('Error en cálculo IA - revisar manualmente');
+      // Una garantia de 0 EUR se lee como "no hace falta garantia"; el tipo '1'
+      // "por defecto" no lo habia elegido nadie.
+      expect(result.calculatedAmount.finalAmount).toBeNull();
+      expect(result.recommendedType.code).toBeNull();
+      expect(result.analysisFailed).toBe(true);
+      expect(result.recommendations[0]).toMatch(/Calcular la garantía manualmente/);
       expect(result.rawResponse).toBe('Invalid JSON');
     });
 
@@ -2367,7 +2374,8 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
       const result = await aiService.fullTransitAnalysis(transit, {}, {}, {});
 
       expect(result.summary.estimatedTransitDays).toBe('N/A');
-      expect(result.summary.guaranteeRequired).toBe(0);
+      // `|| 0` convertia un importe no calculado en "0 EUR de garantia".
+      expect(result.summary.guaranteeRequired).toBeNull();
     });
   });
 

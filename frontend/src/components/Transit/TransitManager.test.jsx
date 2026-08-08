@@ -1637,6 +1637,54 @@ describe('<TransitManager /> panel IA: contrato real del backend', () => {
     await waitFor(() => expect(screen.getByText(/80-150 km/)).toBeInTheDocument())
   })
 
+  // --- Analisis fallido: tercer estado, ni valida ni invalida ---
+  //
+  // E2E 8/Ago/2026: 1 de cada 4 llamadas reales a /ai/validate-route se cortaba
+  // por limite de tokens y el backend devolvia `isValid: false`, o sea "la ruta
+  // que has declarado no es valida". Al reintentar, sin cambiar un dato, salia
+  // valida. El backend ya distingue el caso (`isValid: null` + `analysisFailed`),
+  // pero el frontend es binario: `esValida === false` pinta "Ruta con Problemas"
+  // en rojo, asi que un fallo tecnico seguia leyendose como rechazo de la ruta.
+  const RESPUESTA_ANALISIS_FALLIDO = {
+    routeValidation: {
+      isValid: null,
+      issues: [{ type: 'error', description: 'La respuesta de la IA se cortó por límite de tokens y quedó incompleta: no se pudo evaluar.' }]
+    },
+    routeAnalysis: {},
+    recommendations: [],
+    riskLevel: 'UNKNOWN',
+    analysisFailed: true,
+    truncated: true
+  }
+
+  test('Validar Ruta: un analisis fallido no se pinta como "Ruta con Problemas"', async () => {
+    transitAPI.aiValidateRoute.mockResolvedValue({ data: { success: true, data: RESPUESTA_ANALISIS_FALLIDO } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText(/No se pudo validar la ruta/i)).toBeInTheDocument())
+    expect(screen.queryByText(/Ruta con Problemas/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Ruta Valida/i)).not.toBeInTheDocument()
+  })
+
+  test('Validar Ruta: el fallo explica el motivo, no solo que fallo', async () => {
+    transitAPI.aiValidateRoute.mockResolvedValue({ data: { success: true, data: RESPUESTA_ANALISIS_FALLIDO } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText(/cortó por límite de tokens/)).toBeInTheDocument())
+  })
+
+  test('Validar Ruta: un isValid: false real sigue avisando de la ruta', async () => {
+    // El tercer estado no puede tragarse los rechazos legitimos.
+    transitAPI.aiValidateRoute.mockResolvedValue({ data: { success: true, data: RESPUESTA_VALIDATE_ROUTE } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText(/Ruta con Problemas/i)).toBeInTheDocument())
+    expect(screen.queryByText(/No se pudo validar la ruta/i)).not.toBeInTheDocument()
+  })
+
   // --- Predecir Incidencias: MAYUSCULAS y otros nombres de campo ---
   const RESPUESTA_INCIDENTS = {
     overallRiskScore: 68,

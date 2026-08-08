@@ -4045,6 +4045,28 @@ Responde en JSON:
   }
 
   /**
+   * Describe por qué no se pudo leer la respuesta del modelo, para que quien
+   * reciba el fallo sepa que es un fallo y no un dictamen.
+   *
+   * Bedrock ya avisa del corte en `stopReason: 'max_tokens'` y nadie lo miraba:
+   * medido en vivo, 1 de cada 4 validaciones de ruta se cortaba a mitad de
+   * frase y el catch la convertía en `isValid: false`, o sea, en "la ruta que
+   * has declarado no es válida". Reintentando sin cambiar un solo dato volvía a
+   * salir válida.
+   */
+  _diagnosticoAnalisisFallido(result) {
+    const truncated = result?.stopReason === 'max_tokens';
+    return {
+      analysisFailed: true,
+      truncated,
+      failureReason: truncated
+        ? 'La respuesta de la IA se cortó por límite de tokens y quedó incompleta: no se pudo evaluar.'
+        : 'No se pudo interpretar la respuesta de la IA: análisis no realizado.',
+      rawResponse: result?.content
+    };
+  }
+
+  /**
    * Validar y optimizar ruta de tránsito
    */
   async validateTransitRoute(transit) {
@@ -4139,7 +4161,9 @@ Responde en JSON:
   "riskLevel": "LOW|MEDIUM|HIGH"
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt, { maxTokens: 4096 });
+    // Medido en vivo: una validación de ruta completa gasta ~5.338 tokens. Con
+    // 4096 se cortaba a mitad de JSON en 1 de cada 4 llamadas.
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt, { maxTokens: 8192 });
 
     try {
       let jsonContent = result.content;
@@ -4152,13 +4176,16 @@ Responde en JSON:
         validatedAt: new Date().toISOString()
       };
     } catch (e) {
+      const fallo = this._diagnosticoAnalisisFallido(result);
       return {
-        routeValidation: { isValid: false, issues: [{ type: 'error', description: 'Error en validación IA' }] },
+        // `isValid: null` = no se ha evaluado. Un `false` afirmaba que la ruta
+        // declarada es inválida, que es un veredicto que nadie ha calculado.
+        routeValidation: { isValid: null, issues: [{ type: 'error', description: fallo.failureReason }] },
         routeAnalysis: {},
         alternativeRoutes: [],
         recommendations: [],
         riskLevel: 'UNKNOWN',
-        rawResponse: result.content
+        ...fallo
       };
     }
   }
@@ -4267,7 +4294,9 @@ Responde en JSON:
   ]
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt, { maxTokens: 4096 });
+    // Mismo motivo que en validateTransitRoute: el JSON que se le exige no cabe
+    // en 4096 y el corte se convertia en una puntuacion de riesgo inventada.
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt, { maxTokens: 8192 });
 
     try {
       let jsonContent = result.content;
@@ -4280,14 +4309,17 @@ Responde en JSON:
         predictedAt: new Date().toISOString()
       };
     } catch (e) {
+      const fallo = this._diagnosticoAnalisisFallido(result);
       return {
-        overallRiskScore: 50,
+        // `50` era una puntuación inventada: ni calculada ni declarada como
+        // desconocida, y sobre 100 se lee como riesgo medio.
+        overallRiskScore: null,
         riskLevel: 'UNKNOWN',
         incidentPredictions: [],
         controlProbability: {},
         enquiryRisk: {},
-        recommendations: [{ priority: 'HIGH', action: 'Revisar manualmente', reason: 'Error en predicción IA' }],
-        rawResponse: result.content
+        recommendations: [{ priority: 'HIGH', action: 'Revisar manualmente', reason: fallo.failureReason }],
+        ...fallo
       };
     }
   }
@@ -4396,7 +4428,9 @@ Responde en JSON:
   "warnings": []
 }`;
 
-    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt, { maxTokens: 4096 });
+    // Mismo motivo: el JSON de la sugerencia de garantia no cabe en 4096 y el
+    // corte se convertia en un importe de garantia que nadie habia calculado.
+    const result = await this.callClaude(SONNET_MODEL, SYSTEM_PROMPTS.chatAgent('es'), prompt, { maxTokens: 8192 });
 
     try {
       let jsonContent = result.content;
@@ -4409,12 +4443,16 @@ Responde en JSON:
         calculatedAt: new Date().toISOString()
       };
     } catch (e) {
+      const fallo = this._diagnosticoAnalisisFallido(result);
       return {
-        calculatedAmount: { finalAmount: 0 },
-        recommendedType: { code: '1', name: 'Garantía global', reason: 'Por defecto' },
+        // Una garantía de 0 EUR se lee como "no hace falta garantía", que es la
+        // conclusión más cara de equivocarse en un tránsito; y el tipo '1' "por
+        // defecto" no lo había elegido nadie.
+        calculatedAmount: { finalAmount: null },
+        recommendedType: { code: null, name: null, reason: fallo.failureReason },
         alternatives: [],
-        recommendations: ['Error en cálculo IA - revisar manualmente'],
-        rawResponse: result.content
+        recommendations: [`${fallo.failureReason} Calcular la garantía manualmente.`],
+        ...fallo
       };
     }
   }
@@ -4460,8 +4498,11 @@ Responde en JSON:
       factors.push('Mercancías documentadas');
     }
 
-    // Bajo riesgo de incidencias
-    if (incidentPrediction.overallRiskScore < 40) {
+    // Bajo riesgo de incidencias. Se exige un numero: cuando la prediccion
+    // falla `overallRiskScore` es null, y `null < 40` es true en JS, asi que un
+    // analisis que no se ha hecho sumaba los 15 puntos de "bajo riesgo".
+    if (typeof incidentPrediction.overallRiskScore === 'number' &&
+        incidentPrediction.overallRiskScore < 40) {
       readinessScore += 15;
       factors.push('Bajo riesgo de incidencias');
     }
@@ -4498,7 +4539,16 @@ Responde en JSON:
         factors,
         overallRiskLevel: incidentPrediction.riskLevel,
         estimatedTransitDays: routeValidation.routeAnalysis?.estimatedTransitDays || 'N/A',
-        guaranteeRequired: guaranteeSuggestion.calculatedAmount?.finalAmount || 0
+        // `|| 0` convertia un importe no calculado en "0 EUR de garantia".
+        guaranteeRequired: guaranteeSuggestion.calculatedAmount?.finalAmount ?? null,
+        // Que parte de los tres analisis no se completo. El readinessScore se
+        // calcula con lo que haya, asi que un "Listo para presentar" apoyado en
+        // un analisis a medias tiene que poder verse.
+        incompleteAnalysis: [
+          routeValidation.analysisFailed && 'routeValidation',
+          incidentPrediction.analysisFailed && 'incidentPrediction',
+          guaranteeSuggestion.analysisFailed && 'guaranteeSuggestion'
+        ].filter(Boolean)
       },
       nextSteps,
       analyzedAt: new Date().toISOString()

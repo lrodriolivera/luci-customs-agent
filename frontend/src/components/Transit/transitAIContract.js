@@ -95,6 +95,12 @@ export function normalizarValidacionRuta(data) {
   const incidencias = (Array.isArray(veredicto.issues) ? veredicto.issues : []).map(normalizarIncidenciaRuta)
 
   return {
+    // Tercer estado. `esValida: false` significa "la aduana rechazaria esta
+    // ruta"; cuando el analisis no se ha podido hacer eso es una afirmacion que
+    // nadie ha calculado. Medido en vivo: 1 de cada 4 validaciones se cortaba
+    // por limite de tokens y salia como ruta invalida; al reintentar, sin
+    // cambiar un dato, salia valida.
+    fallo: data.analysisFailed === true || veredicto.isValid === null,
     esValida: veredicto.isValid === true,
     incidencias: incidencias.filter(Boolean),
     analisis: {

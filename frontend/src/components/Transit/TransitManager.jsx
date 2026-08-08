@@ -152,19 +152,34 @@ function TransitAIPanel({ transit, onClose, onApplySuggestion }) {
     if (!data) return null
     return (
       <div className="space-y-4">
-        {/* Veredicto */}
-        <div className={`p-4 rounded-lg ${data.esValida ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-          <div className="flex items-center gap-2">
-            {data.esValida ? (
-              <CheckCircleIcon className="w-6 h-6 text-green-600" />
-            ) : (
-              <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
-            )}
-            <span className={`font-medium ${data.esValida ? 'text-green-800' : 'text-red-800'}`}>
-              {data.esValida ? 'Ruta Valida' : 'Ruta con Problemas'}
-            </span>
+        {/* Veredicto: valida / con problemas / no evaluada. El fallo del
+            analisis es un tercer estado, no un rechazo de la ruta. */}
+        {data.fallo ? (
+          <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+            <div className="flex items-center gap-2">
+              <ExclamationCircleIcon className="w-6 h-6 text-amber-600" />
+              <span className="font-medium text-amber-800">
+                No se pudo validar la ruta
+              </span>
+            </div>
+            <p className="text-sm text-amber-700 mt-1">
+              La ruta no ha quedado ni aprobada ni rechazada. Vuelva a ejecutar el analisis o revise la ruta manualmente.
+            </p>
           </div>
-        </div>
+        ) : (
+          <div className={`p-4 rounded-lg ${data.esValida ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+            <div className="flex items-center gap-2">
+              {data.esValida ? (
+                <CheckCircleIcon className="w-6 h-6 text-green-600" />
+              ) : (
+                <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
+              )}
+              <span className={`font-medium ${data.esValida ? 'text-green-800' : 'text-red-800'}`}>
+                {data.esValida ? 'Ruta Valida' : 'Ruta con Problemas'}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Analisis de ruta */}
         {(data.analisis.distancia || data.analisis.dias !== null) && (
