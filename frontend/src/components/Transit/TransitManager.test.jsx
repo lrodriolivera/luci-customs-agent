@@ -2442,3 +2442,76 @@ describe('<TransitManager /> submitted: reintentar el envio', () => {
     expect(screen.queryByText('Eliminar')).not.toBeInTheDocument()
   })
 })
+
+// ============================================================================
+// El CC044 declaraba `sealsOk: true` por defecto: el boton "Notificar Descarga"
+// llama sin datos y el backend completaba la conformidad. Un transito con un
+// precinto ya marcado "ROTO" en la propia ficha declaraba precintos conformes
+// ante la aduana. El backend ya lo rechaza; la ficha debe avisar antes de que
+// el operador se coma un 400.
+// ============================================================================
+describe('<TransitManager /> precintos rotos antes de notificar la descarga', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    transitAPI.getStats.mockResolvedValue({ data: { success: true, data: {} } })
+    transitAPI.getOverdue.mockResolvedValue({ data: { success: true, data: [] } })
+  })
+
+  const conPrecintos = async (status, seals) => {
+    transitAPI.list.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          transits: [{
+            _id: 'tp1', mrn: 'MRNPREC', lrn: 'LRNPREC', status, transitType: 'T1',
+            principal: {}, departureOffice: { code: 'ES002801' },
+            destinationOffice: { code: 'ES002901' },
+            transport: { seals, sealCount: seals.length }, totals: {}, dates: {}, deadlines: {}
+          }],
+          pagination: { total: 1, page: 1, limit: 20, pages: 1 }
+        }
+      }
+    })
+    render(
+      <MemoryRouter>
+        <TransitManager />
+      </MemoryRouter>
+    )
+    await waitFor(() => expect(screen.getByText('MRNPREC')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('MRNPREC'))
+  }
+
+  test('avisa de que la descarga saldra con discrepancia, no como conforme', async () => {
+    await conPrecintos('arrived', [{ number: 'ES99887', sealType: 'customs', intactOnArrival: false }])
+    // El numero sale tambien en la lista de precintos: se localiza el aviso por
+    // su propio texto y luego se comprueba que lo nombra.
+    const aviso = await screen.findByText(/CC044/)
+    expect(aviso.textContent).toMatch(/ES99887/)
+    expect(aviso.textContent).toMatch(/discrepancia/i)
+  })
+
+  test('la descarga NO se bloquea: el boton sigue disponible', async () => {
+    // El CC044 se presenta igual; lo que no se puede es afirmar conformidad.
+    await conPrecintos('arrived', [{ number: 'ES99887', intactOnArrival: false }])
+    await waitFor(() => expect(screen.getByText('Notificar Descarga')).toBeInTheDocument())
+  })
+
+  test('con los precintos intactos no aparece ningun aviso', async () => {
+    await conPrecintos('arrived', [{ number: 'ES12345', intactOnArrival: true }])
+    await waitFor(() => expect(screen.getByText('Notificar Descarga')).toBeInTheDocument())
+    expect(screen.queryByText(/CC044/)).not.toBeInTheDocument()
+  })
+
+  test('un precinto sin comprobar no genera aviso', async () => {
+    await conPrecintos('arrived', [{ number: 'ES12345' }])
+    await waitFor(() => expect(screen.getByText('Notificar Descarga')).toBeInTheDocument())
+    expect(screen.queryByText(/CC044/)).not.toBeInTheDocument()
+  })
+
+  test('en un estado que no notifica descarga no se avisa', async () => {
+    // En `in_transit` la descarga aun no toca: el aviso seria ruido.
+    await conPrecintos('in_transit', [{ number: 'ES99887', intactOnArrival: false }])
+    await waitFor(() => expect(screen.getByText('Notificar Llegada')).toBeInTheDocument())
+    expect(screen.queryByText(/CC044/)).not.toBeInTheDocument()
+  })
+})

@@ -126,6 +126,25 @@ describe('submitted con MRN: estado incoherente', () => {
     expect(ultimo.status).toBe('accepted');
     expect(ultimo.reason).toMatch(/MRN/);
   });
+
+  it('marca `$locals.declaracionEnviada` a false para que el aviso no mienta', async () => {
+    // El controlador respondia "Declaracion enviada. MRN asignado: X" tambien
+    // en este camino, en el que NO se envia nada: el operador leia que su
+    // declaracion habia salido cuando solo se corrigio el estado.
+    const owner = OWNER();
+    const t = await transitoEnviadoSinMRN(owner, { mrn: '26ES0028015010C3D4' });
+
+    const res = await transitService.submit(t._id, owner);
+    expect(res.$locals.declaracionEnviada).toBe(false);
+  });
+
+  it('marca `$locals.declaracionEnviada` a true cuando el IE015 si sale', async () => {
+    const owner = OWNER();
+    const t = await transitoEnviadoSinMRN(owner);
+
+    const res = await transitService.submit(t._id, owner);
+    expect(res.$locals.declaracionEnviada).toBe(true);
+  });
 });
 
 describe('borrado: un submitted no se borra en local', () => {

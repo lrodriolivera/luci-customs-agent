@@ -34,6 +34,7 @@ import {
 } from './transitAIContract'
 import { normalizarMensajes } from './transitMessages'
 import { destinoFueraDeEspana, avisoDestinoExtranjero } from './transitDestino'
+import { avisoPrecintosRotos } from './transitPrecintos'
 
 const TRANSIT_TYPES = {
   T1: { label: 'T1 - No Union', color: 'blue', description: 'Mercancias no comunitarias' },
@@ -1249,6 +1250,17 @@ export default function TransitManager() {
                             <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                               <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                               <p className="text-sm text-amber-800">{avisoDestinoExtranjero(transit)}</p>
+                            </div>
+                          )}
+
+                          {/* El CC044 no puede declarar precintos conformes si
+                              alguno consta roto: el backend lo rechaza, asi que
+                              se dice aqui y no via un 400 al pulsar. */}
+                          {['arrived', 'control_requested'].includes(transit.status) &&
+                            avisoPrecintosRotos(transit) && (
+                            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                              <ExclamationTriangleIcon className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                              <p className="text-sm text-red-800">{avisoPrecintosRotos(transit)}</p>
                             </div>
                           )}
 

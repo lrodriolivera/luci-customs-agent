@@ -180,6 +180,27 @@ describe('lifecycle', () => {
     expect(res.statusCode).toBe(400);
   });
 
+  test('un submitted con MRN no dice "declaracion enviada": no se envio nada', async () => {
+    // Reintentar el envio de un `submitted` que ya tiene MRN solo corrige el
+    // estado (reenviarlo duplicaria la declaracion en NCTS). El controlador
+    // respondia igualmente "Declaracion enviada. MRN asignado: X", asi que el
+    // operador leia que su declaracion habia salido a AEAT cuando no salio.
+    const owner = OWNER();
+    const t = await transitService.create(datosTransito(), owner);
+    await Transit.findByIdAndUpdate(t._id, { status: 'submitted', mrn: '26ES0028015010C3D4' });
+    const res = crearRes();
+
+    await ctrl.submit(req({ user: owner, params: { id: t._id } }), res);
+
+    expect(res.statusCode).toBe(200);
+    expect(aeatSubmitService.submitNCTS).not.toHaveBeenCalled();
+    // Ojo al aserto: "no se ha reenviado" contiene "enviad". Lo que no debe
+    // aparecer es la afirmacion de que la declaracion ha salido ahora.
+    expect(res.body.message).not.toMatch(/Declaracion enviada/i);
+    expect(res.body.message).toMatch(/no se ha reenviado/i);
+    expect(res.body.message).toMatch(/26ES0028015010C3D4/);
+  });
+
   test('getStats devuelve las estadisticas del owner', async () => {
     const owner = OWNER();
     await transitService.create(datosTransito(), owner);

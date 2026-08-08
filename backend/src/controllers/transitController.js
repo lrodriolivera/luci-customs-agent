@@ -176,11 +176,13 @@ const transitController = {
   async submit(req, res) {
     try {
       const transit = await transitService.submit(req.params.id, req.user._id);
-      res.json({
-        success: true,
-        data: transit,
-        message: `Declaracion enviada. MRN asignado: ${transit.mrn}`
-      });
+      // Reintentar un `submitted` que ya tenia MRN NO reenvia nada: reenviarlo
+      // duplicaria la declaracion en NCTS. Decir "Declaracion enviada" en ese
+      // caso afirmaria una gestion aduanera que no ha ocurrido.
+      const message = transit.$locals?.declaracionEnviada === false
+        ? `La declaracion ya estaba aceptada por NCTS con el MRN ${transit.mrn}: no se ha reenviado. Estado corregido a aceptada.`
+        : `Declaracion enviada. MRN asignado: ${transit.mrn}`;
+      res.json({ success: true, data: transit, message });
     } catch (error) {
       console.error('Error submitting transit:', error);
       res.status(400).json({

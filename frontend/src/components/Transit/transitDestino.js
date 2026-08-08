@@ -28,10 +28,12 @@ const NOMBRE_PAIS = {
 }
 
 /**
- * Pais de una aduana NCTS. El codigo lleva el pais como prefijo ISO
- * ('ES002901' -> 'ES'); el `country` declarado, cuando viene, prevalece.
- * En los datos reales `country` esta vacio casi siempre, asi que depender solo
- * de el equivale a no comprobar nada.
+ * Pais de una aduana NCTS. El `country` declarado prevalece; cuando falta, se
+ * deduce del prefijo ISO del propio codigo ('ES002901' -> 'ES').
+ *
+ * En los 15 transitos vivos del 8/Ago `country` venia relleno, pero el campo es
+ * opcional en el modelo y el codigo NCTS siempre lleva el pais delante: el
+ * fallback cubre los expedientes creados a mano o importados sin el.
  *
  * @returns {string|null} ISO-2 en mayusculas, o null si no es deducible.
  */

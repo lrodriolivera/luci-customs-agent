@@ -57,10 +57,10 @@ function _explicarRechazoCC007(errorAEAT) {
 }
 
 /**
- * Pais de una aduana NCTS. Los codigos llevan el pais como prefijo ISO
- * ('ES002901' -> 'ES', 'DE004600' -> 'DE'); el `country` declarado, cuando
- * viene, prevalece. En los datos reales viene vacio casi siempre, asi que
- * depender solo de el equivale a no comprobar nada.
+ * Pais de una aduana NCTS. El `country` declarado prevalece; cuando falta, se
+ * deduce del prefijo ISO del propio codigo ('ES002901' -> 'ES',
+ * 'DE004600' -> 'DE'). El campo es opcional en el modelo, asi que sin el
+ * fallback los expedientes creados a mano o importados quedarian sin comprobar.
  */
 function _paisAduana(office) {
   if (office?.country) return String(office.country).toUpperCase();
@@ -290,6 +290,10 @@ const transitService = {
         reason: `Ya tenia MRN ${transit.mrn} asignado por NCTS: no se reenvia la declaracion`
       });
       await transit.save();
+      // El controlador responde "Declaracion enviada" segun este flag: por este
+      // camino NO sale nada a AEAT, y decir lo contrario seria una afirmacion
+      // falsa sobre una gestion aduanera.
+      transit.$locals.declaracionEnviada = false;
       return transit;
     }
 
@@ -335,6 +339,7 @@ const transitService = {
     logger.info(`Transit ${transit.lrn} submitted: MRN ${aeatResult.mrn}`);
 
     await transit.save();
+    transit.$locals.declaracionEnviada = true;
     return transit;
   },
 
@@ -503,13 +508,30 @@ const transitService = {
 
     const unloadingDate = data.unloadingDate || new Date();
 
+    // La conformidad de precintos NO se afirma sin comprobarla: es la
+    // declaracion con la que el destinatario autorizado responde ante la aduana
+    // de la integridad de la mercancia. El boton de la UI llama sin datos, asi
+    // que `data.sealsOk` es undefined y el valor por defecto salia como `true`.
+    // El modelo ya guarda `transport.seals[].intactOnArrival` y ya tenia
+    // `checkSeals()` para leerlo, sin ningun punto de llamada.
+    const revisionPrecintos = transit.checkSeals();
+    if (!revisionPrecintos.valid && data.sealsOk === true) {
+      const rotos = revisionPrecintos.issues.map((i) => i.sealNumber).join(', ');
+      throw new Error(
+        `No se puede declarar en el CC044 que los precintos estan conformes: ${rotos} `
+        + 'consta como roto o manipulado. Corrija el estado del precinto o notifique '
+        + 'la descarga con la discrepancia.'
+      );
+    }
+    const sealsOk = revisionPrecintos.valid && data.sealsOk !== false;
+
     const aeatResult = await aeatSubmitService.submitNCTSUnloading({
       mrn: transit.mrn,
       officeOfDestination: transit.destinationOffice?.code || '',
       traderEORI: transit.consignee?.eori || transit.principal?.eori || '',
       unloadingDate,
       unloadingRemark: data.remark || '',
-      sealsOk: data.sealsOk !== false,
+      sealsOk,
       goodsConform: data.goodsConform !== false,
       goodsDiscrepancies: data.discrepancies || []
     });
@@ -525,7 +547,7 @@ const transitService = {
       content: {
         mrn: transit.mrn,
         unloadingDate,
-        sealsOk: data.sealsOk !== false,
+        sealsOk,
         goodsConform: data.goodsConform !== false,
         discrepancies: data.discrepancies || []
       }
