@@ -456,6 +456,9 @@ async function submitENS(ensDeclaration) {
   const soapXML = buildENSDeclarationXML({
     test: process.env.AEAT_ENVIRONMENT !== 'production',
     lrn: ensDeclaration.lrn || '',
+    // Remitente del mensaje: el declarante que firma, NO el transportista (CC316A
+    // "Message Sender is not valid" si se envia el EORI de un transportista ajeno).
+    senderEORI: process.env.DECLARANTE_EORI || 'ESB22477020',
     carrierEORI: carrier.eori || '',
     entryOffice: ensDeclaration.entryOffice?.code || 'ES002801',
     transportMode: modeMap[ensDeclaration.transportMode] || ensDeclaration.transportMode || '3',

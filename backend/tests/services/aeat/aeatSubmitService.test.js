@@ -573,6 +573,23 @@ describe('submitENS', () => {
     expect(endpointLlamado()).toContain('IE315V5SOAP');
   });
 
+  // AEAT rechazo un envio real a PRE (8/Ago/2026) con CC316A "MES.MesSenMES3:
+  // ESA12345678-Message Sender is not valid": el remitente del mensaje era el EORI
+  // del transportista. Los aciertos anteriores fueron coincidencia (el transportista
+  // era el propio declarante), asi que se fija aqui con un transportista ajeno.
+  test('el remitente del mensaje es el declarante, no el transportista', async () => {
+    await submitService.submitENS({
+      lrn: 'LRN-ENS', carrier: { eori: 'ESA12345678', name: 'Transportes Demo SL' },
+      goods: [{ description: 'Tornillos', commodityCode: '73181500', grossMass: 50, numberOfPackages: 3 }],
+      consignor: { name: 'CN Co', address: { country: 'CN' } },
+      consignee: { name: 'ES Co', address: { country: 'ES' } }
+    });
+    const xml = soapEnviado();
+    expect(xml).toContain(`<MesSenMES3>${process.env.DECLARANTE_EORI || 'ESB22477020'}</MesSenMES3>`);
+    expect(xml).not.toContain('<MesSenMES3>ESA12345678</MesSenMES3>');
+    expect(xml).toContain('<TINTRE1>ESA12345678</TINTRE1>');
+  });
+
   test('construye houseConsignments desde goods (envio directo)', async () => {
     const r = await submitService.submitENS({
       lrn: 'X', carrier: { eori: 'E' },

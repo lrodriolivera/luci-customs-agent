@@ -102,6 +102,31 @@ describe('mapa de modo de transporte y regla del ferrocarril', () => {
   });
 });
 
+describe('MesSenMES3: remitente del mensaje = declarante, no transportista', () => {
+  // AEAT rechazo un envio real a PRE con CC316A "MES.MesSenMES3: ESA12345678-Message
+  // Sender is not valid": MesSenMES3 identifica a quien FIRMA y envia el mensaje (el
+  // titular del certificado), no al transportista, que ya viaja en TRAREP/PERLODSUMDEC.
+  // Las 4 ENS aceptadas antes lo estaban por coincidencia: su carrier.eori era el
+  // propio ESB22477020. Con un transportista de terceros AEAT rechaza siempre.
+  test('usa el senderEORI recibido y no el del transportista', () => {
+    const xml = buildENSDeclarationXML(base({
+      senderEORI: 'ESB22477020', carrierEORI: 'ESA12345678', carrierName: 'Transportes Demo SL'
+    }));
+
+    expect(xml).toContain('<MesSenMES3>ESB22477020</MesSenMES3>');
+    expect(xml).not.toContain('<MesSenMES3>ESA12345678</MesSenMES3>');
+    // El transportista sigue declarado en su sitio.
+    expect(xml).toContain('<TINTRE1>ESA12345678</TINTRE1>');
+    expect(xml).toContain('<TINPLD1>ESA12345678</TINPLD1>');
+  });
+
+  test('sin senderEORI cae al declarante de la configuracion, nunca al transportista', () => {
+    const xml = buildENSDeclarationXML(base({ senderEORI: '', carrierEORI: 'ESA12345678' }));
+
+    expect(xml).toContain(`<MesSenMES3>${process.env.DECLARANTE_EORI || 'ESB22477020'}</MesSenMES3>`);
+  });
+});
+
 describe('regla C501: EORI del transportista excluye su nombre', () => {
   test('con EORI del transportista NO se emite NamTRE1', () => {
     const xml = buildENSDeclarationXML(base({ carrierEORI: 'ESB22477020', carrierName: 'Ignorado SL' }));

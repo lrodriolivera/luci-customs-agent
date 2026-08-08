@@ -13,6 +13,10 @@
  *   PRODOCDC2, TRACONCO2, COMCODGODITM, TRACONCE2, CONNR2, PACGS2
  *
  * Regla C501: Si EORI/TIN presente, NO enviar nombre (NamTRE1, etc.)
+ *
+ * MesSenMES3 es el remitente del MENSAJE (titular del certificado que firma), no el
+ * transportista: este va en TRAREP/PERLODSUMDEC. Enviar ahi el EORI del transportista
+ * provoca CC316A "MES.MesSenMES3: <EORI>-Message Sender is not valid".
  */
 
 const { generateTransactionId } = require('./queryXmlBuilder');
@@ -25,6 +29,8 @@ const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 function buildENSDeclarationXML(data) {
   const {
     lrn = '',
+    // Remitente del mensaje (titular del certificado de firma)
+    senderEORI = '',
     // Carrier
     carrierEORI = '', carrierName = '',
     // Entry office
@@ -136,7 +142,7 @@ function buildENSDeclarationXML(data) {
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
   <soapenv:Body>
     <ent:CC315A xmlns:ent="${NS_ENT}">
-  <MesSenMES3>${carrierEORI}</MesSenMES3>
+  <MesSenMES3>${senderEORI || process.env.DECLARANTE_EORI || 'ESB22477020'}</MesSenMES3>
   <MesRecMES6>NICA.ES</MesRecMES6>
   <DatOfPreMES9>${datPrep}</DatOfPreMES9>
   <TimOfPreMES10>${timPrep}</TimOfPreMES10>
