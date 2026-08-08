@@ -8,6 +8,10 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key) => key })
 }))
 
+vi.mock('react-hot-toast', () => ({
+  default: { success: vi.fn(), error: vi.fn() }
+}))
+
 vi.mock('react-router-dom', () => ({
   useParams: () => ({ id: 'ens-123' }),
   useNavigate: () => mockNavigate
@@ -1135,6 +1139,37 @@ describe('ENSDeclarationDetail', () => {
       await user.click(within(screen.getByRole('dialog')).getByText('common.confirm').closest('button'))
       await waitFor(() => {
         expect(ensAPI.submit).toHaveBeenCalled()
+      })
+    })
+
+    it('muestra el motivo de rechazo de AEAT al usuario (toast.error)', async () => {
+      const user = userEvent.setup()
+      const toast = (await import('react-hot-toast')).default
+      // AEAT rechaza p. ej. ENS marítima legacy: el backend devuelve 400 con message.
+      ensAPI.submit.mockRejectedValue({
+        response: { data: { message: 'Las ENS del sector maritimo se deben declarar solo en el sistema ICS2' } }
+      })
+      render(<ENSDeclarationDetail />)
+      await screen.findByRole('heading', { name: 'ENS-2026-001' })
+      await user.click(screen.getByRole('button', { name: /ens.sendToAeat/ }))
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      await user.click(within(screen.getByRole('dialog')).getByText('common.confirm').closest('button'))
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Las ENS del sector maritimo se deben declarar solo en el sistema ICS2')
+      })
+    })
+
+    it('muestra toast de éxito con el MRN al enviar correctamente', async () => {
+      const user = userEvent.setup()
+      const toast = (await import('react-hot-toast')).default
+      ensAPI.submit.mockResolvedValue({ data: { success: true, data: { mrn: '26ESENS0000012345' } } })
+      render(<ENSDeclarationDetail />)
+      await screen.findByRole('heading', { name: 'ENS-2026-001' })
+      await user.click(screen.getByRole('button', { name: /ens.sendToAeat/ }))
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+      await user.click(within(screen.getByRole('dialog')).getByText('common.confirm').closest('button'))
+      await waitFor(() => {
+        expect(toast.success).toHaveBeenCalled()
       })
     })
 

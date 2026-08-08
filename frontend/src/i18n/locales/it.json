@@ -998,7 +998,15 @@
     "blRequiredBatch": "Numero polizza di carico (B/L) obbligatorio",
     "grossWeightPositive": "Il peso lordo deve essere maggiore di 0",
     "containerFormatWarn": "Il formato del container potrebbe non essere corretto (ISO 6346)",
-    "transportModeInvalid": "Modalita di trasporto non valida (ROAD, RAIL, AIR, SEA)"
+    "transportModeInvalid": "Modalita di trasporto non valida (ROAD, RAIL, AIR, SEA)",
+    "sentWithMrn": "Dichiarazione inviata all'AEAT - MRN: {{mrn}}",
+    "sentOk": "Dichiarazione inviata all'AEAT",
+    "submitError": "Errore nell'invio all'AEAT",
+    "cancelledOk": "Dichiarazione annullata",
+    "cancelError": "Errore nell'annullamento",
+    "arrivalNotifiedOk": "Arrivo notificato",
+    "arrivalError": "Errore nella notifica dell'arrivo",
+    "xmlError": "Errore nel download del XML"
   },
   "h7": {
     "title": "Dichiarazioni H7",

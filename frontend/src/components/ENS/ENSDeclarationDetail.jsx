@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import toast from 'react-hot-toast'
 import ConfirmDialog from '../common/ConfirmDialog'
 import { useConfirm } from '../../hooks/useConfirm'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -109,10 +110,16 @@ const ENSDeclarationDetail = () => {
       setActionLoading(true)
       const response = await ensAPI.submit(id)
       if (response.data.success) {
+        const mrn = response.data.data?.mrn
+        toast.success(mrn ? t('ens.sentWithMrn', { mrn }) : t('ens.sentOk', 'Declaración enviada a AEAT'))
         loadDeclaration()
+      } else {
+        toast.error(response.data.message || t('ens.submitError', 'Error al enviar a AEAT'))
       }
     } catch (error) {
       console.error('Error submitting:', error)
+      // AEAT rechaza p. ej. ENS marítimas legacy (deben ir por ICS2): mostrar el motivo.
+      toast.error(error.response?.data?.message || error.response?.data?.error || t('ens.submitError', 'Error al enviar a AEAT'))
     } finally {
       setActionLoading(false)
     }
@@ -125,10 +132,14 @@ const ENSDeclarationDetail = () => {
       if (response.data.success) {
         setCancelDialogOpen(false)
         setCancelReason('')
+        toast.success(t('ens.cancelledOk', 'Declaración anulada'))
         loadDeclaration()
+      } else {
+        toast.error(response.data.message || t('ens.cancelError', 'Error al anular'))
       }
     } catch (error) {
       console.error('Error cancelling:', error)
+      toast.error(error.response?.data?.message || t('ens.cancelError', 'Error al anular'))
     } finally {
       setActionLoading(false)
     }
@@ -141,10 +152,14 @@ const ENSDeclarationDetail = () => {
       if (response.data.success) {
         setArrivalDialogOpen(false)
         setArrivalData({ arrivalDate: '', actualArrivalTime: '', remarks: '' })
+        toast.success(t('ens.arrivalNotifiedOk', 'Llegada notificada'))
         loadDeclaration()
+      } else {
+        toast.error(response.data.message || t('ens.arrivalError', 'Error al notificar llegada'))
       }
     } catch (error) {
       console.error('Error notifying arrival:', error)
+      toast.error(error.response?.data?.message || t('ens.arrivalError', 'Error al notificar llegada'))
     } finally {
       setActionLoading(false)
     }
@@ -162,6 +177,7 @@ const ENSDeclarationDetail = () => {
       window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Error downloading XML:', error)
+      toast.error(error.response?.data?.message || t('ens.xmlError', 'Error al descargar el XML'))
     }
   }
 

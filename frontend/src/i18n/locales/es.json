@@ -251,7 +251,7 @@
     "statusDocsValidated": "Docs Validados",
     "statusDeclarationReady": "Listo Declaracion",
     "statusSubmitted": "Presentada",
-    "statusDeclarationDraft": "Borrador de declaracion",
+    "statusDeclarationDraft": "Declaracion Borrador",
     "statusLevante": "Levante",
     "statusYellowChannel": "Canal Amarillo",
     "statusCleared": "Despachado",
@@ -461,9 +461,7 @@
     "units": "Uds",
     "nifPlaceholder": "B12345678",
     "eoriPlaceholder": "ES + NIF",
-    "descriptionPlaceholder": "Describa el producto con detalle: material, funcion, uso...",
-    "statusDeclarationDraft": "Declaracion Borrador",
-    "statusLevante": "Levante"
+    "descriptionPlaceholder": "Describa el producto con detalle: material, funcion, uso..."
   },
   "classification": {
     "title": "Clasificacion TARIC",
@@ -1001,7 +999,15 @@
     "blRequiredBatch": "Numero de conocimiento (B/L) requerido",
     "grossWeightPositive": "Peso bruto debe ser mayor que 0",
     "containerFormatWarn": "Formato de contenedor puede ser incorrecto (ISO 6346)",
-    "transportModeInvalid": "Modo de transporte invalido (ROAD, RAIL, AIR, SEA)"
+    "transportModeInvalid": "Modo de transporte invalido (ROAD, RAIL, AIR, SEA)",
+    "sentWithMrn": "Declaración enviada a AEAT - MRN: {{mrn}}",
+    "sentOk": "Declaración enviada a AEAT",
+    "submitError": "Error al enviar a AEAT",
+    "cancelledOk": "Declaración anulada",
+    "cancelError": "Error al anular",
+    "arrivalNotifiedOk": "Llegada notificada",
+    "arrivalError": "Error al notificar la llegada",
+    "xmlError": "Error al descargar el XML"
   },
   "h7": {
     "title": "Declaraciones H7",

@@ -998,7 +998,15 @@
     "blRequiredBatch": "Numero de conhecimento (B/L) obrigatorio",
     "grossWeightPositive": "O peso bruto deve ser superior a 0",
     "containerFormatWarn": "O formato do contentor pode estar incorreto (ISO 6346)",
-    "transportModeInvalid": "Modo de transporte invalido (ROAD, RAIL, AIR, SEA)"
+    "transportModeInvalid": "Modo de transporte invalido (ROAD, RAIL, AIR, SEA)",
+    "sentWithMrn": "Declaração enviada à AEAT - MRN: {{mrn}}",
+    "sentOk": "Declaração enviada à AEAT",
+    "submitError": "Erro ao enviar à AEAT",
+    "cancelledOk": "Declaração anulada",
+    "cancelError": "Erro ao anular",
+    "arrivalNotifiedOk": "Chegada notificada",
+    "arrivalError": "Erro ao notificar a chegada",
+    "xmlError": "Erro ao baixar o XML"
   },
   "h7": {
     "title": "Declaracoes H7",

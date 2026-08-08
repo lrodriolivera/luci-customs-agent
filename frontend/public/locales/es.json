@@ -999,7 +999,15 @@
     "blRequiredBatch": "Numero de conocimiento (B/L) requerido",
     "grossWeightPositive": "Peso bruto debe ser mayor que 0",
     "containerFormatWarn": "Formato de contenedor puede ser incorrecto (ISO 6346)",
-    "transportModeInvalid": "Modo de transporte invalido (ROAD, RAIL, AIR, SEA)"
+    "transportModeInvalid": "Modo de transporte invalido (ROAD, RAIL, AIR, SEA)",
+    "sentWithMrn": "Declaración enviada a AEAT - MRN: {{mrn}}",
+    "sentOk": "Declaración enviada a AEAT",
+    "submitError": "Error al enviar a AEAT",
+    "cancelledOk": "Declaración anulada",
+    "cancelError": "Error al anular",
+    "arrivalNotifiedOk": "Llegada notificada",
+    "arrivalError": "Error al notificar la llegada",
+    "xmlError": "Error al descargar el XML"
   },
   "h7": {
     "title": "Declaraciones H7",
@@ -1610,7 +1618,6 @@
     "eoriNumber": "Numero EORI",
     "contactPerson": "Persona de Contacto *",
     "contactPersonPlaceholder": "Juan Garcia",
-    "contactPersonPlaceholder": "Juan Garcia",
     "emailLabel": "Email *",
     "emailPlaceholder": "juan@miempresa.com",
     "phonePlaceholder": "+34 612 345 678",
@@ -1795,7 +1802,7 @@
   },
   "errorBoundary": {
     "title": "Algo salio mal",
-    "description": "Ha ocurrido un error inesperado. Por favor, recarga la pagina o contacta con soporte.",
+    "description": "Ha ocurrido un error inesperado. Por favor, intenta recargar la pagina.",
     "reload": "Recargar Pagina",
     "goHome": "Ir al Inicio"
   },
@@ -3351,11 +3358,5 @@
     "executiveReport": "Reporte Ejecutivo",
     "kpiAnalysis": "KPI Analysis",
     "fullAnalysis": "Analisis Completo"
-  },
-  "errorBoundary": {
-    "title": "Algo salio mal",
-    "description": "Ha ocurrido un error inesperado. Por favor, intenta recargar la pagina.",
-    "reload": "Recargar Pagina",
-    "goHome": "Ir al Inicio"
   }
 }

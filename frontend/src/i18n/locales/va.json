@@ -998,7 +998,15 @@
     "blRequiredBatch": "Numero de coneixement (B/L) requerit",
     "grossWeightPositive": "Pes brut ha de ser major que 0",
     "containerFormatWarn": "Format de contenidor pot ser incorrecte (ISO 6346)",
-    "transportModeInvalid": "Mode de transport invalid (ROAD, RAIL, AIR, SEA)"
+    "transportModeInvalid": "Mode de transport invalid (ROAD, RAIL, AIR, SEA)",
+    "sentWithMrn": "Declaració enviada a l'AEAT - MRN: {{mrn}}",
+    "sentOk": "Declaració enviada a l'AEAT",
+    "submitError": "Error en enviar a l'AEAT",
+    "cancelledOk": "Declaració anul·lada",
+    "cancelError": "Error en anul·lar",
+    "arrivalNotifiedOk": "Arribada notificada",
+    "arrivalError": "Error en notificar l'aplegada",
+    "xmlError": "Error en baixar el XML"
   },
   "h7": {
     "title": "Declaracions H7",

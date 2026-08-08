@@ -998,7 +998,15 @@
     "blRequiredBatch": "Bill of lading (B/L) number required",
     "grossWeightPositive": "Gross weight must be greater than 0",
     "containerFormatWarn": "Container format may be incorrect (ISO 6346)",
-    "transportModeInvalid": "Invalid transport mode (ROAD, RAIL, AIR, SEA)"
+    "transportModeInvalid": "Invalid transport mode (ROAD, RAIL, AIR, SEA)",
+    "sentWithMrn": "Declaration sent to AEAT - MRN: {{mrn}}",
+    "sentOk": "Declaration sent to AEAT",
+    "submitError": "Error sending to AEAT",
+    "cancelledOk": "Declaration cancelled",
+    "cancelError": "Error cancelling",
+    "arrivalNotifiedOk": "Arrival notified",
+    "arrivalError": "Error notifying arrival",
+    "xmlError": "Error downloading the XML"
   },
   "h7": {
     "title": "H7 Declarations",
