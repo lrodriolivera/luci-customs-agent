@@ -1643,7 +1643,7 @@ function TransitCreateForm({ onClose, onCreated }) {
                 <input
                   type="text"
                   required
-                  placeholder="Codigo TARIC (ej: 73043100)"
+                  placeholder="Codigo TARIC (ej: 73041100)"
                   value={item.taricCode}
                   onChange={(e) => {
                     setFormData(f => ({

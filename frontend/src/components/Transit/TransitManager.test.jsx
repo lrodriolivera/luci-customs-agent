@@ -1423,6 +1423,16 @@ describe('<TransitManager /> formulario: partidas de mercancia', () => {
     expect(screen.getByPlaceholderText(/Codigo \(ej: ES002801\)/)).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/Codigo \(ej: ES002901\)/)).toBeInTheDocument()
   })
+
+  /**
+   * La tabla arancelaria del NCTS de PRE no es el catalogo TARIC: 73043100 (el
+   * ejemplo que sugeria el formulario) lo rechaza y 73041100 lo acepta. Sugerir
+   * un codigo que falla manda al usuario directo a un rechazo de AEAT.
+   */
+  test('el placeholder de TARIC sugiere un codigo que el NCTS de PRE acepta', async () => {
+    await abrirFormulario()
+    expect(screen.getByPlaceholderText(/Codigo TARIC \(ej: 73041100\)/)).toBeInTheDocument()
+  })
 })
 
 /**
