@@ -571,9 +571,10 @@ describe('<TransitManager />', () => {
       data: {
         success: true,
         data: {
-          summary: 'Datos completados por LUCI',
-          suggestions: ['Ruta validada'],
+          fieldsCompleted: ['reference', 'principal.eori', 'principal.name'],
+          fieldsRequiringConfirmation: [],
           warnings: [],
+          confidence: 85,
           suggestedData: { reference: 'AI-REF-001', principal: { eori: 'ESAI001', name: 'AI Cliente' } }
         }
       }
@@ -595,7 +596,7 @@ describe('<TransitManager />', () => {
 
     await waitFor(() => {
       expect(transitAPI.aiAutoComplete).toHaveBeenCalled()
-      expect(screen.getByText('Datos completados por LUCI')).toBeInTheDocument()
+      expect(screen.getByText(/3 campos completados/)).toBeInTheDocument()
     })
   })
 
@@ -1294,9 +1295,10 @@ describe('<TransitManager />', () => {
       data: {
         success: true,
         data: {
-          summary: 'Datos parciales',
-          suggestions: ['Se completó el EORI'],
+          fieldsCompleted: ['principal.eori'],
+          fieldsRequiringConfirmation: [],
           warnings: ['Falta información de mercancía', 'Verificar garantía'],
+          confidence: 40,
           suggestedData: { reference: 'PARTIAL' }
         }
       }
@@ -1317,7 +1319,7 @@ describe('<TransitManager />', () => {
 
     await waitFor(() => {
       expect(transitAPI.aiAutoComplete).toHaveBeenCalled()
-      expect(screen.getByText('Datos parciales')).toBeInTheDocument()
+      expect(screen.getByText('Falta información de mercancía', { exact: false })).toBeInTheDocument()
     })
   })
 })
@@ -1827,5 +1829,251 @@ describe('<TransitManager /> panel IA: contrato real del backend', () => {
 
     await waitFor(() => expect(screen.getByText('Garantia Recomendada')).toBeInTheDocument())
     expect(screen.getAllByText(/811/).length).toBeGreaterThan(0)
+  })
+})
+
+describe('<TransitManager /> filtros y paginacion', () => {
+  const transitoEn = (id) => ({
+    _id: id, mrn: `MRN-${id}`, lrn: `LRN-${id}`, status: 'draft', transitType: 'T1',
+    principal: {}, departureOffice: {}, destinationOffice: {},
+    transport: { seals: [] }, totals: {}, dates: {}, deadlines: {}
+  })
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    transitAPI.getStats.mockResolvedValue({ data: { success: true, data: {} } })
+    transitAPI.getOverdue.mockResolvedValue({ data: { success: true, data: [] } })
+    // 35 transitos con limit 1 -> 35 paginas, para poder pasar de pagina.
+    transitAPI.list.mockImplementation((params = {}) => Promise.resolve({
+      data: {
+        success: true,
+        data: {
+          transits: [transitoEn(`p${params.page || 1}`)],
+          pagination: { total: 35, page: params.page || 1, limit: 1, pages: 35 }
+        }
+      }
+    }))
+  })
+
+  test('cambiar de filtro vuelve a la pagina 1', async () => {
+    // Filtrar desde la pagina 2 mantenia `page: 2`. Verificado contra la API
+    // real: `status=draft&limit=1&page=99` devuelve 200 con lista vacia y
+    // `pages: 31`, asi que la pantalla se quedaba en blanco. Y como el
+    // paginador solo se pinta con `pages > 1`, si el filtro cabia en una
+    // pagina el usuario no tenia ni boton para volver: pantalla vacia sin
+    // salida, pareciendo que no hay transitos de ese tipo.
+    render(
+      <MemoryRouter>
+        <TransitManager />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(screen.getByText('MRN-p1')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByText('Siguiente'))
+    await waitFor(() => expect(screen.getByText('MRN-p2')).toBeInTheDocument())
+
+    transitAPI.list.mockClear()
+    fireEvent.change(screen.getByPlaceholderText('Buscar MRN, LRN, referencia...'), {
+      target: { value: 'T1' }
+    })
+
+    await waitFor(() => expect(transitAPI.list).toHaveBeenCalled())
+    const ultima = transitAPI.list.mock.calls.at(-1)[0]
+    expect(ultima.page).toBe(1)
+    expect(ultima.search).toBe('T1')
+  })
+
+  test('cambiar el tipo de transito tambien resetea la pagina', async () => {
+    render(
+      <MemoryRouter>
+        <TransitManager />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(screen.getByText('MRN-p1')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Siguiente'))
+    await waitFor(() => expect(screen.getByText('MRN-p2')).toBeInTheDocument())
+
+    transitAPI.list.mockClear()
+    fireEvent.change(screen.getByDisplayValue('transit.allTypes'), { target: { value: 'T2' } })
+
+    await waitFor(() => expect(transitAPI.list).toHaveBeenCalled())
+    const ultima = transitAPI.list.mock.calls.at(-1)[0]
+    expect(ultima.page).toBe(1)
+    expect(ultima.transitType).toBe('T2')
+  })
+
+  test('pasar de pagina no resetea a 1', async () => {
+    // El reset no debe dispararse al paginar, solo al cambiar filtros.
+    render(
+      <MemoryRouter>
+        <TransitManager />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(screen.getByText('MRN-p1')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Siguiente'))
+    await waitFor(() => expect(screen.getByText('MRN-p2')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Siguiente'))
+    await waitFor(() => expect(screen.getByText('MRN-p3')).toBeInTheDocument())
+  })
+})
+
+/**
+ * E2E 8/Ago: "Autocompletar con IA" del formulario de creacion leia otro contrato.
+ *
+ * Respuesta real de POST /api/transit/ai/auto-complete (verificada contra
+ * https://aduanas.strixai.es, HTTP 200):
+ *   suggestedData, fieldsCompleted, fieldsRequiringConfirmation,
+ *   warnings, confidence, model, tokensUsed, generatedAt
+ *
+ * El JSX leia `summary` y `suggestions`, que NO existen: la mitad del panel
+ * quedaba permanentemente en blanco y lo unico visible eran los avisos. Y lo
+ * mas grave: `fieldsRequiringConfirmation` (los campos que la IA rellena "a
+ * ojo" y avisa que hay que revisar) no se pintaba en ningun sitio, asi que
+ * "Aplicar Sugerencias" metia esos valores en el formulario sin que el usuario
+ * supiera que estaban sin confirmar.
+ *
+ * Ademas `applySuggestion` hacia un spread plano de `suggestedData`, y el
+ * backend devuelve `null` en los campos que no puede inferir: sobrescribia
+ * `principal.eori` con null y React lanza el aviso de input controlado ->
+ * no controlado, dejando el campo requerido en blanco sin poder escribir.
+ */
+describe('<TransitManager /> autocompletar IA: contrato real del backend', () => {
+  // Forma exacta que devuelve el backend con datos parciales.
+  const RESPUESTA_REAL = {
+    suggestedData: {
+      transitType: 'T1',
+      transitTypeReason: 'Mercancia no UE en libre circulacion',
+      principal: { eori: null, name: null, address: {} },
+      departureOffice: { code: 'ES002901', name: 'Madrid', country: 'ES' },
+      destinationOffice: { code: null, name: null, country: null },
+      route: { countries: [], itinerary: null, bindingItinerary: false },
+      guarantee: { type: null, typeDescription: null, estimatedAmount: null, grn: null, reason: 'Sin valor en aduana' },
+      goodsItems: [],
+      estimatedDeadline: null,
+      estimatedTransitDays: 0
+    },
+    fieldsCompleted: ['departureOffice'],
+    fieldsRequiringConfirmation: [
+      { field: 'transitType', suggestedValue: 'T1', reason: 'Sin expediente de origen no se puede verificar el estatuto aduanero' },
+      { field: 'principal.eori', suggestedValue: null, reason: 'No hay historial que identifique al obligado principal' }
+    ],
+    warnings: ['No se ha proporcionado ningun dato del expediente origen'],
+    confidence: 5,
+    model: 'sonnet-5',
+    tokensUsed: 4210,
+    generatedAt: '2026-08-08T10:00:00.000Z'
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    transitAPI.getStats.mockResolvedValue({ data: { success: true, data: {} } })
+    transitAPI.getOverdue.mockResolvedValue({ data: { success: true, data: [] } })
+    transitAPI.list.mockResolvedValue({
+      data: { success: true, data: { transits: [], pagination: { total: 0, page: 1, limit: 20, pages: 0 } } }
+    })
+  })
+
+  const abrirFormularioYAutocompletar = async (respuesta = RESPUESTA_REAL) => {
+    transitAPI.aiAutoComplete.mockResolvedValue({ data: { success: true, data: respuesta } })
+
+    render(
+      <MemoryRouter>
+        <TransitManager />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(screen.getByText('transit.newTransit')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('transit.newTransit'))
+    await waitFor(() => expect(screen.getByText('Nuevo Transito NCTS')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Autocompletar con IA'))
+    await waitFor(() => expect(screen.getByText('Sugerencia de LUCI')).toBeInTheDocument())
+  }
+
+  test('pinta los campos completados que devuelve el backend', async () => {
+    await abrirFormularioYAutocompletar()
+
+    expect(await screen.findByText(/1 campo completado/i)).toBeInTheDocument()
+    expect(screen.getByText(/departureOffice/)).toBeInTheDocument()
+  })
+
+  test('pinta los campos que requieren confirmacion con su motivo', async () => {
+    // Es la informacion mas importante del panel y no se mostraba en absoluto:
+    // el usuario aplicaba valores inventados creyendolos verificados.
+    await abrirFormularioYAutocompletar()
+
+    expect(await screen.findByText(/transitType/)).toBeInTheDocument()
+    expect(screen.getByText(/no se puede verificar el estatuto aduanero/i)).toBeInTheDocument()
+    expect(screen.getByText(/principal\.eori/)).toBeInTheDocument()
+  })
+
+  test('muestra la confianza para que una sugerencia del 5% no parezca fiable', async () => {
+    await abrirFormularioYAutocompletar()
+
+    expect(await screen.findByText(/Confianza: 5%/i)).toBeInTheDocument()
+  })
+
+  test('sigue mostrando los avisos', async () => {
+    await abrirFormularioYAutocompletar()
+
+    expect(await screen.findByText(/No se ha proporcionado ningun dato del expediente origen/)).toBeInTheDocument()
+  })
+
+  test('aplicar la sugerencia no deja los campos requeridos en null', async () => {
+    // `principal.eori` llega null: el spread plano lo metia tal cual en
+    // formData y el input controlado se quedaba sin value.
+    await abrirFormularioYAutocompletar()
+
+    fireEvent.click(screen.getByText('Aplicar Sugerencias'))
+
+    await waitFor(() => expect(screen.queryByText('Sugerencia de LUCI')).not.toBeInTheDocument())
+
+    // La aduana que SI vino se aplica; el EORI que vino null se queda vacio,
+    // no null, para que el input siga siendo controlado y escribible.
+    expect(screen.getByDisplayValue('ES002901')).toBeInTheDocument()
+
+    const eori = screen.getByLabelText('EORI *')
+    expect(eori.value).toBe('')
+    fireEvent.change(eori, { target: { value: 'ESB22477020' } })
+    expect(eori.value).toBe('ESB22477020')
+  })
+
+  test('aplicar la sugerencia no vacia las partidas de mercancia ya escritas', async () => {
+    // `goodsItems: []` es lo que devuelve el backend cuando no puede inferir
+    // partidas. Aplicarlo borraba las que el usuario habia escrito a mano y,
+    // sin partidas, AEAT rechaza el IE015 con el patron de <ent:grossMass>.
+    await abrirFormularioYAutocompletar()
+
+    fireEvent.click(screen.getByText('Aplicar Sugerencias'))
+    await waitFor(() => expect(screen.queryByText('Sugerencia de LUCI')).not.toBeInTheDocument())
+
+    expect(screen.getByPlaceholderText('Partida 1 - Descripcion de la mercancia')).toBeInTheDocument()
+  })
+
+  test('las etiquetas del formulario apuntan a su campo', async () => {
+    // Las 5 <label> del formulario no tenian `htmlFor`: pulsar la etiqueta no
+    // enfocaba el campo y un lector de pantalla anunciaba inputs sin nombre.
+    await abrirFormularioYAutocompletar()
+
+    for (const etiqueta of ['Referencia *', 'Tipo de Transito *', 'EORI *', 'Nombre *']) {
+      expect(screen.getByLabelText(etiqueta)).toBeInTheDocument()
+    }
+  })
+
+  test('no rompe cuando el backend no devuelve ni campos ni confianza', async () => {
+    // Rama de error del backend: suggestedData {}, listas vacias, confidence 0.
+    await abrirFormularioYAutocompletar({
+      suggestedData: {},
+      fieldsCompleted: [],
+      fieldsRequiringConfirmation: [],
+      warnings: ['Error en auto-completado IA'],
+      confidence: 0
+    })
+
+    expect(await screen.findByText(/Error en auto-completado IA/)).toBeInTheDocument()
+    expect(screen.queryByText(/campo completado/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Confianza: 0%/i)).toBeInTheDocument()
   })
 })

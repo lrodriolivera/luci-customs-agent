@@ -26,6 +26,8 @@ import {
   normalizarPrediccionIncidencias,
   normalizarSugerenciaGarantia,
   normalizarAnalisisCompleto,
+  normalizarAutocompletado,
+  mezclarSugerencia,
   etiquetaPreparacion,
   importeEUR,
   ETIQUETA_RIESGO
@@ -781,6 +783,20 @@ export default function TransitManager() {
     loadData()
   }, [filters, pagination.page])
 
+  /**
+   * Cambiar de filtro tiene que devolver a la pagina 1.
+   *
+   * Filtrando desde la pagina 2 se mantenia `page: 2`, y la API responde 200
+   * con lista vacia cuando el filtro no llega a esa pagina. Peor: el paginador
+   * solo se pinta con `pages > 1`, asi que si el resultado cabia en una pagina
+   * el usuario se quedaba con la pantalla vacia y sin boton para volver,
+   * creyendo que no existian transitos de ese tipo.
+   */
+  const actualizarFiltro = (campo, valor) => {
+    setFilters(f => ({ ...f, [campo]: valor }))
+    setPagination(p => (p.page === 1 ? p : { ...p, page: 1 }))
+  }
+
   const loadData = async () => {
     try {
       setLoading(true)
@@ -958,12 +974,12 @@ export default function TransitManager() {
             type="text"
             placeholder="Buscar MRN, LRN, referencia..."
             value={filters.search}
-            onChange={(e) => setFilters(f => ({ ...f, search: e.target.value }))}
+            onChange={(e) => actualizarFiltro('search', e.target.value)}
             className="border rounded-lg px-3 py-2"
           />
           <select
             value={filters.transitType}
-            onChange={(e) => setFilters(f => ({ ...f, transitType: e.target.value }))}
+            onChange={(e) => actualizarFiltro('transitType', e.target.value)}
             className="border rounded-lg px-3 py-2"
           >
             <option value="">{t('transit.allTypes')}</option>
@@ -973,7 +989,7 @@ export default function TransitManager() {
           </select>
           <select
             value={filters.status}
-            onChange={(e) => setFilters(f => ({ ...f, status: e.target.value }))}
+            onChange={(e) => actualizarFiltro('status', e.target.value)}
             className="border rounded-lg px-3 py-2"
           >
             <option value="">{t('transit.allStatuses')}</option>
@@ -1277,7 +1293,7 @@ function TransitCreateForm({ onClose, onCreated }) {
       const res = await transitAPI.aiAutoComplete(formData, expeditionId || undefined)
 
       if (res.data.success) {
-        setAiSuggestion(res.data.data)
+        setAiSuggestion(normalizarAutocompletado(res.data.data))
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Error obteniendo sugerencias IA')
@@ -1287,13 +1303,13 @@ function TransitCreateForm({ onClose, onCreated }) {
   }
 
   const applySuggestion = () => {
-    if (aiSuggestion?.suggestedData) {
-      setFormData(prev => ({
-        ...prev,
-        ...aiSuggestion.suggestedData
-      }))
-      setAiSuggestion(null)
-    }
+    if (!aiSuggestion?.datos) return
+    // `mezclarSugerencia` descarta los nulls y las listas vacias que devuelve el
+    // backend cuando no puede inferir un campo. Un spread plano dejaba
+    // `principal.eori` en null (input controlado sin value, imposible escribir)
+    // y borraba las partidas de mercancia ya escritas a mano.
+    setFormData(prev => mezclarSugerencia(prev, aiSuggestion.datos))
+    setAiSuggestion(null)
   }
 
   const handleSubmit = async (e) => {
@@ -1371,23 +1387,48 @@ function TransitCreateForm({ onClose, onCreated }) {
               </button>
             </div>
 
-            {aiSuggestion.summary && (
-              <p className="text-sm text-gray-600 mb-3">{aiSuggestion.summary}</p>
+            {aiSuggestion.confianza !== null && (
+              <p className="text-sm text-gray-600 mb-3">
+                Confianza: {aiSuggestion.confianza}%
+                {aiSuggestion.confianza < 40 && (
+                  <span className="text-yellow-700"> — revise todos los campos antes de presentar</span>
+                )}
+              </p>
             )}
 
-            {aiSuggestion.suggestions && aiSuggestion.suggestions.length > 0 && (
-              <ul className="text-sm text-gray-600 mb-3 space-y-1">
-                {aiSuggestion.suggestions.map((s, i) => (
-                  <li key={i}>• {s}</li>
-                ))}
-              </ul>
+            {aiSuggestion.completados.length > 0 && (
+              <div className="mb-3">
+                <p className="text-xs font-medium text-gray-700 mb-1">
+                  {aiSuggestion.completados.length === 1
+                    ? '1 campo completado:'
+                    : `${aiSuggestion.completados.length} campos completados:`}
+                </p>
+                <p className="text-xs text-gray-600">{aiSuggestion.completados.join(', ')}</p>
+              </div>
             )}
 
-            {aiSuggestion.warnings && aiSuggestion.warnings.length > 0 && (
+            {/* Lo mas importante del panel: los campos que la IA rellena sin poder
+                verificarlos. Antes no se pintaban y se aplicaban a ciegas. */}
+            {aiSuggestion.porConfirmar.length > 0 && (
+              <div className="bg-orange-50 rounded p-2 mb-3">
+                <p className="text-xs font-medium text-orange-800 mb-1">Requieren confirmacion:</p>
+                <ul className="text-xs text-orange-700 space-y-1">
+                  {aiSuggestion.porConfirmar.map((c, i) => (
+                    <li key={i}>
+                      <span className="font-medium">{c.campo}</span>
+                      {c.valor !== null && c.valor !== '' && <span> = {String(c.valor)}</span>}
+                      {c.motivo && <span className="block text-orange-600">{c.motivo}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {aiSuggestion.avisos.length > 0 && (
               <div className="bg-yellow-50 rounded p-2 mb-3">
                 <p className="text-xs font-medium text-yellow-800 mb-1">Advertencias:</p>
                 <ul className="text-xs text-yellow-700 space-y-0.5">
-                  {aiSuggestion.warnings.map((w, i) => (
+                  {aiSuggestion.avisos.map((w, i) => (
                     <li key={i}>• {w}</li>
                   ))}
                 </ul>
@@ -1412,8 +1453,9 @@ function TransitCreateForm({ onClose, onCreated }) {
 
           {/* Expedition Link for AI */}
           <div>
-            <label className="block text-sm font-medium mb-1">ID Expediente (opcional, para autocompletar)</label>
+            <label htmlFor="transit-expedition-id" className="block text-sm font-medium mb-1">ID Expediente (opcional, para autocompletar)</label>
             <input
+              id="transit-expedition-id"
               type="text"
               value={expeditionId}
               onChange={(e) => setExpeditionId(e.target.value)}
@@ -1426,8 +1468,9 @@ function TransitCreateForm({ onClose, onCreated }) {
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Referencia *</label>
+              <label htmlFor="transit-reference" className="block text-sm font-medium mb-1">Referencia *</label>
               <input
+                id="transit-reference"
                 type="text"
                 value={formData.reference}
                 onChange={(e) => setFormData(f => ({ ...f, reference: e.target.value }))}
@@ -1436,8 +1479,9 @@ function TransitCreateForm({ onClose, onCreated }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Tipo de Transito *</label>
+              <label htmlFor="transit-type" className="block text-sm font-medium mb-1">Tipo de Transito *</label>
               <select
+                id="transit-type"
                 value={formData.transitType}
                 onChange={(e) => setFormData(f => ({ ...f, transitType: e.target.value }))}
                 className="w-full border rounded-lg px-3 py-2"
@@ -1455,8 +1499,9 @@ function TransitCreateForm({ onClose, onCreated }) {
             <h3 className="font-medium mb-2">Principal Obligado</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">EORI *</label>
+                <label htmlFor="transit-principal-eori" className="block text-sm text-gray-600 mb-1">EORI *</label>
                 <input
+                  id="transit-principal-eori"
                   type="text"
                   value={formData.principal.eori}
                   onChange={(e) => setFormData(f => ({
@@ -1468,8 +1513,9 @@ function TransitCreateForm({ onClose, onCreated }) {
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Nombre *</label>
+                <label htmlFor="transit-principal-name" className="block text-sm text-gray-600 mb-1">Nombre *</label>
                 <input
+                  id="transit-principal-name"
                   type="text"
                   value={formData.principal.name}
                   onChange={(e) => setFormData(f => ({

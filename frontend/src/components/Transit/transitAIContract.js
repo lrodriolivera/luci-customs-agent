@@ -182,6 +182,59 @@ export function normalizarSugerenciaGarantia(data) {
 }
 
 /**
+ * Autocompletar con IA (POST /api/transit/ai/auto-complete).
+ *
+ * El JSX del formulario leia `summary` y `suggestions`, dos campos que este
+ * endpoint no devuelve: media pantalla del panel quedaba en blanco. Los campos
+ * reales son `fieldsCompleted` (lo que la IA dio por bueno) y
+ * `fieldsRequiringConfirmation` (lo que rellena a ojo y hay que revisar); el
+ * segundo no se pintaba en ningun sitio, asi que "Aplicar Sugerencias" metia
+ * valores sin confirmar en el formulario como si estuvieran verificados.
+ */
+export function normalizarAutocompletado(data) {
+  if (!data) return null
+  const sugeridos = data.suggestedData && typeof data.suggestedData === 'object' ? data.suggestedData : {}
+
+  return {
+    datos: sugeridos,
+    completados: Array.isArray(data.fieldsCompleted) ? data.fieldsCompleted.filter(Boolean) : [],
+    porConfirmar: (Array.isArray(data.fieldsRequiringConfirmation) ? data.fieldsRequiringConfirmation : [])
+      .filter(c => c && typeof c === 'object')
+      .map(c => ({ campo: c.field || '', valor: c.suggestedValue ?? null, motivo: c.reason || '' })),
+    avisos: Array.isArray(data.warnings) ? data.warnings : [],
+    // Este endpoint documenta la confianza en 0-100, no 0-1: aqui no se
+    // reescala (un 1 es un 1%, no un 100%), solo se acota.
+    confianza: typeof data.confidence === 'number' && !Number.isNaN(data.confidence)
+      ? Math.min(100, Math.max(0, Math.round(data.confidence)))
+      : null,
+    modelo: data.model || null
+  }
+}
+
+/**
+ * Aplica la sugerencia sobre los datos del formulario descartando lo que la IA
+ * no pudo inferir.
+ *
+ * `applySuggestion` hacia un spread plano de `suggestedData`, y el backend
+ * devuelve `null` en cada campo que no deduce y `[]` en las listas vacias. Dos
+ * danos: `principal.eori: null` dejaba un input controlado sin `value` (React
+ * avisa y el campo requerido se quedaba en blanco), y `goodsItems: []` borraba
+ * las partidas que el usuario ya habia escrito a mano — sin partidas AEAT
+ * rechaza el IE015 con el patron de <ent:grossMass>.
+ */
+export function mezclarSugerencia(actual, sugerido) {
+  if (!sugerido || typeof sugerido !== 'object' || Array.isArray(sugerido)) return actual
+  const base = actual && typeof actual === 'object' && !Array.isArray(actual) ? actual : {}
+
+  return Object.entries(sugerido).reduce((acc, [clave, valor]) => {
+    if (valor === null || valor === undefined || valor === '') return acc
+    if (Array.isArray(valor)) return valor.length ? { ...acc, [clave]: valor } : acc
+    if (typeof valor === 'object') return { ...acc, [clave]: mezclarSugerencia(acc[clave], valor) }
+    return { ...acc, [clave]: valor }
+  }, { ...base })
+}
+
+/**
  * Analisis Completo: `summary` es un objeto, no un texto, y los proximos pasos
  * se llaman `nextSteps` (con `priority` numerico 1..n, no 'high'/'low').
  */
