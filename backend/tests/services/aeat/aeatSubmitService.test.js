@@ -280,6 +280,28 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
       const r = await submitService.queryStatus('MRN');
       expect(r.error).toBe('punteroSolo');
     });
+
+    // Rechazo real de PRE (CC316A, 8/Ago/2026) al presentar una ENS con la aduana
+    // de entrada ES001101: OriAttValER14 solo trae el VALOR infractor ('ES001101'),
+    // el campo esta en ErrPoiER12. Devolver solo el valor deja al usuario un
+    // mensaje de error que es literalmente 'ES001101', sin decir que esta mal.
+    test('un rechazo CC316A indica el campo (ErrPoiER12), no solo el valor', async () => {
+      conRespuesta('<ie:CC316A><MesTypMES20>CC316A</MesTypMES20><FUNERRER1>'
+        + '<ErrTypER11>37</ErrTypER11><ErrPoiER12>FEM.RefNumCUSOFFFENT731</ErrPoiER12>'
+        + '<OriAttValER14>ES001101</OriAttValER14></FUNERRER1></ie:CC316A>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.success).toBe(false);
+      expect(r.error).toContain('FEM.RefNumCUSOFFFENT731');
+      expect(r.error).toContain('ES001101');
+    });
+
+    test('varios FUNERRER1 se listan con su campo y su valor', async () => {
+      conRespuesta('<r><MesTypMES20>CC316A</MesTypMES20>'
+        + '<FUNERRER1><ErrPoiER12>campo.uno</ErrPoiER12><OriAttValER14>V1</OriAttValER14></FUNERRER1>'
+        + '<FUNERRER1><ErrPoiER12>campo.dos</ErrPoiER12><OriAttValER14>V2</OriAttValER14></FUNERRER1></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.error).toBe('campo.uno: V1 | campo.dos: V2');
+    });
   });
 
   describe('errores funcionales AES/NCTS (errorDescription)', () => {

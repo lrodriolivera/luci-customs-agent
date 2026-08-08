@@ -60,11 +60,28 @@ function _parseAEATResponse(responseData) {
   const circuito = (body.match(/<Circuito>([^<]+)</) || body.match(/<circuito>([^<]+)</) || [])[1];
   const estado = (body.match(/<EstadoDespacho>([^<]+)</) || [])[1];
   const xmlError = (body.match(/<errorText>([^<]+)</) || [])[1];
-  // ENS legacy: extraer TODOS los errores FUNERRER1
+  // ENS legacy: extraer TODOS los errores FUNERRER1. Se parsea bloque a bloque
+  // porque cada uno describe UN error con campos complementarios: ErrPoiER12 es el
+  // campo infractor y OriAttValER14 el valor rechazado. Un CC316A real solo trae el
+  // valor ('ES001101'), y devolverlo suelto deja un mensaje que no dice que esta mal.
+  const ensBlocks = [...body.matchAll(/<FUNERRER1>([\s\S]*?)<\/FUNERRER1>/g)].map(m => m[1]);
+  const _campo = (b) => (b.match(/<ErrPoiER12>([^<]+)</) || [])[1];
+  const _valor = (b) => (b.match(/<OriAttValER14>([^<]+)</) || [])[1];
+  const _razon = (b) => (b.match(/<ErrReaER13>([^<]+)</) || [])[1];
+  const _describeError = (bloque) => {
+    const partes = [_campo(bloque), _valor(bloque) || _razon(bloque)].filter(Boolean);
+    return partes.length > 1 ? partes.join(': ') : partes[0];
+  };
+  const ensDetallados = ensBlocks.map(_describeError).filter(Boolean);
+  // Fallback para respuestas sin envoltorio FUNERRER1 (algunos mocks y variantes).
   const ensErrors = [...body.matchAll(/<OriAttValER14>([^<]+)</g)].map(m => m[1]);
   const ensReasons = [...body.matchAll(/<ErrReaER13>([^<]+)</g)].map(m => m[1]);
   const ensPointers = [...body.matchAll(/<ErrPoiER12>([^<]+)</g)].map(m => m[1]);
-  const ensError = ensErrors.length > 0 ? ensErrors.join(' | ') : (ensPointers.length > 0 ? ensPointers.map((p, i) => p + (ensReasons[i] ? ':' + ensReasons[i] : '')).join(' | ') : null);
+  const ensError = ensDetallados.length > 0
+    ? ensDetallados.join(' | ')
+    : (ensErrors.length > 0
+      ? ensErrors.join(' | ')
+      : (ensPointers.length > 0 ? ensPointers.map((p, i) => p + (ensReasons[i] ? ':' + ensReasons[i] : '')).join(' | ') : null));
   // AES/NCTS: extraer errorDescription
   const funcErrors = [...body.matchAll(/<errorDescription>([^<]+)</g)].map(m => m[1]);
   const funcError = funcErrors.length > 0 ? funcErrors.join(' | ') : null;
