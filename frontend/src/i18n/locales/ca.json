@@ -1007,7 +1007,9 @@
     "arrivalNotifiedOk": "Arribada notificada",
     "arrivalError": "Error en notificar l'arribada",
     "xmlError": "Error en baixar el XML",
-    "ics2Required": "Aquest mode s'ha de declarar mitjançant ICS2 (no pel canal AEAT actual)"
+    "ics2Required": "Aquest mode s'ha de declarar mitjançant ICS2 (no pel canal AEAT actual)",
+    "commodityCodeRequired": "Codi de mercaderia (TARIC/HS) obligatori",
+    "commodityCodeFormat": "El codi de mercaderia ha de tenir entre 6 i 10 dígits"
   },
   "h7": {
     "title": "Declaracions H7",

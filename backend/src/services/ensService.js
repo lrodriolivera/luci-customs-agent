@@ -115,12 +115,14 @@ class ENSService {
         const rnd = Math.random().toString(36).substring(2, 8).toUpperCase();
         data.lrn = `LUCI${ts}${rnd}`;
       }
-      // Completar goods: sequenceNumber y commodityCode
+      // Completar goods: sequenceNumber y commodityCode desde taricCode. NO se rellena
+      // con un codigo inventado: AEAT rechaza la ENS completa con CC316A ("Combined
+      // Nomenclature is not valid"), asi que un relleno solo esconde el dato que falta
+      // hasta el momento de presentar. Sin codigo, el required del modelo la rechaza.
       if (data.goods && data.goods.length > 0) {
         data.goods.forEach((g, i) => {
           if (!g.sequenceNumber) g.sequenceNumber = i + 1;
           if (!g.commodityCode && g.taricCode) g.commodityCode = g.taricCode;
-          if (!g.commodityCode) g.commodityCode = '000000';
         });
       }
 
@@ -225,19 +227,35 @@ class ENSService {
       });
     }
 
-    // Verificar mercancias sensibles
+    // Verificar mercancias sensibles y exigir codigo de mercancia real. AEAT rechaza
+    // la ENS entera con CC316A ("Combined Nomenclature is not valid") si el codigo es
+    // inventado, asi que se pide aqui en vez de rellenarlo: el required del modelo
+    // lanzaria una ValidationError de Mongoose en lugar de un error estructurado.
     const goods = data.goods || [];
-    for (const item of goods) {
-      if (item.commodityCode) {
-        const hsPrefix = item.commodityCode.substring(0, 4);
+    goods.forEach((item, i) => {
+      const codigo = item.commodityCode || item.taricCode;
+      if (!codigo) {
+        errors.push({
+          field: `goods.${i}.commodityCode`,
+          code: 'ENS_COMMODITY_CODE_REQUIRED',
+          message: 'Codigo de mercancia (TARIC/HS) es obligatorio'
+        });
+      } else if (!/^\d{6,10}$/.test(codigo)) {
+        errors.push({
+          field: `goods.${i}.commodityCode`,
+          code: 'ENS_COMMODITY_CODE_INVALID',
+          message: `Codigo de mercancia invalido (${codigo}): debe tener entre 6 y 10 digitos`
+        });
+      } else {
+        const hsPrefix = codigo.substring(0, 4);
         if (ENS_CONFIG.sensitiveGoods[hsPrefix]) {
           suggestions.push({
             field: 'goods.commodityCode',
-            message: `Codigo ${item.commodityCode}: ${ENS_CONFIG.sensitiveGoods[hsPrefix]}`
+            message: `Codigo ${codigo}: ${ENS_CONFIG.sensitiveGoods[hsPrefix]}`
           });
         }
       }
-    }
+    });
 
     return {
       valid: errors.length === 0,

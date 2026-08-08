@@ -219,7 +219,7 @@ describe('createDeclaration', () => {
     // identification se autocompleta desde carrier.vehicleId (rama del servicio);
     // sin el, validateForSubmission exigiria transportMeans.identification.
     data.carrier.vehicleId = 'IMO9999999';
-    delete data.goods[0].commodityCode; // se completa desde taricCode/000000
+    delete data.goods[0].commodityCode; // se completa desde taricCode
     data.goods[0].taricCode = '850760';
 
     const r = await ens.createDeclaration(data, userId);
@@ -233,6 +233,23 @@ describe('createDeclaration', () => {
     expect(r.data.reference).toMatch(/^ENS-\d{4}-\d{6}$/);          // hook pre-save
     // realmente guardada
     expect(await ENSDeclaration.countDocuments()).toBe(1);
+  });
+
+  // AEAT rechaza siempre un codigo de mercancia relleno ('000000'): en PRE devolvio
+  // CC316A "GDS(1).COM.ComNomCMD1: Combined Nomenclature is not valid(000000)". Un
+  // relleno inventado convierte una ENS en irrechazablemente invalida sin avisar al
+  // usuario, ademas de incumplir la regla de no usar codigos TARIC ficticios: mejor
+  // rechazar en el alta y decir que falta el codigo.
+  test('rechaza la ENS cuando la mercancia no trae codigo, en vez de rellenar 000000', async () => {
+    const data = datosENSValidos();
+    delete data.goods[0].commodityCode;
+    delete data.goods[0].taricCode;
+
+    const r = await ens.createDeclaration(data, userId);
+
+    expect(r.success).toBe(false);
+    expect(JSON.stringify(r.errors)).toMatch(/commodityCode/);
+    expect(await ENSDeclaration.countDocuments()).toBe(0);
   });
 
   test('datos que no pasan preValidate -> success:false con errores, sin guardar', async () => {

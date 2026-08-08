@@ -37,11 +37,19 @@ const CSV_TEMPLATE_COLUMNS = [
   'grossMass',
   'numberOfPackages',
   'goodsDescription',
+  'commodityCode',
   'consignorEORI',
   'consignorName',
   'consigneeEORI',
   'consigneeName'
 ]
+
+/** Fecha de ejemplo para la plantilla: 30 días por delante, en formato ISO corto. */
+const ejemploFechaLlegada = () => {
+  const d = new Date()
+  d.setDate(d.getDate() + 30)
+  return d.toISOString().substring(0, 10)
+}
 
 // Estados que el backend considera exito al procesar un lote.
 const BATCH_OK = ['created', 'submitted', 'accepted']
@@ -167,12 +175,13 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
         name: row.consigneeName || ''
       },
       // El envío a AEAT exige al menos una partida de mercancía (ENS_GOODS_REQUIRED)
-      // y el modelo exige commodityCode. Se genera desde el CSV; commodityCode admite
-      // columna opcional (por defecto '00000000' cuando no se conoce en la sumaria ENS).
+      // y el modelo exige commodityCode. NO se rellena con un valor inventado: AEAT
+      // rechaza cualquier código ficticio con CC316A ("Combined Nomenclature is not
+      // valid"), así que la fila sin código se marca como error en la validación.
       goods: row.goodsDescription || row.grossMass
         ? [{
             sequenceNumber: 1,
-            commodityCode: row.commodityCode || '00000000',
+            commodityCode: row.commodityCode || '',
             description: row.goodsDescription || 'Mercancia general',
             grossMass: parseFloat(row.grossMass) || 0,
             numberOfPackages: parseInt(row.numberOfPackages) || 0
@@ -216,6 +225,15 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
 
       if (!dec.consignment.grossMass || dec.consignment.grossMass <= 0) {
         errors.push(t('ens.grossWeightPositive'))
+      }
+
+      // Sin código de mercancía real AEAT rechaza la ENS entera: es un error de la
+      // fila, no algo que se pueda suplir con un relleno.
+      const codigo = dec.goods?.[0]?.commodityCode
+      if (dec.goods?.length && !codigo) {
+        errors.push(t('ens.commodityCodeRequired', 'Código de mercancía (TARIC/HS) obligatorio'))
+      } else if (codigo && !/^\d{6,10}$/.test(codigo)) {
+        errors.push(t('ens.commodityCodeFormat', 'El código de mercancía debe tener entre 6 y 10 dígitos'))
       }
 
       // Container validation if present
@@ -292,7 +310,10 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
   const handleDownloadTemplate = () => {
     const csvContent = [
       CSV_TEMPLATE_COLUMNS.join(';'),
-      'ROAD;ES001101;2025-01-25;08:00;ESA12345678;Transportes Demo SL;1234ABC;ES;BLEXAMPLE001;MSKU1234567;SEAL001;15000;100;Mercancias varias;ESB87654321;Exportador Demo;ESC11111111;Importador Demo'
+      // Fecha de ejemplo SIEMPRE futura: validateForSubmission rechaza una llegada
+      // pasada (ENS_ARRIVAL_DATE_PAST), y una plantilla con fecha fija caduca.
+      // El código de mercancía es real (73181500, tornillos de hierro o acero).
+      `ROAD;ES001101;${ejemploFechaLlegada()};08:00;ESA12345678;Transportes Demo SL;1234ABC;ES;BLEXAMPLE001;MSKU1234567;SEAL001;15000;100;Mercancias varias;73181500;ESB87654321;Exportador Demo;ESC11111111;Importador Demo`
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })

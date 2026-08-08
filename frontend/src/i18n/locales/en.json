@@ -1007,7 +1007,9 @@
     "arrivalNotifiedOk": "Arrival notified",
     "arrivalError": "Error notifying arrival",
     "xmlError": "Error downloading the XML",
-    "ics2Required": "This mode must be declared via ICS2 (not the current AEAT channel)"
+    "ics2Required": "This mode must be declared via ICS2 (not the current AEAT channel)",
+    "commodityCodeRequired": "Commodity code (TARIC/HS) is required",
+    "commodityCodeFormat": "The commodity code must have between 6 and 10 digits"
   },
   "h7": {
     "title": "H7 Declarations",

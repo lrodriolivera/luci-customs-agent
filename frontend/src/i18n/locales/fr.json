@@ -1007,7 +1007,9 @@
     "arrivalNotifiedOk": "Arrivée notifiée",
     "arrivalError": "Erreur lors de la notification de l'arrivée",
     "xmlError": "Erreur lors du téléchargement du XML",
-    "ics2Required": "Ce mode doit être déclaré via ICS2 (pas par le canal AEAT actuel)"
+    "ics2Required": "Ce mode doit être déclaré via ICS2 (pas par le canal AEAT actuel)",
+    "commodityCodeRequired": "Code marchandise (TARIC/HS) obligatoire",
+    "commodityCodeFormat": "Le code marchandise doit comporter entre 6 et 10 chiffres"
   },
   "h7": {
     "title": "Declarations H7",
