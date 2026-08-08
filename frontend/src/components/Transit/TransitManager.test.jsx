@@ -27,6 +27,7 @@ vi.mock('../../services/api', () => ({
     startTransit: vi.fn(),
     notifyArrival: vi.fn(),
     notifyUnloading: vi.fn(),
+    recordControl: vi.fn(),
     releaseGoods: vi.fn(),
     complete: vi.fn(),
     aiAutoComplete: vi.fn(),
@@ -2513,5 +2514,132 @@ describe('<TransitManager /> precintos rotos antes de notificar la descarga', ()
     await conPrecintos('in_transit', [{ number: 'ES99887', intactOnArrival: false }])
     await waitFor(() => expect(screen.getByText('Notificar Llegada')).toBeInTheDocument())
     expect(screen.queryByText(/CC044/)).not.toBeInTheDocument()
+  })
+})
+
+describe('<TransitManager /> registrar resultado de control (IE143)', () => {
+  // `POST /:id/control` y `transitAPI.recordControl` existian sin ningun punto
+  // de llamada en la UI. Y es el UNICO sitio del codigo que asigna
+  // `transport.seals[].intactOnArrival`: sin este formulario, el campo del que
+  // depende la conformidad de precintos del CC044 no se podia rellenar nunca.
+  beforeEach(() => {
+    vi.clearAllMocks()
+    transitAPI.getStats.mockResolvedValue({ data: { success: true, data: {} } })
+    transitAPI.getOverdue.mockResolvedValue({ data: { success: true, data: [] } })
+    transitAPI.recordControl.mockResolvedValue({ data: { success: true, data: {} } })
+  })
+
+  const abrirFicha = async (status, seals = [{ number: 'ES99887', sealType: 'customs' }]) => {
+    transitAPI.list.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          transits: [{
+            _id: 'tc1', mrn: 'MRNCTRL', lrn: 'LRNCTRL', status, transitType: 'T1',
+            principal: {}, departureOffice: { code: 'ES002801' },
+            destinationOffice: { code: 'ES002901' },
+            transport: { seals, sealCount: seals.length }, totals: {}, dates: {}, deadlines: {}
+          }],
+          pagination: { total: 1, page: 1, limit: 20, pages: 1 }
+        }
+      }
+    })
+    render(
+      <MemoryRouter>
+        <TransitManager />
+      </MemoryRouter>
+    )
+    await waitFor(() => expect(screen.getByText('MRNCTRL')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('MRNCTRL'))
+  }
+
+  const abrirFormulario = async (status = 'arrived', seals) => {
+    await abrirFicha(status, seals)
+    fireEvent.click(await screen.findByText('Registrar Control'))
+    // Por el label del select, no por el texto: "Resultado del control" sale
+    // tambien en el titulo del modal y `getByText` seria ambiguo.
+    await waitFor(() => expect(screen.getByLabelText(/Resultado del control/i)).toBeInTheDocument())
+  }
+
+  test('el boton aparece en `arrived`, que es el estado que el backend exige', async () => {
+    await abrirFicha('arrived')
+    expect(await screen.findByText('Registrar Control')).toBeInTheDocument()
+  })
+
+  test('no aparece en otros estados: el backend exige `arrived`', async () => {
+    // Pintar el boton en `in_transit` seria ofrecer una accion que solo puede
+    // devolver "Transito debe haber llegado para registrar control".
+    await abrirFicha('in_transit')
+    await waitFor(() => expect(screen.getByText('Notificar Llegada')).toBeInTheDocument())
+    expect(screen.queryByText('Registrar Control')).not.toBeInTheDocument()
+  })
+
+  test('el formulario dice la consecuencia del resultado elegido, no solo su nombre', async () => {
+    await abrirFormulario()
+    fireEvent.change(screen.getByLabelText(/Resultado del control/i), { target: { value: 'A4' } })
+    expect(await screen.findByText(/no se entrega la mercancia/i)).toBeInTheDocument()
+  })
+
+  test('permite marcar cada precinto como intacto o roto', async () => {
+    await abrirFormulario('arrived', [{ number: 'ES99887' }, { number: 'ES99888' }])
+    expect(screen.getByLabelText(/ES99887/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/ES99888/)).toBeInTheDocument()
+  })
+
+  test('avisa de que un A1 con un precinto roto se contradice', async () => {
+    await abrirFormulario()
+    fireEvent.change(screen.getByLabelText(/ES99887/), { target: { value: 'roto' } })
+    fireEvent.change(screen.getByLabelText(/Resultado del control/i), { target: { value: 'A1' } })
+    const aviso = await screen.findByText(/Revise la calificacion/i)
+    expect(aviso.textContent).toMatch(/ES99887/)
+  })
+
+  test('el aviso no bloquea: quien califica el control es el actuario', async () => {
+    await abrirFormulario()
+    fireEvent.change(screen.getByLabelText(/ES99887/), { target: { value: 'roto' } })
+    fireEvent.change(screen.getByLabelText(/Resultado del control/i), { target: { value: 'A1' } })
+    await screen.findByText(/Revise la calificacion/i)
+    expect(screen.getByRole('button', { name: /Registrar Resultado/i })).not.toBeDisabled()
+  })
+
+  test('envia el estado del precinto, que es el dato que nadie podia rellenar', async () => {
+    await abrirFormulario()
+    fireEvent.change(screen.getByLabelText(/ES99887/), { target: { value: 'roto' } })
+    fireEvent.change(screen.getByLabelText(/Resultado del control/i), { target: { value: 'A3' } })
+    fireEvent.change(screen.getByLabelText(/Actuario/i), { target: { value: 'Actuario 12' } })
+    fireEvent.click(screen.getByRole('button', { name: /Registrar Resultado/i }))
+
+    await waitFor(() => expect(transitAPI.recordControl).toHaveBeenCalled())
+    const [id, payload] = transitAPI.recordControl.mock.calls[0]
+    expect(id).toBe('tc1')
+    expect(payload.type).toBe('A3')
+    expect(payload.officer).toBe('Actuario 12')
+    expect(payload.seals).toEqual([{ number: 'ES99887', intact: false }])
+  })
+
+  test('un precinto que no se toca no se manda: no se afirma que este intacto', async () => {
+    await abrirFormulario()
+    fireEvent.change(screen.getByLabelText(/Resultado del control/i), { target: { value: 'A1' } })
+    fireEvent.click(screen.getByRole('button', { name: /Registrar Resultado/i }))
+
+    await waitFor(() => expect(transitAPI.recordControl).toHaveBeenCalled())
+    expect(transitAPI.recordControl.mock.calls[0][1].seals).toBeUndefined()
+  })
+
+  test('sin resultado elegido no se envia nada', async () => {
+    await abrirFormulario()
+    fireEvent.click(screen.getByRole('button', { name: /Registrar Resultado/i }))
+    await waitFor(() => expect(screen.getByText(/Elija el resultado/i)).toBeInTheDocument())
+    expect(transitAPI.recordControl).not.toHaveBeenCalled()
+  })
+
+  test('un error del backend se muestra, no se traga', async () => {
+    transitAPI.recordControl.mockRejectedValue({
+      response: { data: { error: 'Transito debe haber llegado para registrar control' } }
+    })
+    await abrirFormulario()
+    fireEvent.change(screen.getByLabelText(/Resultado del control/i), { target: { value: 'A1' } })
+    fireEvent.click(screen.getByRole('button', { name: /Registrar Resultado/i }))
+    expect(await screen.findByText(/debe haber llegado/i)).toBeInTheDocument()
   })
 })

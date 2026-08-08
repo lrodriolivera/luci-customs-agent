@@ -35,6 +35,12 @@ import {
 import { normalizarMensajes } from './transitMessages'
 import { destinoFueraDeEspana, avisoDestinoExtranjero } from './transitDestino'
 import { avisoPrecintosRotos } from './transitPrecintos'
+import {
+  TIPOS_CONTROL,
+  tipoControl,
+  avisoResultadoIncoherente,
+  construirPayloadControl
+} from './transitControl'
 
 const TRANSIT_TYPES = {
   T1: { label: 'T1 - No Union', color: 'blue', description: 'Mercancias no comunitarias' },
@@ -810,6 +816,10 @@ export default function TransitManager() {
   const [expandedId, setExpandedId] = useState(null)
   const [actionLoading, setActionLoading] = useState(null)
   const [showAIPanel, setShowAIPanel] = useState(null) // transit object or null
+  // Formulario de resultado de control (IE143). Es un formulario y no un boton
+  // directo porque el resultado exige elegir una calificacion aduanera y anotar
+  // el estado de cada precinto: no hay valor por defecto honesto.
+  const [showControlForm, setShowControlForm] = useState(null) // transit object or null
 
   useEffect(() => {
     loadData()
@@ -931,6 +941,10 @@ export default function TransitManager() {
         if (!destinoExtranjero) {
           actions.push({ key: 'unloading', label: 'Notificar Descarga', color: 'amber' })
         }
+        // `recordControlResult` exige exactamente `arrived`, y es el unico punto
+        // del codigo que anota si los precintos llegaron intactos. Abre un
+        // formulario (`form: true`) porque no hay resultado por defecto honesto.
+        actions.push({ key: 'control', label: 'Registrar Control', color: 'purple', form: true })
         actions.push({ key: 'release-goods', label: 'Liberar Mercancias', color: 'lime' })
         break
       case 'unloaded':
@@ -1232,7 +1246,11 @@ export default function TransitManager() {
                                 key={action.key}
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handleAction(transit._id, action.key)
+                                  // Las acciones con `form` no se ejecutan al
+                                  // pulsar: abren el formulario que recoge los
+                                  // datos que el mensaje necesita.
+                                  if (action.form) setShowControlForm(transit)
+                                  else handleAction(transit._id, action.key)
                                 }}
                                 disabled={actionLoading === `${transit._id}-${action.key}`}
                                 className={`px-3 py-1.5 text-sm rounded-lg bg-${action.color}-100 text-${action.color}-800 hover:bg-${action.color}-200 disabled:opacity-50`}
@@ -1361,6 +1379,201 @@ export default function TransitManager() {
           onApplySuggestion={loadData}
         />
       )}
+
+      {/* Resultado de control (IE143) */}
+      {showControlForm && (
+        <TransitControlForm
+          transit={showControlForm}
+          onClose={() => setShowControlForm(null)}
+          onRecorded={() => {
+            setShowControlForm(null)
+            loadData()
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+// ==================== Resultado de control en destino (IE143) ====================
+/**
+ * `POST /api/transit/:id/control` no tenia ningun punto de llamada en la UI, y
+ * es el UNICO sitio del codigo que asigna `transport.seals[].intactOnArrival`:
+ * sin este formulario, el estado de los precintos que la ficha pinta como
+ * "ROTO"/"Intacto" —y del que depende la conformidad que el CC044 declara a la
+ * aduana— no se podia registrar nunca.
+ */
+function TransitControlForm({ transit, onClose, onRecorded }) {
+  const precintos = transit.transport?.seals || []
+  const [tipo, setTipo] = useState('')
+  const [actuario, setActuario] = useState('')
+  const [observaciones, setObservaciones] = useState('')
+  // Clave: `number` -> 'intacto' | 'roto' | '' (sin comprobar). Se arranca en
+  // blanco a proposito: un valor por defecto seria afirmar el estado de un
+  // precinto que nadie ha mirado.
+  const [estadoPrecintos, setEstadoPrecintos] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const sealsFormulario = precintos.map((s) => {
+    const marcado = estadoPrecintos[s.number]
+    return {
+      number: s.number,
+      intact: marcado === 'intacto' ? true : marcado === 'roto' ? false : undefined
+    }
+  })
+
+  const aviso = avisoResultadoIncoherente(tipo, sealsFormulario)
+  const elegido = tipoControl(tipo)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!tipo) {
+      setError('Elija el resultado del control antes de registrarlo.')
+      return
+    }
+    try {
+      setLoading(true)
+      setError(null)
+      const payload = construirPayloadControl({
+        type: tipo,
+        officer: actuario,
+        observations: observaciones,
+        seals: sealsFormulario
+      })
+      const res = await transitAPI.recordControl(transit._id, payload)
+      if (res.data.success) onRecorded()
+    } catch (err) {
+      setError(err.response?.data?.error || 'Error registrando el resultado del control')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <ShieldCheckIcon className="w-5 h-5 text-purple-600" />
+            Resultado del control en destino
+          </h3>
+          <button type="button" onClick={onClose} aria-label="Cerrar">
+            <XMarkIcon className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+          <p className="text-sm text-gray-500">
+            Transito {transit.mrn || transit.lrn}. El resultado se anota en el expediente
+            como IE143 y determina si la mercancia puede entregarse.
+          </p>
+
+          <div>
+            <label htmlFor="control-type" className="block text-sm font-medium mb-1">
+              Resultado del control *
+            </label>
+            <select
+              id="control-type"
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg"
+            >
+              <option value="">Seleccione el resultado...</option>
+              {TIPOS_CONTROL.map((t) => (
+                <option key={t.codigo} value={t.codigo}>{t.codigo} - {t.etiqueta}</option>
+              ))}
+            </select>
+            {/* La consecuencia se dice antes de registrar: el operador elige una
+                calificacion con efecto aduanero, no una etiqueta. */}
+            {elegido && (
+              <p className="mt-1 text-sm text-gray-600">{elegido.consecuencia}</p>
+            )}
+          </div>
+
+          {precintos.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Estado de los precintos a la llegada</h4>
+              <p className="text-xs text-gray-500">
+                Un precinto que se deja sin comprobar no se envia: no se afirma que llegase intacto.
+              </p>
+              {precintos.map((s, i) => (
+                <div key={s.number || i} className="flex items-center gap-2">
+                  <label htmlFor={`seal-${i}`} className="text-sm font-mono flex-1">
+                    {s.number || '(sin numero)'}
+                  </label>
+                  <select
+                    id={`seal-${i}`}
+                    value={estadoPrecintos[s.number] || ''}
+                    onChange={(e) => setEstadoPrecintos((p) => ({ ...p, [s.number]: e.target.value }))}
+                    className="px-2 py-1 border rounded text-sm"
+                  >
+                    <option value="">Sin comprobar</option>
+                    <option value="intacto">Intacto</option>
+                    <option value="roto">Roto o manipulado</option>
+                  </select>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No bloquea el envio: quien califica el control es el actuario, y
+              puede haber motivo (precinto sustituido con acta). Lo que no puede
+              es enviarse la contradiccion sin haberla visto. */}
+          {aviso && (
+            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800">{aviso}</p>
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="control-officer" className="block text-sm font-medium mb-1">
+              Actuario
+            </label>
+            <input
+              id="control-officer"
+              type="text"
+              value={actuario}
+              onChange={(e) => setActuario(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg"
+              placeholder="Nombre o codigo del funcionario"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="control-observations" className="block text-sm font-medium mb-1">
+              Observaciones
+            </label>
+            <textarea
+              id="control-observations"
+              value={observaciones}
+              onChange={(e) => setObservaciones(e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 border rounded-lg"
+            />
+          </div>
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
+              {error}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2 border-t">
+            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+            >
+              {loading ? 'Registrando...' : 'Registrar Resultado'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

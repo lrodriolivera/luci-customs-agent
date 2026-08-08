@@ -8,6 +8,27 @@
 
 const mongoose = require('mongoose');
 
+/**
+ * Discrepancia detectada en el control de destino.
+ *
+ * Va en un esquema aparte con `typeKey` cambiado porque el campo se llama
+ * `type` ("shortage", "excess", "taric"...) y `type` es la clave reservada con
+ * la que Mongoose declara el tipo de un path. Escrito en linea,
+ * `discrepancies: [{itemNumber: Number, type: String, ...}]` se interpretaba
+ * como "array de String con opciones", no como subdocumento: guardar una
+ * discrepancia fallaba con `Cast to [string] failed` y, como
+ * `recordControlResult` guarda el resultado completo de una sola vez, se perdia
+ * el control entero. `typeKey` le dice a Mongoose que aqui `type` es un campo
+ * normal.
+ */
+const discrepanciaControlSchema = new mongoose.Schema({
+  itemNumber: Number,
+  type: String,  // shortage, excess, description, taric
+  declared: String,
+  found: String,
+  action: String
+}, { _id: false, typeKey: '$type' });
+
 const transitSchema = new mongoose.Schema({
   // Multi-tenancy
   tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },
@@ -256,13 +277,7 @@ const transitSchema = new mongoose.Schema({
     date: Date,
     officer: String,
     observations: String,
-    discrepancies: [{
-      itemNumber: Number,
-      type: String,  // shortage, excess, description, taric
-      declared: String,
-      found: String,
-      action: String
-    }]
+    discrepancies: [discrepanciaControlSchema]
   },
 
   // Procedimiento de busqueda (enquiry)

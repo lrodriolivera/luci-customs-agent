@@ -9,6 +9,22 @@ const AddressSchema = new mongoose.Schema({
   country: { type: String, default: 'ES' }
 }, { _id: false });
 
+/**
+ * Contenedor de la expedicion.
+ *
+ * En esquema aparte con `typeKey` cambiado porque el campo se llama `type`
+ * (20GP, 40GP, 40HC...) y `type` es la clave reservada con la que Mongoose
+ * declara el tipo de un path. Declarado en linea, Mongoose leia el elemento como
+ * `String` y guardar un contenedor fallaba con `Cast to [string] failed`: el
+ * tipo de contenedor viaja en el ENS y en el DUA, asi que no es un adorno.
+ */
+const ContenedorSchema = new mongoose.Schema({
+  number: String,
+  type: String, // 20GP, 40GP, 40HC, etc.
+  sealNumber: String,
+  grossWeight: Number
+}, { _id: false, typeKey: '$type' });
+
 const ContactSchema = new mongoose.Schema({
   name: String,
   email: String,
@@ -361,12 +377,7 @@ const ExpeditionSchema = new mongoose.Schema({
     entryCustomsOffice: String,
     loadingPlace: String,
     unloadingPlace: String,
-    containers: [{
-      number: String,
-      type: String, // 20GP, 40GP, 40HC, etc.
-      sealNumber: String,
-      grossWeight: Number
-    }]
+    containers: [ContenedorSchema]
   },
 
   // Trade terms

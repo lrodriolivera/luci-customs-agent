@@ -1,6 +1,22 @@
 const mongoose = require('mongoose');
 
 /**
+ * Restriccion arancelaria por pais de origen.
+ *
+ * En esquema aparte con `typeKey` cambiado porque el campo se llama `type`
+ * (prohibition, quota, antidumping) y `type` es la clave reservada con la que
+ * Mongoose declara el tipo de un path. Declarado en linea, Mongoose leia el
+ * elemento como `String` y guardar una restriccion fallaba con
+ * `Cast to [string] failed`: de este campo depende avisar de un antidumping,
+ * que es una diferencia de miles de euros en la liquidacion.
+ */
+const RestriccionOrigenSchema = new mongoose.Schema({
+  country: String,
+  type: String, // prohibition, quota, antidumping
+  description: String
+}, { _id: false, typeKey: '$type' });
+
+/**
  * Modelo para almacenar codigos TARIC y sus detalles
  * Se puede poblar desde la API de la Comision Europea o archivos locales
  */
@@ -111,11 +127,7 @@ const TaricCodeSchema = new mongoose.Schema({
   }],
 
   // Restricciones por origen
-  originRestrictions: [{
-    country: String,
-    type: String, // prohibition, quota, antidumping
-    description: String
-  }],
+  originRestrictions: [RestriccionOrigenSchema],
 
   // Preferencias arancelarias disponibles
   preferences: [{

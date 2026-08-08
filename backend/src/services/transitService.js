@@ -91,6 +91,58 @@ function _exigirDestinoEspanol(transit, mensaje) {
   );
 }
 
+/**
+ * Codigos de resultado de control que, por definicion, describen una mercancia
+ * que NO llego conforme: A3 discrepancia menor, A4 discrepancia significativa,
+ * B1 robo, B2 perdida, B3 destruccion. A1 (satisfactorio) y A2 (conforme con
+ * observaciones) si son conformes.
+ */
+const _CODIGOS_CONTROL_NO_CONFORME = {
+  A3: 'el control de destino se califico A3 (discrepancia menor)',
+  A4: 'el control de destino se califico A4 (discrepancia significativa)',
+  B1: 'el control de destino se califico B1 (robo)',
+  B2: 'el control de destino se califico B2 (perdida)',
+  B3: 'el control de destino se califico B3 (destruccion)'
+};
+
+/**
+ * Motivo por el que la mercancia de este transito NO puede declararse conforme
+ * en el CC044, o `null` si nada en el expediente lo contradice.
+ *
+ * El CC044 declara ante la aduana de destino si la mercancia llego conforme, y
+ * de esa conformidad depende que se genere o no una deuda aduanera. Si el
+ * control de destino anoto discrepancias -o se califico A3/A4/B*-, decir en el
+ * mensaje que llego conforme contradice el propio expediente: seria una
+ * declaracion falsa a la aduana firmada por el operador.
+ *
+ * Devuelve texto para que el error diga QUE discrepancia lo impide y no solo
+ * que hay una; el operador tiene que poder decidir si notifica la descarga con
+ * la discrepancia o corrige el control.
+ */
+function _motivoMercanciaNoConforme(transit) {
+  const control = transit?.controlResult;
+  if (!control) return null;
+
+  const cuantas = control.discrepancies?.length || 0;
+  if (cuantas > 0) {
+    const primera = control.discrepancies[0];
+    const detalle = [
+      primera?.type,
+      primera?.itemNumber ? `partida ${primera.itemNumber}` : null,
+      primera?.declared && primera?.found ? `declarado ${primera.declared} / hallado ${primera.found}` : null
+    ].filter(Boolean).join(', ');
+    const resto = cuantas > 1 ? ` (y ${cuantas - 1} mas)` : '';
+    // El codigo del control (A3, A4...) va en el mensaje porque es el dato con
+    // el que la aduana y el operador identifican el control: sin el, el aviso
+    // no se puede casar con el expediente.
+    const codigo = control.type ? ` [control ${control.type}]` : '';
+    return `el control de destino${codigo} anoto ${cuantas} discrepancia(s)`
+      + (detalle ? `: ${detalle}${resto}` : resto);
+  }
+
+  return _CODIGOS_CONTROL_NO_CONFORME[control.type] || null;
+}
+
 const transitService = {
   /**
    * Crear nuevo transito
@@ -525,6 +577,33 @@ const transitService = {
     }
     const sealsOk = revisionPrecintos.valid && data.sealsOk !== false;
 
+    // Lo mismo con la conformidad de la MERCANCIA: `data.goodsConform !== false`
+    // salia `true` con el boton de la UI, que llama sin datos. Si el control de
+    // destino anoto discrepancias o se califico de A3/A4/B*, declararla conforme
+    // contradice el propio expediente — y sobre esa conformidad se decide si hay
+    // deuda aduanera.
+    const motivoNoConforme = _motivoMercanciaNoConforme(transit);
+    if (motivoNoConforme && data.goodsConform === true) {
+      throw new Error(
+        'No se puede declarar en el CC044 que la mercancia llego conforme: '
+        + `${motivoNoConforme}. Notifique la descarga con la discrepancia.`
+      );
+    }
+    const goodsConform = !motivoNoConforme && data.goodsConform !== false;
+
+    // Las discrepancias del control viajan en el CC044 si el llamante no aporta
+    // otras: declarar "no conforme" sin decir en que consiste deja a la aduana
+    // sin lo que necesita para resolver.
+    const discrepancias = data.discrepancies?.length
+      ? data.discrepancies
+      : (transit.controlResult?.discrepancies || []).map((d) => ({
+        itemNumber: d.itemNumber,
+        type: d.type,
+        declared: d.declared,
+        found: d.found,
+        action: d.action
+      }));
+
     const aeatResult = await aeatSubmitService.submitNCTSUnloading({
       mrn: transit.mrn,
       officeOfDestination: transit.destinationOffice?.code || '',
@@ -532,8 +611,8 @@ const transitService = {
       unloadingDate,
       unloadingRemark: data.remark || '',
       sealsOk,
-      goodsConform: data.goodsConform !== false,
-      goodsDiscrepancies: data.discrepancies || []
+      goodsConform,
+      goodsDiscrepancies: discrepancias
     });
 
     if (!aeatResult.success) {
@@ -548,8 +627,8 @@ const transitService = {
         mrn: transit.mrn,
         unloadingDate,
         sealsOk,
-        goodsConform: data.goodsConform !== false,
-        discrepancies: data.discrepancies || []
+        goodsConform,
+        discrepancies: discrepancias
       }
     });
 
