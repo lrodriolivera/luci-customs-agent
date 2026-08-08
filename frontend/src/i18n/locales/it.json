@@ -1009,7 +1009,9 @@
     "xmlError": "Errore nel download del XML",
     "ics2Required": "Questa modalità va dichiarata tramite ICS2 (non dal canale AEAT attuale)",
     "commodityCodeRequired": "Codice merce (TARIC/HS) obbligatorio",
-    "commodityCodeFormat": "Il codice merce deve avere tra 6 e 10 cifre"
+    "commodityCodeFormat": "Il codice merce deve avere tra 6 e 10 cifre",
+    "arrivalFrom": "Arrivo da",
+    "arrivalTo": "Arrivo a"
   },
   "h7": {
     "title": "Dichiarazioni H7",

@@ -237,15 +237,17 @@ describe('ENSDeclarationList', () => {
     })
   })
 
-  it('maneja filtros de fecha (startDate y endDate)', async () => {
+  // Las etiquetas eran 'Desde'/'Hasta' sin decir de que fecha: el rango filtra la
+  // llegada prevista, la unica fecha que muestra la tabla.
+  it('maneja filtros de fecha (startDate y endDate) rotulados como llegada', async () => {
     ensAPI.list.mockResolvedValue(mockListResponse())
     ensAPI.getStats.mockResolvedValue(mockStatsResponse())
 
     render(<ENSDeclarationList />)
 
-    await screen.findByLabelText('common.from')
-    const fromInput = screen.getByLabelText('common.from')
-    const toInput = screen.getByLabelText('common.to')
+    await screen.findByLabelText('ens.arrivalFrom')
+    const fromInput = screen.getByLabelText('ens.arrivalFrom')
+    const toInput = screen.getByLabelText('ens.arrivalTo')
 
     fireEvent.change(fromInput, { target: { value: '2026-01-01' } })
     fireEvent.change(toInput, { target: { value: '2026-12-31' } })

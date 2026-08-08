@@ -154,6 +154,41 @@ describe('list', () => {
     expect(res.body.success).toBe(true);
   });
 
+  // El filtro Desde/Hasta de la UI se lee junto a la unica fecha que muestra la tabla,
+  // "Llegada Prevista", pero filtraba por createdAt: buscar noviembre/2026 descartaba
+  // las llegadas de noviembre y devolvia las creadas hoy. Se filtra por la llegada.
+  test('el rango de fechas filtra por la llegada prevista, no por createdAt', async () => {
+    const enRango = await sembrarENS(operadorUser, {
+      entryOffice: { code: 'ES002801', name: 'Algeciras', expectedArrival: new Date('2026-11-15T10:00:00Z') }
+    });
+    await sembrarENS(operadorUser, {
+      entryOffice: { code: 'ES002801', name: 'Algeciras', expectedArrival: new Date('2026-12-20T10:00:00Z') }
+    });
+
+    const res = mockRes();
+    await ensController.list(mockReq({
+      user: operadorUser,
+      query: { startDate: '2026-11-01', endDate: '2026-11-30' }
+    }), res);
+
+    expect(res.body.data.map(d => d.reference)).toEqual([enRango.reference]);
+  });
+
+  // new Date('2026-11-30') es medianoche: con $lte se perdia todo el dia 30.
+  test('el dia final del rango entra completo', async () => {
+    const ultimoDia = await sembrarENS(operadorUser, {
+      entryOffice: { code: 'ES002801', name: 'Algeciras', expectedArrival: new Date('2026-11-30T23:30:00Z') }
+    });
+
+    const res = mockRes();
+    await ensController.list(mockReq({
+      user: operadorUser,
+      query: { startDate: '2026-11-01', endDate: '2026-11-30' }
+    }), res);
+
+    expect(res.body.data.map(d => d.reference)).toContain(ultimoDia.reference);
+  });
+
   test('error de BD -> 500', async () => {
     const spy = jest.spyOn(ENSDeclaration, 'find').mockImplementation(() => { throw new Error('boom'); });
     const res = mockRes();

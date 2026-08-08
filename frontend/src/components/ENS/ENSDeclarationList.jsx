@@ -354,7 +354,7 @@ const ENSDeclarationList = () => {
               fullWidth
               size="small"
               type="date"
-              label={t('common.from')}
+              label={t('ens.arrivalFrom', 'Llegada desde')}
               value={filters.startDate}
               onChange={(e) => handleFilterChange('startDate', e.target.value)}
               InputLabelProps={{ shrink: true }}
@@ -365,7 +365,7 @@ const ENSDeclarationList = () => {
               fullWidth
               size="small"
               type="date"
-              label={t('common.to')}
+              label={t('ens.arrivalTo', 'Llegada hasta')}
               value={filters.endDate}
               onChange={(e) => handleFilterChange('endDate', e.target.value)}
               InputLabelProps={{ shrink: true }}

@@ -34,10 +34,18 @@ exports.list = async (req, res) => {
     if (transportMode) query.transportMode = transportMode;
     if (entryOffice) query['entryOffice.code'] = entryOffice;
 
+    // El rango se filtra por la llegada prevista, la unica fecha que muestra la tabla
+    // junto a los campos Desde/Hasta: por createdAt, buscar un mes de llegadas devolvia
+    // las declaraciones creadas hoy. El dia final entra completo (endDate + 1 dia con
+    // $lt), porque new Date('2026-11-30') es medianoche y con $lte se perdia ese dia.
     if (startDate || endDate) {
-      query.createdAt = {};
-      if (startDate) query.createdAt.$gte = new Date(startDate);
-      if (endDate) query.createdAt.$lte = new Date(endDate);
+      query['entryOffice.expectedArrival'] = {};
+      if (startDate) query['entryOffice.expectedArrival'].$gte = new Date(startDate);
+      if (endDate) {
+        const finInclusivo = new Date(endDate);
+        finInclusivo.setDate(finInclusivo.getDate() + 1);
+        query['entryOffice.expectedArrival'].$lt = finInclusivo;
+      }
     }
 
     if (search) {
