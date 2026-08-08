@@ -16,6 +16,9 @@
  *   - la raiz es <ent:CC313A>, sin envoltorio <ent:IE313V5Ent>
  *   - el receptor del canal ENS es NICA.ES (NECA.ES no existe)
  *   - TesIndMES18 declara el entorno y MesIdeMES19 es an..14
+ *   - DatOfPreMES9 va en AAMMDD (no AAAAMMDD) y se declara TimOfPreMES10 (HHMM);
+ *     un segundo envio real se rechazo con XMLERR805 "Element too long (length
+ *     constraint)" sobre CC313A,DatOfPreMES9, codigo 39
  */
 
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/aden/enswsv5/IE313V5Ent.xsd';
@@ -58,7 +61,14 @@ function buildIE313AmendmentXML(data) {
   } = data;
 
   const transId = generateTransactionId();
-  const prepDate = new Date().toISOString().substring(0, 10).replace(/-/g, '');
+  // AAMMDD y HHMM, como el IE315. En AAAAMMDD AEAT lo rechazo con XMLERR805
+  // "Element too long (length constraint)" sobre CC313A,DatOfPreMES9 (codigo 39).
+  const ahora = new Date();
+  const prepDate = String(ahora.getFullYear()).substring(2) +
+    String(ahora.getMonth() + 1).padStart(2, '0') +
+    String(ahora.getDate()).padStart(2, '0');
+  const prepTime = String(ahora.getHours()).padStart(2, '0') +
+    String(ahora.getMinutes()).padStart(2, '0');
 
   const goodsItemsXML = goodsItems.map((item, idx) => `
   <GOOITEGDS>
@@ -77,6 +87,7 @@ function buildIE313AmendmentXML(data) {
       <MesSenMES3>${carrierEORI}</MesSenMES3>
       <MesRecMES6>NICA.ES</MesRecMES6>
       <DatOfPreMES9>${prepDate}</DatOfPreMES9>
+      <TimOfPreMES10>${prepTime}</TimOfPreMES10>
       <TesIndMES18>${test ? '1' : '0'}</TesIndMES18>
       <MesIdeMES19>${transId.substring(0, 14)}</MesIdeMES19>
       <MesTypMES20>CC313A</MesTypMES20>

@@ -302,6 +302,22 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
       const r = await submitService.queryStatus('MRN');
       expect(r.error).toBe('campo.uno: V1 | campo.dos: V2');
     });
+
+    /**
+     * AEAT declara el namespace en CADA hijo del body, tambien en los bloques de
+     * error (se comprobo en un CD917B real de PRE). Al exigir la etiqueta desnuda
+     * `<FUNERRER1>`, el parseo bloque-a-bloque no casaba y el mensaje caia al
+     * fallback plano: se perdia el emparejamiento campo->valor, justo lo que hace
+     * accionable el rechazo.
+     */
+    test('los bloques con namespace tambien emparejan campo y valor', async () => {
+      const NS = 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/aden/enswsv5/IE316V5Sal.xsd';
+      conRespuesta(`<r><MesTypMES20>CC316A</MesTypMES20>`
+        + `<FUNERRER1 xmlns:ie="${NS}"><ErrPoiER12>CUSOFFFENT730.RefNumCUSOFFFENT731</ErrPoiER12>`
+        + '<OriAttValER14>ES001101</OriAttValER14></FUNERRER1></r>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.error).toBe('CUSOFFFENT730.RefNumCUSOFFFENT731: ES001101');
+    });
   });
 
   /**
@@ -378,6 +394,28 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
       expect(r.error).toContain('CC313A');
       expect(r.error).toContain('4');
       expect(r.error).toContain('148');
+    });
+
+    /**
+     * AEAT emite el bloque CON declaracion de namespace repetida en cada hijo del
+     * body: <XMLERR805 xmlns:ie="...IE917V5Sal.xsd">. La primera version de este
+     * parser exigia la etiqueta desnuda `<XMLERR805>` y en produccion no casaba
+     * nunca: el rechazo real seguia llegando sin motivo pese a tener el bloque
+     * delante. Fixture copiada literalmente de la respuesta de PRE del 8/Ago/2026.
+     */
+    test('el bloque con atributos (namespace) tambien se parsea', async () => {
+      const NS = 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/aden/enswsv5/IE917V5Sal.xsd';
+      conRespuesta(`<r><MesTypMES20>CD917B</MesTypMES20><XMLERR805 xmlns:ie="${NS}">`
+        + '<ErrLocXMLER803>CC313A</ErrLocXMLER803><ErrLinNumXMLER800>8</ErrLinNumXMLER800>'
+        + '<ErrColNumXMLER801>8</ErrColNumXMLER801>'
+        + '<ErrReaXMLER802>Element too long (length constraint)</ErrReaXMLER802>'
+        + '<OriAttValXMLER804>CC313A,DatOfPreMES9</OriAttValXMLER804>'
+        + '<ErrCodXMLER806>39</ErrCodXMLER806></XMLERR805></r>');
+
+      const r = await submitService.submitENSAmendment({ mrn: '26ES00280100000000' });
+      expect(r.success).toBe(false);
+      expect(r.error).toContain('Element too long');
+      expect(r.error).toContain('DatOfPreMES9');
     });
 
     test('varios XMLERR805 se muestran todos, no solo el primero', async () => {

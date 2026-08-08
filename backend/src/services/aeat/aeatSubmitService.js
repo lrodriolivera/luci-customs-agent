@@ -68,7 +68,10 @@ function _parseAEATResponse(responseData) {
   // porque cada uno describe UN error con campos complementarios: ErrPoiER12 es el
   // campo infractor y OriAttValER14 el valor rechazado. Un CC316A real solo trae el
   // valor ('ES001101'), y devolverlo suelto deja un mensaje que no dice que esta mal.
-  const ensBlocks = [...body.matchAll(/<FUNERRER1>([\s\S]*?)<\/FUNERRER1>/g)].map(m => m[1]);
+  // El `[^>]*` admite la declaracion de namespace que AEAT repite en cada hijo del
+  // body: sin el, el parseo bloque-a-bloque no casaba y el mensaje caia al
+  // fallback plano, perdiendo el emparejamiento campo->valor.
+  const ensBlocks = [...body.matchAll(/<FUNERRER1[^>]*>([\s\S]*?)<\/FUNERRER1>/g)].map(m => m[1]);
   const _campo = (b) => (b.match(/<ErrPoiER12>([^<]+)</) || [])[1];
   const _valor = (b) => (b.match(/<OriAttValER14>([^<]+)</) || [])[1];
   const _razon = (b) => (b.match(/<ErrReaER13>([^<]+)</) || [])[1];
@@ -89,7 +92,7 @@ function _parseAEATResponse(responseData) {
   // AES/NCTS: cada <FunctionalError> describe UN error de regla de negocio con su
   // errorPointer (la ruta del campo infractor). Se parsea bloque a bloque para no
   // separar la descripcion de su campo: "Debe ser 'B'" a secas no dice donde.
-  const funcBlocks = [...body.matchAll(/<FunctionalError>([\s\S]*?)<\/FunctionalError>/g)].map(m => m[1]);
+  const funcBlocks = [...body.matchAll(/<FunctionalError[^>]*>([\s\S]*?)<\/FunctionalError>/g)].map(m => m[1]);
   const _describeFuncError = (bloque) => {
     const descripcion = (bloque.match(/<errorDescription>([^<]+)</) || [])[1];
     const puntero = (bloque.match(/<errorPointer>([^<]+)</) || [])[1];
@@ -108,7 +111,10 @@ function _parseAEATResponse(responseData) {
   // rechazo llegaba sin una palabra de explicacion (verificado contra PRE el
   // 8/Ago/2026 con una rectificacion de ENS). Se incluye la localizacion
   // (mensaje/linea/columna) porque es lo unico que situa el defecto en el XML.
-  const xmlErrBlocks = [...body.matchAll(/<XMLERR805>([\s\S]*?)<\/XMLERR805>/g)].map(m => m[1]);
+  // El `[^>]*` NO es decorativo: AEAT repite la declaracion de namespace en cada
+  // hijo del body (<XMLERR805 xmlns:ie="...IE917V5Sal.xsd">), asi que exigir la
+  // etiqueta desnuda hacia que el parser no casara nunca en produccion.
+  const xmlErrBlocks = [...body.matchAll(/<XMLERR805[^>]*>([\s\S]*?)<\/XMLERR805>/g)].map(m => m[1]);
   const _describeXmlError = (bloque) => {
     const razon = (bloque.match(/<ErrReaXMLER802>([^<]+)</) || [])[1];
     const valor = (bloque.match(/<OriAttValXMLER804>([^<]+)</) || [])[1];

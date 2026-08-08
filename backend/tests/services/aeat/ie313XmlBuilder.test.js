@@ -73,9 +73,22 @@ describe('buildIE313AmendmentXML: envelope y cabecera', () => {
     expect(xml).toContain('<MesSenMES3>ESB22477020</MesSenMES3>');
   });
 
-  test('la fecha de preparacion tiene forma AAAAMMDD (8 digitos)', () => {
+  /**
+   * Segundo rechazo real de AEAT PRE (8/Ago/2026) tras corregir el namespace:
+   * CD917B / XMLERR805 <ErrReaXMLER802>Element too long (length constraint)
+   * <OriAttValXMLER804>CC313A,DatOfPreMES9, codigo 39. La fecha iba en AAAAMMDD
+   * (8 digitos) y el canal ENS la exige en AAMMDD (6), como el IE315 que AEAT si
+   * acepta; la propia respuesta de AEAT se fecha '260808'.
+   */
+  test('la fecha de preparacion va en AAMMDD (6 digitos), no AAAAMMDD', () => {
     const xml = buildIE313AmendmentXML({ mrn: '26ESX' });
-    expect(xml).toMatch(/<DatOfPreMES9>\d{8}<\/DatOfPreMES9>/);
+    expect(xml).toMatch(/<DatOfPreMES9>\d{6}<\/DatOfPreMES9>/);
+    expect(xml).not.toMatch(/<DatOfPreMES9>\d{8}<\/DatOfPreMES9>/);
+  });
+
+  // El IE315 declara la hora de preparacion; el IE313 la omitia.
+  test('declara la hora de preparacion en HHMM', () => {
+    expect(buildIE313AmendmentXML({ mrn: '26ESX' })).toMatch(/<TimOfPreMES10>\d{4}<\/TimOfPreMES10>/);
   });
 
   test('el motivo de rectificacion cae a un texto por defecto si no se da', () => {

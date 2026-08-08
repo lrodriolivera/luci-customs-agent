@@ -838,13 +838,18 @@ exports.amend = async (req, res) => {
       carrierName: declaration.carrier?.name || req.body.carrierName || '',
       entryOffice: declaration.entryOffice?.code || req.body.entryOffice || '',
       amendmentReason: req.body.reason || 'Rectificacion de datos',
-      goodsItems: req.body.goodsItems || declaration.goodsItems?.map(g => ({
+      // `declaration.goods`, no `goodsItems`: ese campo no existe en el esquema y
+      // resolvia siempre a [], de modo que la rectificacion viajaba a AEAT sin
+      // partidas y declarando peso bruto y bultos CERO.
+      goodsItems: req.body.goodsItems || declaration.goods?.map(g => ({
         sequenceNumber: g.sequenceNumber,
         description: g.description,
         commodityCode: g.commodityCode,
-        grossWeight: g.grossWeight,
+        // El esquema nombra estos dos campos `grossMass` y `kindOfPackages`; leer
+        // `grossWeight`/`packageType` daba undefined y el builder los caia a 0/'PK'.
+        grossWeight: g.grossMass,
         numberOfPackages: g.numberOfPackages,
-        packageType: g.packageType
+        packageType: g.kindOfPackages
       })) || []
     });
 

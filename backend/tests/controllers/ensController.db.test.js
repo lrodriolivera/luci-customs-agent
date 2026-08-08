@@ -696,6 +696,43 @@ describe('amend (IE313)', () => {
    * aparecia `success: false`. Ningun cliente que compruebe el envoltorio (la UI
    * lo hace, api.js devuelve response.data) podia detectar el fallo.
    */
+  /**
+   * El controlador leia `declaration.goodsItems`, campo que el esquema no tiene
+   * (las partidas viven en `goods`). Siempre resolvia a [] y la rectificacion
+   * viajaba a AEAT sin partidas y con TotGroMasHEA307=0 / TotNumOfPacHEA306=0:
+   * una rectificacion que declara peso bruto y bultos cero. Confirmado en el
+   * requestXML del envio real a PRE del 8/Ago/2026.
+   *
+   * Segundo desajuste en el mismo mapeo: el esquema nombra los campos
+   * `grossMass` y `kindOfPackages`, y el controlador leia `grossWeight` y
+   * `packageType`; aun leyendo el array correcto, el peso habria salido a 0.
+   */
+  test('rectifica con las partidas de la ENS (`goods`), no con una lista vacia', async () => {
+    const d = await sembrarENS(operadorUser);
+    d.mrn = '25ES0028011234567X';
+    d.goods = [{
+      sequenceNumber: 1,
+      description: 'Componentes electronicos',
+      commodityCode: '85437000',
+      grossMass: 850,
+      numberOfPackages: 12,
+      kindOfPackages: 'PK'
+    }];
+    await d.save();
+    aeatSubmitService.submitENSAmendment.mockResolvedValue({ success: true, mrn: '25ES0028019999999Y' });
+    const res = mockRes();
+    await ensController.amend(mockReq({
+      user: operadorUser, params: { id: d._id.toString() }, body: { reason: 'correccion peso' }
+    }), res);
+
+    expect(res.body.success).toBe(true);
+    const enviado = aeatSubmitService.submitENSAmendment.mock.calls.at(-1)[0];
+    expect(enviado.goodsItems).toHaveLength(1);
+    expect(enviado.goodsItems[0]).toMatchObject({
+      sequenceNumber: 1, grossWeight: 850, numberOfPackages: 12, commodityCode: '85437000', packageType: 'PK'
+    });
+  });
+
   test('AEAT rechaza la rectificacion -> 400 y NO se marca amended', async () => {
     const d = await sembrarENS(operadorUser);
     d.mrn = '25ES0028011234567X';
