@@ -1305,3 +1305,75 @@ describe('<TransitManager />', () => {
     })
   })
 })
+
+/**
+ * E2E 8/Ago: el formulario de "Nuevo Transito" no pedia las partidas de mercancia.
+ * `formData.goodsItems` arrancaba con `description:''`, `taricCode:''` y
+ * `grossWeight:0`, y no habia ningun campo para rellenarlos: el transito se creaba
+ * (201) y al pulsar "Enviar a NCTS" AEAT devolvia 400 con el patron de
+ * <ent:grossMass>, un mensaje que no nombra ningun campo. Los precintos, ademas,
+ * se enviaban en la raiz (`seals`) en vez de en `transport.seals`.
+ */
+describe('<TransitManager /> formulario: partidas de mercancia', () => {
+  // Este describe es de primer nivel: sin limpiar los mocks aqui, `create.mock.calls[0]`
+  // es la llamada de un test anterior y las aserciones miran el payload equivocado.
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const abrirFormulario = async () => {
+    render(<MemoryRouter><TransitManager /></MemoryRouter>)
+    await waitFor(() => expect(transitAPI.list).toHaveBeenCalled())
+    fireEvent.click(screen.getByText('transit.newTransit'))
+    await waitFor(() => expect(screen.getByText('Nuevo Transito NCTS')).toBeInTheDocument())
+  }
+
+  /** Rellena los campos `required` para que el submit no lo bloquee el navegador. */
+  const rellenarObligatorios = () => {
+    const v = (ph, val) => fireEvent.change(screen.getByPlaceholderText(ph), { target: { value: val } })
+    v(/Codigo \(ej: ES004801\)/, 'ES004801')
+    v(/Codigo \(ej: FR001001\)/, 'FR001001')
+    v(/descripcion de la mercancia/i, 'Tubos de acero')
+    v(/TARIC/i, '73043100')
+    v(/peso bruto/i, '300')
+  }
+
+  test('el formulario expone descripcion, TARIC y peso bruto de la partida', async () => {
+    await abrirFormulario()
+    expect(screen.getByPlaceholderText(/descripcion de la mercancia/i)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/TARIC/i)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/peso bruto/i)).toBeInTheDocument()
+  })
+
+  test('los datos de la partida llegan a transitAPI.create', async () => {
+    transitAPI.create.mockResolvedValue({ data: { success: true, data: { _id: 'nuevo' } } })
+    await abrirFormulario()
+
+    rellenarObligatorios()
+    fireEvent.submit(screen.getByText('Crear Transito').closest('form'))
+    await waitFor(() => expect(transitAPI.create).toHaveBeenCalled())
+
+    const enviado = transitAPI.create.mock.calls[0][0]
+    expect(enviado.goodsItems[0]).toMatchObject({
+      description: 'Tubos de acero',
+      taricCode: '73043100',
+      grossWeight: 300
+    })
+  })
+
+  test('los precintos viajan dentro de transport, no en la raiz', async () => {
+    transitAPI.create.mockResolvedValue({ data: { success: true, data: { _id: 'nuevo' } } })
+    await abrirFormulario()
+
+    fireEvent.change(screen.getByPlaceholderText(/Precinto 1/i), { target: { value: 'PRE-001' } })
+    rellenarObligatorios()
+    fireEvent.submit(screen.getByText('Crear Transito').closest('form'))
+    await waitFor(() => expect(transitAPI.create).toHaveBeenCalled())
+
+    const enviado = transitAPI.create.mock.calls[0][0]
+    expect(enviado.transport.seals).toEqual([
+      expect.objectContaining({ number: 'PRE-001' })
+    ])
+    expect(enviado.seals).toBeUndefined()
+  })
+})

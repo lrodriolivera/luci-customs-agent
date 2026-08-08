@@ -65,7 +65,8 @@ function datosTransito(extra = {}) {
     transport: { mode: '3' },
     principal: { eori: 'ESB22477020', name: 'STRIX AI SL' },
     guarantee: { type: '1' },
-    goodsItems: [{ description: 'Textil', grossWeight: 300, packages: { count: 5 } }],
+    // taricCode real: sin el, submit fallaba la validacion de partidas (E2E 8/Ago).
+    goodsItems: [{ description: 'Textil', taricCode: '73043100', grossWeight: 300, packages: { count: 5 } }],
     ...extra
   };
 }

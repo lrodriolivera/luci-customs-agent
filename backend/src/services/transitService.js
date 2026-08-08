@@ -39,6 +39,21 @@ const transitService = {
       data.lrn = this.generateLRN();
     }
 
+    // El formulario de la UI manda los precintos en la raiz (`seals`) y el modelo
+    // los guarda en `transport.seals`: Mongoose descartaba la clave desconocida sin
+    // avisar y el precinto que escribia el usuario desaparecia, enviandose el
+    // transito a AEAT sin precintos declarados. Se normaliza aqui para no depender
+    // de que cada cliente de la API acierte con la forma anidada.
+    if (Array.isArray(data.seals)) {
+      const precintos = data.seals.filter(s => s?.number?.trim());
+      data = { ...data, transport: { ...(data.transport || {}) } };
+      if (!data.transport.seals?.length) {
+        data.transport.seals = precintos;
+        data.transport.sealCount = precintos.length;
+      }
+      delete data.seals;
+    }
+
     // Vincular expedicion si existe
     if (data.expeditionId) {
       await _loadOwnedExpedition(data.expeditionId, userId);
@@ -559,7 +574,20 @@ const transitService = {
     if (!transit.destinationOffice?.code) errors.push('Aduana de destino requerida');
     if (!transit.principal?.eori) errors.push('EORI del principal obligado requerido');
     if (!transit.transport?.mode) errors.push('Modo de transporte requerido');
-    if (!transit.goodsItems?.length) errors.push('Debe incluir al menos una mercancia');
+    if (!transit.goodsItems?.length) {
+      errors.push('Debe incluir al menos una mercancia');
+    } else {
+      // Una partida vacia pasaba este filtro y AEAT la rechazaba con el patron de
+      // <ent:grossMass> ("El elemento no cumple con el formato exigido. Patron:
+      // ([1-9]\d*(\.\d+)?)|(0\.\d*[1-9]\d*)"), un texto que no nombra ningun campo.
+      // Se valida aqui para que el error diga que partida y que dato falta.
+      transit.goodsItems.forEach((item, i) => {
+        const n = item.itemNumber || i + 1;
+        if (!item.description?.trim()) errors.push(`Partida ${n}: descripcion de la mercancia requerida`);
+        if (!item.taricCode?.trim()) errors.push(`Partida ${n}: codigo TARIC requerido`);
+        if (!(Number(item.grossWeight) > 0)) errors.push(`Partida ${n}: peso bruto debe ser mayor que 0`);
+      });
+    }
 
     // Validar garantia para T1
     if (transit.transitType === 'T1' && !transit.guarantee?.type) {

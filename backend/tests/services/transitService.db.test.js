@@ -52,7 +52,9 @@ function datosTransito(extra = {}) {
     transport: { mode: '3' },
     principal: { eori: 'ESB22477020', name: 'STRIX AI SL' },
     guarantee: { type: '1' },
-    goodsItems: [{ description: 'Textil', grossWeight: 300, packages: { count: 5 } }],
+    // taricCode real (tubos de acero sin soldadura). La fixture no lo llevaba y
+    // por eso `submit` pasaba en los tests mientras AEAT rechazaba en produccion.
+    goodsItems: [{ description: 'Textil', taricCode: '73043100', grossWeight: 300, packages: { count: 5 } }],
     ...extra
   };
 }
@@ -315,7 +317,7 @@ describe('helpers puros', () => {
       destinationOffice: { code: 'FR1' },
       principal: { eori: 'ESB1' },
       transport: { mode: '3' },
-      goodsItems: [{}]
+      goodsItems: [{ description: 'Tubos de acero', taricCode: '73043100', grossWeight: 300 }]
     };
     expect(transitService.validateForSubmission(ok)).toBe(true);
   });
@@ -325,5 +327,122 @@ describe('helpers puros', () => {
     const mrn = transitService.generateMRN('ES');
     expect(mrn.length).toBeLessThanOrEqual(18);
     expect(mrn.startsWith(new Date().getFullYear().toString().slice(-2) + 'ES')).toBe(true);
+  });
+});
+
+/**
+ * E2E 8/Ago: "Enviar a NCTS" devolvia 400 de AEAT con el mensaje ininteligible
+ * "El elemento no cumple con el formato exigido. Patron: ([1-9]\d*(\.\d+)?)|(0\.\d*[1-9]\d*)"
+ * porque el formulario de la UI no pide las partidas de mercancia y `goodsItems`
+ * viajaba con `description:''`, `taricCode:''` y `grossWeight:0`. El patron es el
+ * de <ent:grossMass>: AEAT no admite 0.000. `validateForSubmission` solo miraba
+ * que el array tuviese longitud, asi que dejaba pasar una partida vacia y el
+ * rechazo aparecia a mitad del flujo, con un texto que no nombra ningun campo.
+ */
+describe('validateForSubmission: partidas de mercancia con contenido', () => {
+  test('rechaza una partida con peso bruto 0 nombrando el campo', () => {
+    const t = {
+      transitType: 'T1',
+      departureOffice: { code: 'ES000851' },
+      destinationOffice: { code: 'FR001300' },
+      principal: { eori: 'ESB22477020' },
+      transport: { mode: '3' },
+      guarantee: { type: '1' },
+      goodsItems: [{ description: 'Textil', taricCode: '73181500', grossWeight: 0 }]
+    };
+    expect(() => transitService.validateForSubmission(t)).toThrow(/peso bruto/i);
+  });
+
+  test('rechaza una partida sin descripcion ni codigo TARIC', () => {
+    const base = {
+      transitType: 'T1',
+      departureOffice: { code: 'ES000851' },
+      destinationOffice: { code: 'FR001300' },
+      principal: { eori: 'ESB22477020' },
+      transport: { mode: '3' },
+      guarantee: { type: '1' }
+    };
+    expect(() => transitService.validateForSubmission({
+      ...base, goodsItems: [{ description: '', taricCode: '73181500', grossWeight: 100 }]
+    })).toThrow(/descripcion/i);
+    expect(() => transitService.validateForSubmission({
+      ...base, goodsItems: [{ description: 'Textil', taricCode: '', grossWeight: 100 }]
+    })).toThrow(/TARIC/i);
+  });
+
+  test('acepta una partida completa', () => {
+    const t = {
+      transitType: 'T1',
+      departureOffice: { code: 'ES000851' },
+      destinationOffice: { code: 'FR001300' },
+      principal: { eori: 'ESB22477020' },
+      transport: { mode: '3' },
+      guarantee: { type: '1' },
+      goodsItems: [{ description: 'Tubos de acero', taricCode: '73181500', grossWeight: 300 }]
+    };
+    expect(transitService.validateForSubmission(t)).toBe(true);
+  });
+
+  test('el numero de partida indica cual falla cuando hay varias', () => {
+    const t = {
+      transitType: 'T1',
+      departureOffice: { code: 'ES000851' },
+      destinationOffice: { code: 'FR001300' },
+      principal: { eori: 'ESB22477020' },
+      transport: { mode: '3' },
+      guarantee: { type: '1' },
+      goodsItems: [
+        { description: 'Tubos', taricCode: '73181500', grossWeight: 300 },
+        { description: 'Bridas', taricCode: '73072100', grossWeight: 0 }
+      ]
+    };
+    expect(() => transitService.validateForSubmission(t)).toThrow(/2/);
+  });
+
+  test('submit no llama a AEAT cuando la partida esta vacia', async () => {
+    const owner = OWNER();
+    const t = await transitService.create(datosTransito({
+      goodsItems: [{ description: '', taricCode: '', grossWeight: 0 }]
+    }), owner);
+    await expect(transitService.submit(t._id, owner)).rejects.toThrow(/Validacion fallida/);
+    expect(aeatSubmitService.submitNCTS).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * E2E 8/Ago: el formulario de "Nuevo Transito" manda los precintos en la raiz
+ * (`seals`) y el modelo los guarda en `transport.seals`. `create` hace `...data`,
+ * asi que Mongoose descartaba la clave desconocida en silencio: el precinto
+ * escrito por el usuario desaparecia y el transito se enviaba a AEAT sin
+ * precintos declarados. El fix normaliza la clave en el servicio para no depender
+ * de que todos los clientes de la API acierten con la forma anidada.
+ */
+describe('create: normaliza los precintos de la raiz a transport.seals', () => {
+  test('mueve seals de la raiz a transport.seals', async () => {
+    const owner = OWNER();
+    const t = await transitService.create(datosTransito({
+      seals: [{ number: 'PRE-001', sealType: 'customs', affixedBy: 'Aduana ES004801' }]
+    }), owner);
+    expect(t.transport.seals).toHaveLength(1);
+    expect(t.transport.seals[0].number).toBe('PRE-001');
+    expect(t.transport.sealCount).toBe(1);
+  });
+
+  test('descarta los precintos con el numero vacio (fila en blanco del formulario)', async () => {
+    const owner = OWNER();
+    const t = await transitService.create(datosTransito({
+      seals: [{ number: '', sealType: 'customs', affixedBy: '' }]
+    }), owner);
+    expect(t.transport.seals).toHaveLength(0);
+    expect(t.transport.sealCount).toBe(0);
+  });
+
+  test('no pisa los precintos que ya vienen en transport.seals', async () => {
+    const owner = OWNER();
+    const t = await transitService.create(datosTransito({
+      transport: { mode: '3', seals: [{ number: 'ANIDADO-1' }] },
+      seals: [{ number: 'RAIZ-1' }]
+    }), owner);
+    expect(t.transport.seals.map(s => s.number)).toEqual(['ANIDADO-1']);
   });
 });

@@ -1223,7 +1223,17 @@ function TransitCreateForm({ onClose, onCreated }) {
       setLoading(true)
       setError(null)
 
-      const res = await transitAPI.create(formData)
+      // El modelo guarda los precintos en `transport.seals`; enviarlos en la raiz
+      // hacia que Mongoose descartase la clave sin avisar y el precinto escrito por
+      // el usuario desaparecia, presentandose el transito sin precintos declarados.
+      const { seals, ...resto } = formData
+      const precintos = (seals || []).filter(s => s.number?.trim())
+      const payload = {
+        ...resto,
+        transport: { ...resto.transport, seals: precintos, sealCount: precintos.length }
+      }
+
+      const res = await transitAPI.create(payload)
       if (res.data.success) {
         onCreated()
       }
@@ -1511,18 +1521,20 @@ function TransitCreateForm({ onClose, onCreated }) {
                   placeholder={`Precinto ${idx + 1} - Numero`}
                   value={seal.number}
                   onChange={(e) => {
-                    const seals = [...formData.seals]
-                    seals[idx] = { ...seals[idx], number: e.target.value }
-                    setFormData(f => ({ ...f, seals }))
+                    setFormData(f => ({
+                      ...f,
+                      seals: f.seals.map((s, i) => (i === idx ? { ...s, number: e.target.value } : s))
+                    }))
                   }}
                   className="border rounded-lg px-3 py-2 text-sm"
                 />
                 <select
                   value={seal.sealType}
                   onChange={(e) => {
-                    const seals = [...formData.seals]
-                    seals[idx] = { ...seals[idx], sealType: e.target.value }
-                    setFormData(f => ({ ...f, seals }))
+                    setFormData(f => ({
+                      ...f,
+                      seals: f.seals.map((s, i) => (i === idx ? { ...s, sealType: e.target.value } : s))
+                    }))
                   }}
                   className="border rounded-lg px-3 py-2 text-sm"
                 >
@@ -1536,9 +1548,10 @@ function TransitCreateForm({ onClose, onCreated }) {
                   placeholder="Colocado por"
                   value={seal.affixedBy}
                   onChange={(e) => {
-                    const seals = [...formData.seals]
-                    seals[idx] = { ...seals[idx], affixedBy: e.target.value }
-                    setFormData(f => ({ ...f, seals }))
+                    setFormData(f => ({
+                      ...f,
+                      seals: f.seals.map((s, i) => (i === idx ? { ...s, affixedBy: e.target.value } : s))
+                    }))
                   }}
                   className="border rounded-lg px-3 py-2 text-sm"
                 />
@@ -1554,6 +1567,92 @@ function TransitCreateForm({ onClose, onCreated }) {
                     <XMarkIcon className="w-4 h-4" />
                   </button>
                 )}
+              </div>
+            ))}
+          </div>
+
+          {/* Partidas de mercancia. Sin estos campos el transito se creaba con
+              description/taricCode vacios y grossWeight 0, y AEAT rechazaba el IE015
+              con el patron de <ent:grossMass>, un mensaje que no nombra el campo. */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-medium">Partidas de mercancia</h3>
+              <button
+                type="button"
+                onClick={() => setFormData(f => ({
+                  ...f,
+                  goodsItems: [...f.goodsItems, {
+                    itemNumber: f.goodsItems.length + 1,
+                    description: '',
+                    taricCode: '',
+                    grossWeight: 0,
+                    packages: { count: 1, type: 'CT' }
+                  }]
+                }))}
+                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+              >
+                <PlusIcon className="w-3.5 h-3.5" /> Agregar partida
+              </button>
+            </div>
+            {formData.goodsItems.map((item, idx) => (
+              <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2">
+                <input
+                  type="text"
+                  required
+                  placeholder={`Partida ${idx + 1} - Descripcion de la mercancia`}
+                  value={item.description}
+                  onChange={(e) => {
+                    setFormData(f => ({
+                      ...f,
+                      goodsItems: f.goodsItems.map((g, i) => (i === idx ? { ...g, description: e.target.value } : g))
+                    }))
+                  }}
+                  className="border rounded-lg px-3 py-2 text-sm md:col-span-2"
+                />
+                <input
+                  type="text"
+                  required
+                  placeholder="Codigo TARIC (ej: 73043100)"
+                  value={item.taricCode}
+                  onChange={(e) => {
+                    setFormData(f => ({
+                      ...f,
+                      goodsItems: f.goodsItems.map((g, i) => (i === idx ? { ...g, taricCode: e.target.value } : g))
+                    }))
+                  }}
+                  className="border rounded-lg px-3 py-2 text-sm"
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    required
+                    min="0.001"
+                    step="0.001"
+                    placeholder="Peso bruto (kg)"
+                    value={item.grossWeight || ''}
+                    onChange={(e) => {
+                      setFormData(f => ({
+                        ...f,
+                        goodsItems: f.goodsItems.map((g, i) => (i === idx ? { ...g, grossWeight: Number(e.target.value) } : g))
+                      }))
+                    }}
+                    className="border rounded-lg px-3 py-2 text-sm w-full"
+                  />
+                  {formData.goodsItems.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData(f => ({
+                        ...f,
+                        goodsItems: f.goodsItems
+                          .filter((_, i) => i !== idx)
+                          .map((g, i) => ({ ...g, itemNumber: i + 1 }))
+                      }))}
+                      className="text-red-400 hover:text-red-600 flex items-center"
+                    >
+                      <XMarkIcon className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
