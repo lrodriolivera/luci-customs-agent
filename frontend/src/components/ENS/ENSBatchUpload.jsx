@@ -145,7 +145,19 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
       consignee: {
         eori: row.consigneeEORI?.toUpperCase() || '',
         name: row.consigneeName || ''
-      }
+      },
+      // El envío a AEAT exige al menos una partida de mercancía (ENS_GOODS_REQUIRED)
+      // y el modelo exige commodityCode. Se genera desde el CSV; commodityCode admite
+      // columna opcional (por defecto '00000000' cuando no se conoce en la sumaria ENS).
+      goods: row.goodsDescription || row.grossMass
+        ? [{
+            sequenceNumber: 1,
+            commodityCode: row.commodityCode || '00000000',
+            description: row.goodsDescription || 'Mercancia general',
+            grossMass: parseFloat(row.grossMass) || 0,
+            numberOfPackages: parseInt(row.numberOfPackages) || 0
+          }]
+        : []
     }
   }
 
