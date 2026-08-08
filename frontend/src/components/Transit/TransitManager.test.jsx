@@ -726,12 +726,11 @@ describe('<TransitManager />', () => {
       data: {
         success: true,
         data: {
-          isValid: true,
-          summary: 'Ruta válida',
-          routeAnalysis: { estimatedDuration: '24 horas', distance: 1200, transitCountries: ['ES', 'FR'] },
-          checkpoints: [{ office: 'ES004801', country: 'ES', type: 'partida', required: true }],
-          warnings: [],
-          recommendations: ['Mantener precintos intactos']
+          routeValidation: { isValid: true, issues: [] },
+          routeAnalysis: { totalDistance: '1200 km', estimatedTransitDays: 1, borderCrossings: ['ES-FR'], restrictions: [] },
+          transitOfficesSuggestion: [{ code: 'ES004801', name: 'Barcelona', reason: 'Aduana de partida' }],
+          recommendations: ['Mantener precintos intactos'],
+          riskLevel: 'LOW'
         }
       }
     })
@@ -765,11 +764,18 @@ describe('<TransitManager />', () => {
       data: {
         success: true,
         data: {
-          riskLevel: 'medium',
-          probability: 0.3,
-          predictedIncidents: [{ type: 'Retraso', severity: 'medium', probability: 0.25, description: 'Posible retraso en frontera', mitigation: 'Salir con margen' }],
-          historicalData: { totalTransits: 150, incidentRate: 12, avgDelay: 4 },
-          preventiveMeasures: ['Revisar precintos']
+          riskLevel: 'MEDIUM',
+          overallRiskScore: 30,
+          incidentPredictions: [{
+            type: 'Retraso',
+            impact: 'MEDIUM',
+            probability: 25,
+            description: 'Posible retraso en frontera',
+            stage: 'Cruce fronterizo',
+            potentialDelay: '4 horas',
+            preventiveMeasures: ['Salir con margen']
+          }],
+          recommendations: [{ priority: 'MEDIUM', action: 'Revisar precintos', reason: 'Evitar control' }]
         }
       }
     })
@@ -847,14 +853,18 @@ describe('<TransitManager />', () => {
       data: {
         success: true,
         data: {
-          overallScore: 85,
-          summary: 'Tránsito bien preparado',
-          sections: { route: { score: 90, label: 'Ruta' }, compliance: { score: 80, label: 'Cumplimiento' } },
-          routeValidation: { isValid: true, summary: 'OK' },
-          incidentPrediction: { riskLevel: 'low', mainRisks: ['Ninguno relevante'] },
-          guaranteeSuggestion: { type: 'Global', amount: 3000, grn: 'GRN123' },
-          criticalIssues: [],
-          actionItems: [{ action: 'Revisar docs', priority: 'low', reason: 'Prevención' }]
+          summary: {
+            readinessScore: 85,
+            readinessLevel: 'READY',
+            factors: ['Transito bien preparado'],
+            overallRiskLevel: 'LOW',
+            estimatedTransitDays: 1,
+            guaranteeRequired: 3000
+          },
+          routeValidation: { routeValidation: { isValid: true, issues: [] } },
+          incidentPrediction: { riskLevel: 'LOW', overallRiskScore: 10, incidentPredictions: [] },
+          guaranteeSuggestion: { calculatedAmount: { finalAmount: 3000 }, recommendedType: { code: '1', name: 'Garantia global' } },
+          nextSteps: [{ priority: 1, action: 'Revisar docs', details: 'Prevencion', category: 'documentacion' }]
         }
       }
     })
@@ -881,7 +891,8 @@ describe('<TransitManager />', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText(/Tránsito bien preparado/i)).toBeInTheDocument()
+      expect(screen.getByText(/Transito bien preparado/i)).toBeInTheDocument()
+      expect(screen.getByText('85/100')).toBeInTheDocument()
     })
   })
 
@@ -890,8 +901,8 @@ describe('<TransitManager />', () => {
       data: {
         success: true,
         data: {
-          amount: 2000,
-          availableGuarantees: [{ grn: 'GRN-APPLY', type: 'Global', available: 10000, canUse: true }]
+          calculatedAmount: { finalAmount: 2000 },
+          recommendedType: { code: '1', name: 'Garantia global', reason: 'Operador recurrente' }
         }
       }
     })
@@ -914,12 +925,14 @@ describe('<TransitManager />', () => {
 
     fireEvent.click(screen.getByText('Ejecutar Analisis'))
 
-    await waitFor(() => expect(screen.getByText('GRN-APPLY')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Aplicar al Transito')).toBeInTheDocument())
 
-    fireEvent.click(screen.getByText('Usar'))
+    fireEvent.click(screen.getByText('Aplicar al Transito'))
 
     await waitFor(() => {
-      expect(transitAPI.aiApplySuggestion).toHaveBeenCalledWith('transit-1', { guaranteeGRN: 'GRN-APPLY' })
+      expect(transitAPI.aiApplySuggestion).toHaveBeenCalledWith('transit-1', {
+        guarantee: { type: '1', amount: 2000, currency: 'EUR' }
+      })
       expect(transitAPI.list).toHaveBeenCalledTimes(2) // reload tras aplicar
     })
   })
@@ -1072,10 +1085,9 @@ describe('<TransitManager />', () => {
       data: {
         success: true,
         data: {
-          isValid: false,
-          summary: 'Ruta con problemas',
-          warnings: ['Falta checkpoint intermedio'],
-          recommendations: ['Añadir oficina de tránsito']
+          routeValidation: { isValid: false, issues: ['Falta checkpoint intermedio'] },
+          recommendations: ['Añadir oficina de tránsito'],
+          riskLevel: 'MEDIUM'
         }
       }
     })
@@ -1106,9 +1118,9 @@ describe('<TransitManager />', () => {
       data: {
         success: true,
         data: {
-          riskLevel: 'high',
-          probability: 0.8,
-          predictedIncidents: [{ type: 'Control aduanero', severity: 'high', probability: 0.75, description: 'Alta probabilidad de inspección' }]
+          riskLevel: 'HIGH',
+          overallRiskScore: 80,
+          incidentPredictions: [{ type: 'Control aduanero', impact: 'HIGH', probability: 75, description: 'Alta probabilidad de inspección' }]
         }
       }
     })
@@ -1138,10 +1150,12 @@ describe('<TransitManager />', () => {
       data: {
         success: true,
         data: {
-          overallScore: 55,
-          summary: 'Requiere mejoras',
-          sections: { route: { score: 60, label: 'Ruta' } },
-          criticalIssues: ['Documentación incompleta', 'Garantía insuficiente']
+          summary: {
+            readinessScore: 55,
+            readinessLevel: 'NEEDS_WORK',
+            factors: ['Documentación incompleta', 'Garantía insuficiente'],
+            overallRiskLevel: 'HIGH'
+          }
         }
       }
     })
@@ -1164,12 +1178,13 @@ describe('<TransitManager />', () => {
       expect(transitAPI.aiFullAnalysis).toHaveBeenCalled()
     })
 
-    await waitFor(() => expect(screen.getByText(/Requiere mejoras/)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Requiere trabajo/)).toBeInTheDocument())
+    expect(screen.getByText('Documentación incompleta')).toBeInTheDocument()
   })
 
   test('modal AI: botón actualizar análisis', async () => {
     transitAPI.aiValidateRoute.mockResolvedValue({
-      data: { success: true, data: { isValid: true, summary: 'OK' } }
+      data: { success: true, data: { routeValidation: { isValid: true, issues: [] } } }
     })
 
     render(
@@ -1514,5 +1529,303 @@ describe('<TransitManager /> ciclo en destino: descarga (CC044) y estado unloade
 
     await waitFor(() => expect(screen.getByText('Rechazo CC044')).toBeInTheDocument())
     expect(transitAPI.list.mock.calls.length).toBe(llamadasAntes)
+  })
+})
+
+// ============================================================================
+// Panel "Analisis IA": el contrato que pinta el frontend NO es el que devuelve
+// el backend en ninguna de las 4 pestanas.
+//
+// Los tests que ya existian mas arriba mockeaban el contrato inventado
+// (`{ isValid, riskLevel: 'medium', amount, overallScore }`), asi que pasaban
+// en verde mientras la pantalla real no mostraba nada. Estos usan las
+// respuestas REALES capturadas contra https://aduanas.strixai.es el 8/Ago/2026.
+//
+// El fallo no es cosmetico: `riskLevel` viene en MAYUSCULAS ('MEDIUM', 'HIGH')
+// y el JSX compara con 'high'/'medium' en minusculas, asi que un transito de
+// riesgo alto cae al `else` y se pinta "Riesgo Bajo" sobre fondo verde.
+// ============================================================================
+describe('<TransitManager /> panel IA: contrato real del backend', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    transitAPI.getStats.mockResolvedValue({ data: { success: true, data: {} } })
+    transitAPI.getOverdue.mockResolvedValue({ data: { success: true, data: [] } })
+    transitAPI.list.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          transits: [{
+            _id: 't1', mrn: 'MRN001', lrn: 'LRN001', status: 'in_transit', transitType: 'T1',
+            principal: {}, departureOffice: {}, destinationOffice: {},
+            transport: { seals: [] }, totals: {}, dates: {}, deadlines: {}
+          }],
+          pagination: { total: 1, page: 1, limit: 20, pages: 1 }
+        }
+      }
+    })
+  })
+
+  const abrirPanel = async () => {
+    render(
+      <MemoryRouter>
+        <TransitManager />
+      </MemoryRouter>
+    )
+    await waitFor(() => expect(screen.getByText('MRN001')).toBeInTheDocument())
+    fireEvent.click(screen.getAllByTitle('Analisis IA')[0])
+    await waitFor(() => expect(screen.getByText('Analisis IA - Transito')).toBeInTheDocument())
+  }
+
+  // --- Validar Ruta: el backend anida en routeValidation.{isValid,issues} ---
+  const RESPUESTA_VALIDATE_ROUTE = {
+    routeValidation: {
+      isValid: false,
+      issues: [
+        { type: 'warning', description: 'El pais de la aduana de destino esta vacio', affectedSegment: 'cabecera', recommendation: 'Completar el pais ES' },
+        { type: 'info', description: 'Transito domestico ES->ES', affectedSegment: 'ES->ES', recommendation: 'Confirmar el motivo del T1' }
+      ]
+    },
+    routeAnalysis: { totalDistance: '80-150 km', estimatedTransitDays: 1, borderCrossings: [], restrictions: [] },
+    recommendations: ['Verificar el codigo de pais de ES002901'],
+    riskLevel: 'MEDIUM',
+    model: 'sonnet-5'
+  }
+
+  test('Validar Ruta: pinta el veredicto que viene anidado en routeValidation', async () => {
+    transitAPI.aiValidateRoute.mockResolvedValue({ data: { success: true, data: RESPUESTA_VALIDATE_ROUTE } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(transitAPI.aiValidateRoute).toHaveBeenCalledWith('t1'))
+    // isValid: false -> debe avisar, no dar la ruta por buena.
+    await waitFor(() => expect(screen.getByText(/Ruta con Problemas/i)).toBeInTheDocument())
+  })
+
+  test('Validar Ruta: tolera que issues venga como lista de cadenas', async () => {
+    // El esquema del prompt pide objetos {type, description, ...}, pero el modelo
+    // devuelve cadenas sueltas con cierta frecuencia. Con el JSX leyendo
+    // `inc.description` a pelo, esas incidencias desaparecian sin aviso: ruta
+    // marcada "con problemas" y ni un problema listado.
+    transitAPI.aiValidateRoute.mockResolvedValue({
+      data: {
+        success: true,
+        data: { routeValidation: { isValid: false, issues: ['Falta la aduana de transito intermedia'] } }
+      }
+    })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText(/Falta la aduana de transito intermedia/)).toBeInTheDocument())
+  })
+
+  test('Validar Ruta: muestra las incidencias de routeValidation.issues', async () => {
+    transitAPI.aiValidateRoute.mockResolvedValue({ data: { success: true, data: RESPUESTA_VALIDATE_ROUTE } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText(/El pais de la aduana de destino esta vacio/)).toBeInTheDocument())
+    expect(screen.getByText(/Completar el pais ES/)).toBeInTheDocument()
+  })
+
+  test('Validar Ruta: los dias de transito estimados salen de estimatedTransitDays', async () => {
+    transitAPI.aiValidateRoute.mockResolvedValue({ data: { success: true, data: RESPUESTA_VALIDATE_ROUTE } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText(/80-150 km/)).toBeInTheDocument())
+  })
+
+  // --- Predecir Incidencias: MAYUSCULAS y otros nombres de campo ---
+  const RESPUESTA_INCIDENTS = {
+    overallRiskScore: 68,
+    riskLevel: 'HIGH',
+    incidentPredictions: [
+      { type: 'control', probability: 45, description: 'Probable control fisico en destino', stage: 'arrival', impact: 'HIGH', potentialDelay: '24-48 horas', preventiveMeasures: ['Documentacion completa'] }
+    ],
+    controlProbability: { departure: 20, transit: 10, arrival: 45, factors: [] },
+    recommendations: [{ priority: 'HIGH', action: 'Revisar precintos', reason: 'Riesgo de manipulacion' }],
+    model: 'sonnet-5'
+  }
+
+  test('Predecir Incidencias: un riesgo HIGH no puede pintarse como Riesgo Bajo', async () => {
+    transitAPI.aiPredictIncidents.mockResolvedValue({ data: { success: true, data: RESPUESTA_INCIDENTS } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Predecir Incidencias'))
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(transitAPI.aiPredictIncidents).toHaveBeenCalled())
+    await waitFor(() => expect(screen.getByText(/Riesgo Alto/i)).toBeInTheDocument())
+    expect(screen.queryByText(/Riesgo Bajo/i)).not.toBeInTheDocument()
+  })
+
+  test('Predecir Incidencias: lista incidentPredictions con su probabilidad en %', async () => {
+    transitAPI.aiPredictIncidents.mockResolvedValue({ data: { success: true, data: RESPUESTA_INCIDENTS } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Predecir Incidencias'))
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText(/Probable control fisico en destino/)).toBeInTheDocument())
+    // probability llega 0-100, no 0-1: un 45 no puede mostrarse como 4500%.
+    expect(screen.getByText(/45% probabilidad/)).toBeInTheDocument()
+  })
+
+  test('Predecir Incidencias: muestra el score global de riesgo', async () => {
+    transitAPI.aiPredictIncidents.mockResolvedValue({ data: { success: true, data: RESPUESTA_INCIDENTS } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Predecir Incidencias'))
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText(/68/)).toBeInTheDocument())
+  })
+
+  // --- Sugerir Garantia: calculatedAmount.finalAmount, no `amount` ---
+  const RESPUESTA_GUARANTEE = {
+    calculatedAmount: {
+      baseAmount: 811,
+      reductionPercentage: 0,
+      reductionReason: 'El operador no dispone de estatus OEA',
+      finalAmount: 811,
+      breakdown: { duties: 0, vat: 212.9, excise: 0, other: 202.75 }
+    },
+    recommendedType: { code: '2', name: 'Garantia individual por fianza', reason: 'Operacion puntual sin OEA' },
+    alternatives: [{ code: '3', name: 'Garantia individual en efectivo', suitability: 60, estimatedCost: 20, processingTime: '1 dia', notes: 'Inmoviliza caja' }],
+    globalGuaranteeAnalysis: { canUseExisting: false, availableAmount: 0, wouldBeConsumed: 811, remainingAfter: 0, recommendation: 'Constituir garantia individual' },
+    recommendations: ['Constituir la garantia antes de enviar el IE015'],
+    model: 'sonnet-5'
+  }
+
+  test('Sugerir Garantia: el importe sale de calculatedAmount.finalAmount, no de amount', async () => {
+    transitAPI.aiSuggestGuarantee.mockResolvedValue({ data: { success: true, data: RESPUESTA_GUARANTEE } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Sugerir Garantia'))
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(transitAPI.aiSuggestGuarantee).toHaveBeenCalled())
+    await waitFor(() => expect(screen.getByText('Garantia Recomendada')).toBeInTheDocument())
+    // El importe exigible es 811 EUR. Antes se leia `data.amount` (inexistente)
+    // y se pintaba "0 EUR" para una garantia obligatoria. Nota: el desglose si
+    // muestra 0 EUR en derechos e impuestos especiales, que valen 0 de verdad.
+    expect(screen.getAllByText('811 EUR').length).toBeGreaterThan(0)
+    expect(screen.getByText(/Garantia individual por fianza/)).toBeInTheDocument()
+  })
+
+  test('Sugerir Garantia: desglosa el calculo desde calculatedAmount', async () => {
+    transitAPI.aiSuggestGuarantee.mockResolvedValue({ data: { success: true, data: RESPUESTA_GUARANTEE } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Sugerir Garantia'))
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText(/Detalle del Calculo/i)).toBeInTheDocument())
+    expect(screen.getByText(/El operador no dispone de estatus OEA/)).toBeInTheDocument()
+  })
+
+  test('Sugerir Garantia: aplicar la sugerencia manda el payload que el backend acepta', async () => {
+    // El boton anterior colgaba de `availableGuarantees`, un campo que el backend
+    // no devuelve nunca, asi que jamas se pintaba. Y mandaba `{guaranteeGRN}`, que
+    // `aiApplySuggestion` descarta en silencio: solo aplica las claves del modelo
+    // (guarantee, transitType, principal...). Ahora se manda `guarantee`.
+    transitAPI.aiSuggestGuarantee.mockResolvedValue({ data: { success: true, data: RESPUESTA_GUARANTEE } })
+    transitAPI.aiApplySuggestion.mockResolvedValue({ data: { success: true } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Sugerir Garantia'))
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText('Aplicar al Transito')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('Aplicar al Transito'))
+
+    await waitFor(() => expect(transitAPI.aiApplySuggestion).toHaveBeenCalledWith('t1', {
+      guarantee: { type: '2', amount: 811, currency: 'EUR' }
+    }))
+  })
+
+  test('Sugerir Garantia: sin codigo de tipo no se ofrece aplicar', async () => {
+    // Sin `recommendedType.code` no hay valor valido para el enum del modelo:
+    // aplicarlo daria un ValidationError de Mongoose.
+    const sinCodigo = { ...RESPUESTA_GUARANTEE, recommendedType: { name: 'Algo', reason: '' } }
+    transitAPI.aiSuggestGuarantee.mockResolvedValue({ data: { success: true, data: sinCodigo } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Sugerir Garantia'))
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText('Garantia Recomendada')).toBeInTheDocument())
+    expect(screen.queryByText('Aplicar al Transito')).not.toBeInTheDocument()
+  })
+
+  test('Sugerir Garantia: las alternativas llevan nombre e importe estimado', async () => {
+    transitAPI.aiSuggestGuarantee.mockResolvedValue({ data: { success: true, data: RESPUESTA_GUARANTEE } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Sugerir Garantia'))
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText(/Garantia individual en efectivo/)).toBeInTheDocument())
+  })
+
+  // --- Analisis Completo: summary es un OBJETO, no un texto ---
+  const RESPUESTA_FULL = {
+    routeValidation: RESPUESTA_VALIDATE_ROUTE,
+    incidentPrediction: RESPUESTA_INCIDENTS,
+    guaranteeSuggestion: RESPUESTA_GUARANTEE,
+    summary: {
+      readinessScore: 55,
+      readinessLevel: 'NEEDS_WORK',
+      factors: ['Principal obligado completo', 'Mercancias documentadas'],
+      overallRiskLevel: 'HIGH',
+      estimatedTransitDays: 1,
+      guaranteeRequired: 811
+    },
+    nextSteps: [
+      { priority: 1, action: 'Configurar garantia de transito', details: 'Se recomienda Garantia individual por fianza por 811 EUR', category: 'guarantee' }
+    ],
+    analyzedAt: '2026-08-08T16:13:20.488Z'
+  }
+
+  test('Analisis Completo: la puntuacion sale de summary.readinessScore', async () => {
+    transitAPI.aiFullAnalysis.mockResolvedValue({ data: { success: true, data: RESPUESTA_FULL } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Analisis Completo'))
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(transitAPI.aiFullAnalysis).toHaveBeenCalled())
+    // 0/100 sobre un transito con 55 puntos es un dato falso.
+    await waitFor(() => expect(screen.getByText('55/100')).toBeInTheDocument())
+  })
+
+  test('Analisis Completo: summary es un objeto y no se puede renderizar como texto', async () => {
+    transitAPI.aiFullAnalysis.mockResolvedValue({ data: { success: true, data: RESPUESTA_FULL } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Analisis Completo'))
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    // Los factores del resumen se listan; el objeto crudo nunca llega al DOM.
+    await waitFor(() => expect(screen.getByText(/Principal obligado completo/)).toBeInTheDocument())
+    expect(screen.getByText(/NEEDS_WORK|Requiere trabajo/i)).toBeInTheDocument()
+  })
+
+  test('Analisis Completo: los proximos pasos vienen de nextSteps', async () => {
+    transitAPI.aiFullAnalysis.mockResolvedValue({ data: { success: true, data: RESPUESTA_FULL } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Analisis Completo'))
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText(/Configurar garantia de transito/)).toBeInTheDocument())
+  })
+
+  test('Analisis Completo: el riesgo global HIGH se muestra como Alto', async () => {
+    transitAPI.aiFullAnalysis.mockResolvedValue({ data: { success: true, data: RESPUESTA_FULL } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Analisis Completo'))
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getAllByText(/Riesgo.*Alto/i).length).toBeGreaterThan(0))
+  })
+
+  test('Analisis Completo: la garantia requerida sale de calculatedAmount.finalAmount', async () => {
+    transitAPI.aiFullAnalysis.mockResolvedValue({ data: { success: true, data: RESPUESTA_FULL } })
+    await abrirPanel()
+    fireEvent.click(screen.getByText('Analisis Completo'))
+    fireEvent.click(screen.getByText('Ejecutar Analisis'))
+
+    await waitFor(() => expect(screen.getByText('Garantia Recomendada')).toBeInTheDocument())
+    expect(screen.getAllByText(/811/).length).toBeGreaterThan(0)
   })
 })

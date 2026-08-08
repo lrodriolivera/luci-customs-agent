@@ -21,6 +21,15 @@ import {
   ArrowTrendingUpIcon,
   ExclamationCircleIcon
 } from '@heroicons/react/24/outline'
+import {
+  normalizarValidacionRuta,
+  normalizarPrediccionIncidencias,
+  normalizarSugerenciaGarantia,
+  normalizarAnalisisCompleto,
+  etiquetaPreparacion,
+  importeEUR,
+  ETIQUETA_RIESGO
+} from './transitAIContract'
 
 const TRANSIT_TYPES = {
   T1: { label: 'T1 - No Union', color: 'blue', description: 'Mercancias no comunitarias' },
@@ -121,56 +130,62 @@ function TransitAIPanel({ transit, onClose, onApplySuggestion }) {
     }
   }
 
-  const renderRouteValidation = (data) => {
+  const renderRouteValidation = (raw) => {
+    const data = normalizarValidacionRuta(raw)
     if (!data) return null
     return (
       <div className="space-y-4">
-        {/* Overall Status */}
-        <div className={`p-4 rounded-lg ${data.isValid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+        {/* Veredicto */}
+        <div className={`p-4 rounded-lg ${data.esValida ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
           <div className="flex items-center gap-2">
-            {data.isValid ? (
+            {data.esValida ? (
               <CheckCircleIcon className="w-6 h-6 text-green-600" />
             ) : (
               <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
             )}
-            <span className={`font-medium ${data.isValid ? 'text-green-800' : 'text-red-800'}`}>
-              {data.isValid ? 'Ruta Valida' : 'Ruta con Problemas'}
+            <span className={`font-medium ${data.esValida ? 'text-green-800' : 'text-red-800'}`}>
+              {data.esValida ? 'Ruta Valida' : 'Ruta con Problemas'}
             </span>
           </div>
-          {data.summary && <p className="mt-2 text-sm text-gray-600">{data.summary}</p>}
         </div>
 
-        {/* Route Details */}
-        {data.routeAnalysis && (
+        {/* Analisis de ruta */}
+        {(data.analisis.distancia || data.analisis.dias !== null) && (
           <div className="bg-white border rounded-lg p-4">
             <h4 className="font-medium text-gray-700 mb-3">Analisis de Ruta</h4>
             <div className="space-y-2 text-sm">
-              {data.routeAnalysis.estimatedDuration && (
-                <p><span className="text-gray-500">Duracion estimada:</span> {data.routeAnalysis.estimatedDuration}</p>
+              {data.analisis.distancia && (
+                <p><span className="text-gray-500">Distancia:</span> {data.analisis.distancia}</p>
               )}
-              {data.routeAnalysis.distance && (
-                <p><span className="text-gray-500">Distancia:</span> {data.routeAnalysis.distance} km</p>
-              )}
-              {data.routeAnalysis.transitCountries && (
-                <p><span className="text-gray-500">Paises de transito:</span> {data.routeAnalysis.transitCountries.join(' → ')}</p>
+              {data.analisis.dias !== null && (
+                <p><span className="text-gray-500">Dias de transito estimados:</span> {data.analisis.dias}</p>
               )}
             </div>
           </div>
         )}
 
-        {/* Checkpoints */}
-        {data.checkpoints && data.checkpoints.length > 0 && (
+        {/* Incidencias detectadas (routeValidation.issues) */}
+        {data.incidencias.length > 0 && (
           <div className="bg-white border rounded-lg p-4">
-            <h4 className="font-medium text-gray-700 mb-3">Puntos de Control Requeridos</h4>
-            <div className="space-y-2">
-              {data.checkpoints.map((cp, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                  <div>
-                    <p className="font-medium text-sm">{cp.office || cp.name}</p>
-                    <p className="text-xs text-gray-500">{cp.country} - {cp.type}</p>
+            <h4 className="font-medium text-gray-700 mb-3">Incidencias Detectadas</h4>
+            <div className="space-y-3">
+              {data.incidencias.map((inc, idx) => (
+                <div key={idx} className={`p-3 rounded-lg border ${
+                  inc.tipo === 'error' ? 'border-red-200 bg-red-50' :
+                  inc.tipo === 'warning' ? 'border-yellow-200 bg-yellow-50' :
+                  'border-blue-200 bg-blue-50'
+                }`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium uppercase text-gray-500">{inc.tipo}</span>
+                    {inc.segmento && (
+                      <span className="text-xs text-gray-500">{inc.segmento}</span>
+                    )}
                   </div>
-                  {cp.required && (
-                    <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">Obligatorio</span>
+                  <p className="text-sm text-gray-700">{inc.descripcion}</p>
+                  {inc.recomendacion && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      <span className="font-medium">Recomendacion:</span> {inc.recomendacion}
+                    </p>
                   )}
                 </div>
               ))}
@@ -178,30 +193,51 @@ function TransitAIPanel({ transit, onClose, onApplySuggestion }) {
           </div>
         )}
 
-        {/* Warnings */}
-        {data.warnings && data.warnings.length > 0 && (
+        {/* Restricciones de circulacion */}
+        {data.analisis.restricciones.length > 0 && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
               <ExclamationTriangleIcon className="w-5 h-5" />
-              Advertencias
+              Restricciones
             </h4>
-            <ul className="space-y-1 text-sm text-yellow-700">
-              {data.warnings.map((w, idx) => (
-                <li key={idx}>• {w}</li>
+            <ul className="space-y-2 text-sm text-yellow-700">
+              {data.analisis.restricciones.map((r, idx) => (
+                <li key={idx}>
+                  <span className="font-medium">{r.country}:</span> {r.restriction}
+                  {r.period && <span className="text-xs"> ({r.period})</span>}
+                </li>
               ))}
             </ul>
           </div>
         )}
 
-        {/* Recommendations */}
-        {data.recommendations && data.recommendations.length > 0 && (
+        {/* Aduanas de transito sugeridas */}
+        {data.aduanasSugeridas.length > 0 && (
+          <div className="bg-white border rounded-lg p-4">
+            <h4 className="font-medium text-gray-700 mb-3">Aduanas de Transito Sugeridas</h4>
+            <div className="space-y-2">
+              {data.aduanasSugeridas.map((a, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div>
+                    <p className="font-medium text-sm">{a.code} {a.name && `- ${a.name}`}</p>
+                    <p className="text-xs text-gray-500">{a.country} {a.reason && `- ${a.reason}`}</p>
+                  </div>
+                  <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">#{a.sequence}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recomendaciones */}
+        {data.recomendaciones.length > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 className="font-medium text-blue-800 mb-2 flex items-center gap-2">
               <LightBulbIcon className="w-5 h-5" />
               Recomendaciones
             </h4>
             <ul className="space-y-1 text-sm text-blue-700">
-              {data.recommendations.map((r, idx) => (
+              {data.recomendaciones.map((r, idx) => (
                 <li key={idx}>• {r}</li>
               ))}
             </ul>
@@ -211,64 +247,71 @@ function TransitAIPanel({ transit, onClose, onApplySuggestion }) {
     )
   }
 
-  const renderIncidentPrediction = (data) => {
+  const renderIncidentPrediction = (raw) => {
+    const data = normalizarPrediccionIncidencias(raw)
     if (!data) return null
     return (
       <div className="space-y-4">
-        {/* Risk Level */}
+        {/* Nivel de riesgo */}
         <div className={`p-4 rounded-lg ${
-          data.riskLevel === 'high' ? 'bg-red-50 border border-red-200' :
-          data.riskLevel === 'medium' ? 'bg-yellow-50 border border-yellow-200' :
+          data.riesgo === 'high' ? 'bg-red-50 border border-red-200' :
+          data.riesgo === 'medium' ? 'bg-yellow-50 border border-yellow-200' :
           'bg-green-50 border border-green-200'
         }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <BoltIcon className={`w-6 h-6 ${
-                data.riskLevel === 'high' ? 'text-red-600' :
-                data.riskLevel === 'medium' ? 'text-yellow-600' :
+                data.riesgo === 'high' ? 'text-red-600' :
+                data.riesgo === 'medium' ? 'text-yellow-600' :
                 'text-green-600'
               }`} />
               <span className={`font-medium ${
-                data.riskLevel === 'high' ? 'text-red-800' :
-                data.riskLevel === 'medium' ? 'text-yellow-800' :
+                data.riesgo === 'high' ? 'text-red-800' :
+                data.riesgo === 'medium' ? 'text-yellow-800' :
                 'text-green-800'
               }`}>
-                Riesgo {data.riskLevel === 'high' ? 'Alto' : data.riskLevel === 'medium' ? 'Medio' : 'Bajo'}
+                Riesgo {ETIQUETA_RIESGO[data.riesgo]}
               </span>
             </div>
-            {data.probability && (
+            {data.score !== null && (
               <span className="text-sm font-medium">
-                Probabilidad incidencia: {(data.probability * 100).toFixed(0)}%
+                Puntuacion de riesgo: {data.score}/100
               </span>
             )}
           </div>
         </div>
 
-        {/* Predicted Incidents */}
-        {data.predictedIncidents && data.predictedIncidents.length > 0 && (
+        {/* Incidencias previstas */}
+        {data.incidencias.length > 0 && (
           <div className="bg-white border rounded-lg p-4">
             <h4 className="font-medium text-gray-700 mb-3">Incidencias Potenciales</h4>
             <div className="space-y-3">
-              {data.predictedIncidents.map((incident, idx) => (
+              {data.incidencias.map((inc, idx) => (
                 <div key={idx} className={`p-3 rounded-lg border ${
-                  incident.severity === 'high' ? 'border-red-200 bg-red-50' :
-                  incident.severity === 'medium' ? 'border-yellow-200 bg-yellow-50' :
+                  inc.gravedad === 'high' ? 'border-red-200 bg-red-50' :
+                  inc.gravedad === 'medium' ? 'border-yellow-200 bg-yellow-50' :
                   'border-gray-200 bg-gray-50'
                 }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-sm">{incident.type}</span>
-                    <span className={`px-2 py-0.5 text-xs rounded ${
-                      incident.severity === 'high' ? 'bg-red-200 text-red-800' :
-                      incident.severity === 'medium' ? 'bg-yellow-200 text-yellow-800' :
-                      'bg-gray-200 text-gray-800'
-                    }`}>
-                      {(incident.probability * 100).toFixed(0)}% probabilidad
-                    </span>
+                    <span className="font-medium text-sm">{inc.tipo}</span>
+                    {inc.probabilidad !== null && (
+                      <span className={`px-2 py-0.5 text-xs rounded ${
+                        inc.gravedad === 'high' ? 'bg-red-200 text-red-800' :
+                        inc.gravedad === 'medium' ? 'bg-yellow-200 text-yellow-800' :
+                        'bg-gray-200 text-gray-800'
+                      }`}>
+                        {inc.probabilidad}% probabilidad
+                      </span>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-600">{incident.description}</p>
-                  {incident.mitigation && (
+                  <p className="text-sm text-gray-600">{inc.descripcion}</p>
+                  <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-500">
+                    {inc.etapa && <span><span className="font-medium">Etapa:</span> {inc.etapa}</span>}
+                    {inc.retraso && <span><span className="font-medium">Retraso posible:</span> {inc.retraso}</span>}
+                  </div>
+                  {inc.medidas.length > 0 && (
                     <p className="text-xs text-gray-500 mt-2">
-                      <span className="font-medium">Mitigacion:</span> {incident.mitigation}
+                      <span className="font-medium">Mitigacion:</span> {inc.medidas.join('; ')}
                     </p>
                   )}
                 </div>
@@ -277,37 +320,40 @@ function TransitAIPanel({ transit, onClose, onApplySuggestion }) {
           </div>
         )}
 
-        {/* Historical Data */}
-        {data.historicalData && (
+        {/* Probabilidad de control por etapa */}
+        {data.probabilidadControl && (
           <div className="bg-gray-50 border rounded-lg p-4">
-            <h4 className="font-medium text-gray-700 mb-3">Datos Historicos</h4>
+            <h4 className="font-medium text-gray-700 mb-3">Probabilidad de Control</h4>
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <p className="text-2xl font-bold text-gray-900">{data.historicalData.totalTransits || 0}</p>
-                <p className="text-xs text-gray-500">Transitos similares</p>
+                <p className="text-2xl font-bold text-gray-900">{data.probabilidadControl.departure ?? 0}%</p>
+                <p className="text-xs text-gray-500">En partida</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-orange-600">{data.historicalData.incidentRate || 0}%</p>
-                <p className="text-xs text-gray-500">Tasa de incidencias</p>
+                <p className="text-2xl font-bold text-orange-600">{data.probabilidadControl.transit ?? 0}%</p>
+                <p className="text-xs text-gray-500">En transito</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-blue-600">{data.historicalData.avgDelay || 0}h</p>
-                <p className="text-xs text-gray-500">Retraso promedio</p>
+                <p className="text-2xl font-bold text-blue-600">{data.probabilidadControl.arrival ?? 0}%</p>
+                <p className="text-xs text-gray-500">En destino</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Preventive Measures */}
-        {data.preventiveMeasures && data.preventiveMeasures.length > 0 && (
+        {/* Recomendaciones (objetos con prioridad) */}
+        {data.recomendaciones.length > 0 && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
             <h4 className="font-medium text-indigo-800 mb-2 flex items-center gap-2">
               <ShieldCheckIcon className="w-5 h-5" />
               Medidas Preventivas Recomendadas
             </h4>
-            <ul className="space-y-1 text-sm text-indigo-700">
-              {data.preventiveMeasures.map((m, idx) => (
-                <li key={idx}>• {m}</li>
+            <ul className="space-y-2 text-sm text-indigo-700">
+              {data.recomendaciones.map((r, idx) => (
+                <li key={idx}>
+                  • <span className="font-medium">{r.accion}</span>
+                  {r.motivo && <span className="text-xs text-indigo-600"> — {r.motivo}</span>}
+                </li>
               ))}
             </ul>
           </div>
@@ -316,11 +362,12 @@ function TransitAIPanel({ transit, onClose, onApplySuggestion }) {
     )
   }
 
-  const renderGuaranteeSuggestion = (data) => {
+  const renderGuaranteeSuggestion = (raw) => {
+    const data = normalizarSugerenciaGarantia(raw)
     if (!data) return null
     return (
       <div className="space-y-4">
-        {/* Recommended Guarantee */}
+        {/* Garantia recomendada */}
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <h4 className="font-medium text-green-800 mb-3 flex items-center gap-2">
             <CurrencyEuroIcon className="w-5 h-5" />
@@ -329,247 +376,267 @@ function TransitAIPanel({ transit, onClose, onApplySuggestion }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-500">Tipo</p>
-              <p className="font-medium">{data.recommendedType?.name || data.guaranteeType}</p>
+              <p className="font-medium">{data.tipo || 'No determinado'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Importe</p>
-              <p className="font-medium text-lg">{data.amount?.toLocaleString() || 0} EUR</p>
+              <p className="font-medium text-lg">{importeEUR(data.importe) || 'No calculado'}</p>
             </div>
           </div>
-          {data.justification && (
-            <p className="mt-3 text-sm text-gray-600">{data.justification}</p>
+          {data.motivo && (
+            <p className="mt-3 text-sm text-gray-600">{data.motivo}</p>
+          )}
+          {/*
+            Sin `codigoTipo` no hay valor valido para el enum `guarantee.type` del
+            modelo, asi que no se ofrece aplicar: guardarlo daria un
+            ValidationError de Mongoose.
+          */}
+          {data.codigoTipo && (
+            <button
+              onClick={() => handleApplySuggestion({
+                guarantee: {
+                  type: data.codigoTipo,
+                  ...(data.importe !== null && { amount: data.importe }),
+                  currency: 'EUR'
+                }
+              })}
+              disabled={loading}
+              className="mt-3 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50"
+            >
+              Aplicar al Transito
+            </button>
           )}
         </div>
 
-        {/* Calculation Details */}
-        {data.calculation && (
+        {/* Detalle del calculo */}
+        {(data.calculo.base !== null || data.calculo.desglose) && (
           <div className="bg-white border rounded-lg p-4">
             <h4 className="font-medium text-gray-700 mb-3">Detalle del Calculo</h4>
             <div className="space-y-2 text-sm">
-              {data.calculation.baseAmount && (
+              {data.calculo.desglose && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Derechos de aduana</span>
+                    <span>{importeEUR(data.calculo.desglose.duties) || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">IVA</span>
+                    <span>{importeEUR(data.calculo.desglose.vat) || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Impuestos especiales</span>
+                    <span>{importeEUR(data.calculo.desglose.excise) || '-'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Otros</span>
+                    <span>{importeEUR(data.calculo.desglose.other) || '-'}</span>
+                  </div>
+                </>
+              )}
+              {data.calculo.base !== null && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Importe base (derechos + IVA)</span>
-                  <span>{data.calculation.baseAmount.toLocaleString()} EUR</span>
+                  <span className="text-gray-500">Importe base</span>
+                  <span>{importeEUR(data.calculo.base)}</span>
                 </div>
               )}
-              {data.calculation.riskFactor && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Factor de riesgo</span>
-                  <span>x{data.calculation.riskFactor}</span>
+              {data.calculo.reduccion !== null && (
+                <div className={`flex justify-between ${data.calculo.reduccion > 0 ? 'text-green-600' : 'text-gray-500'}`}>
+                  <span>Reduccion aplicada</span>
+                  <span>-{data.calculo.reduccion}%</span>
                 </div>
               )}
-              {data.calculation.oeaReduction && (
-                <div className="flex justify-between text-green-600">
-                  <span>Reduccion OEA</span>
-                  <span>-{data.calculation.oeaReduction}%</span>
-                </div>
+              {data.calculo.motivoReduccion && (
+                <p className="text-xs text-gray-500">{data.calculo.motivoReduccion}</p>
               )}
               <div className="flex justify-between font-medium pt-2 border-t">
                 <span>Importe final</span>
-                <span>{data.amount?.toLocaleString() || 0} EUR</span>
+                <span>{importeEUR(data.importe) || 'No calculado'}</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* Alternatives */}
-        {data.alternatives && data.alternatives.length > 0 && (
+        {/* Alternativas */}
+        {data.alternativas.length > 0 && (
           <div className="bg-white border rounded-lg p-4">
             <h4 className="font-medium text-gray-700 mb-3">Alternativas</h4>
             <div className="space-y-2">
-              {data.alternatives.map((alt, idx) => (
+              {data.alternativas.map((alt, idx) => (
                 <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                   <div>
-                    <p className="font-medium text-sm">{alt.type}</p>
-                    <p className="text-xs text-gray-500">{alt.description}</p>
+                    <p className="font-medium text-sm">{alt.nombre}</p>
+                    <p className="text-xs text-gray-500">
+                      {alt.notas}
+                      {alt.plazo && ` - Tramitacion: ${alt.plazo}`}
+                    </p>
                   </div>
-                  <span className="text-sm font-medium">{alt.amount?.toLocaleString()} EUR</span>
+                  <div className="text-right">
+                    {alt.coste !== null && <p className="text-sm font-medium">{importeEUR(alt.coste)}</p>}
+                    {alt.idoneidad !== null && <p className="text-xs text-gray-500">Idoneidad {alt.idoneidad}%</p>}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Available Guarantees */}
-        {data.availableGuarantees && data.availableGuarantees.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-800 mb-3">Garantias Disponibles en Sistema</h4>
-            <div className="space-y-2">
-              {data.availableGuarantees.map((g, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 bg-white rounded border">
-                  <div>
-                    <p className="font-medium text-sm">{g.grn || g.reference}</p>
-                    <p className="text-xs text-gray-500">{g.type} - Disponible: {g.available?.toLocaleString()} EUR</p>
-                  </div>
-                  {g.canUse && (
-                    <button
-                      onClick={() => handleApplySuggestion({ guaranteeGRN: g.grn })}
-                      disabled={loading}
-                      className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      Usar
-                    </button>
-                  )}
-                </div>
-              ))}
+        {/* Garantia global existente */}
+        {data.garantiaGlobal && (
+          <div className={`border rounded-lg p-4 ${data.garantiaGlobal.puedeUsarla ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'}`}>
+            <h4 className={`font-medium mb-3 ${data.garantiaGlobal.puedeUsarla ? 'text-blue-800' : 'text-gray-700'}`}>
+              Garantia Global del Operador
+            </h4>
+            <div className="space-y-1 text-sm">
+              <p>
+                {data.garantiaGlobal.puedeUsarla
+                  ? 'Se puede cubrir esta operacion con la garantia global existente.'
+                  : 'La garantia global no cubre esta operacion.'}
+              </p>
+              {data.garantiaGlobal.recomendacion && (
+                <p className="text-gray-600">{data.garantiaGlobal.recomendacion}</p>
+              )}
             </div>
+          </div>
+        )}
+
+        {/* Avisos */}
+        {data.avisos.length > 0 && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
+              <ExclamationTriangleIcon className="w-5 h-5" />
+              Advertencias
+            </h4>
+            <ul className="space-y-1 text-sm text-yellow-700">
+              {data.avisos.map((w, idx) => (
+                <li key={idx}>• {w}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Recomendaciones */}
+        {data.recomendaciones.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-blue-800 mb-2 flex items-center gap-2">
+              <LightBulbIcon className="w-5 h-5" />
+              Recomendaciones
+            </h4>
+            <ul className="space-y-1 text-sm text-blue-700">
+              {data.recomendaciones.map((r, idx) => (
+                <li key={idx}>• {r}</li>
+              ))}
+            </ul>
           </div>
         )}
       </div>
     )
   }
 
-  const renderFullAnalysis = (data) => {
+  const renderFullAnalysis = (raw) => {
+    const data = normalizarAnalisisCompleto(raw)
     if (!data) return null
+    const puntuacion = data.puntuacion
     return (
       <div className="space-y-4">
-        {/* Summary */}
+        {/* Resumen de preparacion */}
         <div className={`p-4 rounded-lg ${
-          data.overallScore >= 80 ? 'bg-green-50 border border-green-200' :
-          data.overallScore >= 60 ? 'bg-yellow-50 border border-yellow-200' :
+          puntuacion >= 80 ? 'bg-green-50 border border-green-200' :
+          puntuacion >= 60 ? 'bg-yellow-50 border border-yellow-200' :
           'bg-red-50 border border-red-200'
         }`}>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <SparklesIcon className="w-6 h-6 text-luci" />
-              <span className="font-medium">Analisis Integral LUCI</span>
+            <div>
+              <h4 className="font-medium text-gray-800">Preparacion del Transito</h4>
+              <p className="text-sm text-gray-600">{etiquetaPreparacion(data.nivel)}</p>
             </div>
             <div className="text-right">
-              <span className={`text-2xl font-bold ${
-                data.overallScore >= 80 ? 'text-green-600' :
-                data.overallScore >= 60 ? 'text-yellow-600' :
+              <span className={`text-3xl font-bold ${
+                puntuacion >= 80 ? 'text-green-600' :
+                puntuacion >= 60 ? 'text-yellow-600' :
                 'text-red-600'
               }`}>
-                {data.overallScore || 0}/100
+                {puntuacion !== null ? `${puntuacion}/100` : 'N/D'}
               </span>
               <p className="text-xs text-gray-500">Puntuacion</p>
             </div>
           </div>
-          {data.summary && <p className="mt-3 text-sm text-gray-600">{data.summary}</p>}
+          <div className="mt-3 flex flex-wrap gap-3 text-sm text-gray-600">
+            <span>Riesgo global: <span className="font-medium">{ETIQUETA_RIESGO[data.riesgoGlobal]}</span></span>
+            {data.diasEstimados !== null && <span>Dias estimados: <span className="font-medium">{data.diasEstimados}</span></span>}
+            {data.garantiaRequerida !== null && <span>Garantia: <span className="font-medium">{importeEUR(data.garantiaRequerida)}</span></span>}
+          </div>
         </div>
 
-        {/* Section Scores */}
-        {data.sections && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(data.sections).map(([key, section]) => (
-              <div key={key} className="bg-white border rounded-lg p-3 text-center">
-                <p className={`text-xl font-bold ${
-                  section.score >= 80 ? 'text-green-600' :
-                  section.score >= 60 ? 'text-yellow-600' :
-                  'text-red-600'
-                }`}>
-                  {section.score || 0}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{section.label || key}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Route Validation Embedded */}
-        {data.routeValidation && (
+        {/* Factores que suman a la preparacion */}
+        {data.factores.length > 0 && (
           <div className="bg-white border rounded-lg p-4">
-            <h4 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-              <MapPinIcon className="w-5 h-5" />
-              Validacion de Ruta
-            </h4>
-            {renderRouteValidation(data.routeValidation)}
-          </div>
-        )}
-
-        {/* Incident Prediction Embedded */}
-        {data.incidentPrediction && (
-          <div className="bg-white border rounded-lg p-4">
-            <h4 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-              <BoltIcon className="w-5 h-5" />
-              Prediccion de Incidencias
-            </h4>
-            <div className={`p-3 rounded ${
-              data.incidentPrediction.riskLevel === 'high' ? 'bg-red-50' :
-              data.incidentPrediction.riskLevel === 'medium' ? 'bg-yellow-50' :
-              'bg-green-50'
-            }`}>
-              <p className="font-medium">
-                Riesgo: {data.incidentPrediction.riskLevel === 'high' ? 'Alto' :
-                        data.incidentPrediction.riskLevel === 'medium' ? 'Medio' : 'Bajo'}
-              </p>
-              {data.incidentPrediction.mainRisks && (
-                <ul className="mt-2 text-sm">
-                  {data.incidentPrediction.mainRisks.slice(0, 3).map((r, i) => (
-                    <li key={i}>• {r}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Guarantee Summary */}
-        {data.guaranteeSuggestion && (
-          <div className="bg-white border rounded-lg p-4">
-            <h4 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
-              <CurrencyEuroIcon className="w-5 h-5" />
-              Garantia Recomendada
-            </h4>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">{data.guaranteeSuggestion.type}</p>
-                <p className="text-sm text-gray-500">{data.guaranteeSuggestion.grn || 'Nuevo deposito necesario'}</p>
-              </div>
-              <p className="text-xl font-bold text-green-600">{data.guaranteeSuggestion.amount?.toLocaleString() || 0} EUR</p>
-            </div>
-          </div>
-        )}
-
-        {/* Critical Issues */}
-        {data.criticalIssues && data.criticalIssues.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h4 className="font-medium text-red-800 mb-2 flex items-center gap-2">
-              <ExclamationTriangleIcon className="w-5 h-5" />
-              Problemas Criticos
-            </h4>
-            <ul className="space-y-1 text-sm text-red-700">
-              {data.criticalIssues.map((issue, idx) => (
-                <li key={idx}>• {issue}</li>
+            <h4 className="font-medium text-gray-700 mb-3">Factores Verificados</h4>
+            <ul className="space-y-1 text-sm text-gray-600">
+              {data.factores.map((f, idx) => (
+                <li key={idx} className="flex items-center gap-2">
+                  <CheckCircleIcon className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  {f}
+                </li>
               ))}
             </ul>
           </div>
         )}
 
-        {/* Action Items */}
-        {data.actionItems && data.actionItems.length > 0 && (
+        {/* Validacion de ruta embebida */}
+        {raw.routeValidation && (
+          <div className="bg-white border rounded-lg p-4">
+            <h4 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+              <MapPinIcon className="w-5 h-5" />
+              Validacion de Ruta
+            </h4>
+            {renderRouteValidation(raw.routeValidation)}
+          </div>
+        )}
+
+        {/* Prediccion de incidencias embebida */}
+        {raw.incidentPrediction && (
+          <div className="bg-white border rounded-lg p-4">
+            <h4 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+              <BoltIcon className="w-5 h-5" />
+              Prediccion de Incidencias
+            </h4>
+            {renderIncidentPrediction(raw.incidentPrediction)}
+          </div>
+        )}
+
+        {/* Garantia embebida */}
+        {raw.guaranteeSuggestion && (
+          <div className="bg-white border rounded-lg p-4">
+            <h4 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+              <CurrencyEuroIcon className="w-5 h-5" />
+              Garantia
+            </h4>
+            {renderGuaranteeSuggestion(raw.guaranteeSuggestion)}
+          </div>
+        )}
+
+        {/* Proximos pasos (nextSteps, prioridad numerica) */}
+        {data.proximosPasos.length > 0 && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-            <h4 className="font-medium text-indigo-800 mb-3">Acciones Recomendadas</h4>
+            <h4 className="font-medium text-indigo-800 mb-3">Proximos Pasos</h4>
             <div className="space-y-2">
-              {data.actionItems.map((item, idx) => (
+              {data.proximosPasos.map((paso, idx) => (
                 <div key={idx} className="flex items-start gap-2">
                   <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                    item.priority === 'high' ? 'bg-red-200 text-red-800' :
-                    item.priority === 'medium' ? 'bg-yellow-200 text-yellow-800' :
+                    paso.prioridad === 1 ? 'bg-red-200 text-red-800' :
+                    paso.prioridad === 2 ? 'bg-yellow-200 text-yellow-800' :
                     'bg-blue-200 text-blue-800'
                   }`}>
-                    {idx + 1}
+                    {paso.prioridad ?? idx + 1}
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">{item.action}</p>
-                    {item.reason && <p className="text-xs text-gray-500">{item.reason}</p>}
+                    <p className="text-sm font-medium text-gray-700">{paso.accion}</p>
+                    {paso.detalle && <p className="text-xs text-gray-500">{paso.detalle}</p>}
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        )}
-
-        {/* Apply Full Suggestion Button */}
-        {data.suggestedData && (
-          <button
-            onClick={() => handleApplySuggestion(data.suggestedData)}
-            disabled={loading}
-            className="w-full py-3 bg-luci text-white rounded-lg hover:bg-luci-dark disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            <SparklesIcon className="w-5 h-5" />
-            Aplicar Todas las Sugerencias
-          </button>
         )}
       </div>
     )
