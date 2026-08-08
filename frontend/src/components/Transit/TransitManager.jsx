@@ -32,6 +32,7 @@ import {
   importeEUR,
   ETIQUETA_RIESGO
 } from './transitAIContract'
+import { normalizarMensajes } from './transitMessages'
 
 const TRANSIT_TYPES = {
   T1: { label: 'T1 - No Union', color: 'blue', description: 'Mercancias no comunitarias' },
@@ -1195,13 +1196,45 @@ export default function TransitManager() {
                             ))}
                           </div>
 
-                          {/* Messages count */}
-                          {transit.messages?.length > 0 && (
-                            <p className="text-sm text-gray-500 mt-2">
-                              <DocumentTextIcon className="w-4 h-4 inline mr-1" />
-                              {transit.messages.length} mensaje(s) NCTS
-                            </p>
-                          )}
+                          {/* Mensajes NCTS: los intercambiados con AEAT y los que
+                              solo son registro local (ver transitMessages.js) */}
+                          {transit.messages?.length > 0 && (() => {
+                            const mensajes = normalizarMensajes(transit.messages)
+                            const intercambiados = mensajes.filter(m => m.intercambiado).length
+
+                            return (
+                              <div className="mt-2">
+                                <p className="text-sm text-gray-500">
+                                  <DocumentTextIcon className="w-4 h-4 inline mr-1" />
+                                  {intercambiados > 0
+                                    ? `${intercambiados} mensaje(s) intercambiados con AEAT`
+                                    : 'Ningun mensaje intercambiado con AEAT'}
+                                </p>
+                                <ul className="mt-1 space-y-1">
+                                  {mensajes.map((m, i) => (
+                                    <li key={`${m.tipo}-${m.fecha}-${i}`} className="text-xs flex flex-wrap items-center gap-2">
+                                      <span className="font-mono font-medium text-gray-700">{m.tipo}</span>
+                                      <span className="text-gray-500">{m.descripcion}</span>
+                                      {m.intercambiado ? (
+                                        <span className="text-gray-400">
+                                          {m.direccion === 'inbound' ? 'recibido de AEAT' : 'enviado a AEAT'}
+                                        </span>
+                                      ) : (
+                                        <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                                          Solo registro local, no enviado a AEAT
+                                        </span>
+                                      )}
+                                      {m.fecha && (
+                                        <span className="text-gray-400">
+                                          {new Date(m.fecha).toLocaleString('es-ES')}
+                                        </span>
+                                      )}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )
+                          })()}
                         </div>
                       </div>
                     </div>

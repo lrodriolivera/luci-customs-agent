@@ -608,3 +608,77 @@ describe('notifyArrival / notifyUnloading: envio real a AEAT + transicion de est
     expect(t.status).toBe('completed');
   });
 });
+
+/**
+ * E2E 8/Ago: tres transiciones fabrican mensajes NCTS que AEAT nunca envio y los
+ * registran como intercambio real.
+ *
+ * `releaseAtDeparture` empujaba un IE029 con `direction: 'inbound'` — el IE029
+ * (Release for Transit) es una AUTORIZACION de la aduana de partida, y marcarlo
+ * como entrante equivale a afirmar que AEAT ha liberado la mercancia. Verificado
+ * en produccion: un transito liberado desde la UI muestra "3 mensaje(s) NCTS"
+ * con `IE029 inbound` junto al IE015/IE028 que si son reales, indistinguibles.
+ * Igual `recordControlResult` (IE143) e `initiateEnquiry` (IE118), que se marcan
+ * `outbound` sin que salga nada por la red.
+ *
+ * El riesgo es el mismo que el aviso "Modo demo" que mentia: quien mira el
+ * expediente concluye que la aduana ha respondido. Los mensajes se conservan
+ * (documentan la transicion local) pero quedan marcados como no intercambiados.
+ */
+describe('mensajes NCTS locales: no se pueden presentar como intercambio con AEAT', () => {
+  test('el IE029 de releaseAtDeparture no se marca como recibido de AEAT', async () => {
+    const owner = OWNER();
+    let t = await crearAceptado(owner);
+    t = await transitService.releaseAtDeparture(t._id, owner);
+
+    const ie029 = t.messages.find(m => m.type === 'IE029');
+    expect(ie029).toBeDefined();
+    // No ha entrado por la red: no puede figurar como mensaje entrante de AEAT.
+    expect(ie029.direction).not.toBe('inbound');
+    expect(ie029.exchanged).toBe(false);
+
+    // Los que SI son reales siguen marcados como intercambiados.
+    expect(t.messages.find(m => m.type === 'IE015').exchanged).toBe(true);
+    expect(t.messages.find(m => m.type === 'IE028').exchanged).toBe(true);
+  });
+
+  test('el IE143 de recordControlResult queda marcado como no intercambiado', async () => {
+    const owner = OWNER();
+    let t = await crearAceptado(owner);
+    t = await transitService.releaseAtDeparture(t._id, owner);
+    t = await transitService.startTransit(t._id, owner);
+    t = await transitService.notifyArrival(t._id, {}, owner);
+    t = await transitService.recordControlResult(t._id, { type: 'A1' }, owner);
+
+    const ie143 = t.messages.find(m => m.type === 'IE143');
+    expect(ie143).toBeDefined();
+    expect(ie143.exchanged).toBe(false);
+  });
+
+  test('el IE118 de initiateEnquiry queda marcado como no intercambiado', async () => {
+    const owner = OWNER();
+    let t = await crearAceptado(owner);
+    t = await transitService.releaseAtDeparture(t._id, owner);
+    t = await transitService.startTransit(t._id, owner);
+    // Vencer el plazo para que initiateEnquiry lo admita.
+    await Transit.updateOne({ _id: t._id }, { 'deadlines.arrivalDeadline': new Date('2020-01-01') });
+    t = await transitService.initiateEnquiry(t._id, { reason: 'Plazo excedido' }, owner);
+
+    const ie118 = t.messages.find(m => m.type === 'IE118');
+    expect(ie118).toBeDefined();
+    expect(ie118.exchanged).toBe(false);
+  });
+
+  test('un mensaje sin marca explicita se considera intercambiado', async () => {
+    // Compatibilidad con los transitos ya guardados: los IE015/IE028 historicos
+    // no llevan la clave y son intercambios reales.
+    const owner = OWNER();
+    const t = await crearAceptado(owner);
+    const doc = await Transit.findById(t._id);
+    doc.messages.push({ type: 'IE060', direction: 'inbound', content: {} });
+    await doc.save();
+
+    const recargado = await Transit.findById(t._id);
+    expect(recargado.messages.find(m => m.type === 'IE060').exchanged).toBe(true);
+  });
+});

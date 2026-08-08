@@ -332,7 +332,16 @@ const transitSchema = new mongoose.Schema({
     direction: { type: String, enum: ['outbound', 'inbound'] },
     timestamp: { type: Date, default: Date.now },
     content: mongoose.Schema.Types.Mixed,
-    correlationId: String
+    correlationId: String,
+    // `false` = el mensaje lo genera LUCI para documentar una transicion local y
+    // NUNCA salio ni entro por la red. Algunas transiciones (IE029 de
+    // releaseAtDeparture, IE143 de requestControl, IE118 de initiateEnquiry) no
+    // tienen aun envio real a AEAT, y anotarlas sin marca las hacia
+    // indistinguibles del IE015/IE028 que si se intercambian: quien miraba el
+    // expediente concluia que la aduana habia respondido.
+    // Por defecto `true` para no reetiquetar como falsos los mensajes ya
+    // guardados, que son intercambios reales.
+    exchanged: { type: Boolean, default: true }
   }],
 
   // Historial de estados

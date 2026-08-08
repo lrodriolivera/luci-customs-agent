@@ -2077,3 +2077,90 @@ describe('<TransitManager /> autocompletar IA: contrato real del backend', () =>
     expect(screen.getByText(/Confianza: 0%/i)).toBeInTheDocument()
   })
 })
+
+// ============================================================================
+// Mensajes NCTS de la ficha expandida.
+//
+// La ficha mostraba solo "N mensaje(s) NCTS". Tres transiciones anotan mensajes
+// que LUCI genera en local y que nunca salen por la red (IE029 de liberar,
+// IE143 de resultado de control, IE118 de busqueda): en el contador quedaban
+// sumados a los IE015/IE028/IE160 que si se intercambian con AEAT, asi que quien
+// mira el expediente concluye que la aduana ha respondido. Verificado en
+// produccion sobre un transito liberado desde la UI el 8/Ago/2026.
+// ============================================================================
+describe('<TransitManager /> mensajes NCTS: distinguir intercambio real de anotacion local', () => {
+  // Respuesta real del transito 6a773812c42a3f3ec6f54b30 tras "Liberar Mercancias".
+  const MENSAJES_REALES = [
+    { type: 'IE015', direction: 'outbound', timestamp: '2026-08-08T14:07:14.268Z', exchanged: true },
+    { type: 'IE028', direction: 'inbound', timestamp: '2026-08-08T14:07:16.144Z', exchanged: true },
+    { type: 'IE029', timestamp: '2026-08-08T17:02:11.533Z', exchanged: false }
+  ]
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    transitAPI.getStats.mockResolvedValue({ data: { success: true, data: {} } })
+    transitAPI.getOverdue.mockResolvedValue({ data: { success: true, data: [] } })
+  })
+
+  const expandirCon = async (messages) => {
+    transitAPI.list.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          transits: [{
+            _id: 't1', mrn: 'MRN001', lrn: 'LRN001', status: 'released', transitType: 'T1',
+            principal: {}, departureOffice: {}, destinationOffice: {},
+            transport: { seals: [] }, totals: {}, dates: {}, deadlines: {}, messages
+          }],
+          pagination: { total: 1, page: 1, limit: 20, pages: 1 }
+        }
+      }
+    })
+    render(
+      <MemoryRouter>
+        <TransitManager />
+      </MemoryRouter>
+    )
+    await waitFor(() => expect(screen.getByText('MRN001')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('MRN001'))
+  }
+
+  test('el contador solo cuenta los mensajes realmente intercambiados con AEAT', async () => {
+    await expandirCon(MENSAJES_REALES)
+    // 3 mensajes, 2 intercambiados: decir "3" atribuia a AEAT un IE029 local.
+    expect(await screen.findByText(/2 mensaje\(s\) intercambiados con AEAT/i)).toBeInTheDocument()
+    expect(screen.queryByText(/3 mensaje\(s\) NCTS/i)).not.toBeInTheDocument()
+  })
+
+  test('cada mensaje se lista con su tipo y descripcion', async () => {
+    await expandirCon(MENSAJES_REALES)
+    expect(await screen.findByText('IE015')).toBeInTheDocument()
+    expect(screen.getByText('IE028')).toBeInTheDocument()
+    expect(screen.getByText('IE029')).toBeInTheDocument()
+    expect(screen.getByText(/Declaracion de transito/i)).toBeInTheDocument()
+    expect(screen.getByText(/Levante para transito/i)).toBeInTheDocument()
+  })
+
+  test('el mensaje generado en local se marca como no enviado a AEAT', async () => {
+    await expandirCon(MENSAJES_REALES)
+    expect(await screen.findByText(/Solo registro local/i)).toBeInTheDocument()
+  })
+
+  test('un mensaje sin la marca `exchanged` se trata como intercambio real', async () => {
+    // Compatibilidad con los transitos guardados antes del campo.
+    await expandirCon([{ type: 'IE015', direction: 'outbound', timestamp: '2026-08-08T14:07:14.268Z' }])
+    expect(await screen.findByText(/1 mensaje\(s\) intercambiados con AEAT/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Solo registro local/i)).not.toBeInTheDocument()
+  })
+
+  test('si todos los mensajes son locales no se afirma ningun intercambio', async () => {
+    await expandirCon([{ type: 'IE029', timestamp: '2026-08-08T17:02:11.533Z', exchanged: false }])
+    expect(await screen.findByText(/Ningun mensaje intercambiado con AEAT/i)).toBeInTheDocument()
+  })
+
+  test('sin mensajes no se pinta la seccion', async () => {
+    await expandirCon([])
+    await waitFor(() => expect(screen.getByText('Analisis IA')).toBeInTheDocument())
+    expect(screen.queryByText(/mensaje\(s\)/i)).not.toBeInTheDocument()
+  })
+})

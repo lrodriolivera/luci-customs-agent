@@ -294,12 +294,15 @@ const transitService = {
       throw new Error('Transito debe estar aceptado para liberar');
     }
 
-    // Simular mensaje IE029 (Release for Transit)
+    // El IE029 (Release for Transit) es una AUTORIZACION que emite la aduana de
+    // partida: no hay envio a AEAT en esta transicion, la genera LUCI para dejar
+    // constancia del cambio de estado. Marcarlo `inbound` afirmaba que AEAT habia
+    // liberado la mercancia, indistinguible del IE015/IE028 reales del expediente.
     transit.messages.push({
       type: 'IE029',
-      direction: 'inbound',
       timestamp: new Date(),
-      content: { mrn: transit.mrn, releaseDate: new Date() }
+      content: { mrn: transit.mrn, releaseDate: new Date() },
+      exchanged: false
     });
 
     transit.status = 'released';
@@ -515,12 +518,14 @@ const transitService = {
       }
     }
 
-    // Simular mensaje IE143 (Control Results)
+    // Resultado de control anotado en local: no sale ningun IE143 por la red en
+    // esta transicion, asi que queda marcado como no intercambiado.
     transit.messages.push({
       type: 'IE143',
       direction: 'outbound',
       timestamp: new Date(),
-      content: transit.controlResult
+      content: transit.controlResult,
+      exchanged: false
     });
 
     // Si hay discrepancias significativas
@@ -626,7 +631,8 @@ const transitService = {
     transit.status = 'enquiry';
     transit.deadlines.enquiryStart = new Date();
 
-    // Simular mensaje IE118 (Enquiry Request)
+    // La solicitud de busqueda se registra en local; el IE118 a la aduana de
+    // partida no se emite todavia, de ahi `exchanged: false`.
     transit.messages.push({
       type: 'IE118',
       direction: 'outbound',
@@ -634,7 +640,8 @@ const transitService = {
       content: {
         mrn: transit.mrn,
         reason: transit.enquiry.reason
-      }
+      },
+      exchanged: false
     });
 
     transit.statusHistory.push({
