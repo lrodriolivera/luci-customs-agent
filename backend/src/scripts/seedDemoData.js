@@ -8,6 +8,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const connectDB = require('../config/database');
+const { generarMRN } = require('../utils/mrnFormat');
 
 // Import models
 const Expedition = require('../models/Expedition');
@@ -32,10 +33,9 @@ const randomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 const randomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-const generateMRN = (year = 2026) => {
-  const num = String(randomNumber(100000, 999999));
-  return `${year}ES00${num}`;
-};
+// El generador antiguo usaba el anyo de 4 digitos y salian MRN de 14
+// caracteres, que AEAT rechaza ("Patron: [0-9]{2}[A-Z]{2}[A-Z0-9]{14}").
+const generateMRN = () => generarMRN();
 
 const generateLRN = () => {
   return `LRN${Date.now()}${randomNumber(1000, 9999)}`;
@@ -631,7 +631,19 @@ async function seedTransits(demoUserId, tenantId) {
 
   const transits = [];
 
-  const destinationOffices = [
+  // Todas las aduanas de destino eran extranjeras, y la llegada (CC007) y la
+  // descarga (CC044) se presentan ante la aduana del pais DONDE TERMINA el
+  // transito: LUCI solo habla con AEAT, asi que en esos expedientes esas dos
+  // acciones no pueden prosperar (ver transitService._exigirDestinoEspanol).
+  // Los estados en los que la UI ofrece notificar llegada/descarga necesitan
+  // destino espanol para ser demostrables.
+  const destinationOfficesES = [
+    { code: 'ES002901', name: 'Aduana de Malaga', country: 'ES' },
+    { code: 'ES004801', name: 'Aduana de Bilbao', country: 'ES' },
+    { code: 'ES002801', name: 'Aduana de Madrid', country: 'ES' }
+  ];
+
+  const destinationOfficesUE = [
     { code: 'DE004600', name: 'Zollamt Hamburg', country: 'DE' },
     { code: 'FR001000', name: 'Bureau de douane Paris', country: 'FR' },
     { code: 'IT001001', name: 'Dogana di Milano', country: 'IT' },
@@ -639,11 +651,16 @@ async function seedTransits(demoUserId, tenantId) {
     { code: 'BE000100', name: 'Douane Anvers', country: 'BE' }
   ];
 
+  /** Estados en los que la ficha ofrece notificar llegada o descarga. */
+  const ESTADOS_CON_AVISO_A_AEAT = ['in_transit', 'arrived', 'unloaded'];
+
   for (let i = 0; i < 15; i++) {
     const client = randomItem(clients);
     const departureOffice = randomItem(customsOffices);
-    const destinationOffice = randomItem(destinationOffices);
     const status = randomItem(transitStatuses);
+    const destinationOffice = ESTADOS_CON_AVISO_A_AEAT.includes(status)
+      ? randomItem(destinationOfficesES)
+      : randomItem(destinationOfficesUE);
     const product = randomItem(products);
 
     const transit = new Transit({

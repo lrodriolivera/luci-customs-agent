@@ -35,6 +35,7 @@ const { Transit, Guarantee, Expedition } = require('../../src/models');
 const User = require('../../src/models/User');
 const aeatSubmitService = require('../../src/services/aeat/aeatSubmitService');
 const transitService = require('../../src/services/transitService');
+const { esMRNValido } = require('../../src/utils/mrnFormat');
 
 usarBaseDeDatosEnMemoria();
 
@@ -52,7 +53,12 @@ function datosTransito(extra = {}) {
     reference: 'REF-T1-001',
     transitType: 'T1',
     departureOffice: { code: 'ES000851' },
-    destinationOffice: { code: 'FR001300' },
+    // Destino espanol a proposito: la llegada (CC007) y la descarga (CC044) se
+    // presentan ante la aduana del pais donde TERMINA el transito, y LUCI solo
+    // habla con AEAT. La fixture llevaba 'FR001300' y con ella los tests del
+    // ciclo de destino probaban un envio que en la vida real no puede prosperar
+    // (ver transitService.destinoExtranjero.test.js).
+    destinationOffice: { code: 'ES002901' },
     transport: { mode: '3' },
     principal: { eori: 'ESB22477020', name: 'STRIX AI SL' },
     guarantee: { type: '1' },
@@ -329,8 +335,19 @@ describe('helpers puros', () => {
   test('generateLRN y generateMRN tienen la forma esperada', () => {
     expect(transitService.generateLRN()).toMatch(/^LRN/);
     const mrn = transitService.generateMRN('ES');
-    expect(mrn.length).toBeLessThanOrEqual(18);
+    // Antes se comprobaba `length <= 18`, y por ahi pasaban los MRN cortos que
+    // AEAT rechaza. El patron exige exactamente 18 caracteres.
+    expect(mrn).toMatch(/^[0-9]{2}[A-Z]{2}[A-Z0-9]{14}$/);
     expect(mrn.startsWith(new Date().getFullYear().toString().slice(-2) + 'ES')).toBe(true);
+  });
+
+  test('generateMRN no produce nunca un MRN que AEAT rechace por formato', () => {
+    // `Math.random().toString(36)` devuelve cadenas de longitud variable: con el
+    // generador anterior, un MRN de 17 caracteres salia de vez en cuando y solo
+    // fallaba al enviarlo.
+    for (let i = 0; i < 300; i++) {
+      expect(esMRNValido(transitService.generateMRN())).toBe(true);
+    }
   });
 });
 
@@ -478,7 +495,7 @@ describe('notifyArrival / notifyUnloading: envio real a AEAT + transicion de est
 
     expect(aeatSubmitService.submitNCTSArrival).toHaveBeenCalledWith(expect.objectContaining({
       mrn: '26ES0008512345678X',
-      officeOfDestination: 'FR001300'
+      officeOfDestination: 'ES002901'
     }));
     expect(actualizado.status).toBe('arrived');
     expect(actualizado.messages.some(m => m.type === 'IE160')).toBe(true);

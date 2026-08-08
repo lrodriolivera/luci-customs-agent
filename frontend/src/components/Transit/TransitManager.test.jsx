@@ -2290,3 +2290,155 @@ describe('<TransitManager /> estados: cobertura completa del enum del backend', 
     }
   })
 })
+
+// ============================================================================
+// Destino extranjero: los botones de llegada (CC007) y descarga (CC044) no
+// pueden funcionar cuando el transito termina fuera de Espana.
+//
+// En los datos vivos del 8/Ago/2026 los 15 transitos tenian destino extranjero,
+// y la ficha ofrecia igualmente "Notificar Llegada" / "Notificar Descarga". La
+// llamada real a `POST /:id/arrival` sobre BE000100 devolvia
+//   400 "CC007: falta el numero de autorizacion del lugar de la mercancia"
+// culpando a un campo del formulario, cuando el problema es de jurisdiccion: la
+// llegada en Amberes la notifica el destinatario ante la aduana belga.
+// ============================================================================
+describe('<TransitManager /> destino extranjero: sin botones que no pueden funcionar', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    transitAPI.getStats.mockResolvedValue({ data: { success: true, data: {} } })
+    transitAPI.getOverdue.mockResolvedValue({ data: { success: true, data: [] } })
+  })
+
+  const conDestino = async (status, destinationOffice) => {
+    transitAPI.list.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          transits: [{
+            _id: 'td1', mrn: 'MRNDEST', lrn: 'LRNDEST', status, transitType: 'T1',
+            principal: {}, departureOffice: { code: 'ES002801' }, destinationOffice,
+            transport: { seals: [] }, totals: {}, dates: {}, deadlines: {}
+          }],
+          pagination: { total: 1, page: 1, limit: 20, pages: 1 }
+        }
+      }
+    })
+    render(
+      <MemoryRouter>
+        <TransitManager />
+      </MemoryRouter>
+    )
+    await waitFor(() => expect(screen.getByText('MRNDEST')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('MRNDEST'))
+  }
+
+  test('in_transit con destino aleman NO ofrece "Notificar Llegada"', async () => {
+    // Tal como llega de la API real: solo el codigo, sin `country`.
+    await conDestino('in_transit', { code: 'DE004600' })
+    await waitFor(() => expect(screen.getByText('Acciones')).toBeInTheDocument())
+    expect(screen.queryByText('Notificar Llegada')).not.toBeInTheDocument()
+  })
+
+  test('explica en su lugar quien notifica la llegada y ante quien', async () => {
+    await conDestino('in_transit', { code: 'DE004600' })
+    // El codigo tambien sale en la fila ("ES002801 → DE004600"), asi que el
+    // aviso se localiza por su texto y luego se comprueba que lo nombra.
+    const aviso = await screen.findByText(/destinatario autorizado/)
+    expect(aviso.textContent).toMatch(/DE004600/)
+    expect(aviso.textContent).toMatch(/Alemania/)
+    expect(aviso.textContent).toMatch(/AEAT/)
+  })
+
+  test('arrived con destino belga NO ofrece "Notificar Descarga" pero SI liberar mercancias', async () => {
+    // Liberar mercancias es local (no sale a AEAT), asi que sigue disponible.
+    await conDestino('arrived', { code: 'BE000100' })
+    await waitFor(() => expect(screen.getByText('Liberar Mercancias')).toBeInTheDocument())
+    expect(screen.queryByText('Notificar Descarga')).not.toBeInTheDocument()
+  })
+
+  test('con destino espanol los dos botones siguen ahi', async () => {
+    await conDestino('in_transit', { code: 'ES002901' })
+    await waitFor(() => expect(screen.getByText('Notificar Llegada')).toBeInTheDocument())
+    expect(screen.queryByText(/destinatario autorizado/)).not.toBeInTheDocument()
+  })
+
+  test('destino espanol en arrived: descarga y liberacion disponibles', async () => {
+    await conDestino('arrived', { code: 'ES002901' })
+    await waitFor(() => expect(screen.getByText('Notificar Descarga')).toBeInTheDocument())
+    expect(screen.getByText('Liberar Mercancias')).toBeInTheDocument()
+  })
+
+  test('un destino sin codigo no se acusa de extranjero: se mantiene el boton', async () => {
+    // Sin dato de aduana el aviso seria una afirmacion inventada. El fallo, si
+    // llega, lo dara AEAT y se vera como error de la accion.
+    await conDestino('in_transit', {})
+    await waitFor(() => expect(screen.getByText('Notificar Llegada')).toBeInTheDocument())
+    expect(screen.queryByText(/destinatario autorizado/)).not.toBeInTheDocument()
+  })
+
+  test('los demas estados no se ven afectados por el destino extranjero', async () => {
+    await conDestino('released', { code: 'IT001001' })
+    await waitFor(() => expect(screen.getByText('Iniciar Transito')).toBeInTheDocument())
+  })
+})
+
+// ============================================================================
+// El estado `submitted` no ofrecia ninguna accion: ni boton, ni transicion en
+// el backend, y el borrado exige draft. Un transito cuyo IE015 salio sin
+// respuesta de NCTS se quedaba inmovil para siempre.
+//
+// `submitted` = IE015 enviado, IE028 (MRN) sin llegar. La salida es reintentar.
+// ============================================================================
+describe('<TransitManager /> submitted: reintentar el envio', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    transitAPI.getStats.mockResolvedValue({ data: { success: true, data: {} } })
+    transitAPI.getOverdue.mockResolvedValue({ data: { success: true, data: [] } })
+  })
+
+  const expandirSubmitted = async () => {
+    transitAPI.list.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          transits: [{
+            _id: 'ts1', mrn: null, lrn: 'LRNSUB', status: 'submitted', transitType: 'T1',
+            principal: {}, departureOffice: { code: 'ES002801' },
+            destinationOffice: { code: 'ES002901' },
+            transport: { seals: [] }, totals: {}, dates: {}, deadlines: {}
+          }],
+          pagination: { total: 1, page: 1, limit: 20, pages: 1 }
+        }
+      }
+    })
+    render(
+      <MemoryRouter>
+        <TransitManager />
+      </MemoryRouter>
+    )
+    await waitFor(() => expect(screen.getByText('LRNSUB')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('LRNSUB'))
+  }
+
+  test('ofrece reintentar el envio a NCTS', async () => {
+    await expandirSubmitted()
+    await waitFor(() => expect(screen.getByText('Reintentar Envio a NCTS')).toBeInTheDocument())
+  })
+
+  test('el reintento llama a submit y recarga la lista', async () => {
+    transitAPI.submit.mockResolvedValue({ data: { success: true, data: { status: 'accepted' } } })
+    await expandirSubmitted()
+    await waitFor(() => expect(screen.getByText('Reintentar Envio a NCTS')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByText('Reintentar Envio a NCTS'))
+
+    await waitFor(() => expect(transitAPI.submit).toHaveBeenCalledWith('ts1'))
+    expect(transitAPI.list.mock.calls.length).toBeGreaterThan(1)
+  })
+
+  test('un submitted NO ofrece eliminar (el IE015 ya salio)', async () => {
+    await expandirSubmitted()
+    await waitFor(() => expect(screen.getByText('Acciones')).toBeInTheDocument())
+    expect(screen.queryByText('Eliminar')).not.toBeInTheDocument()
+  })
+})

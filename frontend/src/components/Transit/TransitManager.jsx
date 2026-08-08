@@ -33,6 +33,7 @@ import {
   ETIQUETA_RIESGO
 } from './transitAIContract'
 import { normalizarMensajes } from './transitMessages'
+import { destinoFueraDeEspana, avisoDestinoExtranjero } from './transitDestino'
 
 const TRANSIT_TYPES = {
   T1: { label: 'T1 - No Union', color: 'blue', description: 'Mercancias no comunitarias' },
@@ -895,11 +896,22 @@ export default function TransitManager() {
 
   const getNextActions = (transit) => {
     const actions = []
+    // El CC007 y el CC044 van a la aduana de destino, y LUCI solo habla con
+    // AEAT: con destino extranjero esos dos avisos no pueden prosperar (ver
+    // transitDestino.js). Liberar mercancias es local y sigue disponible.
+    const destinoExtranjero = destinoFueraDeEspana(transit)
 
     switch (transit.status) {
       case 'draft':
         actions.push({ key: 'submit', label: 'Enviar a NCTS', color: 'blue' })
         actions.push({ key: 'delete', label: 'Eliminar', color: 'red' })
+        break
+      case 'submitted':
+        // El IE015 salio y el IE028 con el MRN no ha llegado. Este estado no
+        // ofrecia ninguna accion: ni boton aqui, ni transicion que lo aceptara
+        // en el backend, y eliminar exige draft. El transito quedaba inmovil.
+        // No se ofrece "Eliminar": AEAT puede tener ya la declaracion.
+        actions.push({ key: 'submit', label: 'Reintentar Envio a NCTS', color: 'blue' })
         break
       case 'accepted':
         actions.push({ key: 'release-departure', label: 'Liberar en Partida', color: 'cyan' })
@@ -908,12 +920,16 @@ export default function TransitManager() {
         actions.push({ key: 'start', label: 'Iniciar Transito', color: 'orange' })
         break
       case 'in_transit':
-        actions.push({ key: 'arrival', label: 'Notificar Llegada', color: 'yellow' })
+        if (!destinoExtranjero) {
+          actions.push({ key: 'arrival', label: 'Notificar Llegada', color: 'yellow' })
+        }
         break
       case 'arrived':
         // El CC044 es opcional: se puede liberar directamente o notificar antes
         // la descarga (precintos/conformidad de la mercancia).
-        actions.push({ key: 'unloading', label: 'Notificar Descarga', color: 'amber' })
+        if (!destinoExtranjero) {
+          actions.push({ key: 'unloading', label: 'Notificar Descarga', color: 'amber' })
+        }
         actions.push({ key: 'release-goods', label: 'Liberar Mercancias', color: 'lime' })
         break
       case 'unloaded':
@@ -1224,6 +1240,17 @@ export default function TransitManager() {
                               </button>
                             ))}
                           </div>
+
+                          {/* Por que faltan "Notificar Llegada"/"Notificar Descarga":
+                              el transito no termina en Espana y esos avisos se
+                              presentan ante la aduana de destino, no ante AEAT. */}
+                          {['in_transit', 'arrived'].includes(transit.status) &&
+                            avisoDestinoExtranjero(transit) && (
+                            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                              <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                              <p className="text-sm text-amber-800">{avisoDestinoExtranjero(transit)}</p>
+                            </div>
+                          )}
 
                           {/* Mensajes NCTS: los intercambiados con AEAT y los que
                               solo son registro local (ver transitMessages.js) */}

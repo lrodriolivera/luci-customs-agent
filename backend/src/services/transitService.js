@@ -5,6 +5,7 @@
 
 const { Transit, Guarantee, Expedition } = require('../models');
 const User = require('../models/User');
+const { generarMRN } = require('../utils/mrnFormat');
 
 /**
  * Carga una expedicion comprobando que es del tenant de quien la pide.
@@ -53,6 +54,41 @@ function _explicarRechazoCC007(errorAEAT) {
   }
 
   return texto;
+}
+
+/**
+ * Pais de una aduana NCTS. Los codigos llevan el pais como prefijo ISO
+ * ('ES002901' -> 'ES', 'DE004600' -> 'DE'); el `country` declarado, cuando
+ * viene, prevalece. En los datos reales viene vacio casi siempre, asi que
+ * depender solo de el equivale a no comprobar nada.
+ */
+function _paisAduana(office) {
+  if (office?.country) return String(office.country).toUpperCase();
+  return /^[A-Z]{2}/.exec(String(office?.code || '').toUpperCase())?.[0] || null;
+}
+
+/**
+ * La llegada y la descarga de un transito se notifican a la aduana del pais
+ * DONDE TERMINA el transito, y LUCI solo habla con AEAT.
+ *
+ * Sin esta guarda LUCI enviaba el CC007/CC044 a AEAT para un transito con
+ * destino en Hamburgo o Rotterdam. AEAT no es la aduana de destino de ese
+ * transito, asi que el mensaje no puede prosperar, y el rechazo que devolvia
+ * ("falta el numero de autorizacion del lugar de la mercancia") culpaba a un
+ * campo del formulario: el operador lo rellenaria una y otra vez sin que
+ * funcione nunca. Se corta antes de construir el XML y salir a la red.
+ */
+function _exigirDestinoEspanol(transit, mensaje) {
+  const pais = _paisAduana(transit.destinationOffice);
+  if (pais === 'ES') return;
+
+  const donde = pais ? `en ${pais}` : 'fuera de Espana';
+  throw new Error(
+    `La aduana de destino ${transit.destinationOffice?.code || '(sin codigo)'} esta ${donde}: `
+    + `el ${mensaje} se presenta ante la autoridad aduanera de destino por su propio sistema NCTS, `
+    + 'no ante AEAT. LUCI solo puede notificarlo cuando el transito termina en una aduana espanola. '
+    + 'Debe hacerlo el destinatario autorizado del pais de destino.'
+  );
 }
 
 const transitService = {
@@ -222,7 +258,13 @@ const transitService = {
   },
 
   /**
-   * Enviar declaracion a NCTS
+   * Enviar declaracion a NCTS.
+   *
+   * Admite tambien `submitted`, que significa "el IE015 salio y aun no ha
+   * llegado el IE028 con el MRN". Era un callejon sin salida: las seis
+   * transiciones lo rechazaban, el borrado exige draft y la UI no ofrecia
+   * ninguna accion, asi que un transito ahi no se podia ni mover ni retirar.
+   * La salida correcta es reintentar el envio, no rehacer el expediente.
    */
   async submit(id, userId) {
     const transit = await Transit.findOne({ _id: id, owner: userId });
@@ -231,8 +273,24 @@ const transitService = {
       throw new Error('Transito no encontrado');
     }
 
-    if (transit.status !== 'draft') {
-      throw new Error('Solo se pueden enviar transitos en estado borrador');
+    if (!['draft', 'submitted'].includes(transit.status)) {
+      throw new Error('Solo se pueden enviar transitos en estado borrador o ya enviados sin respuesta de NCTS');
+    }
+
+    // Un `submitted` CON mrn es incoherente: si AEAT dio MRN, la declaracion
+    // esta aceptada. Reenviarla la duplicaria en NCTS, asi que solo se corrige
+    // el estado. Los seeds creaban exactamente este caso.
+    if (transit.status === 'submitted' && transit.mrn) {
+      transit.status = 'accepted';
+      transit.dates.acceptance = transit.dates.acceptance || new Date();
+      transit.statusHistory.push({
+        status: 'accepted',
+        timestamp: new Date(),
+        user: userId,
+        reason: `Ya tenia MRN ${transit.mrn} asignado por NCTS: no se reenvia la declaracion`
+      });
+      await transit.save();
+      return transit;
     }
 
     // Validar campos requeridos
@@ -371,6 +429,8 @@ const transitService = {
       throw new Error('El transito no tiene MRN: no se puede notificar la llegada');
     }
 
+    _exigirDestinoEspanol(transit, 'aviso de llegada (CC007)');
+
     const arrivalDate = data.arrivalDate || new Date();
 
     const aeatResult = await aeatSubmitService.submitNCTSArrival({
@@ -438,6 +498,8 @@ const transitService = {
     if (!transit.mrn) {
       throw new Error('El transito no tiene MRN: no se puede notificar la descarga');
     }
+
+    _exigirDestinoEspanol(transit, 'resultado de la descarga (CC044)');
 
     const unloadingDate = data.unloadingDate || new Date();
 
@@ -743,13 +805,13 @@ const transitService = {
   },
 
   /**
-   * Generar MRN (simulado)
+   * Generar MRN (simulado). Delega en el generador comun para que cumpla
+   * siempre el patron de AEAT: `Math.random().toString(36)` devuelve cadenas de
+   * longitud variable y de vez en cuando salia un MRN de 17 caracteres, que el
+   * organismo rechaza con un error que no nombra el campo.
    */
   generateMRN(countryCode = 'ES') {
-    const year = new Date().getFullYear().toString().slice(-2);
-    const country = countryCode.toUpperCase();
-    const random = Math.random().toString(36).substring(2, 15).toUpperCase();
-    return `${year}${country}${random}`.substring(0, 18);
+    return generarMRN({ pais: countryCode });
   }
 };
 

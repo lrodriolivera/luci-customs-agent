@@ -63,7 +63,11 @@ function datosTransito(extra = {}) {
     reference: 'REF-T1-001',
     transitType: 'T1',
     departureOffice: { code: 'ES000851' },
-    destinationOffice: { code: 'FR001300' },
+    // Destino espanol a proposito: el CC007/CC044 se presenta ante la autoridad
+    // del pais donde termina el transito, y LUCI solo habla con AEAT. Con
+    // 'FR001300' los tests de arrival/unloading probaban en verde un
+    // intercambio que en la realidad no puede prosperar.
+    destinationOffice: { code: 'ES002901' },
     transport: { mode: '3' },
     principal: { eori: 'ESB22477020', name: 'STRIX AI SL' },
     guarantee: { type: '1' },

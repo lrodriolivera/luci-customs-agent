@@ -8,6 +8,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const connectDB = require('../config/database');
+const { generarMRN } = require('../utils/mrnFormat');
 
 const Expedition = require('../models/Expedition');
 const Requirement = require('../models/Requirement');
@@ -27,7 +28,9 @@ const User = require('../models/User');
 const randomDate = (start, end) => new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 const randomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const randomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-const generateMRN = (year = 2026) => `${year}ES00${String(randomNumber(100000, 999999))}`;
+// El generador antiguo usaba el anyo de 4 digitos y salian MRN de 14
+// caracteres, que AEAT rechaza ("Patron: [0-9]{2}[A-Z]{2}[A-Z0-9]{14}").
+const generateMRN = () => generarMRN();
 const generateLRN = () => `LRN${Date.now()}${randomNumber(1000, 9999)}`;
 
 // ==================== Data ====================
@@ -457,7 +460,19 @@ async function seedTransits(userId, tenantId) {
   const transitTypes = ['T1', 'T2', 'T2F', 'TIR'];
   const transitStatuses = ['draft', 'submitted', 'accepted', 'released', 'in_transit', 'arrived', 'completed'];
 
-  const destinationOffices = [
+  // Todas las aduanas de destino eran extranjeras, y la llegada (CC007) y la
+  // descarga (CC044) se presentan ante la aduana del pais DONDE TERMINA el
+  // transito: LUCI solo habla con AEAT, asi que en esos expedientes esas dos
+  // acciones no pueden prosperar (ver transitService._exigirDestinoEspanol).
+  // Los estados en los que la UI ofrece notificar llegada/descarga necesitan
+  // destino espanol para ser demostrables.
+  const destinationOfficesES = [
+    { code: 'ES002901', name: 'Aduana de Malaga', country: 'ES' },
+    { code: 'ES004801', name: 'Aduana de Bilbao', country: 'ES' },
+    { code: 'ES002801', name: 'Aduana de Madrid', country: 'ES' }
+  ];
+
+  const destinationOfficesUE = [
     { code: 'DE004600', name: 'Zollamt Hamburg', country: 'DE' },
     { code: 'FR001000', name: 'Bureau de douane Paris', country: 'FR' },
     { code: 'IT001001', name: 'Dogana di Milano', country: 'IT' },
@@ -465,13 +480,18 @@ async function seedTransits(userId, tenantId) {
     { code: 'BE000100', name: 'Douane Anvers', country: 'BE' }
   ];
 
+  /** Estados en los que la ficha ofrece notificar llegada o descarga. */
+  const ESTADOS_CON_AVISO_A_AEAT = ['in_transit', 'arrived', 'unloaded'];
+
   const transits = [];
 
   for (let i = 0; i < 12; i++) {
     const client = randomItem(clients);
     const departureOffice = randomItem(customsOffices);
-    const destinationOffice = randomItem(destinationOffices);
     const status = randomItem(transitStatuses);
+    const destinationOffice = ESTADOS_CON_AVISO_A_AEAT.includes(status)
+      ? randomItem(destinationOfficesES)
+      : randomItem(destinationOfficesUE);
     const product = randomItem(products);
 
     const transit = new Transit({
