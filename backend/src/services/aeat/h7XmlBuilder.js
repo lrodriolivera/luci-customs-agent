@@ -311,7 +311,7 @@ function buildAltaH7V1XML(data) {
           </Address>
         </Exporter>
         <Importer>
-${importador.phone ? `          <phoneNumber>${esc(importador.phone)}</phoneNumber>\n` : ''}${importador.email ? `          <eMailAddress>${esc(importador.email)}</eMailAddress>\n` : ''}          <name>${esc(importador.name)}</name>
+${importador.email ? `          <eMailAddress>${esc(importador.email)}</eMailAddress>\n` : ''}${importador.phone ? `          <phoneNumber>${esc(importador.phone)}</phoneNumber>\n` : ''}          <name>${esc(importador.name)}</name>
 ${importadorNidXML}          <Address>
             <city>${esc(importador.city)}</city>
             <country>${esc(importador.country || 'ES')}</country>
