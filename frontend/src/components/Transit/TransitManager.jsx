@@ -53,9 +53,23 @@ const STATUS_CONFIG = {
   goods_released: { label: 'Entregado', color: 'lime', icon: CheckCircleIcon },
   discrepancy: { label: 'Discrepancia', color: 'red', icon: ExclamationTriangleIcon },
   enquiry: { label: 'Busqueda', color: 'red', icon: ExclamationTriangleIcon },
+  // `recovered` y `written_off` estan en el enum de Transit.status desde el
+  // principio y faltaban aqui: caian en el fallback a `draft` y un transito dado
+  // de baja se etiquetaba "Borrador" en gris, o sea, sin presentar.
+  recovered: { label: 'Recuperado', color: 'lime', icon: CheckCircleIcon },
+  written_off: { label: 'Dado de Baja', color: 'gray', icon: ExclamationCircleIcon },
   completed: { label: 'Completado', color: 'green', icon: CheckCircleIcon },
   cancelled: { label: 'Cancelado', color: 'gray', icon: ExclamationTriangleIcon }
 }
+
+/**
+ * Un estado que el frontend no conozca se muestra con su codigo crudo. Antes
+ * caia en `STATUS_CONFIG.draft` y se presentaba como "Borrador": una etiqueta
+ * falsa y tranquilizadora oculta el desajuste con el backend, un codigo visible
+ * lo delata.
+ */
+const configEstado = (status) =>
+  STATUS_CONFIG[status] || { label: status || 'Desconocido', color: 'gray', icon: ExclamationCircleIcon }
 
 const TRANSPORT_MODES = {
   '1': 'Maritimo',
@@ -1031,7 +1045,7 @@ export default function TransitManager() {
         ) : (
           <div className="divide-y">
             {transits.map(transit => {
-              const statusConfig = STATUS_CONFIG[transit.status] || STATUS_CONFIG.draft
+              const statusConfig = configEstado(transit.status)
               const StatusIcon = statusConfig.icon
               const typeConfig = TRANSIT_TYPES[transit.transitType] || {}
               const isExpanded = expandedId === transit._id

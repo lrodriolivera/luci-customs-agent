@@ -2164,3 +2164,81 @@ describe('<TransitManager /> mensajes NCTS: distinguir intercambio real de anota
     expect(screen.queryByText(/mensaje\(s\)/i)).not.toBeInTheDocument()
   })
 })
+
+// ============================================================================
+// Estados del tránsito ausentes de STATUS_CONFIG.
+//
+// El enum de `Transit.status` tiene 15 valores; STATUS_CONFIG solo cubria 13.
+// `recovered` (recuperado tras busqueda) y `written_off` (dado de baja) faltaban,
+// y la fila cae en `STATUS_CONFIG[status] || STATUS_CONFIG.draft`: un transito
+// dado de baja se etiquetaba "Borrador" en gris, es decir, sin presentar. Hoy
+// ningun codigo del backend los asigna (nada resuelve el enquiry), pero el
+// fallback miente en cuanto lo haga, y tampoco eran filtrables.
+// ============================================================================
+describe('<TransitManager /> estados: cobertura completa del enum del backend', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    transitAPI.getStats.mockResolvedValue({ data: { success: true, data: {} } })
+    transitAPI.getOverdue.mockResolvedValue({ data: { success: true, data: [] } })
+  })
+
+  const conEstado = async (status) => {
+    transitAPI.list.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          transits: [{
+            _id: 't1', mrn: 'MRN001', lrn: 'LRN001', status, transitType: 'T1',
+            principal: {}, departureOffice: {}, destinationOffice: {},
+            transport: { seals: [] }, totals: {}, dates: {}, deadlines: {}
+          }],
+          pagination: { total: 1, page: 1, limit: 20, pages: 1 }
+        }
+      }
+    })
+    render(
+      <MemoryRouter>
+        <TransitManager />
+      </MemoryRouter>
+    )
+    await waitFor(() => expect(screen.getByText('MRN001')).toBeInTheDocument())
+  }
+
+  // "Borrador" tambien es una opcion del filtro de estado, generada desde el
+  // mismo STATUS_CONFIG: hay que mirar el chip de la fila, no el documento.
+  const chipDeFila = (texto) =>
+    screen.queryAllByText(texto).filter(el => el.closest('option') === null)
+
+  test('un transito recuperado no se etiqueta "Borrador"', async () => {
+    await conEstado('recovered')
+    expect(chipDeFila('Recuperado').length).toBeGreaterThan(0)
+    expect(chipDeFila('Borrador')).toHaveLength(0)
+  })
+
+  test('un transito dado de baja no se etiqueta "Borrador"', async () => {
+    await conEstado('written_off')
+    expect(chipDeFila('Dado de Baja').length).toBeGreaterThan(0)
+    expect(chipDeFila('Borrador')).toHaveLength(0)
+  })
+
+  test('un estado que el frontend no conoce se muestra tal cual, no como "Borrador"', async () => {
+    // Si el backend anyade un estado, mejor un codigo crudo visible (que delata
+    // el desajuste) que una etiqueta falsa y tranquilizadora.
+    await conEstado('estado_futuro')
+    expect(chipDeFila('estado_futuro').length).toBeGreaterThan(0)
+    expect(chipDeFila('Borrador')).toHaveLength(0)
+  })
+
+  test('el filtro de estado ofrece los 15 estados del enum del backend', async () => {
+    await conEstado('draft')
+    const selectEstado = screen.getAllByRole('combobox')[1]
+    const valores = [...selectEstado.options].map(o => o.value)
+    for (const estado of [
+      'draft', 'submitted', 'accepted', 'released', 'in_transit', 'arrived',
+      'unloaded', 'control_requested', 'goods_released', 'discrepancy',
+      'enquiry', 'recovered', 'written_off', 'cancelled', 'completed'
+    ]) {
+      expect(valores).toContain(estado)
+    }
+  })
+})
