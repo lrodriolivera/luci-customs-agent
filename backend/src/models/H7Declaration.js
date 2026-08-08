@@ -481,10 +481,21 @@ H7DeclarationSchema.index({ createdBy: 1, createdAt: -1 });
 H7DeclarationSchema.pre('save', async function(next) {
   if (!this.reference) {
     const year = new Date().getFullYear();
-    const count = await this.constructor.countDocuments({
-      createdAt: { $gte: new Date(year, 0, 1) }
-    });
-    this.reference = `H7-${year}-${String(count + 1).padStart(6, '0')}`;
+    // La referencia se basa en el MÁXIMO sufijo existente + 1, no en countDocuments:
+    // usar el conteo colisiona (E11000) cuando el nº de documentos no coincide con
+    // el número más alto (p. ej. tras borrados intermedios o huecos del seeder).
+    const prefijo = `H7-${year}-`;
+    const ultima = await this.constructor
+      .findOne({ reference: new RegExp(`^${prefijo}`) })
+      .sort({ reference: -1 })
+      .select('reference')
+      .lean();
+    let siguiente = 1;
+    if (ultima?.reference) {
+      const n = parseInt(ultima.reference.slice(prefijo.length), 10);
+      if (Number.isFinite(n)) siguiente = n + 1;
+    }
+    this.reference = `${prefijo}${String(siguiente).padStart(6, '0')}`;
   }
 
   // Calcular valor en aduana si no existe
