@@ -4020,6 +4020,31 @@ Responde en JSON:
   }
 
   /**
+   * Describe una aduana NCTS para un prompt: `CODIGO (PAIS)`.
+   *
+   * Los prompts de tránsito interpolaban `${office?.country}` sin respaldo, así
+   * que una aduana guardada sin `country` (el caso normal: la UI solo pide el
+   * código) llegaba al modelo como `ES002901 (undefined)`. El modelo no
+   * distingue eso de un valor real, y el país de las aduanas es justo el dato
+   * sobre el que se le pide decidir (fronteras cruzadas, aduanas de tránsito
+   * necesarias): analizaba a ciegas y respondía con la misma seguridad.
+   *
+   * El país se deduce del prefijo ISO del código, que es como se construyen los
+   * códigos de aduana NCTS (`ES002901` → `ES`, `DE005030` → `DE`). Si no se
+   * puede deducir se dice, con la convención del resto del fichero.
+   */
+  _describirAduana(office) {
+    if (!office?.code) return 'No especificado';
+    const paisDeducido = /^[A-Z]{2}/.exec(String(office.code))?.[0];
+    return `${office.code} (${office.country || paisDeducido || 'No especificado'})`;
+  }
+
+  /** Igual que arriba: un dato ausente se nombra, no se interpola como `undefined`. */
+  _oNoEspecificado(valor) {
+    return valor === undefined || valor === null || valor === '' ? 'No especificado' : valor;
+  }
+
+  /**
    * Validar y optimizar ruta de tránsito
    */
   async validateTransitRoute(transit) {
@@ -4027,8 +4052,8 @@ Responde en JSON:
 
 DATOS DEL TRÁNSITO:
 - Tipo: ${transit.transitType}
-- Aduana partida: ${transit.departureOffice?.code} (${transit.departureOffice?.country})
-- Aduana destino: ${transit.destinationOffice?.code} (${transit.destinationOffice?.country})
+- Aduana partida: ${this._describirAduana(transit.departureOffice)}
+- Aduana destino: ${this._describirAduana(transit.destinationOffice)}
 - Aduanas de tránsito: ${JSON.stringify(transit.transitOffices || [])}
 - Ruta declarada: ${JSON.stringify(transit.route || {})}
 - Modo transporte: ${transit.transport?.mode} (1=Mar, 2=Ferrocarril, 3=Carretera, 4=Aéreo)
@@ -4038,8 +4063,8 @@ MERCANCÍAS:
 ${transit.goodsItems?.map((g, i) => `
 ${i + 1}. ${g.description}
    - TARIC: ${g.taricCode || 'No especificado'}
-   - Origen: ${g.countryOfOrigin}
-   - Peso: ${g.grossWeight} kg
+   - Origen: ${this._oNoEspecificado(g.countryOfOrigin)}
+   - Peso: ${this._oNoEspecificado(g.grossWeight)} kg
 `).join('') || 'No especificadas'}
 
 INSTRUCCIONES:
@@ -4147,11 +4172,11 @@ Responde en JSON:
 DATOS DEL TRÁNSITO:
 - MRN: ${transit.mrn || 'Pendiente'}
 - Tipo: ${transit.transitType}
-- Estado actual: ${transit.status}
-- Partida: ${transit.departureOffice?.code} (${transit.departureOffice?.country})
-- Destino: ${transit.destinationOffice?.code} (${transit.destinationOffice?.country})
+- Estado actual: ${this._oNoEspecificado(transit.status)}
+- Partida: ${this._describirAduana(transit.departureOffice)}
+- Destino: ${this._describirAduana(transit.destinationOffice)}
 - Ruta: ${transit.route?.countries?.join(' → ') || 'No especificada'}
-- Garantía tipo: ${transit.guarantee?.type} (${transit.guarantee?.amount || 0} EUR)
+- Garantía tipo: ${this._oNoEspecificado(transit.guarantee?.type)} (${transit.guarantee?.amount || 0} EUR)
 - Fecha salida: ${transit.dates?.releaseAtDeparture || 'No iniciado'}
 - Plazo llegada: ${transit.deadlines?.arrivalDeadline || 'No calculado'}
 
@@ -4164,8 +4189,8 @@ TRANSPORTE:
 MERCANCÍAS:
 ${transit.goodsItems?.map((g, i) => `
 ${i + 1}. ${g.description} (${g.taricCode || 'sin TARIC'})
-   - Origen: ${g.countryOfOrigin}
-   - Peso: ${g.grossWeight} kg
+   - Origen: ${this._oNoEspecificado(g.countryOfOrigin)}
+   - Peso: ${this._oNoEspecificado(g.grossWeight)} kg
 `).join('') || 'No especificadas'}
 
 PRINCIPAL OBLIGADO:
@@ -4275,8 +4300,8 @@ Responde en JSON:
 
 DATOS DEL TRÁNSITO:
 - Tipo: ${transit.transitType}
-- Partida: ${transit.departureOffice?.code} (${transit.departureOffice?.country})
-- Destino: ${transit.destinationOffice?.code} (${transit.destinationOffice?.country})
+- Partida: ${this._describirAduana(transit.departureOffice)}
+- Destino: ${this._describirAduana(transit.destinationOffice)}
 - Países en ruta: ${transit.route?.countries?.join(', ') || 'No especificados'}
 
 MERCANCÍAS:
@@ -4284,7 +4309,7 @@ ${transit.goodsItems?.map((g, i) => `
 ${i + 1}. ${g.description}
    - TARIC: ${g.taricCode || 'No especificado'}
    - Valor estimado: ${g.value || 'No especificado'} EUR
-   - Peso: ${g.grossWeight} kg
+   - Peso: ${this._oNoEspecificado(g.grossWeight)} kg
 `).join('') || 'No especificadas'}
 
 VALOR TOTAL ESTIMADO: ${transit.totalValue || 'No especificado'} EUR
