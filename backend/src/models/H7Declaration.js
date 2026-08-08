@@ -372,7 +372,10 @@ const H7DeclarationSchema = new mongoose.Schema({
   mrn: {
     type: String,
     sparse: true,
-    match: /^\d{2}ES\d{14}H7$/  // Formato H7 espanol
+    // MRN AEAT: AA + ES + resto alfanumerico (18 chars). El H7 real llega como
+    // 26ESH7A000067964R6 (el tipo 'H7' va tras ES, no al final): la regex anterior
+    // (\d{14}H7$) lo rechazaba. Se valida el prefijo de pais y la longitud.
+    match: /^\d{2}ES[A-Z0-9]{14}$/
   },
 
   // Fecha de presentacion

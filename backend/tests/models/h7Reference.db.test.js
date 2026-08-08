@@ -39,6 +39,12 @@ describe('H7Declaration.reference — generación robusta', () => {
     expect(nueva.reference).toBe(`H7-${year}-000037`);
   });
 
+  test('acepta el MRN real de H7 que devuelve AEAT (26ESH7A...)', async () => {
+    // La regex antigua (\d{14}H7$) rechazaba el MRN real de H7. Debe aceptarlo.
+    const d = await H7Declaration.create(baseH7({ mrn: '26ESH7A000067964R6' }));
+    expect(d.mrn).toBe('26ESH7A000067964R6');
+  });
+
   test('varias creaciones consecutivas generan referencias únicas y crecientes', async () => {
     const year = new Date().getFullYear();
     const a = await H7Declaration.create(baseH7());
