@@ -347,6 +347,49 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
     });
   });
 
+  /**
+   * Rechazo real de AEAT PRE (8/Ago/2026) a una rectificacion de ENS: el canal
+   * enswsv5 contesta un CD917B cuyo motivo va en <XMLERR805>, un bloque que el
+   * parser NO miraba en absoluto. Resultado: `error: null` y `success: false` sin
+   * una sola palabra de por que. El bloque trae ademas la localizacion exacta
+   * (ErrLocXMLER803 = mensaje, linea y columna), que es lo unico que permite
+   * encontrar el defecto en el XML enviado.
+   */
+  describe('errores de formato XML del canal ENS (XMLERR805 / CD917B)', () => {
+    const CD917B = '<r><MesTypMES20>CD917B</MesTypMES20><XMLERR805>'
+      + '<ErrLocXMLER803>CC313A</ErrLocXMLER803><ErrLinNumXMLER800>4</ErrLinNumXMLER800>'
+      + '<ErrColNumXMLER801>148</ErrColNumXMLER801><ErrReaXMLER802>Invalid XML format</ErrReaXMLER802>'
+      + '<OriAttValXMLER804>Invalid NameSpace</OriAttValXMLER804><ErrCodXMLER806>52</ErrCodXMLER806>'
+      + '</XMLERR805></r>';
+
+    test('un CD917B es un rechazo, no un exito', async () => {
+      conRespuesta(CD917B);
+      const r = await submitService.submitENSAmendment({ mrn: '26ES00280100000000' });
+      expect(r.success).toBe(false);
+      expect(r.code).toBe('CD917B');
+    });
+
+    test('el error dice el motivo, el valor rechazado y donde esta', async () => {
+      conRespuesta(CD917B);
+      const r = await submitService.submitENSAmendment({ mrn: '26ES00280100000000' });
+
+      expect(r.error).toContain('Invalid XML format');
+      expect(r.error).toContain('Invalid NameSpace');
+      expect(r.error).toContain('CC313A');
+      expect(r.error).toContain('4');
+      expect(r.error).toContain('148');
+    });
+
+    test('varios XMLERR805 se muestran todos, no solo el primero', async () => {
+      conRespuesta('<r><MesTypMES20>CD917B</MesTypMES20>'
+        + '<XMLERR805><ErrReaXMLER802>Uno</ErrReaXMLER802></XMLERR805>'
+        + '<XMLERR805><ErrReaXMLER802>Dos</ErrReaXMLER802></XMLERR805></r>');
+      const r = await submitService.submitENSAmendment({ mrn: '26ES00280100000000' });
+      expect(r.error).toContain('Uno');
+      expect(r.error).toContain('Dos');
+    });
+  });
+
   describe('cuerpo no-string', () => {
     test('un body no-string produce fallo sin reventar', async () => {
       aeatTransport.sendSoap.mockResolvedValue({ status: 200, data: { objeto: true } });
@@ -354,6 +397,41 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
       expect(r.success).toBe(false);
       expect(r.rawResponse).toBe('');
     });
+  });
+});
+
+// ==========================================================================
+// requestXML: el XML que se ENVIO
+// ==========================================================================
+/**
+ * `rawResponse` guarda lo que AEAT contesto, pero NADIE devolvia el XML que se le
+ * mando. Sin el, una declaracion aceptada con MRN real no tiene prueba de QUE se
+ * declaro: es el documento que el operador debe conservar y exhibir en una
+ * comprobacion. Los llamantes que quieran persistirlo (ensService) no lo podian
+ * hacer porque el dato se perdia dentro de `_sendToAEAT`.
+ */
+describe('requestXML: el resultado incluye el XML enviado', () => {
+  test.each([
+    ['submitENS', () => submitService.submitENS({
+      lrn: 'LRN-ENS', carrier: { eori: 'ESB22477020' },
+      goods: [{ description: 'Ropa', commodityCode: '6109', grossMass: 50, numberOfPackages: 3 }]
+    }), 'CC315A'],
+    ['submitENSAmendment', () => submitService.submitENSAmendment({ mrn: '26ES00280100000000' }), 'CC313A'],
+    ['submitH7', () => submitService.submitH7(h7(), TENANT_STRIX), 'AltaH7V1Ent'],
+    ['queryStatus', () => submitService.queryStatus('26ES00280100000000'), 'ConsultaImportacion']
+  ])('%s devuelve requestXML con el mensaje %s', async (_nombre, invocar, marca) => {
+    const r = await invocar();
+    expect(typeof r.requestXML).toBe('string');
+    expect(r.requestXML).toContain(marca);
+    // Es literalmente lo que viajo por el cable, no una reconstruccion.
+    expect(r.requestXML).toBe(soapEnviado());
+  });
+
+  test('requestXML sobrevive a un rechazo: es cuando mas falta hace', async () => {
+    conRespuesta('<r><CodigoRespuesta>9</CodigoRespuesta><DescripcionError>Datos incorrectos</DescripcionError></r>');
+    const r = await submitService.submitENSAmendment({ mrn: '26ES00280100000000' });
+    expect(r.success).toBe(false);
+    expect(r.requestXML).toContain('CC313A');
   });
 });
 

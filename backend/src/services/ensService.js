@@ -313,11 +313,21 @@ class ENSService {
         aeatResult = await aeatSubmitService.submitENS(declaration);
       }
 
-      // Guardar XML y respuesta raw para debugging
-      declaration.generatedXML = aeatResult.rawResponse ? 'Enviado via aeatSubmitService' : '';
+      // El XML REALMENTE enviado a AEAT. Antes se guardaba aqui el literal
+      // 'Enviado via aeatSubmitService', asi que de una ENS presentada con MRN real
+      // no quedaba constancia de QUE se declaro y GET /:id/xml devolvia esa nota.
+      // Se guarda tambien cuando AEAT rechaza: es el documento con el que se
+      // diagnostica el rechazo. ICS2 no envia nada todavia y no aporta XML.
+      if (aeatResult.requestXML) {
+        declaration.generatedXML = aeatResult.requestXML;
+      }
 
       if (!aeatResult.success) {
         logger.warn(`[ENS] AEAT rechazo: code=${aeatResult.code}, error=${aeatResult.error}`);
+        // Persistir el XML enviado aunque el envio se rechace: sin este save() el
+        // rechazo no dejaba rastro y no habia con que diagnosticarlo. El estado NO
+        // avanza (sigue draft/validated), asi que se puede corregir y reenviar.
+        await declaration.save();
         return {
           success: false,
           error: aeatResult.error || 'Error en respuesta AEAT',

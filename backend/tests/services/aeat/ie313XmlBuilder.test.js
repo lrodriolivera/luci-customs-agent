@@ -24,9 +24,43 @@ describe('buildIE313AmendmentXML: envelope y cabecera', () => {
     const xml = buildIE313AmendmentXML({ mrn: '26ES00085123456789' });
 
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
-    expect(xml).toContain('<ent:IE313V5Ent');
     expect(xml).toContain('<MesTypMES20>CC313A</MesTypMES20>');
-    expect(xml).toContain('<MesRecMES6>NECA.ES</MesRecMES6>');
+    expect(xml).toContain('<MesRecMES6>NICA.ES</MesRecMES6>');
+  });
+
+  /**
+   * AEAT PRE rechazo una rectificacion real (8/Ago/2026) con
+   * CD917B / XMLERR805 "Invalid XML format" + "Invalid NameSpace", errCod 52,
+   * senalando linea 4 columna 148: el elemento raiz. Tres defectos a la vez:
+   *   1. El namespace apuntaba a /static_files/common/... cuando la familia ENS
+   *      (enswsv5) vive en /ADUA/internet/es/aeat/dit/adu/... — el IE315 que SI
+   *      acepta AEAT usa esa ruta.
+   *   2. Envolvia el CC313A dentro de <ent:IE313V5Ent>. El IE315V5 que funciona
+   *      pone <ent:CC315A> como raiz directa, sin envoltorio Ent.
+   *   3. <MesRecMES6> era 'NECA.ES'; el receptor del canal ENS es 'NICA.ES'
+   *      (lo confirma el <MesSenMES3>NICA.ES</MesSenMES3> de todo CC328A real).
+   * Sin esto, NINGUNA rectificacion de ENS podia llegar nunca a AEAT.
+   */
+  test('la raiz es <ent:CC313A> con el namespace ADUA de enswsv5 (no un envoltorio Ent)', () => {
+    const xml = buildIE313AmendmentXML({ mrn: '26ES00085123456789' });
+
+    expect(xml).toContain('<ent:CC313A xmlns:ent="https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/aden/enswsv5/IE313V5Ent.xsd">');
+    expect(xml).toContain('</ent:CC313A>');
+    expect(xml).not.toContain('IE313V5Ent xmlns');
+    expect(xml).not.toContain('static_files');
+  });
+
+  test('marca el indicador de entorno de pruebas como hace el IE315', () => {
+    expect(buildIE313AmendmentXML({ mrn: '26ESX', test: true })).toContain('<TesIndMES18>1</TesIndMES18>');
+    expect(buildIE313AmendmentXML({ mrn: '26ESX', test: false })).toContain('<TesIndMES18>0</TesIndMES18>');
+  });
+
+  // MesIdeMES19 es an..14 en el esquema ENS: el transactionId de 24 digitos que
+  // generaba el builder desbordaba el tipo.
+  test('el identificador de mensaje no pasa de 14 caracteres', () => {
+    const xml = buildIE313AmendmentXML({ mrn: '26ESX' });
+    const ide = (xml.match(/<MesIdeMES19>([^<]*)</) || [])[1];
+    expect(ide.length).toBeLessThanOrEqual(14);
   });
 
   test('vuelca el MRN original, la aduana de entrada y el transportista', () => {

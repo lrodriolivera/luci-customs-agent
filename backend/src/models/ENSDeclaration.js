@@ -387,6 +387,13 @@ const ENSDeclarationSchema = new mongoose.Schema({
     message: String,
     timestamp: Date,
     correlationId: String,
+    // Codigo Seguro de Verificacion que devuelve AEAT al aceptar la ENS: es el
+    // justificante de presentacion con el que se acredita la declaracion ante la
+    // Administracion. `ensService` ya lo escribia, pero al no estar declarado el
+    // esquema estricto lo descartaba en silencio (mismo campo que en
+    // H7Declaration.aeatResponse), asi que una ENS con MRN real se guardaba sin
+    // prueba de presentacion.
+    csv: String,
     errors: [{
       field: String,
       code: String,

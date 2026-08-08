@@ -554,6 +554,19 @@ exports.addDocument = async (req, res) => {
 
     const { type, documentNumber, name, url } = req.body;
 
+    // Un `type` invalido hacia estallar el save() y el catch generico respondia
+    // 500 "Error al agregar documento", sin decir que el tipo era el problema ni
+    // cuales se admiten. Se valida contra el propio enum del esquema (fuente
+    // unica) para que el 400 nombre el valor rechazado y los validos.
+    const tiposValidos = ENSDeclaration.schema.path('documents').schema.path('type').enumValues;
+    if (!type || !tiposValidos.includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Tipo de documento invalido',
+        error: `Tipo de documento invalido: '${type === undefined ? '' : type}'. Valores admitidos: ${tiposValidos.join(', ')}`
+      });
+    }
+
     declaration.documents.push({
       type,
       documentNumber,
@@ -835,11 +848,22 @@ exports.amend = async (req, res) => {
       })) || []
     });
 
-    if (result.success) {
-      declaration.status = 'amended';
-      declaration.amendedAt = new Date();
-      declaration.amendmentMRN = result.mrn || declaration.mrn;
+    // Un rechazo de AEAT no es un exito: antes se respondia 200 con
+    // `success: true` y el fallo quedaba escondido en `data.success`, asi que la
+    // UI (api.js devuelve response.data) daba la rectificacion por hecha. Un
+    // CD917B ademas no trae texto de error (el motivo va en XMLERR805), por eso
+    // el mensaje cae al codigo AEAT antes que quedarse vacio.
+    if (!result.success) {
+      const motivo = result.error || (result.code
+        ? `AEAT rechazo la rectificacion (${result.code})`
+        : 'AEAT rechazo la rectificacion');
+      logger.warn(`[ENS] Rectificacion IE313 rechazada: mrn=${declaration.mrn}, code=${result.code}, error=${result.error}`);
+      return res.status(400).json({ success: false, error: motivo, data: result });
     }
+
+    declaration.status = 'amended';
+    declaration.amendedAt = new Date();
+    declaration.amendmentMRN = result.mrn || declaration.mrn;
     await declaration.save();
 
     res.json({ success: true, data: result });

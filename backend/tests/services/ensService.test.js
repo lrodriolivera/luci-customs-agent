@@ -328,6 +328,54 @@ describe('submitToAEAT', () => {
     expect(doc.status).toBe('accepted');
   });
 
+  /**
+   * `generatedXML` guardaba el literal 'Enviado via aeatSubmitService' (29 chars):
+   * un campo que se llama "XML generado" y contiene una nota de depuracion. Efecto
+   * real comprobado en produccion sobre la ENS aceptada con MRN 26ES009999Z0000750:
+   * GET /api/ens/:id/xml devolvia 200 con ese texto, asi que de una declaracion
+   * presentada de verdad ante la AEAT NO quedaba constancia de QUE se declaro.
+   */
+  test('RAIL: guarda el XML REALMENTE enviado a AEAT, no una nota de depuracion', async () => {
+    const xmlEnviado = '<?xml version="1.0"?><ent:CC315A><MesTypMES20>CC315A</MesTypMES20></ent:CC315A>';
+    aeatSubmitService.submitENS.mockResolvedValue({
+      success: true, mrn: '26ES00112233445566EN', code: 'CC328A', estado: 'ACEPTADA',
+      csv: 'C6H8GNJ9K5HQWD3F', requestXML: xmlEnviado, rawResponse: '<CC328A/>'
+    });
+    await ens.submitToAEAT(declId, userId);
+
+    const doc = await ENSDeclaration.findById(declId);
+    expect(doc.generatedXML).toBe(xmlEnviado);
+    expect(doc.generatedXML).not.toMatch(/Enviado via/);
+  });
+
+  // El CSV es el Codigo Seguro de Verificacion: la prueba de presentacion ante la
+  // AEAT. ensService lo escribia en aeatResponse.csv, pero el subesquema
+  // aeatResponse de ENSDeclaration no lo declaraba, asi que Mongoose (strict) lo
+  // descartaba en silencio. Comprobado en produccion: la ENS aceptada no tenia csv.
+  test('RAIL: persiste el CSV (Codigo Seguro de Verificacion) que devuelve AEAT', async () => {
+    aeatSubmitService.submitENS.mockResolvedValue({
+      success: true, mrn: '26ES00112233445566EN', code: 'CC328A', estado: 'ACEPTADA',
+      csv: 'C6H8GNJ9K5HQWD3F', requestXML: '<x/>', rawResponse: '<CC328A/>'
+    });
+    await ens.submitToAEAT(declId, userId);
+
+    const doc = await ENSDeclaration.findById(declId);
+    expect(doc.aeatResponse.csv).toBe('C6H8GNJ9K5HQWD3F');
+  });
+
+  // Si AEAT rechaza, el XML enviado es justo lo que hay que mirar para entender
+  // por que: no puede perderse en la rama de error.
+  test('RAIL: un rechazo tambien conserva el XML enviado', async () => {
+    aeatSubmitService.submitENS.mockResolvedValue({
+      success: false, code: 'CC316A', error: 'ES001101', requestXML: '<ent:CC315A/>'
+    });
+    await ens.submitToAEAT(declId, userId);
+
+    const doc = await ENSDeclaration.findById(declId);
+    expect(doc.generatedXML).toBe('<ent:CC315A/>');
+    expect(doc.status).toBe('draft');
+  });
+
   test('RAIL: AEAT rechaza -> success:false, no cambia a submitted', async () => {
     aeatSubmitService.submitENS.mockResolvedValue({ success: false, code: 'RC', error: 'Datos incorrectos' });
     const r = await ens.submitToAEAT(declId, userId);

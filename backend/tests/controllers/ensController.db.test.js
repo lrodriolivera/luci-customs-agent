@@ -482,6 +482,37 @@ describe('addDocument', () => {
     }), res);
     expect(res.statusCode).toBe(404);
   });
+
+  /**
+   * Un `type` fuera del enum hacia estallar el save() y el catch generico
+   * respondia 500 "Error al agregar documento": el usuario no podia saber que el
+   * tipo era el problema ni cuales se admiten (el enum de este `documents` son
+   * etiquetas de fichero adjunto: CMR/BL/AWB/INVOICE/..., no los codigos UCC del
+   * `documents` por partida). Un dato de entrada invalido es 400, no 500.
+   */
+  test('tipo de documento fuera del enum -> 400 nombrando el tipo y los validos', async () => {
+    const d = await sembrarENS(operadorUser);
+    const res = mockRes();
+    await ensController.addDocument(mockReq({
+      user: operadorUser, params: { id: d._id.toString() },
+      body: { type: 'N935', documentNumber: 'FAC-1', name: 'Factura' }
+    }), res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toContain('N935');
+    expect(res.body.error).toContain('INVOICE');
+    const tras = await ENSDeclaration.findById(d._id);
+    expect(tras.documents.length).toBe(0);
+  });
+
+  test('sin tipo -> 400 (no se guarda un adjunto sin clasificar)', async () => {
+    const d = await sembrarENS(operadorUser);
+    const res = mockRes();
+    await ensController.addDocument(mockReq({
+      user: operadorUser, params: { id: d._id.toString() }, body: { documentNumber: 'FAC-1' }
+    }), res);
+    expect(res.statusCode).toBe(400);
+  });
 });
 
 // ==================== getXML ====================
@@ -656,5 +687,48 @@ describe('amend (IE313)', () => {
       user: operadorUser, params: { id: d._id.toString() }, body: {}
     }), res);
     expect(res.statusCode).toBe(404);
+  });
+
+  /**
+   * Comprobado contra AEAT PRE (8/Ago/2026): la rectificacion se rechazo con
+   * CD917B y el endpoint respondio HTTP 200 con `success: true`. El envoltorio
+   * afirmaba exito sobre un rechazo de la aduana; solo mirando dentro de `data`
+   * aparecia `success: false`. Ningun cliente que compruebe el envoltorio (la UI
+   * lo hace, api.js devuelve response.data) podia detectar el fallo.
+   */
+  test('AEAT rechaza la rectificacion -> 400 y NO se marca amended', async () => {
+    const d = await sembrarENS(operadorUser);
+    d.mrn = '25ES0028011234567X';
+    await d.save();
+    aeatSubmitService.submitENSAmendment.mockResolvedValue({
+      success: false, code: 'CD917B', error: 'CC313A: Invalid NameSpace', rawResponse: '<CD917B/>'
+    });
+    const res = mockRes();
+    await ensController.amend(mockReq({
+      user: operadorUser, params: { id: d._id.toString() }, body: { reason: 'correccion' }
+    }), res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toMatch(/Invalid NameSpace/);
+    const tras = await ENSDeclaration.findById(d._id);
+    expect(tras.status).not.toBe('amended');
+  });
+
+  // Un CD917B (error de formato XML) no trae DescripcionError: el motivo esta en
+  // XMLERR805. Sin mensaje, el usuario recibia un 400 vacio.
+  test('rechazo sin texto de error -> mensaje con el codigo AEAT, nunca vacio', async () => {
+    const d = await sembrarENS(operadorUser);
+    d.mrn = '25ES0028011234567X';
+    await d.save();
+    aeatSubmitService.submitENSAmendment.mockResolvedValue({ success: false, code: 'CD917B', error: null });
+    const res = mockRes();
+    await ensController.amend(mockReq({
+      user: operadorUser, params: { id: d._id.toString() }, body: {}
+    }), res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBeTruthy();
+    expect(res.body.error).toContain('CD917B');
   });
 });

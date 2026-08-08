@@ -103,6 +103,26 @@ function _parseAEATResponse(responseData) {
     ? funcDetallados.join(' | ')
     : (funcErrors.length > 0 ? funcErrors.join(' | ') : null);
 
+  // Canal ENS (enswsv5): un CD917B rechaza el mensaje por FORMATO XML y el motivo
+  // vive en <XMLERR805>, no en FUNERRER1 ni en DescripcionError. Sin parsearlo, el
+  // rechazo llegaba sin una palabra de explicacion (verificado contra PRE el
+  // 8/Ago/2026 con una rectificacion de ENS). Se incluye la localizacion
+  // (mensaje/linea/columna) porque es lo unico que situa el defecto en el XML.
+  const xmlErrBlocks = [...body.matchAll(/<XMLERR805>([\s\S]*?)<\/XMLERR805>/g)].map(m => m[1]);
+  const _describeXmlError = (bloque) => {
+    const razon = (bloque.match(/<ErrReaXMLER802>([^<]+)</) || [])[1];
+    const valor = (bloque.match(/<OriAttValXMLER804>([^<]+)</) || [])[1];
+    const donde = (bloque.match(/<ErrLocXMLER803>([^<]+)</) || [])[1];
+    const linea = (bloque.match(/<ErrLinNumXMLER800>([^<]+)</) || [])[1];
+    const columna = (bloque.match(/<ErrColNumXMLER801>([^<]+)</) || [])[1];
+    const cabeza = [razon, valor].filter(Boolean).join(': ');
+    if (!cabeza) return null;
+    const sitio = [donde, linea ? `linea ${linea}` : null, columna ? `columna ${columna}` : null]
+      .filter(Boolean).join(', ');
+    return sitio ? `${cabeza} (${sitio})` : cabeza;
+  };
+  const xmlFormatError = xmlErrBlocks.map(_describeXmlError).filter(Boolean).join(' | ') || null;
+
   // Detectar tipo de mensaje (para AES/NCTS/ENS que usan formato diferente)
   const msgType = (body.match(/<MesTypMES20>([^<]+)</) || body.match(/<messageType>([^<]+)</) || [])[1];
   const tipoResp = (body.match(/<tipoRespuesta>([^<]+)</) || [])[1];
@@ -145,7 +165,7 @@ function _parseAEATResponse(responseData) {
     csv: csv || null,
     channel: channelMap[circuito] || channelMap[circuito?.toLowerCase()] || channelMap[circuitoAES] || null,
     estado: estado || estadoAES || null,
-    error: isSuccess ? null : (error || xmlError || ensError || funcError || fault || null),
+    error: isSuccess ? null : (error || xmlError || ensError || funcError || xmlFormatError || fault || null),
     rawResponse: body
   };
 }
@@ -155,7 +175,11 @@ function _parseAEATResponse(responseData) {
 // mapeo de datos puedan mockearlo sin certificado ni red.
 async function _sendToAEAT(soapXML, endpoint) {
   const response = await aeatTransport.sendSoap(soapXML, endpoint);
-  return _parseAEATResponse(response.data);
+  // `requestXML` viaja de vuelta al llamante porque el XML enviado es la prueba
+  // de QUE se declaro: sin el, una declaracion con MRN real no tiene constancia
+  // documental, y un rechazo no se puede diagnosticar. Se devuelve tanto en
+  // exito como en error, que es cuando mas falta hace.
+  return { ..._parseAEATResponse(response.data), requestXML: soapXML };
 }
 
 // ==================== METODOS PUBLICOS ====================
