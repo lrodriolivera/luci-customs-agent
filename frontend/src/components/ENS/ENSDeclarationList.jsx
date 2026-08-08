@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import ConfirmDialog from '../common/ConfirmDialog'
 import { useConfirm } from '../../hooks/useConfirm'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import {
   Box, Typography, Paper, Grid, Button, TextField, MenuItem,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -44,6 +45,12 @@ const ENSDeclarationList = () => {
     AIR: { icon: AirIcon, color: '#2196F3', label: t('ens.air') },
     SEA: { icon: SeaIcon, color: '#00BCD4', label: t('ens.maritime') }
   }
+
+  // Solo el ferrocarril (RAIL) se declara por el canal legacy AEAT (IE315). Maritimo,
+  // aereo y carretera requieren ICS2 (fase 4, 2026): AEAT rechaza esos modos por el
+  // legacy, asi que el envio se ofrece deshabilitado igual que en la ficha.
+  const ICS2_MODES = ['SEA', 'AIR', 'ROAD']
+  const requiresICS2 = (mode) => ICS2_MODES.includes(String(mode || '').toUpperCase())
 
   // Status configuration
   const statusConfig = {
@@ -162,11 +169,18 @@ const ENSDeclarationList = () => {
     try {
       const response = await ensAPI.submit(id)
       if (response.data.success) {
+        // El envio es REAL contra AEAT: sin avisar del MRN el usuario no sabe si se
+        // ha presentado la declaracion. Mismo criterio que en ENSDeclarationDetail.
+        const mrn = response.data.data?.mrn
+        toast.success(mrn ? t('ens.sentWithMrn', { mrn }) : t('ens.sentOk', 'Declaración enviada a AEAT'))
         loadDeclarations()
         loadStats()
+      } else {
+        toast.error(response.data.message || t('ens.submitError', 'Error al enviar a AEAT'))
       }
     } catch (error) {
       console.error('Error submitting declaration:', error)
+      toast.error(error.response?.data?.message || error.response?.data?.error || t('ens.submitError', 'Error al enviar a AEAT'))
     }
   }
 
@@ -435,14 +449,20 @@ const ENSDeclarationList = () => {
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title={t('ens.sendToAeat')}>
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={() => handleSubmitDeclaration(dec._id)}
-                          >
-                            <SendIcon fontSize="small" />
-                          </IconButton>
+                        <Tooltip title={requiresICS2(dec.transportMode)
+                          ? t('ens.ics2Required', 'Este modo debe declararse mediante ICS2 (no por el canal AEAT actual)')
+                          : t('ens.sendToAeat')}>
+                          <span>
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              aria-label={t('ens.sendToAeat')}
+                              disabled={requiresICS2(dec.transportMode)}
+                              onClick={() => handleSubmitDeclaration(dec._id)}
+                            >
+                              <SendIcon fontSize="small" />
+                            </IconButton>
+                          </span>
                         </Tooltip>
                       </>
                     )}

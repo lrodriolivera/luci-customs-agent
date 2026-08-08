@@ -7,13 +7,19 @@ import { ensAPI } from '../../services/api'
 // Mocks obligatorios
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key) => key
+    // Interpola solo `mrn` para poder afirmar que el MRN real llega al aviso; el
+    // resto de claves se devuelven tal cual como esperan los demas tests.
+    t: (key, opts) => (opts && opts.mrn ? `${key}:${opts.mrn}` : key)
   })
 }))
 
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate
+}))
+
+vi.mock('react-hot-toast', () => ({
+  default: { success: vi.fn(), error: vi.fn() }
 }))
 
 vi.mock('../../services/api', () => ({
@@ -336,7 +342,9 @@ describe('ENSDeclarationList', () => {
   })
 
   it('submitea declaración al clicar SendIcon con confirm=true', async () => {
-    const declarations = [mockDeclaration({ status: 'draft' })]
+    // RAIL: unico modo que admite el canal legacy AEAT (los demas van por ICS2 y
+    // tienen el boton deshabilitado).
+    const declarations = [mockDeclaration({ status: 'draft', transportMode: 'RAIL' })]
     ensAPI.list.mockResolvedValue(mockListResponse(declarations, 1))
     ensAPI.getStats.mockResolvedValue(mockStatsResponse())
     ensAPI.submit.mockResolvedValue({ data: { success: true } })
@@ -366,7 +374,7 @@ describe('ENSDeclarationList', () => {
   })
 
   it('no submitea si se cancela el modal', async () => {
-    const declarations = [mockDeclaration({ status: 'draft' })]
+    const declarations = [mockDeclaration({ status: 'draft', transportMode: 'RAIL' })]
     ensAPI.list.mockResolvedValue(mockListResponse(declarations, 1))
     ensAPI.getStats.mockResolvedValue(mockStatsResponse())
 
@@ -577,7 +585,7 @@ describe('ENSDeclarationList', () => {
 
   it('maneja error en handleSubmitDeclaration (catch)', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const declarations = [mockDeclaration({ status: 'draft' })]
+    const declarations = [mockDeclaration({ status: 'draft', transportMode: 'RAIL' })]
     ensAPI.list.mockResolvedValue(mockListResponse(declarations, 1))
     ensAPI.getStats.mockResolvedValue(mockStatsResponse())
     ensAPI.submit.mockRejectedValue(new Error('Submit failed'))
@@ -1096,5 +1104,92 @@ describe('ENSDeclarationList', () => {
     // En es-ES sería "1.234.567", pero puede variar según locale del sistema
     // Verificamos que el número está presente
     expect(screen.getByText(/1[,.]234[,.]567/)).toBeInTheDocument()
+  })
+})
+
+describe('ENSDeclarationList: envio a AEAT desde la fila', () => {
+  const listar = (declarations) => {
+    ensAPI.list.mockResolvedValue({
+      data: { success: true, data: declarations, pagination: { total: declarations.length } }
+    })
+    ensAPI.getStats.mockResolvedValue({ data: { success: true, data: {} } })
+  }
+
+  const decl = (overrides = {}) => ({
+    _id: 'dec-1',
+    reference: 'ENS-001',
+    lrn: 'LRN-001',
+    status: 'draft',
+    transportMode: 'RAIL',
+    consignment: { referenceNumber: 'BL-1', containerNumber: 'C-1' },
+    carrier: { name: 'Carrier Inc', eori: 'ES123456789' },
+    entryOffice: { code: 'ES001234', expectedArrival: '2026-08-10T10:00:00Z' },
+    riskAssessment: { status: 'PENDING' },
+    ...overrides
+  })
+
+  const enviarPrimeraFila = async (container) => {
+    await screen.findByText('ENS-001')
+    const boton = container.querySelector('svg[data-testid="SendIcon"]').closest('button')
+    fireEvent.click(boton)
+    const dialogo = await screen.findByRole('dialog')
+    fireEvent.click(within(dialogo).getByText('common.confirm').closest('button'))
+  }
+
+  // El envio es REAL contra AEAT: si el usuario no ve el MRN ni el motivo del rechazo,
+  // no sabe si ha presentado algo. La ficha (ENSDeclarationDetail) ya avisa con toast;
+  // la lista lo hacia en silencio (solo console.error).
+  it('avisa con el MRN devuelto por AEAT tras un envio correcto', async () => {
+    const toast = (await import('react-hot-toast')).default
+    listar([decl()])
+    ensAPI.submit.mockResolvedValue({
+      data: { success: true, data: { mrn: '26ES009999Z0000717', status: 'accepted' } }
+    })
+
+    const { container } = render(<ENSDeclarationList />)
+    await enviarPrimeraFila(container)
+
+    await waitFor(() => expect(ensAPI.submit).toHaveBeenCalledWith('dec-1'))
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith(
+      'ens.sentWithMrn:26ES009999Z0000717'
+    ))
+  })
+
+  it('muestra el motivo cuando AEAT rechaza el envio', async () => {
+    const toast = (await import('react-hot-toast')).default
+    listar([decl()])
+    ensAPI.submit.mockRejectedValue({
+      response: { data: { message: 'AEAT rechaza: modo no admitido por el canal legacy' } }
+    })
+
+    const { container } = render(<ENSDeclarationList />)
+    await enviarPrimeraFila(container)
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(
+      'AEAT rechaza: modo no admitido por el canal legacy'
+    ))
+  })
+
+  // Coherencia con ENSDeclarationDetail: SEA/AIR/ROAD deben ir por ICS2 y AEAT los
+  // rechaza por el canal legacy. Ofrecer el boton habilitado en la lista lleva al
+  // usuario a un rechazo seguro.
+  it.each(['SEA', 'AIR', 'ROAD'])('deshabilita el envio en %s (requiere ICS2)', async (modo) => {
+    listar([decl({ transportMode: modo })])
+
+    const { container } = render(<ENSDeclarationList />)
+    await screen.findByText('ENS-001')
+
+    const boton = container.querySelector('svg[data-testid="SendIcon"]').closest('button')
+    expect(boton).toBeDisabled()
+  })
+
+  it('mantiene habilitado el envio en RAIL', async () => {
+    listar([decl({ transportMode: 'RAIL' })])
+
+    const { container } = render(<ENSDeclarationList />)
+    await screen.findByText('ENS-001')
+
+    const boton = container.querySelector('svg[data-testid="SendIcon"]').closest('button')
+    expect(boton).not.toBeDisabled()
   })
 })
