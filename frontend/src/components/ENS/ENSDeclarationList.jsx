@@ -231,7 +231,7 @@ const ENSDeclarationList = () => {
       {/* Stats Cards */}
       {stats && (
         <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
@@ -243,7 +243,7 @@ const ENSDeclarationList = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
@@ -255,7 +255,7 @@ const ENSDeclarationList = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
@@ -267,7 +267,7 @@ const ENSDeclarationList = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
@@ -289,7 +289,7 @@ const ENSDeclarationList = () => {
       {/* Filters */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size="small"
@@ -305,7 +305,7 @@ const ENSDeclarationList = () => {
               }}
             />
           </Grid>
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <TextField
               fullWidth
               size="small"
@@ -320,7 +320,7 @@ const ENSDeclarationList = () => {
               ))}
             </TextField>
           </Grid>
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <TextField
               fullWidth
               size="small"
@@ -335,7 +335,7 @@ const ENSDeclarationList = () => {
               ))}
             </TextField>
           </Grid>
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <TextField
               fullWidth
               size="small"
@@ -346,7 +346,7 @@ const ENSDeclarationList = () => {
               InputLabelProps={{ shrink: true }}
             />
           </Grid>
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <TextField
               fullWidth
               size="small"
@@ -487,7 +487,7 @@ const ENSDeclarationList = () => {
           {selectedDeclaration && (
             <Grid container spacing={3}>
               {/* General Info */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Paper variant="outlined" sx={{ p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom color="primary">
                     {t('ens.generalInfo')}
@@ -513,7 +513,7 @@ const ENSDeclarationList = () => {
               </Grid>
 
               {/* Entry Office */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Paper variant="outlined" sx={{ p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom color="primary">
                     {t('ens.entryCustomsLabel')}
@@ -530,7 +530,7 @@ const ENSDeclarationList = () => {
               </Grid>
 
               {/* Carrier */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Paper variant="outlined" sx={{ p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom color="primary">
                     {t('ens.carrier')}
@@ -545,7 +545,7 @@ const ENSDeclarationList = () => {
               </Grid>
 
               {/* Consignment */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Paper variant="outlined" sx={{ p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom color="primary">
                     {t('ens.shipment')}
@@ -565,7 +565,7 @@ const ENSDeclarationList = () => {
 
               {/* Risk Assessment */}
               {selectedDeclaration.riskAssessment && (
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Paper variant="outlined" sx={{ p: 2 }}>
                     <Typography variant="subtitle2" gutterBottom color="primary">
                       {t('ens.riskAnalysis')}
@@ -594,7 +594,7 @@ const ENSDeclarationList = () => {
               )}
 
               {/* Status History */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Paper variant="outlined" sx={{ p: 2 }}>
                   <Typography variant="subtitle2" gutterBottom color="primary">
                     {t('ens.statusHistory')}

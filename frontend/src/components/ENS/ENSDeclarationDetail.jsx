@@ -362,34 +362,34 @@ const ENSDeclarationDetail = () => {
       {/* Tab 0: General */}
       {activeTab === 0 && (
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   {t('ens.generalInfo')}
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.reference')}</Typography>
                     <Typography variant="body1">{declaration.reference}</Typography>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="body2" color="textSecondary">LRN</Typography>
                     <Typography variant="body1">{declaration.lrn || '-'}</Typography>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="body2" color="textSecondary">MRN</Typography>
                     <Typography variant="body1" fontFamily="monospace">{declaration.mrn || '-'}</Typography>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="body2" color="textSecondary">{t('common.type')}</Typography>
                     <Typography variant="body1">{declaration.declarationType || 'ENS'}</Typography>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.created')}</Typography>
                     <Typography variant="body1">{formatDate(declaration.createdAt)}</Typography>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.updated')}</Typography>
                     <Typography variant="body1">{formatDate(declaration.updatedAt)}</Typography>
                   </Grid>
@@ -398,22 +398,22 @@ const ENSDeclarationDetail = () => {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   {t('ens.entryCustomsLabel')}
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.code')}</Typography>
                     <Typography variant="body1">{declaration.entryOffice?.code}</Typography>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="body2" color="textSecondary">{t('common.name')}</Typography>
                     <Typography variant="body1">{declaration.entryOffice?.name || '-'}</Typography>
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.expectedArrival')}</Typography>
                     <Typography variant="body1">{formatDate(declaration.entryOffice?.expectedArrival)}</Typography>
                   </Grid>
@@ -423,14 +423,14 @@ const ENSDeclarationDetail = () => {
           </Grid>
 
           {declaration.riskAssessment && (
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
                     {t('ens.riskAnalysis')}
                   </Typography>
                   <Grid container spacing={2}>
-                    <Grid item xs={6} md={3}>
+                    <Grid size={{ xs: 6, md: 3 }}>
                       <Typography variant="body2" color="textSecondary">{t('common.status')}</Typography>
                       <Chip
                         color={riskConfig[declaration.riskAssessment.status]?.color || 'default'}
@@ -438,19 +438,19 @@ const ENSDeclarationDetail = () => {
                       />
                     </Grid>
                     {declaration.riskAssessment.riskScore !== undefined && (
-                      <Grid item xs={6} md={3}>
+                      <Grid size={{ xs: 6, md: 3 }}>
                         <Typography variant="body2" color="textSecondary">{t('ens.score')}</Typography>
                         <Typography variant="h5">{declaration.riskAssessment.riskScore}/100</Typography>
                       </Grid>
                     )}
-                    <Grid item xs={6} md={3}>
+                    <Grid size={{ xs: 6, md: 3 }}>
                       <Typography variant="body2" color="textSecondary">{t('ens.dnlLabel')}</Typography>
                       <Typography variant="body1">
                         {declaration.riskAssessment.doNotLoadList ? 'SI' : 'NO'}
                       </Typography>
                     </Grid>
                     {declaration.riskAssessment.evaluatedAt && (
-                      <Grid item xs={6} md={3}>
+                      <Grid size={{ xs: 6, md: 3 }}>
                         <Typography variant="body2" color="textSecondary">{t('ens.evaluated')}</Typography>
                         <Typography variant="body1">{formatDate(declaration.riskAssessment.evaluatedAt)}</Typography>
                       </Grid>
@@ -462,27 +462,27 @@ const ENSDeclarationDetail = () => {
           )}
 
           {declaration.aeatResponse && (
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
                     {t('ens.aeatResponse')}
                   </Typography>
                   <Grid container spacing={2}>
-                    <Grid item xs={6} md={3}>
+                    <Grid size={{ xs: 6, md: 3 }}>
                       <Typography variant="body2" color="textSecondary">{t('ens.code')}</Typography>
                       <Typography variant="body1">{declaration.aeatResponse.code || '-'}</Typography>
                     </Grid>
-                    <Grid item xs={6} md={3}>
+                    <Grid size={{ xs: 6, md: 3 }}>
                       <Typography variant="body2" color="textSecondary">{t('common.date')}</Typography>
                       <Typography variant="body1">{formatDate(declaration.aeatResponse.timestamp)}</Typography>
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                       <Typography variant="body2" color="textSecondary">{t('ens.message')}</Typography>
                       <Typography variant="body1">{declaration.aeatResponse.message || '-'}</Typography>
                     </Grid>
                     {declaration.aeatResponse.errors?.length > 0 && (
-                      <Grid item xs={12}>
+                      <Grid size={{ xs: 12 }}>
                         <Alert severity="error">
                           {declaration.aeatResponse.errors.map((err, i) => (
                             <Typography key={i} variant="body2">
@@ -503,23 +503,23 @@ const ENSDeclarationDetail = () => {
       {/* Tab 1: Carrier */}
       {activeTab === 1 && (
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   {t('ens.carrierData')}
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.eoriLabel')}</Typography>
                     <Typography variant="body1" fontFamily="monospace">{declaration.carrier?.eori || '-'}</Typography>
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Typography variant="body2" color="textSecondary">{t('common.name')}</Typography>
                     <Typography variant="body1">{declaration.carrier?.name || '-'}</Typography>
                   </Grid>
                   {declaration.carrier?.address && (
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                       <Typography variant="body2" color="textSecondary">{t('common.address')}</Typography>
                       <Typography variant="body1">
                         {[
@@ -536,22 +536,22 @@ const ENSDeclarationDetail = () => {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   {t('ens.transportMeans')}
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="body2" color="textSecondary">{t('common.type')}</Typography>
                     <Typography variant="body1">{declaration.transportMeans?.type || '-'}</Typography>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.identification')}</Typography>
                     <Typography variant="body1">{declaration.transportMeans?.identification || '-'}</Typography>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.nationality')}</Typography>
                     <Typography variant="body1">{declaration.transportMeans?.nationality || '-'}</Typography>
                   </Grid>
@@ -565,34 +565,34 @@ const ENSDeclarationDetail = () => {
       {/* Tab 2: Consignment */}
       {activeTab === 2 && (
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   {t('ens.shipmentData')}
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={6} md={3}>
+                  <Grid size={{ xs: 6, md: 3 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.billOfLading')}</Typography>
                     <Typography variant="body1">{declaration.consignment?.referenceNumber || '-'}</Typography>
                   </Grid>
-                  <Grid item xs={6} md={3}>
+                  <Grid size={{ xs: 6, md: 3 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.container')}</Typography>
                     <Typography variant="body1" fontFamily="monospace">{declaration.consignment?.containerNumber || '-'}</Typography>
                   </Grid>
-                  <Grid item xs={6} md={3}>
+                  <Grid size={{ xs: 6, md: 3 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.seal')}</Typography>
                     <Typography variant="body1">{declaration.consignment?.sealNumber || '-'}</Typography>
                   </Grid>
-                  <Grid item xs={6} md={3}>
+                  <Grid size={{ xs: 6, md: 3 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.grossWeight')}</Typography>
                     <Typography variant="body1">{declaration.consignment?.grossMass ? `${declaration.consignment.grossMass} kg` : '-'}</Typography>
                   </Grid>
-                  <Grid item xs={6} md={3}>
+                  <Grid size={{ xs: 6, md: 3 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.packagesLabel')}</Typography>
                     <Typography variant="body1">{declaration.consignment?.numberOfPackages || '-'}</Typography>
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Typography variant="body2" color="textSecondary">{t('common.description')}</Typography>
                     <Typography variant="body1">{declaration.consignment?.goodsDescription || '-'}</Typography>
                   </Grid>
@@ -601,7 +601,7 @@ const ENSDeclarationDetail = () => {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -615,7 +615,7 @@ const ENSDeclarationDetail = () => {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
@@ -636,7 +636,7 @@ const ENSDeclarationDetail = () => {
         <Grid container spacing={3}>
           {/* House Consignments (Groupage) */}
           {declaration.houseConsignments?.length > 0 && (
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
@@ -673,7 +673,7 @@ const ENSDeclarationDetail = () => {
 
           {/* Direct Goods Items */}
           {declaration.goods?.length > 0 && (
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
@@ -711,22 +711,22 @@ const ENSDeclarationDetail = () => {
           )}
 
           {/* Totals */}
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   {t('ens.totals')}
                 </Typography>
                 <Grid container spacing={3}>
-                  <Grid item xs={4}>
+                  <Grid size={{ xs: 4 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.totalWeight')}</Typography>
                     <Typography variant="h5">{declaration.totals?.grossMass || declaration.consignment?.grossMass || 0} kg</Typography>
                   </Grid>
-                  <Grid item xs={4}>
+                  <Grid size={{ xs: 4 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.packagesLabel')}</Typography>
                     <Typography variant="h5">{declaration.totals?.numberOfPackages || declaration.consignment?.numberOfPackages || 0}</Typography>
                   </Grid>
-                  <Grid item xs={4}>
+                  <Grid size={{ xs: 4 }}>
                     <Typography variant="body2" color="textSecondary">{t('ens.items')}</Typography>
                     <Typography variant="h5">{declaration.totals?.numberOfItems || declaration.goods?.length || 0}</Typography>
                   </Grid>

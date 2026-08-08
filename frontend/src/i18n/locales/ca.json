@@ -2285,6 +2285,7 @@
     "riskScore": "Puntuacio de risc"
   },
   "help": {
+    "openContextualHelp": "Obrir ajuda contextual",
     "howToUse": "Com utilitzar",
     "regulation": "Normativa",
     "luciAi": "LUCI IA",

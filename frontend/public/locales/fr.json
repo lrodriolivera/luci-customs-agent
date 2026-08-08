@@ -2290,6 +2290,7 @@
     "riskScore": "Score de risque"
   },
   "help": {
+    "openContextualHelp": "Ouvrir l’aide contextuelle",
     "howToUse": "Comment utiliser",
     "regulation": "Reglementation",
     "luciAi": "LUCI IA",

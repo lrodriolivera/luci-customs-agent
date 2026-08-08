@@ -391,7 +391,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
         {/* Step 0: Transport */}
         {activeStep === 0 && (
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom>
                 {t('ens.transportModeLabel')}
               </Typography>
@@ -399,7 +399,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                 {transportModes.map((mode) => {
                   const IconComponent = mode.icon
                   return (
-                    <Grid item xs={6} sm={3} key={mode.value}>
+                    <Grid size={{ xs: 6, sm: 3 }} key={mode.value}>
                       <Card
                         sx={{
                           cursor: 'pointer',
@@ -427,14 +427,14 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             </Grid>
 
             {formData.transportMode && formData.transportMode !== 'RAIL' && (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Alert severity="warning">
                   Atención: solo RAIL acepta ENS legacy en AEAT. Las declaraciones de carretera, aéreo y marítimo (excepto RO-RO) deben presentarse mediante ICS2.
                 </Alert>
               </Grid>
             )}
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Autocomplete
                 options={filteredOffices}
                 getOptionLabel={(option) => `${option.code} - ${option.name}`}
@@ -452,7 +452,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 type="datetime-local"
@@ -471,13 +471,13 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
         {/* Step 1: Carrier */}
         {activeStep === 1 && (
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom>
                 {t('ens.carrierData')}
               </Typography>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label={t('ens.eoriCarrier')}
@@ -489,7 +489,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label={t('ens.companyName')}
@@ -498,14 +498,14 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Divider sx={{ my: 2 }} />
               <Typography variant="subtitle1" gutterBottom>
                 {t('ens.addressLabel')}
               </Typography>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label={t('ens.street')}
@@ -514,7 +514,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <TextField
                 fullWidth
                 label={t('common.city')}
@@ -523,7 +523,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <TextField
                 fullWidth
                 label={t('common.postalCode')}
@@ -532,7 +532,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <TextField
                 fullWidth
                 label={t('common.country')}
@@ -543,14 +543,14 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Divider sx={{ my: 2 }} />
               <Typography variant="subtitle1" gutterBottom>
                 {t('ens.transportMeans')}
               </Typography>
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 select
@@ -567,7 +567,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               </TextField>
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 label={t('ens.identification')}
@@ -576,7 +576,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 label={t('ens.nationality')}
@@ -592,13 +592,13 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
         {/* Step 2: Consignment */}
         {activeStep === 2 && (
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom>
                 {t('ens.shipmentData')}
               </Typography>
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 label={t('ens.blNumber')}
@@ -610,7 +610,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 label={t('ens.containerNumber')}
@@ -620,7 +620,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 label={t('ens.sealNumber')}
@@ -629,7 +629,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 type="number"
@@ -642,7 +642,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 type="number"
@@ -652,7 +652,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 multiline
@@ -664,14 +664,14 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             </Grid>
 
             {/* Consignor */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Divider sx={{ my: 2 }} />
               <Typography variant="subtitle1" gutterBottom>
                 {t('ens.consignorLabel')}
               </Typography>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label={t('ens.eoriConsignor')}
@@ -680,7 +680,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label={t('ens.nameConsignor')}
@@ -690,14 +690,14 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             </Grid>
 
             {/* Consignee */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Divider sx={{ my: 2 }} />
               <Typography variant="subtitle1" gutterBottom>
                 {t('ens.consigneeLabel')}
               </Typography>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label={t('ens.eoriConsignee')}
@@ -706,7 +706,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label={t('ens.nameConsignee')}
@@ -720,7 +720,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
         {/* Step 3: Goods */}
         {activeStep === 3 && (
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6">
                   {t('ens.goodsItems')}
@@ -741,7 +741,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               // Direct goods items
               <>
                 {formData.goods.map((item, index) => (
-                  <Grid item xs={12} key={index}>
+                  <Grid size={{ xs: 12 }} key={index}>
                     <Paper variant="outlined" sx={{ p: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                         <Typography variant="subtitle2">
@@ -758,7 +758,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                         )}
                       </Box>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <TextField
                             fullWidth
                             size="small"
@@ -767,7 +767,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                             onChange={(e) => handleGoodsItemChange(index, 'description', e.target.value)}
                           />
                         </Grid>
-                        <Grid item xs={12} md={3}>
+                        <Grid size={{ xs: 12, md: 3 }}>
                           <TextField
                             fullWidth
                             size="small"
@@ -777,7 +777,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                             inputProps={{ maxLength: 10 }}
                           />
                         </Grid>
-                        <Grid item xs={12} md={3}>
+                        <Grid size={{ xs: 12, md: 3 }}>
                           <TextField
                             fullWidth
                             size="small"
@@ -787,7 +787,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                             inputProps={{ maxLength: 2 }}
                           />
                         </Grid>
-                        <Grid item xs={6} md={3}>
+                        <Grid size={{ xs: 6, md: 3 }}>
                           <TextField
                             fullWidth
                             size="small"
@@ -797,7 +797,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                             onChange={(e) => handleGoodsItemChange(index, 'grossMass', e.target.value)}
                           />
                         </Grid>
-                        <Grid item xs={6} md={3}>
+                        <Grid size={{ xs: 6, md: 3 }}>
                           <TextField
                             fullWidth
                             size="small"
@@ -807,7 +807,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                             onChange={(e) => handleGoodsItemChange(index, 'netMass', e.target.value)}
                           />
                         </Grid>
-                        <Grid item xs={6} md={3}>
+                        <Grid size={{ xs: 6, md: 3 }}>
                           <TextField
                             fullWidth
                             size="small"
@@ -817,7 +817,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                             onChange={(e) => handleGoodsItemChange(index, 'numberOfPackages', e.target.value)}
                           />
                         </Grid>
-                        <Grid item xs={6} md={3}>
+                        <Grid size={{ xs: 6, md: 3 }}>
                           <TextField
                             fullWidth
                             size="small"
@@ -830,7 +830,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                     </Paper>
                   </Grid>
                 ))}
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Button
                     variant="outlined"
                     startIcon={<AddIcon />}
@@ -844,7 +844,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               // House consignments for groupage
               <>
                 {formData.houseConsignments.map((house, index) => (
-                  <Grid item xs={12} key={index}>
+                  <Grid size={{ xs: 12 }} key={index}>
                     <Paper variant="outlined" sx={{ p: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                         <Typography variant="subtitle2">
@@ -859,7 +859,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                         </IconButton>
                       </Box>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                           <TextField
                             fullWidth
                             size="small"
@@ -872,7 +872,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                             }}
                           />
                         </Grid>
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                           <TextField
                             fullWidth
                             size="small"
@@ -885,7 +885,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                             }}
                           />
                         </Grid>
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                           <TextField
                             fullWidth
                             size="small"
@@ -902,7 +902,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                     </Paper>
                   </Grid>
                 ))}
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Button
                     variant="outlined"
                     startIcon={<AddIcon />}
@@ -912,7 +912,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                   </Button>
                 </Grid>
                 {errors['houseConsignments'] && (
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Typography color="error" variant="caption">{errors['houseConsignments']}</Typography>
                   </Grid>
                 )}
@@ -924,14 +924,14 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
         {/* Step 4: Review */}
         {activeStep === 4 && (
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" gutterBottom>
                 {t('ens.reviewTitle')}
               </Typography>
             </Grid>
 
             {/* Validation */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Button
                 variant="outlined"
                 startIcon={validating ? <CircularProgress size={20} /> : <InfoIcon />}
@@ -943,7 +943,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             </Grid>
 
             {validationResult && (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Alert severity={validationResult.isValid ? 'success' : 'warning'}>
                   {validationResult.isValid
                     ? t('ens.declarationValid')
@@ -972,7 +972,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
             )}
 
             {/* Summary */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="subtitle2" gutterBottom color="primary">
                   {t('ens.summaryTransport')}
@@ -989,7 +989,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               </Paper>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="subtitle2" gutterBottom color="primary">
                   {t('ens.summaryCarrier')}
@@ -1006,7 +1006,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               </Paper>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="subtitle2" gutterBottom color="primary">
                   {t('ens.summaryShipment')}
@@ -1026,7 +1026,7 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
               </Paper>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="subtitle2" gutterBottom color="primary">
                   {t('ens.summaryGoods')}

@@ -2287,6 +2287,7 @@
     "riskScore": "Risk score"
   },
   "help": {
+    "openContextualHelp": "Open contextual help",
     "howToUse": "How to use",
     "regulation": "Regulation",
     "luciAi": "LUCI AI",

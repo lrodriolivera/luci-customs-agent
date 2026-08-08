@@ -782,7 +782,7 @@
     "importBatch": "Importar Lot",
     "new": "Nova ENS",
     "totalDeclarations": "Total Declaracions",
-    "totalWeight": "Pes Total",
+    "totalWeight": "Pes Total (Tn)",
     "totalPackages": "Total Bolics",
     "byTransportMode": "Per Mode Transport",
     "statusFilter": "Estat",
@@ -2287,6 +2287,7 @@
     "riskScore": "Puntuacio de risc"
   },
   "help": {
+    "openContextualHelp": "Obrir ajuda contextual",
     "howToUse": "Com usar",
     "regulation": "Normativa",
     "luciAi": "LUCI IA",

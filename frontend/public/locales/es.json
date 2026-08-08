@@ -781,7 +781,7 @@
     "importBatch": "Importar Lote",
     "new": "Nueva ENS",
     "totalDeclarations": "Total Declaraciones",
-    "totalWeight": "Peso Total",
+    "totalWeight": "Peso Total (Tn)",
     "totalPackages": "Total Bultos",
     "byTransportMode": "Por Modo Transporte",
     "statusFilter": "Estado",
@@ -2294,6 +2294,7 @@
     "riskScore": "Puntuacion de riesgo"
   },
   "help": {
+    "openContextualHelp": "Abrir ayuda contextual",
     "howToUse": "Como usar",
     "regulation": "Normativa",
     "luciAi": "LUCI IA",

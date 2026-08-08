@@ -2290,6 +2290,7 @@
     "riskScore": "Punteggio di rischio"
   },
   "help": {
+    "openContextualHelp": "Apri la guida contestuale",
     "howToUse": "Come usare",
     "regulation": "Normativa",
     "luciAi": "LUCI IA",

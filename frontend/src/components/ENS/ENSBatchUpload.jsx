@@ -413,7 +413,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
           <Box>
             {/* Summary */}
             <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={3}>
+              <Grid size={{ xs: 3 }}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
                     <Typography color="textSecondary">{t('common.total')}</Typography>
@@ -421,7 +421,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={3}>
+              <Grid size={{ xs: 3 }}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
                     <Typography color="success.main">{t('ens.batchValid')}</Typography>
@@ -431,7 +431,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={3}>
+              <Grid size={{ xs: 3 }}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
                     <Typography color="warning.main">{t('ens.batchWarnings')}</Typography>
@@ -441,7 +441,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={3}>
+              <Grid size={{ xs: 3 }}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
                     <Typography color="error.main">{t('ens.batchErrors')}</Typography>
