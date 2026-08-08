@@ -87,8 +87,10 @@ describe('<ENSDeclarationForm />', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     render(<ENSDeclarationForm declarationId="abc123" onClose={mockOnClose} onSuccess={mockOnSuccess} />)
     await waitFor(() => expect(ensAPI.get).toHaveBeenCalledWith('abc123'))
-    // No rompe: sigue renderizado, título es editTitle porque declarationId existe
-    expect(screen.getByText('ens.editTitle')).toBeInTheDocument()
+    // No rompe: sigue renderizado, título es editTitle porque declarationId existe.
+    // findBy* (no getBy*): tras el rechazo aun queda el re-render que sale de loading,
+    // y con getBy sincrono el test es flaky.
+    expect(await screen.findByText('ens.editTitle')).toBeInTheDocument()
     consoleErrorSpy.mockRestore()
   })
 

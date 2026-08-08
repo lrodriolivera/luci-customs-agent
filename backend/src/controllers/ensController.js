@@ -292,7 +292,9 @@ exports.submit = async (req, res) => {
 
     res.json({
       success: true,
-      message: '[DEMO] Declaracion ENS enviada a AEAT',
+      // Presentacion REAL ante AEAT (entorno segun AEAT_ENVIRONMENT): el MRN
+      // devuelto es autentico. No rotular como demo/simulacion.
+      message: 'Declaracion ENS enviada a AEAT',
       data: result.data
     });
 

@@ -765,4 +765,68 @@ AIR;ES001102;2025-01-26;09:00;ESA22222222;Carrier2;5678DEF;ES;BL002;ABCD9876543;
       expect(screen.getByText('ens.dragOrClick')).toBeInTheDocument()
     })
   })
+
+  // Contrato REAL del backend (ensService.processBatch): devuelve data.declarations
+  // con {sequence, reference, lrn, status:'created'|'submitted'|'failed'|'error'},
+  // NO data.results con {success}. Verificado en produccion via navegador: la tabla
+  // de resultados por fila no se pintaba nunca.
+  describe('Step 2: contrato real de la respuesta de lote', () => {
+    const csvConFilaInvalida = `transportMode;entryOfficeCode;expectedArrivalDate;expectedArrivalTime;carrierEORI;carrierName;transportIdentification;transportNationality;billOfLading;containerNumber;sealNumber;grossMass;numberOfPackages;goodsDescription;consignorEORI;consignorName;consigneeEORI;consigneeName
+RAIL;ES009999;2026-11-20;09:00;ESB22477020;Renfe;VAG-1001;ES;LOTE-RAIL-001;;SEAL0001;7200;40;Tornillos;DE123456789012;Metallwerk;ESB22477020;STRIX
+RAIL;ES009999;2026-11-21;11:30;ESB22477020;Renfe;VAG-1002;ES;LOTE-ERROR-002;;SEAL0002;0;12;Sin peso;DE123456789012;Metallwerk;ESB22477020;STRIX
+RAIL;ES001101;2026-11-22;16:45;ESB22477020;Renfe;VAG-1003;ES;LOTE-RAIL-003;MSKU1234567;SEAL0003;3100;18;Perfiles;DE123456789012;Metallwerk;ESB22477020;STRIX`
+
+    const procesar = async (csv) => {
+      const file = new File([csv], 'batch.csv', { type: 'text/csv' })
+      if (!file.text) file.text = () => Promise.resolve(csv)
+      render(<ENSBatchUpload open={true} onClose={vi.fn()} onSuccess={vi.fn()} />)
+      fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [file] } })
+      await waitFor(() => expect(screen.getByText('ens.processDeclarations')).toBeInTheDocument())
+      fireEvent.click(screen.getByRole('button', { name: /ens\.processDeclarations/i }))
+      await waitFor(() => expect(screen.getByText('ens.processingComplete')).toBeInTheDocument())
+    }
+
+    it('pinta la referencia y el MRN que devuelve el backend en data.declarations', async () => {
+      ensAPI.processBatch.mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: {
+            batchId: 'ENSBATCH-1',
+            total: 2,
+            successful: 2,
+            failed: 0,
+            declarations: [
+              { sequence: 1, reference: 'ENS-2026-000009', lrn: 'LUCIA', status: 'submitted', mrn: '26ES009999Z0000717' },
+              { sequence: 2, reference: 'ENS-2026-000010', lrn: 'LUCIB', status: 'created' }
+            ]
+          }
+        }
+      })
+      await procesar(csvConFilaInvalida)
+      expect(screen.getByText('ENS-2026-000009')).toBeInTheDocument()
+      expect(screen.getByText('26ES009999Z0000717')).toBeInTheDocument()
+      expect(screen.getByText('ENS-2026-000010')).toBeInTheDocument()
+    })
+
+    it('marca como error la declaracion que el backend rechaza (status failed)', async () => {
+      ensAPI.processBatch.mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: {
+            batchId: 'ENSBATCH-2',
+            total: 2,
+            successful: 1,
+            failed: 1,
+            declarations: [
+              { sequence: 1, reference: 'ENS-2026-000011', status: 'created' },
+              { sequence: 2, status: 'failed', errors: [{ message: 'ENS_GOODS_REQUIRED' }] }
+            ]
+          }
+        }
+      })
+      await procesar(csvConFilaInvalida)
+      expect(screen.getByText('common.error')).toBeInTheDocument()
+      expect(screen.getByText('ens.success')).toBeInTheDocument()
+    })
+  })
 })

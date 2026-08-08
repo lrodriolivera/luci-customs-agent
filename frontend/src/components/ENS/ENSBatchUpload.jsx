@@ -43,6 +43,26 @@ const CSV_TEMPLATE_COLUMNS = [
   'consigneeName'
 ]
 
+// Estados que el backend considera exito al procesar un lote.
+const BATCH_OK = ['created', 'submitted', 'accepted']
+
+/**
+ * Normaliza la respuesta de POST /api/ens/batch a la forma que pinta la tabla.
+ * El backend devuelve `declarations` con `status`; se acepta tambien `results`
+ * con `success` por compatibilidad con respuestas antiguas.
+ */
+const normalizeBatchResults = (data) => {
+  const filas = data?.declarations || data?.results || []
+  return filas.map((fila) => ({
+    ...fila,
+    success: fila.success !== undefined ? fila.success : BATCH_OK.includes(fila.status),
+    message: fila.message
+      || (fila.errors?.length ? fila.errors.map(e => e.message || e.code || String(e)).join('; ') : undefined)
+      || fila.error
+      || fila.status
+  }))
+}
+
 const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
   const { t } = useTranslation()
   const fileInputRef = useRef(null)
@@ -232,12 +252,21 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
       const response = await ensAPI.processBatch(declarations, autoSubmit)
 
       if (response.data.success) {
-        setProcessResults(response.data.data)
+        // El backend (ensService.processBatch) devuelve `declarations`, no `results`,
+        // y el exito se expresa en `status` ('created'/'submitted' vs 'failed'/'error').
+        const devueltas = normalizeBatchResults(response.data.data)
+        setProcessResults({ ...response.data.data, results: devueltas })
 
-        // Update parsed data with results
+        // Los indices de la respuesta siguen el orden de `rowsToProcess` (que excluye
+        // las filas con error), no el de `selectedRows`: mapear por esas mismas filas.
+        const indicesProcesados = parsedData
+          .map((fila, i) => ({ fila, i }))
+          .filter(({ fila, i }) => selectedRows.includes(i) && fila.status !== 'error')
+          .map(({ i }) => i)
+
         const updatedData = [...parsedData]
-        response.data.data.results?.forEach((result, index) => {
-          const originalIndex = selectedRows[index]
+        devueltas.forEach((result, index) => {
+          const originalIndex = indicesProcesados[index]
           if (originalIndex !== undefined) {
             updatedData[originalIndex] = {
               ...updatedData[originalIndex],
@@ -567,7 +596,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
                 </Alert>
 
                 {/* Results Table */}
-                {processResults.results && (
+                {processResults.results?.length > 0 && (
                   <TableContainer component={Paper}>
                     <Table size="small">
                       <TableHead>

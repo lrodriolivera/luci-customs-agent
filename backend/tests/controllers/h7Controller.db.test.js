@@ -249,6 +249,24 @@ describe('cancel', () => {
   });
 });
 
+describe('submit: el envio a AEAT es real, no una simulacion', () => {
+  // H7 obtuvo MRN real en PRE (26ESH7A000067965R5): rotular el mensaje como
+  // [DEMO] hace creer al usuario que no se ha presentado nada. Igual que en H1
+  // (f0af0ab) y ENS.
+  test('el mensaje de exito no dice DEMO', async () => {
+    const aeatSubmitService = require('../../src/services/aeat/aeatSubmitService');
+    aeatSubmitService.submitH7.mockResolvedValue({
+      success: true, accepted: true, mrn: '26ESH7A000067965R5', xml: '<xml/>'
+    });
+    const user = usuario();
+    const h7 = await crearH7({ user });
+    const res = crearRes();
+
+    await ctrl.submit({ params: { id: h7._id }, body: {}, user }, res);
+    expect(res.body.message).not.toMatch(/DEMO|simula/i);
+  });
+});
+
 describe('addDocument', () => {
   test('agrega un documento a la H7 del creador', async () => {
     const user = usuario();

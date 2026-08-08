@@ -275,8 +275,15 @@ describe('validate', () => {
 // ==================== submit ====================
 
 describe('submit', () => {
+  // Solo RAIL va por el canal legacy AEAT (aeatSubmitService); SEA/AIR/ROAD se
+  // enrutan a ICS2 — ese camino se cubre en tests/services/ensService.test.js.
+  const sembrarRAIL = () => sembrarENS(operadorUser, {
+    transportMode: 'RAIL',
+    transportMeans: { identification: 'TREN-9001', identificationType: 'TRAIN_NUMBER', modeAtBorder: '2' }
+  });
+
   test('envio aceptado por AEAT -> declaracion aceptada', async () => {
-    const d = await sembrarENS(operadorUser);
+    const d = await sembrarRAIL();
     aeatSubmitService.submitENS.mockResolvedValue({
       success: true, accepted: true, mrn: '25ES0028011234567X', xml: '<xml/>'
     });
@@ -290,7 +297,7 @@ describe('submit', () => {
   });
 
   test('rechazo AEAT -> 400 y sigue en draft', async () => {
-    const d = await sembrarENS(operadorUser);
+    const d = await sembrarRAIL();
     aeatSubmitService.submitENS.mockResolvedValue({
       success: false, accepted: false, error: 'Rechazada', errors: [{ code: 'X' }]
     });
@@ -301,6 +308,22 @@ describe('submit', () => {
     expect(res.statusCode).toBe(400);
     const tras = await ENSDeclaration.findById(d._id);
     expect(tras.status).toBe('draft');
+  });
+
+  // El envio es REAL contra AEAT (PRE o produccion segun AEAT_ENVIRONMENT) y devuelve
+  // un MRN autentico: rotular el mensaje como [DEMO] hace creer al usuario que se ha
+  // simulado. Mismo engano ya corregido en el envio de H1 (f0af0ab).
+  test('el mensaje de exito no dice DEMO: el envio a AEAT es real', async () => {
+    const d = await sembrarRAIL();
+    aeatSubmitService.submitENS.mockResolvedValue({
+      success: true, accepted: true, mrn: '25ES0028011234567X', xml: '<xml/>'
+    });
+    const res = mockRes();
+    await ensController.submit(mockReq({
+      user: operadorUser, params: { id: d._id.toString() }, body: {}
+    }), res);
+    expect(res.body.success).toBe(true);
+    expect(res.body.message).not.toMatch(/DEMO|simula/i);
   });
 });
 
