@@ -320,7 +320,12 @@ const transitService = {
   },
 
   /**
-   * Notificar llegada a aduana de destino
+   * Notificar llegada a aduana de destino (CC007 / IE160).
+   *
+   * Envia el mensaje a AEAT de verdad: si lo rechaza, NO se toca el estado. Antes
+   * el controller tenia un segundo `notifyArrival` que pisaba a este, enviaba el
+   * CC007 y respondia siempre `{success:true}`, asi que un rechazo de AEAT se
+   * mostraba como llegada notificada y el transito se quedaba en `in_transit`.
    */
   async notifyArrival(id, data, userId) {
     const transit = await Transit.findOne({ _id: id, owner: userId });
@@ -333,20 +338,38 @@ const transitService = {
       throw new Error('Transito debe estar en camino para notificar llegada');
     }
 
-    // Simular mensaje IE160 (Arrival Notification)
+    if (!transit.mrn) {
+      throw new Error('El transito no tiene MRN: no se puede notificar la llegada');
+    }
+
+    const arrivalDate = data.arrivalDate || new Date();
+
+    const aeatResult = await aeatSubmitService.submitNCTSArrival({
+      mrn: transit.mrn,
+      officeOfDestination: transit.destinationOffice?.code || '',
+      arrivalDate,
+      traderEORI: transit.consignee?.eori || transit.principal?.eori || '',
+      traderName: transit.consignee?.name || transit.principal?.name || ''
+    });
+
+    if (!aeatResult.success) {
+      throw new Error(aeatResult.error || 'Error en respuesta CC007/AEAT');
+    }
+
+    // IE160 (Arrival Notification): el CC007 aceptado por AEAT.
     transit.messages.push({
       type: 'IE160',
       direction: 'outbound',
       timestamp: new Date(),
       content: {
         mrn: transit.mrn,
-        arrivalDate: data.arrivalDate || new Date(),
+        arrivalDate,
         customsOffice: transit.destinationOffice.code
       }
     });
 
     transit.status = 'arrived';
-    transit.dates.actualArrival = data.arrivalDate || new Date();
+    transit.dates.actualArrival = arrivalDate;
 
     transit.statusHistory.push({
       status: 'arrived',
@@ -357,6 +380,73 @@ const transitService = {
     });
 
     await transit.save();
+    logger.info(`Transit ${transit.lrn} arrival notified: MRN ${transit.mrn}`);
+    return transit;
+  },
+
+  /**
+   * Notificar resultado de la descarga en destino (CC044 / IE044).
+   *
+   * Mismo criterio que notifyArrival: el estado solo avanza si AEAT acepta.
+   */
+  async notifyUnloading(id, data, userId) {
+    const transit = await Transit.findOne({ _id: id, owner: userId });
+
+    if (!transit) {
+      throw new Error('Transito no encontrado');
+    }
+
+    if (!['arrived', 'control_requested'].includes(transit.status)) {
+      throw new Error('Transito debe haber llegado a destino para notificar la descarga');
+    }
+
+    if (!transit.mrn) {
+      throw new Error('El transito no tiene MRN: no se puede notificar la descarga');
+    }
+
+    const unloadingDate = data.unloadingDate || new Date();
+
+    const aeatResult = await aeatSubmitService.submitNCTSUnloading({
+      mrn: transit.mrn,
+      officeOfDestination: transit.destinationOffice?.code || '',
+      traderEORI: transit.consignee?.eori || transit.principal?.eori || '',
+      unloadingDate,
+      unloadingRemark: data.remark || '',
+      sealsOk: data.sealsOk !== false,
+      goodsConform: data.goodsConform !== false,
+      goodsDiscrepancies: data.discrepancies || []
+    });
+
+    if (!aeatResult.success) {
+      throw new Error(aeatResult.error || 'Error en respuesta CC044/AEAT');
+    }
+
+    transit.messages.push({
+      type: 'IE044',
+      direction: 'outbound',
+      timestamp: new Date(),
+      content: {
+        mrn: transit.mrn,
+        unloadingDate,
+        sealsOk: data.sealsOk !== false,
+        goodsConform: data.goodsConform !== false,
+        discrepancies: data.discrepancies || []
+      }
+    });
+
+    transit.status = 'unloaded';
+    transit.dates.unloadingNotification = unloadingDate;
+
+    transit.statusHistory.push({
+      status: 'unloaded',
+      timestamp: new Date(),
+      user: userId,
+      office: transit.destinationOffice.code,
+      reason: data.remark || 'Descarga notificada'
+    });
+
+    await transit.save();
+    logger.info(`Transit ${transit.lrn} unloading notified: MRN ${transit.mrn}`);
     return transit;
   },
 
@@ -429,7 +519,10 @@ const transitService = {
       throw new Error('Transito no encontrado');
     }
 
-    if (!['arrived', 'control_requested'].includes(transit.status)) {
+    // `unloaded` (CC044 aceptado) tambien es un estado de destino: si no se
+    // admitia, notificar la descarga dejaba el transito en un callejon sin salida
+    // porque la UI ya no ofrecia ninguna accion.
+    if (!['arrived', 'unloaded', 'control_requested'].includes(transit.status)) {
       throw new Error('Transito debe estar en destino para liberar mercancias');
     }
 

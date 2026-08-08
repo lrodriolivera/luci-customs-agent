@@ -36,6 +36,7 @@ const STATUS_CONFIG = {
   released: { label: 'Liberado', color: 'cyan', icon: TruckIcon },
   in_transit: { label: 'En Transito', color: 'orange', icon: TruckIcon },
   arrived: { label: 'Llegado', color: 'yellow', icon: MapPinIcon },
+  unloaded: { label: 'Descargado', color: 'amber', icon: MapPinIcon },
   control_requested: { label: 'Control', color: 'amber', icon: ExclamationTriangleIcon },
   goods_released: { label: 'Entregado', color: 'lime', icon: CheckCircleIcon },
   discrepancy: { label: 'Discrepancia', color: 'red', icon: ExclamationTriangleIcon },
@@ -753,6 +754,9 @@ export default function TransitManager() {
         case 'arrival':
           res = await transitAPI.notifyArrival(id, data)
           break
+        case 'unloading':
+          res = await transitAPI.notifyUnloading(id, data)
+          break
         case 'release-goods':
           res = await transitAPI.releaseGoods(id)
           break
@@ -794,6 +798,12 @@ export default function TransitManager() {
         actions.push({ key: 'arrival', label: 'Notificar Llegada', color: 'yellow' })
         break
       case 'arrived':
+        // El CC044 es opcional: se puede liberar directamente o notificar antes
+        // la descarga (precintos/conformidad de la mercancia).
+        actions.push({ key: 'unloading', label: 'Notificar Descarga', color: 'amber' })
+        actions.push({ key: 'release-goods', label: 'Liberar Mercancias', color: 'lime' })
+        break
+      case 'unloaded':
       case 'control_requested':
         actions.push({ key: 'release-goods', label: 'Liberar Mercancias', color: 'lime' })
         break
@@ -1183,7 +1193,9 @@ function TransitCreateForm({ onClose, onCreated }) {
     seals: [{ number: '', sealType: 'customs', affixedBy: '' }],
     guarantee: { type: '1', grn: '' },
     route: { countries: [] },
-    goodsItems: [{ itemNumber: 1, description: '', taricCode: '', grossWeight: 0, packages: { count: 1, type: 'CT' } }]
+    // `prevDocType` / `prevDocRef` son campos de formulario: handleSubmit los
+    // convierte en `previousDocuments` (el formato del modelo) y los descarta.
+    goodsItems: [{ itemNumber: 1, description: '', taricCode: '', grossWeight: 0, packages: { count: 1, type: 'CT' }, prevDocType: 'N337', prevDocRef: '' }]
   })
   const [loading, setLoading] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
@@ -1228,8 +1240,25 @@ function TransitCreateForm({ onClose, onCreated }) {
       // el usuario desaparecia, presentandose el transito sin precintos declarados.
       const { seals, ...resto } = formData
       const precintos = (seals || []).filter(s => s.number?.trim())
+
+      // AEAT exige al menos un documento previo por partida en el IE015 ("No vienen
+      // Previous Document..."), asi que el formulario lo pide en campos aparte y
+      // aqui se traduce al formato del modelo. Si el usuario los deja en blanco no
+      // se manda la clave: un array vacio no cumple la regla y ademas Mongoose
+      // guardaria una partida con un documento sin tipo ni referencia.
+      const partidas = (resto.goodsItems || []).map(({ prevDocType, prevDocRef, ...g }, idx) => {
+        const tipo = prevDocType?.trim()
+        const referencia = prevDocRef?.trim()
+        if (!tipo || !referencia) return g
+        return {
+          ...g,
+          previousDocuments: [{ type: tipo, reference: referencia, goodsItemNumber: String(idx + 1) }]
+        }
+      })
+
       const payload = {
         ...resto,
+        goodsItems: partidas,
         transport: { ...resto.transport, seals: precintos, sealCount: precintos.length }
       }
 
@@ -1393,7 +1422,7 @@ function TransitCreateForm({ onClose, onCreated }) {
               <h3 className="font-medium mb-2">Aduana de Partida</h3>
               <input
                 type="text"
-                placeholder="Codigo (ej: ES004801)"
+                placeholder="Codigo (ej: ES002801)"
                 value={formData.departureOffice.code}
                 onChange={(e) => setFormData(f => ({
                   ...f,
@@ -1407,7 +1436,7 @@ function TransitCreateForm({ onClose, onCreated }) {
               <h3 className="font-medium mb-2">Aduana de Destino</h3>
               <input
                 type="text"
-                placeholder="Codigo (ej: FR001001)"
+                placeholder="Codigo (ej: ES002901)"
                 value={formData.destinationOffice.code}
                 onChange={(e) => setFormData(f => ({
                   ...f,
@@ -1586,7 +1615,9 @@ function TransitCreateForm({ onClose, onCreated }) {
                     description: '',
                     taricCode: '',
                     grossWeight: 0,
-                    packages: { count: 1, type: 'CT' }
+                    packages: { count: 1, type: 'CT' },
+                    prevDocType: 'N337',
+                    prevDocRef: ''
                   }]
                 }))}
                 className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
@@ -1595,7 +1626,7 @@ function TransitCreateForm({ onClose, onCreated }) {
               </button>
             </div>
             {formData.goodsItems.map((item, idx) => (
-              <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2">
+              <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
                 <input
                   type="text"
                   required
@@ -1653,6 +1684,34 @@ function TransitCreateForm({ onClose, onCreated }) {
                     </button>
                   )}
                 </div>
+
+                {/* Documento previo: AEAT lo exige por partida en el IE015. Sin el,
+                    el envio se rechazaba con "No vienen Previous Document..." y el
+                    formulario no ofrecia ninguna forma de aportarlo. */}
+                <input
+                  type="text"
+                  placeholder={`Tipo doc. previo (ej: N337)`}
+                  value={item.prevDocType || ''}
+                  onChange={(e) => {
+                    setFormData(f => ({
+                      ...f,
+                      goodsItems: f.goodsItems.map((g, i) => (i === idx ? { ...g, prevDocType: e.target.value } : g))
+                    }))
+                  }}
+                  className="border rounded-lg px-3 py-2 text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="Referencia doc. previo (ej: sumaria 25ES...)"
+                  value={item.prevDocRef || ''}
+                  onChange={(e) => {
+                    setFormData(f => ({
+                      ...f,
+                      goodsItems: f.goodsItems.map((g, i) => (i === idx ? { ...g, prevDocRef: e.target.value } : g))
+                    }))
+                  }}
+                  className="border rounded-lg px-3 py-2 text-sm md:col-span-3"
+                />
               </div>
             ))}
           </div>

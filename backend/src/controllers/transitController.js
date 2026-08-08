@@ -234,7 +234,8 @@ const transitController = {
 
   /**
    * POST /api/transit/:id/arrival
-   * Notificar llegada a destino
+   * Notificar llegada a destino (CC007). El servicio envia el mensaje a AEAT y
+   * solo cambia el estado si lo acepta, asi que un rechazo llega aqui como error.
    */
   async notifyArrival(req, res) {
     try {
@@ -246,7 +247,30 @@ const transitController = {
       });
     } catch (error) {
       console.error('Error notifying arrival:', error);
-      res.status(400).json({
+      const status = error.message === 'Transito no encontrado' ? 404 : 400;
+      res.status(status).json({
+        success: false,
+        error: error.message
+      });
+    }
+  },
+
+  /**
+   * POST /api/transit/:id/unloading
+   * Notificar resultado de la descarga en destino (CC044).
+   */
+  async notifyUnloading(req, res) {
+    try {
+      const transit = await transitService.notifyUnloading(req.params.id, req.body, req.user._id);
+      res.json({
+        success: true,
+        data: transit,
+        message: 'Descarga notificada correctamente'
+      });
+    } catch (error) {
+      console.error('Error notifying unloading:', error);
+      const status = error.message === 'Transito no encontrado' ? 404 : 400;
+      res.status(status).json({
         success: false,
         error: error.message
       });
@@ -649,77 +673,6 @@ const transitController = {
         error: error.message
       });
     }
-  }
-};
-
-/**
- * NCTS Arrival notification (CC007)
- * POST /api/transit/:id/arrival
- */
-transitController.notifyArrival = async (req, res) => {
-  try {
-    const { Transit } = require('../models');
-    const aeatSubmitService = require('../services/aeat/aeatSubmitService');
-
-    // Los transitos se aislan por owner (no llevan tenantId), asi que
-    // ensureSameTenant (que lee tenantId) hacia de no-op y dejaba que cualquier
-    // usuario notificara la llegada de un transito ajeno. Se acota por owner
-    // como el resto del modulo.
-    const transit = await Transit.findOne({ _id: req.params.id, owner: req.user._id });
-    if (!transit) return res.status(404).json({ success: false, error: 'Transito no encontrado' });
-    if (!transit.mrn) return res.status(400).json({ success: false, error: 'El transito no tiene MRN' });
-
-    const result = await aeatSubmitService.submitNCTSArrival({
-      mrn: transit.mrn,
-      officeOfDestination: transit.destinationOffice?.code || req.body.officeOfDestination || '',
-      arrivalDate: req.body.arrivalDate || '',
-      traderEORI: transit.consignee?.eori || req.body.traderEORI || '',
-      traderName: transit.consignee?.name || ''
-    });
-
-    transit.status = result.success ? 'arrived' : transit.status;
-    transit.arrivedAt = result.success ? new Date() : undefined;
-    await transit.save();
-
-    res.json({ success: true, data: result });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
-
-/**
- * NCTS Unloading remarks (CC044)
- * POST /api/transit/:id/unloading
- */
-transitController.notifyUnloading = async (req, res) => {
-  try {
-    const { Transit } = require('../models');
-    const aeatSubmitService = require('../services/aeat/aeatSubmitService');
-
-    // Mismo aislamiento por owner que notifyArrival: ensureSameTenant no acotaba
-    // porque los transitos no llevan tenantId.
-    const transit = await Transit.findOne({ _id: req.params.id, owner: req.user._id });
-    if (!transit) return res.status(404).json({ success: false, error: 'Transito no encontrado' });
-    if (!transit.mrn) return res.status(400).json({ success: false, error: 'El transito no tiene MRN' });
-
-    const result = await aeatSubmitService.submitNCTSUnloading({
-      mrn: transit.mrn,
-      officeOfDestination: transit.destinationOffice?.code || '',
-      traderEORI: transit.consignee?.eori || req.body.traderEORI || '',
-      unloadingDate: req.body.unloadingDate || '',
-      unloadingRemark: req.body.remark || '',
-      sealsOk: req.body.sealsOk !== false,
-      goodsConform: req.body.goodsConform !== false,
-      goodsDiscrepancies: req.body.discrepancies || []
-    });
-
-    transit.status = result.success ? 'unloaded' : transit.status;
-    transit.unloadedAt = result.success ? new Date() : undefined;
-    await transit.save();
-
-    res.json({ success: true, data: result });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
   }
 };
 

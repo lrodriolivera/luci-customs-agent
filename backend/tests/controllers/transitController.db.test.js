@@ -43,6 +43,8 @@ const OWNER = () => new mongoose.Types.ObjectId();
 
 beforeEach(() => {
   aeatSubmitService.submitNCTS.mockResolvedValue({ success: true, mrn: '26ES0008512345678X', code: 'IE028' });
+  aeatSubmitService.submitNCTSArrival.mockResolvedValue({ success: true, code: 'CC007' });
+  aeatSubmitService.submitNCTSUnloading.mockResolvedValue({ success: true, code: 'CC044' });
 });
 
 function crearRes() {
@@ -250,10 +252,30 @@ describe('handlers IA: guard de aislamiento (no facturar Bedrock por transitos a
   });
 });
 
+/**
+ * E2E 8/Ago (bug #5): habia DOS `notifyArrival` en este controller. La segunda
+ * (una asignacion `transitController.notifyArrival = ...` posterior al literal)
+ * pisaba en silencio la buena y respondia `{success:true}` aunque AEAT rechazara
+ * el CC007, con lo que el frontend (`if (res.data.success) loadData()`) pintaba
+ * "OK" sobre un fallo y el transito se quedaba en `in_transit`. Estos tests
+ * fijan el contrato: el handler delega en el servicio, devuelve el TRANSITO
+ * actualizado (no el resultado crudo de AEAT) y un rechazo de AEAT llega al
+ * cliente como error.
+ */
 describe('notificaciones NCTS (arrival/unloading)', () => {
+  /** Transito en `in_transit` con MRN, el estado desde el que se notifica llegada. */
+  async function enTransito(owner) {
+    let t = await transitService.create(datosTransito(), owner);
+    t = await transitService.submit(t._id, owner);
+    t = await transitService.releaseAtDeparture(t._id, owner);
+    return transitService.startTransit(t._id, owner);
+  }
+
   test('notifyArrival exige que el transito tenga MRN (400)', async () => {
     const owner = OWNER();
     const t = await transitService.create(datosTransito(), owner); // draft, sin MRN
+    t.status = 'in_transit';
+    await t.save();
     const res = crearRes();
 
     await ctrl.notifyArrival(req({ user: owner, params: { id: t._id }, body: {} }), res);
@@ -263,26 +285,39 @@ describe('notificaciones NCTS (arrival/unloading)', () => {
     expect(aeatSubmitService.submitNCTSArrival).not.toHaveBeenCalled();
   });
 
-  test('notifyArrival con MRN envia el CC007 y pasa a arrived', async () => {
+  test('notifyArrival envia el CC007, pasa a arrived y devuelve el transito', async () => {
     const owner = OWNER();
-    const t = await transitService.create(datosTransito(), owner);
-    t.mrn = '26ES0008512345678X';
-    await t.save();
-    aeatSubmitService.submitNCTSArrival.mockResolvedValue({ success: true });
+    const t = await enTransito(owner);
 
     const res = crearRes();
     await ctrl.notifyArrival(req({ user: owner, params: { id: t._id }, body: { arrivalDate: '2026-08-05' } }), res);
 
     expect(res.statusCode).toBe(200);
     expect(aeatSubmitService.submitNCTSArrival).toHaveBeenCalled();
+    // El cuerpo debe llevar el transito (con status/messages), no el crudo de AEAT.
+    expect(res.body.data.status).toBe('arrived');
+    expect(res.body.data.messages.some(m => m.type === 'IE160')).toBe(true);
     const guardado = await Transit.findById(t._id);
     expect(guardado.status).toBe('arrived');
   });
 
+  test('un rechazo de AEAT en el CC007 se propaga como error (no {success:true})', async () => {
+    const owner = OWNER();
+    const t = await enTransito(owner);
+    aeatSubmitService.submitNCTSArrival.mockResolvedValue({ success: false, error: 'Rechazo CC007 4404' });
+
+    const res = crearRes();
+    await ctrl.notifyArrival(req({ user: owner, params: { id: t._id }, body: {} }), res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toMatch(/4404/);
+    const guardado = await Transit.findById(t._id);
+    expect(guardado.status).toBe('in_transit');
+  });
+
   test('notifyArrival sobre un transito ajeno devuelve 404 sin enviar nada', async () => {
-    const t = await transitService.create(datosTransito(), OWNER());
-    t.mrn = '26ES0008512345678X';
-    await t.save();
+    const t = await enTransito(OWNER());
     const res = crearRes();
 
     await ctrl.notifyArrival(req({ user: OWNER(), params: { id: t._id }, body: {} }), res);
@@ -291,20 +326,30 @@ describe('notificaciones NCTS (arrival/unloading)', () => {
     expect(aeatSubmitService.submitNCTSArrival).not.toHaveBeenCalled();
   });
 
-  test('notifyUnloading con MRN envia el CC044 y pasa a unloaded', async () => {
+  test('notifyUnloading envia el CC044, pasa a unloaded y devuelve el transito', async () => {
     const owner = OWNER();
-    const t = await transitService.create(datosTransito(), owner);
-    t.mrn = '26ES0008512345678X';
-    t.status = 'arrived';
-    await t.save();
-    aeatSubmitService.submitNCTSUnloading.mockResolvedValue({ success: true });
+    let t = await enTransito(owner);
+    t = await transitService.notifyArrival(t._id, {}, owner);
 
     const res = crearRes();
     await ctrl.notifyUnloading(req({ user: owner, params: { id: t._id }, body: { sealsOk: true, goodsConform: true } }), res);
 
     expect(res.statusCode).toBe(200);
     expect(aeatSubmitService.submitNCTSUnloading).toHaveBeenCalled();
+    expect(res.body.data.status).toBe('unloaded');
     const guardado = await Transit.findById(t._id);
     expect(guardado.status).toBe('unloaded');
+  });
+
+  test('notifyUnloading sobre un transito ajeno devuelve 404 sin enviar nada', async () => {
+    const owner = OWNER();
+    let t = await enTransito(owner);
+    await transitService.notifyArrival(t._id, {}, owner);
+    const res = crearRes();
+
+    await ctrl.notifyUnloading(req({ user: OWNER(), params: { id: t._id }, body: {} }), res);
+
+    expect(res.statusCode).toBe(404);
+    expect(aeatSubmitService.submitNCTSUnloading).not.toHaveBeenCalled();
   });
 });

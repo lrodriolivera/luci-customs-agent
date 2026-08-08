@@ -527,6 +527,7 @@ export const transitAPI = {
   startTransit: (id) => api.post(`/api/transit/${id}/start`),
   recordTransitOffice: (id, data) => api.post(`/api/transit/${id}/transit-office`, data),
   notifyArrival: (id, data) => api.post(`/api/transit/${id}/arrival`, data),
+  notifyUnloading: (id, data) => api.post(`/api/transit/${id}/unloading`, data),
   recordControl: (id, data) => api.post(`/api/transit/${id}/control`, data),
   releaseGoods: (id) => api.post(`/api/transit/${id}/release-goods`),
   complete: (id) => api.post(`/api/transit/${id}/complete`),

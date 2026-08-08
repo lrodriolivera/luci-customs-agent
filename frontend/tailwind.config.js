@@ -29,7 +29,7 @@ export default {
     'bg-red-100', 'text-red-800',
     // Acciones del ciclo NCTS (getNextActions): incluye el estado hover.
     'hover:bg-blue-200', 'hover:bg-red-200', 'hover:bg-cyan-200', 'hover:bg-orange-200',
-    'hover:bg-yellow-200', 'hover:bg-lime-200', 'hover:bg-green-200',
+    'hover:bg-yellow-200', 'hover:bg-lime-200', 'hover:bg-green-200', 'hover:bg-amber-200',
   ],
   theme: {
     extend: {

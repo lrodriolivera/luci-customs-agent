@@ -26,7 +26,9 @@ const mongoose = require('mongoose');
 const { usarBaseDeDatosEnMemoria } = require('./../helpers/memoryDb');
 
 jest.mock('../../src/services/aeat/aeatSubmitService', () => ({
-  submitNCTS: jest.fn()
+  submitNCTS: jest.fn(),
+  submitNCTSArrival: jest.fn(),
+  submitNCTSUnloading: jest.fn()
 }));
 
 const { Transit, Guarantee, Expedition } = require('../../src/models');
@@ -40,6 +42,8 @@ const OWNER = () => new mongoose.Types.ObjectId();
 
 beforeEach(() => {
   aeatSubmitService.submitNCTS.mockResolvedValue({ success: true, mrn: '26ES0008512345678X', code: 'IE028' });
+  aeatSubmitService.submitNCTSArrival.mockResolvedValue({ success: true, code: 'CC007' });
+  aeatSubmitService.submitNCTSUnloading.mockResolvedValue({ success: true, code: 'CC044' });
 });
 
 /** Datos minimos validos para crear un transito enviable. */
@@ -444,5 +448,117 @@ describe('create: normaliza los precintos de la raiz a transport.seals', () => {
       seals: [{ number: 'RAIZ-1' }]
     }), owner);
     expect(t.transport.seals.map(s => s.number)).toEqual(['ANIDADO-1']);
+  });
+});
+
+/**
+ * E2E 8/Ago (bug #5 de /transit): "Notificar Llegada" decia OK en la UI y el
+ * transito se quedaba en `in_transit`. Habia DOS definiciones de
+ * `notifyArrival` en el controller: la buena (que llama a este servicio, empuja
+ * el IE160 y escribe en statusHistory) quedaba pisada por una asignacion
+ * posterior que enviaba el CC007 a AEAT y respondia `{success:true}` incluso
+ * cuando AEAT rechazaba. Consecuencia: el ciclo se cortaba ahi y "Liberar
+ * Mercancias"/"Completar" nunca aparecian.
+ *
+ * El servicio pasa a ser el unico dueno de la transicion y ademas envia el
+ * CC007/CC044 de verdad: si AEAT rechaza, no hay cambio de estado.
+ */
+describe('notifyArrival / notifyUnloading: envio real a AEAT + transicion de estado', () => {
+  async function enTransito(owner) {
+    let t = await crearAceptado(owner);
+    t = await transitService.releaseAtDeparture(t._id, owner);
+    return transitService.startTransit(t._id, owner);
+  }
+
+  test('notifyArrival envia el CC007 a AEAT con el MRN y la aduana de destino', async () => {
+    const owner = OWNER();
+    const t = await enTransito(owner);
+
+    const actualizado = await transitService.notifyArrival(t._id, { notes: 'Llegada OK' }, owner);
+
+    expect(aeatSubmitService.submitNCTSArrival).toHaveBeenCalledWith(expect.objectContaining({
+      mrn: '26ES0008512345678X',
+      officeOfDestination: 'FR001300'
+    }));
+    expect(actualizado.status).toBe('arrived');
+    expect(actualizado.messages.some(m => m.type === 'IE160')).toBe(true);
+    expect(actualizado.statusHistory.some(h => h.status === 'arrived')).toBe(true);
+  });
+
+  test('si AEAT rechaza el CC007 el transito NO pasa a arrived', async () => {
+    const owner = OWNER();
+    const t = await enTransito(owner);
+    aeatSubmitService.submitNCTSArrival.mockResolvedValue({ success: false, error: 'Rechazo CC007 4404' });
+
+    await expect(transitService.notifyArrival(t._id, {}, owner)).rejects.toThrow(/4404/);
+
+    const guardado = await Transit.findById(t._id);
+    expect(guardado.status).toBe('in_transit');
+    expect(guardado.messages.some(m => m.type === 'IE160')).toBe(false);
+  });
+
+  test('notifyArrival exige MRN: sin el no se llama a AEAT', async () => {
+    const owner = OWNER();
+    // Transito forzado a in_transit sin pasar por submit -> sin MRN.
+    const t = await transitService.create(datosTransito(), owner);
+    t.status = 'in_transit';
+    await t.save();
+
+    await expect(transitService.notifyArrival(t._id, {}, owner)).rejects.toThrow(/MRN/);
+    expect(aeatSubmitService.submitNCTSArrival).not.toHaveBeenCalled();
+  });
+
+  test('notifyUnloading envia el CC044, pasa a unloaded y deja rastro', async () => {
+    const owner = OWNER();
+    let t = await enTransito(owner);
+    t = await transitService.notifyArrival(t._id, {}, owner);
+
+    const actualizado = await transitService.notifyUnloading(t._id, { sealsOk: true, goodsConform: true }, owner);
+
+    expect(aeatSubmitService.submitNCTSUnloading).toHaveBeenCalledWith(expect.objectContaining({
+      mrn: '26ES0008512345678X'
+    }));
+    expect(actualizado.status).toBe('unloaded');
+    expect(actualizado.messages.some(m => m.type === 'IE044')).toBe(true);
+    expect(actualizado.statusHistory.some(h => h.status === 'unloaded')).toBe(true);
+    expect(actualizado.dates.unloadingNotification).toBeDefined();
+  });
+
+  test('notifyUnloading exige que el transito haya llegado', async () => {
+    const owner = OWNER();
+    const t = await enTransito(owner);
+    await expect(transitService.notifyUnloading(t._id, {}, owner)).rejects.toThrow(/llegado/);
+    expect(aeatSubmitService.submitNCTSUnloading).not.toHaveBeenCalled();
+  });
+
+  test('si AEAT rechaza el CC044 el transito sigue en arrived', async () => {
+    const owner = OWNER();
+    let t = await enTransito(owner);
+    t = await transitService.notifyArrival(t._id, {}, owner);
+    aeatSubmitService.submitNCTSUnloading.mockResolvedValue({ success: false, error: 'Rechazo CC044' });
+
+    await expect(transitService.notifyUnloading(t._id, {}, owner)).rejects.toThrow(/CC044/);
+    const guardado = await Transit.findById(t._id);
+    expect(guardado.status).toBe('arrived');
+  });
+
+  test('un transito ajeno no se puede notificar', async () => {
+    const t = await enTransito(OWNER());
+    await expect(transitService.notifyArrival(t._id, {}, OWNER())).rejects.toThrow(/no encontrado/);
+    await expect(transitService.notifyUnloading(t._id, {}, OWNER())).rejects.toThrow(/no encontrado/);
+    expect(aeatSubmitService.submitNCTSArrival).not.toHaveBeenCalled();
+  });
+
+  test('unloaded sigue permitiendo liberar mercancias (el ciclo no se corta)', async () => {
+    const owner = OWNER();
+    let t = await enTransito(owner);
+    t = await transitService.notifyArrival(t._id, {}, owner);
+    t = await transitService.notifyUnloading(t._id, {}, owner);
+
+    t = await transitService.releaseGoods(t._id, owner);
+    expect(t.status).toBe('goods_released');
+
+    t = await transitService.complete(t._id, owner);
+    expect(t.status).toBe('completed');
   });
 });

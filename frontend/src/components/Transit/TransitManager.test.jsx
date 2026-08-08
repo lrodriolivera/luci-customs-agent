@@ -26,6 +26,7 @@ vi.mock('../../services/api', () => ({
     releaseAtDeparture: vi.fn(),
     startTransit: vi.fn(),
     notifyArrival: vi.fn(),
+    notifyUnloading: vi.fn(),
     releaseGoods: vi.fn(),
     complete: vi.fn(),
     aiAutoComplete: vi.fn(),
@@ -1331,10 +1332,10 @@ describe('<TransitManager /> formulario: partidas de mercancia', () => {
   /** Rellena los campos `required` para que el submit no lo bloquee el navegador. */
   const rellenarObligatorios = () => {
     const v = (ph, val) => fireEvent.change(screen.getByPlaceholderText(ph), { target: { value: val } })
-    v(/Codigo \(ej: ES004801\)/, 'ES004801')
-    v(/Codigo \(ej: FR001001\)/, 'FR001001')
+    v(/Codigo \(ej: ES002801\)/, 'ES002801')
+    v(/Codigo \(ej: ES002901\)/, 'ES002901')
     v(/descripcion de la mercancia/i, 'Tubos de acero')
-    v(/TARIC/i, '73043100')
+    v(/TARIC/i, '73041100')
     v(/peso bruto/i, '300')
   }
 
@@ -1356,7 +1357,7 @@ describe('<TransitManager /> formulario: partidas de mercancia', () => {
     const enviado = transitAPI.create.mock.calls[0][0]
     expect(enviado.goodsItems[0]).toMatchObject({
       description: 'Tubos de acero',
-      taricCode: '73043100',
+      taricCode: '73041100',
       grossWeight: 300
     })
   })
@@ -1375,5 +1376,133 @@ describe('<TransitManager /> formulario: partidas de mercancia', () => {
       expect.objectContaining({ number: 'PRE-001' })
     ])
     expect(enviado.seals).toBeUndefined()
+  })
+
+  /**
+   * E2E 8/Ago: AEAT exige un documento previo por partida en un T1 ("No vienen
+   * Previous Document...") y el formulario no tenia ese campo, asi que un
+   * transito creado solo desde la UI era imposible de enviar. Los placeholders
+   * tampoco servian: ES004801 y FR001001 los rechaza AEAT PRE (la aduana de
+   * destino tiene que tener rol DES y la de partida casar con la ubicacion).
+   */
+  test('el formulario pide el documento previo de la partida', async () => {
+    await abrirFormulario()
+    expect(screen.getByPlaceholderText(/Tipo doc\. previo/i)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/Referencia doc\. previo/i)).toBeInTheDocument()
+  })
+
+  test('el documento previo llega a transitAPI.create dentro de la partida', async () => {
+    transitAPI.create.mockResolvedValue({ data: { success: true, data: { _id: 'nuevo' } } })
+    await abrirFormulario()
+
+    rellenarObligatorios()
+    fireEvent.change(screen.getByPlaceholderText(/Tipo doc\. previo/i), { target: { value: 'N337' } })
+    fireEvent.change(screen.getByPlaceholderText(/Referencia doc\. previo/i), { target: { value: '25ES00280180003993' } })
+    fireEvent.submit(screen.getByText('Crear Transito').closest('form'))
+    await waitFor(() => expect(transitAPI.create).toHaveBeenCalled())
+
+    expect(transitAPI.create.mock.calls[0][0].goodsItems[0].previousDocuments).toEqual([
+      { type: 'N337', reference: '25ES00280180003993', goodsItemNumber: '1' }
+    ])
+  })
+
+  test('sin documento previo la partida no manda previousDocuments vacio', async () => {
+    transitAPI.create.mockResolvedValue({ data: { success: true, data: { _id: 'nuevo' } } })
+    await abrirFormulario()
+
+    rellenarObligatorios()
+    fireEvent.submit(screen.getByText('Crear Transito').closest('form'))
+    await waitFor(() => expect(transitAPI.create).toHaveBeenCalled())
+
+    expect(transitAPI.create.mock.calls[0][0].goodsItems[0].previousDocuments).toBeUndefined()
+  })
+
+  test('los placeholders de aduana usan codigos que AEAT PRE acepta', async () => {
+    await abrirFormulario()
+    // ES002801 casa con la ubicacion 2801AAAAAC de PRE; ES002901 tiene rol DES.
+    expect(screen.getByPlaceholderText(/Codigo \(ej: ES002801\)/)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/Codigo \(ej: ES002901\)/)).toBeInTheDocument()
+  })
+})
+
+/**
+ * E2E 8/Ago (bug #5 de /transit): tras "Notificar Llegada" el ciclo se cortaba.
+ * En destino falta la notificacion de descarga (CC044) y el estado `unloaded`
+ * que produce no aparecia en `getNextActions`, asi que un transito descargado
+ * quedaba sin ninguna accion disponible: ni liberar mercancias ni completar.
+ */
+describe('<TransitManager /> ciclo en destino: descarga (CC044) y estado unloaded', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    transitAPI.getStats.mockResolvedValue({ data: { success: true, data: {} } })
+    transitAPI.getOverdue.mockResolvedValue({ data: { success: true, data: [] } })
+  })
+
+  const unTransito = (status) => ({
+    data: {
+      success: true,
+      data: {
+        transits: [{
+          _id: 't1', mrn: 'MRN001', lrn: 'LRN001', status, transitType: 'T1',
+          principal: {}, departureOffice: {}, destinationOffice: {},
+          transport: { seals: [] }, totals: {}, dates: {}, deadlines: {}
+        }],
+        pagination: { total: 1, page: 1, limit: 20, pages: 1 }
+      }
+    }
+  })
+
+  const expandirFila = async (status) => {
+    transitAPI.list.mockResolvedValue(unTransito(status))
+    render(
+      <MemoryRouter>
+        <TransitManager />
+      </MemoryRouter>
+    )
+    await waitFor(() => expect(screen.getByText('MRN001')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('MRN001'))
+  }
+
+  test('un transito llegado ofrece notificar la descarga', async () => {
+    await expandirFila('arrived')
+    await waitFor(() => expect(screen.getByText('Notificar Descarga')).toBeInTheDocument())
+  })
+
+  test('unloaded muestra la etiqueta "Descargado" y permite liberar mercancias', async () => {
+    await expandirFila('unloaded')
+    // "Descargado" sale dos veces: el chip de la fila y la opcion del filtro de
+    // estado, que se genera desde el mismo STATUS_CONFIG.
+    await waitFor(() => expect(screen.getAllByText('Descargado').length).toBeGreaterThan(1))
+    expect(screen.getByText('Liberar Mercancias')).toBeInTheDocument()
+  })
+
+  test('el filtro de estado ofrece "Descargado" (el estado existia sin ser filtrable)', async () => {
+    await expandirFila('arrived')
+    const selectEstado = screen.getAllByRole('combobox')[1]
+    expect([...selectEstado.options].map(o => o.value)).toContain('unloaded')
+  })
+
+  test('Notificar Descarga llama a la API y recarga la lista', async () => {
+    transitAPI.notifyUnloading.mockResolvedValue({ data: { success: true, data: { status: 'unloaded' } } })
+    await expandirFila('arrived')
+    await waitFor(() => expect(screen.getByText('Notificar Descarga')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByText('Notificar Descarga'))
+
+    await waitFor(() => expect(transitAPI.notifyUnloading).toHaveBeenCalledWith('t1', expect.anything()))
+    // list se llama al montar y otra vez tras la accion.
+    expect(transitAPI.list.mock.calls.length).toBeGreaterThan(1)
+  })
+
+  test('si la API rechaza la descarga se muestra el error y NO se recarga', async () => {
+    transitAPI.notifyUnloading.mockRejectedValue({ response: { data: { error: 'Rechazo CC044' } } })
+    await expandirFila('arrived')
+    await waitFor(() => expect(screen.getByText('Notificar Descarga')).toBeInTheDocument())
+    const llamadasAntes = transitAPI.list.mock.calls.length
+
+    fireEvent.click(screen.getByText('Notificar Descarga'))
+
+    await waitFor(() => expect(screen.getByText('Rechazo CC044')).toBeInTheDocument())
+    expect(transitAPI.list.mock.calls.length).toBe(llamadasAntes)
   })
 })

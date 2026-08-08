@@ -961,6 +961,15 @@ describe('api.js — transitAPI', () => {
     expect(mockApi.post).toHaveBeenCalledWith('/api/transit/trans123/arrival', data)
   })
 
+  it('transitAPI.notifyUnloading llama a POST /api/transit/:id/unloading', async () => {
+    const api = await import('./api.js')
+
+    const data = { sealsOk: true, goodsConform: true }
+    await api.transitAPI.notifyUnloading('trans123', data)
+
+    expect(mockApi.post).toHaveBeenCalledWith('/api/transit/trans123/unloading', data)
+  })
+
   it('transitAPI.aiAutoComplete llama a POST con timeout 90s', async () => {
     const api = await import('./api.js')
 
