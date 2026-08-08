@@ -133,7 +133,7 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
       expect(result.overallRiskScore).toBe(75);
       expect(result.channelPrediction.mostLikely).toBe('ORANGE');
       expect(result.criticalIssues).toHaveLength(1);
-      expect(result.model).toBe('opus-4');
+      expect(result.model).toBe('sonnet-5');
       expect(result.tokensUsed).toBe(1200);
       expect(result.analyzedAt).toBeDefined();
     });
@@ -409,7 +409,7 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
       expect(result.items[0].suggestions).toHaveLength(2);
       expect(result.items[0].suggestions[0].taricCode).toBe('0901210000');
       expect(result.items[0].suggestions[0].confidence).toBe(95);
-      expect(result.model).toBe('opus-4');
+      expect(result.model).toBe('opus-5');
       expect(result.tokensUsed).toBe(2000);
       expect(result.analyzedAt).toBeDefined();
     });
@@ -756,7 +756,7 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
       expect(result.criticalIssues).toBe(1);
       expect(result.inconsistencies).toHaveLength(3);
       expect(result.readyForDeclaration).toBe(false);
-      expect(result.model).toBe('sonnet-4');
+      expect(result.model).toBe('sonnet-5');
       expect(result.tokensUsed).toBe(1500);
       expect(result.analyzedAt).toBeDefined();
     });
@@ -1099,7 +1099,7 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
       expect(result.productClassification).toBe('Aparato electrónico');
       expect(result.pueRequirements.ROHS.required).toBe(true);
       expect(result.pueRequirements.ROHS.confidence).toBe(95);
-      expect(result.model).toBe('opus-4');
+      expect(result.model).toBe('sonnet-5');
       expect(result.tokensUsed).toBe(1000);
     });
 
@@ -1308,7 +1308,7 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
       expect(result.suggestedData.route.countries).toEqual(['ES', 'FR', 'DE']);
       expect(result.fieldsCompleted).toHaveLength(5);
       expect(result.confidence).toBe(85);
-      expect(result.model).toBe('opus-4');
+      expect(result.model).toBe('sonnet-5');
       expect(result.tokensUsed).toBe(2500);
       expect(result.generatedAt).toBeDefined();
     });
@@ -1516,7 +1516,7 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
       expect(result.routeValidation.isValid).toBe(true);
       expect(result.routeAnalysis.estimatedTransitDays).toBe(4);
       expect(result.riskLevel).toBe('LOW');
-      expect(result.model).toBe('opus-4');
+      expect(result.model).toBe('sonnet-5');
       expect(result.tokensUsed).toBe(2000);
       expect(result.validatedAt).toBeDefined();
     });
@@ -1758,7 +1758,7 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
       expect(result.incidentPredictions).toHaveLength(1);
       expect(result.controlProbability.departure).toBe(30);
       expect(result.recommendations).toHaveLength(1);
-      expect(result.model).toBe('opus-4');
+      expect(result.model).toBe('sonnet-5');
       expect(result.tokensUsed).toBe(2500);
       expect(result.predictedAt).toBeDefined();
     });
@@ -2017,7 +2017,7 @@ describe('aiService - Expedition & Transit Methods - Branch Coverage', () => {
       expect(result.recommendedType.code).toBe('1');
       expect(result.globalGuaranteeAnalysis.canUseExisting).toBe(true);
       expect(result.oeaImpact.hasReduction).toBe(true);
-      expect(result.model).toBe('sonnet-4');
+      expect(result.model).toBe('sonnet-5');
       expect(result.tokensUsed).toBe(2000);
       expect(result.calculatedAt).toBeDefined();
     });

@@ -42,7 +42,9 @@ const ChatMessageSchema = new mongoose.Schema({
     documentId: mongoose.Schema.Types.ObjectId,
     documentType: String,
     validationStatus: String,
-    aiModel: String, // 'sonnet-4' o 'opus-4.5'
+    // Etiqueta de presentacion que devuelve `labelFor` ('sonnet-5', 'opus-5'),
+    // no el ID invocable de Bedrock. Ver config/bedrockModels.js.
+    aiModel: String,
     tokensUsed: Number,
     processingTime: Number // ms
   },

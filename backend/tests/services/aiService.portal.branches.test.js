@@ -62,7 +62,7 @@ describe('AIService - Portal Cliente', () => {
       expect(result.intent).toBe('status_query');
       expect(result.intentConfidence).toBe(95);
       expect(result.response.message).toContain('en proceso');
-      expect(result.model).toBe('sonnet-4');
+      expect(result.model).toBe('sonnet-5');
       expect(result.tokensUsed).toBe(100);
       expect(result.generatedAt).toBeDefined();
     });
@@ -176,7 +176,7 @@ describe('AIService - Portal Cliente', () => {
       expect(result.matchedFAQs[0].matchScore).toBe(90);
       expect(result.response.answer).toContain('canal');
       expect(result.confidence).toBe(90);
-      expect(result.model).toBe('sonnet-4');
+      expect(result.model).toBe('sonnet-5');
     });
 
     test('detecta FAQ sin bloque JSON (directo)', async () => {
@@ -754,7 +754,7 @@ describe('AIService - Portal Cliente', () => {
       expect(result.risks).toHaveLength(1);
       expect(result.recommendations).toHaveLength(1);
       expect(result.nextPeriodForecast.confidence).toBe(85);
-      expect(result.model).toBe('opus-4');
+      expect(result.model).toBe('sonnet-5');
       expect(result.generatedAt).toBeDefined();
     });
 
@@ -832,7 +832,7 @@ describe('AIService - Portal Cliente', () => {
       expect(result.alertsGenerated).toHaveLength(1);
       expect(result.summary.criticalCount).toBe(1);
       expect(result.summary.requiresImmediateAttention).toBe(true);
-      expect(result.model).toBe('opus-4');
+      expect(result.model).toBe('sonnet-5');
       expect(result.analyzedAt).toBeDefined();
     });
 
@@ -909,7 +909,7 @@ describe('AIService - Portal Cliente', () => {
       expect(result.modelConfidence).toBe(85);
       expect(result.limitations).toHaveLength(2);
       expect(result.horizon).toBe(15);
-      expect(result.model).toBe('opus-4');
+      expect(result.model).toBe('sonnet-5');
       expect(result.predictedAt).toBeDefined();
     });
 
@@ -1007,7 +1007,7 @@ describe('AIService - Portal Cliente', () => {
       expect(result.riskAssessment.overallRisk).toBe('LOW');
       expect(result.nextSteps).toHaveLength(1);
       expect(result.appendix.methodology).toBeTruthy();
-      expect(result.model).toBe('opus-4');
+      expect(result.model).toBe('sonnet-5');
       expect(result.generatedAt).toBeDefined();
     });
 
@@ -1082,7 +1082,7 @@ describe('AIService - Portal Cliente', () => {
       expect(result.quickWins).toHaveLength(1);
       expect(result.strategicInitiatives).toHaveLength(1);
       expect(result.monitoringPlan.reviewFrequency).toBe('Semanal');
-      expect(result.model).toBe('sonnet-4');
+      expect(result.model).toBe('sonnet-5');
       expect(result.analyzedAt).toBeDefined();
     });
 

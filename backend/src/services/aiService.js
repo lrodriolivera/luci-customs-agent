@@ -15,7 +15,7 @@ const CLASSIFICATION_CACHE_TTL = 7 * 24 * 60 * 60;
 // Los IDs viven en config/bedrockModels para que exista una unica fuente de
 // verdad: cuando estaban repartidos por el codigo, una migracion de modelo
 // dejo tres llamadas apuntando a un modelo inexistente.
-const { OPUS: OPUS_MODEL, SONNET: SONNET_MODEL, FAST: FAST_MODEL } = require('../config/bedrockModels');
+const { OPUS: OPUS_MODEL, SONNET: SONNET_MODEL, FAST: FAST_MODEL, labelFor } = require('../config/bedrockModels');
 
 // Mapa de idiomas para instrucciones al modelo
 const LANGUAGE_INSTRUCTIONS = {
@@ -557,7 +557,7 @@ CONTEXTO DEL EXPEDIENTE:
 
     return {
       message: result.content,
-      model: selectedModel === FAST_MODEL ? 'sonnet-5' : selectedModel === OPUS_MODEL ? 'opus-5' : 'sonnet-5',
+      model: labelFor(selectedModel),
       tokensUsed: result.tokensUsed,
       confidence: selectedModel === FAST_MODEL ? 75 : 85,
       sources: []
@@ -577,7 +577,9 @@ CONTEXTO DEL EXPEDIENTE:
 
     return {
       message: result.content,
-      model: 'sonnet-5',
+      // Etiqueta derivada del modelo que respondio: `_selectModel` puede
+      // devolver Opus segun la pregunta, y aqui se afirmaba Sonnet siempre.
+      model: labelFor(selectedModel),
       tokensUsed: result.tokensUsed,
       confidence: selectedModel === FAST_MODEL ? 70 : 80,
       sources: []
@@ -843,7 +845,7 @@ Responde en formato JSON.`;
 
       return {
         message: result.content,
-        model: 'opus-4',
+        model: labelFor(OPUS_MODEL),
         tokensUsed: result.tokensUsed,
         confidence: 85,
         metadata: metadata,
@@ -956,7 +958,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed
       };
     } catch (e) {
@@ -1150,7 +1152,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed
       };
     } catch (e) {
@@ -1484,7 +1486,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'sonnet-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -1639,7 +1641,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -1802,7 +1804,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'sonnet-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -1949,7 +1951,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'sonnet-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         calculatedAt: new Date().toISOString()
       };
@@ -2092,7 +2094,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         generatedAt: new Date().toISOString()
       };
@@ -2199,7 +2201,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'sonnet-4',
+        model: labelFor(FAST_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -2339,7 +2341,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(OPUS_MODEL),
         tokensUsed: result.tokensUsed,
         generatedAt: new Date().toISOString()
       };
@@ -2471,7 +2473,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'sonnet-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -2722,7 +2724,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(OPUS_MODEL),
         tokensUsed: result.tokensUsed,
         validatedAt: new Date().toISOString()
       };
@@ -2835,7 +2837,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'sonnet-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -2967,7 +2969,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(OPUS_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -3113,7 +3115,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         predictedAt: new Date().toISOString()
       };
@@ -3345,7 +3347,7 @@ Responde en JSON:
       // cierre) que el regex ```...``` no capturaba y hacian caer al fallback.
       return {
         ...this._parseJsonRespuesta(result.content),
-        model: 'opus-4',
+        model: labelFor(OPUS_MODEL),
         tokensUsed: result.tokensUsed
       };
     } catch (e) {
@@ -3496,7 +3498,7 @@ Responde en JSON:
       // ```...``` dejaba caer al fallback.
       return {
         ...this._parseJsonRespuesta(result.content),
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -3602,7 +3604,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(OPUS_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -3742,7 +3744,7 @@ Responde en JSON:
     try {
       return {
         ...this._parseJsonRespuesta(result.content),
-        model: 'sonnet-4',
+        model: labelFor(FAST_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -3857,7 +3859,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed
       };
     } catch (e) {
@@ -4001,7 +4003,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         generatedAt: new Date().toISOString()
       };
@@ -4120,7 +4122,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         validatedAt: new Date().toISOString()
       };
@@ -4248,7 +4250,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         predictedAt: new Date().toISOString()
       };
@@ -4377,7 +4379,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'sonnet-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         calculatedAt: new Date().toISOString()
       };
@@ -4633,7 +4635,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'sonnet-4',
+        model: labelFor(FAST_MODEL),
         tokensUsed: result.tokensUsed,
         generatedAt: new Date().toISOString()
       };
@@ -4713,7 +4715,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'sonnet-4',
+        model: labelFor(FAST_MODEL),
         tokensUsed: result.tokensUsed
       };
     } catch (e) {
@@ -4810,7 +4812,7 @@ Responde en JSON:
         ...JSON.parse(jsonContent),
         eventType: event.type,
         expeditionId: expedition?.expeditionId,
-        model: 'sonnet-4',
+        model: labelFor(FAST_MODEL),
         tokensUsed: result.tokensUsed,
         generatedAt: new Date().toISOString()
       };
@@ -4936,7 +4938,7 @@ Responde en JSON:
       return {
         ...JSON.parse(jsonContent),
         expeditionId: expedition.expeditionId,
-        model: 'sonnet-4',
+        model: labelFor(FAST_MODEL),
         tokensUsed: result.tokensUsed,
         generatedAt: new Date().toISOString()
       };
@@ -5158,7 +5160,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         generatedAt: new Date().toISOString()
       };
@@ -5278,7 +5280,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -5393,7 +5395,7 @@ Responde en JSON:
       return {
         ...JSON.parse(jsonContent),
         horizon,
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         predictedAt: new Date().toISOString()
       };
@@ -5524,7 +5526,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         generatedAt: new Date().toISOString()
       };
@@ -5644,7 +5646,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'sonnet-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -5851,7 +5853,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(OPUS_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -5964,7 +5966,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(OPUS_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()
       };
@@ -6116,7 +6118,7 @@ Responde en JSON:
 
       return {
         ...JSON.parse(jsonContent),
-        model: 'opus-4',
+        model: labelFor(OPUS_MODEL),
         tokensUsed: result.tokensUsed,
         validatedAt: new Date().toISOString()
       };
@@ -6252,7 +6254,8 @@ Responde en JSON:
           historyBased
         ),
 
-        model: 'opus-4-combined',
+        // Analisis combinado de varias llamadas; la gama que manda es la fuerte.
+        model: `${labelFor(OPUS_MODEL)}-combined`,
         tokensUsed: (baseSuggestions.tokensUsed || 0) +
                     (historyBased?.tokensUsed || 0) +
                     (feedbackImproved?.tokensUsed || 0) +
@@ -6331,7 +6334,7 @@ Responde en JSON:
         ...JSON.parse(jsonContent),
         feedbackId: `fb_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         recordedAt: new Date().toISOString(),
-        model: 'sonnet-4',
+        model: labelFor(SONNET_MODEL),
         tokensUsed: result.tokensUsed
       };
     } catch (e) {

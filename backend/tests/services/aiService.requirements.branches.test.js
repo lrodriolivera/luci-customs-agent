@@ -59,7 +59,7 @@ describe('aiService.requirements - generateRequirementResponse', () => {
     expect(result.formalResponse.header.reference).toBe('REQ-001');
     expect(result.documentsToAttach).toHaveLength(1);
     expect(result.legalArguments[0].strength).toBe('STRONG');
-    expect(result.model).toBe('opus-4');
+    expect(result.model).toBe('sonnet-5');
     expect(result.tokensUsed).toBe(100);
     expect(result.generatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(callClaudeSpy).toHaveBeenCalledTimes(1);
@@ -194,7 +194,7 @@ describe('aiService.requirements - analyzeRequestedDocuments', () => {
     expect(result.documentAnalysis).toHaveLength(1);
     expect(result.documentAnalysis[0].alreadyAvailable).toBe(true);
     expect(result.completenessScore).toBe(90);
-    expect(result.model).toBe('sonnet-4');
+    expect(result.model).toBe('sonnet-5');
     expect(result.tokensUsed).toBe(150);
     expect(result.analyzedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
@@ -293,7 +293,7 @@ describe('aiService.requirements - suggestLegalArguments', () => {
     expect(result.mainArguments).toHaveLength(1);
     expect(result.mainArguments[0].strength).toBe('STRONG');
     expect(result.recommendedStrategy.approach).toBe('COLLABORATIVE');
-    expect(result.model).toBe('opus-4');
+    expect(result.model).toBe('opus-5');
     expect(result.tokensUsed).toBe(200);
     expect(result.generatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
@@ -379,7 +379,7 @@ describe('aiService.requirements - analyzeRequirementRisk', () => {
     expect(result.riskLevel).toBe('MEDIUM');
     expect(result.riskScore).toBe(55);
     expect(result.resolutionPrediction.mostLikely).toBe('LEVANTE');
-    expect(result.model).toBe('sonnet-4');
+    expect(result.model).toBe('sonnet-5');
     expect(result.tokensUsed).toBe(180);
     expect(result.analyzedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
@@ -582,7 +582,7 @@ describe('aiService.declarations - validateDeclarationBeforeSubmit', () => {
     expect(result.readyToSubmit).toBe(true);
     expect(result.validationScore).toBe(95);
     expect(result.errors).toHaveLength(0);
-    expect(result.model).toBe('opus-4');
+    expect(result.model).toBe('opus-5');
     expect(result.tokensUsed).toBe(150);
     expect(result.validatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
@@ -745,7 +745,7 @@ describe('aiService.declarations - detectDeclarationErrors', () => {
     expect(result.errors).toHaveLength(3);
     expect(result.errors[0].severity).toBe('BLOCKING');
     expect(result.riskOfRejection).toBe(75);
-    expect(result.model).toBe('sonnet-4');
+    expect(result.model).toBe('sonnet-5');
     expect(result.tokensUsed).toBe(140);
     expect(result.analyzedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
@@ -836,7 +836,7 @@ describe('aiService.declarations - suggestRegimeAndPreference', () => {
     expect(result.recommendedPreference.code).toBe('300');
     expect(result.alternativeRegimes).toHaveLength(1);
     expect(result.estimatedDuties.estimatedSavings).toBe('250 EUR');
-    expect(result.model).toBe('opus-4');
+    expect(result.model).toBe('opus-5');
     expect(result.tokensUsed).toBe(160);
     expect(result.analyzedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
@@ -925,7 +925,7 @@ describe('aiService.declarations - predictDeclarationChannel', () => {
     expect(result.prediction.channel).toBe('GREEN');
     expect(result.prediction.probability.green).toBe(85);
     expect(result.positiveFactors).toHaveLength(1);
-    expect(result.model).toBe('opus-4');
+    expect(result.model).toBe('sonnet-5');
     expect(result.tokensUsed).toBe(150);
     expect(result.predictedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
@@ -1157,7 +1157,7 @@ describe('aiService.declarations - suggestMissingDocuments', () => {
     expect(result.preferentialOrigin.recommendedDocument).toBe('EUR1');
     expect(result.specialRequirements).toHaveLength(1);
     expect(result.completenessScore).toBe(60);
-    expect(result.model).toBe('opus-4');
+    expect(result.model).toBe('opus-5');
     expect(result.tokensUsed).toBe(140);
   });
 

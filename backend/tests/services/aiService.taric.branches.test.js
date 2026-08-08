@@ -84,7 +84,7 @@ describe('improveClassificationWithFeedback: aprender de correcciones', () => {
     expect(result.improvedSuggestions).toHaveLength(1);
     expect(result.improvedSuggestions[0].taricCode).toBe('0901210000');
     expect(result.feedbackSummary.overallLearningImpact).toBe('NONE');
-    expect(result.model).toBe('opus-4');
+    expect(result.model).toBe('opus-5');
     expect(result.tokensUsed).toBe(500);
     expect(result.analyzedAt).toBeDefined();
   });
@@ -302,7 +302,7 @@ describe('suggestBasedOnHistory: precedentes del cliente', () => {
     expect(result.historicalAnalysis.similarProductsFound).toBe(0);
     expect(result.newProductAlert.isNew).toBe(true);
     expect(result.clientProfileFit.sectorAlignment).toBe('LOW');
-    expect(result.model).toBe('opus-4');
+    expect(result.model).toBe('opus-5');
     expect(result.analyzedAt).toBeDefined();
   });
 
@@ -503,7 +503,7 @@ describe('crossValidateWithRegulations: validación normativa', () => {
     expect(result.validationResult.overallAssessment).toBe('CONFIRMED');
     expect(result.rgiAnalysis.conclusionRGI).toContain('Clasificación cumple');
     expect(result.finalRecommendation.proceed).toBe(true);
-    expect(result.model).toBe('opus-4');
+    expect(result.model).toBe('opus-5');
     expect(result.validatedAt).toBeDefined();
   });
 
@@ -776,7 +776,7 @@ describe('fullTaricAnalysis: análisis completo combinado', () => {
     expect(result.analysis.historicalAnalysis).toBeDefined();
     expect(result.analysis.feedbackLearning).toBeNull();
     expect(result.analysis.regulationValidation).toBeNull();
-    expect(result.model).toBe('opus-4-combined');
+    expect(result.model).toBe('opus-5-combined');
   });
 
   test('con historial y feedback, consolida tres fuentes', async () => {
@@ -1023,7 +1023,7 @@ describe('recordClassificationFeedback: grabar aprendizajes', () => {
     expect(result.feedbackId).toBeDefined();
     expect(result.feedbackId).toMatch(/^fb_/);
     expect(result.recordedAt).toBeDefined();
-    expect(result.model).toBe('sonnet-4');
+    expect(result.model).toBe('sonnet-5');
   });
 
   test('feedback de clasificación incorrecta - error de material', async () => {
