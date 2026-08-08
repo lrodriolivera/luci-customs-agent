@@ -73,7 +73,11 @@
     "from": "From",
     "to": "To",
     "total": "Total",
-    "subtotal": "Subtotal"
+    "subtotal": "Subtotal",
+    "action": "Action",
+    "allTypes": "All types",
+    "refresh": "Refresh",
+    "target": "Target"
   },
   "nav": {
     "skipToContent": "Skip to main content",
@@ -125,7 +129,8 @@
     "logout": "Log Out",
     "user": "User",
     "admin": "Administrator",
-    "customsAgent": "Customs Agent"
+    "customsAgent": "Customs Agent",
+    "newH1": "+ New H1 (SAD)"
   },
   "auth": {
     "login": "Log In",
@@ -172,7 +177,35 @@
     "passwordUpdated": "Password updated. You can now log in.",
     "resetError": "Error resetting password",
     "tokenInvalid": "Invalid or expired token. Request a new link.",
-    "copyright": "STRIX AI"
+    "copyright": "STRIX AI",
+    "subtitle": "Intelligent customs agent",
+    "company": "Company",
+    "registerButton": "Create account",
+    "registering": "Creating account...",
+    "registerSuccess": "Account created successfully",
+    "registerError": "Could not create the account",
+    "registerLink": "Create an account",
+    "loginLink": "Sign in",
+    "verifyTitle": "Verify your email",
+    "verifySubtitle": "We sent a 6-digit code to",
+    "verificationCode": "Verification code",
+    "verifyButton": "Verify",
+    "verifying": "Verifying...",
+    "codeLength": "The code must be 6 digits long",
+    "resendCode": "Resend code",
+    "resending": "Resending...",
+    "codeResent": "Code resent",
+    "forgotSubtitle": "We'll send you a link to reset your password",
+    "sendResetLink": "Send link",
+    "forgotSuccess": "If the email exists, you'll receive a reset link",
+    "forgotError": "Could not send the reset link",
+    "resetSuccess": "Password reset",
+    "resetting": "Resetting...",
+    "passwordMismatch": "Passwords do not match",
+    "newPasswordTitle": "Set a new password",
+    "newPasswordSubtitle": "Your account must change its password before continuing",
+    "savePassword": "Save password",
+    "saving": "Saving..."
   },
   "dashboard": {
     "goodMorning": "Good morning",
@@ -459,7 +492,7 @@
     "nifPlaceholder": "B12345678",
     "eoriPlaceholder": "ES + Tax ID",
     "descriptionPlaceholder": "Describe the product in detail: material, function, use...",
-    "statusDeclarationDraft": "Draft Declaration",
+    "statusDeclarationDraft": "Declaration Draft",
     "statusLevante": "Released"
   },
   "classification": {
@@ -617,7 +650,9 @@
     "infoOf": "Information about",
     "foundInChapter": "{{count}} headings found in Ch. {{chapter}}",
     "infoFoundSource": "Information found (source: {{source}})",
-    "explainAbout": "Explain about"
+    "explainAbout": "Explain about",
+    "found": "found",
+    "foundPlural": "found"
   },
   "declarations": {
     "title": "Declaration Generator",
@@ -1730,7 +1765,8 @@
     "docsInfoReceipts": "Payment receipts are proof of duties and taxes paid",
     "docsInfoVerify": "For digitally signed documents, verify their authenticity on the AEAT electronic office",
     "errorLoadingSignedDocs": "Error loading signed documents",
-    "errorDownloading": "Error downloading document"
+    "errorDownloading": "Error downloading document",
+    "loading": "Loading..."
   },
   "landing": {
     "features": "Features",
@@ -2236,7 +2272,11 @@
     "entryCustomsCode": "Entry Customs Code",
     "durationMonths": "Duration (months)",
     "addGoods": "+ Add goods",
-    "createRegime": "Create Regime"
+    "createRegime": "Create Regime",
+    "aiAdvisorTitle": "AI Regime Advisor",
+    "aiAdvisorSubtitle": "LUCI recommends the most favourable customs regime",
+    "yieldValidatorTitle": "Yield Validator",
+    "yieldValidatorSubtitle": "Checks the declared rate of yield"
   },
   "certificates": {
     "title": "AEAT Digital Certificates",
@@ -3234,7 +3274,8 @@
         "f2Name": "Continuous optimisation",
         "f2Desc": "Evaluates each rule's performance and suggests adjustments to improve effectiveness based on results"
       }
-    }
+    },
+    "contextualHelp": "Contextual help"
   },
   "admin": {
     "dashboard": "Dashboard",
@@ -3356,12 +3397,69 @@
     "trends": "Trends",
     "executiveReport": "Executive Report",
     "kpiAnalysis": "KPI Analysis",
-    "fullAnalysis": "Full Analysis"
+    "fullAnalysis": "Full Analysis",
+    "title": "Advanced Analytics",
+    "subtitle": "Metrics, KPIs and AI forecasting",
+    "advancedAnalytics": "Advanced Analytics",
+    "aiAnalysisCenter": "AI Analysis Center",
+    "analyzingWithAI": "Analyzing with AI...",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "last7Days": "Last 7 days",
+    "last30Days": "Last 30 days",
+    "thisMonth": "This month",
+    "lastMonth": "Last month",
+    "thisQuarter": "This quarter",
+    "thisYear": "This year",
+    "keyMetrics": "Key Metrics",
+    "luciSummary": "LUCI Summary",
+    "mainInsights": "Main Insights",
+    "recommendations": "Recommendations",
+    "recommendedActions": "Recommended Actions",
+    "strategicRecommendations": "Strategic Recommendations",
+    "improvementActions": "Improvement Actions",
+    "suggestedAction": "Suggested Action",
+    "attentionAreas": "Areas Needing Attention",
+    "periodAchievements": "Period Achievements",
+    "predictions": "Forecasts",
+    "confidence": "Confidence",
+    "expected": "Expected",
+    "actual": "Actual",
+    "deviation": "Deviation",
+    "kpiDeviations": "KPI Deviations",
+    "rootCauses": "Root Causes",
+    "expectedImpact": "Expected Impact",
+    "seasonalPatterns": "Seasonal Patterns",
+    "peakPeriods": "Peak Periods",
+    "trendAlerts": "Trend Alerts",
+    "criticalItems": "Critical Items",
+    "score": "Score",
+    "fullLuciAnalysis": "Full LUCI analysis",
+    "errorLoadingDashboard": "Could not load the analytics dashboard",
+    "reportsManager": "Reports Manager",
+    "reportsManagerSubtitle": "Generate and schedule customs reports",
+    "generateReport": "Generate Report",
+    "schedule": "Schedule",
+    "selectReportType": "Select the report type",
+    "searchReports": "Search reports...",
+    "noReports": "No reports generated",
+    "noReportsHint": "Create your first one with the Generate Report button",
+    "reportGenerated": "Report generated",
+    "errorGeneratingReport": "Could not generate the report",
+    "errorLoadingReports": "Could not load the reports"
   },
   "errorBoundary": {
     "title": "Something went wrong",
     "description": "An unexpected error has occurred. Please reload the page or contact support.",
     "reload": "Reload Page",
     "goHome": "Go to Home"
+  },
+  "inspections": {
+    "title": "Inspections"
+  },
+  "workflows": {
+    "title": "Workflows",
+    "subtitle": "Automate repetitive customs tasks",
+    "newWorkflow": "New Workflow"
   }
 }

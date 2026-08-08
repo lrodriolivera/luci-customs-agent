@@ -73,7 +73,11 @@
     "from": "Da",
     "to": "A",
     "total": "Totale",
-    "subtotal": "Subtotale"
+    "subtotal": "Subtotale",
+    "action": "Azione",
+    "allTypes": "Tutti i tipi",
+    "refresh": "Aggiorna",
+    "target": "Obiettivo"
   },
   "nav": {
     "skipToContent": "Vai al contenuto principale",
@@ -125,7 +129,8 @@
     "logout": "Esci",
     "user": "Utente",
     "admin": "Amministratore",
-    "customsAgent": "Agente Doganale"
+    "customsAgent": "Agente Doganale",
+    "newH1": "+ Nuova H1 (DAU)"
   },
   "auth": {
     "login": "Accedi",
@@ -172,7 +177,35 @@
     "passwordUpdated": "Password aggiornata. Ora puoi accedere.",
     "resetError": "Errore durante il ripristino della password",
     "tokenInvalid": "Token non valido o scaduto. Richiedi un nuovo link.",
-    "copyright": "STRIX AI"
+    "copyright": "STRIX AI",
+    "subtitle": "Agente doganale intelligente",
+    "company": "Azienda",
+    "registerButton": "Crea account",
+    "registering": "Creazione account...",
+    "registerSuccess": "Account creato correttamente",
+    "registerError": "Impossibile creare l’account",
+    "registerLink": "Crea un account",
+    "loginLink": "Accedi",
+    "verifyTitle": "Verifica la tua email",
+    "verifySubtitle": "Abbiamo inviato un codice di 6 cifre a",
+    "verificationCode": "Codice di verifica",
+    "verifyButton": "Verifica",
+    "verifying": "Verifica in corso...",
+    "codeLength": "Il codice deve avere 6 cifre",
+    "resendCode": "Invia di nuovo il codice",
+    "resending": "Invio in corso...",
+    "codeResent": "Codice inviato di nuovo",
+    "forgotSubtitle": "Ti invieremo un link per reimpostare la password",
+    "sendResetLink": "Invia link",
+    "forgotSuccess": "Se l'email esiste, riceverai un link di reimpostazione",
+    "forgotError": "Impossibile inviare il link di reimpostazione",
+    "resetSuccess": "Password reimpostata",
+    "resetting": "Reimpostazione...",
+    "passwordMismatch": "Le password non corrispondono",
+    "newPasswordTitle": "Imposta una nuova password",
+    "newPasswordSubtitle": "Il tuo account deve cambiare la password prima di continuare",
+    "savePassword": "Salva password",
+    "saving": "Salvataggio..."
   },
   "dashboard": {
     "goodMorning": "Buongiorno",
@@ -459,8 +492,8 @@
     "nifPlaceholder": "B12345678",
     "eoriPlaceholder": "ES + NIF",
     "descriptionPlaceholder": "Describa el producto con detalle: material, funcion, uso...",
-    "statusDeclarationDraft": "Dichiarazione Bozza",
-    "statusLevante": "Svincolo"
+    "statusDeclarationDraft": "Bozza di dichiarazione",
+    "statusLevante": "Svincolato"
   },
   "classification": {
     "title": "Classificazione TARIC",
@@ -617,7 +650,9 @@
     "infoOf": "Informazione de",
     "foundInChapter": "{{count}} partidas encontradas en Cap. {{chapter}}",
     "infoFoundSource": "Informazione encontrada (fuente: {{source}})",
-    "explainAbout": "Explicame sobre"
+    "explainAbout": "Explicame sobre",
+    "found": "trovato",
+    "foundPlural": "trovati"
   },
   "declarations": {
     "title": "Generatore di Dichiarazioni",
@@ -1730,7 +1765,8 @@
     "docsInfoReceipts": "Los recibos de pago son comprobantes de los derechos e impuestos abonados",
     "docsInfoVerify": "Para documenti con firma digital, verifique su autenticidad en la sede electronica de la AEAT",
     "errorLoadingSignedDocs": "Errore durante cargar documenti firmados",
-    "errorDownloading": "Errore durante descargar el documento"
+    "errorDownloading": "Errore durante descargar el documento",
+    "loading": "Caricamento..."
   },
   "landing": {
     "features": "Funzionalita",
@@ -2097,7 +2133,9 @@
     "mutualRecognition": "Riconoscimento Reciproco",
     "customsSimplifications": "Semplificazioni Doganali",
     "securityProtection": "Sicurezza e Protezione",
-    "complete": "Completo (OEAC + OEAS)"
+    "complete": "Completo (OEAC + OEAS)",
+    "newApplication": "Nuova Domanda",
+    "newApplicationOEA": "Nuova Domanda AEO"
   },
   "regulations": {
     "title": "Ricerca Normativa",
@@ -2234,7 +2272,11 @@
     "entryCustomsCode": "Codice Dogana di Entrata",
     "durationMonths": "Durata (mesi)",
     "addGoods": "+ Aggiungi merce",
-    "createRegime": "Crea Regime"
+    "createRegime": "Crea Regime",
+    "aiAdvisorTitle": "Consulente Regimi IA",
+    "aiAdvisorSubtitle": "LUCI consiglia il regime doganale più favorevole",
+    "yieldValidatorTitle": "Validatore di Resa",
+    "yieldValidatorSubtitle": "Verifica il tasso di resa dichiarato"
   },
   "certificates": {
     "title": "Certificati Digitali AEAT",
@@ -3232,7 +3274,8 @@
         "f2Name": "Optimizacion continua",
         "f2Desc": "Evalua el rendimiento de cada regla y sugiere ajustes para mejorar su eficacia basandose en los resultados"
       }
-    }
+    },
+    "contextualHelp": "Guida contestuale"
   },
   "admin": {
     "dashboard": "Dashboard",
@@ -3354,12 +3397,69 @@
     "trends": "Tendenze",
     "executiveReport": "Report Esecutivo",
     "kpiAnalysis": "Analisi KPI",
-    "fullAnalysis": "Analisi Completa"
+    "fullAnalysis": "Analisi Completa",
+    "title": "Analytics e BI",
+    "subtitle": "Dashboard di business intelligence e analisi avanzate",
+    "advancedAnalytics": "Analisi avanzata con LUCI",
+    "aiAnalysisCenter": "Centro di Analisi IA",
+    "analyzingWithAI": "Analisi con IA...",
+    "today": "Oggi",
+    "yesterday": "Ieri",
+    "last7Days": "Ultimi 7 giorni",
+    "last30Days": "Ultimi 30 giorni",
+    "thisMonth": "Questo mese",
+    "lastMonth": "Mese scorso",
+    "thisQuarter": "Questo trimestre",
+    "thisYear": "Quest'anno",
+    "keyMetrics": "Metriche Chiave",
+    "luciSummary": "Riepilogo LUCI",
+    "mainInsights": "Insights Principali",
+    "recommendations": "Raccomandazioni",
+    "recommendedActions": "Azioni Raccomandate",
+    "strategicRecommendations": "Raccomandazioni Strategiche",
+    "improvementActions": "Azioni di Miglioramento",
+    "suggestedAction": "Azione suggerita",
+    "attentionAreas": "Aree di Attenzione",
+    "periodAchievements": "Risultati del Periodo",
+    "predictions": "Predizioni",
+    "confidence": "Confidenza",
+    "expected": "Atteso",
+    "actual": "Attuale",
+    "deviation": "Deviazione",
+    "kpiDeviations": "Deviazioni dei KPI",
+    "rootCauses": "Cause Radice",
+    "expectedImpact": "Impatto atteso",
+    "seasonalPatterns": "Modelli Stagionali",
+    "peakPeriods": "Periodi di picco",
+    "trendAlerts": "Avvisi di Tendenza",
+    "criticalItems": "Elementi Critici",
+    "score": "Punteggio",
+    "fullLuciAnalysis": "Analisi Completa LUCI",
+    "errorLoadingDashboard": "Errore nel caricamento del dashboard",
+    "reportsManager": "Gestore dei Report",
+    "reportsManagerSubtitle": "Genera e pianifica report doganali",
+    "generateReport": "Genera Report",
+    "schedule": "Pianifica",
+    "selectReportType": "Seleziona il tipo di report",
+    "searchReports": "Cerca report...",
+    "noReports": "Nessun report generato",
+    "noReportsHint": "Genera il primo con il pulsante Genera Report",
+    "reportGenerated": "Report generato",
+    "errorGeneratingReport": "Impossibile generare il report",
+    "errorLoadingReports": "Impossibile caricare i report"
   },
   "errorBoundary": {
     "title": "Qualcosa e andato storto",
     "description": "Si e verificato un errore imprevisto. Por favor, prova a ricaricare la pagina.",
     "reload": "Ricarica pagina",
     "goHome": "Vai all'inizio"
+  },
+  "inspections": {
+    "title": "Ispezioni"
+  },
+  "workflows": {
+    "title": "Flussi di Lavoro",
+    "subtitle": "Automatizza le attività doganali ripetitive",
+    "newWorkflow": "Nuovo Flusso"
   }
 }

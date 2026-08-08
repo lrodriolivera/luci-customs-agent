@@ -73,7 +73,11 @@
     "from": "De",
     "to": "Ate",
     "total": "Total",
-    "subtotal": "Subtotal"
+    "subtotal": "Subtotal",
+    "action": "Ação",
+    "allTypes": "Todos os tipos",
+    "refresh": "Atualizar",
+    "target": "Objetivo"
   },
   "nav": {
     "skipToContent": "Saltar para o conteudo principal",
@@ -127,7 +131,8 @@
     "admin": "Administrador",
     "customsAgent": "Despachante Aduaneiro",
     "help": "Ajuda",
-    "userManual": "Manual do utilizador"
+    "userManual": "Manual do utilizador",
+    "newH1": "+ Nova H1 (DAU)"
   },
   "auth": {
     "login": "Iniciar Sessao",
@@ -174,7 +179,35 @@
     "passwordUpdated": "Palavra-passe atualizada. Ja pode iniciar sessao.",
     "resetError": "Erro ao redefinir a palavra-passe",
     "tokenInvalid": "Token invalido ou expirado. Solicite um novo link.",
-    "copyright": "STRIX AI"
+    "copyright": "STRIX AI",
+    "subtitle": "Agente aduaneiro inteligente",
+    "company": "Empresa",
+    "registerButton": "Criar conta",
+    "registering": "A criar conta...",
+    "registerSuccess": "Conta criada com sucesso",
+    "registerError": "Não foi possível criar a conta",
+    "registerLink": "Criar uma conta",
+    "loginLink": "Iniciar sessão",
+    "verifyTitle": "Verifique o seu email",
+    "verifySubtitle": "Enviámos um código de 6 dígitos para",
+    "verificationCode": "Código de verificação",
+    "verifyButton": "Verificar",
+    "verifying": "A verificar...",
+    "codeLength": "O código deve ter 6 dígitos",
+    "resendCode": "Reenviar código",
+    "resending": "A reenviar...",
+    "codeResent": "Código reenviado",
+    "forgotSubtitle": "Enviaremos um link para redefinir a sua palavra-passe",
+    "sendResetLink": "Enviar link",
+    "forgotSuccess": "Se o email existir, receberá um link de redefinição",
+    "forgotError": "Não foi possível enviar o link de redefinição",
+    "resetSuccess": "Palavra-passe redefinida",
+    "resetting": "A redefinir...",
+    "passwordMismatch": "As palavras-passe não coincidem",
+    "newPasswordTitle": "Defina uma nova palavra-passe",
+    "newPasswordSubtitle": "A sua conta tem de alterar a palavra-passe antes de continuar",
+    "savePassword": "Guardar palavra-passe",
+    "saving": "A guardar..."
   },
   "dashboard": {
     "goodMorning": "Bom dia",
@@ -619,7 +652,9 @@
     "infoOf": "Informacao de",
     "foundInChapter": "{{count}} posicoes encontradas no Cap. {{chapter}}",
     "infoFoundSource": "Informacao encontrada (fonte: {{source}})",
-    "explainAbout": "Explique-me sobre"
+    "explainAbout": "Explique-me sobre",
+    "found": "encontrado",
+    "foundPlural": "encontrados"
   },
   "declarations": {
     "title": "Gerador de Declaracoes",
@@ -1732,7 +1767,8 @@
     "docsInfoReceipts": "Os recibos de pagamento sao comprovativos dos direitos e impostos pagos",
     "docsInfoVerify": "Para documentos com assinatura digital, verifique a sua autenticidade na sede eletronica da AEAT",
     "errorLoadingSignedDocs": "Erro ao carregar documentos assinados",
-    "errorDownloading": "Erro ao descarregar o documento"
+    "errorDownloading": "Erro ao descarregar o documento",
+    "loading": "A carregar..."
   },
   "landing": {
     "features": "Funcionalidades",
@@ -2099,7 +2135,9 @@
     "mutualRecognition": "Reconhecimento Mutuo",
     "customsSimplifications": "Simplificacoes Aduaneiras",
     "securityProtection": "Seguranca e Protecao",
-    "complete": "Completo (OEAC + OEAS)"
+    "complete": "Completo (OEAC + OEAS)",
+    "newApplication": "Novo Pedido",
+    "newApplicationOEA": "Novo Pedido OEA"
   },
   "regulations": {
     "title": "Pesquisa de Regulamentacao",
@@ -2236,7 +2274,11 @@
     "entryCustomsCode": "Codigo Alfandega de Entrada",
     "durationMonths": "Duracao (meses)",
     "addGoods": "+ Adicionar mercadoria",
-    "createRegime": "Criar Regime"
+    "createRegime": "Criar Regime",
+    "aiAdvisorTitle": "Consultor de Regimes IA",
+    "aiAdvisorSubtitle": "A LUCI recomenda o regime aduaneiro mais favorável",
+    "yieldValidatorTitle": "Validador de Rendimento",
+    "yieldValidatorSubtitle": "Verifica a taxa de rendimento declarada"
   },
   "certificates": {
     "title": "Certificados Digitais AEAT",
@@ -3234,7 +3276,8 @@
         "f2Name": "Optimizacion continua",
         "f2Desc": "Evalua el rendimiento de cada regla y sugiere ajustes para mejorar su eficacia basandose en los resultados"
       }
-    }
+    },
+    "contextualHelp": "Ajuda contextual"
   },
   "admin": {
     "dashboard": "Dashboard",
@@ -3394,12 +3437,31 @@
     "lastMonth": "Mes passado",
     "thisQuarter": "Este trimestre",
     "thisYear": "Este ano",
-    "errorLoadingDashboard": "Erro ao carregar dashboard"
+    "errorLoadingDashboard": "Erro ao carregar dashboard",
+    "reportsManager": "Gestor de Relatórios",
+    "reportsManagerSubtitle": "Gere e agende relatórios aduaneiros",
+    "generateReport": "Gerar Relatório",
+    "schedule": "Agendar",
+    "selectReportType": "Selecione o tipo de relatório",
+    "searchReports": "Pesquisar relatórios...",
+    "noReports": "Não há relatórios gerados",
+    "noReportsHint": "Gere o primeiro com o botão Gerar Relatório",
+    "reportGenerated": "Relatório gerado",
+    "errorGeneratingReport": "Não foi possível gerar o relatório",
+    "errorLoadingReports": "Não foi possível carregar os relatórios"
   },
   "errorBoundary": {
     "title": "Algo correu mal",
     "description": "Ocorreu um erro inesperado. Por favor, tente recarregar a pagina.",
     "reload": "Recarregar Pagina",
     "goHome": "Ir para o Inicio"
+  },
+  "inspections": {
+    "title": "Inspeções"
+  },
+  "workflows": {
+    "title": "Fluxos de Trabalho",
+    "subtitle": "Automatize tarefas aduaneiras repetitivas",
+    "newWorkflow": "Novo Fluxo"
   }
 }

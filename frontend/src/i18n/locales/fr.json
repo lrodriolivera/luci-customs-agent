@@ -73,7 +73,11 @@
     "from": "Du",
     "to": "Au",
     "total": "Total",
-    "subtotal": "Sous-total"
+    "subtotal": "Sous-total",
+    "action": "Action",
+    "allTypes": "Tous les types",
+    "refresh": "Actualiser",
+    "target": "Objectif"
   },
   "nav": {
     "skipToContent": "Aller au contenu principal",
@@ -125,7 +129,8 @@
     "logout": "Deconnexion",
     "user": "Utilisateur",
     "admin": "Administrateur",
-    "customsAgent": "Agent en Douane"
+    "customsAgent": "Agent en Douane",
+    "newH1": "+ Nouvelle H1 (DAU)"
   },
   "auth": {
     "login": "Connexion",
@@ -172,7 +177,35 @@
     "passwordUpdated": "Mot de passe mis a jour. Vous pouvez maintenant vous connecter.",
     "resetError": "Erreur lors de la reinitialisation du mot de passe",
     "tokenInvalid": "Jeton invalide ou expire. Demandez un nouveau lien.",
-    "copyright": "STRIX AI"
+    "copyright": "STRIX AI",
+    "subtitle": "Agent en douane intelligent",
+    "company": "Entreprise",
+    "registerButton": "Créer un compte",
+    "registering": "Création du compte...",
+    "registerSuccess": "Compte créé avec succès",
+    "registerError": "Impossible de créer le compte",
+    "registerLink": "Créer un compte",
+    "loginLink": "Se connecter",
+    "verifyTitle": "Vérifiez votre e-mail",
+    "verifySubtitle": "Nous avons envoyé un code à 6 chiffres à",
+    "verificationCode": "Code de vérification",
+    "verifyButton": "Vérifier",
+    "verifying": "Vérification...",
+    "codeLength": "Le code doit comporter 6 chiffres",
+    "resendCode": "Renvoyer le code",
+    "resending": "Envoi en cours...",
+    "codeResent": "Code renvoyé",
+    "forgotSubtitle": "Nous vous enverrons un lien pour réinitialiser votre mot de passe",
+    "sendResetLink": "Envoyer le lien",
+    "forgotSuccess": "Si l'adresse existe, vous recevrez un lien de réinitialisation",
+    "forgotError": "Impossible d’envoyer le lien de réinitialisation",
+    "resetSuccess": "Mot de passe réinitialisé",
+    "resetting": "Réinitialisation...",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "newPasswordTitle": "Définissez un nouveau mot de passe",
+    "newPasswordSubtitle": "Votre compte doit changer de mot de passe avant de continuer",
+    "savePassword": "Enregistrer le mot de passe",
+    "saving": "Enregistrement..."
   },
   "dashboard": {
     "goodMorning": "Bonjour",
@@ -459,7 +492,7 @@
     "nifPlaceholder": "B12345678",
     "eoriPlaceholder": "ES + NIF",
     "descriptionPlaceholder": "Describa el producto con detalle: material, funcion, uso...",
-    "statusDeclarationDraft": "Declaration Brouillon",
+    "statusDeclarationDraft": "Brouillon de declaration",
     "statusLevante": "Mainlevee"
   },
   "classification": {
@@ -617,7 +650,9 @@
     "infoOf": "Information de",
     "foundInChapter": "{{count}} partidas encontradas en Cap. {{chapter}}",
     "infoFoundSource": "Information encontrada (fuente: {{source}})",
-    "explainAbout": "Explicame sobre"
+    "explainAbout": "Explicame sobre",
+    "found": "trouvé",
+    "foundPlural": "trouvés"
   },
   "declarations": {
     "title": "Generateur de Declarations",
@@ -1730,7 +1765,8 @@
     "docsInfoReceipts": "Los recibos de pago son comprobantes de los derechos e impuestos abonados",
     "docsInfoVerify": "Para documents con firma digital, verifique su autenticidad en la sede electronica de la AEAT",
     "errorLoadingSignedDocs": "Erreur lors de cargar documents firmados",
-    "errorDownloading": "Erreur lors de descargar el documento"
+    "errorDownloading": "Erreur lors de descargar el documento",
+    "loading": "Chargement..."
   },
   "landing": {
     "features": "Fonctionnalites",
@@ -2097,7 +2133,9 @@
     "mutualRecognition": "Reconnaissance Mutuelle",
     "customsSimplifications": "Simplifications Douanieres",
     "securityProtection": "Surete et Securite",
-    "complete": "Complet (OEAC + OEAS)"
+    "complete": "Complet (OEAC + OEAS)",
+    "newApplication": "Nouvelle Demande",
+    "newApplicationOEA": "Nouvelle Demande OEA"
   },
   "regulations": {
     "title": "Recherche de Reglementation",
@@ -2234,7 +2272,11 @@
     "entryCustomsCode": "Code Douane d'Entree",
     "durationMonths": "Duree (mois)",
     "addGoods": "+ Ajouter une marchandise",
-    "createRegime": "Creer le Regime"
+    "createRegime": "Creer le Regime",
+    "aiAdvisorTitle": "Conseiller de Régimes IA",
+    "aiAdvisorSubtitle": "LUCI recommande le régime douanier le plus favorable",
+    "yieldValidatorTitle": "Validateur de Rendement",
+    "yieldValidatorSubtitle": "Vérifie le taux de rendement déclaré"
   },
   "certificates": {
     "title": "Certificats Numeriques AEAT",
@@ -3232,7 +3274,8 @@
         "f2Name": "Optimizacion continua",
         "f2Desc": "Evalua el rendimiento de cada regla y sugiere ajustes para mejorar su eficacia basandose en los resultados"
       }
-    }
+    },
+    "contextualHelp": "Aide contextuelle"
   },
   "admin": {
     "dashboard": "Tableau de bord",
@@ -3354,12 +3397,69 @@
     "trends": "Tendances",
     "executiveReport": "Rapport Executif",
     "kpiAnalysis": "Analyse KPI",
-    "fullAnalysis": "Analyse Complete"
+    "fullAnalysis": "Analyse Complete",
+    "title": "Analytics et BI",
+    "subtitle": "Tableau de bord d'intelligence d'affaires et analyses avancees",
+    "advancedAnalytics": "Analyses avancees avec LUCI",
+    "aiAnalysisCenter": "Centre d'Analyse IA",
+    "analyzingWithAI": "Analyse avec IA...",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "last7Days": "7 derniers jours",
+    "last30Days": "30 derniers jours",
+    "thisMonth": "Ce mois",
+    "lastMonth": "Mois dernier",
+    "thisQuarter": "Ce trimestre",
+    "thisYear": "Cette annee",
+    "keyMetrics": "Metriques Cles",
+    "luciSummary": "Resume LUCI",
+    "mainInsights": "Insights Principaux",
+    "recommendations": "Recommandations",
+    "recommendedActions": "Actions Recommandees",
+    "strategicRecommendations": "Recommandations Strategiques",
+    "improvementActions": "Actions d'Amelioration",
+    "suggestedAction": "Action suggeree",
+    "attentionAreas": "Zones d'Attention",
+    "periodAchievements": "Realisations de la Periode",
+    "predictions": "Predictions",
+    "confidence": "Confiance",
+    "expected": "Attendu",
+    "actual": "Actuel",
+    "deviation": "Deviation",
+    "kpiDeviations": "Deviations des KPI",
+    "rootCauses": "Causes Racines",
+    "expectedImpact": "Impact attendu",
+    "seasonalPatterns": "Modeles Saisonniers",
+    "peakPeriods": "Periodes de pointe",
+    "trendAlerts": "Alertes de Tendance",
+    "criticalItems": "Elements Critiques",
+    "score": "Score",
+    "fullLuciAnalysis": "Analyse Complete LUCI",
+    "errorLoadingDashboard": "Erreur de chargement du tableau de bord",
+    "reportsManager": "Gestionnaire de Rapports",
+    "reportsManagerSubtitle": "Générez et planifiez des rapports douaniers",
+    "generateReport": "Générer un Rapport",
+    "schedule": "Planifier",
+    "selectReportType": "Sélectionnez le type de rapport",
+    "searchReports": "Rechercher des rapports...",
+    "noReports": "Aucun rapport généré",
+    "noReportsHint": "Générez le premier avec le bouton Générer un Rapport",
+    "reportGenerated": "Rapport généré",
+    "errorGeneratingReport": "Impossible de générer le rapport",
+    "errorLoadingReports": "Impossible de charger les rapports"
   },
   "errorBoundary": {
     "title": "Quelque chose s'est mal passe",
     "description": "Une erreur inattendue s'est produite. Por favor, essayez de recharger la pagina.",
     "reload": "Recharger la page",
     "goHome": "Aller a l'accueil"
+  },
+  "inspections": {
+    "title": "Inspections"
+  },
+  "workflows": {
+    "title": "Flux de Travail",
+    "subtitle": "Automatisez les tâches douanières répétitives",
+    "newWorkflow": "Nouveau Flux"
   }
 }

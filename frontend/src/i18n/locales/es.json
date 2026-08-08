@@ -73,7 +73,11 @@
     "from": "Desde",
     "to": "Hasta",
     "total": "Total",
-    "subtotal": "Subtotal"
+    "subtotal": "Subtotal",
+    "action": "Acción",
+    "allTypes": "Todos los tipos",
+    "refresh": "Actualizar",
+    "target": "Objetivo"
   },
   "nav": {
     "skipToContent": "Saltar al contenido principal",
@@ -173,7 +177,35 @@
     "passwordUpdated": "Contrasena actualizada. Ya puedes iniciar sesion.",
     "resetError": "Error al restablecer la contrasena",
     "tokenInvalid": "Token invalido o expirado. Solicita un nuevo enlace.",
-    "copyright": "STRIX AI"
+    "copyright": "STRIX AI",
+    "subtitle": "Agente aduanero inteligente",
+    "company": "Empresa",
+    "registerButton": "Crear cuenta",
+    "registering": "Creando cuenta...",
+    "registerSuccess": "Cuenta creada correctamente",
+    "registerError": "No se pudo crear la cuenta",
+    "registerLink": "Crear una cuenta",
+    "loginLink": "Iniciar sesión",
+    "verifyTitle": "Verifique su correo",
+    "verifySubtitle": "Hemos enviado un código de 6 dígitos a",
+    "verificationCode": "Código de verificación",
+    "verifyButton": "Verificar",
+    "verifying": "Verificando...",
+    "codeLength": "El código debe tener 6 dígitos",
+    "resendCode": "Reenviar código",
+    "resending": "Reenviando...",
+    "codeResent": "Código reenviado",
+    "forgotSubtitle": "Le enviaremos un enlace para restablecer su contraseña",
+    "sendResetLink": "Enviar enlace",
+    "forgotSuccess": "Si el correo existe, recibirá un enlace de restablecimiento",
+    "forgotError": "No se pudo enviar el enlace de restablecimiento",
+    "resetSuccess": "Contraseña restablecida",
+    "resetting": "Restableciendo...",
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "newPasswordTitle": "Establezca una contraseña nueva",
+    "newPasswordSubtitle": "Su cuenta requiere cambiar la contraseña antes de continuar",
+    "savePassword": "Guardar contraseña",
+    "saving": "Guardando..."
   },
   "dashboard": {
     "goodMorning": "Buenos dias",
@@ -251,7 +283,7 @@
     "statusDocsValidated": "Docs Validados",
     "statusDeclarationReady": "Listo Declaracion",
     "statusSubmitted": "Presentada",
-    "statusDeclarationDraft": "Declaracion Borrador",
+    "statusDeclarationDraft": "Borrador de declaracion",
     "statusLevante": "Levante",
     "statusYellowChannel": "Canal Amarillo",
     "statusCleared": "Despachado",
@@ -618,7 +650,9 @@
     "infoOf": "Informacion de",
     "foundInChapter": "{{count}} partidas encontradas en Cap. {{chapter}}",
     "infoFoundSource": "Informacion encontrada (fuente: {{source}})",
-    "explainAbout": "Explicame sobre"
+    "explainAbout": "Explicame sobre",
+    "found": "encontrado",
+    "foundPlural": "encontrados"
   },
   "declarations": {
     "title": "Generador de Declaraciones",
@@ -1731,7 +1765,8 @@
     "docsInfoReceipts": "Los recibos de pago son comprobantes de los derechos e impuestos abonados",
     "docsInfoVerify": "Para documentos con firma digital, verifique su autenticidad en la sede electronica de la AEAT",
     "errorLoadingSignedDocs": "Error al cargar documentos firmados",
-    "errorDownloading": "Error al descargar el documento"
+    "errorDownloading": "Error al descargar el documento",
+    "loading": "Cargando..."
   },
   "landing": {
     "features": "Funciones",
@@ -2243,7 +2278,11 @@
     "entryCustomsCode": "Codigo Aduana Entrada",
     "durationMonths": "Duracion (meses)",
     "addGoods": "+ Anadir mercancia",
-    "createRegime": "Crear Regimen"
+    "createRegime": "Crear Regimen",
+    "aiAdvisorTitle": "Asesor de Regímenes IA",
+    "aiAdvisorSubtitle": "LUCI recomienda el régimen aduanero más favorable",
+    "yieldValidatorTitle": "Validador de Rendimiento",
+    "yieldValidatorSubtitle": "Comprueba el coeficiente de rendimiento declarado"
   },
   "certificates": {
     "title": "Certificados Digitales AEAT",
@@ -3241,7 +3280,8 @@
         "f2Name": "Optimizacion continua",
         "f2Desc": "Evalua el rendimiento de cada regla y sugiere ajustes para mejorar su eficacia basandose en los resultados"
       }
-    }
+    },
+    "contextualHelp": "Ayuda contextual"
   },
   "admin": {
     "dashboard": "Dashboard",
@@ -3363,6 +3403,63 @@
     "trends": "Tendencias",
     "executiveReport": "Reporte Ejecutivo",
     "kpiAnalysis": "KPI Analysis",
-    "fullAnalysis": "Analisis Completo"
+    "fullAnalysis": "Analisis Completo",
+    "title": "Analítica Avanzada",
+    "subtitle": "Métricas, KPIs y predicción con IA",
+    "advancedAnalytics": "Analítica Avanzada",
+    "aiAnalysisCenter": "Centro de Análisis IA",
+    "analyzingWithAI": "Analizando con IA...",
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "last7Days": "Últimos 7 días",
+    "last30Days": "Últimos 30 días",
+    "thisMonth": "Este mes",
+    "lastMonth": "Mes anterior",
+    "thisQuarter": "Este trimestre",
+    "thisYear": "Este año",
+    "keyMetrics": "Métricas Clave",
+    "luciSummary": "Resumen de LUCI",
+    "mainInsights": "Hallazgos Principales",
+    "recommendations": "Recomendaciones",
+    "recommendedActions": "Acciones Recomendadas",
+    "strategicRecommendations": "Recomendaciones Estratégicas",
+    "improvementActions": "Acciones de Mejora",
+    "suggestedAction": "Acción Sugerida",
+    "attentionAreas": "Áreas de Atención",
+    "periodAchievements": "Logros del Período",
+    "predictions": "Predicciones",
+    "confidence": "Confianza",
+    "expected": "Previsto",
+    "actual": "Real",
+    "deviation": "Desviación",
+    "kpiDeviations": "Desviaciones de KPI",
+    "rootCauses": "Causas Raíz",
+    "expectedImpact": "Impacto Esperado",
+    "seasonalPatterns": "Patrones Estacionales",
+    "peakPeriods": "Períodos Punta",
+    "trendAlerts": "Alertas de Tendencia",
+    "criticalItems": "Elementos Críticos",
+    "score": "Puntuación",
+    "fullLuciAnalysis": "Análisis completo de LUCI",
+    "errorLoadingDashboard": "No se pudo cargar el panel de analítica",
+    "reportsManager": "Gestor de Informes",
+    "reportsManagerSubtitle": "Genere y programe informes aduaneros",
+    "generateReport": "Generar Informe",
+    "schedule": "Programar",
+    "selectReportType": "Seleccione el tipo de informe",
+    "searchReports": "Buscar informes...",
+    "noReports": "No hay informes generados",
+    "noReportsHint": "Genere el primero con el botón Generar Informe",
+    "reportGenerated": "Informe generado",
+    "errorGeneratingReport": "No se pudo generar el informe",
+    "errorLoadingReports": "No se pudieron cargar los informes"
+  },
+  "inspections": {
+    "title": "Inspecciones"
+  },
+  "workflows": {
+    "title": "Flujos de Trabajo",
+    "subtitle": "Automatice tareas aduaneras repetitivas",
+    "newWorkflow": "Nuevo Flujo"
   }
 }

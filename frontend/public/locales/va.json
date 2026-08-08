@@ -73,7 +73,11 @@
     "from": "Des de",
     "to": "Fins a",
     "total": "Total",
-    "subtotal": "Subtotal"
+    "subtotal": "Subtotal",
+    "action": "Acció",
+    "allTypes": "Tots els tipus",
+    "refresh": "Actualitzar",
+    "target": "Objectiu"
   },
   "nav": {
     "skipToContent": "Saltar al contingut principal",
@@ -127,7 +131,8 @@
     "admin": "Administrador",
     "customsAgent": "Agent Duaner",
     "help": "Ajuda",
-    "userManual": "Manual d'usuari"
+    "userManual": "Manual d'usuari",
+    "newH1": "+ Nova H1 (DUA)"
   },
   "auth": {
     "login": "Iniciar Sessio",
@@ -174,7 +179,35 @@
     "passwordUpdated": "Contrasenya actualitzada. Ja pots iniciar sessio.",
     "resetError": "Error en restablir la contrasenya",
     "tokenInvalid": "Token invalid o expirat. Sol·licita un nou enllac.",
-    "copyright": "STRIX AI"
+    "copyright": "STRIX AI",
+    "subtitle": "Agent duaner intel·ligent",
+    "company": "Empresa",
+    "registerButton": "Crear compte",
+    "registering": "Creant compte...",
+    "registerSuccess": "Compte creat correctament",
+    "registerError": "No s'ha pogut crear el compte",
+    "registerLink": "Crear un compte",
+    "loginLink": "Iniciar sessió",
+    "verifyTitle": "Verifiqueu el vostre correu",
+    "verifySubtitle": "Hem enviat un codi de 6 dígits a",
+    "verificationCode": "Codi de verificació",
+    "verifyButton": "Verificar",
+    "verifying": "Verificant...",
+    "codeLength": "El codi ha de tindre 6 dígits",
+    "resendCode": "Reenviar codi",
+    "resending": "Reenviant...",
+    "codeResent": "Codi reenviat",
+    "forgotSubtitle": "Us enviarem un enllaç per restablir la contrasenya",
+    "sendResetLink": "Enviar enllaç",
+    "forgotSuccess": "Si el correu existix, rebreu un enllaç de restabliment",
+    "forgotError": "No s'ha pogut enviar l'enllaç de restabliment",
+    "resetSuccess": "Contrasenya restablida",
+    "resetting": "Restablint...",
+    "passwordMismatch": "Les contrasenyes no coincidixen",
+    "newPasswordTitle": "Establiu una contrasenya nova",
+    "newPasswordSubtitle": "El vostre compte ha de canviar la contrasenya abans de continuar",
+    "savePassword": "Guardar contrasenya",
+    "saving": "Guardant..."
   },
   "dashboard": {
     "goodMorning": "Bon dia",
@@ -619,7 +652,9 @@
     "infoOf": "Informacio de",
     "foundInChapter": "{{count}} partides trobades en Cap. {{chapter}}",
     "infoFoundSource": "Informacio trobada (font: {{source}})",
-    "explainAbout": "Explica'm sobre"
+    "explainAbout": "Explica'm sobre",
+    "found": "trobat",
+    "foundPlural": "trobats"
   },
   "declarations": {
     "title": "Generador de Declaracions",
@@ -1732,7 +1767,8 @@
     "docsInfoReceipts": "Els rebuts de pagament son comprovants dels drets i impostos abonats",
     "docsInfoVerify": "Per a documents amb firma digital, verifique la seua autenticitat en la seu electronica de l'AEAT",
     "errorLoadingSignedDocs": "Error en carregar documents firmats",
-    "errorDownloading": "Error en descarregar el document"
+    "errorDownloading": "Error en descarregar el document",
+    "loading": "Carregant..."
   },
   "landing": {
     "features": "Funcions",
@@ -2099,7 +2135,9 @@
     "mutualRecognition": "Reconeixement Mutu",
     "customsSimplifications": "Simplificacions Duaneres",
     "securityProtection": "Seguretat i Proteccio",
-    "complete": "Complet (OEAC + OEAS)"
+    "complete": "Complet (OEAC + OEAS)",
+    "newApplication": "Nova Sol·licitud",
+    "newApplicationOEA": "Nova Sol·licitud OEA"
   },
   "regulations": {
     "title": "Buscador de Normativa",
@@ -2236,7 +2274,11 @@
     "entryCustomsCode": "Codi Duana Entrada",
     "durationMonths": "Duracio (mesos)",
     "addGoods": "+ Afegir mercaderia",
-    "createRegime": "Crear Regim"
+    "createRegime": "Crear Regim",
+    "aiAdvisorTitle": "Assessor de Règims IA",
+    "aiAdvisorSubtitle": "LUCI recomana el règim duaner més favorable",
+    "yieldValidatorTitle": "Validador de Rendiment",
+    "yieldValidatorSubtitle": "Comprova el coeficient de rendiment declarat"
   },
   "certificates": {
     "title": "Certificats Digitals AEAT",
@@ -3234,7 +3276,8 @@
         "f2Name": "Optimitzacio continua",
         "f2Desc": "Avalua el rendiment de cada regla i suggereix ajustos per millorar la seva eficacia basant-se en els resultats"
       }
-    }
+    },
+    "contextualHelp": "Ajuda contextual"
   },
   "admin": {
     "dashboard": "Dashboard",
@@ -3394,12 +3437,31 @@
     "lastMonth": "Mes passat",
     "thisQuarter": "Este trimestre",
     "thisYear": "Este any",
-    "errorLoadingDashboard": "Error carregant el dashboard"
+    "errorLoadingDashboard": "Error carregant el dashboard",
+    "reportsManager": "Gestor d'Informes",
+    "reportsManagerSubtitle": "Genereu i programeu informes duaners",
+    "generateReport": "Generar Informe",
+    "schedule": "Programar",
+    "selectReportType": "Seleccioneu el tipus d'informe",
+    "searchReports": "Buscar informes...",
+    "noReports": "No hi ha informes generats",
+    "noReportsHint": "Genereu el primer amb el botó Generar Informe",
+    "reportGenerated": "Informe generat",
+    "errorGeneratingReport": "No s'ha pogut generar l'informe",
+    "errorLoadingReports": "No s'han pogut carregar els informes"
   },
   "errorBoundary": {
     "description": "S'ha produit un error inesperat. Per favor, torna a carregar la pagina.",
     "goHome": "Anar a l'inici",
     "reload": "Recarregar pagina",
     "title": "Alguna cosa ha eixit malament"
+  },
+  "inspections": {
+    "title": "Inspeccions"
+  },
+  "workflows": {
+    "title": "Fluxos de Treball",
+    "subtitle": "Automatitzeu tasques duaneres repetitives",
+    "newWorkflow": "Nou Flux"
   }
 }

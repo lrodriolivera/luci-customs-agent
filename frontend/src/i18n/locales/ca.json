@@ -73,7 +73,11 @@
     "from": "Des de",
     "to": "Fins a",
     "total": "Total",
-    "subtotal": "Subtotal"
+    "subtotal": "Subtotal",
+    "action": "Acció",
+    "allTypes": "Tots els tipus",
+    "refresh": "Actualitzar",
+    "target": "Objectiu"
   },
   "nav": {
     "skipToContent": "Saltar al contingut principal",
@@ -125,7 +129,8 @@
     "logout": "Tancar Sessio",
     "user": "Usuari",
     "admin": "Administrador",
-    "customsAgent": "Agent Duaner"
+    "customsAgent": "Agent Duaner",
+    "newH1": "+ Nova H1 (DUA)"
   },
   "auth": {
     "login": "Iniciar Sessio",
@@ -172,7 +177,35 @@
     "passwordUpdated": "Contrasenya actualitzada. Ja pots iniciar sessio.",
     "resetError": "Error en restablir la contrasenya",
     "tokenInvalid": "Token invalid o caducat. Sol·licita un nou enllac.",
-    "copyright": "STRIX AI"
+    "copyright": "STRIX AI",
+    "subtitle": "Agent duaner intel·ligent",
+    "company": "Empresa",
+    "registerButton": "Crear compte",
+    "registering": "Creant compte...",
+    "registerSuccess": "Compte creat correctament",
+    "registerError": "No s'ha pogut crear el compte",
+    "registerLink": "Crear un compte",
+    "loginLink": "Iniciar sessió",
+    "verifyTitle": "Verifiqueu el vostre correu",
+    "verifySubtitle": "Hem enviat un codi de 6 dígits a",
+    "verificationCode": "Codi de verificació",
+    "verifyButton": "Verificar",
+    "verifying": "Verificant...",
+    "codeLength": "El codi ha de tenir 6 dígits",
+    "resendCode": "Reenviar codi",
+    "resending": "Reenviant...",
+    "codeResent": "Codi reenviat",
+    "forgotSubtitle": "Us enviarem un enllaç per restablir la contrasenya",
+    "sendResetLink": "Enviar enllaç",
+    "forgotSuccess": "Si el correu existeix, rebreu un enllaç de restabliment",
+    "forgotError": "No s'ha pogut enviar l'enllaç de restabliment",
+    "resetSuccess": "Contrasenya restablerta",
+    "resetting": "Restablint...",
+    "passwordMismatch": "Les contrasenyes no coincideixen",
+    "newPasswordTitle": "Establiu una contrasenya nova",
+    "newPasswordSubtitle": "El vostre compte ha de canviar la contrasenya abans de continuar",
+    "savePassword": "Guardar contrasenya",
+    "saving": "Guardant..."
   },
   "dashboard": {
     "goodMorning": "Bon dia",
@@ -459,7 +492,7 @@
     "nifPlaceholder": "B12345678",
     "eoriPlaceholder": "ES + NIF",
     "descriptionPlaceholder": "Descriviu el producte amb detall: material, funcio, us...",
-    "statusDeclarationDraft": "Declaracio Esborrany",
+    "statusDeclarationDraft": "Esborrany de declaracio",
     "statusLevante": "Aixecament"
   },
   "classification": {
@@ -617,7 +650,9 @@
     "infoOf": "Informacio de",
     "foundInChapter": "{{count}} partides trobades al Cap. {{chapter}}",
     "infoFoundSource": "Informacio trobada (font: {{source}})",
-    "explainAbout": "Explica'm sobre"
+    "explainAbout": "Explica'm sobre",
+    "found": "trobat",
+    "foundPlural": "trobats"
   },
   "declarations": {
     "title": "Generador de Declaracions",
@@ -1730,7 +1765,8 @@
     "docsInfoReceipts": "Els rebuts de pagament son comprovants dels drets i impostos abonats",
     "docsInfoVerify": "Per a documents amb signatura digital, verifiqueu la seva autenticitat a la seu electronica de l'AEAT",
     "errorLoadingSignedDocs": "Error en carregar documents signats",
-    "errorDownloading": "Error en descarregar el document"
+    "errorDownloading": "Error en descarregar el document",
+    "loading": "Carregant..."
   },
   "landing": {
     "features": "Funcions",
@@ -2097,7 +2133,9 @@
     "mutualRecognition": "Reconeixement Mutu",
     "customsSimplifications": "Simplificacions Duaneres",
     "securityProtection": "Seguretat i Proteccio",
-    "complete": "Complet (OEAC + OEAS)"
+    "complete": "Complet (OEAC + OEAS)",
+    "newApplication": "Nova Sol·licitud",
+    "newApplicationOEA": "Nova Sol·licitud OEA"
   },
   "regulations": {
     "title": "Cercador de Normativa",
@@ -2234,7 +2272,11 @@
     "entryCustomsCode": "Codi Duana Entrada",
     "durationMonths": "Durada (mesos)",
     "addGoods": "+ Afegir mercaderia",
-    "createRegime": "Crear Regim"
+    "createRegime": "Crear Regim",
+    "aiAdvisorTitle": "Assessor de Règims IA",
+    "aiAdvisorSubtitle": "LUCI recomana el règim duaner més favorable",
+    "yieldValidatorTitle": "Validador de Rendiment",
+    "yieldValidatorSubtitle": "Comprova el coeficient de rendiment declarat"
   },
   "certificates": {
     "title": "Certificats Digitals AEAT",
@@ -3232,7 +3274,8 @@
         "f2Name": "Optimitzacio continua",
         "f2Desc": "Avalua el rendiment de cada regla i suggereix ajustos per millorar la seva eficacia basant-se en els resultats"
       }
-    }
+    },
+    "contextualHelp": "Ajuda contextual"
   },
   "admin": {
     "dashboard": "Dashboard",
@@ -3354,12 +3397,69 @@
     "trends": "Tendencies",
     "executiveReport": "Informe Executiu",
     "kpiAnalysis": "KPI Analysis",
-    "fullAnalysis": "Analisi Completa"
+    "fullAnalysis": "Analisi Completa",
+    "title": "Analitica i BI",
+    "subtitle": "Tauler d'intel.ligencia de negoci i analisi avancada",
+    "advancedAnalytics": "Analisi avancada amb LUCI",
+    "aiAnalysisCenter": "Centre d'Analisi IA",
+    "analyzingWithAI": "Analitzant amb IA...",
+    "today": "Avui",
+    "yesterday": "Ahir",
+    "last7Days": "Ultims 7 dies",
+    "last30Days": "Ultims 30 dies",
+    "thisMonth": "Aquest mes",
+    "lastMonth": "Mes passat",
+    "thisQuarter": "Aquest trimestre",
+    "thisYear": "Aquest any",
+    "keyMetrics": "Metriques Clau",
+    "luciSummary": "Resum de LUCI",
+    "mainInsights": "Insights Principals",
+    "recommendations": "Recomanacions",
+    "recommendedActions": "Accions Recomanades",
+    "strategicRecommendations": "Recomanacions Estrategiques",
+    "improvementActions": "Accions de Millora",
+    "suggestedAction": "Accio suggerida",
+    "attentionAreas": "Arees d'Atencio",
+    "periodAchievements": "Assoliments del Periode",
+    "predictions": "Prediccions",
+    "confidence": "Confianca",
+    "expected": "Esperat",
+    "actual": "Actual",
+    "deviation": "Desviacio",
+    "kpiDeviations": "Desviacions de KPI",
+    "rootCauses": "Causes Arrel",
+    "expectedImpact": "Impacte esperat",
+    "seasonalPatterns": "Patrons Estacionals",
+    "peakPeriods": "Periodes pic",
+    "trendAlerts": "Alertes de Tendencia",
+    "criticalItems": "Elements Critics",
+    "score": "Puntuacio",
+    "fullLuciAnalysis": "Analisi Completa de LUCI",
+    "errorLoadingDashboard": "Error carregant el dashboard",
+    "reportsManager": "Gestor d'Informes",
+    "reportsManagerSubtitle": "Genereu i programeu informes duaners",
+    "generateReport": "Generar Informe",
+    "schedule": "Programar",
+    "selectReportType": "Seleccioneu el tipus d'informe",
+    "searchReports": "Cercar informes...",
+    "noReports": "No hi ha informes generats",
+    "noReportsHint": "Genereu el primer amb el botó Generar Informe",
+    "reportGenerated": "Informe generat",
+    "errorGeneratingReport": "No s'ha pogut generar l'informe",
+    "errorLoadingReports": "No s'han pogut carregar els informes"
   },
   "errorBoundary": {
     "description": "S'ha produit un error inesperat. Si us plau, torneu a carregar la pagina.",
     "goHome": "Anar a l'inici",
     "reload": "Recarregar pagina",
     "title": "Alguna cosa ha anat malament"
+  },
+  "inspections": {
+    "title": "Inspeccions"
+  },
+  "workflows": {
+    "title": "Fluxos de Treball",
+    "subtitle": "Automatitzeu tasques duaneres repetitives",
+    "newWorkflow": "Nou Flux"
   }
 }
