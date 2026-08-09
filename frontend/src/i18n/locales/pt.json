@@ -1046,7 +1046,8 @@
     "commodityCodeRequired": "Código de mercadoria (TARIC/HS) obrigatório",
     "commodityCodeFormat": "O código de mercadoria deve ter entre 6 e 10 dígitos",
     "arrivalFrom": "Chegada desde",
-    "arrivalTo": "Chegada até"
+    "arrivalTo": "Chegada até",
+    "entryOfficesLoadError": "Nao foi possivel carregar as alfandegas de entrada. Recarregue a pagina."
   },
   "h7": {
     "title": "Declaracoes H7",

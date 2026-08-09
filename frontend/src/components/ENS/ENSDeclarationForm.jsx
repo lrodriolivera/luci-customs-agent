@@ -29,23 +29,12 @@ const getTransportModes = (t) => [
   { value: 'SEA', label: t('ens.maritime'), icon: SeaIcon, color: '#00BCD4', deadline: t('ens.twentyFourHours') }
 ]
 
-// Spanish entry customs offices
-const entryOffices = [
-  { code: 'ES009999', name: 'PRE Pruebas Peninsula', modes: ['SEA', 'ROAD', 'RAIL', 'AIR'] },
-  { code: 'ES009998', name: 'PRE Pruebas Canarias', modes: ['SEA', 'ROAD', 'RAIL', 'AIR'] },
-  { code: 'ES002801', name: 'Algeciras', modes: ['SEA', 'ROAD'] },
-  { code: 'ES000801', name: 'Barcelona', modes: ['SEA', 'ROAD', 'RAIL', 'AIR'] },
-  { code: 'ES002101', name: 'Bilbao', modes: ['SEA', 'ROAD'] },
-  { code: 'ES001501', name: 'Madrid-Barajas', modes: ['AIR', 'ROAD'] },
-  { code: 'ES004601', name: 'Valencia', modes: ['SEA', 'ROAD', 'RAIL'] },
-  { code: 'ES001101', name: 'La Junquera', modes: ['ROAD', 'RAIL'] },
-  { code: 'ES001102', name: 'Irun', modes: ['ROAD', 'RAIL'] },
-  { code: 'ES003501', name: 'Las Palmas', modes: ['SEA', 'AIR'] },
-  { code: 'ES003801', name: 'Tenerife', modes: ['SEA', 'AIR'] },
-  { code: 'ES002901', name: 'Malaga', modes: ['SEA', 'AIR', 'ROAD'] },
-  { code: 'ES004101', name: 'Sevilla', modes: ['SEA', 'ROAD'] },
-  { code: 'ES003001', name: 'Vigo', modes: ['SEA', 'ROAD'] }
-]
+// Las aduanas de entrada se piden a GET /api/ens/entry-offices.
+//
+// Antes estaban aqui a mano y no coincidian con la lista del backend: los
+// mismos codigos designaban aduanas distintas en cada lado (ES003001 era Vigo
+// aqui e Irun alli) y ES009999/ES009998 solo existian en este fichero, asi que
+// la validacion de coherencia modo/aduana del backend no llegaba a dispararse.
 
 // Empty goods item template
 const emptyGoodsItem = {
@@ -139,6 +128,31 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
     // Step 5: Documents
     documents: []
   })
+
+  // Aduanas de entrada: se piden al backend para que las dos partes hablen del
+  // mismo catalogo. Si la peticion falla se deja vacio a proposito: es mas
+  // honesto un desplegable sin opciones que uno con codigos que el backend
+  // rechazaria despues.
+  const [entryOffices, setEntryOffices] = useState([])
+  const [officesError, setOfficesError] = useState(false)
+
+  useEffect(() => {
+    let cancelado = false
+    const cargarOficinas = async () => {
+      try {
+        const response = await ensAPI.getEntryOffices()
+        if (cancelado) return
+        setEntryOffices(response.data?.data || [])
+        setOfficesError(false)
+      } catch (e) {
+        if (cancelado) return
+        setEntryOffices([])
+        setOfficesError(true)
+      }
+    }
+    cargarOficinas()
+    return () => { cancelado = true }
+  }, [])
 
   // Load existing declaration if editing
   useEffect(() => {
@@ -445,8 +459,11 @@ const ENSDeclarationForm = ({ declarationId, onClose, onSuccess }) => {
                     {...params}
                     label={t('ens.entryCustomsLabel')}
                     required
-                    error={!!errors['entryOffice.code']}
-                    helperText={errors['entryOffice.code']}
+                    error={!!errors['entryOffice.code'] || officesError}
+                    helperText={
+                      errors['entryOffice.code'] ||
+                      (officesError ? t('ens.entryOfficesLoadError') : '')
+                    }
                   />
                 )}
               />

@@ -15,6 +15,8 @@ const ensGenerator = require('./forms/ensGenerator');
 const aeatSubmitService = require('./aeat/aeatSubmitService');
 const ics2Service = require('./ics2/ics2Service');
 const logger = require('../config/logger');
+// Catalogo unico de aduanas de entrada, compartido con el frontend.
+const { getEntryOffice, listEntryOffices } = require('../config/entryOffices');
 
 /**
  * Carga una declaracion ENS comprobando que pertenece a quien la pide.
@@ -44,19 +46,9 @@ const ENS_CONFIG = {
     SEA: 24    // 24 horas antes
   },
 
-  // Aduanas de entrada en Espana (principales)
-  entryOffices: {
-    'ES002801': { name: 'Algeciras', type: 'SEA' },
-    'ES002802': { name: 'Barcelona', type: 'SEA' },
-    'ES002803': { name: 'Valencia', type: 'SEA' },
-    'ES002804': { name: 'Bilbao', type: 'SEA' },
-    'ES004600': { name: 'Madrid Barajas', type: 'AIR' },
-    'ES000801': { name: 'Barcelona El Prat', type: 'AIR' },
-    'ES003001': { name: 'Irun', type: 'ROAD' },
-    'ES001701': { name: 'La Junquera', type: 'ROAD' },
-    'ES003201': { name: 'Canfranc', type: 'RAIL' },
-    'ES001702': { name: 'Portbou', type: 'RAIL' }
-  },
+  // Las aduanas de entrada ya NO viven aqui: estaban duplicadas en el
+  // formulario del frontend y en aeatConfig, con los mismos codigos
+  // significando aduanas distintas. Fuente unica: config/entryOffices.js.
 
   // Paises con riesgo elevado
   highRiskCountries: ['AF', 'IQ', 'IR', 'KP', 'LY', 'SY', 'YE', 'SO', 'VE'],
@@ -192,13 +184,24 @@ class ENSService {
       });
     }
 
-    // Validar aduana de entrada
+    // Validar aduana de entrada contra el catalogo unico.
+    //
+    // Antes se buscaba en una lista interna que no coincidia con la del
+    // formulario: si el codigo no estaba (caso de ES009999, la de PRE), `office`
+    // salia undefined y esta comprobacion se saltaba en silencio. Ahora un
+    // codigo desconocido es un error explicito.
     if (data.entryOffice?.code) {
-      const office = ENS_CONFIG.entryOffices[data.entryOffice.code];
-      if (office && data.transportMode && office.type !== data.transportMode) {
+      const office = getEntryOffice(data.entryOffice.code);
+      if (!office) {
+        errors.push({
+          field: 'entryOffice.code',
+          code: 'ENS_UNKNOWN_ENTRY_OFFICE',
+          message: `Aduana de entrada ${data.entryOffice.code} no existe en el catalogo`
+        });
+      } else if (data.transportMode && !office.modes.includes(data.transportMode)) {
         suggestions.push({
           field: 'entryOffice.code',
-          message: `Aduana ${office.name} es tipo ${office.type}, pero transporte es ${data.transportMode}`
+          message: `La aduana ${office.name} (${office.code}) admite ${office.modes.join('/')}, pero el transporte es ${data.transportMode}`
         });
       }
     }
@@ -709,16 +712,14 @@ class ENSService {
   }
 
   /**
-   * Obtener aduanas de entrada disponibles
+   * Obtener aduanas de entrada disponibles.
+   *
+   * Lee el catalogo unico de config/entryOffices.js. Antes tenia su propia
+   * lista de 10 aduanas mientras el formulario ofrecia otra de 15, con codigos
+   * que significaban cosas distintas en cada lado.
    */
   getEntryOffices(transportMode = null) {
-    if (transportMode) {
-      return Object.entries(ENS_CONFIG.entryOffices)
-        .filter(([_, office]) => office.type === transportMode)
-        .map(([code, office]) => ({ code, ...office }));
-    }
-    return Object.entries(ENS_CONFIG.entryOffices)
-      .map(([code, office]) => ({ code, ...office }));
+    return listEntryOffices(transportMode || undefined);
   }
 
   /**

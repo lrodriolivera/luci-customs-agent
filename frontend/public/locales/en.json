@@ -283,8 +283,6 @@
     "statusDocsValidated": "Docs Validated",
     "statusDeclarationReady": "Declaration Ready",
     "statusSubmitted": "Submitted",
-    "statusDeclarationDraft": "Declaration Draft",
-    "statusLevante": "Released",
     "statusYellowChannel": "Yellow Channel",
     "statusCleared": "Cleared",
     "statusGreenChannel": "Green Channel",
@@ -493,7 +491,9 @@
     "units": "Units",
     "nifPlaceholder": "B12345678",
     "eoriPlaceholder": "ES + Tax ID",
-    "descriptionPlaceholder": "Describe the product in detail: material, function, use..."
+    "descriptionPlaceholder": "Describe the product in detail: material, function, use...",
+    "statusDeclarationDraft": "Declaration Draft",
+    "statusLevante": "Released"
   },
   "classification": {
     "title": "TARIC Classification",
@@ -1046,7 +1046,8 @@
     "commodityCodeRequired": "Commodity code (TARIC/HS) is required",
     "commodityCodeFormat": "The commodity code must have between 6 and 10 digits",
     "arrivalFrom": "Arrival from",
-    "arrivalTo": "Arrival to"
+    "arrivalTo": "Arrival to",
+    "entryOfficesLoadError": "Could not load the entry customs offices. Please reload the page."
   },
   "h7": {
     "title": "H7 Declarations",

@@ -13,9 +13,22 @@ vi.mock('../../services/api', () => ({
     create: vi.fn(),
     update: vi.fn(),
     validate: vi.fn(),
-    submit: vi.fn()
+    submit: vi.fn(),
+    getEntryOffices: vi.fn()
   }
 }))
+
+// Las aduanas ya NO estan cableadas en el componente: las pide al backend
+// (config/entryOffices.js). Este fixture reproduce el contrato del endpoint con
+// las aduanas que usan los tests; los `modes` son los del catalogo real.
+const OFICINAS = [
+  { code: 'ES009999', name: 'PRE Pruebas Peninsula', type: 'test', modes: ['SEA', 'ROAD', 'RAIL', 'AIR'], test: true },
+  { code: 'ES009998', name: 'PRE Pruebas Canarias', type: 'test', modes: ['SEA', 'ROAD', 'RAIL', 'AIR'], test: true },
+  { code: 'ES002801', name: 'Barcelona - Puerto', type: 'maritime', modes: ['SEA', 'ROAD'] },
+  { code: 'ES003001', name: 'Algeciras - Puerto', type: 'maritime', modes: ['SEA', 'ROAD'] },
+  { code: 'ES002101', name: 'Madrid - Barajas', type: 'air', modes: ['AIR', 'ROAD'] },
+  { code: 'ES002001', name: 'Irun', type: 'land', modes: ['ROAD', 'RAIL'] }
+]
 
 describe('<ENSDeclarationForm />', () => {
   const mockOnClose = vi.fn()
@@ -36,6 +49,7 @@ describe('<ENSDeclarationForm />', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    ensAPI.getEntryOffices.mockResolvedValue({ data: { success: true, data: OFICINAS } })
   })
 
   test('renderiza el formulario inicial en modo creación (step 0, 4 modos de transporte)', () => {
@@ -92,6 +106,28 @@ describe('<ENSDeclarationForm />', () => {
     // y con getBy sincrono el test es flaky.
     expect(await screen.findByText('ens.editTitle')).toBeInTheDocument()
     consoleErrorSpy.mockRestore()
+  })
+
+  /**
+   * Antes las aduanas estaban cableadas en el componente, asi que el desplegable
+   * nunca podia quedarse vacio. Ahora vienen del backend: si la llamada falla hay
+   * que DECIRLO, no ofrecer una lista vacia como si no hubiera aduanas.
+   */
+  test('si falla la carga de aduanas lo avisa en el campo en lugar de quedarse en blanco', async () => {
+    ensAPI.getEntryOffices.mockRejectedValueOnce(new Error('Network error'))
+    render(<ENSDeclarationForm onClose={mockOnClose} onSuccess={mockOnSuccess} />)
+    expect(await screen.findByText('ens.entryOfficesLoadError')).toBeInTheDocument()
+  })
+
+  test('las aduanas del desplegable vienen del backend, no de una lista cableada', async () => {
+    render(<ENSDeclarationForm onClose={mockOnClose} onSuccess={mockOnSuccess} />)
+    await waitFor(() => expect(ensAPI.getEntryOffices).toHaveBeenCalled())
+    const officeInput = screen.getByRole('combobox', { name: /ens.entryCustomsLabel/ })
+    fireEvent.mouseDown(officeInput)
+    await waitFor(() => {
+      const listbox = document.querySelector('[role="listbox"]')
+      expect(within(listbox).getByText(/ES009999/)).toBeInTheDocument()
+    })
   })
 
   test('click en modo de transporte cambia transportMode y filtra oficinas', async () => {

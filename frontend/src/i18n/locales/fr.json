@@ -1046,7 +1046,8 @@
     "commodityCodeRequired": "Code marchandise (TARIC/HS) obligatoire",
     "commodityCodeFormat": "Le code marchandise doit comporter entre 6 et 10 chiffres",
     "arrivalFrom": "Arrivée à partir du",
-    "arrivalTo": "Arrivée jusqu'au"
+    "arrivalTo": "Arrivée jusqu'au",
+    "entryOfficesLoadError": "Impossible de charger les bureaux de douane d'entree. Rechargez la page."
   },
   "h7": {
     "title": "Declarations H7",

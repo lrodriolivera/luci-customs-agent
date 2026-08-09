@@ -1046,7 +1046,8 @@
     "commodityCodeRequired": "Commodity code (TARIC/HS) is required",
     "commodityCodeFormat": "The commodity code must have between 6 and 10 digits",
     "arrivalFrom": "Arrival from",
-    "arrivalTo": "Arrival to"
+    "arrivalTo": "Arrival to",
+    "entryOfficesLoadError": "Could not load the entry customs offices. Please reload the page."
   },
   "h7": {
     "title": "H7 Declarations",

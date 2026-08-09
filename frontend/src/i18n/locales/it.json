@@ -1046,7 +1046,8 @@
     "commodityCodeRequired": "Codice merce (TARIC/HS) obbligatorio",
     "commodityCodeFormat": "Il codice merce deve avere tra 6 e 10 cifre",
     "arrivalFrom": "Arrivo da",
-    "arrivalTo": "Arrivo a"
+    "arrivalTo": "Arrivo a",
+    "entryOfficesLoadError": "Non e stato possibile caricare le dogane di entrata. Ricarica la pagina."
   },
   "h7": {
     "title": "Dichiarazioni H7",
