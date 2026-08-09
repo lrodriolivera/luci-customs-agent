@@ -928,16 +928,9 @@ describe('cobertura de error paths (lineas 133, 185, 227)', () => {
     expect(typeof r.error).toBe('string');
   });
 
-  test('generateCancellation captura error interno (linea 227)', () => {
-    // Pasar un objeto reason que lance error al intentar ser escapado
-    const badReason = {
-      toString() { throw new Error('Test error in toString'); }
-    };
-    const r = ensGenerator.generateCancellation('MRN-1', badReason);
-
-    expect(r.success).toBe(false);
-    expect(typeof r.error).toBe('string');
-  });
+  // El caso de generateCancellation desaparece con el metodo: era un XML de
+  // anulacion inventado (etiquetado CC328C, el acuse de AEAT) que nadie enviaba.
+  // La anulacion real es el IE314/CC314A -> tests/services/aeat/ie314XmlBuilder.test.js
 });
 
 describe('casos limite y robustez', () => {

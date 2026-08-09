@@ -471,11 +471,43 @@ class ENSService {
       throw new Error(`No se puede anular declaracion en estado ${declaration.status}`);
     }
 
-    // Si ya tiene MRN, necesita anulacion formal
+    // Una sumaria CON MRN esta viva en AEAT: anularla exige presentar el mensaje
+    // de anulacion (IE314/CC314A) y que AEAT lo acepte. Antes se generaba aqui un
+    // CC328C (que es el ACUSE de registro de AEAT, no una anulacion), se guardaba
+    // encima de `generatedXML` y NO se enviaba a nadie: la declaracion quedaba
+    // 'cancelled' en LUCI y viva para Hacienda con su MRN. Verificado el
+    // 9/Ago/2026 sobre la ENS-2026-000025 (MRN real 26ES009999Z0000768).
     if (declaration.mrn) {
-      // Generar XML de anulacion
-      const xmlResult = ensGenerator.generateCancellation(declaration.mrn, reason);
-      declaration.generatedXML = xmlResult.xml;
+      const aeatResult = await aeatSubmitService.submitENSCancellation({
+        mrn: declaration.mrn,
+        reason: reason || 'Anulacion solicitada por el declarante',
+        declarantEORI: declaration.carrier?.eori || process.env.DECLARANTE_EORI || '',
+        declarantName: declaration.carrier?.name || process.env.DECLARANTE_NOMBRE || '',
+        entryOffice: declaration.entryOffice?.code || ''
+      });
+
+      // El XML enviado se guarda APARTE: `generatedXML` es el XML de lo declarado
+      // y sobrescribirlo borraria la constancia de que se declaro. Se guarda
+      // tambien cuando AEAT rechaza, que es cuando hace falta para diagnosticar.
+      declaration.cancellation = {
+        reason: reason || 'Anulacion solicitada por el declarante',
+        requestedAt: new Date(),
+        requestXML: aeatResult.requestXML,
+        aeatCode: aeatResult.code,
+        aeatMessage: aeatResult.error || aeatResult.estado
+      };
+
+      if (!aeatResult.success) {
+        // AEAT no ha anulado nada: la sumaria SIGUE viva y el estado no avanza,
+        // asi que se puede corregir el motivo y reintentar.
+        logger.warn(`[ENS] AEAT rechazo la anulacion: mrn=${declaration.mrn}, code=${aeatResult.code}, error=${aeatResult.error}`);
+        await declaration.save();
+        return {
+          success: false,
+          error: aeatResult.error || `AEAT rechazo la anulacion${aeatResult.code ? ` (${aeatResult.code})` : ''}`,
+          details: aeatResult
+        };
+      }
     }
 
     declaration.status = 'cancelled';
@@ -483,7 +515,8 @@ class ENSService {
       status: 'cancelled',
       timestamp: new Date(),
       user: userId,
-      reason: reason || 'Anulada por usuario'
+      reason: reason || 'Anulada por usuario',
+      aeatCode: declaration.cancellation?.aeatCode
     });
 
     await declaration.save();

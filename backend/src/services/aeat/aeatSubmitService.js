@@ -19,6 +19,7 @@ const { buildH1CancelXML } = require('./h1CancelXmlBuilder');
 const { buildCC007ArrivalXML } = require('./cc007XmlBuilder');
 const { buildCC044UnloadingXML } = require('./cc044XmlBuilder');
 const { buildIE313AmendmentXML } = require('./ie313XmlBuilder');
+const { buildIE314CancelXML } = require('./ie314XmlBuilder');
 const { buildQueryImportXML } = require('./queryXmlBuilder');
 
 // Helper: obtener certificado activo
@@ -647,6 +648,20 @@ async function submitENSAmendment(data) {
   return _sendToAEAT(xml, '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.IE313V5SOAP');
 }
 
+/**
+ * ENS Cancellation (IE314)
+ *
+ * La anulacion de una sumaria no tenia envio: ensService generaba un CC328C
+ * (que es el acuse de registro de AEAT, no una anulacion) y lo guardaba en la
+ * declaracion sin mandarlo a nadie. Para AEAT la sumaria seguia viva con su MRN.
+ */
+async function submitENSCancellation(data) {
+  data.test = process.env.AEAT_ENVIRONMENT !== 'production';
+  const xml = buildIE314CancelXML(data);
+  logger.info(`[AEAT] ENS Cancellation: MRN=${data.mrn}`);
+  return _sendToAEAT(xml, '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.IE314V5SOAP');
+}
+
 module.exports = {
   submitH1,
   submitH7,
@@ -658,5 +673,6 @@ module.exports = {
   cancelH1,
   submitNCTSArrival,
   submitNCTSUnloading,
-  submitENSAmendment
+  submitENSAmendment,
+  submitENSCancellation
 };

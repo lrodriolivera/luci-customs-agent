@@ -189,47 +189,12 @@ class ENSGenerator {
     }
   }
 
-  /**
-   * Generar XML de anulacion (CC328C)
-   */
-  generateCancellation(mrn, reason) {
-    try {
-      const timestamp = new Date().toISOString();
-      const messageId = this._generateMessageId('CAN');
-
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<ie:CC328C xmlns:ie="${this.namespaces.ie}" xmlns:md="${this.namespaces.md}">
-  <md:MessageMetaData>
-    <md:MessageIdentifier>${messageId}</md:MessageIdentifier>
-    <md:MessageType>CC328C</md:MessageType>
-    <md:MessageDateTime>${timestamp}</md:MessageDateTime>
-    <md:MessageSender>LUCI-Customs-Agent</md:MessageSender>
-    <md:MessageRecipient>ES.AEAT.ICS2</md:MessageRecipient>
-    <md:MessageVersion>${this.messageVersion}</md:MessageVersion>
-  </md:MessageMetaData>
-
-  <ie:TransitOperation>
-    <ie:MRN>${mrn}</ie:MRN>
-    <ie:CancellationReason>${this._escapeXML(reason || 'Anulacion solicitada')}</ie:CancellationReason>
-    <ie:CancellationDateTime>${timestamp}</ie:CancellationDateTime>
-  </ie:TransitOperation>
-
-</ie:CC328C>`;
-
-      return {
-        success: true,
-        xml: this._cleanXML(xml),
-        messageId,
-        messageType: 'CC328C'
-      };
-
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
+  // Aqui vivia generateCancellation(mrn, reason): un XML de anulacion inventado
+  // —etiquetado CC328C, que es el ACUSE de registro que emite AEAT, con
+  // MessageSender 'LUCI-Customs-Agent' y MessageRecipient 'ES.AEAT.ICS2'— que
+  // `ensService.cancelDeclaration` guardaba encima de `generatedXML` sin enviarlo
+  // a nadie. La anulacion de una ENS en el canal enswsv5 es el IE314/CC314A:
+  // services/aeat/ie314XmlBuilder.js + aeatSubmitService.submitENSCancellation.
 
   // ============== BUILDERS PRIVADOS ==============
 

@@ -375,7 +375,10 @@ const ENSDeclarationSchema = new mongoose.Schema({
       'arrived',         // Llegada notificada
       'released',        // Levante concedido
       'dnl',            // Do Not Load emitido
-      'cancelled'       // Anulada
+      // No hay 'cancellation_pending': el intercambio del IE314 es sincrono, o
+      // AEAT acepta la anulacion (y el estado pasa a 'cancelled') o la rechaza (y
+      // el estado NO avanza, porque la sumaria sigue viva en la aduana).
+      'cancelled'       // Anulada por AEAT via IE314/CC314A
     ],
     default: 'draft'
   },
@@ -433,6 +436,21 @@ const ENSDeclarationSchema = new mongoose.Schema({
   // modo que se perdia la referencia AEAT resultante de la rectificacion.
   amendmentMRN: String,
   amendedAt: Date,
+
+  // === ANULACION ===
+  // La anulacion de una sumaria ya presentada es un mensaje propio (IE314/CC314A)
+  // que hay que acreditar. Se guarda aparte porque `generatedXML` es el XML de lo
+  // DECLARADO: sobrescribirlo con el de la anulacion (lo que hacia antes
+  // cancelDeclaration con un CC328C) destruye la constancia de que se declaro.
+  cancellation: {
+    reason: String,
+    requestedAt: Date,
+    // XML del IE314 realmente enviado a AEAT: es la prueba de que se pidio la
+    // anulacion, y con lo que se diagnostica un rechazo.
+    requestXML: String,
+    aeatCode: String,
+    aeatMessage: String
+  },
 
   // === DOCUMENTOS ADJUNTOS ===
   // Ficheros que el usuario adjunta en la app (con url/name); NO se declaran a

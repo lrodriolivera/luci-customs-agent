@@ -997,6 +997,38 @@ describe('ENSDeclarationDetail', () => {
       })
     })
 
+    /**
+     * Anular una sumaria con MRN exige que AEAT acepte el IE314. Si lo rechaza, la
+     * declaracion SIGUE viva en la aduana: el motivo tiene que verse y el modal no
+     * puede cerrarse como si la anulacion se hubiera hecho. El backend devuelve
+     * 400 con el motivo en `message`/`error` (ensService lo pone en `error`).
+     */
+    it('muestra el motivo del rechazo de AEAT y no cierra el modal', async () => {
+      const toast = (await import('react-hot-toast')).default
+      const user = userEvent.setup()
+      ensAPI.get.mockResolvedValue({
+        data: { success: true, data: createMockDeclaration({ status: 'accepted' }) }
+      })
+      ensAPI.cancel.mockRejectedValue({
+        response: { data: { success: false, error: 'AEAT rechazo la anulacion (CD917B)' } }
+      })
+      render(<ENSDeclarationDetail />)
+      await screen.findByRole('heading', { name: 'ENS-2026-001' })
+      await user.click(screen.getByRole('button', { name: /ens.cancel/ }))
+      await waitFor(() => {
+        expect(screen.getByText('ens.cancelDeclaration')).toBeInTheDocument()
+      })
+      await user.type(screen.getByLabelText('ens.cancelReasonLabel'), 'Mercancia no embarcada')
+      await user.click(screen.getByRole('button', { name: /ens.cancelButton/ }))
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('AEAT rechazo la anulacion (CD917B)')
+      })
+      // El modal sigue abierto: la sumaria no esta anulada.
+      expect(screen.getByText('ens.cancelDeclaration')).toBeInTheDocument()
+      expect(toast.success).not.toHaveBeenCalled()
+    })
+
     it('closes cancel dialog when clicking Cancel (common.cancel)', async () => {
       const user = userEvent.setup()
       ensAPI.get.mockResolvedValue({

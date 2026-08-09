@@ -8,6 +8,7 @@ const aiService = require('../services/aiService');
 const logger = require('../config/logger');
 const { ensureSameTenant } = require('../utils/tenantGuard');
 const { parseENSRiskMessage } = require('../services/aeat/ensRiskParser');
+const { ROLES, esSuperAdmin } = require('../constants/roles');
 
 /**
  * Listar declaraciones ENS
@@ -329,11 +330,16 @@ exports.cancel = async (req, res) => {
       req.user._id
     );
 
+    // Un rechazo de AEAT no es una anulacion. `ensService` devuelve el motivo en
+    // `error` (no en `errors`), asi que leer solo `errors` dejaba al usuario un
+    // 400 sin explicacion sobre una sumaria que sigue viva en la aduana.
     if (!result.success) {
       return res.status(400).json({
         success: false,
-        message: 'Error al anular declaracion',
-        errors: result.errors
+        message: result.error || 'Error al anular declaracion',
+        error: result.error,
+        errors: result.errors,
+        details: result.details
       });
     }
 
@@ -371,7 +377,10 @@ exports.cancel = async (req, res) => {
  */
 exports.ingestRiskMessage = async (req, res) => {
   try {
-    const esAdmin = ['admin', 'superadmin', 'super_admin'].includes(req.user?.role);
+    // Las variantes del rol de super administrador se reconocen en un unico
+    // sitio (src/constants/roles.js). Enumerarlas aqui a mano reintroducia la
+    // divergencia que ese fichero existe para cerrar.
+    const esAdmin = req.user?.role === ROLES.ADMIN || esSuperAdmin(req.user);
     if (!esAdmin) {
       return res.status(403).json({
         success: false,
@@ -676,6 +685,20 @@ exports.getXML = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'XML no disponible. La declaracion aun no ha sido enviada.'
+      });
+    }
+
+    // Las ENS presentadas antes de que submitToAEAT persistiera `requestXML`
+    // guardaron en este campo la nota de log 'Enviado via aeatSubmitService': 29
+    // bytes que no son un XML. Servirlos con Content-Type application/xml le
+    // entregaba al usuario un ENS_xxx.xml con una frase dentro en lugar de la
+    // prueba de lo declarado. Ese XML no se guardo y no es recuperable: se dice.
+    if (!declaration.generatedXML.trimStart().startsWith('<')) {
+      logger.warn(`[ENS] ${declaration.reference}: generatedXML no es XML (${declaration.generatedXML.length} bytes), no se sirve`);
+      return res.status(404).json({
+        success: false,
+        message: 'El XML de esta declaracion no se conservo al presentarla, asi que no se puede descargar. Las declaraciones presentadas a partir del 8/8/2026 si lo guardan.',
+        mrn: declaration.mrn
       });
     }
 

@@ -882,6 +882,28 @@ describe('operaciones auxiliares', () => {
     expect(endpointLlamado()).toContain('IE313V5SOAP');
   });
 
+  /**
+   * La anulacion de una ENS no tenia envio: ensService generaba un CC328C (que es
+   * el ACUSE de registro de AEAT, no una anulacion) y no lo mandaba a ningun
+   * sitio. La sumaria quedaba 'cancelled' en LUCI y viva en AEAT con su MRN.
+   */
+  test('submitENSCancellation postea el CC314A a IE314', async () => {
+    await submitService.submitENSCancellation({ mrn: '26ES00280100000000', reason: 'Mercancia no embarcada' });
+    expect(endpointLlamado()).toContain('IE314V5SOAP');
+    expect(soapEnviado()).toContain('<MesTypMES20>CC314A</MesTypMES20>');
+    expect(soapEnviado()).toContain('<DocNumHEA5>26ES00280100000000</DocNumHEA5>');
+  });
+
+  test('submitENSCancellation marca el entorno de pruebas salvo en produccion', async () => {
+    await submitService.submitENSCancellation({ mrn: '26ES00280100000000' });
+    expect(soapEnviado()).toContain('<TesIndMES18>1</TesIndMES18>');
+  });
+
+  test('submitENSCancellation devuelve el XML enviado como prueba de lo declarado', async () => {
+    const r = await submitService.submitENSCancellation({ mrn: '26ES00280100000000' });
+    expect(r.requestXML).toContain('CC314A');
+  });
+
   test('queryStatus postea a ConsultaImportacionV2', async () => {
     await submitService.queryStatus('26ES00280100000000');
     expect(endpointLlamado()).toContain('ConsultaImportacionV2SOAP');

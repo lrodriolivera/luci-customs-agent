@@ -140,11 +140,17 @@ const ENSDeclarationDetail = () => {
         toast.success(t('ens.cancelledOk', 'Declaración anulada'))
         loadDeclaration()
       } else {
-        toast.error(response.data.message || t('ens.cancelError', 'Error al anular'))
+        toast.error(response.data.message || response.data.error || t('ens.cancelError', 'Error al anular'))
       }
     } catch (error) {
       console.error('Error cancelling:', error)
-      toast.error(error.response?.data?.message || t('ens.cancelError', 'Error al anular'))
+      // Anular una sumaria con MRN exige que AEAT acepte el IE314. Cuando lo
+      // rechaza, la declaracion SIGUE viva en la aduana y el motivo viaja en
+      // `message` o en `error` (ensService lo devuelve en `error`): leer solo
+      // `message` dejaba un "Error al anular" genérico sobre un rechazo aduanero.
+      // El modal se queda abierto a proposito: la anulacion no se ha producido.
+      const data = error.response?.data
+      toast.error(data?.message || data?.error || t('ens.cancelError', 'Error al anular'))
     } finally {
       setActionLoading(false)
     }

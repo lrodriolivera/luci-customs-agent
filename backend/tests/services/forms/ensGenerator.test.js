@@ -125,17 +125,16 @@ describe('generateArrivalNotification (CC305C)', () => {
   });
 });
 
-describe('generateCancellation (CC328C)', () => {
-  test('genera un CC328C con MRN y razon por defecto', () => {
-    const r = ensGenerator.generateCancellation('MRN-CAN');
-
-    expect(r.messageType).toBe('CC328C');
-    expect(r.xml).toContain('<ie:CancellationReason>Anulacion solicitada</ie:CancellationReason>');
-  });
-
-  test('escapa la razon de anulacion', () => {
-    const r = ensGenerator.generateCancellation('MRN', 'Error <grave>');
-    expect(r.xml).toContain('Error &lt;grave&gt;');
+/**
+ * Aqui se probaba generateCancellation, un "CC328C de anulacion" que no existe:
+ * el CC328C es el acuse de registro que emite AEAT. Se elimino del generador
+ * junto a su unico llamante (ensService.cancelDeclaration, que lo guardaba sin
+ * enviarlo). La anulacion real de una ENS es el IE314/CC314A, cubierta en
+ * tests/services/aeat/ie314XmlBuilder.test.js.
+ */
+describe('anulacion de ENS', () => {
+  test('el generador ya no fabrica XML de anulacion', () => {
+    expect(ensGenerator.generateCancellation).toBeUndefined();
   });
 });
 

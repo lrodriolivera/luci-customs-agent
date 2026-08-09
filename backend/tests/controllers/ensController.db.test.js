@@ -534,6 +534,27 @@ describe('getXML', () => {
     expect(res.send).toHaveBeenCalledWith('<ENS/>');
     expect(res.type).toHaveBeenCalledWith('application/xml');
   });
+
+  /**
+   * Las 8 ENS presentadas antes del fix de submitToAEAT tienen en `generatedXML`
+   * la nota de log 'Enviado via aeatSubmitService' (29 bytes), no un XML: el
+   * endpoint la servia con Content-Type application/xml y el usuario se
+   * descargaba un ENS_xxx.xml con una frase dentro, creyendo tener la prueba de
+   * lo declarado. Ese XML no se guardo y no se puede recuperar; hay que decirlo,
+   * no entregar la nota disfrazada de declaracion.
+   */
+  test('no sirve como XML una nota de log que no es XML', async () => {
+    const d = await sembrarENS(operadorUser);
+    d.generatedXML = 'Enviado via aeatSubmitService';
+    await d.save();
+    const res = mockRes();
+
+    await ensController.getXML(mockReq({ user: operadorUser, params: { id: d._id.toString() } }), res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.send).not.toHaveBeenCalled();
+    expect(res.body.message).toMatch(/no se conserv|no disponible/i);
+  });
 });
 
 // ==================== endpoints IA ====================

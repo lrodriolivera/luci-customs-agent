@@ -72,13 +72,17 @@ describe('preValidate', () => {
     expect(r.errors.some(e => e.code === 'ENS_INVALID_EORI')).toBe(true);
   });
 
-  test('aduana de tipo distinto al transporte -> sugerencia (no error)', () => {
-    // ES004600 es AIR; transporte SEA -> sugerencia de incoherencia.
+  /**
+   * ES002805 (Barcelona - Aeropuerto) admite AIR/ROAD; el transporte es SEA. Antes
+   * se usaba ES004600, que no esta en el catalogo unico, asi que el caso probaba en
+   * realidad la rama de "aduana inexistente" (error) y no la de incoherencia.
+   */
+  test('aduana que no admite el modo de transporte -> sugerencia (no error)', () => {
     const r = ens.preValidate(datosENSValidos({
-      entryOffice: { code: 'ES004600', expectedArrival: enHoras(48) }
+      entryOffice: { code: 'ES002805', expectedArrival: enHoras(48) }
     }));
     expect(r.valid).toBe(true); // sugerencia, no error
-    expect(r.suggestions.some(s => /es tipo AIR/i.test(s.message))).toBe(true);
+    expect(r.suggestions.some(s => /admite AIR/i.test(s.message))).toBe(true);
   });
 
   test('presentacion fuera de plazo (llegada demasiado cercana) -> error de deadline', () => {
@@ -128,17 +132,30 @@ describe('riesgo (superficie)', () => {
 // ==================== helpers puros ====================
 
 describe('helpers de configuracion', () => {
+  /**
+   * El catalogo de aduanas es ahora unico (config/entryOffices.js): el frontend
+   * ofrecia 15 aduanas y el backend solo aceptaba 10, asi que 5 de las que la UI
+   * proponia se rechazaban al enviar. Se cuenta con el catalogo, no con un numero
+   * a mano, para que ampliarlo no rompa el test; lo que se fija es el contrato.
+   */
   test('getEntryOffices sin filtro devuelve todas con su codigo', () => {
+    const { listEntryOffices } = require('../../src/config/entryOffices');
     const all = ens.getEntryOffices();
-    expect(all.length).toBe(10);
+    expect(all.length).toBe(listEntryOffices().length);
     expect(all[0]).toHaveProperty('code');
     expect(all[0]).toHaveProperty('type');
   });
 
+  /**
+   * Filtra por `modes` (los modos que la aduana admite), no por `type` (su
+   * naturaleza: maritime/air/land/inland/test). Un puerto admite tambien camion,
+   * de modo que comparar type === 'SEA' no describia el catalogo.
+   */
   test('getEntryOffices filtra por modo de transporte', () => {
     const sea = ens.getEntryOffices('SEA');
-    expect(sea.length).toBe(4);
-    expect(sea.every(o => o.type === 'SEA')).toBe(true);
+    expect(sea.length).toBeGreaterThan(0);
+    expect(sea.every(o => o.modes.includes('SEA'))).toBe(true);
+    expect(sea.length).toBeLessThan(ens.getEntryOffices().length);
   });
 
   test('getSubmissionDeadlines devuelve los plazos por modo', () => {
@@ -263,7 +280,10 @@ describe('submitToAEAT', () => {
   function datosENSRail(overrides = {}) {
     return datosENSValidos({
       transportMode: 'RAIL',
-      entryOffice: { code: 'ES003201', name: 'Canfranc', expectedArrival: enHoras(48) },
+      // Irun: aduana terrestre con ferrocarril en el catalogo unico. Antes se usaba
+      // ES003201 (Canfranc), que no esta en el censo, asi que createDeclaration la
+      // rechazaba y el beforeEach reventaba con `created.data` undefined.
+      entryOffice: { code: 'ES002001', name: 'Irun', expectedArrival: enHoras(48) },
       transportMeans: { identification: 'TREN-100', identificationType: 'TRAIN_NUMBER', modeAtBorder: '2' },
       ...overrides
     });
@@ -454,18 +474,91 @@ describe('ciclo de vida sobre Mongo real', () => {
     ).rejects.toThrow(/No se puede rectificar/i);
   });
 
-  test('cancelDeclaration anula un draft (sin MRN, sin XML de anulacion)', async () => {
+  /**
+   * Una ENS sin MRN nunca salio de LUCI, asi que no hay nada que anular ante
+   * AEAT: se anula en local y no se envia mensaje.
+   */
+  test('cancelDeclaration anula un draft en local y NO habla con AEAT', async () => {
+    aeatSubmitService.submitENSCancellation = jest.fn();
     const created = await ens.createDeclaration(datosENSValidos(), userId);
     const r = await ens.cancelDeclaration(created.data._id, 'Cliente cancelo', userId);
     expect(r.success).toBe(true);
     expect(r.data.status).toBe('cancelled');
+    expect(aeatSubmitService.submitENSCancellation).not.toHaveBeenCalled();
   });
 
-  test('cancelDeclaration de una con MRN genera XML de anulacion', async () => {
+  /**
+   * El bug verificado el 9/Ago/2026 contra el desplegado: la ENS-2026-000025 con
+   * el MRN real 26ES009999Z0000768 se puso 'cancelled' con el mensaje
+   * "Declaracion ENS anulada" sin que saliera NADA hacia AEAT. Para la
+   * Administracion la sumaria seguia viva con su MRN.
+   */
+  test('cancelDeclaration de una con MRN envia el IE314 a AEAT', async () => {
+    aeatSubmitService.submitENSCancellation = jest.fn().mockResolvedValue({
+      success: true, code: 'CC328C', estado: 'Anulacion registrada', requestXML: '<CC314A/>'
+    });
     const id = await crearAceptada();
+
     const r = await ens.cancelDeclaration(id, 'Error', userId);
+
+    expect(aeatSubmitService.submitENSCancellation).toHaveBeenCalledWith(
+      expect.objectContaining({ mrn: '26ES00000000000001EN', reason: 'Error' })
+    );
     expect(r.data.status).toBe('cancelled');
-    expect(r.data.generatedXML).toBeTruthy(); // XML de anulacion
+    expect(r.data.cancellation.requestXML).toContain('CC314A');
+  });
+
+  /**
+   * `generatedXML` es el XML de lo DECLARADO. Machacarlo con el de la anulacion
+   * (lo que hacia antes con un CC328C generado a mano) borra la constancia de
+   * que se declaro, que es justo lo que hay que conservar tras anular.
+   */
+  test('cancelDeclaration no destruye el XML de lo declarado', async () => {
+    aeatSubmitService.submitENSCancellation = jest.fn().mockResolvedValue({
+      success: true, requestXML: '<CC314A/>'
+    });
+    const id = await crearAceptada();
+    await ENSDeclaration.findByIdAndUpdate(id, { generatedXML: '<CC315A>lo declarado</CC315A>' });
+
+    const r = await ens.cancelDeclaration(id, 'Error', userId);
+
+    expect(r.data.generatedXML).toContain('CC315A');
+    expect(r.data.generatedXML).not.toContain('CC314A');
+  });
+
+  /**
+   * Si AEAT rechaza la anulacion, la sumaria SIGUE viva: darla por anulada en
+   * LUCI es exactamente el fallo que se esta corrigiendo.
+   */
+  test('cancelDeclaration NO anula si AEAT rechaza; deja constancia del rechazo', async () => {
+    aeatSubmitService.submitENSCancellation = jest.fn().mockResolvedValue({
+      success: false, code: 'CD917B', error: 'MRN desconocido', requestXML: '<CC314A/>'
+    });
+    const id = await crearAceptada();
+
+    const r = await ens.cancelDeclaration(id, 'Error', userId);
+
+    expect(r.success).toBe(false);
+    const doc = await ENSDeclaration.findById(id);
+    expect(doc.status).toBe('accepted');
+    expect(doc.status).not.toBe('cancelled');
+    expect(doc.cancellation.aeatCode).toBe('CD917B');
+    expect(doc.cancellation.requestXML).toContain('CC314A');
+  });
+
+  /**
+   * Un fallo de red no es una anulacion. Antes ni se llegaba a la red, pero al
+   * introducir el envio hay que asegurar que la excepcion no deja la
+   * declaracion anulada en local.
+   */
+  test('cancelDeclaration deja la declaracion intacta si el envio a AEAT falla', async () => {
+    aeatSubmitService.submitENSCancellation = jest.fn().mockRejectedValue(new Error('ETIMEDOUT'));
+    const id = await crearAceptada();
+
+    await expect(ens.cancelDeclaration(id, 'Error', userId)).rejects.toThrow(/ETIMEDOUT/);
+
+    const doc = await ENSDeclaration.findById(id);
+    expect(doc.status).toBe('accepted');
   });
 
   test('cancelDeclaration rechaza estados no anulables', async () => {
@@ -589,7 +682,10 @@ describe('processBatch', () => {
     });
     const railData = datosENSValidos({
       transportMode: 'RAIL',
-      entryOffice: { code: 'ES003201', name: 'Canfranc', expectedArrival: enHoras(48) },
+      // Irun: aduana terrestre con ferrocarril en el catalogo unico. Antes se usaba
+      // ES003201 (Canfranc), que no esta en el censo, asi que createDeclaration la
+      // rechazaba y el beforeEach reventaba con `created.data` undefined.
+      entryOffice: { code: 'ES002001', name: 'Irun', expectedArrival: enHoras(48) },
       transportMeans: { identification: 'TREN-1', identificationType: 'TRAIN_NUMBER', modeAtBorder: '2' }
     });
     const r = await ens.processBatch([railData], userId, { autoSubmit: true });
