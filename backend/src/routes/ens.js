@@ -32,6 +32,19 @@ router.post('/ai/predict-rejection', ensController.aiPredictRejection);
 // Procesamiento masivo
 router.post('/batch', ensController.processBatch);
 
+/**
+ * @openapi
+ * /api/ens/risk-message:
+ *   post:
+ *     tags: [declarations]
+ *     summary: Registrar un mensaje de riesgo de AEAT (CC351A/CC324A) sobre una ENS
+ *     description: >
+ *       El CC328A de la presentacion solo acusa el registro; el circuito
+ *       (ACK/HOLD/DNL) llega despues en un mensaje aparte que se ingiere por aqui.
+ *       Solo admin. Debe declararse ANTES de /:id o el router la tomaria por un id.
+ */
+router.post('/risk-message', ensController.ingestRiskMessage);
+
 // Busquedas
 router.get('/search/container/:container', ensController.searchByContainer);
 router.get('/search/bol/:bol', ensController.searchByBOL);

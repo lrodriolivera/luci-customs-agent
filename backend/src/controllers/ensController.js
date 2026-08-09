@@ -7,6 +7,7 @@ const ensService = require('../services/ensService');
 const aiService = require('../services/aiService');
 const logger = require('../config/logger');
 const { ensureSameTenant } = require('../utils/tenantGuard');
+const { parseENSRiskMessage } = require('../services/aeat/ensRiskParser');
 
 /**
  * Listar declaraciones ENS
@@ -349,6 +350,63 @@ exports.cancel = async (req, res) => {
       message: 'Error al anular declaracion ENS',
       error: error.message
     });
+  }
+};
+
+/**
+ * Ingerir un mensaje de RIESGO de AEAT sobre una ENS ya registrada
+ * POST /api/ens/risk-message   body: { xml }
+ *
+ * Este es el llamante que le faltaba a ensService.processRiskResponse(): el
+ * CC328A que se recibe al presentar la ENS solo acusa el REGISTRO, y el circuito
+ * (ACK/HOLD/DNL) llega despues en un mensaje aparte. Sin esta puerta de entrada el
+ * riesgo se quedaba en PENDING para siempre.
+ *
+ * No hay alternativa por consulta: se comprobo en PRE que ConsultaImportacionV2
+ * responde CodigoRespuesta 9 / CodigoError 6020 ("No existe importación con la
+ * referencia solicitada") ante un MRN de ENS, porque es el canal de H1.
+ *
+ * Restringido a admin: es un veredicto de la aduana sobre la carga y la deuda de
+ * un tercero, no algo que deba poder inyectar cualquier operador.
+ */
+exports.ingestRiskMessage = async (req, res) => {
+  try {
+    const esAdmin = ['admin', 'superadmin', 'super_admin'].includes(req.user?.role);
+    if (!esAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Solo un administrador puede registrar un mensaje de riesgo de AEAT'
+      });
+    }
+
+    const { xml } = req.body || {};
+    if (!xml || typeof xml !== 'string') {
+      return res.status(400).json({ success: false, error: 'Falta el xml del mensaje de AEAT' });
+    }
+
+    const parsed = parseENSRiskMessage(xml);
+    if (!parsed.recognised) {
+      logger.warn(`[ENS] Mensaje de riesgo no ingerible: ${parsed.reason}`);
+      return res.status(422).json({ success: false, error: parsed.reason, data: { messageType: parsed.messageType } });
+    }
+
+    const result = await ensService.processRiskResponse(parsed.mrn, parsed.risk);
+    if (!result.success) {
+      // MRN desconocido: no se crea nada, se informa. Un mensaje de AEAT sobre una
+      // ENS que no tenemos es un problema de datos, no una declaracion nueva.
+      return res.status(404).json({ success: false, error: result.error, data: { mrn: parsed.mrn } });
+    }
+
+    logger.info(`[ENS] Riesgo ingerido: mrn=${parsed.mrn}, tipo=${parsed.messageType}, estado=${parsed.risk.status}`);
+    res.json({
+      success: true,
+      message: `Analisis de riesgo registrado (${parsed.risk.status})`,
+      data: { mrn: parsed.mrn, messageType: parsed.messageType, riskAssessment: result.data.riskAssessment, status: result.data.status }
+    });
+
+  } catch (error) {
+    logger.error('Error ingesting ENS risk message:', error);
+    res.status(500).json({ success: false, error: 'Error al registrar el mensaje de riesgo' });
   }
 };
 
