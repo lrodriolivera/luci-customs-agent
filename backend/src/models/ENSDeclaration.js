@@ -11,6 +11,9 @@
  * Normativa: Reglamento (UE) 2019/1896 - ICS2 (Import Control System 2)
  */
 const mongoose = require('mongoose');
+// Contador atomico: el patron countDocuments()+1 reutilizaba referencias vivas
+// tras un borrado (E11000) y repartia el mismo numero en altas concurrentes.
+const { nextReference } = require('../utils/sequence');
 
 // Esquema de direccion
 const AddressSchema = new mongoose.Schema({
@@ -494,10 +497,7 @@ ENSDeclarationSchema.index({ 'riskAssessment.status': 1 });
 ENSDeclarationSchema.pre('save', async function(next) {
   if (!this.reference) {
     const year = new Date().getFullYear();
-    const count = await this.constructor.countDocuments({
-      createdAt: { $gte: new Date(year, 0, 1) }
-    });
-    this.reference = `ENS-${year}-${String(count + 1).padStart(6, '0')}`;
+    this.reference = await nextReference(this.constructor, 'reference', `ENS-${year}`, 6);
   }
 
   // Generar LRN si no existe

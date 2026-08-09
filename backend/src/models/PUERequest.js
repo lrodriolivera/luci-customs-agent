@@ -11,6 +11,9 @@
  * Endpoint AEAT: https://www7.aeat.es/wlpl/AD44-JDIT/EnvioMensajePUE
  */
 const mongoose = require('mongoose');
+// Contador atomico: el patron countDocuments()+1 reutilizaba referencias vivas
+// tras un borrado (E11000) y repartia el mismo numero en altas concurrentes.
+const { nextReference } = require('../utils/sequence');
 
 // Esquema de direccion
 const AddressSchema = new mongoose.Schema({
@@ -713,10 +716,7 @@ PUERequestSchema.index({ 'riiNumbers.raee': 1 });
 PUERequestSchema.pre('save', async function(next) {
   if (!this.reference) {
     const year = new Date().getFullYear();
-    const count = await this.constructor.countDocuments({
-      createdAt: { $gte: new Date(year, 0, 1) }
-    });
-    this.reference = `PUE-${this.pueType}-${year}-${String(count + 1).padStart(6, '0')}`;
+    this.reference = await nextReference(this.constructor, 'reference', `PUE-${this.pueType}-${year}`, 6);
   }
 
   // Calcular totales

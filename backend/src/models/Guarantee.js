@@ -17,6 +17,9 @@
  * - Deuda aduanera potencial
  */
 const mongoose = require('mongoose');
+// Contador atomico: el patron countDocuments()+1 reutilizaba referencias vivas
+// tras un borrado (E11000) y repartia el mismo numero en altas concurrentes.
+const { nextReference } = require('../utils/sequence');
 
 // Esquema de movimiento/consumo de garantia
 const GuaranteeMovementSchema = new mongoose.Schema({
@@ -348,9 +351,6 @@ GuaranteeSchema.index({ 'linkedExpeditions.expedition': 1 });
 GuaranteeSchema.pre('save', async function(next) {
   if (!this.reference) {
     const year = new Date().getFullYear();
-    const count = await this.constructor.countDocuments({
-      createdAt: { $gte: new Date(year, 0, 1) }
-    });
     const typePrefix = {
       'CGU': 'CGU',
       'individual': 'IND',
@@ -359,7 +359,7 @@ GuaranteeSchema.pre('save', async function(next) {
       'insurance': 'SEG',
       'surety': 'FZA'
     }[this.type] || 'GAR';
-    this.reference = `${typePrefix}-${year}-${String(count + 1).padStart(5, '0')}`;
+    this.reference = await nextReference(this.constructor, 'reference', `${typePrefix}-${year}`, 5);
   }
 
   // Calcular disponible

@@ -11,6 +11,9 @@
  * Referencia: Reglamento (UE) 952/2013 - Articulos 210-262
  */
 const mongoose = require('mongoose');
+// Contador atomico: el patron countDocuments()+1 reutilizaba referencias vivas
+// tras un borrado (E11000) y repartia el mismo numero en altas concurrentes.
+const { nextReference } = require('../utils/sequence');
 
 // Esquema de mercancia bajo regimen
 const RegimeGoodsSchema = new mongoose.Schema({
@@ -567,10 +570,6 @@ SpecialRegimeSchema.index({ 'transit.mrn': 1 });
 SpecialRegimeSchema.pre('save', async function(next) {
   if (!this.reference) {
     const year = new Date().getFullYear();
-    const count = await this.constructor.countDocuments({
-      regimeCode: this.regimeCode,
-      createdAt: { $gte: new Date(year, 0, 1) }
-    });
     const prefix = {
       '51': 'IP',   // Inward Processing
       '53': 'TA',   // Temporary Admission
@@ -579,7 +578,7 @@ SpecialRegimeSchema.pre('save', async function(next) {
       'T2': 'T2',
       'TIR': 'TIR'
     }[this.regimeCode] || 'SR';
-    this.reference = `${prefix}-${year}-${String(count + 1).padStart(5, '0')}`;
+    this.reference = await nextReference(this.constructor, 'reference', `${prefix}-${year}`, 5);
   }
 
   // Calcular totales

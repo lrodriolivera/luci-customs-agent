@@ -10,6 +10,9 @@
  */
 
 const mongoose = require('mongoose');
+// Contador atomico: el patron countDocuments()+1 reutilizaba referencias vivas
+// tras un borrado (E11000) y repartia el mismo numero en altas concurrentes.
+const { nextReference } = require('../utils/sequence');
 
 // Schema para participantes en la inspección
 const ParticipantSchema = new mongoose.Schema({
@@ -430,13 +433,7 @@ InspectionSchema.pre('save', async function(next) {
   if (!this.inspectionNumber) {
     const year = new Date().getFullYear();
     const typePrefix = this.inspectionType.substring(0, 3).toUpperCase();
-    const count = await this.constructor.countDocuments({
-      createdAt: {
-        $gte: new Date(year, 0, 1),
-        $lt: new Date(year + 1, 0, 1)
-      }
-    });
-    this.inspectionNumber = `INS-${typePrefix}-${year}-${String(count + 1).padStart(5, '0')}`;
+    this.inspectionNumber = await nextReference(this.constructor, 'inspectionNumber', `INS-${typePrefix}-${year}`, 5);
   }
   next();
 });
