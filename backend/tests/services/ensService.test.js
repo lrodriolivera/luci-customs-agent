@@ -110,55 +110,18 @@ describe('preValidate', () => {
   });
 });
 
-// ==================== simulateRiskAssessment (Math.random fijado) ====================
+// ==================== riesgo: solo AEAT lo determina ====================
 
-describe('simulateRiskAssessment', () => {
-  let randomSpy;
-  afterEach(() => randomSpy && randomSpy.mockRestore());
-
-  test('riesgo bajo -> ACK', () => {
-    randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.9); // no suma el +15
-    const r = ens.simulateRiskAssessment({ consignment: { countryOfDispatch: 'DE', grossMass: 100 }, goods: [] });
-    expect(r.status).toBe('ACK');
-    expect(r.score).toBe(0);
-    expect(r.dnl).toBe(false);
-  });
-
-  test('pais alto riesgo (40) + peso elevado (10) = 50 -> HOLD', () => {
-    randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.9);
-    const r = ens.simulateRiskAssessment({
-      consignment: { countryOfDispatch: 'IR', grossMass: 30000 }, goods: []
-    });
-    expect(r.score).toBe(50);
-    expect(r.status).toBe('HOLD');
-  });
-
-  test('pais riesgo (40) + 2 mercancias sensibles (40) = 80 -> DNL', () => {
-    randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.9);
-    const r = ens.simulateRiskAssessment({
-      consignment: { countryOfDispatch: 'KP', grossMass: 100 },
-      goods: [{ commodityCode: '930200' }, { commodityCode: '240300' }] // armas + tabaco
-    });
-    expect(r.score).toBe(80);
-    expect(r.status).toBe('DNL');
-    expect(r.dnl).toBe(true);
-    expect(r.dnlReason).toMatch(/Alto riesgo/i);
-  });
-
-  test('nuevo transportista simulado (Math.random<0.1) suma 15', () => {
-    randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.05); // dispara el +15
-    const r = ens.simulateRiskAssessment({ consignment: { countryOfDispatch: 'DE', grossMass: 100 }, goods: [] });
-    expect(r.score).toBe(15);
-    expect(r.status).toBe('ACK');
-  });
-
-  test('score se topa en 100', () => {
-    randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.05);
-    const r = ens.simulateRiskAssessment({
-      consignment: { countryOfDispatch: 'AF', grossMass: 30000 },
-      goods: [{ commodityCode: '930200' }, { commodityCode: '930300' }, { commodityCode: '240200' }]
-    }); // 40 + 60 + 10 + 15 = 125 -> topado a 100
-    expect(r.score).toBe(100);
+/**
+ * Aqui habia un describe completo de `simulateRiskAssessment`, un generador de
+ * circuito aduanero basado en `Math.random()` que no tenia ningun llamante en
+ * produccion. Los tests le daban apariencia de funcionalidad soportada. La
+ * funcion se ha eliminado; el unico origen valido de `riskAssessment` es
+ * processRiskResponse() con un mensaje real de AEAT.
+ */
+describe('riesgo (superficie)', () => {
+  test('el servicio ya no expone un generador de riesgo simulado', () => {
+    expect(ens.simulateRiskAssessment).toBeUndefined();
   });
 });
 
@@ -314,7 +277,7 @@ describe('submitToAEAT', () => {
     aeatSubmitService.submitENS = jest.fn();
   });
 
-  test('RAIL: AEAT (legacy) acepta -> estado accepted, MRN, riskAssessment ACK', async () => {
+  test('RAIL: AEAT (legacy) acepta -> estado accepted y MRN', async () => {
     aeatSubmitService.submitENS.mockResolvedValue({
       success: true, mrn: '26ES00112233445566EN', code: 'AC', estado: 'ACEPTADA', csv: 'CSV123'
     });
@@ -322,10 +285,30 @@ describe('submitToAEAT', () => {
     expect(r.success).toBe(true);
     expect(r.data.mrn).toBe('26ES00112233445566EN');
     expect(r.data.status).toBe('accepted');
-    expect(r.data.riskAssessment.status).toBe('ACK');
     expect(aeatSubmitService.submitENS).toHaveBeenCalled(); // fue por el canal legacy
     const doc = await ENSDeclaration.findById(declId);
     expect(doc.status).toBe('accepted');
+  });
+
+  /**
+   * El CC328A acusa el REGISTRO de la ENS, no el resultado del analisis de riesgo:
+   * ese llega despues, en un mensaje aparte, y lo procesa `processRiskResponse`.
+   * `submitToAEAT` escribia riskAssessment.status='ACK' al recibir el acuse, asi
+   * que la ficha mostraba "Analisis de Riesgo: Aceptada" y "DNL: NO" — un veredicto
+   * de la aduana que AEAT nunca habia emitido (verificado en PRE el 8/Ago/2026
+   * sobre el MRN real 26ES009999Z0000750: la respuesta guardada es solo
+   * CC328A/"Declaracion ENS enviada", sin circuito ni decision de control).
+   * Este test es la version corregida del que antes exigia 'ACK'.
+   */
+  test('el acuse de registro NO es un analisis de riesgo: el riesgo sigue PENDING', async () => {
+    aeatSubmitService.submitENS.mockResolvedValue({
+      success: true, mrn: '26ES00112233445566EN', code: 'CC328A', estado: 'ACEPTADA', csv: 'CSV123'
+    });
+    await ens.submitToAEAT(declId, userId);
+
+    const doc = await ENSDeclaration.findById(declId);
+    expect(doc.riskAssessment.status).toBe('PENDING');
+    expect(doc.riskAssessment.assessedAt).toBeUndefined();
   });
 
   /**
@@ -442,15 +425,25 @@ describe('ciclo de vida sobre Mongo real', () => {
     return doc._id;
   }
 
-  test('amendDeclaration rectifica una aceptada, genera XML y queda amended', async () => {
+  /**
+   * Version corregida: antes exigia `status === 'amended'`, que es lo que producia
+   * un bloque '[DEMO] Simular aceptacion de rectificacion' colocado justo despues
+   * de poner 'amendment_pending'. Solo AEAT acepta una rectificacion (CC304A);
+   * este metodo genera el XML pero NO lo envia, asi que la declaracion se queda
+   * pendiente de respuesta. Darla por aceptada afirmaba que la aduana habia
+   * admitido una rectificacion que ni siquiera habia salido de LUCI.
+   */
+  test('amendDeclaration rectifica una aceptada, genera XML y queda pendiente de AEAT', async () => {
     const id = await crearAceptada();
     const r = await ens.amendDeclaration(id, {
       reason: 'Correccion peso', details: 'grossMass corregido',
       consignment: { referenceNumber: 'MBL-001', grossMass: 1200, numberOfPackages: 12, goodsDescription: 'Mercancia' }
     }, userId);
     expect(r.success).toBe(true);
-    expect(r.data.status).toBe('amended');
+    expect(r.data.status).toBe('amendment_pending');
+    expect(r.data.status).not.toBe('amended');
     expect(r.data.amendment.originalMRN).toBe('26ES00000000000001EN');
+    expect(r.data.amendment.processedAt).toBeUndefined();
     expect(r.data.generatedXML).toBeTruthy();
   });
 
@@ -481,11 +474,33 @@ describe('ciclo de vida sobre Mongo real', () => {
     await expect(ens.cancelDeclaration(id, 'x', userId)).rejects.toThrow(/No se puede anular/i);
   });
 
-  test('notifyArrival sobre una ACK dispara levante automatico (released)', async () => {
+  test('notifyArrival deja la declaracion en arrived y registra el lugar de descarga', async () => {
     const id = await crearAceptada();
     const r = await ens.notifyArrival(id, { unloadingPlace: 'Muelle 3' }, userId);
-    expect(r.data.status).toBe('released'); // riskAssessment ACK -> levante auto
+    expect(r.data.status).toBe('arrived');
     expect(r.data.arrival.unloadingPlace).toBe('Muelle 3');
+  });
+
+  /**
+   * El levante lo concede la aduana, no LUCI. Un bloque marcado '[DEMO] Simular
+   * levante automatico' ponia la declaracion en 'released' en cuanto el riesgo
+   * fuese 'ACK' — y como submitToAEAT escribia ese ACK sola al recibir el acuse
+   * de registro, bastaba pulsar "Notificar Llegada" en la UI para que LUCI se
+   * concediera a si misma el despacho de la mercancia. 'released' solo puede
+   * venir de un mensaje de AEAT procesado por processRiskResponse.
+   */
+  test('notifyArrival NO concede el levante por su cuenta, ni con el riesgo en ACK', async () => {
+    const id = await crearAceptada();
+    await ENSDeclaration.findByIdAndUpdate(id, {
+      'riskAssessment.status': 'ACK', 'riskAssessment.assessedAt': new Date()
+    });
+
+    const r = await ens.notifyArrival(id, { unloadingPlace: 'Muelle 3' }, userId);
+
+    expect(r.data.status).toBe('arrived');
+    expect(r.data.status).not.toBe('released');
+    const doc = await ENSDeclaration.findById(id);
+    expect(doc.statusHistory.some(h => /levante/i.test(h.reason || ''))).toBe(false);
   });
 
   test('notifyArrival rechaza estados que no admiten llegada', async () => {

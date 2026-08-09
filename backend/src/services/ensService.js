@@ -351,13 +351,13 @@ class ENSService {
         csv: aeatResult.csv
       };
 
-      // Evaluar riesgo basado en respuesta real
+      // El CC328A acusa el REGISTRO de la ENS, no su analisis de riesgo: AEAT
+      // comunica el circuito (ACK / HOLD / DNL) mas tarde y en otro mensaje, que
+      // se procesa en processRiskResponse(). Escribir aqui `status: 'ACK'` hacia
+      // que la ficha mostrase "Analisis de Riesgo: Aceptada" y "DNL: NO" sobre un
+      // analisis que AEAT no habia comunicado. El riesgo queda en PENDING.
       if (aeatResult.success) {
         declaration.status = 'accepted';
-        declaration.riskAssessment = {
-          status: 'ACK',
-          assessedAt: new Date()
-        };
       }
 
       await declaration.save();
@@ -380,57 +380,10 @@ class ENSService {
     }
   }
 
-  /**
-   * Simular evaluacion de riesgo (para desarrollo)
-   */
-  simulateRiskAssessment(declaration) {
-    let score = 0;
-    let dnl = false;
-    let dnlReason = null;
-
-    // Factor: pais de expedicion
-    if (ENS_CONFIG.highRiskCountries.includes(declaration.consignment?.countryOfDispatch)) {
-      score += 40;
-    }
-
-    // Factor: mercancias sensibles
-    const goods = declaration.goods || [];
-    for (const item of goods) {
-      const hsPrefix = item.commodityCode?.substring(0, 4);
-      if (ENS_CONFIG.sensitiveGoods[hsPrefix]) {
-        score += 20;
-      }
-    }
-
-    // Factor: peso elevado
-    if (declaration.consignment?.grossMass > 20000) {
-      score += 10;
-    }
-
-    // Factor: nuevo transportista (simulado)
-    if (Math.random() < 0.1) {
-      score += 15;
-    }
-
-    // Determinar estado
-    let status;
-    if (score >= 70) {
-      dnl = true;
-      dnlReason = 'Alto riesgo - requiere verificacion adicional antes de carga';
-      status = 'DNL';
-    } else if (score >= 40) {
-      status = 'HOLD';
-    } else {
-      status = 'ACK';
-    }
-
-    return {
-      status,
-      score: Math.min(100, score),
-      dnl,
-      dnlReason
-    };
-  }
+  // Aqui vivia simulateRiskAssessment(): un generador de circuito aduanero con
+  // `Math.random()` y sin un solo llamante. Se elimina en lugar de dejarlo a mano:
+  // el unico origen legitimo de `riskAssessment` es processRiskResponse() con un
+  // mensaje de AEAT. Las sugerencias de riesgo informativas siguen en preValidate().
 
   /**
    * Rectificar declaracion ENS
@@ -483,18 +436,15 @@ class ENSService {
         reason: amendments.reason
       });
 
-      // [DEMO] Simular aceptacion de rectificacion
-      declaration.status = 'amended';
-      declaration.amendment.processedAt = new Date();
-      declaration.statusHistory.push({
-        status: 'amended',
-        timestamp: new Date(),
-        reason: 'Rectificacion aceptada'
-      });
+      // Aqui se genera el IE313 pero NO se envia: quien lo presenta a AEAT es
+      // ensController.amend(). Dar la rectificacion por aceptada en este punto
+      // (status 'amended' + "Rectificacion aceptada" en el historial) afirmaba que
+      // la aduana habia admitido un cambio que ni siquiera habia salido de LUCI.
+      // Queda en amendment_pending hasta que AEAT responda.
 
       await declaration.save();
 
-      logger.info(`ENS ${declaration.reference} amended`);
+      logger.info(`ENS ${declaration.reference}: IE313 generado, pendiente de respuesta AEAT`);
 
       return {
         success: true,
@@ -572,15 +522,12 @@ class ENSService {
       reason: 'Llegada notificada'
     });
 
-    // [DEMO] Simular levante automatico para bajo riesgo
-    if (declaration.riskAssessment?.status === 'ACK') {
-      declaration.status = 'released';
-      declaration.statusHistory.push({
-        status: 'released',
-        timestamp: new Date(),
-        reason: 'Levante automatico'
-      });
-    }
+    // El levante lo concede la aduana, no LUCI. Aqui habia un bloque que ponia
+    // `status: 'released'` en cuanto el riesgo estaba en ACK; combinado con el ACK
+    // que se autoescribia al recibir el CC328A, bastaba pulsar "Notificar Llegada"
+    // en la UI para que la mercancia apareciese despachada sin que AEAT hubiera
+    // autorizado nada. El paso a 'released' solo lo hace processRiskResponse()
+    // con un mensaje real de AEAT.
 
     await declaration.save();
 
