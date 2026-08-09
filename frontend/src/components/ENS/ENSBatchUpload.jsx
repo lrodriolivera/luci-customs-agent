@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Box, Typography, Paper, Grid, Button, Card, CardContent,
@@ -44,6 +44,15 @@ const CSV_TEMPLATE_COLUMNS = [
   'consigneeName'
 ]
 
+/**
+ * Aduana de ejemplo para la plantilla. Tiene que ser una que EXISTA en el catalogo
+ * del backend (config/entryOffices.js): la plantilla anterior traia ES001101, que no
+ * esta en el censo, asi que el lote descargado y subido sin tocar fallaba entero con
+ * "Aduana de entrada ES001101 no existe en el catalogo". ES009999 es la aduana de
+ * pruebas del entorno PRE de la AEAT y admite los 4 modos de transporte.
+ */
+const ADUANA_EJEMPLO = 'ES009999'
+
 /** Fecha de ejemplo para la plantilla: 30 días por delante, en formato ISO corto. */
 const ejemploFechaLlegada = () => {
   const d = new Date()
@@ -84,6 +93,21 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
   const [processResults, setProcessResults] = useState(null)
   const [autoSubmit, setAutoSubmit] = useState(false)
   const [selectedRows, setSelectedRows] = useState([])
+  // Catalogo de aduanas del backend. Sin el solo se podia comprobar el FORMATO del
+  // codigo, y una aduana inexistente se pintaba "Valida" hasta el paso de procesar.
+  const [aduanas, setAduanas] = useState(null)
+
+  useEffect(() => {
+    if (!open) return
+    let cancelado = false
+    ensAPI.getEntryOffices()
+      .then(res => {
+        if (cancelado) return
+        setAduanas((res?.data?.data || []).map(o => o.code))
+      })
+      .catch(() => { if (!cancelado) setAduanas([]) })
+    return () => { cancelado = true }
+  }, [open])
 
   const steps = [t('ens.stepUpload'), t('ens.stepValidate'), t('ens.stepProcess')]
 
@@ -203,10 +227,15 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
         errors.push(t('ens.transportModeInvalid'))
       }
 
+      // El formato correcto no implica que la aduana exista: el backend rechaza la
+      // fila entera si el codigo no esta en el censo, asi que se avisa aqui y no
+      // despues de procesar. Si el catalogo no llego (null) solo se valida formato.
       if (!dec.entryOffice.code) {
         errors.push(t('ens.customsCodeRequired'))
       } else if (!/^ES\d{6}$/.test(dec.entryOffice.code)) {
         warnings.push(t('ens.customsCodeFormat'))
+      } else if (aduanas?.length && !aduanas.includes(dec.entryOffice.code)) {
+        errors.push(t('ens.customsCodeUnknown', { code: dec.entryOffice.code }))
       }
 
       if (!dec.entryOffice.expectedArrival) {
@@ -252,6 +281,15 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
     setValidationResults(results)
     setParsedData(results)
   }
+
+  // Si el catalogo llega despues de que el usuario haya subido el fichero, revalidar:
+  // de lo contrario esa carga se habria validado solo por formato.
+  useEffect(() => {
+    if (!aduanas?.length || parsedData.length === 0) return
+    if (parsedData.some(f => f.processResult)) return // ya procesado, no tocar
+    validateData(parsedData)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aduanas])
 
   const handleProcess = async () => {
     const rowsToProcess = parsedData.filter((_, i) => selectedRows.includes(i) && _.status !== 'error')
@@ -313,7 +351,7 @@ const ENSBatchUpload = ({ open, onClose, onSuccess }) => {
       // Fecha de ejemplo SIEMPRE futura: validateForSubmission rechaza una llegada
       // pasada (ENS_ARRIVAL_DATE_PAST), y una plantilla con fecha fija caduca.
       // El código de mercancía es real (73181500, tornillos de hierro o acero).
-      `ROAD;ES001101;${ejemploFechaLlegada()};08:00;ESA12345678;Transportes Demo SL;1234ABC;ES;BLEXAMPLE001;MSKU1234567;SEAL001;15000;100;Mercancias varias;73181500;ESB87654321;Exportador Demo;ESC11111111;Importador Demo`
+      `ROAD;${ADUANA_EJEMPLO};${ejemploFechaLlegada()};08:00;ESA12345678;Transportes Demo SL;1234ABC;ES;BLEXAMPLE001;MSKU1234567;SEAL001;15000;100;Mercancias varias;73181500;ESB87654321;Exportador Demo;ESC11111111;Importador Demo`
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })

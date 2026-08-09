@@ -1047,7 +1047,8 @@
     "commodityCodeFormat": "O código de mercadoria deve ter entre 6 e 10 dígitos",
     "arrivalFrom": "Chegada desde",
     "arrivalTo": "Chegada até",
-    "entryOfficesLoadError": "Nao foi possivel carregar as alfandegas de entrada. Recarregue a pagina."
+    "entryOfficesLoadError": "Nao foi possivel carregar as alfandegas de entrada. Recarregue a pagina.",
+    "customsCodeUnknown": "A estancia aduaneira de entrada {{code}} nao existe no catalogo da AEAT"
   },
   "h7": {
     "title": "Declaracoes H7",

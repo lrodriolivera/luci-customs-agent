@@ -1047,7 +1047,8 @@
     "commodityCodeFormat": "Il codice merce deve avere tra 6 e 10 cifre",
     "arrivalFrom": "Arrivo da",
     "arrivalTo": "Arrivo a",
-    "entryOfficesLoadError": "Non e stato possibile caricare le dogane di entrata. Ricarica la pagina."
+    "entryOfficesLoadError": "Non e stato possibile caricare le dogane di entrata. Ricarica la pagina.",
+    "customsCodeUnknown": "L'ufficio doganale di entrata {{code}} non esiste nel catalogo dell'AEAT"
   },
   "h7": {
     "title": "Dichiarazioni H7",

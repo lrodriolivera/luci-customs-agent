@@ -1047,7 +1047,8 @@
     "commodityCodeFormat": "El código de mercancía debe tener entre 6 y 10 dígitos",
     "arrivalFrom": "Llegada desde",
     "arrivalTo": "Llegada hasta",
-    "entryOfficesLoadError": "No se pudieron cargar las aduanas de entrada. Recarga la pagina."
+    "entryOfficesLoadError": "No se pudieron cargar las aduanas de entrada. Recarga la pagina.",
+    "customsCodeUnknown": "La aduana de entrada {{code}} no existe en el catalogo de la AEAT"
   },
   "h7": {
     "title": "Declaraciones H7",

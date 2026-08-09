@@ -1047,7 +1047,8 @@
     "commodityCodeFormat": "Le code marchandise doit comporter entre 6 et 10 chiffres",
     "arrivalFrom": "Arrivée à partir du",
     "arrivalTo": "Arrivée jusqu'au",
-    "entryOfficesLoadError": "Impossible de charger les bureaux de douane d'entree. Rechargez la page."
+    "entryOfficesLoadError": "Impossible de charger les bureaux de douane d'entree. Rechargez la page.",
+    "customsCodeUnknown": "Le bureau de douane d'entree {{code}} n'existe pas dans le catalogue de l'AEAT"
   },
   "h7": {
     "title": "Declarations H7",

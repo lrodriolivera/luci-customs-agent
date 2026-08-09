@@ -12,13 +12,23 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('../../services/api', () => ({
   ensAPI: {
-    processBatch: vi.fn()
+    processBatch: vi.fn(),
+    getEntryOffices: vi.fn()
   }
 }))
+
+// Catalogo minimo tal como lo devuelve GET /api/ens/entry-offices. ES001101 NO esta,
+// igual que en el catalogo real del backend (config/entryOffices.js).
+const ADUANAS = [
+  { code: 'ES009999', name: 'Aduana de pruebas PRE', modes: ['SEA', 'AIR', 'ROAD', 'RAIL'] },
+  { code: 'ES002801', name: 'Madrid', modes: ['ROAD', 'RAIL'] },
+  { code: 'ES000401', name: 'Algeciras', modes: ['SEA', 'ROAD'] }
+]
 
 describe('ENSBatchUpload', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    ensAPI.getEntryOffices.mockResolvedValue({ data: { success: true, data: ADUANAS } })
     // Mock URL.createObjectURL for jsdom
     global.URL.createObjectURL = vi.fn(() => 'blob:mock')
     global.URL.revokeObjectURL = vi.fn()
@@ -84,6 +94,39 @@ describe('ENSBatchUpload', () => {
       createElementSpy.mockRestore()
     })
 
+    /**
+     * La plantilla que la aplicacion entrega tiene que ser IMPORTABLE. Traia
+     * entryOfficeCode=ES001101, una aduana que no esta en el catalogo
+     * (config/entryOffices.js): quien la descargaba, la rellenaba y la subia veia
+     * fallar el lote entero con "Aduana de entrada ES001101 no existe en el
+     * catalogo" ya en el procesado, despues de que la validacion la hubiera
+     * marcado "Valida". Verificado en el entorno desplegado.
+     */
+    it('la plantilla usa una aduana que existe en el catalogo del backend', async () => {
+      const originalCreateElement = document.createElement.bind(document)
+      const mockLink = { href: '', download: '', click: vi.fn() }
+      vi.spyOn(document, 'createElement').mockImplementation((tag) => (tag === 'a' ? mockLink : originalCreateElement(tag)))
+      // jsdom no implementa Blob.text(), asi que se capturan las partes que recibe
+      // el constructor en vez de leer el Blob ya construido.
+      const partes = []
+      const BlobReal = global.Blob
+      global.Blob = class extends BlobReal {
+        constructor(trozos, opciones) { super(trozos, opciones); partes.push(trozos.join('')) }
+      }
+
+      render(<ENSBatchUpload open={true} onClose={vi.fn()} onSuccess={vi.fn()} />)
+      fireEvent.click(screen.getByText('ens.downloadTemplate'))
+      await waitFor(() => expect(partes.length).toBe(1))
+      global.Blob = BlobReal
+
+      const codigo = partes[0].split('\n')[1].split(';')[1]
+      // ES009999 es la aduana de pruebas de PRE: la unica con la que AEAT ha
+      // aceptado ENS nuestras, asi que la plantilla es utilizable tal cual.
+      expect(codigo).toBe('ES009999')
+      expect(codigo).not.toBe('ES001101')
+      vi.restoreAllMocks()
+    })
+
     it('calls onClose when cancel button clicked', () => {
       const onClose = vi.fn()
       render(<ENSBatchUpload open={true} onClose={onClose} onSuccess={vi.fn()} />)
@@ -98,7 +141,7 @@ describe('ENSBatchUpload', () => {
   describe('File parsing', () => {
     it('parses valid CSV file and moves to validation step', async () => {
       const csvContent = `transportMode;entryOfficeCode;expectedArrivalDate;expectedArrivalTime;carrierEORI;carrierName;transportIdentification;transportNationality;billOfLading;containerNumber;sealNumber;grossMass;numberOfPackages;goodsDescription;commodityCode;consignorEORI;consignorName;consigneeEORI;consigneeName
-ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1234567;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`
+ROAD;ES002801;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1234567;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`
 
       const file = new File([csvContent], 'batch.csv', { type: 'text/csv' })
 
@@ -156,7 +199,7 @@ ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1
     it('validates row with empty transportMode defaults to ROAD (valid)', async () => {
       // When transportMode is empty, transformRowToDeclaration sets it to 'ROAD' (line 118)
       // So the validation passes as valid
-      const csvContent = createCsvWithRow(`;ES001101;2025-01-25;08:00;ESA12345678;Carrier;;ES;BLEXAMPLE001;;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
+      const csvContent = createCsvWithRow(`;ES002801;2025-01-25;08:00;ESA12345678;Carrier;;ES;BLEXAMPLE001;;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
 
       const file = new File([csvContent], 'batch.csv', { type: 'text/csv' })
       if (!file.text) file.text = () => Promise.resolve(csvContent)
@@ -177,7 +220,7 @@ ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1
     })
 
     it('validates row with invalid transportMode (error)', async () => {
-      const csvContent = createCsvWithRow(`INVALID;ES001101;2025-01-25;08:00;ESA12345678;Carrier;;ES;BLEXAMPLE001;;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
+      const csvContent = createCsvWithRow(`INVALID;ES002801;2025-01-25;08:00;ESA12345678;Carrier;;ES;BLEXAMPLE001;;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
 
       const file = new File([csvContent], 'batch.csv', { type: 'text/csv' })
       if (!file.text) file.text = () => Promise.resolve(csvContent)
@@ -236,7 +279,7 @@ ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1
     })
 
     it('validates row with missing expectedArrival (error)', async () => {
-      const csvContent = createCsvWithRow(`ROAD;ES001101;;;ESA12345678;Carrier;;ES;BLEXAMPLE001;;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
+      const csvContent = createCsvWithRow(`ROAD;ES002801;;;ESA12345678;Carrier;;ES;BLEXAMPLE001;;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
 
       const file = new File([csvContent], 'batch.csv', { type: 'text/csv' })
       if (!file.text) file.text = () => Promise.resolve(csvContent)
@@ -253,7 +296,7 @@ ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1
     })
 
     it('validates row with missing carrierEORI (error)', async () => {
-      const csvContent = createCsvWithRow(`ROAD;ES001101;2025-01-25;08:00;;Carrier;;ES;BLEXAMPLE001;;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
+      const csvContent = createCsvWithRow(`ROAD;ES002801;2025-01-25;08:00;;Carrier;;ES;BLEXAMPLE001;;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
 
       const file = new File([csvContent], 'batch.csv', { type: 'text/csv' })
       if (!file.text) file.text = () => Promise.resolve(csvContent)
@@ -270,7 +313,7 @@ ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1
     })
 
     it('validates row with badly formatted carrierEORI (warning)', async () => {
-      const csvContent = createCsvWithRow(`ROAD;ES001101;2025-01-25;08:00;BADFORMAT;Carrier;;ES;BLEXAMPLE001;;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
+      const csvContent = createCsvWithRow(`ROAD;ES002801;2025-01-25;08:00;BADFORMAT;Carrier;;ES;BLEXAMPLE001;;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
 
       const file = new File([csvContent], 'batch.csv', { type: 'text/csv' })
       if (!file.text) file.text = () => Promise.resolve(csvContent)
@@ -287,7 +330,7 @@ ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1
     })
 
     it('validates row with missing billOfLading (error)', async () => {
-      const csvContent = createCsvWithRow(`ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;;ES;;;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
+      const csvContent = createCsvWithRow(`ROAD;ES002801;2025-01-25;08:00;ESA12345678;Carrier;;ES;;;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
 
       const file = new File([csvContent], 'batch.csv', { type: 'text/csv' })
       if (!file.text) file.text = () => Promise.resolve(csvContent)
@@ -304,7 +347,7 @@ ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1
     })
 
     it('validates row with zero grossMass (error)', async () => {
-      const csvContent = createCsvWithRow(`ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;;ES;BLEXAMPLE001;;SEAL001;0;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
+      const csvContent = createCsvWithRow(`ROAD;ES002801;2025-01-25;08:00;ESA12345678;Carrier;;ES;BLEXAMPLE001;;SEAL001;0;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
 
       const file = new File([csvContent], 'batch.csv', { type: 'text/csv' })
       if (!file.text) file.text = () => Promise.resolve(csvContent)
@@ -320,8 +363,45 @@ ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1
       })
     })
 
+    /**
+     * La validacion solo comprobaba el FORMATO del codigo de aduana (^ES\d{6}$) y
+     * como aviso, no como error. Una aduana con formato correcto pero inexistente
+     * se pintaba "Valida" y el usuario se enteraba al procesar, cuando el backend
+     * ya habia rechazado la fila. El aviso tiene que llegar antes de procesar.
+     */
+    it('marca como error una aduana con formato valido que no esta en el catalogo', async () => {
+      const csvContent = createCsvWithRow(`ROAD;ES777777;2026-11-22;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1234567;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
+      const file = new File([csvContent], 'batch.csv', { type: 'text/csv' })
+      if (!file.text) file.text = () => Promise.resolve(csvContent)
+
+      render(<ENSBatchUpload open={true} onClose={vi.fn()} onSuccess={vi.fn()} />)
+      fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [file] } })
+
+      await waitFor(() => {
+        // Error, no aviso: la fila no debe poder seleccionarse para procesar.
+        expect(screen.getAllByText('ens.batchErrors').length).toBeGreaterThan(0)
+      })
+      expect(document.querySelector('tbody tr input[type="checkbox"]')).toBeDisabled()
+    })
+
+    it('no marca error cuando la aduana si esta en el catalogo', async () => {
+      const csvContent = createCsvWithRow(`ROAD;ES009999;2026-11-22;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1234567;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
+      const file = new File([csvContent], 'batch.csv', { type: 'text/csv' })
+      if (!file.text) file.text = () => Promise.resolve(csvContent)
+
+      render(<ENSBatchUpload open={true} onClose={vi.fn()} onSuccess={vi.fn()} />)
+      fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [file] } })
+
+      await waitFor(() => {
+        expect(screen.getAllByText('ens.batchValid').length).toBeGreaterThan(0)
+      })
+      // La tarjeta de resumen rotula siempre 'ens.batchErrors' con su contador, asi
+      // que lo que se comprueba es que la fila SI se puede seleccionar para procesar.
+      expect(document.querySelector('tbody tr input[type="checkbox"]')).not.toBeDisabled()
+    })
+
     it('validates row with badly formatted containerNumber (warning)', async () => {
-      const csvContent = createCsvWithRow(`ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;;ES;BLEXAMPLE001;BADCONTAINER;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
+      const csvContent = createCsvWithRow(`ROAD;ES002801;2025-01-25;08:00;ESA12345678;Carrier;;ES;BLEXAMPLE001;BADCONTAINER;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
 
       const file = new File([csvContent], 'batch.csv', { type: 'text/csv' })
       if (!file.text) file.text = () => Promise.resolve(csvContent)
@@ -338,7 +418,7 @@ ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1
     })
 
     it('validates completely valid row (status=valid)', async () => {
-      const csvContent = createCsvWithRow(`ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1234567;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
+      const csvContent = createCsvWithRow(`ROAD;ES002801;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1234567;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`)
 
       const file = new File([csvContent], 'batch.csv', { type: 'text/csv' })
       if (!file.text) file.text = () => Promise.resolve(csvContent)
@@ -358,7 +438,7 @@ ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BLEXAMPLE001;MSKU1
 
   describe('Step 1: Validation interactions', () => {
     const validCsv = `transportMode;entryOfficeCode;expectedArrivalDate;expectedArrivalTime;carrierEORI;carrierName;transportIdentification;transportNationality;billOfLading;containerNumber;sealNumber;grossMass;numberOfPackages;goodsDescription;commodityCode;consignorEORI;consignorName;consigneeEORI;consigneeName
-ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BL001;MSKU1234567;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer
+ROAD;ES002801;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BL001;MSKU1234567;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer
 AIR;ES001102;2025-01-26;09:00;ESA22222222;Carrier2;5678DEF;ES;BL002;ABCD9876543;SEAL002;10000;50;Goods2;ESB77777777;Exporter2;ESC22222222;Importer2`
 
     it('toggles autoSubmit checkbox', async () => {
@@ -477,7 +557,7 @@ AIR;ES001102;2025-01-26;09:00;ESA22222222;Carrier2;5678DEF;ES;BL002;ABCD9876543;
 
   describe('Step 2: Processing', () => {
     const validCsv = `transportMode;entryOfficeCode;expectedArrivalDate;expectedArrivalTime;carrierEORI;carrierName;transportIdentification;transportNationality;billOfLading;containerNumber;sealNumber;grossMass;numberOfPackages;goodsDescription;commodityCode;consignorEORI;consignorName;consigneeEORI;consigneeName
-ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BL001;MSKU1234567;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`
+ROAD;ES002801;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BL001;MSKU1234567;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer`
 
     it('returns early when no rows are selected', async () => {
       const file = new File([validCsv], 'batch.csv', { type: 'text/csv' })
@@ -554,7 +634,7 @@ ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BL001;MSKU1234567;
           expect.objectContaining({
             transportMode: 'ROAD',
             entryOffice: expect.objectContaining({
-              code: 'ES001101'
+              code: 'ES002801'
             })
           })
         ]),
@@ -651,7 +731,7 @@ ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BL001;MSKU1234567;
       })
 
       const multiRowCsv = `transportMode;entryOfficeCode;expectedArrivalDate;expectedArrivalTime;carrierEORI;carrierName;transportIdentification;transportNationality;billOfLading;containerNumber;sealNumber;grossMass;numberOfPackages;goodsDescription;commodityCode;consignorEORI;consignorName;consigneeEORI;consigneeName
-ROAD;ES001101;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BL001;MSKU1234567;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer
+ROAD;ES002801;2025-01-25;08:00;ESA12345678;Carrier;1234ABC;ES;BL001;MSKU1234567;SEAL001;15000;100;Goods;73181500;ESB87654321;Exporter;ESC11111111;Importer
 AIR;ES001102;2025-01-26;09:00;ESA22222222;Carrier2;5678DEF;ES;BL002;ABCD9876543;SEAL002;10000;50;Goods2;ESB77777777;Exporter2;ESC22222222;Importer2`
 
       const file = new File([multiRowCsv], 'batch.csv', { type: 'text/csv' })
@@ -774,7 +854,7 @@ AIR;ES001102;2025-01-26;09:00;ESA22222222;Carrier2;5678DEF;ES;BL002;ABCD9876543;
     const csvConFilaInvalida = `transportMode;entryOfficeCode;expectedArrivalDate;expectedArrivalTime;carrierEORI;carrierName;transportIdentification;transportNationality;billOfLading;containerNumber;sealNumber;grossMass;numberOfPackages;goodsDescription;commodityCode;consignorEORI;consignorName;consigneeEORI;consigneeName
 RAIL;ES009999;2026-11-20;09:00;ESB22477020;Renfe;VAG-1001;ES;LOTE-RAIL-001;;SEAL0001;7200;40;Tornillos;73181500;DE123456789012;Metallwerk;ESB22477020;STRIX
 RAIL;ES009999;2026-11-21;11:30;ESB22477020;Renfe;VAG-1002;ES;LOTE-ERROR-002;;SEAL0002;0;12;Sin peso;73181500;DE123456789012;Metallwerk;ESB22477020;STRIX
-RAIL;ES001101;2026-11-22;16:45;ESB22477020;Renfe;VAG-1003;ES;LOTE-RAIL-003;MSKU1234567;SEAL0003;3100;18;Perfiles;73181500;DE123456789012;Metallwerk;ESB22477020;STRIX`
+RAIL;ES002801;2026-11-22;16:45;ESB22477020;Renfe;VAG-1003;ES;LOTE-RAIL-003;MSKU1234567;SEAL0003;3100;18;Perfiles;73181500;DE123456789012;Metallwerk;ESB22477020;STRIX`
 
     const procesar = async (csv) => {
       const file = new File([csv], 'batch.csv', { type: 'text/csv' })

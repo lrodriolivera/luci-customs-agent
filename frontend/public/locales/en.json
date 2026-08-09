@@ -1047,7 +1047,8 @@
     "commodityCodeFormat": "The commodity code must have between 6 and 10 digits",
     "arrivalFrom": "Arrival from",
     "arrivalTo": "Arrival to",
-    "entryOfficesLoadError": "Could not load the entry customs offices. Please reload the page."
+    "entryOfficesLoadError": "Could not load the entry customs offices. Please reload the page.",
+    "customsCodeUnknown": "Entry customs office {{code}} does not exist in the AEAT catalogue"
   },
   "h7": {
     "title": "H7 Declarations",
