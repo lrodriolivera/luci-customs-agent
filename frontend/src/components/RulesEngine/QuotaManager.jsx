@@ -332,6 +332,24 @@ export default function QuotaManager() {
                             <span>Disponible: {quota.volume.available.toLocaleString()} {quota.volume.unit}</span>
                             <span>Total: {quota.volume.total.toLocaleString()} {quota.volume.unit}</span>
                           </div>
+                          {/* El saldo no se consulta al sistema de contingentes de la
+                              Comision: sale del catalogo local. Un contingente FCFS se
+                              puede agotar en horas, asi que presentarlo sin mas seria
+                              dar por disponible algo que no se ha comprobado. */}
+                          {quota.volume.isLiveBalance === false && (
+                            <p className="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1 mt-2">
+                              Saldo de referencia, no consultado en tiempo real.{' '}
+                              <a
+                                href={quota.volume.officialSource}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline font-medium"
+                              >
+                                Consultar disponibilidad oficial
+                              </a>{' '}
+                              antes de declarar.
+                            </p>
+                          )}
                         </div>
 
                         {/* Arancel */}

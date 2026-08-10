@@ -1222,4 +1222,59 @@ describe('QuotaManager', () => {
       expect(customsValueInput).toHaveAttribute('step', '0.01')
     })
   })
+
+  /**
+   * El saldo de los contingentes sale del catalogo local del backend, NO del sistema
+   * de contingentes de la Comision. Un contingente FCFS puede agotarse en horas, asi
+   * que mostrar "Disponible: 12.550.000 kg" sin mas es dar por disponible algo que no
+   * se ha comprobado. Detectado en produccion el 10/Ago/2026.
+   */
+  describe('Aviso de saldo no consultado en tiempo real', () => {
+    const contingente = (extra = {}) => ({
+      description: 'Carne de vacuno de alta calidad',
+      orderNumber: '090001',
+      agreement: null,
+      available: true,
+      volume: { utilizationPercent: 72, available: 12550000, total: 45000000, unit: 'kg', ...extra },
+      duty: { inQuota: 0, outQuota: 0.124, savings: 0.124 },
+      critical: false,
+      recommendation: 'OK',
+      requiresCertificate: false
+    })
+
+    const buscar = async () => {
+      render(<QuotaManager />)
+      fireEvent.change(screen.getByPlaceholderText('ej. 02011000 (carne de vacuno)'), { target: { value: '02011000' } })
+      fireEvent.change(screen.getByPlaceholderText('10000'), { target: { value: '1000' } })
+      fireEvent.click(screen.getByRole('button', { name: /Verificar Disponibilidad/i }))
+    }
+
+    it('avisa de que el saldo no es en vivo y enlaza a la fuente oficial', async () => {
+      api.post.mockResolvedValueOnce({
+        data: { success: true, data: { found: true, count: 1, quotas: [contingente({
+          isLiveBalance: false,
+          officialSource: 'https://ec.europa.eu/taxation_customs/dds2/taric/quota_consultation.jsp'
+        })] } }
+      })
+
+      await buscar()
+
+      const aviso = await screen.findByText(/no consultado en tiempo real/i)
+      expect(aviso).toBeInTheDocument()
+      const enlace = screen.getByRole('link', { name: /disponibilidad oficial/i })
+      expect(enlace).toHaveAttribute('href', 'https://ec.europa.eu/taxation_customs/dds2/taric/quota_consultation.jsp')
+      expect(enlace).toHaveAttribute('rel', expect.stringContaining('noopener'))
+    })
+
+    it('si el saldo fuera en vivo no se muestra el aviso', async () => {
+      api.post.mockResolvedValueOnce({
+        data: { success: true, data: { found: true, count: 1, quotas: [contingente({ isLiveBalance: true })] } }
+      })
+
+      await buscar()
+
+      await screen.findByText('Carne de vacuno de alta calidad')
+      expect(screen.queryByText(/no consultado en tiempo real/i)).not.toBeInTheDocument()
+    })
+  })
 })

@@ -49,6 +49,22 @@ describe('Quota Service', () => {
       }
     });
 
+    /**
+     * Los saldos de este servicio son un catalogo ESTATICO en codigo, no una consulta
+     * al sistema de contingentes de la Comision. Un contingente FCFS puede agotarse en
+     * horas, asi que presentar "Disponible: 12.550.000 kg" como disponibilidad actual
+     * es afirmar algo que no se ha consultado. Detectado en produccion el 10/Ago/2026.
+     */
+    test('el saldo se marca como NO consultado en tiempo real', () => {
+      const result = quotaService.checkQuotaAvailability('02011000', 'AR', 10000, 'kg');
+
+      expect(result.found).toBe(true);
+      for (const quota of result.quotas) {
+        expect(quota.volume.isLiveBalance).toBe(false);
+        expect(quota.volume.officialSource).toMatch(/^https:\/\//);
+      }
+    });
+
     test('should sort quotas by lowest tariff first', () => {
       const result = quotaService.checkQuotaAvailability('02011000', 'AR', 1000, 'kg');
 
@@ -251,6 +267,37 @@ describe('Quota Service', () => {
       if (critical.length > 0) {
         expect(critical[0].estimatedExhaustion).toBeDefined();
         expect(typeof critical[0].estimatedExhaustion).toBe('string');
+      }
+    });
+
+    /**
+     * La criticidad salia de `utilization > 90 || quota.critical`, y dos contingentes
+     * venian marcados `critical: true` a mano con el 79% y el 85,86% consumido: la
+     * pestaña "Contingentes Criticos" los listaba con "Solicite reserva urgente"
+     * mientras su propia ficha decia "Mas de 90 dias" de margen. Un aviso de urgencia
+     * que contradice la cifra que lo acompaña desorienta. Ahora sale solo del consumo.
+     */
+    test('solo son criticos los que superan el 90% consumido', () => {
+      const critical = quotaService.getCriticalQuotas();
+
+      expect(critical.length).toBeGreaterThan(0); // si no, el test no probaria nada
+      for (const q of critical) {
+        expect(q.utilizationPercent).toBeGreaterThan(90);
+      }
+    });
+
+    /**
+     * La fecha de agotamiento es una extrapolacion lineal sobre un consumo que no se
+     * actualiza nunca (catalogo estatico). Devolver una fecha concreta y a secas se
+     * lee como un dato comprobado, cuando puede venir de cifras congeladas hace meses.
+     */
+    test('la fecha de agotamiento se declara como proyeccion, no como dato', () => {
+      const critical = quotaService.getCriticalQuotas();
+
+      const conFecha = critical.filter(q => /\d{4}-\d{2}-\d{2}/.test(q.estimatedExhaustion));
+      expect(conFecha.length).toBeGreaterThan(0); // si no, el test no probaria nada
+      for (const q of conFecha) {
+        expect(q.estimatedExhaustion).toMatch(/proyeccion sobre datos no actualizados/i);
       }
     });
 

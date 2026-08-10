@@ -311,7 +311,11 @@ export default function ExciseDutiesCalculator() {
               <div className="text-sm text-blue-800">
                 <p className="font-medium mb-2">Sistema SILICIE:</p>
                 <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>Alcohol: Ley 38/1992 - €/litro/grado o €/litro alcohol puro</li>
+                  {/* La cerveza NO tributa en €/litro/grado: la Ley 38/1992 la grava
+                      por hectolitro segun epigrafes de grado Plato (art. 26), el vino
+                      tranquilo esta a tipo cero (art. 30) y el alcohol etilico si va
+                      por litro de alcohol puro (art. 39). */}
+                  <li>Alcohol: Ley 38/1992 - cerveza €/hl por grado Plato (art. 26), vino a tipo cero (art. 30), alcohol etilico €/hl de alcohol puro (art. 39)</li>
                   <li>Tabaco: Componente específico + proporcional (mínimo garantizado)</li>
                   <li>Hidrocarburos: €/1000 litros, €/tonelada o €/gigajulio</li>
                   <li>Electricidad: 5.11% sobre consumo</li>

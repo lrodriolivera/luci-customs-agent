@@ -240,7 +240,15 @@ function checkQuotaAvailability(taricCode, originCountry, quantity, unit = 'kg')
         total: quota.volume.total,
         used: quota.volume.used,
         unit: quota.volume.unit,
-        utilizationPercent: parseFloat(utilization.toFixed(2))
+        utilizationPercent: parseFloat(utilization.toFixed(2)),
+        // El saldo NO es en vivo: sale del catalogo estatico de este servicio, no del
+        // sistema de contingentes de la Comision. Un contingente FCFS puede agotarse
+        // en horas, asi que presentar este numero como disponibilidad actual es
+        // afirmar algo que no se ha consultado. Quien lo muestre debe advertirlo y
+        // remitir a la consulta oficial antes de declarar.
+        isLiveBalance: false,
+        source: 'catalogo_local',
+        officialSource: 'https://ec.europa.eu/taxation_customs/dds2/taric/quota_consultation.jsp'
       },
       duty: {
         inQuota: quota.duty.inQuota,
@@ -250,7 +258,8 @@ function checkQuotaAvailability(taricCode, originCountry, quantity, unit = 'kg')
       period: quota.period,
       allocationMethod: quota.allocationMethod,
       requiresCertificate: quota.requiresCertificate,
-      critical: quota.critical || utilization > 95,
+      // Criticidad SIEMPRE derivada del consumo real, con un unico umbral.
+      critical: utilization > 90,
       recommendation: available
         ? 'Solicitar número de orden en declaración aduanera'
         : 'Contingente agotado - se aplicará tipo arancelario normal'
@@ -304,7 +313,8 @@ function reserveQuota(quotaId, quantity, operation) {
       'Conservar documentación probatoria por 3 años',
       quota.allocationMethod === 'traditional' ? 'Verificar elegibilidad como importador tradicional' : null
     ].filter(Boolean),
-    warnings: quota.critical ? ['Contingente en estado crítico - gestionar con prioridad'] : []
+    warnings: (quota.volume.used / quota.volume.total) * 100 > 90
+      ? ['Contingente en estado crítico - gestionar con prioridad'] : []
   };
 
   logger.info(`[QuotaService] Reservation created: ${reservation.reservationId}`);
@@ -375,7 +385,7 @@ function getQuotasByAgreement(agreementCode) {
         },
         duty: quota.duty,
         period: quota.period,
-        critical: quota.critical || utilization > 95
+        critical: utilization > 90
       });
     }
   }
@@ -396,7 +406,13 @@ function getCriticalQuotas() {
   for (const [quotaId, quota] of Object.entries(ACTIVE_QUOTAS)) {
     const utilization = (quota.volume.used / quota.volume.total) * 100;
 
-    if (utilization > 90 || quota.critical) {
+    // La criticidad sale del consumo REAL, no de una marca manual del catalogo. La
+    // condicion incluia `|| quota.critical`, y dos contingentes venian marcados a mano
+    // con el 79% y el 85,86% consumido: la pantalla los listaba como criticos con
+    // "Solicite reserva urgente" mientras su propio dato decia "Mas de 90 dias" de
+    // margen. Un aviso de urgencia que contradice la cifra que lo acompaña no orienta,
+    // desorienta.
+    if (utilization > 90) {
       critical.push({
         quotaId,
         orderNumber: quota.orderNumber,
@@ -438,12 +454,18 @@ function calculateExhaustionDate(quota) {
 
   const exhaustionDate = new Date(now.getTime() + daysToExhaustion * 24 * 60 * 60 * 1000);
 
+  // La fecha es una PROYECCION lineal sobre un consumo que no se actualiza: sale del
+  // catalogo estatico de este servicio, no del sistema de contingentes de la Comision.
+  // Se dice explicitamente, porque una fecha concreta se lee como un dato comprobado
+  // y aqui es una extrapolacion sobre cifras que pueden llevar meses congeladas.
+  const proyeccion = '(proyeccion sobre datos no actualizados)';
+
   if (daysToExhaustion < 30) {
-    return `Crítico: ${Math.round(daysToExhaustion)} días (${exhaustionDate.toISOString().split('T')[0]})`;
+    return `Crítico: ~${Math.round(daysToExhaustion)} días (${exhaustionDate.toISOString().split('T')[0]}) ${proyeccion}`;
   } else if (daysToExhaustion < 90) {
-    return `${Math.round(daysToExhaustion)} días (${exhaustionDate.toISOString().split('T')[0]})`;
+    return `~${Math.round(daysToExhaustion)} días (${exhaustionDate.toISOString().split('T')[0]}) ${proyeccion}`;
   } else {
-    return `Más de 90 días`;
+    return `Más de 90 días ${proyeccion}`;
   }
 }
 
@@ -473,7 +495,7 @@ function generateQuotaReport(filters = {}) {
         !quota.originCountries.includes(filters.originCountry)) continue;
 
     const utilization = (quota.volume.used / quota.volume.total) * 100;
-    const isCritical = utilization > 90 || quota.critical;
+    const isCritical = utilization > 90;
     const isExhausted = quota.volume.available <= 0;
 
     report.summary.total++;

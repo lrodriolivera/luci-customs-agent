@@ -60,51 +60,122 @@ describe('Excise Duties Service', () => {
   });
 
   describe('calculateAlcoholExcise', () => {
-    test('should calculate excise for beer', () => {
-      const product = {
-        taricCode: '2203000010',
-        quantity: 1000,
-        alcoholContent: 5.0,
-        unit: 'L'
-      };
-
-      const result = exciseDutiesService.calculateAlcoholExcise(product);
-
-      expect(result.applicable).toBe(true);
-      expect(result.subcategory).toBe('BEER');
-      expect(result.amount).toBe(5.5); // 1000 L * 5% * 0.11 €/L/grado
-    });
-
-    test('should calculate excise for low-alcohol beer', () => {
-      const product = {
-        taricCode: '2203000010',
-        quantity: 1000,
-        alcoholContent: 1.0,
-        unit: 'L'
-      };
-
-      const result = exciseDutiesService.calculateAlcoholExcise(product);
+    /**
+     * Ley 38/1992 art. 26 (texto vigente consultado en el BOE el 10/Ago/2026): la
+     * cerveza tributa POR HECTOLITRO segun epigrafes de GRADO PLATO, no en
+     * €/litro/grado alcoholico.
+     *
+     * Estos tests fijaban la tarifa inventada de 0,11 €/L/grado, que ademas se
+     * aplicaba mal: `quantity * (alcoholContent/100) * rate` divide el grado entre
+     * 100 aunque la tarifa dice ser "por grado", asi que ni siquiera cuadraba con el
+     * desglose que la propia pantalla mostraba (1.000 L al 5% daban 5,50 EUR cuando
+     * esa formula da 550). Reescritos con los importes de la ley.
+     */
+    test('cerveza de 5% vol: epigrafe 3 a 9,96 €/hl (Ley 38/1992 art. 26)', () => {
+      const result = exciseDutiesService.calculateAlcoholExcise({
+        taricCode: '2203000010', quantity: 1000, alcoholContent: 5.0, unit: 'L'
+      });
 
       expect(result.applicable).toBe(true);
       expect(result.subcategory).toBe('BEER');
-      expect(result.rate).toBe(0.055); // Reduced rate
+      expect(result.rate).toBe(9.96);
+      expect(result.amount).toBe(99.6);   // 10 hl x 9,96 €/hl
+      expect(result.unit).toBe('€/hl');
+      expect(result.legalBasis).toBe('Ley 38/1992, art. 26');
+      // Sin grado Plato declarado se estima, y se dice que es una estimacion.
+      expect(result.platoEstimated).toBe(true);
     });
 
-    test('should apply intermediate rate for wine products between 1.2% and 15%', () => {
-      const product = {
-        taricCode: '2204210000',
-        quantity: 1000,
-        alcoholContent: 12.0,
-        unit: 'L'
-      };
+    test('el grado Plato declarado manda sobre la estimacion', () => {
+      // 5% vol estimaria 12,5 grados Plato (epigrafe 3). Declarando 10 baja al 2.
+      const result = exciseDutiesService.calculateAlcoholExcise({
+        taricCode: '2203000010', quantity: 1000, alcoholContent: 5.0, platoDegrees: 10, unit: 'L'
+      });
 
-      const result = exciseDutiesService.calculateAlcoholExcise(product);
+      expect(result.rate).toBe(7.48);
+      expect(result.amount).toBe(74.8);
+      expect(result.platoEstimated).toBe(false);
+    });
 
-      // Wine with 1.2% - 15% alcohol is treated as intermediate product
+    test('cerveza sin alcohol (<= 1,2% vol): epigrafe 1.a), 0 €/hl', () => {
+      const result = exciseDutiesService.calculateAlcoholExcise({
+        taricCode: '2203000010', quantity: 1000, alcoholContent: 1.0, unit: 'L'
+      });
+
+      expect(result.applicable).toBe(true);
+      expect(result.rate).toBe(0);
+      expect(result.amount).toBe(0);
+      expect(result.epigraph).toMatch(/1\.a/);
+    });
+
+    test('cerveza de 2,5% vol: epigrafe 1.b) a 2,75 €/hl', () => {
+      const result = exciseDutiesService.calculateAlcoholExcise({
+        taricCode: '2203000010', quantity: 1000, alcoholContent: 2.5, unit: 'L'
+      });
+
+      expect(result.rate).toBe(2.75);
+      expect(result.amount).toBe(27.5);
+    });
+
+    // Epigrafe 5: unico que va POR grado Plato ademas de por hectolitro.
+    test('cerveza de mas de 19 grados Plato: 0,91 €/hl y POR grado Plato', () => {
+      const result = exciseDutiesService.calculateAlcoholExcise({
+        taricCode: '2203000010', quantity: 1000, alcoholContent: 9.0, platoDegrees: 22, unit: 'L'
+      });
+
+      expect(result.rate).toBe(0.91);
+      expect(result.amount).toBe(200.2);  // 10 hl x 0,91 x 22 grados Plato
+      expect(result.unit).toBe('€/hl/grado Plato');
+    });
+
+    /**
+     * Ley 38/1992 art. 30: los vinos tranquilos y espumosos tributan a CERO en Espana.
+     *
+     * Este test EXIGIA el comportamiento incorrecto: daba por bueno que un vino de 12%
+     * vol se tratara como "producto intermedio" a 0,85 €/L, un tipo que no existe en
+     * la ley. Con el, un contenedor de 10.000 L de Rioja liquidaba 8.500 EUR de
+     * impuesto especial inexistente. Los productos intermedios son otra categoria
+     * (art. 34) y van POR HECTOLITRO.
+     */
+    test('un vino tranquilo de 12% vol tributa a CERO (art. 30), no como intermedio', () => {
+      const result = exciseDutiesService.calculateAlcoholExcise({
+        taricCode: '2204210000', quantity: 1000, alcoholContent: 12.0, unit: 'L'
+      });
+
+      expect(result.subcategory).not.toBe('INTERMEDIATE');
+      expect(result.amount || 0).toBe(0);
+    });
+
+    /**
+     * Ley 38/1992 art. 39: 958,94 €/hectolitro de alcohol puro = 9,5894 €/litro.
+     * El servicio tenia 10,97 €/L, un 14% POR ENCIMA del tipo legal, y el reducido
+     * en 5,485 (la mitad del inflado) en vez del regimen de cosechero del art. 41
+     * (226,36 €/hl). Ningun test cubria el alcohol etilico, asi que el tipo inflado
+     * pasaba inadvertido.
+     */
+    test('alcohol etilico: 9,5894 €/litro de alcohol puro (art. 39)', () => {
+      // 1.000 L de whisky a 40% vol = 400 L de alcohol puro.
+      const result = exciseDutiesService.calculateAlcoholExcise({
+        taricCode: '2208300000', quantity: 1000, alcoholContent: 40.0, unit: 'L'
+      });
+
+      expect(result.applicable).toBe(true);
+      expect(result.rate).toBe(9.5894);
+      expect(result.pureAlcoholLiters).toBe(400);
+      expect(result.amount).toBe(3835.76);  // 400 L x 9,5894
+    });
+
+    test('un vino encabezado de mas de 15% vol si es producto intermedio (art. 34)', () => {
+      const result = exciseDutiesService.calculateAlcoholExcise({
+        taricCode: '2204210000', quantity: 1000, alcoholContent: 18.0, unit: 'L'
+      });
+
       expect(result.applicable).toBe(true);
       expect(result.subcategory).toBe('INTERMEDIATE');
-      expect(result.rate).toBe(0.85);
-      expect(result.amount).toBe(850); // 1000 L * 0.85 €/L
+      expect(result.rate).toBe(38.48);
+      expect(result.amount).toBe(384.8);  // 10 hl x 38,48 €/hl
+      expect(result.unit).toBe('€/hl');
+      expect(result.legalBasis).toBe('Ley 38/1992, art. 34');
     });
 
     test('should exempt wine with less than 1.2% alcohol', () => {
@@ -134,7 +205,9 @@ describe('Excise Duties Service', () => {
       expect(result.applicable).toBe(true);
       expect(result.subcategory).toBe('SPIRITS');
       expect(result.pureAlcoholLiters).toBe(40); // 100 L * 40%
-      expect(result.amount).toBe(438.8); // 40 L * 10.97 €/L
+      // Ley 38/1992 art. 39: 958,94 €/hl de alcohol puro = 9,5894 €/L. Este test
+      // fijaba 438,80 EUR, que salia del tipo inflado de 10,97 €/L (14% de mas).
+      expect(result.amount).toBe(383.58); // 40 L * 9,5894 €/L
     });
 
     test('should return error if missing required fields', () => {
@@ -181,7 +254,27 @@ describe('Excise Duties Service', () => {
 
       expect(result.applicable).toBe(true);
       expect(result.subcategory).toBe('CIGARS');
-      expect(result.proportionalComponent).toBe(1650); // 10000 * 0.165
+      // Ley 38/1992 art. 60 epigrafe 1: 15,8% sobre PVP. El test fijaba 1.650 EUR,
+      // que salia del 16,5% que tenia el servicio y que la ley no recoge.
+      expect(result.proportionalComponent).toBe(1580); // 10000 * 0,158
+    });
+
+    /**
+     * Epigrafe 1 del art. 60: "El importe del impuesto no puede ser inferior al tipo
+     * unico de 47 euros por cada 1.000 unidades". Los cigarros eran la unica labor
+     * que NO aplicaba su minimo, asi que un puro barato liquidaba por debajo del
+     * minimo legal.
+     */
+    test('los cigarros aplican el tipo unico minimo de 47 €/1.000 unidades', () => {
+      // 1.000 puros a 100 EUR de PVP total: el 15,8% son 15,80 EUR, muy por debajo
+      // del minimo de 47 EUR por cada 1.000 unidades.
+      const result = exciseDutiesService.calculateTobaccoExcise({
+        taricCode: '2402100000', quantity: 1000, price: 100, unit: 'units'
+      });
+
+      expect(result.proportionalComponent).toBe(15.8);
+      expect(result.minimumTax).toBe(47);
+      expect(result.amount).toBe(47); // manda el minimo
     });
 
     test('should calculate excise for fine cut tobacco', () => {
@@ -227,8 +320,11 @@ describe('Excise Duties Service', () => {
 
       expect(result.applicable).toBe(true);
       expect(result.subcategory).toBe('GASOLINE');
-      expect(result.rate).toBe(436.00);
-      expect(result.amount).toBe(4360); // 10000 / 1000 * 436
+      // Ley 38/1992 art. 50 epigrafe 1.2.2: el tipo es la SUMA del general (400,69)
+      // y el especial (72) = 472,69 €/1.000 l. El test fijaba 436, que no es ninguno
+      // de los dos ni su suma.
+      expect(result.rate).toBe(472.69);
+      expect(result.amount).toBe(4726.9); // 10000 / 1000 * 472,69
     });
 
     test('should calculate excise for diesel', () => {
@@ -243,8 +339,9 @@ describe('Excise Duties Service', () => {
 
       expect(result.applicable).toBe(true);
       expect(result.subcategory).toBe('DIESEL');
-      expect(result.rate).toBe(331.00);
-      expect(result.amount).toBe(6620); // 20000 / 1000 * 331
+      // Epigrafe 1.3: 307 general + 72 especial = 379 €/1.000 l.
+      expect(result.rate).toBe(379.00);
+      expect(result.amount).toBe(7580); // 20000 / 1000 * 379
     });
 
     test('should calculate excise for LPG', () => {
