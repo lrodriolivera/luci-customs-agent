@@ -262,6 +262,49 @@ describe('determineDocumentation', () => {
     expect(docs.some(d => d.code === 'C501' && d.name === 'EUR.1')).toBe(true);
   });
 
+  /**
+   * `checkSanctions` marca `action: 'require_authorization'` para los paises
+   * sancionados parcialmente (RU, nivel sectorial), pero esa autorizacion no
+   * llegaba NUNCA a la documentacion. Detectado en produccion el 10/Ago/2026:
+   * una importacion textil desde Rusia salia "con Restricciones" y a la vez
+   * listaba como documentacion solo Factura + BL/AWB + Packing List, omitiendo
+   * el unico requisito que impide despacharla.
+   */
+  test('una sancion que exige autorizacion la anade a la documentacion', () => {
+    const docs = rulesEngine.determineDocumentation({}, {
+      ...baseAnalysis,
+      controls: {
+        paracustoms: [],
+        sanctions: { sanctioned: true, country: 'RU', level: 'sectorial', reason: 'Rusia - sanciones por conflicto Ucrania', action: 'require_authorization' }
+      }
+    });
+
+    const autorizacion = docs.find(d => /Autorizacion de importacion/i.test(d.name));
+    expect(autorizacion).toBeTruthy();
+    expect(autorizacion.mandatory).toBe(true);
+    expect(autorizacion.name).toContain('RU');
+  });
+
+  test('sin sancion no se anade ninguna autorizacion', () => {
+    const docs = rulesEngine.determineDocumentation({}, {
+      ...baseAnalysis,
+      controls: { paracustoms: [], sanctions: { sanctioned: false } }
+    });
+
+    expect(docs.some(d => /Autorizacion de importacion/i.test(d.name))).toBe(false);
+  });
+
+  // Una sancion TOTAL bloquea la operacion (`block_operation`): no procede pedir
+  // una autorizacion para algo que no se puede importar.
+  test('una sancion total no pide autorizacion: bloquea', () => {
+    const docs = rulesEngine.determineDocumentation({}, {
+      ...baseAnalysis,
+      controls: { paracustoms: [], sanctions: { sanctioned: true, country: 'KP', level: 'total', action: 'block_operation' } }
+    });
+
+    expect(docs.some(d => /Autorizacion de importacion/i.test(d.name))).toBe(false);
+  });
+
   test('desglosa los documentos de los controles paraduaneros', () => {
     const docs = rulesEngine.determineDocumentation({}, {
       ...baseAnalysis,

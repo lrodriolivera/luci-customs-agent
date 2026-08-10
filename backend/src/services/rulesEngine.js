@@ -654,6 +654,23 @@ class RulesEngine {
       });
     }
 
+    // Autorizacion por sanciones. `checkSanctions` ya determina
+    // `action: 'require_authorization'` para las sancionadas parcialmente (p.ej. RU),
+    // pero esa autorizacion no llegaba NUNCA a la documentacion: la pantalla
+    // presentaba "Factura + BL/AWB + Packing List" como la documentacion de la
+    // operacion, omitiendo el unico requisito que impide despacharla. Un usuario que
+    // siguiera esa lista se plantaria en la aduana sin la autorizacion exigida.
+    if (analysis.controls?.sanctions?.sanctioned &&
+        analysis.controls.sanctions.action === 'require_authorization') {
+      docs.push({
+        code: 'C990',
+        name: `Autorizacion de importacion (sanciones ${analysis.controls.sanctions.country})`,
+        mandatory: true,
+        authority: 'Secretaria de Estado de Comercio',
+        reason: analysis.controls.sanctions.reason
+      });
+    }
+
     return docs;
   }
 

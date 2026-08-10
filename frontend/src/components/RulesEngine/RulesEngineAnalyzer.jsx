@@ -285,9 +285,14 @@ export default function RulesEngineAnalyzer() {
                       <div key={idx} className={`p-3 rounded-md ${getSeverityColor(alert.severity)}`}>
                         <div className="flex items-start">
                           <ExclamationTriangleIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                          {/* El `code` es un identificador interno (NO_AGREEMENTS,
+                              SANCTIONS_HIT...), no texto de interfaz: se pintaba en
+                              negrita como titular del aviso. El texto para el usuario
+                              es `message`; el codigo queda como referencia discreta
+                              para dar parte de una incidencia. */}
                           <div>
-                            <p className="font-medium text-sm">{alert.code}</p>
-                            <p className="text-sm">{alert.message}</p>
+                            <p className="font-medium text-sm">{alert.message}</p>
+                            {alert.code && <p className="text-xs opacity-70 mt-0.5">{alert.code}</p>}
                           </div>
                         </div>
                       </div>
@@ -303,8 +308,8 @@ export default function RulesEngineAnalyzer() {
                         <div className="flex items-start">
                           <InformationCircleIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
                           <div>
-                            <p className="font-medium text-sm">{warning.code}</p>
-                            <p className="text-sm">{warning.message}</p>
+                            <p className="font-medium text-sm">{warning.message}</p>
+                            {warning.code && <p className="text-xs opacity-70 mt-0.5">{warning.code}</p>}
                           </div>
                         </div>
                       </div>

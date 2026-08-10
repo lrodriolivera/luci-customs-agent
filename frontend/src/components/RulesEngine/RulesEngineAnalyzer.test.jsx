@@ -500,6 +500,12 @@ describe('RulesEngineAnalyzer', () => {
       expect(screen.getByText('WARN-001')).toBeInTheDocument()
       expect(screen.getByText('Advertencia importante')).toBeInTheDocument()
     })
+
+    // El `code` es un identificador interno (NO_AGREEMENTS, SANCTIONS...), no texto
+    // de interfaz: se pintaba en negrita COMO TITULAR del aviso, con el mensaje
+    // legible debajo en letra normal. Visto en produccion el 10/Ago/2026.
+    expect(screen.getByText('Advertencia importante')).toHaveClass('font-medium')
+    expect(screen.getByText('WARN-001')).not.toHaveClass('font-medium')
   })
 
   it('renderiza impuestos con tarifa', async () => {
