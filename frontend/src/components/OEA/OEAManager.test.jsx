@@ -125,6 +125,26 @@ const mockMutualRecognition = [
 ]
 
 describe('<OEAManager />', () => {
+  /**
+   * Espera a que el componente haya terminado de cargar, es decir a que el
+   * spinner desaparezca.
+   *
+   * No sirve `await waitFor(() => expect(oeaAPI.X).toHaveBeenCalled())`: el
+   * `useEffect` invoca las llamadas de forma sincrona en el montaje, asi que esa
+   * espera se cumple en el primer tick, cuando `loading` sigue a `true` y lo
+   * unico pintado es el spinner. Cualquier `getBy*` sincrono a continuacion
+   * depende de que los microtasks de las promesas y el re-render de React entren
+   * antes que el assert: en local suele colar, bajo la carga de la bateria
+   * completa no, y dejaba el CI rojo en un test distinto cada vez.
+   */
+  const esperarCargaCompleta = async () => {
+    // El selector apunta al spinner de carga inicial, no al `animate-spin` del
+    // boton de crear (que solo aparece con `creating` a true).
+    await waitFor(() =>
+      expect(document.querySelector('.animate-spin.h-8.w-8')).toBeNull()
+    )
+  }
+
   // Helper para expandir una OEA
   const expandOEA = async (nameRegex) => {
     const clickableHeader = screen.getByText(nameRegex).closest('div[class*="cursor-pointer"]')
@@ -163,7 +183,7 @@ describe('<OEAManager />', () => {
 
   test('renderiza las 4 pestañas de navegacion', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
     expect(screen.getByText('Certificaciones')).toBeInTheDocument()
     expect(screen.getByText('Beneficios')).toBeInTheDocument()
     expect(screen.getByText('Simplificaciones')).toBeInTheDocument()
@@ -219,27 +239,28 @@ describe('<OEAManager />', () => {
     // No crashea
   })
 
+  // Los tres siguientes esperan con `findByText` a la pestaña que van a pulsar, no
+  // a que el mock se haya llamado: que la promesa del API se haya invocado no
+  // implica que React haya pintado nada todavia. Con `getByText` sincronico el
+  // componente seguia mostrando el spinner y el click fallaba (rojo en CI).
   test('maneja benefits catalog vacio sin romper', async () => {
     oeaAPI.getBenefitsCatalog.mockResolvedValueOnce({ data: {} })
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.getBenefitsCatalog).toHaveBeenCalled())
-    fireEvent.click(screen.getByText('Beneficios'))
+    fireEvent.click(await screen.findByText('Beneficios'))
     // No crashea
   })
 
   test('maneja simplifications vacio sin romper', async () => {
     oeaAPI.getSimplifications.mockResolvedValueOnce({ data: {} })
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.getSimplifications).toHaveBeenCalled())
-    fireEvent.click(screen.getByText('Simplificaciones'))
+    fireEvent.click(await screen.findByText('Simplificaciones'))
     // No crashea
   })
 
   test('maneja mutualRecognition vacio sin romper', async () => {
     oeaAPI.getMutualRecognition.mockResolvedValueOnce({ data: {} })
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.getMutualRecognition).toHaveBeenCalled())
-    fireEvent.click(screen.getByText('Reconocimiento Mutuo'))
+    fireEvent.click(await screen.findByText('Reconocimiento Mutuo'))
     // No crashea
   })
 
@@ -270,7 +291,7 @@ describe('<OEAManager />', () => {
   test('no muestra alerta si expiring esta vacio', async () => {
     oeaAPI.getExpiring.mockResolvedValueOnce({ data: { data: [] } })
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.getExpiring).toHaveBeenCalled())
+    await esperarCargaCompleta()
     expect(screen.queryByText(/Certificaciones Proximas a Vencer/)).not.toBeInTheDocument()
   })
 
@@ -303,14 +324,14 @@ describe('<OEAManager />', () => {
   test('no renderiza estadisticas si stats es null', async () => {
     oeaAPI.getStats.mockResolvedValueOnce({ data: { data: null } })
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.getStats).toHaveBeenCalled())
+    await esperarCargaCompleta()
     expect(screen.queryByText('Total OEA')).not.toBeInTheDocument()
   })
 
   // ==================== FORMULARIO CREAR OEA ====================
   test('muestra formulario de creacion al hacer clic en boton', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
     const btnNuevo = screen.getByText('oea.newApplication')
     fireEvent.click(btnNuevo)
     expect(screen.getByText('oea.newApplicationOEA')).toBeInTheDocument()
@@ -319,7 +340,7 @@ describe('<OEAManager />', () => {
 
   test('oculta formulario al hacer clic en Cancelar', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
     fireEvent.click(screen.getByText('oea.newApplication'))
     expect(screen.getByText('oea.newApplicationOEA')).toBeInTheDocument()
     fireEvent.click(screen.getByText('Cancelar'))
@@ -328,7 +349,7 @@ describe('<OEAManager />', () => {
 
   test('actualiza estado del formulario al cambiar inputs', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
     fireEvent.click(screen.getByText('oea.newApplication'))
 
     const inputName = screen.getByPlaceholderText('STRIX AI SL')
@@ -342,7 +363,7 @@ describe('<OEAManager />', () => {
 
   test('permite seleccionar tipo de certificacion', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
     fireEvent.click(screen.getByText('oea.newApplication'))
 
     const radioOEAS = screen.getByDisplayValue('OEAS')
@@ -356,7 +377,7 @@ describe('<OEAManager />', () => {
       .mockResolvedValueOnce({ data: { data: { oeas: [mockOea] } } })
 
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
     fireEvent.click(screen.getByText('oea.newApplication'))
 
     fireEvent.change(screen.getByPlaceholderText('STRIX AI SL'), { target: { value: 'STRIX AI SL' } })
@@ -401,7 +422,7 @@ describe('<OEAManager />', () => {
   test('maneja error al crear solicitud', async () => {
     oeaAPI.create.mockRejectedValueOnce({ response: { data: { error: 'NIF duplicado' } } })
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
     fireEvent.click(screen.getByText('oea.newApplication'))
 
     fireEvent.change(screen.getByPlaceholderText('STRIX AI SL'), { target: { value: 'Test' } })
@@ -417,7 +438,7 @@ describe('<OEAManager />', () => {
   test('resetea formulario tras crear solicitud exitosamente', async () => {
     oeaAPI.create.mockResolvedValueOnce({ data: { data: mockOea } })
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
     fireEvent.click(screen.getByText('oea.newApplication'))
 
     fireEvent.change(screen.getByPlaceholderText('STRIX AI SL'), { target: { value: 'Test' } })
@@ -434,7 +455,8 @@ describe('<OEAManager />', () => {
   // ==================== FILTROS ====================
   test('aplica filtro de estado', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalledWith({}))
+    await esperarCargaCompleta()
+    expect(oeaAPI.list).toHaveBeenCalledWith({})
 
     vi.clearAllMocks()
     oeaAPI.list.mockResolvedValueOnce({ data: { data: { oeas: [] } } })
@@ -447,7 +469,7 @@ describe('<OEAManager />', () => {
 
   test('cambia entre filtros correctamente', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
 
     vi.clearAllMocks()
     oeaAPI.list.mockResolvedValue({ data: { data: { oeas: [] } } })
@@ -815,7 +837,7 @@ describe('<OEAManager />', () => {
   // ==================== TABS ====================
   test('cambia a tab Beneficios', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
 
     fireEvent.click(screen.getByText('Beneficios'))
     await waitFor(() => expect(screen.getByText('Reduccion 100%')).toBeInTheDocument())
@@ -824,7 +846,7 @@ describe('<OEAManager />', () => {
 
   test('tab Beneficios agrupa por categoria', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
 
     fireEvent.click(screen.getByText('Beneficios'))
     await waitFor(() => expect(screen.getByText('Garantias')).toBeInTheDocument())
@@ -833,7 +855,7 @@ describe('<OEAManager />', () => {
 
   test('cambia a tab Simplificaciones', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
 
     fireEvent.click(screen.getByText('Simplificaciones'))
     await waitFor(() => expect(screen.getByText('Despacho Centralizado')).toBeInTheDocument())
@@ -842,7 +864,7 @@ describe('<OEAManager />', () => {
 
   test('tab Simplificaciones muestra requisitos', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
 
     fireEvent.click(screen.getByText('Simplificaciones'))
     await waitFor(() => expect(screen.getByText('Requisitos:')).toBeInTheDocument())
@@ -851,7 +873,7 @@ describe('<OEAManager />', () => {
 
   test('cambia a tab Reconocimiento Mutuo', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
 
     fireEvent.click(screen.getByText('Reconocimiento Mutuo'))
     await waitFor(() => expect(screen.getByText('Estados Unidos')).toBeInTheDocument())
@@ -860,7 +882,7 @@ describe('<OEAManager />', () => {
 
   test('tab Reconocimiento Mutuo muestra beneficios', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
 
     fireEvent.click(screen.getByText('Reconocimiento Mutuo'))
     await waitFor(() => expect(screen.getByText('Menos inspecciones')).toBeInTheDocument())
@@ -870,7 +892,7 @@ describe('<OEAManager />', () => {
   test('vuelve a tab Certificaciones', async () => {
     oeaAPI.list.mockResolvedValueOnce({ data: { data: { oeas: [mockOea] } } })
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
+    await esperarCargaCompleta()
 
     fireEvent.click(screen.getByText('Beneficios'))
     await waitFor(() => expect(screen.getByText('Reduccion 100%')).toBeInTheDocument())
