@@ -320,36 +320,30 @@ describe('VUA Service', () => {
       expect(result.timestamp).toBeDefined();
     });
 
+    // El simulador decide con `Math.random() > 0.2`, asi que tirar 20 veces
+    // esperando ver ambas caras es un flaky: no salir ningun PENDING en 20
+    // intentos pasa el 0,8^20 = 1,2% de las veces, y asi fallaba en el CI.
+    // Se fija el dado para ejercitar cada rama de forma determinista.
     test('debe retornar número de levante cuando es aprobado', async () => {
-      const results = [];
-      for (let i = 0; i < 20; i++) {
-        const result = await vuaService.requestRelease(`VUA2024TEST${i}`, {});
-        results.push(result);
-      }
+      jest.spyOn(Math, 'random').mockReturnValue(0.9); // > 0.2 => aprobado
 
-      const approved = results.filter(r => r.releaseStatus === 'APPROVED');
-      expect(approved.length).toBeGreaterThan(0);
-      approved.forEach(r => {
-        expect(r.releaseNumber).toBeDefined();
-        expect(r.releaseNumber).toMatch(/^LEV-/);
-        expect(r.conditions).toEqual([]);
-      });
+      const result = await vuaService.requestRelease('VUA2024TESTABCD1234', {});
+
+      expect(result.releaseStatus).toBe('APPROVED');
+      expect(result.releaseNumber).toBeDefined();
+      expect(result.releaseNumber).toMatch(/^LEV-/);
+      expect(result.conditions).toEqual([]);
     });
 
     test('debe retornar condiciones cuando está pendiente', async () => {
-      const results = [];
-      for (let i = 0; i < 20; i++) {
-        const result = await vuaService.requestRelease(`VUA2024TEST${i}`, {});
-        results.push(result);
-      }
+      jest.spyOn(Math, 'random').mockReturnValue(0.1); // <= 0.2 => pendiente
 
-      const pending = results.filter(r => r.releaseStatus === 'PENDING');
-      expect(pending.length).toBeGreaterThan(0);
-      pending.forEach(r => {
-        expect(r.releaseNumber).toBeNull();
-        expect(r.conditions).toBeDefined();
-        expect(Array.isArray(r.conditions)).toBe(true);
-      });
+      const result = await vuaService.requestRelease('VUA2024TESTABCD1234', {});
+
+      expect(result.releaseStatus).toBe('PENDING');
+      expect(result.releaseNumber).toBeNull();
+      expect(result.conditions).toBeDefined();
+      expect(Array.isArray(result.conditions)).toBe(true);
     });
   });
 
