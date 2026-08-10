@@ -1,0 +1,223 @@
+/* Hoja de estilo para los informes de LUCI en PDF (pandoc + weasyprint).
+   Paleta heredada de docs/generate-pdfs.py para que los documentos de la
+   familia se reconozcan entre si.
+
+   Los PDF no se versionan (.gitignore ignora *.pdf): se regeneran desde el
+   Markdown, que es la fuente. Desde docs/:
+
+     pandoc INFORME-PRUEBAS-PRE-TESTERS-2026-08-10.md \
+       --from=gfm --to=html5 --standalone --css=informe-pdf.css \
+       --metadata title="LUCI Customs Agent — Informe de pruebas previo a testers humanos" \
+       --metadata lang=es -o informe.html
+     weasyprint informe.html LUCI-Informe-Pruebas-Testers-2026-08-10.pdf
+
+   El title de los metadatos alimenta el titulo del PDF; el <h1 class="title">
+   que pandoc genera con el se oculta mas abajo para no duplicar el del
+   documento. */
+
+:root {
+  --azul: #0284c7;
+  --azul-oscuro: #075985;
+  --tinta: #0f172a;
+  --gris: #64748b;
+  --gris-claro: #e2e8f0;
+  --fondo-suave: #f8fafc;
+  --azul-suave: #e0f2fe;
+  --ambar: #b45309;
+  --rojo: #b91c1c;
+}
+
+@page {
+  size: A4;
+  margin: 2cm 1.9cm 1.9cm 1.9cm;
+
+  @bottom-left {
+    content: "LUCI Customs Agent — Informe de pruebas 10/08/2026";
+    font: 7.5pt "DejaVu Sans", sans-serif;
+    color: var(--gris);
+  }
+  @bottom-right {
+    content: counter(page) " / " counter(pages);
+    font: 7.5pt "DejaVu Sans", sans-serif;
+    color: var(--gris);
+  }
+}
+
+/* La primera pagina hace de portada: sin pie de pagina. */
+@page :first {
+  margin-top: 4.5cm;
+  @bottom-left { content: ""; }
+  @bottom-right { content: ""; }
+}
+
+body {
+  font-family: "DejaVu Serif", Georgia, serif;
+  font-size: 9.7pt;
+  line-height: 1.5;
+  color: var(--tinta);
+  hyphens: auto;
+}
+
+/* --- Titulos --- */
+
+h1 {
+  font-family: "DejaVu Sans", sans-serif;
+  font-size: 21pt;
+  font-weight: 700;
+  color: var(--azul);
+  line-height: 1.15;
+  margin: 0 0 0.5cm 0;
+  letter-spacing: -0.3pt;
+}
+
+h2 {
+  font-family: "DejaVu Sans", sans-serif;
+  font-size: 13pt;
+  color: var(--azul-oscuro);
+  border-bottom: 1.2pt solid var(--azul);
+  padding-bottom: 3pt;
+  margin: 0.85cm 0 0.35cm 0;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+h3 {
+  font-family: "DejaVu Sans", sans-serif;
+  font-size: 10.8pt;
+  color: var(--tinta);
+  margin: 0.6cm 0 0.25cm 0;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+/* pandoc imprime el title de los metadatos como <h1 class="title">, que
+   duplicaria el H1 del propio documento. Se oculta aqui en vez de omitir el
+   metadato, porque de ahi sale el titulo del PDF. */
+h1.title { display: none; }
+
+/* No se fuerza salto por seccion: dejaba paginas a medias. Solo se evita que
+   un titulo quede al pie con su contenido en la pagina siguiente. */
+
+p { margin: 0 0 0.28cm 0; orphans: 2; widows: 2; }
+
+/* --- Cabecera de metadatos (el bloque de lineas en negrita del inicio) --- */
+
+body > p:first-of-type {
+  font-family: "DejaVu Sans", sans-serif;
+  font-size: 9pt;
+  background: var(--azul-suave);
+  border-left: 3pt solid var(--azul);
+  padding: 0.32cm 0.4cm;
+  margin-bottom: 0.7cm;
+  line-height: 1.65;
+}
+
+/* --- Tablas --- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "DejaVu Sans", sans-serif;
+  font-size: 8.1pt;
+  margin: 0.3cm 0 0.5cm 0;
+}
+
+thead { display: table-header-group; }   /* repite cabecera al partir pagina */
+tr { break-inside: avoid; page-break-inside: avoid; }
+
+th {
+  background: var(--azul);
+  color: #fff;
+  font-weight: 700;
+  text-align: left;
+  padding: 4.5pt 5pt;
+  border: 0.5pt solid var(--azul);
+}
+
+td {
+  padding: 4pt 5pt;
+  border: 0.5pt solid var(--gris-claro);
+  vertical-align: top;
+}
+
+tbody tr:nth-child(even) td { background: var(--fondo-suave); }
+
+/* En las tablas de tres columnas (pantalla | hallazgo | estado) el reparto
+   automatico dejaba la primera tan estrecha que partia los nombres de ruta
+   (`/exci-se-du-ties`). Se fija el ancho y se prohibe cortar la palabra: la
+   descripcion, que es texto corrido, absorbe el sobrante. */
+table { table-layout: auto; }
+
+td:first-child {
+  white-space: nowrap;
+  hyphens: none;
+}
+
+/* Salvo en el anexo de commits, cuya primera columna es un hash corto y la
+   tercera un asunto largo que si debe fluir. */
+td code { white-space: nowrap; }
+
+/* --- Codigo --- */
+
+code {
+  font-family: "DejaVu Sans Mono", monospace;
+  font-size: 0.86em;
+  background: var(--fondo-suave);
+  border: 0.4pt solid var(--gris-claro);
+  border-radius: 2pt;
+  padding: 0.4pt 2.2pt;
+  word-break: break-all;
+}
+
+pre {
+  font-family: "DejaVu Sans Mono", monospace;
+  font-size: 7.4pt;
+  background: var(--fondo-suave);
+  border-left: 2.5pt solid var(--gris);
+  padding: 0.28cm 0.35cm;
+  margin: 0.25cm 0 0.4cm 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  break-inside: avoid;
+}
+pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+/* --- Citas: el patron de fondo de la campana --- */
+
+blockquote {
+  margin: 0.35cm 0;
+  padding: 0.3cm 0.45cm;
+  background: var(--azul-suave);
+  border-left: 3pt solid var(--azul);
+  font-style: italic;
+  font-size: 10.2pt;
+  color: var(--azul-oscuro);
+  break-inside: avoid;
+}
+blockquote p { margin: 0; }
+
+/* --- Listas --- */
+
+ul, ol { margin: 0.15cm 0 0.4cm 0; padding-left: 0.65cm; }
+li { margin-bottom: 0.14cm; }
+
+/* --- Enfasis --- */
+
+strong { font-weight: 700; color: #000; }
+em { font-style: italic; }
+
+hr {
+  border: none;
+  border-top: 0.5pt solid var(--gris-claro);
+  margin: 0.5cm 0;
+}
+
+/* El cierre en cursiva del documento. */
+body > p:last-of-type em { color: var(--gris); font-size: 8.6pt; }
+
+/* El anexo de commits si arranca en pagina propia: es material de consulta,
+   no de lectura seguida. */
+#anexo-a--los-73-commits-de-la-campaña {
+  break-before: page;
+  page-break-before: always;
+}
