@@ -145,6 +145,48 @@ describe('dutyCalculationService', () => {
       expect(r.dutyRate).toBe(6.5); // el string del cache se convierte a numero
     });
 
+    /**
+     * `duties.specific` es un objeto anidado en linea y **Mongoose SIEMPRE lo
+     * materializa como {}** aunque en Mongo no exista. Como {} es truthy, el
+     * ternario `duties.specific ? 'mixed' : 'ad_valorem'` marcaba 'mixed' a los
+     * ~19.900 codigos del catalogo SIN derecho especifico (21.946 - 2.032).
+     * Detectado el 10/Ago/2026 en la calculadora: el TARIC 8471300000
+     * (portatiles, arancel MFN 0%) salia como "Tipo de Arancel: Mixed".
+     *
+     * Importa porque con 'mixed' el importe pasa a `Math.max(adValorem, especifico)`:
+     * el arancel deja de ser el ad valorem en cuanto haya un especifico mal leido.
+     */
+    test('sin importe especifico el arancel es ad valorem, no mixto', async () => {
+      TaricCode.findOne.mockResolvedValue({
+        code: '8471300000',
+        description: { es: 'Portatiles' },
+        // Asi es como Mongoose entrega el subdocumento cuando en Mongo NO hay
+        // derecho especifico: el contenedor existe y esta vacio.
+        duties: { thirdCountry: 0, specific: {} },
+        measures: [], requiredDocuments: [], preferences: []
+      });
+
+      const r = await getDutyInfo('8471300000');
+
+      expect(r.dutyType).toBe('ad_valorem');
+      expect(r.specificDuty).toBeNull();
+    });
+
+    test('con importe especifico si es mixto y conserva el importe', async () => {
+      // 2204210000 (vino embotellado): 32 EUR/hl ademas del ad valorem. Real.
+      TaricCode.findOne.mockResolvedValue({
+        code: '2204210000',
+        description: { es: 'Vino' },
+        duties: { thirdCountry: 50, specific: { amount: 32, unit: 'EUR/hl' } },
+        measures: [], requiredDocuments: [], preferences: []
+      });
+
+      const r = await getDutyInfo('2204210000');
+
+      expect(r.dutyType).toBe('mixed');
+      expect(r.specificDuty).toEqual({ amount: 32, unit: 'EUR/hl' });
+    });
+
     test('la clave de cache separa por origen (el arancel preferencial difiere)', async () => {
       enBDLocal('6109100010');
 

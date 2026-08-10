@@ -111,6 +111,45 @@ describe('<DutyCalculator />', () => {
     expect(screen.getByText('calculator.seasonal')).toBeInTheDocument()
   })
 
+  /**
+   * La unidad suplementaria se pintaba como `{descripcion} ({unidad})` leyendo
+   * `supplementaryUnit.type`. Detectado en produccion el 10/Ago/2026: el catalogo
+   * TARIC tenia el dato guardado como `type_unit` (la BD y el esquema estaban
+   * desalineados por la clave reservada `type` de Mongoose), asi que `.type` era
+   * siempre undefined y la UI mostraba "Numero de articulos ()" con el parentesis
+   * vacio. Migrados los 5 documentos al nombre del esquema; aqui se fija que la UI
+   * no pinte un parentesis vacio si algun dia vuelve a faltar la unidad.
+   */
+  test('la unidad suplementaria se muestra entre parentesis cuando existe', async () => {
+    calculationsAPI.calculateDuties.mockResolvedValue({
+      data: { data: { dutyAmount: 0, vatAmount: 2100, totalToPay: 12100, customsValue: 10000,
+        supplementaryUnit: { required: true, description: 'Numero de articulos', type: 'p/st' } } }
+    })
+    render(<DutyCalculator />)
+    fireEvent.change(screen.getByTestId('calc-taric'), { target: { value: '8471300000' } })
+    fireEvent.change(screen.getByTestId('calc-value'), { target: { value: '10000' } })
+    fireEvent.change(screen.getByTestId('calc-origin'), { target: { value: 'CN' } })
+    fireEvent.submit(document.querySelector('form'))
+
+    await waitFor(() => expect(screen.getByText(/Numero de articulos/)).toBeInTheDocument())
+    expect(screen.getByText(/Numero de articulos \(p\/st\)/)).toBeInTheDocument()
+  })
+
+  test('sin unidad no se pinta un parentesis vacio', async () => {
+    calculationsAPI.calculateDuties.mockResolvedValue({
+      data: { data: { dutyAmount: 0, vatAmount: 2100, totalToPay: 12100, customsValue: 10000,
+        supplementaryUnit: { required: true, description: 'Numero de articulos' } } }
+    })
+    render(<DutyCalculator />)
+    fireEvent.change(screen.getByTestId('calc-taric'), { target: { value: '8471300000' } })
+    fireEvent.change(screen.getByTestId('calc-value'), { target: { value: '10000' } })
+    fireEvent.change(screen.getByTestId('calc-origin'), { target: { value: 'CN' } })
+    fireEvent.submit(document.querySelector('form'))
+
+    await waitFor(() => expect(screen.getByText(/Numero de articulos/)).toBeInTheDocument())
+    expect(screen.queryByText(/\(\s*\)/)).not.toBeInTheDocument()
+  })
+
   // Las ramas de estilo del render (source/confidence/vatType) son ternarios: para
   // cubrirlas hay que renderizar con cada valor. Parametrizamos.
   test.each([

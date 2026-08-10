@@ -38,8 +38,15 @@ async function getDutyInfo(taricCode, origin = null) {
       code: normalizedCode,
       description: localData.description?.es || localData.description?.en,
       dutyRate: localData.duties.thirdCountry,
-      dutyType: localData.duties.specific ? 'mixed' : 'ad_valorem',
-      specificDuty: localData.duties.specific || null,
+      // Se mira el IMPORTE del derecho especifico, no el contenedor: `duties.specific`
+      // es un objeto anidado en linea y Mongoose SIEMPRE lo materializa como {} aunque
+      // en Mongo no exista. Como {} es truthy, este ternario marcaba 'mixed' a los
+      // ~19.900 codigos del catalogo que NO tienen derecho especifico, y con 'mixed' el
+      // calculo pasa a Math.max(adValorem, especifico): un arancel ad valorem se
+      // presentaba como mixto y bastaba un derecho especifico mal leido para que el
+      // importe a pagar dejara de ser el ad valorem.
+      dutyType: localData.duties.specific?.amount ? 'mixed' : 'ad_valorem',
+      specificDuty: localData.duties.specific?.amount ? localData.duties.specific : null,
       vatRate: localVatInfo.rate,
       vatType: localVatInfo.type,
       supplementaryUnit: localData.supplementaryUnit,

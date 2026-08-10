@@ -69,8 +69,13 @@ export default function PreferencesCalculator() {
           available: eligibility.eligible,
           agreement: eligibility.recommended?.name || (eligibility.agreements[0]?.name),
           certificate: eligibility.recommended?.certificate || (eligibility.agreements[0]?.certificate),
-          standard: 0.125, // Default standard rate
-          preferential: eligibility.recommended?.conditions?.find(c => c.type === 'preferential')?.rate || 0,
+          // El arancel NMF y el preferencial vienen del backend o no se muestran. Aqui
+          // habia `standard: 0.125` fijo ("Default standard rate"): un arancel del 12,5%
+          // INVENTADO, igual para toda mercancia, con el que se calculaba y presentaba un
+          // "Ahorro Total" que no existia (p.ej. 6.250 EUR sobre 50.000 para un TARIC con
+          // arancel real del 0% y `savings: 0` devuelto por el backend).
+          standard: eligibility.standardRate ?? null,
+          preferential: eligibility.recommended?.conditions?.find(c => c.type === 'preferential')?.rate ?? null,
           originRules: eligibility.agreements[0]?.conditions?.find(c => c.type === 'rvc') ?
             { regionalValueContent: 0.45, tolerance: 0.10 } :
             { general: 'Product-specific rules', tolerance: 0.10, regionalValueContent: 0.45 },
@@ -213,9 +218,16 @@ export default function PreferencesCalculator() {
                 onChange={(e) => setFormData({ ...formData, originCountry: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
               >
+                {/* Se muestra el codigo ISO, no el acuerdo: `countriesGrouped` es el
+                    catalogo ISO 3166-1 y no lleva acuerdo comercial, asi que
+                    `c.agreement` era SIEMPRE undefined y las 194 opciones se pintaban
+                    como "Canada ()". Ademas el acuerdo no depende solo del pais sino
+                    del par pais+mercancia, y eso lo resuelve el backend al verificar
+                    la elegibilidad: ponerlo aqui seria afirmar un acuerdo sin haberlo
+                    comprobado. */}
                 {countries.map(c => (
                   <option key={c.code} value={c.code}>
-                    {c.name} ({c.agreement})
+                    {c.name} ({c.code})
                   </option>
                 ))}
               </select>
@@ -449,22 +461,36 @@ export default function PreferencesCalculator() {
                     Ahorro Estimado
                   </h3>
 
+                  {/* Los tipos solo se muestran si el backend los ha devuelto: antes
+                      caian a '12.5' y a 0.125, un arancel inventado que ademas se
+                      pintaba como "0.125%" mientras el importe lo usaba como 12,5%.
+                      El ahorro es el que calcula el backend (standardDuty -
+                      preferentialDuty), no una resta hecha aqui con tipos de relleno. */}
                   <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-600">Arancel NMF (sin preferencia):</span>
-                      <span className="font-semibold">{result.standard || '12.5'}%</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-600">Arancel Preferencial:</span>
-                      <span className="font-semibold text-green-600">{result.preferential || '0'}%</span>
-                    </div>
+                    {result.standard != null && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-600">Arancel NMF (sin preferencia):</span>
+                        <span className="font-semibold">{result.standard}%</span>
+                      </div>
+                    )}
+                    {result.preferential != null && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-gray-600">Arancel Preferencial:</span>
+                        <span className="font-semibold text-green-600">{result.preferential}%</span>
+                      </div>
+                    )}
                     <div className="flex justify-between py-3 bg-green-50 rounded-md px-3">
                       <span className="font-semibold text-gray-900">Ahorro Total:</span>
                       <span className="font-bold text-xl text-green-600">
-                        {((parseFloat(formData.customsValue) * (result.standard || 0.125)) -
-                          (parseFloat(formData.customsValue) * (result.preferential || 0))).toFixed(2)} EUR
+                        {Number(result.savings || 0).toFixed(2)} EUR
                       </span>
                     </div>
+                    {!result.savings && (
+                      <p className="text-sm text-gray-500">
+                        Este producto ya tiene arancel cero sin preferencia, por lo que el
+                        acuerdo no supone ahorro arancelario.
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

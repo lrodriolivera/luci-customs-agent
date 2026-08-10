@@ -20,16 +20,19 @@ vi.mock('../../services/api', () => ({
   }
 }))
 
+// El catalogo real (src/data/countries.js) es ISO 3166-1 y NO lleva `agreement`: el
+// acuerdo depende del par pais+mercancia y lo resuelve el backend. El mock lo incluia,
+// y por eso ningun test veia que la UI pintaba "Canada ()" en las 194 opciones.
 vi.mock('../../data/countries', () => ({
   countriesGrouped: [
     {
       group: 'Comunes',
       countries: [
-        { code: 'CA', name: 'Canada', label: 'Canada', agreement: 'CETA' },
-        { code: 'CN', name: 'China', label: 'China', agreement: 'None' },
-        { code: 'BR', name: 'Brasil', label: 'Brasil', agreement: 'MERCOSUR' },
-        { code: 'FR', name: 'Francia', label: 'Francia', agreement: 'EU' },
-        { code: 'US', name: 'Estados Unidos', label: 'Estados Unidos', agreement: 'None' }
+        { code: 'CA', label: 'Canada' },
+        { code: 'CN', label: 'China' },
+        { code: 'BR', label: 'Brasil' },
+        { code: 'FR', label: 'Francia' },
+        { code: 'US', label: 'Estados Unidos' }
       ]
     }
   ]
@@ -121,6 +124,73 @@ describe('<PreferencesCalculator />', () => {
     expect(screen.getByText(/125\.00 EUR/i)).toBeInTheDocument()
   })
 
+  /**
+   * El "Ahorro Total" se calculaba en el frontend con `standard: 0.125` fijo
+   * ("Default standard rate"): un arancel del 12,5% INVENTADO, igual para toda
+   * mercancia. Detectado en produccion el 10/Ago/2026 con el TARIC 8471300000
+   * (portatiles, arancel real 0%) desde Canada: el backend devolvia `savings: 0`
+   * y la pantalla anunciaba un ahorro de 6.250 EUR sobre 50.000 que no existe.
+   *
+   * El test anterior no lo detectaba porque pasaba por coincidencia:
+   * 1000 x 0.125 = 125, justo el `savings` del mock.
+   */
+  test('el ahorro es el que calcula el backend, no un arancel inventado', async () => {
+    preferencesAPI.checkEligibility.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          eligible: true,
+          recommended: { name: 'CETA', certificate: 'EUR.1', conditions: [] },
+          agreements: [{ name: 'CETA', certificate: 'EUR.1', conditions: [] }],
+          savings: 0, // arancel NMF ya es 0%: el acuerdo no ahorra nada
+          requirements: [], warnings: []
+        }
+      }
+    })
+
+    render(<PreferencesCalculator />)
+    fireEvent.change(getTaricInput(), { target: { value: '8471300000' } })
+    fireEvent.change(getValueInput(), { target: { value: '50000' } })
+    fireEvent.submit(screen.getByText('Datos del Producto').closest('form'))
+
+    await waitFor(() => expect(screen.getByText('Preferencia Disponible')).toBeInTheDocument())
+    expect(screen.getByText(/0\.00 EUR/)).toBeInTheDocument()
+    // 50.000 x 12,5% = 6.250: el importe que se anunciaba con el arancel de relleno.
+    expect(screen.queryByText(/6250\.00 EUR/)).not.toBeInTheDocument()
+    expect(screen.getByText(/no supone ahorro arancelario/i)).toBeInTheDocument()
+  })
+
+  test('sin tipos del backend no se pinta un arancel NMF de relleno', async () => {
+    preferencesAPI.checkEligibility.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          eligible: true,
+          recommended: { name: 'CETA', certificate: 'EUR.1', conditions: [] },
+          agreements: [{ name: 'CETA', certificate: 'EUR.1', conditions: [] }],
+          savings: 0, requirements: [], warnings: []
+        }
+      }
+    })
+
+    render(<PreferencesCalculator />)
+    fireEvent.change(getTaricInput(), { target: { value: '8471300000' } })
+    fireEvent.change(getValueInput(), { target: { value: '50000' } })
+    fireEvent.submit(screen.getByText('Datos del Producto').closest('form'))
+
+    await waitFor(() => expect(screen.getByText('Preferencia Disponible')).toBeInTheDocument())
+    expect(screen.queryByText(/12\.5%/)).not.toBeInTheDocument()
+    expect(screen.queryByText('Arancel NMF (sin preferencia):')).not.toBeInTheDocument()
+  })
+
+  // Las 194 opciones se pintaban como "Canada ()" leyendo un `agreement` inexistente.
+  test('el desplegable de paises muestra el codigo ISO, no un parentesis vacio', () => {
+    render(<PreferencesCalculator />)
+    const opcion = screen.getByRole('option', { name: /Canada/ })
+    expect(opcion).toHaveTextContent('Canada (CA)')
+    expect(opcion.textContent).not.toMatch(/\(\s*\)/)
+  })
+
   test('verificación exitosa: preferencia NO disponible', async () => {
     preferencesAPI.checkEligibility.mockResolvedValue({
       data: {
@@ -170,7 +240,13 @@ describe('<PreferencesCalculator />', () => {
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('País no soportado'))
   })
 
-  test('cálculo de ahorro con tasa preferencial no-cero', async () => {
+  /**
+   * Estos dos tests EXIGIAN el comportamiento incorrecto: sus mocks ni siquiera
+   * enviaban `savings`, y esperaban el importe que salia del arancel inventado
+   * (2000 x (0,125 - 0,05) = 150; 1234,56 x 0,125 = 154,32). Reescritos contra el
+   * `savings` que calcula el backend, que es el unico dato real.
+   */
+  test('el ahorro con tasa preferencial no-cero es el del backend', async () => {
     preferencesAPI.checkEligibility.mockResolvedValue({
       data: {
         success: true,
@@ -181,6 +257,7 @@ describe('<PreferencesCalculator />', () => {
             certificate: 'EUR.1',
             conditions: [{ type: 'preferential', rate: 0.05 }]
           },
+          savings: 150,
           agreements: []
         }
       }
@@ -196,7 +273,7 @@ describe('<PreferencesCalculator />', () => {
     await waitFor(() => expect(screen.getByText(/150\.00 EUR/i)).toBeInTheDocument())
   })
 
-  test('cálculo de ahorro con customsValue decimal', async () => {
+  test('el ahorro con valor decimal se muestra con dos decimales', async () => {
     preferencesAPI.checkEligibility.mockResolvedValue({
       data: {
         success: true,
@@ -207,6 +284,7 @@ describe('<PreferencesCalculator />', () => {
             certificate: 'Form A',
             conditions: [{ type: 'preferential', rate: 0 }]
           },
+          savings: 154.32,
           agreements: []
         }
       }

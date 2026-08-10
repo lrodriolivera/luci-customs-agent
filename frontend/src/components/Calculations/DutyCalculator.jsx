@@ -500,7 +500,7 @@ export default function DutyCalculator() {
               {result.data.supplementaryUnit?.required && (
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    <span className="font-medium">{t('calculator.supplementaryUnits')}</span> {result.data.supplementaryUnit.description} ({result.data.supplementaryUnit.type})
+                    <span className="font-medium">{t('calculator.supplementaryUnits')}</span> {result.data.supplementaryUnit.description}{result.data.supplementaryUnit.type ? ` (${result.data.supplementaryUnit.type})` : ''}
                   </p>
                 </div>
               )}
