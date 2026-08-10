@@ -161,7 +161,12 @@ describe('POST /api/quotas/calculate-savings', () => {
 
 describe('GET /api/quotas/critical', () => {
   test('declara que la criticidad la marca TARIC', async () => {
-    quotaService.getCriticalQuotas.mockResolvedValue([{ orderNumber: '090006', critical: true }]);
+    quotaService.getCriticalQuotas.mockResolvedValue({
+      quotas: [{ orderNumber: '090006', critical: true }],
+      totalCritical: 1,
+      truncated: false,
+      limit: 200
+    });
 
     const res = await request(app).get('/api/quotas/critical');
 
@@ -170,8 +175,25 @@ describe('GET /api/quotas/critical', () => {
     expect(res.body.data.criticalSource).toBe('taric');
   });
 
+  test('publica el total cuando el tope recorta la lista', async () => {
+    // 291 criticos en el catalogo de 2026 y tope de 200: devolver solo `count`
+    // se leeria como que hay 200.
+    quotaService.getCriticalQuotas.mockResolvedValue({
+      quotas: [{ orderNumber: '090006', critical: true }],
+      totalCritical: 291,
+      truncated: true,
+      limit: 200
+    });
+
+    const res = await request(app).get('/api/quotas/critical');
+
+    expect(res.body.data).toMatchObject({ totalCritical: 291, truncated: true, limit: 200 });
+  });
+
   test('una lista vacia no es un error', async () => {
-    quotaService.getCriticalQuotas.mockResolvedValue([]);
+    quotaService.getCriticalQuotas.mockResolvedValue({
+      quotas: [], totalCritical: 0, truncated: false, limit: 200
+    });
 
     const res = await request(app).get('/api/quotas/critical');
 

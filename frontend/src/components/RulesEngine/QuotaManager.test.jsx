@@ -415,6 +415,42 @@ describe('QuotaManager', () => {
       expect(screen.getByText('17.53% consumido')).toBeInTheDocument()
     })
 
+    it('avisa cuando el tope deja criticos fuera de la lista', async () => {
+      // El catalogo real de 2026 tiene 291 criticos y el endpoint devuelve 200:
+      // sin este aviso, la pestana se lee como "hay 200 criticos".
+      api.get.mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: {
+            count: 1,
+            totalCritical: 291,
+            truncated: true,
+            limit: 200,
+            quotas: [contingente({ critical: true })]
+          }
+        }
+      })
+
+      irAPestana('Contingentes Críticos')
+
+      expect(await screen.findByText(/291/)).toBeInTheDocument()
+      expect(screen.getByText(/se muestran los 200/i)).toBeInTheDocument()
+    })
+
+    it('no pone el aviso de truncado cuando caben todos', async () => {
+      api.get.mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: { count: 1, totalCritical: 1, truncated: false, limit: 200, quotas: [contingente({ critical: true })] }
+        }
+      })
+
+      irAPestana('Contingentes Críticos')
+
+      await screen.findByText('Orden 090006')
+      expect(screen.queryByText(/se muestran los/i)).not.toBeInTheDocument()
+    })
+
     it('dice que no se puede reservar cupo', async () => {
       api.get.mockResolvedValueOnce({
         data: { success: true, data: { count: 1, quotas: [contingente({ critical: true })] } }

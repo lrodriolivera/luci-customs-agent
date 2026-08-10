@@ -444,12 +444,23 @@ async function calculateQuotaSavings(taricCode, originCountry, quantity, customs
  */
 async function getCriticalQuotas(opciones = {}) {
   const year = opciones.year || new Date().getFullYear();
-  const criticos = await TariffQuota.find({ year, critical: true })
+  const tope = opciones.limit || 200;
+
+  const consulta = { year, critical: true };
+  // El total va aparte del tope: el catalogo de 2026 tiene 291 criticos y
+  // devolver 200 en silencio se lee como "hay 200 criticos".
+  const totalCritical = await TariffQuota.countDocuments(consulta);
+  const criticos = await TariffQuota.find(consulta)
     .sort({ utilizationPercent: -1 })
-    .limit(opciones.limit || 200)
+    .limit(tope)
     .lean();
 
-  return criticos.map((q) => presentar(q, { warnings: avisos(q) }));
+  return {
+    quotas: criticos.map((q) => presentar(q, { warnings: avisos(q) })),
+    totalCritical,
+    truncated: totalCritical > criticos.length,
+    limit: tope
+  };
 }
 
 /** Resumen del catalogo sincronizado. */

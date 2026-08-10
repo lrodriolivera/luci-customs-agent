@@ -60,6 +60,7 @@ export default function QuotaManager() {
   const [quotas, setQuotas] = useState([])
   const [listado, setListado] = useState({ total: 0, page: 1, synced: true, lastSyncAt: null })
   const [critical, setCritical] = useState([])
+  const [criticosTruncados, setCriticosTruncados] = useState(null)
   const [availability, setAvailability] = useState(null)
   const [selectedTab, setSelectedTab] = useState('search')
   const [pagina, setPagina] = useState(1)
@@ -114,6 +115,10 @@ export default function QuotaManager() {
 
       if (data.success) {
         setCritical(data.data.quotas)
+        // El endpoint tiene tope: hay que saber si la lista es todo lo que hay.
+        setCriticosTruncados(data.data.truncated
+          ? { total: data.data.totalCritical, limite: data.data.limit }
+          : null)
       } else {
         toast.error('Error al cargar contingentes críticos')
       }
@@ -621,7 +626,17 @@ export default function QuotaManager() {
               <p className="text-gray-500">Cargando contingentes críticos...</p>
             </div>
           ) : critical.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              {/* El endpoint tiene tope. Sin este aviso, una lista recortada se
+                  lee como el total de criticos del catalogo. */}
+              {criticosTruncados && (
+                <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-4">
+                  El catálogo tiene {criticosTruncados.total} contingentes marcados como
+                  críticos: se muestran los {criticosTruncados.limite} de mayor consumo.
+                  Consulta el resto en la fuente oficial.
+                </p>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {critical.map((quota) => (
                 <div key={quota.quotaId} className="bg-white rounded-lg shadow-md border-2 border-orange-500 p-6">
                   <div className="flex items-start mb-4">
@@ -662,6 +677,7 @@ export default function QuotaManager() {
                   </div>
                 </div>
               ))}
+              </div>
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow-md p-12 text-center">

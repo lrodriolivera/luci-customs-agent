@@ -130,10 +130,15 @@ exports.getCritical = async (req, res) => {
     res.json({
       success: true,
       data: {
-        count: critical.length,
+        count: critical.quotas.length,
+        // El total y el tope se publican: si el tope deja criticos fuera, quien
+        // consulta tiene que saberlo en vez de leer `count` como el total.
+        totalCritical: critical.totalCritical,
+        truncated: critical.truncated,
+        limit: critical.limit,
         criticalSource: 'taric',
         officialSource: quotaService.URL_OFICIAL,
-        quotas: critical
+        quotas: critical.quotas
       }
     });
   } catch (error) {

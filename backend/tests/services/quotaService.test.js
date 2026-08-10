@@ -428,10 +428,10 @@ describe('getCriticalQuotas', () => {
     const r = await quotaService.getCriticalQuotas({ year: 2026 });
 
     expect(TariffQuota.find).toHaveBeenCalledWith({ year: 2026, critical: true });
-    expect(r[0].critical).toBe(true);
-    expect(r[0].criticalSource).toBe('taric');
+    expect(r.quotas[0].critical).toBe(true);
+    expect(r.quotas[0].criticalSource).toBe('taric');
     // Critico al 17,53%: la criticidad no es funcion del porcentaje.
-    expect(r[0].volume.utilizationPercent).toBe(17.53);
+    expect(r.quotas[0].volume.utilizationPercent).toBe(17.53);
   });
 
   test('no proyecta una fecha de agotamiento que la fuente no da', async () => {
@@ -439,7 +439,7 @@ describe('getCriticalQuotas', () => {
 
     const r = await quotaService.getCriticalQuotas({ year: 2026 });
 
-    expect(r[0].exhaustionDate).toBeNull();
+    expect(r.quotas[0].exhaustionDate).toBeNull();
   });
 
   test('devuelve la fecha oficial de agotamiento cuando existe', async () => {
@@ -447,7 +447,32 @@ describe('getCriticalQuotas', () => {
 
     const r = await quotaService.getCriticalQuotas({ year: 2026 });
 
-    expect(r[0].exhaustionDate).toBe('2026-03-14');
+    expect(r.quotas[0].exhaustionDate).toBe('2026-03-14');
+  });
+
+  test('dice cuantos criticos hay cuando el tope deja fuera a algunos', async () => {
+    // El catalogo real de 2026 tiene 291 criticos y el tope por defecto es 200:
+    // devolver 200 en silencio se lee como "hay 200 criticos", que es justo la
+    // clase de cifra sin respaldo que este servicio venia arrastrando.
+    TariffQuota.countDocuments = jest.fn().mockResolvedValue(291);
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({ critical: true })]));
+
+    const r = await quotaService.getCriticalQuotas({ year: 2026, limit: 200 });
+
+    expect(TariffQuota.countDocuments).toHaveBeenCalledWith({ year: 2026, critical: true });
+    expect(r.totalCritical).toBe(291);
+    expect(r.truncated).toBe(true);
+    expect(r.quotas).toHaveLength(1);
+  });
+
+  test('no se declara truncado cuando caben todos', async () => {
+    TariffQuota.countDocuments = jest.fn().mockResolvedValue(1);
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({ critical: true })]));
+
+    const r = await quotaService.getCriticalQuotas({ year: 2026 });
+
+    expect(r.truncated).toBe(false);
+    expect(r.totalCritical).toBe(1);
   });
 });
 
