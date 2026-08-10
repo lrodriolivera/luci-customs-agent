@@ -24,8 +24,13 @@ jobs:
         working-directory: backend
         run: npm test
 
-  frontend-build:
+  # Los tests van ANTES del build y en el mismo job: `npm run build` solo empaqueta
+  # lo alcanzable desde App.jsx, asi que no detecta roturas en ficheros que ninguna
+  # ruta importa todavia. Asi se colo `lucide-react` sin declarar en package.json:
+  # el build pasaba y la suite de Portal caia a 0 tests en cualquier checkout limpio.
+  frontend-tests-and-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v4
 
@@ -36,6 +41,10 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test
 
       - name: Build frontend
         working-directory: frontend
