@@ -105,3 +105,6 @@ frontend/dist/stats.html
 
 # Dependencias solo-tests instaladas fuera de node_modules (mongodb-memory-server)
 backend/.test-deps/
+
+# Intermedio de pandoc para generar el PDF del informe (ver docs/informe-pdf.css)
+docs/informe.html

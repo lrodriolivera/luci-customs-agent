@@ -19,6 +19,13 @@ Cada afirmación de este documento es comprobable: hay un identificador de commi
 un MRN devuelto por AEAT o una consulta a base de datos detrás. Donde algo **no**
 está verificado, se dice explícitamente en la sección 7.
 
+**Sobre las capturas.** Las ocho figuras de este informe son pantallazos reales de la
+aplicación tomados durante la campaña, con MRN devueltos por AEAT PRE. Contienen EORI,
+NIF y nombres de usuario, así que **no se versionan en el repositorio**: viven en
+`evidencia-e2e-luci-2026-08/` junto al proyecto (146 capturas en total; las 8
+seleccionadas, en `seleccion-informe/`). El PDF sí las lleva incrustadas y es, por
+tanto, el documento que se entrega.
+
 **Advertencia de lectura.** Este informe no presenta un producto sin defectos.
 Presenta 61 correcciones sobre defectos reales, muchos de ellos graves, y una lista
 abierta de lo que queda. Se ha escrito así a propósito: un informe que solo cuenta
@@ -118,6 +125,29 @@ tester intente romper de nuevo.
 **8 ENS con MRN real de AEAT PRE**, todas en modo RAIL:
 `26ES009999Z0000685`, `...693`, `...709`, `...717`, `...725`, `...733`, `...741`, `...750`.
 
+![](../../evidencia-e2e-luci-2026-08/seleccion-informe/02-ens-toast-mrn-envio-aeat.png)
+
+*Figura 1 — El aviso de la propia aplicación tras enviar: «Declaración enviada a AEAT
+· MRN: 26ES009999Z0000741». Detrás, el listado con las ENS aceptadas y su MRN en la
+columna correspondiente.*
+
+![](../../evidencia-e2e-luci-2026-08/seleccion-informe/01-ens-mrn-cc328a-aduana-pre.png)
+
+*Figura 2 — Detalle de `ENS-2026-000019`: MRN `26ES009999Z0000750`, respuesta de AEAT
+`CC328A` y aduana de entrada `ES009999 — PRE Pruebas Peninsula`. Es el entorno de
+pruebas de AEAT, nunca producción.*
+
+![](../../evidencia-e2e-luci-2026-08/seleccion-informe/04-ens-historial-estados.png)
+
+*Figura 3 — Pestaña «Historial» de la misma declaración: Borrador → Enviada →
+Aceptada, las tres el 08/08/2026 a las 21:57.*
+
+![](../../evidencia-e2e-luci-2026-08/seleccion-informe/03-ens-listado-15-declaraciones.png)
+
+*Figura 4 — Listado completo de ENS (15 declaraciones). Las cinco con MRN en la
+columna son las que AEAT aceptó; el resto son borradores locales. La diferencia se ve
+en la propia pantalla: sin MRN no hay declaración presentada.*
+
 ### 4.3 Tránsito NCTS
 
 | Qué se probó | Lo más grave | Estado |
@@ -129,6 +159,21 @@ tester intente romper de nuevo.
 | Jurisdicción | Las 15 operaciones acababan en aduana extranjera y la interfaz ofrecía acciones que solo puede presentar el destinatario | Corregido (3 defectos) |
 
 **6 tránsitos con MRN de formato AEAT válido**: `26ES002801501092J0` a `...097J5`.
+
+![](../../evidencia-e2e-luci-2026-08/seleccion-informe/06-transit-mrn-liberado-3-mensajes.png)
+
+*Figura 5 — Tránsito T1 `26ES002801501095J7` liberado en partida (ES002801 → ES002901),
+con precinto declarado y el contador «3 mensaje(s) NCTS». Ese contador es justo lo que
+se corrigió: de los tres mensajes anotados, solo dos cruzaron la red — el `IE029` se
+generaba en local y se presentaba igual que un levante concedido por AEAT. Hoy el
+listado distingue los intercambiados de los que son solo registro local.*
+
+![](../../evidencia-e2e-luci-2026-08/seleccion-informe/05-transit-error-aeat-visible.png)
+
+*Figura 6 — El comportamiento correcto ante un rechazo: AEAT devuelve «El elemento no
+cumple con el formato exigido» con el patrón que espera, y la interfaz lo muestra tal
+cual sobre el LRN `LRNMSKEKS0T7E5C9Z`. Antes de la corrección, una respuesta así podía
+acabar presentada como éxito.*
 
 ### 4.4 Cálculo y normativa (la tanda más delicada)
 
@@ -237,6 +282,19 @@ Esta sección es la más útil del documento. Aquí no hay red de seguridad.
   se ha verificado **RAIL**. Los plazos de ROAD (1 h), AIR (4 h) y SEA (24 h) no
   se han ejercitado por interfaz.
 - **`/ens`: «Importar Lote»** de extremo a extremo (CSV separado por `;`).
+
+![](../../evidencia-e2e-luci-2026-08/seleccion-informe/07-ens-ics2-solo-rail.png)
+
+*Figura 7 — `ENS-2026-000008`, modo marítimo: el botón «Enviar a AEAT» está
+deshabilitado y explica por qué — «Este modo debe declararse mediante ICS2 (no por el
+canal AEAT actual)». La limitación se avisa en pantalla en vez de dejar que el envío
+falle. Los modos ROAD, AIR y SEA siguen sin recorrer por navegador.*
+
+![](../../evidencia-e2e-luci-2026-08/seleccion-informe/08-ens-importar-lote.png)
+
+*Figura 8 — «Importar Lote» sí se ha ejercitado hasta el paso 3: 2 de 2 declaraciones
+procesadas, creadas como `ENS-2026-000011` y `...012`. Quedan **sin MRN** (columna a
+guiones), es decir, creadas en LUCI pero no presentadas: eso es lo que falta recorrer.*
 - **`/pue`** (Punto Único de Entrada / SOIVRE): es el **único generador de
   documentos sin MRN real**, porque AEAT lo tiene bloqueado para nuestro EORI.
 

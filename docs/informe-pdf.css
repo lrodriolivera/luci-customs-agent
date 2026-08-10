@@ -215,6 +215,38 @@ hr {
 /* El cierre en cursiva del documento. */
 body > p:last-of-type em { color: var(--gris); font-size: 8.6pt; }
 
+/* --- Figuras --- */
+
+/* Las capturas viven FUERA del repositorio (llevan EORI/NIF/MRN y la regla del
+   proyecto excluye pantallazos del control de versiones), asi que la ruta del
+   Markdown es relativa a ../../evidencia-e2e-luci-2026-08/. weasyprint las
+   resuelve desde el HTML generado en docs/. */
+img {
+  display: block;
+  max-width: 100%;
+  max-height: 9.6cm;           /* dos figuras por pagina, con su pie, sin partirlas */
+  margin: 0.35cm auto 0.12cm auto;
+  border: 0.5pt solid var(--gris-claro);
+}
+
+/* El parrafo en cursiva que sigue a cada imagen es su pie. */
+p > img + br { display: none; }
+
+p:has(> img) { break-inside: avoid; margin-bottom: 0.1cm; }
+
+/* Pie de figura: el parrafo en cursiva inmediatamente posterior. */
+p:has(> img) + p em {
+  display: block;
+  font-family: "DejaVu Sans", sans-serif;
+  font-size: 7.8pt;
+  font-style: normal;
+  color: var(--gris);
+  line-height: 1.4;
+  text-align: left;
+  margin-bottom: 0.45cm;
+}
+p:has(> img) + p { break-before: avoid; page-break-before: avoid; }
+
 /* El anexo de commits si arranca en pagina propia: es material de consulta,
    no de lectura seguida. */
 #anexo-a--los-73-commits-de-la-campaña {
