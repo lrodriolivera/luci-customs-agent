@@ -18,6 +18,20 @@ const { ClientApiKey } = require('../../src/models');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 
+/**
+ * Sondea la API key hasta que el contador de uso alcance el valor esperado.
+ * Necesario porque el middleware lanza `recordUsage` sin esperarlo.
+ */
+async function esperarUsoRegistrado(id, totalEsperado, intentos = 50) {
+  let doc;
+  for (let i = 0; i < intentos; i++) {
+    doc = await ClientApiKey.findById(id);
+    if (doc?.usage?.totalRequests === totalEsperado) return doc;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  return doc;
+}
+
 describe('apiKeyAuth middleware - branches SECURITY-CRITICAL', () => {
   usarBaseDeDatosEnMemoria();
 
@@ -365,10 +379,11 @@ describe('apiKeyAuth middleware - branches SECURITY-CRITICAL', () => {
 
       expect(next).toHaveBeenCalledWith();
 
-      // Esperar a que se complete el recordUsage async
-      await new Promise((resolve) => setImmediate(resolve));
-
-      const updated = await ClientApiKey.findById(validApiKeyDoc._id);
+      // `recordUsage` es fire-and-forget (el middleware no lo espera), asi que
+      // hay que sondear la BD: un solo setImmediate solo cubre el caso en que el
+      // save al mongod acabe dentro del mismo tick, y bajo la carga de la
+      // bateria completa no acaba (flaky que dejaba el CI rojo).
+      const updated = await esperarUsoRegistrado(validApiKeyDoc._id, initialUsage + 1);
       expect(updated.usage.totalRequests).toBe(initialUsage + 1);
       expect(updated.usage.lastUsedAt).toBeDefined();
       expect(updated.usage.lastUsedIp).toBe('192.168.1.1');
