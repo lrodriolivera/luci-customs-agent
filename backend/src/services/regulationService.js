@@ -602,6 +602,16 @@ class RegulationService {
       // Extract text content from HTML (simplified)
       const textContent = this.extractTextFromHTML(response.data);
 
+      // Mismo caso que EUR-Lex: una respuesta 2xx con cuerpo vacio no es un documento.
+      // Sin esto se sigue adelante con content:'' y todo lo que se consulte despues
+      // sale "no encontrado" como si fuera una respuesta sobre el texto real.
+      if (!textContent || textContent.trim().length === 0) {
+        throw new Error(
+          `El BOE no devolvio el texto del documento ${id} (HTTP ${response.status}, cuerpo vacio). ` +
+          'Consultar directamente en boe.es.'
+        );
+      }
+
       return {
         id: id,
         source: 'BOE',
@@ -627,6 +637,20 @@ class RegulationService {
 
       // Extract text content
       const textContent = this.extractTextFromHTML(response.data);
+
+      // EUR-Lex responde HTTP 202 con CUERPO VACIO cuando no sirve el documento
+      // (peticiones automatizadas, documento en preparacion...). Como el 202 no es un
+      // error, axios no lanza y el documento seguia adelante con content:''. Aguas
+      // abajo, `searchArticle` buscaba el articulo en una cadena vacia y devolvia
+      // `found:false`, asi que la pantalla decia "Articulo no encontrado" -y en verde,
+      // como un resultado normal- para articulos que existen. Un fallo al obtener el
+      // texto no puede presentarse como una respuesta sobre su contenido.
+      if (!textContent || textContent.trim().length === 0) {
+        throw new Error(
+          `EUR-Lex no devolvio el texto del documento ${celex} (HTTP ${response.status}, cuerpo vacio). ` +
+          'Consultar directamente en eur-lex.europa.eu.'
+        );
+      }
 
       return {
         id: celex,

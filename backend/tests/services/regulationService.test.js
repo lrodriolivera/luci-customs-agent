@@ -244,6 +244,36 @@ describe('getDocumentContent (con cache)', () => {
       regulationService.getDocumentContent('BOE', 'noexiste')
     ).rejects.toThrow(/Error obteniendo documento/i);
   });
+
+  /**
+   * Comprobado contra EUR-Lex el 10/Ago/2026: a las peticiones automatizadas responde
+   * **HTTP 202 con el cuerpo VACIO**. Como el 202 no es un error, axios no lanza y el
+   * documento seguia adelante con `content: ''`. Aguas abajo, `searchArticle` buscaba
+   * el articulo en una cadena vacia y devolvia `found:false`, asi que la pantalla
+   * decia "Articulo no encontrado" para articulos que existen (p.ej. el art. 22 del
+   * CAU). Un fallo al obtener el texto no puede presentarse como una respuesta sobre
+   * su contenido.
+   */
+  test('EUR-Lex con 202 y cuerpo vacio lanza, no devuelve un documento vacio', async () => {
+    axios.get.mockResolvedValue({ status: 202, data: '' });
+    await expect(
+      regulationService.getDocumentContent('EUR-Lex', '32013R0952')
+    ).rejects.toThrow(/no devolvio el texto/i);
+  });
+
+  test('BOE con cuerpo vacio tampoco pasa por documento', async () => {
+    axios.get.mockResolvedValue({ status: 200, data: '   ' });
+    await expect(
+      regulationService.getDocumentContent('BOE', 'BOE-A-1992-28741')
+    ).rejects.toThrow(/no devolvio el texto/i);
+  });
+
+  // El texto sin etiquetas debe seguir aceptandose: lo que se rechaza es el VACIO.
+  test('un documento con texto real si se acepta', async () => {
+    axios.get.mockResolvedValue({ status: 200, data: '<p>Artículo 22. Solicitudes.</p>' });
+    const doc = await regulationService.getDocumentContent('EUR-Lex', '32013R0952');
+    expect(doc.content).toContain('Artículo 22');
+  });
 });
 
 describe('searchArticle', () => {

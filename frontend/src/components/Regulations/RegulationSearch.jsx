@@ -720,29 +720,43 @@ export default function RegulationSearch() {
               </button>
             </div>
 
+            {/* El "no encontrado" se pintaba sobre fondo VERDE y sin enlace, con el
+                mismo aspecto que un resultado correcto. No encontrar un articulo no es
+                un exito, y ademas casi nunca significa que no exista: significa que no
+                se ha podido leer el texto (EUR-Lex responde 202 con cuerpo vacio a las
+                peticiones automatizadas). Se distingue visualmente y se ofrece SIEMPRE
+                el enlace a la fuente oficial, que es lo unico util en ese caso. */}
             {articleResult && (
-              <div className="mt-4 p-4 bg-green-50 rounded-lg">
+              <div className={`mt-4 p-4 rounded-lg ${articleResult.found ? 'bg-green-50' : 'bg-amber-50'}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium text-green-900">
+                  <h3 className={`text-sm font-medium ${articleResult.found ? 'text-green-900' : 'text-amber-900'}`}>
                     Articulo {articleResult.article}
                   </h3>
-                  {articleResult.found && (
-                    <a
-                      href={articleResult.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-green-600 hover:text-green-800"
-                    >
-                      <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-                    </a>
-                  )}
+                  <a
+                    href={articleResult.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={articleResult.found ? 'text-green-600 hover:text-green-800' : 'text-amber-700 hover:text-amber-900'}
+                  >
+                    <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                  </a>
                 </div>
                 {articleResult.found ? (
                   <div className="text-sm text-gray-700 max-h-60 overflow-y-auto">
                     {articleResult.excerpt}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">Articulo no encontrado</p>
+                  <p className="text-sm text-amber-800">
+                    No se ha podido recuperar el texto de este articulo. Consultelo en{' '}
+                    <a
+                      href={articleResult.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline font-medium"
+                    >
+                      la fuente oficial
+                    </a>.
+                  </p>
                 )}
               </div>
             )}

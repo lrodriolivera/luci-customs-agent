@@ -1107,7 +1107,8 @@ describe('RegulationSearch', () => {
           success: true,
           data: {
             found: false,
-            article: '999'
+            article: '999',
+            url: 'https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32013R0952#999'
           }
         }
       })
@@ -1125,7 +1126,15 @@ describe('RegulationSearch', () => {
       const searchButton = screen.getByRole('button', { name: 'Buscar articulo' })
       await user.click(searchButton)
 
-      await screen.findByText('Articulo no encontrado')
+      // No encontrar un articulo NO es un exito: se pintaba en verde y sin enlace,
+      // con el mismo aspecto que un resultado correcto. Y casi nunca significa que el
+      // articulo no exista, sino que no se ha podido leer el texto (EUR-Lex responde
+      // 202 con cuerpo vacio). Se ofrece SIEMPRE la fuente oficial, que es lo unico
+      // util en ese caso.
+      await screen.findByText(/No se ha podido recuperar el texto/i)
+      const enlaces = screen.getAllByRole('link', { name: /fuente oficial/i })
+      expect(enlaces[0]).toHaveAttribute('href', expect.stringContaining('eur-lex.europa.eu'))
+      expect(enlaces[0]).toHaveAttribute('rel', expect.stringContaining('noopener'))
     })
 
     it('shows error toast when searchArticle returns success:false', async () => {
