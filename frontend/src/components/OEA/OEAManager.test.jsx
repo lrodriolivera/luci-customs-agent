@@ -153,8 +153,10 @@ describe('<OEAManager />', () => {
   // ==================== RENDERIZADO BASICO ====================
   test('renderiza header con titulo y boton de nueva solicitud', async () => {
     render(<OEAManager />)
-    await waitFor(() => expect(oeaAPI.list).toHaveBeenCalled())
-    expect(screen.getByText('oea.title')).toBeInTheDocument()
+    // Esperar a que `list` se llame NO garantiza haber salido del spinner: el
+    // re-render posterior a resolver la promesa llega despues, y bajo la carga
+    // de la bateria completa el assert sincrono cazaba el spinner (flaky).
+    expect(await screen.findByText('oea.title')).toBeInTheDocument()
     expect(screen.getByText('oea.subtitle')).toBeInTheDocument()
     expect(screen.getByText('oea.newApplication')).toBeInTheDocument()
   })
