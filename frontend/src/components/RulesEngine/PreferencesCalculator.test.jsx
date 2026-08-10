@@ -784,4 +784,51 @@ describe('<PreferencesCalculator />', () => {
     fireEvent.change(inputAuth, { target: { value: 'es/001/test' } })
     expect(inputAuth.value).toBe('ES/001/TEST')
   })
+
+  /**
+   * Los codigos ofrecidos deben ser los que ACEPTA el backend (`validTypes` de
+   * preferencesService): 'EUR.1', 'EUR-MED', 'Form A', 'Statement on Origin', 'ATR'.
+   * El formulario de validacion ya los usaba bien; el de elegibilidad enviaba 'EUR1',
+   * 'FORMA' y 'STATEMENT'. Ese campo hoy no se manda a ningun endpoint, pero el
+   * desajuste estaba puesto para morder en cuanto se usara.
+   */
+  describe('Codigos de certificado alineados con el backend', () => {
+    const ACEPTADOS = ['EUR.1', 'EUR-MED', 'Form A', 'Statement on Origin', 'ATR']
+
+    it('todos los tipos ofrecidos son tipos que el backend acepta', () => {
+      render(<PreferencesCalculator />)
+      fireEvent.click(screen.getByRole('button', { name: /Validar Certificado/i }))
+      // Confirma que la pestaña ha cambiado antes de buscar el desplegable.
+      expect(screen.getByText(/Validar Certificado de Origen/i)).toBeInTheDocument()
+
+      // Los campos no tienen <label for>: se localiza el select por sus opciones.
+      const select = [...document.querySelectorAll('select')]
+        .find(sel => /Certificado de circulaci/i.test(sel.textContent))
+      const valores = [...select.options].map(o => o.value).filter(v => v && v !== 'NONE')
+
+      expect(valores.length).toBeGreaterThan(0)
+      for (const v of valores) {
+        expect(ACEPTADOS).toContain(v)
+      }
+    })
+
+    // El `field` es el nombre interno (issuedDate, certificateNumber...): iba en
+    // negrita COMO TITULAR del problema, con el mensaje legible detras.
+    it('el problema se titula con el mensaje, no con el nombre del campo', async () => {
+      preferencesAPI.validateCertificate.mockResolvedValue({
+        data: { success: true, data: { valid: false, issues: [
+          { field: 'issuedDate', message: 'Certificado expirado (>10 meses desde emision)' }
+        ], warnings: [] } }
+      })
+
+      render(<PreferencesCalculator />)
+      fireEvent.click(screen.getByRole('button', { name: /Validar Certificado/i }))
+      fireEvent.change(document.querySelector('input[type="date"]'), { target: { value: '2025-06-01' } })
+      fireEvent.submit(screen.getByText('Validar Certificado de Origen').closest('form'))
+
+      const mensaje = await screen.findByText(/Certificado expirado/i)
+      expect(mensaje).toBeInTheDocument()
+      expect(screen.getByText('issuedDate')).not.toHaveClass('font-medium')
+    })
+  })
 })

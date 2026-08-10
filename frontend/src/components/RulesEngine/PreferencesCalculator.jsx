@@ -141,11 +141,18 @@ export default function PreferencesCalculator() {
 
   const countries = countriesGrouped.flatMap(g => g.countries.map(c => ({ code: c.code, name: c.label || c.name })))
 
+  // Codigos alineados con los `validTypes` del backend ('EUR.1', 'EUR-MED',
+  // 'Form A', 'Statement on Origin', 'ATR'), como ya lo estaba el formulario de
+  // validacion. OJO: hoy `formData.certificate` NO se envia a ningun endpoint
+  // -`checkEligibility` solo manda originCountry y goods-, asi que este desplegable
+  // no tiene efecto sobre el resultado. Se dejan los codigos correctos para que el
+  // dia que se use no haya que descubrir el desajuste.
   const certificates = [
-    { code: 'EUR1', name: 'EUR.1 - Certificado de circulación' },
-    { code: 'FORMA', name: 'Form A - Sistema Preferencias Generalizadas' },
+    { code: 'EUR.1', name: 'EUR.1 - Certificado de circulación' },
+    { code: 'EUR-MED', name: 'EUR-MED - Certificado paneuromediterráneo' },
+    { code: 'Form A', name: 'Form A - Sistema Preferencias Generalizadas' },
     { code: 'ATR', name: 'ATR - Tránsito Union Aduanera Turquía' },
-    { code: 'STATEMENT', name: 'Statement on Origin - Declaración en factura' },
+    { code: 'Statement on Origin', name: 'Statement on Origin - Declaración en factura' },
     { code: 'NONE', name: 'Sin certificado' }
   ]
 
@@ -783,8 +790,13 @@ export default function PreferencesCalculator() {
                         {certValidation.issues.map((issue, idx) => (
                           <li key={idx} className="flex items-start bg-white rounded p-2">
                             <ExclamationTriangleIcon className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
+                            {/* `field` es el nombre interno del campo (issuedDate,
+                                certificateNumber...), no texto de interfaz: iba en
+                                NEGRITA como titular del problema. El mensaje ya es
+                                autoexplicativo; el campo queda como referencia. */}
                             <span className="text-sm text-red-700">
-                              <strong>{issue.field}:</strong> {issue.message}
+                              {issue.message}
+                              {issue.field && <span className="block text-xs opacity-70">{issue.field}</span>}
                             </span>
                           </li>
                         ))}
@@ -800,7 +812,8 @@ export default function PreferencesCalculator() {
                           <li key={idx} className="flex items-start bg-yellow-50 rounded p-2">
                             <InformationCircleIcon className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0" />
                             <span className="text-sm text-yellow-700">
-                              <strong>{warning.field}:</strong> {warning.message}
+                              {warning.message}
+                              {warning.field && <span className="block text-xs opacity-70">{warning.field}</span>}
                             </span>
                           </li>
                         ))}
