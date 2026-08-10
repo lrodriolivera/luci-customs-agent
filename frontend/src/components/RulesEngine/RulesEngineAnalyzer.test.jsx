@@ -726,86 +726,130 @@ describe('RulesEngineAnalyzer', () => {
     })
   })
 
-  it('renderiza contingente disponible', async () => {
-    const mockResponse = {
+  /**
+   * Los tres tests de contingentes fijaban el contrato anterior: `Q001` con
+   * `duty.savings: 0.5` pintado como "Ahorro: 50.00% del arancel" y un
+   * `available` booleano cuyo `false` se rotulaba "Agotado". Ni el numero de
+   * orden existia ni el motor tiene el tipo dentro del contingente (esta en la
+   * medida de TARIC del codigo y el origen concretos), asi que ese 50% era una
+   * cifra inventada que el test daba por buena.
+   */
+  const analisisConContingente = (quota) => ({
+    data: {
+      success: true,
       data: {
-        success: true,
-        data: {
-          summary: {
-            eligible: true,
-            alerts: [],
-            warnings: [],
-            recommendations: []
-          },
-          taxes: { total: 0 },
-          quotas: [
-            {
-              description: 'Contingente para productos textiles',
-              orderNumber: 'Q001',
-              product: '1234567890',
-              available: true,
-              duty: {
-                savings: 0.5
-              }
-            }
-          ]
-        }
+        summary: { eligible: true, alerts: [], warnings: [], recommendations: [] },
+        taxes: { total: 0 },
+        quotas: [quota]
       }
     }
-    api.post.mockResolvedValue(mockResponse)
+  })
 
+  const analizar = () => {
     const { container } = render(<RulesEngineAnalyzer />)
     const taricInput = container.querySelector('input[placeholder="Código TARIC"]')
-    fireEvent.change(taricInput, { target: { value: '1234567890' } })
+    fireEvent.change(taricInput, { target: { value: '0302410000' } })
+    fireEvent.submit(container.querySelector('form'))
+  }
 
-    const form = container.querySelector('form')
-    fireEvent.submit(form)
+  it('presenta el contingente con el saldo fechado y sin cifrar ahorro', async () => {
+    api.post.mockResolvedValue(analisisConContingente({
+      orderNumber: '090006',
+      origins: 'ERGA OMNES',
+      product: '0302410000',
+      available: true,
+      volume: { syncedAt: '2026-08-10T06:00:00.000Z', utilizationPercent: 17.53 }
+    }))
+
+    analizar()
 
     await waitFor(() => {
       expect(screen.getByText('Contingentes Disponibles')).toBeInTheDocument()
-      expect(screen.getByText('Contingente para productos textiles')).toBeInTheDocument()
-      expect(screen.getByText(/Orden: Q001/i)).toBeInTheDocument()
-      expect(screen.getByText(/Producto: 1234567890/i)).toBeInTheDocument()
-      expect(screen.getByText('Disponible')).toBeInTheDocument()
-      expect(screen.getByText(/Ahorro: 50.00% del arancel/i)).toBeInTheDocument()
     })
+    expect(screen.getByText('ERGA OMNES')).toBeInTheDocument()
+    expect(screen.getByText(/Orden: 090006/i)).toBeInTheDocument()
+    expect(screen.getByText('Saldo suficiente')).toBeInTheDocument()
+    expect(screen.getByText(/Saldo consultado el/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Ahorro/i)).not.toBeInTheDocument()
   })
 
-  it('renderiza contingente agotado', async () => {
-    const mockResponse = {
-      data: {
-        success: true,
-        data: {
-          summary: {
-            eligible: true,
-            alerts: [],
-            warnings: [],
-            recommendations: []
-          },
-          taxes: { total: 0 },
-          quotas: [
-            {
-              description: 'Contingente agotado',
-              orderNumber: 'Q002',
-              product: '9876543210',
-              available: false
-            }
-          ]
-        }
-      }
-    }
-    api.post.mockResolvedValue(mockResponse)
+  it('el saldo insuficiente no se confunde con el que no se pudo comparar', async () => {
+    api.post.mockResolvedValue(analisisConContingente({
+      orderNumber: '090006',
+      product: '0302410000',
+      available: false,
+      volume: { syncedAt: '2026-08-10T06:00:00.000Z' }
+    }))
 
-    const { container } = render(<RulesEngineAnalyzer />)
-    const taricInput = container.querySelector('input[placeholder="Código TARIC"]')
-    fireEvent.change(taricInput, { target: { value: '1234567890' } })
-
-    const form = container.querySelector('form')
-    fireEvent.submit(form)
+    analizar()
 
     await waitFor(() => {
-      expect(screen.getByText('Agotado')).toBeInTheDocument()
+      expect(screen.getByText('Saldo insuficiente')).toBeInTheDocument()
     })
+    expect(screen.queryByText('Saldo sin comprobar')).not.toBeInTheDocument()
+  })
+
+  it('un saldo que no se puede comparar no se pinta como agotado', async () => {
+    // 090101 publica el saldo en EURO: comparar kg con EURO no se puede, y eso
+    // es `available: null`. Antes ese caso se rotulaba "Agotado", un veredicto
+    // que nadie habia emitido.
+    api.post.mockResolvedValue(analisisConContingente({
+      orderNumber: '090101',
+      product: '0302410000',
+      available: null,
+      volume: { syncedAt: null }
+    }))
+
+    analizar()
+
+    await waitFor(() => {
+      expect(screen.getByText('Saldo sin comprobar')).toBeInTheDocument()
+    })
+    expect(screen.queryByText('Agotado')).not.toBeInTheDocument()
+    expect(screen.queryByText('Saldo insuficiente')).not.toBeInTheDocument()
+    // Sin fecha de sincronizacion se dice que no la hay, no se omite el aviso.
+    expect(screen.getByText(/Saldo sin fecha de consulta registrada/i)).toBeInTheDocument()
+  })
+
+  it('avisa en la tarjeta cuando el contingente coincide solo por prefijo', async () => {
+    // 090101 esta definido en `5007201110`, `5007201910`... y se localiza por
+    // prefijo desde `5007200000`. En la tarjeta se veia igual que una coincidencia
+    // exacta: "Contingentes Disponibles" con el numero de orden, sin decir que
+    // puede no cubrir la subdivision concreta que se declara.
+    api.post.mockResolvedValue(analisisConContingente({
+      orderNumber: '090101',
+      product: '5007200000',
+      available: null,
+      codeMatch: 'prefijo',
+      taricCodes: ['5007201110', '5007201910'],
+      volume: { syncedAt: '2026-08-10T06:00:00.000Z' }
+    }))
+
+    analizar()
+
+    await waitFor(() => {
+      expect(screen.getByText(/Orden: 090101/i)).toBeInTheDocument()
+    })
+    expect(screen.getByText(/no esta definido para el codigo consultado/i)).toBeInTheDocument()
+    expect(screen.getByText(/5007201110/)).toBeInTheDocument()
+  })
+
+  it('no pone el aviso de prefijo cuando la coincidencia es exacta', async () => {
+    api.post.mockResolvedValue(analisisConContingente({
+      orderNumber: '090006',
+      product: '0302410000',
+      available: true,
+      codeMatch: 'exacta',
+      taricCodes: ['0302410000'],
+      volume: { syncedAt: '2026-08-10T06:00:00.000Z' }
+    }))
+
+    analizar()
+
+    await waitFor(() => {
+      expect(screen.getByText(/Orden: 090006/i)).toBeInTheDocument()
+    })
+    expect(screen.queryByText(/no esta definido para el codigo consultado/i)).not.toBeInTheDocument()
   })
 
   it('renderiza documentación requerida como strings', async () => {

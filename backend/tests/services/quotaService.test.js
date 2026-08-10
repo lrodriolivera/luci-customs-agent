@@ -1,460 +1,508 @@
 /**
- * Tests for Quota Service
+ * Tests del servicio de contingentes arancelarios.
+ *
+ * LA BATERIA ANTERIOR FIJABA EL BUG
+ * ---------------------------------
+ * Los tests que habia comprobaban la integridad del catalogo cableado
+ * (`volume.used + volume.available === volume.total`, `Q090001` como primer
+ * resultado, `duty.outQuota > duty.inQuota`) y por eso pasaban en verde mientras
+ * el catalogo entero era ficticio: 10 de los 11 numeros de orden no existen en
+ * la base de la Comision y el unico que existe describe otro producto. Un test
+ * que verifica la coherencia interna de un dato inventado no protege de nada.
+ *
+ * Lo que se comprueba ahora es lo contrario: que el servicio no afirme lo que la
+ * fuente no dice.
  */
+jest.mock('../../src/models/TariffQuota');
+jest.mock('../../src/config/logger', () => ({
+  debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn()
+}));
 
+const TariffQuota = require('../../src/models/TariffQuota');
 const quotaService = require('../../src/services/quotaService');
 
-describe('Quota Service', () => {
+/** Contingente real: 090006 de 2026, tal como lo publica QUOTA. */
+const contingente090006 = (extra = {}) => ({
+  orderNumber: '090006',
+  year: 2026,
+  origins: 'ERGA OMNES',
+  startDate: '2026-01-01',
+  endDate: '2026-12-31',
+  initialVolume: { amount: 33496000, unit: 'Kilogram' },
+  balance: { amount: 27624751.299, unit: 'Kilogram' },
+  used: 5871248.701,
+  utilizationPercent: 17.53,
+  critical: false,
+  exhaustionDate: null,
+  taricCodes: ['0302410000', '0303510000'],
+  syncedAt: new Date(),
+  source: 'quota_dds2',
+  ...extra
+});
 
-  describe('checkQuotaAvailability', () => {
-    test('should find quota for beef from Argentina', () => {
-      const result = quotaService.checkQuotaAvailability('02011000', 'AR', 10000, 'kg');
+/** Encadenables de Mongoose: find().lean(), find().sort().limit().lean(). */
+const cadena = (resultado) => {
+  const api = {};
+  ['sort', 'limit', 'skip', 'select'].forEach((m) => { api[m] = jest.fn(() => api); });
+  api.lean = jest.fn().mockResolvedValue(resultado);
+  return api;
+};
 
-      expect(result.found).toBe(true);
-      expect(result.count).toBeGreaterThan(0);
-      expect(result.quotas[0].type).toBeDefined();
-    });
+beforeEach(() => {
+  jest.clearAllMocks();
+  TariffQuota.find = jest.fn(() => cadena([]));
+  TariffQuota.findOne = jest.fn(() => cadena(null));
+  TariffQuota.countDocuments = jest.fn().mockResolvedValue(0);
+  TariffQuota.findOneAndUpdate = jest.fn().mockResolvedValue({});
+});
 
-    test('should find quota for beef from US', () => {
-      const result = quotaService.checkQuotaAvailability('02011000', 'US', 5000, 'kg');
+describe('checkQuotaAvailability', () => {
+  test('devuelve el contingente del catalogo oficial con el saldo fechado', async () => {
+    TariffQuota.find = jest.fn(() => cadena([contingente090006()]));
 
-      expect(result.found).toBe(true);
-      expect(result.quotas.some(q => q.originCountries.includes('US'))).toBe(true); // US is in origin list for Q090001
-      expect(result.quotas[0].quotaId).toBe('Q090001'); // Autonomous quota includes US
-    });
+    const r = await quotaService.checkQuotaAvailability('0302410000', 'CN', 1000, 'kg', { year: 2026 });
 
-    test('should find quota for pork from Canada (CETA)', () => {
-      const result = quotaService.checkQuotaAvailability('02031110', 'CA', 5000, 'kg');
-
-      expect(result.found).toBe(true);
-      expect(result.quotas[0].agreement).toBe('CETA');
-      expect(result.quotas[0].requiresCertificate).toBe('EUR.1');
-    });
-
-    test('should not find quota for non-quota products', () => {
-      const result = quotaService.checkQuotaAvailability('8517120000', 'CN', 100, 'kg');
-
-      expect(result.found).toBe(false);
-      expect(result.count).toBe(0);
-      expect(result.quotas).toHaveLength(0);
-    });
-
-    test('should check if requested quantity is available', () => {
-      const result = quotaService.checkQuotaAvailability('02011000', 'AR', 100000000, 'kg');
-
-      if (result.found && result.quotas.length > 0) {
-        const hasAvailable = result.quotas.some(q => q.available);
-        // With 100M kg request, should exceed most quotas
-        expect(hasAvailable).toBeDefined();
-      }
-    });
-
-    /**
-     * Los saldos de este servicio son un catalogo ESTATICO en codigo, no una consulta
-     * al sistema de contingentes de la Comision. Un contingente FCFS puede agotarse en
-     * horas, asi que presentar "Disponible: 12.550.000 kg" como disponibilidad actual
-     * es afirmar algo que no se ha consultado. Detectado en produccion el 10/Ago/2026.
-     */
-    test('el saldo se marca como NO consultado en tiempo real', () => {
-      const result = quotaService.checkQuotaAvailability('02011000', 'AR', 10000, 'kg');
-
-      expect(result.found).toBe(true);
-      for (const quota of result.quotas) {
-        expect(quota.volume.isLiveBalance).toBe(false);
-        expect(quota.volume.officialSource).toMatch(/^https:\/\//);
-      }
-    });
-
-    test('should sort quotas by lowest tariff first', () => {
-      const result = quotaService.checkQuotaAvailability('02011000', 'AR', 1000, 'kg');
-
-      if (result.found && result.quotas.length > 1) {
-        for (let i = 0; i < result.quotas.length - 1; i++) {
-          expect(result.quotas[i].duty.inQuota).toBeLessThanOrEqual(result.quotas[i + 1].duty.inQuota);
-        }
-      }
-    });
-
-    test('should calculate utilization percentage', () => {
-      const result = quotaService.checkQuotaAvailability('02011000', 'AR', 1000, 'kg');
-
-      if (result.found && result.quotas.length > 0) {
-        expect(result.quotas[0].volume.utilizationPercent).toBeGreaterThanOrEqual(0);
-        expect(result.quotas[0].volume.utilizationPercent).toBeLessThanOrEqual(100);
-      }
-    });
-
-    test('should mark quota as critical if >95% utilized', () => {
-      const result = quotaService.checkQuotaAvailability('04021019', 'US', 1000, 'kg');
-
-      if (result.found && result.quotas.length > 0) {
-        const criticalQuota = result.quotas.find(q => q.volume.utilizationPercent > 95);
-        if (criticalQuota) {
-          expect(criticalQuota.critical).toBe(true);
-        }
-      }
-    });
+    expect(r.found).toBe(true);
+    expect(r.quotas[0].orderNumber).toBe('090006');
+    expect(r.quotas[0].volume.balance).toEqual({ amount: 27624751.299, unit: 'Kilogram' });
+    // El saldo NO se lee en vivo: viene de una sincronizacion con fecha.
+    expect(r.quotas[0].volume.isLiveBalance).toBe(false);
+    expect(r.quotas[0].volume.syncedAt).toBeTruthy();
   });
 
-  describe('reserveQuota', () => {
-    test('should reserve quota successfully', () => {
-      const result = quotaService.reserveQuota('Q090001', 1000, {
-        type: 'import',
-        originCountry: 'AR'
-      });
+  test('avisa siempre de que un FCFS se agota en horas', async () => {
+    TariffQuota.find = jest.fn(() => cadena([contingente090006()]));
 
-      expect(result.success).toBe(true);
-      expect(result.reservationId).toContain('RES-Q090001');
-      expect(result.quantity).toBe(1000);
-      expect(result.instructions).toBeInstanceOf(Array);
-      expect(result.instructions.length).toBeGreaterThan(0);
-    });
+    const r = await quotaService.checkQuotaAvailability('0302410000', 'CN', 1000, 'kg', { year: 2026 });
 
-    test('should fail if quota does not exist', () => {
-      const result = quotaService.reserveQuota('Q999999', 1000, {});
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('no encontrado');
-    });
-
-    test('should fail if quantity exceeds availability', () => {
-      const result = quotaService.reserveQuota('Q090001', 999999999, {});
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('excede disponibilidad');
-      expect(result.available).toBeDefined();
-      expect(result.requested).toBe(999999999);
-    });
-
-    test('should include EUR.1 requirement for CETA quotas', () => {
-      const result = quotaService.reserveQuota('Q094100', 1000, {});
-
-      if (result.success) {
-        const hasEUR1 = result.instructions.some(i => i && i.includes('EUR.1'));
-        expect(hasEUR1).toBe(true);
-      }
-    });
-
-    test('should warn for critical quotas', () => {
-      const result = quotaService.reserveQuota('Q090002', 100, {}); // Critical quota
-
-      if (result.success) {
-        expect(result.warnings.length).toBeGreaterThan(0);
-        expect(result.warnings[0]).toContain('crítico');
-      }
-    });
+    expect(r.quotas[0].warnings.some((w) => /FCFS|agotarse en horas/i.test(w))).toBe(true);
   });
 
-  describe('calculateQuotaSavings', () => {
-    test('should calculate savings for eligible product', () => {
-      const result = quotaService.calculateQuotaSavings('02011000', 'AR', 10000, 50000);
+  test('marca el saldo como caducado cuando la sincronizacion es vieja', async () => {
+    const hace3Dias = new Date(Date.now() - 3 * 24 * 3600 * 1000);
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({ syncedAt: hace3Dias })]));
 
-      if (result.applicable) {
-        expect(result.dutyWithoutQuota).toBeGreaterThan(0);
-        expect(result.dutyWithQuota).toBeGreaterThanOrEqual(0);
-        expect(result.savings).toBeGreaterThan(0);
-        expect(result.savingsPercent).toBeGreaterThan(0);
-        expect(result.recommendation).toContain('contingente');
-      }
-    });
+    const r = await quotaService.checkQuotaAvailability('0302410000', 'CN', 1000, 'kg', { year: 2026 });
 
-    test('should return not applicable if no quotas found', () => {
-      const result = quotaService.calculateQuotaSavings('8517120000', 'CN', 100, 50000);
-
-      expect(result.applicable).toBe(false);
-      expect(result.savings).toBe(0);
-      expect(result.message).toContain('No hay contingentes');
-    });
-
-    test('should return not applicable if quota is exhausted', () => {
-      // Try with a quota that has very limited availability
-      const result = quotaService.calculateQuotaSavings('04021019', 'US', 10000000, 5000000);
-
-      if (!result.applicable) {
-        expect(result.message || result.quota?.recommendation).toBeDefined();
-      }
-    });
-
-    test('should calculate percentage savings correctly', () => {
-      const result = quotaService.calculateQuotaSavings('02011000', 'AR', 10000, 50000);
-
-      if (result.applicable && result.savings > 0) {
-        const expectedPercent = (result.savings / result.dutyWithoutQuota) * 100;
-        expect(result.savingsPercent).toBeCloseTo(expectedPercent, 1);
-      }
-    });
+    expect(r.quotas[0].volume.balanceStale).toBe(true);
+    expect(r.quotas[0].volume.balanceAgeHours).toBeGreaterThan(24);
+    expect(r.quotas[0].warnings.some((w) => /se consulto el/i.test(w))).toBe(true);
   });
 
-  describe('getQuotasByAgreement', () => {
-    test('should return CETA quotas', () => {
-      const result = quotaService.getQuotasByAgreement('CETA');
+  test('no compara la cantidad cuando la unidad del saldo es otra', async () => {
+    // 090101 publica el saldo en EURO. Comparar 1.000 kg contra 1.964.263 EURO y
+    // responder "disponible" seria inventarse una conversion.
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({
+      orderNumber: '090101',
+      initialVolume: { amount: 2432000, unit: 'EURO' },
+      balance: { amount: 1964263.541, unit: 'EURO' }
+    })]));
 
-      expect(result.agreement).toBe('CETA');
-      expect(result.count).toBeGreaterThan(0);
-      expect(result.quotas).toBeInstanceOf(Array);
-      // All returned quotas should be CETA
-      result.quotas.forEach(q => {
-        expect(q.agreement).toBe('CETA');
-      });
-    });
+    const r = await quotaService.checkQuotaAvailability('5007200000', 'IN', 1000, 'kg', { year: 2026 });
 
-    test('should return JEFTA quotas', () => {
-      const result = quotaService.getQuotasByAgreement('JEFTA');
-
-      expect(result.agreement).toBe('JEFTA');
-      // All returned quotas should be JEFTA
-      result.quotas.forEach(q => {
-        expect(q.agreement).toBe('JEFTA');
-      });
-    });
-
-    test('should return EU-MERCOSUR quotas', () => {
-      const result = quotaService.getQuotasByAgreement('EU-MERCOSUR');
-
-      expect(result.agreement).toBe('EU-MERCOSUR');
-      expect(result.count).toBeGreaterThan(0);
-      expect(result.quotas.every(q => q.originCountries.some(c => ['AR', 'BR', 'UY', 'PY'].includes(c)))).toBe(true);
-    });
-
-    test('should return empty for non-existent agreement', () => {
-      const result = quotaService.getQuotasByAgreement('NON_EXISTENT');
-
-      expect(result.agreement).toBe('NON_EXISTENT');
-      expect(result.count).toBe(0);
-      expect(result.quotas).toHaveLength(0);
-    });
-
-    test('should include utilization percentage', () => {
-      const result = quotaService.getQuotasByAgreement('CETA');
-
-      if (result.quotas.length > 0) {
-        expect(result.quotas[0].volume.utilizationPercent).toBeDefined();
-        expect(typeof result.quotas[0].volume.utilizationPercent).toBe('number');
-      }
-    });
+    expect(r.quotas[0].available).toBeNull();
+    expect(r.quotas[0].unitMismatch).toMatch(/EURO/);
   });
 
-  describe('getCriticalQuotas', () => {
-    test('should return quotas with >90% utilization or marked as critical', () => {
-      const critical = quotaService.getCriticalQuotas();
+  test('compara kg contra el "Kilogram" que escribe la fuente', async () => {
+    // QUOTA publica la unidad en ingles y sin abreviar. Sin equivalencia, ninguna
+    // cantidad se comprobaba nunca: todo salia como "no se puede comparar".
+    TariffQuota.find = jest.fn(() => cadena([contingente090006()]));
 
-      expect(critical).toBeInstanceOf(Array);
-      if (critical.length > 0) {
-        // Each quota should either have >90% utilization OR be explicitly marked as critical
-        critical.forEach(q => {
-          const isCritical = q.utilizationPercent > 90;
-          if (!isCritical) {
-            // If not >90%, it should have been marked as critical in the source data
-            expect(q.utilizationPercent).toBeGreaterThan(70); // At least >70%
-          }
-        });
-      }
-    });
+    const r = await quotaService.checkQuotaAvailability('0302410000', 'CN', 1000, 'kg', { year: 2026 });
 
-    test('should sort by utilization percentage descending', () => {
-      const critical = quotaService.getCriticalQuotas();
-
-      if (critical.length > 1) {
-        for (let i = 0; i < critical.length - 1; i++) {
-          expect(critical[i].utilizationPercent).toBeGreaterThanOrEqual(critical[i + 1].utilizationPercent);
-        }
-      }
-    });
-
-    test('should include exhaustion date estimate', () => {
-      const critical = quotaService.getCriticalQuotas();
-
-      if (critical.length > 0) {
-        expect(critical[0].estimatedExhaustion).toBeDefined();
-        expect(typeof critical[0].estimatedExhaustion).toBe('string');
-      }
-    });
-
-    /**
-     * La criticidad salia de `utilization > 90 || quota.critical`, y dos contingentes
-     * venian marcados `critical: true` a mano con el 79% y el 85,86% consumido: la
-     * pestaña "Contingentes Criticos" los listaba con "Solicite reserva urgente"
-     * mientras su propia ficha decia "Mas de 90 dias" de margen. Un aviso de urgencia
-     * que contradice la cifra que lo acompaña desorienta. Ahora sale solo del consumo.
-     */
-    test('solo son criticos los que superan el 90% consumido', () => {
-      const critical = quotaService.getCriticalQuotas();
-
-      expect(critical.length).toBeGreaterThan(0); // si no, el test no probaria nada
-      for (const q of critical) {
-        expect(q.utilizationPercent).toBeGreaterThan(90);
-      }
-    });
-
-    /**
-     * La fecha de agotamiento es una extrapolacion lineal sobre un consumo que no se
-     * actualiza nunca (catalogo estatico). Devolver una fecha concreta y a secas se
-     * lee como un dato comprobado, cuando puede venir de cifras congeladas hace meses.
-     */
-    test('la fecha de agotamiento se declara como proyeccion, no como dato', () => {
-      const critical = quotaService.getCriticalQuotas();
-
-      const conFecha = critical.filter(q => /\d{4}-\d{2}-\d{2}/.test(q.estimatedExhaustion));
-      expect(conFecha.length).toBeGreaterThan(0); // si no, el test no probaria nada
-      for (const q of conFecha) {
-        expect(q.estimatedExhaustion).toMatch(/proyeccion sobre datos no actualizados/i);
-      }
-    });
-
-    test('should include quota details', () => {
-      const critical = quotaService.getCriticalQuotas();
-
-      if (critical.length > 0) {
-        const quota = critical[0];
-        expect(quota.quotaId).toBeDefined();
-        expect(quota.orderNumber).toBeDefined();
-        expect(quota.description).toBeDefined();
-        expect(quota.available).toBeDefined();
-        expect(quota.unit).toBeDefined();
-      }
-    });
+    expect(r.quotas[0].available).toBe(true);
+    expect(r.quotas[0].unitMismatch).toBeNull();
   });
 
-  describe('generateQuotaReport', () => {
-    test('should generate full report without filters', () => {
-      const report = quotaService.generateQuotaReport({});
+  test('compara kg contra el "Kilógramo" acentuado de la pagina de detalle', async () => {
+    // El listado da la unidad en ingles ("Kilogram") pero la pagina de detalle la
+    // da en castellano y CON TILDE ("Kilógramo"), y es esa la que se guarda al
+    // sincronizar. Con la tabla de equivalencias sin tildes, los contingentes
+    // sincronizados de verdad salian todos como "saldo sin comprobar".
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({
+      initialVolume: { amount: 33496000, unit: 'Kilógramo' },
+      balance: { amount: 27624751.299, unit: 'Kilógramo' }
+    })]));
 
-      expect(report.generatedAt).toBeDefined();
-      expect(report.summary.total).toBeGreaterThan(0);
-      expect(report.quotas).toBeInstanceOf(Array);
-      expect(report.quotas.length).toBe(report.summary.total);
-    });
+    const r = await quotaService.checkQuotaAvailability('0302410000', 'CN', 1000, 'kg', { year: 2026 });
 
-    test('should filter by type', () => {
-      const report = quotaService.generateQuotaReport({ type: 'fta' });
-
-      expect(report.filters.type).toBe('fta');
-      if (report.quotas.length > 0) {
-        expect(report.quotas.every(q => q.type === 'fta')).toBe(true);
-      }
-    });
-
-    test('should filter by agreement', () => {
-      const report = quotaService.generateQuotaReport({ agreement: 'CETA' });
-
-      expect(report.filters.agreement).toBe('CETA');
-      if (report.quotas.length > 0) {
-        expect(report.quotas.every(q => q.agreement === 'CETA')).toBe(true);
-      }
-    });
-
-    test('should filter by origin country', () => {
-      const report = quotaService.generateQuotaReport({ originCountry: 'CA' });
-
-      expect(report.filters.originCountry).toBe('CA');
-      if (report.quotas.length > 0) {
-        // Verify that returned quotas are relevant to CA
-        report.quotas.forEach(q => {
-          // The quota should have origin countries defined
-          expect(q).toHaveProperty('originCountries');
-        });
-      }
-    });
-
-    test('should calculate summary statistics', () => {
-      const report = quotaService.generateQuotaReport({});
-
-      expect(report.summary.total).toBeGreaterThan(0);
-      expect(report.summary.critical).toBeGreaterThanOrEqual(0);
-      expect(report.summary.available).toBeGreaterThanOrEqual(0);
-      expect(report.summary.exhausted).toBeGreaterThanOrEqual(0);
-      expect(report.summary.byType).toBeDefined();
-    });
-
-    test('should classify quota status correctly', () => {
-      const report = quotaService.generateQuotaReport({});
-
-      if (report.quotas.length > 0) {
-        report.quotas.forEach(quota => {
-          expect(['available', 'critical', 'exhausted']).toContain(quota.status);
-        });
-      }
-    });
+    expect(r.quotas[0].available).toBe(true);
+    expect(r.quotas[0].unitMismatch).toBeNull();
   });
 
-  describe('ACTIVE_QUOTAS data integrity', () => {
-    test('should have valid quota structure', () => {
-      const quotas = quotaService.ACTIVE_QUOTAS;
+  test('tampoco confunde unidades acentuadas distintas entre si', async () => {
+    // La tolerancia a tildes no debe volver comparable lo que no lo es.
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({
+      initialVolume: { amount: 1000, unit: 'Hectólitro' },
+      balance: { amount: 800, unit: 'Hectólitro' }
+    })]));
 
-      Object.entries(quotas).forEach(([quotaId, quota]) => {
-        expect(quota.orderNumber).toBeDefined();
-        expect(quota.type).toBeDefined();
-        expect(quota.description).toBeDefined();
-        expect(quota.taricCodes).toBeInstanceOf(Array);
-        expect(quota.originCountries).toBeInstanceOf(Array);
-        expect(quota.volume).toBeDefined();
-        expect(quota.volume.total).toBeGreaterThan(0);
-        expect(quota.volume.used).toBeGreaterThanOrEqual(0);
-        expect(quota.volume.available).toBeGreaterThanOrEqual(0);
-        expect(quota.duty).toBeDefined();
-        expect(quota.duty.inQuota).toBeGreaterThanOrEqual(0);
-        expect(quota.duty.outQuota).toBeGreaterThan(quota.duty.inQuota);
-      });
-    });
+    const r = await quotaService.checkQuotaAvailability('2204210600', 'CL', 1000, 'kg', { year: 2026 });
 
-    test('should have consistent volume calculations', () => {
-      const quotas = quotaService.ACTIVE_QUOTAS;
-
-      Object.entries(quotas).forEach(([quotaId, quota]) => {
-        expect(quota.volume.used + quota.volume.available).toBe(quota.volume.total);
-      });
-    });
-
-    test('should have valid period dates', () => {
-      const quotas = quotaService.ACTIVE_QUOTAS;
-
-      Object.entries(quotas).forEach(([quotaId, quota]) => {
-        expect(quota.period.start).toBeDefined();
-        expect(quota.period.end).toBeDefined();
-        const start = new Date(quota.period.start);
-        const end = new Date(quota.period.end);
-        expect(start.getTime()).toBeLessThan(end.getTime());
-      });
-    });
-
-    test('should have valid allocation methods', () => {
-      const quotas = quotaService.ACTIVE_QUOTAS;
-      const validMethods = ['fcfs', 'traditional', 'license'];
-
-      Object.entries(quotas).forEach(([quotaId, quota]) => {
-        expect(validMethods).toContain(quota.allocationMethod);
-      });
-    });
+    expect(r.quotas[0].available).toBeNull();
+    expect(r.quotas[0].unitMismatch).toMatch(/Hectólitro/);
   });
 
-  describe('Edge cases', () => {
-    test('should handle empty TARIC code', () => {
-      const result = quotaService.checkQuotaAvailability('', 'AR', 1000, 'kg');
+  /**
+   * Unidades medidas en el catalogo real de 2026 (1.682 contingentes): 1.420 en
+   * "Kilógramo", 193 "Número de unidades", 26 "Litro", 13 "Metro cuadrado", 10
+   * "EURO", 6 "Litro de alcohol puro (100%)", 6 "Número de pares", 6 "Kilógramo
+   * of sugar with a yield in white sugar of 92%", 1 "Metro cúbico" y 1 "Kilógramo
+   * of drained net weight". Las tres ultimas NO son la magnitud base: un kg de
+   * azucar al 92% de rendimiento o un litro de alcohol puro no son un kg ni un
+   * litro de mercancia, y compararlos seria la misma clase de invento que el
+   * "ahorro estimado" que se quito.
+   */
+  const conUnidad = (unidad, saldo = 800) => contingente090006({
+    initialVolume: { amount: 1000, unit: unidad },
+    balance: { amount: saldo, unit: unidad }
+  });
 
-      expect(result.found).toBe(false);
+  test.each([
+    ['Número de unidades', 'ud'],
+    ['Metro cuadrado', 'm2'],
+    ['Litro', 'l']
+  ])('compara la unidad real "%s" contra "%s"', async (publicada, pedida) => {
+    TariffQuota.find = jest.fn(() => cadena([conUnidad(publicada)]));
+
+    const r = await quotaService.checkQuotaAvailability('0302410000', 'CN', 100, pedida, { year: 2026 });
+
+    expect(r.quotas[0].available).toBe(true);
+    expect(r.quotas[0].unitMismatch).toBeNull();
+  });
+
+  test.each([
+    ['Kilógramo of sugar with a yield in white sugar of 92%', 'kg'],
+    ['Kilógramo of drained net weight', 'kg'],
+    ['Litro de alcohol puro (100%)', 'l'],
+    ['Número de pares', 'ud']
+  ])('no compara "%s" con "%s": no es la misma magnitud', async (publicada, pedida) => {
+    TariffQuota.find = jest.fn(() => cadena([conUnidad(publicada)]));
+
+    const r = await quotaService.checkQuotaAvailability('0302410000', 'CN', 100, pedida, { year: 2026 });
+
+    // `null` = no se puede comparar. Nunca `true`: el saldo esta expresado en una
+    // unidad condicionada (rendimiento, peso escurrido, alcohol puro, pares).
+    expect(r.quotas[0].available).toBeNull();
+    expect(r.quotas[0].unitMismatch).toContain(publicada);
+  });
+
+  test('dice que el saldo publicado no cubre la cantidad pedida', async () => {
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({
+      balance: { amount: 500, unit: 'Kilogram' }
+    })]));
+
+    const r = await quotaService.checkQuotaAvailability('0302410000', 'CN', 1000, 'kg', { year: 2026 });
+
+    expect(r.quotas[0].available).toBe(false);
+    expect(r.quotas[0].recommendation).toMatch(/insuficiente/i);
+  });
+
+  test('no afirma disponibilidad cuando la fuente no publica saldo', async () => {
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({ balance: null })]));
+
+    const r = await quotaService.checkQuotaAvailability('0302410000', 'CN', 1000, 'kg', { year: 2026 });
+
+    // `null` es "no lo se", no `false` ni `true`.
+    expect(r.quotas[0].available).toBeNull();
+  });
+
+  test('descarta los contingentes cuyo periodo no esta vigente', async () => {
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({
+      startDate: '2020-01-01', endDate: '2020-12-31'
+    })]));
+
+    const r = await quotaService.checkQuotaAvailability('0302410000', 'CN', 1000, 'kg', { year: 2026 });
+
+    expect(r.found).toBe(false);
+  });
+
+  test('sin resultados dice que es el catalogo sincronizado, no la fuente', async () => {
+    // La distincion importa: si el catalogo esta sin sincronizar, "no hay
+    // contingente" seria una afirmacion falsa sobre la realidad.
+    const r = await quotaService.checkQuotaAvailability('8517120000', 'CN', 100, 'kg', { year: 2026 });
+
+    expect(r.found).toBe(false);
+    expect(r.source).toBe('catalogo_oficial_sincronizado');
+    expect(r.officialSource).toContain('quota_consultation.jsp');
+  });
+
+  test('busca por el codigo y por sus prefijos de 8 y 6 digitos', async () => {
+    await quotaService.checkQuotaAvailability('0302410090', 'CN', 1000, 'kg', { year: 2026 });
+
+    const consulta = TariffQuota.find.mock.calls[0][0];
+    const exactos = consulta.$or.find((c) => c.taricCodes.$in).taricCodes.$in;
+    expect(exactos).toEqual(expect.arrayContaining(['0302410090', '0302410000']));
+    expect(consulta.year).toBe(2026);
+  });
+
+  test('encuentra el contingente definido en subdivisiones mas especificas', async () => {
+    // 090101 no lleva `5007200000`: la fuente lo define en `5007201110`,
+    // `5007201910`... Con el cotejo por igualdad y ceros de relleno, una consulta
+    // de 8 digitos no alcanzaba NUNCA un contingente asi. Existe en el catalogo
+    // sincronizado y era inaccesible desde el codigo que teclea el usuario.
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({
+      orderNumber: '090101',
+      taricCodes: ['5007201110', '5007201910', '5007202110']
+    })]));
+
+    const r = await quotaService.checkQuotaAvailability('50072000', 'IN', 1000, 'kg', { year: 2026 });
+
+    expect(r.found).toBe(true);
+    expect(r.quotas[0].orderNumber).toBe('090101');
+    // Y se dice que la coincidencia es por prefijo: el contingente NO esta
+    // definido para el codigo consultado, sino para subdivisiones suyas.
+    expect(r.quotas[0].codeMatch).toBe('prefijo');
+    expect(r.quotas[0].warnings.some((w) => /subdivisiones mas especificas/i.test(w))).toBe(true);
+  });
+
+  test('consulta tambien por prefijo, no solo por igualdad', async () => {
+    await quotaService.checkQuotaAvailability('50072000', 'IN', 1000, 'kg', { year: 2026 });
+
+    const consulta = TariffQuota.find.mock.calls[0][0];
+    const porPrefijo = consulta.$or.find((c) => c.taricCodes.$regex);
+    // Los ceros de cola son posiciones sin concretar, asi que el prefijo es 500720.
+    expect(porPrefijo.taricCodes.$regex).toBe('^500720');
+  });
+
+  test('no ensancha por prefijo un codigo de 10 digitos ya concreto', async () => {
+    // Si el llamante da la subdivision exacta, ensanchar a 6 digitos devolveria
+    // contingentes de otra subdivision del mismo epigrafe: seria presentar como
+    // aplicable un contingente que no cubre esa mercancia.
+    await quotaService.checkQuotaAvailability('5007209010', 'IN', 1000, 'kg', { year: 2026 });
+
+    const consulta = TariffQuota.find.mock.calls[0][0];
+    const porPrefijo = consulta.$or.find((c) => c.taricCodes.$regex);
+    expect(porPrefijo.taricCodes.$regex).toBe('^5007209010');
+  });
+
+  test('marca como exacta la coincidencia cuando el codigo si esta en el contingente', async () => {
+    TariffQuota.find = jest.fn(() => cadena([contingente090006()]));
+
+    const r = await quotaService.checkQuotaAvailability('0302410000', 'CN', 1000, 'kg', { year: 2026 });
+
+    expect(r.quotas[0].codeMatch).toBe('exacta');
+    expect(r.quotas[0].warnings.some((w) => /subdivisiones mas especificas/i.test(w))).toBe(false);
+  });
+
+  test('no busca con un codigo mas corto de 6 digitos', async () => {
+    // Ensanchar a 4 digitos devolvia contingentes de otro producto del capitulo.
+    const r = await quotaService.checkQuotaAvailability('0302', 'CN', 1000, 'kg', { year: 2026 });
+
+    expect(r.found).toBe(false);
+    expect(TariffQuota.find).not.toHaveBeenCalled();
+  });
+
+  test('no expone una elegibilidad por origen que no ha resuelto', async () => {
+    TariffQuota.find = jest.fn(() => cadena([contingente090006()]));
+
+    const r = await quotaService.checkQuotaAvailability('0302410000', 'RU', 1000, 'kg', { year: 2026 });
+
+    expect(r.quotas[0].originVerified).toBe(false);
+    expect(r.quotas[0].warnings.some((w) => /elegibilidad por origen/i.test(w))).toBe(true);
+  });
+});
+
+describe('getQuotaClaimData', () => {
+  test('no presenta el dato como una reserva de cupo', async () => {
+    // La version anterior devolvia `reservationId` y 30 dias de validez: no hay
+    // reserva, la atribucion la hace la aduana al admitir la declaracion.
+    TariffQuota.findOne = jest.fn(() => cadena(contingente090006()));
+
+    const r = await quotaService.getQuotaClaimData('090006', 1000, { year: 2026 });
+
+    expect(r.success).toBe(true);
+    expect(r.isReservation).toBe(false);
+    expect(r.reservationId).toBeUndefined();
+    expect(r.instructions.some((i) => /no reserva cupo/i.test(i))).toBe(true);
+  });
+
+  test('avisa cuando la cantidad pedida supera el saldo publicado', async () => {
+    TariffQuota.findOne = jest.fn(() => cadena(contingente090006({
+      balance: { amount: 500, unit: 'Kilogram' }
+    })));
+
+    const r = await quotaService.getQuotaClaimData('090006', 1000, { year: 2026 });
+
+    expect(r.warnings.some((w) => /inferior a la cantidad solicitada/i.test(w))).toBe(true);
+  });
+
+  test('traslada la criticidad que declara TARIC', async () => {
+    TariffQuota.findOne = jest.fn(() => cadena(contingente090006({ critical: true })));
+
+    const r = await quotaService.getQuotaClaimData('090006', 10, { year: 2026 });
+
+    expect(r.critical).toBe(true);
+    expect(r.warnings.some((w) => /critico/i.test(w))).toBe(true);
+  });
+
+  test('falla explicitamente si el numero de orden no esta en el catalogo', async () => {
+    const r = await quotaService.getQuotaClaimData('090001', 1000, { year: 2026 });
+
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/090001/);
+  });
+});
+
+describe('calculateQuotaSavings', () => {
+  test('no cuantifica el ahorro sin los dos tipos', async () => {
+    // El tipo dentro del contingente no lo publica el sistema de contingentes:
+    // esta en la medida de TARIC. El servicio anterior lo tenia cableado a 0.00 y
+    // de ahi salian 1.500 EUR de ahorro sobre un arancel real del 0%.
+    TariffQuota.find = jest.fn(() => cadena([contingente090006()]));
+
+    const r = await quotaService.calculateQuotaSavings('0302410000', 'CN', 1000, 50000);
+
+    expect(r.applicable).toBe(false);
+    expect(r.savings).toBeNull();
+    expect(r.message).toMatch(/falta el tipo/i);
+    // Hay contingente: lo que falta es el tipo, y se devuelve el contingente.
+    expect(r.quota.orderNumber).toBe('090006');
+  });
+
+  test('calcula el ahorro cuando el llamante aporta los dos tipos', async () => {
+    TariffQuota.find = jest.fn(() => cadena([contingente090006()]));
+
+    const r = await quotaService.calculateQuotaSavings('0302410000', 'CN', 1000, 50000, {
+      inQuotaDuty: 0, outQuotaDuty: 0.12
     });
 
-    test('should handle zero quantity', () => {
-      const result = quotaService.checkQuotaAvailability('02011000', 'AR', 0, 'kg');
+    expect(r.applicable).toBe(true);
+    expect(r.dutyWithoutQuota).toBe(6000);
+    expect(r.dutyWithQuota).toBe(0);
+    expect(r.savings).toBe(6000);
+    expect(r.savingsPercent).toBe(100);
+  });
 
-      if (result.found) {
-        expect(result.quotas[0].volume.requested).toBe(0);
-      }
+  test('un ahorro de cero es cero, no "no aplicable"', async () => {
+    // Cuando los dos tipos coinciden el contingente no ahorra nada, y eso es un
+    // resultado calculado, distinto de no poder calcularlo.
+    TariffQuota.find = jest.fn(() => cadena([contingente090006()]));
+
+    const r = await quotaService.calculateQuotaSavings('0302410000', 'CN', 1000, 50000, {
+      inQuotaDuty: 0.06, outQuotaDuty: 0.06
     });
 
-    test('should handle negative quantity gracefully', () => {
-      const result = quotaService.checkQuotaAvailability('02011000', 'AR', -1000, 'kg');
+    expect(r.applicable).toBe(true);
+    expect(r.savings).toBe(0);
+  });
 
-      // Should still return results but with negative requested (will be caught by validation)
-      expect(result).toBeDefined();
+  test('avisa de que el ahorro se ha cifrado sobre una coincidencia por prefijo', async () => {
+    // El ahorro se calcula sobre `quotas[0]`. Si ese contingente se localizo por
+    // prefijo puede no cubrir la mercancia declarada, y entonces la cifra es
+    // condicional: darla igual que una coincidencia exacta es afirmar un ahorro
+    // que depende de una cobertura no comprobada.
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({
+      orderNumber: '090101',
+      taricCodes: ['5007201110', '5007201910']
+    })]));
+
+    const r = await quotaService.calculateQuotaSavings('50072000', 'IN', 1000, 50000, {
+      inQuotaDuty: 0, outQuotaDuty: 0.12
     });
 
-    test('should handle non-existent country code', () => {
-      const result = quotaService.checkQuotaAvailability('02011000', 'ZZ', 1000, 'kg');
+    expect(r.applicable).toBe(true);
+    expect(r.savings).toBe(6000);
+    expect(r.quota.codeMatch).toBe('prefijo');
+    expect(r.warnings.some((w) => /subdivisiones mas especificas/i.test(w))).toBe(true);
+    expect(r.recommendation).toMatch(/si el contingente cubre/i);
+  });
 
-      // May or may not find depending on 'ALL' countries
-      expect(result).toBeDefined();
-      expect(result.found).toBeDefined();
+  test('sin contingente no devuelve un ahorro de cero, devuelve que no hay', async () => {
+    const r = await quotaService.calculateQuotaSavings('8517120000', 'CN', 100, 1000, {
+      inQuotaDuty: 0, outQuotaDuty: 0.12
     });
+
+    expect(r.applicable).toBe(false);
+    expect(r.savings).toBeNull();
+  });
+});
+
+describe('getCriticalQuotas', () => {
+  test('consulta la criticidad declarada por TARIC, no un umbral de consumo', async () => {
+    // Deducirla de >90% de consumo marcaba como urgentes contingentes cuyo propio
+    // dato daba mas de 90 dias de margen.
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({ critical: true, utilizationPercent: 17.53 })]));
+
+    const r = await quotaService.getCriticalQuotas({ year: 2026 });
+
+    expect(TariffQuota.find).toHaveBeenCalledWith({ year: 2026, critical: true });
+    expect(r[0].critical).toBe(true);
+    expect(r[0].criticalSource).toBe('taric');
+    // Critico al 17,53%: la criticidad no es funcion del porcentaje.
+    expect(r[0].volume.utilizationPercent).toBe(17.53);
+  });
+
+  test('no proyecta una fecha de agotamiento que la fuente no da', async () => {
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({ critical: true, exhaustionDate: null })]));
+
+    const r = await quotaService.getCriticalQuotas({ year: 2026 });
+
+    expect(r[0].exhaustionDate).toBeNull();
+  });
+
+  test('devuelve la fecha oficial de agotamiento cuando existe', async () => {
+    TariffQuota.find = jest.fn(() => cadena([contingente090006({ critical: true, exhaustionDate: '2026-03-14' })]));
+
+    const r = await quotaService.getCriticalQuotas({ year: 2026 });
+
+    expect(r[0].exhaustionDate).toBe('2026-03-14');
+  });
+});
+
+describe('generateQuotaReport', () => {
+  test('un catalogo vacio se declara sin sincronizar, no sin contingentes', async () => {
+    // La fuente publica ~1.960 filas para 2026: cero resultados significa que no
+    // se ha sincronizado.
+    const r = await quotaService.generateQuotaReport({ year: 2026 });
+
+    expect(r.summary.total).toBe(0);
+    expect(r.summary.synced).toBe(false);
+    expect(r.officialSource).toContain('quota_consultation.jsp');
+  });
+
+  test('cuenta agotados, criticos y la fecha de la ultima sincronizacion', async () => {
+    TariffQuota.countDocuments = jest.fn()
+      .mockResolvedValueOnce(1125)  // total
+      .mockResolvedValueOnce(37)    // criticos
+      .mockResolvedValueOnce(112);  // agotados
+    const sincronizado = new Date('2026-08-10T06:00:00.000Z');
+    TariffQuota.findOne = jest.fn(() => cadena({ syncedAt: sincronizado }));
+    TariffQuota.find = jest.fn(() => cadena([contingente090006()]));
+
+    const r = await quotaService.generateQuotaReport({ year: 2026 });
+
+    expect(r.summary).toMatchObject({ total: 1125, critical: 37, exhausted: 112, available: 1013, synced: true });
+    expect(r.summary.lastSyncAt).toBe('2026-08-10T06:00:00.000Z');
+  });
+});
+
+describe('guardarContingente', () => {
+  test('escribe rutas concretas con $set y no reemplaza el documento', async () => {
+    // Asignar el documento entero borraria los campos que la consulta de turno no
+    // traiga, que es la trampa de findOneAndUpdate en Mongoose.
+    await quotaService.guardarContingente({
+      orderNumber: '090006', year: 2026,
+      balance: { amount: 100, unit: 'Kilogram' }
+    });
+
+    const [filtro, actualizacion] = TariffQuota.findOneAndUpdate.mock.calls[0];
+    expect(filtro).toEqual({ orderNumber: '090006', year: 2026 });
+    expect(actualizacion.$set).toBeDefined();
+    expect(actualizacion.$set.syncedAt).toBeInstanceOf(Date);
+    expect(actualizacion.$set.source).toBe('quota_dds2');
+  });
+
+  test('no guarda un contingente sin numero de orden o sin ano', async () => {
+    await expect(quotaService.guardarContingente({ orderNumber: '090006' }))
+      .rejects.toThrow(/ano/i);
+    expect(TariffQuota.findOneAndUpdate).not.toHaveBeenCalled();
+  });
+
+  test('no convierte en cero un consumo que la fuente no da', async () => {
+    await quotaService.guardarContingente({ orderNumber: '090006', year: 2026, used: undefined });
+
+    expect(TariffQuota.findOneAndUpdate.mock.calls[0][1].$set.used).toBeNull();
   });
 });

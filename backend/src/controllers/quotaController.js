@@ -1,26 +1,35 @@
 /**
- * Quota Controller
- * Endpoints para gestión de Contingentes Arancelarios (TRQ)
+ * Contingentes Arancelarios (TRQ) — endpoints.
+ *
+ * Todo sale del catalogo oficial sincronizado (`TariffQuota`), no de una lista
+ * escrita en el codigo: los 11 contingentes que habia cableados en
+ * `quotaService.js` no existen en la base de la Comision (10 de los 11 numeros
+ * de orden no aparecen en ningun ano).
+ *
+ * Dos endpoints cambian de contrato a proposito:
+ *  - `/reserve` pasa a ser `/claim-data`: no habia reserva ninguna, el cupo lo
+ *    atribuye la aduana al admitir la declaracion.
+ *  - `/by-agreement` desaparece: la fuente no clasifica los contingentes por
+ *    acuerdo comercial, y los que se devolvian (CETA, EU-MERCOSUR) estaban
+ *    inventados —EU-MERCOSUR no esta ni en vigor—.
  */
 
 const quotaService = require('../services/quotaService');
+const TariffQuota = require('../models/TariffQuota');
 const logger = require('../config/logger');
+
+const anoDe = (valor) => {
+  const n = parseInt(valor, 10);
+  return Number.isInteger(n) && n >= 2000 && n <= 2100 ? n : new Date().getFullYear();
+};
 
 /**
  * POST /api/quotas/check-availability
- * Verificar disponibilidad de contingente
- *
- * Body:
- * {
- *   taricCode: '02011000',
- *   originCountry: 'AR',
- *   quantity: 10000,
- *   unit: 'kg'
- * }
+ * Contingentes aplicables a un codigo TARIC.
  */
 exports.checkAvailability = async (req, res) => {
   try {
-    const { taricCode, originCountry, quantity, unit } = req.body;
+    const { taricCode, originCountry, quantity, unit, year } = req.body;
 
     if (!taricCode || !originCountry || !quantity) {
       return res.status(400).json({
@@ -29,88 +38,64 @@ exports.checkAvailability = async (req, res) => {
       });
     }
 
-    const result = quotaService.checkQuotaAvailability(
+    const result = await quotaService.checkQuotaAvailability(
       taricCode,
       originCountry,
       quantity,
-      unit || 'kg'
+      unit || 'kg',
+      { year: anoDe(year) }
     );
 
-    res.json({
-      success: true,
-      data: result
-    });
-
+    res.json({ success: true, data: result });
   } catch (error) {
     logger.error('[QuotaController] Error in checkAvailability:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
 /**
- * POST /api/quotas/reserve
- * Reservar contingente
+ * POST /api/quotas/claim-data
+ * Datos para consignar el contingente en la declaracion.
  *
- * Body:
- * {
- *   quotaId: 'Q090001',
- *   quantity: 5000,
- *   operation: { ... }
- * }
+ * Sustituye al antiguo `/reserve`, que devolvia un `reservationId` y una validez
+ * de 30 dias sin que existiera reserva alguna: el cupo se atribuye al admitirse
+ * la declaracion, no antes.
  */
-exports.reserveQuota = async (req, res) => {
+exports.getClaimData = async (req, res) => {
   try {
-    const { quotaId, quantity, operation } = req.body;
+    const { orderNumber, quantity, year } = req.body;
 
-    if (!quotaId || !quantity) {
+    if (!orderNumber || !quantity) {
       return res.status(400).json({
         success: false,
-        error: 'quotaId y quantity son obligatorios'
+        error: 'orderNumber y quantity son obligatorios'
       });
     }
 
-    const result = quotaService.reserveQuota(quotaId, quantity, operation || {});
+    const result = await quotaService.getQuotaClaimData(orderNumber, quantity, { year: anoDe(year) });
 
-    if (result.success) {
-      res.json({
-        success: true,
-        data: result
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        error: result.error,
-        details: result
-      });
+    if (!result.success) {
+      return res.status(404).json({ success: false, error: result.error, details: result });
     }
 
+    res.json({ success: true, data: result });
   } catch (error) {
-    logger.error('[QuotaController] Error in reserveQuota:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    logger.error('[QuotaController] Error in getClaimData:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
 /**
  * POST /api/quotas/calculate-savings
- * Calcular ahorro potencial usando contingente
  *
- * Body:
- * {
- *   taricCode: '02011000',
- *   originCountry: 'AR',
- *   quantity: 10000,
- *   customsValue: 50000
- * }
+ * Exige los dos tipos (dentro y fuera del contingente) en la peticion: el
+ * sistema de contingentes no publica el tipo in-quota, esta en la medida de
+ * TARIC del codigo y el origen concretos. Sin ellos se responde que no se puede
+ * cuantificar, no un ahorro de cero.
  */
 exports.calculateSavings = async (req, res) => {
   try {
-    const { taricCode, originCountry, quantity, customsValue } = req.body;
+    const { taricCode, originCountry, quantity, customsValue, inQuotaDuty, outQuotaDuty } = req.body;
 
     if (!taricCode || !originCountry || !quantity || !customsValue) {
       return res.status(400).json({
@@ -119,258 +104,176 @@ exports.calculateSavings = async (req, res) => {
       });
     }
 
-    const result = quotaService.calculateQuotaSavings(
+    const result = await quotaService.calculateQuotaSavings(
       taricCode,
       originCountry,
       quantity,
-      customsValue
+      customsValue,
+      { inQuotaDuty, outQuotaDuty }
     );
 
-    res.json({
-      success: true,
-      data: result
-    });
-
+    res.json({ success: true, data: result });
   } catch (error) {
     logger.error('[QuotaController] Error in calculateSavings:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-};
-
-/**
- * GET /api/quotas/by-agreement/:agreementCode
- * Obtener contingentes por acuerdo comercial
- */
-exports.getByAgreement = async (req, res) => {
-  try {
-    const { agreementCode } = req.params;
-
-    const result = quotaService.getQuotasByAgreement(agreementCode);
-
-    res.json({
-      success: true,
-      data: result
-    });
-
-  } catch (error) {
-    logger.error('[QuotaController] Error in getByAgreement:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
 /**
  * GET /api/quotas/critical
- * Obtener contingentes críticos (>90% utilización)
+ * Contingentes que TARIC declara criticos (no un umbral de consumo).
  */
 exports.getCritical = async (req, res) => {
   try {
-    const critical = quotaService.getCriticalQuotas();
+    const critical = await quotaService.getCriticalQuotas({ year: anoDe(req.query?.year) });
 
     res.json({
       success: true,
       data: {
         count: critical.length,
+        criticalSource: 'taric',
+        officialSource: quotaService.URL_OFICIAL,
         quotas: critical
       }
     });
-
   } catch (error) {
     logger.error('[QuotaController] Error in getCritical:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
 /**
  * POST /api/quotas/report
- * Generar reporte de contingentes
- *
- * Body (opcional):
- * {
- *   type: 'fta',
- *   agreement: 'CETA',
- *   originCountry: 'CA'
- * }
  */
 exports.generateReport = async (req, res) => {
   try {
     const filters = req.body || {};
+    const report = await quotaService.generateQuotaReport({ ...filters, year: anoDe(filters.year) });
 
-    const report = quotaService.generateQuotaReport(filters);
-
-    res.json({
-      success: true,
-      data: report
-    });
-
+    res.json({ success: true, data: report });
   } catch (error) {
     logger.error('[QuotaController] Error in generateReport:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
 /**
  * GET /api/quotas/list
- * Listar todos los contingentes activos
+ * Listado paginado del catalogo sincronizado.
+ *
+ * Se pagina porque la fuente publica ~1.125 contingentes por ano: la version
+ * anterior devolvia los 11 inventados de golpe.
  */
 exports.listAll = async (req, res) => {
   try {
-    const quotas = quotaService.ACTIVE_QUOTAS;
+    const year = anoDe(req.query?.year);
+    const limit = Math.min(parseInt(req.query?.limit, 10) || 50, 200);
+    const page = Math.max(parseInt(req.query?.page, 10) || 1, 1);
 
-    const quotaList = Object.entries(quotas).map(([quotaId, quota]) => {
-      const utilization = (quota.volume.used / quota.volume.total) * 100;
+    const total = await TariffQuota.countDocuments({ year });
+    const report = await quotaService.generateQuotaReport({ year, limit: 0 });
 
-      return {
-        quotaId,
-        orderNumber: quota.orderNumber,
-        type: quota.type,
-        agreement: quota.agreement,
-        description: quota.description,
-        originCountries: quota.originCountries,
-        volume: {
-          ...quota.volume,
-          utilizationPercent: parseFloat(utilization.toFixed(2))
-        },
-        duty: quota.duty,
-        period: quota.period,
-        status: quota.volume.available <= 0 ? 'exhausted' :
-                utilization > 90 ? 'critical' : 'available'
-      };
-    });
+    const quotas = await TariffQuota.find({ year })
+      .sort({ orderNumber: 1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
 
     res.json({
       success: true,
       data: {
-        count: quotaList.length,
-        quotas: quotaList
+        count: quotas.length,
+        total,
+        page,
+        limit,
+        year,
+        // Si el catalogo esta vacio es que no se ha sincronizado, no que la UE no
+        // tenga contingentes. Decirlo evita leer la lista vacia como "sin TRQ".
+        synced: total > 0,
+        lastSyncAt: report.summary.lastSyncAt,
+        officialSource: quotaService.URL_OFICIAL,
+        quotas: quotas.map((q) => quotaService.presentar(q))
       }
     });
-
   } catch (error) {
     logger.error('[QuotaController] Error in listAll:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
 /**
  * GET /api/quotas/:orderNumber
- * Obtener detalles de un contingente específico
  */
 exports.getByOrderNumber = async (req, res) => {
   try {
     const { orderNumber } = req.params;
+    const year = anoDe(req.query?.year);
 
-    const quota = Object.entries(quotaService.ACTIVE_QUOTAS)
-      .find(([_, q]) => q.orderNumber === orderNumber);
+    const quota = await TariffQuota.findOne({ orderNumber: String(orderNumber), year }).lean();
 
     if (!quota) {
       return res.status(404).json({
         success: false,
-        error: 'Contingente no encontrado'
+        error: `Contingente ${orderNumber} no encontrado en el catalogo oficial de ${year}`,
+        officialSource: quotaService.URL_OFICIAL
       });
     }
 
-    const [quotaId, quotaData] = quota;
-    const utilization = (quotaData.volume.used / quotaData.volume.total) * 100;
-
-    res.json({
-      success: true,
-      data: {
-        quotaId,
-        orderNumber: quotaData.orderNumber,
-        type: quotaData.type,
-        agreement: quotaData.agreement,
-        description: quotaData.description,
-        taricCodes: quotaData.taricCodes,
-        originCountries: quotaData.originCountries,
-        volume: {
-          ...quotaData.volume,
-          utilizationPercent: parseFloat(utilization.toFixed(2))
-        },
-        duty: quotaData.duty,
-        period: quotaData.period,
-        allocationMethod: quotaData.allocationMethod,
-        requiresCertificate: quotaData.requiresCertificate,
-        status: quotaData.volume.available <= 0 ? 'exhausted' :
-                utilization > 90 ? 'critical' : 'available'
-      }
-    });
-
+    res.json({ success: true, data: quotaService.presentar(quota) });
   } catch (error) {
     logger.error('[QuotaController] Error in getByOrderNumber:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
 /**
  * GET /api/quotas/info
- * Información sobre el sistema de contingentes
  */
 exports.getInfo = async (req, res) => {
   try {
-    const info = {
-      system: 'Tariff Rate Quotas (TRQ)',
-      description: 'Sistema de gestión de contingentes arancelarios de la UE',
-      version: '1.0.0',
-      capabilities: [
-        'Verificación de disponibilidad en tiempo real',
-        'Reserva y asignación de contingentes',
-        'Cálculo de ahorros arancelarios',
-        'Monitoreo de contingentes críticos',
-        'Reportes por acuerdo comercial',
-        'Alertas de agotamiento'
-      ],
-      allocationMethods: {
-        fcfs: 'First Come First Served - Por orden de llegada',
-        traditional: 'Importadores tradicionales - Basado en histórico',
-        license: 'Licencia de importación - Requiere autorización previa'
-      },
-      quotaTypes: {
-        autonomous: 'Contingentes autónomos UE',
-        fta: 'Contingentes de acuerdos de libre comercio',
-        agricultural: 'Contingentes agrícolas específicos',
-        wto: 'Contingentes OMC'
-      },
-      coverage: {
-        activeQuotas: Object.keys(quotaService.ACTIVE_QUOTAS).length,
-        agreements: ['CETA', 'JEFTA', 'EU-MERCOSUR', 'Autónomos'],
-        products: 'Principalmente agrícolas y agroalimentarios'
-      },
-      documentation: {
-        dua_field: 'Casilla 47 del DUA - Número de orden',
-        certificate: 'EUR.1 o equivalente según acuerdo',
-        proof: 'Documentación probatoria por 3 años'
-      }
-    };
+    const year = anoDe(req.query?.year);
+    const total = await TariffQuota.countDocuments({ year });
+    const critical = await TariffQuota.countDocuments({ year, critical: true });
+    const ultimo = await TariffQuota.findOne({ year }).sort({ syncedAt: -1 }).select('syncedAt').lean();
 
     res.json({
       success: true,
-      data: info
+      data: {
+        system: 'Contingentes arancelarios (TRQ)',
+        description: 'Catalogo de contingentes de la Comision Europea sincronizado desde el sistema QUOTA',
+        source: {
+          name: 'QUOTA - DG TAXUD',
+          url: quotaService.URL_OFICIAL,
+          // El saldo se sincroniza, no se lee en vivo en cada peticion.
+          isLiveBalance: false,
+          lastSyncAt: ultimo?.syncedAt ? new Date(ultimo.syncedAt).toISOString() : null,
+          syncedQuotas: total,
+          criticalQuotas: critical,
+          year
+        },
+        limitations: [
+          'El saldo corresponde a la ultima sincronizacion: un contingente de reparto ' +
+          'simultaneo (FCFS) puede agotarse en horas.',
+          'El tipo aplicable dentro del contingente no lo publica el sistema de ' +
+          'contingentes: esta en la medida de TARIC del codigo y el origen concretos.',
+          'La elegibilidad por origen no se resuelve automaticamente: hay que ' +
+          'comprobarla en la consulta oficial.',
+          'Este sistema no reserva cupo: la atribucion la hace la aduana al admitir ' +
+          'la declaracion.'
+        ],
+        allocationMethods: {
+          fcfs: 'First Come First Served - por orden de llegada',
+          license: 'Licencia de importacion - requiere autorizacion previa'
+        },
+        documentation: {
+          dua_field: 'Numero de orden del contingente en la declaracion',
+          proof: 'Documentacion probatoria del origen'
+        }
+      }
     });
-
   } catch (error) {
     logger.error('[QuotaController] Error in getInfo:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 

@@ -15,6 +15,55 @@ const { getSeasonalTariff, hasSeasonalTariff } = require('../data/seasonalTariff
 const dutyCache = getCache();
 const CACHE_TTL_SECONDS = 60 * 60; // 1 hora
 
+/** Paises con derecho punitivo por el Reg. (UE) 2024/1392. */
+const PAISES_SANCIONADOS = ['RU', 'BY'];
+
+/**
+ * Decide si el derecho punitivo de Rusia/Bielorrusia aplica a este origen.
+ *
+ * Existe porque el catalogo guardaba ese 50% en `duties.thirdCountry`, es decir
+ * como si fuera el arancel de cualquier tercer pais: un contenedor de aceite de
+ * soja de Argentina se liquidaba al 50% en vez de al 6,40%. Ahora el 50% vive en
+ * `duties.sancionRusiaBielorrusia` y solo entra si el origen lo justifica.
+ *
+ * Si no se declara origen no se puede afirmar ni descartar: se devuelve el
+ * arancel general y se AVISA de que existe un derecho distinto, en vez de elegir
+ * en silencio uno de los dos.
+ */
+function resolverSancion(sancion, origin) {
+  if (!sancion?.adValorem) return { aplica: false, info: null, avisos: [] };
+
+  const pais = (origin || '').trim().toUpperCase();
+  const detalle = {
+    adValorem: sancion.adValorem,
+    certificado: sancion.certificado,
+    countries: PAISES_SANCIONADOS,
+    regulation: 'Reg. (UE) 2024/1392'
+  };
+
+  if (PAISES_SANCIONADOS.includes(pais)) {
+    return {
+      aplica: true,
+      adValorem: sancion.adValorem,
+      info: { ...detalle, applied: true },
+      avisos: [`Derecho punitivo del ${detalle.regulation} aplicado: ${sancion.adValorem}% ` +
+        `por origen ${pais} (certificado ${sancion.certificado}).`]
+    };
+  }
+
+  if (!pais) {
+    return {
+      aplica: false,
+      info: { ...detalle, applied: false },
+      avisos: ['Sin pais de origen declarado: se aplica el derecho de terceros paises. ' +
+        `Si la mercancia se exporta desde Rusia o Bielorrusia el derecho es del ${sancion.adValorem}% ` +
+        `(${detalle.regulation}).`]
+    };
+  }
+
+  return { aplica: false, info: { ...detalle, applied: false }, avisos: [] };
+}
+
 /**
  * Obtener informacion completa de aranceles para un codigo TARIC
  * Usa multiples fuentes: BD local -> Cache IA -> IA en tiempo real
@@ -34,10 +83,14 @@ async function getDutyInfo(taricCode, origin = null) {
   const localData = await TaricCode.findOne({ code: normalizedCode });
   if (localData && localData.duties && localData.duties.thirdCountry !== undefined) {
     const localVatInfo = getVATRateByChapter(normalizedCode);
+    const sancion = resolverSancion(localData.duties.sancionRusiaBielorrusia, origin);
     const result = {
       code: normalizedCode,
       description: localData.description?.es || localData.description?.en,
-      dutyRate: localData.duties.thirdCountry,
+      // Si el origen es Rusia o Bielorrusia manda el derecho punitivo del
+      // Reg. (UE) 2024/1392, que sustituye al de terceros paises (en TARIC es la
+      // otra rama de la MISMA medida, no un recargo que se sume).
+      dutyRate: sancion.aplica ? sancion.adValorem : localData.duties.thirdCountry,
       // Se mira el IMPORTE del derecho especifico, no el contenedor: `duties.specific`
       // es un objeto anidado en linea y Mongoose SIEMPRE lo materializa como {} aunque
       // en Mongo no exista. Como {} es truthy, este ternario marcaba 'mixed' a los
@@ -54,6 +107,11 @@ async function getDutyInfo(taricCode, origin = null) {
       requiredDocuments: localData.requiredDocuments || [],
       preferences: localData.preferences || [],
       source: 'local_db',
+      // Procedencia del tipo: distingue un arancel contrastado contra el TARIC
+      // oficial de uno heredado de una carga sin verificar.
+      dutyOrigin: localData.duties.origen || null,
+      sanction: sancion.info,
+      warnings: sancion.avisos,
       lastVerified: localData.lastUpdated
     };
 
@@ -356,6 +414,15 @@ async function calculateDutiesWithAI(params) {
   if (dutyInfo.confidence && dutyInfo.confidence < 90) {
     warnings.push('Arancel estimado - verificar en TARIC oficial antes de declarar');
   }
+  // Los avisos que genera getDutyInfo (derecho punitivo de Rusia/Bielorrusia)
+  // tienen que llegar al resultado del calculo: si se quedan en getDutyInfo, la
+  // liquidacion aplica un tipo u otro sin decir por que.
+  if (dutyInfo.warnings?.length) {
+    warnings.push(...dutyInfo.warnings);
+  }
+  if (dutyInfo.dutyOrigin && dutyInfo.dutyOrigin.fuente !== 'taric_oficial') {
+    warnings.push('Arancel sin contrastar contra el TARIC oficial - verificar antes de declarar');
+  }
 
   return {
     taricCode,
@@ -390,6 +457,10 @@ async function calculateDutiesWithAI(params) {
     measures: dutyInfo.measures || [],
     antidumping: dutyInfo.antidumping,
     quota: dutyInfo.quota,
+    // Derecho punitivo Rusia/Bielorrusia: se expone siempre que el codigo lo
+    // tenga, con `applied` diciendo si ha entrado en esta liquidacion.
+    sanction: dutyInfo.sanction || null,
+    dutyOrigin: dutyInfo.dutyOrigin || null,
 
     // Totales
     totalTaxes: Math.round((totalDuty + vatAmount) * 100) / 100,
@@ -647,33 +718,46 @@ function getEstimatedDuty(taricCode) {
 
 async function updateLocalDatabase(taricCode, dutyInfo) {
   try {
+    // Un arancel traido del TARIC oficial NO se sobreescribe con uno de la IA.
+    // Este camino solo se recorre cuando el codigo no estaba en el catalogo o no
+    // tenia arancel, pero entre la consulta y la escritura puede haberse
+    // repoblado, y degradar un dato verificado a una estimacion de la IA seria
+    // perder justo la trazabilidad que costo conseguir.
+    const existente = await TaricCode.findOne({ code: taricCode })
+      .select('duties.origen')
+      .lean();
+    if (existente?.duties?.origen?.fuente === 'taric_oficial') {
+      logger.debug(`No se sobreescribe ${taricCode}: arancel del TARIC oficial`);
+      return;
+    }
+
+    // OJO: se escriben rutas puntuales (`duties.thirdCountry`), no el objeto
+    // `duties` entero. Asignar `duties: { thirdCountry }` REEMPLAZA el
+    // subdocumento y borra sus hermanos: el derecho especifico, la procedencia y
+    // el recargo por sanciones desaparecian en silencio, dejando el codigo con
+    // un unico ad valorem de la IA.
     await TaricCode.findOneAndUpdate(
       { code: taricCode },
       {
-        code: taricCode,
-        description: {
-          es: dutyInfo.description_es || dutyInfo.description,
-          en: dutyInfo.description
-        },
-        breakdown: {
-          chapter: taricCode.substring(0, 2),
-          heading: taricCode.substring(0, 4),
-          subheading: taricCode.substring(0, 6),
-          cnCode: taricCode.substring(0, 8),
-          taricCode: taricCode
-        },
-        level: 10,
-        duties: {
-          thirdCountry: dutyInfo.dutyRate
-        },
-        vat: {
-          applicable: dutyInfo.vatRate || 21
-        },
-        supplementaryUnit: dutyInfo.supplementaryUnit || { required: false },
-        measures: dutyInfo.measures || [],
-        isLeaf: true,
-        isActive: true,
-        lastUpdated: new Date()
+        $set: {
+          code: taricCode,
+          'description.es': dutyInfo.description_es || dutyInfo.description,
+          'description.en': dutyInfo.description,
+          'breakdown.chapter': taricCode.substring(0, 2),
+          'breakdown.heading': taricCode.substring(0, 4),
+          'breakdown.subheading': taricCode.substring(0, 6),
+          'breakdown.cnCode': taricCode.substring(0, 8),
+          'breakdown.taricCode': taricCode,
+          level: 10,
+          'duties.thirdCountry': dutyInfo.dutyRate,
+          'duties.origen': { fuente: 'ia', consultadoEl: new Date(), metodo: 'estimacion_ia' },
+          'vat.applicable': dutyInfo.vatRate || 21,
+          supplementaryUnit: dutyInfo.supplementaryUnit || { required: false },
+          measures: dutyInfo.measures || [],
+          isLeaf: true,
+          isActive: true,
+          lastUpdated: new Date()
+        }
       },
       { upsert: true }
     );
@@ -696,5 +780,6 @@ module.exports = {
   calculateDutiesWithAI,
   validateDutyRate,
   getArancelesFromAI,
+  resolverSancion,
   clearMemoryCache
 };

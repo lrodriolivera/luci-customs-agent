@@ -1,490 +1,264 @@
 /**
- * Tests for Quota Controller
+ * Tests de los endpoints de contingentes arancelarios.
+ *
+ * La bateria anterior mockeaba el servicio devolviendo el catalogo cableado
+ * (`Q090001` con 45.000.000 kg de carne de vacuno, contingentes de CETA y
+ * EU-MERCOSUR) y comprobaba que el controlador lo repitiera. Ninguno de esos
+ * numeros de orden existe en la base de la Comision, asi que los tests fijaban
+ * la forma de un dato inventado. Ahora se comprueba el contrato nuevo: catalogo
+ * sincronizado, paginado, sin reserva de cupo y sin clasificacion por acuerdo.
  */
-
 const request = require('supertest');
 const express = require('express');
+
+jest.mock('../../src/services/quotaService');
+jest.mock('../../src/models/TariffQuota');
+jest.mock('../../src/config/logger', () => ({
+  debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn()
+}));
+
 const quotaController = require('../../src/controllers/quotaController');
 const quotaService = require('../../src/services/quotaService');
+const TariffQuota = require('../../src/models/TariffQuota');
 
-// Mock the service
-jest.mock('../../src/services/quotaService');
-
-// Create test app
 const app = express();
 app.use(express.json());
-
-// Define routes - specific paths must come before parameterized paths
 app.post('/api/quotas/check-availability', quotaController.checkAvailability);
-app.post('/api/quotas/reserve', quotaController.reserveQuota);
+app.post('/api/quotas/claim-data', quotaController.getClaimData);
 app.post('/api/quotas/calculate-savings', quotaController.calculateSavings);
 app.post('/api/quotas/report', quotaController.generateReport);
-app.get('/api/quotas/by-agreement/:agreementCode', quotaController.getByAgreement);
 app.get('/api/quotas/critical', quotaController.getCritical);
 app.get('/api/quotas/list', quotaController.listAll);
-app.get('/api/quotas/info', quotaController.getInfo); // Specific path before :orderNumber
+app.get('/api/quotas/info', quotaController.getInfo);
 app.get('/api/quotas/:orderNumber', quotaController.getByOrderNumber);
 
-describe('Quota Controller', () => {
+const cadena = (resultado) => {
+  const api = {};
+  ['sort', 'limit', 'skip', 'select'].forEach((m) => { api[m] = jest.fn(() => api); });
+  api.lean = jest.fn().mockResolvedValue(resultado);
+  return api;
+};
 
-  afterEach(() => {
-    jest.clearAllMocks();
+const ANO = new Date().getFullYear();
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  quotaService.URL_OFICIAL = 'https://ec.europa.eu/taxation_customs/dds2/taric/quota_consultation.jsp';
+  quotaService.presentar = jest.fn((q) => ({ orderNumber: q.orderNumber, presentado: true }));
+  TariffQuota.find = jest.fn(() => cadena([]));
+  TariffQuota.findOne = jest.fn(() => cadena(null));
+  TariffQuota.countDocuments = jest.fn().mockResolvedValue(0);
+});
+
+describe('POST /api/quotas/check-availability', () => {
+  test('devuelve el resultado del servicio', async () => {
+    quotaService.checkQuotaAvailability.mockResolvedValue({
+      found: true, count: 1, quotas: [{ orderNumber: '090006' }]
+    });
+
+    const res = await request(app).post('/api/quotas/check-availability')
+      .send({ taricCode: '0302410000', originCountry: 'CN', quantity: 1000, unit: 'kg' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.quotas[0].orderNumber).toBe('090006');
+    expect(quotaService.checkQuotaAvailability)
+      .toHaveBeenCalledWith('0302410000', 'CN', 1000, 'kg', { year: ANO });
   });
 
-  describe('POST /api/quotas/check-availability', () => {
-    test('should check quota availability successfully', async () => {
-      const mockResult = {
-        found: true,
-        count: 2,
-        quotas: [
-          {
-            quotaId: 'Q090001',
-            orderNumber: '090001',
-            description: 'Carne de vacuno',
-            available: true,
-            volume: { requested: 10000, available: 12550000, total: 45000000 }
-          }
-        ]
-      };
+  test('rechaza la peticion sin los campos obligatorios', async () => {
+    const res = await request(app).post('/api/quotas/check-availability')
+      .send({ taricCode: '0302410000' });
 
-      quotaService.checkQuotaAvailability.mockReturnValue(mockResult);
-
-      const response = await request(app)
-        .post('/api/quotas/check-availability')
-        .send({
-          taricCode: '02011000',
-          originCountry: 'AR',
-          quantity: 10000,
-          unit: 'kg'
-        });
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.found).toBe(true);
-      expect(response.body.data.quotas).toBeInstanceOf(Array);
-      expect(quotaService.checkQuotaAvailability).toHaveBeenCalledWith('02011000', 'AR', 10000, 'kg');
-    });
-
-    test('should use default unit if not provided', async () => {
-      quotaService.checkQuotaAvailability.mockReturnValue({ found: false, count: 0, quotas: [] });
-
-      await request(app)
-        .post('/api/quotas/check-availability')
-        .send({
-          taricCode: '02011000',
-          originCountry: 'AR',
-          quantity: 10000
-        });
-
-      expect(quotaService.checkQuotaAvailability).toHaveBeenCalledWith('02011000', 'AR', 10000, 'kg');
-    });
-
-    test('should return 400 if taricCode is missing', async () => {
-      const response = await request(app)
-        .post('/api/quotas/check-availability')
-        .send({
-          originCountry: 'AR',
-          quantity: 10000
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('taricCode, originCountry y quantity son obligatorios');
-    });
-
-    test('should return 400 if originCountry is missing', async () => {
-      const response = await request(app)
-        .post('/api/quotas/check-availability')
-        .send({
-          taricCode: '02011000',
-          quantity: 10000
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-    });
-
-    test('should return 400 if quantity is missing', async () => {
-      const response = await request(app)
-        .post('/api/quotas/check-availability')
-        .send({
-          taricCode: '02011000',
-          originCountry: 'AR'
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-    });
-
-    test('should handle service errors', async () => {
-      quotaService.checkQuotaAvailability.mockImplementation(() => {
-        throw new Error('Service error');
-      });
-
-      const response = await request(app)
-        .post('/api/quotas/check-availability')
-        .send({
-          taricCode: '02011000',
-          originCountry: 'AR',
-          quantity: 10000
-        });
-
-      expect(response.status).toBe(500);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Service error');
-    });
+    expect(res.status).toBe(400);
+    expect(quotaService.checkQuotaAvailability).not.toHaveBeenCalled();
   });
 
-  describe('POST /api/quotas/reserve', () => {
-    test('should reserve quota successfully', async () => {
-      const mockResult = {
-        success: true,
-        reservationId: 'RES-Q090001-123',
-        quotaId: 'Q090001',
-        quantity: 5000,
-        instructions: ['Declarar número de orden en casilla 47 del DUA']
-      };
+  test('descarta un ano fuera de rango en vez de consultarlo', async () => {
+    quotaService.checkQuotaAvailability.mockResolvedValue({ found: false, quotas: [] });
 
-      quotaService.reserveQuota.mockReturnValue(mockResult);
+    await request(app).post('/api/quotas/check-availability')
+      .send({ taricCode: '0302410000', originCountry: 'CN', quantity: 1, year: 'abc' });
 
-      const response = await request(app)
-        .post('/api/quotas/reserve')
-        .send({
-          quotaId: 'Q090001',
-          quantity: 5000,
-          operation: { type: 'import', originCountry: 'AR' }
-        });
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.reservationId).toBeDefined();
-      expect(quotaService.reserveQuota).toHaveBeenCalledWith('Q090001', 5000, expect.any(Object));
-    });
-
-    test('should use empty operation object if not provided', async () => {
-      quotaService.reserveQuota.mockReturnValue({ success: true });
-
-      await request(app)
-        .post('/api/quotas/reserve')
-        .send({
-          quotaId: 'Q090001',
-          quantity: 5000
-        });
-
-      expect(quotaService.reserveQuota).toHaveBeenCalledWith('Q090001', 5000, {});
-    });
-
-    test('should return 400 if quota reservation fails', async () => {
-      const mockResult = {
-        success: false,
-        error: 'Cantidad solicitada excede disponibilidad',
-        available: 1000,
-        requested: 5000
-      };
-
-      quotaService.reserveQuota.mockReturnValue(mockResult);
-
-      const response = await request(app)
-        .post('/api/quotas/reserve')
-        .send({
-          quotaId: 'Q090001',
-          quantity: 5000
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('excede disponibilidad');
-      expect(response.body.details).toBeDefined();
-    });
-
-    test('should return 400 if quotaId is missing', async () => {
-      const response = await request(app)
-        .post('/api/quotas/reserve')
-        .send({
-          quantity: 5000
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('quotaId y quantity son obligatorios');
-    });
-
-    test('should return 400 if quantity is missing', async () => {
-      const response = await request(app)
-        .post('/api/quotas/reserve')
-        .send({
-          quotaId: 'Q090001'
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-    });
+    expect(quotaService.checkQuotaAvailability.mock.calls[0][4]).toEqual({ year: ANO });
   });
 
-  describe('POST /api/quotas/calculate-savings', () => {
-    test('should calculate quota savings successfully', async () => {
-      const mockResult = {
-        applicable: true,
-        dutyWithoutQuota: 945,
-        dutyWithQuota: 40,
-        savings: 905,
-        savingsPercent: 95.77,
-        quota: {
-          quotaId: 'Q090001',
-          orderNumber: '090001',
-          description: 'Carne de vacuno'
-        }
-      };
+  test('propaga el fallo del servicio como 500 en vez de un "sin contingente"', async () => {
+    // Un error de base de datos no puede leerse como que el producto no tiene
+    // contingente: son cosas distintas.
+    quotaService.checkQuotaAvailability.mockRejectedValue(new Error('Mongo caido'));
 
-      quotaService.calculateQuotaSavings.mockReturnValue(mockResult);
+    const res = await request(app).post('/api/quotas/check-availability')
+      .send({ taricCode: '0302410000', originCountry: 'CN', quantity: 1 });
 
-      const response = await request(app)
-        .post('/api/quotas/calculate-savings')
-        .send({
-          taricCode: '02011000',
-          originCountry: 'AR',
-          quantity: 10000,
-          customsValue: 50000
-        });
+    expect(res.status).toBe(500);
+    expect(res.body.success).toBe(false);
+  });
+});
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.applicable).toBe(true);
-      expect(response.body.data.savings).toBe(905);
-      expect(quotaService.calculateQuotaSavings).toHaveBeenCalledWith('02011000', 'AR', 10000, 50000);
+describe('POST /api/quotas/claim-data', () => {
+  test('devuelve los datos para consignar el contingente', async () => {
+    quotaService.getQuotaClaimData.mockResolvedValue({
+      success: true, isReservation: false, orderNumber: '090006', instructions: [], warnings: []
     });
 
-    test('should return 400 if required fields are missing', async () => {
-      const response = await request(app)
-        .post('/api/quotas/calculate-savings')
-        .send({
-          taricCode: '02011000',
-          originCountry: 'AR'
-        });
+    const res = await request(app).post('/api/quotas/claim-data')
+      .send({ orderNumber: '090006', quantity: 1000 });
 
-      expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('taricCode, originCountry, quantity y customsValue son obligatorios');
-    });
+    expect(res.status).toBe(200);
+    // No hay reserva: el cupo lo atribuye la aduana al admitir la declaracion.
+    expect(res.body.data.isReservation).toBe(false);
+    expect(res.body.data.reservationId).toBeUndefined();
   });
 
-  describe('GET /api/quotas/by-agreement/:agreementCode', () => {
-    test('should return quotas by agreement', async () => {
-      const mockResult = {
-        agreement: 'CETA',
-        count: 5,
-        quotas: [
-          { quotaId: 'Q094100', orderNumber: '094100', description: 'Carne de cerdo - CETA' }
-        ]
-      };
-
-      quotaService.getQuotasByAgreement.mockReturnValue(mockResult);
-
-      const response = await request(app)
-        .get('/api/quotas/by-agreement/CETA');
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.agreement).toBe('CETA');
-      expect(response.body.data.quotas).toBeInstanceOf(Array);
-      expect(quotaService.getQuotasByAgreement).toHaveBeenCalledWith('CETA');
+  test('responde 404 cuando el contingente no esta en el catalogo', async () => {
+    quotaService.getQuotaClaimData.mockResolvedValue({
+      success: false, error: 'Contingente 090001 no encontrado en el catalogo oficial de 2026'
     });
 
-    test('should handle non-existent agreement', async () => {
-      const mockResult = {
-        agreement: 'NON_EXISTENT',
-        count: 0,
-        quotas: []
-      };
+    const res = await request(app).post('/api/quotas/claim-data')
+      .send({ orderNumber: '090001', quantity: 1000 });
 
-      quotaService.getQuotasByAgreement.mockReturnValue(mockResult);
-
-      const response = await request(app)
-        .get('/api/quotas/by-agreement/NON_EXISTENT');
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.count).toBe(0);
-    });
+    expect(res.status).toBe(404);
+    expect(res.body.error).toMatch(/090001/);
   });
 
-  describe('GET /api/quotas/critical', () => {
-    test('should return critical quotas', async () => {
-      const mockCritical = [
-        {
-          quotaId: 'Q090002',
-          orderNumber: '090002',
-          utilizationPercent: 97.5,
-          available: 250000,
-          estimatedExhaustion: 'Crítico: 15 días'
-        }
-      ];
+  test('exige orderNumber y quantity', async () => {
+    const res = await request(app).post('/api/quotas/claim-data').send({ quantity: 10 });
 
-      quotaService.getCriticalQuotas.mockReturnValue(mockCritical);
+    expect(res.status).toBe(400);
+    expect(quotaService.getQuotaClaimData).not.toHaveBeenCalled();
+  });
+});
 
-      const response = await request(app)
-        .get('/api/quotas/critical');
+describe('POST /api/quotas/calculate-savings', () => {
+  test('pasa al servicio los dos tipos que aporta el llamante', async () => {
+    // El tipo dentro del contingente no lo publica el sistema de contingentes:
+    // tiene que venir de la medida de TARIC, no de un valor cableado.
+    quotaService.calculateQuotaSavings.mockResolvedValue({ applicable: true, savings: 6000 });
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.count).toBe(1);
-      expect(response.body.data.quotas).toBeInstanceOf(Array);
-      expect(response.body.data.quotas[0].utilizationPercent).toBeGreaterThan(90);
+    await request(app).post('/api/quotas/calculate-savings').send({
+      taricCode: '0302410000', originCountry: 'CN', quantity: 1000, customsValue: 50000,
+      inQuotaDuty: 0, outQuotaDuty: 0.12
     });
 
-    test('should return empty array if no critical quotas', async () => {
-      quotaService.getCriticalQuotas.mockReturnValue([]);
-
-      const response = await request(app)
-        .get('/api/quotas/critical');
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.count).toBe(0);
-      expect(response.body.data.quotas).toHaveLength(0);
-    });
+    expect(quotaService.calculateQuotaSavings).toHaveBeenCalledWith(
+      '0302410000', 'CN', 1000, 50000, { inQuotaDuty: 0, outQuotaDuty: 0.12 }
+    );
   });
 
-  describe('POST /api/quotas/report', () => {
-    test('should generate quota report without filters', async () => {
-      const mockReport = {
-        generatedAt: new Date().toISOString(),
-        filters: {},
-        summary: {
-          total: 10,
-          available: 6,
-          critical: 2,
-          exhausted: 2,
-          byType: { autonomous: 5, fta: 5 }
-        },
-        quotas: []
-      };
-
-      quotaService.generateQuotaReport.mockReturnValue(mockReport);
-
-      const response = await request(app)
-        .post('/api/quotas/report')
-        .send({});
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.summary).toBeDefined();
-      expect(quotaService.generateQuotaReport).toHaveBeenCalledWith({});
+  test('responde 200 con applicable false cuando faltan los tipos', async () => {
+    quotaService.calculateQuotaSavings.mockResolvedValue({
+      applicable: false, savings: null, message: 'falta el tipo dentro'
     });
 
-    test('should generate quota report with filters', async () => {
-      const mockReport = {
-        generatedAt: new Date().toISOString(),
-        filters: { type: 'fta', agreement: 'CETA' },
-        summary: { total: 3 },
-        quotas: []
-      };
+    const res = await request(app).post('/api/quotas/calculate-savings')
+      .send({ taricCode: '0302410000', originCountry: 'CN', quantity: 1000, customsValue: 50000 });
 
-      quotaService.generateQuotaReport.mockReturnValue(mockReport);
+    expect(res.status).toBe(200);
+    expect(res.body.data.savings).toBeNull();
+  });
+});
 
-      const response = await request(app)
-        .post('/api/quotas/report')
-        .send({
-          type: 'fta',
-          agreement: 'CETA'
-        });
+describe('GET /api/quotas/critical', () => {
+  test('declara que la criticidad la marca TARIC', async () => {
+    quotaService.getCriticalQuotas.mockResolvedValue([{ orderNumber: '090006', critical: true }]);
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.filters.type).toBe('fta');
-      expect(quotaService.generateQuotaReport).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'fta', agreement: 'CETA' })
-      );
-    });
+    const res = await request(app).get('/api/quotas/critical');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.count).toBe(1);
+    expect(res.body.data.criticalSource).toBe('taric');
   });
 
-  describe('GET /api/quotas/list', () => {
-    test('should list all active quotas', async () => {
-      const mockQuotas = {
-        Q090001: {
-          orderNumber: '090001',
-          type: 'autonomous',
-          description: 'Carne de vacuno',
-          originCountries: ['US', 'AR'],
-          volume: { total: 45000000, used: 32450000, available: 12550000, unit: 'kg' },
-          duty: { inQuota: 0.08, outQuota: 0.189 },
-          period: { start: '2025-01-01', end: '2026-12-31' }
-        }
-      };
+  test('una lista vacia no es un error', async () => {
+    quotaService.getCriticalQuotas.mockResolvedValue([]);
 
-      quotaService.ACTIVE_QUOTAS = mockQuotas;
+    const res = await request(app).get('/api/quotas/critical');
 
-      const response = await request(app)
-        .get('/api/quotas/list');
+    expect(res.status).toBe(200);
+    expect(res.body.data.count).toBe(0);
+  });
+});
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.count).toBeGreaterThan(0);
-      expect(response.body.data.quotas).toBeInstanceOf(Array);
-      expect(response.body.data.quotas[0].quotaId).toBeDefined();
-      expect(response.body.data.quotas[0].status).toBeDefined();
-    });
+describe('GET /api/quotas/list', () => {
+  test('pagina el listado y dice el total', async () => {
+    // La fuente publica ~1.125 contingentes por ano: devolverlos todos de golpe
+    // no es viable, y el total tiene que viajar para que la UI no crea que hay 50.
+    TariffQuota.countDocuments = jest.fn().mockResolvedValue(1125);
+    TariffQuota.find = jest.fn(() => cadena([{ orderNumber: '090006' }, { orderNumber: '090007' }]));
+    quotaService.generateQuotaReport.mockResolvedValue({ summary: { lastSyncAt: '2026-08-10T06:00:00.000Z' } });
+
+    const res = await request(app).get('/api/quotas/list?limit=2&page=3');
+
+    expect(res.body.data).toMatchObject({ count: 2, total: 1125, page: 3, limit: 2, synced: true });
+    expect(res.body.data.lastSyncAt).toBe('2026-08-10T06:00:00.000Z');
   });
 
-  describe('GET /api/quotas/:orderNumber', () => {
-    test('should get quota by order number', async () => {
-      const mockQuotas = {
-        Q090001: {
-          orderNumber: '090001',
-          type: 'autonomous',
-          agreement: 'N/A',
-          description: 'Carne de vacuno',
-          taricCodes: ['02011000'],
-          originCountries: ['US', 'AR'],
-          volume: { total: 45000000, used: 32450000, available: 12550000, unit: 'kg' },
-          duty: { inQuota: 0.08, outQuota: 0.189 },
-          period: { start: '2025-01-01', end: '2026-12-31' },
-          allocationMethod: 'fcfs',
-          requiresCertificate: 'N/A'
-        }
-      };
+  test('un catalogo vacio se marca como no sincronizado', async () => {
+    // Sin esta distincion la lista vacia se lee como "la UE no tiene contingentes".
+    quotaService.generateQuotaReport.mockResolvedValue({ summary: { lastSyncAt: null } });
 
-      quotaService.ACTIVE_QUOTAS = mockQuotas;
+    const res = await request(app).get('/api/quotas/list');
 
-      const response = await request(app)
-        .get('/api/quotas/090001');
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.orderNumber).toBe('090001');
-      expect(response.body.data.quotaId).toBe('Q090001');
-      expect(response.body.data.volume.utilizationPercent).toBeDefined();
-      expect(response.body.data.status).toBeDefined();
-    });
-
-    test('should return 404 if quota not found', async () => {
-      quotaService.ACTIVE_QUOTAS = {};
-
-      const response = await request(app)
-        .get('/api/quotas/999999');
-
-      expect(response.status).toBe(404);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('no encontrado');
-    });
+    expect(res.body.data.synced).toBe(false);
+    expect(res.body.data.total).toBe(0);
+    expect(res.body.data.officialSource).toContain('quota_consultation.jsp');
   });
 
-  describe('GET /api/quotas/info', () => {
-    test('should return quota system information', async () => {
-      quotaService.ACTIVE_QUOTAS = { Q1: {}, Q2: {} };
+  test('acota el limite pedido para que no se pida el catalogo entero', async () => {
+    quotaService.generateQuotaReport.mockResolvedValue({ summary: { lastSyncAt: null } });
 
-      const response = await request(app)
-        .get('/api/quotas/info');
+    const res = await request(app).get('/api/quotas/list?limit=5000');
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.system).toBe('Tariff Rate Quotas (TRQ)');
-      expect(response.body.data.description).toBeDefined();
-      expect(response.body.data.capabilities).toBeInstanceOf(Array);
-      expect(response.body.data.allocationMethods).toBeDefined();
-      expect(response.body.data.quotaTypes).toBeDefined();
-      expect(response.body.data.coverage).toBeDefined();
-      expect(response.body.data.coverage.activeQuotas).toBe(2);
-    });
+    expect(res.body.data.limit).toBe(200);
+  });
+});
+
+describe('GET /api/quotas/:orderNumber', () => {
+  test('devuelve el contingente del catalogo', async () => {
+    TariffQuota.findOne = jest.fn(() => cadena({ orderNumber: '090006' }));
+
+    const res = await request(app).get('/api/quotas/090006');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.orderNumber).toBe('090006');
+  });
+
+  test('404 con el ano en el mensaje cuando el numero de orden no existe', async () => {
+    // 090001 es uno de los 10 numeros de orden inventados que llevaba el catalogo.
+    const res = await request(app).get('/api/quotas/090001?year=2026');
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toMatch(/090001.*2026/);
+  });
+});
+
+describe('GET /api/quotas/info', () => {
+  test('publica el estado de la sincronizacion y no la promete en vivo', async () => {
+    TariffQuota.countDocuments = jest.fn()
+      .mockResolvedValueOnce(1125)
+      .mockResolvedValueOnce(37);
+    TariffQuota.findOne = jest.fn(() => cadena({ syncedAt: new Date('2026-08-10T06:00:00.000Z') }));
+
+    const res = await request(app).get('/api/quotas/info');
+
+    expect(res.body.data.source.isLiveBalance).toBe(false);
+    expect(res.body.data.source.syncedQuotas).toBe(1125);
+    expect(res.body.data.source.criticalQuotas).toBe(37);
+    expect(res.body.data.source.lastSyncAt).toBe('2026-08-10T06:00:00.000Z');
+  });
+
+  test('enumera las limitaciones del dato en vez de prometer tiempo real', async () => {
+    // La version anterior anunciaba "Verificacion de disponibilidad en tiempo
+    // real" y "Reserva y asignacion de contingentes": ninguna de las dos existia.
+    const res = await request(app).get('/api/quotas/info');
+
+    const texto = res.body.data.limitations.join(' ');
+    expect(texto).toMatch(/FCFS/);
+    expect(texto).toMatch(/no reserva cupo|atribucion la hace la aduana/i);
+    expect(JSON.stringify(res.body.data)).not.toMatch(/tiempo real/i);
+    // Los acuerdos comerciales ya no se afirman: la fuente no clasifica por
+    // acuerdo y los que se listaban (CETA, EU-MERCOSUR) estaban inventados.
+    expect(JSON.stringify(res.body.data)).not.toMatch(/MERCOSUR|CETA/);
   });
 });

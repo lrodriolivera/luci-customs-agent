@@ -41,6 +41,25 @@ function enBDLocal(code, dutyRate = 12) {
   });
 }
 
+/**
+ * Simula un codigo con el derecho punitivo de Rusia/Bielorrusia separado del
+ * arancel general, tal y como queda tras repoblar desde el TARIC oficial.
+ */
+function conSancion(code, general, punitivo) {
+  TaricCode.findOne.mockResolvedValue({
+    code,
+    description: { es: 'descripcion' },
+    duties: {
+      thirdCountry: general,
+      sancionRusiaBielorrusia: { adValorem: punitivo, certificado: 'Y155' },
+      origen: { fuente: 'taric_oficial', metodo: 'condiciones_de_medida' }
+    },
+    measures: [],
+    requiredDocuments: [],
+    preferences: []
+  });
+}
+
 /** Devuelve el tipo de IVA que getDutyInfo asigna a un codigo. */
 async function ivaDe(code) {
   enBDLocal(code);
@@ -185,6 +204,77 @@ describe('dutyCalculationService', () => {
 
       expect(r.dutyType).toBe('mixed');
       expect(r.specificDuty).toEqual({ amount: 32, unit: 'EUR/hl' });
+    });
+
+    /**
+     * El 50% de estos codigos NO era el arancel general: es el derecho punitivo
+     * del Reg. (UE) 2024/1392 contra Rusia y Bielorrusia, que en TARIC es la
+     * rama de la medida condicionada al certificado Y155. Guardado en
+     * `duties.thirdCountry` se cobraba a cualquier origen: un contenedor de
+     * aceite de soja argentino se liquidaba al 50% en vez de al 6,40%.
+     */
+    test('el derecho punitivo RU/BY no se aplica a un origen no sancionado', async () => {
+      conSancion('1507109000', 6.4, 50);
+
+      const r = await getDutyInfo('1507109000', 'AR');
+
+      expect(r.dutyRate).toBe(6.4);
+      expect(r.sanction).toMatchObject({ adValorem: 50, applied: false });
+    });
+
+    test('el derecho punitivo sustituye al general cuando el origen es Rusia', async () => {
+      conSancion('1507109000', 6.4, 50);
+
+      const r = await getDutyInfo('1507109000', 'RU');
+
+      expect(r.dutyRate).toBe(50);
+      expect(r.sanction.applied).toBe(true);
+      expect(r.warnings[0]).toMatch(/2024\/1392/);
+    });
+
+    test('lo mismo con Bielorrusia, y en minusculas', async () => {
+      conSancion('1507109000', 6.4, 50);
+
+      const r = await getDutyInfo('1507109000', 'by');
+
+      expect(r.dutyRate).toBe(50);
+      expect(r.sanction.applied).toBe(true);
+    });
+
+    test('sin origen declarado aplica el general pero AVISA del punitivo', async () => {
+      // No se puede afirmar ni descartar la sancion: elegir en silencio es lo que
+      // hacia que el importe liquidado no se pudiera justificar.
+      conSancion('1507109000', 6.4, 50);
+
+      const r = await getDutyInfo('1507109000');
+
+      expect(r.dutyRate).toBe(6.4);
+      expect(r.warnings.join(' ')).toMatch(/Rusia o Bielorrusia/);
+    });
+
+    test('un codigo sin sancion no genera aviso ni campo', async () => {
+      enBDLocal('6109100010', 12);
+
+      const r = await getDutyInfo('6109100010');
+
+      expect(r.sanction).toBeNull();
+      expect(r.warnings).toEqual([]);
+    });
+
+    test('expone la procedencia del arancel', async () => {
+      TaricCode.findOne.mockResolvedValue({
+        code: '1507109000',
+        description: { es: 'Aceite de soja' },
+        duties: {
+          thirdCountry: 6.4,
+          origen: { fuente: 'taric_oficial', metodo: 'condiciones_de_medida' }
+        },
+        measures: [], requiredDocuments: [], preferences: []
+      });
+
+      const r = await getDutyInfo('1507109000');
+
+      expect(r.dutyOrigin.fuente).toBe('taric_oficial');
     });
 
     test('la clave de cache separa por origen (el arancel preferencial difiere)', async () => {
@@ -447,6 +537,77 @@ describe('getArancelesFromAI', () => {
   test('devuelve null si la respuesta no es JSON', async () => {
     aiService.callClaude.mockResolvedValue({ content: 'texto libre' });
     expect(await getArancelesFromAI('6109100010')).toBeNull();
+  });
+});
+
+/**
+ * updateLocalDatabase es interna: se ejercita por su unica via real, un
+ * getDutyInfo que acaba resolviendo con la IA y persiste el resultado.
+ */
+describe('persistencia del arancel obtenido por IA', () => {
+  /** Mock de `TaricCode.findOne(...).select(...).lean()`. */
+  const conOrigenExistente = (origen) => {
+    TaricCode.findOne.mockImplementation(() => ({
+      select: () => ({ lean: async () => (origen ? { duties: { origen } } : null) })
+    }));
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCache.get.mockResolvedValue(null);
+    TaricAICache.getFromCache.mockResolvedValue(null);
+    TaricAICache.saveToCache.mockResolvedValue(null);
+    TaricCode.findOneAndUpdate.mockResolvedValue({});
+    aiService.callClaude.mockResolvedValue({
+      content: '{"dutyRateNumeric": 8, "dutyType": "ad_valorem", "description_es": "X"}'
+    });
+  });
+
+  /**
+   * Asignar `duties: { thirdCountry }` REEMPLAZA el subdocumento entero en
+   * Mongo: se llevaba por delante el derecho especifico, la procedencia y el
+   * recargo por sanciones. Verificado contra la BD real: tras el update solo
+   * quedaba `thirdCountry`. Por eso se escriben rutas puntuales.
+   */
+  test('escribe rutas puntuales de duties, sin reemplazar el subdocumento', async () => {
+    // La primera llamada (busqueda del codigo) devuelve null; la segunda es el
+    // findOne().select().lean() de updateLocalDatabase.
+    let n = 0;
+    TaricCode.findOne.mockImplementation(() => {
+      n++;
+      if (n === 1) return Promise.resolve(null);
+      return { select: () => ({ lean: async () => null }) };
+    });
+
+    await getDutyInfo('1507109000');
+
+    const update = TaricCode.findOneAndUpdate.mock.calls[0][1];
+    expect(update.$set['duties.thirdCountry']).toBe(8);
+    expect(update.duties).toBeUndefined();
+  });
+
+  test('no degrada a estimacion de IA un arancel del TARIC oficial', async () => {
+    let n = 0;
+    TaricCode.findOne.mockImplementation(() => {
+      n++;
+      if (n === 1) return Promise.resolve(null); // no estaba al buscarlo...
+      // ...pero al ir a escribir ya se habia repoblado desde la fuente oficial.
+      return { select: () => ({ lean: async () => ({ duties: { origen: { fuente: 'taric_oficial' } } }) }) };
+    });
+
+    await getDutyInfo('1507109000');
+
+    expect(TaricCode.findOneAndUpdate).not.toHaveBeenCalled();
+  });
+
+  test('marca como procedente de IA el arancel que persiste', async () => {
+    conOrigenExistente(null);
+    TaricCode.findOne.mockImplementationOnce(() => Promise.resolve(null));
+
+    await getDutyInfo('1507109000');
+
+    const update = TaricCode.findOneAndUpdate.mock.calls[0][1];
+    expect(update.$set['duties.origen'].fuente).toBe('ia');
   });
 });
 

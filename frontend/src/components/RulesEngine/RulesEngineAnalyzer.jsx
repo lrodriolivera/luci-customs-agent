@@ -383,21 +383,45 @@ export default function RulesEngineAnalyzer() {
                       <div key={idx} className="p-3 bg-purple-50 border border-purple-200 rounded-md">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-medium text-purple-900">{quota.description}</p>
+                            <p className="font-medium text-purple-900">{quota.origins || quota.orderNumber}</p>
                             <p className="text-xs text-purple-700">Orden: {quota.orderNumber}</p>
                             <p className="text-xs text-purple-700">Producto: {quota.product}</p>
                           </div>
+                          {/* `available` es de tres estados: `null` significa que no se
+                              pudo comparar la cantidad con el saldo (otra unidad, o sin
+                              saldo publicado). Antes ese caso se pintaba "Agotado", que
+                              es un veredicto que nadie habia emitido. */}
                           <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            quota.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            quota.available === true ? 'bg-green-100 text-green-800'
+                              : quota.available === false ? 'bg-red-100 text-red-800'
+                                : 'bg-gray-100 text-gray-800'
                           }`}>
-                            {quota.available ? 'Disponible' : 'Agotado'}
+                            {quota.available === true ? 'Saldo suficiente'
+                              : quota.available === false ? 'Saldo insuficiente'
+                                : 'Saldo sin comprobar'}
                           </span>
                         </div>
-                        {quota.duty && (
-                          <p className="text-xs text-purple-600 mt-2">
-                            Ahorro: {(quota.duty.savings * 100).toFixed(2)}% del arancel
+                        {/* Coincidencia por prefijo: la fuente define el contingente en
+                            subdivisiones mas especificas que el codigo consultado, asi que
+                            puede no cubrir la mercancia declarada. Sin este aviso la
+                            tarjeta se leia igual que una coincidencia exacta. */}
+                        {quota.codeMatch === 'prefijo' && (
+                          <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-2">
+                            Este contingente no esta definido para el codigo consultado, sino para
+                            subdivisiones suyas
+                            {quota.taricCodes?.length ? ` (${quota.taricCodes.slice(0, 3).join(', ')}...)` : ''}
+                            : comprobar en la consulta oficial si cubre el codigo TARIC exacto de la mercancia.
                           </p>
                         )}
+                        {/* No se muestra ahorro: el tipo dentro del contingente esta en
+                            la medida de TARIC del codigo y el origen concretos, y el
+                            motor no lo tiene. */}
+                        <p className="text-xs text-purple-600 mt-2">
+                          {quota.volume?.syncedAt
+                            ? `Saldo consultado el ${new Date(quota.volume.syncedAt).toLocaleString('es-ES')}`
+                            : 'Saldo sin fecha de consulta registrada'}
+                          {' — comprobar en la consulta oficial antes de declarar.'}
+                        </p>
                       </div>
                     ))}
                   </div>

@@ -2106,24 +2106,7 @@
   },
   "quotaManager": {
     "title": "Gestio de Contingents Aranzelaris",
-    "subtitle": "TRQ (Tariff Rate Quotas) - Consulta i gestio de contingents per a importacio amb aranzel reduit",
-    "checkAvailability": "Buscar Disponibilitat",
-    "allQuotas": "Tots els Contingents",
-    "criticalQuotas": "Contingents Critics",
-    "verifyAvailability": "Verificar Disponibilitat",
-    "quotaAvailable": "Disponible",
-    "quotaCritical": "Critic",
-    "quotaDepleted": "Esgotat",
-    "utilization": "Utilitzacio",
-    "quotaRate": "Aranzel en contingent",
-    "normalRate": "Aranzel normal (NMF)",
-    "criticalWarning": "Contingent en estat critic. Sol·licite reserva amb urgencia.",
-    "recommendation": "Recomanacio",
-    "certificateRequired": "Certificat requerit",
-    "noQuotasFound": "No s'han trobat contingents per a este producte",
-    "mfnApplied": "S'aplicara l'aranzel NMF (Nacio Mes Afavorida)",
-    "noCritical": "No hi ha contingents en estat critic",
-    "allAdequate": "Tots els contingents actius tenen disponibilitat adequada"
+    "subtitle": "Cataleg oficial de contingents aranzelaris (TRQ). El saldo es el de l'ultima sincronitzacio amb la Comissio, no una consulta en viu"
   },
   "oea": {
     "title": "Operador Economic Autoritzat",
@@ -3111,30 +3094,30 @@
     },
     "quotas": {
       "title": "Contingents Aranzelaris",
-      "description": "Consulta i gestiona contingents aranzelaris de la UE que permeten importar a tipus reduits dins de volums limitats",
+      "description": "Consulta el cataleg oficial de contingents aranzelaris de la UE, que permeten importar a tipus reduits dins de volums limitats. El saldo mostrat es el de l'ultima sincronitzacio",
       "uso": {
-        "s0Title": "Consultar contingents",
-        "s0Text": "Busca contingents aranzelaris oberts per codi TARIC o pais d'origen, amb el seu saldo disponible i tipus de dret reduit",
-        "s1Title": "Sol·licitar contingent",
-        "s1Text": "Sol·licita la imputacio a un contingent aranzelari en la teva declaracio d'importacio per beneficiar-te del tipus reduit",
+        "s0Title": "Consultar el cataleg",
+        "s0Text": "Busca al cataleg sincronitzat els contingents d'un codi TARIC, amb el saldo publicat i la data en que es va consultar",
+        "s1Title": "Consignar el contingent",
+        "s1Text": "El cupo no es reserva: s'indica el numero d'ordre en la declaracio d'importacio i la duana l'atribueix en admetre-la, per ordre cronologic",
         "step0": "Accedeix a la seccio Contingents des del menu lateral",
-        "step1": "Busca contingents disponibles per a la teva mercaderia i origen",
-        "step2": "Verifica el saldo restant del contingent",
-        "step3": "Inclou la sol·licitud de contingent en la teva declaracio d'importacio"
+        "step1": "Busca al cataleg els contingents del codi TARIC de la teva mercaderia",
+        "step2": "Comprova la data del saldo i confirma'l a la consulta oficial de la Comissio",
+        "step3": "Indica el numero d'ordre del contingent en la teva declaracio d'importacio"
       },
       "normativa": {
         "r0Title": "Contingents aranzelaris (CDU Art. 56(4))",
         "r0Desc": "Base legal per a l'aplicacio de contingents aranzelaris que permeten importar a tipus reduits dins de volums fixats",
         "r1Title": "Gestio de contingents",
-        "r1Desc": "La Comissio Europea gestiona els contingents per ordre cronologic d'admissio de les declaracions (first come, first served)"
+        "r1Desc": "La Comissio Europea gestiona els contingents per ordre cronologic d'admissio de les declaracions (first come, first served): un contingent pot esgotar-se en hores"
       },
       "luciIA": {
-        "f0Name": "Cerca de contingents",
-        "f0Desc": "LUCI busca automaticament contingents disponibles per a la teva mercaderia i et notifica si hi ha saldo",
-        "f1Name": "Alerta d'obertura",
-        "f1Desc": "Rep notificacions quan s'obrin nous contingents o es renovi el saldo de contingents existents",
-        "f2Name": "Estimacio de saldo",
-        "f2Desc": "Analitza la velocitat de consum del contingent per estimar si hi haura saldo disponible per a la teva operacio"
+        "f0Name": "Cataleg sincronitzat",
+        "f0Desc": "LUCI sincronitza el cataleg oficial de contingents de la Comissio i localitza per codi TARIC els que poden aplicar-se a la teva mercaderia",
+        "f1Name": "Criticitat declarada per TARIC",
+        "f1Desc": "Avisa quan TARIC marca el contingent com a critic, sense deduir-ho del percentatge de consum: un contingent pot ser critic amb el 17% consumit",
+        "f2Name": "Saldo datat",
+        "f2Desc": "Cada saldo es mostra amb la data en que es va consultar i s'avisa quan ha caducat, perque un contingent de repartiment simultani s'esgota en hores"
       }
     },
     "integrations": {

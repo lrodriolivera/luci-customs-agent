@@ -2106,24 +2106,7 @@
   },
   "quotaManager": {
     "title": "Tariff Quota Management",
-    "subtitle": "TRQ (Tariff Rate Quotas) - Query and manage quotas for imports at reduced tariff rates",
-    "checkAvailability": "Check Availability",
-    "allQuotas": "All Quotas",
-    "criticalQuotas": "Critical Quotas",
-    "verifyAvailability": "Verify Availability",
-    "quotaAvailable": "Available",
-    "quotaCritical": "Critical",
-    "quotaDepleted": "Depleted",
-    "utilization": "Utilization",
-    "quotaRate": "In-quota tariff",
-    "normalRate": "Normal tariff (MFN)",
-    "criticalWarning": "Quota in critical status. Request allocation urgently.",
-    "recommendation": "Recommendation",
-    "certificateRequired": "Certificate required",
-    "noQuotasFound": "No quotas found for this product",
-    "mfnApplied": "The MFN (Most Favoured Nation) tariff will apply",
-    "noCritical": "No quotas in critical status",
-    "allAdequate": "All active quotas have adequate availability"
+    "subtitle": "Official tariff rate quota (TRQ) catalogue. The balance is the one from the last sync with the Commission, not a live query"
   },
   "oea": {
     "title": "Authorized Economic Operator",
@@ -3111,30 +3094,30 @@
     },
     "quotas": {
       "title": "Tariff Quotas",
-      "description": "Check and manage EU tariff quotas allowing import at reduced rates within limited volumes",
+      "description": "Check the official EU tariff quota catalogue, which allows imports at reduced rates within limited volumes. The balance shown is the one from the last sync",
       "uso": {
-        "s0Title": "Check quotas",
-        "s0Text": "Search open tariff quotas by TARIC code or country of origin, with available balance and reduced duty rate",
-        "s1Title": "Request quota",
-        "s1Text": "Request allocation to a tariff quota in your import declaration to benefit from the reduced rate",
-        "step0": "Access the Quotas section from the side menu",
-        "step1": "Search available quotas for your goods and origin",
-        "step2": "Verify the remaining quota balance",
-        "step3": "Include the quota request in your import declaration"
+        "s0Title": "Check the catalogue",
+        "s0Text": "Search the synced catalogue for the quotas of a TARIC code, with the published balance and the date it was retrieved",
+        "s1Title": "Claim the quota",
+        "s1Text": "Quota volume cannot be reserved: you enter the order number in the import declaration and customs allocates it on acceptance, in chronological order",
+        "step0": "Open the Quotas section from the side menu",
+        "step1": "Search the catalogue for the quotas of your goods TARIC code",
+        "step2": "Check the balance date and confirm it in the Commission official query",
+        "step3": "Enter the quota order number in your import declaration"
       },
       "normativa": {
         "r0Title": "Tariff quotas (UCC Art. 56(4))",
         "r0Desc": "Legal basis for applying tariff quotas allowing import at reduced rates within fixed volumes",
         "r1Title": "Quota management",
-        "r1Desc": "The European Commission manages quotas in chronological order of declaration acceptance (first come, first served)"
+        "r1Desc": "The European Commission manages quotas in chronological order of declaration acceptance (first come, first served): a quota can be exhausted within hours"
       },
       "luciIA": {
-        "f0Name": "Quota search",
-        "f0Desc": "LUCI automatically searches for available quotas for your goods and notifies you if there is balance",
-        "f1Name": "Opening alerts",
-        "f1Desc": "Receive notifications when new quotas open or existing quota balances are renewed",
-        "f2Name": "Balance estimation",
-        "f2Desc": "Analyses quota consumption speed to estimate whether balance will be available for your operation"
+        "f0Name": "Synced catalogue",
+        "f0Desc": "LUCI syncs the Commission official quota catalogue and finds by TARIC code the quotas that may apply to your goods",
+        "f1Name": "Criticality as declared by TARIC",
+        "f1Desc": "Warns when TARIC flags the quota as critical, without deriving it from the consumption percentage: a quota can be critical at 17% used",
+        "f2Name": "Dated balance",
+        "f2Desc": "Every balance is shown with the date it was retrieved and flagged when stale, because a first-come-first-served quota is exhausted within hours"
       }
     },
     "integrations": {

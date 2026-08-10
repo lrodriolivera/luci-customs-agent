@@ -45,8 +45,11 @@ function armarFronterasNeutras() {
     eligible: false, agreements: [], recommended: null,
     savings: 0, requirements: [], warnings: []
   });
-  quotaService.checkQuotaAvailability.mockReturnValue({ found: false, quotas: [] });
-  quotaService.calculateQuotaSavings.mockReturnValue({ applicable: false });
+  // El servicio de contingentes consulta el catalogo oficial en Mongo, asi que es
+  // asincrono: con `mockReturnValue` el motor recibiria una promesa y
+  // `quotaCheck.found` saldria undefined sin que ningun test se queje.
+  quotaService.checkQuotaAvailability.mockResolvedValue({ found: false, quotas: [] });
+  quotaService.calculateQuotaSavings.mockResolvedValue({ applicable: false });
 }
 
 describe('checkSanctions', () => {
@@ -565,92 +568,120 @@ describe('analyzeOperation', () => {
     expect(analysis.preferences.agreements.some(a => a.name === 'JEFTA')).toBe(true);
   });
 
-  test('contingente con ahorro emite recomendacion quota_savings sin reventar', async () => {
-    // Regresion del mismo bug: la rama de contingente empujaba a
-    // summary.recommendations (inexistente) -> ANALYSIS_ERROR. Tras el fix la
-    // recomendacion quota_savings se emite en analysis.recommendations.
-    quotaService.checkQuotaAvailability.mockReturnValue({
+  test('informa de que existe contingente sin afirmar un ahorro', async () => {
+    // El motor NO tiene el tipo dentro del contingente (esta en la medida de
+    // TARIC del codigo y el origen concretos), asi que no puede cifrar el ahorro.
+    // La version anterior leia un `duty.savings` del catalogo cableado y llamaba a
+    // calculateQuotaSavings con el; ahora se recomienda comprobar y se deja el
+    // ahorro en null, que es lo que se sabe.
+    quotaService.checkQuotaAvailability.mockResolvedValue({
       found: true,
       quotas: [{
-        orderNumber: '09.1234',
-        available: true,
-        critical: true,
-        duty: { savings: 5 },
-        volume: { utilizationPercent: 95 }
-      }]
-    });
-    quotaService.calculateQuotaSavings.mockReturnValue({
-      applicable: true,
-      recommendation: 'Usar contingente 09.1234',
-      savings: 250
-    });
-
-    const analysis = await rulesEngine.analyzeOperation({
-      type: 'import',
-      originCountry: 'AR',
-      goods: [{ taricCode: '02013000', description: 'Carne', customsValue: 1000, quantity: 500, unit: 'kg' }]
-    });
-
-    expect(analysis.quotas.length).toBeGreaterThan(0);
-    expect(analysis.quotas[0].taricCode).toBe('02013000');
-    const rec = analysis.recommendations.find(r => r.type === 'quota_savings');
-    expect(rec).toBeTruthy();
-    expect(rec.quota).toBe('09.1234');
-    expect(rec.savings).toBe(250);
-    expect(analysis.summary.alerts.some(a => a.code === 'ANALYSIS_ERROR')).toBe(false);
-  });
-
-  test('contingente encontrado pero sin ahorro ni criticidad: se lista sin recomendaciones', async () => {
-    quotaService.checkQuotaAvailability.mockReturnValue({
-      found: true,
-      quotas: [{
-        orderNumber: '09.5555',
+        orderNumber: '090006',
         available: true,
         critical: false,
-        duty: { savings: 0 },
-        volume: { utilizationPercent: 10 }
+        volume: { utilizationPercent: 17.53, syncedAt: '2026-08-10T06:00:00.000Z', balanceStale: false }
       }]
     });
 
     const analysis = await rulesEngine.analyzeOperation({
       type: 'import',
-      originCountry: 'AR',
-      goods: [{ taricCode: '02013000', customsValue: 1000, quantity: 100 }]
+      originCountry: 'CN',
+      goods: [{ taricCode: '0302410000', description: 'Arenques', customsValue: 1000, quantity: 500, unit: 'kg' }]
     });
 
-    // Sin ahorro (savings=0) ni criticidad no se llega al push de recomendacion,
-    // por lo que no se invoca calculateQuotaSavings.
-    expect(analysis.quotas.length).toBe(1);
-    expect(analysis.quotas[0].orderNumber).toBe('09.5555');
-    expect(analysis.summary.alerts.some(a => a.code === 'ANALYSIS_ERROR')).toBe(false);
+    expect(analysis.quotas).toHaveLength(1);
+    expect(analysis.quotas[0].taricCode).toBe('0302410000');
+
+    const rec = analysis.recommendations.find(r => r.type === 'quota_available');
+    expect(rec).toBeTruthy();
+    expect(rec.quota).toBe('090006');
+    expect(rec.savings).toBeNull();
+    expect(rec.message).toMatch(/Comprobar el saldo y el tipo aplicable/i);
+    // Y no se inventa un tipo para poder llamar al calculo de ahorro.
     expect(quotaService.calculateQuotaSavings).not.toHaveBeenCalled();
+    expect(analysis.summary.alerts.some(a => a.code === 'ANALYSIS_ERROR')).toBe(false);
   });
 
-  test('contingente critico sin ahorro: avisa con warning QUOTA_CRITICAL', async () => {
-    // Con savings=0 no se emite recomendacion, y se alcanza la rama de
-    // criticidad que avisa con QUOTA_CRITICAL.
-    quotaService.checkQuotaAvailability.mockReturnValue({
+  test('no afirma que el contingente sea "para" el codigo si coincide por prefijo', async () => {
+    // 090101 no esta definido en `5007200000` sino en `5007201110`, `5007201910`...
+    // El contingente se localiza por prefijo, pero decir "existe contingente para
+    // 5007200000" afirmaria una cobertura que no se ha comprobado: puede aplicar a
+    // otra subdivision del epigrafe y no a la mercancia declarada.
+    quotaService.checkQuotaAvailability.mockResolvedValue({
       found: true,
       quotas: [{
-        orderNumber: '09.7777',
-        available: true,
-        critical: true,
-        duty: { savings: 0 },
-        volume: { utilizationPercent: 98 }
+        orderNumber: '090101',
+        available: null,
+        critical: false,
+        codeMatch: 'prefijo',
+        taricCodes: ['5007201110', '5007201910'],
+        volume: { utilizationPercent: null, syncedAt: '2026-08-10T06:00:00.000Z', balanceStale: false }
       }]
     });
 
     const analysis = await rulesEngine.analyzeOperation({
       type: 'import',
-      originCountry: 'AR',
-      goods: [{ taricCode: '02013000', customsValue: 1000, quantity: 100 }]
+      originCountry: 'IN',
+      goods: [{ taricCode: '5007200000', description: 'Tejidos de seda', customsValue: 1000, quantity: 100, unit: 'kg' }]
+    });
+
+    const rec = analysis.recommendations.find(r => r.type === 'quota_available');
+    expect(rec).toBeTruthy();
+    expect(rec.message).toMatch(/subdivisiones/i);
+    expect(rec.message).not.toMatch(/Existe contingente arancelario 090101 para 5007200000\./);
+    expect(rec.codeMatch).toBe('prefijo');
+  });
+
+  test('avisa de criticidad con el dato de TARIC, no con el porcentaje de consumo', async () => {
+    // Un contingente al 17,53% puede ser critico: la Comision lo declara por sus
+    // reglas de gestion. Deducirlo de >90% de consumo dejaba pasar precisamente
+    // los que se agotan en horas.
+    quotaService.checkQuotaAvailability.mockResolvedValue({
+      found: true,
+      quotas: [{
+        orderNumber: '090006',
+        available: true,
+        critical: true,
+        volume: { utilizationPercent: 17.53, syncedAt: '2026-08-10T06:00:00.000Z', balanceStale: false }
+      }]
+    });
+
+    const analysis = await rulesEngine.analyzeOperation({
+      type: 'import',
+      originCountry: 'CN',
+      goods: [{ taricCode: '0302410000', customsValue: 1000, quantity: 100 }]
     });
 
     const w = analysis.summary.warnings.find(x => x.code === 'QUOTA_CRITICAL');
     expect(w).toBeTruthy();
-    expect(w.message).toContain('09.7777');
-    expect(w.message).toContain('98%');
+    expect(w.message).toContain('090006');
+    expect(w.message).toMatch(/TARIC marca/i);
     expect(analysis.summary.alerts.some(a => a.code === 'ANALYSIS_ERROR')).toBe(false);
+  });
+
+  test('avisa cuando el saldo del contingente esta caducado', async () => {
+    // Un saldo de hace dias presentado sin fecha es lo que hace que un FCFS
+    // agotado parezca disponible.
+    quotaService.checkQuotaAvailability.mockResolvedValue({
+      found: true,
+      quotas: [{
+        orderNumber: '090006',
+        available: true,
+        critical: false,
+        volume: { utilizationPercent: 17.53, syncedAt: '2026-08-01T06:00:00.000Z', balanceStale: true }
+      }]
+    });
+
+    const analysis = await rulesEngine.analyzeOperation({
+      type: 'import',
+      originCountry: 'CN',
+      goods: [{ taricCode: '0302410000', customsValue: 1000, quantity: 100 }]
+    });
+
+    const w = analysis.summary.warnings.find(x => x.code === 'QUOTA_BALANCE_STALE');
+    expect(w).toBeTruthy();
+    expect(w.message).toContain('2026-08-01T06:00:00.000Z');
   });
 
   test('operacion sin mercancias no rompe y sigue siendo elegible', async () => {

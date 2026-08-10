@@ -2106,24 +2106,7 @@
   },
   "quotaManager": {
     "title": "Gestion des Contingents Tarifaires",
-    "subtitle": "TRQ (Tariff Rate Quotas) - Consultation et gestion des contingents pour l'importation a droit reduit",
-    "checkAvailability": "Rechercher la Disponibilite",
-    "allQuotas": "Tous les Contingents",
-    "criticalQuotas": "Contingents Critiques",
-    "verifyAvailability": "Verifier la Disponibilite",
-    "quotaAvailable": "Disponible",
-    "quotaCritical": "Critique",
-    "quotaDepleted": "Epuise",
-    "utilization": "Utilisation",
-    "quotaRate": "Droit contingentaire",
-    "normalRate": "Droit normal (NPF)",
-    "criticalWarning": "Contingent en etat critique. Demandez une reservation en urgence.",
-    "recommendation": "Recommandation",
-    "certificateRequired": "Certificat requis",
-    "noQuotasFound": "Aucun contingent trouve pour ce produit",
-    "mfnApplied": "Le droit NPF (Nation la Plus Favorisee) sera applique",
-    "noCritical": "Aucun contingent en etat critique",
-    "allAdequate": "Tous les contingents actifs ont une disponibilite suffisante"
+    "subtitle": "Catalogue officiel des contingents tarifaires (TRQ). Le solde est celui de la derniere synchronisation avec la Commission, pas une consultation en direct"
   },
   "oea": {
     "title": "Operateur Economique Agree",
@@ -3111,30 +3094,30 @@
     },
     "quotas": {
       "title": "Contingentes Arancelarios",
-      "description": "Consulta y gestiona contingentes arancelarios de la UE que permiten importar a tipos reducidos dentro de volumenes limitados",
+      "description": "Consultez le catalogue officiel des contingents tarifaires de l'UE, qui permettent d'importer a droit reduit dans des volumes limites. Le solde affiche est celui de la derniere synchronisation",
       "uso": {
-        "s0Title": "Consultar contingentes",
-        "s0Text": "Busca contingentes arancelarios abiertos por codigo TARIC o pais de origen, con su saldo disponible y tipo de derecho reducido",
-        "s1Title": "Solicitar contingente",
-        "s1Text": "Solicita la imputacion a un contingente arancelario en tu declaracion de importacion para beneficiarte del tipo reducido",
-        "step0": "Accede a la seccion Contingentes desde el menu lateral",
-        "step1": "Busca contingentes disponibles para tu mercancia y origen",
-        "step2": "Verifica el saldo restante del contingente",
-        "step3": "Incluye la solicitud de contingente en tu declaracion de importacion"
+        "s0Title": "Consulter le catalogue",
+        "s0Text": "Recherchez dans le catalogue synchronise les contingents d'un code TARIC, avec le solde publie et la date de consultation",
+        "s1Title": "Imputer le contingent",
+        "s1Text": "Le volume ne se reserve pas : on indique le numero d'ordre dans la declaration d'importation et la douane l'attribue lors de son admission, par ordre chronologique",
+        "step0": "Accedez a la section Contingents depuis le menu lateral",
+        "step1": "Recherchez dans le catalogue les contingents du code TARIC de votre marchandise",
+        "step2": "Verifiez la date du solde et confirmez-le dans la consultation officielle de la Commission",
+        "step3": "Indiquez le numero d'ordre du contingent dans votre declaration d'importation"
       },
       "normativa": {
         "r0Title": "Contingentes arancelarios (CAU Art. 56(4))",
         "r0Desc": "Base legal para la aplicacion de contingentes arancelarios que permiten importar a tipos reducidos dentro de volumenes fijados",
         "r1Title": "Gestion de contingentes",
-        "r1Desc": "La Comision Europea gestiona los contingentes por orden cronologico de admision de las declaraciones (first come, first served)"
+        "r1Desc": "La Commission europeenne gere les contingents par ordre chronologique d'admission des declarations (first come, first served) : un contingent peut s'epuiser en quelques heures"
       },
       "luciIA": {
-        "f0Name": "Busqueda de contingentes",
-        "f0Desc": "LUCI busca automaticamente contingentes disponibles para tu mercancia y te notifica si hay saldo",
-        "f1Name": "Alerta de apertura",
-        "f1Desc": "Recibe notificaciones cuando se abren nuevos contingentes o se renueva el saldo de contingentes existentes",
-        "f2Name": "Estimacion de saldo",
-        "f2Desc": "Analiza la velocidad de consumo del contingente para estimar si habra saldo disponible para tu operacion"
+        "f0Name": "Catalogue synchronise",
+        "f0Desc": "LUCI synchronise le catalogue officiel des contingents de la Commission et retrouve par code TARIC ceux qui peuvent s'appliquer a votre marchandise",
+        "f1Name": "Criticite declaree par TARIC",
+        "f1Desc": "Signale quand TARIC marque le contingent comme critique, sans le deduire du pourcentage de consommation : un contingent peut etre critique a 17 % consomme",
+        "f2Name": "Solde date",
+        "f2Desc": "Chaque solde est affiche avec sa date de consultation et signale quand il est perime, car un contingent a repartition simultanee s'epuise en quelques heures"
       }
     },
     "integrations": {

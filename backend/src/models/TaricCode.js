@@ -75,6 +75,46 @@ const TaricCodeSchema = new mongoose.Schema({
         amount: Number,
         unit: String
       }
+    },
+
+    /**
+     * Procedencia del arancel, para poder distinguir un tipo traido del TARIC
+     * oficial de uno heredado de una carga sin contrastar. 426 codigos del
+     * catalogo tenian `thirdCountry: 50` sin ninguna trazabilidad: era el
+     * arancel punitivo del Reg. (UE) 2024/1392 contra Rusia y Bielorrusia
+     * guardado como si fuera el derecho general. Sin este campo no habia forma
+     * de saber que valores estaban verificados.
+     */
+    origen: {
+      fuente: String,        // 'taric_oficial' | 'ia' | 'carga_inicial'
+      consultadoEl: Date,
+      // Texto literal del que se extrajo el tipo, para poder auditarlo contra
+      // la fuente sin repetir la consulta.
+      evidencia: String,
+      // Como se obtuvo: 'fila_de_medida' | 'condiciones_de_medida'
+      metodo: String,
+      // Rotulo de la medida de TARIC de la que sale el tipo.
+      rotulo: String,
+      /**
+       * `true` cuando el tipo procede de la medida "Derecho no preferencial en
+       * regimen de destino final": NO es el derecho general, solo se aplica con
+       * la autorizacion EUS (certificado N990). Son los codigos NC acabados en
+       * 1000 de los capitulos de aceites. Sin este aviso el tipo se leeria como
+       * el arancel de cualquier importacion, que es la misma confusion que puso
+       * el 50% de la sancion a Rusia en `thirdCountry`.
+       */
+      soloDestinoFinal: Boolean
+    },
+
+    /**
+     * Derecho adicional aplicable solo a mercancia originaria o exportada desde
+     * Rusia o Bielorrusia (Reg. (UE) 2024/1392). En TARIC es la rama de la
+     * medida condicionada al certificado Y155; NO es el arancel general y no
+     * debe usarse para liquidar una importacion de otro origen.
+     */
+    sancionRusiaBielorrusia: {
+      adValorem: Number,
+      certificado: String    // Y155
     }
   },
 

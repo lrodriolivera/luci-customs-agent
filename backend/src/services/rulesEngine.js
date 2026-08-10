@@ -269,50 +269,74 @@ class RulesEngine {
       }
 
       // 5.5. Verificar contingentes arancelarios
+      //
+      // Se informa de que existe contingente y de la fecha del saldo, pero NO se
+      // calcula aqui ningun ahorro: el tipo dentro del contingente no lo publica
+      // el sistema de contingentes (esta en la medida de TARIC del codigo y el
+      // origen concretos) y este motor no lo tiene. La version anterior leia un
+      // `duty.savings` que salia de un catalogo cableado.
       if (operation.type === 'import') {
         for (const good of operation.goods || []) {
-          const quotaCheck = quotaService.checkQuotaAvailability(
+          const quotaCheck = await quotaService.checkQuotaAvailability(
             good.taricCode,
             operation.originCountry,
             good.quantity || 0,
             good.unit || 'kg'
           );
 
-          if (quotaCheck.found && quotaCheck.quotas.length > 0) {
-            analysis.quotas.push(...quotaCheck.quotas.map(q => ({
-              ...q,
-              product: good.description,
-              taricCode: good.taricCode
-            })));
+          if (!quotaCheck.found || !quotaCheck.quotas.length) continue;
 
-            // Recomendar uso de contingente si hay ahorro significativo
-            const bestQuota = quotaCheck.quotas[0];
-            if (bestQuota.available && bestQuota.duty.savings > 0.01) {
-              const savingsCalc = quotaService.calculateQuotaSavings(
-                good.taricCode,
-                operation.originCountry,
-                good.quantity || 0,
-                good.customsValue || 0
-              );
+          analysis.quotas.push(...quotaCheck.quotas.map(q => ({
+            ...q,
+            product: good.description,
+            taricCode: good.taricCode
+          })));
 
-              if (savingsCalc.applicable) {
-                analysis.recommendations.push({
-                  type: 'quota_savings',
-                  message: savingsCalc.recommendation,
-                  quota: bestQuota.orderNumber,
-                  savings: savingsCalc.savings
-                });
-              }
-            }
+          const bestQuota = quotaCheck.quotas[0];
 
-            // Alertar si contingente está crítico
-            if (bestQuota.critical) {
-              analysis.summary.warnings.push({
-                severity: 'medium',
-                code: 'QUOTA_CRITICAL',
-                message: `Contingente ${bestQuota.orderNumber} en estado crítico (${bestQuota.volume.utilizationPercent}% utilizado)`
-              });
-            }
+          // Si la coincidencia es por prefijo, el contingente esta definido para
+          // subdivisiones mas especificas y puede no cubrir la mercancia
+          // declarada: decir "existe contingente PARA este codigo" afirmaria una
+          // cobertura que no se ha comprobado.
+          const porPrefijo = bestQuota.codeMatch === 'prefijo';
+          const mensajeQuota = porPrefijo
+            ? `Hay un contingente arancelario (${bestQuota.orderNumber}) en subdivisiones de ` +
+              `${good.taricCode}. Comprobar en la consulta oficial si cubre el codigo TARIC ` +
+              'exacto de la mercancia, y el saldo y el tipo aplicable antes de declararlo.'
+            : `Existe contingente arancelario ${bestQuota.orderNumber} para ${good.taricCode}. ` +
+              'Comprobar el saldo y el tipo aplicable en la consulta oficial antes de declararlo.';
+
+          analysis.recommendations.push({
+            type: 'quota_available',
+            message: mensajeQuota,
+            action: porPrefijo
+              ? `Comprobar el ambito del contingente ${bestQuota.orderNumber} antes de consignarlo`
+              : `Consignar el numero de orden ${bestQuota.orderNumber} si procede`,
+            quota: bestQuota.orderNumber,
+            codeMatch: bestQuota.codeMatch || null,
+            // El ahorro no se afirma sin los dos tipos: decirlo es mas util que
+            // dar una cifra sin respaldo.
+            savings: null,
+            balanceSyncedAt: bestQuota.volume.syncedAt
+          });
+
+          // La criticidad es la que declara TARIC, no un umbral calculado aqui.
+          if (bestQuota.critical) {
+            analysis.summary.warnings.push({
+              severity: 'medium',
+              code: 'QUOTA_CRITICAL',
+              message: `TARIC marca el contingente ${bestQuota.orderNumber} como critico: ` +
+                'puede agotarse antes de que se admita la declaracion'
+            });
+          }
+
+          if (bestQuota.volume.balanceStale) {
+            analysis.summary.warnings.push({
+              severity: 'medium',
+              code: 'QUOTA_BALANCE_STALE',
+              message: `El saldo del contingente ${bestQuota.orderNumber} es de ` +
+                `${bestQuota.volume.syncedAt || 'fecha desconocida'}: comprobarlo en la fuente oficial`
+            });
           }
         }
       }
