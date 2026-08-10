@@ -19,12 +19,16 @@ Cada afirmación de este documento es comprobable: hay un identificador de commi
 un MRN devuelto por AEAT o una consulta a base de datos detrás. Donde algo **no**
 está verificado, se dice explícitamente en la sección 7.
 
-**Sobre las capturas.** Las ocho figuras de este informe son pantallazos reales de la
-aplicación tomados durante la campaña, con MRN devueltos por AEAT PRE. Contienen EORI,
-NIF y nombres de usuario, así que **no se versionan en el repositorio**: viven en
-`evidencia-e2e-luci-2026-08/` junto al proyecto (146 capturas en total; las 8
-seleccionadas, en `seleccion-informe/`). El PDF sí las lleva incrustadas y es, por
-tanto, el documento que se entrega.
+**Sobre las capturas.** Las **44 figuras** de este informe son pantallazos reales de la
+aplicación en producción, con MRN devueltos por AEAT PRE. Hay al menos una de **cada una
+de las 36 pantallas** de la aplicación: las de la campaña —tomadas en el momento en que
+se encontró cada defecto— y un recorrido completo de solo lectura hecho el 10/08 para
+que no falte ninguna sección. Contienen EORI, NIF y nombres de usuario, así que **no se
+versionan en el repositorio**: viven en `evidencia-e2e-luci-2026-08/` junto al proyecto
+(191 ficheros en total; el recorrido de las 36 pantallas en `pantallas-completas/`, las
+ocho de los hallazgos en `seleccion-informe/`, y el material de trabajo de la campaña en
+`ens/`, `transit/` y `sueltas/`). El PDF sí las lleva incrustadas y es, por tanto, el
+documento que se entrega.
 
 **Advertencia de lectura.** Este informe no presenta un producto sin defectos.
 Presenta 61 correcciones sobre defectos reales, muchos de ellos graves, y una lista
@@ -42,8 +46,9 @@ los aciertos no sirve para dirigir una campaña de pruebas.
 | De ellos correcciones de defectos (`fix:`) | **61** |
 | Ficheros modificados | **204** |
 | Líneas | **+21.855 / −5.516** |
-| Pantallas recorridas de extremo a extremo | **19** |
+| Pantallas recorridas de extremo a extremo | **19** de 36 (las 17 restantes, en el anexo A) |
 | Defectos corregidos | **~90** (detalle en la sección 4) |
+| Defectos nuevos encontrados al redactar este informe | **6**, sin corregir (ver 7.2) |
 | Ficheros de prueba | 243 backend + 69 frontend |
 | Tests backend | **8.588 pasando, 0 fallando** (batería completa, 10/Ago) |
 | CI | **Verde** (ejecución 186: backend 7m35s + frontend 6m49s) |
@@ -104,6 +109,31 @@ nada**, y por eso hace falta el ojo humano.
 Orden aproximado de recorrido. La columna «Lo más grave» es lo que conviene que un
 tester intente romper de nuevo.
 
+### 4.0 Punto de entrada: escritorio y expedientes
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/00-dashboard.png)
+
+*Figura 1 — Escritorio con datos reales: 33 expedientes (6 pendientes, 18 en proceso,
+7 completados), 16 alertas críticas y los cinco expedientes recientes con su estado
+aduanero (Listo H1, Canal Verde, Borrador). El conmutador AEAT / DMS-DECO de arriba a
+la derecha es el cambio de país: España y Países Bajos.*
+
+> **Defecto encontrado al tomar esta captura.** En el panel «Plataforma», la fila
+> **«Países: 21946»** no cuenta países: es el total de códigos TARIC. La etiqueta es
+> `dashboard.countries` sobre el valor `taricCodesTotal`
+> (`Dashboard.jsx:402`). No corregido — figura en la sección 7.2.
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/01-expedientes.png)
+
+*Figura 2 — Listado de expedientes: 33 registros con cliente, NIF, tipo, país, estado
+del circuito (Canal Verde, Canal Naranja, Levante, Docs Validados…) y número de
+documentos adjuntos. Es la pantalla desde la que arranca cualquier operación.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/02-expediente-nuevo.png)
+
+*Figura 3 — Alta de expediente en tres pasos: Tipo y Cliente → Mercancías →
+Transporte.*
+
 ### 4.1 Declaraciones y despacho
 
 | Pantalla | Lo más grave que se encontró | Estado |
@@ -112,6 +142,40 @@ tester intente romper de nuevo.
 | `/h7` | Reglamento 2026/382 aplicado; H7 reescrito al esquema `AltaH7V1Ent` | **MRN real `26ESH7A000067965R5`, canal verde** |
 | `/classification` (TARIC) | Clasificar y Validar estaban rotos (URL, cuerpo de petición y envoltorio); se mostraba JSON crudo al usuario | Corregido |
 | `/channels` y `/requirements` | **Fuga de datos entre clientes** en las estadísticas; dos respaldos de IA que fingían un «Canal VERDE» sobre un canal ROJO | Corregido (6 defectos) |
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/06-h7-listado.png)
+
+*Figura 4 — H7 (comercio electrónico): 41 declaraciones, 2.770 € de valor y 643,26 € de
+derechos recaudados. Las dos primeras filas llevan **MRN real de AEAT PRE**
+(`26ESH7A000067966R4` y `...965R5`) en estado Levante. Arriba, el aviso del
+**Reglamento (UE) 2026/382** marcado «EN VIGOR» con enlace a EUR-Lex: es la supresión
+de la franquicia de 150 €.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/07-h7-nueva.png)
+
+*Figura 5 — Alta de H7. El aviso recoge la consecuencia práctica del reglamento:
+**derecho fijo de 3 € por artículo** para envíos IOSS y postales.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/05-h1-nueva.png)
+
+*Figura 6 — Alta de H1 (DUA de importación) con la casilla 1.1 del documento: tipo de
+declaración IM/CO y adicional A/D/Y. Es el formulario completo, no un resumen.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/04-declarations.png)
+
+*Figura 7 — Generador de declaraciones: elección entre H1 (importación) y AES
+(exportación), con el país aduanero seleccionado arriba. Aquí estaba el aviso «Modo
+demo: simula» que en realidad enviaba a PRE.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/03-classification.png)
+
+*Figura 8 — Clasificación TARIC con sus cuatro modos: Básico, Buscar Código, Explorar
+Árbol y Avanzado IA.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/16-channels.png)
+
+*Figura 9 — Circuitos aduaneros: 11 en Canal Verde con levante autorizado. Las
+estadísticas de esta pantalla eran las que **filtraban datos entre clientes**.*
 
 ### 4.2 ENS / ICS2 (declaración sumaria de entrada)
 
@@ -127,26 +191,40 @@ tester intente romper de nuevo.
 
 ![](../../evidencia-e2e-luci-2026-08/seleccion-informe/02-ens-toast-mrn-envio-aeat.png)
 
-*Figura 1 — El aviso de la propia aplicación tras enviar: «Declaración enviada a AEAT
+*Figura 10 — El aviso de la propia aplicación tras enviar: «Declaración enviada a AEAT
 · MRN: 26ES009999Z0000741». Detrás, el listado con las ENS aceptadas y su MRN en la
 columna correspondiente.*
 
 ![](../../evidencia-e2e-luci-2026-08/seleccion-informe/01-ens-mrn-cc328a-aduana-pre.png)
 
-*Figura 2 — Detalle de `ENS-2026-000019`: MRN `26ES009999Z0000750`, respuesta de AEAT
+*Figura 11 — Detalle de `ENS-2026-000019`: MRN `26ES009999Z0000750`, respuesta de AEAT
 `CC328A` y aduana de entrada `ES009999 — PRE Pruebas Peninsula`. Es el entorno de
 pruebas de AEAT, nunca producción.*
 
 ![](../../evidencia-e2e-luci-2026-08/seleccion-informe/04-ens-historial-estados.png)
 
-*Figura 3 — Pestaña «Historial» de la misma declaración: Borrador → Enviada →
+*Figura 12 — Pestaña «Historial» de la misma declaración: Borrador → Enviada →
 Aceptada, las tres el 08/08/2026 a las 21:57.*
 
 ![](../../evidencia-e2e-luci-2026-08/seleccion-informe/03-ens-listado-15-declaraciones.png)
 
-*Figura 4 — Listado completo de ENS (15 declaraciones). Las cinco con MRN en la
-columna son las que AEAT aceptó; el resto son borradores locales. La diferencia se ve
-en la propia pantalla: sin MRN no hay declaración presentada.*
+*Figura 13 — El listado tal como estaba durante la campaña, con 15 declaraciones: las
+cinco con MRN en la columna son las que AEAT aceptó y el resto eran borradores locales.
+La diferencia se ve en la propia pantalla: sin MRN no hay declaración presentada.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/08-ens.png)
+
+*Figura 14 — El mismo listado el 10/08 al cerrar el informe, y **no coincide con la
+figura anterior**: quedan 8 declaraciones, todas con MRN real y en «Aceptada» (71,3 Tn,
+442 bultos). Los borradores intermedios y las `ENS-2026-000011/000012` de la importación
+por lote ya no están; las referencias saltan de `000005` a `000015`. Se deja constancia
+del descuadre: si un tester ve un recuento distinto al de la figura 13, es esto, no un
+fallo. **Las ocho son modo RAIL** — el único que cubre ICS2 hoy (ver 7.1).*
+
+> **Detalle que conviene mirar.** La columna «Riesgo» marca «Pendiente» en las ocho.
+> Eso es lo correcto tras la corrección: AEAT no ha comunicado análisis de riesgo, así
+> que no hay canal. Antes, ese hueco se rellenaba con un acuse propio y **el levante se
+> daba por concedido**. Un «Pendiente» aquí es una buena señal, no una carencia.
 
 ### 4.3 Tránsito NCTS
 
@@ -162,7 +240,7 @@ en la propia pantalla: sin MRN no hay declaración presentada.*
 
 ![](../../evidencia-e2e-luci-2026-08/seleccion-informe/06-transit-mrn-liberado-3-mensajes.png)
 
-*Figura 5 — Tránsito T1 `26ES002801501095J7` liberado en partida (ES002801 → ES002901),
+*Figura 15 — Tránsito T1 `26ES002801501095J7` liberado en partida (ES002801 → ES002901),
 con precinto declarado y el contador «3 mensaje(s) NCTS». Ese contador es justo lo que
 se corrigió: de los tres mensajes anotados, solo dos cruzaron la red — el `IE029` se
 generaba en local y se presentaba igual que un levante concedido por AEAT. Hoy el
@@ -170,10 +248,18 @@ listado distingue los intercambiados de los que son solo registro local.*
 
 ![](../../evidencia-e2e-luci-2026-08/seleccion-informe/05-transit-error-aeat-visible.png)
 
-*Figura 6 — El comportamiento correcto ante un rechazo: AEAT devuelve «El elemento no
+*Figura 16 — El comportamiento correcto ante un rechazo: AEAT devuelve «El elemento no
 cumple con el formato exigido» con el patrón que espera, y la interfaz lo muestra tal
 cual sobre el LRN `LRNMSKEKS0T7E5C9Z`. Antes de la corrección, una respuesta así podía
 acabar presentada como éxito.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/24-transit.png)
+
+*Figura 17 — Listado de tránsitos: 37 operaciones, todas T1 (T2, T2F y TIR a cero).
+Conviene mirar la mezcla: los seis `26ES0028015010xx` con MRN de formato AEAT válido
+—en «Liberado» o «En Tránsito»— frente a la mayoría en «Borrador» con LRN pero sin MRN,
+que son los que **nunca se presentaron**. Un tránsito en «Borrador» no está en poder de
+la aduana; el listado no debería leerse como cartera de operaciones vivas.*
 
 ### 4.4 Cálculo y normativa (la tanda más delicada)
 
@@ -189,6 +275,42 @@ equivocada**. Es lo que más conviene que un tester con conocimiento aduanero re
 | `/rules-engine` | Avisaba de sanciones a Rusia y a la vez listaba la documentación **omitiendo la autorización que impide despacharla** | Corregido |
 | `/regulations` | EUR-Lex responde `202` con cuerpo vacío: no es un error, así que el documento se quedaba sin contenido y salía «Artículo no encontrado» **en verde** para el artículo 22 del Código Aduanero | Corregido |
 | `/calculator` | Un problema de tipos marcaba `dutyType: 'mixed'` en unos 19.900 códigos | Corregido |
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/12-excise-duties.png)
+
+*Figura 18 — Impuestos especiales tras la corrección. El texto de la pantalla ya cita
+el artículo de la Ley 38/1992 que aplica a cada base: cerveza €/hl por grado Plato
+(art. 26), **vino a tipo cero (art. 30)** y alcohol etílico €/hl de alcohol puro
+(art. 39). El vino a tipo cero es justo lo que estaba mal: se cobraba como producto
+intermedio.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/13-quotas.png)
+
+*Figura 19 — Contingentes arancelarios. El subtítulo dice ahora lo que antes se
+ocultaba: «El saldo es el de la última sincronización con la Comisión, **no una
+consulta en vivo**». Y el campo exige 6 dígitos, porque con menos se devolvían
+contingentes de otro producto.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/10-calculator.png)
+
+*Figura 20 — Calculadora de derechos: código TARIC, valor en aduana y país de origen.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/11-preferences.png)
+
+*Figura 21 — Preferencias arancelarias (FTA, GSP, GSP+, EBA), con sus tres pestañas:
+Verificar Elegibilidad, Validar Certificado y Recomendaciones. El «Ahorro Estimado»
+inventado estaba aquí.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/15-regulations.png)
+
+*Figura 22 — Buscador de normativa sobre EUR-Lex (CAU) y BOE, con el catálogo del
+Reglamento (UE) 952/2013. Es la pantalla donde EUR-Lex devolvía `202` con cuerpo vacío
+y el artículo salía sin contenido, en verde.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/14-rules-engine.png)
+
+*Figura 23 — Motor de reglas: analiza requisitos, aranceles, impuestos y controles de
+una operación concreta.*
 
 ### 4.5 Envío de correo (10/Ago, `0ac56f4`)
 
@@ -270,6 +392,14 @@ Verificado el 10/08/2026 a las 19:45:
 | ENS | 8 |
 | OEA | 5 |
 
+> **Estas cifras son de la base de datos completa, no de lo que verá cada usuario.** Los
+> listados filtran por propietario, así que casi ningún recuento de pantalla va a coincidir
+> con esta tabla: de los 53 tránsitos, 37 son del usuario con el que se tomaron las
+> capturas y 16 del de pruebas; las 12 garantías son todas del usuario de pruebas, y por
+> eso `/guarantees` muestra 0 en la figura 30. Una diferencia entre esta tabla y la
+> pantalla es lo normal; lo que **no** es normal es que el escritorio avise de garantías
+> de otro usuario — ver 7.2, punto 1.
+
 ---
 
 ## 7. Lo que NO está verificado — dónde conviene que insistan los testers
@@ -285,14 +415,14 @@ Esta sección es la más útil del documento. Aquí no hay red de seguridad.
 
 ![](../../evidencia-e2e-luci-2026-08/seleccion-informe/07-ens-ics2-solo-rail.png)
 
-*Figura 7 — `ENS-2026-000008`, modo marítimo: el botón «Enviar a AEAT» está
+*Figura 24 — `ENS-2026-000008`, modo marítimo: el botón «Enviar a AEAT» está
 deshabilitado y explica por qué — «Este modo debe declararse mediante ICS2 (no por el
 canal AEAT actual)». La limitación se avisa en pantalla en vez de dejar que el envío
 falle. Los modos ROAD, AIR y SEA siguen sin recorrer por navegador.*
 
 ![](../../evidencia-e2e-luci-2026-08/seleccion-informe/08-ens-importar-lote.png)
 
-*Figura 8 — «Importar Lote» sí se ha ejercitado hasta el paso 3: 2 de 2 declaraciones
+*Figura 25 — «Importar Lote» sí se ha ejercitado hasta el paso 3: 2 de 2 declaraciones
 procesadas, creadas como `ENS-2026-000011` y `...012`. Quedan **sin MRN** (columna a
 guiones), es decir, creadas en LUCI pero no presentadas: eso es lo que falta recorrer.*
 - **`/pue`** (Punto Único de Entrada / SOIVRE): es el **único generador de
@@ -300,12 +430,92 @@ guiones), es decir, creadas en LUCI pero no presentadas: eso es lo que falta rec
 
 ### 7.2 Defectos conocidos y no corregidos
 
+#### Encontrados al redactar este informe (10/Ago, verificados, sin corregir)
+
+Recorrer las 36 pantallas para ilustrar el documento destapó **seis defectos
+nuevos**. Se dejan aquí sin corregir a propósito: sirven de calibración: son
+exactamente el tipo de cosa que se busca, y los testers pueden comprobar si los
+encuentran por su cuenta.
+
+**1. 🔴 El escritorio avisa de garantías agotadas que no existen** — el mismo
+patrón de la campaña, y el más grave de los seis.
+
+La figura 1 muestra tres alertas **CRÍTICO** «Garantía con saldo bajo: 100 %
+utilizado», y la figura 30 muestra «No hay garantías registradas». Ninguna de las
+dos miente sobre lo que consulta; el problema es la consulta del escritorio
+(`backend/src/routes/dashboard.js:101`):
+
+```js
+const lowBalanceGuarantees = await Guarantee.find({
+  status: 'active',
+  $expr: { $lt: ['$balance.available', { $multiply: ['$amount', 0.2] }] }
+});
+```
+
+Los campos `balance.available` y `amount` **no existen en el modelo**: los reales
+son `availableAmount` y `totalAmount`. En MongoDB una referencia a un campo
+inexistente se evalúa como `null`, y **`$lt: [null, null]` es `true`**, así que la
+consulta selecciona *todas* las garantías activas — 10 de 12 — y luego
+`percentUsed` calcula `100 %` sobre esos mismos `undefined`. No hay ni un error en
+el registro: la consulta funciona, sencillamente afirma lo contrario de la verdad.
+Consultado con los campos correctos, el número de garantías con saldo bajo real es
+**0**. Lo mismo ocurre con «garantías por vencer», que busca `expirationDate`
+cuando el campo es `validUntil`.
+
+Y hay un segundo problema en la misma consulta: **no filtra por cliente**. Las 7
+consultas de `/api/dashboard/alerts` no acotan por `owner` ni por `tenantId`,
+aunque su propia documentación dice «Alertas consolidadas del tenant». Hoy no se
+nota porque solo hay un cliente en la base de datos, pero es la misma familia de
+fuga que ya se corrigió en las estadísticas de canales y requerimientos. Por eso
+`/guarantees` muestra 0: **ese** listado sí filtra (`owner: req.user._id`), y las
+12 garantías pertenecen a `tester@strixai.es`, no al usuario con el que se tomó la
+captura.
+
+> Un tester que vea esas tres alertas rojas en el escritorio dará por hecho que hay
+> garantías al límite. Es la definición del patrón de esta campaña: **una cifra
+> creíble, alarmante y falsa, sin ningún error a la vista.**
+
+**2. «Países: 21946» en el escritorio** no cuenta países: es el total de códigos
+TARIC. La etiqueta `dashboard.countries` se pinta sobre el valor `taricCodesTotal`
+(`Dashboard.jsx:402`), y **el test afirma el mismo valor equivocado**
+(`Dashboard.test.jsx:627`) — otra vez un test fijando el fallo.
+
+**3. La «Confianza de Modelos» de `/ml-insights` son tres números escritos a
+mano.** Las barras del 85 %, 78 % y 92 % (figura 41) salen de
+`stats?.…?.modelConfidence || 85` en `MLInsights.jsx:322-351`. Las dos primeras
+tienen un origen real posible, pero el respaldo cableado gana siempre que el dato
+falte; **la tercera (92 %, detección de fraude) no lo tiene en absoluto**:
+`fraudDetectionService.getStatistics()` no devuelve `modelAccuracy`, así que ese
+92 % es siempre el literal. Se pinta junto a «Precisión: N/A%» y 0 análisis.
+
+**4. Las estadísticas de uso de `/integrations` están cableadas.** Las 3.040
+llamadas y el 98,4 % de éxito de la figura 35 son literales en
+`integrationManager.js:417`, en un método cuyo propio comentario lo dice: *«En
+producción, esto leería de una base de datos»*. Además, el contador «Simulación: 0»
+contradice a las tres tarjetas que muestran «Ambiente: simulation».
+
+**5. `/settings` no carga: «Error al cargar la configuración»** (figura 43).
+`GET /api/tenant` responde **400 `TENANT_REQUIRED`** con token válido. La causa:
+`extractTenant` resuelve el cliente desde `req.user.tenantId`, pero la ruta
+`/tenant` **no lleva el middleware `auth`** (`routes/tenant.js:72`), así que
+`req.user` nunca se rellena y `requireTenant` rechaza la petición. Es primo hermano
+del defecto ya corregido de las 9 rutas de gestión de clientes que devolvían 401 por
+la misma razón.
+
+**6. `GET /api/knowledge/categories` responde 404** al abrir `/assistant`. El
+router solo expone `/regimes`, `/regime/:code`, `/incoterms` e `/incoterm/:code`; la
+ruta de categorías no existe. La pantalla funciona igual —de ahí que pasara
+inadvertido—, pero cada carga produce un 404 en la consola.
+
+#### Ya conocidos de la campaña
+
 | Qué | Consecuencia para el tester |
 |---|---|
 | **14 tránsitos con MRN de formato inválido** (`2026ES00384656` y similares) | Datos previos ya sembrados. El generador ya está corregido; los antiguos siguen mal. No es un fallo nuevo si los ves |
 | **`2026ES00642137`: `released` sin ningún mensaje** | Un levante sin nada que lo respalde. Anterior a la instrumentación, sin rastro de origen. **Pendiente de decisión** |
 | **Anular un tránsito no existe** | El estado `cancelled` está en el modelo pero **ninguna transición lo asigna**. Si buscas cómo anular, no lo hay |
 | **Firma XAdES** | El resumen criptográfico de `SignedProperties` se calcula sobre el identificador y no sobre el bloque XML. **Primer sospechoso si AEAT rechaza por «digest»** |
+| **`InspectorCommunication.petition`: la clave `type` de Mongoose** (figura 28) | El subdocumento usa `type` como nombre de campo, así que Mongoose lo interpreta como declaración de tipo y **descarta el dato entero al guardar**. Si registras una petición en una comunicación con el inspector, se pierde sin error. Es el último caso del barrido; los demás ya están corregidos |
 | **~75 rejillas de MUI v5 sin migrar** (sobre todo en `/pue` y `/queries`) | Posible descuadre visual del diseño en esas pantallas |
 | **`TransitManager` casi sin traducir** | Verás texto en castellano aunque cambies de idioma. ~7 claves traducidas en unas 2.100 líneas |
 | **Facturación oculta a propósito** | No es un fallo: se ha ocultado deliberadamente |
@@ -353,7 +563,154 @@ AEAT PRE, consultadas en el momento de escribirlo.*
 
 ---
 
-## Anexo A — Los 73 commits de la campaña
+## Anexo A — El resto de las pantallas
+
+Las secciones anteriores documentan las **19 pantallas recorridas de extremo a
+extremo**. La aplicación tiene 36 rutas con sesión, y las 17 restantes **no se han
+recorrido**: se han abierto, comprobado que cargan y fotografiado, nada más. Es
+terreno virgen para los testers, y por eso van aquí con lo que se ve en cada una.
+
+El recorrido fue de solo lectura: navegar y fotografiar, sin crear ni enviar nada.
+
+### A.1 Control aduanero
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/17-requirements.png)
+
+*Figura 26 — Requerimientos: 15 en total (6 pendientes, 5 en proceso, 3 resueltos). Es
+la pantalla cuyas estadísticas tenían la fuga entre clientes (ver 4.1); el recuento por
+estado es lo primero que conviene contrastar con el listado.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/18-inspections.png)
+
+*Figura 27 — Inspecciones físicas y documentales, con vista de lista y de calendario.
+Los contadores de arriba están a cero aunque la base de datos tiene **20 inspecciones**:
+son «Programadas Hoy» y «Pendientes», no el total. Merece una comprobación.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/19-communications.png)
+
+*Figura 28 — Comunicaciones con inspectores (alegaciones y recursos): 25 registros en
+base de datos. Aquí queda un defecto conocido sin corregir: el subdocumento `petition`
+usa la clave reservada `type` de Mongoose, que **descarta el dato al guardar** sin
+avisar. Ver 7.2.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/20-deadlines.png)
+
+*Figura 29 — Gestor de plazos y vencimientos. Todos los contadores a cero: no hay
+plazos sembrados. Un «0 vencidos» aquí no significa que el control funcione — significa
+que no hay nada que controlar. Conviene crear plazos y forzar el vencimiento.*
+
+### A.2 Regímenes
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/21-guarantees.png)
+
+*Figura 30 — Garantías aduaneras: **«Garantías Activas 0 / 0,00 €» y «No hay garantías
+registradas»**, mientras el escritorio de la figura 1 avisaba de tres garantías al 100 %
+utilizado. Las dos pantallas leen la misma colección de 12 garantías y dicen cosas
+incompatibles. Este contraste destapó un defecto nuevo al redactar el informe (7.2).*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/22-oea.png)
+
+*Figura 31 — Operador Económico Autorizado (OEAC/OEAS/OEAF), con pestañas de
+certificaciones, beneficios, simplificaciones y reconocimiento mutuo. Sin datos. Esta es
+una de las rutas que llegó a servir **NIF y EORI sin token** y que ya está corregida:
+comprobar que sigue exigiendo sesión es una prueba de valor.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/23-special-regimes.png)
+
+*Figura 32 — Regímenes especiales del CAU (arts. 210-262): perfeccionamiento activo,
+importación temporal y el resto, con asistente de IA. Los contadores marcan 0 con **10
+regímenes en base de datos**.*
+
+### A.3 AEAT e integraciones
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/25-aeat-certificates.png)
+
+*Figura 33 — Certificados digitales AEAT: «No hay certificados». El certificado FNMT con
+el que se firma **no se gestiona desde aquí**, sino desde la configuración del servidor,
+así que esta pantalla vacía no impide firmar. Es una discrepancia que confunde.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/26-aeat-monitor.png)
+
+*Figura 34 — Monitor de estado AEAT: «Entorno: Sandbox», 0 certificados y 0
+monitorizando, con el rótulo «LUCI: Sistema operativo». Ese «Sistema operativo» en verde
+sobre cero declaraciones monitorizadas es justo el tipo de mensaje tranquilizador que
+conviene desconfiar y perseguir hasta su origen.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/27-integrations.png)
+
+*Figura 35 — Integraciones: AEAT, VUA, TRACES y NCTS, las cuatro «active». **Dos cosas
+que no cuadran y ya están verificadas como defecto** (7.2): el contador «Simulación 0»
+mientras tres tarjetas dicen «Ambiente: simulation», y las «Estadísticas de Uso (últimos
+30 días)» —3.040 llamadas, 98,4 % de éxito— que **están escritas a mano en el código**,
+no medidas.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/32-nl-customs.png)
+
+*Figura 36 — Panel de aduanas de Países Bajos (DMS 4.0 / DECO), ambos «operational».
+Es la parte multi-país; el EORI de pruebas neerlandés y el certificado PKIoverheid
+**todavía no están**, así que aquí no hay intercambio real posible.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/28-queries.png)
+
+*Figura 37 — Consultas ADDS-JDIT, sin ninguna realizada. En esta pantalla queda parte de
+las **~75 rejillas de MUI v5 sin migrar**, así que puede haber descuadre visual.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/09-pue.png)
+
+*Figura 38 — PUE / SOIVRE (controles ROHS, COM, ECO, CAL): 0 solicitudes. Es el **único
+generador de documentos sin MRN real** de toda la aplicación, porque AEAT lo tiene
+bloqueado para nuestro EORI. No es un fallo nuestro (ver 7.4).*
+
+### A.4 Analítica y administración
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/29-analytics.png)
+
+*Figura 39 — Analítica avanzada. La franja superior dice «En tiempo real · Declaraciones
+activas: 19 · Pendientes: 5 · AEAT: Conectado (709 ms)» y justo debajo las tarjetas
+marcan **Declaraciones 0 y Valor Aduanero 0 €** para los últimos 30 días, con las dos
+gráficas vacías. Dos cifras incompatibles en la misma pantalla: buen punto de partida.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/30-analytics-reports.png)
+
+*Figura 40 — Gestor de informes (resumen ejecutivo, detalle de operaciones, financiero),
+con generación y programación. Sin recorrer: **generar un informe y contrastar sus cifras
+con las pantallas de origen es una de las pruebas más rentables que quedan**, porque un
+informe consolida datos de varias fuentes y es donde una cifra inventada pasa
+desapercibida.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/31-ml-insights.png)
+
+*Figura 41 — ML Insights: los cinco subsistemas en «Operativo», todos los contadores a 0
+y «Precisión: N/A%». Debajo, «Confianza de Modelos» con **85 %, 78 % y 92 %**. Esos tres
+porcentajes son literales escritos en el frontend, no medidas — defecto verificado, ver
+7.2.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/33-assistant.png)
+
+*Figura 42 — Asistente LUCI, con preguntas sugeridas sobre origen preferencial, régimen
+42, requisitos alimentarios y valor en aduana con FOB. **Es la pantalla más expuesta al
+patrón de esta campaña**: un modelo de lenguaje responde siempre, con aplomo y sin
+distinguir lo que sabe de lo que compone. Cualquier respuesta que cite un artículo, un
+tipo impositivo o un código conviene contrastarla con el BOE o con TARIC.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/34-settings.png)
+
+*Figura 43 — Configuración de la organización: **«Error al cargar la configuración»**.
+Es un defecto reproducible y ya verificado en el servidor (7.2). Las pestañas (General,
+Marca, Valores por Defecto, Notificaciones, Seguridad, Roles) se pintan, pero no hay
+datos que guardar.*
+
+![](../../evidencia-e2e-luci-2026-08/pantallas-completas/35-admin.png)
+
+*Figura 44 — Panel de administración: 4 usuarios (4 activos), con pestañas de usuarios,
+configuración y auditoría. Es la pantalla que llegó a servirse **sin token** —
+`/api/admin/users` con NIF y EORI expuestos, el hallazgo de seguridad más serio de la
+campaña— y está corregida. Merece una comprobación explícita: cerrar sesión e intentar
+la URL directa.*
+
+---
+
+## Anexo B — Los 73 commits de la campaña
 
 Trazabilidad completa. Cada línea es verificable con `git show <hash>`.
 

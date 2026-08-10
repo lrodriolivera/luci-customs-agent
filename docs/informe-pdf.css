@@ -229,6 +229,16 @@ img {
   border: 0.5pt solid var(--gris-claro);
 }
 
+/* Tres capturas son formularios o articulados muy largos (mas del doble de alto
+   que de ancho: H1, listado H7 y el visor de normativa). Con el limite general de
+   9.6cm el ancho baja a ~4.5cm y no se lee nada, asi que se les deja casi la
+   pagina entera; su pie explica que lo relevante es la extension, no el detalle. */
+img[src*="05-h1-nueva"],
+img[src*="06-h7-listado"],
+img[src*="15-regulations"] {
+  max-height: 18cm;
+}
+
 /* El parrafo en cursiva que sigue a cada imagen es su pie. */
 p > img + br { display: none; }
 
@@ -247,9 +257,13 @@ p:has(> img) + p em {
 }
 p:has(> img) + p { break-before: avoid; page-break-before: avoid; }
 
-/* El anexo de commits si arranca en pagina propia: es material de consulta,
-   no de lectura seguida. */
-#anexo-a--los-73-commits-de-la-campaña {
+/* Los dos anexos si arrancan en pagina propia: son material de consulta, no de
+   lectura seguida. Los id los genera pandoc a partir del texto del encabezado,
+   asi que si se retitula un anexo hay que actualizar el selector (paso ya una
+   vez: el de commits era "anexo-a" antes de que las pantallas pasaran a ser el
+   anexo A). */
+#anexo-a--el-resto-de-las-pantallas,
+#anexo-b--los-73-commits-de-la-campaña {
   break-before: page;
   page-break-before: always;
 }
