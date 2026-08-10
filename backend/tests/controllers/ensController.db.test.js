@@ -789,4 +789,261 @@ describe('amend (IE313)', () => {
     expect(res.body.error).toBeTruthy();
     expect(res.body.error).toContain('CD917B');
   });
+
+  /**
+   * Verificado contra AEAT PRE (10/Ago/2026). `req.body.changes` se ignoraba por
+   * completo: LUCI presentaba a la aduana los datos SIN rectificar, AEAT aceptaba
+   * una "rectificacion" identica a la original (de hecho la rechazaba con "The data
+   * of the ENS declaration is identical to the previous presentation") y la ENS
+   * quedaba marcada 'amended' con el peso y los bultos viejos. Es decir, se
+   * acreditaba una rectificacion que nunca se pidio a la aduana.
+   */
+  describe('aplicacion de los cambios pedidos', () => {
+    async function ensConPartida() {
+      const d = await sembrarENS(operadorUser);
+      d.mrn = '25ES0028011234567X';
+      d.goods = [{
+        sequenceNumber: 1,
+        description: 'Componentes electronicos',
+        commodityCode: '85437000',
+        grossMass: 850,
+        numberOfPackages: 12,
+        kindOfPackages: 'PK'
+      }];
+      await d.save();
+      return d;
+    }
+
+    test('los cambios pedidos son los que se declaran a la aduana', async () => {
+      const d = await ensConPartida();
+      aeatSubmitService.submitENSAmendment.mockResolvedValue({ success: true, mrn: '25ES0028019999999Y' });
+      const res = mockRes();
+      await ensController.amend(mockReq({
+        user: operadorUser,
+        params: { id: d._id.toString() },
+        body: {
+          reason: 'Correccion de peso tras pesaje',
+          changes: { goods: [{ sequenceNumber: 1, description: 'Componentes electronicos', commodityCode: '85437000', grossMass: 910, numberOfPackages: 14, kindOfPackages: 'PK' }] }
+        }
+      }), res);
+
+      expect(res.body.success).toBe(true);
+      const enviado = aeatSubmitService.submitENSAmendment.mock.calls.at(-1)[0];
+      expect(enviado.goodsItems[0]).toMatchObject({ grossWeight: 910, numberOfPackages: 14 });
+      const tras = await ENSDeclaration.findById(d._id);
+      expect(tras.goods[0].grossMass).toBe(910);
+      expect(tras.goods[0].numberOfPackages).toBe(14);
+    });
+
+    // Los totales de la expedicion son la suma de las partidas y es lo que declara
+    // el CC313A (TotGroMasHEA307/TotNumOfPacHEA306). Sin recalcularlos, la ficha
+    // mostraba el peso ANTERIOR mientras a la aduana ya se le habia declarado el nuevo.
+    test('recalcula los totales de la expedicion desde las partidas rectificadas', async () => {
+      const d = await ensConPartida();
+      aeatSubmitService.submitENSAmendment.mockResolvedValue({ success: true, mrn: '25ES0028019999999Y' });
+      await ensController.amend(mockReq({
+        user: operadorUser,
+        params: { id: d._id.toString() },
+        body: { changes: { goods: [{ sequenceNumber: 1, description: 'X', commodityCode: '85437000', grossMass: 910, numberOfPackages: 14, kindOfPackages: 'PK' }] } }
+      }), mockRes());
+
+      const tras = await ENSDeclaration.findById(d._id);
+      expect(tras.consignment.grossMass).toBe(910);
+      expect(tras.consignment.numberOfPackages).toBe(14);
+    });
+
+    // Un subdocumento se fusiona: rectificar el peso no debe borrar el resto de la
+    // expedicion (la referencia del B/L, el pais de destino...).
+    test('rectificar un campo de la expedicion no borra los demas', async () => {
+      const d = await ensConPartida();
+      const destinoOriginal = d.consignment.countryOfDestination;
+      aeatSubmitService.submitENSAmendment.mockResolvedValue({ success: true, mrn: '25ES0028019999999Y' });
+      await ensController.amend(mockReq({
+        user: operadorUser,
+        params: { id: d._id.toString() },
+        body: { changes: { consignment: { referenceNumber: 'BL-NUEVO-123' } } }
+      }), mockRes());
+
+      const tras = await ENSDeclaration.findById(d._id);
+      expect(tras.consignment.referenceNumber).toBe('BL-NUEVO-123');
+      expect(tras.consignment.countryOfDestination).toBe(destinoOriginal);
+    });
+
+    // El MRN identifica la sumaria que se rectifica: no es rectificable via IE313.
+    test('un campo no rectificable se rechaza SIN llamar a la aduana', async () => {
+      const d = await ensConPartida();
+      aeatSubmitService.submitENSAmendment.mockClear();
+      const res = mockRes();
+      await ensController.amend(mockReq({
+        user: operadorUser, params: { id: d._id.toString() }, body: { changes: { mrn: 'FALSO', status: 'accepted' } }
+      }), res);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toMatch(/no rectificables/i);
+      expect(res.body.error).toMatch(/mrn/);
+      expect(aeatSubmitService.submitENSAmendment).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Mongoose NO lanza cuando no puede castear: descarta el valor en silencio
+     * (comprobado con el modelo real — `goods: 'texto'` deja el array en [] y
+     * `grossMass: 'mucho'` deja la partida sin peso, sin error alguno). Si no se
+     * compara lo aplicado con lo pedido, se presenta a la aduana una rectificacion
+     * DISTINTA de la pedida y se acredita como si fuera la pedida.
+     */
+    test('un peso no numerico se descarta en silencio -> 400, nada llega a la aduana', async () => {
+      const d = await ensConPartida();
+      aeatSubmitService.submitENSAmendment.mockClear();
+      const res = mockRes();
+      await ensController.amend(mockReq({
+        user: operadorUser,
+        params: { id: d._id.toString() },
+        body: { changes: { goods: [{ sequenceNumber: 1, description: 'X', commodityCode: '85437000', grossMass: 'mil quinientos', numberOfPackages: 12, kindOfPackages: 'PK' }] } }
+      }), res);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toMatch(/no se han podido aplicar/i);
+      expect(res.body.error).toMatch(/grossMass/);
+      expect(aeatSubmitService.submitENSAmendment).not.toHaveBeenCalled();
+      const tras = await ENSDeclaration.findById(d._id);
+      expect(tras.goods[0].grossMass).toBe(850);
+    });
+
+    // El caso mas grave: `goods` con un valor que no es una lista de partidas deja
+    // el array VACIO, y la rectificacion habria viajado sin partidas y con totales a 0.
+    test('unas partidas que Mongoose no puede castear -> 400, no una ENS sin partidas', async () => {
+      const d = await ensConPartida();
+      aeatSubmitService.submitENSAmendment.mockClear();
+      const res = mockRes();
+      await ensController.amend(mockReq({
+        user: operadorUser, params: { id: d._id.toString() }, body: { changes: { goods: 'una caja de tornillos' } }
+      }), res);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toMatch(/no se han podido aplicar/i);
+      expect(aeatSubmitService.submitENSAmendment).not.toHaveBeenCalled();
+      const tras = await ENSDeclaration.findById(d._id);
+      expect(tras.goods).toHaveLength(1);
+    });
+
+    // Pedir el peso como texto numerico es legitimo (viene de un formulario): lo que
+    // importa es que el valor casteado sea el pedido.
+    test('un peso enviado como texto numerico se acepta', async () => {
+      const d = await ensConPartida();
+      aeatSubmitService.submitENSAmendment.mockResolvedValue({ success: true, mrn: '25ES0028019999999Y' });
+      const res = mockRes();
+      await ensController.amend(mockReq({
+        user: operadorUser,
+        params: { id: d._id.toString() },
+        body: { changes: { goods: [{ sequenceNumber: 1, description: 'X', commodityCode: '85437000', grossMass: '910', numberOfPackages: '14', kindOfPackages: 'PK' }] } }
+      }), res);
+
+      expect(res.body.success).toBe(true);
+      const tras = await ENSDeclaration.findById(d._id);
+      expect(tras.goods[0].grossMass).toBe(910);
+    });
+
+    // Una rectificacion que deja la ENS invalida no se presenta.
+    test('si los cambios dejan la ENS invalida no se envia nada a la aduana', async () => {
+      const d = await ensConPartida();
+      aeatSubmitService.submitENSAmendment.mockClear();
+      const res = mockRes();
+      await ensController.amend(mockReq({
+        user: operadorUser,
+        params: { id: d._id.toString() },
+        // La aduana de entrada es obligatoria y su codigo tiene formato: vaciarlo
+        // deja la ENS impresentable.
+        body: { changes: { entryOffice: { code: '' } } }
+      }), res);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toMatch(/invalida/i);
+      expect(aeatSubmitService.submitENSAmendment).not.toHaveBeenCalled();
+    });
+
+    // Si la aduana no acepta, lo declarado sigue siendo lo anterior: persistir los
+    // cambios dejaria la BD diciendo una cosa y AEAT otra.
+    test('rechazo de AEAT -> los cambios NO se persisten', async () => {
+      const d = await ensConPartida();
+      aeatSubmitService.submitENSAmendment.mockResolvedValue({
+        success: false, code: 'CC305A', error: 'ITI.ITI: R879'
+      });
+      await ensController.amend(mockReq({
+        user: operadorUser,
+        params: { id: d._id.toString() },
+        body: { changes: { goods: [{ sequenceNumber: 1, description: 'X', commodityCode: '85437000', grossMass: 910, numberOfPackages: 14, kindOfPackages: 'PK' }] } }
+      }), mockRes());
+
+      const tras = await ENSDeclaration.findById(d._id);
+      expect(tras.goods[0].grossMass).toBe(850);
+      expect(tras.goods[0].numberOfPackages).toBe(12);
+      expect(tras.amendments).toHaveLength(0);
+    });
+
+    /**
+     * El CC304A y su CSV son el justificante de lo presentado; sin el historial solo
+     * quedaba una fecha, sin forma de saber QUE se rectifico ni de acreditarlo. El
+     * array `amendments` tampoco existia en el esquema: el modo estricto lo descartaba
+     * en silencio. Verificado contra PRE: CC304A + CSV 6JVUKW5XMGC28W3A.
+     */
+    test('la rectificacion aceptada se acredita con el codigo AEAT, el CSV y el XML', async () => {
+      const d = await ensConPartida();
+      aeatSubmitService.submitENSAmendment.mockResolvedValue({
+        success: true, mrn: '25ES0028019999999Y', code: 'CC304A',
+        csv: '6JVUKW5XMGC28W3A', requestXML: '<CC313A/>'
+      });
+      await ensController.amend(mockReq({
+        user: operadorUser,
+        params: { id: d._id.toString() },
+        body: { reason: 'Correccion de peso tras pesaje', changes: { goods: [{ sequenceNumber: 1, description: 'X', commodityCode: '85437000', grossMass: 910, numberOfPackages: 14, kindOfPackages: 'PK' }] } }
+      }), mockRes());
+
+      const tras = await ENSDeclaration.findById(d._id);
+      expect(tras.amendments).toHaveLength(1);
+      expect(tras.amendments[0]).toMatchObject({
+        reason: 'Correccion de peso tras pesaje',
+        aeatCode: 'CC304A',
+        csv: '6JVUKW5XMGC28W3A',
+        requestXML: '<CC313A/>'
+      });
+      expect(tras.amendments[0].changes.goods[0].grossMass).toBe(910);
+      expect(tras.amendments[0].submittedAt).toBeInstanceOf(Date);
+    });
+
+    // Cada rectificacion se acumula: la segunda no puede pisar la primera, o se
+    // pierde la constancia de lo presentado en aquella.
+    test('varias rectificaciones se acumulan en el historial', async () => {
+      const d = await ensConPartida();
+      aeatSubmitService.submitENSAmendment.mockResolvedValue({ success: true, mrn: '25ES0028019999999Y', code: 'CC304A', csv: 'AAA' });
+      const pedir = (peso) => ensController.amend(mockReq({
+        user: operadorUser, params: { id: d._id.toString() },
+        body: { reason: `peso ${peso}`, changes: { goods: [{ sequenceNumber: 1, description: 'X', commodityCode: '85437000', grossMass: peso, numberOfPackages: 12, kindOfPackages: 'PK' }] } }
+      }), mockRes());
+
+      await pedir(910);
+      await pedir(925);
+
+      const tras = await ENSDeclaration.findById(d._id);
+      expect(tras.amendments).toHaveLength(2);
+      expect(tras.amendments.map(a => a.reason)).toEqual(['peso 910', 'peso 925']);
+    });
+
+    // El motivo es metadato de LUCI: el CC313A no tiene campo para el. Lo que se
+    // declara en AmdPlaHEA598 es el LUGAR de la rectificacion (an..35), y meter ahi
+    // el texto del usuario hacia que AEAT rechazase por longitud.
+    test('a la aduana se le declara el lugar de rectificacion, no el motivo', async () => {
+      const d = await ensConPartida();
+      d.entryOffice.code = 'ES009999';
+      await d.save();
+      aeatSubmitService.submitENSAmendment.mockResolvedValue({ success: true, mrn: '25ES0028019999999Y' });
+      await ensController.amend(mockReq({
+        user: operadorUser, params: { id: d._id.toString() },
+        body: { reason: 'Correccion de peso bruto tras pesaje en origen' }
+      }), mockRes());
+
+      const enviado = aeatSubmitService.submitENSAmendment.mock.calls.at(-1)[0];
+      expect(enviado.amendmentPlace).toBe('ES');
+      expect(enviado.amendmentReason).toBeUndefined();
+    });
+  });
 });

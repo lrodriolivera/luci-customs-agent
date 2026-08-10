@@ -11,6 +11,58 @@ const { parseENSRiskMessage } = require('../services/aeat/ensRiskParser');
 const { ROLES, esSuperAdmin } = require('../constants/roles');
 
 /**
+ * Comprobar que los cambios pedidos han quedado REALMENTE aplicados al documento.
+ *
+ * Mongoose no lanza cuando no puede castear un valor: lo descarta en silencio.
+ * `goods: 'texto'` deja el array vacio, `grossMass: 'mucho'` deja la partida sin
+ * peso, y `validateSync()` no siempre lo delata (una partida sin peso puede seguir
+ * siendo valida). En una rectificacion eso significa presentar a la aduana algo
+ * distinto de lo que pidio el usuario y acreditarlo como si fuera lo pedido, asi
+ * que se compara lo aplicado con lo pedido antes de enviar nada.
+ *
+ * @param {Object} cambios - Cambios pedidos (subconjunto de campos del documento)
+ * @param {Object} doc - Documento Mongoose ya modificado
+ * @returns {string[]} Rutas de los valores que no llegaron a aplicarse
+ */
+function camposNoAplicados(cambios, doc) {
+  const descartados = [];
+
+  const comparar = (pedido, aplicado, ruta) => {
+    if (pedido === null || pedido === undefined) return;
+    if (Array.isArray(pedido)) {
+      if (!Array.isArray(aplicado) || aplicado.length !== pedido.length) {
+        descartados.push(ruta);
+        return;
+      }
+      pedido.forEach((v, i) => comparar(v, aplicado[i], `${ruta}[${i}]`));
+      return;
+    }
+    if (typeof pedido === 'object') {
+      // Los subdocumentos se recorren campo a campo: lo que no se pidio no importa.
+      for (const [k, v] of Object.entries(pedido)) {
+        comparar(v, aplicado?.[k], `${ruta}.${k}`);
+      }
+      return;
+    }
+    if (aplicado === undefined || aplicado === null) {
+      descartados.push(ruta);
+      return;
+    }
+    // Se compara el valor ya casteado: pedir el peso como "910" y que quede en 910
+    // es correcto; que quede en undefined o en otro numero, no.
+    const iguales = aplicado instanceof Date
+      ? aplicado.getTime() === new Date(pedido).getTime()
+      : String(aplicado) === String(pedido);
+    if (!iguales) descartados.push(ruta);
+  };
+
+  for (const [campo, valor] of Object.entries(cambios)) {
+    comparar(valor, doc[campo], campo);
+  }
+  return descartados;
+}
+
+/**
  * Listar declaraciones ENS
  * GET /api/ens
  */
@@ -912,13 +964,84 @@ exports.amend = async (req, res) => {
       return res.status(400).json({ success: false, error: 'La declaracion no tiene MRN asignado' });
     }
 
+    // Los cambios pedidos se APLICAN a la declaracion antes de enviarla. Antes se
+    // ignoraba `req.body.changes` por completo: LUCI mandaba a la aduana los datos
+    // SIN rectificar, AEAT aceptaba una "rectificacion" identica a la original y la
+    // ENS quedaba marcada 'amended' con el peso y los bultos viejos. Es decir, se
+    // acreditaba una rectificacion que nunca se pidio a la aduana.
+    const cambios = req.body.changes || {};
+    const CAMPOS_RECTIFICABLES = ['consignment', 'goods', 'consignor', 'consignee', 'transportMeans', 'entryOffice'];
+    const noRectificables = Object.keys(cambios).filter(c => !CAMPOS_RECTIFICABLES.includes(c));
+    if (noRectificables.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: `Campos no rectificables via IE313: ${noRectificables.join(', ')}. Rectificables: ${CAMPOS_RECTIFICABLES.join(', ')}`
+      });
+    }
+    for (const [campo, valor] of Object.entries(cambios)) {
+      // Los subdocumentos se fusionan (una rectificacion de peso no debe borrar la
+      // referencia del B/L); los arrays de partidas se sustituyen enteros.
+      declaration[campo] = Array.isArray(valor) || typeof valor !== 'object'
+        ? valor
+        : { ...(declaration[campo]?.toObject?.() || declaration[campo] || {}), ...valor };
+    }
+
+    // Mongoose DESCARTA en silencio lo que no puede castear: `goods: 'texto'` deja
+    // el array vacio y `grossMass: 'mucho'` deja la partida sin peso, sin lanzar ni
+    // marcar error. Sin esta comprobacion se le presentaba a la aduana una
+    // rectificacion DISTINTA de la pedida y se acreditaba como si fuera la pedida.
+    const descartados = camposNoAplicados(cambios, declaration);
+    if (descartados.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: `Cambios con valor no valido, no se han podido aplicar: ${descartados.join(', ')}`
+      });
+    }
+    // Los totales de la expedicion se recalculan desde las partidas rectificadas: el
+    // CC313A declara TotGroMasHEA307/TotNumOfPacHEA306 como suma de las partidas, asi
+    // que sin esto la ficha se quedaba con el peso y los bultos ANTERIORES mientras a
+    // la aduana ya se le habian declarado los nuevos (el pre('save') de ENS no llama
+    // a calculateTotals, a diferencia de ensService.amend).
+    declaration.calculateTotals();
+
+    // Se valida ANTES de enviar: una rectificacion que deje la ENS invalida no se
+    // presenta a la aduana.
+    const errorValidacion = declaration.validateSync();
+    if (errorValidacion) {
+      return res.status(400).json({
+        success: false,
+        error: `Los cambios dejan la declaracion invalida: ${errorValidacion.message}`
+      });
+    }
+
     const result = await aeatSubmitService.submitENSAmendment({
       mrn: declaration.mrn,
-      lrn: declaration.reference || '',
       carrierEORI: declaration.carrier?.eori || req.body.carrierEORI || '',
       carrierName: declaration.carrier?.name || req.body.carrierName || '',
       entryOffice: declaration.entryOffice?.code || req.body.entryOffice || '',
-      amendmentReason: req.body.reason || 'Rectificacion de datos',
+      // El motivo que teclea el usuario NO se declara a la aduana: el unico campo
+      // parecido del CC313A es AmdPlaHEA598, que es el LUGAR de la rectificacion
+      // (an..35). Mandar ahi el motivo era declarar un texto libre en un campo que
+      // significa otra cosa, y AEAT lo rechazaba por longitud. El motivo queda en
+      // el historial `amendments` de LUCI, que es donde sirve de justificacion.
+      amendmentPlace: declaration.entryOffice?.code?.substring(0, 2) || 'ES',
+      // Remitente del MENSAJE: el declarante que firma, no el transportista (el
+      // CC315A da "Message Sender is not valid" si se manda un EORI ajeno).
+      senderEORI: process.env.DECLARANTE_EORI || 'ESB22477020',
+      // El CC313A lleva el mismo cuerpo que el CC315A, asi que necesita el modo y
+      // el medio de transporte DECLARADOS. El builder los tenia fijos a maritimo y
+      // AEAT rechazaba toda rectificacion remitiendo a ICS2 (regla del sector
+      // maritimo) aunque la sumaria fuese ferroviaria.
+      transportMode: declaration.transportMode,
+      transportId: declaration.transportMeans?.identification || '',
+      transportCountry: declaration.transportMeans?.nationality || '',
+      consignment: { containerNumber: declaration.consignment?.containerNumber || '' },
+      // El CC313A exige ExpDatOfArrFIRENT733: es la fecha prevista de llegada ya
+      // declarada, no un dato nuevo que pueda rellenar el builder.
+      expectedArrival: declaration.entryOffice?.expectedArrival,
+      // Itinerario (reglas C570/R879): pais de expedicion DECLARADO y destino.
+      itinerary: [declaration.consignment?.countryOfDispatch, declaration.consignment?.countryOfDestination || 'ES']
+        .filter(Boolean),
       // `declaration.goods`, no `goodsItems`: ese campo no existe en el esquema y
       // resolvia siempre a [], de modo que la rectificacion viajaba a AEAT sin
       // partidas y declarando peso bruto y bultos CERO.
@@ -930,7 +1053,35 @@ exports.amend = async (req, res) => {
         // `grossWeight`/`packageType` daba undefined y el builder los caia a 0/'PK'.
         grossWeight: g.grossMass,
         numberOfPackages: g.numberOfPackages,
-        packageType: g.kindOfPackages
+        packageType: g.kindOfPackages,
+        // El esquema lo llama `marksAndNumbers`; `marksOfPackages` no existe y
+        // daba undefined, con lo que la partida viajaba sin marcas (regla C062).
+        marksOfPackages: g.marksAndNumbers,
+        // Reglas C574/C579/C584: cada partida declara donde se carga, donde se
+        // descarga y a quien va. Los tomaba del aire (no los mandaba) y AEAT los
+        // reclamaba uno a uno. La ENS no guarda UN/LOCODE de carga/descarga, solo
+        // los paises de expedicion y destino: se declara el pais + ZZZ ("lugar no
+        // especificado"), la misma convencion que usa el CC315A aceptado.
+        placeOfLoading: declaration.consignment?.countryOfDispatch
+          ? `${declaration.consignment.countryOfDispatch}ZZZ` : undefined,
+        placeOfUnloading: `${declaration.consignment?.countryOfDestination || 'ES'}ZZZ`,
+        commercialReference: declaration.consignment?.referenceNumber,
+        // AddressSchema nombra los campos `streetAndNumber` y `postalCode`: leer
+        // `street`/`postcode` daba undefined y el builder ponia '-' y '00000'.
+        consignor: {
+          name: declaration.consignor?.name,
+          street: declaration.consignor?.address?.streetAndNumber,
+          postcode: declaration.consignor?.address?.postalCode,
+          city: declaration.consignor?.address?.city,
+          country: declaration.consignor?.address?.country || g.countryOfOrigin
+        },
+        consignee: {
+          name: declaration.consignee?.name,
+          street: declaration.consignee?.address?.streetAndNumber,
+          postcode: declaration.consignee?.address?.postalCode,
+          city: declaration.consignee?.address?.city,
+          country: declaration.consignee?.address?.country
+        }
       })) || []
     });
 
@@ -939,6 +1090,9 @@ exports.amend = async (req, res) => {
     // UI (api.js devuelve response.data) daba la rectificacion por hecha. Un
     // CD917B ademas no trae texto de error (el motivo va en XMLERR805), por eso
     // el mensaje cae al codigo AEAT antes que quedarse vacio.
+    // Se sale SIN `save()` a proposito: si la aduana no acepta la rectificacion, lo
+    // declarado sigue siendo lo anterior y los cambios aplicados en memoria se
+    // descartan. Persistirlos dejaria la BD diciendo una cosa y AEAT otra.
     if (!result.success) {
       const motivo = result.error || (result.code
         ? `AEAT rechazo la rectificacion (${result.code})`
@@ -947,9 +1101,20 @@ exports.amend = async (req, res) => {
       return res.status(400).json({ success: false, error: motivo, data: result });
     }
 
+    // La rectificacion aceptada se acredita: el CC304A y su CSV son el justificante
+    // de lo presentado, y `changes` deja constancia de QUE se rectifico. Antes solo
+    // quedaba una fecha, sin forma de saber que se cambio ni de probarlo.
     declaration.status = 'amended';
     declaration.amendedAt = new Date();
     declaration.amendmentMRN = result.mrn || declaration.mrn;
+    declaration.amendments = [...(declaration.amendments || []), {
+      reason: req.body.reason || 'Rectificacion de datos',
+      changes: cambios,
+      submittedAt: new Date(),
+      aeatCode: result.code || null,
+      csv: result.csv || null,
+      requestXML: result.requestXML || null
+    }];
     await declaration.save();
 
     res.json({ success: true, data: result });

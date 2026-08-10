@@ -437,6 +437,21 @@ const ENSDeclarationSchema = new mongoose.Schema({
   amendmentMRN: String,
   amendedAt: Date,
 
+  // Historial de rectificaciones aceptadas por AEAT. Sin el, una ENS rectificada
+  // varias veces solo conservaba la ultima fecha y no habia forma de acreditar QUE
+  // se rectifico ni con que XML: el CC304A de aceptacion es el justificante y su CSV
+  // la unica prueba de presentacion.
+  amendments: [{
+    reason: String,
+    // Campos y valores realmente rectificados (los que se enviaron a la aduana).
+    changes: mongoose.Schema.Types.Mixed,
+    submittedAt: Date,
+    aeatCode: String,
+    csv: String,
+    // XML del IE313 tal cual viajo: es lo que se declaro en la rectificacion.
+    requestXML: String
+  }],
+
   // === ANULACION ===
   // La anulacion de una sumaria ya presentada es un mensaje propio (IE314/CC314A)
   // que hay que acreditar. Se guarda aparte porque `generatedXML` es el XML de lo

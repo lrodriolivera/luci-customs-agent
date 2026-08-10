@@ -159,10 +159,20 @@ function _parseAEATResponse(responseData) {
     };
   }
 
-  // Exito: H1/H7 usan CodigoRespuesta 0/1/2, ENS usa CC328A, AES usa RE515C/CC528C,
-  // NCTS usa CC028C. AES real tambien marca <tipoRespuesta>OK</tipoRespuesta>.
+  // Exito: H1/H7 usan CodigoRespuesta 0/1/2, ENS usa CC328A (alta) y CC304A
+  // (rectificacion), AES usa RE515C/CC528C, NCTS usa CC028C. AES real tambien
+  // marca <tipoRespuesta>OK</tipoRespuesta>.
+  //
+  // CC304A es el ACUSE DE ACEPTACION del IE313, verificado contra PRE el
+  // 10/Ago/2026: trae <AmeAccDatTimHEA111> (fecha/hora en que la aduana ACEPTA la
+  // rectificacion) y el CSV de presentacion. Al no estar en esta lista, toda
+  // rectificacion aceptada se respondia como fallida —y sin motivo, porque un
+  // CC304A no trae ninguno—, dejando la declaracion sin marcar como rectificada
+  // mientras AEAT ya habia registrado el cambio. El rechazo es el CC305A, que si
+  // trae sus FUNERRER1 con las reglas incumplidas.
   const isSuccess = code === '0' || code === '1' || code === '2' || code === '0000'
-    || msgType === 'CC328A' || msgType === 'CC528C' || msgType === 'CC028C' || msgType === 'RE515C'
+    || msgType === 'CC328A' || msgType === 'CC304A' || msgType === 'CC528C'
+    || msgType === 'CC028C' || msgType === 'RE515C'
     || tipoResp === 'OK';
 
   return {

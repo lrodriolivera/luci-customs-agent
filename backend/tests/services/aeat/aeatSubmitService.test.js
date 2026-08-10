@@ -43,6 +43,21 @@ const soapEnviado = () => aeatTransport.sendSoap.mock.calls[0][0];
 
 const TENANT_STRIX = { businessInfo: { eori: 'ESB22477020' }, companyName: 'STRIX AI SL' };
 
+/**
+ * Datos minimos de una rectificacion de ENS. El CC313A exige el modo de transporte
+ * y la fecha prevista de llegada YA DECLARADOS en la sumaria original, y el builder
+ * lanza si faltan en vez de inventarlos (antes el modo estaba fijo a maritimo y AEAT
+ * rechazaba toda rectificacion remitiendo a ICS2).
+ */
+function rectificacionENS(extra = {}) {
+  return {
+    mrn: '26ES00280100000000',
+    transportMode: 'RAIL',
+    expectedArrival: '2026-09-01T08:30:00.000Z',
+    ...extra
+  };
+}
+
 function h7({ recipientTaxId = 'B99999999', ...rest } = {}) {
   return {
     customsOffice: 'ES002801',
@@ -97,7 +112,7 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
   });
 
   describe('flags de exito por tipo de mensaje (AES/NCTS/ENS)', () => {
-    test.each(['CC328A', 'CC528C', 'CC028C', 'RE515C'])(
+    test.each(['CC328A', 'CC304A', 'CC528C', 'CC028C', 'RE515C'])(
       'MesTypMES20 %s marca exito',
       async (msgType) => {
         conRespuesta(`<r><MesTypMES20>${msgType}</MesTypMES20></r>`);
@@ -106,6 +121,35 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
         expect(r.code).toBe(msgType);
       }
     );
+
+    /**
+     * Respuesta REAL de AEAT PRE (10/Ago/2026) a una rectificacion de ENS. El
+     * CC304A es el acuse de ACEPTACION del IE313: <AmeAccDatTimHEA111> es la fecha
+     * en que la aduana acepta la rectificacion, y el CSV llega en un comentario XML.
+     * No estaba en la lista de exitos, asi que toda rectificacion aceptada se
+     * devolvia como fallida —y sin motivo, porque un CC304A no trae ninguno—: la
+     * declaracion se quedaba sin marcar como rectificada mientras AEAT ya habia
+     * registrado el cambio. El rechazo es el CC305A, con sus FUNERRER1.
+     */
+    test('un CC304A de PRE es la rectificacion ACEPTADA, con su MRN y su CSV', async () => {
+      conRespuesta('<ie:CC304A xmlns:ie="https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/aden/enswsv5/IE304V5Sal.xsd"><MesTypMES20>CC304A</MesTypMES20><HEAHEA><DocNumHEA5>26ES009999Z0000776</DocNumHEA5><AmeAccDatTimHEA111>202608100715</AmeAccDatTimHEA111></HEAHEA><!--Declaracion presentada con Código Seguro de Verificación XZZZM65UC5QJEMRU el día 10-08-2026--></ie:CC304A>');
+      const r = await submitService.queryStatus('MRN');
+
+      expect(r.success).toBe(true);
+      expect(r.code).toBe('CC304A');
+      expect(r.mrn).toBe('26ES009999Z0000776');
+      expect(r.csv).toBe('XZZZM65UC5QJEMRU');
+      expect(r.error).toBeNull();
+    });
+
+    test('un CC305A es el rechazo de la rectificacion y conserva las reglas', async () => {
+      conRespuesta('<r><MesTypMES20>CC305A</MesTypMES20><FUNERRER1><ErrPoiER12>ITI.ITI</ErrPoiER12><ErrReaER13>R879</ErrReaER13></FUNERRER1></r>');
+      const r = await submitService.queryStatus('MRN');
+
+      expect(r.success).toBe(false);
+      expect(r.error).toContain('ITI.ITI');
+      expect(r.error).toContain('R879');
+    });
 
     test('AltaH7V1Sal aceptada (responseCode A) es exito y extrae el MRN', async () => {
       conRespuesta('<h7:AltaH7V1Sal xmlns:h7="x"><Response><responseCode>A</responseCode></Response><MRN>26ESH7A000067962R8</MRN><documentationRequired>N</documentationRequired></h7:AltaH7V1Sal>');
@@ -380,14 +424,14 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
 
     test('un CD917B es un rechazo, no un exito', async () => {
       conRespuesta(CD917B);
-      const r = await submitService.submitENSAmendment({ mrn: '26ES00280100000000' });
+      const r = await submitService.submitENSAmendment(rectificacionENS());
       expect(r.success).toBe(false);
       expect(r.code).toBe('CD917B');
     });
 
     test('el error dice el motivo, el valor rechazado y donde esta', async () => {
       conRespuesta(CD917B);
-      const r = await submitService.submitENSAmendment({ mrn: '26ES00280100000000' });
+      const r = await submitService.submitENSAmendment(rectificacionENS());
 
       expect(r.error).toContain('Invalid XML format');
       expect(r.error).toContain('Invalid NameSpace');
@@ -412,7 +456,7 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
         + '<OriAttValXMLER804>CC313A,DatOfPreMES9</OriAttValXMLER804>'
         + '<ErrCodXMLER806>39</ErrCodXMLER806></XMLERR805></r>');
 
-      const r = await submitService.submitENSAmendment({ mrn: '26ES00280100000000' });
+      const r = await submitService.submitENSAmendment(rectificacionENS());
       expect(r.success).toBe(false);
       expect(r.error).toContain('Element too long');
       expect(r.error).toContain('DatOfPreMES9');
@@ -422,7 +466,7 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
       conRespuesta('<r><MesTypMES20>CD917B</MesTypMES20>'
         + '<XMLERR805><ErrReaXMLER802>Uno</ErrReaXMLER802></XMLERR805>'
         + '<XMLERR805><ErrReaXMLER802>Dos</ErrReaXMLER802></XMLERR805></r>');
-      const r = await submitService.submitENSAmendment({ mrn: '26ES00280100000000' });
+      const r = await submitService.submitENSAmendment(rectificacionENS());
       expect(r.error).toContain('Uno');
       expect(r.error).toContain('Dos');
     });
@@ -454,7 +498,7 @@ describe('requestXML: el resultado incluye el XML enviado', () => {
       lrn: 'LRN-ENS', carrier: { eori: 'ESB22477020' },
       goods: [{ description: 'Ropa', commodityCode: '6109', grossMass: 50, numberOfPackages: 3 }]
     }), 'CC315A'],
-    ['submitENSAmendment', () => submitService.submitENSAmendment({ mrn: '26ES00280100000000' }), 'CC313A'],
+    ['submitENSAmendment', () => submitService.submitENSAmendment(rectificacionENS()), 'CC313A'],
     ['submitH7', () => submitService.submitH7(h7(), TENANT_STRIX), 'AltaH7V1Ent'],
     ['queryStatus', () => submitService.queryStatus('26ES00280100000000'), 'ConsultaImportacion']
   ])('%s devuelve requestXML con el mensaje %s', async (_nombre, invocar, marca) => {
@@ -467,7 +511,7 @@ describe('requestXML: el resultado incluye el XML enviado', () => {
 
   test('requestXML sobrevive a un rechazo: es cuando mas falta hace', async () => {
     conRespuesta('<r><CodigoRespuesta>9</CodigoRespuesta><DescripcionError>Datos incorrectos</DescripcionError></r>');
-    const r = await submitService.submitENSAmendment({ mrn: '26ES00280100000000' });
+    const r = await submitService.submitENSAmendment(rectificacionENS());
     expect(r.success).toBe(false);
     expect(r.requestXML).toContain('CC313A');
   });
@@ -878,7 +922,7 @@ describe('operaciones auxiliares', () => {
   });
 
   test('submitENSAmendment postea a IE313', async () => {
-    await submitService.submitENSAmendment({ mrn: '26ES00280100000000' });
+    await submitService.submitENSAmendment(rectificacionENS());
     expect(endpointLlamado()).toContain('IE313V5SOAP');
   });
 
