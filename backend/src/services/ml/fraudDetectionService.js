@@ -322,7 +322,10 @@ function detectSplitting(data, historicalData = []) {
       type: 'splitting',
       severity: 'medium',
       indicator: 'multiple_shipments',
-      message: `${similarDeclarations.length} envios similares en los ultimos 30 dias (valor total: ${totalValue.toLocaleString()} EUR)`,
+      // `toLocaleString()` sin locale usa el del proceso: el mismo importe salia
+      // "7500" en una maquina en es_ES y "7,500" en el runner de CI (locale C).
+      // Un importe en euros de un aviso de fraude no puede depender de eso.
+      message: `${similarDeclarations.length} envios similares en los ultimos 30 dias (valor total: ${totalValue.toLocaleString('es-ES')} EUR)`,
       recommendation: 'Verificar si hay fraccionamiento deliberado para evitar controles'
     });
   }

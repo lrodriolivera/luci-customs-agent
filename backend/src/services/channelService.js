@@ -207,7 +207,7 @@ class ChannelService {
       actions: [
         'Requerimiento documental creado',
         `Numero: ${requirement.requirementNumber}`,
-        `Plazo: ${requirement.deadline?.toLocaleDateString() || 'No especificado'}`
+        `Plazo: ${requirement.deadline?.toLocaleDateString('es-ES') || 'No especificado'}`
       ],
       message: 'CANAL NARANJA - Revision documental requerida. Se ha creado un requerimiento con los documentos solicitados.'
     };

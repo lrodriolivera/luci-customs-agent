@@ -277,7 +277,7 @@ const specialRegimeService = {
     // Validar limite maximo segun tipo de regimen
     const maxExtension = this.getMaxExtension(regime);
     if (maxExtension && newDeadline > maxExtension) {
-      throw new Error(`Fecha maxima de prorroga: ${maxExtension.toLocaleDateString()}`);
+      throw new Error(`Fecha maxima de prorroga: ${maxExtension.toLocaleDateString('es-ES')}`);
     }
 
     regime.extensions.push({
@@ -294,7 +294,7 @@ const specialRegimeService = {
       status: regime.status,
       timestamp: new Date(),
       user: userId,
-      reason: `Prorroga concedida hasta ${newDeadline.toLocaleDateString()}`
+      reason: `Prorroga concedida hasta ${newDeadline.toLocaleDateString('es-ES')}`
     });
 
     await regime.save();
