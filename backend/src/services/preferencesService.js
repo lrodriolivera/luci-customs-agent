@@ -336,7 +336,7 @@ class PreferencesService {
     evaluation.conditions.push(...originCheck.conditions);
 
     // 2. Calcular ahorro arancelario
-    const standardDuty = this.calculateStandardDuty(operation);
+    const standardDuty = await this.calculateStandardDuty(operation);
     const preferentialDuty = standardDuty * agreement.preferentialRate;
     evaluation.savings = standardDuty - preferentialDuty;
 
@@ -436,11 +436,11 @@ class PreferencesService {
   /**
    * Calcular arancel estándar (sin preferencias)
    */
-  calculateStandardDuty(operation) {
+  async calculateStandardDuty(operation) {
     let totalDuty = 0;
 
     for (const good of operation.goods || []) {
-      const rate = this.getStandardRate(good.taricCode);
+      const rate = await this.getStandardRate(good.taricCode);
       const dutyAmount = (good.customsValue || 0) * rate;
       totalDuty += dutyAmount;
     }
@@ -451,20 +451,28 @@ class PreferencesService {
   /**
    * Obtener tasa arancelaria estándar
    */
-  getStandardRate(taricCode) {
-    if (!taricCode) return 0.05;
+  async getStandardRate(taricCode) {
+    if (!taricCode) return 0;
 
-    const chapter = taricCode.substring(0, 2);
+    // El arancel real de la mercancia, de la misma fuente que usa la calculadora
+    // (catalogo TARIC -> cache -> IA). Antes esto era una tabla POR CAPITULO cableada
+    // ('84' -> 3%, y 5% para cualquier capitulo no listado) que no distingue entre
+    // partidas del mismo capitulo: con ella, el TARIC 8471300000 (portatiles, arancel
+    // REAL 0%) declaraba un ahorro de 1.500 EUR sobre 50.000 por un acuerdo que no
+    // ahorra nada, porque el arancel ya era cero sin preferencia.
+    try {
+      const { getDutyInfo } = require('./dutyCalculationService');
+      const info = await getDutyInfo(taricCode);
+      if (info && typeof info.dutyRate === 'number') {
+        return info.dutyRate / 100; // getDutyInfo lo da en porcentaje
+      }
+    } catch (error) {
+      logger.warn(`No se pudo obtener el arancel real de ${taricCode}: ${error.message}`);
+    }
 
-    const rates = {
-      '01': 0.15, '02': 0.15, '03': 0.12, '04': 0.15,
-      '07': 0.14, '08': 0.12,
-      '50': 0.12, '61': 0.12, '62': 0.12,
-      '84': 0.03, '85': 0.03,
-      '87': 0.10
-    };
-
-    return rates[chapter] || 0.05;
+    // Sin arancel conocido no se inventa uno: se declara ahorro cero antes que
+    // anunciar un ahorro que no se ha podido calcular.
+    return 0;
   }
 
   /**

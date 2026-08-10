@@ -3,7 +3,22 @@
  * Preferencias Arancelarias - FTA, GSP, GSP+, EBA
  */
 
+/**
+ * El arancel estandar sale de dutyCalculationService (catalogo TARIC real). Se mockea
+ * porque es una frontera con Mongo/IA: antes habia aqui una tabla POR CAPITULO cableada
+ * ('84' -> 3%, 5% por defecto) que anunciaba ahorro para mercancias con arancel 0%.
+ */
+jest.mock('../../src/services/dutyCalculationService', () => ({
+  getDutyInfo: jest.fn()
+}));
+
+const { getDutyInfo } = require('../../src/services/dutyCalculationService');
 const preferencesService = require('../../src/services/preferencesService');
+
+beforeEach(() => {
+  // Por defecto, un arancel real distinto de cero para que el ahorro sea comprobable.
+  getDutyInfo.mockResolvedValue({ dutyRate: 16 });
+});
 
 describe('Preferences Service', () => {
 
@@ -121,6 +136,38 @@ describe('Preferences Service', () => {
 
       expect(result.eligible).toBe(true);
       expect(result.savings).toBeGreaterThan(0);
+    });
+
+    /**
+     * Verificado en produccion el 10/Ago/2026: el TARIC 8471300000 (portatiles) tiene
+     * arancel REAL 0% y la pantalla anunciaba 1.500 EUR de ahorro sobre 50.000 por el
+     * CETA. Venia de `getStandardRate`, una tabla por capitulo cableada ('84' -> 3%,
+     * 5% para lo no listado) que no distingue partidas dentro del mismo capitulo.
+     * Un acuerdo no puede ahorrar sobre un arancel que ya es cero.
+     */
+    test('sin arancel que ahorrar el ahorro es cero, no un porcentaje por capitulo', async () => {
+      getDutyInfo.mockResolvedValue({ dutyRate: 0 }); // portatiles: 0% real
+
+      const result = await preferencesService.checkEligibility({
+        originCountry: 'CA',
+        goods: [{ taricCode: '8471300000', customsValue: 50000, description: 'Portatiles' }]
+      });
+
+      expect(result.eligible).toBe(true);   // el acuerdo aplica...
+      expect(result.savings).toBe(0);       // ...pero no ahorra nada
+    });
+
+    // Si no se puede saber el arancel no se inventa: mejor ahorro cero que anunciar
+    // uno que no se ha podido calcular.
+    test('si el arancel real no se puede obtener no se declara ahorro', async () => {
+      getDutyInfo.mockRejectedValue(new Error('catalogo no disponible'));
+
+      const result = await preferencesService.checkEligibility({
+        originCountry: 'CA',
+        goods: [{ taricCode: '8701200000', customsValue: 100000, description: 'Tractores' }]
+      });
+
+      expect(result.savings).toBe(0);
     });
 
     test('should include requirements for applying preference', async () => {
