@@ -638,10 +638,13 @@ describe('IntegrationsManager', () => {
       expect(screen.getByText('Tiempo Resp. (s)')).toBeInTheDocument()
 
       // Check that calls/success/errors are displayed (toLocaleString format may vary)
+      // El separador de miles depende del locale del proceso: es-ES no agrupa por
+      // debajo de 10.000 ("3200") pero en-US si ("3,200"), asi que las dos ultimas
+      // aserciones solo pasaban en la maquina de desarrollo y dejaban el CI rojo.
       expect(screen.getByText(/12[.,]500/)).toBeInTheDocument()
       expect(screen.getByText(/12[.,]400/)).toBeInTheDocument()
-      expect(screen.getByText('3200')).toBeInTheDocument() // no separator for <10k
-      expect(screen.getByText('3100')).toBeInTheDocument() // no separator for <10k
+      expect(screen.getByText(/^3[.,]?200$/)).toBeInTheDocument()
+      expect(screen.getByText(/^3[.,]?100$/)).toBeInTheDocument()
 
       // Check calculated percentage
       expect(screen.getByText('99.2%')).toBeInTheDocument() // (12400/12500)*100
