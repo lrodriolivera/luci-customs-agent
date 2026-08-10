@@ -627,13 +627,22 @@ class ChannelService {
       body += `\nPuede consultar el estado en nuestro portal de cliente.\n`;
       body += `\nAtentamente,\nLUCI - Agente de Aduanas Digital`;
 
-      await emailService.sendEmail({
+      const envio = await emailService.sendEmail({
         to: client.contact.email,
         subject,
         text: body
       });
 
-      logger.info(`Client notified about ${channel} channel: ${client.contact.email}`);
+      // `sendEmail` NO lanza cuando falla: devuelve `{success:false}`. Escribir
+      // "Client notified" sin mirarlo dejaba en el log la constancia de un aviso
+      // de canal que el cliente nunca recibio. No se propaga el fallo: notificar
+      // es accesorio y no debe interrumpir el procesado del canal.
+      if (envio && envio.success === false) {
+        const motivo = envio.reason || envio.error || 'motivo desconocido';
+        logger.warn(`Client NOT notified about ${channel} channel: ${client.contact.email}: ${motivo}`);
+      } else {
+        logger.info(`Client notified about ${channel} channel: ${client.contact.email}`);
+      }
 
     } catch (error) {
       logger.error('Error notifying client:', error);

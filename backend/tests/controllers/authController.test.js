@@ -106,7 +106,10 @@ describe('authController', () => {
     test('guarda el token HASHEADO, nunca en claro', async () => {
       const user = mockUser();
       User.findOne.mockResolvedValue(user);
-      emailService.sendPasswordResetEmail.mockResolvedValue(true);
+      // `sendPasswordResetEmail` devuelve el resultado de `sendEmail`, no un
+      // booleano: mockearlo con `true` inventaba un contrato que la fuente real
+      // no tiene y era justo lo que dejaba pasar el bug de abajo.
+      emailService.sendPasswordResetEmail.mockResolvedValue({ success: true, messageId: 'msg-1' });
 
       await request(app).post('/api/auth/forgot-password').send({ email: 'tester@strixai.es' });
 
@@ -143,6 +146,64 @@ describe('authController', () => {
       // Sin esto quedaria un token valido que nadie recibio.
       expect(user.resetPasswordToken).toBeUndefined();
       expect(user.resetPasswordExpires).toBeUndefined();
+    });
+
+    /**
+     * `emailService.sendEmail` NO lanza en sus tres modos de fallo: devuelve
+     * `{success:false}` con un `reason`. Un try/catch no ve ninguno de los tres,
+     * asi que el usuario leia "recibiras un enlace" para un correo que nunca
+     * salio, y ademas con el token ya invalidado esperaba un email inexistente.
+     */
+    describe.each([
+      ['no hay SMTP/SES configurado', { success: false, reason: 'not_configured' }],
+      ['el destinatario esta suprimido', { success: false, reason: 'suppressed', skipped: ['tester@strixai.es'] }],
+      ['el envio falla y se captura dentro', { success: false, error: 'Connection timeout' }]
+    ])('cuando %s', (_caso, resultadoEnvio) => {
+      test('responde 500 y limpia el token en vez de prometer un email que no salio', async () => {
+        const user = mockUser();
+        User.findOne.mockResolvedValue(user);
+        emailService.sendPasswordResetEmail.mockResolvedValue(resultadoEnvio);
+
+        const res = await request(app).post('/api/auth/forgot-password')
+          .send({ email: 'tester@strixai.es' });
+
+        expect(res.status).toBe(500);
+        expect(res.body.success).toBe(false);
+        expect(res.body.message).toBeUndefined();
+        expect(user.resetPasswordToken).toBeUndefined();
+        expect(user.resetPasswordExpires).toBeUndefined();
+      });
+    });
+
+    test('un envio con exito sigue respondiendo 200', async () => {
+      const user = mockUser();
+      User.findOne.mockResolvedValue(user);
+      emailService.sendPasswordResetEmail.mockResolvedValue({ success: true, messageId: 'msg-1' });
+
+      const res = await request(app).post('/api/auth/forgot-password')
+        .send({ email: 'tester@strixai.es' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(user.resetPasswordToken).toBeDefined();
+    });
+
+    /**
+     * Compatibilidad: hay llamantes historicos y tests que resuelven el envio
+     * con un valor sin `success`. Tratar eso como fallo romperia el reset para
+     * quien no haya migrado, asi que solo un `success === false` explicito
+     * cuenta como error.
+     */
+    test('un resultado sin campo success no se interpreta como fallo', async () => {
+      const user = mockUser();
+      User.findOne.mockResolvedValue(user);
+      emailService.sendPasswordResetEmail.mockResolvedValue(true);
+
+      const res = await request(app).post('/api/auth/forgot-password')
+        .send({ email: 'tester@strixai.es' });
+
+      expect(res.status).toBe(200);
+      expect(user.resetPasswordToken).toBeDefined();
     });
   });
 

@@ -51,7 +51,8 @@ beforeEach(() => {
     { documentType: 'commercial_invoice', documentName: 'Factura', required: true, received: false },
     { documentType: 'packing_list', documentName: 'Packing', required: false, received: false }
   ]);
-  emailService.sendPortalLink.mockResolvedValue(true);
+  // `sendPortalLink` devuelve el resultado de `sendEmail`, no un booleano.
+  emailService.sendPortalLink.mockResolvedValue({ success: true, messageId: 'msg-1' });
 });
 
 function usuario({ tenant, role = 'operator' } = {}) {
@@ -188,6 +189,31 @@ describe('sendPortalLink', () => {
 
     expect(res.statusCode).toBe(404);
     expect(emailService.sendPortalLink).not.toHaveBeenCalled();
+  });
+
+  /**
+   * `emailService` NO lanza cuando el envio falla: devuelve `{success:false}`.
+   * Sin comprobarlo, el expediente quedaba con una comunicacion y un evento de
+   * timeline afirmando que el cliente habia recibido el enlace, y la respuesta
+   * decia "Link enviado correctamente". El cliente esperaba un correo
+   * inexistente y el expediente lo documentaba como enviado.
+   */
+  test.each([
+    ['no hay SMTP/SES configurado', { success: false, reason: 'not_configured' }],
+    ['el destinatario esta suprimido', { success: false, reason: 'suppressed' }],
+    ['el envio falla', { success: false, error: 'Connection timeout' }]
+  ])('no registra el envio cuando %s', async (_caso, resultadoEnvio) => {
+    const user = usuario();
+    const exp = await crearExpediente(user);
+    const res = crearRes();
+    emailService.sendPortalLink.mockResolvedValue(resultadoEnvio);
+
+    await ctrl.sendPortalLink({ params: { id: exp._id }, body: {}, user }, res);
+
+    expect(res.statusCode).toBe(500);
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.communications.some(c => c.sentTo === 'ana@cliente.es')).toBe(false);
+    expect(guardado.timeline.some(t => t.action === 'portal_link_sent')).toBe(false);
   });
 });
 

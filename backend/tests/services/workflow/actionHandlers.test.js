@@ -112,6 +112,33 @@ describe('actionHandlers', () => {
         template: 'declaracion_accepted'
       });
     });
+
+    /**
+     * `sendEmail` no lanza cuando falla: devuelve `{success:false}`. El handler
+     * devolvia `sent: true` de todas formas, y ese valor se guarda en el
+     * `actionResults` de la ejecucion, asi que el historial del workflow
+     * afirmaba haber avisado al cliente de un correo que nunca salio.
+     */
+    it.each([
+      ['no hay SMTP/SES configurado', { success: false, reason: 'not_configured' }],
+      ['el destinatario esta suprimido', { success: false, reason: 'suppressed' }],
+      ['el envio falla', { success: false, error: 'Connection timeout' }]
+    ])('no debe reportar sent:true cuando %s', async (_caso, resultadoEnvio) => {
+      emailService.sendEmail = jest.fn().mockResolvedValue(resultadoEnvio);
+
+      const execution = {
+        actionResults: [{ actionId: 'action-fallo' }],
+        addActionLog: jest.fn()
+      };
+
+      await expect(
+        actionHandlers.send_email(
+          { emailTo: 'test@example.com', emailSubject: 'Asunto', emailBody: 'Cuerpo', emailTemplate: null },
+          {},
+          execution
+        )
+      ).rejects.toThrow(/email/i);
+    });
   });
 
   // ==================== send_notification ====================

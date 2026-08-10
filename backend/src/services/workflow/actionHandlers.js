@@ -31,6 +31,17 @@ const actionHandlers = {
       template: emailTemplate
     });
 
+    // `sendEmail` NO lanza cuando falla: devuelve `{success:false}` (sin SMTP/SES
+    // configurado, destinatario suprimido, o error de envio capturado dentro).
+    // Devolver `sent: true` sin mirarlo guardaba en el `actionResults` de la
+    // ejecucion que se habia avisado al cliente de un correo que nunca salio.
+    // Lanzar es el contrato que espera el motor: reintenta segun `maxRetries` y
+    // marca la accion como fallida.
+    if (result && result.success === false) {
+      const motivo = result.reason || result.error || 'motivo desconocido';
+      throw new Error(`Email no enviado a ${recipients.join(', ')}: ${motivo}`);
+    }
+
     return { sent: true, recipients, messageId: result?.messageId };
   },
 

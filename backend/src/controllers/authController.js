@@ -393,14 +393,29 @@ const forgotPassword = async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || 'https://aduanas.strixai.es';
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
-    try {
-      const emailService = require('../services/emailService');
-      await emailService.sendPasswordResetEmail(email, user.name, resetUrl);
-    } catch (emailErr) {
-      logger.warn('Reset email no enviado:', emailErr.message);
+    // `emailService.sendEmail` NO lanza en sus tres modos de fallo (sin SMTP/SES
+    // configurado, destinatario suprimido, o error de envio capturado dentro):
+    // devuelve `{success:false, reason|error}`. Con solo el try/catch, esos tres
+    // casos respondian "recibiras un enlace" para un correo que nunca salio, y
+    // encima con el token ya invalidado. Hay que mirar el `success`, no solo las
+    // excepciones. Un resultado sin `success` se considera correcto para no
+    // romper a los llamantes historicos que devuelven otra cosa.
+    const fallaEnvio = (motivo) => {
+      logger.warn(`Reset email no enviado a ${email}: ${motivo}`);
       user.resetPasswordToken = undefined;
       user.resetPasswordExpires = undefined;
-      await user.save({ validateBeforeSave: false });
+      return user.save({ validateBeforeSave: false });
+    };
+
+    try {
+      const emailService = require('../services/emailService');
+      const envio = await emailService.sendPasswordResetEmail(email, user.name, resetUrl);
+      if (envio && envio.success === false) {
+        await fallaEnvio(envio.reason || envio.error || 'motivo desconocido');
+        return res.status(500).json({ success: false, error: 'Error al enviar el email. Intente de nuevo.' });
+      }
+    } catch (emailErr) {
+      await fallaEnvio(emailErr.message);
       return res.status(500).json({ success: false, error: 'Error al enviar el email. Intente de nuevo.' });
     }
 

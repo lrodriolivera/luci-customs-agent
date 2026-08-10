@@ -559,13 +559,28 @@ const sendPortalLink = async (req, res) => {
     }
 
     // Enviar email
-    await emailService.sendPortalLink(
+    const envio = await emailService.sendPortalLink(
       clientEmail,
       expedition.client.companyName,
       expedition.portalUrl,
       expedition.expeditionId,
       expedition.operationType
     );
+
+    // `emailService` NO lanza cuando el envio falla: devuelve `{success:false}`
+    // (sin SMTP/SES configurado, destinatario suprimido, o error capturado
+    // dentro). Sin comprobarlo se guardaba una comunicacion y un evento de
+    // timeline afirmando que el cliente habia recibido el enlace, y se respondia
+    // "Link enviado correctamente": el expediente documentaba como enviado un
+    // correo que nunca salio.
+    if (envio && envio.success === false) {
+      const motivo = envio.reason || envio.error || 'motivo desconocido';
+      logger.warn(`Portal link no enviado: ${expedition.expeditionId} -> ${clientEmail}: ${motivo}`);
+      return res.status(500).json({
+        success: false,
+        error: 'Error al enviar link del portal'
+      });
+    }
 
     // Registrar en comunicaciones
     expedition.communications.push({
