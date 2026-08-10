@@ -1180,8 +1180,40 @@ describe('RegulationSearch', () => {
       await user.click(searchButton)
 
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith('Error buscando articulo')
+        expect(toast.error).toHaveBeenCalledWith('No se ha podido consultar la normativa')
       })
+
+      consoleError.mockRestore()
+    })
+
+    /**
+     * Cuando EUR-Lex no devuelve el texto (responde 202 con cuerpo vacio a las
+     * peticiones automatizadas), el backend lanza y antes solo salia un toast generico
+     * que se va en segundos: el usuario pulsaba "Buscar articulo" y no quedaba NADA en
+     * pantalla, ni el motivo ni adonde acudir. Verificado en produccion el 10/Ago/2026.
+     */
+    it('un fallo al leer la norma deja el motivo y el enlace oficial en pantalla', async () => {
+      const user = userEvent.setup()
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      regulationsAPI.searchArticle.mockRejectedValue({
+        response: { data: { error: 'EUR-Lex no devolvio el texto del documento 32013R0952' } }
+      })
+
+      render(<RegulationSearch />)
+      await screen.findByText(/Buscar Articulo Especifico/)
+
+      await user.type(screen.getByPlaceholderText(/Ej: 32013R0952/), '32013R0952')
+      await user.type(screen.getByPlaceholderText(/Ej: 22/), '22')
+      await user.click(screen.getByRole('button', { name: 'Buscar articulo' }))
+
+      // El motivo REAL del backend, no un mensaje generico
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('EUR-Lex no devolvio el texto'))
+      })
+      // Y queda constancia en la ficha, con la fuente oficial a mano
+      await screen.findByText(/No se ha podido recuperar el texto/i)
+      const enlaces = screen.getAllByRole('link', { name: /fuente oficial/i })
+      expect(enlaces[0]).toHaveAttribute('href', expect.stringContaining('CELEX:32013R0952'))
 
       consoleError.mockRestore()
     })

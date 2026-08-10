@@ -134,7 +134,20 @@ export default function RegulationSearch() {
         toast.error('Articulo no encontrado')
       }
     } catch (error) {
-      toast.error('Error buscando articulo')
+      // El backend lanza cuando EUR-Lex no devuelve el texto (responde 202 con cuerpo
+      // vacio a las peticiones automatizadas). Antes solo salia un toast generico que
+      // se va en segundos: el usuario pulsaba "Buscar articulo" y no quedaba NADA en
+      // pantalla, ni el motivo ni adonde acudir. Se deja el resultado en la ficha, con
+      // el enlace a la fuente oficial.
+      const motivo = error?.response?.data?.error || 'No se ha podido consultar la normativa'
+      toast.error(motivo)
+      setArticleResult({
+        celex: articleSearch.celex,
+        article: articleSearch.article,
+        found: false,
+        excerpt: '',
+        url: `https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:${articleSearch.celex}#${articleSearch.article}`
+      })
       console.error(error)
     } finally {
       setSearchingArticle(false)
