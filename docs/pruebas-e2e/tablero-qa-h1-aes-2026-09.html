@@ -303,6 +303,14 @@ h3{
   color:var(--accent);
   line-height:1;
 }
+.tcase-source{
+  font-size:.76rem;
+  color:var(--text-faint);
+  padding-top:4px;
+  border-top:1px dashed var(--border);
+  margin-top:2px;
+}
+.tcase-source b{font-weight:650; color:var(--text-dim)}
 .tag-priority{
   font-family:var(--mono);
   font-size:.68rem;
@@ -370,7 +378,7 @@ footer.note{
 <header class="page">
   <p class="eyebrow">Guía de montaje · Trello</p>
   <h1>Tablero de pruebas de usuario — LUCI</h1>
-  <p class="subtitle">Estructura lista para crear en Trello: columnas, plantilla de tarjeta y 37 casos de prueba con casuística real extraída del código — H1 y AES en profundidad (la especialidad de la agente de aduanas) más los módulos de cálculo y consulta que no tocan AEAT.</p>
+  <p class="subtitle">Estructura lista para crear en Trello: columnas, plantilla de tarjeta y 59 casos de prueba — H1 y AES en profundidad (la especialidad de la agente de aduanas), los módulos de cálculo y consulta que no tocan AEAT, y una tercera tanda de H1/AES contrastada contra AEAT y el Código Aduanero de la Unión, no solo contra el código del proyecto.</p>
 </header>
 
 <section class="section">
@@ -675,6 +683,139 @@ footer.note{
 </section>
 
 <section class="section">
+  <div class="frente-head"><span class="frente-num">03</span><h2>H1 y AES contrastado contra fuentes oficiales</h2></div>
+  <p class="section-intro">Los dos frentes anteriores salieron de leer el código de LUCI — con el riesgo de que un caso de prueba herede el mismo error que el código ya asume. Estos 22 casos nuevos vienen de la normativa y los manuales oficiales (AEAT, Código Aduanero de la Unión y sus reglamentos), no del código, para poder contrastar contra la verdad de terreno.</p>
+
+  <div class="module">
+    <div class="module-head">
+      <span class="module-name">H1 — Regímenes, tipos de declaración y garantías</span>
+      <span class="module-count">11 casos</span>
+    </div>
+    <div class="tcase-group">
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Régimen 44 (destino final) con documento de control</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declara régimen 44 (exención/tipo reducido por uso con fines particulares — ej. motores para aeronave civil)</span><span class="k">→</span><span class="exp">debe exigirse el documento de control asociado (N990/C990) y no debe poder despacharse sin él</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — Curso "Nuevo sistema de importación H1"</b>, separata "Novedades elemento de dato 11 09 - Régimen"</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Régimen 95 exige que no se haya pagado IVA ni IIEE</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declara régimen 95 (inclusión de mercancías de la Unión en depósito distinto del aduanero) sobre una mercancía con IVA o IIEE ya liquidados</span><span class="k">→</span><span class="exp">LUCI debe rechazar o advertir, no dejar pasar el régimen 95 cuando ya se pagaron esos tributos</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — Curso H1</b>, separata "Novedades elemento de dato 11 09 - Régimen" (ejemplo cigarrillos Canarias→Bélgica)</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Desaparición del régimen 49: unión aduanera vs territorios fiscales especiales</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declara despacho a consumo de mercancía en el marco del art. 1.3 CAU (territorios fiscales especiales) frente a mercancía de un país con unión aduanera (Andorra/San Marino/Turquía)</span><span class="k">→</span><span class="exp">el primero usa declaration type CO + procedure 40 + additional F15 sin preferencia; el segundo usa IM + procedure 40 + F16 + preferencia '4' — LUCI no debe tratarlos igual, el 49 ya no existe</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — Curso H1</b>, separata 13 "Régimen 40 vs Régimen 49"</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Tipo de cambio: no se admiten los códigos antiguos 7008/7010</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se intenta declarar manualmente un tipo de cambio con los códigos nacionales antiguos 7008 o 7010</span><span class="k">→</span><span class="exp">LUCI no debe permitirlo; si no se informa ExchangeRate, debe asumir el tipo de cambio a la fecha de admisión, nunca dejarlo vacío o en 0</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — Curso H1</b>, separata 10 "Tipo de cambio"</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Ubicación de la mercancía condiciona si se puede importar</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declara una ubicación de tipo B (otros lugares designados por la aduana, ej. PIF/escáner), H (otras ubicaciones no autorizadas) o I (mercancía Unión con estatuto pendiente de justificar)</span><span class="k">→</span><span class="exp">LUCI debe advertir que esa ubicación NO permite importación, en vez de dejar continuar el flujo</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — Curso H1</b>, separata 11 "Tipo de ubicación que permite realizar importaciones"</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">No se puede modificar el declarante/representante tras la fase PREDUA con control</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se intenta modificar el declarante, el número de partidas o el tipo de declaración de un H1 ya en fase "PREDUA con intención de control", o después del levante</span><span class="k">→</span><span class="exp">LUCI debe bloquear esa edición por XML; tras el levante solo cabe un mensaje de solicitud de modificación, nunca una edición directa</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — Curso H1</b>, separata 12 "Campos modificables según el estado de la declaración"</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Estatus OEA no puede aparecer ni desaparecer en una modificación</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">una declaración se presentó con estatus OEA (importador y declarante/representante son OEA simultáneamente) y luego se modifica un dato</span><span class="k">→</span><span class="exp">el estatus OEA debe mantenerse igual que en la presentación original; no puede "aparecer" OEA en una modificación si no lo era al presentar, ni al revés</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — Curso H1</b>, separata 12 "Campos modificables según el estado de la declaración"</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Preferencia 14 11: primera cifra vs contingente arancelario</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declara preferencia con primera cifra '2' (SPG) y segundas cifras '20' (contingente arancelario) para un país sin acuerdo SPG vigente</span><span class="k">→</span><span class="exp">LUCI debe rechazar la combinación, no calcular un arancel preferencial inexistente</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — Curso H1</b>, separata "Elemento de dato 14 11 Preferencia"</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Garantía obligatoria antes del levante si no se paga la deuda</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se solicita el levante de un H1 con deuda aduanera pendiente de pago y sin garantía constituida</span><span class="k">→</span><span class="exp">LUCI no debe permitir avanzar al levante; el levante requiere pago previo o garantía constituida (depósito, aval o seguro de caución)</span></div>
+        <div class="tcase-source">Fuente: AEAT (página resumen "Deuda aduanera y garantías"), citando <b>CAU art. 195</b> — de segunda mano: verificar el número de artículo contra el texto oficial en el DOUE antes de usarlo como referencia legal</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Dispensa de garantía para operador OEA/AEOC</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">el importador tiene estatus OEA (AEOC) con autorización de garantía global reducida</span><span class="k">→</span><span class="exp">LUCI debe permitir la dispensa/reducción de la garantía individual, no exigir el 100% como a un operador sin OEA</span></div>
+        <div class="tcase-source">Fuente: AEAT (página resumen "Deuda aduanera y garantías"), citando <b>RECAU art. 84</b> — de segunda mano: verificar el número de artículo contra el texto oficial en el DOUE antes de usarlo como referencia legal</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Valor en aduana: cánones y comisiones de venta se suman, comisiones de compra no</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">la factura incluye una comisión de venta del vendedor y, por separado, una comisión de compra pagada por el importador a su propio agente</span><span class="k">→</span><span class="exp">la comisión de venta se SUMA al valor en aduana; la comisión de compra NO se incluye — LUCI no debe tratarlas igual</span></div>
+        <div class="tcase-source">Fuente: compilación académica no oficial (uv.es), citando <b>CAU arts. 71 y 72</b> — de segunda mano: verificar el número de artículo contra el texto oficial en el DOUE antes de usarlo como referencia legal</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="module">
+    <div class="module-head">
+      <span class="module-name">AES — Datos de seguridad y elementos personales (AES P1)</span>
+      <span class="module-count">11 casos</span>
+    </div>
+    <div class="tcase-group">
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Declaración EX tipo A (sin seguridad) vs tipo B (con seguridad)</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se genera una exportación normal (tipo A) y, por separado, una con datos de seguridad obligatorios (tipo B, Security='2')</span><span class="k">→</span><span class="exp">solo en tipo B deben volverse obligatorios Expedidor y Destinatario (Consignor/Consignee); en tipo A deben quedar opcionales o ausentes</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — FAQs AES P1</b>, preguntas 15 y 17</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Representación indirecta se deduce, no se declara</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declara un exportador distinto del declarante, sin marcar explícitamente el campo de representación</span><span class="k">→</span><span class="exp">LUCI debe deducir representación indirecta automáticamente; el grupo "Representante" solo debe rellenarse cuando la representación es DIRECTA</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — FAQs AES P1</b>, pregunta 23</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Transportista solo si es distinto del declarante, siempre con EORI</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">el transportista coincide con el declarante, y por separado si es un tercero</span><span class="k">→</span><span class="exp">coincidiendo, el dato de transportista debe omitirse del XML; si es un tercero, debe incluir su EORI obligatoriamente</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — FAQs AES P1</b>, pregunta 16</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Expedidor de seguridad distinto del exportador</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">en una declaración con datos de seguridad, el expedidor de seguridad (quien entrega físicamente al transportista) es un tercero distinto del exportador</span><span class="k">→</span><span class="exp">LUCI debe permitir declarar ese expedidor de seguridad como entidad separada del exportador, a nivel de envío o de partida</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — FAQs AES P1</b>, pregunta 17</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Definición legal de exportador: quien decide sacar la mercancía, no quien factura</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">la persona que factura la venta es distinta de la que, establecida en la UE, decidió y ejecuta la salida de la mercancía del territorio aduanero</span><span class="k">→</span><span class="exp">LUCI debe declarar como exportador a quien decide la salida (según el Reglamento Delegado 2015/2446), no automáticamente a quien aparece en la factura comercial</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — FAQs AES P1</b>, pregunta 20, que a su vez cita el <b>Reglamento Delegado (UE) 2015/2446</b> (de segunda mano: no se verificó el texto oficial del reglamento en el DOUE)</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Exportador sin EORI: las 5 excepciones documentadas</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declara un exportador particular (envío de equipaje personal), con código CO, en reexportación (NIF instrumental), con país de exportación distinto de España, o en entregas sucesivas con exportador no establecido en España</span><span class="k">→</span><span class="exp">en estos 5 casos concretos NO debe exigirse EORI del exportador (o se sustituye por NIF instrumental) — fuera de ellos, EORI+NIF es obligatorio</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — FAQs AES P1</b>, pregunta 22 (Apéndices IX y XV de la Resolución del DUA)</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Pre-DUA de exportación caduca a los 30 días sin presentación de mercancía</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se presenta una declaración (normal o simplificada) antes de presentar la mercancía física en aduana, y pasan 30 días sin presentarla</span><span class="k">→</span><span class="exp">LUCI debe marcar la declaración como "no presentada" tras esos 30 días, no dejarla indefinidamente activa</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — FAQs AES P1</b>, pregunta 26</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">EUR.1 no se puede firmar antes de que la exportación sea efectiva o esté asegurada</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se intenta emitir un certificado EUR.1/EURMED con cargo a un pre-DUA de exportación que aún no ha sido aceptado por la aduana</span><span class="k">→</span><span class="exp">LUCI debe bloquear la emisión hasta que la declaración de exportación tenga existencia legal (haya sido aceptada), no antes</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — FAQs AES P1</b>, pregunta 27 (Protocolos de origen, procedimiento EUR.1)</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Documento de levante no se actualiza tras modificar la declaración</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se modifica una declaración de exportación después de generado el documento de levante</span><span class="k">→</span><span class="exp">el documento de levante original NO debe reflejar el cambio (se genera una sola vez); LUCI debe mostrar el dato actualizado solo en la consulta de la declaración, nunca reimprimir el levante como si estuviera al día</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — FAQs AES P1</b>, pregunta 13</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Máximo 30 precintos y 99 contenedores por declaración</span><span class="tag-row"><span class="tag-priority">baja</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declaran más de 30 precintos o más de 99 contenedores en una misma exportación</span><span class="k">→</span><span class="exp">LUCI debe impedir superar esos límites antes de enviar a AEAT, no dejar que el envío falle en destino</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — Guía CUSDEC/CUSRES Exportación (ECS)</b>, casillas 29-31 (límites heredados en AES)</div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Masa bruta sin decimales si es ≥1kg, con hasta 3 decimales si es &lt;1kg</span><span class="tag-row"><span class="tag-priority">baja</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declara una partida con masa bruta de 0,750 kg y otra con 12 kg</span><span class="k">→</span><span class="exp">la primera admite decimales (0,750); la segunda debe redondearse a entero, no aceptar "12.4 kg"</span></div>
+        <div class="tcase-source">Fuente: <b>AEAT — Guía CUSDEC/CUSRES Exportación (ECS)</b>, casilla 35</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
   <h3 style="margin-bottom:10px">Backlog — próxima ronda</h3>
   <p class="section-intro" style="margin-bottom:14px">Módulos que sí envían a AEAT pero quedan fuera de esta primera tanda por no ser la especialidad de la agente.</p>
   <div class="module">
@@ -707,8 +848,8 @@ footer.note{
     <div class="step">
       <div class="step-num"></div>
       <div class="step-body">
-        <h3>Crear las 37 tarjetas</h3>
-        <p>Una tarjeta por caso, todas en «Pendiente». El campo SI de cada caso es la condición a provocar y el campo → es el resultado esperado — pegar ambos en la plantilla. Empezar por las marcadas ALTA, y dentro de esas, por las de <span class="tag-regress" style="padding:1px 5px">REGRESIÓN</span>: son bugs reales que ya se corrigieron una vez.</p>
+        <h3>Crear las 59 tarjetas</h3>
+        <p>Una tarjeta por caso, todas en «Pendiente». El campo SI de cada caso es la condición a provocar y el campo → es el resultado esperado — pegar ambos en la plantilla, junto con la fuente citada si la tiene. Empezar por las marcadas ALTA, luego por las de <span class="tag-regress" style="padding:1px 5px">REGRESIÓN</span> (bugs reales ya corregidos una vez), y priorizar el Frente 03 cuando la agente quiera contrastar contra normativa, no solo contra el comportamiento actual de LUCI.</p>
       </div>
     </div>
     <div class="step">
@@ -733,7 +874,7 @@ footer.note{
 </section>
 
 <footer class="note">
-  Tablero pensado para 3–5 personas en el plan gratuito de Trello (usuarios ilimitados por workspace). 37 casos extraídos del código real (builders XML, reglas de negocio, bugs corregidos en agosto/2026) a 8/Sep/2026 — ampliar el módulo correspondiente si el código cambia o se agregan pantallas nuevas.
+  Tablero pensado para 3–5 personas en el plan gratuito de Trello (usuarios ilimitados por workspace). 59 casos a 8/Sep/2026: 37 extraídos del código real (builders XML, reglas de negocio, bugs corregidos en agosto/2026) y 22 contrastados contra fuentes oficiales — AEAT (curso H1, FAQs AES P1, guía CUSDEC/CUSRES) y el Reglamento (UE) 952/2013 (CAU) con sus reglamentos delegado 2015/2446 y de ejecución 2015/2447. Ampliar el módulo correspondiente si el código o la normativa cambian.
 </footer>
 
 </div>
