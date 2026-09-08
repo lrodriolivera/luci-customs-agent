@@ -1,0 +1,8 @@
+# Dependencias del submódulo video-wiki.
+# Solo lo que NO está ya en backend/frontend del proyecto principal.
+
+playwright>=1.40.0       # captura de pantallas headless
+moviepy>=1.0.3,<2        # ensamblado del video (1.x: API estable con moviepy.editor)
+Pillow>=9.5,<10          # procesado imágenes (10+ rompe MoviePy 1.x: Image.ANTIALIAS)
+requests>=2.31.0         # llamadas a ElevenLabs y login API
+python-dotenv>=1.0.0     # carga del .env

@@ -1,0 +1,8 @@
+# video-wiki — ignorar outputs y secretos
+.env
+output/screenshots/
+output/audio/
+output/*.mp4
+venv/
+__pycache__/
+*.pyc
