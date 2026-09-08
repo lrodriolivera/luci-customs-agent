@@ -1,0 +1,739 @@
+<title>Tablero QA LUCI</title>
+<style>
+:root{
+  --ground:#faf9f6;
+  --surface:#ffffff;
+  --surface-2:#f1efe8;
+  --border:#e4e0d4;
+  --text:#242220;
+  --text-dim:#65605a;
+  --text-faint:#918c82;
+  --accent:#8a5a2b;
+  --accent-ink:#ffffff;
+  --accent-soft:#f3e6d4;
+  --ok:#3f7d5c;
+  --ok-soft:#e3efe8;
+  --warn:#a8781f;
+  --warn-soft:#f6ecd6;
+  --crit:#b0472f;
+  --crit-soft:#f8e5df;
+  --info:#3b6ea5;
+  --info-soft:#e4edf6;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#1b1815;
+    --surface:#242019;
+    --surface-2:#2c2720;
+    --border:#3c352b;
+    --text:#eeebe4;
+    --text-dim:#b6afa2;
+    --text-faint:#847c70;
+    --accent:#d3924f;
+    --accent-ink:#20160a;
+    --accent-soft:#3a2c18;
+    --ok:#7ec49d;
+    --ok-soft:#213228;
+    --warn:#e0b25a;
+    --warn-soft:#3a2f18;
+    --crit:#e58a72;
+    --crit-soft:#3b2420;
+    --info:#8db3dd;
+    --info-soft:#1e2c3a;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#1b1815;
+  --surface:#242019;
+  --surface-2:#2c2720;
+  --border:#3c352b;
+  --text:#eeebe4;
+  --text-dim:#b6afa2;
+  --text-faint:#847c70;
+  --accent:#d3924f;
+  --accent-ink:#20160a;
+  --accent-soft:#3a2c18;
+  --ok:#7ec49d;
+  --ok-soft:#213228;
+  --warn:#e0b25a;
+  --warn-soft:#3a2f18;
+  --crit:#e58a72;
+  --crit-soft:#3b2420;
+  --info:#8db3dd;
+  --info-soft:#1e2c3a;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground);
+  color:var(--text);
+  margin:0;
+  font-family:'Source Sans 3', system-ui, -apple-system, sans-serif;
+  font-size:15.5px;
+  line-height:1.55;
+}
+
+.wrap{max-width:920px;margin:0 auto;padding:56px 28px 96px}
+
+header.page{margin-bottom:44px}
+.eyebrow{
+  font-family:var(--mono);
+  font-size:12px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin:0 0 10px;
+}
+h1{
+  font-family:'Fraunces', Georgia, serif;
+  font-weight:600;
+  font-size:clamp(1.9rem, 1.5rem + 1.6vw, 2.7rem);
+  line-height:1.08;
+  margin:0 0 12px;
+  text-wrap:balance;
+  letter-spacing:-.01em;
+}
+.subtitle{
+  color:var(--text-dim);
+  font-size:1.05rem;
+  max-width:62ch;
+  margin:0;
+}
+
+h2{
+  font-family:'Fraunces', Georgia, serif;
+  font-weight:600;
+  font-size:1.5rem;
+  margin:0 0 6px;
+  letter-spacing:-.005em;
+}
+h3{
+  font-family:'Fraunces', Georgia, serif;
+  font-weight:600;
+  font-size:1.12rem;
+  margin:0 0 4px;
+}
+.section{margin-top:56px}
+.section-intro{color:var(--text-dim); max-width:64ch; margin:0 0 24px}
+
+/* board columns */
+.board{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-top:20px;
+}
+.col{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:16px 14px;
+}
+.col-head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:12px;
+}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.dot.pend{background:var(--text-faint)}
+.dot.curso{background:var(--info)}
+.dot.bug{background:var(--crit)}
+.dot.hecho{background:var(--ok)}
+.col-title{font-weight:650; font-size:.92rem}
+.col-desc{font-size:.82rem; color:var(--text-faint); margin:0 0 12px}
+.card-mini{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:7px;
+  padding:9px 10px;
+  font-size:.82rem;
+  color:var(--text-dim);
+  margin-bottom:8px;
+}
+.card-mini b{color:var(--text); font-weight:600; display:block; margin-bottom:2px}
+
+/* card template */
+.template{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:24px 26px;
+  margin-top:20px;
+}
+.field-row{
+  display:grid;
+  grid-template-columns:180px 1fr;
+  gap:4px 16px;
+  padding:11px 0;
+  border-bottom:1px solid var(--border);
+  align-items:start;
+}
+.field-row:last-child{border-bottom:none}
+.field-label{
+  font-family:var(--mono);
+  font-size:.76rem;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  padding-top:2px;
+}
+.field-value{color:var(--text)}
+.field-value.example{color:var(--text-dim); font-style:italic}
+.badge{
+  display:inline-block;
+  font-family:var(--mono);
+  font-size:.72rem;
+  padding:2px 8px;
+  border-radius:5px;
+  font-weight:600;
+  letter-spacing:.02em;
+}
+.badge.crit{background:var(--crit-soft); color:var(--crit)}
+.badge.warn{background:var(--warn-soft); color:var(--warn)}
+.badge.info{background:var(--info-soft); color:var(--info)}
+.badge.ok{background:var(--ok-soft); color:var(--ok)}
+
+/* severity legend */
+.legend{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px}
+.legend-item{
+  display:flex; align-items:center; gap:8px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:8px 12px 8px 10px;
+  font-size:.85rem;
+}
+.legend-item .badge{flex:none}
+
+/* module groups */
+.module{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:18px 20px;
+  margin-bottom:14px;
+}
+.module-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+  flex-wrap:wrap;
+}
+.module-name{font-weight:650; font-size:1rem}
+.module-count{
+  font-family:var(--mono);
+  font-size:.76rem;
+  color:var(--text-faint);
+}
+.checklist{list-style:none; margin:0; padding:0; display:grid; gap:7px}
+.checklist li{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  font-size:.9rem;
+  color:var(--text-dim);
+}
+.checklist li::before{
+  content:'';
+  width:14px;height:14px;
+  border:1.5px solid var(--border);
+  border-radius:4px;
+  flex:none;
+  margin-top:2px;
+}
+.checklist li b{color:var(--text); font-weight:600}
+
+/* technical case card (condition -> expected) */
+.tcase-group{display:grid; gap:10px}
+.tcase{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:13px 15px;
+  display:grid;
+  gap:6px;
+}
+.tcase-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+.tcase-title{font-weight:650; font-size:.92rem; color:var(--text)}
+.tcase-flow{
+  display:grid;
+  grid-template-columns:20px 1fr;
+  gap:3px 8px;
+  font-size:.85rem;
+}
+.tcase-flow .k{
+  font-family:var(--mono);
+  font-size:.7rem;
+  color:var(--text-faint);
+  padding-top:1px;
+}
+.tcase-flow .cond{color:var(--text-dim)}
+.tcase-flow .exp{color:var(--text)}
+.tcase-flow .exp b{font-weight:650}
+.tag-row{display:flex; gap:6px; flex:none}
+.tag-regress{
+  font-family:var(--mono);
+  font-size:.66rem;
+  padding:2px 7px;
+  border-radius:4px;
+  background:var(--info-soft);
+  color:var(--info);
+  font-weight:700;
+  white-space:nowrap;
+}
+.frente-head{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  margin:0 0 6px;
+}
+.frente-num{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:1.9rem;
+  color:var(--accent);
+  line-height:1;
+}
+.tag-priority{
+  font-family:var(--mono);
+  font-size:.68rem;
+  padding:1px 6px;
+  border-radius:4px;
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-weight:700;
+  flex:none;
+  margin-left:auto;
+}
+
+/* setup steps */
+.steps{counter-reset:step; margin-top:20px; display:grid; gap:14px}
+.step{
+  display:grid;
+  grid-template-columns:40px 1fr;
+  gap:16px;
+  align-items:start;
+}
+.step-num{
+  counter-increment:step;
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:1.3rem;
+  color:var(--accent);
+  line-height:1;
+}
+.step-num::before{content:counter(step)}
+.step-body h3{margin-bottom:4px}
+.step-body p{margin:0; color:var(--text-dim); font-size:.92rem}
+
+.callout{
+  border-left:3px solid var(--accent);
+  background:var(--accent-soft);
+  border-radius:0 8px 8px 0;
+  padding:14px 18px;
+  margin-top:24px;
+  font-size:.92rem;
+  color:var(--text);
+}
+.callout b{color:var(--accent)}
+
+footer.note{
+  margin-top:64px;
+  padding-top:20px;
+  border-top:1px solid var(--border);
+  font-size:.82rem;
+  color:var(--text-faint);
+}
+
+@media (max-width: 720px){
+  .board{grid-template-columns:1fr 1fr}
+  .field-row{grid-template-columns:1fr}
+}
+@media (max-width: 480px){
+  .board{grid-template-columns:1fr}
+}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;600;650&family=JetBrains+Mono:wght@500;700&display=swap">
+
+<div class="wrap">
+
+<header class="page">
+  <p class="eyebrow">Guía de montaje · Trello</p>
+  <h1>Tablero de pruebas de usuario — LUCI</h1>
+  <p class="subtitle">Estructura lista para crear en Trello: columnas, plantilla de tarjeta y 37 casos de prueba con casuística real extraída del código — H1 y AES en profundidad (la especialidad de la agente de aduanas) más los módulos de cálculo y consulta que no tocan AEAT.</p>
+</header>
+
+<section class="section">
+  <h2>Columnas del tablero</h2>
+  <p class="section-intro">Cuatro columnas, en este orden. Cada tarjeta se mueve de izquierda a derecha a medida que avanza — nunca hacia atrás salvo que se reabra un bug.</p>
+
+  <div class="board">
+    <div class="col">
+      <div class="col-head"><span class="dot pend"></span><span class="col-title">Pendiente</span></div>
+      <p class="col-desc">Casos de prueba aún sin empezar.</p>
+      <div class="card-mini"><b>Enviar AES a AEAT (PRE)</b>Flujo exportación</div>
+      <div class="card-mini"><b>Verificar canal H1 real</b>Flujo importación</div>
+    </div>
+    <div class="col">
+      <div class="col-head"><span class="dot curso"></span><span class="col-title">En curso</span></div>
+      <p class="col-desc">La agente lo está probando ahora mismo.</p>
+      <div class="card-mini"><b>Generar H1 desde expediente</b>Flujo importación</div>
+    </div>
+    <div class="col">
+      <div class="col-head"><span class="dot bug"></span><span class="col-title">Bug encontrado</span></div>
+      <p class="col-desc">Algo falló. Queda aquí hasta que el equipo lo revise y lo devuelva a Pendiente o lo cierre.</p>
+      <div class="card-mini"><b>Casilla 54 vacía en el PDF</b>Flujo H1 · adjunta captura</div>
+    </div>
+    <div class="col">
+      <div class="col-head"><span class="dot hecho"></span><span class="col-title">Hecho</span></div>
+      <p class="col-desc">Probado sin incidencias.</p>
+      <div class="card-mini"><b>Alta de expediente exportación</b>Verificado 12/Ago</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Plantilla de tarjeta</h2>
+  <p class="section-intro">Al crear cada tarjeta nueva, copiar estos campos en la descripción. Los primeros tres los rellena quien crea la tarea; el resto los completa la agente de aduanas al probar.</p>
+
+  <div class="template">
+    <div class="field-row">
+      <span class="field-label">Título</span>
+      <span class="field-value example">Generar declaración H1 desde un expediente nuevo</span>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Pantalla / URL</span>
+      <span class="field-value example">/declarations → botón "Nueva H1"</span>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Pasos a seguir</span>
+      <span class="field-value example">1. Abrir un expediente existente&nbsp;&nbsp;2. Pulsar "Generar H1"&nbsp;&nbsp;3. Revisar que Régimen e Incoterm aparezcan rellenos&nbsp;&nbsp;4. Enviar a AEAT (entorno PRE)&nbsp;&nbsp;5. Confirmar que llega un MRN</span>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Resultado esperado</span>
+      <span class="field-value example">Se genera el DUA y se recibe un MRN válido de AEAT PRE, sin errores 500 ni campos vacíos</span>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Resultado obtenido</span>
+      <span class="field-value">— lo rellena la agente al probar —</span>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Severidad</span>
+      <span class="field-value"><span class="badge crit">Bloqueante</span> <span class="badge warn">Importante</span> <span class="badge info">Menor</span> <span class="badge ok">Sin problema</span></span>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Evidencia</span>
+      <span class="field-value">Captura de pantalla adjunta a la tarjeta (arrastrar la imagen directo sobre ella, o pegar con Ctrl+V)</span>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Probado por / fecha</span>
+      <span class="field-value example">Nombre de la agente + fecha en formato DD/MM</span>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="badge crit">Bloqueante</span> no se puede continuar el trámite</div>
+    <div class="legend-item"><span class="badge warn">Importante</span> funciona pero el dato o resultado es incorrecto</div>
+    <div class="legend-item"><span class="badge info">Menor</span> molesta pero no afecta el resultado (texto, estilo, orden)</div>
+    <div class="legend-item"><span class="badge ok">Sin problema</span> se probó y todo funcionó como se esperaba</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="frente-head"><span class="frente-num">01</span><h2>H1 y AES — casuística profunda</h2></div>
+  <p class="section-intro">20 casos extraídos directamente del código de los builders XML y las reglas de negocio reales (formaRepresentacion, EORI, régimen 2026/382, rectificaciones). Cada tarjeta lleva la condición exacta a provocar y el resultado esperado — copiar ambos en el campo «Pasos a seguir» / «Resultado esperado» de la plantilla.</p>
+
+  <div class="module">
+    <div class="module-head">
+      <span class="module-name">H1 — Declaración de importación</span>
+      <span class="module-count">11 casos</span>
+    </div>
+    <div class="tcase-group">
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Declarante = importador → representación directa</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">el NIF del declarante coincide con el del importador</span><span class="k">→</span><span class="exp"><b>formaRepresentacion</b> debe quedar en '1' (directa), nunca en '2' por defecto</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Representación indirecta sin representante registrado</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">declarante ≠ importador y el representante no está dado de alta como representante aduanero</span><span class="k">→</span><span class="exp">AEAT debe rechazar (error 1035); LUCI no debe presentarlo como aceptado</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Código adicional vacío no se envía como '000'</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">el código adicional del régimen queda vacío o en '0'/'00'/'000'</span><span class="k">→</span><span class="exp">el XML NO debe incluir la casilla de código adicional (si se envía, AEAT devuelve error 2077)</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Unidades suplementarias obligatorias según TARIC</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declara un TARIC que exige casilla 41 (unidades suplementarias) sin rellenarla</span><span class="k">→</span><span class="exp">LUCI debe advertir antes de enviar, no dejar pasar el campo en blanco</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Múltiples partidas con régimen y origen distintos</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">el expediente tiene 3+ partidas, cada una con TARIC, país de origen y preferencia distintos</span><span class="k">→</span><span class="exp">cada partida calcula sus propios tributos sin arrastrar datos de la anterior</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Modificar una declaración con MRN ya asignado</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se reenvía un H1 que ya tiene MRN de una presentación previa</span><span class="k">→</span><span class="exp">el tipo de operación pasa a MODIFICACIÓN e incluye el MRN previo, no se trata como declaración nueva</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Mercancía sin valor comercial (valor factura = 0)</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">una partida tiene valor de factura 0 (muestra sin valor)</span><span class="k">→</span><span class="exp">el cálculo de tributos no debe dar NaN ni un importe negativo</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Importador particular vs empresa</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">el importador es una persona física, no una empresa con NIF societario</span><span class="k">→</span><span class="exp">el flujo pide los datos correctos y el PDF del DUA (casilla 8) refleja "particular"</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Indicador de contenedor según el transporte</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">la expedición lleva número de contenedor informado, y por separado si no lo lleva</span><span class="k">→</span><span class="exp">el indicador de "transporte en contenedores" cambia a 1 o 0 según corresponda, en ambos casos</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Modo de transporte: los 4 códigos</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se prueban expedientes por mar, ferrocarril, carretera y aire</span><span class="k">→</span><span class="exp">cada uno mapea al código de transporte correcto (1/2/3/4), no queda un valor fijo por defecto</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Descripción de mercancía muy larga</span><span class="tag-row"><span class="tag-priority">baja</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">la descripción del producto supera los 250 caracteres</span><span class="k">→</span><span class="exp">se trunca sin romper el envío ni perder el código TARIC o la cantidad</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="module">
+    <div class="module-head">
+      <span class="module-name">AES — Declaración de exportación</span>
+      <span class="module-count">7 casos</span>
+    </div>
+    <div class="tcase-group">
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">EORI presente → nunca enviar nombre/dirección</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">el exportador o el consignatario tienen EORI relleno, y por separado si no lo tienen</span><span class="k">→</span><span class="exp">con EORI se omite nombre+dirección completos; sin EORI, deben ir siempre presentes</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Exportación directa vs indirecta según oficinas</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">la aduana de exportación coincide con la de salida (directa), y por separado si son distintas (indirecta)</span><span class="k">→</span><span class="exp">en directa no debe incluirse el medio de transporte de salida; en indirecta sí</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Persona de contacto siempre obligatoria</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se genera un AES sin representante aduanero</span><span class="k">→</span><span class="exp">el bloque de persona de contacto (nombre, teléfono, email) debe ir siempre relleno, nunca vacío</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Doble país de ruta cuando el destino es extra-UE</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">el destino es fuera de la UE con declaración tipo "A"</span><span class="k">→</span><span class="exp">deben aparecer los dos países de ruta (origen y destino); con destino UE, no se exige lo mismo</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Condiciones de entrega: código de lugar o dirección, nunca ambos</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se informa el código UN de localización, y por separado si se informa lugar+país en texto</span><span class="k">→</span><span class="exp">el XML usa solo uno de los dos formatos según el caso, nunca ambos combinados</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Unidades suplementarias exigidas por TARIC</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">la partida tiene un TARIC que exige unidades suplementarias y cantidad mayor que 0</span><span class="k">→</span><span class="exp">deben incluirse en el XML; con cantidad 0 o ausente, deben omitirse sin romper el envío</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Rectificación de una AES ya aceptada</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se modifica una AES con LRN ya aceptado por AEAT</span><span class="k">→</span><span class="exp">el cambio queda reflejado en el histórico del expediente, no solo mostrado como "aceptado" en pantalla</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="module">
+    <div class="module-head">
+      <span class="module-name">H7 — Envío de bajo valor (Reg. 2026/382)</span>
+      <span class="module-count">2 casos</span>
+    </div>
+    <div class="tcase-group">
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Derecho fijo de 3€/artículo bajo el nuevo régimen</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">valor intrínseco ≤150€, exento de IVA por IOSS o transportista Correos, entre 1/Jul/2026 y 1/Jul/2028</span><span class="k">→</span><span class="exp">se aplica el derecho fijo de 3€/artículo; fuera de esas condiciones NO debe aplicarse</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Código de IVA según modalidad IOSS</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">el envío tiene IOSS válido, y por separado si no lo tiene</span><span class="k">→</span><span class="exp">con IOSS usa código F48; sin IOSS usa F53, y F48 con representación indirecta exige el documento de autorización del declarante</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="frente-head"><span class="frente-num">02</span><h2>Módulos que no envían nada a AEAT</h2></div>
+  <p class="section-intro">Cálculo y consulta pura — sin llamada a AEAT — pero con la misma exigencia: el resultado debe coincidir con lo que la agente calcularía a mano o consultaría en la fuente oficial (TARIC UE, BOE Ley 38/1992, DDS2). Varios casos son <span class="tag-regress">REGRESIÓN</span>: repiten bugs reales ya corregidos en agosto para asegurar que no vuelven.</p>
+
+  <div class="module">
+    <div class="module-head">
+      <span class="module-name">Clasificación TARIC y calculadora de aranceles</span>
+      <span class="module-count">4 casos</span>
+    </div>
+    <div class="tcase-group">
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Portátil TARIC 8471300000 con arancel real 0%</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se clasifica exactamente este código</span><span class="k">→</span><span class="exp">el arancel debe salir 0%, nunca un valor genérico de todo el capítulo 84</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Tipo de derecho: ad valorem vs mixto según el TARIC real</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se calcula un TARIC sin derecho específico real, y por separado uno que sí lo tiene</span><span class="k">→</span><span class="exp">el primero sale "ad valorem" (nunca "mixto" por defecto); el segundo sale "mixto"/"específico" correctamente</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Arancel estacional según la fecha</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se calcula el mismo TARIC de fruta/verdura en temporada alta y en temporada baja</span><span class="k">→</span><span class="exp">el tipo aplicado cambia según la fecha, no queda fijo todo el año</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Comparar 5 códigos TARIC contra la web oficial de la UE</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">la agente elige 5 códigos de productos que conoce bien y los clasifica en LUCI</span><span class="k">→</span><span class="exp">arancel, descripción y medidas coinciden con la consulta directa en TARIC de la UE</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="module">
+    <div class="module-head">
+      <span class="module-name">Preferencias arancelarias</span>
+      <span class="module-count">2 casos</span>
+    </div>
+    <div class="tcase-group">
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Ahorro real, no una tabla por capítulo</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se pide preferencia para un TARIC con arancel base real 0%</span><span class="k">→</span><span class="exp">el ahorro estimado debe salir 0€, nunca un ahorro inventado sobre una tabla genérica de capítulo</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Sin arancel conocido, ahorro en cero</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">el TARIC no tiene arancel disponible ni en catálogo ni por IA</span><span class="k">→</span><span class="exp">el ahorro mostrado debe ser 0€, nunca un valor inventado</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="module">
+    <div class="module-head">
+      <span class="module-name">Impuestos especiales (IIEE) — Ley 38/1992</span>
+      <span class="module-count">6 casos</span>
+    </div>
+    <div class="tcase-group">
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Cerveza: los 5 tramos de grado Plato</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se da de alta cerveza cruzando los tramos de grado alcohólico y Plato</span><span class="k">→</span><span class="exp">cada tramo aplica su tipo exacto por hectolitro, nunca la fórmula antigua por litro/grado</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Vino tranquilo y espumoso a tipo cero</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declara vino tranquilo y vino espumoso</span><span class="k">→</span><span class="exp">el impuesto especial sale 0€ en ambos (art. 30 Ley 38/1992)</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Producto intermedio como categoría propia</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declara un producto intermedio (vermú, jerez) con grado ≤15% y con &gt;15%</span><span class="k">→</span><span class="exp">aplican 38,48€/hl y 64,13€/hl respectivamente, como categoría separada del vino</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Alcohol etílico al tipo legal correcto</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declara alcohol etílico estándar, y por separado bajo régimen de cosechero</span><span class="k">→</span><span class="exp">958,94€/hl en el estándar; 226,36€/hl en cosechero — ninguno con el valor antiguo inflado ~14%</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Tabaco: los 4 epígrafes con su mínimo</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se declaran cigarrillos, cigarros, picadura fina y "demás labores" en cantidades bajas</span><span class="k">→</span><span class="exp">cada uno respeta su mínimo por 1000 unidades/kg (150€ / 47€ / 112,50€ / 30€)</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Hidrocarburos: tipo general + especial sumados</span><span class="tag-row"><span class="tag-priority">media</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se calcula gasolina 95 y gasóleo estándar</span><span class="k">→</span><span class="exp">472,69€/1000L y 379€/1000L respectivamente (tipo general + especial de automoción sumados)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="module">
+    <div class="module-head">
+      <span class="module-name">Contingentes, motor de reglas y normativa</span>
+      <span class="module-count">5 casos</span>
+    </div>
+    <div class="tcase-group">
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Saldo de contingente con fecha de sincronización visible</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se consulta un contingente de reparto simultáneo (FCFS)</span><span class="k">→</span><span class="exp">se muestra la fecha/hora de la última sincronización junto al saldo, advirtiendo que puede agotarse en horas</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Saldo comparado contra la fuente oficial DDS2</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">la agente consulta 2-3 contingentes activos en LUCI y los compara con DDS2 directamente</span><span class="k">→</span><span class="exp">los saldos coinciden dentro de la ventana de sincronización</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">País sancionado exige autorización visible</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se clasifica una mercancía con destino u origen Rusia (sanciones sectoriales)</span><span class="k">→</span><span class="exp">la documentación exigida incluye la autorización por sanciones, no solo un aviso genérico</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Los 3 niveles de sanción se distinguen</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se prueba Corea del Norte (embargo total), Rusia (sectorial) y Venezuela (parcial)</span><span class="k">→</span><span class="exp">cada nivel produce un mensaje y una exigencia documental distintos, no uno genérico igual para los tres</span></div>
+      </div>
+      <div class="tcase">
+        <div class="tcase-top"><span class="tcase-title">Artículo de normativa que la fuente devuelve vacío</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">ALTA</span></span></div>
+        <div class="tcase-flow"><span class="k">SI</span><span class="cond">se abre un artículo cuya consulta en vivo a la fuente normativa falla o devuelve vacío</span><span class="k">→</span><span class="exp">la pantalla debe indicar claramente que no se pudo obtener el texto, nunca mostrarlo "encontrado" en verde</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <b>Caso transversal de regresión:</b> para cualquier módulo de este frente, provocar deliberadamente un fallo (desconectar internet un momento, o pedir al equipo técnico que simule una caída) y confirmar que la pantalla lo muestra como error — nunca como un resultado calculado con apariencia normal.
+  </div>
+</section>
+
+<section class="section">
+  <h3 style="margin-bottom:10px">Backlog — próxima ronda</h3>
+  <p class="section-intro" style="margin-bottom:14px">Módulos que sí envían a AEAT pero quedan fuera de esta primera tanda por no ser la especialidad de la agente.</p>
+  <div class="module">
+    <ul class="checklist">
+      <li><span><b>ENS</b> — alta y envío en modo carretera, rectificación</span><span class="tag-priority">baja</span></li>
+      <li><span><b>Tránsito NCTS</b> — inicio de un T1 y veredicto de riesgo</span><span class="tag-priority">baja</span></li>
+      <li><span><b>PUE / SOIVRE</b> — solicitud de certificado tras H1 aceptado</span><span class="tag-priority">baja</span></li>
+      <li><span><b>Cuenta y sesión</b> — login, logout, "olvidé mi contraseña"</span><span class="tag-priority">baja</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Montarlo en Trello</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h3>Crear el tablero</h3>
+        <p>En trello.com, crear un tablero nuevo llamado «LUCI — Pruebas de usuario». Añadir las 4 columnas de arriba en ese orden exacto.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h3>Invitar a la agente de aduanas</h3>
+        <p>Botón «Invitar» → su correo. Recibe un enlace, crea cuenta gratis con ese correo y ya tiene acceso. No requiere instalar nada.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h3>Crear las 37 tarjetas</h3>
+        <p>Una tarjeta por caso, todas en «Pendiente». El campo SI de cada caso es la condición a provocar y el campo → es el resultado esperado — pegar ambos en la plantilla. Empezar por las marcadas ALTA, y dentro de esas, por las de <span class="tag-regress" style="padding:1px 5px">REGRESIÓN</span>: son bugs reales que ya se corrigieron una vez.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h3>Etiquetas de severidad</h3>
+        <p>Crear 4 etiquetas de color en el tablero: rojo = Bloqueante, ámbar = Importante, azul = Menor, verde = Sin problema. La agente las aplica al mover una tarjeta a «Bug encontrado».</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h3>Explicarle el flujo a la agente</h3>
+        <p>Bastan 3 frases: «mueve la tarjeta a En curso cuando empieces, escribe en comentarios lo que encuentres y adjunta una captura, y muévela a Bug encontrado o a Hecho según el resultado».</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <b>Nota sobre severidad Bloqueante:</b> cualquier tarjeta con esa etiqueta debería avisarse aparte (WhatsApp o correo), no solo dejarse en el tablero — Trello no notifica activamente al equipo técnico.
+  </div>
+</section>
+
+<footer class="note">
+  Tablero pensado para 3–5 personas en el plan gratuito de Trello (usuarios ilimitados por workspace). 37 casos extraídos del código real (builders XML, reglas de negocio, bugs corregidos en agosto/2026) a 8/Sep/2026 — ampliar el módulo correspondiente si el código cambia o se agregan pantallas nuevas.
+</footer>
+
+</div>
