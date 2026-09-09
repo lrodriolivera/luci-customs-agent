@@ -3,6 +3,7 @@
  * Usa Claude Sonnet 4.6 para chat y Claude Opus 4.6 para tareas complejas
  */
 
+const fs = require('fs');
 const { BedrockRuntimeClient, ConverseCommand } = require('@aws-sdk/client-bedrock-runtime');
 const logger = require('../config/logger');
 const { getCache } = require('./cacheService');
@@ -449,27 +450,61 @@ class AIService {
       return this.mockResponse(userMessage);
     }
 
+    // Opus razona antes de responder y ese razonamiento se factura como
+    // salida. Medido en generacion H1: 8.164 tokens de salida por defecto
+    // ('high') frente a 6.277 con 'medium', sin perder ninguna casilla
+    // obligatoria del DUA ni dejar de detectar un antidumping vigente.
+    // Los modelos sin razonamiento por defecto no llevan effort.
+    const effort = options.effort || (model.includes('opus') ? 'medium' : null);
+
+    const command = new ConverseCommand({
+      modelId: model,
+      system: [{ text: systemPrompt }],
+      messages: [{ role: 'user', content: [{ text: userMessage }] }],
+      ...(effort ? { additionalModelRequestFields: { output_config: { effort } } } : {}),
+      inferenceConfig: {
+        // Opus razona antes de responder y ese razonamiento consume el mismo
+        // presupuesto que la respuesta: con 4096 una clasificacion larga se
+        // trunca a mitad de razonamiento y no llega a emitir texto.
+        maxTokens: options.maxTokens || (model.includes('opus') ? 8192 : 4096)
+      }
+    });
+
+    return this._enviarConverse(command, model);
+  }
+
+  /**
+   * Llamada a Claude via Bedrock Converse adjuntando un bloque de contenido
+   * (imagen o documento) antes del texto -- para que el modelo analice el
+   * archivo real en vez de que se le pida "simular" un resultado plausible.
+   */
+  async callClaudeWithDocument(model, systemPrompt, userMessage, contentBlock, options = {}) {
+    if (!this.client) {
+      return this.mockResponse(userMessage);
+    }
+
+    const effort = options.effort || (model.includes('opus') ? 'medium' : null);
+
+    const command = new ConverseCommand({
+      modelId: model,
+      system: [{ text: systemPrompt }],
+      messages: [{ role: 'user', content: [contentBlock, { text: userMessage }] }],
+      ...(effort ? { additionalModelRequestFields: { output_config: { effort } } } : {}),
+      inferenceConfig: {
+        maxTokens: options.maxTokens || (model.includes('opus') ? 8192 : 4096)
+      }
+    });
+
+    return this._enviarConverse(command, model);
+  }
+
+  /**
+   * Envia un ConverseCommand ya construido, con reintento/fallback de cuenta.
+   * Compartido por callClaude y callClaudeWithDocument para no duplicar la
+   * logica de reintentos.
+   */
+  async _enviarConverse(command, model) {
     try {
-      // Opus razona antes de responder y ese razonamiento se factura como
-      // salida. Medido en generacion H1: 8.164 tokens de salida por defecto
-      // ('high') frente a 6.277 con 'medium', sin perder ninguna casilla
-      // obligatoria del DUA ni dejar de detectar un antidumping vigente.
-      // Los modelos sin razonamiento por defecto no llevan effort.
-      const effort = options.effort || (model.includes('opus') ? 'medium' : null);
-
-      const command = new ConverseCommand({
-        modelId: model,
-        system: [{ text: systemPrompt }],
-        messages: [{ role: 'user', content: [{ text: userMessage }] }],
-        ...(effort ? { additionalModelRequestFields: { output_config: { effort } } } : {}),
-        inferenceConfig: {
-          // Opus razona antes de responder y ese razonamiento consume el mismo
-          // presupuesto que la respuesta: con 4096 una clasificacion larga se
-          // trunca a mitad de razonamiento y no llega a emitir texto.
-          maxTokens: options.maxTokens || (model.includes('opus') ? 8192 : 4096)
-        }
-      });
-
       // Un intento = probar la cuenta principal y, si falla a nivel de cuenta,
       // la de fallback. Devuelve la respuesta o lanza el error mas relevante.
       const enviarUnaVez = async () => {
@@ -520,6 +555,37 @@ class AIService {
       logger.error('Error llamando a Claude via Bedrock:', error.message);
       throw new Error('Error en servicio de IA');
     }
+  }
+
+  /**
+   * Bloque de contenido Converse (image/document) segun el mimetype real del
+   * archivo subido. Devuelve null si Bedrock Converse no soporta ese formato
+   * -- quien llama debe pedir revision manual, nunca simular un analisis.
+   */
+  _contentBlockParaArchivo(mimeType, bytes, nombreArchivo) {
+    const IMAGENES = { 'image/jpeg': 'jpeg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+    const DOCUMENTOS = {
+      'application/pdf': 'pdf',
+      'application/msword': 'doc',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+      'application/vnd.ms-excel': 'xls',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+      'text/plain': 'txt',
+      'text/csv': 'csv'
+    };
+
+    if (IMAGENES[mimeType]) {
+      return { image: { format: IMAGENES[mimeType], source: { bytes } } };
+    }
+    if (DOCUMENTOS[mimeType]) {
+      // Bedrock exige un `name` no vacio y sin caracteres fuera de un set
+      // reducido (alfanumericos, espacios, guiones, parentesis, corchetes).
+      const nombreSaneado = (nombreArchivo || 'documento')
+        .replace(/[^a-zA-Z0-9\s\-()[\]]/g, '_')
+        .slice(0, 200) || 'documento';
+      return { document: { format: DOCUMENTOS[mimeType], name: nombreSaneado, source: { bytes } } };
+    }
+    return null;
   }
 
   /**
@@ -721,27 +787,51 @@ Responde en JSON: { "isValid": boolean, "confidence": number, "reasoning": strin
    * Validar documento con OCR/Vision
    */
   async validateDocument(document, expedition) {
-    // En produccion, aqui se usaria Claude Vision para analizar el PDF/imagen
-    // Por ahora, simulamos la validacion
+    let fileBytes;
+    try {
+      fileBytes = await fs.promises.readFile(document.filePath);
+    } catch (err) {
+      return {
+        isValid: false,
+        confidence: 0,
+        extractedData: {},
+        notes: 'No se pudo leer el archivo en el servidor para validarlo automaticamente. Requiere revision manual.',
+        autoFillSuggestions: {}
+      };
+    }
 
-    const prompt = `Simula la validacion de un documento tipo ${document.type} para:
+    const contentBlock = this._contentBlockParaArchivo(document.mimeType, fileBytes, document.originalName);
+    if (!contentBlock) {
+      return {
+        isValid: false,
+        confidence: 0,
+        extractedData: {},
+        notes: `Formato ${document.mimeType} no soportado para validacion automatica (PDF, JPEG, PNG, WEBP, GIF, Word, Excel, TXT o CSV). Requiere revision manual.`,
+        autoFillSuggestions: {}
+      };
+    }
+
+    const prompt = `Analiza el documento adjunto (tipo declarado: ${document.type}) del expediente:
 - Expediente: ${expedition.expeditionId}
 - Operacion: ${expedition.operationType}
 - Cliente: ${expedition.client?.companyName}
 
-Genera datos de ejemplo que se extraerian de este tipo de documento.
+Extrae UNICAMENTE los datos que puedas leer con certeza en el documento -- no inventes ningun valor. Compara lo que extraigas contra los datos declarados en el expediente cuando sea posible.
+
+Si el documento esta borroso, incompleto, en un idioma que no puedas leer con confianza, o no corresponde al tipo de documento esperado, responde isValid:false y explica el motivo exacto en notes -- nunca asumas que es valido por falta de evidencia en contra.
+
 Responde en JSON con el formato especificado en el system prompt.`;
 
-    const result = await this.callClaude(FAST_MODEL, SYSTEM_PROMPTS.documentValidation, prompt);
+    const result = await this.callClaudeWithDocument(FAST_MODEL, SYSTEM_PROMPTS.documentValidation, prompt, contentBlock);
 
     try {
-      return JSON.parse(result.content);
+      return this._parseJsonRespuesta(result.content);
     } catch (e) {
       return {
-        isValid: true,
-        confidence: 75,
+        isValid: false,
+        confidence: 0,
         extractedData: {},
-        notes: result.content,
+        notes: 'No se pudo interpretar la respuesta del analisis del documento.',
         autoFillSuggestions: {}
       };
     }
