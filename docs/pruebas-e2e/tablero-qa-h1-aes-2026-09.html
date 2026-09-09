@@ -838,9 +838,10 @@ footer.note{
       <div class="tcase-source">✅ Corregido 9/Sep/2026 (commit a93602e): validateAll ahora recorre el checklist completo, no solo los documentos ya subidos. Verificar que un obligatorio sin subir nunca deja el expediente en "documents_validated".</div>
     </div>
     <div class="tcase">
-      <div class="tcase-top"><span class="tcase-title">03. La validación con IA no lee el archivo real, genera datos de ejemplo simulados</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+      <div class="tcase-top"><span class="tcase-title">03. [REGRESIÓN] La validación con IA no lee el archivo real, genera datos de ejemplo simulados</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">ALTA</span></span></div>
       <div class="tcase-flow"><span class="k">SI</span><span class="cond">se sube cualquier documento (incluso uno irrelevante, en blanco, o con datos erróneos) y se pulsa "Validar"</span><span class="k">→</span><span class="exp">`aiService.validateDocument` no envía el PDF/imagen al modelo — le pide "simular" datos de ejemplo plausibles para ese tipo de documento sin haberlo leído nunca; puede devolver isValid:true con datos extraídos inventados. LUCI presenta como verificado algo que nunca fue analizado</span></div>
       <div class="tcase-source">Fuente: aiService.js validateDocument, líneas 723-748 — comentario explícito "Por ahora, simulamos la validacion"</div>
+      <div class="tcase-source">✅ Corregido 9/Sep/2026 (commit 9a3debf): ahora lee el archivo real y lo envía como bloque image/document de Bedrock Converse (Vision). Un formato no soportado o archivo ilegible falla a isValid:false pidiendo revisión manual. Verificar subiendo un documento real y uno irrelevante/en blanco para confirmar que ya NO se valida como correcto.</div>
     </div>
     <div class="tcase">
       <div class="tcase-top"><span class="tcase-title">04. [REGRESIÓN] Alta de expediente self-service no debe fallar por createdBy</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">MEDIA</span></span></div>
