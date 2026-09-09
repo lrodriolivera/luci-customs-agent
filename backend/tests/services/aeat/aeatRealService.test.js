@@ -917,17 +917,18 @@ describe('AEAT Real Service', () => {
       process.env.AEAT_SIMULATE = originalEnv;
     });
 
-    test('should fallback to simulation when no certificate loaded', async () => {
-      // Restaurar el mock para que devuelva false temporalmente
+    test('lanza error en vez de simular cuando no hay certificado cargado', async () => {
+      // Sin certificado NO debe caer en simulacion silenciosa: una declaracion
+      // real presentada durante pruebas de agente no puede recibir un MRN/canal
+      // inventado solo porque el .p12 no cargo. Debe fallar de forma ruidosa.
       aeatRealService.isCertificateReady.mockReturnValueOnce(false);
 
       const service = aeatRealService.SERVICES.H1_SUBMIT;
       const envelope = '<test>soap</test>';
 
-      const response = await aeatRealService._sendSOAPRequest(service, envelope);
-
-      // Como no hay certificado, cae en simulación
-      expect(response.simulated).toBe(true);
+      await expect(aeatRealService._sendSOAPRequest(service, envelope))
+        .rejects.toThrow(/certificado/i);
+      expect(mockAxiosPost).not.toHaveBeenCalled();
     });
   });
 

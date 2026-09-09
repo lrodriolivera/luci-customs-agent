@@ -962,10 +962,13 @@ class AEATRealService {
       return this._simulateAEATResponse(service, soapEnvelope);
     }
 
-    // Verificar que tenemos certificado para conexión real
+    // Verificar que tenemos certificado para conexión real. Sin certificado
+    // NO se cae en simulacion silenciosa: una declaracion real presentada a la
+    // agente durante las pruebas no puede recibir un MRN/canal inventado solo
+    // porque el .p12 no cargo (permisos, contraseña, expiracion). Fallar ruidoso.
     if (!this.isCertificateReady()) {
-      logger.warn('[AEAT] No certificate loaded - falling back to simulation');
-      return this._simulateAEATResponse(service, soapEnvelope);
+      logger.error('[AEAT] No certificate loaded - refusing to submit or simulate');
+      throw new Error('Certificado AEAT no disponible: no se puede enviar la petición real. Verifique AEAT_CERTIFICATE_PATH y AEAT_CERTIFICATE_PASSWORD.');
     }
 
     // Log de petición si debug está activo

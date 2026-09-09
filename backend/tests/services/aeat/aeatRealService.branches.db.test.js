@@ -898,15 +898,14 @@ describe('aeatRealService - Cobertura de RAMAS', () => {
       process.env.AEAT_SIMULATE = originalEnv;
     });
 
-    test('_sendSOAPRequest usa simulación cuando no hay certificado', async () => {
+    test('_sendSOAPRequest lanza error en vez de simular cuando no hay certificado', async () => {
       aeatRealService.isCertificateReady.mockReturnValueOnce(false);
 
       const service = aeatRealService.SERVICES.H1_SUBMIT;
       const envelope = '<soap>test</soap>';
 
-      const response = await aeatRealService._sendSOAPRequest(service, envelope);
-
-      expect(response.simulated).toBe(true);
+      await expect(aeatRealService._sendSOAPRequest(service, envelope))
+        .rejects.toThrow(/certificado/i);
       expect(mockAxiosPost).not.toHaveBeenCalled();
     });
 
