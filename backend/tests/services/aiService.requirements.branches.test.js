@@ -663,10 +663,14 @@ describe('aiService.declarations - validateDeclarationBeforeSubmit', () => {
 
     const result = await aiService.validateDeclarationBeforeSubmit(expedition, 'H1');
 
-    expect(result.isValid).toBe(true);
-    expect(result.readyToSubmit).toBe(true);
-    expect(result.validationScore).toBe(70);
-    expect(result.errors).toEqual([]);
+    // Un fallo de IA no puede presentarse como "listo para enviar": antes
+    // fabricaba isValid:true/readyToSubmit:true/score:70 sin haber validado nada.
+    expect(result.isValid).toBe(false);
+    expect(result.readyToSubmit).toBe(false);
+    expect(result.validationScore).toBe(0);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].code).toBe('AI_ANALYSIS_FAILED');
+    expect(result.analysisFailed).toBe(true);
     expect(result.warnings).toHaveLength(1);
     expect(result.warnings[0].code).toBe('WARN_AI');
     expect(result.summary).toBe('No se pudo completar la validación automática');
@@ -760,10 +764,13 @@ describe('aiService.declarations - detectDeclarationErrors', () => {
 
     const result = await aiService.detectDeclarationErrors(expedition, 'H1');
 
-    expect(result.totalErrors).toBe(0);
-    expect(result.blockingErrors).toBe(0);
+    // Un fallo de IA no equivale a "cero errores, riesgo bajo": antes fingia
+    // una declaracion limpia sin haberla analizado.
+    expect(result.totalErrors).toBeNull();
+    expect(result.blockingErrors).toBeNull();
     expect(result.errors).toEqual([]);
-    expect(result.riskOfRejection).toBe(20);
+    expect(result.riskOfRejection).toBeNull();
+    expect(result.analysisFailed).toBe(true);
     expect(result.summary).toBe('Error procesando detección de errores');
     expect(result.rawResponse).toBe('```json\n{invalid\n```');
   });
@@ -851,9 +858,12 @@ describe('aiService.declarations - suggestRegimeAndPreference', () => {
 
     const result = await aiService.suggestRegimeAndPreference(expedition);
 
-    expect(result.recommendedRegime.code).toBe('40');
-    expect(result.recommendedPreference.code).toBe('100');
-    expect(result.warnings).toEqual(['Error en análisis IA']);
+    // Un fallo de IA no puede sugerir un regimen/preferencia concretos (40/100
+    // con confianza 80): antes se inventaba una recomendacion sin analizar nada.
+    expect(result.recommendedRegime).toBeNull();
+    expect(result.recommendedPreference).toBeNull();
+    expect(result.analysisFailed).toBe(true);
+    expect(result.warnings[0]).toMatch(/no se pudo determinar/i);
     expect(result.summary).toBe('No se pudo completar el análisis de régimen');
     expect(result.rawResponse).toBe('```json\n{invalid\n```');
   });
@@ -972,10 +982,13 @@ describe('aiService.declarations - predictDeclarationChannel', () => {
 
     const result = await aiService.predictDeclarationChannel(expedition, 'H1');
 
-    expect(result.prediction.channel).toBe('GREEN');
-    expect(result.prediction.probability.green).toBe(60);
-    expect(result.prediction.confidence).toBe(50);
-    expect(result.summary).toBe('Error procesando predicción');
+    // Un fallo de IA no puede predecir canal VERDE con 60% de probabilidad:
+    // antes fabricaba un canal favorable sin haber analizado nada.
+    expect(result.prediction.channel).toBeNull();
+    expect(result.prediction.probability).toEqual({});
+    expect(result.prediction.confidence).toBe(0);
+    expect(result.analysisFailed).toBe(true);
+    expect(result.summary).toMatch(/no se pudo predecir/i);
     expect(result.rawResponse).toBe('```json\n{invalid\n```');
   });
 
@@ -1109,6 +1122,32 @@ describe('aiService.declarations - fullDeclarationAnalysis', () => {
     for (let i = 1; i < result.nextSteps.length; i++) {
       expect(result.nextSteps[i].priority).toBeGreaterThanOrEqual(result.nextSteps[i - 1].priority);
     }
+  });
+
+  test('si un sub-analisis falla por JSON invalido (no por rechazo de red), no fabrica un readinessScore/canal', async () => {
+    // Antes: (validation.validationScore || 70) etc. disfrazaba el fallo de UN
+    // sub-analisis (el JSON de canal no parseo) con valores por defecto, dando
+    // un score numerico y un canal como si los 4 analisis hubieran funcionado.
+    const validationData = { isValid: true, readyToSubmit: true, validationScore: 90, errors: [], warnings: [], missingDocuments: [], fieldValidations: {}, summary: 'Ok' };
+    const errorsData = { totalErrors: 0, blockingErrors: 0, errors: [], riskOfRejection: 10, commonMistakesDetected: [], recommendations: [], summary: 'Sin errores' };
+    const regimeData = { recommendedRegime: { code: '40', confidence: 85 }, alternativeRegimes: [], recommendedPreference: { code: '100', confidence: 80 }, alternativePreferences: [], specialConsiderations: [], warnings: [], summary: 'Régimen OK' };
+    // El canal responde con JSON invalido -> predictDeclarationChannel entra en su catch.
+
+    callClaudeSpy
+      .mockResolvedValueOnce({ content: '```json\n' + JSON.stringify(validationData) + '\n```', tokensUsed: 50 })
+      .mockResolvedValueOnce({ content: '```json\n' + JSON.stringify(errorsData) + '\n```', tokensUsed: 40 })
+      .mockResolvedValueOnce({ content: '```json\n' + JSON.stringify(regimeData) + '\n```', tokensUsed: 60 })
+      .mockResolvedValueOnce({ content: '```json\n{roto\n```', tokensUsed: 10 });
+
+    const expedition = { expeditionId: 'E-PARTIAL-FAIL', operationType: 'import', declaration: {}, client: { companyName: 'Test' }, goods: [] };
+
+    const result = await aiService.fullDeclarationAnalysis(expedition, 'H1');
+
+    expect(result.channel.analysisFailed).toBe(true);
+    expect(result.overallReadiness.score).toBeNull();
+    expect(result.overallReadiness.readyToSubmit).toBe(false);
+    expect(result.overallReadiness.incompleteAnalysis).toBe(true);
+    expect(result.overallReadiness.incompleteAnalysisReason).toMatch(/predicción de canal/i);
   });
 });
 

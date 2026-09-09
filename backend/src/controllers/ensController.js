@@ -921,7 +921,11 @@ exports.aiGetSuggestions = async (req, res) => {
       aiService.predictENSRejection(declaration)
     ]);
 
-    // Combinar sugerencias
+    // Combinar sugerencias. Si la validacion o la prediccion fallaron
+    // (analysisFailed), sus campos numericos son null -- calcular un
+    // overallReadiness con ellos daria un numero que no refleja ningun
+    // analisis real. Se avisa explicito en vez de fabricar una cifra.
+    const analysisFailed = Boolean(validation.analysisFailed || prediction.analysisFailed);
     const suggestions = {
       validation,
       prediction,
@@ -929,7 +933,8 @@ exports.aiGetSuggestions = async (req, res) => {
         ...(validation.suggestions || []),
         ...(prediction.recommendations || [])
       ],
-      overallReadiness: Math.round((validation.overallScore + (100 - prediction.rejectionProbability)) / 2)
+      overallReadiness: analysisFailed ? null : Math.round((validation.overallScore + (100 - prediction.rejectionProbability)) / 2),
+      analysisFailed
     };
 
     res.json({

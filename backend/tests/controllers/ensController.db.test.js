@@ -662,6 +662,26 @@ describe('aiGetSuggestions', () => {
     }), res);
     expect(res.statusCode).toBe(404);
   });
+
+  test('si la IA fallo (analysisFailed), overallReadiness no fabrica un numero', async () => {
+    // Antes: Math.round((validation.overallScore + (100 - prediction.rejectionProbability)) / 2)
+    // con overallScore:0 y rejectionProbability:null daria un numero (50) que
+    // no refleja ningun analisis real. Debe avisar explicito en vez de calcular.
+    const d = await sembrarENS(operadorUser);
+    aiService.validateENSBeforeSubmit.mockResolvedValue({
+      overallScore: 0, suggestions: [], analysisFailed: true
+    });
+    aiService.predictENSRejection.mockResolvedValue({
+      rejectionProbability: null, recommendations: [], analysisFailed: true
+    });
+    const res = mockRes();
+    await ensController.aiGetSuggestions(mockReq({
+      user: operadorUser, params: { id: d._id.toString() }
+    }), res);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.overallReadiness).toBeNull();
+    expect(res.body.data.analysisFailed).toBe(true);
+  });
 });
 
 // ==================== amend (IE313 via aeatSubmitService) ====================

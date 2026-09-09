@@ -1100,13 +1100,14 @@ Responde en JSON:
       return JSON.parse(jsonContent);
     } catch (e) {
       return {
-        isValid: true,
-        errors: [],
-        warnings: [{ field: 'general', message: 'No se pudo procesar validacion IA' }],
+        isValid: false,
+        errors: [{ field: 'general', message: 'No se pudo procesar la validación IA; revisar manualmente antes de enviar', severity: 'ERROR' }],
+        warnings: [],
         riskFlags: [],
         suggestions: [],
-        overallScore: 70,
-        readyToSubmit: true
+        overallScore: 0,
+        readyToSubmit: false,
+        analysisFailed: true
       };
     }
   }
@@ -1158,13 +1159,14 @@ Responde en JSON:
       return JSON.parse(jsonContent);
     } catch (e) {
       return {
-        rejectionProbability: 15,
-        documentalInspectionProbability: 20,
-        physicalInspectionProbability: 5,
-        riskLevel: 'LOW',
+        rejectionProbability: null,
+        documentalInspectionProbability: null,
+        physicalInspectionProbability: null,
+        riskLevel: 'UNKNOWN',
         riskFactors: [],
         recommendations: [],
-        confidence: 50
+        confidence: 0,
+        analysisFailed: true
       };
     }
   }
@@ -1321,13 +1323,14 @@ Responde en JSON:
       return JSON.parse(jsonContent);
     } catch (e) {
       return {
-        predictions: { approved: 60, approvedWithConditions: 25, rejected: 10, requiresLab: 5 },
-        mostLikelyOutcome: 'APPROVED',
-        confidence: 50,
+        predictions: { approved: null, approvedWithConditions: null, rejected: null, requiresLab: null },
+        mostLikelyOutcome: 'UNKNOWN',
+        confidence: 0,
         riskFactors: [],
         missingElements: [],
         recommendations: [],
-        estimatedResolutionDays: 7
+        estimatedResolutionDays: null,
+        analysisFailed: true
       };
     }
   }
@@ -1737,11 +1740,12 @@ Responde en JSON:
       };
     } catch (e) {
       return {
-        recommendedType: { primary: 'individual', confidence: 70 },
+        recommendedType: null,
         alternatives: [],
         costComparison: {},
         implementationPlan: {},
         summary: 'Error generando recomendación',
+        analysisFailed: true,
         rawResponse: result.content
       };
     }
@@ -2820,14 +2824,15 @@ Responde en JSON:
       };
     } catch (e) {
       return {
-        isValid: true,
-        readyToSubmit: true,
-        validationScore: 70,
-        errors: [],
+        isValid: false,
+        readyToSubmit: false,
+        validationScore: 0,
+        errors: [{ code: 'AI_ANALYSIS_FAILED', message: 'No se pudo completar la validación automática; revisar manualmente antes de enviar' }],
         warnings: [{ code: 'WARN_AI', message: 'Error procesando validación IA' }],
         missingDocuments: [],
         fieldValidations: {},
         summary: 'No se pudo completar la validación automática',
+        analysisFailed: true,
         rawResponse: result.content
       };
     }
@@ -2933,13 +2938,14 @@ Responde en JSON:
       };
     } catch (e) {
       return {
-        totalErrors: 0,
-        blockingErrors: 0,
+        totalErrors: null,
+        blockingErrors: null,
         errors: [],
-        riskOfRejection: 20,
+        riskOfRejection: null,
         commonMistakesDetected: [],
         recommendations: [],
         summary: 'Error procesando detección de errores',
+        analysisFailed: true,
         rawResponse: result.content
       };
     }
@@ -3065,13 +3071,14 @@ Responde en JSON:
       };
     } catch (e) {
       return {
-        recommendedRegime: { code: '40', name: 'Despacho a libre práctica', confidence: 80 },
+        recommendedRegime: null,
         alternativeRegimes: [],
-        recommendedPreference: { code: '100', name: 'Arancel terceros países', confidence: 80 },
+        recommendedPreference: null,
         alternativePreferences: [],
         specialConsiderations: [],
-        warnings: ['Error en análisis IA'],
+        warnings: ['Error en análisis IA: no se pudo determinar un régimen/preferencia recomendado, revisar manualmente'],
         summary: 'No se pudo completar el análisis de régimen',
+        analysisFailed: true,
         rawResponse: result.content
       };
     }
@@ -3212,15 +3219,16 @@ Responde en JSON:
     } catch (e) {
       return {
         prediction: {
-          channel: 'GREEN',
-          probability: { green: 60, orange: 30, red: 10 },
-          confidence: 50
+          channel: null,
+          probability: {},
+          confidence: 0
         },
         riskFactors: [],
         positiveFactors: [],
         potentialInspections: {},
         recommendations: [],
-        summary: 'Error procesando predicción',
+        summary: 'No se pudo predecir el canal: error procesando la respuesta de la IA',
+        analysisFailed: true,
         rawResponse: result.content
       };
     }
@@ -3239,12 +3247,21 @@ Responde en JSON:
         this.predictDeclarationChannel(expedition, declarationType)
       ]);
 
-      // Calcular readiness score
-      const readinessScore = Math.round(
-        (validation.validationScore || 70) * 0.3 +
-        (100 - (errors.riskOfRejection || 30)) * 0.3 +
-        (regime.recommendedRegime?.confidence || 70) * 0.2 +
-        (channel.prediction?.probability?.green || 50) * 0.2
+      // Si algun sub-analisis fallo, un score numerico calculado con valores
+      // "por defecto" fingiria una lectura que nunca se hizo. Antes,
+      // (validation.validationScore || 70) etc. disfrazaba un fallo real como
+      // un 70/100 razonable -- no se recorre esta ruta y se avisa explicito.
+      const failedAnalyses = [];
+      if (validation.analysisFailed) failedAnalyses.push('validación de la declaración');
+      if (errors.analysisFailed) failedAnalyses.push('detección de errores');
+      if (regime.analysisFailed) failedAnalyses.push('régimen/preferencia');
+      if (channel.analysisFailed) failedAnalyses.push('predicción de canal');
+
+      const readinessScore = failedAnalyses.length > 0 ? null : Math.round(
+        validation.validationScore * 0.3 +
+        (100 - errors.riskOfRejection) * 0.3 +
+        regime.recommendedRegime.confidence * 0.2 +
+        channel.prediction.probability.green * 0.2
       );
 
       return {
@@ -3257,11 +3274,15 @@ Responde en JSON:
         channel,
         overallReadiness: {
           score: readinessScore,
-          readyToSubmit: validation.readyToSubmit && errors.blockingErrors === 0,
+          readyToSubmit: failedAnalyses.length === 0 && validation.readyToSubmit && errors.blockingErrors === 0,
           estimatedChannel: channel.prediction?.channel,
           estimatedProcessingTime: channel.estimatedProcessingTime?.[
             channel.prediction?.channel?.toLowerCase() + 'Channel'
-          ] || 'Variable'
+          ] || 'Variable',
+          incompleteAnalysis: failedAnalyses.length > 0,
+          ...(failedAnalyses.length > 0 && {
+            incompleteAnalysisReason: `No se pudo completar: ${failedAnalyses.join(', ')}. Revisar manualmente antes de enviar.`
+          })
         },
         nextSteps: this._generateDeclarationNextSteps(validation, errors, regime, channel)
       };
