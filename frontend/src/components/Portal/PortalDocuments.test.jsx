@@ -65,4 +65,25 @@ describe('PortalDocuments', () => {
 
     expect(screen.getByText('portal.uploadSubtitleImport')).toBeInTheDocument()
   })
+
+  it('muestra el nombre real del documento y lo marca como subido, usando la forma que devuelve /api/portal/:token', () => {
+    // portalController.js (clientView.documentChecklist) devuelve documentName/received,
+    // no name/uploaded. Si el componente lee los campos equivocados, el nombre no
+    // aparece y el item nunca se pinta como subido aunque received:true.
+    outletContext = {
+      expedition: {
+        operationType: 'import',
+        documentChecklist: [
+          { documentType: 'commercial_invoice', documentName: 'Factura Comercial', required: true, received: true, validated: false }
+        ]
+      },
+      token: 'tok-abc'
+    }
+
+    render(<PortalDocuments />)
+
+    const nombre = screen.getByText('Factura Comercial')
+    expect(nombre).toBeInTheDocument()
+    expect(nombre.className).toContain('text-green-700')
+  })
 })

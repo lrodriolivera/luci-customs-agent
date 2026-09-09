@@ -189,19 +189,19 @@ export default function PortalDocuments() {
             <div
               key={index}
               className={`flex items-center gap-3 p-3 rounded-lg ${
-                doc.uploaded ? 'bg-green-50' : 'bg-gray-50'
+                doc.received ? 'bg-green-50' : 'bg-gray-50'
               }`}
             >
-              {doc.uploaded ? (
+              {doc.received ? (
                 <CheckCircleIcon className="w-5 h-5 text-green-500" />
               ) : (
                 <div className="w-5 h-5 border-2 border-gray-300 rounded-full" />
               )}
-              <span className={doc.uploaded ? 'text-green-700' : 'text-gray-700'}>
-                {doc.name}
+              <span className={doc.received ? 'text-green-700' : 'text-gray-700'}>
+                {doc.documentName}
               </span>
               {doc.required && (
-                <span className={`text-xs ml-auto ${doc.uploaded ? 'text-green-600' : 'text-red-500'}`}>
+                <span className={`text-xs ml-auto ${doc.received ? 'text-green-600' : 'text-red-500'}`}>
                   {doc.required ? t('common.required') : t('common.optional')}
                 </span>
               )}
