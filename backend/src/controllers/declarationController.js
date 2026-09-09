@@ -5,7 +5,6 @@ const { ensureSameTenant } = require('../utils/tenantGuard');
 const h1Generator = require('../services/forms/h1Generator');
 const aesGenerator = require('../services/forms/aesGenerator');
 const h7Generator = require('../services/forms/h7Generator');
-const aeatService = require('../services/aeatService');
 const aeatSubmitService = require('../services/aeat/aeatSubmitService');
 const channelService = require('../services/channelService');
 

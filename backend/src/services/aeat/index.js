@@ -6,11 +6,9 @@
  * Fase 6.1: Integración Real AEAT
  */
 
-const aeatService = require('./aeatService');
 const aeatConfig = require('./aeatConfig');
 const signatureService = require('./signatureService');
 const xmlParser = require('./xmlParser');
-const SimulationEngine = require('./simulationEngine');
 
 // Fase 6.1 - Nuevos servicios de integración real
 const certificateService = require('./certificateService');
@@ -19,18 +17,12 @@ const aeatRealService = require('./aeatRealService');
 const aeatStatusMonitorService = require('./aeatStatusMonitorService');
 
 module.exports = {
-  // Servicio principal (simulación)
-  aeatService,
-
   // Configuracion
   aeatConfig,
 
   // Servicios auxiliares originales
   signatureService,
   xmlParser,
-
-  // Motor de simulacion (para testing o uso directo)
-  SimulationEngine,
 
   // === FASE 6.1: Integración Real AEAT ===
 

@@ -35,21 +35,16 @@ jest.mock('../../../src/services/integrations/nctsService', () => ({
   getDeclarationStatus: jest.fn()
 }));
 
-// Mockear AMBAS rutas de aeatService (la preferida y la fallback)
-jest.mock('../../../src/services/aeat/aeatService', () => ({
-  testConnectivity: jest.fn(),
-  submitH1: jest.fn()
-}));
-
-jest.mock('../../../src/services/aeatService', () => ({
-  testConnectivity: jest.fn(),
-  submitH1: jest.fn()
-}));
+// aeatService (services/aeat/aeatService.js y services/aeatService.js) se
+// eliminaron: eran codigo muerto, un motor de simulacion inalcanzable desde
+// ninguna ruta real que fabricaba un MRN aceptado sin que AEAT lo viera.
+// integrationManager degrada con gracia cuando el require falla (ver
+// getService/_executeIntegrationOperation mas abajo) -- eso es lo que se
+// prueba ahora, no un servicio simulado.
 
 const vuaService = require('../../../src/services/integrations/vuaService');
 const tracesService = require('../../../src/services/integrations/tracesService');
 const nctsService = require('../../../src/services/integrations/nctsService');
-const aeatService = require('../../../src/services/aeat/aeatService');
 const logger = require('../../../src/config/logger');
 
 // Cargar integrationManager UNA vez (los mocks ya están instalados arriba)
@@ -87,13 +82,6 @@ describe('IntegrationManager', () => {
       simulationMode: true,
       message: 'Modo simulación activo',
       timestamp: new Date().toISOString()
-    });
-
-    aeatService.testConnectivity.mockResolvedValue({
-      success: true,
-      mode: 'simulation',
-      simulationMode: true,
-      message: 'Simulation mode - no connectivity test needed'
     });
 
     vuaService.getInfo.mockReturnValue({
@@ -243,13 +231,12 @@ describe('IntegrationManager', () => {
   });
 
   describe('healthCheck', () => {
-    test('debe ejecutar testConnectivity de todos los servicios disponibles', async () => {
+    test('debe ejecutar testConnectivity de los servicios disponibles', async () => {
       const result = await integrationManager.healthCheck();
 
       expect(vuaService.testConnectivity).toHaveBeenCalled();
       expect(tracesService.testConnectivity).toHaveBeenCalled();
       expect(nctsService.testConnectivity).toHaveBeenCalled();
-      expect(aeatService.testConnectivity).toHaveBeenCalled();
     });
 
     test('debe retornar summary con total, active, simulation, error, inactive', async () => {
@@ -340,7 +327,8 @@ describe('IntegrationManager', () => {
       expect(integrationManager.statusCache.get('VUA')).toBe('simulation');
       expect(integrationManager.statusCache.get('TRACES')).toBe('simulation');
       expect(integrationManager.statusCache.get('NCTS')).toBe('simulation');
-      expect(integrationManager.statusCache.get('AEAT')).toBe('simulation');
+      // AEAT no tiene servicio (codigo muerto eliminado): inactive, no simulado.
+      expect(integrationManager.statusCache.get('AEAT')).toBe('inactive');
     });
 
     test('debe actualizar lastHealthCheck con timestamp', async () => {
@@ -565,13 +553,7 @@ describe('IntegrationManager', () => {
       expect(result.operations.some(op => op.code === 'NCTS')).toBe(true);
     });
 
-    test('debe incluir AEAT si directAEAT es true', async () => {
-      aeatService.submitH1.mockResolvedValueOnce({
-        success: true,
-        mrn: '24ES987654321',
-        status: 'ACCEPTED'
-      });
-
+    test('debe incluir AEAT si directAEAT es true, y fallar honestamente sin servicio', async () => {
       const operationData = {
         type: 'import',
         declaration: { xml: '<H1>...</H1>' },
@@ -582,7 +564,12 @@ describe('IntegrationManager', () => {
 
       const result = await integrationManager.processMultiIntegrationOperation(operationData);
 
-      expect(result.operations.some(op => op.code === 'AEAT')).toBe(true);
+      const aeatOp = result.operations.find(op => op.code === 'AEAT');
+      expect(aeatOp).toBeDefined();
+      // Sin aeatService (codigo muerto eliminado): debe fallar con un error
+      // explicito, nunca fabricar un MRN aceptado.
+      expect(aeatOp.success).toBe(false);
+      expect(aeatOp.error).toBe('Servicio no disponible');
     });
 
     test('debe contar success/failed/pending correctamente', async () => {

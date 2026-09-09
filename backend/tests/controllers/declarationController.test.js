@@ -27,7 +27,6 @@ jest.mock('../../src/services/aeat/aeatSubmitService', () => ({
   cancelH1: (...a) => mockCancelH1(...a)
 }));
 jest.mock('../../src/services/aiService', () => ({}));
-jest.mock('../../src/services/aeatService', () => ({}));
 jest.mock('../../src/services/channelService', () => ({}));
 jest.mock('../../src/services/emailService', () => ({
   sendDeclarationRejected: jest.fn().mockResolvedValue(true),

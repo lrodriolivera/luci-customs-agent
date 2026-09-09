@@ -32,7 +32,6 @@ jest.mock('../../src/services/forms/h1Generator', () => ({
 }));
 jest.mock('../../src/services/forms/aesGenerator', () => ({ generate: jest.fn() }));
 jest.mock('../../src/services/forms/h7Generator', () => ({ isEligibleForH7: jest.fn(), generate: jest.fn() }));
-jest.mock('../../src/services/aeatService', () => ({}));
 jest.mock('../../src/services/aeat/aeatSubmitService', () => ({
   submitH1: jest.fn(), submitAES: jest.fn(), cancelH1: jest.fn()
 }));
