@@ -398,11 +398,11 @@ footer.note{
 <header class="page">
   <p class="eyebrow">Guía de montaje · Trello</p>
   <h1>Tablero de pruebas de usuario — LUCI</h1>
-  <p class="subtitle">Estructura completa en Trello: 8 listas por módulo, plantilla de tarjeta con navegación embebida y 104 casos de prueba — H1 y AES en profundidad (la especialidad de la agente de aduanas), controles no arancelarios (MAPA/MITERD/Sanidad), y los módulos de cálculo y consulta que no tocan AEAT. Casuística contrastada contra el código del proyecto, fuentes oficiales de AEAT y el Código Aduanero de la Unión, el curso oficial FIGAD de representante aduanero, y documentos reales de dos operaciones aduaneras conocidas por la agente.</p>
+  <p class="subtitle">Estructura completa en Trello: 9 listas por módulo, plantilla de tarjeta con navegación embebida y 112 casos de prueba — H1 y AES en profundidad (la especialidad de la agente de aduanas), controles no arancelarios (MAPA/MITERD/Sanidad), y los módulos de cálculo y consulta que no tocan AEAT. Casuística contrastada contra el código del proyecto, fuentes oficiales de AEAT y el Código Aduanero de la Unión, el curso oficial FIGAD de representante aduanero, y documentos reales de dos operaciones aduaneras conocidas por la agente.</p>
 </header>
 <section class="section">
   <h2>Estructura del tablero</h2>
-  <p class="section-intro">8 listas (columnas), una por módulo funcional de LUCI. El estado del caso (Pendiente/En curso/Bug encontrado/Hecho) se marca con una <b>etiqueta de color</b> en la tarjeta, no moviéndola de columna — las columnas están reservadas para separar por funcionalidad.</p>
+  <p class="section-intro">9 listas (columnas), una por módulo funcional de LUCI. El estado del caso (Pendiente/En curso/Bug encontrado/Hecho) se marca con una <b>etiqueta de color</b> en la tarjeta, no moviéndola de columna — las columnas están reservadas para separar por funcionalidad.</p>
   <div class="board" style="grid-template-columns:repeat(4,1fr)">
     <div class="col">
       <div class="col-head"><span class="col-title">H1 — Importación</span></div>
@@ -821,6 +821,53 @@ footer.note{
   </div>
 </section>
 <section class="section">
+  <h2>Portal cliente y documentos</h2>
+  <p class="list-stats">8 casos</p>
+  <div class="nav-callout"><b>Cómo llegar (dos roles):</b> Como AGENTE: menú lateral → "Operaciones" → "Expedientes" → abrir un expediente → botón <b>"Copiar enlace"</b> (copia la URL del Portal del cliente) → sección <b>"Documentos"</b> (checklist) más abajo en la misma pantalla del expediente. Como CLIENTE: pega el enlace copiado en una pestaña nueva o en modo incógnito (no requiere iniciar sesión) → llegas a `/portal/:token` → pestaña <b>"Documentos"</b> → elige el tipo de documento → arrastra o selecciona el archivo → revisa el checklist al final de esa misma pantalla.</div>
+  <div class="tcase-group">
+    <div class="tcase">
+      <div class="tcase-top"><span class="tcase-title">01. Checklist del cliente nunca marca nada como subido — mismatch de campos</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+      <div class="tcase-flow"><span class="k">SI</span><span class="cond">un cliente sube un documento en el Portal (factura, packing list, etc.)</span><span class="k">→</span><span class="exp">el checklist de esa misma pantalla debería marcar el ítem en verde con el nombre del documento, pero el componente lee los campos `.name`/`.uploaded` mientras el backend del Portal devuelve `documentName`/`received` — el checklist SIEMPRE muestra el ítem como pendiente y sin nombre visible, aunque la subida fue exitosa</span></div>
+      <div class="tcase-source">Fuente: PortalDocuments.jsx (líneas ~188-208) vs portalController.js (líneas ~69-76)</div>
+    </div>
+    <div class="tcase">
+      <div class="tcase-top"><span class="tcase-title">02. "Validar todos" puede marcar el expediente como completo sin todos los documentos obligatorios</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+      <div class="tcase-flow"><span class="k">SI</span><span class="cond">un expediente tiene un documento obligatorio (ej. Bill of Lading) que nunca se subió, pero sí se subieron y validaron otros documentos opcionales</span><span class="k">→</span><span class="exp">"Validar todos" calcula si el expediente está completo mirando SOLO los documentos ya subidos e ignora los obligatorios ausentes — puede marcar el expediente como "documents_validated" sin el documento obligatorio</span></div>
+      <div class="tcase-source">Fuente: documentController.js validateAll (líneas ~373-382)</div>
+    </div>
+    <div class="tcase">
+      <div class="tcase-top"><span class="tcase-title">03. La validación con IA no lee el archivo real, genera datos de ejemplo simulados</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+      <div class="tcase-flow"><span class="k">SI</span><span class="cond">se sube cualquier documento (incluso uno irrelevante, en blanco, o con datos erróneos) y se pulsa "Validar"</span><span class="k">→</span><span class="exp">`aiService.validateDocument` no envía el PDF/imagen al modelo — le pide "simular" datos de ejemplo plausibles para ese tipo de documento sin haberlo leído nunca; puede devolver isValid:true con datos extraídos inventados. LUCI presenta como verificado algo que nunca fue analizado</span></div>
+      <div class="tcase-source">Fuente: aiService.js validateDocument, líneas 723-748 — comentario explícito "Por ahora, simulamos la validacion"</div>
+    </div>
+    <div class="tcase">
+      <div class="tcase-top"><span class="tcase-title">04. [REGRESIÓN] Alta de expediente self-service no debe fallar por createdBy</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">MEDIA</span></span></div>
+      <div class="tcase-flow"><span class="k">SI</span><span class="cond">un cliente crea un expediente nuevo desde el Portal en modo self-service, sin que un agente lo haya dado de alta antes</span><span class="k">→</span><span class="exp">debe completarse sin error "Cast to ObjectId failed" — createdBy es un ObjectId de referencia a User y el alta self-service no tiene usuario de plataforma asociado (bug ya corregido, verificar que sigue corregido)</span></div>
+      <div class="tcase-source">Fuente: clientPortalService.js, comentario líneas 118-122</div>
+    </div>
+    <div class="tcase">
+      <div class="tcase-top"><span class="tcase-title">05. Checklist se desvincula si se sube un segundo documento del mismo tipo</span><span class="tag-row"><span class="tag-priority">MEDIA</span></span></div>
+      <div class="tcase-flow"><span class="k">SI</span><span class="cond">se sube un segundo documento del mismo tipo (ej. dos facturas comerciales)</span><span class="k">→</span><span class="exp">el checklist solo tiene una entrada por tipo y su documentId se sobrescribe con el último subido; el primer documento queda sin checklist que lo referencie, y si se elimina, el checklist no lo detecta (busca por un documentId que ya no coincide)</span></div>
+      <div class="tcase-source">Fuente: documentController.js upload/deleteDocument (líneas 42-48, 285-292)</div>
+    </div>
+    <div class="tcase">
+      <div class="tcase-top"><span class="tcase-title">06. Checklist de documentos varía según el tipo de operación</span><span class="tag-row"><span class="tag-priority">MEDIA</span></span></div>
+      <div class="tcase-flow"><span class="k">SI</span><span class="cond">se crea un expediente de importación, y por separado uno de exportación y uno de tránsito</span><span class="k">→</span><span class="exp">importación exige Factura+Packing List+BL/AWB/CMR obligatorios y Certificado de Origen opcional condicional a preferencia; exportación hace el BL/AWB/CMR OPCIONAL y añade Licencia de Exportación opcional condicional a producto controlado; tránsito solo exige Documento de Transporte además de la base. No debe mostrarse el mismo checklist en los tres casos</span></div>
+      <div class="tcase-source">Fuente: clientPortalService.js generateDocumentChecklist (líneas 176-208)</div>
+    </div>
+    <div class="tcase">
+      <div class="tcase-top"><span class="tcase-title">07. La vista del agente sí traduce received→uploaded — contrastar contra la del cliente</span><span class="tag-row"><span class="tag-priority">MEDIA</span></span></div>
+      <div class="tcase-flow"><span class="k">SI</span><span class="cond">se sube un documento y luego se revisa el checklist desde la vista del AGENTE (Expediente → sección Documentos), no desde el Portal del cliente</span><span class="k">→</span><span class="exp">ahí SÍ debe aparecer correctamente marcado como subido — ese endpoint traduce bien los campos, a diferencia del Portal del cliente (ver caso 1). Usar este contraste para confirmar cuál vista está realmente rota</span></div>
+      <div class="tcase-source">Fuente: expeditionController.js (líneas 458-465) vs portalController.js</div>
+    </div>
+    <div class="tcase">
+      <div class="tcase-top"><span class="tcase-title">08. Tipos de archivo aceptados: el frontend del Portal es más restrictivo que el backend</span><span class="tag-row"><span class="tag-priority">BAJA</span></span></div>
+      <div class="tcase-flow"><span class="k">SI</span><span class="cond">se intenta subir un archivo .webp, o de más de 10MB pero menos de 50MB</span><span class="k">→</span><span class="exp">el frontend del Portal lo bloquea antes de enviarlo (acepta solo PDF/JPG/PNG/TIFF/DOC/DOCX hasta 10MB), aunque el backend permitiría hasta 50MB y también WEBP/XLS/CSV/TXT/XML; verificar que el mensaje al cliente sea claro sobre el límite real de 10MB</span></div>
+      <div class="tcase-source">Fuente: PortalDocuments.jsx (líneas 74-84) vs upload.js (líneas 40-76)</div>
+    </div>
+  </div>
+</section>
+<section class="section">
   <h2>H7 — Bajo valor</h2>
   <p class="list-stats">2 casos</p>
   <div class="nav-callout"><b>Cómo llegar:</b> Menú lateral → "Declaraciones" → "H7 E-commerce" (ver lista) o "+ Nueva H7" (crear). Campos: Número de Tracking, Número IOSS (si aplica), Remitente, Destinatario/NIF-NIE, Artículos (botón "Agregar artículo").</div>
@@ -997,5 +1044,5 @@ footer.note{
   </div>
   <div class="callout"><b>Nota:</b> las tarjetas marcadas [REGRESIÓN] son bugs reales ya corregidos antes — priorizarlas primero confirma que no han vuelto.</div>
 </section>
-<footer class="note">Tablero pensado para 3–5 personas en el plan gratuito de Trello. 104 casos a 9/Sep/2026 en 8 módulos: casuística extraída del código real del proyecto, fuentes oficiales de AEAT y el Código Aduanero de la Unión, el curso oficial FIGAD de representante aduanero, y documentos reales de operaciones aduaneras conocidas por la agente. Ampliar cada lista si el código, la normativa o la plataforma cambian.</footer>
+<footer class="note">Tablero pensado para 3–5 personas en el plan gratuito de Trello. 112 casos a 9/Sep/2026 en 9 módulos: casuística extraída del código real del proyecto, fuentes oficiales de AEAT y el Código Aduanero de la Unión, el curso oficial FIGAD de representante aduanero, y documentos reales de operaciones aduaneras conocidas por la agente. Ampliar cada lista si el código, la normativa o la plataforma cambian.</footer>
 </div>
