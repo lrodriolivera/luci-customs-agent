@@ -826,14 +826,16 @@ footer.note{
   <div class="nav-callout"><b>Cómo llegar (dos roles):</b> Como AGENTE: menú lateral → "Operaciones" → "Expedientes" → abrir un expediente → botón <b>"Copiar enlace"</b> (copia la URL del Portal del cliente) → sección <b>"Documentos"</b> (checklist) más abajo en la misma pantalla del expediente. Como CLIENTE: pega el enlace copiado en una pestaña nueva o en modo incógnito (no requiere iniciar sesión) → llegas a `/portal/:token` → pestaña <b>"Documentos"</b> → elige el tipo de documento → arrastra o selecciona el archivo → revisa el checklist al final de esa misma pantalla.</div>
   <div class="tcase-group">
     <div class="tcase">
-      <div class="tcase-top"><span class="tcase-title">01. Checklist del cliente nunca marca nada como subido — mismatch de campos</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+      <div class="tcase-top"><span class="tcase-title">01. [REGRESIÓN] Checklist del cliente nunca marca nada como subido — mismatch de campos</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">ALTA</span></span></div>
       <div class="tcase-flow"><span class="k">SI</span><span class="cond">un cliente sube un documento en el Portal (factura, packing list, etc.)</span><span class="k">→</span><span class="exp">el checklist de esa misma pantalla debería marcar el ítem en verde con el nombre del documento, pero el componente lee los campos `.name`/`.uploaded` mientras el backend del Portal devuelve `documentName`/`received` — el checklist SIEMPRE muestra el ítem como pendiente y sin nombre visible, aunque la subida fue exitosa</span></div>
       <div class="tcase-source">Fuente: PortalDocuments.jsx (líneas ~188-208) vs portalController.js (líneas ~69-76)</div>
+      <div class="tcase-source">✅ Corregido 9/Sep/2026 (commit b93420a): PortalDocuments.jsx ahora lee documentName/received. Verificar que el checklist SÍ marca el item al subir un documento real.</div>
     </div>
     <div class="tcase">
-      <div class="tcase-top"><span class="tcase-title">02. "Validar todos" puede marcar el expediente como completo sin todos los documentos obligatorios</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
+      <div class="tcase-top"><span class="tcase-title">02. [REGRESIÓN] "Validar todos" puede marcar el expediente como completo sin todos los documentos obligatorios</span><span class="tag-row"><span class="tag-regress">REGRESIÓN</span><span class="tag-priority">ALTA</span></span></div>
       <div class="tcase-flow"><span class="k">SI</span><span class="cond">un expediente tiene un documento obligatorio (ej. Bill of Lading) que nunca se subió, pero sí se subieron y validaron otros documentos opcionales</span><span class="k">→</span><span class="exp">"Validar todos" calcula si el expediente está completo mirando SOLO los documentos ya subidos e ignora los obligatorios ausentes — puede marcar el expediente como "documents_validated" sin el documento obligatorio</span></div>
       <div class="tcase-source">Fuente: documentController.js validateAll (líneas ~373-382)</div>
+      <div class="tcase-source">✅ Corregido 9/Sep/2026 (commit a93602e): validateAll ahora recorre el checklist completo, no solo los documentos ya subidos. Verificar que un obligatorio sin subir nunca deja el expediente en "documents_validated".</div>
     </div>
     <div class="tcase">
       <div class="tcase-top"><span class="tcase-title">03. La validación con IA no lee el archivo real, genera datos de ejemplo simulados</span><span class="tag-row"><span class="tag-priority">ALTA</span></span></div>
