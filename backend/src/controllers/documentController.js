@@ -370,10 +370,16 @@ const validateAll = async (req, res) => {
       }
     }
 
-    // Actualizar status del expediente
-    const allValidated = expedition.documents
-      .filter(d => expedition.documentChecklist.find(c => c.documentId?.toString() === d._id.toString())?.required)
-      .every(d => d.status === 'validated');
+    // Actualizar status del expediente. Recorrer el checklist (no los documentos
+    // ya subidos): un item requerido sin documentId (nunca subido) debe impedir
+    // marcar el expediente como validado, no quedar fuera del calculo en silencio.
+    const allValidated = expedition.documentChecklist
+      .filter(item => item.required)
+      .every(item => {
+        if (!item.documentId) return false;
+        const doc = expedition.documents.find(d => d._id.toString() === item.documentId.toString());
+        return doc?.status === 'validated';
+      });
 
     if (allValidated) {
       expedition.status = 'documents_validated';

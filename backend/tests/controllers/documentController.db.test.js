@@ -336,4 +336,23 @@ describe('validateAll', () => {
     const guardado = await Expedition.findById(exp._id);
     expect(guardado.status).toBe('documents_incomplete');
   });
+
+  test('un documento obligatorio nunca subido no debe permitir marcar el expediente como validado', async () => {
+    const exp = await sembrarExp(TENANT_A, { docs: [docFixture()] });
+    // commercial_invoice: subido, requerido y vinculado al checklist.
+    // bill_of_lading: requerido pero JAMAS subido (sin documentId, received:false).
+    exp.documentChecklist.push(
+      { documentType: 'commercial_invoice', required: true, documentId: exp.documents[0]._id },
+      { documentType: 'bill_of_lading', required: true, received: false }
+    );
+    await exp.save();
+
+    const res = mockRes();
+    await documentController.validateAll(
+      mockReq({ user: adminA, params: { expeditionId: exp._id.toString() } }), res);
+
+    expect(res.body.success).toBe(true);
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.status).not.toBe('documents_validated');
+  });
 });
