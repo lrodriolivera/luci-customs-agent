@@ -1995,6 +1995,7 @@
   },
   "queries": {
     "title": "ADDS-JDIT Queries",
+    "demoWarning": "Demo screen: these results are examples and are not a real query against AEAT. The ADDS-JDIT service integration is not connected yet.",
     "totalQueries": "Total Queries",
     "successful": "Successful",
     "failed": "Failed",

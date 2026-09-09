@@ -245,6 +245,10 @@ const QueryDashboard = () => {
         {t('queries.title')}
       </Typography>
 
+      <Alert severity="warning" sx={{ mb: 3 }}>
+        {t('queries.demoWarning')}
+      </Alert>
+
       {/* Stats Cards */}
       {stats && (
         <Grid container spacing={2} sx={{ mb: 3 }}>

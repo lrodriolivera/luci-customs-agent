@@ -46,7 +46,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 // Grupos del sidebar (con claves i18n)
-const navGroups = [
+export const navGroups = [
   {
     id: 'operations',
     labelKey: 'nav.operations',
@@ -93,7 +93,10 @@ const navGroups = [
       { path: '/deadlines', icon: ClockIcon, labelKey: 'nav.deadlines' },
       { path: '/inspections', icon: MagnifyingGlassIcon, labelKey: 'nav.inspections' },
       { path: '/communications', icon: EnvelopeIcon, labelKey: 'nav.communications' },
-      { path: '/queries', icon: MagnifyingGlassIcon, labelKey: 'nav.queriesAdds' },
+      // '/queries' (Consultas ADDS) oculto: summaryQueryService no tiene
+      // integracion real contra AEAT, siempre fabrica resultados (modo DEMO
+      // documentado en sus propios tests). Restaurar solo cuando exista una
+      // integracion real verificada.
     ]
   },
   {

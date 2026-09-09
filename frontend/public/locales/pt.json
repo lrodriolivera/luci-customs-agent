@@ -1995,6 +1995,7 @@
   },
   "queries": {
     "title": "Consultas ADDS-JDIT",
+    "demoWarning": "Ecrã de demonstração: estes resultados são exemplos e não provêm de uma consulta real à AEAT. A integração com o serviço ADDS-JDIT ainda não está ligada.",
     "totalQueries": "Total de Consultas",
     "successful": "Com exito",
     "failed": "Falhadas",

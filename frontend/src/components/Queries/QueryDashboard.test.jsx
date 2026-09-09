@@ -887,4 +887,13 @@ describe('QueryDashboard', () => {
 
     expect(screen.queryByText('LRN:')).not.toBeInTheDocument()
   })
+
+  test('advierte que los resultados son de demostración, sin integración real con AEAT', () => {
+    // summaryQueryService (backend) siempre fabrica resultados con Math.random(),
+    // documentado como modo DEMO en sus propios tests. Quien llegue a esta
+    // pantalla por URL directa (el enlace del menu ya se oculto) debe verlo.
+    render(<QueryDashboard />)
+
+    expect(screen.getByText('queries.demoWarning')).toBeInTheDocument()
+  })
 })

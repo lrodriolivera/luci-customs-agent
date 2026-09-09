@@ -1995,6 +1995,7 @@
   },
   "queries": {
     "title": "Requetes ADDS-JDIT",
+    "demoWarning": "Écran de démonstration : ces résultats sont des exemples et ne proviennent pas d'une consultation réelle auprès de l'AEAT. L'intégration avec le service ADDS-JDIT n'est pas encore connectée.",
     "totalQueries": "Total des Requetes",
     "successful": "Reussies",
     "failed": "Echouees",
