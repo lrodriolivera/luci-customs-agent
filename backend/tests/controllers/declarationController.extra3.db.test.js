@@ -846,6 +846,115 @@ describe('generateH1Direct: ramas de creacion automatica de expediente', () => {
   });
 });
 
+describe('generateH1Direct: validacion del modo formulario (antes "sin validaciones estrictas")', () => {
+  test('rechaza sin items: no crea expediente con un articulo vacio', async () => {
+    const user = usuario();
+    const res = crearRes();
+
+    await ctrl.generateH1Direct({ user, body: { recipient: { name: 'X', eori: 'ESB1' }, sender: { name: 'Y' } } }, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(/items/i);
+    expect(await Expedition.countDocuments({ tenantId: user.tenantId })).toBe(0);
+  });
+
+  test('rechaza un articulo sin descripcion', async () => {
+    const user = usuario();
+    const res = crearRes();
+
+    await ctrl.generateH1Direct({
+      user,
+      body: {
+        items: [{ taricCode: '8471300000', itemPrice: 100 }],
+        recipient: { name: 'Cliente SL', eori: 'ESB12345678' },
+        sender: { name: 'Proveedor Inc' }
+      }
+    }, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(/descripción/i);
+    expect(await Expedition.countDocuments({ tenantId: user.tenantId })).toBe(0);
+  });
+
+  test('rechaza un codigo TARIC con formato invalido', async () => {
+    const user = usuario();
+    const res = crearRes();
+
+    await ctrl.generateH1Direct({
+      user,
+      body: {
+        items: [{ description: 'Widget', taricCode: 'ABC', itemPrice: 100 }],
+        recipient: { name: 'Cliente SL', eori: 'ESB12345678' },
+        sender: { name: 'Proveedor Inc' }
+      }
+    }, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(/TARIC/i);
+  });
+
+  test('rechaza sin nombre de destinatario', async () => {
+    const user = usuario();
+    const res = crearRes();
+
+    await ctrl.generateH1Direct({
+      user,
+      body: {
+        items: [{ description: 'Widget', taricCode: '8471300000', itemPrice: 100 }],
+        recipient: { eori: 'ESB12345678' },
+        sender: { name: 'Proveedor Inc' }
+      }
+    }, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(/destinatario/i);
+  });
+
+  test('rechaza destinatario sin EORI ni NIF', async () => {
+    const user = usuario();
+    const res = crearRes();
+
+    await ctrl.generateH1Direct({
+      user,
+      body: {
+        items: [{ description: 'Widget', taricCode: '8471300000', itemPrice: 100 }],
+        recipient: { name: 'Cliente SL' },
+        sender: { name: 'Proveedor Inc' }
+      }
+    }, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(/EORI o NIF/i);
+  });
+
+  test('rechaza sin nombre de remitente', async () => {
+    const user = usuario();
+    const res = crearRes();
+
+    await ctrl.generateH1Direct({
+      user,
+      body: {
+        items: [{ description: 'Widget', taricCode: '8471300000', itemPrice: 100 }],
+        recipient: { name: 'Cliente SL', eori: 'ESB12345678' },
+        sender: {}
+      }
+    }, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(/remitente/i);
+  });
+
+  test('modo clasico: expeditionId con formato invalido se rechaza antes de tocar la BD', async () => {
+    const user = usuario();
+    const res = crearRes();
+
+    await ctrl.generateH1Direct({ user, body: { expeditionId: 'no-es-un-object-id' } }, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(/expediente inv[aá]lido/i);
+  });
+});
+
 describe('submitH7: ramas hasIOSS y vatToPay', () => {
   test('canal green cuando tiene IOSS (hasIOSS = true)', async () => {
     const user = usuario();

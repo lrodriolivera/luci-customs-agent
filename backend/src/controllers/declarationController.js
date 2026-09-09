@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const { Expedition } = require('../models');
 const logger = require('../config/logger');
 const aiService = require('../services/aiService');
@@ -513,12 +514,68 @@ const submitDeclaration = async (req, res) => {
 };
 
 /**
- * Generar H1 directamente (modo demo - sin validaciones estrictas)
+ * Valida el body de /h1/generate-direct.
+ *
+ * declarationValidators.generateH1 (la ruta hermana /h1/generate) exige
+ * expeditionId como ObjectId y por eso no sirve aqui: el modo formulario de
+ * esta ruta crea el expediente EN el propio request, sin id previo. Por eso
+ * esta ruta llevaba "sin validaciones estrictas" en el comentario -- ningun
+ * campo del formulario (descripcion, TARIC, destinatario) se comprobaba antes
+ * de guardarlo, así que un campo vacio o mal escrito quedaba en el expediente
+ * en silencio en vez de bloquear la creacion.
+ *
+ * Devuelve un array de mensajes de error; vacio si el body es valido.
+ */
+function validateH1DirectBody(body) {
+  const errores = [];
+
+  if (body.expeditionId) {
+    if (!mongoose.Types.ObjectId.isValid(body.expeditionId)) {
+      errores.push('ID de expediente invalido');
+    }
+    return errores;
+  }
+
+  if (!Array.isArray(body.items) || body.items.length === 0) {
+    errores.push('Debe incluir al menos un articulo (items)');
+  } else {
+    body.items.forEach((item, i) => {
+      if (!item?.description || !String(item.description).trim()) {
+        errores.push(`Artículo ${i + 1}: falta la descripción`);
+      }
+      if (item?.taricCode && !/^\d{6,10}$/.test(String(item.taricCode))) {
+        errores.push(`Artículo ${i + 1}: código TARIC inválido (${item.taricCode})`);
+      }
+    });
+  }
+
+  if (!body.recipient?.name || !String(body.recipient.name).trim()) {
+    errores.push('El destinatario requiere nombre');
+  }
+  if (!body.recipient?.eori && !body.recipient?.nif) {
+    errores.push('El destinatario requiere EORI o NIF');
+  }
+  if (!body.sender?.name || !String(body.sender.name).trim()) {
+    errores.push('El remitente requiere nombre');
+  }
+
+  return errores;
+}
+
+/**
+ * Generar H1 directamente (modo clasico con expediente existente, o modo
+ * formulario que crea el expediente en el propio request)
  * POST /api/declarations/h1/generate-direct
  */
 const generateH1Direct = async (req, res) => {
   try {
     const body = req.body;
+
+    const erroresValidacion = validateH1DirectBody(body);
+    if (erroresValidacion.length > 0) {
+      return res.status(400).json({ success: false, error: erroresValidacion.join('; '), errors: erroresValidacion });
+    }
+
     let expedition;
 
     if (body.expeditionId) {
@@ -1519,6 +1576,7 @@ const cancelDeclaration = async (req, res) => {
 module.exports = {
   generateH1,
   generateH1Direct,
+  validateH1DirectBody,
   generateAES,
   getXML,
   updateDeclaration,
