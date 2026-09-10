@@ -8,6 +8,8 @@
 
 const crypto = require('crypto');
 const forge = require('node-forge');
+const { DOMParser } = require('@xmldom/xmldom');
+const { ExclusiveCanonicalization } = require('xml-crypto');
 const logger = require('../../config/logger');
 const certificateService = require('./certificateService');
 
@@ -200,27 +202,36 @@ class XAdESSignatureService {
     const signatureId = this._generateId('Signature');
     const signedPropertiesId = `${signatureId}-SignedProperties`;
 
-    // Calcular digests
-    const contentDigest = this._calculateDigest(xmlContent);
+    // Digest del documento completo, canonicalizado (Exclusive-C14N + enveloped-signature)
+    const contentDigest = this._digestCanonical(xmlContent);
     const certDigest = this._calculateCertificateDigest(certResult.certPem);
 
-    // Construir SignedInfo
-    const signedInfoContent = this._buildSignedInfo(contentDigest, signedPropertiesId);
-
-    // Calcular firma
-    const signatureValue = this._calculateSignature(signedInfoContent, certResult.keyPem);
-
-    // Construir firma XAdES completa
-    const signatureXML = this._buildXAdESSignature({
-      signatureId,
+    // SignedProperties autocontenido (declara sus propios namespaces) y su digest canonicalizado
+    const signedPropertiesFragment = this._buildSignedProperties({
       signedPropertiesId,
+      signatureId,
       timestamp,
-      contentDigest,
       certDigest,
-      signatureValue,
-      certificate: certResult.certPem,
       certInfo: certResult.info,
       includePolicy: options.includePolicy
+    });
+    const propsDigest = this._digestCanonical(signedPropertiesFragment);
+
+    // SignedInfo con ambos digests correctos, canonicalizado antes de firmar
+    const signedInfoContent = this._buildSignedInfo(contentDigest, signedPropertiesId, propsDigest);
+    const canonicalSignedInfo = this._canonicalize(signedInfoContent);
+
+    // La firma cubre exactamente los bytes canónicos de SignedInfo
+    const signatureValue = this._calculateSignature(canonicalSignedInfo, certResult.keyPem);
+
+    // Construir firma XAdES completa, insertando los MISMOS strings que se firmaron/digirieron
+    const signatureXML = this._buildXAdESSignature({
+      signatureId,
+      signedInfoContent,
+      signedPropertiesFragment,
+      signatureValue,
+      certificate: certResult.certPem,
+      certInfo: certResult.info
     });
 
     // Insertar firma en el documento
@@ -234,46 +245,7 @@ class XAdESSignatureService {
     };
   }
 
-  _buildSignedInfo(contentDigest, signedPropertiesId) {
-    const propsDigest = this._calculateDigest(signedPropertiesId);
-
-    return `<ds:SignedInfo xmlns:ds="${this.NAMESPACES.ds}">
-      <ds:CanonicalizationMethod Algorithm="${this.ALGORITHMS.CANONICALIZATION}"/>
-      <ds:SignatureMethod Algorithm="${this.ALGORITHMS.SIGNATURE}"/>
-      <ds:Reference URI="">
-        <ds:Transforms>
-          <ds:Transform Algorithm="${this.ALGORITHMS.TRANSFORM_ENVELOPED}"/>
-          <ds:Transform Algorithm="${this.ALGORITHMS.CANONICALIZATION}"/>
-        </ds:Transforms>
-        <ds:DigestMethod Algorithm="${this.ALGORITHMS.DIGEST}"/>
-        <ds:DigestValue>${contentDigest}</ds:DigestValue>
-      </ds:Reference>
-      <ds:Reference URI="#${signedPropertiesId}" Type="http://uri.etsi.org/01903#SignedProperties">
-        <ds:DigestMethod Algorithm="${this.ALGORITHMS.DIGEST}"/>
-        <ds:DigestValue>${propsDigest}</ds:DigestValue>
-      </ds:Reference>
-    </ds:SignedInfo>`;
-  }
-
-  _buildXAdESSignature(params) {
-    const {
-      signatureId,
-      signedPropertiesId,
-      timestamp,
-      contentDigest,
-      certDigest,
-      signatureValue,
-      certificate,
-      certInfo,
-      includePolicy
-    } = params;
-
-    // Extraer certificado base64 (sin headers PEM)
-    const certBase64 = certificate
-      .replace('-----BEGIN CERTIFICATE-----', '')
-      .replace('-----END CERTIFICATE-----', '')
-      .replace(/\s/g, '');
-
+  _buildSignedProperties({ signedPropertiesId, signatureId, timestamp, certDigest, certInfo, includePolicy }) {
     const policyBlock = includePolicy ? `
             <xades:SignaturePolicyIdentifier>
               <xades:SignaturePolicyId>
@@ -291,34 +263,7 @@ class XAdESSignatureService {
               <xades:SignaturePolicyImplied/>
             </xades:SignaturePolicyIdentifier>`;
 
-    return `
-  <ds:Signature xmlns:ds="${this.NAMESPACES.ds}" xmlns:xades="${this.NAMESPACES.xades}" Id="${signatureId}">
-    <ds:SignedInfo>
-      <ds:CanonicalizationMethod Algorithm="${this.ALGORITHMS.CANONICALIZATION}"/>
-      <ds:SignatureMethod Algorithm="${this.ALGORITHMS.SIGNATURE}"/>
-      <ds:Reference URI="">
-        <ds:Transforms>
-          <ds:Transform Algorithm="${this.ALGORITHMS.TRANSFORM_ENVELOPED}"/>
-          <ds:Transform Algorithm="${this.ALGORITHMS.CANONICALIZATION}"/>
-        </ds:Transforms>
-        <ds:DigestMethod Algorithm="${this.ALGORITHMS.DIGEST}"/>
-        <ds:DigestValue>${contentDigest}</ds:DigestValue>
-      </ds:Reference>
-      <ds:Reference URI="#${signedPropertiesId}" Type="http://uri.etsi.org/01903#SignedProperties">
-        <ds:DigestMethod Algorithm="${this.ALGORITHMS.DIGEST}"/>
-        <ds:DigestValue>${this._calculateDigest(timestamp)}</ds:DigestValue>
-      </ds:Reference>
-    </ds:SignedInfo>
-    <ds:SignatureValue Id="${signatureId}-SignatureValue">${signatureValue}</ds:SignatureValue>
-    <ds:KeyInfo Id="${signatureId}-KeyInfo">
-      <ds:X509Data>
-        <ds:X509SubjectName>CN=${certInfo.subject}</ds:X509SubjectName>
-        <ds:X509Certificate>${certBase64}</ds:X509Certificate>
-      </ds:X509Data>
-    </ds:KeyInfo>
-    <ds:Object>
-      <xades:QualifyingProperties Target="#${signatureId}">
-        <xades:SignedProperties Id="${signedPropertiesId}">
+    return `<xades:SignedProperties xmlns:xades="${this.NAMESPACES.xades}" xmlns:ds="${this.NAMESPACES.ds}" Id="${signedPropertiesId}">
           <xades:SignedSignatureProperties>
             <xades:SigningTime>${timestamp}</xades:SigningTime>
             <xades:SigningCertificate>
@@ -340,10 +285,84 @@ class XAdESSignatureService {
               <xades:Encoding>UTF-8</xades:Encoding>
             </xades:DataObjectFormat>
           </xades:SignedDataObjectProperties>
-        </xades:SignedProperties>
+        </xades:SignedProperties>`;
+  }
+
+  _buildSignedInfo(contentDigest, signedPropertiesId, propsDigest) {
+    return `<ds:SignedInfo xmlns:ds="${this.NAMESPACES.ds}">
+      <ds:CanonicalizationMethod Algorithm="${this.ALGORITHMS.CANONICALIZATION}"/>
+      <ds:SignatureMethod Algorithm="${this.ALGORITHMS.SIGNATURE}"/>
+      <ds:Reference URI="">
+        <ds:Transforms>
+          <ds:Transform Algorithm="${this.ALGORITHMS.TRANSFORM_ENVELOPED}"/>
+          <ds:Transform Algorithm="${this.ALGORITHMS.CANONICALIZATION}"/>
+        </ds:Transforms>
+        <ds:DigestMethod Algorithm="${this.ALGORITHMS.DIGEST}"/>
+        <ds:DigestValue>${contentDigest}</ds:DigestValue>
+      </ds:Reference>
+      <ds:Reference URI="#${signedPropertiesId}" Type="http://uri.etsi.org/01903#SignedProperties">
+        <ds:Transforms>
+          <ds:Transform Algorithm="${this.ALGORITHMS.CANONICALIZATION}"/>
+        </ds:Transforms>
+        <ds:DigestMethod Algorithm="${this.ALGORITHMS.DIGEST}"/>
+        <ds:DigestValue>${propsDigest}</ds:DigestValue>
+      </ds:Reference>
+    </ds:SignedInfo>`;
+  }
+
+  _buildXAdESSignature(params) {
+    const {
+      signatureId,
+      signedInfoContent,
+      signedPropertiesFragment,
+      signatureValue,
+      certificate,
+      certInfo
+    } = params;
+
+    // Extraer certificado base64 (sin headers PEM)
+    const certBase64 = certificate
+      .replace('-----BEGIN CERTIFICATE-----', '')
+      .replace('-----END CERTIFICATE-----', '')
+      .replace(/\s/g, '');
+
+    return `<ds:Signature xmlns:ds="${this.NAMESPACES.ds}" xmlns:xades="${this.NAMESPACES.xades}" Id="${signatureId}">
+    ${signedInfoContent}
+    <ds:SignatureValue Id="${signatureId}-SignatureValue">${signatureValue}</ds:SignatureValue>
+    <ds:KeyInfo Id="${signatureId}-KeyInfo">
+      <ds:X509Data>
+        <ds:X509SubjectName>CN=${certInfo.subject}</ds:X509SubjectName>
+        <ds:X509Certificate>${certBase64}</ds:X509Certificate>
+      </ds:X509Data>
+    </ds:KeyInfo>
+    <ds:Object>
+      <xades:QualifyingProperties Target="#${signatureId}">
+        ${signedPropertiesFragment}
       </xades:QualifyingProperties>
     </ds:Object>
   </ds:Signature>`;
+  }
+
+  /** Parsea el fragmento y devuelve sus bytes canonicalizados con Exclusive-C14N. */
+  _canonicalize(xmlFragment) {
+    let parseError = null;
+    const parser = new DOMParser({
+      errorHandler: {
+        warning: () => {},
+        error: (msg) => { parseError = msg; },
+        fatalError: (msg) => { parseError = msg; }
+      }
+    });
+    const doc = parser.parseFromString(xmlFragment, 'text/xml');
+    if (parseError) {
+      throw new Error(`XAdESSignature: fragmento XML inválido al canonicalizar: ${parseError}`);
+    }
+    return new ExclusiveCanonicalization().process(doc.documentElement, {});
+  }
+
+  _digestCanonical(xmlFragment) {
+    const canonical = this._canonicalize(xmlFragment);
+    return crypto.createHash('sha256').update(canonical, 'utf8').digest('base64');
   }
 
   _calculateDigest(content) {
@@ -365,9 +384,8 @@ class XAdESSignatureService {
       sign.update(signedInfo);
       return sign.sign(privateKeyPem, 'base64');
     } catch (error) {
-      // Si falla la firma real, generar firma mock
-      logger.warn('XAdESSignature: Usando firma mock (clave privada no disponible)');
-      return 'MOCK_SIGNATURE_' + this._calculateDigest(signedInfo);
+      logger.error('XAdESSignature: Fallo criptográfico al firmar SignedInfo', { error: error.message });
+      throw error;
     }
   }
 
@@ -382,16 +400,21 @@ class XAdESSignatureService {
       '</Document>'
     ];
 
+    // Sin separadores añadidos: el transform enveloped-signature de la firma
+    // quita el nodo <ds:Signature> al verificar, pero no limpia nodos de texto
+    // (espacios/saltos de línea) adyacentes que hayamos insertado nosotros. Si
+    // se añadiera aquí un '\n', quedaría como texto huérfano tras la
+    // verificación y el digest del documento ya no coincidiría con el firmado.
     for (const tag of closingTags) {
       if (xmlContent.includes(tag)) {
-        return xmlContent.replace(tag, signatureXML + '\n' + tag);
+        return xmlContent.replace(tag, signatureXML + tag);
       }
     }
 
     // Insertar antes del último tag de cierre
     const lastTagMatch = xmlContent.match(/<\/[^>]+>\s*$/);
     if (lastTagMatch) {
-      return xmlContent.replace(lastTagMatch[0], signatureXML + '\n' + lastTagMatch[0]);
+      return xmlContent.replace(lastTagMatch[0], signatureXML + lastTagMatch[0]);
     }
 
     return xmlContent + signatureXML;

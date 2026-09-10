@@ -4,7 +4,10 @@
  * Objetivo: >65%L, >55%B con lógica criptográfica auténtica
  */
 
+const fs = require('fs');
+const path = require('path');
 const forge = require('node-forge');
+const { SignedXml } = require('xml-crypto');
 
 // Mock de certificateService antes de importar el servicio bajo prueba
 jest.mock('../../../src/services/aeat/certificateService');
@@ -348,7 +351,7 @@ describe('XAdESSignatureService', () => {
       expect(result.timestamp).toBeDefined();
 
       // Verificar que la firma contiene todos los bloques esperados
-      expect(result.signedXML).toContain('<ds:SignedInfo>');
+      expect(result.signedXML).toContain('<ds:SignedInfo');
       expect(result.signedXML).toContain('<ds:SignatureValue');
       expect(result.signedXML).toContain('<ds:KeyInfo');
       expect(result.signedXML).toContain('<xades:QualifyingProperties');
@@ -358,103 +361,108 @@ describe('XAdESSignatureService', () => {
   });
 
   describe('_buildSignedInfo', () => {
-    it('debe construir SignedInfo con digest de contenido y propiedades', () => {
+    it('debe construir SignedInfo con digest de contenido y de SignedProperties, ambos canonicalizados', () => {
       const contentDigest = 'abc123contentDigest';
       const signedPropertiesId = 'SignedProperties-1';
+      const propsDigest = 'propsDigest456';
 
-      const signedInfo = xadesSignatureService._buildSignedInfo(contentDigest, signedPropertiesId);
+      const signedInfo = xadesSignatureService._buildSignedInfo(contentDigest, signedPropertiesId, propsDigest);
 
       expect(signedInfo).toContain('<ds:SignedInfo');
       expect(signedInfo).toContain(contentDigest);
       expect(signedInfo).toContain(signedPropertiesId);
+      expect(signedInfo).toContain(propsDigest);
       expect(signedInfo).toContain('CanonicalizationMethod');
       expect(signedInfo).toContain('SignatureMethod');
       expect(signedInfo).toContain('ds:Reference');
       expect(signedInfo).toContain('http://www.w3.org/2001/04/xmldsig-more#rsa-sha256');
+      // La Reference de SignedProperties debe declarar exc-c14n explícitamente: sin esto,
+      // xml-crypto (y cualquier validador conforme) asume C14N inclusivo por defecto y el
+      // digest jamás coincidirá con el que nosotros calculamos con Exclusive-C14N.
+      const signedPropsReference = signedInfo.slice(signedInfo.indexOf(`#${signedPropertiesId}`));
+      expect(signedPropsReference).toContain('http://www.w3.org/2001/10/xml-exc-c14n#');
+    });
+  });
+
+  describe('_buildSignedProperties', () => {
+    const baseParams = {
+      signedPropertiesId: 'Props-1',
+      signatureId: 'Sig-1',
+      timestamp: '2026-08-05T12:00:00Z',
+      certDigest: 'certDigest456',
+      certInfo: { subject: 'STRIX AI TEST', serialNumber: '01' }
+    };
+
+    it('debe ser autocontenido: declara xmlns:xades y xmlns:ds en su propio elemento raíz', () => {
+      const fragment = xadesSignatureService._buildSignedProperties({ ...baseParams, includePolicy: true });
+
+      expect(fragment).toMatch(/^<xades:SignedProperties[^>]*xmlns:xades="[^"]+"[^>]*xmlns:ds="[^"]+"/);
+      expect(fragment).toContain(`Id="${baseParams.signedPropertiesId}"`);
+    });
+
+    it('debe incluir política explícita cuando includePolicy=true', () => {
+      const fragment = xadesSignatureService._buildSignedProperties({ ...baseParams, includePolicy: true });
+
+      expect(fragment).toContain('xades:SignaturePolicyIdentifier');
+      expect(fragment).toContain('xades:SignaturePolicyId');
+      expect(fragment).toContain('urn:oid:2.16.724.1.3.1.1.2.1.9');
+      expect(fragment).not.toContain('xades:SignaturePolicyImplied');
+    });
+
+    it('debe incluir política implícita cuando includePolicy=false', () => {
+      const fragment = xadesSignatureService._buildSignedProperties({ ...baseParams, includePolicy: false });
+
+      expect(fragment).toContain('xades:SignaturePolicyIdentifier');
+      expect(fragment).toContain('xades:SignaturePolicyImplied');
+      expect(fragment).not.toContain('<xades:SignaturePolicyId>');
+    });
+
+    it('debe usar serialNumber por defecto "0" cuando certInfo.serialNumber es undefined', () => {
+      const fragment = xadesSignatureService._buildSignedProperties({
+        ...baseParams,
+        certInfo: { subject: 'STRIX AI TEST', serialNumber: null },
+        includePolicy: true
+      });
+
+      expect(fragment).toContain('<ds:X509SerialNumber>0</ds:X509SerialNumber>');
     });
   });
 
   describe('_buildXAdESSignature', () => {
-    it('debe incluir política explícita cuando includePolicy=true', () => {
-      const params = {
+    it('debe interpolar signedInfoContent y signedPropertiesFragment literalmente, sin reconstruirlos', () => {
+      const signedInfoContent = '<ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">MARCADOR-SIGNED-INFO</ds:SignedInfo>';
+      const signedPropertiesFragment = '<xades:SignedProperties Id="Props-1">MARCADOR-SIGNED-PROPERTIES</xades:SignedProperties>';
+
+      const signature = xadesSignatureService._buildXAdESSignature({
         signatureId: 'Sig-1',
-        signedPropertiesId: 'Props-1',
-        timestamp: '2026-08-05T12:00:00Z',
-        contentDigest: 'digest123',
-        certDigest: 'certDigest456',
+        signedInfoContent,
+        signedPropertiesFragment,
         signatureValue: 'signatureValue789',
         certificate: realCertPem,
-        certInfo: { subject: 'STRIX AI TEST', serialNumber: '01' },
-        includePolicy: true
-      };
+        certInfo: { subject: 'STRIX AI TEST', serialNumber: '01' }
+      });
 
-      const signature = xadesSignatureService._buildXAdESSignature(params);
-
-      expect(signature).toContain('xades:SignaturePolicyIdentifier');
-      expect(signature).toContain('xades:SignaturePolicyId');
-      expect(signature).toContain('urn:oid:2.16.724.1.3.1.1.2.1.9');
-      expect(signature).not.toContain('xades:SignaturePolicyImplied');
-    });
-
-    it('debe incluir política implícita cuando includePolicy=false', () => {
-      const params = {
-        signatureId: 'Sig-1',
-        signedPropertiesId: 'Props-1',
-        timestamp: '2026-08-05T12:00:00Z',
-        contentDigest: 'digest123',
-        certDigest: 'certDigest456',
-        signatureValue: 'signatureValue789',
-        certificate: realCertPem,
-        certInfo: { subject: 'STRIX AI TEST', serialNumber: '01' },
-        includePolicy: false
-      };
-
-      const signature = xadesSignatureService._buildXAdESSignature(params);
-
-      expect(signature).toContain('xades:SignaturePolicyIdentifier');
-      expect(signature).toContain('xades:SignaturePolicyImplied');
-      // Verificar que NO hay tag <xades:SignaturePolicyId> (debe ser substring completo con '<')
-      expect(signature).not.toContain('<xades:SignaturePolicyId>');
+      // Identidad de string: lo insertado debe ser EXACTAMENTE lo mismo que se firmó/digirió,
+      // no una reconstrucción paralela con otros valores (bug histórico de este servicio).
+      expect(signature).toContain(signedInfoContent);
+      expect(signature).toContain(signedPropertiesFragment);
+      expect(signature).toContain('signatureValue789');
     });
 
     it('debe incluir certificado en formato base64 sin headers PEM', () => {
-      const params = {
+      const signature = xadesSignatureService._buildXAdESSignature({
         signatureId: 'Sig-1',
-        signedPropertiesId: 'Props-1',
-        timestamp: '2026-08-05T12:00:00Z',
-        contentDigest: 'digest123',
-        certDigest: 'certDigest456',
+        signedInfoContent: '<ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"></ds:SignedInfo>',
+        signedPropertiesFragment: '<xades:SignedProperties Id="Props-1"></xades:SignedProperties>',
         signatureValue: 'signatureValue789',
         certificate: realCertPem,
-        certInfo: { subject: 'STRIX AI TEST', serialNumber: '01' },
-        includePolicy: true
-      };
-
-      const signature = xadesSignatureService._buildXAdESSignature(params);
+        certInfo: { subject: 'STRIX AI TEST', serialNumber: '01' }
+      });
 
       expect(signature).toContain('<ds:X509Certificate>');
       expect(signature).not.toContain('-----BEGIN CERTIFICATE-----');
       expect(signature).not.toContain('-----END CERTIFICATE-----');
-      // Debe contener base64 (al menos parte del contenido del cert)
       expect(signature).toMatch(/<ds:X509Certificate>[A-Za-z0-9+/=]+<\/ds:X509Certificate>/);
-    });
-
-    it('debe usar serialNumber por defecto "0" cuando certInfo.serialNumber es undefined', () => {
-      const params = {
-        signatureId: 'Sig-1',
-        signedPropertiesId: 'Props-1',
-        timestamp: '2026-08-05T12:00:00Z',
-        contentDigest: 'digest123',
-        certDigest: 'certDigest456',
-        signatureValue: 'signatureValue789',
-        certificate: realCertPem,
-        certInfo: { subject: 'STRIX AI TEST', serialNumber: null }, // null → fallback a '0'
-        includePolicy: true
-      };
-
-      const signature = xadesSignatureService._buildXAdESSignature(params);
-
-      expect(signature).toContain('<ds:X509SerialNumber>0</ds:X509SerialNumber>');
     });
   });
 
@@ -510,17 +518,67 @@ describe('XAdESSignatureService', () => {
       expect(signature2).toBe(signature);
     });
 
-    it('debe devolver firma mock si la clave privada es inválida', () => {
+    it('debe relanzar el error si la clave privada es inválida (no debe fabricar firma)', () => {
       const signedInfo = '<ds:SignedInfo>test</ds:SignedInfo>';
       const invalidKey = 'not a valid key';
 
-      const signature = xadesSignatureService._calculateSignature(signedInfo, invalidKey);
-
-      expect(signature).toBeDefined();
-      expect(signature).toContain('MOCK_SIGNATURE_');
-      expect(logger.warn).toHaveBeenCalledWith(
-        'XAdESSignature: Usando firma mock (clave privada no disponible)'
+      expect(() => xadesSignatureService._calculateSignature(signedInfo, invalidKey)).toThrow();
+      expect(logger.error).toHaveBeenCalledWith(
+        'XAdESSignature: Fallo criptográfico al firmar SignedInfo',
+        expect.objectContaining({ error: expect.any(String) })
       );
+    });
+  });
+
+  describe('verificación criptográfica independiente (oráculo xml-crypto)', () => {
+    // Estos tests NO reutilizan _canonicalize/_digestCanonical del propio servicio: usan
+    // xml-crypto en modo verificación (loadSignature + checkSignature), que reimplementa por
+    // su cuenta la canonicalización, la localización de SignedProperties por Id y la
+    // verificación RSA. Si el servicio produjera una firma inválida (por cualquiera de los
+    // bugs históricos: digest de SignedProperties mal calculado, SignedInfo firmado distinto
+    // del insertado, o documento sin canonicalizar), esto falla por motivos independientes,
+    // no por casualidad.
+    async function signAndVerify(xmlContent, operationType) {
+      const result = await xadesSignatureService.signForAEAT(xmlContent, 'test-cert-id', 'test-password', {
+        operationType
+      });
+      expect(result.success).toBe(true);
+
+      const signatureMatch = result.signedXML.match(/<ds:Signature[^>]*>[\s\S]*?<\/ds:Signature>/);
+      expect(signatureMatch).not.toBeNull();
+
+      const verifier = new SignedXml({ publicCert: realCertPem });
+      verifier.loadSignature(signatureMatch[0]);
+      return verifier.checkSignature(result.signedXML);
+    }
+
+    it('debe producir una firma XAdES criptográficamente válida para un XML de prueba', async () => {
+      const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<ImportacionCompletaV1Ent><Declaracion><Importador>B22477020</Importador></Declaracion></ImportacionCompletaV1Ent>`;
+
+      expect(await signAndVerify(xmlContent, 'H1')).toBe(true);
+    });
+
+    it('debe producir una firma XAdES válida sobre un fixture real de H1 (AEAT PRE)', async () => {
+      const raw = fs.readFileSync(
+        path.join(__dirname, '../../aeat-pre-request-H1___Importacion_Completa.xml'),
+        'utf8'
+      );
+      const declarationMatch = raw.match(/<ent:ImportacionCompletaV1Ent[\s\S]*?<\/ent:ImportacionCompletaV1Ent>/);
+      expect(declarationMatch).not.toBeNull();
+
+      expect(await signAndVerify(declarationMatch[0], 'H1')).toBe(true);
+    });
+
+    it('debe producir una firma XAdES válida sobre un fixture real de AES (AEAT PRE)', async () => {
+      const raw = fs.readFileSync(
+        path.join(__dirname, '../../aeat-pre-request-AES___Exportacion.xml'),
+        'utf8'
+      );
+      const declarationMatch = raw.match(/<ent:CC515CV1Ent[\s\S]*?<\/ent:CC515CV1Ent>/);
+      expect(declarationMatch).not.toBeNull();
+
+      expect(await signAndVerify(declarationMatch[0], 'AES')).toBe(true);
     });
   });
 
