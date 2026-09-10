@@ -397,7 +397,14 @@ class AIService {
       'AccessDeniedException',
       'ServiceUnavailableException',
       'InternalServerException',
-      'ModelNotReadyException'
+      'ModelNotReadyException',
+      // Credenciales invalidas/caducadas de la cuenta (p.ej. access key
+      // rotada o revocada): tan de la cuenta como AccessDeniedException, y
+      // sin esto el fallback nunca se activaba pese a tener una cuenta
+      // secundaria sana (incidente real 9/Sep/2026).
+      'UnrecognizedClientException',
+      'InvalidSignatureException',
+      'ExpiredTokenException'
     ].includes(error?.name);
   }
 

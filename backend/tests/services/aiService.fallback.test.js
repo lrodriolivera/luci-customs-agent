@@ -77,6 +77,25 @@ describe('aiService.callClaude — fallback entre cuentas', () => {
     expect(result.content).toBe('rescatado');
   });
 
+  // Caso real detectado en producción (9/Sep/2026): la access key de la
+  // cuenta principal quedó invalidada y Bedrock respondió con
+  // UnrecognizedClientException/403 en vez de AccessDeniedException. Como
+  // ese nombre de error no estaba en _isAccountLevelFailure, el fallback
+  // (con credenciales sanas, verificado a mano contra Bedrock) nunca se
+  // activaba: la IA quedaba caída pese a tener una cuenta de respaldo lista.
+  it.each([
+    'UnrecognizedClientException',
+    'InvalidSignatureException',
+    'ExpiredTokenException'
+  ])('reintenta en la secundaria cuando la principal falla con %s (credenciales inválidas)', async (nombreError) => {
+    aiService.client = { send: jest.fn().mockRejectedValue(awsError(nombreError)) };
+    aiService.fallbackClient = { send: jest.fn().mockResolvedValue(okResponse('rescatado por credenciales')) };
+
+    const result = await aiService.callClaude('us.anthropic.claude-sonnet-5', 'sys', 'user');
+
+    expect(result.content).toBe('rescatado por credenciales');
+  });
+
   it('NO reintenta ante un error de validacion: fallaria igual en la otra cuenta', async () => {
     const fallbackSend = jest.fn();
     aiService.client = { send: jest.fn().mockRejectedValue(awsError('ValidationException')) };
