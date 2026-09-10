@@ -1192,6 +1192,15 @@ class AEATRealService {
 
   // ============== ANÁLISIS LUCI ==============
 
+  /**
+   * Comprueba si el XML contiene una etiqueta de apertura, tolerando un
+   * prefijo de namespace opcional (los builders reales usan <ent:Tag ...>,
+   * no <Tag ...>; ver aesXmlBuilder.js/nctsXmlBuilder.js/h1XmlBuilder.js).
+   */
+  _xmlHasTag(xml, tagName) {
+    return new RegExp(`<(?:[\\w.-]+:)?${tagName}(?=[\\s/>])`).test(xml);
+  }
+
   async _luciPreSubmitValidation(declarationXML, service, options) {
     const issues = [];
     const warnings = [];
@@ -1202,15 +1211,14 @@ class AEATRealService {
     }
 
     // Verificar estructura según tipo
-    const expectedTag = service.messageType ? `<${service.messageType}` : null;
-    if (expectedTag && !declarationXML.includes(expectedTag)) {
+    if (service.messageType && !this._xmlHasTag(declarationXML, service.messageType)) {
       warnings.push(`No se encontró tag esperado ${service.messageType}`);
     }
 
     // Verificar campos críticos según tipo de declaración
     const criticalFields = this._getCriticalFields(service.code);
     for (const field of criticalFields) {
-      if (!declarationXML.includes(`<${field.tag}>`) && !declarationXML.includes(`<${field.tag} `)) {
+      if (!this._xmlHasTag(declarationXML, field.tag)) {
         if (field.required) {
           issues.push(`Campo obligatorio faltante: ${field.name}`);
         } else {
@@ -1398,22 +1406,30 @@ class AEATRealService {
         { tag: 'C42ValorFactura', name: 'Valor factura', required: true },
         { tag: 'C3312CodigoPosicionTaric', name: 'Codigo TARIC', required: true }
       ],
+      // NOTA (sep/2026): existen dos builders H7 (buildH7ImportXML con tags
+      // AEAT-nativos tipo C08Importador/C14Declarante, y buildAltaH7V1XML,
+      // el esquema oficial más reciente, con Exporter/Importer/GoodsItem) y
+      // no está claro cuál es el vigente para H7_SUBMIT — el propio SERVICES
+      // lo marca "Obsoleto desde 2026". No se corrige aquí sin confirmar cuál
+      // builder es el real para no adivinar una decisión de producto.
       'H7_SUBMIT': [
         { tag: 'Sender', name: 'Remitente', required: true },
         { tag: 'Recipient', name: 'Destinatario', required: true },
         { tag: 'GoodsDescription', name: 'Descripción mercancía', required: true },
         { tag: 'IntrinsicValue', name: 'Valor intrínseco', required: true }
       ],
+      // Nombres verificados contra aesXmlBuilder.js (único builder AES, elementFormDefault="qualified").
       'AES_SUBMIT': [
         { tag: 'Exporter', name: 'Exportador', required: true },
-        { tag: 'DestinationCountry', name: 'País destino', required: true },
-        { tag: 'ExportOffice', name: 'Aduana exportación', required: true },
+        { tag: 'countryOfDestination', name: 'País destino', required: true },
+        { tag: 'CustomsOfficeOfExport', name: 'Aduana exportación', required: true },
         { tag: 'GoodsItem', name: 'Partida de mercancía', required: true }
       ],
+      // Nombres verificados contra nctsXmlBuilder.js (único builder NCTS, elementFormDefault="qualified").
       'NCTS_SUBMIT': [
-        { tag: 'Principal', name: 'Titular tránsito', required: true },
-        { tag: 'DepartureOffice', name: 'Aduana partida', required: true },
-        { tag: 'DestinationOffice', name: 'Aduana destino', required: true },
+        { tag: 'HolderOfTheTransitProcedure', name: 'Titular tránsito', required: true },
+        { tag: 'CustomsOfficeOfDeparture', name: 'Aduana partida', required: true },
+        { tag: 'CustomsOfficeOfDestinationDeclared', name: 'Aduana destino', required: true },
         { tag: 'Guarantee', name: 'Garantía', required: true }
       ]
     };

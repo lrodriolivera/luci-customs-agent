@@ -61,19 +61,25 @@ const VALID_H1_XML = `<ImportacionCompletaV1Ent>
   <C3312CodigoPosicionTaric>0901210000</C3312CodigoPosicionTaric>
 </ImportacionCompletaV1Ent>`;
 
-const VALID_AES_XML = `<CC515C>
-  <Exporter><Name>Test</Name></Exporter>
-  <DestinationCountry>FR</DestinationCountry>
-  <ExportOffice>ES002801</ExportOffice>
-  <GoodsItem><Description>Test</Description></GoodsItem>
-</CC515C>`;
+// Nombres y prefijo ent: alineados con aesXmlBuilder.js real (elementFormDefault="qualified").
+const VALID_AES_XML = `<ent:CC515CV1Ent xmlns:ent="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/CC515CV1Ent.xsd">
+  <ent:CC515C>
+    <ent:Exporter><ent:identificationNumber>ESB22477020</ent:identificationNumber></ent:Exporter>
+    <ent:GoodsShipment><ent:countryOfDestination>FR</ent:countryOfDestination></ent:GoodsShipment>
+    <ent:CustomsOfficeOfExport><ent:referenceNumber>ES002801</ent:referenceNumber></ent:CustomsOfficeOfExport>
+    <ent:GoodsItem><ent:declarationGoodsItemNumber>1</ent:declarationGoodsItemNumber></ent:GoodsItem>
+  </ent:CC515C>
+</ent:CC515CV1Ent>`;
 
-const VALID_NCTS_XML = `<CC015C>
-  <Principal><Name>Test</Name></Principal>
-  <DepartureOffice>ES002801</DepartureOffice>
-  <DestinationOffice>FR001</DestinationOffice>
-  <Guarantee><Type>A</Type></Guarantee>
-</CC015C>`;
+// Nombres y prefijo ent: alineados con nctsXmlBuilder.js real (elementFormDefault="qualified").
+const VALID_NCTS_XML = `<ent:CC015CV1Ent xmlns:ent="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC015CV1Ent.xsd">
+  <ent:CC015C>
+    <ent:HolderOfTheTransitProcedure><ent:identificationNumber>ESB22477020</ent:identificationNumber></ent:HolderOfTheTransitProcedure>
+    <ent:CustomsOfficeOfDeparture><ent:referenceNumber>ES002801</ent:referenceNumber></ent:CustomsOfficeOfDeparture>
+    <ent:CustomsOfficeOfDestinationDeclared><ent:referenceNumber>FR001</ent:referenceNumber></ent:CustomsOfficeOfDestinationDeclared>
+    <ent:Guarantee><ent:guaranteeType>1</ent:guaranteeType></ent:Guarantee>
+  </ent:CC015C>
+</ent:CC015CV1Ent>`;
 
 describe('aeatRealService - Cobertura de RAMAS', () => {
 
@@ -185,18 +191,18 @@ describe('aeatRealService - Cobertura de RAMAS', () => {
       expect(result.issues).toHaveLength(0);
     });
 
-    test('campos críticos de AES_SUBMIT incluyen Exporter y DestinationCountry', () => {
+    test('campos críticos de AES_SUBMIT incluyen Exporter y countryOfDestination', () => {
       const fields = aeatRealService._getCriticalFields('AES_SUBMIT');
       expect(fields).toEqual(expect.arrayContaining([
         expect.objectContaining({ tag: 'Exporter', required: true }),
-        expect.objectContaining({ tag: 'DestinationCountry', required: true })
+        expect.objectContaining({ tag: 'countryOfDestination', required: true })
       ]));
     });
 
-    test('campos críticos de NCTS_SUBMIT incluyen Principal y Guarantee', () => {
+    test('campos críticos de NCTS_SUBMIT incluyen HolderOfTheTransitProcedure y Guarantee', () => {
       const fields = aeatRealService._getCriticalFields('NCTS_SUBMIT');
       expect(fields).toEqual(expect.arrayContaining([
-        expect.objectContaining({ tag: 'Principal', required: true }),
+        expect.objectContaining({ tag: 'HolderOfTheTransitProcedure', required: true }),
         expect.objectContaining({ tag: 'Guarantee', required: true })
       ]));
     });

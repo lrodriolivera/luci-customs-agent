@@ -179,6 +179,80 @@ describe('AEAT Real Service', () => {
       );
       expect(result.canSubmit).toBe(true);
     });
+
+    // h1XmlBuilder.js (el builder real usado en producción) genera el elemento
+    // raíz como <ent:ImportacionCompletaV1Ent ...>, con prefijo de namespace.
+    // El XML de arriba usa un tag sin prefijo que nunca ocurre en la realidad;
+    // este test reproduce el XML real y por eso es el que de verdad protege
+    // contra la regresión (bloqueaba TODO envío real de H1 antes del fix).
+    test('debe aceptar el elemento raíz con prefijo de namespace real (ent:)', async () => {
+      const realXml = `<?xml version="1.0" encoding="UTF-8"?>
+<ent:ImportacionCompletaV1Ent xmlns:ent="https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/adip/ws/ImportacionCompletaV1Ent.xsd">
+  <C14Declarante><NIF>B12345678</NIF></C14Declarante>
+  <Partida><NumeroPartida>1</NumeroPartida></Partida>
+  <C42ValorFactura>10000</C42ValorFactura>
+  <C3312CodigoPosicionTaric>8517120000</C3312CodigoPosicionTaric>
+</ent:ImportacionCompletaV1Ent>`;
+
+      const result = await aeatRealService._luciPreSubmitValidation(
+        realXml,
+        { code: 'H1_SUBMIT', messageType: 'ImportacionCompletaV1Ent' },
+        {}
+      );
+
+      expect(result.canSubmit).toBe(true);
+      expect(result.issues).toEqual([]);
+      expect(result.warnings).not.toEqual(
+        expect.arrayContaining([expect.stringContaining('No se encontró tag esperado')])
+      );
+    });
+
+    // aesXmlBuilder.js declara elementFormDefault="qualified": TODOS los
+    // elementos llevan prefijo ent:, incluidos los campos críticos.
+    test('debe aceptar los campos críticos de AES con prefijo ent: (formato real del builder)', async () => {
+      const realAesXml = `<?xml version="1.0" encoding="UTF-8"?>
+<ent:CC515CV1Ent xmlns:ent="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/CC515CV1Ent.xsd">
+  <ent:CC515C>
+    <ent:Exporter><ent:identificationNumber>ESB22477020</ent:identificationNumber></ent:Exporter>
+    <ent:GoodsShipment>
+      <ent:countryOfDestination>CN</ent:countryOfDestination>
+    </ent:GoodsShipment>
+    <ent:CustomsOfficeOfExport><ent:referenceNumber>ES002801</ent:referenceNumber></ent:CustomsOfficeOfExport>
+    <ent:GoodsItem><ent:declarationGoodsItemNumber>1</ent:declarationGoodsItemNumber></ent:GoodsItem>
+  </ent:CC515C>
+</ent:CC515CV1Ent>`;
+
+      const result = await aeatRealService._luciPreSubmitValidation(
+        realAesXml,
+        { code: 'AES_SUBMIT', messageType: 'CC515C' },
+        {}
+      );
+
+      expect(result.canSubmit).toBe(true);
+      expect(result.issues).toEqual([]);
+    });
+
+    // nctsXmlBuilder.js: misma convención elementFormDefault="qualified".
+    test('debe aceptar los campos críticos de NCTS con prefijo ent: (formato real del builder)', async () => {
+      const realNctsXml = `<?xml version="1.0" encoding="UTF-8"?>
+<ent:CC015CV1Ent xmlns:ent="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC015CV1Ent.xsd">
+  <ent:CC015C>
+    <ent:CustomsOfficeOfDeparture><ent:referenceNumber>ES002801</ent:referenceNumber></ent:CustomsOfficeOfDeparture>
+    <ent:CustomsOfficeOfDestinationDeclared><ent:referenceNumber>NL000001</ent:referenceNumber></ent:CustomsOfficeOfDestinationDeclared>
+    <ent:HolderOfTheTransitProcedure><ent:identificationNumber>ESB22477020</ent:identificationNumber></ent:HolderOfTheTransitProcedure>
+    <ent:Guarantee><ent:guaranteeType>1</ent:guaranteeType></ent:Guarantee>
+  </ent:CC015C>
+</ent:CC015CV1Ent>`;
+
+      const result = await aeatRealService._luciPreSubmitValidation(
+        realNctsXml,
+        { code: 'NCTS_SUBMIT', messageType: 'CC015C' },
+        {}
+      );
+
+      expect(result.canSubmit).toBe(true);
+      expect(result.issues).toEqual([]);
+    });
   });
 
   describe('Channel Analysis', () => {
