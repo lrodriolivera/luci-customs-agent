@@ -23,7 +23,11 @@ const mockCertService = {
   verifyCertificateStatus: jest.fn(),
   validateCertificateForOperation: jest.fn(),
   analyzeCertificateWithLuci: jest.fn(),
-  getCertificateForSigning: jest.fn()
+  getCertificateForSigning: jest.fn(),
+  // Identidad: estos tests verifican ramas del controller, no la resolución
+  // alias->certId en sí (eso lo cubre certificateService.test.js), así que
+  // devolver el mismo alias mantiene intactas las aserciones existentes.
+  getCertificateIdByAlias: jest.fn(alias => alias)
 };
 
 const mockXadesService = {
@@ -32,12 +36,11 @@ const mockXadesService = {
 };
 
 const mockAeatRealService = {
-  validateBeforeSubmit: jest.fn(),
   submitH1Declaration: jest.fn(),
   submitH7Declaration: jest.fn(),
   submitAESDeclaration: jest.fn(),
   submitNCTSDeclaration: jest.fn(),
-  submitICS2Declaration: jest.fn(),
+  submitENSDeclaration: jest.fn(),
   queryDeclarationStatus: jest.fn(),
   getInbox: jest.fn(),
   submitDigitalDocuments: jest.fn(),
@@ -139,7 +142,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAeatRealService.validateBeforeSubmit.mockResolvedValue({ isValid: true });
+    mockCertService.getCertificateIdByAlias.mockImplementation(alias => alias);
     mockStatusMonitor.trackDeclaration.mockResolvedValue({ tracked: true });
     mockAiService.askLuci.mockResolvedValue('Análisis OK');
   });
@@ -326,7 +329,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(200);
@@ -349,7 +353,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(200);
@@ -376,7 +381,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(mockStatusMonitor.trackDeclaration).not.toHaveBeenCalled();
@@ -395,7 +401,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       const expActualizado = await Expedition.findById(exp._id);
@@ -420,7 +427,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(mockStatusMonitor.trackDeclaration).not.toHaveBeenCalled();
@@ -439,7 +447,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       const expActualizado = await Expedition.findById(exp._id);
@@ -464,7 +473,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(mockStatusMonitor.trackDeclaration).not.toHaveBeenCalled();
@@ -483,7 +493,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       const expActualizado = await Expedition.findById(exp._id);
@@ -501,7 +512,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
     test('persiste submission_error cuando result.success=false (línea 638)', async () => {
       const exp = await crearExpedicion();
 
-      mockAeatRealService.submitICS2Declaration.mockResolvedValue({
+      mockAeatRealService.submitENSDeclaration.mockResolvedValue({
         success: false,
         error: 'ICS2 rechazado'
       });
@@ -510,7 +521,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       const expActualizado = await Expedition.findById(exp._id);
@@ -911,14 +923,16 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           xmlContent: '<H1>...</H1>',
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
-      // Línea 281: serviceType || 'H1_SUBMIT'
+      // Línea 281: serviceType || 'H1'
       expect(mockXadesService.signForAEAT).toHaveBeenCalledWith(
         '<H1>...</H1>',
         'FNMT-STRIX',
-        'H1_SUBMIT'
+        'clave-real',
+        { operationType: 'H1' }
       );
     });
 
@@ -932,13 +946,15 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .send({
           xmlContent: '<H7>...</H7>',
           certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real',
           serviceType: 'H7_SUBMIT'
         });
 
       expect(mockXadesService.signForAEAT).toHaveBeenCalledWith(
         '<H7>...</H7>',
         'FNMT-STRIX',
-        'H7_SUBMIT'
+        'clave-real',
+        { operationType: 'H7_SUBMIT' }
       );
     });
   });
@@ -1159,11 +1175,13 @@ describe('aeatRealController - ramas sin cubrir', () => {
   });
 
   // ============================================
-  // RAMAS: submitNCTSDeclaration - messageType explícito
-  // Línea 582
+  // RAMAS: submitNCTSDeclaration - messageType en el body se ignora
+  // aeatRealService.submitNCTSDeclaration siempre usa SERVICES.NCTS_SUBMIT;
+  // nunca existió un parámetro messageType real en el servicio, así que
+  // pasarlo en el body no debe alterar la llamada (certId + password + options).
   // ============================================
-  describe('submitNCTSDeclaration - messageType explícito', () => {
-    test('respeta messageType cuando se pasa en body', async () => {
+  describe('submitNCTSDeclaration - messageType en el body no afecta la llamada', () => {
+    test('ignora messageType del body y pasa certId+password normalmente', async () => {
       const exp = await crearExpedicion({ operationType: 'transit' });
 
       mockAeatRealService.submitNCTSDeclaration.mockResolvedValue({
@@ -1176,28 +1194,28 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .send({
           expeditionId: exp._id.toString(),
           certificateAlias: 'FNMT-STRIX',
-          messageType: 'CC013C' // explícito
+          password: 'clave-real',
+          messageType: 'CC013C' // ignorado: el servicio no lo usa
         });
 
-      // Línea 582: messageType || 'CC015C'
       expect(mockAeatRealService.submitNCTSDeclaration).toHaveBeenCalledWith(
         '<H1>Test declaration</H1>',
         'FNMT-STRIX',
-        'CC013C', // usa el explícito
+        'clave-real',
         { useSandbox: true }
       );
     });
   });
 
   // ============================================
-  // RAMAS: submitICS2Declaration - messageType explícito
-  // Línea 634
+  // RAMAS: submitICS2Declaration - messageType en el body se ignora
+  // aeatRealService.submitENSDeclaration siempre usa SERVICES.ICS2_ENS_SUBMIT.
   // ============================================
-  describe('submitICS2Declaration - messageType explícito', () => {
-    test('respeta messageType cuando se pasa', async () => {
+  describe('submitICS2Declaration - messageType en el body no afecta la llamada', () => {
+    test('ignora messageType del body y llama a submitENSDeclaration con certId+password', async () => {
       const exp = await crearExpedicion();
 
-      mockAeatRealService.submitICS2Declaration.mockResolvedValue({
+      mockAeatRealService.submitENSDeclaration.mockResolvedValue({
         success: true,
         acknowledgement: 'ICS2-ACK-999'
       });
@@ -1207,14 +1225,14 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .send({
           expeditionId: exp._id.toString(),
           certificateAlias: 'FNMT-STRIX',
-          messageType: 'CC316C' // explícito
+          password: 'clave-real',
+          messageType: 'CC316C' // ignorado: el servicio no lo usa
         });
 
-      // Línea 634: messageType || 'CC315C'
-      expect(mockAeatRealService.submitICS2Declaration).toHaveBeenCalledWith(
+      expect(mockAeatRealService.submitENSDeclaration).toHaveBeenCalledWith(
         '<H1>Test declaration</H1>',
         'FNMT-STRIX',
-        'CC316C', // usa el explícito
+        'clave-real',
         { useSandbox: true }
       );
     });
@@ -1410,7 +1428,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       const expActualizado = await Expedition.findById(exp._id);
@@ -1439,7 +1458,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       const expActualizado = await Expedition.findById(exp._id);
@@ -1472,7 +1492,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       const expActualizado = await Expedition.findById(exp._id);
@@ -1504,7 +1525,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       const expActualizado = await Expedition.findById(exp._id);
@@ -1663,7 +1685,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           xmlContent: '<H1>...</H1>',
-          certificateAlias: 'CERT-X'
+          certificateAlias: 'CERT-X',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(500);
@@ -1690,7 +1713,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'CERT-X'
+          certificateAlias: 'CERT-X',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(500);
@@ -1706,7 +1730,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'CERT-X'
+          certificateAlias: 'CERT-X',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(500);
@@ -1722,7 +1747,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'CERT-X'
+          certificateAlias: 'CERT-X',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(500);
@@ -1738,7 +1764,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'CERT-X'
+          certificateAlias: 'CERT-X',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(500);
@@ -1748,13 +1775,14 @@ describe('aeatRealController - ramas sin cubrir', () => {
     test('submitICS2Declaration - error sin message (línea 652)', async () => {
       const exp = await crearExpedicion();
 
-      mockAeatRealService.submitICS2Declaration.mockRejectedValue({});
+      mockAeatRealService.submitENSDeclaration.mockRejectedValue({});
 
       const res = await request(app(aeatRealController.submitICS2Declaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'CERT-X'
+          certificateAlias: 'CERT-X',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(500);
@@ -1970,6 +1998,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .send({
           expeditionId: exp._id.toString(),
           certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real',
           useSandbox: false // explícito
         });
 
@@ -1978,6 +2007,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
       expect(mockAeatRealService.submitH1Declaration).toHaveBeenCalledWith(
         '<H1>Test declaration</H1>',
         'FNMT-STRIX',
+        'clave-real',
         { useSandbox: false }
       );
     });
@@ -2000,12 +2030,14 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .send({
           expeditionId: exp._id.toString(),
           certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real',
           useSandbox: false
         });
 
       expect(mockAeatRealService.submitH7Declaration).toHaveBeenCalledWith(
         expect.any(String),
         'FNMT-STRIX',
+        'clave-real',
         { useSandbox: false }
       );
     });
@@ -2025,12 +2057,14 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .send({
           expeditionId: exp._id.toString(),
           certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real',
           useSandbox: false
         });
 
       expect(mockAeatRealService.submitAESDeclaration).toHaveBeenCalledWith(
         expect.any(String),
         'FNMT-STRIX',
+        'clave-real',
         { useSandbox: false }
       );
     });
@@ -2050,13 +2084,14 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .send({
           expeditionId: exp._id.toString(),
           certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real',
           useSandbox: false
         });
 
       expect(mockAeatRealService.submitNCTSDeclaration).toHaveBeenCalledWith(
         expect.any(String),
         'FNMT-STRIX',
-        'CC015C',
+        'clave-real',
         { useSandbox: false }
       );
     });
@@ -2066,7 +2101,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
     test('respeta useSandbox=false', async () => {
       const exp = await crearExpedicion();
 
-      mockAeatRealService.submitICS2Declaration.mockResolvedValue({
+      mockAeatRealService.submitENSDeclaration.mockResolvedValue({
         success: true
       });
 
@@ -2075,13 +2110,14 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .send({
           expeditionId: exp._id.toString(),
           certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real',
           useSandbox: false
         });
 
-      expect(mockAeatRealService.submitICS2Declaration).toHaveBeenCalledWith(
+      expect(mockAeatRealService.submitENSDeclaration).toHaveBeenCalledWith(
         expect.any(String),
         'FNMT-STRIX',
-        'CC315C',
+        'clave-real',
         { useSandbox: false }
       );
     });

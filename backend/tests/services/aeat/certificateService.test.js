@@ -248,4 +248,37 @@ describe('Certificate Service', () => {
       expect(result.alerts[0].level).toBe('warning');
     });
   });
+
+  describe('getCertificateIdByAlias', () => {
+    // El certId es un hash opaco (ver _generateCertificateId); ningún llamador
+    // externo puede conocerlo de antemano. Los controladores solo conocen el
+    // alias legible que el usuario eligió al importar, así que necesitan una
+    // forma real de resolver alias -> certId antes de firmar o consultar.
+    test('debe resolver el certId a partir del alias guardado en metadata', () => {
+      certificateService.certificates.set('abc123opaco', {
+        id: 'abc123opaco',
+        type: 'FNMT_PJ',
+        status: 'active',
+        metadata: { alias: 'fnmt-jenifer' }
+      });
+
+      expect(certificateService.getCertificateIdByAlias('fnmt-jenifer')).toBe('abc123opaco');
+    });
+
+    test('debe devolver null si ningún certificado tiene ese alias', () => {
+      expect(certificateService.getCertificateIdByAlias('alias-inexistente')).toBeNull();
+    });
+
+    test('no debe confundir el alias con el propio certId', () => {
+      certificateService.certificates.set('otro-cert-id', {
+        id: 'otro-cert-id',
+        type: 'FNMT_PJ',
+        status: 'active',
+        metadata: { alias: 'mi-alias' }
+      });
+
+      // Pedir el certId literal como si fuera un alias no debe devolverlo por casualidad.
+      expect(certificateService.getCertificateIdByAlias('otro-cert-id')).toBeNull();
+    });
+  });
 });

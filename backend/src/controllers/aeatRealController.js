@@ -236,8 +236,16 @@ const validateCertificateForOperation = async (req, res) => {
       });
     }
 
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    if (!certificateId) {
+      return res.status(404).json({
+        success: false,
+        error: 'Certificado no encontrado para el alias indicado'
+      });
+    }
+
     const validation = await certificateService.validateCertificateForOperation(
-      certificateAlias,
+      certificateId,
       operationType,
       declarationType
     );
@@ -266,19 +274,28 @@ const validateCertificateForOperation = async (req, res) => {
  */
 const signDocument = async (req, res) => {
   try {
-    const { xmlContent, certificateAlias, serviceType } = req.body;
+    const { xmlContent, certificateAlias, password, serviceType } = req.body;
 
-    if (!xmlContent || !certificateAlias) {
+    if (!xmlContent || !certificateAlias || !password) {
       return res.status(400).json({
         success: false,
-        error: 'Se requiere contenido XML y alias de certificado'
+        error: 'Se requiere contenido XML, alias de certificado y contraseña'
+      });
+    }
+
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    if (!certificateId) {
+      return res.status(404).json({
+        success: false,
+        error: 'Certificado no encontrado para el alias indicado'
       });
     }
 
     const signedDocument = await xadesSignatureService.signForAEAT(
       xmlContent,
-      certificateAlias,
-      serviceType || 'H1_SUBMIT'
+      certificateId,
+      password,
+      { operationType: serviceType || 'H1' }
     );
 
     res.json({
@@ -336,12 +353,12 @@ const verifySignature = async (req, res) => {
  */
 const submitH1Declaration = async (req, res) => {
   try {
-    const { expeditionId, certificateAlias, useSandbox } = req.body;
+    const { expeditionId, certificateAlias, password, useSandbox } = req.body;
 
-    if (!expeditionId || !certificateAlias) {
+    if (!expeditionId || !certificateAlias || !password) {
       return res.status(400).json({
         success: false,
-        error: 'Se requiere ID de expediente y certificado'
+        error: 'Se requiere ID de expediente, certificado y contraseña'
       });
     }
 
@@ -355,25 +372,25 @@ const submitH1Declaration = async (req, res) => {
       });
     }
 
-    // Validación inteligente con LUCI antes del envío
-    const preSubmitValidation = await aeatRealService.validateBeforeSubmit({
-      declaration: expedition.declaration,
-      goods: expedition.goods,
-      transport: expedition.transport
-    });
-
-    if (!preSubmitValidation.isValid) {
-      return res.status(400).json({
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    if (!certificateId) {
+      return res.status(404).json({
         success: false,
-        error: 'Validación pre-envío fallida',
-        data: preSubmitValidation
+        error: 'Certificado no encontrado para el alias indicado'
       });
     }
+
+    // La validación previa (LUCI, campos críticos) ya la hace internamente
+    // aeatRealService.submitH1Declaration -> _submitDeclaration ->
+    // _luciPreSubmitValidation, devolviendo {success:false, error, luciAnalysis}
+    // si falla. Aquí no se duplica: "aeatRealService.validateBeforeSubmit" no
+    // existe en el servicio real (llamarlo lanzaba antes de llegar a firmar).
 
     // Enviar a AEAT
     const result = await aeatRealService.submitH1Declaration(
       expedition.declaration.xmlContent,
-      certificateAlias,
+      certificateId,
+      password,
       { useSandbox: useSandbox !== false }
     );
 
@@ -417,7 +434,6 @@ const submitH1Declaration = async (req, res) => {
       success: true,
       data: {
         result,
-        preSubmitValidation,
         expedition: {
           id: expedition._id,
           status: expedition.declaration.status
@@ -440,22 +456,31 @@ const submitH1Declaration = async (req, res) => {
  */
 const submitH7Declaration = async (req, res) => {
   try {
-    const { expeditionId, certificateAlias, useSandbox } = req.body;
+    const { expeditionId, certificateAlias, password, useSandbox } = req.body;
 
-    if (!expeditionId || !certificateAlias) {
+    if (!expeditionId || !certificateAlias || !password) {
       return res.status(400).json({
         success: false,
-        error: 'Se requiere ID de expediente y certificado'
+        error: 'Se requiere ID de expediente, certificado y contraseña'
       });
     }
 
     const expedition = await Expedition.findById(expeditionId).populate('documents');
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    if (!certificateId) {
+      return res.status(404).json({
+        success: false,
+        error: 'Certificado no encontrado para el alias indicado'
+      });
+    }
+
     // Enviar a AEAT
     const result = await aeatRealService.submitH7Declaration(
       expedition.declaration.xmlContent,
-      certificateAlias,
+      certificateId,
+      password,
       { useSandbox: useSandbox !== false }
     );
 
@@ -504,21 +529,30 @@ const submitH7Declaration = async (req, res) => {
  */
 const submitAESDeclaration = async (req, res) => {
   try {
-    const { expeditionId, certificateAlias, useSandbox } = req.body;
+    const { expeditionId, certificateAlias, password, useSandbox } = req.body;
 
-    if (!expeditionId || !certificateAlias) {
+    if (!expeditionId || !certificateAlias || !password) {
       return res.status(400).json({
         success: false,
-        error: 'Se requiere ID de expediente y certificado'
+        error: 'Se requiere ID de expediente, certificado y contraseña'
       });
     }
 
     const expedition = await Expedition.findById(expeditionId).populate('documents');
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    if (!certificateId) {
+      return res.status(404).json({
+        success: false,
+        error: 'Certificado no encontrado para el alias indicado'
+      });
+    }
+
     const result = await aeatRealService.submitAESDeclaration(
       expedition.declaration.xmlContent,
-      certificateAlias,
+      certificateId,
+      password,
       { useSandbox: useSandbox !== false }
     );
 
@@ -564,22 +598,30 @@ const submitAESDeclaration = async (req, res) => {
  */
 const submitNCTSDeclaration = async (req, res) => {
   try {
-    const { expeditionId, certificateAlias, messageType, useSandbox } = req.body;
+    const { expeditionId, certificateAlias, password, useSandbox } = req.body;
 
-    if (!expeditionId || !certificateAlias) {
+    if (!expeditionId || !certificateAlias || !password) {
       return res.status(400).json({
         success: false,
-        error: 'Se requiere ID de expediente y certificado'
+        error: 'Se requiere ID de expediente, certificado y contraseña'
       });
     }
 
     const expedition = await Expedition.findById(expeditionId);
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    if (!certificateId) {
+      return res.status(404).json({
+        success: false,
+        error: 'Certificado no encontrado para el alias indicado'
+      });
+    }
+
     const result = await aeatRealService.submitNCTSDeclaration(
       expedition.declaration.xmlContent,
-      certificateAlias,
-      messageType || 'CC015C',
+      certificateId,
+      password,
       { useSandbox: useSandbox !== false }
     );
 
@@ -616,22 +658,33 @@ const submitNCTSDeclaration = async (req, res) => {
  */
 const submitICS2Declaration = async (req, res) => {
   try {
-    const { expeditionId, certificateAlias, messageType, useSandbox } = req.body;
+    const { expeditionId, certificateAlias, password, useSandbox } = req.body;
 
-    if (!expeditionId || !certificateAlias) {
+    if (!expeditionId || !certificateAlias || !password) {
       return res.status(400).json({
         success: false,
-        error: 'Se requiere ID de expediente y certificado'
+        error: 'Se requiere ID de expediente, certificado y contraseña'
       });
     }
 
     const expedition = await Expedition.findById(expeditionId);
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
-    const result = await aeatRealService.submitICS2Declaration(
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    if (!certificateId) {
+      return res.status(404).json({
+        success: false,
+        error: 'Certificado no encontrado para el alias indicado'
+      });
+    }
+
+    // aeatRealService no expone "submitICS2Declaration": el servicio ICS2/ENS
+    // es submitENSDeclaration (ver SERVICES.ICS2_ENS_SUBMIT). Llamar al nombre
+    // antiguo lanzaba TypeError antes de llegar siquiera a AEAT.
+    const result = await aeatRealService.submitENSDeclaration(
       expedition.declaration.xmlContent,
-      certificateAlias,
-      messageType || 'CC315C',
+      certificateId,
+      password,
       { useSandbox: useSandbox !== false }
     );
 

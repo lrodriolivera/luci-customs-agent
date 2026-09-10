@@ -24,7 +24,8 @@ const mockCertService = {
   deleteCertificate: jest.fn(),
   verifyCertificateStatus: jest.fn(),
   validateCertificateForOperation: jest.fn(),
-  analyzeCertificateWithLuci: jest.fn()
+  analyzeCertificateWithLuci: jest.fn(),
+  getCertificateIdByAlias: jest.fn(alias => alias)
 };
 
 const mockXadesService = {
@@ -33,12 +34,11 @@ const mockXadesService = {
 };
 
 const mockAeatRealService = {
-  validateBeforeSubmit: jest.fn(),
   submitH1Declaration: jest.fn(),
   submitH7Declaration: jest.fn(),
   submitAESDeclaration: jest.fn(),
   submitNCTSDeclaration: jest.fn(),
-  submitICS2Declaration: jest.fn(),
+  submitENSDeclaration: jest.fn(),
   queryDeclarationStatus: jest.fn(),
   getInbox: jest.fn(),
   submitDigitalDocuments: jest.fn(),
@@ -141,8 +141,7 @@ describe('aeatRealController con Mongo real', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Defaults: validación OK, LUCI responde
-    mockAeatRealService.validateBeforeSubmit.mockResolvedValue({ isValid: true });
+    mockCertService.getCertificateIdByAlias.mockImplementation(alias => alias);
     mockStatusMonitor.trackDeclaration.mockResolvedValue({ tracked: true });
     mockAiService.askLuci.mockResolvedValue('Todo listo para enviar');
   });
@@ -166,6 +165,7 @@ describe('aeatRealController con Mongo real', () => {
         .send({
           expeditionId: exp._id.toString(),
           certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real',
           useSandbox: true
         });
 
@@ -187,14 +187,14 @@ describe('aeatRealController con Mongo real', () => {
   // submitH1Declaration con Mongo real
   // ============================================
   describe('submitH1Declaration', () => {
-    test('400 si falta expeditionId o certificateAlias', async () => {
+    test('400 si falta expeditionId, certificateAlias o password', async () => {
       const res = await request(app(aeatRealController.submitH1Declaration))
         .post('/r')
-        .send({ expeditionId: 'abc123' }); // falta certificateAlias
+        .send({ expeditionId: 'abc123' }); // falta certificateAlias y password
 
       expect(res.status).toBe(400);
       expect(res.body.error).toMatch(/certificado/i);
-      expect(mockAeatRealService.validateBeforeSubmit).not.toHaveBeenCalled();
+      expect(mockAeatRealService.submitH1Declaration).not.toHaveBeenCalled();
     });
 
     test('404 si el expediente es de otro tenant (ensureSameTenant)', async () => {
@@ -204,12 +204,13 @@ describe('aeatRealController con Mongo real', () => {
         .post('/r')
         .send({
           expeditionId: expOtroTenant._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(404);
       expect(res.body.error).toMatch(/no encontrado/i);
-      expect(mockAeatRealService.validateBeforeSubmit).not.toHaveBeenCalled();
+      expect(mockAeatRealService.submitH1Declaration).not.toHaveBeenCalled();
     });
 
     test('400 si el expediente no tiene xmlContent generado', async () => {
@@ -221,30 +222,27 @@ describe('aeatRealController con Mongo real', () => {
         .post('/r')
         .send({
           expeditionId: expSinXml._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(400);
       expect(res.body.error).toMatch(/declaración generada/i);
     });
 
-    test('400 si validateBeforeSubmit detecta errores', async () => {
+    test('404 si el alias no resuelve a ningún certificado importado', async () => {
       const exp = await crearExpedicion();
-
-      mockAeatRealService.validateBeforeSubmit.mockResolvedValue({
-        isValid: false,
-        errors: ['Falta EORI del destinatario']
-      });
+      mockCertService.getCertificateIdByAlias.mockReturnValue(null);
 
       const res = await request(app(aeatRealController.submitH1Declaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'ALIAS-INEXISTENTE',
+          password: 'clave-real'
         });
 
-      expect(res.status).toBe(400);
-      expect(res.body.error).toMatch(/validación pre-envío/i);
+      expect(res.status).toBe(404);
       expect(mockAeatRealService.submitH1Declaration).not.toHaveBeenCalled();
     });
 
@@ -262,6 +260,7 @@ describe('aeatRealController con Mongo real', () => {
         .send({
           expeditionId: exp._id.toString(),
           certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real',
           useSandbox: true
         });
 
@@ -269,10 +268,11 @@ describe('aeatRealController con Mongo real', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.result.mrn).toBe('26ES123456789012345');
 
-      // Verificar que delegó correctamente
+      // Verificar que delegó correctamente, con el certId resuelto y la contraseña real
       expect(mockAeatRealService.submitH1Declaration).toHaveBeenCalledWith(
         '<H1>Test declaration</H1>',
         'FNMT-STRIX',
+        'clave-real',
         { useSandbox: true }
       );
 
@@ -306,7 +306,8 @@ describe('aeatRealController con Mongo real', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(500);
@@ -334,7 +335,8 @@ describe('aeatRealController con Mongo real', () => {
         .post('/r')
         .send({
           expeditionId: expOtro._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(404);
@@ -354,6 +356,7 @@ describe('aeatRealController con Mongo real', () => {
         .send({
           expeditionId: exp._id.toString(),
           certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real',
           useSandbox: false
         });
 
@@ -377,7 +380,8 @@ describe('aeatRealController con Mongo real', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(500);
@@ -404,7 +408,8 @@ describe('aeatRealController con Mongo real', () => {
         .post('/r')
         .send({
           expeditionId: expOtro._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(404);
@@ -422,7 +427,8 @@ describe('aeatRealController con Mongo real', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(200);
@@ -444,7 +450,8 @@ describe('aeatRealController con Mongo real', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(500);
@@ -471,13 +478,14 @@ describe('aeatRealController con Mongo real', () => {
         .post('/r')
         .send({
           expeditionId: expOtro._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(404);
     });
 
-    test('camino feliz: usa messageType=CC015C por defecto', async () => {
+    test('camino feliz: llama a aeatRealService.submitNCTSDeclaration con certId+password', async () => {
       const exp = await crearExpedicion({ operationType: 'transit' });
 
       mockAeatRealService.submitNCTSDeclaration.mockResolvedValue({
@@ -489,14 +497,15 @@ describe('aeatRealController con Mongo real', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(200);
       expect(mockAeatRealService.submitNCTSDeclaration).toHaveBeenCalledWith(
         '<H1>Test declaration</H1>',
         'FNMT-STRIX',
-        'CC015C',
+        'clave-real',
         { useSandbox: true }
       );
 
@@ -516,7 +525,8 @@ describe('aeatRealController con Mongo real', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(500);
@@ -543,16 +553,17 @@ describe('aeatRealController con Mongo real', () => {
         .post('/r')
         .send({
           expeditionId: expOtro._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(404);
     });
 
-    test('camino feliz: usa messageType=CC315C por defecto, NO guarda MRN (ICS2 no devuelve MRN)', async () => {
+    test('camino feliz: llama a submitENSDeclaration (no submitICS2Declaration, que no existe en el servicio), NO guarda MRN', async () => {
       const exp = await crearExpedicion();
 
-      mockAeatRealService.submitICS2Declaration.mockResolvedValue({
+      mockAeatRealService.submitENSDeclaration.mockResolvedValue({
         success: true,
         acknowledgement: 'ICS2-ACK-123'
       });
@@ -562,11 +573,17 @@ describe('aeatRealController con Mongo real', () => {
         .send({
           expeditionId: exp._id.toString(),
           certificateAlias: 'FNMT-STRIX',
-          messageType: 'CC315C'
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(200);
       expect(res.body.data.acknowledgement).toBe('ICS2-ACK-123');
+      expect(mockAeatRealService.submitENSDeclaration).toHaveBeenCalledWith(
+        '<H1>Test declaration</H1>',
+        'FNMT-STRIX',
+        'clave-real',
+        { useSandbox: true }
+      );
 
       const expActualizado = await Expedition.findById(exp._id);
       expect(expActualizado.declaration.status).toBe('submitted');
@@ -577,7 +594,7 @@ describe('aeatRealController con Mongo real', () => {
     test('500 cuando el servicio lanza', async () => {
       const exp = await crearExpedicion();
 
-      mockAeatRealService.submitICS2Declaration.mockRejectedValue(
+      mockAeatRealService.submitENSDeclaration.mockRejectedValue(
         new Error('Timeout ICS2')
       );
 
@@ -585,7 +602,8 @@ describe('aeatRealController con Mongo real', () => {
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX'
+          certificateAlias: 'FNMT-STRIX',
+          password: 'clave-real'
         });
 
       expect(res.status).toBe(500);

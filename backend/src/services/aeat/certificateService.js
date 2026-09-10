@@ -409,6 +409,20 @@ class CertificateService {
   /**
    * Validar que certificado puede usarse para operación específica
    */
+  /**
+   * Resolver el certId opaco (hash generado, ver _generateCertificateId) a
+   * partir del alias legible que el usuario elige al importar. Ningún
+   * llamador externo puede conocer el certId de antemano, así que sin esto
+   * cualquier endpoint que reciba "certificateAlias" no puede localizar el
+   * certificado.
+   */
+  getCertificateIdByAlias(alias) {
+    for (const [id, cert] of this.certificates) {
+      if (cert.metadata?.alias === alias) return id;
+    }
+    return null;
+  }
+
   async validateCertificateForOperation(certId, operationType) {
     const certRecord = this.certificates.get(certId);
 

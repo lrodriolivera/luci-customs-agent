@@ -17,7 +17,8 @@ const mockCertService = {
   deleteCertificate: jest.fn(),
   verifyCertificateStatus: jest.fn(),
   validateCertificateForOperation: jest.fn(),
-  analyzeCertificateWithLuci: jest.fn()
+  analyzeCertificateWithLuci: jest.fn(),
+  getCertificateIdByAlias: jest.fn()
 };
 
 const mockXadesService = {
@@ -26,8 +27,12 @@ const mockXadesService = {
 };
 
 const mockAeatReal = {
-  validateBeforeSubmit: jest.fn(),
-  submitDeclaration: jest.fn()
+  submitDeclaration: jest.fn(),
+  submitH1Declaration: jest.fn(),
+  submitH7Declaration: jest.fn(),
+  submitAESDeclaration: jest.fn(),
+  submitNCTSDeclaration: jest.fn(),
+  submitENSDeclaration: jest.fn()
 };
 
 const mockStatusMonitor = {
@@ -318,6 +323,7 @@ describe('aeatRealController.deleteCertificate', () => {
 describe('aeatRealController.validateCertificateForOperation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCertService.getCertificateIdByAlias.mockReturnValue('cert-id-real-1');
     mockCertService.validateCertificateForOperation.mockResolvedValue({ valid: true });
   });
 
@@ -329,7 +335,20 @@ describe('aeatRealController.validateCertificateForOperation', () => {
     expect(mockCertService.validateCertificateForOperation).not.toHaveBeenCalled();
   });
 
-  test('camino feliz: valida certificado para operación', async () => {
+  test('404 si el alias no resuelve a ningún certificado importado', async () => {
+    // certificateService no indexa por alias (es metadata libre); sin esta
+    // resolución explícita, el alias se pasaba tal cual como si fuera el
+    // certId opaco y el servicio siempre respondía "Certificado no encontrado".
+    mockCertService.getCertificateIdByAlias.mockReturnValue(null);
+
+    const res = await request(app(aeatRealController.validateCertificateForOperation))
+      .post('/r').send({ certificateAlias: 'ALIAS-INEXISTENTE', operationType: 'import' });
+
+    expect(res.status).toBe(404);
+    expect(mockCertService.validateCertificateForOperation).not.toHaveBeenCalled();
+  });
+
+  test('camino feliz: resuelve el alias a certId antes de validar', async () => {
     const res = await request(app(aeatRealController.validateCertificateForOperation))
       .post('/r').send({
         certificateAlias: 'FNMT-STRIX',
@@ -339,8 +358,9 @@ describe('aeatRealController.validateCertificateForOperation', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.valid).toBe(true);
+    expect(mockCertService.getCertificateIdByAlias).toHaveBeenCalledWith('FNMT-STRIX');
     expect(mockCertService.validateCertificateForOperation).toHaveBeenCalledWith(
-      'FNMT-STRIX',
+      'cert-id-real-1',
       'import',
       'H1'
     );
@@ -363,30 +383,46 @@ describe('aeatRealController.validateCertificateForOperation', () => {
 describe('aeatRealController.signDocument', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCertService.getCertificateIdByAlias.mockReturnValue('cert-id-real-1');
     mockXadesService.signForAEAT.mockResolvedValue({ signedXml: '<Signed>...</Signed>' });
   });
 
-  test('400 sin xmlContent o certificateAlias', async () => {
+  test('400 sin xmlContent, certificateAlias o password', async () => {
+    // Antes del fix: se llamaba a signForAEAT sin password (pasando el
+    // serviceType en su lugar), y xadesSignatureService.getCertificateForSigning
+    // exige la contraseña exacta del .p12 para descifrar la clave privada.
     const res = await request(app(aeatRealController.signDocument))
-      .post('/r').send({ xmlContent: '<H1/>' });
+      .post('/r').send({ xmlContent: '<H1/>', certificateAlias: 'FNMT-STRIX' }); // falta password
 
     expect(res.status).toBe(400);
     expect(mockXadesService.signForAEAT).not.toHaveBeenCalled();
   });
 
-  test('camino feliz: firma documento con serviceType por defecto', async () => {
+  test('404 si el alias no resuelve a ningún certificado importado', async () => {
+    mockCertService.getCertificateIdByAlias.mockReturnValue(null);
+
+    const res = await request(app(aeatRealController.signDocument))
+      .post('/r').send({ xmlContent: '<H1/>', certificateAlias: 'ALIAS-INEXISTENTE', password: 'pass' });
+
+    expect(res.status).toBe(404);
+    expect(mockXadesService.signForAEAT).not.toHaveBeenCalled();
+  });
+
+  test('camino feliz: resuelve el certId y pasa la contraseña real a signForAEAT', async () => {
     const res = await request(app(aeatRealController.signDocument))
       .post('/r').send({
         xmlContent: '<H1>...</H1>',
-        certificateAlias: 'FNMT-STRIX'
+        certificateAlias: 'FNMT-STRIX',
+        password: 'clave-real-p12'
       });
 
     expect(res.status).toBe(200);
     expect(res.body.data.signedXml).toContain('Signed');
     expect(mockXadesService.signForAEAT).toHaveBeenCalledWith(
       '<H1>...</H1>',
-      'FNMT-STRIX',
-      'H1_SUBMIT'
+      'cert-id-real-1',
+      'clave-real-p12',
+      { operationType: 'H1' }
     );
   });
 
@@ -396,7 +432,8 @@ describe('aeatRealController.signDocument', () => {
     const res = await request(app(aeatRealController.signDocument))
       .post('/r').send({
         xmlContent: '<H1/>',
-        certificateAlias: 'FNMT-STRIX'
+        certificateAlias: 'FNMT-STRIX',
+        password: 'clave-real-p12'
       });
 
     expect(res.status).toBe(500);
@@ -527,12 +564,12 @@ describe('aeatRealController.acknowledgeAlert', () => {
 describe('aeatRealController.submitH1Declaration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAeatReal.validateBeforeSubmit.mockResolvedValue({ valid: true, errors: [] });
+    mockCertService.getCertificateIdByAlias.mockReturnValue('cert-id-real-1');
   });
 
-  test('400 sin expediente o sin certificado, y sin llamar a AEAT', async () => {
+  test('400 sin expediente, certificado o contraseña, y sin llamar a AEAT', async () => {
     const res = await request(app(aeatRealController.submitH1Declaration))
-      .post('/r').send({ expeditionId: 'e1' }); // falta certificateAlias
+      .post('/r').send({ expeditionId: 'e1' }); // falta certificateAlias y password
 
     expect(res.status).toBe(400);
     expect(mockExpedition.findById).not.toHaveBeenCalled();
@@ -546,10 +583,10 @@ describe('aeatRealController.submitH1Declaration', () => {
     });
 
     const res = await request(app(aeatRealController.submitH1Declaration))
-      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX' });
+      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX', password: 'clave-real' });
 
     expect(res.status).toBe(404);
-    expect(mockAeatReal.validateBeforeSubmit).not.toHaveBeenCalled();
+    expect(mockAeatReal.submitH1Declaration).not.toHaveBeenCalled();
   });
 
   test('400 si el expediente no tiene XML generado', async () => {
@@ -558,10 +595,198 @@ describe('aeatRealController.submitH1Declaration', () => {
     });
 
     const res = await request(app(aeatRealController.submitH1Declaration))
-      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX' });
+      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX', password: 'clave-real' });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/declaración generada/i);
-    expect(mockAeatReal.validateBeforeSubmit).not.toHaveBeenCalled();
+    expect(mockAeatReal.submitH1Declaration).not.toHaveBeenCalled();
+  });
+
+  test('404 si el alias no resuelve a ningún certificado importado', async () => {
+    mockCertService.getCertificateIdByAlias.mockReturnValue(null);
+    mockExpedition.findById.mockReturnValue({
+      populate: jest.fn().mockResolvedValue({ _id: 'e1', tenantId: 't1', declaration: { xmlContent: '<x/>' } })
+    });
+
+    const res = await request(app(aeatRealController.submitH1Declaration))
+      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'ALIAS-INEXISTENTE', password: 'clave-real' });
+
+    expect(res.status).toBe(404);
+    expect(mockAeatReal.submitH1Declaration).not.toHaveBeenCalled();
+  });
+
+  test('camino feliz: llama a aeatRealService.submitH1Declaration con certId y password reales', async () => {
+    // Este es el caso que faltaba por completo: antes del fix, la llamada real
+    // pasaba (xmlContent, certificateAlias, options) — sin password y sin
+    // resolver el alias — y aeatRealService.submitH1Declaration nunca
+    // funcionaría contra el servicio real (getCertificateForSigning exige
+    // certId+password exactos).
+    const expedition = {
+      _id: 'e1',
+      expeditionId: 'EXP-1',
+      tenantId: 't1',
+      declaration: { xmlContent: '<ent:ImportacionCompletaV1Ent/>' },
+      timeline: [],
+      save: jest.fn().mockResolvedValue()
+    };
+    mockExpedition.findById.mockReturnValue({ populate: jest.fn().mockResolvedValue(expedition) });
+    mockAeatReal.submitH1Declaration.mockResolvedValue({ success: true, mrn: '26ES00280130003MQ2', channel: 'green' });
+
+    const res = await request(app(aeatRealController.submitH1Declaration))
+      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX', password: 'clave-real-p12' });
+
+    expect(res.status).toBe(200);
+    expect(mockCertService.getCertificateIdByAlias).toHaveBeenCalledWith('FNMT-STRIX');
+    expect(mockAeatReal.submitH1Declaration).toHaveBeenCalledWith(
+      '<ent:ImportacionCompletaV1Ent/>',
+      'cert-id-real-1',
+      'clave-real-p12',
+      { useSandbox: true }
+    );
+    expect(expedition.declaration.mrn).toBe('26ES00280130003MQ2');
+  });
+});
+
+describe('aeatRealController.submitH7Declaration', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCertService.getCertificateIdByAlias.mockReturnValue('cert-id-real-1');
+  });
+
+  test('400 sin certificado o contraseña', async () => {
+    const res = await request(app(aeatRealController.submitH7Declaration))
+      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX' }); // falta password
+
+    expect(res.status).toBe(400);
+    expect(mockExpedition.findById).not.toHaveBeenCalled();
+  });
+
+  test('camino feliz: resuelve certId y pasa password a aeatRealService.submitH7Declaration', async () => {
+    const expedition = {
+      _id: 'e1', tenantId: 't1',
+      declaration: { xmlContent: '<ent:DeclaSimpliImporV1Ent/>' },
+      timeline: [], save: jest.fn().mockResolvedValue()
+    };
+    mockExpedition.findById.mockReturnValue({ populate: jest.fn().mockResolvedValue(expedition) });
+    mockAeatReal.submitH7Declaration.mockResolvedValue({ success: true, mrn: '26ES00H7' });
+
+    const res = await request(app(aeatRealController.submitH7Declaration))
+      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX', password: 'clave-real' });
+
+    expect(res.status).toBe(200);
+    expect(mockAeatReal.submitH7Declaration).toHaveBeenCalledWith(
+      '<ent:DeclaSimpliImporV1Ent/>',
+      'cert-id-real-1',
+      'clave-real',
+      { useSandbox: true }
+    );
+  });
+});
+
+describe('aeatRealController.submitAESDeclaration', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCertService.getCertificateIdByAlias.mockReturnValue('cert-id-real-1');
+  });
+
+  test('400 sin certificado o contraseña', async () => {
+    const res = await request(app(aeatRealController.submitAESDeclaration))
+      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX' }); // falta password
+
+    expect(res.status).toBe(400);
+    expect(mockExpedition.findById).not.toHaveBeenCalled();
+  });
+
+  test('camino feliz: resuelve certId y pasa password a aeatRealService.submitAESDeclaration', async () => {
+    const expedition = {
+      _id: 'e1', tenantId: 't1',
+      declaration: { xmlContent: '<ent:CC515CV1Ent/>' },
+      timeline: [], save: jest.fn().mockResolvedValue()
+    };
+    mockExpedition.findById.mockReturnValue({ populate: jest.fn().mockResolvedValue(expedition) });
+    mockAeatReal.submitAESDeclaration.mockResolvedValue({ success: true, mrn: '26ES00AES' });
+
+    const res = await request(app(aeatRealController.submitAESDeclaration))
+      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX', password: 'clave-real' });
+
+    expect(res.status).toBe(200);
+    expect(mockAeatReal.submitAESDeclaration).toHaveBeenCalledWith(
+      '<ent:CC515CV1Ent/>',
+      'cert-id-real-1',
+      'clave-real',
+      { useSandbox: true }
+    );
+  });
+});
+
+describe('aeatRealController.submitNCTSDeclaration', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCertService.getCertificateIdByAlias.mockReturnValue('cert-id-real-1');
+  });
+
+  test('400 sin certificado o contraseña', async () => {
+    const res = await request(app(aeatRealController.submitNCTSDeclaration))
+      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX' }); // falta password
+
+    expect(res.status).toBe(400);
+    expect(mockExpedition.findById).not.toHaveBeenCalled();
+  });
+
+  test('camino feliz: resuelve certId y pasa password a aeatRealService.submitNCTSDeclaration', async () => {
+    const expedition = {
+      _id: 'e1', tenantId: 't1',
+      declaration: { xmlContent: '<ent:CC015CV1Ent/>' },
+      save: jest.fn().mockResolvedValue()
+    };
+    mockExpedition.findById.mockReturnValue(Promise.resolve(expedition));
+    mockAeatReal.submitNCTSDeclaration.mockResolvedValue({ success: true, mrn: '26ES00NCTS' });
+
+    const res = await request(app(aeatRealController.submitNCTSDeclaration))
+      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX', password: 'clave-real' });
+
+    expect(res.status).toBe(200);
+    expect(mockAeatReal.submitNCTSDeclaration).toHaveBeenCalledWith(
+      '<ent:CC015CV1Ent/>',
+      'cert-id-real-1',
+      'clave-real',
+      { useSandbox: true }
+    );
+  });
+});
+
+describe('aeatRealController.submitICS2Declaration', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCertService.getCertificateIdByAlias.mockReturnValue('cert-id-real-1');
+  });
+
+  test('400 sin certificado o contraseña', async () => {
+    const res = await request(app(aeatRealController.submitICS2Declaration))
+      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX' }); // falta password
+
+    expect(res.status).toBe(400);
+    expect(mockExpedition.findById).not.toHaveBeenCalled();
+  });
+
+  test('camino feliz: llama a aeatRealService.submitENSDeclaration (no "submitICS2Declaration", que no existe en el servicio)', async () => {
+    const expedition = {
+      _id: 'e1', tenantId: 't1',
+      declaration: { xmlContent: '<ent:CC315C/>' },
+      save: jest.fn().mockResolvedValue()
+    };
+    mockExpedition.findById.mockReturnValue(Promise.resolve(expedition));
+    mockAeatReal.submitENSDeclaration.mockResolvedValue({ success: true, mrn: '26ES00ENS' });
+
+    const res = await request(app(aeatRealController.submitICS2Declaration))
+      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX', password: 'clave-real' });
+
+    expect(res.status).toBe(200);
+    expect(mockAeatReal.submitENSDeclaration).toHaveBeenCalledWith(
+      '<ent:CC315C/>',
+      'cert-id-real-1',
+      'clave-real',
+      { useSandbox: true }
+    );
   });
 });
