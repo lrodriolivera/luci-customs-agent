@@ -1,0 +1,48 @@
+CASO BORDE-15 — Te con CBD añadido: clasificacion arancelaria vs. autorizacion Novel Food (doble control)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Suiza (Zug)
+Destino: Espana
+Incoterm: FCA Zug
+Moneda: CHF
+
+VENDEDOR/EXPORTADOR:
+    Alpina Precision Instruments AG
+    Industriestrasse 14
+    6300 Zug
+    Suiza
+    Tax ID: CHE-123.456.789
+
+COMPRADOR/IMPORTADOR:
+    Zona Franca Trading Barcelona S.L.
+    Calle 2, Sector A, Nave 12
+    08040 Barcelona (Zona Franca)
+    Espana
+    NIF: B-08987651 | EORI: ESB08987651
+
+Factura No.: INV-BORDE-15-2026-9086242  Fecha: 18/07/2026
+Documento de transporte: MSCU20269086242
+
+MERCANCIAS:
+  - Infusion de te verde con extracto de cannabidiol (CBD) de origen vegetal añadido, contenido certificado de THC no detectable (0,00%), comercializada como 'te de bienestar relajante', sin ninguna alegacion medica ni terapeutica en el etiquetado
+    HS: 090240  Cantidad: 1400 KGM  Precio unit.: 14.5 CHF
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- CASO DE BORDE: FUNDAMENTO DE LA DISPUTA DE CLASIFICACION ---
+Base normativa/tecnica: Reglamento (UE) de Nuevos Alimentos (Novel Food) + clasificacion arancelaria por el componente que aporta el caracter esencial
+
+El te con CBD añadido plantea dos capas de riesgo distintas que se confunden con frecuencia: (1) clasificacion arancelaria — ¿sigue siendo 'te' (0902) con un aditivo, o el CBD como principio activo dominante cambia la naturaleza del producto?; y (2) reglamentacion alimentaria — el CBD como ingrediente puede estar sujeto a autorizacion de Novel Food en la UE independientemente de que la clasificacion arancelaria elegida sea correcta. Aprobar el codigo TARIC NO implica que el producto pueda comercializarse legalmente sin la autorizacion alimentaria correspondiente.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugeriria de forma naive/erronea el proveedor o transitario en un envio real. El
+objetivo de este caso es verificar si el agente / LUCI llegan a la clasificacion correcta
+razonando desde las Reglas Generales de Interpretacion, no copiando el codigo de la factura.

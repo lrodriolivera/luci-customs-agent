@@ -1,0 +1,52 @@
+[
+  {
+    "id": "01_intro",
+    "title": "LUCI Customs Agent",
+    "narration": "Manual del Agente Aduanero — LUCI LUCI Customs Agent es la plataforma que utilizas todos los días para gestionar expedientes aduaneros, presentar declaraciones a la AEAT y resolver requerimientos. Esta wiki está pensada para que cualquier agente — con o sin experiencia técnica — pueda sacarle el máximo partido."
+  },
+  {
+    "id": "02_empezando",
+    "title": "Empezando con LUCI",
+    "narration": "LUCI es una plataforma web que reúne en un único sitio todo lo que un agente de aduanas necesita en su día a día: Expedientes: ficha completa de cada operación, desde la llegada de la mercancía hasta el levante. Declaraciones AEAT: formularios H1 (importación), H7 (e-commerce bajo valor), AES (exportación), NCTS (tránsito), ENS (entrada sumaria), PUE (control SOIVRE/ROHS). Cálculo de derechos: arancel, IVA, impuestos especiales y preferencias arancelarias contra la base TARIC EU oficial (21.946 códigos cargados)."
+  },
+  {
+    "id": "03_expedientes",
+    "title": "Crear un expediente",
+    "narration": "El expediente es la «carpeta» donde LUCI guarda todo lo de una operación: documentos, declaraciones, comunicaciones con AEAT, garantías afectadas. Antes de declarar nada, crea el expediente. Necesitas a mano: Datos del importador o exportador (NIF, EORI, razón social, dirección). Tipo de operación (importación / exportación). Aduana donde se va a presentar (ej. Madrid Barajas → 2801). Una referencia propia (factura del cliente, número de expediente interno…). Si tienes ya: TARIC, valor declarado, transportista. Si no, los rellenas más tarde."
+  },
+  {
+    "id": "04_h1",
+    "title": "Declarar una H1 de importación",
+    "narration": "La H1 es el DUA estándar de importación: cualquier mercancía con valor superior a 150 € o sometida a control especial. Es la declaración más común. Antes de empezar Tener el expediente creado y al menos los 4 documentos básicos validados: Factura comercial Packing list Conocimiento de embarque (BL / AWB / CMR) Certificado de origen (si aplica preferencia) Conocer: TARIC correcto (la sugerencia IA te ayuda). Valor aduanero (factura + flete + seguro hasta llegada UE). Régimen que solicitas (4000 = importación a libre práctica + consumo es lo más común)."
+  },
+  {
+    "id": "05_h7_manifiesto",
+    "title": "Manifiestos masivos H7",
+    "narration": "Cuando un courier (DHL, UPS, AirGo Express, Correos Express…) te manda un Excel/CSV con 30, 50 o 200 envíos, no los hagas uno a uno. Sube el manifiesto y LUCI los procesa todos en bloque. Antes de empezar El archivo CSV / XLSX del courier. Tener decidido si el manifiesto es H7 (paquetería express ≤ 150 €) o H1 (envíos de mayor valor o B2B). Tu EORI dado de alta para el tipo de declaración."
+  },
+  {
+    "id": "06_aeat",
+    "title": "Enviar a AEAT y obtener un MRN",
+    "narration": "Una vez la declaración está completa y firmada, falta enviarla. AEAT responde en segundos con un MRN, el canal asignado y, si todo va bien, el levante. Antes de empezar Declaración H1/H7/AES/NCTS/ENS en estado DRAFT o READY. Certificado FNMT importado en LUCI y vigente. Verifícalo en AEAT e Integraciones → Certificados AEAT. Conexión estable (el envío SOAP a AEAT con mTLS tarda 3-15s)."
+  },
+  {
+    "id": "07_calculo",
+    "title": "Calcular derechos arancelarios",
+    "narration": "Antes de cotizar al cliente final, suele hacer falta saber cuánto va a pagar de aduana. LUCI tiene una calculadora oficial contra TARIC EU. Sidebar → Cálculo y normativa → Calculadora de derechos. Introduce los datos"
+  },
+  {
+    "id": "08_ia",
+    "title": "Asistente LUCI e Inteligencia Artificial",
+    "narration": "Asistente LUCI e Inteligencia Artificial LUCI no es solo un formulario aduanero. Lleva integrada inteligencia artificial en muchas pantallas para automatizar tareas tediosas, anticipar problemas y redactar documentos formales por ti."
+  },
+  {
+    "id": "09_casos_reales",
+    "title": "Casos reales — 4 MRN reales en AEAT",
+    "narration": "Cuatro casos reales completados durante las pruebas E2E con AEAT PRE. Cada uno muestra el recorrido de principio a fin: desde la creación del expediente hasta el MRN auténtico. H1 colchones Turquía Resultado: MRN 26ES00280130001TT1 · Canal VERDE · Levante automático"
+  },
+  {
+    "id": "10_wiki",
+    "title": "Manual integrado en la plataforma",
+    "narration": "Trucos para ir más rápido, evitar errores comunes y aprovechar funciones que no son obvias a primera vista. Productividad pura Crea siempre el expediente primero"
+  }
+]

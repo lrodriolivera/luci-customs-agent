@@ -1,0 +1,42 @@
+CASO H1-46 — Perecederos vegetales: declaracion adicional fitosanitaria obligatoria por plaga de zona (citrus black spot)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Sudafrica (Cape Town)
+Destino: Espana
+Incoterm: FOB Cape Town
+Moneda: ZAR
+
+VENDEDOR/EXPORTADOR:
+    Cape Fruit Exporters (Pty) Ltd
+    12 Beach Road, Paarden Eiland
+    7405 Cape Town
+    Sudafrica
+    Tax ID: 4230123456
+
+COMPRADOR/IMPORTADOR:
+    Suministros Norte Peninsular S.A.
+    Poligono Asipo, Parcela 22
+    33428 Llanera (Asturias)
+    Espana
+    NIF: A-33456789 | EORI: ESA33456789
+
+Factura No.: INV-H1-46-2026-9164512  Fecha: 25/08/2026
+Documento de transporte: MSCU20269164512
+
+MERCANCIAS:
+  - Naranjas frescas, variedad Valencia Late, para consumo en fresco
+    HS: 080510  Cantidad: 24000 KGM  Precio unit.: 11.8 ZAR
+
+NOTA DEL CASO (que se prueba):
+  Origen sujeto a riesgo de Phyllosticta citricarpa (mancha negra de los citricos): el certificado fitosanitario debe incluir declaracion adicional de zona de produccion reconocida como de baja prevalencia, conforme al Reglamento de Ejecucion (UE) 2019/2072. Sin esa declaracion adicional especifica, el certificado fitosanitario generico no basta.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_certificado_fitosanitario.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

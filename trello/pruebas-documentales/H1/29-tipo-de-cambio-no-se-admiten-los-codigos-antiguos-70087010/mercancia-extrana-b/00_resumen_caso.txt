@@ -1,0 +1,46 @@
+CASO H1-29-EXTRANA-b — Tipo de cambio: no se admiten los códigos antiguos 7008/7010 — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: Estados Unidos (Long Beach)
+Destino: Espana
+Incoterm: CPT Long Beach
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Pacific Coast Machinery LLC
+    1150 Harbor Way
+    CA 90802 Long Beach
+    Estados Unidos
+    Tax ID: 95-1123456
+
+COMPRADOR/IMPORTADOR:
+    Ceutrade Comercio Exterior S.L.
+    Calle Real, 45
+    51001 Ceuta
+    Espana
+    NIF: B-51123456 | EORI: ESB51123456
+
+Factura No.: INV-H1-29-EXTRANA-b-2026-9651497  Fecha: 08/11/2026
+Documento de transporte: 020-20269651497
+
+MERCANCIAS:
+  - Chaqueta de exterior en tejido tecnico impermeable con 3 paneles de fibra de carbono calefactables integrados en el forro, alimentados por bateria de litio extraible de 7,4V, control de temperatura via boton fisico, sin conectividad
+    HS: 620201  Cantidad: 173 PCE  Precio unit.: 80.64 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Textil (cap. 62) con funcion electrica de calefaccion incorporada. Segun la Nota explicativa correspondiente, si el elemento electrico es accesorio al uso de la prenda, se mantiene en textil; si predomina la funcion de calentar, podria derivar a 8516 (aparatos electricos de calefaccion). El limite es estrecho.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

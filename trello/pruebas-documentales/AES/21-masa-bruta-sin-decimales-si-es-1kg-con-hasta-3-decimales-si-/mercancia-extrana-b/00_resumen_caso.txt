@@ -1,0 +1,46 @@
+CASO AES-21-EXTRANA-b — Masa bruta sin decimales si es ≥1kg, con hasta 3 decimales si es <1kg — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Zaragoza)
+Destino: Pakistan
+Incoterm: FOB Zaragoza
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Aragonesa de Suministros Industriales S.A.
+    Poligono El Pilar, Nave 8
+    50197 Zaragoza
+    Espana
+    NIF: A-50123890 | EORI: ESA50123890
+
+COMPRADOR/IMPORTADOR:
+    Karachi Textile Mills (Pvt.) Ltd.
+    S.I.T.E. Area, Manghopir Road
+    75700 Karachi
+    Pakistan
+    Tax ID: NTN-8765432-1
+
+Factura No.: INV-AES-21-EXTRANA-b-2026-8786950  Fecha: 24/03/2026
+Documento de transporte: MSCU20268786950
+
+MERCANCIAS:
+  - Tabla de skate electrica autoequilibrada (hoverboard) con dos ruedas independientes, motor electrico de 350W, bateria de litio, control por inclinacion corporal, sin manillar, velocidad maxima 15 km/h, uso mixto adultos/adolescentes
+    HS: 950300  Cantidad: 97 PCE  Precio unit.: 178.2 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Disputa real y conocida en la practica aduanera UE: hoverboards clasificados como juguete (9503, si uso claramente recreativo/infantil) frente a vehiculo con motor electrico (8711) si la velocidad/potencia y el publico objetivo son de adultos.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

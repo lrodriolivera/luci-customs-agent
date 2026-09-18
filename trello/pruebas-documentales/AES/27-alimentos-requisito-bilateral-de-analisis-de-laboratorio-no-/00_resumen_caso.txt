@@ -1,0 +1,43 @@
+CASO AES-27 — Alimentos: requisito bilateral de analisis de laboratorio no armonizado a nivel UE (China)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Guarnizo (Cantabria))
+Destino: China
+Incoterm: FOB Guarnizo (Cantabria)
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Cantabrica Import S.A.
+    Poligono Guarnizo, Parcela 14
+    39611 Guarnizo (Cantabria)
+    Espana
+    NIF: A-39456782 | EORI: ESA39456782
+
+COMPRADOR/IMPORTADOR:
+    Shanghai Hongtai Import & Export Co., Ltd.
+    No. 1288 Pudong Ave, Bldg 3
+    200120 Shanghai
+    China
+    Tax ID: 91310115MA1K3F5Q28
+
+Factura No.: INV-AES-27-2026-3820989  Fecha: 06/09/2026
+Documento de transporte: MSCU20263820989
+
+MERCANCIAS:
+  - Aceite de oliva virgen extra, envasado en botellas de vidrio de 750 ml
+    HS: 150910  Cantidad: 20000 LTR  Precio unit.: 4.6 USD
+
+NOTA DEL CASO (que se prueba):
+  China exige un certificado de analisis de laboratorio (acidez, indice de peroxidos, parametros de calidad) ADEMAS del certificado sanitario UE estandar de exportacion — requisito bilateral especifico de China para aceite de oliva, no armonizado a nivel UE.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_certificado_sanitario.pdf
+  - 05_certificado_analisis.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

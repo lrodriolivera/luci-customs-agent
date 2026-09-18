@@ -1,0 +1,48 @@
+CASO BORDE-04 — Vino desalcoholizado: ¿sigue siendo 'vino' tras eliminar el alcohol? (Nota 5 Cap. 22)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Argentina (Buenos Aires)
+Destino: Espana
+Incoterm: FOB Buenos Aires
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Pampa Cueros y Marroquineria S.A.
+    Av. Corrientes 2340, Piso 4
+    C1046AAQ Buenos Aires
+    Argentina
+    Tax ID: 30-71234567-8
+
+COMPRADOR/IMPORTADOR:
+    Mercantil Andaluza de Importacion S.L.
+    Avda. de la Innovacion, 3
+    41703 Dos Hermanas (Sevilla)
+    Espana
+    NIF: B-41678912 | EORI: ESB41678912
+
+Factura No.: INV-BORDE-04-2026-3648533  Fecha: 07/06/2026
+Documento de transporte: MSCU20263648533
+
+MERCANCIAS:
+  - Vino tinto sometido a un proceso de destilacion al vacio que elimina el alcohol tras la fermentacion completa de la uva, graduacion alcoholica final inferior a 0,5% vol., envasado en botella de vidrio de 750ml, comercializado como "vino sin alcohol"
+    HS: 220600  Cantidad: 7200 LTR  Precio unit.: 3.1 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- CASO DE BORDE: FUNDAMENTO DE LA DISPUTA DE CLASIFICACION ---
+Base normativa/tecnica: Nota 5 del Capitulo 22 sobre bebidas desalcoholizadas
+
+Aunque el producto se obtiene POR FERMENTACION de la uva igual que el vino normal (partida 2204), el Sistema Armonizado dirige especificamente las bebidas a las que se ha extraido el alcohol tras la fermentacion hacia la partida 2202 (bebidas no alcoholicas), NO a la 2204 (vino) ni a la 2206 (otras bebidas fermentadas) — un punto que se pasa por alto con frecuencia porque el producto 'sigue siendo vino' en el lenguaje comercial.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugeriria de forma naive/erronea el proveedor o transitario en un envio real. El
+objetivo de este caso es verificar si el agente / LUCI llegan a la clasificacion correcta
+razonando desde las Reglas Generales de Interpretacion, no copiando el codigo de la factura.

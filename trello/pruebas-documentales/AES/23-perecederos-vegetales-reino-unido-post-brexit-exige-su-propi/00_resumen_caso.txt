@@ -1,0 +1,42 @@
+CASO AES-23 — Perecederos vegetales: Reino Unido post-Brexit exige su propio Plant Health Certificate
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Carretera
+Origen mercancia: Espana (Ciudad Real)
+Destino: Reino Unido
+Incoterm: DAP Ciudad Real
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Grupo Manchego de Distribucion S.L.
+    Ctra. Nacional 401, Km 12
+    13004 Ciudad Real
+    Espana
+    NIF: B-13456789 | EORI: ESB13456789
+
+COMPRADOR/IMPORTADOR:
+    Thames Valley Precision Ltd.
+    Unit 8, Bicester Business Park
+    OX26 4SP Bicester
+    Reino Unido
+    Tax ID: GB123456789
+
+Factura No.: INV-AES-23-2026-7901145  Fecha: 26/05/2026
+Documento de transporte: CMR-20267901145
+
+MERCANCIAS:
+  - Naranjas frescas, variedad Valencia Late, para consumo en fresco
+    HS: 080510  Cantidad: 18000 KGM  Precio unit.: 0.72 EUR
+
+NOTA DEL CASO (que se prueba):
+  Desde el Brexit, Reino Unido exige su propio 'Plant Health Certificate' britanico para importar citricos espanoles — Sanidad Vegetal emite este certificado bajo el modelo GB especifico, distinto del modelo IPPC interno de la UE. Doble anotacion de temperatura de transito en el CMR del remolque reefer, salida via Eurotunnel Calais-Folkestone.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+  - 04_certificado_fitosanitario.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

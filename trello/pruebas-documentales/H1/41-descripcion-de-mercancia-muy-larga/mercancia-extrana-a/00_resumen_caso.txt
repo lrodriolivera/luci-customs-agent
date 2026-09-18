@@ -1,0 +1,46 @@
+CASO H1-41-EXTRANA-a — Descripción de mercancía muy larga — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: China (Ningbo)
+Destino: Espana
+Incoterm: FOB Ningbo
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Ningbo Haitong Trading Co., Ltd.
+    88 Jiangdong North Rd
+    315040 Ningbo
+    China
+    Tax ID: 91330204MA2H1D8P47
+
+COMPRADOR/IMPORTADOR:
+    Ibertrade Import-Export S.A.
+    Muelle de Poniente s/n, Edif. Lonja
+    35008 Las Palmas de Gran Canaria
+    Espana
+    NIF: A-35678901 | EORI: ESA35678901
+
+Factura No.: INV-H1-41-EXTRANA-a-2026-9013821  Fecha: 20/03/2026
+Documento de transporte: MSCU20269013821
+
+MERCANCIAS:
+  - Reloj de pulsera con caja de acero inoxidable, movimiento de cuarzo analogico tradicional combinado con pantalla OLED secundaria para notificaciones de smartphone, GPS y monitor de ritmo cardiaco, sin conectividad celular propia
+    HS: 910211  Cantidad: 338 PCE  Precio unit.: 60.32 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Frontera clasica entre reloj (cap. 91, 9102) y aparato de comunicacion/computo vestible (8517/8471). La UE distingue por si la funcion de reloj es accesoria o principal; aqui el movimiento de cuarzo tradicional es el elemento dominante, pero la pantalla OLED y sensores complican el caracter esencial.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

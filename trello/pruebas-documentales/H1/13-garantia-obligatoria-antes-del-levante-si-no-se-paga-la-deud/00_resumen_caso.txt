@@ -1,0 +1,41 @@
+CASO H1-13 — Garantía obligatoria antes del levante si no se paga la deuda
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Tailandia (Bangkok)
+Destino: Espana
+Incoterm: CIF Bangkok
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Bangkok Rice Trading Co., Ltd.
+    399 Sukhumvit Soi 22
+    10110 Bangkok
+    Tailandia
+    Tax ID: 0105536012345
+
+COMPRADOR/IMPORTADOR:
+    Ceutrade Comercio Exterior S.L.
+    Calle Real, 45
+    51001 Ceuta
+    Espana
+    NIF: B-51123456 | EORI: ESB51123456
+
+Factura No.: INV-H1-13-2026-6478636  Fecha: 16/05/2026
+Documento de transporte: MSCU20266478636
+
+MERCANCIAS:
+  - Baldosas y losas de ceramica esmaltada para pavimento, 60x60 cm
+    HS: 690723  Cantidad: 5200 MTK  Precio unit.: 6.8 USD
+
+NOTA DEL CASO (que se prueba):
+  Customs debt not settled at time of clearance — guarantee (CGU) required before release (levante).
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

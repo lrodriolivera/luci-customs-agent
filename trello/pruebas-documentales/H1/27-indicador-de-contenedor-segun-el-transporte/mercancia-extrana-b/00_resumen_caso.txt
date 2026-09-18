@@ -1,0 +1,46 @@
+CASO H1-27-EXTRANA-b — Indicador de contenedor según el transporte — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Carretera
+Origen mercancia: Turquia (Izmir)
+Destino: Espana
+Incoterm: EXW Izmir
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Ege Makina Ithalat Ihracat Ltd. Sti.
+    Ataturk Cad. No: 88
+    35220 Izmir
+    Turquia
+    Tax ID: 9876543210
+
+COMPRADOR/IMPORTADOR:
+    Baleares Import S.L.
+    Poligono Son Castello, Calle Gremi de Fusters 22
+    07009 Palma de Mallorca
+    Espana
+    NIF: B-07234561 | EORI: ESB07234561
+
+Factura No.: INV-H1-27-EXTRANA-b-2026-1312432  Fecha: 06/09/2026
+Documento de transporte: CMR-20261312432
+
+MERCANCIAS:
+  - Aeronave no tripulada (dron) de ala rotatoria con camara de video 4K integrada de forma no desmontable, gimbal estabilizador de 3 ejes, autonomia de 34 minutos, peso 900g, uso fotografia aerea profesional, no apto para uso infantil
+    HS: 950300  Cantidad: 83 PCE  Precio unit.: 428.4 EUR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Desde la actualizacion del Sistema Armonizado 2022 existe la partida especifica 8806 (vehiculos aereos no tripulados) distinta de 9503 (juguetes) y de 8525 (camaras). Con camara no desmontable y uso profesional, 9503 es casi con certeza incorrecto.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

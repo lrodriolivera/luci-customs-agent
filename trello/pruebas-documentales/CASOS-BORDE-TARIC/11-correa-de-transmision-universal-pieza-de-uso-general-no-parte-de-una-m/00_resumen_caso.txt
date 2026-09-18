@@ -1,0 +1,48 @@
+CASO BORDE-11 — Correa de transmision universal: pieza de uso general, no 'parte' de una maquina (Nota 2 Sec. XVI)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: India (Jaipur)
+Destino: Espana
+Incoterm: FOB Jaipur
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Ganesh Handicrafts Exports
+    14 Sardar Patel Road
+    302001 Jaipur
+    India
+    Tax ID: AABCG5678K
+
+COMPRADOR/IMPORTADOR:
+    Cantabrica Import S.A.
+    Poligono Guarnizo, Parcela 14
+    39611 Guarnizo (Cantabria)
+    Espana
+    NIF: A-39456782 | EORI: ESA39456782
+
+Factura No.: INV-BORDE-11-2026-7174505  Fecha: 14/03/2026
+Documento de transporte: MSCU20267174505
+
+MERCANCIAS:
+  - Correa de transmision de caucho reforzado con fibra, seccion trapezoidal estandar tipo A42, compatible indistintamente con motores de compresores de aire, generadores electricos, bombas de riego y maquinaria agricola de multiples fabricantes, vendida como recambio generico sin destino a una maquina especifica
+    HS: 840999  Cantidad: 9600 PCE  Precio unit.: 4.6 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- CASO DE BORDE: FUNDAMENTO DE LA DISPUTA DE CLASIFICACION ---
+Base normativa/tecnica: Nota 2 de la Seccion XVI — partes de uso general
+
+Cuando una pieza (aqui, una correa de transmision) es de USO GENERAL y no esta diseñada ni destinada a una maquina concreta de una partida especifica, la Nota 2 de la Seccion XVI impide clasificarla como 'parte' de una maquina determinada (lo que haria el proveedor al facturarla como parte de 'motores de embolo', 8409); en su lugar corresponde a su propia partida de articulo de caucho para uso tecnico general (4010), independientemente de en que maquina termine instalandose el comprador.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugeriria de forma naive/erronea el proveedor o transitario en un envio real. El
+objetivo de este caso es verificar si el agente / LUCI llegan a la clasificacion correcta
+razonando desde las Reglas Generales de Interpretacion, no copiando el codigo de la factura.

@@ -1,0 +1,41 @@
+CASO H1-17 — Régimen de zona franca no exento de IVA desde 2023
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Tunez (Sfax)
+Destino: Espana (Zona Franca de Barcelona)
+Incoterm: FOB Sfax
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Sfax Huile d'Olive Export S.A.R.L.
+    Route de Tunis Km 6
+    3000 Sfax
+    Tunez
+    Tax ID: 123456A
+
+COMPRADOR/IMPORTADOR:
+    Importaciones Costa Brava S.L.
+    Carrer de la Indústria, 8
+    17005 Barcelona (Zona Franca)
+    Espana (Zona Franca de Barcelona)
+    NIF: B-17987654 | EORI: ESB17987654
+
+Factura No.: INV-H1-17-2026-1435713  Fecha: 20/09/2026
+Documento de transporte: MSCU20261435713
+
+MERCANCIAS:
+  - Aceite de oliva virgen extra, envasado en botellas de vidrio de 750 ml
+    HS: 150910  Cantidad: 9000 LTR  Precio unit.: 4.2 EUR
+
+NOTA DEL CASO (que se prueba):
+  Goods placed under Free Zone procedure on entry (Barcelona Free Zone) — VAT suspension does NOT apply since 2023 reform.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

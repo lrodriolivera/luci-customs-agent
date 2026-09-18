@@ -1,0 +1,41 @@
+CASO AES-08 — Representación indirecta se deduce, no se declara
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Aereo
+Origen mercancia: Espana (Las Palmas de Gran Canaria)
+Destino: Japon
+Incoterm: DAP Las Palmas de Gran Canaria
+Moneda: JPY
+
+VENDEDOR/EXPORTADOR:
+    Ibertrade Import-Export S.A.
+    Muelle de Poniente s/n, Edif. Lonja
+    35008 Las Palmas de Gran Canaria
+    Espana
+    NIF: A-35678901 | EORI: ESA35678901
+
+COMPRADOR/IMPORTADOR:
+    Osaka Kiko Trading Corporation
+    5-1-8 Minamisenba, Chuo-ku
+    542-0081 Osaka
+    Japon
+    Tax ID: T5120001067890
+
+Factura No.: INV-AES-08-2026-2250207  Fecha: 11/10/2026
+Documento de transporte: 020-20262250207
+
+MERCANCIAS:
+  - Instrumentos y aparatos de cirugia, pinzas y tijeras de acero inoxidable
+    HS: 901839  Cantidad: 480 PCE  Precio unit.: 145.0 JPY
+
+NOTA DEL CASO (que se prueba):
+  Indirect representation applies by deduction from the parties involved — it is NOT separately declared as a data element.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

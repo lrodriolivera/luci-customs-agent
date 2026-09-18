@@ -1,0 +1,46 @@
+CASO AES-17-EXTRANA-a — EUR.1 no se puede firmar antes de que la exportación sea efectiva o esté asegurada — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Carretera
+Origen mercancia: Espana (Melilla)
+Destino: Tunez
+Incoterm: FOB Melilla
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Distribuciones del Estrecho S.A.
+    Poligono Tres Culturas, Nave 6
+    52006 Melilla
+    Espana
+    NIF: A-52234567 | EORI: ESA52234567
+
+COMPRADOR/IMPORTADOR:
+    Sfax Huile d'Olive Export S.A.R.L.
+    Route de Tunis Km 6
+    3000 Sfax
+    Tunez
+    Tax ID: 123456A
+
+Factura No.: INV-AES-17-EXTRANA-a-2026-7508530  Fecha: 20/09/2026
+Documento de transporte: CMR-20267508530
+
+MERCANCIAS:
+  - Alfombra de salon tejida en lana con circuito de cable calefactor de carbono integrado en el reverso, termostato regulable, certificacion electrica CE, dimensiones 200x300cm
+    HS: 570210  Cantidad: 93 PCE  Precio unit.: 233.1 EUR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Igual tension que la chaqueta calefactable: textil de superficie (cap. 57) con elemento electrico de calefaccion incorporado con caracter funcional relevante — podria derivar a 8516 (aparato electrico de calefaccion) si la funcion de calentar predomina sobre la funcion decorativa/textil de la alfombra.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

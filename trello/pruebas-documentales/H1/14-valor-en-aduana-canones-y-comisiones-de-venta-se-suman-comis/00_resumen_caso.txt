@@ -1,0 +1,41 @@
+CASO H1-14 — Valor en aduana: cánones y comisiones de venta se suman, comisiones de compra no
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Indonesia (Jakarta)
+Destino: Espana
+Incoterm: FOB Jakarta
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Jakarta Furniture Manufacturing PT
+    Jl. Industri Raya III No. 5
+    15136 Jakarta
+    Indonesia
+    Tax ID: 01.234.567.8-901.000
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones del Estrecho S.A.
+    Poligono Tres Culturas, Nave 6
+    52006 Melilla
+    Espana
+    NIF: A-52234567 | EORI: ESA52234567
+
+Factura No.: INV-H1-14-2026-5919903  Fecha: 17/06/2026
+Documento de transporte: MSCU20265919903
+
+MERCANCIAS:
+  - Muebles de madera de haya para dormitorio, sin tapizar, en kit desmontado
+    HS: 940350  Cantidad: 340 PCE  Precio unit.: 210.0 USD
+
+NOTA DEL CASO (que se prueba):
+  Sales commission (buying agent fee, 4%) included per Incoterm; buying commission paid separately by Buyer to its own agent is NOT included in this invoice value.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

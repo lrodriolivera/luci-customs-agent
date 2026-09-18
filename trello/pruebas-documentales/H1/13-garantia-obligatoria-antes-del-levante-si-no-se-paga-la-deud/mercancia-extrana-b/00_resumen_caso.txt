@@ -1,0 +1,46 @@
+CASO H1-13-EXTRANA-b — Garantía obligatoria antes del levante si no se paga la deuda — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Tailandia (Chiang Mai)
+Destino: Espana
+Incoterm: CIF Chiang Mai
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Chiang Mai Ceramics Export Co., Ltd.
+    88 Nimmanhaemin Road
+    50200 Chiang Mai
+    Tailandia
+    Tax ID: 0505562098765
+
+COMPRADOR/IMPORTADOR:
+    Cantabrica Import S.A.
+    Poligono Guarnizo, Parcela 14
+    39611 Guarnizo (Cantabria)
+    Espana
+    NIF: A-39456782 | EORI: ESA39456782
+
+Factura No.: INV-H1-13-EXTRANA-b-2026-3346569  Fecha: 16/05/2026
+Documento de transporte: MSCU20263346569
+
+MERCANCIAS:
+  - Mochila de nylon con panel solar flexible integrado en la solapa frontal, puerto USB-A y power bank de litio de 10.000 mAh cosido en el compartimento interior, con cerradura de combinacion antirrobo integrada en la cremallera principal
+    HS: 420229  Cantidad: 216 PCE  Precio unit.: 35.88 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Articulo compuesto: contenedor textil (cap. 42) vs. bateria/power bank (8507) vs. panel fotovoltaico (8541). GRI 3(b): determinar el caracter esencial — ¿es una mochila con electronica accesoria, o un cargador portatil con forma de mochila?
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

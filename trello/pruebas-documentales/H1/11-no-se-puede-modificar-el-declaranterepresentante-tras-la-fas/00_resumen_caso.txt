@@ -1,0 +1,41 @@
+CASO H1-11 — No se puede modificar el declarante/representante tras la fase PREDUA con control
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Mexico (Leon)
+Destino: Espana
+Incoterm: FOB Leon
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Manufacturas del Bajio S.A. de C.V.
+    Blvd. Industrial 450, Parque Ind. Norte
+    37490 Leon
+    Mexico
+    Tax ID: MBA950612AB1
+
+COMPRADOR/IMPORTADOR:
+    Cantabrica Import S.A.
+    Poligono Guarnizo, Parcela 14
+    39611 Guarnizo (Cantabria)
+    Espana
+    NIF: A-39456782 | EORI: ESA39456782
+
+Factura No.: INV-H1-11-2026-7408439  Fecha: 14/03/2026
+Documento de transporte: MSCU20267408439
+
+MERCANCIAS:
+  - Vajilla y articulos de mesa de porcelana, decorados, para uso domestico
+    HS: 691110  Cantidad: 9600 PCE  Precio unit.: 1.35 USD
+
+NOTA DEL CASO (que se prueba):
+  PREDUA phase reached with control flag active — declarant/representative locked pending customs decision.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

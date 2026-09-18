@@ -1,0 +1,46 @@
+CASO AES-07-EXTRANA-a — Declaración EX tipo A (sin seguridad) vs tipo B (con seguridad) — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Palma de Mallorca)
+Destino: Canada
+Incoterm: FOB Palma de Mallorca
+Moneda: CAD
+
+VENDEDOR/EXPORTADOR:
+    Baleares Import S.L.
+    Poligono Son Castello, Calle Gremi de Fusters 22
+    07009 Palma de Mallorca
+    Espana
+    NIF: B-07234561 | EORI: ESB07234561
+
+COMPRADOR/IMPORTADOR:
+    Great Lakes Industrial Equipment Inc.
+    1450 Dundas Street East
+    ON L4X 2R9 Mississauga
+    Canada
+    Tax ID: 123456789RT0001
+
+Factura No.: INV-AES-07-EXTRANA-a-2026-3809161  Fecha: 10/09/2026
+Documento de transporte: MSCU20263809161
+
+MERCANCIAS:
+  - Muñeca de coleccionista de edicion limitada (150 unidades numeradas) con cabeza y manos de porcelana pintada a mano por artesano identificado, cuerpo articulado de tela relleno, vestido de época cosido a medida, certificado de autenticidad y numero de serie
+    HS: 950300  Cantidad: 168 PCE  Precio unit.: 222.6 CAD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Las muñecas 'de juguete' van en 9503, pero las piezas de coleccionista de edicion limitada, numeradas y certificadas, sin destino de juego infantil, se acercan al concepto de objeto de coleccion/articulo decorativo de porcelana artistica (6913) — la intencion de uso (jugar vs. coleccionar/exhibir) es determinante y no siempre es obvia solo por la descripcion 'muñeca'.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

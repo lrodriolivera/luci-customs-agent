@@ -1,0 +1,46 @@
+CASO H1-02-EXTRANA-a — Representación indirecta sin representante registrado — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Vietnam (Hanoi)
+Destino: Espana
+Incoterm: CIF Hanoi
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Hanoi Phuong Dong Garment JSC
+    45 Duy Tan Street, Cau Giay
+    100000 Hanoi
+    Vietnam
+    Tax ID: 0106789452
+
+COMPRADOR/IMPORTADOR:
+    Suministros Norte Peninsular S.A.
+    Poligono Asipo, Parcela 22
+    33428 Llanera (Asturias)
+    Espana
+    NIF: A-33456789 | EORI: ESA33456789
+
+Factura No.: INV-H1-02-EXTRANA-a-2026-5035737  Fecha: 05/04/2026
+Documento de transporte: MSCU20265035737
+
+MERCANCIAS:
+  - Tabla de skate electrica autoequilibrada (hoverboard) con dos ruedas independientes, motor electrico de 350W, bateria de litio, control por inclinacion corporal, sin manillar, velocidad maxima 15 km/h, uso mixto adultos/adolescentes
+    HS: 950300  Cantidad: 92 PCE  Precio unit.: 174.9 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Disputa real y conocida en la practica aduanera UE: hoverboards clasificados como juguete (9503, si uso claramente recreativo/infantil) frente a vehiculo con motor electrico (8711) si la velocidad/potencia y el publico objetivo son de adultos.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

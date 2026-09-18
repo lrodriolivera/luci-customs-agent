@@ -1,0 +1,46 @@
+CASO H1-27-EXTRANA-a — Indicador de contenedor según el transporte — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Carretera
+Origen mercancia: Turquia (Istanbul)
+Destino: Espana
+Incoterm: EXW Istanbul
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Anadolu Tekstil San. ve Tic. A.S.
+    Organize Sanayi Bolgesi, 4. Cad. No:17
+    34530 Istanbul
+    Turquia
+    Tax ID: 1234567890
+
+COMPRADOR/IMPORTADOR:
+    Aragonesa de Suministros Industriales S.A.
+    Poligono El Pilar, Nave 8
+    50197 Zaragoza
+    Espana
+    NIF: A-50123890 | EORI: ESA50123890
+
+Factura No.: INV-H1-27-EXTRANA-a-2026-8803642  Fecha: 06/09/2026
+Documento de transporte: CMR-20268803642
+
+MERCANCIAS:
+  - Tabla de skate electrica autoequilibrada (hoverboard) con dos ruedas independientes, motor electrico de 350W, bateria de litio, control por inclinacion corporal, sin manillar, velocidad maxima 15 km/h, uso mixto adultos/adolescentes
+    HS: 950300  Cantidad: 88 PCE  Precio unit.: 165.0 EUR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Disputa real y conocida en la practica aduanera UE: hoverboards clasificados como juguete (9503, si uso claramente recreativo/infantil) frente a vehiculo con motor electrico (8711) si la velocidad/potencia y el publico objetivo son de adultos.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

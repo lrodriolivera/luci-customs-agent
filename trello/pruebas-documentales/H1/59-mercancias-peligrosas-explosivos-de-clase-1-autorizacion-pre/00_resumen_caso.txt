@@ -1,0 +1,44 @@
+CASO H1-59 — Mercancias peligrosas: explosivos de Clase 1 — autorizacion previa de naviera y autoridad portuaria
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: China (Yiwu)
+Destino: Espana
+Incoterm: FOB Yiwu
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Yiwu Chuangxin Commodity Co., Ltd.
+    3F, Futian Market Zone 5
+    322000 Yiwu
+    China
+    Tax ID: 91330782MA28T6R91X
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones Iberica del Levante S.L.
+    Poligono Industrial Fuente del Jarro, Calle 4 nº 12
+    46988 Paterna (Valencia)
+    Espana
+    NIF: B-46123456 | EORI: ESB46123456
+
+Factura No.: INV-H1-59-2026-2217036  Fecha: 14/11/2026
+Documento de transporte: MSCU20262217036
+
+MERCANCIAS:
+  - Articulos de pirotecnia para espectaculos, categoria F4 (uso exclusivo profesional)
+    HS: 360410  Cantidad: 1200 PCE  Precio unit.: 32.0 USD
+
+NOTA DEL CASO (que se prueba):
+  Mercancia de Clase 1 (explosivos, UN0335): requiere autorizacion previa expresa de la naviera y de la autoridad portuaria antes de aceptar la reserva de espacio, ademas de la licencia de importacion de articulos pirotecnicos. El rechazo, si se produce, ocurre en origen — mucho antes de que la carga llegue a la aduana espanola.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_ficha_datos_seguridad.pdf
+  - 05_declaracion_mercancias_peligrosas.pdf
+  - 06_licencia_importacion.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

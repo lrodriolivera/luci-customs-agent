@@ -1,0 +1,48 @@
+CASO BORDE-03 — Disfraz de carnaval: calidad de confeccion como criterio de partida (Nota 1(e) Cap. 95)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: India (Mumbai)
+Destino: Espana
+Incoterm: FOB Mumbai
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Sunrise Textiles Pvt. Ltd.
+    Plot 22, MIDC Industrial Area
+    400093 Mumbai
+    India
+    Tax ID: AAECS1234F
+
+COMPRADOR/IMPORTADOR:
+    Suministros Norte Peninsular S.A.
+    Poligono Asipo, Parcela 22
+    33428 Llanera (Asturias)
+    Espana
+    NIF: A-33456789 | EORI: ESA33456789
+
+Factura No.: INV-BORDE-03-2026-7689106  Fecha: 06/05/2026
+Documento de transporte: MSCU20267689106
+
+MERCANCIAS:
+  - Traje completo de disfraz de "pirata" para adulto: chaqueta, pantalon, sombrero tricornio y pañuelo, en tejido sintetico ligero de baja calidad de confeccion (costuras simples sin acabado, no lavable, un solo uso previsto), vendido en set unico para fiestas tematicas
+    HS: 950500  Cantidad: 2400 SET  Precio unit.: 6.4 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- CASO DE BORDE: FUNDAMENTO DE LA DISPUTA DE CLASIFICACION ---
+Base normativa/tecnica: Nota 1(e) del Capitulo 95 + Notas Explicativas del SA sobre disfraces de fiesta
+
+El Capitulo 95 (9505) cubre expresamente 'articulos para fiestas' incluidos los disfraces de carnaval, PERO solo si la calidad de confeccion es claramente inferior a la de una prenda de vestir normal (materiales endebles, costuras simples, un solo uso). Si el disfraz tiene calidad de confeccion de prenda real (dobladillos, cremalleras de calidad, reutilizable), la clasificacion correcta pasa a capitulos 61/62 como prenda de vestir ordinaria — el limite es la CALIDAD DE CONFECCION, no el uso pretendido.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugeriria de forma naive/erronea el proveedor o transitario en un envio real. El
+objetivo de este caso es verificar si el agente / LUCI llegan a la clasificacion correcta
+razonando desde las Reglas Generales de Interpretacion, no copiando el codigo de la factura.

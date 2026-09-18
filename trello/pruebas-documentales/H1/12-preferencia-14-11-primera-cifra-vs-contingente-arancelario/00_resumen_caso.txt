@@ -1,0 +1,42 @@
+CASO H1-12 — Preferencia 14 11: primera cifra vs contingente arancelario
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Egipto (Cairo)
+Destino: Espana
+Incoterm: FOB Cairo
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Nile Cotton Export Co.
+    18 El Nasr Road, Nasr City
+    11765 Cairo
+    Egipto
+    Tax ID: 123-456-789
+
+COMPRADOR/IMPORTADOR:
+    Riojana de Comercio Exterior S.L.
+    Avda. de Lobete, 8
+    26007 Logroño
+    Espana
+    NIF: B-26567834 | EORI: ESB26567834
+
+Factura No.: INV-H1-12-2026-2154919  Fecha: 15/04/2026
+Documento de transporte: MSCU20262154919
+
+MERCANCIAS:
+  - Tejidos de algodon crudo, ligamento tafetan, en rollos
+    HS: 520911  Cantidad: 14000 KGM  Precio unit.: 1.95 USD
+
+NOTA DEL CASO (que se prueba):
+  Preferential order number 14 11 claimed — subject to available tariff quota balance, not first-come-first-served waiver.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_eur1.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

@@ -1,0 +1,46 @@
+CASO H1-11-EXTRANA-a — No se puede modificar el declarante/representante tras la fase PREDUA con control — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Mexico (Leon)
+Destino: Espana
+Incoterm: FOB Leon
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Manufacturas del Bajio S.A. de C.V.
+    Blvd. Industrial 450, Parque Ind. Norte
+    37490 Leon
+    Mexico
+    Tax ID: MBA950612AB1
+
+COMPRADOR/IMPORTADOR:
+    Ibertrade Import-Export S.A.
+    Muelle de Poniente s/n, Edif. Lonja
+    35008 Las Palmas de Gran Canaria
+    Espana
+    NIF: A-35678901 | EORI: ESA35678901
+
+Factura No.: INV-H1-11-EXTRANA-a-2026-3186012  Fecha: 14/03/2026
+Documento de transporte: MSCU20263186012
+
+MERCANCIAS:
+  - Panel textil decorativo para ventana con recubrimiento fotocatalitico de dioxido de titanio que descompone particulas contaminantes del aire al contacto con luz solar, sin componentes electricos ni motor, funcion pasiva
+    HS: 630392  Cantidad: 346 PCE  Precio unit.: 29.4 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Producto textil con tratamiento quimico funcional (purificacion de aire pasiva). Al no tener motor ni ser un 'aparato', se mantiene mayoritariamente en textil (6303), pero el recubrimiento activo con funcion catalitica podria cuestionar si sigue siendo 'solo textil' segun la proporcion y funcion del tratamiento quimico frente al soporte.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

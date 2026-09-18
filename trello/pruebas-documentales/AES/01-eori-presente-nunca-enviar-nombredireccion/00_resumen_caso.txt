@@ -1,0 +1,41 @@
+CASO AES-01 — EORI presente → nunca enviar nombre/dirección
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Melilla)
+Destino: Estados Unidos
+Incoterm: FOB Melilla
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Distribuciones del Estrecho S.A.
+    Poligono Tres Culturas, Nave 6
+    52006 Melilla
+    Espana
+    NIF: A-52234567 | EORI: ESA52234567
+
+COMPRADOR/IMPORTADOR:
+    Meridian Industrial Supply Inc.
+    4820 Corporate Blvd, Suite 210
+    NC 28216 Charlotte
+    Estados Unidos
+    Tax ID: 56-2345671
+
+Factura No.: INV-AES-01-2026-9539112  Fecha: 04/03/2026
+Documento de transporte: MSCU20269539112
+
+MERCANCIAS:
+  - Aceite de oliva virgen extra, envasado en botellas de vidrio de 750 ml
+    HS: 150910  Cantidad: 8400 LTR  Precio unit.: 5.2 USD
+
+NOTA DEL CASO (que se prueba):
+  Buyer holds a valid EORI/identification number — company name and address are NOT to be additionally declared per AES rule.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

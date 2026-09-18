@@ -1,0 +1,44 @@
+CASO H1-61 — Cadena de frio farmaceutica: producto veterinario biologico en transito maritimo de larga duracion
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Argentina (Buenos Aires)
+Destino: Espana
+Incoterm: CIF Buenos Aires
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Patagonia BioFarma Import S.A.
+    Av. Rivadavia 3200, Piso 6
+    C1203AAM Buenos Aires
+    Argentina
+    Tax ID: 30-98765432-1
+
+COMPRADOR/IMPORTADOR:
+    Suministros Norte Peninsular S.A.
+    Poligono Asipo, Parcela 22
+    33428 Llanera (Asturias)
+    Espana
+    NIF: A-33456789 | EORI: ESA33456789
+
+Factura No.: INV-H1-61-2026-8528602  Fecha: 16/03/2026
+Documento de transporte: MSCU20268528602
+
+MERCANCIAS:
+  - Vacunas veterinarias inactivadas, viales de 50 dosis, uso ganadero, en nevera activa
+    HS: 300220  Cantidad: 6000 PCE  Precio unit.: 3.1 USD
+
+NOTA DEL CASO (que se prueba):
+  Producto biologico veterinario en cadena de frio maritima de larga duracion (30+ dias de transito): el certificado de control de temperatura debe cubrir la totalidad del trayecto sin discontinuidad, incluido el tiempo de espera en deposito temporal antes del levante — cualquier hueco documental invalida la cadena de frio aunque el resto sea correcto.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_certificado_veterinario.pdf
+  - 05_certificado_control_temperatura.pdf
+  - 06_certificado_gdp.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

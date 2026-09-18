@@ -1,0 +1,46 @@
+CASO H1-09-EXTRANA-b — Desaparición del régimen 49: unión aduanera vs territorios fiscales especiales — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Marruecos (Marrakech)
+Destino: Espana (Canarias) - IGIC, fuera del territorio IVA UE
+Incoterm: FOB Marrakech
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Marrakech Artisanat Export
+    Route de Safi, Km 5
+    40000 Marrakech
+    Marruecos
+    Tax ID: IF40987654
+
+COMPRADOR/IMPORTADOR:
+    Suministros Norte Peninsular S.A.
+    Poligono Asipo, Parcela 22
+    33428 Las Palmas de Gran Canaria
+    Espana (Canarias) - IGIC, fuera del territorio IVA UE
+    NIF: A-33456789 | EORI: ESA33456789
+
+Factura No.: INV-H1-09-EXTRANA-b-2026-5634178  Fecha: 12/11/2026
+Documento de transporte: MSCU20265634178
+
+MERCANCIAS:
+  - Anillo de compromiso fabricado por impresion 3D en polvo de titanio sinterizado con engaste de diamante sintetico cultivado en laboratorio de 0,5 quilates, diseño geometrico parametrico unico por pieza, sin moldes ni troqueles
+    HS: 711719  Cantidad: 50 PCE  Precio unit.: 353.6 EUR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+El titanio no es un metal precioso (excluye cap. 71 seccion joyeria fina), pero el diamante sintetico engastado SI puede ser relevante para 7104 (piedras sinteticas). La fabricacion aditiva (impresion 3D) no cambia la clasificacion del producto final, pero la combinacion titanio+diamante sintetico exige verificar la partida exacta, no asumir 'bisuteria' generica.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

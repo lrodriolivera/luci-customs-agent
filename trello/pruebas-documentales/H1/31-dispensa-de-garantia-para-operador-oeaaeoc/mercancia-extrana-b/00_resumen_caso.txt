@@ -1,0 +1,46 @@
+CASO H1-31-EXTRANA-b — Dispensa de garantía para operador OEA/AEOC — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Canada (Trois-Rivieres)
+Destino: Espana
+Incoterm: FOB Trois-Rivieres
+Moneda: CAD
+
+VENDEDOR/EXPORTADOR:
+    Maple Valley Timber Corp.
+    780 Rue Principale
+    QC G8T 4H3 Trois-Rivieres
+    Canada
+    Tax ID: 987654321RT0001
+
+COMPRADOR/IMPORTADOR:
+    Importaciones Costa Brava S.L.
+    Carrer de la Indústria, 8
+    17005 Girona
+    Espana
+    NIF: B-17987654 | EORI: ESB17987654
+
+Factura No.: INV-H1-31-EXTRANA-b-2026-8137710  Fecha: 10/03/2026
+Documento de transporte: MSCU20268137710
+
+MERCANCIAS:
+  - Bolsa reutilizable de la compra tejida a partir de hilo fabricado con botellas de PET recicladas (100% material reciclado post-consumo), con asas reforzadas y estampado publicitario, capacidad 20kg
+    HS: 392329  Cantidad: 5234 PCE  Precio unit.: 1.38 CAD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+El material de origen (botellas PET) no determina la clasificacion: una vez transformado en hilo y tejido, el producto final es un articulo textil de materia textil sintetica (cap. 63, 6305) y no un 'articulo de plastico' (cap. 39) — error frecuente en declaraciones basadas en el origen del material, no en el producto final.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

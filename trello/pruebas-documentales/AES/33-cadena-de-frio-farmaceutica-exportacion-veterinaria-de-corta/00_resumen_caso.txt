@@ -1,0 +1,44 @@
+CASO AES-33 — Cadena de frio farmaceutica: exportacion veterinaria de corta distancia — la brevedad no exime la cadena de frio
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Carretera
+Origen mercancia: Espana (Girona)
+Destino: Marruecos
+Incoterm: DAP Girona
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Importaciones Costa Brava S.L.
+    Carrer de la Indústria, 8
+    17005 Girona
+    Espana
+    NIF: B-17987654 | EORI: ESB17987654
+
+COMPRADOR/IMPORTADOR:
+    Souss Massa BioVet Import-Export S.A.R.L.
+    Zone Industrielle Ait Melloul, Lot 56
+    86150 Agadir
+    Marruecos
+    Tax ID: IF40567891
+
+Factura No.: INV-AES-33-2026-3274942  Fecha: 12/05/2026
+Documento de transporte: CMR-20263274942
+
+MERCANCIAS:
+  - Vacunas veterinarias inactivadas, viales de 50 dosis, uso ganadero, en nevera activa
+    HS: 300220  Cantidad: 3000 PCE  Precio unit.: 3.6 EUR
+
+NOTA DEL CASO (que se prueba):
+  Exportacion de producto biologico veterinario por carretera de corta distancia (Algeciras — Tanger Med): la brevedad del trayecto no exime de mantener y documentar la cadena de frio continua, ni de la licencia de exportacion de medicamentos veterinarios de la AEMPS.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+  - 04_licencia_exportacion.pdf
+  - 05_certificado_control_temperatura.pdf
+  - 06_certificado_gdp.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

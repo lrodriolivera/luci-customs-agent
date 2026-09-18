@@ -1,0 +1,46 @@
+CASO H1-16-EXTRANA-a — Declaración simplificada por falta de documentos — códigos 9AR a 9VI — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Peru (Lima)
+Destino: Espana
+Incoterm: FOB Lima
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Textiles Alpaca del Sur S.A.C.
+    Av. Argentina 2140
+    15082 Lima
+    Peru
+    Tax ID: 20512345678
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones Iberica del Levante S.L.
+    Poligono Industrial Fuente del Jarro, Calle 4 nº 12
+    46988 Paterna (Valencia)
+    Espana
+    NIF: B-46123456 | EORI: ESB46123456
+
+Factura No.: INV-H1-16-EXTRANA-a-2026-9696851  Fecha: 19/08/2026
+Documento de transporte: MSCU20269696851
+
+MERCANCIAS:
+  - Reloj de pulsera con caja de acero inoxidable, movimiento de cuarzo analogico tradicional combinado con pantalla OLED secundaria para notificaciones de smartphone, GPS y monitor de ritmo cardiaco, sin conectividad celular propia
+    HS: 910211  Cantidad: 351 PCE  Precio unit.: 60.32 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Frontera clasica entre reloj (cap. 91, 9102) y aparato de comunicacion/computo vestible (8517/8471). La UE distingue por si la funcion de reloj es accesoria o principal; aqui el movimiento de cuarzo tradicional es el elemento dominante, pero la pantalla OLED y sensores complican el caracter esencial.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

@@ -1,0 +1,46 @@
+CASO H1-43-EXTRANA-a — Exportador extracomunitario sin NIF español vs. importador con NIF/EORI español — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Argentina (Buenos Aires)
+Destino: Espana
+Incoterm: FOB Buenos Aires
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Pampa Cueros y Marroquineria S.A.
+    Av. Corrientes 2340, Piso 4
+    C1046AAQ Buenos Aires
+    Argentina
+    Tax ID: 30-71234567-8
+
+COMPRADOR/IMPORTADOR:
+    Extremadura Trading Company S.L.
+    Avda. de la Constitucion, 4
+    06011 Badajoz
+    Espana
+    NIF: B-06345678 | EORI: ESB06345678
+
+Factura No.: INV-H1-43-EXTRANA-a-2026-9914218  Fecha: 22/05/2026
+Documento de transporte: MSCU20269914218
+
+MERCANCIAS:
+  - Estanteria modular de madera de pino en kit desmontado (flat-pack), sin los tornillos ni bisagras metalicas de montaje (se venden por separado en el pais de destino), compuesta por 6 paneles cortados a medida y taladrados
+    HS: 441900  Cantidad: 118 SET  Precio unit.: 119.18 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+GRI 2(a): un articulo incompleto o sin terminar se clasifica como el articulo completo si ya presenta las caracteristicas esenciales de este (mueble desmontado = mueble, 9403), aunque falten piezas menores de ferreteria que se compran aparte.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

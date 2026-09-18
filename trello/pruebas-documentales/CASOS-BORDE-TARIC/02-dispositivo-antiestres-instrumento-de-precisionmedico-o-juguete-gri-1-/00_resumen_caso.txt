@@ -1,0 +1,48 @@
+CASO BORDE-02 — Dispositivo 'antiestres': ¿instrumento de precision/medico o juguete? (GRI 1, caso real UE)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: China (Shenzhen)
+Destino: Espana
+Incoterm: FCA Shenzhen
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Shenzhen Weilun Electronics Co., Ltd.
+    Bldg 7, Nanshan Zhiyuan Ind. Park
+    518052 Shenzhen
+    China
+    Tax ID: 91440300MA5G7H2N63
+
+COMPRADOR/IMPORTADOR:
+    Importaciones Costa Brava S.L.
+    Carrer de la Indústria, 8
+    17005 Girona
+    Espana
+    NIF: B-17987654 | EORI: ESB17987654
+
+Factura No.: INV-BORDE-02-2026-2676924  Fecha: 05/04/2026
+Documento de transporte: 020-20262676924
+
+MERCANCIAS:
+  - Dispositivo giratorio de bolsillo fabricado en aleacion de zinc con rodamiento de bolas de precision, comercializado por el fabricante como "herramienta de alivio del estres y mejora de la concentracion para adultos con TDAH", sin ninguna certificacion medica ni marcado sanitario, vendido en tiendas de juguetes y de regalo por igual
+    HS: 900190  Cantidad: 8600 PCE  Precio unit.: 1.85 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- CASO DE BORDE: FUNDAMENTO DE LA DISPUTA DE CLASIFICACION ---
+Base normativa/tecnica: GRI 1 — texto de la partida 9503 (Nota Explicativa) frente a la alegacion comercial de uso terapeutico
+
+Caso real y ampliamente documentado en la practica aduanera de la UE (fidget spinners, ~2017): el fabricante alega uso terapeutico/medico para intentar evitar la partida de juguetes (9503, con aranceles y controles de seguridad de juguete), pero al no existir certificacion medica ni dispositivo medico registrado, las autoridades aduaneras consolidaron su clasificacion como juguete (9503) independientemente del marketing.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugeriria de forma naive/erronea el proveedor o transitario en un envio real. El
+objetivo de este caso es verificar si el agente / LUCI llegan a la clasificacion correcta
+razonando desde las Reglas Generales de Interpretacion, no copiando el codigo de la factura.

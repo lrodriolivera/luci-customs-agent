@@ -1,0 +1,46 @@
+CASO H1-39-EXTRANA-b — Unidades suplementarias opcionales (no obligatorias) específicamente bajo régimen 82 — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Pakistan (Karachi)
+Destino: Espana
+Incoterm: FOB Karachi
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Karachi Textile Mills (Pvt.) Ltd.
+    S.I.T.E. Area, Manghopir Road
+    75700 Karachi
+    Pakistan
+    Tax ID: NTN-8765432-1
+
+COMPRADOR/IMPORTADOR:
+    Suministros Norte Peninsular S.A.
+    Poligono Asipo, Parcela 22
+    33428 Llanera (Asturias)
+    Espana
+    NIF: A-33456789 | EORI: ESA33456789
+
+Factura No.: INV-H1-39-EXTRANA-b-2026-4901389  Fecha: 18/11/2026
+Documento de transporte: MSCU20264901389
+
+MERCANCIAS:
+  - Tabla de skate electrica autoequilibrada (hoverboard) con dos ruedas independientes, motor electrico de 350W, bateria de litio, control por inclinacion corporal, sin manillar, velocidad maxima 15 km/h, uso mixto adultos/adolescentes
+    HS: 950300  Cantidad: 85 PCE  Precio unit.: 169.95 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Disputa real y conocida en la practica aduanera UE: hoverboards clasificados como juguete (9503, si uso claramente recreativo/infantil) frente a vehiculo con motor electrico (8711) si la velocidad/potencia y el publico objetivo son de adultos.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

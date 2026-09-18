@@ -1,0 +1,46 @@
+CASO H1-09-EXTRANA-a — Desaparición del régimen 49: unión aduanera vs territorios fiscales especiales — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Marruecos (Casablanca)
+Destino: Espana (Canarias) - IGIC, fuera del territorio IVA UE
+Incoterm: FOB Casablanca
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Atlas Agrumes S.A.R.L.
+    Zone Industrielle Sidi Bernoussi, Lot 34
+    20600 Casablanca
+    Marruecos
+    Tax ID: IF40123456
+
+COMPRADOR/IMPORTADOR:
+    Importaciones Costa Brava S.L.
+    Carrer de la Indústria, 8
+    17005 Las Palmas de Gran Canaria
+    Espana (Canarias) - IGIC, fuera del territorio IVA UE
+    NIF: B-17987654 | EORI: ESB17987654
+
+Factura No.: INV-H1-09-EXTRANA-a-2026-1950505  Fecha: 12/11/2026
+Documento de transporte: MSCU20261950505
+
+MERCANCIAS:
+  - Mueble plegable de doble funcion: en posicion vertical es una silla con respaldo tapizado, y al abatirse se convierte en una mesa auxiliar con superficie de melamina, estructura de acero tubular
+    HS: 940179  Cantidad: 165 PCE  Precio unit.: 65.28 EUR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Mueble de doble uso simultaneo (silla/mesa): ni la partida 9401 (asientos) ni la 9403 (los demas muebles) describen por si solas el articulo completo. GRI 3(c): cuando no puede determinarse el caracter esencial entre partidas igualmente especificas, se clasifica en la partida de numeracion mas alta (9403), lo contrario de lo declarado.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

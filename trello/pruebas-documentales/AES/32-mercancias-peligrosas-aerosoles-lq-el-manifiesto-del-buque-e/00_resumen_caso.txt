@@ -1,0 +1,43 @@
+CASO AES-32 — Mercancias peligrosas: aerosoles LQ — el manifiesto del buque exige declaracion IMDG igualmente
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Paterna (Valencia))
+Destino: Chile
+Incoterm: FOB Paterna (Valencia)
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Distribuciones Iberica del Levante S.L.
+    Poligono Industrial Fuente del Jarro, Calle 4 nº 12
+    46988 Paterna (Valencia)
+    Espana
+    NIF: B-46123456 | EORI: ESB46123456
+
+COMPRADOR/IMPORTADOR:
+    Vinedos del Maule Exportadora S.A.
+    Camino Real 340
+    3460000 Talca
+    Chile
+    Tax ID: 76.123.456-7
+
+Factura No.: INV-AES-32-2026-5469745  Fecha: 11/04/2026
+Documento de transporte: MSCU20265469745
+
+MERCANCIAS:
+  - Aerosoles cosmeticos (desodorante corporal), propelente inflamable, envase de 150ml
+    HS: 330720  Cantidad: 36000 PCE  Precio unit.: 0.98 USD
+
+NOTA DEL CASO (que se prueba):
+  Exportacion maritima de aerosoles bajo 'cantidades limitadas' (LQ): aun con la exencion de marcado individual reducido, el conocimiento de embarque y el manifiesto de mercancias peligrosas del buque SI deben declarar la carga como IMDG — no es opcional aunque el bulto individual este exento de algunas marcas.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_ficha_datos_seguridad.pdf
+  - 05_declaracion_mercancias_peligrosas.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

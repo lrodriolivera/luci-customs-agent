@@ -1,0 +1,44 @@
+CASO AES-30 — Quimicos: licencia de exportacion de doble uso/seguridad para fertilizante precursor de explosivos
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Melilla)
+Destino: Egipto
+Incoterm: FOB Melilla
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Distribuciones del Estrecho S.A.
+    Poligono Tres Culturas, Nave 6
+    52006 Melilla
+    Espana
+    NIF: A-52234567 | EORI: ESA52234567
+
+COMPRADOR/IMPORTADOR:
+    Nile Cotton Export Co.
+    18 El Nasr Road, Nasr City
+    11765 Cairo
+    Egipto
+    Tax ID: 123-456-789
+
+Factura No.: INV-AES-30-2026-2825223  Fecha: 09/02/2026
+Documento de transporte: MSCU20262825223
+
+MERCANCIAS:
+  - Fertilizante a base de nitrato de amonio, granulado, 34,5% de nitrogeno
+    HS: 310230  Cantidad: 300000 KGM  Precio unit.: 0.29 EUR
+
+NOTA DEL CASO (que se prueba):
+  Exportacion de fertilizante a base de nitrato de amonio: licencia de exportacion de seguridad si la concentracion de nitrogeno supera el umbral que lo califica como precursor de explosivos regulado (Reglamento (UE) 2019/1148), ademas de la declaracion de mercancias peligrosas ordinaria del transporte maritimo.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_ficha_datos_seguridad.pdf
+  - 05_declaracion_mercancias_peligrosas.pdf
+  - 06_licencia_exportacion.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

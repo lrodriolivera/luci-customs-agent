@@ -1,0 +1,46 @@
+CASO AES-01-EXTRANA-a — EORI presente → nunca enviar nombre/dirección — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Logroño)
+Destino: Estados Unidos
+Incoterm: FOB Logroño
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Riojana de Comercio Exterior S.L.
+    Avda. de Lobete, 8
+    26007 Logroño
+    Espana
+    NIF: B-26567834 | EORI: ESB26567834
+
+COMPRADOR/IMPORTADOR:
+    Meridian Industrial Supply Inc.
+    4820 Corporate Blvd, Suite 210
+    NC 28216 Charlotte
+    Estados Unidos
+    Tax ID: 56-2345671
+
+Factura No.: INV-AES-01-EXTRANA-a-2026-2589693  Fecha: 04/03/2026
+Documento de transporte: MSCU20262589693
+
+MERCANCIAS:
+  - Bolsa reutilizable de la compra tejida a partir de hilo fabricado con botellas de PET recicladas (100% material reciclado post-consumo), con asas reforzadas y estampado publicitario, capacidad 20kg
+    HS: 392329  Cantidad: 5219 PCE  Precio unit.: 1.47 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+El material de origen (botellas PET) no determina la clasificacion: una vez transformado en hilo y tejido, el producto final es un articulo textil de materia textil sintetica (cap. 63, 6305) y no un 'articulo de plastico' (cap. 39) — error frecuente en declaraciones basadas en el origen del material, no en el producto final.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

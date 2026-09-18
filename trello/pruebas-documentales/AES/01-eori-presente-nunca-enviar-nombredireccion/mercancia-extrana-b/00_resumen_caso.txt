@@ -1,0 +1,46 @@
+CASO AES-01-EXTRANA-b — EORI presente → nunca enviar nombre/dirección — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Ceuta)
+Destino: Estados Unidos
+Incoterm: FOB Ceuta
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Ceutrade Comercio Exterior S.L.
+    Calle Real, 45
+    51001 Ceuta
+    Espana
+    NIF: B-51123456 | EORI: ESB51123456
+
+COMPRADOR/IMPORTADOR:
+    Pacific Coast Machinery LLC
+    1150 Harbor Way
+    CA 90802 Long Beach
+    Estados Unidos
+    Tax ID: 95-1123456
+
+Factura No.: INV-AES-01-EXTRANA-b-2026-5523991  Fecha: 04/03/2026
+Documento de transporte: MSCU20265523991
+
+MERCANCIAS:
+  - Set de pintura para manualidades infantiles fabricada con colorantes alimentarios y almidon de maiz, formulada para ser segura en caso de ingestion accidental por niños pequeños, presentada en 6 botes de 100ml con pincel
+    HS: 320910  Cantidad: 602 SET  Precio unit.: 4.66 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Pinturas convencionales van en el capitulo 32, pero una formulacion explicitamente comestible/apta para ingestion con base en almidon alimentario puede acercarse a preparaciones del capitulo 21 (otras preparaciones alimenticias) segun su composicion real — requiere ficha tecnica, no solo la descripcion comercial 'pintura'.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

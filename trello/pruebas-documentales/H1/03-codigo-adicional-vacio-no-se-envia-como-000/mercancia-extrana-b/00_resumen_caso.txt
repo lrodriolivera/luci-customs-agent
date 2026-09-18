@@ -1,0 +1,46 @@
+CASO H1-03-EXTRANA-b — Código adicional vacío no se envía como '000' — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: India (Jaipur)
+Destino: Espana
+Incoterm: FOB Jaipur
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Ganesh Handicrafts Exports
+    14 Sardar Patel Road
+    302001 Jaipur
+    India
+    Tax ID: AABCG5678K
+
+COMPRADOR/IMPORTADOR:
+    Ibertrade Import-Export S.A.
+    Muelle de Poniente s/n, Edif. Lonja
+    35008 Las Palmas de Gran Canaria
+    Espana
+    NIF: A-35678901 | EORI: ESA35678901
+
+Factura No.: INV-H1-03-EXTRANA-b-2026-7252920  Fecha: 06/05/2026
+Documento de transporte: MSCU20267252920
+
+MERCANCIAS:
+  - Reloj de pulsera con caja de acero inoxidable, movimiento de cuarzo analogico tradicional combinado con pantalla OLED secundaria para notificaciones de smartphone, GPS y monitor de ritmo cardiaco, sin conectividad celular propia
+    HS: 910211  Cantidad: 352 PCE  Precio unit.: 58.0 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Frontera clasica entre reloj (cap. 91, 9102) y aparato de comunicacion/computo vestible (8517/8471). La UE distingue por si la funcion de reloj es accesoria o principal; aqui el movimiento de cuarzo tradicional es el elemento dominante, pero la pantalla OLED y sensores complican el caracter esencial.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

@@ -1,0 +1,41 @@
+CASO AES-10 — Exportador sin EORI: las 5 excepciones documentadas
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Aereo
+Origen mercancia: Espana (Zaragoza)
+Destino: Emiratos Arabes Unidos
+Incoterm: CPT Zaragoza
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Aragonesa de Suministros Industriales S.A.
+    Poligono El Pilar, Nave 8
+    50197 Zaragoza
+    Espana
+    NIF: A-50123890 | EORI: ESA50123890
+
+COMPRADOR/IMPORTADOR:
+    Emirates Perfume Trading Co. LLC
+    Warehouse 22, Jebel Ali Free Zone
+    00000 Dubai
+    Emiratos Arabes Unidos
+    Tax ID: 100876543200003
+
+Factura No.: INV-AES-10-2026-2282603  Fecha: 13/02/2026
+Documento de transporte: 020-20262282603
+
+MERCANCIAS:
+  - Perfumes y aguas de tocador, en frasco pulverizador de 100 ml
+    HS: 330300  Cantidad: 3600 LTR  Precio unit.: 9.8 USD
+
+NOTA DEL CASO (que se prueba):
+  Exporter without EORI — one of the 5 documented exceptions applies (occasional exporter, private individual shipment).
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

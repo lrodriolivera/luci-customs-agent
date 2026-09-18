@@ -1,0 +1,42 @@
+CASO H1-47 — Perecederos vegetales: sistema de precio de entrada para tomates de terceros paises
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Carretera
+Origen mercancia: Marruecos (Casablanca)
+Destino: Espana
+Incoterm: FOB Casablanca
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Atlas Agrumes S.A.R.L.
+    Zone Industrielle Sidi Bernoussi, Lot 34
+    20600 Casablanca
+    Marruecos
+    Tax ID: IF40123456
+
+COMPRADOR/IMPORTADOR:
+    Mercantil Andaluza de Importacion S.L.
+    Avda. de la Innovacion, 3
+    41703 Dos Hermanas (Sevilla)
+    Espana
+    NIF: B-41678912 | EORI: ESB41678912
+
+Factura No.: INV-H1-47-2026-5970348  Fecha: 26/09/2026
+Documento de transporte: CMR-20265970348
+
+MERCANCIAS:
+  - Tomates frescos, variedad Cherry en racimo (tipo vine), calibre 20-30mm
+    HS: 070200  Cantidad: 16000 KGM  Precio unit.: 0.78 EUR
+
+NOTA DEL CASO (que se prueba):
+  Sistema de precio de entrada para tomates de terceros paises (OCM unica, Reg. (UE) 1308/2013 y normativa de desarrollo): si el valor declarado en factura es inferior al precio de entrada de referencia vigente en el periodo, se aplica un derecho de importacion adicional especifico sobre la diferencia, ademas del arancel ad valorem ordinario.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+  - 04_certificado_fitosanitario.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

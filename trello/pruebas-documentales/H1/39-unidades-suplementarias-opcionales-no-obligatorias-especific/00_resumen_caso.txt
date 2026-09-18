@@ -1,0 +1,41 @@
+CASO H1-39 — Unidades suplementarias opcionales (no obligatorias) específicamente bajo régimen 82
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Pakistan (Karachi)
+Destino: Espana
+Incoterm: FOB Karachi
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Karachi Textile Mills (Pvt.) Ltd.
+    S.I.T.E. Area, Manghopir Road
+    75700 Karachi
+    Pakistan
+    Tax ID: NTN-8765432-1
+
+COMPRADOR/IMPORTADOR:
+    Baleares Import S.L.
+    Poligono Son Castello, Calle Gremi de Fusters 22
+    07009 Palma de Mallorca
+    Espana
+    NIF: B-07234561 | EORI: ESB07234561
+
+Factura No.: INV-H1-39-2026-3043524  Fecha: 18/11/2026
+Documento de transporte: MSCU20263043524
+
+MERCANCIAS:
+  - Tejidos de algodon crudo, ligamento tafetan, en rollos
+    HS: 520911  Cantidad: 15500 KGM  Precio unit.: 1.75 USD
+
+NOTA DEL CASO (que se prueba):
+  Regime 82 declared — supplementary units are OPTIONAL (not mandatory) specifically under this regime.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

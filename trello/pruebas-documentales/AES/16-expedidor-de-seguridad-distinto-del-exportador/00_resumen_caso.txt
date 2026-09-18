@@ -1,0 +1,41 @@
+CASO AES-16 — Expedidor de seguridad distinto del exportador
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Melilla)
+Destino: Peru
+Incoterm: FOB Melilla
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Distribuciones del Estrecho S.A.
+    Poligono Tres Culturas, Nave 6
+    52006 Melilla
+    Espana
+    NIF: A-52234567 | EORI: ESA52234567
+
+COMPRADOR/IMPORTADOR:
+    Textiles Alpaca del Sur S.A.C.
+    Av. Argentina 2140
+    15082 Lima
+    Peru
+    Tax ID: 20512345678
+
+Factura No.: INV-AES-16-2026-4975853  Fecha: 19/08/2026
+Documento de transporte: MSCU20264975853
+
+MERCANCIAS:
+  - Bolsos de mano de cuero natural bovino, con cierre de cremallera
+    HS: 420221  Cantidad: 1400 PCE  Precio unit.: 26.0 USD
+
+NOTA DEL CASO (que se prueba):
+  Security consignor (dispatcher for safety/security data) is a party distinct from the exporter of record.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

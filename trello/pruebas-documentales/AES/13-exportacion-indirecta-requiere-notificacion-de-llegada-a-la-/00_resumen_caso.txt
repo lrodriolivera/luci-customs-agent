@@ -1,0 +1,48 @@
+CASO AES-13 — Exportación indirecta requiere notificación de llegada a la aduana de salida
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Carretera
+Origen mercancia: Espana (Guarnizo (Cantabria))
+Destino: Suiza
+Incoterm: FCA Guarnizo (Cantabria)
+Moneda: CHF
+
+VENDEDOR/EXPORTADOR:
+    Cantabrica Import S.A.
+    Poligono Guarnizo, Parcela 14
+    39611 Guarnizo (Cantabria)
+    Espana
+    NIF: A-39456782 | EORI: ESA39456782
+
+COMPRADOR/IMPORTADOR:
+    Alpina Precision Instruments AG
+    Industriestrasse 14
+    6300 Zug
+    Suiza
+    Tax ID: CHE-123.456.789
+
+CONSIGNATARIO:
+    Geneve Horlogerie Fine SA
+    Rue du Rhone 45
+    1204 Geneve
+    Suiza
+    Tax ID: CHE-987.654.321
+
+Factura No.: INV-AES-13-2026-7080551  Fecha: 16/05/2026
+Documento de transporte: CMR-20267080551
+
+MERCANCIAS:
+  - Relojes de pulsera mecanicos, caja de acero inoxidable
+    HS: 910219  Cantidad: 260 PCE  Precio unit.: 195.0 CHF
+
+NOTA DEL CASO (que se prueba):
+  Indirect export via another Member State's office of exit — requires arrival notification (IE507/IE521) at the actual office of exit.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

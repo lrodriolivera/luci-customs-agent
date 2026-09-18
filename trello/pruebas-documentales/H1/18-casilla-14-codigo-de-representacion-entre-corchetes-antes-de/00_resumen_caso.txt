@@ -1,0 +1,41 @@
+CASO H1-18 — Casilla 14 — código de representación entre corchetes antes del nombre
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Pakistan (Lahore)
+Destino: Espana
+Incoterm: FOB Lahore
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Lahore Surgical Instruments Ltd.
+    Sialkot Road, Industrial Estate
+    54000 Lahore
+    Pakistan
+    Tax ID: NTN-1234567-8
+
+COMPRADOR/IMPORTADOR:
+    Suministros Norte Peninsular S.A.
+    Poligono Asipo, Parcela 22
+    33428 Llanera (Asturias)
+    Espana
+    NIF: A-33456789 | EORI: ESA33456789
+
+Factura No.: INV-H1-18-2026-6956672  Fecha: 21/10/2026
+Documento de transporte: MSCU20266956672
+
+MERCANCIAS:
+  - Tejidos de algodon crudo, ligamento tafetan, en rollos
+    HS: 520911  Cantidad: 11000 KGM  Precio unit.: 1.8 USD
+
+NOTA DEL CASO (que se prueba):
+  Box 14 representation code to be declared in brackets before the representative's name, per AEAT format.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

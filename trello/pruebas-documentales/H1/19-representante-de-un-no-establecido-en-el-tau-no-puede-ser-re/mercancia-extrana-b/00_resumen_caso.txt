@@ -1,0 +1,46 @@
+CASO H1-19-EXTRANA-b — Representante de un no establecido en el TAU no puede ser representación directa — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Bangladesh (Dhaka)
+Destino: Espana
+Incoterm: FOB Dhaka
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Dhaka Knitwear Exports Ltd.
+    Plot 45, Export Processing Zone
+    1230 Dhaka
+    Bangladesh
+    Tax ID: BIN-000123456-0101
+
+COMPRADOR/IMPORTADOR:
+    Aragonesa de Suministros Industriales S.A.
+    Poligono El Pilar, Nave 8
+    50197 Zaragoza
+    Espana
+    NIF: A-50123890 | EORI: ESA50123890
+
+Factura No.: INV-H1-19-EXTRANA-b-2026-7951694  Fecha: 22/11/2026
+Documento de transporte: MSCU20267951694
+
+MERCANCIAS:
+  - Set de pintura para manualidades infantiles fabricada con colorantes alimentarios y almidon de maiz, formulada para ser segura en caso de ingestion accidental por niños pequeños, presentada en 6 botes de 100ml con pincel
+    HS: 320910  Cantidad: 629 SET  Precio unit.: 4.54 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Pinturas convencionales van en el capitulo 32, pero una formulacion explicitamente comestible/apta para ingestion con base en almidon alimentario puede acercarse a preparaciones del capitulo 21 (otras preparaciones alimenticias) segun su composicion real — requiere ficha tecnica, no solo la descripcion comercial 'pintura'.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

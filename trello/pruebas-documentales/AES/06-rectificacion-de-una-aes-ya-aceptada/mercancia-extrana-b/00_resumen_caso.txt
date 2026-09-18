@@ -1,0 +1,46 @@
+CASO AES-06-EXTRANA-b — Rectificación de una AES ya aceptada — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Carretera
+Origen mercancia: Espana (Zaragoza)
+Destino: Turquia
+Incoterm: EXW Zaragoza
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Aragonesa de Suministros Industriales S.A.
+    Poligono El Pilar, Nave 8
+    50197 Zaragoza
+    Espana
+    NIF: A-50123890 | EORI: ESA50123890
+
+COMPRADOR/IMPORTADOR:
+    Ege Makina Ithalat Ihracat Ltd. Sti.
+    Ataturk Cad. No: 88
+    35220 Izmir
+    Turquia
+    Tax ID: 9876543210
+
+Factura No.: INV-AES-06-EXTRANA-b-2026-5225531  Fecha: 09/08/2026
+Documento de transporte: CMR-20265225531
+
+MERCANCIAS:
+  - Banco de jardin de madera tratada con dos jardineras de metal galvanizado integradas en los extremos, diseñado para exterior, vendido como pieza unica de mobiliario-jardineria
+    HS: 940179  Cantidad: 72 PCE  Precio unit.: 158.1 EUR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Mueble de exterior (9403) con jardineras/macetas de metal (7324/3924 segun material) integradas como parte inseparable de una unica pieza vendida. GRI 1 y las Notas de Seccion: al ser un articulo compuesto de fabricacion unica (no un surtido de piezas sueltas), se clasifica por su funcion principal como mueble, pero exige justificar por que las jardineras metalicas no cambian la partida.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

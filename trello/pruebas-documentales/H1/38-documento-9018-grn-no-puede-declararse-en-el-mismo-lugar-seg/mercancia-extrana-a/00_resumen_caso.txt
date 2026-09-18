@@ -1,0 +1,46 @@
+CASO H1-38-EXTRANA-a — Documento 9018 (GRN) no puede declararse en el mismo lugar según el tipo de declaración — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Indonesia (Jakarta)
+Destino: Espana
+Incoterm: FOB Jakarta
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Jakarta Furniture Manufacturing PT
+    Jl. Industri Raya III No. 5
+    15136 Jakarta
+    Indonesia
+    Tax ID: 01.234.567.8-901.000
+
+COMPRADOR/IMPORTADOR:
+    Zona Franca Trading Barcelona S.L.
+    Calle 2, Sector A, Nave 12
+    08040 Barcelona (Zona Franca)
+    Espana
+    NIF: B-08987651 | EORI: ESB08987651
+
+Factura No.: INV-H1-38-EXTRANA-a-2026-4603869  Fecha: 17/10/2026
+Documento de transporte: MSCU20264603869
+
+MERCANCIAS:
+  - Cinturon de lastre para buceo relleno con perdigones de plomo reciclado encapsulados en bolsas de neopreno cosidas, hebilla de liberacion rapida de acero inoxidable, uso deportivo profesional
+    HS: 401699  Cantidad: 322 PCE  Precio unit.: 28.89 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+El neopreno (caucho, cap. 40) es solo el envoltorio; el componente que da la funcion y el peso real es el plomo (metal, cap. 78/83 segun forma). Articulo compuesto de materiales diferentes donde el material 'visible' (neopreno) no es el que aporta el caracter esencial (el lastre de plomo).
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

@@ -1,0 +1,44 @@
+CASO H1-51 — Alimentos: triple control simultaneo (pesquero INDNR + veterinario + cadena de frio) sobre una sola partida
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Peru (Lima)
+Destino: Espana
+Incoterm: CIF Lima
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Textiles Alpaca del Sur S.A.C.
+    Av. Argentina 2140
+    15082 Lima
+    Peru
+    Tax ID: 20512345678
+
+COMPRADOR/IMPORTADOR:
+    Aragonesa de Suministros Industriales S.A.
+    Poligono El Pilar, Nave 8
+    50197 Zaragoza
+    Espana
+    NIF: A-50123890 | EORI: ESA50123890
+
+Factura No.: INV-H1-51-2026-7263048  Fecha: 06/03/2026
+Documento de transporte: MSCU20267263048
+
+MERCANCIAS:
+  - Filetes de pescado congelado (merluza austral), sin piel, IQF, caja de 10kg
+    HS: 030462  Cantidad: 15000 KGM  Precio unit.: 5.4 USD
+
+NOTA DEL CASO (que se prueba):
+  Triple control no arancelario simultaneo sobre una sola partida: pesquero INDNR (certificado de captura), sanitario veterinario (establecimiento autorizado) y cadena de frio ininterrumpida a -18°C desde la captura hasta el Puesto de Control Fronterizo — los tres deben superarse independientemente para el levante.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_certificado_captura.pdf
+  - 05_certificado_veterinario.pdf
+  - 06_certificado_control_temperatura.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

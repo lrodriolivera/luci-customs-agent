@@ -1,0 +1,41 @@
+CASO H1-03 — Código adicional vacío no se envía como '000'
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: India (Mumbai)
+Destino: Espana
+Incoterm: FOB Mumbai
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Sunrise Textiles Pvt. Ltd.
+    Plot 22, MIDC Industrial Area
+    400093 Mumbai
+    India
+    Tax ID: AAECS1234F
+
+COMPRADOR/IMPORTADOR:
+    Suministros Norte Peninsular S.A.
+    Poligono Asipo, Parcela 22
+    33428 Llanera (Asturias)
+    Espana
+    NIF: A-33456789 | EORI: ESA33456789
+
+Factura No.: INV-H1-03-2026-7525127  Fecha: 06/05/2026
+Documento de transporte: MSCU20267525127
+
+MERCANCIAS:
+  - Tejidos de algodon crudo, ligamento tafetan, en rollos
+    HS: 520911  Cantidad: 8500 KGM  Precio unit.: 2.15 USD
+
+NOTA DEL CASO (que se prueba):
+  Additional TARIC code: N/A for this heading (no additional code applicable — must be declared as '000', not left blank).
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

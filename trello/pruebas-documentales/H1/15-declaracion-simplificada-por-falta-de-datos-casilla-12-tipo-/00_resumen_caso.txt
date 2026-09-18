@@ -1,0 +1,41 @@
+CASO H1-15 — Declaración simplificada por falta de datos — casilla 1.2 tipo C
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Colombia (Bogota)
+Destino: Espana
+Incoterm: FOB Bogota
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Cafe de los Andes Exportadora S.A.S.
+    Calle 26 #68-90, Torre B Of. 501
+    111071 Bogota
+    Colombia
+    Tax ID: 900.123.456-7
+
+COMPRADOR/IMPORTADOR:
+    Zona Franca Trading Barcelona S.L.
+    Calle 2, Sector A, Nave 12
+    08040 Barcelona (Zona Franca)
+    Espana
+    NIF: B-08987651 | EORI: ESB08987651
+
+Factura No.: INV-H1-15-2026-6660626  Fecha: 18/07/2026
+Documento de transporte: MSCU20266660626
+
+MERCANCIAS:
+  - Cacao en grano, entero o partido, crudo o tostado
+    HS: 180100  Cantidad: 21000 KGM  Precio unit.: 3.1 USD
+
+NOTA DEL CASO (que se prueba):
+  Simplified declaration — box 1.2 type C: certain particulars pending, to be completed in supplementary declaration.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

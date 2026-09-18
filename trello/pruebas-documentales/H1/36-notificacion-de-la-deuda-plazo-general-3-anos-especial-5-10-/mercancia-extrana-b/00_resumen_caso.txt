@@ -1,0 +1,46 @@
+CASO H1-36-EXTRANA-b — Notificación de la deuda: plazo general 3 años, especial 5-10 años — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Sudafrica (Sandton)
+Destino: Espana
+Incoterm: FOB Sandton
+Moneda: ZAR
+
+VENDEDOR/EXPORTADOR:
+    Johannesburg Mineral Traders (Pty) Ltd
+    88 Rivonia Road
+    2196 Sandton
+    Sudafrica
+    Tax ID: 4450987654
+
+COMPRADOR/IMPORTADOR:
+    Riojana de Comercio Exterior S.L.
+    Avda. de Lobete, 8
+    26007 Logroño
+    Espana
+    NIF: B-26567834 | EORI: ESB26567834
+
+Factura No.: INV-H1-36-EXTRANA-b-2026-3532559  Fecha: 15/08/2026
+Documento de transporte: MSCU20263532559
+
+MERCANCIAS:
+  - Huevos de hormiga escamolera (Liometopum) deshidratados, envasados al vacio para consumo humano como delicatessen (conocidos como "caviar mexicano"), producto tradicional gourmet de exportacion limitada
+    HS: 210690  Cantidad: 107 KGM  Precio unit.: 146.45 ZAR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Producto de insecto para consumo humano: desde la revision HS 2022 existen partidas mas especificas para insectos comestibles (0410) distintas del generico 'preparacion alimenticia no expresada'. Ademas puede estar sujeto a Reglamento de Nuevos Alimentos (Novel Food) de la UE si no tiene historial de consumo demostrado en territorio UE.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

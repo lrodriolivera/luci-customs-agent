@@ -1,0 +1,42 @@
+CASO H1-53 — Quimicos: ficha de datos de seguridad (FDS) obligatoria en espanol — REACH/CLP
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Israel (Haifa)
+Destino: Espana
+Incoterm: FOB Haifa
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Haifa Chemical Industries Export Ltd.
+    HaShayarot Street 12, Haifa Bay Ind. Zone
+    2624002 Haifa
+    Israel
+    Tax ID: 514123456
+
+COMPRADOR/IMPORTADOR:
+    Extremadura Trading Company S.L.
+    Avda. de la Constitucion, 4
+    06011 Badajoz
+    Espana
+    NIF: B-06345678 | EORI: ESB06345678
+
+Factura No.: INV-H1-53-2026-9916901  Fecha: 08/05/2026
+Documento de transporte: MSCU20269916901
+
+MERCANCIAS:
+  - Acido sulfurico tecnico, concentracion 98%, a granel en cisterna ISO
+    HS: 280700  Cantidad: 180000 KGM  Precio unit.: 0.18 USD
+
+NOTA DEL CASO (que se prueba):
+  Sustancia quimica a granel: la Ficha de Datos de Seguridad (FDS) es obligatoria en espanol conforme al Anexo II REACH (Reg. (CE) 1907/2006), con las 16 secciones normalizadas. El registro REACH previo del proveedor NO exime al importador de la UE de verificar su propio estatus como importador si supera el umbral de 1 tonelada/ano.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_ficha_datos_seguridad.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

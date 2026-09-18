@@ -1,0 +1,46 @@
+CASO AES-02-EXTRANA-a — Exportación directa vs indirecta según oficinas — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Melilla)
+Destino: Mexico
+Incoterm: CIF Melilla
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Distribuciones del Estrecho S.A.
+    Poligono Tres Culturas, Nave 6
+    52006 Melilla
+    Espana
+    NIF: A-52234567 | EORI: ESA52234567
+
+COMPRADOR/IMPORTADOR:
+    Manufacturas del Bajio S.A. de C.V.
+    Blvd. Industrial 450, Parque Ind. Norte
+    37490 Leon
+    Mexico
+    Tax ID: MBA950612AB1
+
+Factura No.: INV-AES-02-EXTRANA-a-2026-3239537  Fecha: 05/04/2026
+Documento de transporte: MSCU20263239537
+
+MERCANCIAS:
+  - Mascarilla facial reutilizable de tejido de punto con capa filtrante de polipropileno no tejido insertada, válvula de exhalacion de plastico, comercializada indistintamente como accesorio de moda y como proteccion respiratoria basica, sin certificacion medica FFP
+    HS: 630790  Cantidad: 18025 PCE  Precio unit.: 0.29 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Clasico dilema post-2020: mascarilla textil de uso general (6307) frente a equipo de proteccion respiratoria (6307.90 especifico o cap. 90 si tiene certificacion medica). Sin certificacion FFP/medica, NO deberia declararse como EPI sanitario aunque el vendedor lo sugiera en marketing.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

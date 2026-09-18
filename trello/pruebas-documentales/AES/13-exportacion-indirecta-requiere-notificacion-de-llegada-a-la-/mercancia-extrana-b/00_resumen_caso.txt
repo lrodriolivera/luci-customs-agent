@@ -1,0 +1,46 @@
+CASO AES-13-EXTRANA-b — Exportación indirecta requiere notificación de llegada a la aduana de salida — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Carretera
+Origen mercancia: Espana (Ciudad Real)
+Destino: Suiza
+Incoterm: FCA Ciudad Real
+Moneda: CHF
+
+VENDEDOR/EXPORTADOR:
+    Grupo Manchego de Distribucion S.L.
+    Ctra. Nacional 401, Km 12
+    13004 Ciudad Real
+    Espana
+    NIF: B-13456789 | EORI: ESB13456789
+
+COMPRADOR/IMPORTADOR:
+    Geneve Horlogerie Fine SA
+    Rue du Rhone 45
+    1204 Geneve
+    Suiza
+    Tax ID: CHE-987.654.321
+
+Factura No.: INV-AES-13-EXTRANA-b-2026-9297929  Fecha: 16/05/2026
+Documento de transporte: CMR-20269297929
+
+MERCANCIAS:
+  - Bolsa reutilizable de la compra tejida a partir de hilo fabricado con botellas de PET recicladas (100% material reciclado post-consumo), con asas reforzadas y estampado publicitario, capacidad 20kg
+    HS: 392329  Cantidad: 5219 PCE  Precio unit.: 1.38 CHF
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+El material de origen (botellas PET) no determina la clasificacion: una vez transformado en hilo y tejido, el producto final es un articulo textil de materia textil sintetica (cap. 63, 6305) y no un 'articulo de plastico' (cap. 39) — error frecuente en declaraciones basadas en el origen del material, no en el producto final.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

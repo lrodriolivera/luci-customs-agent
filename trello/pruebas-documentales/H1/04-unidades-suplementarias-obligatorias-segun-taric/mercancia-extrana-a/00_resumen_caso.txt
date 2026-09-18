@@ -1,0 +1,46 @@
+CASO H1-04-EXTRANA-a — Unidades suplementarias obligatorias según TARIC — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Carretera
+Origen mercancia: Turquia (Istanbul)
+Destino: Espana
+Incoterm: EXW Istanbul
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Anadolu Tekstil San. ve Tic. A.S.
+    Organize Sanayi Bolgesi, 4. Cad. No:17
+    34530 Istanbul
+    Turquia
+    Tax ID: 1234567890
+
+COMPRADOR/IMPORTADOR:
+    Grupo Manchego de Distribucion S.L.
+    Ctra. Nacional 401, Km 12
+    13004 Ciudad Real
+    Espana
+    NIF: B-13456789 | EORI: ESB13456789
+
+Factura No.: INV-H1-04-EXTRANA-a-2026-2188715  Fecha: 07/06/2026
+Documento de transporte: CMR-20262188715
+
+MERCANCIAS:
+  - Impresora 3D de sobremesa especializada en extrusion de pasta de chocolate y masa alimentaria para reposteria decorativa, cabezal calefactado, estructura de aluminio, sin funcion de impresion de plasticos ni resinas
+    HS: 847780  Cantidad: 35 PCE  Precio unit.: 916.7 EUR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Las impresoras 3D genericas se debaten entre 8477 (maquinaria de plastico/caucho) y 8479 (maquinas con funcion propia no expresada en otra partida). Al ser exclusivamente para alimentos, 8477 (pensada para plastico/caucho) resulta cuestionable: podria corresponder a maquinaria para la industria alimentaria (8438).
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

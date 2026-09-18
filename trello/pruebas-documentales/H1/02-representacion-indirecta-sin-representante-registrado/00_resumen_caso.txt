@@ -1,0 +1,42 @@
+CASO H1-02 — Representación indirecta sin representante registrado
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Vietnam (Hanoi)
+Destino: Espana
+Incoterm: CIF Hanoi
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Hanoi Phuong Dong Garment JSC
+    45 Duy Tan Street, Cau Giay
+    100000 Hanoi
+    Vietnam
+    Tax ID: 0106789452
+
+COMPRADOR/IMPORTADOR:
+    Importaciones Costa Brava S.L.
+    Carrer de la Indústria, 8
+    17005 Girona
+    Espana
+    NIF: B-17987654 | EORI: ESB17987654
+
+Factura No.: INV-H1-02-2026-4312418  Fecha: 05/04/2026
+Documento de transporte: MSCU20264312418
+
+MERCANCIAS:
+  - Camisetas de punto, 100% algodon, manga corta, para caballero
+    HS: 610910  Cantidad: 12000 PCE  Precio unit.: 3.2 USD
+
+NOTA DEL CASO (que se prueba):
+  NOTE: No customs representative registered with AEAT at time of invoicing — indirect representation pending appointment.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_certificado_seguro.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

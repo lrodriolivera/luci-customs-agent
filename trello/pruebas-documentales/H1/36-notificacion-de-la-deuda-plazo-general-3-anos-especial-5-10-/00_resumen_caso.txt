@@ -1,0 +1,42 @@
+CASO H1-36 — Notificación de la deuda: plazo general 3 años, especial 5-10 años
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Sudafrica (Sandton)
+Destino: Espana
+Incoterm: FOB Sandton
+Moneda: ZAR
+
+VENDEDOR/EXPORTADOR:
+    Johannesburg Mineral Traders (Pty) Ltd
+    88 Rivonia Road
+    2196 Sandton
+    Sudafrica
+    Tax ID: 4450987654
+
+COMPRADOR/IMPORTADOR:
+    Ibertrade Import-Export S.A.
+    Muelle de Poniente s/n, Edif. Lonja
+    35008 Las Palmas de Gran Canaria
+    Espana
+    NIF: A-35678901 | EORI: ESA35678901
+
+Factura No.: INV-H1-36-2026-3452020  Fecha: 15/08/2026
+Documento de transporte: MSCU20263452020
+
+MERCANCIAS:
+  - Aguacates (paltas) frescos, variedad Hass, calibre 16-18
+    HS: 080440  Cantidad: 18000 KGM  Precio unit.: 1.1 ZAR
+
+NOTA DEL CASO (que se prueba):
+  Reference invoice for post-clearance debt notification timing (general 3-year limitation period).
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_certificado_fitosanitario.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

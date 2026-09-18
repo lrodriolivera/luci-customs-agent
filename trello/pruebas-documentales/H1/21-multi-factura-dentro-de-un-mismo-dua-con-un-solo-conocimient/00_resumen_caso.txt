@@ -1,0 +1,44 @@
+CASO H1-21 — Multi-factura dentro de un mismo DUA con un solo conocimiento de embarque
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Vietnam (Binh Duong)
+Destino: Espana
+Incoterm: FOB Binh Duong
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Binh Duong Furniture Export Co.
+    Lot C-12, VSIP II Industrial Park
+    75000 Binh Duong
+    Vietnam
+    Tax ID: 3702134567
+
+COMPRADOR/IMPORTADOR:
+    Ibertrade Import-Export S.A.
+    Muelle de Poniente s/n, Edif. Lonja
+    35008 Las Palmas de Gran Canaria
+    Espana
+    NIF: A-35678901 | EORI: ESA35678901
+
+Factura No.: INV-H1-21-2026-6597168  Fecha: 24/03/2026
+Documento de transporte: MSCU20266597168
+
+MERCANCIAS:
+  - Bicicletas de paseo, sin motor auxiliar, rueda de 28 pulgadas
+    HS: 871200  Cantidad: 1200 PCE  Precio unit.: 78.0 USD
+  - Pantalones vaqueros de mezclilla (denim), 98% algodon / 2% elastano
+    HS: 620342  Cantidad: 4000 PCE  Precio unit.: 9.4 USD
+
+NOTA DEL CASO (que se prueba):
+  Multi-invoice shipment: this is INVOICE 1 of 2 covering a single consolidated Bill of Lading (see companion invoice for line 2).
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01a_factura_comercial_1de2.pdf
+  - 01b_factura_comercial_2de2.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

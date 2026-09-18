@@ -1,0 +1,44 @@
+CASO AES-34 — Cadena de frio farmaceutica: contenedor activo certificado (tipo Envirotainer) vs. anotacion manual en AWB
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Aereo
+Origen mercancia: Espana (Llanera (Asturias))
+Destino: Colombia
+Incoterm: CPT Llanera (Asturias)
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Suministros Norte Peninsular S.A.
+    Poligono Asipo, Parcela 22
+    33428 Llanera (Asturias)
+    Espana
+    NIF: A-33456789 | EORI: ESA33456789
+
+COMPRADOR/IMPORTADOR:
+    Cafe de los Andes Exportadora S.A.S.
+    Calle 26 #68-90, Torre B Of. 501
+    111071 Bogota
+    Colombia
+    Tax ID: 900.123.456-7
+
+Factura No.: INV-AES-34-2026-1874059  Fecha: 13/06/2026
+Documento de transporte: 020-20261874059
+
+MERCANCIAS:
+  - Insulina humana biosintetica, cartuchos de 3ml para pluma precargada, caja de 5 uds.
+    HS: 300431  Cantidad: 6000 PCE  Precio unit.: 15.8 EUR
+
+NOTA DEL CASO (que se prueba):
+  Exportacion de medicamento biologico termosensible por via aerea: control de temperatura mediante contenedor activo certificado (tipo Envirotainer) con registro propio, no una mera anotacion manual de temperatura en el AWB — el dispositivo certificado es lo que acredita el cumplimiento, no la declaracion del transportista.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+  - 04_licencia_exportacion.pdf
+  - 05_certificado_control_temperatura.pdf
+  - 06_certificado_gdp.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

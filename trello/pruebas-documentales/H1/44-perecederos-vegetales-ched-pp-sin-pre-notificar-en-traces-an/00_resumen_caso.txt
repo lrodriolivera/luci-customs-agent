@@ -1,0 +1,43 @@
+CASO H1-44 — Perecederos vegetales: CHED-PP sin pre-notificar en TRACES antes de la llegada fisica
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: Kenia (Naivasha)
+Destino: Espana
+Incoterm: FCA Naivasha
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Rift Valley Horticultural Exporters Ltd.
+    Naivasha-Nakuru Highway, Plot 45
+    20117 Naivasha
+    Kenia
+    Tax ID: P051234567X
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones Iberica del Levante S.L.
+    Poligono Industrial Fuente del Jarro, Calle 4 nº 12
+    46988 Paterna (Valencia)
+    Espana
+    NIF: B-46123456 | EORI: ESB46123456
+
+Factura No.: INV-H1-44-2026-7892096  Fecha: 23/06/2026
+Documento de transporte: 020-20267892096
+
+MERCANCIAS:
+  - Judias verdes frescas, variedad Boby, para consumo directo en fresco
+    HS: 070820  Cantidad: 6000 KGM  Precio unit.: 3.4 EUR
+
+NOTA DEL CASO (que se prueba):
+  CHED-PP debe completarse en TRACES NT y estar disponible ANTES de la llegada fisica de la mercancia al Puesto de Control Fronterizo (Reg. (UE) 2017/625, Art. 133). Envio de prueba: el CHED-PP se registro despues de la llegada del vuelo — retencion en el PCF hasta subsanar.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+  - 04_certificado_fitosanitario.pdf
+  - 05_ched_vegetales.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

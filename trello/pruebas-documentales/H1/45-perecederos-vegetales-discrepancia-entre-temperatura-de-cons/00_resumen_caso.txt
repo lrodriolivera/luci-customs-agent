@@ -1,0 +1,44 @@
+CASO H1-45 — Perecederos vegetales: discrepancia entre temperatura de consigna y temperatura real registrada
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Costa Rica (Guácimo)
+Destino: Espana
+Incoterm: CIF Guácimo
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Piñas Tropicales de Costa Rica S.A.
+    Carretera a Guápiles, Km 18
+    70201 Guácimo
+    Costa Rica
+    Tax ID: 3-101-456789
+
+COMPRADOR/IMPORTADOR:
+    Importaciones Costa Brava S.L.
+    Carrer de la Indústria, 8
+    17005 Girona
+    Espana
+    NIF: B-17987654 | EORI: ESB17987654
+
+Factura No.: INV-H1-45-2026-7372640  Fecha: 24/07/2026
+Documento de transporte: MSCU20267372640
+
+MERCANCIAS:
+  - Pinas tropicales frescas, variedad MD-2 (Golden Sweet), enteras
+    HS: 080430  Cantidad: 19000 KGM  Precio unit.: 0.92 USD
+
+NOTA DEL CASO (que se prueba):
+  Data logger del contenedor reefer registra una excursion de temperatura de 6 horas por encima del punto de consigna durante el transito maritimo. Se prueba si esto es un asunto de control aduanero/documental (no lo es, el certificado fitosanitario sigue siendo valido) o un asunto puramente comercial/de calidad entre comprador y vendedor.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_certificado_fitosanitario.pdf
+  - 05_certificado_fumigacion.pdf
+  - 06_certificado_control_temperatura.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

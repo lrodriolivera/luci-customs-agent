@@ -1,0 +1,42 @@
+CASO H1-10 — Ubicación de la mercancía condiciona si se puede importar
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Brasil (Sao Paulo)
+Destino: Espana
+Incoterm: CIF Sao Paulo
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Comercial Amazonia Exportacao Ltda.
+    Av. das Nacoes Unidas, 1200, Sala 5
+    04578-000 Sao Paulo
+    Brasil
+    Tax ID: 12.345.678/0001-90
+
+COMPRADOR/IMPORTADOR:
+    Extremadura Trading Company S.L.
+    Avda. de la Constitucion, 4
+    06011 Badajoz
+    Espana
+    NIF: B-06345678 | EORI: ESB06345678
+
+Factura No.: INV-H1-10-2026-4836991  Fecha: 13/02/2026
+Documento de transporte: MSCU20264836991
+
+MERCANCIAS:
+  - Cafe sin tostar, sin descafeinar, en grano, variedad Arabica
+    HS: 090111  Cantidad: 19000 KGM  Precio unit.: 2.85 USD
+
+NOTA DEL CASO (que se prueba):
+  Goods placed in temporary storage at bonded warehouse pending location authorization for release.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_certificado_sanitario.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

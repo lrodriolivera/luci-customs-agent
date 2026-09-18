@@ -1,0 +1,46 @@
+CASO H1-19-EXTRANA-a — Representante de un no establecido en el TAU no puede ser representación directa — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Bangladesh (Dhaka)
+Destino: Espana
+Incoterm: FOB Dhaka
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Dhaka Knitwear Exports Ltd.
+    Plot 45, Export Processing Zone
+    1230 Dhaka
+    Bangladesh
+    Tax ID: BIN-000123456-0101
+
+COMPRADOR/IMPORTADOR:
+    Grupo Manchego de Distribucion S.L.
+    Ctra. Nacional 401, Km 12
+    13004 Ciudad Real
+    Espana
+    NIF: B-13456789 | EORI: ESB13456789
+
+Factura No.: INV-H1-19-EXTRANA-a-2026-9744390  Fecha: 22/11/2026
+Documento de transporte: MSCU20269744390
+
+MERCANCIAS:
+  - Bolsa reutilizable de la compra tejida a partir de hilo fabricado con botellas de PET recicladas (100% material reciclado post-consumo), con asas reforzadas y estampado publicitario, capacidad 20kg
+    HS: 392329  Cantidad: 5209 PCE  Precio unit.: 1.43 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+El material de origen (botellas PET) no determina la clasificacion: una vez transformado en hilo y tejido, el producto final es un articulo textil de materia textil sintetica (cap. 63, 6305) y no un 'articulo de plastico' (cap. 39) — error frecuente en declaraciones basadas en el origen del material, no en el producto final.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

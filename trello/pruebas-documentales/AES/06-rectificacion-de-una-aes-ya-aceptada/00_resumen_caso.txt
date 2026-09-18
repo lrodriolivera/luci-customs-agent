@@ -1,0 +1,41 @@
+CASO AES-06 — Rectificación de una AES ya aceptada
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Carretera
+Origen mercancia: Espana (Dos Hermanas (Sevilla))
+Destino: Turquia
+Incoterm: EXW Dos Hermanas (Sevilla)
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Mercantil Andaluza de Importacion S.L.
+    Avda. de la Innovacion, 3
+    41703 Dos Hermanas (Sevilla)
+    Espana
+    NIF: B-41678912 | EORI: ESB41678912
+
+COMPRADOR/IMPORTADOR:
+    Anadolu Tekstil San. ve Tic. A.S.
+    Organize Sanayi Bolgesi, 4. Cad. No:17
+    34530 Istanbul
+    Turquia
+    Tax ID: 1234567890
+
+Factura No.: INV-AES-06-2026-6495776  Fecha: 09/08/2026
+Documento de transporte: CMR-20266495776
+
+MERCANCIAS:
+  - Vajilla y articulos de mesa de porcelana, decorados, para uso domestico
+    HS: 691110  Cantidad: 6800 PCE  Precio unit.: 1.75 EUR
+
+NOTA DEL CASO (que se prueba):
+  This invoice supports an AES declaration subsequently RECTIFIED after acceptance by customs (see case notes for amendment detail).
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

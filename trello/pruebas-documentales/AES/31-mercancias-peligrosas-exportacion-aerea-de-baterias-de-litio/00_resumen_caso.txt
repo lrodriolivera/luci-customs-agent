@@ -1,0 +1,43 @@
+CASO AES-31 — Mercancias peligrosas: exportacion aerea de baterias de litio — formacion IATA DGR del expedidor
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Aereo
+Origen mercancia: Espana (Barcelona (Zona Franca))
+Destino: Estados Unidos
+Incoterm: CPT Barcelona (Zona Franca)
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Zona Franca Trading Barcelona S.L.
+    Calle 2, Sector A, Nave 12
+    08040 Barcelona (Zona Franca)
+    Espana
+    NIF: B-08987651 | EORI: ESB08987651
+
+COMPRADOR/IMPORTADOR:
+    Pacific Coast Machinery LLC
+    1150 Harbor Way
+    CA 90802 Long Beach
+    Estados Unidos
+    Tax ID: 95-1123456
+
+Factura No.: INV-AES-31-2026-1203445  Fecha: 10/03/2026
+Documento de transporte: 020-20261203445
+
+MERCANCIAS:
+  - Baterias de litio-ion recargables para dispositivos electronicos portatiles, embaladas solas (no instaladas en equipo)
+    HS: 850760  Cantidad: 3200 PCE  Precio unit.: 7.1 USD
+
+NOTA DEL CASO (que se prueba):
+  Exportacion aerea de baterias de litio-ion solas: el expedidor espanol debe estar certificado/formado en mercancias peligrosas (IATA DGR, categoria de expedidor), y la aerolinea exige el Estado de Carga (SoC) declarado por escrito antes de aceptar la reserva — sin la formacion certificada del expedidor, ninguna aerolinea de carga acepta la DGD.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+  - 04_ficha_datos_seguridad.pdf
+  - 05_declaracion_mercancias_peligrosas.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

@@ -1,0 +1,41 @@
+CASO AES-11 — Pre-DUA de exportación caduca a los 30 días sin presentación de mercancía
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Palma de Mallorca)
+Destino: Arabia Saudita
+Incoterm: FOB Palma de Mallorca
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Baleares Import S.L.
+    Poligono Son Castello, Calle Gremi de Fusters 22
+    07009 Palma de Mallorca
+    Espana
+    NIF: B-07234561 | EORI: ESB07234561
+
+COMPRADOR/IMPORTADOR:
+    Riyadh Advanced Materials Co.
+    King Fahd Road, Al Olaya District
+    12212 Riyadh
+    Arabia Saudita
+    Tax ID: 300123456700003
+
+Factura No.: INV-AES-11-2026-9620040  Fecha: 14/03/2026
+Documento de transporte: MSCU20269620040
+
+MERCANCIAS:
+  - Aparatos electricos de alumbrado con fuente de luz LED integrada
+    HS: 940540  Cantidad: 4800 PCE  Precio unit.: 8.9 USD
+
+NOTA DEL CASO (que se prueba):
+  Pre-DUA lodged in advance of goods arrival at the customs office of exit — lapses automatically after 30 days without presentation.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

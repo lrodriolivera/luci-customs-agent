@@ -1,0 +1,41 @@
+CASO H1-09 — Desaparición del régimen 49: unión aduanera vs territorios fiscales especiales
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Marruecos (Casablanca)
+Destino: Espana (Canarias) - IGIC, fuera del territorio IVA UE
+Incoterm: FOB Casablanca
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Atlas Agrumes S.A.R.L.
+    Zone Industrielle Sidi Bernoussi, Lot 34
+    20600 Casablanca
+    Marruecos
+    Tax ID: IF40123456
+
+COMPRADOR/IMPORTADOR:
+    Baleares Import S.L.
+    Poligono Son Castello, Calle Gremi de Fusters 22
+    07009 Las Palmas de Gran Canaria
+    Espana (Canarias) - IGIC, fuera del territorio IVA UE
+    NIF: B-07234561 | EORI: ESB07234561
+
+Factura No.: INV-H1-09-2026-8184596  Fecha: 12/11/2026
+Documento de transporte: MSCU20268184596
+
+MERCANCIAS:
+  - Bolsos de mano de cuero natural bovino, con cierre de cremallera
+    HS: 420221  Cantidad: 2100 PCE  Precio unit.: 14.5 EUR
+
+NOTA DEL CASO (que se prueba):
+  Consignee established in the Canary Islands (special fiscal territory — outside EU VAT area, inside customs union).
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

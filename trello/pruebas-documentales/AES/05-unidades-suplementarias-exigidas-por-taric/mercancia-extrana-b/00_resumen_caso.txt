@@ -1,0 +1,46 @@
+CASO AES-05-EXTRANA-b — Unidades suplementarias exigidas por TARIC — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Las Palmas de Gran Canaria)
+Destino: Sudafrica
+Incoterm: FOB Las Palmas de Gran Canaria
+Moneda: ZAR
+
+VENDEDOR/EXPORTADOR:
+    Ibertrade Import-Export S.A.
+    Muelle de Poniente s/n, Edif. Lonja
+    35008 Las Palmas de Gran Canaria
+    Espana
+    NIF: A-35678901 | EORI: ESA35678901
+
+COMPRADOR/IMPORTADOR:
+    Johannesburg Mineral Traders (Pty) Ltd
+    88 Rivonia Road
+    2196 Sandton
+    Sudafrica
+    Tax ID: 4450987654
+
+Factura No.: INV-AES-05-EXTRANA-b-2026-2687042  Fecha: 08/07/2026
+Documento de transporte: MSCU20262687042
+
+MERCANCIAS:
+  - Panel textil decorativo para ventana con recubrimiento fotocatalitico de dioxido de titanio que descompone particulas contaminantes del aire al contacto con luz solar, sin componentes electricos ni motor, funcion pasiva
+    HS: 630392  Cantidad: 366 PCE  Precio unit.: 30.52 ZAR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Producto textil con tratamiento quimico funcional (purificacion de aire pasiva). Al no tener motor ni ser un 'aparato', se mantiene mayoritariamente en textil (6303), pero el recubrimiento activo con funcion catalitica podria cuestionar si sigue siendo 'solo textil' segun la proporcion y funcion del tratamiento quimico frente al soporte.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

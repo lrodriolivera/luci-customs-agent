@@ -1,0 +1,46 @@
+CASO H1-30-EXTRANA-b — Estatus OEA no puede aparecer ni desaparecer en una modificación — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Canada (Trois-Rivieres)
+Destino: Espana
+Incoterm: FOB Trois-Rivieres
+Moneda: CAD
+
+VENDEDOR/EXPORTADOR:
+    Maple Valley Timber Corp.
+    780 Rue Principale
+    QC G8T 4H3 Trois-Rivieres
+    Canada
+    Tax ID: 987654321RT0001
+
+COMPRADOR/IMPORTADOR:
+    Zona Franca Trading Barcelona S.L.
+    Calle 2, Sector A, Nave 12
+    08040 Barcelona (Zona Franca)
+    Espana
+    NIF: B-08987651 | EORI: ESB08987651
+
+Factura No.: INV-H1-30-EXTRANA-b-2026-7421079  Fecha: 09/02/2026
+Documento de transporte: MSCU20267421079
+
+MERCANCIAS:
+  - Estanteria modular de madera de pino en kit desmontado (flat-pack), sin los tornillos ni bisagras metalicas de montaje (se venden por separado en el pais de destino), compuesta por 6 paneles cortados a medida y taladrados
+    HS: 441900  Cantidad: 119 SET  Precio unit.: 129.8 CAD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+GRI 2(a): un articulo incompleto o sin terminar se clasifica como el articulo completo si ya presenta las caracteristicas esenciales de este (mueble desmontado = mueble, 9403), aunque falten piezas menores de ferreteria que se compran aparte.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

@@ -1,0 +1,41 @@
+CASO H1-06 — Modificar una declaración con MRN ya asignado
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: Japon (Tokyo)
+Destino: Espana
+Incoterm: CPT Tokyo
+Moneda: JPY
+
+VENDEDOR/EXPORTADOR:
+    Fujimoto Precision Instruments Co., Ltd.
+    3-14-2 Nishishinjuku
+    160-0023 Tokyo
+    Japon
+    Tax ID: T1010401012345
+
+COMPRADOR/IMPORTADOR:
+    Ibertrade Import-Export S.A.
+    Muelle de Poniente s/n, Edif. Lonja
+    35008 Las Palmas de Gran Canaria
+    Espana
+    NIF: A-35678901 | EORI: ESA35678901
+
+Factura No.: INV-H1-06-2026-4751021  Fecha: 09/08/2026
+Documento de transporte: 020-20264751021
+
+MERCANCIAS:
+  - Relojes de pulsera mecanicos, caja de acero inoxidable
+    HS: 910219  Cantidad: 220 PCE  Precio unit.: 18500 JPY
+
+NOTA DEL CASO (que se prueba):
+  Reference: this invoice supports a declaration subsequently amended after MRN assignment (see case notes).
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

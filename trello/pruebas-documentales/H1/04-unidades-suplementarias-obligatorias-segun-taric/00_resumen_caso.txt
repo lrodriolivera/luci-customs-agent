@@ -1,0 +1,41 @@
+CASO H1-04 — Unidades suplementarias obligatorias según TARIC
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Carretera
+Origen mercancia: Turquia (Istanbul)
+Destino: Espana
+Incoterm: EXW Istanbul
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Anadolu Tekstil San. ve Tic. A.S.
+    Organize Sanayi Bolgesi, 4. Cad. No:17
+    34530 Istanbul
+    Turquia
+    Tax ID: 1234567890
+
+COMPRADOR/IMPORTADOR:
+    Mercantil Andaluza de Importacion S.L.
+    Avda. de la Innovacion, 3
+    41703 Dos Hermanas (Sevilla)
+    Espana
+    NIF: B-41678912 | EORI: ESB41678912
+
+Factura No.: INV-H1-04-2026-5811709  Fecha: 07/06/2026
+Documento de transporte: CMR-20265811709
+
+MERCANCIAS:
+  - Whisky escoces "single malt", envasado en botella de vidrio de 700 ml
+    HS: 220830  Cantidad: 3600 LTR  Precio unit.: 8.4 EUR
+
+NOTA DEL CASO (que se prueba):
+  Product subheading requires mandatory supplementary unit (litres of pure alcohol) per TARIC — see quantity in 'l alc. 100%'.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

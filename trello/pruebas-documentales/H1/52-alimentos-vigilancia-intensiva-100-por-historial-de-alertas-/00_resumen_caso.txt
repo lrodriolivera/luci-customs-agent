@@ -1,0 +1,43 @@
+CASO H1-52 — Alimentos: vigilancia intensiva 100% por historial de alertas RASFF (residuos de antibioticos)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Argentina (General Pico)
+Destino: Espana
+Incoterm: FOB General Pico
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Pampa Apicola Exportadora S.A.
+    Ruta Nacional 5, Km 340
+    L6360 General Pico
+    Argentina
+    Tax ID: 30-87654321-0
+
+COMPRADOR/IMPORTADOR:
+    Baleares Import S.L.
+    Poligono Son Castello, Calle Gremi de Fusters 22
+    07009 Palma de Mallorca
+    Espana
+    NIF: B-07234561 | EORI: ESB07234561
+
+Factura No.: INV-H1-52-2026-3256477  Fecha: 07/04/2026
+Documento de transporte: MSCU20263256477
+
+MERCANCIAS:
+  - Miel natural de flores silvestres, sin procesar, a granel en bidones de 300kg
+    HS: 040900  Cantidad: 20000 KGM  Precio unit.: 2.35 USD
+
+NOTA DEL CASO (que se prueba):
+  Origen bajo vigilancia intensiva del 100% (no el 20% ordinario de otros origenes/productos) por historial de alertas RASFF de residuos de antibioticos (cloranfenicol) en envios previos del mismo origen — contrastar con el 20% aplicado a la pimienta india del caso H1-48: la frecuencia de control depende del historial de riesgo especifico, no es un porcentaje fijo.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_ched_alimentos.pdf
+  - 05_certificado_analisis.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

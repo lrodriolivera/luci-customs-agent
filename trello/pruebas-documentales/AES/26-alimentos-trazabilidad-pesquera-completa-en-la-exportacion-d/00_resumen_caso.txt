@@ -1,0 +1,43 @@
+CASO AES-26 — Alimentos: trazabilidad pesquera completa en la exportacion de conserva transformada
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Badajoz)
+Destino: Corea del Sur
+Incoterm: FOB Badajoz
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Extremadura Trading Company S.L.
+    Avda. de la Constitucion, 4
+    06011 Badajoz
+    Espana
+    NIF: B-06345678 | EORI: ESB06345678
+
+COMPRADOR/IMPORTADOR:
+    Hanwoori Electronics Co., Ltd.
+    128 Teheran-ro, Gangnam-gu
+    06133 Seoul
+    Corea del Sur
+    Tax ID: 214-81-23456
+
+Factura No.: INV-AES-26-2026-6459631  Fecha: 05/08/2026
+Documento de transporte: MSCU20266459631
+
+MERCANCIAS:
+  - Atun en conserva al natural en aceite de oliva, lata de 160g, caja de 48 uds.
+    HS: 160414  Cantidad: 16000 KGM  Precio unit.: 2.95 USD
+
+NOTA DEL CASO (que se prueba):
+  Exportacion de producto de la pesca transformado: Espana, como Estado de elaboracion, debe emitir el certificado de captura de salida y el certificado sanitario de exportacion, aunque la materia prima proceda originalmente de aguas de terceros paises — se declara la trazabilidad completa del origen del pescado, no solo el lugar de fabricacion de la conserva.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_certificado_captura.pdf
+  - 05_certificado_veterinario.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

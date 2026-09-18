@@ -1,0 +1,46 @@
+CASO H1-18-EXTRANA-a — Casilla 14 — código de representación entre corchetes antes del nombre — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Pakistan (Lahore)
+Destino: Espana
+Incoterm: FOB Lahore
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Lahore Surgical Instruments Ltd.
+    Sialkot Road, Industrial Estate
+    54000 Lahore
+    Pakistan
+    Tax ID: NTN-1234567-8
+
+COMPRADOR/IMPORTADOR:
+    Comercial Vasca de Componentes S.L.
+    Poligono Jundiz, Calle E nº 15
+    01015 Vitoria-Gasteiz
+    Espana
+    NIF: B-01234567 | EORI: ESB01234567
+
+Factura No.: INV-H1-18-EXTRANA-a-2026-1614968  Fecha: 21/10/2026
+Documento de transporte: MSCU20261614968
+
+MERCANCIAS:
+  - Estanteria modular de madera de pino en kit desmontado (flat-pack), sin los tornillos ni bisagras metalicas de montaje (se venden por separado en el pais de destino), compuesta por 6 paneles cortados a medida y taladrados
+    HS: 441900  Cantidad: 94 SET  Precio unit.: 119.18 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+GRI 2(a): un articulo incompleto o sin terminar se clasifica como el articulo completo si ya presenta las caracteristicas esenciales de este (mueble desmontado = mueble, 9403), aunque falten piezas menores de ferreteria que se compran aparte.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

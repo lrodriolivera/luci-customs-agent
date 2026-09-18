@@ -1,0 +1,41 @@
+CASO AES-04 — Doble país de ruta cuando el destino es extra-UE
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Girona)
+Destino: Australia
+Incoterm: CFR Girona
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Importaciones Costa Brava S.L.
+    Carrer de la Indústria, 8
+    17005 Girona
+    Espana
+    NIF: B-17987654 | EORI: ESB17987654
+
+COMPRADOR/IMPORTADOR:
+    Southern Wool Exporters Pty Ltd
+    12 Flinders Lane
+    VIC 3000 Melbourne
+    Australia
+    Tax ID: 29 876 543 210
+
+Factura No.: INV-AES-04-2026-3277311  Fecha: 07/06/2026
+Documento de transporte: MSCU20263277311
+
+MERCANCIAS:
+  - Hilados de lana peinada, sin acondicionar para la venta al por menor
+    HS: 510610  Cantidad: 5200 KGM  Precio unit.: 6.4 USD
+
+NOTA DEL CASO (que se prueba):
+  Routing countries: goods transit via a third country (Singapore) before reaching the extra-EU destination — dual routing country applies.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

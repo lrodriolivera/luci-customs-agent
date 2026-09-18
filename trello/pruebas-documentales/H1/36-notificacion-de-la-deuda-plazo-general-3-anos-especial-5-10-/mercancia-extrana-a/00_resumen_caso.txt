@@ -1,0 +1,46 @@
+CASO H1-36-EXTRANA-a — Notificación de la deuda: plazo general 3 años, especial 5-10 años — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Sudafrica (Cape Town)
+Destino: Espana
+Incoterm: FOB Cape Town
+Moneda: ZAR
+
+VENDEDOR/EXPORTADOR:
+    Cape Fruit Exporters (Pty) Ltd
+    12 Beach Road, Paarden Eiland
+    7405 Cape Town
+    Sudafrica
+    Tax ID: 4230123456
+
+COMPRADOR/IMPORTADOR:
+    Cantabrica Import S.A.
+    Poligono Guarnizo, Parcela 14
+    39611 Guarnizo (Cantabria)
+    Espana
+    NIF: A-39456782 | EORI: ESA39456782
+
+Factura No.: INV-H1-36-EXTRANA-a-2026-4382670  Fecha: 15/08/2026
+Documento de transporte: MSCU20264382670
+
+MERCANCIAS:
+  - Panel textil decorativo para ventana con recubrimiento fotocatalitico de dioxido de titanio que descompone particulas contaminantes del aire al contacto con luz solar, sin componentes electricos ni motor, funcion pasiva
+    HS: 630392  Cantidad: 342 PCE  Precio unit.: 31.36 ZAR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Producto textil con tratamiento quimico funcional (purificacion de aire pasiva). Al no tener motor ni ser un 'aparato', se mantiene mayoritariamente en textil (6303), pero el recubrimiento activo con funcion catalitica podria cuestionar si sigue siendo 'solo textil' segun la proporcion y funcion del tratamiento quimico frente al soporte.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

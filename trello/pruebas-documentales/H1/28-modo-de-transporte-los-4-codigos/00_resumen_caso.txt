@@ -1,0 +1,41 @@
+CASO H1-28 — Modo de transporte: los 4 códigos
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Carretera
+Origen mercancia: Suiza (Geneve)
+Destino: Espana
+Incoterm: EXW Geneve
+Moneda: CHF
+
+VENDEDOR/EXPORTADOR:
+    Geneve Horlogerie Fine SA
+    Rue du Rhone 45
+    1204 Geneve
+    Suiza
+    Tax ID: CHE-987.654.321
+
+COMPRADOR/IMPORTADOR:
+    Ceutrade Comercio Exterior S.L.
+    Calle Real, 45
+    51001 Ceuta
+    Espana
+    NIF: B-51123456 | EORI: ESB51123456
+
+Factura No.: INV-H1-28-2026-7344708  Fecha: 07/10/2026
+Documento de transporte: CMR-20267344708
+
+MERCANCIAS:
+  - Relojes de pulsera mecanicos, caja de acero inoxidable
+    HS: 910219  Cantidad: 340 PCE  Precio unit.: 210.0 CHF
+
+NOTA DEL CASO (que se prueba):
+  Reference shipment for transport mode coding exercise (box 21/26 — inland transport by road).
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

@@ -1,0 +1,43 @@
+CASO H1-56 — Quimicos: transporte por carretera de mercancia peligrosa (ADR) — senalizacion y formacion del conductor
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Carretera
+Origen mercancia: Turquia (Istanbul)
+Destino: Espana
+Incoterm: DAP Istanbul
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Anadolu Tekstil San. ve Tic. A.S.
+    Organize Sanayi Bolgesi, 4. Cad. No:17
+    34530 Istanbul
+    Turquia
+    Tax ID: 1234567890
+
+COMPRADOR/IMPORTADOR:
+    Ceutrade Comercio Exterior S.L.
+    Calle Real, 45
+    51001 Ceuta
+    Espana
+    NIF: B-51123456 | EORI: ESB51123456
+
+Factura No.: INV-H1-56-2026-5629624  Fecha: 11/08/2026
+Documento de transporte: CMR-20265629624
+
+MERCANCIAS:
+  - Acetona tecnica, grado industrial, a granel en cisterna ISO de 20.000L
+    HS: 291411  Cantidad: 20000 LTR  Precio unit.: 0.68 EUR
+
+NOTA DEL CASO (que se prueba):
+  Transporte por carretera de mercancia peligrosa bajo ADR: el conductor debe portar su certificado de formacion ADR y el vehiculo debe llevar los paneles naranja de numero de peligro/ONU visibles. El CMR debe incluir la descripcion reglamentaria completa de mercancias peligrosas en su casilla especifica — no basta con adjuntar solo la factura.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+  - 04_ficha_datos_seguridad.pdf
+  - 05_declaracion_mercancias_peligrosas.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

@@ -1,0 +1,48 @@
+CASO H1-19 — Representante de un no establecido en el TAU no puede ser representación directa
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Bangladesh (Dhaka)
+Destino: Espana
+Incoterm: FOB Dhaka
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Dhaka Knitwear Exports Ltd.
+    Plot 45, Export Processing Zone
+    1230 Dhaka
+    Bangladesh
+    Tax ID: BIN-000123456-0101
+
+COMPRADOR/IMPORTADOR:
+    Mercantil Andaluza de Importacion S.L.
+    Avda. de la Innovacion, 3
+    41703 Dos Hermanas (Sevilla)
+    Espana
+    NIF: B-41678912 | EORI: ESB41678912
+
+CONSIGNATARIO:
+    Alpina Precision Instruments AG
+    Industriestrasse 14
+    6300 Zug
+    Suiza
+    Tax ID: CHE-123.456.789
+
+Factura No.: INV-H1-19-2026-6123135  Fecha: 22/11/2026
+Documento de transporte: MSCU20266123135
+
+MERCANCIAS:
+  - Camisetas de punto, 100% algodon, manga corta, para caballero
+    HS: 610910  Cantidad: 26000 PCE  Precio unit.: 2.75 USD
+
+NOTA DEL CASO (que se prueba):
+  Consignee (ultimate importer) is established in Switzerland, OUTSIDE the EU customs territory (TAU) — the Spanish customs agent CANNOT act as direct representative for a non-established principal; indirect representation is mandatory per CAU Art. 18-19.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

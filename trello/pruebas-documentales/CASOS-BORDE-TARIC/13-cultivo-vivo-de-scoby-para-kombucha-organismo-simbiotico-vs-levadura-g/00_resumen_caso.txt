@@ -1,0 +1,49 @@
+CASO BORDE-13 — Cultivo vivo de SCOBY para kombucha: organismo simbiotico vs. 'levadura' generica (GRI 1)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: Reino Unido (Elgin)
+Destino: Espana
+Incoterm: CPT Elgin
+Moneda: GBP
+
+VENDEDOR/EXPORTADOR:
+    Highland Whisky Merchants Ltd.
+    22 Speyside Way
+    IV30 1TF Elgin
+    Reino Unido
+    Tax ID: GB987654321
+
+COMPRADOR/IMPORTADOR:
+    Ceutrade Comercio Exterior S.L.
+    Calle Real, 45
+    51001 Ceuta
+    Espana
+    NIF: B-51123456 | EORI: ESB51123456
+
+Factura No.: INV-BORDE-13-2026-1938791  Fecha: 16/05/2026
+Documento de transporte: 020-20261938791
+
+MERCANCIAS:
+  - Cultivo vivo de SCOBY (colonia simbiotica de bacterias y levaduras) para la elaboracion domestica de kombucha, transportado en su propio liquido de cultivo (te fermentado), refrigerado, con actividad biologica activa en el momento de la exportacion
+    HS: 210210  Cantidad: 85 KGM  Precio unit.: 21.0 GBP
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+  - 04_certificado_sanitario.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- CASO DE BORDE: FUNDAMENTO DE LA DISPUTA DE CLASIFICACION ---
+Base normativa/tecnica: GRI 1 — naturaleza del producto (cultivo microbiologico vivo en medio liquido) frente a 'levadura' en sentido estricto
+
+Un SCOBY no es una levadura pura sino un cultivo simbiotico mixto de bacterias acidas y levaduras en una matriz de celulosa, transportado en te fermentado activo. Clasificarlo sin mas como 'levadura' (2102) ignora que gran parte de su masa y funcion es bacteriana, no fungica — ademas, al ser un organismo vivo en medio liquido con fermentacion activa, puede requerir controles sanitarios/fitosanitarios adicionales que un producto de levadura seca inerte no necesitaria.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugeriria de forma naive/erronea el proveedor o transitario en un envio real. El
+objetivo de este caso es verificar si el agente / LUCI llegan a la clasificacion correcta
+razonando desde las Reglas Generales de Interpretacion, no copiando el codigo de la factura.

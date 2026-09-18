@@ -1,0 +1,42 @@
+CASO AES-25 — Alimentos: producto de origen animal — establecimiento debe figurar en listado bilateral UE-Japon
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Aereo
+Origen mercancia: Espana (Palma de Mallorca)
+Destino: Japon
+Incoterm: CPT Palma de Mallorca
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Baleares Import S.L.
+    Poligono Son Castello, Calle Gremi de Fusters 22
+    07009 Palma de Mallorca
+    Espana
+    NIF: B-07234561 | EORI: ESB07234561
+
+COMPRADOR/IMPORTADOR:
+    Fujimoto Precision Instruments Co., Ltd.
+    3-14-2 Nishishinjuku
+    160-0023 Tokyo
+    Japon
+    Tax ID: T1010401012345
+
+Factura No.: INV-AES-25-2026-1187634  Fecha: 04/07/2026
+Documento de transporte: 020-20261187634
+
+MERCANCIAS:
+  - Queso de leche cruda de oveja, curado 6 meses, en piezas de 1kg
+    HS: 040690  Cantidad: 1800 KGM  Precio unit.: 12.4 EUR
+
+NOTA DEL CASO (que se prueba):
+  Exportacion de producto de origen animal: el establecimiento espanol debe figurar en el listado bilateral de establecimientos autorizados a exportar a Japon (acuerdo sanitario especifico UE-Japon). El certificado veterinario de exportacion sigue el modelo pactado bilateralmente, no el modelo generico de importacion a la UE.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+  - 04_certificado_veterinario.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

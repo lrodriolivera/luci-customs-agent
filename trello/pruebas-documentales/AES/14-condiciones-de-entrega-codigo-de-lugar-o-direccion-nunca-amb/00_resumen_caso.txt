@@ -1,0 +1,41 @@
+CASO AES-14 — Condiciones de entrega: código de lugar o dirección, nunca ambos
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Carretera
+Origen mercancia: Espana (Logroño)
+Destino: Noruega
+Incoterm: DAP Logroño
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Riojana de Comercio Exterior S.L.
+    Avda. de Lobete, 8
+    26007 Logroño
+    Espana
+    NIF: B-26567834 | EORI: ESB26567834
+
+COMPRADOR/IMPORTADOR:
+    Nordfjord Seafood AS
+    Havnegata 12
+    6002 Alesund
+    Noruega
+    Tax ID: 923456789
+
+Factura No.: INV-AES-14-2026-3110989  Fecha: 17/06/2026
+Documento de transporte: CMR-20263110989
+
+MERCANCIAS:
+  - Camarones y langostinos congelados, sin cabeza, calibre 21/25
+    HS: 030617  Cantidad: 3800 KGM  Precio unit.: 7.4 EUR
+
+NOTA DEL CASO (que se prueba):
+  Delivery conditions: EITHER a UN/LOCODE place code OR a free-text address may be declared — never both simultaneously.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

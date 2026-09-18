@@ -1,0 +1,41 @@
+CASO H1-29 — Tipo de cambio: no se admiten los códigos antiguos 7008/7010
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: Estados Unidos (Long Beach)
+Destino: Espana
+Incoterm: CPT Long Beach
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Pacific Coast Machinery LLC
+    1150 Harbor Way
+    CA 90802 Long Beach
+    Estados Unidos
+    Tax ID: 95-1123456
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones del Estrecho S.A.
+    Poligono Tres Culturas, Nave 6
+    52006 Melilla
+    Espana
+    NIF: A-52234567 | EORI: ESA52234567
+
+Factura No.: INV-H1-29-2026-7015903  Fecha: 08/11/2026
+Documento de transporte: 020-20267015903
+
+MERCANCIAS:
+  - Instrumentos y aparatos de medicina, tensiometros digitales de brazo
+    HS: 901819  Cantidad: 210 PCE  Precio unit.: 340.0 USD
+
+NOTA DEL CASO (que se prueba):
+  Exchange rate applicable: current AEAT daily rate — legacy codes 7008/7010 are not accepted for this declaration.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

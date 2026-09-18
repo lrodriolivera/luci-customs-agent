@@ -1,0 +1,46 @@
+CASO AES-19-EXTRANA-b — Deuda aduanera nacida por una exportación — cláusula de no reembolso — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Dos Hermanas (Sevilla))
+Destino: Argentina
+Incoterm: FOB Dos Hermanas (Sevilla)
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Mercantil Andaluza de Importacion S.L.
+    Avda. de la Innovacion, 3
+    41703 Dos Hermanas (Sevilla)
+    Espana
+    NIF: B-41678912 | EORI: ESB41678912
+
+COMPRADOR/IMPORTADOR:
+    Pampa Cueros y Marroquineria S.A.
+    Av. Corrientes 2340, Piso 4
+    C1046AAQ Buenos Aires
+    Argentina
+    Tax ID: 30-71234567-8
+
+Factura No.: INV-AES-19-EXTRANA-b-2026-4819785  Fecha: 22/11/2026
+Documento de transporte: MSCU20264819785
+
+MERCANCIAS:
+  - Muñeca de coleccionista de edicion limitada (150 unidades numeradas) con cabeza y manos de porcelana pintada a mano por artesano identificado, cuerpo articulado de tela relleno, vestido de época cosido a medida, certificado de autenticidad y numero de serie
+    HS: 950300  Cantidad: 168 PCE  Precio unit.: 235.2 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Las muñecas 'de juguete' van en 9503, pero las piezas de coleccionista de edicion limitada, numeradas y certificadas, sin destino de juego infantil, se acercan al concepto de objeto de coleccion/articulo decorativo de porcelana artistica (6913) — la intencion de uso (jugar vs. coleccionar/exhibir) es determinante y no siempre es obvia solo por la descripcion 'muñeca'.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

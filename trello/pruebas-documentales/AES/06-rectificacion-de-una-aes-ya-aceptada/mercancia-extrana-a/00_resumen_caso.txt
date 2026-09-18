@@ -1,0 +1,46 @@
+CASO AES-06-EXTRANA-a — Rectificación de una AES ya aceptada — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Carretera
+Origen mercancia: Espana (Ciudad Real)
+Destino: Turquia
+Incoterm: EXW Ciudad Real
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Grupo Manchego de Distribucion S.L.
+    Ctra. Nacional 401, Km 12
+    13004 Ciudad Real
+    Espana
+    NIF: B-13456789 | EORI: ESB13456789
+
+COMPRADOR/IMPORTADOR:
+    Anadolu Tekstil San. ve Tic. A.S.
+    Organize Sanayi Bolgesi, 4. Cad. No:17
+    34530 Istanbul
+    Turquia
+    Tax ID: 1234567890
+
+Factura No.: INV-AES-06-EXTRANA-a-2026-6990648  Fecha: 09/08/2026
+Documento de transporte: CMR-20266990648
+
+MERCANCIAS:
+  - Huevos de hormiga escamolera (Liometopum) deshidratados, envasados al vacio para consumo humano como delicatessen (conocidos como "caviar mexicano"), producto tradicional gourmet de exportacion limitada
+    HS: 210690  Cantidad: 97 KGM  Precio unit.: 145.0 EUR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Producto de insecto para consumo humano: desde la revision HS 2022 existen partidas mas especificas para insectos comestibles (0410) distintas del generico 'preparacion alimenticia no expresada'. Ademas puede estar sujeto a Reglamento de Nuevos Alimentos (Novel Food) de la UE si no tiene historial de consumo demostrado en territorio UE.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

@@ -1,0 +1,41 @@
+CASO H1-37 — Incoterm DAP con lugar de destino específico debe coincidir con la aduana/ubicación declarada
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Tailandia (Chiang Mai)
+Destino: Espana
+Incoterm: DAP Chiang Mai
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Chiang Mai Ceramics Export Co., Ltd.
+    88 Nimmanhaemin Road
+    50200 Chiang Mai
+    Tailandia
+    Tax ID: 0505562098765
+
+COMPRADOR/IMPORTADOR:
+    Grupo Manchego de Distribucion S.L.
+    Ctra. Nacional 401, Km 12
+    13004 Ciudad Real
+    Espana
+    NIF: B-13456789 | EORI: ESB13456789
+
+Factura No.: INV-H1-37-2026-1067417  Fecha: 16/09/2026
+Documento de transporte: MSCU20261067417
+
+MERCANCIAS:
+  - Muebles de madera de haya para dormitorio, sin tapizar, en kit desmontado
+    HS: 940350  Cantidad: 260 PCE  Precio unit.: 195.0 USD
+
+NOTA DEL CASO (que se prueba):
+  Incoterm DAP — named place of destination: Poligono Industrial Fuente del Jarro, Paterna (Valencia) — must match declared customs location.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

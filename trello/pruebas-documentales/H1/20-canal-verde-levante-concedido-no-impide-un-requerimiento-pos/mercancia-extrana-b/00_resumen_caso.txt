@@ -1,0 +1,46 @@
+CASO H1-20-EXTRANA-b — Canal Verde + Levante concedido no impide un requerimiento posterior — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: China (Yiwu)
+Destino: Espana
+Incoterm: FCA Yiwu
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Yiwu Chuangxin Commodity Co., Ltd.
+    3F, Futian Market Zone 5
+    322000 Yiwu
+    China
+    Tax ID: 91330782MA28T6R91X
+
+COMPRADOR/IMPORTADOR:
+    Extremadura Trading Company S.L.
+    Avda. de la Constitucion, 4
+    06011 Badajoz
+    Espana
+    NIF: B-06345678 | EORI: ESB06345678
+
+Factura No.: INV-H1-20-EXTRANA-b-2026-6477397  Fecha: 23/02/2026
+Documento de transporte: 020-20266477397
+
+MERCANCIAS:
+  - Guitarra electroacustica de cuerpo hueco en madera con pastilla piezoelectrica integrada, preamplificador y ecualizador digital de 3 bandas alimentado por pila de 9V, salida jack 1/4 pulgada
+    HS: 920600  Cantidad: 70 PCE  Precio unit.: 206.7 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Los instrumentos musicales con componentes electronicos de amplificacion incorporados siguen clasificandose en el capitulo 92 (instrumentos musicales) mientras la electronica sea accesoria a la funcion musical — pero el limite se cuestiona cuando el preamplificador/ecualizador tiene mas valor que el cuerpo de madera.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

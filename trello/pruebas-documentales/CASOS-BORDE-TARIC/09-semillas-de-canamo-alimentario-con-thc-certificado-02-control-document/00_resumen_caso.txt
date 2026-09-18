@@ -1,0 +1,48 @@
+CASO BORDE-09 — Semillas de canamo alimentario con THC certificado <0,2% (control documental reforzado)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Canada (Mississauga)
+Destino: Espana
+Incoterm: FOB Mississauga
+Moneda: CAD
+
+VENDEDOR/EXPORTADOR:
+    Great Lakes Industrial Equipment Inc.
+    1450 Dundas Street East
+    ON L4X 2R9 Mississauga
+    Canada
+    Tax ID: 123456789RT0001
+
+COMPRADOR/IMPORTADOR:
+    Baleares Import S.L.
+    Poligono Son Castello, Calle Gremi de Fusters 22
+    07009 Palma de Mallorca
+    Espana
+    NIF: B-07234561 | EORI: ESB07234561
+
+Factura No.: INV-BORDE-09-2026-7177977  Fecha: 12/11/2026
+Documento de transporte: MSCU20267177977
+
+MERCANCIAS:
+  - Semillas de canamo (Cannabis sativa) peladas, tostadas, para uso alimentario directo o como topping de ensaladas y batidos, contenido de THC inferior al 0,2% certificado por analisis de laboratorio, sin capacidad de germinacion
+    HS: 120729  Cantidad: 4800 KGM  Precio unit.: 3.9 CAD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- CASO DE BORDE: FUNDAMENTO DE LA DISPUTA DE CLASIFICACION ---
+Base normativa/tecnica: Nota complementaria de capitulo sobre semillas de Cannabis sativa con bajo contenido de THC + control documental de estupefacientes
+
+Las semillas de canamo con THC certificado por debajo del umbral legal (0,2% en la UE) y sin capacidad germinativa se clasifican como semilla oleaginosa alimentaria ordinaria (1207.99), pero CUALQUIER envio de productos derivados de Cannabis sativa esta sujeto a escrutinio documental reforzado (certificado de analisis THC, a veces licencia) independientemente del codigo TARIC que se declare — un caso donde la clasificacion correcta NO exime del control regulatorio adicional.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugeriria de forma naive/erronea el proveedor o transitario en un envio real. El
+objetivo de este caso es verificar si el agente / LUCI llegan a la clasificacion correcta
+razonando desde las Reglas Generales de Interpretacion, no copiando el codigo de la factura.

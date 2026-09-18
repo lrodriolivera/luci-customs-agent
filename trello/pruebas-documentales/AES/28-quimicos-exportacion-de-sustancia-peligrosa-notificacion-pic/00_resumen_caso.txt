@@ -1,0 +1,43 @@
+CASO AES-28 — Quimicos: exportacion de sustancia peligrosa — notificacion PIC (Reg. 649/2012) a la autoridad designada
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Carretera
+Origen mercancia: Espana (Logroño)
+Destino: Marruecos
+Incoterm: FOB Logroño
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Riojana de Comercio Exterior S.L.
+    Avda. de Lobete, 8
+    26007 Logroño
+    Espana
+    NIF: B-26567834 | EORI: ESB26567834
+
+COMPRADOR/IMPORTADOR:
+    Marrakech Artisanat Export
+    Route de Safi, Km 5
+    40000 Marrakech
+    Marruecos
+    Tax ID: IF40987654
+
+Factura No.: INV-AES-28-2026-1546396  Fecha: 07/10/2026
+Documento de transporte: CMR-20261546396
+
+MERCANCIAS:
+  - Acido sulfurico tecnico, concentracion 98%, a granel en cisterna ISO
+    HS: 280700  Cantidad: 40000 KGM  Precio unit.: 0.24 EUR
+
+NOTA DEL CASO (que se prueba):
+  Exportacion de sustancia quimica peligrosa a un tercer pais: si la sustancia figura en el Anexo I del Reglamento (UE) 649/2012 (PIC — consentimiento fundamentado previo), el exportador debe notificar la exportacion al MITECO como autoridad designada antes del primer envio del ano a ese pais de destino, independientemente del tramite aduanero ordinario.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+  - 04_ficha_datos_seguridad.pdf
+  - 05_declaracion_mercancias_peligrosas.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

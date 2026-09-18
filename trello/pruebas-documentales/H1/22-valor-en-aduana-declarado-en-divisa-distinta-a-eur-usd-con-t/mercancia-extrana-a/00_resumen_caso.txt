@@ -1,0 +1,46 @@
+CASO H1-22-EXTRANA-a — Valor en aduana declarado en divisa distinta a EUR (USD) con transporte aéreo — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: Japon (Tokyo)
+Destino: Espana
+Incoterm: DAP Tokyo
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Fujimoto Precision Instruments Co., Ltd.
+    3-14-2 Nishishinjuku
+    160-0023 Tokyo
+    Japon
+    Tax ID: T1010401012345
+
+COMPRADOR/IMPORTADOR:
+    Ceutrade Comercio Exterior S.L.
+    Calle Real, 45
+    51001 Ceuta
+    Espana
+    NIF: B-51123456 | EORI: ESB51123456
+
+Factura No.: INV-H1-22-EXTRANA-a-2026-7383297  Fecha: 25/04/2026
+Documento de transporte: 020-20267383297
+
+MERCANCIAS:
+  - Anillo de compromiso fabricado por impresion 3D en polvo de titanio sinterizado con engaste de diamante sintetico cultivado en laboratorio de 0,5 quilates, diseño geometrico parametrico unico por pieza, sin moldes ni troqueles
+    HS: 711719  Cantidad: 40 PCE  Precio unit.: 343.4 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+El titanio no es un metal precioso (excluye cap. 71 seccion joyeria fina), pero el diamante sintetico engastado SI puede ser relevante para 7104 (piedras sinteticas). La fabricacion aditiva (impresion 3D) no cambia la clasificacion del producto final, pero la combinacion titanio+diamante sintetico exige verificar la partida exacta, no asumir 'bisuteria' generica.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

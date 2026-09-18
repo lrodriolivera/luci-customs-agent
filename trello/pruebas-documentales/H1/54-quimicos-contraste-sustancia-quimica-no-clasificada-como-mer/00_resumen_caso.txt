@@ -1,0 +1,42 @@
+CASO H1-54 — Quimicos: contraste — sustancia quimica NO clasificada como mercancia peligrosa para el transporte
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: China (Shanghai)
+Destino: Espana
+Incoterm: FOB Shanghai
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Shanghai Hongtai Import & Export Co., Ltd.
+    No. 1288 Pudong Ave, Bldg 3
+    200120 Shanghai
+    China
+    Tax ID: 91310115MA1K3F5Q28
+
+COMPRADOR/IMPORTADOR:
+    Cantabrica Import S.A.
+    Poligono Guarnizo, Parcela 14
+    39611 Guarnizo (Cantabria)
+    Espana
+    NIF: A-39456782 | EORI: ESA39456782
+
+Factura No.: INV-H1-54-2026-4227546  Fecha: 09/06/2026
+Documento de transporte: MSCU20264227546
+
+MERCANCIAS:
+  - Resina epoxi liquida, sin curar, para uso industrial, en bidones de 25kg
+    HS: 390730  Cantidad: 22000 KGM  Precio unit.: 1.65 USD
+
+NOTA DEL CASO (que se prueba):
+  Contraste deliberado: mercancia quimica sujeta a REACH/CLP (requiere FDS) pero SIN numero ONU asignado — NO es mercancia peligrosa para el transporte y por tanto NO requiere Declaracion de Mercancias Peligrosas. 'Quimico' y 'peligroso para el transporte' no son sinonimos, aunque coincidan con frecuencia.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_ficha_datos_seguridad.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

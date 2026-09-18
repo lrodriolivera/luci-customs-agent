@@ -1,0 +1,46 @@
+CASO AES-15-EXTRANA-b — Transportista solo si es distinto del declarante, siempre con EORI — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Guarnizo (Cantabria))
+Destino: Colombia
+Incoterm: FOB Guarnizo (Cantabria)
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Cantabrica Import S.A.
+    Poligono Guarnizo, Parcela 14
+    39611 Guarnizo (Cantabria)
+    Espana
+    NIF: A-39456782 | EORI: ESA39456782
+
+COMPRADOR/IMPORTADOR:
+    Cafe de los Andes Exportadora S.A.S.
+    Calle 26 #68-90, Torre B Of. 501
+    111071 Bogota
+    Colombia
+    Tax ID: 900.123.456-7
+
+Factura No.: INV-AES-15-EXTRANA-b-2026-2951581  Fecha: 18/07/2026
+Documento de transporte: MSCU20262951581
+
+MERCANCIAS:
+  - Set para acampada compuesto por: una tienda de campaña para 2 personas, un hornillo de gas portatil, una linterna de LED recargable y un set de cubiertos plegables, empaquetados juntos en una unica bolsa de transporte para venta al detalle como "kit de supervivencia"
+    HS: 630622  Cantidad: 241 SET  Precio unit.: 38.38 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Otro caso de GRI 3(b) 'surtidos': tienda (textil, 6306), hornillo (metal/gas, 7321 o similar), linterna (electrico, 8513) y cubiertos (metal, 8211/7323) presentados como un conjunto. Debe determinarse el componente de caracter esencial del conjunto para la venta al detalle, no facturar todo bajo la partida del articulo mas voluminoso.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

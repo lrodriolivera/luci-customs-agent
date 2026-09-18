@@ -1,0 +1,41 @@
+CASO AES-19 — Deuda aduanera nacida por una exportación — cláusula de no reembolso
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Girona)
+Destino: Argentina
+Incoterm: FOB Girona
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Importaciones Costa Brava S.L.
+    Carrer de la Indústria, 8
+    17005 Girona
+    Espana
+    NIF: B-17987654 | EORI: ESB17987654
+
+COMPRADOR/IMPORTADOR:
+    Pampa Cueros y Marroquineria S.A.
+    Av. Corrientes 2340, Piso 4
+    C1046AAQ Buenos Aires
+    Argentina
+    Tax ID: 30-71234567-8
+
+Factura No.: INV-AES-19-2026-4227521  Fecha: 22/11/2026
+Documento de transporte: MSCU20264227521
+
+MERCANCIAS:
+  - Bicicletas de paseo, sin motor auxiliar, rueda de 28 pulgadas
+    HS: 871200  Cantidad: 640 PCE  Precio unit.: 145.0 USD
+
+NOTA DEL CASO (que se prueba):
+  Customs debt arising from an export declaration — no-refund clause applies even if goods are not ultimately shipped.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

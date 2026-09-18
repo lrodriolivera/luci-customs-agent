@@ -1,0 +1,46 @@
+CASO H1-16-EXTRANA-b — Declaración simplificada por falta de documentos — códigos 9AR a 9VI — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Peru (Lima)
+Destino: Espana
+Incoterm: FOB Lima
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Textiles Alpaca del Sur S.A.C.
+    Av. Argentina 2140
+    15082 Lima
+    Peru
+    Tax ID: 20512345678
+
+COMPRADOR/IMPORTADOR:
+    Importaciones Costa Brava S.L.
+    Carrer de la Indústria, 8
+    17005 Girona
+    Espana
+    NIF: B-17987654 | EORI: ESB17987654
+
+Factura No.: INV-H1-16-EXTRANA-b-2026-4237258  Fecha: 19/08/2026
+Documento de transporte: MSCU20264237258
+
+MERCANCIAS:
+  - Impresora 3D de sobremesa especializada en extrusion de pasta de chocolate y masa alimentaria para reposteria decorativa, cabezal calefactado, estructura de aluminio, sin funcion de impresion de plasticos ni resinas
+    HS: 847780  Cantidad: 32 PCE  Precio unit.: 943.4 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Las impresoras 3D genericas se debaten entre 8477 (maquinaria de plastico/caucho) y 8479 (maquinas con funcion propia no expresada en otra partida). Al ser exclusivamente para alimentos, 8477 (pensada para plastico/caucho) resulta cuestionable: podria corresponder a maquinaria para la industria alimentaria (8438).
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

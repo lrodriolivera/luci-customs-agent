@@ -1,0 +1,46 @@
+CASO H1-07-EXTRANA-b — Régimen 44 (destino final) con documento de control — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Corea del Sur (Busan)
+Destino: Espana
+Incoterm: DAP Busan
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Busan Marine Parts Corp.
+    45 Haeundae-ro, Haeundae-gu
+    48099 Busan
+    Corea del Sur
+    Tax ID: 605-81-98765
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones del Estrecho S.A.
+    Poligono Tres Culturas, Nave 6
+    52006 Melilla
+    Espana
+    NIF: A-52234567 | EORI: ESA52234567
+
+Factura No.: INV-H1-07-EXTRANA-b-2026-1414236  Fecha: 10/09/2026
+Documento de transporte: MSCU20261414236
+
+MERCANCIAS:
+  - Mascarilla facial reutilizable de tejido de punto con capa filtrante de polipropileno no tejido insertada, válvula de exhalacion de plastico, comercializada indistintamente como accesorio de moda y como proteccion respiratoria basica, sin certificacion medica FFP
+    HS: 630790  Cantidad: 18015 PCE  Precio unit.: 0.3 EUR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Clasico dilema post-2020: mascarilla textil de uso general (6307) frente a equipo de proteccion respiratoria (6307.90 especifico o cap. 90 si tiene certificacion medica). Sin certificacion FFP/medica, NO deberia declararse como EPI sanitario aunque el vendedor lo sugiera en marketing.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

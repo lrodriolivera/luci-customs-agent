@@ -1,0 +1,41 @@
+CASO AES-15 — Transportista solo si es distinto del declarante, siempre con EORI
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Ceuta)
+Destino: Colombia
+Incoterm: FOB Ceuta
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Ceutrade Comercio Exterior S.L.
+    Calle Real, 45
+    51001 Ceuta
+    Espana
+    NIF: B-51123456 | EORI: ESB51123456
+
+COMPRADOR/IMPORTADOR:
+    Cafe de los Andes Exportadora S.A.S.
+    Calle 26 #68-90, Torre B Of. 501
+    111071 Bogota
+    Colombia
+    Tax ID: 900.123.456-7
+
+Factura No.: INV-AES-15-2026-4717867  Fecha: 18/07/2026
+Documento de transporte: MSCU20264717867
+
+MERCANCIAS:
+  - Tejidos de algodon crudo, ligamento tafetan, en rollos
+    HS: 520911  Cantidad: 7200 KGM  Precio unit.: 2.3 USD
+
+NOTA DEL CASO (que se prueba):
+  Carrier is declared only when different from the declarant, and in that case an EORI number is mandatory for the carrier.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

@@ -1,0 +1,46 @@
+CASO H1-22-EXTRANA-b — Valor en aduana declarado en divisa distinta a EUR (USD) con transporte aéreo — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: Japon (Osaka)
+Destino: Espana
+Incoterm: DAP Osaka
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Osaka Kiko Trading Corporation
+    5-1-8 Minamisenba, Chuo-ku
+    542-0081 Osaka
+    Japon
+    Tax ID: T5120001067890
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones del Estrecho S.A.
+    Poligono Tres Culturas, Nave 6
+    52006 Melilla
+    Espana
+    NIF: A-52234567 | EORI: ESA52234567
+
+Factura No.: INV-H1-22-EXTRANA-b-2026-3672614  Fecha: 25/04/2026
+Documento de transporte: 020-20263672614
+
+MERCANCIAS:
+  - Alfombra de salon tejida en lana con circuito de cable calefactor de carbono integrado en el reverso, termostato regulable, certificacion electrica CE, dimensiones 200x300cm
+    HS: 570210  Cantidad: 105 PCE  Precio unit.: 216.3 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Igual tension que la chaqueta calefactable: textil de superficie (cap. 57) con elemento electrico de calefaccion incorporado con caracter funcional relevante — podria derivar a 8516 (aparato electrico de calefaccion) si la funcion de calentar predomina sobre la funcion decorativa/textil de la alfombra.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

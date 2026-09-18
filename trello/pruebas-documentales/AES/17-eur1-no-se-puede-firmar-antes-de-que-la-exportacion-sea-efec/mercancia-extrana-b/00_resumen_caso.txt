@@ -1,0 +1,46 @@
+CASO AES-17-EXTRANA-b — EUR.1 no se puede firmar antes de que la exportación sea efectiva o esté asegurada — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Carretera
+Origen mercancia: Espana (Barcelona (Zona Franca))
+Destino: Tunez
+Incoterm: FOB Barcelona (Zona Franca)
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Zona Franca Trading Barcelona S.L.
+    Calle 2, Sector A, Nave 12
+    08040 Barcelona (Zona Franca)
+    Espana
+    NIF: B-08987651 | EORI: ESB08987651
+
+COMPRADOR/IMPORTADOR:
+    Sfax Huile d'Olive Export S.A.R.L.
+    Route de Tunis Km 6
+    3000 Sfax
+    Tunez
+    Tax ID: 123456A
+
+Factura No.: INV-AES-17-EXTRANA-b-2026-6093480  Fecha: 20/09/2026
+Documento de transporte: CMR-20266093480
+
+MERCANCIAS:
+  - Perfume solido en base de cera de abeja y aceites esenciales, presentado en un estuche compacto de aleacion de zinc con espejo integrado y grabado personalizable, para venta como accesorio de bolsillo/joya olfativa
+    HS: 330300  Cantidad: 986 PCE  Precio unit.: 12.6 EUR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+El contenido (perfume solido) va en 3303, pero el estuche de metal con espejo tiene entidad propia como articulo de tocador/bisuteria (7326/8306). Cuando el envase tiene un uso y valor claramente independientes del producto que contiene (no es un envase 'normal' desechable), puede exigir clasificacion o valoracion separada.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

@@ -1,0 +1,43 @@
+CASO H1-63 — Perecederos vegetales: flor cortada de alta perecibilidad por via aerea con control de temperatura continuo
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: Ecuador (Latacunga)
+Destino: Espana
+Incoterm: CPT Latacunga
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Rosas del Cotopaxi Export Cia. Ltda.
+    Via Lasso-Mulaló Km 4
+    050101 Latacunga
+    Ecuador
+    Tax ID: 0993456789001
+
+COMPRADOR/IMPORTADOR:
+    Comercial Vasca de Componentes S.L.
+    Poligono Jundiz, Calle E nº 15
+    01015 Vitoria-Gasteiz
+    Espana
+    NIF: B-01234567 | EORI: ESB01234567
+
+Factura No.: INV-H1-63-2026-9649946  Fecha: 18/05/2026
+Documento de transporte: 020-20269649946
+
+MERCANCIAS:
+  - Rosas cortadas frescas, variedad Freedom, tallo largo (60cm), para floristeria
+    HS: 060311  Cantidad: 5000 KGM  Precio unit.: 1.35 USD
+
+NOTA DEL CASO (que se prueba):
+  Flor cortada de altisima perecibilidad y valor unitario alto, transportada por via aerea con control de temperatura continuo desde el cultivo (+2°C/+4°C). El mismo patron fitosanitario que la fruta/verdura fresca, pero con un vector comercial distinto: envios concentrados en picos de demanda estacional (San Valentin, Dia de la Madre).
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+  - 04_certificado_fitosanitario.pdf
+  - 05_certificado_control_temperatura.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

@@ -1,0 +1,42 @@
+CASO AES-02 — Exportación directa vs indirecta según oficinas
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Barcelona (Zona Franca))
+Destino: Mexico
+Incoterm: CIF Barcelona (Zona Franca)
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Zona Franca Trading Barcelona S.L.
+    Calle 2, Sector A, Nave 12
+    08040 Barcelona (Zona Franca)
+    Espana
+    NIF: B-08987651 | EORI: ESB08987651
+
+COMPRADOR/IMPORTADOR:
+    Manufacturas del Bajio S.A. de C.V.
+    Blvd. Industrial 450, Parque Ind. Norte
+    37490 Leon
+    Mexico
+    Tax ID: MBA950612AB1
+
+Factura No.: INV-AES-02-2026-1893312  Fecha: 05/04/2026
+Documento de transporte: MSCU20261893312
+
+MERCANCIAS:
+  - Vino tinto de mesa, en botellas de vidrio de 750 ml, grado alcoholico 13% vol.
+    HS: 220421  Cantidad: 6000 LTR  Precio unit.: 4.8 USD
+
+NOTA DEL CASO (que se prueba):
+  Direct export declared at the customs office of exit — compare with indirect-export scenario via a different office.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_certificado_seguro.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

@@ -1,0 +1,46 @@
+CASO H1-15-EXTRANA-b — Declaración simplificada por falta de datos — casilla 1.2 tipo C — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Colombia (Bogota)
+Destino: Espana
+Incoterm: FOB Bogota
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Cafe de los Andes Exportadora S.A.S.
+    Calle 26 #68-90, Torre B Of. 501
+    111071 Bogota
+    Colombia
+    Tax ID: 900.123.456-7
+
+COMPRADOR/IMPORTADOR:
+    Zona Franca Trading Barcelona S.L.
+    Calle 2, Sector A, Nave 12
+    08040 Barcelona (Zona Franca)
+    Espana
+    NIF: B-08987651 | EORI: ESB08987651
+
+Factura No.: INV-H1-15-EXTRANA-b-2026-5240260  Fecha: 18/07/2026
+Documento de transporte: MSCU20265240260
+
+MERCANCIAS:
+  - Kit de cigarrillo electronico recargable con bateria de litio 900mAh, atomizador intercambiable de ceramica, sin liquido incluido, mando a distancia por bluetooth para ajustar temperatura desde app movil
+    HS: 854370  Cantidad: 2409 PCE  Precio unit.: 8.99 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+TARIC creo subpartidas especificas para cigarrillos electronicos (8543.40) tras años de clasificacion dispersa entre 8543.70 (generico) y partidas de bateria/atomizador por separado. Riesgo real de usar el codigo generico antiguo.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

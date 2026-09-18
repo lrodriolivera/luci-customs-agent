@@ -1,0 +1,43 @@
+CASO H1-58 — Mercancias peligrosas: aerosoles bajo exencion de cantidades limitadas (LQ) en el codigo IMDG
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: China (Ningbo)
+Destino: Espana
+Incoterm: FOB Ningbo
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Ningbo Haitong Trading Co., Ltd.
+    88 Jiangdong North Rd
+    315040 Ningbo
+    China
+    Tax ID: 91330204MA2H1D8P47
+
+COMPRADOR/IMPORTADOR:
+    Zona Franca Trading Barcelona S.L.
+    Calle 2, Sector A, Nave 12
+    08040 Barcelona (Zona Franca)
+    Espana
+    NIF: B-08987651 | EORI: ESB08987651
+
+Factura No.: INV-H1-58-2026-3127219  Fecha: 13/10/2026
+Documento de transporte: MSCU20263127219
+
+MERCANCIAS:
+  - Aerosoles cosmeticos (desodorante corporal), propelente inflamable, envase de 150ml
+    HS: 330720  Cantidad: 48000 PCE  Precio unit.: 0.85 USD
+
+NOTA DEL CASO (que se prueba):
+  Aerosoles bajo la exencion de 'cantidades limitadas' (Limited Quantities, LQ) del codigo IMDG: si cada bulto no supera el volumen limite, se simplifica el marcado individual, pero la obligacion de declarar la carga como mercancia peligrosa en el conocimiento de embarque y en el manifiesto del buque NO desaparece.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_ficha_datos_seguridad.pdf
+  - 05_declaracion_mercancias_peligrosas.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

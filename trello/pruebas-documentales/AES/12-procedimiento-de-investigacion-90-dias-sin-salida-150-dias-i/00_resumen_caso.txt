@@ -1,0 +1,41 @@
+CASO AES-12 — Procedimiento de investigación: 90 días sin salida, 150 días invalida la declaración
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Carretera
+Origen mercancia: Espana (Badajoz)
+Destino: Reino Unido
+Incoterm: DAP Badajoz
+Moneda: GBP
+
+VENDEDOR/EXPORTADOR:
+    Extremadura Trading Company S.L.
+    Avda. de la Constitucion, 4
+    06011 Badajoz
+    Espana
+    NIF: B-06345678 | EORI: ESB06345678
+
+COMPRADOR/IMPORTADOR:
+    Thames Valley Precision Ltd.
+    Unit 8, Bicester Business Park
+    OX26 4SP Bicester
+    Reino Unido
+    Tax ID: GB123456789
+
+Factura No.: INV-AES-12-2026-7514291  Fecha: 15/04/2026
+Documento de transporte: CMR-20267514291
+
+MERCANCIAS:
+  - Muebles de madera de haya para dormitorio, sin tapizar, en kit desmontado
+    HS: 940350  Cantidad: 180 PCE  Precio unit.: 165.0 GBP
+
+NOTA DEL CASO (que se prueba):
+  Reference for the AES investigation procedure: no exit confirmation within 90 days triggers inquiry; 150 days invalidates the declaration.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

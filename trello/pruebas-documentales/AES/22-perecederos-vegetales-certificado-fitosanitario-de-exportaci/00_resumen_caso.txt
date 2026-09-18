@@ -1,0 +1,42 @@
+CASO AES-22 — Perecederos vegetales: certificado fitosanitario de exportacion — limite de residuos exigido por el pais tercero
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Aereo
+Origen mercancia: Espana (Las Palmas de Gran Canaria)
+Destino: Emiratos Arabes Unidos
+Incoterm: CPT Las Palmas de Gran Canaria
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Ibertrade Import-Export S.A.
+    Muelle de Poniente s/n, Edif. Lonja
+    35008 Las Palmas de Gran Canaria
+    Espana
+    NIF: A-35678901 | EORI: ESA35678901
+
+COMPRADOR/IMPORTADOR:
+    Al Maha General Trading LLC
+    Office 1204, Jumeirah Lakes Towers
+    00000 Dubai
+    Emiratos Arabes Unidos
+    Tax ID: 100234567800003
+
+Factura No.: INV-AES-22-2026-8085066  Fecha: 25/04/2026
+Documento de transporte: 020-20268085066
+
+MERCANCIAS:
+  - Fresas frescas variedad Fortuna, en bandejas de 250g para venta al detalle
+    HS: 081010  Cantidad: 4000 KGM  Precio unit.: 6.5 EUR
+
+NOTA DEL CASO (que se prueba):
+  Certificado fitosanitario de exportacion emitido por Sanidad Vegetal espanola. El limite de residuos de plaguicidas exigido por Emiratos Arabes Unidos es un requisito del pais de destino, no de la UE — la aduana espanola de salida verifica la correccion documental del certificado, no el limite de residuos del pais tercero.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+  - 04_certificado_fitosanitario.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

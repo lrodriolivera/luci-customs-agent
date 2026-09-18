@@ -1,0 +1,41 @@
+CASO H1-31 — Dispensa de garantía para operador OEA/AEOC
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Canada (Trois-Rivieres)
+Destino: Espana
+Incoterm: FOB Trois-Rivieres
+Moneda: CAD
+
+VENDEDOR/EXPORTADOR:
+    Maple Valley Timber Corp.
+    780 Rue Principale
+    QC G8T 4H3 Trois-Rivieres
+    Canada
+    Tax ID: 987654321RT0001
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones Iberica del Levante S.L.
+    Poligono Industrial Fuente del Jarro, Calle 4 nº 12
+    46988 Paterna (Valencia)
+    Espana
+    NIF: B-46123456 | EORI: ESB46123456
+
+Factura No.: INV-H1-31-2026-1851696  Fecha: 10/03/2026
+Documento de transporte: MSCU20261851696
+
+MERCANCIAS:
+  - Perfiles de aleaciones de aluminio, anodizados, para construccion
+    HS: 760420  Cantidad: 24000 KGM  Precio unit.: 3.85 CAD
+
+NOTA DEL CASO (que se prueba):
+  Importer holds AEOC status — guarantee waiver requested per CAU Art. 95(2).
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

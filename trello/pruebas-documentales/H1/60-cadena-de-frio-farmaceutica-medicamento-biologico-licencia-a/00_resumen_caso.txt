@@ -1,0 +1,44 @@
+CASO H1-60 — Cadena de frio farmaceutica: medicamento biologico — licencia AEMPS + GDP + serializacion antifalsificacion
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: Suiza (Zug)
+Destino: Espana
+Incoterm: CPT Zug
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Helvetia Pharma Export AG
+    Baarerstrasse 88
+    6302 Zug
+    Suiza
+    Tax ID: CHE-789.123.456
+
+COMPRADOR/IMPORTADOR:
+    Importaciones Costa Brava S.L.
+    Carrer de la Indústria, 8
+    17005 Girona
+    Espana
+    NIF: B-17987654 | EORI: ESB17987654
+
+Factura No.: INV-H1-60-2026-7624367  Fecha: 15/02/2026
+Documento de transporte: 020-20267624367
+
+MERCANCIAS:
+  - Insulina humana biosintetica, cartuchos de 3ml para pluma precargada, caja de 5 uds.
+    HS: 300431  Cantidad: 8000 PCE  Precio unit.: 14.5 EUR
+
+NOTA DEL CASO (que se prueba):
+  Medicamento biologico: requiere autorizacion de importacion de la AEMPS (Agencia Espanola de Medicamentos y Productos Sanitarios) ademas del control aduanero ordinario, cadena de frio +2°C/+8°C certificada por transportista con GDP vigente, y dispositivo de seguridad/serializacion anti-manipulacion conforme a la Directiva 2011/62/UE.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+  - 04_licencia_importacion.pdf
+  - 05_certificado_control_temperatura.pdf
+  - 06_certificado_gdp.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

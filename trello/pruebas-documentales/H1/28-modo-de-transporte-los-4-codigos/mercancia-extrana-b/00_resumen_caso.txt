@@ -1,0 +1,46 @@
+CASO H1-28-EXTRANA-b — Modo de transporte: los 4 códigos — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Carretera
+Origen mercancia: Suiza (Geneve)
+Destino: Espana
+Incoterm: EXW Geneve
+Moneda: CHF
+
+VENDEDOR/EXPORTADOR:
+    Geneve Horlogerie Fine SA
+    Rue du Rhone 45
+    1204 Geneve
+    Suiza
+    Tax ID: CHE-987.654.321
+
+COMPRADOR/IMPORTADOR:
+    Cantabrica Import S.A.
+    Poligono Guarnizo, Parcela 14
+    39611 Guarnizo (Cantabria)
+    Espana
+    NIF: A-39456782 | EORI: ESA39456782
+
+Factura No.: INV-H1-28-EXTRANA-b-2026-7457092  Fecha: 07/10/2026
+Documento de transporte: CMR-20267457092
+
+MERCANCIAS:
+  - Reloj de pulsera con caja de acero inoxidable, movimiento de cuarzo analogico tradicional combinado con pantalla OLED secundaria para notificaciones de smartphone, GPS y monitor de ritmo cardiaco, sin conectividad celular propia
+    HS: 910211  Cantidad: 348 PCE  Precio unit.: 62.06 CHF
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Frontera clasica entre reloj (cap. 91, 9102) y aparato de comunicacion/computo vestible (8517/8471). La UE distingue por si la funcion de reloj es accesoria o principal; aqui el movimiento de cuarzo tradicional es el elemento dominante, pero la pantalla OLED y sensores complican el caracter esencial.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

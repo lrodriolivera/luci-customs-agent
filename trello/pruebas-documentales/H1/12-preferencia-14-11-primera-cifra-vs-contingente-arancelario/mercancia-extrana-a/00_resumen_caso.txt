@@ -1,0 +1,46 @@
+CASO H1-12-EXTRANA-a — Preferencia 14 11: primera cifra vs contingente arancelario — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Egipto (Cairo)
+Destino: Espana
+Incoterm: FOB Cairo
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Nile Cotton Export Co.
+    18 El Nasr Road, Nasr City
+    11765 Cairo
+    Egipto
+    Tax ID: 123-456-789
+
+COMPRADOR/IMPORTADOR:
+    Aragonesa de Suministros Industriales S.A.
+    Poligono El Pilar, Nave 8
+    50197 Zaragoza
+    Espana
+    NIF: A-50123890 | EORI: ESA50123890
+
+Factura No.: INV-H1-12-EXTRANA-a-2026-2499992  Fecha: 15/04/2026
+Documento de transporte: MSCU20262499992
+
+MERCANCIAS:
+  - Banco de jardin de madera tratada con dos jardineras de metal galvanizado integradas en los extremos, diseñado para exterior, vendido como pieza unica de mobiliario-jardineria
+    HS: 940179  Cantidad: 51 PCE  Precio unit.: 170.5 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Mueble de exterior (9403) con jardineras/macetas de metal (7324/3924 segun material) integradas como parte inseparable de una unica pieza vendida. GRI 1 y las Notas de Seccion: al ser un articulo compuesto de fabricacion unica (no un surtido de piezas sueltas), se clasifica por su funcion principal como mueble, pero exige justificar por que las jardineras metalicas no cambian la partida.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

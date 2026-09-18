@@ -1,0 +1,43 @@
+CASO H1-57 — Mercancias peligrosas: baterias de litio-ion solas por via aerea — restriccion de estado de carga (SoC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: China (Shenzhen)
+Destino: Espana
+Incoterm: CPT Shenzhen
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Shenzhen Weilun Electronics Co., Ltd.
+    Bldg 7, Nanshan Zhiyuan Ind. Park
+    518052 Shenzhen
+    China
+    Tax ID: 91440300MA5G7H2N63
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones del Estrecho S.A.
+    Poligono Tres Culturas, Nave 6
+    52006 Melilla
+    Espana
+    NIF: A-52234567 | EORI: ESA52234567
+
+Factura No.: INV-H1-57-2026-8998564  Fecha: 12/09/2026
+Documento de transporte: 020-20268998564
+
+MERCANCIAS:
+  - Baterias de litio-ion recargables para dispositivos electronicos portatiles, embaladas solas (no instaladas en equipo)
+    HS: 850760  Cantidad: 4000 PCE  Precio unit.: 6.2 USD
+
+NOTA DEL CASO (que se prueba):
+  Baterias de litio-ion transportadas SOLAS (no instaladas en equipo) por via aerea: la IATA restringe el estado de carga (SoC) declarado a <=30% para transporte como carga aerea, y numerosas aerolineas de carga las excluyen directamente de aviones de pasajeros. La aduana no valida el SoC, pero exige la DGD firmada antes de aceptar el despacho.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+  - 04_ficha_datos_seguridad.pdf
+  - 05_declaracion_mercancias_peligrosas.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

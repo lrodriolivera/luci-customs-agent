@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUCI Customs Agent - NVIDIA Inception Pitch Deck</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #0a0a0a;
+  color: #ffffff;
+}
+
+.slide {
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  padding: 40px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  page-break-after: always;
+  page-break-inside: avoid;
+  position: relative;
+  overflow: hidden;
+}
+
+@media print {
+  .slide {
+    height: 100vh;
+    max-height: 100vh;
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+}
+
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+.slide::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 80%;
+  height: 200%;
+  background: radial-gradient(ellipse at center, rgba(118, 185, 0, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.slide-number {
+  position: absolute;
+  bottom: 30px;
+  right: 40px;
+  font-size: 14px;
+  color: #555;
+  font-weight: 300;
+}
+
+.logo-bar {
+  position: absolute;
+  top: 30px;
+  left: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-bar .company {
+  font-size: 14px;
+  font-weight: 600;
+  color: #76b900;
+  letter-spacing: 1px;
+}
+
+/* Slide 1 - Cover */
+.cover {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+  text-align: center;
+  align-items: center;
+}
+
+.cover h1 {
+  font-size: 72px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #76b900, #a0e000);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 16px;
+}
+
+.cover .subtitle {
+  font-size: 28px;
+  font-weight: 300;
+  color: #ccc;
+  margin-bottom: 40px;
+}
+
+.cover .tagline {
+  font-size: 18px;
+  color: #888;
+  max-width: 700px;
+  line-height: 1.6;
+}
+
+.cover .badge {
+  margin-top: 40px;
+  display: inline-block;
+  padding: 10px 24px;
+  border: 1px solid #76b900;
+  border-radius: 30px;
+  font-size: 14px;
+  color: #76b900;
+  letter-spacing: 1px;
+}
+
+/* Headers */
+h2 {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 28px;
+  color: #fff;
+}
+
+h2 span {
+  color: #76b900;
+}
+
+h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #ddd;
+}
+
+/* Content */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 30px;
+}
+
+.card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 20px 24px;
+  transition: border-color 0.3s;
+}
+
+.card:hover {
+  border-color: rgba(118, 185, 0, 0.3);
+}
+
+.card .icon {
+  font-size: 36px;
+  margin-bottom: 16px;
+}
+
+.card h4 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #fff;
+}
+
+.card p {
+  font-size: 13px;
+  color: #999;
+  line-height: 1.5;
+}
+
+.stat-row {
+  display: flex;
+  gap: 30px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat .number {
+  font-size: 40px;
+  font-weight: 800;
+  color: #76b900;
+}
+
+.stat .label {
+  font-size: 14px;
+  color: #888;
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+ul li {
+  padding: 8px 0;
+  padding-left: 24px;
+  position: relative;
+  font-size: 15px;
+  color: #ccc;
+  line-height: 1.4;
+}
+
+ul li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: #76b900;
+}
+
+.highlight-box {
+  background: linear-gradient(135deg, rgba(118, 185, 0, 0.1), rgba(118, 185, 0, 0.02));
+  border: 1px solid rgba(118, 185, 0, 0.3);
+  border-radius: 12px;
+  padding: 24px 32px;
+  margin-top: 30px;
+}
+
+.highlight-box p {
+  font-size: 16px;
+  color: #ccc;
+  line-height: 1.6;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+table th {
+  text-align: left;
+  padding: 14px 16px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #76b900;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+table td {
+  padding: 14px 16px;
+  font-size: 15px;
+  color: #ccc;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+table tr:hover td {
+  background: rgba(118, 185, 0, 0.03);
+}
+
+.status-ok {
+  color: #76b900;
+  font-weight: 600;
+}
+
+.status-pending {
+  color: #f59e0b;
+}
+
+.nvidia-section {
+  background: linear-gradient(135deg, rgba(118, 185, 0, 0.08), transparent);
+  border-left: 3px solid #76b900;
+  padding: 24px 32px;
+  border-radius: 0 12px 12px 0;
+  margin-top: 20px;
+}
+
+.nvidia-section h4 {
+  color: #76b900;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.pipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 30px 0;
+  flex-wrap: wrap;
+}
+
+.pipeline .step {
+  background: rgba(118, 185, 0, 0.1);
+  border: 1px solid rgba(118, 185, 0, 0.3);
+  padding: 16px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ccc;
+  text-align: center;
+  min-width: 140px;
+}
+
+.pipeline .arrow {
+  font-size: 24px;
+  color: #76b900;
+  padding: 0 8px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: COVER -->
+<div class="slide cover">
+  <h1>LUCI</h1>
+  <div class="subtitle">AI-Native Customs Clearance Platform</div>
+  <div class="tagline">
+    Automating cross-border trade compliance for European freight operators
+    using LLMs and agentic AI — from manifest ingestion to customs clearance in minutes, not hours.
+  </div>
+  <div class="badge">STRIX AI SL &nbsp;|&nbsp; May 2026</div>
+  <span class="slide-number">1</span>
+</div>
+
+<!-- SLIDE 2: PROBLEM -->
+<div class="slide">
+  <div class="logo-bar"><span class="company">STRIX AI</span></div>
+  <h2>The <span>Problem</span></h2>
+  <div class="grid-2">
+    <div>
+      <ul>
+        <li>A single customs declaration takes <strong>15-30 minutes</strong> manually and costs <strong>80-200 EUR</strong></li>
+        <li>Classifying goods across <strong>21,946 tariff codes</strong> is error-prone — mistakes cost 500-5,000 EUR per incident</li>
+        <li>Legacy software (Portic, SIECA, VisualTrans) has <strong>no AI capabilities</strong></li>
+        <li>New EU regulations (ICS2, UCC, 2026/382) increase complexity every year</li>
+        <li><strong>15,000+</strong> importers/exporters in Spain alone; 600K+ across the EU</li>
+      </ul>
+    </div>
+    <div>
+      <div class="card">
+        <div class="icon">💰</div>
+        <h4>Market Pain</h4>
+        <p>EUR 54M/year addressable market in Spain. EUR 600M+ across the EU. Zero AI-native solutions with direct government integration.</p>
+      </div>
+      <div class="card" style="margin-top: 20px;">
+        <div class="icon">⚠️</div>
+        <h4>Regulatory Pressure</h4>
+        <p>July 2026: EU Reg. 2026/382 eliminates the EUR 150 duty exemption. Every e-commerce parcel will need a customs declaration. Volume explosion incoming.</p>
+      </div>
+    </div>
+  </div>
+  <span class="slide-number">2</span>
+</div>
+
+<!-- SLIDE 3: SOLUTION -->
+<div class="slide">
+  <div class="logo-bar"><span class="company">STRIX AI</span></div>
+  <h2>LUCI: The <span>Solution</span></h2>
+
+  <div class="pipeline">
+    <div class="step">Manifest<br>Upload</div>
+    <div class="arrow">→</div>
+    <div class="step">AI Classification<br>(TARIC/HS)</div>
+    <div class="arrow">→</div>
+    <div class="step">Duty<br>Calculation</div>
+    <div class="arrow">→</div>
+    <div class="step">Declaration<br>Generation</div>
+    <div class="arrow">→</div>
+    <div class="step">Digital Signature<br>& Submission</div>
+    <div class="arrow">→</div>
+    <div class="step">MRN<br>Issued ✓</div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <h4>AI Tariff Classification</h4>
+      <p>LLM-powered classification across 21,946 real TARIC codes with 97 chapters. Sub-second inference, cached progressively.</p>
+    </div>
+    <div class="card">
+      <h4>6 Declaration Types</h4>
+      <p>H1, H7, AES, ENS, NCTS, PUE — XML validated against official XSD schemas. 5/6 accepted by Spanish Tax Authority (AEAT) with real MRN.</p>
+    </div>
+    <div class="card">
+      <h4>Multi-Country</h4>
+      <p>Spain (AEAT) live in production. Netherlands (Douane/DECO) architecture ready. EU-wide TARIC codes shared.</p>
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <p><strong>Result:</strong> From 30 minutes to 2 minutes per declaration. Cost reduction of 96-98% for the end customer (EUR 2.98/declaration vs EUR 80-200 manual).</p>
+  </div>
+  <span class="slide-number">3</span>
+</div>
+
+<!-- SLIDE 4: AI & NVIDIA TECHNOLOGY -->
+<div class="slide">
+  <div class="logo-bar"><span class="company">STRIX AI</span></div>
+  <h2>AI Architecture & <span>GPU</span> Strategy</h2>
+
+  <div class="grid-2">
+    <div>
+      <h3>Current AI Stack</h3>
+      <ul>
+        <li>AWS Bedrock with Claude models (Haiku 4.5 / Sonnet 4.6 / Opus 4.6)</li>
+        <li>Agentic AI pipeline: classification → validation → generation → submission</li>
+        <li>Redis-backed inference cache (70%+ hit rate)</li>
+        <li>Multi-model routing: fast model for classification, powerful for complex H1 declarations</li>
+        <li>6,490+ lines of AI orchestration logic</li>
+      </ul>
+
+      <h3 style="margin-top: 30px;">AI Capabilities</h3>
+      <ul>
+        <li>TARIC code classification from free-text descriptions (multilingual)</li>
+        <li>Document OCR + extraction (invoices, packing lists, certificates)</li>
+        <li>Customs regulation Q&A assistant (CAU, TARIC, regimes)</li>
+        <li>Anomaly detection on declaration data</li>
+      </ul>
+    </div>
+    <div>
+      <div class="nvidia-section">
+        <h4>GPU Inference Roadmap</h4>
+        <ul>
+          <li><strong>On-premise LLMs</strong> — Deploy customs-specialized models for EU data residency (GDPR Art. 44+)</li>
+          <li><strong>GPU-accelerated inference</strong> — Real-time batch processing of 1000+ declarations/hour during peak customs windows</li>
+          <li><strong>Fine-tuning</strong> — Domain-specific models trained on multilingual tariff nomenclature (21,946 codes × 7 languages)</li>
+          <li><strong>Multi-model serving</strong> — Parallel pipelines for classification + extraction + Q&A</li>
+          <li><strong>Optimized latency</strong> — Sub-second inference for time-critical customs submissions (AEAT has 4-second timeout)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <span class="slide-number">4</span>
+</div>
+
+<!-- SLIDE 5: TRACTION -->
+<div class="slide">
+  <div class="logo-bar"><span class="company">STRIX AI</span></div>
+  <h2>Traction & <span>Validation</span></h2>
+
+  <div class="stat-row">
+    <div class="stat"><div class="number">5/6</div><div class="label">AEAT Builders<br>Accepted</div></div>
+    <div class="stat"><div class="number">21,946</div><div class="label">Real TARIC<br>Codes</div></div>
+    <div class="stat"><div class="number">4</div><div class="label">Real MRNs<br>Issued</div></div>
+    <div class="stat"><div class="number">123</div><div class="label">Automated<br>Tests</div></div>
+    <div class="stat"><div class="number">7</div><div class="label">Languages<br>Supported</div></div>
+  </div>
+
+  <table style="margin-top: 50px;">
+    <tr><th>Declaration Type</th><th>Status</th><th>Evidence</th></tr>
+    <tr><td>H1 — Standard Import</td><td class="status-ok">✓ ACCEPTED — Real MRN</td><td>Green channel, immediate release</td></tr>
+    <tr><td>H7 — E-commerce (&lt;150 EUR)</td><td class="status-ok">✓ ACCEPTED — Real MRN</td><td>With real guarantee bond</td></tr>
+    <tr><td>AES — Export</td><td class="status-ok">✓ ACCEPTED — Real MRN</td><td>Green channel</td></tr>
+    <tr><td>ENS — Entry Summary</td><td class="status-ok">✓ ACCEPTED — 30+ MRNs</td><td>Multiple successful submissions</td></tr>
+    <tr><td>NCTS — Transit</td><td class="status-ok">✓ ACCEPTED — Real MRN</td><td>Green channel, immediate release</td></tr>
+    <tr><td>PUE — Inspections (ROHS)</td><td class="status-pending">Pending — SOIVRE DB issue</td><td>XML schema validated</td></tr>
+  </table>
+
+  <div class="highlight-box" style="margin-top: 30px;">
+    <p><strong>Second product validated:</strong> 300dec — AI-powered customs notification system for Correos de España (Spanish national postal service). Serverless AWS stack deployed and in pilot.</p>
+  </div>
+  <span class="slide-number">5</span>
+</div>
+
+<!-- SLIDE 6: BUSINESS MODEL -->
+<div class="slide">
+  <div class="logo-bar"><span class="company">STRIX AI</span></div>
+  <h2>Business <span>Model</span></h2>
+
+  <div class="grid-2">
+    <div>
+      <h3>SaaS Pricing — 93% Gross Margin</h3>
+      <table>
+        <tr><th>Plan</th><th>Price/mo</th><th>Declarations</th></tr>
+        <tr><td><strong>Professional</strong></td><td>EUR 149</td><td>50/month</td></tr>
+        <tr><td><strong>Business</strong></td><td>EUR 749</td><td>200/month</td></tr>
+        <tr><td><strong>Enterprise</strong></td><td>From EUR 799</td><td>Unlimited</td></tr>
+      </table>
+
+      <h3 style="margin-top: 30px;">Unit Economics</h3>
+      <table>
+        <tr><td>ARPU</td><td><strong>EUR 216/month</strong></td></tr>
+        <tr><td>Gross Margin</td><td><strong>93%</strong></td></tr>
+        <tr><td>CAC (organic)</td><td>~EUR 20</td></tr>
+        <tr><td>LTV/CAC</td><td><strong>108x</strong></td></tr>
+        <tr><td>Payback</td><td>&lt; 1 month</td></tr>
+        <tr><td>Break-even</td><td>1 paying customer</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Market Size</h3>
+      <div class="card">
+        <h4>TAM — EUR 600M/year</h4>
+        <p>EU-wide customs software market (28 countries, 600K+ import/export companies)</p>
+      </div>
+      <div class="card" style="margin-top: 16px;">
+        <h4>SAM — EUR 54M/year</h4>
+        <p>Spain: 15,000 companies × EUR 300/mo avg. First beachhead market.</p>
+      </div>
+      <div class="card" style="margin-top: 16px;">
+        <h4>SOM (3yr) — EUR 1.3M/year</h4>
+        <p>500 customers at EUR 216 ARPU. Conservative 10% SAM penetration.</p>
+      </div>
+    </div>
+  </div>
+  <span class="slide-number">6</span>
+</div>
+
+<!-- SLIDE 7: COMPETITIVE LANDSCAPE -->
+<div class="slide">
+  <div class="logo-bar"><span class="company">STRIX AI</span></div>
+  <h2>Competitive <span>Landscape</span></h2>
+
+  <table>
+    <tr>
+      <th>Capability</th>
+      <th>Portic (Legacy)</th>
+      <th>Customs4Trade</th>
+      <th>Avalara / Zonos</th>
+      <th style="color: #76b900;">LUCI</th>
+    </tr>
+    <tr>
+      <td>AI Classification</td>
+      <td>—</td>
+      <td>Limited</td>
+      <td>Rules-based</td>
+      <td class="status-ok">LLM-powered</td>
+    </tr>
+    <tr>
+      <td>Direct AEAT Integration</td>
+      <td>Yes (legacy)</td>
+      <td>Partial</td>
+      <td>—</td>
+      <td class="status-ok">5/6 validated</td>
+    </tr>
+    <tr>
+      <td>Duty Calculation</td>
+      <td>Basic</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td class="status-ok">21,946 real codes</td>
+    </tr>
+    <tr>
+      <td>AI Assistant 24/7</td>
+      <td>—</td>
+      <td>—</td>
+      <td>—</td>
+      <td class="status-ok">Multilingual</td>
+    </tr>
+    <tr>
+      <td>Multi-Country EU</td>
+      <td>Spain only</td>
+      <td>EU</td>
+      <td>Global (no AEAT)</td>
+      <td class="status-ok">ES live, NL ready</td>
+    </tr>
+    <tr>
+      <td>Price/month</td>
+      <td>EUR 200-500</td>
+      <td>EUR 300-800</td>
+      <td>Enterprise</td>
+      <td class="status-ok">EUR 149-749</td>
+    </tr>
+  </table>
+
+  <div class="highlight-box" style="margin-top: 40px;">
+    <p><strong>Unique positioning:</strong> Only platform combining generative AI + real government submission + full lifecycle management. Competitors have 1 or 2 of these, never all 3.</p>
+  </div>
+  <span class="slide-number">7</span>
+</div>
+
+<!-- SLIDE 8: TEAM -->
+<div class="slide">
+  <div class="logo-bar"><span class="company">STRIX AI</span></div>
+  <h2>The <span>Team</span></h2>
+
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <h4>Jenifer Romero — CEO</h4>
+        <p>Business strategy, commercial relationships, legal representation. Direct relationship with customs authorities (AEAT/DIT).</p>
+      </div>
+      <div class="card" style="margin-top: 20px;">
+        <h4>Luis Rodriguez — CTO</h4>
+        <p>Full-stack architect, AI/ML integration, infrastructure & security. Built the entire platform: 25,000+ lines backend, 42,500+ lines frontend, 6 XML builders, AI orchestration pipeline.</p>
+      </div>
+      <div class="card" style="margin-top: 20px;">
+        <h4>Rodrigo Godoy — CFO</h4>
+        <p>Finance, business development, client relationships. Logistics industry network across Spain and LATAM.</p>
+      </div>
+    </div>
+    <div>
+      <h3>Technical Depth</h3>
+      <ul>
+        <li>Full-stack: React, Node.js, MongoDB, Redis, AWS</li>
+        <li>AI: Claude API, AWS Bedrock, prompt engineering, agentic pipelines</li>
+        <li>DevOps: EC2, PM2 cluster, Nginx, CI/CD (GitHub Actions)</li>
+        <li>Security: FNMT digital signatures, PII encryption (AES-256-GCM), GDPR compliance</li>
+        <li>Auth: AWS Cognito, JWT dual-mode</li>
+        <li>Testing: 123 automated tests (Jest + Cypress + Playwright)</li>
+      </ul>
+
+      <h3 style="margin-top: 30px;">Company</h3>
+      <ul>
+        <li><strong>STRIX AI SL</strong> (NIF: B22477020)</li>
+        <li>EORI: ESB22477020 (registered customs operator)</li>
+        <li>FNMT certificate valid until Oct 2027</li>
+        <li>Platform live: aduanas.strixai.es</li>
+      </ul>
+    </div>
+  </div>
+  <span class="slide-number">8</span>
+</div>
+
+<!-- SLIDE 9: GPU & SCALABILITY -->
+<div class="slide">
+  <div class="logo-bar"><span class="company">STRIX AI</span></div>
+  <h2>GPU Strategy & <span>Scalability</span></h2>
+
+  <div class="grid-2">
+    <div>
+      <h3>Immediate (0-6 months)</h3>
+      <div class="card">
+        <h4>Fine-tune Domain Models</h4>
+        <p>Train specialized customs classification models on our 21,946-code TARIC dataset × 7 languages. Target: 95%+ accuracy on HS code classification vs. current 85% with general LLMs.</p>
+      </div>
+      <div class="card" style="margin-top: 16px;">
+        <h4>Document Processing Pipeline</h4>
+        <p>GPU-accelerated OCR + extraction for invoices, certificates of origin, packing lists. Process 500+ documents/hour for batch manifest uploads.</p>
+      </div>
+    </div>
+    <div>
+      <h3>Medium-term (6-12 months)</h3>
+      <div class="card">
+        <h4>On-Premise Inference</h4>
+        <p>Deploy specialized LLMs on-premise for enterprise customers with EU data residency requirements (GDPR Art. 44+). Customs data cannot leave EU jurisdiction.</p>
+      </div>
+      <div class="card" style="margin-top: 16px;">
+        <h4>Real-time Batch Processing</h4>
+        <p>Optimized inference for processing 1000+ declarations during peak customs windows (EU port arrivals, 6-8 AM CET). Sub-second classification at scale.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight-box" style="margin-top: 40px;">
+    <p><strong>GPU compute need is real and immediate:</strong> July 2026 EU regulation eliminates the EUR 150 exemption — every e-commerce parcel entering the EU will need a customs declaration. We project 10x volume increase for our customers. GPU inference is the only way to handle this at acceptable latency.</p>
+  </div>
+  <span class="slide-number">9</span>
+</div>
+
+<!-- SLIDE 10: ROADMAP -->
+<div class="slide">
+  <div class="logo-bar"><span class="company">STRIX AI</span></div>
+  <h2><span>Roadmap</span></h2>
+
+  <div class="grid-2">
+    <div>
+      <h3>2026 Milestones</h3>
+      <table>
+        <tr><th>Quarter</th><th>Goal</th></tr>
+        <tr><td>Q1 ✓</td><td>5/6 AEAT builders accepted, 300dec pilot deployed</td></tr>
+        <tr><td>Q2 ✓</td><td>Cognito auth, Bedrock migration, 123 tests, GDPR</td></tr>
+        <tr><td>Q3</td><td>First 10 paying customers, GPU fine-tuning started</td></tr>
+        <tr><td>Q4</td><td>50 customers, on-premise inference for enterprise, NL launch</td></tr>
+      </table>
+
+      <h3 style="margin-top: 30px;">2027 Vision</h3>
+      <ul>
+        <li>500+ customers across 3 EU countries</li>
+        <li>EUR 30K+ MRR</li>
+        <li>Proprietary customs AI model (fine-tuned)</li>
+        <li>Series A: EUR 500K-1M</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Pre-Seed Round</h3>
+      <div class="nvidia-section">
+        <h4>EUR 150-300K</h4>
+        <ul>
+          <li><strong>60%</strong> — Team (1 senior dev + 1 commercial)</li>
+          <li><strong>25%</strong> — Go-to-market (ads, events, onboarding)</li>
+          <li><strong>10%</strong> — Infrastructure (AWS, GPU compute, tools)</li>
+          <li><strong>5%</strong> — Legal & admin</li>
+        </ul>
+      </div>
+
+      <div class="card" style="margin-top: 20px;">
+        <h4>What Success Looks Like (12mo)</h4>
+        <p>50 paying customers, EUR 10K MRR, 6/6 AEAT builders complete, proprietary classification model at 95%+ accuracy, Netherlands launched.</p>
+      </div>
+    </div>
+  </div>
+  <span class="slide-number">10</span>
+</div>
+
+<!-- SLIDE 11: CONTACT -->
+<div class="slide cover">
+  <h1>LUCI</h1>
+  <div class="subtitle">AI-Native Customs Clearance</div>
+  <div class="tagline" style="margin-bottom: 40px;">
+    The only platform combining generative AI + real government submission + full lifecycle management
+  </div>
+
+  <div style="display: flex; gap: 40px; justify-content: center; margin-top: 20px;">
+    <div class="stat"><div class="number">93%</div><div class="label">Gross Margin</div></div>
+    <div class="stat"><div class="number">108x</div><div class="label">LTV/CAC</div></div>
+    <div class="stat"><div class="number">5/6</div><div class="label">Gov. Validated</div></div>
+  </div>
+
+  <div style="margin-top: 60px; font-size: 16px; color: #888; line-height: 2;">
+    <strong style="color: #ccc;">STRIX AI SL</strong><br>
+    Platform: aduanas.strixai.es<br>
+    Contact: luis.rodriguez@strixai.es<br>
+    Web: strixai.es
+  </div>
+
+  <div class="badge" style="margin-top: 30px;">Pre-Seed Round: EUR 150-300K &nbsp;|&nbsp; Valuation: EUR 1.0-1.5M</div>
+  <span class="slide-number">11</span>
+</div>
+
+</body>
+</html>

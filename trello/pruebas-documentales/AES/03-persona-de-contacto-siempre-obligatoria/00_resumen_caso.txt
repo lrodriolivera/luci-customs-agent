@@ -1,0 +1,41 @@
+CASO AES-03 — Persona de contacto siempre obligatoria
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Paterna (Valencia))
+Destino: Brasil
+Incoterm: FOB Paterna (Valencia)
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Distribuciones Iberica del Levante S.L.
+    Poligono Industrial Fuente del Jarro, Calle 4 nº 12
+    46988 Paterna (Valencia)
+    Espana
+    NIF: B-46123456 | EORI: ESB46123456
+
+COMPRADOR/IMPORTADOR:
+    Comercial Amazonia Exportacao Ltda.
+    Av. das Nacoes Unidas, 1200, Sala 5
+    04578-000 Sao Paulo
+    Brasil
+    Tax ID: 12.345.678/0001-90
+
+Factura No.: INV-AES-03-2026-9396987  Fecha: 06/05/2026
+Documento de transporte: MSCU20269396987
+
+MERCANCIAS:
+  - Baldosas y losas de ceramica esmaltada para pavimento, 60x60 cm
+    HS: 690723  Cantidad: 9600 MTK  Precio unit.: 5.6 USD
+
+NOTA DEL CASO (que se prueba):
+  Contact person for this consignment: Sra. Marta Alonso Ruiz — mandatory field, always required regardless of representation type.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

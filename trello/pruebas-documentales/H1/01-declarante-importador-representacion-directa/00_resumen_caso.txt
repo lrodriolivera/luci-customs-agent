@@ -1,0 +1,42 @@
+CASO H1-01 — Declarante = importador → representación directa
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: China (Shanghai)
+Destino: Espana
+Incoterm: FOB Shanghai
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Shanghai Hongtai Import & Export Co., Ltd.
+    No. 1288 Pudong Ave, Bldg 3
+    200120 Shanghai
+    China
+    Tax ID: 91310115MA1K3F5Q28
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones Iberica del Levante S.L.
+    Poligono Industrial Fuente del Jarro, Calle 4 nº 12
+    46988 Paterna (Valencia)
+    Espana
+    NIF: B-46123456 | EORI: ESB46123456
+
+Factura No.: INV-H1-01-2026-8198800  Fecha: 04/03/2026
+Documento de transporte: MSCU20268198800
+
+MERCANCIAS:
+  - Ordenadores portatiles, pantalla 14", 16GB RAM / 512GB SSD, modelo comercial "ProBook X14"
+    HS: 847130  Cantidad: 480 PCE  Precio unit.: 385.0 USD
+
+NOTA DEL CASO (que se prueba):
+  Declarant acts as Importer of Record (direct representation).
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_declaracion_ce.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

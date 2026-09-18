@@ -1,0 +1,46 @@
+CASO H1-14-EXTRANA-a — Valor en aduana: cánones y comisiones de venta se suman, comisiones de compra no — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Indonesia (Jakarta)
+Destino: Espana
+Incoterm: FOB Jakarta
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Jakarta Furniture Manufacturing PT
+    Jl. Industri Raya III No. 5
+    15136 Jakarta
+    Indonesia
+    Tax ID: 01.234.567.8-901.000
+
+COMPRADOR/IMPORTADOR:
+    Riojana de Comercio Exterior S.L.
+    Avda. de Lobete, 8
+    26007 Logroño
+    Espana
+    NIF: B-26567834 | EORI: ESB26567834
+
+Factura No.: INV-H1-14-EXTRANA-a-2026-9183834  Fecha: 17/06/2026
+Documento de transporte: MSCU20269183834
+
+MERCANCIAS:
+  - Peluche de felpa de poliester con forma de oso, relleno con semillas de trigo y lavanda seca, apto para calentar en microondas como compresa termica, con funda textil extraible
+    HS: 950300  Cantidad: 981 PCE  Precio unit.: 7.28 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+¿Juguete (9503) o aparato/articulo de uso terapeutico-domestico (compresa termica, posible 3005/6307)? La funcion de calentar (no jugar) puede prevalecer segun GRI 1 sobre la apariencia de peluche.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

@@ -1,0 +1,46 @@
+CASO AES-07-EXTRANA-b — Declaración EX tipo A (sin seguridad) vs tipo B (con seguridad) — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Badajoz)
+Destino: Canada
+Incoterm: FOB Badajoz
+Moneda: CAD
+
+VENDEDOR/EXPORTADOR:
+    Extremadura Trading Company S.L.
+    Avda. de la Constitucion, 4
+    06011 Badajoz
+    Espana
+    NIF: B-06345678 | EORI: ESB06345678
+
+COMPRADOR/IMPORTADOR:
+    Maple Valley Timber Corp.
+    780 Rue Principale
+    QC G8T 4H3 Trois-Rivieres
+    Canada
+    Tax ID: 987654321RT0001
+
+Factura No.: INV-AES-07-EXTRANA-b-2026-7022839  Fecha: 10/09/2026
+Documento de transporte: MSCU20267022839
+
+MERCANCIAS:
+  - Cinturon de lastre para buceo relleno con perdigones de plomo reciclado encapsulados en bolsas de neopreno cosidas, hebilla de liberacion rapida de acero inoxidable, uso deportivo profesional
+    HS: 401699  Cantidad: 311 PCE  Precio unit.: 28.62 CAD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+El neopreno (caucho, cap. 40) es solo el envoltorio; el componente que da la funcion y el peso real es el plomo (metal, cap. 78/83 segun forma). Articulo compuesto de materiales diferentes donde el material 'visible' (neopreno) no es el que aporta el caracter esencial (el lastre de plomo).
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

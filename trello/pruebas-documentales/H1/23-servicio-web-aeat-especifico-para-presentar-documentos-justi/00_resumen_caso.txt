@@ -1,0 +1,42 @@
+CASO H1-23 — Servicio Web AEAT específico para presentar documentos justificativos pendientes TRAS el levante
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Corea del Sur (Busan)
+Destino: Espana
+Incoterm: CIF Busan
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Busan Marine Parts Corp.
+    45 Haeundae-ro, Haeundae-gu
+    48099 Busan
+    Corea del Sur
+    Tax ID: 605-81-98765
+
+COMPRADOR/IMPORTADOR:
+    Aragonesa de Suministros Industriales S.A.
+    Poligono El Pilar, Nave 8
+    50197 Zaragoza
+    Espana
+    NIF: A-50123890 | EORI: ESA50123890
+
+Factura No.: INV-H1-23-2026-3799830  Fecha: 26/05/2026
+Documento de transporte: MSCU20263799830
+
+MERCANCIAS:
+  - Aparatos electricos de alumbrado con fuente de luz LED integrada
+    HS: 940540  Cantidad: 5200 PCE  Precio unit.: 11.4 USD
+
+NOTA DEL CASO (que se prueba):
+  Supporting documents (test certificates) to be submitted via the dedicated AEAT web service AFTER release (levante) has been granted.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_declaracion_ce.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

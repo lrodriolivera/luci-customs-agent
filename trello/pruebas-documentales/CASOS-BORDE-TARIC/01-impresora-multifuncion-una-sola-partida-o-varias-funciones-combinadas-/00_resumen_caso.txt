@@ -1,0 +1,48 @@
+CASO BORDE-01 — Impresora multifuncion: ¿una sola partida o varias funciones combinadas? (Nota 3 Sec. XVI)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: China (Shanghai)
+Destino: Espana
+Incoterm: FOB Shanghai
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Shanghai Hongtai Import & Export Co., Ltd.
+    No. 1288 Pudong Ave, Bldg 3
+    200120 Shanghai
+    China
+    Tax ID: 91310115MA1K3F5Q28
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones Iberica del Levante S.L.
+    Poligono Industrial Fuente del Jarro, Calle 4 nº 12
+    46988 Paterna (Valencia)
+    Espana
+    NIF: B-46123456 | EORI: ESB46123456
+
+Factura No.: INV-BORDE-01-2026-4831390  Fecha: 04/03/2026
+Documento de transporte: MSCU20264831390
+
+MERCANCIAS:
+  - Equipo de oficina que combina en una sola unidad: impresora laser color, escaner de documentos, fax analogico y fotocopiadora, con bandeja de alimentacion automatica y conectividad de red, comercializado como "impresora multifuncion"
+    HS: 844332  Cantidad: 340 PCE  Precio unit.: 165.0 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- CASO DE BORDE: FUNDAMENTO DE LA DISPUTA DE CLASIFICACION ---
+Base normativa/tecnica: Nota 3 de la Seccion XVI del Sistema Armonizado + GRI 3(c)
+
+Maquina que realiza varias funciones alternativas de la partida 8443 (impresora) y 8471 (unidad periferica de tratamiento de datos, si se considera el escaner como entrada de datos). La Nota 3 de Seccion XVI exige clasificar por la funcion principal; cuando ninguna funcion es claramente principal, GRI 3(c) obliga a elegir la partida de numeracion mas alta entre las igualmente aplicables — la practica real consolidada en la UE clasifica estos equipos en 8443.32, pero el razonamiento hay que poder justificarlo, no darlo por hecho por el nombre comercial.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugeriria de forma naive/erronea el proveedor o transitario en un envio real. El
+objetivo de este caso es verificar si el agente / LUCI llegan a la clasificacion correcta
+razonando desde las Reglas Generales de Interpretacion, no copiando el codigo de la factura.

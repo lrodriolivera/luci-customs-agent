@@ -1,0 +1,43 @@
+CASO H1-50 — Alimentos: producto de origen animal — numero de establecimiento en el certificado veterinario vs. CHED-P
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Carretera
+Origen mercancia: Suiza (Gruyères)
+Destino: Espana
+Incoterm: DAP Gruyères
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Gruyère Alpin Affineurs SA
+    Route de Bulle 22
+    1663 Gruyères
+    Suiza
+    Tax ID: CHE-456.789.123
+
+COMPRADOR/IMPORTADOR:
+    Grupo Manchego de Distribucion S.L.
+    Ctra. Nacional 401, Km 12
+    13004 Ciudad Real
+    Espana
+    NIF: B-13456789 | EORI: ESB13456789
+
+Factura No.: INV-H1-50-2026-5037567  Fecha: 05/02/2026
+Documento de transporte: CMR-20265037567
+
+MERCANCIAS:
+  - Queso de leche cruda de oveja, curado 6 meses, en piezas de 1kg
+    HS: 040690  Cantidad: 3200 KGM  Precio unit.: 9.8 EUR
+
+NOTA DEL CASO (que se prueba):
+  El numero de autorizacion sanitaria del establecimiento de origen declarado en el certificado veterinario debe coincidir EXACTAMENTE con el indicado en el CHED-P y figurar en la lista de establecimientos de terceros paises autorizados a exportar a la UE — una discrepancia entre ambos documentos provoca el rechazo en el Puesto de Control Fronterizo.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+  - 04_certificado_veterinario.pdf
+  - 05_ched_animal.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

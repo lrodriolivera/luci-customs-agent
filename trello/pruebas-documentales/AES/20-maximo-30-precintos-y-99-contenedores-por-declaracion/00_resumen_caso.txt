@@ -1,0 +1,41 @@
+CASO AES-20 — Máximo 30 precintos y 99 contenedores por declaración
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Llanera (Asturias))
+Destino: Tailandia
+Incoterm: FOB Llanera (Asturias)
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Suministros Norte Peninsular S.A.
+    Poligono Asipo, Parcela 22
+    33428 Llanera (Asturias)
+    Espana
+    NIF: A-33456789 | EORI: ESA33456789
+
+COMPRADOR/IMPORTADOR:
+    Bangkok Rice Trading Co., Ltd.
+    399 Sukhumvit Soi 22
+    10110 Bangkok
+    Tailandia
+    Tax ID: 0105536012345
+
+Factura No.: INV-AES-20-2026-4036106  Fecha: 23/02/2026
+Documento de transporte: MSCU20264036106
+
+MERCANCIAS:
+  - Juguetes de plastico, figuras de accion articuladas, con marcado CE
+    HS: 950300  Cantidad: 28000 PCE  Precio unit.: 1.15 USD
+
+NOTA DEL CASO (que se prueba):
+  Multi-container shipment — reference for the declaration limit of maximum 30 seals and 99 containers.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

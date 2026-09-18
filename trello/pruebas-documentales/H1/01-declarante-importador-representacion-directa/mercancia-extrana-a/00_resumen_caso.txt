@@ -1,0 +1,46 @@
+CASO H1-01-EXTRANA-a — Declarante = importador → representación directa — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: China (Shanghai)
+Destino: Espana
+Incoterm: FOB Shanghai
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Shanghai Hongtai Import & Export Co., Ltd.
+    No. 1288 Pudong Ave, Bldg 3
+    200120 Shanghai
+    China
+    Tax ID: 91310115MA1K3F5Q28
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones Iberica del Levante S.L.
+    Poligono Industrial Fuente del Jarro, Calle 4 nº 12
+    46988 Paterna (Valencia)
+    Espana
+    NIF: B-46123456 | EORI: ESB46123456
+
+Factura No.: INV-H1-01-EXTRANA-a-2026-1268017  Fecha: 04/03/2026
+Documento de transporte: MSCU20261268017
+
+MERCANCIAS:
+  - Mochila de nylon con panel solar flexible integrado en la solapa frontal, puerto USB-A y power bank de litio de 10.000 mAh cosido en el compartimento interior, con cerradura de combinacion antirrobo integrada en la cremallera principal
+    HS: 420229  Cantidad: 182 PCE  Precio unit.: 34.84 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Articulo compuesto: contenedor textil (cap. 42) vs. bateria/power bank (8507) vs. panel fotovoltaico (8541). GRI 3(b): determinar el caracter esencial — ¿es una mochila con electronica accesoria, o un cargador portatil con forma de mochila?
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

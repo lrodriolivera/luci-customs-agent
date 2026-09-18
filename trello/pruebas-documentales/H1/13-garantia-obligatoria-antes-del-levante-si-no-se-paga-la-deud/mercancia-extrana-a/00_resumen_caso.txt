@@ -1,0 +1,46 @@
+CASO H1-13-EXTRANA-a — Garantía obligatoria antes del levante si no se paga la deuda — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Tailandia (Bangkok)
+Destino: Espana
+Incoterm: CIF Bangkok
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Bangkok Rice Trading Co., Ltd.
+    399 Sukhumvit Soi 22
+    10110 Bangkok
+    Tailandia
+    Tax ID: 0105536012345
+
+COMPRADOR/IMPORTADOR:
+    Extremadura Trading Company S.L.
+    Avda. de la Constitucion, 4
+    06011 Badajoz
+    Espana
+    NIF: B-06345678 | EORI: ESB06345678
+
+Factura No.: INV-H1-13-EXTRANA-a-2026-2298230  Fecha: 16/05/2026
+Documento de transporte: MSCU20262298230
+
+MERCANCIAS:
+  - Cinturon de lastre para buceo relleno con perdigones de plomo reciclado encapsulados en bolsas de neopreno cosidas, hebilla de liberacion rapida de acero inoxidable, uso deportivo profesional
+    HS: 401699  Cantidad: 326 PCE  Precio unit.: 27.03 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+El neopreno (caucho, cap. 40) es solo el envoltorio; el componente que da la funcion y el peso real es el plomo (metal, cap. 78/83 segun forma). Articulo compuesto de materiales diferentes donde el material 'visible' (neopreno) no es el que aporta el caracter esencial (el lastre de plomo).
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

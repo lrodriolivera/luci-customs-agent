@@ -1,0 +1,41 @@
+CASO H1-41 — Descripción de mercancía muy larga
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: China (Yiwu)
+Destino: Espana
+Incoterm: FOB Yiwu
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Yiwu Chuangxin Commodity Co., Ltd.
+    3F, Futian Market Zone 5
+    322000 Yiwu
+    China
+    Tax ID: 91330782MA28T6R91X
+
+COMPRADOR/IMPORTADOR:
+    Cantabrica Import S.A.
+    Poligono Guarnizo, Parcela 14
+    39611 Guarnizo (Cantabria)
+    Espana
+    NIF: A-39456782 | EORI: ESA39456782
+
+Factura No.: INV-H1-41-2026-3480325  Fecha: 20/03/2026
+Documento de transporte: MSCU20263480325
+
+MERCANCIAS:
+  - Precision CNC vertical machining center spare parts kit comprising ball-screw assemblies, linear motion guideways, spindle taper bearings (ISO 7:1 taper), servo-motor couplings, coolant nozzles and electrical cabinet connectors, supplied as a complete maintenance overhaul set for model VMC-850 machining centers, packed in individually labelled anti-corrosion wrapping within a single reinforced wooden crate conforming to ISPM-15 phytosanitary treatment for wood packaging material
+    HS: 845959  Cantidad: 40 PCE  Precio unit.: 890.0 USD
+
+NOTA DEL CASO (que se prueba):
+  LONG DESCRIPTION TEST: single tariff line with an unusually long, fully-detailed goods description (see line 1).
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

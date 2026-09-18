@@ -1,0 +1,46 @@
+CASO H1-18-EXTRANA-b — Casilla 14 — código de representación entre corchetes antes del nombre — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Pakistan (Karachi)
+Destino: Espana
+Incoterm: FOB Karachi
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Karachi Textile Mills (Pvt.) Ltd.
+    S.I.T.E. Area, Manghopir Road
+    75700 Karachi
+    Pakistan
+    Tax ID: NTN-8765432-1
+
+COMPRADOR/IMPORTADOR:
+    Ibertrade Import-Export S.A.
+    Muelle de Poniente s/n, Edif. Lonja
+    35008 Las Palmas de Gran Canaria
+    Espana
+    NIF: A-35678901 | EORI: ESA35678901
+
+Factura No.: INV-H1-18-EXTRANA-b-2026-2822703  Fecha: 21/10/2026
+Documento de transporte: MSCU20262822703
+
+MERCANCIAS:
+  - Figura decorativa de jardin en resina con forma de gnomo, altura 35cm, con panel solar oculto en el sombrero que alimenta una luz LED en el interior de una lampara de cristal que sostiene en la mano, encendido automatico al anochecer
+    HS: 691390  Cantidad: 744 PCE  Precio unit.: 9.68 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Objeto decorativo (9505/3926/6913 segun material) con funcion de iluminacion electrica real (9405, lampara). La pregunta de caracter esencial: ¿es un adorno con una luz, o una lampara con forma decorativa? El uso predominante nocturno como luz de jardin apunta a 9405.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

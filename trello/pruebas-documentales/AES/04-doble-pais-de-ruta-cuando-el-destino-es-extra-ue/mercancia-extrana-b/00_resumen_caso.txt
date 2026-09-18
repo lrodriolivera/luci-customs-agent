@@ -1,0 +1,46 @@
+CASO AES-04-EXTRANA-b — Doble país de ruta cuando el destino es extra-UE — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Dos Hermanas (Sevilla))
+Destino: Australia
+Incoterm: CFR Dos Hermanas (Sevilla)
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Mercantil Andaluza de Importacion S.L.
+    Avda. de la Innovacion, 3
+    41703 Dos Hermanas (Sevilla)
+    Espana
+    NIF: B-41678912 | EORI: ESB41678912
+
+COMPRADOR/IMPORTADOR:
+    Southern Wool Exporters Pty Ltd
+    12 Flinders Lane
+    VIC 3000 Melbourne
+    Australia
+    Tax ID: 29 876 543 210
+
+Factura No.: INV-AES-04-EXTRANA-b-2026-5129497  Fecha: 07/06/2026
+Documento de transporte: MSCU20265129497
+
+MERCANCIAS:
+  - Alfombra de salon tejida en lana con circuito de cable calefactor de carbono integrado en el reverso, termostato regulable, certificacion electrica CE, dimensiones 200x300cm
+    HS: 570210  Cantidad: 90 PCE  Precio unit.: 216.3 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Igual tension que la chaqueta calefactable: textil de superficie (cap. 57) con elemento electrico de calefaccion incorporado con caracter funcional relevante — podria derivar a 8516 (aparato electrico de calefaccion) si la funcion de calentar predomina sobre la funcion decorativa/textil de la alfombra.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

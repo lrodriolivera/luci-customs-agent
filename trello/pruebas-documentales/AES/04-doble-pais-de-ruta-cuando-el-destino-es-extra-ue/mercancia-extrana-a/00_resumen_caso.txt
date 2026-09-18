@@ -1,0 +1,46 @@
+CASO AES-04-EXTRANA-a — Doble país de ruta cuando el destino es extra-UE — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Llanera (Asturias))
+Destino: Australia
+Incoterm: CFR Llanera (Asturias)
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Suministros Norte Peninsular S.A.
+    Poligono Asipo, Parcela 22
+    33428 Llanera (Asturias)
+    Espana
+    NIF: A-33456789 | EORI: ESA33456789
+
+COMPRADOR/IMPORTADOR:
+    Outback Mining Supplies Pty Ltd
+    55 Coronation Drive
+    QLD 4000 Brisbane
+    Australia
+    Tax ID: 51 234 567 890
+
+Factura No.: INV-AES-04-EXTRANA-a-2026-5654637  Fecha: 07/06/2026
+Documento de transporte: MSCU20265654637
+
+MERCANCIAS:
+  - Anillo de compromiso fabricado por impresion 3D en polvo de titanio sinterizado con engaste de diamante sintetico cultivado en laboratorio de 0,5 quilates, diseño geometrico parametrico unico por pieza, sin moldes ni troqueles
+    HS: 711719  Cantidad: 25 PCE  Precio unit.: 343.4 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+El titanio no es un metal precioso (excluye cap. 71 seccion joyeria fina), pero el diamante sintetico engastado SI puede ser relevante para 7104 (piedras sinteticas). La fabricacion aditiva (impresion 3D) no cambia la clasificacion del producto final, pero la combinacion titanio+diamante sintetico exige verificar la partida exacta, no asumir 'bisuteria' generica.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

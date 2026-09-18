@@ -1,0 +1,48 @@
+CASO BORDE-10 — Controlador MIDI sin generador de sonido: ¿instrumento musical o periferico informatico? (GRI 1)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: China (Ningbo)
+Destino: Espana
+Incoterm: FCA Ningbo
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Ningbo Haitong Trading Co., Ltd.
+    88 Jiangdong North Rd
+    315040 Ningbo
+    China
+    Tax ID: 91330204MA2H1D8P47
+
+COMPRADOR/IMPORTADOR:
+    Extremadura Trading Company S.L.
+    Avda. de la Constitucion, 4
+    06011 Badajoz
+    Espana
+    NIF: B-06345678 | EORI: ESB06345678
+
+Factura No.: INV-BORDE-10-2026-1135477  Fecha: 13/02/2026
+Documento de transporte: 020-20261135477
+
+MERCANCIAS:
+  - Controlador de teclado musical con 61 teclas sensibles a la velocidad, sin generador de sonido propio ni altavoces internos, se conecta por USB a un ordenador que ejecuta el software que realmente sintetiza el sonido; el propio controlador es electricamente incapaz de producir ninguna nota por si mismo
+    HS: 920600  Cantidad: 210 PCE  Precio unit.: 78.0 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- CASO DE BORDE: FUNDAMENTO DE LA DISPUTA DE CLASIFICACION ---
+Base normativa/tecnica: GRI 1 — texto de la partida 9207 exige que el propio aparato genere o amplifique el sonido
+
+Un teclado MIDI controlador que no contiene ningun generador de sonido (ni sintetizador interno, ni altavoz) no es, en sentido estricto, un 'instrumento musical electronico' de la partida 9207 — es un periferico de entrada de datos para ordenador, mas propio de la partida 8471 (o 8543 segun el analisis). Es un error habitual clasificar por apariencia (parece un teclado de piano) en vez de por funcion real (no suena sin un ordenador conectado).
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugeriria de forma naive/erronea el proveedor o transitario en un envio real. El
+objetivo de este caso es verificar si el agente / LUCI llegan a la clasificacion correcta
+razonando desde las Reglas Generales de Interpretacion, no copiando el codigo de la factura.

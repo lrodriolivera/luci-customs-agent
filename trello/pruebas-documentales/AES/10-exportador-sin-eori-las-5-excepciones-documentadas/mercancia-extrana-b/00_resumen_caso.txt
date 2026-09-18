@@ -1,0 +1,46 @@
+CASO AES-10-EXTRANA-b — Exportador sin EORI: las 5 excepciones documentadas — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Aereo
+Origen mercancia: Espana (Paterna (Valencia))
+Destino: Emiratos Arabes Unidos
+Incoterm: CPT Paterna (Valencia)
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Distribuciones Iberica del Levante S.L.
+    Poligono Industrial Fuente del Jarro, Calle 4 nº 12
+    46988 Paterna (Valencia)
+    Espana
+    NIF: B-46123456 | EORI: ESB46123456
+
+COMPRADOR/IMPORTADOR:
+    Emirates Perfume Trading Co. LLC
+    Warehouse 22, Jebel Ali Free Zone
+    00000 Dubai
+    Emiratos Arabes Unidos
+    Tax ID: 100876543200003
+
+Factura No.: INV-AES-10-EXTRANA-b-2026-9303888  Fecha: 13/02/2026
+Documento de transporte: 020-20269303888
+
+MERCANCIAS:
+  - Reloj de pulsera con caja de acero inoxidable, movimiento de cuarzo analogico tradicional combinado con pantalla OLED secundaria para notificaciones de smartphone, GPS y monitor de ritmo cardiaco, sin conectividad celular propia
+    HS: 910211  Cantidad: 321 PCE  Precio unit.: 63.8 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Frontera clasica entre reloj (cap. 91, 9102) y aparato de comunicacion/computo vestible (8517/8471). La UE distingue por si la funcion de reloj es accesoria o principal; aqui el movimiento de cuarzo tradicional es el elemento dominante, pero la pantalla OLED y sensores complican el caracter esencial.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

@@ -1,0 +1,41 @@
+CASO H1-24 — Régimen 82 (salida de depósito distinto del aduanero) con 6 exclusiones simultáneas
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Australia (Brisbane)
+Destino: Espana
+Incoterm: FOB Brisbane
+Moneda: AUD
+
+VENDEDOR/EXPORTADOR:
+    Outback Mining Supplies Pty Ltd
+    55 Coronation Drive
+    QLD 4000 Brisbane
+    Australia
+    Tax ID: 51 234 567 890
+
+COMPRADOR/IMPORTADOR:
+    Baleares Import S.L.
+    Poligono Son Castello, Calle Gremi de Fusters 22
+    07009 Palma de Mallorca
+    Espana
+    NIF: B-07234561 | EORI: ESB07234561
+
+Factura No.: INV-H1-24-2026-9242212  Fecha: 03/06/2026
+Documento de transporte: MSCU20269242212
+
+MERCANCIAS:
+  - Hilados de lana peinada, sin acondicionar para la venta al por menor
+    HS: 510610  Cantidad: 16000 KGM  Precio unit.: 7.9 AUD
+
+NOTA DEL CASO (que se prueba):
+  Regime 82 declared (removal from a place other than a customs warehouse) — 6 simultaneous regime exclusions apply per CDU Annex 71-05.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

@@ -1,0 +1,43 @@
+CASO AES-35 — Cadena de frio: bioseguridad reforzada del pais de destino para acuicultura espanola
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Dos Hermanas (Sevilla))
+Destino: Australia
+Incoterm: CIF Dos Hermanas (Sevilla)
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Mercantil Andaluza de Importacion S.L.
+    Avda. de la Innovacion, 3
+    41703 Dos Hermanas (Sevilla)
+    Espana
+    NIF: B-41678912 | EORI: ESB41678912
+
+COMPRADOR/IMPORTADOR:
+    Outback Mining Supplies Pty Ltd
+    55 Coronation Drive
+    QLD 4000 Brisbane
+    Australia
+    Tax ID: 51 234 567 890
+
+Factura No.: INV-AES-35-2026-8679315  Fecha: 14/07/2026
+Documento de transporte: MSCU20268679315
+
+MERCANCIAS:
+  - Camarones y langostinos congelados, sin cabeza, calibre 21/25
+    HS: 030617  Cantidad: 15000 KGM  Precio unit.: 7.2 USD
+
+NOTA DEL CASO (que se prueba):
+  Exportacion de producto de acuicultura espanola a un pais con bioseguridad de frontera muy estricta: Australia exige un certificado veterinario adicional de ausencia de enfermedades especificas de crustaceos, requisito propio del pais de destino que se suma (no sustituye) al certificado sanitario UE estandar.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_certificado_veterinario.pdf
+  - 05_certificado_control_temperatura.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

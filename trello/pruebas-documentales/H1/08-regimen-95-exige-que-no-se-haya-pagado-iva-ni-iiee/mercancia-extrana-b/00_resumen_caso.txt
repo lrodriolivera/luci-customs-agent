@@ -1,0 +1,46 @@
+CASO H1-08-EXTRANA-b — Régimen 95 exige que no se haya pagado IVA ni IIEE — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Sudafrica (Sandton)
+Destino: Espana
+Incoterm: EXW Sandton
+Moneda: ZAR
+
+VENDEDOR/EXPORTADOR:
+    Johannesburg Mineral Traders (Pty) Ltd
+    88 Rivonia Road
+    2196 Sandton
+    Sudafrica
+    Tax ID: 4450987654
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones Iberica del Levante S.L.
+    Poligono Industrial Fuente del Jarro, Calle 4 nº 12
+    46988 Paterna (Valencia)
+    Espana
+    NIF: B-46123456 | EORI: ESB46123456
+
+Factura No.: INV-H1-08-EXTRANA-b-2026-8201096  Fecha: 11/10/2026
+Documento de transporte: MSCU20268201096
+
+MERCANCIAS:
+  - Set para acampada compuesto por: una tienda de campaña para 2 personas, un hornillo de gas portatil, una linterna de LED recargable y un set de cubiertos plegables, empaquetados juntos en una unica bolsa de transporte para venta al detalle como "kit de supervivencia"
+    HS: 630622  Cantidad: 230 SET  Precio unit.: 42.56 ZAR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Otro caso de GRI 3(b) 'surtidos': tienda (textil, 6306), hornillo (metal/gas, 7321 o similar), linterna (electrico, 8513) y cubiertos (metal, 8211/7323) presentados como un conjunto. Debe determinarse el componente de caracter esencial del conjunto para la venta al detalle, no facturar todo bajo la partida del articulo mas voluminoso.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

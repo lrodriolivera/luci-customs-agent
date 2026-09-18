@@ -1,0 +1,44 @@
+CASO H1-55 — Quimicos: triple capa regulatoria — REACH/CLP + IMDG clase 5.1 + precursor de explosivos
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Estados Unidos (Charlotte)
+Destino: Espana
+Incoterm: FOB Charlotte
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Meridian Industrial Supply Inc.
+    4820 Corporate Blvd, Suite 210
+    NC 28216 Charlotte
+    Estados Unidos
+    Tax ID: 56-2345671
+
+COMPRADOR/IMPORTADOR:
+    Riojana de Comercio Exterior S.L.
+    Avda. de Lobete, 8
+    26007 Logroño
+    Espana
+    NIF: B-26567834 | EORI: ESB26567834
+
+Factura No.: INV-H1-55-2026-4268808  Fecha: 10/07/2026
+Documento de transporte: MSCU20264268808
+
+MERCANCIAS:
+  - Fertilizante a base de nitrato de amonio, granulado, 34,5% de nitrogeno
+    HS: 310230  Cantidad: 500000 KGM  Precio unit.: 0.32 USD
+
+NOTA DEL CASO (que se prueba):
+  Triple capa regulatoria sobre un solo producto: (1) REACH/CLP — ficha de seguridad; (2) IMDG clase 5.1 (comburente), UN2067 — declaracion de mercancias peligrosas para el transporte maritimo; (3) precursor de explosivos regulado por el Reglamento (UE) 2019/1148 — por encima del umbral de nitrogeno, uso final restringido y control reforzado.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_ficha_datos_seguridad.pdf
+  - 05_declaracion_mercancias_peligrosas.pdf
+  - 06_licencia_importacion.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

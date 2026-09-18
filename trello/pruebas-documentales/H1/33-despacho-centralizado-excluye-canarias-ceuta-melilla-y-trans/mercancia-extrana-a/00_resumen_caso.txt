@@ -1,0 +1,46 @@
+CASO H1-33-EXTRANA-a — Despacho centralizado excluye Canarias, Ceuta, Melilla y tránsito — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Marruecos (Casablanca)
+Destino: Espana (Ceuta) - fuera del territorio aduanero UE
+Incoterm: FOB Casablanca
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Atlas Agrumes S.A.R.L.
+    Zone Industrielle Sidi Bernoussi, Lot 34
+    20600 Casablanca
+    Marruecos
+    Tax ID: IF40123456
+
+COMPRADOR/IMPORTADOR:
+    Comercial Vasca de Componentes S.L.
+    Poligono Jundiz, Calle E nº 15
+    01015 Ceuta
+    Espana (Ceuta) - fuera del territorio aduanero UE
+    NIF: B-01234567 | EORI: ESB01234567
+
+Factura No.: INV-H1-33-EXTRANA-a-2026-9246555  Fecha: 12/05/2026
+Documento de transporte: MSCU20269246555
+
+MERCANCIAS:
+  - Guitarra electroacustica de cuerpo hueco en madera con pastilla piezoelectrica integrada, preamplificador y ecualizador digital de 3 bandas alimentado por pila de 9V, salida jack 1/4 pulgada
+    HS: 920600  Cantidad: 69 PCE  Precio unit.: 214.5 EUR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Los instrumentos musicales con componentes electronicos de amplificacion incorporados siguen clasificandose en el capitulo 92 (instrumentos musicales) mientras la electronica sea accesoria a la funcion musical — pero el limite se cuestiona cuando el preamplificador/ecualizador tiene mas valor que el cuerpo de madera.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

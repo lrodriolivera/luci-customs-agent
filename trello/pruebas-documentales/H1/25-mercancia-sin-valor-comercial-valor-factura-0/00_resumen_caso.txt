@@ -1,0 +1,41 @@
+CASO H1-25 — Mercancía sin valor comercial (valor factura = 0)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: China (Ningbo)
+Destino: Espana
+Incoterm: FCA Ningbo
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Ningbo Haitong Trading Co., Ltd.
+    88 Jiangdong North Rd
+    315040 Ningbo
+    China
+    Tax ID: 91330204MA2H1D8P47
+
+COMPRADOR/IMPORTADOR:
+    Extremadura Trading Company S.L.
+    Avda. de la Constitucion, 4
+    06011 Badajoz
+    Espana
+    NIF: B-06345678 | EORI: ESB06345678
+
+Factura No.: INV-H1-25-2026-4955024  Fecha: 04/07/2026
+Documento de transporte: 020-20264955024
+
+MERCANCIAS:
+  - Juguetes de plastico, figuras de accion articuladas, con marcado CE
+    HS: 950300  Cantidad: 3200 PCE  Precio unit.: 0.0 USD
+
+NOTA DEL CASO (que se prueba):
+  COMMERCIAL VALUE: NIL — goods supplied free of charge as warranty replacement units. No commercial value. Statistical value for customs purposes only.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

@@ -1,0 +1,46 @@
+CASO AES-15-EXTRANA-a — Transportista solo si es distinto del declarante, siempre con EORI — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: EXPORTACION (AES)
+Modo de transporte: Maritimo
+Origen mercancia: Espana (Badajoz)
+Destino: Colombia
+Incoterm: FOB Badajoz
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Extremadura Trading Company S.L.
+    Avda. de la Constitucion, 4
+    06011 Badajoz
+    Espana
+    NIF: B-06345678 | EORI: ESB06345678
+
+COMPRADOR/IMPORTADOR:
+    Cafe de los Andes Exportadora S.A.S.
+    Calle 26 #68-90, Torre B Of. 501
+    111071 Bogota
+    Colombia
+    Tax ID: 900.123.456-7
+
+Factura No.: INV-AES-15-EXTRANA-a-2026-5927643  Fecha: 18/07/2026
+Documento de transporte: MSCU20265927643
+
+MERCANCIAS:
+  - Guitarra electroacustica de cuerpo hueco en madera con pastilla piezoelectrica integrada, preamplificador y ecualizador digital de 3 bandas alimentado por pila de 9V, salida jack 1/4 pulgada
+    HS: 920600  Cantidad: 56 PCE  Precio unit.: 218.4 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Los instrumentos musicales con componentes electronicos de amplificacion incorporados siguen clasificandose en el capitulo 92 (instrumentos musicales) mientras la electronica sea accesoria a la funcion musical — pero el limite se cuestiona cuando el preamplificador/ecualizador tiene mas valor que el cuerpo de madera.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

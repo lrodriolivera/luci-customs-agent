@@ -1,0 +1,46 @@
+CASO H1-08-EXTRANA-a — Régimen 95 exige que no se haya pagado IVA ni IIEE — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Sudafrica (Cape Town)
+Destino: Espana
+Incoterm: EXW Cape Town
+Moneda: ZAR
+
+VENDEDOR/EXPORTADOR:
+    Cape Fruit Exporters (Pty) Ltd
+    12 Beach Road, Paarden Eiland
+    7405 Cape Town
+    Sudafrica
+    Tax ID: 4230123456
+
+COMPRADOR/IMPORTADOR:
+    Zona Franca Trading Barcelona S.L.
+    Calle 2, Sector A, Nave 12
+    08040 Barcelona (Zona Franca)
+    Espana
+    NIF: B-08987651 | EORI: ESB08987651
+
+Factura No.: INV-H1-08-EXTRANA-a-2026-1144022  Fecha: 11/10/2026
+Documento de transporte: MSCU20261144022
+
+MERCANCIAS:
+  - Guitarra electroacustica de cuerpo hueco en madera con pastilla piezoelectrica integrada, preamplificador y ecualizador digital de 3 bandas alimentado por pila de 9V, salida jack 1/4 pulgada
+    HS: 920600  Cantidad: 45 PCE  Precio unit.: 214.5 ZAR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Los instrumentos musicales con componentes electronicos de amplificacion incorporados siguen clasificandose en el capitulo 92 (instrumentos musicales) mientras la electronica sea accesoria a la funcion musical — pero el limite se cuestiona cuando el preamplificador/ecualizador tiene mas valor que el cuerpo de madera.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

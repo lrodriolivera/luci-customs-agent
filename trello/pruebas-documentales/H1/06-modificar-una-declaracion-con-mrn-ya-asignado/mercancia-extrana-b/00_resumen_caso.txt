@@ -1,0 +1,46 @@
+CASO H1-06-EXTRANA-b — Modificar una declaración con MRN ya asignado — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: Japon (Osaka)
+Destino: Espana
+Incoterm: CPT Osaka
+Moneda: JPY
+
+VENDEDOR/EXPORTADOR:
+    Osaka Kiko Trading Corporation
+    5-1-8 Minamisenba, Chuo-ku
+    542-0081 Osaka
+    Japon
+    Tax ID: T5120001067890
+
+COMPRADOR/IMPORTADOR:
+    Riojana de Comercio Exterior S.L.
+    Avda. de Lobete, 8
+    26007 Logroño
+    Espana
+    NIF: B-26567834 | EORI: ESB26567834
+
+Factura No.: INV-H1-06-EXTRANA-b-2026-1871601  Fecha: 09/08/2026
+Documento de transporte: 020-20261871601
+
+MERCANCIAS:
+  - Bolsa reutilizable de la compra tejida a partir de hilo fabricado con botellas de PET recicladas (100% material reciclado post-consumo), con asas reforzadas y estampado publicitario, capacidad 20kg
+    HS: 392329  Cantidad: 5210 PCE  Precio unit.: 1.38 JPY
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+El material de origen (botellas PET) no determina la clasificacion: una vez transformado en hilo y tejido, el producto final es un articulo textil de materia textil sintetica (cap. 63, 6305) y no un 'articulo de plastico' (cap. 39) — error frecuente en declaraciones basadas en el origen del material, no en el producto final.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

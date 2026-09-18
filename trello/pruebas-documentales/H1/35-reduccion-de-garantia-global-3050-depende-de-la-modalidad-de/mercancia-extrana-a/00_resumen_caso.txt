@@ -1,0 +1,46 @@
+CASO H1-35-EXTRANA-a — Reducción de garantía global 30%/50% depende de la modalidad de representación — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Brasil (Sao Paulo)
+Destino: Espana
+Incoterm: FOB Sao Paulo
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Comercial Amazonia Exportacao Ltda.
+    Av. das Nacoes Unidas, 1200, Sala 5
+    04578-000 Sao Paulo
+    Brasil
+    Tax ID: 12.345.678/0001-90
+
+COMPRADOR/IMPORTADOR:
+    Baleares Import S.L.
+    Poligono Son Castello, Calle Gremi de Fusters 22
+    07009 Palma de Mallorca
+    Espana
+    NIF: B-07234561 | EORI: ESB07234561
+
+Factura No.: INV-H1-35-EXTRANA-a-2026-1080688  Fecha: 14/07/2026
+Documento de transporte: MSCU20261080688
+
+MERCANCIAS:
+  - Alfombra de salon tejida en lana con circuito de cable calefactor de carbono integrado en el reverso, termostato regulable, certificacion electrica CE, dimensiones 200x300cm
+    HS: 570210  Cantidad: 104 PCE  Precio unit.: 224.7 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Igual tension que la chaqueta calefactable: textil de superficie (cap. 57) con elemento electrico de calefaccion incorporado con caracter funcional relevante — podria derivar a 8516 (aparato electrico de calefaccion) si la funcion de calentar predomina sobre la funcion decorativa/textil de la alfombra.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

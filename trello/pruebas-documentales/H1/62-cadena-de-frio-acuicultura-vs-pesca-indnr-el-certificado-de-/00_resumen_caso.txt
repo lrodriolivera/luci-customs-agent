@@ -1,0 +1,44 @@
+CASO H1-62 — Cadena de frio: acuicultura vs. pesca INDNR — el certificado de captura no aplica a productos de piscifactoria
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Ecuador (Guayaquil)
+Destino: Espana
+Incoterm: CIF Guayaquil
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Camaronera del Golfo de Guayaquil S.A.
+    Malecón del Estero, Bodega 7
+    090250 Guayaquil
+    Ecuador
+    Tax ID: 0992345678001
+
+COMPRADOR/IMPORTADOR:
+    Mercantil Andaluza de Importacion S.L.
+    Avda. de la Innovacion, 3
+    41703 Dos Hermanas (Sevilla)
+    Espana
+    NIF: B-41678912 | EORI: ESB41678912
+
+Factura No.: INV-H1-62-2026-1694119  Fecha: 17/04/2026
+Documento de transporte: MSCU20261694119
+
+MERCANCIAS:
+  - Camarones y langostinos congelados, sin cabeza, calibre 21/25
+    HS: 030617  Cantidad: 17000 KGM  Precio unit.: 6.9 USD
+
+NOTA DEL CASO (que se prueba):
+  Producto de ACUICULTURA (piscifactoria/camaronera), NO de captura salvaje: el certificado de captura INDNR (Reg. (CE) 1005/2008) NO aplica a este envio — se sustituye por una declaracion de origen de explotacion acuicola registrada. Error frecuente: exigir el certificado de captura para el mismo capitulo arancelario (0306) sin distinguir el regimen.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+  - 04_certificado_veterinario.pdf
+  - 05_certificado_captura.pdf
+  - 06_certificado_control_temperatura.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

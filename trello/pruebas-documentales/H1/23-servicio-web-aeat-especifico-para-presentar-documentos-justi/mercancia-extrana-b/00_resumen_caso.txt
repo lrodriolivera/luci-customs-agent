@@ -1,0 +1,46 @@
+CASO H1-23-EXTRANA-b — Servicio Web AEAT específico para presentar documentos justificativos pendientes TRAS el levante — mercancia extrana b (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Corea del Sur (Busan)
+Destino: Espana
+Incoterm: CIF Busan
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Busan Marine Parts Corp.
+    45 Haeundae-ro, Haeundae-gu
+    48099 Busan
+    Corea del Sur
+    Tax ID: 605-81-98765
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones Iberica del Levante S.L.
+    Poligono Industrial Fuente del Jarro, Calle 4 nº 12
+    46988 Paterna (Valencia)
+    Espana
+    NIF: B-46123456 | EORI: ESB46123456
+
+Factura No.: INV-H1-23-EXTRANA-b-2026-4707120  Fecha: 26/05/2026
+Documento de transporte: MSCU20264707120
+
+MERCANCIAS:
+  - Panel textil decorativo para ventana con recubrimiento fotocatalitico de dioxido de titanio que descompone particulas contaminantes del aire al contacto con luz solar, sin componentes electricos ni motor, funcion pasiva
+    HS: 630392  Cantidad: 343 PCE  Precio unit.: 30.24 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Producto textil con tratamiento quimico funcional (purificacion de aire pasiva). Al no tener motor ni ser un 'aparato', se mantiene mayoritariamente en textil (6303), pero el recubrimiento activo con funcion catalitica podria cuestionar si sigue siendo 'solo textil' segun la proporcion y funcion del tratamiento quimico frente al soporte.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

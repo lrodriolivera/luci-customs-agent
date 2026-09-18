@@ -1,0 +1,41 @@
+CASO H1-22 — Valor en aduana declarado en divisa distinta a EUR (USD) con transporte aéreo
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: Japon (Osaka)
+Destino: Espana
+Incoterm: DAP Osaka
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Osaka Kiko Trading Corporation
+    5-1-8 Minamisenba, Chuo-ku
+    542-0081 Osaka
+    Japon
+    Tax ID: T5120001067890
+
+COMPRADOR/IMPORTADOR:
+    Grupo Manchego de Distribucion S.L.
+    Ctra. Nacional 401, Km 12
+    13004 Ciudad Real
+    Espana
+    NIF: B-13456789 | EORI: ESB13456789
+
+Factura No.: INV-H1-22-2026-1359417  Fecha: 25/04/2026
+Documento de transporte: 020-20261359417
+
+MERCANCIAS:
+  - Instrumentos y aparatos de medicina, tensiometros digitales de brazo
+    HS: 901819  Cantidad: 640 PCE  Precio unit.: 96.0 USD
+
+NOTA DEL CASO (que se prueba):
+  Customs value declared in USD (non-EUR currency) for an air freight shipment — exchange rate per AEAT daily rate table applies.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

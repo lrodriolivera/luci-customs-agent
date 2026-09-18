@@ -1,0 +1,46 @@
+CASO H1-17-EXTRANA-a — Régimen de zona franca no exento de IVA desde 2023 — mercancia extrana a (test clasificacion TARIC)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: Tunez (Sfax)
+Destino: Espana (Zona Franca de Barcelona)
+Incoterm: FOB Sfax
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Sfax Huile d'Olive Export S.A.R.L.
+    Route de Tunis Km 6
+    3000 Sfax
+    Tunez
+    Tax ID: 123456A
+
+COMPRADOR/IMPORTADOR:
+    Suministros Norte Peninsular S.A.
+    Poligono Asipo, Parcela 22
+    33428 Barcelona (Zona Franca)
+    Espana (Zona Franca de Barcelona)
+    NIF: A-33456789 | EORI: ESA33456789
+
+Factura No.: INV-H1-17-EXTRANA-a-2026-5902193  Fecha: 20/09/2026
+Documento de transporte: MSCU20265902193
+
+MERCANCIAS:
+  - Chaqueta de exterior en tejido tecnico impermeable con 3 paneles de fibra de carbono calefactables integrados en el forro, alimentados por bateria de litio extraible de 7,4V, control de temperatura via boton fisico, sin conectividad
+    HS: 620201  Cantidad: 176 PCE  Precio unit.: 78.48 EUR
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- RETO DE CLASIFICACION TARIC (uso interno QA, no aparece en la factura) ---
+Textil (cap. 62) con funcion electrica de calefaccion incorporada. Segun la Nota explicativa correspondiente, si el elemento electrico es accesorio al uso de la prenda, se mantiene en textil; si predomina la funcion de calentar, podria derivar a 8516 (aparatos electricos de calefaccion). El limite es estrecho.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugiere el propio proveedor extranjero (a menudo generico o incorrecto), tal y como
+ocurriria en un envio real. El objetivo de este caso es que el agente / LUCI clasifiquen
+la mercancia de verdad a partir de la descripcion, no que copien un codigo ya dado.

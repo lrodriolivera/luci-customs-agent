@@ -1,0 +1,48 @@
+CASO BORDE-05 — Colageno marino en polvo: complemento alimenticio vs. producto opoterapico (Nota 1 Cap. 30)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: Corea del Sur (Seoul)
+Destino: Espana
+Incoterm: CPT Seoul
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Hanwoori Electronics Co., Ltd.
+    128 Teheran-ro, Gangnam-gu
+    06133 Seoul
+    Corea del Sur
+    Tax ID: 214-81-23456
+
+COMPRADOR/IMPORTADOR:
+    Comercial Vasca de Componentes S.L.
+    Poligono Jundiz, Calle E nº 15
+    01015 Vitoria-Gasteiz
+    Espana
+    NIF: B-01234567 | EORI: ESB01234567
+
+Factura No.: INV-BORDE-05-2026-9835946  Fecha: 08/07/2026
+Documento de transporte: 020-20269835946
+
+MERCANCIAS:
+  - Peptidos de colageno hidrolizado de origen marino (piel de pescado), en polvo soluble, envasado en botes de 300g con cuchara dosificadora, etiquetado como "complemento alimenticio para la salud articular", sin indicaciones terapeuticas especificas ni principio activo farmaceutico
+    HS: 300190  Cantidad: 480 KGM  Precio unit.: 42.0 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- CASO DE BORDE: FUNDAMENTO DE LA DISPUTA DE CLASIFICACION ---
+Base normativa/tecnica: Nota 1 del Capitulo 30 vs. partida 2106 (preparaciones alimenticias no expresadas)
+
+El colageno hidrolizado en polvo para consumo por via oral, presentado y etiquetado como complemento alimenticio (sin indicacion de dosis terapeutica ni enfermedad concreta a tratar), corresponde a 2106 (preparaciones alimenticias), NO al Capitulo 30 (productos farmaceuticos) que exige presentacion e indicaciones propias de un medicamento. Clasificarlo como producto opoterapico (partida farmaceutica) por el origen animal del colageno es un error frecuente que ignora la presentacion real del producto.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugeriria de forma naive/erronea el proveedor o transitario en un envio real. El
+objetivo de este caso es verificar si el agente / LUCI llegan a la clasificacion correcta
+razonando desde las Reglas Generales de Interpretacion, no copiando el codigo de la factura.

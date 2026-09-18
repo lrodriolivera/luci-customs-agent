@@ -1,0 +1,48 @@
+CASO BORDE-12 — Kit de energia solar residencial: ¿un solo codigo o declarar cada componente por separado? (GRI 3b)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Maritimo
+Origen mercancia: China (Yiwu)
+Destino: Espana
+Incoterm: FOB Yiwu
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Yiwu Chuangxin Commodity Co., Ltd.
+    3F, Futian Market Zone 5
+    322000 Yiwu
+    China
+    Tax ID: 91330782MA28T6R91X
+
+COMPRADOR/IMPORTADOR:
+    Riojana de Comercio Exterior S.L.
+    Avda. de Lobete, 8
+    26007 Logroño
+    Espana
+    NIF: B-26567834 | EORI: ESB26567834
+
+Factura No.: INV-BORDE-12-2026-2118502  Fecha: 15/04/2026
+Documento de transporte: MSCU20262118502
+
+MERCANCIAS:
+  - Conjunto para autoconsumo domestico compuesto por 6 paneles fotovoltaicos, 1 inversor hibrido, 1 bateria de litio de 5kWh y el cableado/estructura de montaje necesarios, envasados y vendidos como un unico "kit de energia solar" con un solo numero de referencia comercial
+    HS: 854140  Cantidad: 65 SET  Precio unit.: 780.0 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_bill_of_lading.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- CASO DE BORDE: FUNDAMENTO DE LA DISPUTA DE CLASIFICACION ---
+Base normativa/tecnica: GRI 3(b) 'surtidos' vs. Nota de Seccion XVI sobre instalaciones completas
+
+Un 'kit' de energia solar combina componentes de partidas claramente distintas: paneles fotovoltaicos (8541), inversor (8504), bateria (8507) y estructura metalica (7308/7610). A diferencia de un 'surtido para la venta al por menor' (GRI 3b, un solo codigo por caracter esencial), cuando los componentes forman una instalacion funcional destinada a montarse como un sistema integrado, la practica aduanera exige evaluar si corresponde declarar cada componente por su propia partida (lo habitual) en vez de forzar un unico codigo — facturar 'todo como panel solar' subdeclara el valor arancelario real de la bateria y el inversor, tipicamente con aranceles distintos entre si.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugeriria de forma naive/erronea el proveedor o transitario en un envio real. El
+objetivo de este caso es verificar si el agente / LUCI llegan a la clasificacion correcta
+razonando desde las Reglas Generales de Interpretacion, no copiando el codigo de la factura.

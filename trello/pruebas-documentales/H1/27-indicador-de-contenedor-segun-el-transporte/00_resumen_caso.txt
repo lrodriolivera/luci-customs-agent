@@ -1,0 +1,41 @@
+CASO H1-27 — Indicador de contenedor según el transporte
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Carretera
+Origen mercancia: Turquia (Izmir)
+Destino: Espana
+Incoterm: EXW Izmir
+Moneda: EUR
+
+VENDEDOR/EXPORTADOR:
+    Ege Makina Ithalat Ihracat Ltd. Sti.
+    Ataturk Cad. No: 88
+    35220 Izmir
+    Turquia
+    Tax ID: 9876543210
+
+COMPRADOR/IMPORTADOR:
+    Riojana de Comercio Exterior S.L.
+    Avda. de Lobete, 8
+    26007 Logroño
+    Espana
+    NIF: B-26567834 | EORI: ESB26567834
+
+Factura No.: INV-H1-27-2026-7105177  Fecha: 06/09/2026
+Documento de transporte: CMR-20267105177
+
+MERCANCIAS:
+  - Baldosas y losas de ceramica esmaltada para pavimento, 60x60 cm
+    HS: 690723  Cantidad: 3600 MTK  Precio unit.: 5.1 EUR
+
+NOTA DEL CASO (que se prueba):
+  Road transport, non-containerized (LTL) — container indicator per box 19 must reflect 'not containerized'.
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_cmr.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.

@@ -1,0 +1,48 @@
+CASO BORDE-14 — Visor de realidad virtual con auriculares integrados: funcion principal combinada (Nota 3 Sec. XVI)
+======================================================================
+
+Operacion: IMPORTACION (H1)
+Modo de transporte: Aereo
+Origen mercancia: Corea del Sur (Busan)
+Destino: Espana
+Incoterm: FCA Busan
+Moneda: USD
+
+VENDEDOR/EXPORTADOR:
+    Busan Marine Parts Corp.
+    45 Haeundae-ro, Haeundae-gu
+    48099 Busan
+    Corea del Sur
+    Tax ID: 605-81-98765
+
+COMPRADOR/IMPORTADOR:
+    Distribuciones del Estrecho S.A.
+    Poligono Tres Culturas, Nave 6
+    52006 Melilla
+    Espana
+    NIF: A-52234567 | EORI: ESA52234567
+
+Factura No.: INV-BORDE-14-2026-1241146  Fecha: 17/06/2026
+Documento de transporte: 020-20261241146
+
+MERCANCIAS:
+  - Visor de realidad virtual con pantallas OLED estereoscopicas integradas, auriculares circumaurales con cancelacion de ruido incorporados de forma no desmontable, y controlador de mano con sensores de movimiento, vendido como conjunto unico "todo incluido"
+    HS: 852872  Cantidad: 620 PCE  Precio unit.: 285.0 USD
+
+DOCUMENTOS GENERADOS EN ESTA CARPETA:
+  - 01_factura_comercial.pdf
+  - 02_packing_list.pdf
+  - 03_air_waybill.pdf
+
+---
+Documentacion de prueba QA generada para LUCI/STRIX AI. No usar como dato real.
+
+--- CASO DE BORDE: FUNDAMENTO DE LA DISPUTA DE CLASIFICACION ---
+Base normativa/tecnica: Nota 3 de la Seccion XVI (funcion principal) vs. GRI 3(b) si se considerase surtido
+
+El visor combina pantalla (8528), auriculares con microfono/altavoz (8518) y mando con sensores (8471/8543). Al estar los auriculares fisicamente INTEGRADOS y no ser vendibles por separado, la Nota 3 de Seccion XVI aplica (maquina combinada, clasificar por funcion principal: la visualizacion) — pero el mando de mano, si es separable, podria analizarse de forma independiente en vez de forzarlo dentro del mismo codigo que el visor.
+
+NOTA: la factura NO indica un codigo TARIC de confianza — el codigo que figura es el
+que sugeriria de forma naive/erronea el proveedor o transitario en un envio real. El
+objetivo de este caso es verificar si el agente / LUCI llegan a la clasificacion correcta
+razonando desde las Reglas Generales de Interpretacion, no copiando el codigo de la factura.
