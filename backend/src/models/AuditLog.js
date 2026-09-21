@@ -4,8 +4,12 @@ const mongoose = require('mongoose');
  * Central audit log for GDPR compliance and traceability.
  *
  * Records WHO did WHAT on WHICH resource, WHEN and from WHERE.
- * Append-only (no updates, no deletes by API). Retention handled by
- * cron (docs/compliance/retention-policy.md).
+ * Append-only (no updates, no deletes by API).
+ *
+ * Retention: 4 years, then purged by a documented DBA procedure — NOT by cron.
+ * A cron job cannot purge this collection: the hooks below reject deleteMany,
+ * including our own. That is deliberate; a log the app can erase is not evidence.
+ * See docs/compliance/retention-policy.md §2.4 for the procedure.
  */
 const AuditLogSchema = new mongoose.Schema({
   tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },

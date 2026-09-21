@@ -1,8 +1,37 @@
 # GDPR Compliance Checklist - LUCI Customs Agent
 
-**Fecha**: 2026-03-11
-**Responsable**: STRIX AI SL (NIF: B22477020)
+**Fecha de elaboración**: 2026-03-11
+**Última verificación**: **2026-08-15**
+**Responsable**: STRIX AI PIONEER SOLUTIONS, S.L. (CIF: B22477020)
 **Aplicacion**: LUCI Customs Agent (aduanas.strixai.es)
+
+---
+
+> ## ⚠️ EL CUERPO DE ESTE CHECKLIST ES DE MARZO 2026 Y ESTÁ DESACTUALIZADO
+>
+> **Las casillas y el "41% de cumplimiento" de la sección Resumen YA NO SON VÁLIDOS.**
+> Varios puntos marcados como MISSING se implementaron después de marzo.
+>
+> Verificación contra el código el **15 de agosto de 2026**:
+>
+> | | Marzo 2026 | **Agosto 2026** |
+> |---|---|---|
+> | Cumple | 8 / 29 | **17 / 29** |
+> | Parcial | 8 / 29 | **6 / 29** |
+> | No cumple | 13 / 29 | **6 / 29** |
+> | **Estimación** | ~41 % | **~69 %** |
+>
+> **Lo que cambió desde marzo** (detalle en la [sección de verificación](#verificación-de-estado--15-de-agosto-de-2026) al final):
+> exportación de datos y borrado de cuenta implementados (`src/routes/gdpr.js`),
+> audit trail formal en producción (`AuditLog` append-only), política de retención
+> documentada (`docs/compliance/retention-policy.md`), y cifrado de PII a nivel de campo
+> disponible en código.
+>
+> 🔴 **Un punto EMPEORÓ respecto a lo que sugiere el texto viejo:** el cifrado de PII está
+> implementado pero **NO está activo en producción** — falta la variable de entorno.
+> Ver la sección de verificación; es la acción más urgente de la lista.
+>
+> **No citar el "41%" ni las casillas del cuerpo sin leer antes la sección de verificación.**
 
 ---
 
@@ -146,6 +175,9 @@
 
 ## Resumen
 
+> ⚠️ **Tabla histórica (marzo 2026).** El estado vigente está en la
+> [sección de verificación](#verificación-de-estado--15-de-agosto-de-2026) al final.
+
 | Categoria | DONE | PARTIAL | MISSING | Total |
 |-----------|------|---------|---------|-------|
 | Data Protection | 2 | 1 | 2 | 5 |
@@ -155,7 +187,7 @@
 | Customs Specific | 1 | 2 | 1 | 4 |
 | **TOTAL** | **8** | **8** | **13** | **29** |
 
-**Compliance estimate: ~41% (8/29 fully compliant, 8/29 partially)**
+**Compliance estimate (marzo 2026): ~41%** — **desfasado. Agosto 2026: ~69%.**
 
 ---
 
@@ -200,3 +232,88 @@
 14. **Training program** - Documentar formacion GDPR para el equipo.
 
 15. **Cross-border transfer documentation** - Documentar mecanismos de transferencia ES-NL (Decisiones de adecuacion UE, SCCs si aplica).
+
+---
+
+# Verificación de estado — 15 de Agosto de 2026
+
+Revisión punto por punto contra el código en producción, cinco meses después de elaborar
+el checklist. Cada línea se comprobó leyendo el fichero indicado.
+
+## Puntos que pasaron a CUMPLIDO desde marzo
+
+| Punto del checklist | Marzo | Agosto | Evidencia |
+|---|---|---|---|
+| Derecho de acceso (Art. 15) | PARTIAL | ✅ **DONE** | `src/routes/gdpr.js:18` — `GET /api/gdpr/export` devuelve perfil, expediciones, declaraciones H7/ENS/PUE, tránsitos y hasta 5.000 entradas de auditoría |
+| Derecho de portabilidad (Art. 20) | MISSING | ✅ **DONE** | Mismo endpoint: salida JSON descargable, formato legible por máquina |
+| Derecho de supresión (Art. 17) | PARTIAL | ✅ **DONE** | `src/routes/gdpr.js:63` — `POST /api/gdpr/delete-account`, autoservicio del titular con confirmación explícita; anonimiza correo y nombre, vacía perfil y permisos, inutiliza la contraseña |
+| Anonimización / seudonimización | MISSING | ✅ **DONE** | Misma ruta: sustituye por `deleted-<id>@anonymized.invalid`, conserva el documento aduanero desvinculado de la identidad |
+| Audit trail formal | PARTIAL | ✅ **DONE** | `src/models/AuditLog.js` — append-only con bloqueo activo de `updateOne`/`updateMany`/`findOneAndUpdate`/`deleteMany`. Middleware global en `src/app.js:224`. Registra usuario, acción, recurso, IP, agente, cambios y marca de tiempo |
+| Política de retención de datos | MISSING | ✅ **DONE** | `docs/compliance/retention-policy.md` (creado 15-ago-2026). 5 índices TTL activos en modelos: flujos 90 d, búsquedas TARIC 12 m, caché IA 30 d, claves de API y supresiones de correo por caducidad |
+| Retención de declaraciones (3-7 años) | PARTIAL | ✅ **DONE** | Documentado en la política §2.1: 4 años (mínimo de 3 del CAU art. 51, elevado por prescripción fiscal española, Ley 58/2003 art. 66) |
+
+## Puntos que siguen abiertos
+
+| Punto | Estado | Nota |
+|---|---|---|
+| Cifrado en reposo | 🔴 **Implementado pero INACTIVO** | Ver abajo — es la acción más urgente |
+| Cookie consent granular | 🟡 PARTIAL | `frontend/src/components/Legal/CookieBanner.jsx` sigue con un único botón "Aceptar" (41 líneas, sin categorías). Sin opción de rechazar cookies no esenciales |
+| DPA para clientes | ❌ MISSING | Sin plantilla de acuerdo de tratamiento |
+| ROPA (Art. 30) | ❌ MISSING | Sin registro formal de actividades de tratamiento |
+| Procedimiento de brecha (72 h) | ❌ MISSING | Sin documento interno. El documento comercial ya compromete aviso al cliente en 24 h: conviene formalizarlo |
+| DPIA | ❌ MISSING | Recomendable por el uso de IA sobre datos de cliente |
+| DPO designado | ❌ MISSING | No obligatorio por tamaño, pero recomendable |
+| Cifrado de backups | 🟡 PARTIAL | Copia remota en S3 con cifrado AES256 del bucket; la copia local de `backup-mongo.sh` no se cifra en disco |
+
+## 🔴 Hallazgo de esta verificación: el cifrado de PII no está activo
+
+El código de cifrado existe y es correcto (`src/utils/piiCrypto.js`, AES-256-GCM con
+versionado de clave), pero **está desactivado en producción**:
+
+```
+docker exec luci-backend printenv | grep PII_ENCRYPTION_KEY   → sin resultado
+piiCrypto.enabled()                                           → false
+```
+
+`getKey()` devuelve `null` cuando falta `PII_ENCRYPTION_KEY`, y los llamantes hacen
+pass-through: **el NIF y el EORI se guardan en claro**. Comprobado en la base de datos: el
+único tenant existente tiene ambos campos sin el prefijo `v1:`, es decir, sin cifrar.
+
+El alcance real hoy es mínimo —un solo tenant, de pruebas— pero la afirmación "ciframos los
+identificadores fiscales" no se sostiene mientras la variable no esté definida.
+
+**Cómo activarlo:**
+
+1. Definir `PII_ENCRYPTION_KEY` (mínimo 32 caracteres) y `PII_HASH_KEY` en el entorno del
+   backend, fuera del repositorio.
+2. Ejecutar la migración, que ya existe y es idempotente:
+   `node src/scripts/encryptPii.js` (requiere además `ENCRYPT_PII=true`).
+3. Verificar que los campos pasan a llevar el prefijo `v1:`.
+
+⚠️ La clave debe ser la misma en todas las instancias y **no puede perderse**: sin ella los
+datos cifrados son irrecuperables. Guardarla donde se custodian el resto de secretos.
+
+## Estimación revisada
+
+| | Marzo 2026 | Agosto 2026 |
+|---|---|---|
+| Cumple | 8 | **17** |
+| Parcial | 8 | **6** |
+| No cumple | 13 | **6** |
+| **Estimación** | ~41 % | **~69 %** |
+
+## Prioridad sugerida
+
+1. **Activar el cifrado de PII** — es lo único de esta lista que contradice algo que ya
+   afirmamos por escrito ante clientes.
+2. **Consentimiento granular de cookies** — exigido por ePrivacy y LSSI-CE; visible desde
+   fuera y fácil de detectar en una auditoría.
+3. **ROPA y procedimiento de brecha** — documentales, sin desarrollo, y son lo primero que
+   pide un cliente corporativo en su cuestionario de proveedor.
+
+## Nota de método
+
+Este checklist se citó durante cinco meses como estado vigente, transmitiendo un 41 % de
+cumplimiento cuando la cifra real estaba cerca del 69 %. Un checklist sin fecha de
+verificación envejece hacia lo pesimista y perjudica a quien lo escribió. Antes de citar
+cualquier porcentaje de este documento, comprobar contra el código.

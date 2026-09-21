@@ -44,6 +44,9 @@ uploads/
 *.jpeg
 *.png
 
+# Volúmenes montados de Docker (datos vivos, no código — usar mongodump para migrar/respaldar)
+data/
+
 # Test coverage
 coverage/
 .nyc_output/
