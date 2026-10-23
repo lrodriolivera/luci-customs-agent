@@ -24,7 +24,7 @@ No es un chatbot. Es una plataforma completa que ya cubre declaraciones H1, H7, 
 
 Te propongo una demo de 15 minutos donde te muestro como funciona con un caso real. Sin compromiso.
 
-Puedes ver la plataforma en: https://aduanas.strixai.es/landing
+Puedes ver la plataforma en: https://aduanas.strixai.ai/landing
 
 Que dia te vendria bien esta semana?
 
@@ -57,7 +57,7 @@ Varias empresas del sector ya lo estan probando. El plan gratuito incluye 10 cla
 
 Te interesa que te haga una demo rapida? Son 15 minutos.
 
-https://aduanas.strixai.es/landing
+https://aduanas.strixai.ai/landing
 
 Un saludo,
 [TU NOMBRE]
@@ -104,7 +104,7 @@ En Strix AI hemos desarrollado LUCI, una herramienta con IA que:
 
 Es como tener un agente de aduanas experto disponible 24/7 en tu navegador.
 
-Puedes probarlo gratis: https://aduanas.strixai.es/landing
+Puedes probarlo gratis: https://aduanas.strixai.ai/landing
 
 Si quieres que lo veamos juntos con uno de tus productos, escribeme y lo hacemos en 15 minutos.
 

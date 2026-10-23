@@ -24,7 +24,7 @@ No es teoria. Ya esta en produccion.
 98 capitulos TARIC | 195 paises | Clasificacion IA en tiempo real
 
 Si trabajas en aduanas, logistica o comercio exterior, te invito a probarlo gratis:
-https://aduanas.strixai.es/landing
+https://aduanas.strixai.ai/landing
 
 #Aduanas #ComercioExterior #InteligenciaArtificial #TARIC #Logistica #FreightForwarding #ImportExport
 
@@ -74,7 +74,7 @@ En LUCI hemos automatizado todo esto. Introduces el codigo TARIC y el pais de or
 
 El conocimiento aduanero no deberia ser un cuello de botella. Deberia ser una ventaja competitiva.
 
-https://aduanas.strixai.es/landing
+https://aduanas.strixai.ai/landing
 
 #Aranceles #Preferencias #EUR1 #SPG #ComercioInternacional
 
@@ -145,7 +145,7 @@ En Strix AI estamos construyendo las herramientas para que los profesionales de 
 
 LUCI no reemplaza al agente de aduanas. Lo convierte en un agente de aduanas con superpoderes.
 
-https://aduanas.strixai.es/landing
+https://aduanas.strixai.ai/landing
 
 #FuturoAduanas #TransformacionDigital #IA #AgentesDeAduanas
 
@@ -228,7 +228,7 @@ El error mas comun: aplicar el 21% a frutas y verduras frescas (deberia ser 10%)
 
 En LUCI, el IVA correcto se calcula automaticamente segun el capitulo TARIC. Sin errores.
 
-https://aduanas.strixai.es/landing
+https://aduanas.strixai.ai/landing
 
 #IVA #Aranceles #Importacion #Fiscalidad
 

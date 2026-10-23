@@ -59,11 +59,11 @@
 
 | | |
 |---|---|
-| **URL plataforma** | `https://aduanas.strixai.es` |
+| **URL plataforma** | `https://aduanas.strixai.ai` |
 | **Cliente** | STRIX AI SL (NIF B22477020 — EORI ESB22477020) |
 | **AEAT entorno actual** | PRE (pre-producción) — `prewww1.aeat.es` |
 | **Idiomas disponibles** | Español, Catalán, Valencià, English, Français, Italiano, Português |
-| **Soporte** | `soporte@strixai.es` |
+| **Soporte** | `soporte@strixai.ai` |
 
 > **Aviso:** estás en entorno de **pre-producción AEAT**. Las declaraciones que envíes son técnicamente reales (firma electrónica con certificado FNMT, mTLS, MRN auténtico) pero **no producen liberación aduanera real de mercancía** ni cobros — sirven como ensayo de la integración. Cuando STRIX migre a producción, el flujo será idéntico.
 

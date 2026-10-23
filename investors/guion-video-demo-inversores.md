@@ -8,7 +8,7 @@
 
 - Navegador Chrome limpio, sin extensiones visibles
 - Resolucion 1920x1080
-- Logueado en aduanas.strixai.es (test@luci.es / test123)
+- Logueado en aduanas.strixai.ai (test@luci.es / test123)
 - Tener preparada una busqueda TARIC y una declaracion H1
 - Herramienta: OBS Studio (gratis) o Loom
 - Musica de fondo: "corporate technology" de YouTube Audio Library (volumen al 15%)
@@ -143,7 +143,7 @@ NOTA: Cortar el tiempo de login en edicion, ir directo al dashboard
 LUCI
 Agente Aduanero con IA
 
-aduanas.strixai.es
+aduanas.strixai.ai
 
 Pre-Seed Round: 150-300K EUR
 

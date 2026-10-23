@@ -56,7 +56,7 @@ LUCI es una plataforma SaaS de gestion aduanera con IA que automatiza clasificac
 | Demo en vivo / Video demo | Guion existe, grabar | Alta |
 | One-pager | **Incluido abajo** | Alta |
 | Data Room (due diligence) | Estructura abajo | Media |
-| Producto funcionando | aduanas.strixai.es | Ya listo |
+| Producto funcionando | aduanas.strixai.ai | Ya listo |
 
 ### 3.2 Data Room (para due diligence)
 
@@ -175,7 +175,7 @@ Adjunto nuestro one-pager. Encantado de enviar el deck completo.
 
 Un saludo,
 [NOMBRE]
-STRIX AI SL | strixai.es
+STRIX AI SL | strixai.ai
 ```
 
 ---

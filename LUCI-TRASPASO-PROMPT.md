@@ -11,7 +11,7 @@ Necesito que revises, completes y arregles lo que falte en el despliegue de **LU
 
 ## Contexto: por qué se migró (y con prisa)
 
-LUCI corría en un EC2 de AWS (`aduanas.strixai.es`, eu-west-1). La **cuenta AWS 367509577730 fue suspendida por impago el 2026-07-15** — credenciales IAM muertas (`InvalidAccessKeyId`), sin consola ni CLI. Hubo que migrar LUCI **desde el código local** (`/home/rypcloud/Documentos/Logistic/POC/luci-customs-agent/`, actualizado) al homelab (HP ProBook, Docker en `/srv/homelab/luci/`), sustituyendo todas las dependencias de esa cuenta AWS. Se priorizó dejarlo **funcionando** rápido; por eso puede haber cosas a medias o sin validar a fondo.
+LUCI corría en un EC2 de AWS (`aduanas.strixai.ai`, eu-west-1). La **cuenta AWS 367509577730 fue suspendida por impago el 2026-07-15** — credenciales IAM muertas (`InvalidAccessKeyId`), sin consola ni CLI. Hubo que migrar LUCI **desde el código local** (`/home/rypcloud/Documentos/Logistic/POC/luci-customs-agent/`, actualizado) al homelab (HP ProBook, Docker en `/srv/homelab/luci/`), sustituyendo todas las dependencias de esa cuenta AWS. Se priorizó dejarlo **funcionando** rápido; por eso puede haber cosas a medias o sin validar a fondo.
 
 ## Qué se hizo y por qué (decisiones ya tomadas — respétalas salvo que encuentres algo roto)
 
@@ -20,7 +20,7 @@ LUCI corría en un EC2 de AWS (`aduanas.strixai.es`, eu-west-1). La **cuenta AWS
 - `luci-backend` (Express, :5001) — build desde `backend/Dockerfile` (node:20-slim)
 - `luci-ai` (FastAPI, :8003) — build desde `ai-service/Dockerfile`
 - `luci-frontend` (React/Vite → nginx) — build desde `frontend/Dockerfile`, proxea `/api` al backend
-- Publicado en internet vía **Cloudflare Tunnel**: `aduanas.strixai.es` → `http://luci-frontend:80` (Path vacío). NO se exponen puertos al LAN.
+- Publicado en internet vía **Cloudflare Tunnel**: `aduanas.strixai.ai` → `http://luci-frontend:80` (Path vacío). NO se exponen puertos al LAN.
 
 **Sustituciones AWS aplicadas** (la cuenta original está caída):
 - **IA — Bedrock con cuenta UMMIA 405894862059** (NO la cuenta vieja, cuya key estaba además en cuarentena). Credenciales en `backend/.env` y `ai-service/.env` como `BEDROCK_ACCESS_KEY_ID` / `BEDROCK_SECRET_ACCESS_KEY` (origen: `/home/rypcloud/Documentos/Rene/consultoria-ummia/credenciales aws_ummia/luis_rodriguez_accessKeys.csv`). Región us-east-1. Verificado con un `ConverseCommand` real (respondió OK).
@@ -38,11 +38,11 @@ LUCI corría en un EC2 de AWS (`aduanas.strixai.es`, eu-west-1). La **cuenta AWS
 **Datos cargados** (BD nueva, ejecutados dentro de `luci-backend`):
 - `node src/scripts/createIndexes.js` → 29 índices Mongo.
 - `node src/scripts/seedDemoData.js` → datos demo (25 expedientes, 35 H7, requerimientos, inspecciones, etc.).
-- `node src/scripts/createSuperAdmin.js` → usuario **`tester@strixai.es` / `Tester2026!`** (admin, 9/9 permisos, Enterprise). Login verificado por API. ⚠️ El usuario `test@luci.es`/`test123` que menciona el MEMORY.md original NO existe en esta BD — ningún seed actual lo crea.
+- `node src/scripts/createSuperAdmin.js` → usuario **`tester@strixai.ai` / `Tester2026!`** (admin, 9/9 permisos, Enterprise). Login verificado por API. ⚠️ El usuario `test@luci.es`/`test123` que menciona el MEMORY.md original NO existe en esta BD — ningún seed actual lo crea.
 
 ## Estado verificado al cierre de la migración
 - 5/5 contenedores `Up`, `/health` = OK (mongo+redis connected), ai-service `/health` 200.
-- Bedrock OK (converse real). Login OK por el túnel (`https://aduanas.strixai.es/api/auth/login`).
+- Bedrock OK (converse real). Login OK por el túnel (`https://aduanas.strixai.ai/api/auth/login`).
 - Frontend sirve la SPA y proxea `/api` (200/200 end-to-end).
 
 ## Lo que queda pendiente / puede estar roto — REVISA Y ARREGLA

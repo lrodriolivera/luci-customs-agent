@@ -168,5 +168,5 @@ Desarrollo e implantacion de un modulo de gestion automatizada de notificaciones
 
 **Contacto**:
 STRIX AI SL | NIF: B22477020
-Jenifer Romero | `despacho@strixai.es`
-`https://aduanas.strixai.es`
+Jenifer Romero | `despacho@strixai.ai`
+`https://aduanas.strixai.ai`

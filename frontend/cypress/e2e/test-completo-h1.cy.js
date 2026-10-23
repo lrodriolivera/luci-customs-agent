@@ -5,18 +5,18 @@
 // rellenar importador > mercancia > transporte > crear > generar H1 XML >
 // previsualizar > enviar a AEAT > verificar MRN/canal > dashboard canales
 //
-// Usuario: luis.rodriguez@strixai.es (superadmin)
+// Usuario: luis.rodriguez@strixai.ai (superadmin)
 // Datos de prueba: Cafe verde Colombia, TARIC 0901110000, 5000 kg, 15000 EUR
 // =============================================================================
 
 describe('PRUEBA COMPLETA H1 - Importacion Completa', () => {
 
   before(() => {
-    cy.login('luis.rodriguez@strixai.es', 'test123')
+    cy.login('luis.rodriguez@strixai.ai', 'test123')
   })
 
   beforeEach(() => {
-    cy.login('luis.rodriguez@strixai.es', 'test123')
+    cy.login('luis.rodriguez@strixai.ai', 'test123')
   })
 
   // -------------------------------------------------------------------------
@@ -141,10 +141,10 @@ describe('PRUEBA COMPLETA H1 - Importacion Completa', () => {
     cy.get('body').then($body => {
       if ($body.find('input[type="email"]').length > 0) {
         cy.get('input[type="email"]').first()
-          .clear().type('prueba-h1@strixai.es', { force: true })
+          .clear().type('prueba-h1@strixai.ai', { force: true })
       } else if ($body.text().includes('Email')) {
         cy.contains('Email').parent().find('input').first()
-          .clear().type('prueba-h1@strixai.es', { force: true })
+          .clear().type('prueba-h1@strixai.ai', { force: true })
       }
     })
 
@@ -308,7 +308,7 @@ describe('PRUEBA COMPLETA H1 - Importacion Completa', () => {
     cy.get('body').then($body => {
       if ($body.text().includes('Email')) {
         cy.contains('Email').parent().find('input').first()
-          .clear().type('cafe-h1@strixai.es', { force: true })
+          .clear().type('cafe-h1@strixai.ai', { force: true })
       }
     })
 

@@ -5,18 +5,18 @@
 // login > dashboard > crear expedicion importacion > rellenar todos los campos >
 // generar H1 XML > enviar a AEAT PRE > verificar MRN/canal > dashboard canales
 //
-// Usuario: luis.rodriguez@strixai.es (superadmin)
+// Usuario: luis.rodriguez@strixai.ai (superadmin)
 // Datos: Ordenadores portatiles Lenovo desde China, TARIC 8471300000, 150kg, 5000 EUR
 // =============================================================================
 
 describe('H1 REAL AEAT PRE - Importacion Completa', () => {
 
   before(() => {
-    cy.login('luis.rodriguez@strixai.es', 'test123')
+    cy.login('luis.rodriguez@strixai.ai', 'test123')
   })
 
   beforeEach(() => {
-    cy.login('luis.rodriguez@strixai.es', 'test123')
+    cy.login('luis.rodriguez@strixai.ai', 'test123')
   })
 
   // Auto-accept all confirmation dialogs
@@ -164,7 +164,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
     cy.get('body').then($body => {
       const emailInputs = $body.find('input[type="email"]')
       if (emailInputs.length > 0) {
-        cy.wrap(emailInputs.first()).clear({ force: true }).type('prueba-h1-real@strixai.es', { force: true })
+        cy.wrap(emailInputs.first()).clear({ force: true }).type('prueba-h1-real@strixai.ai', { force: true })
       }
     })
     cy.wait(4000)
@@ -234,7 +234,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
     })
     cy.wait(3000)
     // Email
-    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-h1-real@strixai.es', { force: true })
+    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-h1-real@strixai.ai', { force: true })
     cy.wait(3000)
     // Exporter country (required)
     cy.get('body').then($body => {
@@ -348,7 +348,7 @@ describe('H1 REAL AEAT PRE - Importacion Completa', () => {
       const nifInput = $body.find('input[pattern="[A-Z0-9]{8,10}"]')
       if (nifInput.length > 0) cy.wrap(nifInput.first()).clear({ force: true }).type('B99887766', { force: true })
     })
-    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-h1-real@strixai.es', { force: true })
+    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-h1-real@strixai.ai', { force: true })
     // EORI
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')

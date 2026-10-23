@@ -32,7 +32,7 @@
     <C14DeclaranteRazonSocial>STRIX AI SL</C14DeclaranteRazonSocial>
     <C14DeclaranteTipoAutorizaDespacho>G</C14DeclaranteTipoAutorizaDespacho>
   </C14Declarante>
-  <EmailNotificaDespacho>despacho@strixai.es</EmailNotificaDespacho>
+  <EmailNotificaDespacho>despacho@strixai.ai</EmailNotificaDespacho>
   <C15aPaisExpedicion>CN</C15aPaisExpedicion>
   <C17aPaisDestino>ES</C17aPaisDestino>
   <C17bProvinciaIslaDestino>50</C17bProvinciaIslaDestino>

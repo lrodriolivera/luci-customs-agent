@@ -7,12 +7,12 @@
 ## Company
 - **Empresa**: STRIX AI SL (NIF: B22477020, EORI: ESB22477020)
 - **Representante**: Jenifer Romero (NIF: 70073780W, CEO no tecnica)
-- **Tech Lead**: Luis Rodriguez (luis.rodriguez@strixai.es)
-- **Comercial**: Rodrigo Godoy (rodrigo.godoy@strixai.es)
+- **Tech Lead**: Luis Rodriguez (luis.rodriguez@strixai.ai)
+- **Comercial**: Rodrigo Godoy (rodrigo.godoy@strixai.ai)
 
 ## Git — Forgejo, NO GitHub
-- **Remote**: `https://git.strixai.es/strixai/luci-customs-agent.git`, rama `main`
-- SSH alternativo: `ssh://git@git.strixai.es:2222/strixai/luci-customs-agent.git`
+- **Remote**: `https://git.strixai.ai/strixai/luci-customs-agent.git`, rama `main`
+- SSH alternativo: `ssh://git@git.strixai.ai:2222/strixai/luci-customs-agent.git`
 - Verificar siempre `git remote -v` antes de push — un remote a GitHub es un error
 
 ## Deploy — HOMELAB (Docker), ya NO AWS EC2
@@ -26,7 +26,7 @@
   `backend/.env`, `ai-service/.env`, `certs/strixai_fnmt.p12`, `data/` (volumenes Mongo/uploads)
 - Backup Mongo: cron diario 03:30 → `/srv/backups/luci/`, retencion 30 dias (solo Mongo, no `.env`/certs)
 - Homelab sin salida directa a internet → Surfshark VPN necesaria (MTU 1280 rompe TLS de contenedores); salida siempre por WiFi
-- **URL**: `https://aduanas.strixai.es` | admin `luis.rodriguez@strixai.es`/`Juancho_1301`, `tester@strixai.es`/`Tester2026!`
+- **URL**: `https://aduanas.strixai.ai` | admin `luis.rodriguez@strixai.ai`/`Juancho_1301`, `tester@strixai.ai`/`Tester2026!`
 - Auth: **Cognito muerto** (caido en incidente AWS 15/Jul–6/Ago, no restaurado) → login por JWT legacy
 
 ## Project Structure
@@ -119,7 +119,7 @@ que la fuente real no tiene.
 
 ## Otros proyectos relacionados (mismo ecosistema STRIX AI)
 - **300dec/Correos ADU002** ⚠️ PAUSADO — EventBridge disabled, 8 Lambdas sin comprobar, repo sin remote
-- **AXEL** ⚠️ EC2 stopped — `axel.strixai.es` inaccesible
+- **AXEL** ⚠️ EC2 stopped — `axel.strixai.ai` inaccesible
 - Otros repos Forgejo: `strixbid`, `strixai-landing`, `pocstocklogistic`, `strix-bucanera`
 
 ## Investors

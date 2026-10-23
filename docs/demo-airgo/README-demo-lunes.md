@@ -2,7 +2,7 @@
 
 ## Credenciales
 
-### LUCI (Aduanas) - https://aduanas.strixai.es
+### LUCI (Aduanas) - https://aduanas.strixai.ai
 | Email | Nombre | Rol | Password |
 |-------|--------|-----|----------|
 | bvillanueva@airgoexpress.com | Borja Villanueva | admin | AirgoDemo2026 |
@@ -13,7 +13,7 @@
 
 **Tenant**: AIRGO EXPRESS (B84285923, ESB84285923)
 
-### AXEL (Cotizaciones Transporte) - https://axel.strixai.es
+### AXEL (Cotizaciones Transporte) - https://axel.strixai.ai
 | Email | Nombre | Password |
 |-------|--------|----------|
 | emendez@airgoexpress.com | Eduardo Mendez | AirgoAxel2026 |

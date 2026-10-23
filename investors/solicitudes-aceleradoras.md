@@ -33,7 +33,7 @@ Somos la unica plataforma que combina IA generativa + envio real validado a la A
 SaaS B2B por suscripcion. Professional: 149 EUR/mes (50 declaraciones). Business: 749 EUR/mes (200 declaraciones). Enterprise: desde 799 EUR/mes (ilimitadas). Margen bruto del 93%. Coste por usuario: ~10 EUR/mes. Break-even con 1 cliente.
 
 **Traccion**:
-- Producto completo desplegado en produccion (aduanas.strixai.es)
+- Producto completo desplegado en produccion (aduanas.strixai.ai)
 - 4/6 builders AEAT aceptados con MRN reales (Marzo 2026)
 - 47 rondas de testing con la Agencia Tributaria
 - POC adicional completada para Correos de Espana (300 declaraciones/mes)
@@ -88,7 +88,7 @@ Spain's 15,000 import/export companies manage customs with 20-year-old legacy so
 B2B SaaS. Plans from 149 EUR/month (93% gross margin). Unit economics: LTV/CAC 108x, CAC ~20 EUR, payback < 1 month.
 
 **Traction**:
-- Production platform deployed (aduanas.strixai.es)
+- Production platform deployed (aduanas.strixai.ai)
 - 4/6 AEAT declaration builders accepted with real MRNs
 - 47 testing rounds with Spanish Tax Agency
 - Additional POC completed for Correos de Espana (postal operator)
@@ -125,7 +125,7 @@ Only platform combining generative AI + validated real AEAT submission + complet
 LUCI uses generative AI to classify tariff codes, calculate duties for 195 countries, generate validated XML declarations, and submit them directly to the Spanish Tax Agency electronically. We've achieved acceptance for 4 of 6 declaration types in AEAT testing with real reference numbers. Our platform reduces declaration time from 30 minutes to 2 minutes at 2.98 EUR per operation vs 80-200 EUR manually.
 
 **Traction**:
-- Live product: aduanas.strixai.es
+- Live product: aduanas.strixai.ai
 - 4/6 AEAT declaration types accepted (H1, H7, AES, ENS)
 - 47 rounds of testing with Spanish Tax Agency
 - POC for Correos de Espana (Spain's postal operator, 300 declarations/month)

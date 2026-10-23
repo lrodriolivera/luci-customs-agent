@@ -1,7 +1,7 @@
 # Evidencia Correccion Aranceles - Test End-to-End
 
 **Fecha:** 2026-03-23 11:06 UTC-3
-**Entorno:** Produccion (https://aduanas.strixai.es)
+**Entorno:** Produccion (https://aduanas.strixai.ai)
 **Tester:** API test automatizado contra produccion AWS
 
 ---

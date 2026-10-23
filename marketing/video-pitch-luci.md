@@ -1,5 +1,5 @@
 # Video Pitch LUCI — Material Completo
-**STRIX AI · aduanas.strixai.es · Junio 2026**
+**STRIX AI · aduanas.strixai.ai · Junio 2026**
 **Duración objetivo: 75-90 segundos**
 
 ---
@@ -37,7 +37,7 @@
 ### ESCENA 5 — Llamada a la acción (1:10–1:25)
 **[Voz en off, tono de cierre]**
 
-"1 agente con LUCI hace el trabajo de 3 agentes tradicionales. Si gestionas operaciones aduaneras o quieres invertir en el futuro del comercio exterior europeo, hablemos. LUCI — aduanas.strixai.es"
+"1 agente con LUCI hace el trabajo de 3 agentes tradicionales. Si gestionas operaciones aduaneras o quieres invertir en el futuro del comercio exterior europeo, hablemos. LUCI — aduanas.strixai.ai"
 
 ---
 
@@ -56,7 +56,7 @@
 | 9 | 0:55–1:05 | **10.640** agencias alcanzables UE · SOM 1.064 | Mapa UE con expansión desde España | "El mercado alcanzable en la UE..." |
 | 10 | 1:05–1:10 | **450K€** Año 1 · **7,5M€** Año 5 · **16x** ROI | Gráfico de barras creciendo | "Escenario base: 450.000 euros..." |
 | 11 | 1:10–1:20 | **1 agente LUCI = 3 agentes tradicionales** | Comparativa visual 1 vs 3 figuras | "1 agente con LUCI hace el trabajo..." |
-| 12 | 1:20–1:25 | **aduanas.strixai.es** · STRIX AI | Pantalla final con URL y logo | "LUCI — aduanas.strixai.es" |
+| 12 | 1:20–1:25 | **aduanas.strixai.ai** · STRIX AI | Pantalla final con URL y logo | "LUCI — aduanas.strixai.ai" |
 
 ---
 
@@ -112,7 +112,7 @@ INSTRUCCIONES DE ESTILO:
 - Tono: profesional, directo, con autoridad — no comercial ni exagerado
 - Voz: española, clara, pausada en las cifras clave
 - Fondo: corporativo oscuro (azul marino o negro) con texto blanco/naranja
-- Mostrar URL final: aduanas.strixai.es
+- Mostrar URL final: aduanas.strixai.ai
 - Añadir logo STRIX AI en esquina superior derecha durante todo el video
 ```
 
@@ -127,10 +127,10 @@ Si el campo pide una URL (no un archivo), graba el video con HeyGen y súbelo a:
 
 Si el campo acepta texto descriptivo, usa:
 
-> Video pitch de 90 segundos disponible en aduanas.strixai.es/landing — 
+> Video pitch de 90 segundos disponible en aduanas.strixai.ai/landing — 
 > presenta el problema, la solución LUCI, tracción AEAT real y proyección financiera 
 > del escenario base (450K€ año 1 → 7,5M€ año 5, 16x ROI inversor).
 
 ---
 
-*STRIX AI Pioneer Solutions SL · luis.rodriguez@strixai.es · +34 614 814 140*
+*STRIX AI Pioneer Solutions SL · luis.rodriguez@strixai.ai · +34 614 814 140*

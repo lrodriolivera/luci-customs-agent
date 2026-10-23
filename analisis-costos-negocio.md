@@ -34,7 +34,7 @@ La plataforma usa 23 llamadas con Opus y 16 con Sonnet en el codigo. Estimacion 
 
 | Concepto | Costo/mes |
 |----------|-----------|
-| Dominio strixai.es | ~1 EUR (12 EUR/ano) |
+| Dominio strixai.ai | ~1 EUR (12 EUR/ano) |
 | SSL Let's Encrypt | 0 EUR (gratuito) |
 | MongoDB (local en EC2) | 0 EUR (incluido) |
 | Stripe comision (2.9% + 0.25 EUR) | Variable por transaccion |

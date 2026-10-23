@@ -62,4 +62,4 @@ Un cordial saludo,
 Jenifer Romero
 STRIX AI SL
 NIF: B22477020 / EORI: ESB22477020
-despacho@strixai.es
+despacho@strixai.ai

@@ -6,7 +6,7 @@
 // documento transporte > generar XML > previsualizar > enviar a AEAT >
 // verificar MRN > verificar en lista H7
 //
-// Usuario: luis.rodriguez@strixai.es (superadmin)
+// Usuario: luis.rodriguez@strixai.ai (superadmin)
 // Datos de prueba: Camisetas algodon China, HS 610910, 50 kg, 120 EUR
 // Garantia: 26ESAGL2800000054 (datos Jose Antonio AEAT PRE)
 // =============================================================================
@@ -14,11 +14,11 @@
 describe('PRUEBA COMPLETA H7 - Declaracion Simplificada Importacion', () => {
 
   before(() => {
-    cy.login('luis.rodriguez@strixai.es', 'test123')
+    cy.login('luis.rodriguez@strixai.ai', 'test123')
   })
 
   beforeEach(() => {
-    cy.login('luis.rodriguez@strixai.es', 'test123')
+    cy.login('luis.rodriguez@strixai.ai', 'test123')
   })
 
   // -------------------------------------------------------------------------

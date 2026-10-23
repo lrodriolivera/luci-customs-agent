@@ -439,7 +439,7 @@ describe('BillingDashboard', () => {
       await user.click(enterpriseBtn);
 
       expect(window.open).toHaveBeenCalledWith(
-        'mailto:luci@strixai.es?subject=Plan Enterprise LUCI',
+        'mailto:luci@strixai.ai?subject=Plan Enterprise LUCI',
         '_blank'
       );
     });

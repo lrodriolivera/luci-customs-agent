@@ -6,24 +6,24 @@
 
 ### Remote principal
 ```
-origin: https://git.strixai.es/strixai/luci-customs-agent.git
+origin: https://git.strixai.ai/strixai/luci-customs-agent.git
 ```
 Credenciales de `strixadmin` en el CLAUDE.md global del usuario (no se versionan aquí).
 
 ### Configuración (si el remote sigue apuntando a GitHub)
 ```bash
-git remote set-url origin "https://git.strixai.es/strixai/luci-customs-agent.git"
+git remote set-url origin "https://git.strixai.ai/strixai/luci-customs-agent.git"
 ```
 
 ### SSH alternativo
 ```bash
-git remote set-url origin ssh://git@git.strixai.es:2222/strixai/luci-customs-agent.git
+git remote set-url origin ssh://git@git.strixai.ai:2222/strixai/luci-customs-agent.git
 ```
 
 ### Reglas de push
 - **Rama principal:** `main`
-- **Siempre hacer push a Forgejo** (git.strixai.es), NUNCA a GitHub
-- Antes de cualquier push, verificar con `git remote -v` que apunta a git.strixai.es
+- **Siempre hacer push a Forgejo** (git.strixai.ai), NUNCA a GitHub
+- Antes de cualquier push, verificar con `git remote -v` que apunta a git.strixai.ai
 - Excluir siempre: `.env`, credenciales, capturas de pantalla, archivos de claves AWS
 
 ## Proyecto
@@ -34,8 +34,8 @@ LUCI es un agente de IA para clasificación aduanera automatizada (código TARIC
 
 | Repo | URL Forgejo |
 |---|---|
-| 300dec-correos | https://git.strixai.es/strixai/300dec-correos.git |
-| strixbid | https://git.strixai.es/strixai/strixbid.git |
-| strixai-landing | https://git.strixai.es/strixai/strixai-landing.git |
-| pocstocklogistic | https://git.strixai.es/strixai/pocstocklogistic.git |
-| strix-bucanera | https://git.strixai.es/strixai/strix-bucanera.git |
+| 300dec-correos | https://git.strixai.ai/strixai/300dec-correos.git |
+| strixbid | https://git.strixai.ai/strixai/strixbid.git |
+| strixai-landing | https://git.strixai.ai/strixai/strixai-landing.git |
+| pocstocklogistic | https://git.strixai.ai/strixai/pocstocklogistic.git |
+| strix-bucanera | https://git.strixai.ai/strixai/strix-bucanera.git |

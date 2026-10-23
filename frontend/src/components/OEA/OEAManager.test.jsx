@@ -387,7 +387,7 @@ describe('<OEAManager />', () => {
     fireEvent.change(screen.getByPlaceholderText('Madrid'), { target: { value: 'Madrid' } })
     fireEvent.change(screen.getByPlaceholderText('28001'), { target: { value: '28013' } })
     fireEvent.change(screen.getByPlaceholderText('Juan Perez'), { target: { value: 'Luis Rodriguez' } })
-    fireEvent.change(screen.getByPlaceholderText('juan@empresa.com'), { target: { value: 'luis@strixai.es' } })
+    fireEvent.change(screen.getByPlaceholderText('juan@empresa.com'), { target: { value: 'luis@strixai.ai' } })
     fireEvent.change(screen.getByPlaceholderText('+34 912345678'), { target: { value: '+34600123456' } })
 
     const btnCrear = screen.getByText('Crear Solicitud')
@@ -408,7 +408,7 @@ describe('<OEAManager />', () => {
           },
           contact: {
             name: 'Luis Rodriguez',
-            email: 'luis@strixai.es',
+            email: 'luis@strixai.ai',
             phone: '+34600123456'
           }
         },

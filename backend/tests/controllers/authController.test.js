@@ -28,7 +28,7 @@ const emailService = require('../../src/services/emailService');
 const authController = require('../../src/controllers/authController');
 
 // Usuario autenticado simulado, para las rutas que van detras del middleware.
-const AUTH_USER = { _id: 'u1', email: 'tester@strixai.es' };
+const AUTH_USER = { _id: 'u1', email: 'tester@strixai.ai' };
 
 const app = express();
 app.use(express.json());
@@ -41,12 +41,12 @@ app.post('/api/auth/change-password', (req, _res, next) => { req.user = AUTH_USE
 function mockUser(overrides = {}) {
   return {
     _id: 'u1',
-    email: 'tester@strixai.es',
+    email: 'tester@strixai.ai',
     name: 'Tester',
     save: jest.fn().mockResolvedValue(true),
     comparePassword: jest.fn().mockResolvedValue(true),
     generateAuthToken: jest.fn().mockReturnValue('jwt-token'),
-    toPublicJSON: jest.fn().mockReturnValue({ id: 'u1', email: 'tester@strixai.es' }),
+    toPublicJSON: jest.fn().mockReturnValue({ id: 'u1', email: 'tester@strixai.ai' }),
     ...overrides
   };
 }
@@ -60,7 +60,7 @@ describe('authController', () => {
       User.findByCredentials.mockResolvedValue(user);
 
       const res = await request(app).post('/api/auth/login')
-        .send({ email: 'tester@strixai.es', password: 'Tester2026!' });
+        .send({ email: 'tester@strixai.ai', password: 'Tester2026!' });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -72,7 +72,7 @@ describe('authController', () => {
       User.findByCredentials.mockResolvedValue(null);
 
       const res = await request(app).post('/api/auth/login')
-        .send({ email: 'noexiste@strixai.es', password: 'loquesea' });
+        .send({ email: 'noexiste@strixai.ai', password: 'loquesea' });
 
       expect(res.status).toBe(401);
       expect(res.body.error).toBe('Credenciales invalidas');
@@ -85,7 +85,7 @@ describe('authController', () => {
       User.findByCredentials.mockResolvedValue(user);
 
       const res = await request(app).post('/api/auth/login')
-        .send({ email: 'tester@strixai.es', password: 'Tester2026!' });
+        .send({ email: 'tester@strixai.ai', password: 'Tester2026!' });
 
       expect(JSON.stringify(res.body)).not.toMatch(/password|\$2[aby]\$/);
     });
@@ -94,7 +94,7 @@ describe('authController', () => {
       User.findByCredentials.mockRejectedValue(new Error('ECONNREFUSED mongo:27017'));
 
       const res = await request(app).post('/api/auth/login')
-        .send({ email: 'tester@strixai.es', password: 'x' });
+        .send({ email: 'tester@strixai.ai', password: 'x' });
 
       expect(res.status).toBe(500);
       expect(res.body.error).toBe('Error al iniciar sesion');
@@ -111,7 +111,7 @@ describe('authController', () => {
       // no tiene y era justo lo que dejaba pasar el bug de abajo.
       emailService.sendPasswordResetEmail.mockResolvedValue({ success: true, messageId: 'msg-1' });
 
-      await request(app).post('/api/auth/forgot-password').send({ email: 'tester@strixai.es' });
+      await request(app).post('/api/auth/forgot-password').send({ email: 'tester@strixai.ai' });
 
       // El enlace lleva el token en claro; en BD solo debe quedar su sha256.
       const urlEnviada = emailService.sendPasswordResetEmail.mock.calls[0][2];
@@ -127,7 +127,7 @@ describe('authController', () => {
       User.findOne.mockResolvedValue(null);
 
       const res = await request(app).post('/api/auth/forgot-password')
-        .send({ email: 'noexiste@strixai.es' });
+        .send({ email: 'noexiste@strixai.ai' });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -140,7 +140,7 @@ describe('authController', () => {
       emailService.sendPasswordResetEmail.mockRejectedValue(new Error('SMTP caido'));
 
       const res = await request(app).post('/api/auth/forgot-password')
-        .send({ email: 'tester@strixai.es' });
+        .send({ email: 'tester@strixai.ai' });
 
       expect(res.status).toBe(500);
       // Sin esto quedaria un token valido que nadie recibio.
@@ -156,7 +156,7 @@ describe('authController', () => {
      */
     describe.each([
       ['no hay SMTP/SES configurado', { success: false, reason: 'not_configured' }],
-      ['el destinatario esta suprimido', { success: false, reason: 'suppressed', skipped: ['tester@strixai.es'] }],
+      ['el destinatario esta suprimido', { success: false, reason: 'suppressed', skipped: ['tester@strixai.ai'] }],
       ['el envio falla y se captura dentro', { success: false, error: 'Connection timeout' }]
     ])('cuando %s', (_caso, resultadoEnvio) => {
       test('responde 500 y limpia el token en vez de prometer un email que no salio', async () => {
@@ -165,7 +165,7 @@ describe('authController', () => {
         emailService.sendPasswordResetEmail.mockResolvedValue(resultadoEnvio);
 
         const res = await request(app).post('/api/auth/forgot-password')
-          .send({ email: 'tester@strixai.es' });
+          .send({ email: 'tester@strixai.ai' });
 
         expect(res.status).toBe(500);
         expect(res.body.success).toBe(false);
@@ -181,7 +181,7 @@ describe('authController', () => {
       emailService.sendPasswordResetEmail.mockResolvedValue({ success: true, messageId: 'msg-1' });
 
       const res = await request(app).post('/api/auth/forgot-password')
-        .send({ email: 'tester@strixai.es' });
+        .send({ email: 'tester@strixai.ai' });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -200,7 +200,7 @@ describe('authController', () => {
       emailService.sendPasswordResetEmail.mockResolvedValue(true);
 
       const res = await request(app).post('/api/auth/forgot-password')
-        .send({ email: 'tester@strixai.es' });
+        .send({ email: 'tester@strixai.ai' });
 
       expect(res.status).toBe(200);
       expect(user.resetPasswordToken).toBeDefined();

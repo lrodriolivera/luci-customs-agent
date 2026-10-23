@@ -114,7 +114,7 @@ backend/src/services/aiService.js
 
 ## Servidor de Producción
 - **IP:** 46.137.105.47
-- **URL:** https://aduanas.strixai.es
+- **URL:** https://aduanas.strixai.ai
 - **SSH Key:** ~/.ssh/aws-keys/luci-customs-key.pem
 - **Usuario:** ubuntu
 - **PM2 Backend:** luci-backend
@@ -122,7 +122,7 @@ backend/src/services/aiService.js
 
 ## Cómo Probar
 
-1. Ir a https://aduanas.strixai.es
+1. Ir a https://aduanas.strixai.ai
 2. Login: `test@luci.es` / `test123`
 3. Menú lateral → **Clasificación TARIC**
 4. Seleccionar pestaña **"Buscar por Código"**

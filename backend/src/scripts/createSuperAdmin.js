@@ -31,9 +31,9 @@ const ALL_PERMISSIONS = {
 // Las contrasenas se leen del .env (gitignored). El fallback solo aplica en
 // entornos sin esas variables; en prod deben venir de SUPERADMIN_*_PASSWORD.
 const ADMINS = [
-  { email: 'tester@strixai.es',         password: process.env.SUPERADMIN_TESTER_PASSWORD  || 'Tester2026!',    name: 'Tester STRIX',   position: 'QA Tester' },
-  { email: 'luis.rodriguez@strixai.es', password: process.env.SUPERADMIN_LUIS_PASSWORD    || 'ChangeMe2026!', name: 'Luis Rodriguez', position: 'Tech Lead' },
-  { email: 'jenifer.romero@strixai.es', password: process.env.SUPERADMIN_JENIFER_PASSWORD || 'ChangeMe2026!', name: 'Jenifer Romero', position: 'CEO' }
+  { email: 'tester@strixai.ai',         password: process.env.SUPERADMIN_TESTER_PASSWORD  || 'Tester2026!',    name: 'Tester STRIX',   position: 'QA Tester' },
+  { email: 'luis.rodriguez@strixai.ai', password: process.env.SUPERADMIN_LUIS_PASSWORD    || 'ChangeMe2026!', name: 'Luis Rodriguez', position: 'Tech Lead' },
+  { email: 'jenifer.romero@strixai.ai', password: process.env.SUPERADMIN_JENIFER_PASSWORD || 'ChangeMe2026!', name: 'Jenifer Romero', position: 'CEO' }
 ];
 
 const createSuperAdmins = async () => {
@@ -86,7 +86,7 @@ const createSuperAdmins = async () => {
       await tenant.save();
     }
 
-    console.log(`\n✓ Listo. URL: https://aduanas.strixai.es`);
+    console.log(`\n✓ Listo. URL: https://aduanas.strixai.ai`);
     console.log(`  Tenant ID: ${tenant._id}\n`);
 
     await mongoose.connection.close();

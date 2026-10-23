@@ -253,14 +253,14 @@ describe('emailService', () => {
   describe('_buildRawMessage', () => {
     test('construye mensaje MIME multipart con text y html', () => {
       const raw = emailService._buildRawMessage({
-        from: 'LUCI <noreply@strixai.es>',
+        from: 'LUCI <noreply@strixai.ai>',
         to: ['test@example.com'],
         subject: 'Test Subject',
         html: '<p>HTML content</p>',
         text: 'Plain text content'
       });
 
-      expect(raw).toContain('From: LUCI <noreply@strixai.es>');
+      expect(raw).toContain('From: LUCI <noreply@strixai.ai>');
       expect(raw).toContain('To: test@example.com');
       expect(raw).toContain('Subject: Test Subject');
       expect(raw).toContain('MIME-Version: 1.0');
@@ -273,19 +273,19 @@ describe('emailService', () => {
 
     test('incluye List-Unsubscribe con URL y mailto', () => {
       const raw = emailService._buildRawMessage({
-        from: 'LUCI <noreply@strixai.es>',
+        from: 'LUCI <noreply@strixai.ai>',
         to: ['test@example.com'],
         subject: 'Test',
         html: '<p>Test</p>'
       });
 
-      expect(raw).toContain('List-Unsubscribe: <mailto:unsubscribe@strixai.es');
+      expect(raw).toContain('List-Unsubscribe: <mailto:unsubscribe@strixai.ai');
       expect(raw).toContain('https://test.luci.es/api/email/unsubscribe?token=');
     });
 
     test('incluye headers de bulk email', () => {
       const raw = emailService._buildRawMessage({
-        from: 'LUCI <noreply@strixai.es>',
+        from: 'LUCI <noreply@strixai.ai>',
         to: ['test@example.com'],
         subject: 'Test',
         html: '<p>Test</p>'
@@ -297,7 +297,7 @@ describe('emailService', () => {
 
     test('maneja múltiples destinatarios en header To', () => {
       const raw = emailService._buildRawMessage({
-        from: 'LUCI <noreply@strixai.es>',
+        from: 'LUCI <noreply@strixai.ai>',
         to: ['test1@example.com', 'test2@example.com'],
         subject: 'Test',
         html: '<p>Test</p>'
@@ -309,7 +309,7 @@ describe('emailService', () => {
     test('codifica contenido HTML en base64 con líneas de 76 caracteres', () => {
       const longHtml = '<p>' + 'A'.repeat(200) + '</p>';
       const raw = emailService._buildRawMessage({
-        from: 'LUCI <noreply@strixai.es>',
+        from: 'LUCI <noreply@strixai.ai>',
         to: ['test@example.com'],
         subject: 'Test',
         html: longHtml
@@ -324,7 +324,7 @@ describe('emailService', () => {
 
     test('omite parte text si no se proporciona', () => {
       const raw = emailService._buildRawMessage({
-        from: 'LUCI <noreply@strixai.es>',
+        from: 'LUCI <noreply@strixai.ai>',
         to: ['test@example.com'],
         subject: 'Test',
         html: '<p>HTML only</p>'
@@ -338,7 +338,7 @@ describe('emailService', () => {
 
     test('omite parte html si no se proporciona', () => {
       const raw = emailService._buildRawMessage({
-        from: 'LUCI <noreply@strixai.es>',
+        from: 'LUCI <noreply@strixai.ai>',
         to: ['test@example.com'],
         subject: 'Test',
         text: 'Plain text only'
@@ -739,7 +739,7 @@ describe('emailService', () => {
   describe('sendDocumentReceivedNotification', () => {
     test('notifica recepción de documento al agente', async () => {
       const result = await emailService.sendDocumentReceivedNotification(
-        'agent@strixai.es',
+        'agent@strixai.ai',
         'EXP123',
         'Factura Comercial',
         'ACME Corp'
@@ -758,7 +758,7 @@ describe('emailService', () => {
   describe('sendDeclarationReadyNotification', () => {
     test('notifica que declaración está lista para aprobación', async () => {
       const result = await emailService.sendDeclarationReadyNotification(
-        'agent@strixai.es',
+        'agent@strixai.ai',
         'EXP123',
         'H7'
       );
@@ -792,7 +792,7 @@ describe('emailService', () => {
 
   describe('sendTestEmail', () => {
     test('envía email de prueba con configuración del servicio', async () => {
-      const result = await emailService.sendTestEmail('admin@strixai.es');
+      const result = await emailService.sendTestEmail('admin@strixai.ai');
 
       expect(result.success).toBe(true);
       const rawCall = mockSendMail.mock.calls[0][0].raw;

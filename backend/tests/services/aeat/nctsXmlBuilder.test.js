@@ -107,7 +107,7 @@ describe('titular del transito (regla 1499/1626: EORI excluye name/Address)', ()
   test('la persona de contacto cae a valores por defecto de despacho', () => {
     const xml = buildNCTSTransitXML(base());
 
-    expect(xml).toContain('<ent:eMailAddress>despacho@strixai.es</ent:eMailAddress>');
+    expect(xml).toContain('<ent:eMailAddress>despacho@strixai.ai</ent:eMailAddress>');
     expect(xml).toContain('<ent:phoneNumber>+34976000000</ent:phoneNumber>');
   });
 

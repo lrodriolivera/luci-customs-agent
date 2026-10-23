@@ -1075,7 +1075,7 @@ async function seedCommunications(demoUserId, expeditions, requirements) {
             name: 'STRIX AI SL',
             role: 'Representante Aduanero',
             organization: 'STRIX AI',
-            email: 'aduanas@strixai.es'
+            email: 'aduanas@strixai.ai'
           },
           recipient: {
             name: authorityType,

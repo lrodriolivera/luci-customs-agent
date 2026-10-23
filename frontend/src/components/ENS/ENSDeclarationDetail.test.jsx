@@ -125,7 +125,7 @@ const createMockDeclaration = (overrides = {}) => ({
       documentNumber: 'BL123456',
       name: 'BL-Valencia-001.pdf',
       uploadedAt: '2026-08-01T09:00:00Z',
-      url: 'https://strixai.es/docs/bl123456.pdf'
+      url: 'https://strixai.ai/docs/bl123456.pdf'
     },
     {
       type: 'Commercial Invoice',
@@ -139,7 +139,7 @@ const createMockDeclaration = (overrides = {}) => ({
       status: 'draft',
       timestamp: '2026-08-01T10:00:00Z',
       reason: 'Declaración creada',
-      performedBy: 'luis.rodriguez@strixai.es'
+      performedBy: 'luis.rodriguez@strixai.ai'
     },
     {
       status: 'submitted',
@@ -884,7 +884,7 @@ describe('ENSDeclarationDetail', () => {
       expect(screen.getByText('Commercial Invoice')).toBeInTheDocument()
       const links = screen.getAllByRole('link')
       expect(links.length).toBeGreaterThanOrEqual(1)
-      expect(links[0]).toHaveAttribute('href', 'https://strixai.es/docs/bl123456.pdf')
+      expect(links[0]).toHaveAttribute('href', 'https://strixai.ai/docs/bl123456.pdf')
     })
 
     it('renders no documents message when empty', async () => {
@@ -918,7 +918,7 @@ describe('ENSDeclarationDetail', () => {
       const statusDraftLabels = screen.getAllByText('ens.statusDraft')
       expect(statusDraftLabels.length).toBeGreaterThanOrEqual(1)
       expect(screen.getByText('Declaración creada')).toBeInTheDocument()
-      expect(screen.getByText(/ens.performedBy: luis.rodriguez@strixai.es/)).toBeInTheDocument()
+      expect(screen.getByText(/ens.performedBy: luis.rodriguez@strixai.ai/)).toBeInTheDocument()
       expect(screen.getByText('ens.statusSent')).toBeInTheDocument()
       expect(screen.getByText(/ens.performedBy: system/)).toBeInTheDocument()
     })

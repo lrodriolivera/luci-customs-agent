@@ -2,7 +2,7 @@ const { defineConfig } = require('cypress')
 
 module.exports = defineConfig({
   e2e: {
-    baseUrl: 'https://aduanas.strixai.es',
+    baseUrl: 'https://aduanas.strixai.ai',
     viewportWidth: 1440,
     viewportHeight: 900,
     video: true,

@@ -561,7 +561,7 @@ class PaymentService {
         await tenant.save();
       }
       return {
-        url: (process.env.FRONTEND_URL || 'https://aduanas.strixai.es') + '/billing?success=true&plan=starter',
+        url: (process.env.FRONTEND_URL || 'https://aduanas.strixai.ai') + '/billing?success=true&plan=starter',
         sessionId: null,
         freePlan: true
       };
@@ -585,7 +585,7 @@ class PaymentService {
         await tenant.save();
       }
       return {
-        url: (process.env.FRONTEND_URL || 'https://aduanas.strixai.es') + '/billing?mock=true',
+        url: (process.env.FRONTEND_URL || 'https://aduanas.strixai.ai') + '/billing?mock=true',
         sessionId: `cs_mock_${Date.now()}`,
         mockMode: true
       };
@@ -615,7 +615,7 @@ class PaymentService {
       }
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || 'https://aduanas.strixai.es';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://aduanas.strixai.ai';
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
@@ -662,7 +662,7 @@ class PaymentService {
       throw new Error('No Stripe customer found for this account');
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || 'https://aduanas.strixai.es';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://aduanas.strixai.ai';
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${frontendUrl}/billing`

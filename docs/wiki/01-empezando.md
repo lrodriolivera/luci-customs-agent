@@ -20,7 +20,7 @@ LUCI es una plataforma web que reúne en un único sitio todo lo que un agente d
 
 | | |
 |---|---|
-| **URL** | <https://aduanas.strixai.es> |
+| **URL** | <https://aduanas.strixai.ai> |
 | **Email** | el que te haya facilitado tu administrador (típicamente `nombre@empresa.es`) |
 | **Contraseña** | la que recibiste por email — cámbiala en tu primer acceso desde *Tu perfil* |
 

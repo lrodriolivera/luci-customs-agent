@@ -80,7 +80,7 @@ const actionHandlers = {
       sender: 'luci',
       senderInfo: {
         name: 'LUCI (Automatico)',
-        email: 'luci@strixai.es'
+        email: 'luci@strixai.ai'
       },
       content: config.messageContent || config.notificationBody,
       messageType: 'system'

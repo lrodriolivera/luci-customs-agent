@@ -1,7 +1,7 @@
 # Respuesta Jose Antonio AEAT (2/Mar/2026)
 
 **De:** atenusu@correo.aeat.es
-**A:** luis.rodriguez@strixai.es
+**A:** luis.rodriguez@strixai.ai
 **Fecha:** 2026-03-02 11:02
 
 ## Datos de pruebas AEAT PRE entregados

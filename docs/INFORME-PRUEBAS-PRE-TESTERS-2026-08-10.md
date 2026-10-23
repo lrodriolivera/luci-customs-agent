@@ -2,7 +2,7 @@
 
 **Fecha:** 10 de agosto de 2026
 **Versión desplegada:** `0ac56f4`
-**Entorno:** `https://aduanas.strixai.es` (homelab STRIX AI)
+**Entorno:** `https://aduanas.strixai.ai` (homelab STRIX AI)
 **AEAT:** entorno **PRE (pruebas)** — `AEAT_ENVIRONMENT=test`. En ningún momento se ha enviado nada a producción de AEAT.
 **Autor:** Luis Rodríguez (Tech Lead)
 
@@ -87,8 +87,8 @@ nada**, y por eso hace falta el ojo humano.
 
 | Dato | Valor |
 |---|---|
-| URL | `https://aduanas.strixai.es` |
-| Usuario de pruebas | `tester@strixai.es` |
+| URL | `https://aduanas.strixai.ai` |
+| Usuario de pruebas | `tester@strixai.ai` |
 | Contraseña | *se entrega por canal aparte — no se versiona en el repositorio* |
 | Rol | admin (ve todas las pantallas) |
 
@@ -335,7 +335,7 @@ Cuatro con defecto real, ordenados por gravedad:
 **Cómo se verificó en producción:** la respuesta del servidor es idéntica en éxito
 y en fallo, y debe serlo para no revelar qué correos existen. Lo que discrimina es
 el token: si el envío falla, la corrección lo borra. Se solicitó un
-restablecimiento para `tester@strixai.es` y el token sha256 de 64 caracteres seguía
+restablecimiento para `tester@strixai.ai` y el token sha256 de 64 caracteres seguía
 en base de datos con caducidad a 1 hora ⇒ **el correo salió de verdad**.
 
 ---
@@ -468,7 +468,7 @@ aunque su propia documentación dice «Alertas consolidadas del tenant». Hoy no
 nota porque solo hay un cliente en la base de datos, pero es la misma familia de
 fuga que ya se corrigió en las estadísticas de canales y requerimientos. Por eso
 `/guarantees` muestra 0: **ese** listado sí filtra (`owner: req.user._id`), y las
-12 garantías pertenecen a `tester@strixai.es`, no al usuario con el que se tomó la
+12 garantías pertenecen a `tester@strixai.ai`, no al usuario con el que se tomó la
 captura.
 
 > Un tester que vea esas tres alertas rojas en el escritorio dará por hecho que hay

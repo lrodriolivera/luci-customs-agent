@@ -12,8 +12,8 @@
 
 **Screenshots capturados**: 61
 **Herramienta**: Cypress 15.11.0 + Electron (headless)
-**Entorno**: https://aduanas.strixai.es (produccion)
-**Usuario test**: luis.rodriguez@strixai.es
+**Entorno**: https://aduanas.strixai.ai (produccion)
+**Usuario test**: luis.rodriguez@strixai.ai
 
 ---
 
@@ -164,5 +164,5 @@ Los fallos restantes son exclusivamente de selectores de automatizacion y no afe
 ---
 
 *Informe generado automaticamente por Cypress 15.11.0*
-*Entorno: https://aduanas.strixai.es*
+*Entorno: https://aduanas.strixai.ai*
 *Fecha: 11 de Marzo de 2026*

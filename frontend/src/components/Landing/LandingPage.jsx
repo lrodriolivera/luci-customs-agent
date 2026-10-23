@@ -382,7 +382,7 @@ export default function LandingPage() {
               <span className="text-slate-500 text-sm">by Strix AI</span>
             </div>
             <div className="flex items-center flex-wrap gap-4 sm:gap-6 text-sm text-slate-400">
-              <a href="https://strixai.es" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">strixai.es</a>
+              <a href="https://strixai.ai" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">strixai.ai</a>
               <Link to="/privacy" className="hover:text-white transition-colors">{t('landing.footerPrivacy')}</Link>
               <Link to="/terms" className="hover:text-white transition-colors">{t('landing.footerTerms')}</Link>
               <Link to="/cookies" className="hover:text-white transition-colors">{t('landing.footerCookies')}</Link>

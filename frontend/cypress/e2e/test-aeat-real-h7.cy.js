@@ -5,7 +5,7 @@
 // login > crear expedicion importacion bajo valor > navegar a H7 >
 // generar H7 > enviar a AEAT PRE > verificar MRN y garantia
 //
-// Usuario: luis.rodriguez@strixai.es (superadmin)
+// Usuario: luis.rodriguez@strixai.ai (superadmin)
 // Datos: Camisetas de algodon desde China, HS 6109100000, 50kg, 120 EUR
 // Garantia: 26ESAGL2800000054 | IOSS: IMES000000123
 // =============================================================================
@@ -13,11 +13,11 @@
 describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
 
   before(() => {
-    cy.login('luis.rodriguez@strixai.es', 'test123')
+    cy.login('luis.rodriguez@strixai.ai', 'test123')
   })
 
   beforeEach(() => {
-    cy.login('luis.rodriguez@strixai.es', 'test123')
+    cy.login('luis.rodriguez@strixai.ai', 'test123')
   })
 
   // Auto-accept all confirmation dialogs
@@ -105,7 +105,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
     cy.wait(3000)
 
     // Email
-    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-h7-real@strixai.es', { force: true })
+    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-h7-real@strixai.ai', { force: true })
     cy.wait(3000)
 
     // Phone
@@ -155,7 +155,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       const nif = $body.find('input[pattern="[A-Z0-9]{8,10}"]')
       if (nif.length > 0) cy.wrap(nif.first()).clear({ force: true }).type('B22477020', { force: true })
     })
-    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-h7-real@strixai.es', { force: true })
+    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-h7-real@strixai.ai', { force: true })
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')
       if (allText.length > 7) cy.wrap(allText.eq(7)).clear({ force: true }).type('CN', { force: true })
@@ -264,7 +264,7 @@ describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
       const nif = $body.find('input[pattern="[A-Z0-9]{8,10}"]')
       if (nif.length > 0) cy.wrap(nif.first()).clear({ force: true }).type('B22477020', { force: true })
     })
-    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-h7-real@strixai.es', { force: true })
+    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-h7-real@strixai.ai', { force: true })
     // EORI
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')

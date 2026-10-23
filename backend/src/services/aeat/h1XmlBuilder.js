@@ -269,7 +269,7 @@ function expeditionToH1Data(expedition) {
     formaRepresentacion: '1',
     tipoAutorizaDespacho: 'O',
     // Emails
-    emailDespacho: client.contact?.email || 'despacho@strixai.es',
+    emailDespacho: client.contact?.email || 'despacho@strixai.ai',
     // Paises
     paisExpedicion: goods[0]?.countryOfOrigin || expedition.exporter?.country || 'CN',
     paisDestino: 'ES',

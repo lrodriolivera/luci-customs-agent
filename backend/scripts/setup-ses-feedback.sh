@@ -6,8 +6,8 @@
 #
 # Prerequisites:
 #   - AWS CLI configured with credentials for AgenteAduana (LUCI account 962990060849)
-#   - Domain strixai.es verified in SES us-east-1
-#   - Backend deployed at https://aduanas.strixai.es with /api/email/internal/ses-feedback
+#   - Domain strixai.ai verified in SES us-east-1
+#   - Backend deployed at https://aduanas.strixai.ai with /api/email/internal/ses-feedback
 #
 # Usage:
 #   AWS_PROFILE=strixai bash scripts/setup-ses-feedback.sh
@@ -18,7 +18,7 @@ set -euo pipefail
 
 REGION="${SES_REGION:-us-east-1}"
 CONFIG_SET="${SES_CONFIGURATION_SET:-luci-feedback-v1}"
-WEBHOOK_URL="${SES_FEEDBACK_WEBHOOK:-https://aduanas.strixai.es/api/email/internal/ses-feedback}"
+WEBHOOK_URL="${SES_FEEDBACK_WEBHOOK:-https://aduanas.strixai.ai/api/email/internal/ses-feedback}"
 BOUNCE_TOPIC="luci-ses-bounces"
 COMPLAINT_TOPIC="luci-ses-complaints"
 

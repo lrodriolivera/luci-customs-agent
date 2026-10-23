@@ -54,7 +54,7 @@ export default class ErrorBoundary extends React.Component {
                 {t('errorBoundary.goHome')}
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-6">soporte@strixai.es</p>
+            <p className="text-xs text-gray-400 mt-6">soporte@strixai.ai</p>
           </div>
         </div>
       )

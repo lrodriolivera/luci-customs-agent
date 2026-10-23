@@ -2,7 +2,7 @@
 
 **Para**: Nationale Helpdesk Douane (NHD)
 **Via**: Formulario en https://nh.douane.nl/softwareontwikkelaars/ o tel. (088) 156 66 55
-**CC**: luis.rodriguez@strixai.es
+**CC**: luis.rodriguez@strixai.ai
 
 ---
 
@@ -18,8 +18,8 @@ We are writing to request registration as a software developer for Dutch Customs
 - **NIF (Spanish Tax ID)**: B22477020
 - **EORI**: ESB22477020
 - **Country**: Spain
-- **Website**: https://aduanas.strixai.es
-- **Contact person**: Luis Rodriguez (luis.rodriguez@strixai.es)
+- **Website**: https://aduanas.strixai.ai
+- **Contact person**: Luis Rodriguez (luis.rodriguez@strixai.ai)
 - **Representative**: Jenifer Romero
 
 ## About our software
@@ -63,5 +63,5 @@ Kind regards,
 Luis Rodriguez
 Software Developer
 STRIX AI SL
-luis.rodriguez@strixai.es
+luis.rodriguez@strixai.ai
 +34 [phone number]

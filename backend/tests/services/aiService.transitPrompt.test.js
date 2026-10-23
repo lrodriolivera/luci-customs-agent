@@ -1,7 +1,7 @@
 /**
  * Los prompts de transito interpolaban `undefined` como si fuera un dato.
  *
- * E2E 8/Ago/2026, sobre 5 transitos vivos de https://aduanas.strixai.es: 4
+ * E2E 8/Ago/2026, sobre 5 transitos vivos de https://aduanas.strixai.ai: 4
  * generaban lineas como
  *
  *   - Aduana destino: ES002901 (undefined)

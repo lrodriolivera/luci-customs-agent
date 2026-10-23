@@ -2,7 +2,7 @@
 
 **Inicio**: 2026-04-20
 **Owner**: Luis Rodriguez
-**Estado producción**: Desplegado en AWS (aduanas.strixai.es)
+**Estado producción**: Desplegado en AWS (aduanas.strixai.ai)
 **Principio**: No romper nada. Cambios reversibles, deploy escalonado, verificación tras cada fase.
 
 ---
@@ -10,7 +10,7 @@
 ## Estrategia de deploy seguro
 
 1. Todos los cambios se prueban en local primero
-2. Backup antes de cada deploy: `ssh ubuntu@aduanas.strixai.es 'tar czf /tmp/backup-$(date +%Y%m%d-%H%M).tgz /opt/luci-customs/backend/src'`
+2. Backup antes de cada deploy: `ssh ubuntu@aduanas.strixai.ai 'tar czf /tmp/backup-$(date +%Y%m%d-%H%M).tgz /opt/luci-customs/backend/src'`
 3. Deploy por lotes pequeños (backend y frontend por separado)
 4. Verificación `/health` + smoke test login tras cada deploy
 5. Rollback plan documentado por fase

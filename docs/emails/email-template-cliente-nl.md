@@ -70,4 +70,4 @@ Un cordial saludo,
 Jenifer Romero
 STRIX AI SL
 NIF: B22477020 / EORI: ESB22477020
-Web: https://aduanas.strixai.es
+Web: https://aduanas.strixai.ai

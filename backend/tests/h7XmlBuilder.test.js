@@ -36,7 +36,7 @@ function minimalCall(overrides = {}) {
     destinatarioDireccion: 'Calle Ejemplo 1', destinatarioPoblacion: 'Zaragoza',
     destinatarioCP: '50001', destinatarioPais: 'ES',
     declaranteNIF: 'ESB22477020', declaranteNombre: 'STRIX AI SL',
-    formaRepresentacion: '1', emailDespacho: 'despacho@strixai.es',
+    formaRepresentacion: '1', emailDespacho: 'despacho@strixai.ai',
     garantiaGRN: '26ESAGL2800000054',
     partidas: [minimalPartida()],
     ...overrides

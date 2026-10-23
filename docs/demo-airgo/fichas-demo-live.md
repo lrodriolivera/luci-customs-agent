@@ -2,7 +2,7 @@
 
 ## Login
 
-- URL: <https://aduanas.strixai.es>
+- URL: <https://aduanas.strixai.ai>
 - User: demo@airgoexpress.com / AirgoDemo2026
 
 ---

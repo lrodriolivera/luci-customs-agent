@@ -58,7 +58,7 @@ jobs:
         run: npm ci && NODE_ENV=production npx vite build
 
   deploy:
-    name: Deploy to aduanas.strixai.es
+    name: Deploy to aduanas.strixai.ai
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
@@ -82,12 +82,12 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H aduanas.strixai.es >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H aduanas.strixai.ai >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Backup current prod
         run: |
           TS=$(date +%Y%m%d-%H%M%S)
-          ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.es \
+          ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.ai \
             "sudo tar czf /tmp/luci-backup-ci-${TS}.tgz /opt/luci-customs/backend/src /opt/luci-customs/frontend/dist"
           echo "BACKUP=/tmp/luci-backup-ci-${TS}.tgz" >> $GITHUB_ENV
 
@@ -96,33 +96,33 @@ jobs:
           rsync -avz --exclude 'node_modules' --exclude '.env' --exclude 'uploads' \
             --exclude 'logs' --exclude 'Certificados' --exclude 'data' --exclude '.git' \
             -e "ssh -i ~/.ssh/deploy_key" \
-            backend/src/ ubuntu@aduanas.strixai.es:/opt/luci-customs/backend/src/
+            backend/src/ ubuntu@aduanas.strixai.ai:/opt/luci-customs/backend/src/
 
       - name: Deploy ecosystem config
         run: |
           scp -i ~/.ssh/deploy_key \
-            backend/ecosystem.config.js ubuntu@aduanas.strixai.es:/opt/luci-customs/backend/
+            backend/ecosystem.config.js ubuntu@aduanas.strixai.ai:/opt/luci-customs/backend/
 
       - name: Deploy frontend
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
-            frontend/dist/ ubuntu@aduanas.strixai.es:/opt/luci-customs/frontend/dist/
+            frontend/dist/ ubuntu@aduanas.strixai.ai:/opt/luci-customs/frontend/dist/
 
       - name: Reload backend (graceful, no downtime)
         run: |
-          ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.es \
+          ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.ai \
             "pm2 reload luci-backend --update-env"
 
       - name: Clear rate-limit keys (so smoke can login)
         run: |
-          ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.es \
+          ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.ai \
             'redis-cli keys "rl:*" | xargs -r redis-cli del' || true
 
       - name: Verify deployment
         run: |
           sleep 5
-          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" https://aduanas.strixai.es/api/health)
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" https://aduanas.strixai.ai/api/health)
           STATUS=$(echo "$RESPONSE" | tail -1 | cut -d: -f2)
           BODY=$(echo "$RESPONSE" | sed '$d')
           if [ "$STATUS" = "200" ] && echo "$BODY" | grep -q '"status":"OK"'; then
@@ -131,7 +131,7 @@ jobs:
           else
             echo "WARNING: health check failed (HTTP $STATUS) — rolling back"
             echo "$BODY"
-            ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.es \
+            ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.ai \
               "sudo tar xzf ${{ env.BACKUP }} -C / && pm2 reload luci-backend"
             exit 1
           fi

@@ -25,7 +25,7 @@ Con declarante `ESB22477020` (STRIX AI SL), certificado FNMT persona jurídica, 
 | NCTS (CC015CV1) | ❌ ver punto 1 | — | — |
 | PUE/SOIVRE (ROHSsolicitudV1) | ❌ ver punto 2 | — | — |
 
-Los 4 primeros los tenemos ya integrados end-to-end en nuestra plataforma LUCI (https://aduanas.strixai.es), incluidos los builders XML, el parseo de respuesta (MRN, CSV, circuito, levante) y los flujos de canal verde/naranja/rojo.
+Los 4 primeros los tenemos ya integrados end-to-end en nuestra plataforma LUCI (https://aduanas.strixai.ai), incluidos los builders XML, el parseo de respuesta (MRN, CSV, circuito, levante) y los flujos de canal verde/naranja/rojo.
 
 ## 1. NCTS — nos falta una sumaria activa en `2801AAAAAC`
 
@@ -94,4 +94,4 @@ Un cordial saludo,
 Luis Rodriguez
 STRIX AI SL
 NIF: B22477020 / EORI: ESB22477020
-luis.rodriguez@strixai.es
+luis.rodriguez@strixai.ai

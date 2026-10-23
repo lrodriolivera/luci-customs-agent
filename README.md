@@ -8,7 +8,7 @@
 [![AI](https://img.shields.io/badge/Claude_Sonnet_4-blueviolet?style=flat-square)](#motor-ia)
 [![Deploy](https://img.shields.io/badge/AWS_EC2-orange?style=flat-square)](#deploy)
 
-[Demo en vivo](https://aduanas.strixai.es/landing) · [Solicitar Demo](https://aduanas.strixai.es/landing#contact)
+[Demo en vivo](https://aduanas.strixai.ai/landing) · [Solicitar Demo](https://aduanas.strixai.ai/landing#contact)
 
 </div>
 
@@ -18,7 +18,7 @@
 
 LUCI es una plataforma integral de despacho aduanero que utiliza inteligencia artificial para automatizar clasificacion arancelaria, calculo de derechos, gestion de declaraciones y procesos de inspeccion.
 
-Desarrollado por **[Strix AI](https://strixai.es)** para agentes de aduanas, freight forwarders e importadores/exportadores.
+Desarrollado por **[Strix AI](https://strixai.ai)** para agentes de aduanas, freight forwarders e importadores/exportadores.
 
 ---
 
@@ -54,7 +54,7 @@ Desarrollado por **[Strix AI](https://strixai.es)** para agentes de aduanas, fre
 ```
 ┌──────────────────────────────────────────────────────┐
 │                  NGINX (443/SSL)                     │
-│               aduanas.strixai.es                     │
+│               aduanas.strixai.ai                     │
 ├────────────┬─────────────────┬───────────────────────┤
 │  /         │  /api           │  /ai                  │
 │  Frontend  │  Backend API    │  AI Service           │
@@ -225,6 +225,6 @@ Software propietario. &copy; 2026 Strix AI. Todos los derechos reservados.
 
 <div align="center">
 
-**[Strix AI](https://strixai.es)**
+**[Strix AI](https://strixai.ai)**
 
 </div>

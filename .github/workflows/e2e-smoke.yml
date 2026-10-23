@@ -14,7 +14,7 @@ on:
 
 jobs:
   smoke:
-    name: Smoke tests against aduanas.strixai.es
+    name: Smoke tests against aduanas.strixai.ai
     runs-on: ubuntu-latest
     # Only run after a successful deploy (or manual/scheduled)
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
@@ -38,11 +38,11 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H aduanas.strixai.es >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H aduanas.strixai.ai >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Clear rate-limit keys in prod Redis
         run: |
-          ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.es \
+          ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.ai \
             'redis-cli keys "rl:*" | xargs -r redis-cli del' || true
 
       - name: Run batch-final smoke (13 API tests)
@@ -55,7 +55,7 @@ jobs:
 
       - name: Clear rate-limit again before next suite
         run: |
-          ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.es \
+          ssh -i ~/.ssh/deploy_key ubuntu@aduanas.strixai.ai \
             'redis-cli keys "rl:*" | xargs -r redis-cli del' || true
 
       - name: Run UI flows smoke (13 UI + API tests)

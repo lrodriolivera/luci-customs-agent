@@ -65,7 +65,7 @@ async function setup() {
   console.log('\n========================================');
   console.log('AIRGO EXPRESS ready!');
   console.log('Tenant ID:', tenant._id.toString());
-  console.log('URL: https://aduanas.strixai.es');
+  console.log('URL: https://aduanas.strixai.ai');
   console.log('Login: any email above / AirgoDemo2026');
   console.log('========================================');
   await mongoose.disconnect();

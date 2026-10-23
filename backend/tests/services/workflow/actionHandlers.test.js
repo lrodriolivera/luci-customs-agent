@@ -204,7 +204,7 @@ describe('actionHandlers', () => {
       expect(mensaje.content).toBe('Este es el contenido del mensaje');
       expect(mensaje.sender).toBe('luci'); // Corregido: 'system' no es válido
       expect(mensaje.senderInfo.name).toBe('LUCI (Automatico)');
-      expect(mensaje.senderInfo.email).toBe('luci@strixai.es');
+      expect(mensaje.senderInfo.email).toBe('luci@strixai.ai');
       expect(mensaje.messageType).toBe('system'); // Corregido: 'system_notification' no es válido
       expect(mensaje.expedition.toString()).toBe(expedition._id.toString());
     });

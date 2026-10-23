@@ -26,7 +26,7 @@
 
 | Activo | Detalle |
 |--------|---------|
-| **Producto desplegado** | aduanas.strixai.es - plataforma completa en produccion |
+| **Producto desplegado** | aduanas.strixai.ai - plataforma completa en produccion |
 | **Validacion AEAT** | 4/6 builders de declaraciones aceptados con MRN reales |
 | **Pipeline comercial** | Conversaciones avanzadas con operadores de paqueteria express y transitarios |
 | **Segundo producto** | 300dec/Correos - POC completada y desplegada en AWS |
@@ -145,7 +145,7 @@ Para LUCI, la narrativa es:
 | Financial Model (Excel) | NO EXISTE | **CREAR - es critico** |
 | Video demo (2:30 min) | Guion existe | **GRABAR** |
 | Data Room (Google Drive) | Estructura definida | **MONTAR** |
-| Producto en vivo | aduanas.strixai.es | Ya listo |
+| Producto en vivo | aduanas.strixai.ai | Ya listo |
 
 **PRIORIDAD ABSOLUTA**: El financial model. Sin el, ningun inversor serio avanza. Debe incluir:
 - P&L mensual proyectado a 24 meses
@@ -226,7 +226,7 @@ Hemos construido la primera plataforma SaaS que automatiza declaraciones
 aduaneras con IA y las envia directamente a la AEAT:
 
 - 4/6 builders aceptados por la Agencia Tributaria con MRN reales
-- Producto completo desplegado en produccion (aduanas.strixai.es)
+- Producto completo desplegado en produccion (aduanas.strixai.ai)
 - Margen bruto 93%, arquitectura multi-pais (ES+NL) operativa
 
 Buscamos $300-500K pre-seed para equipo y go-to-market.
@@ -237,7 +237,7 @@ Adjunto one-pager. Deck completo disponible bajo peticion.
 
 Un saludo,
 [NOMBRE]
-STRIX AI SL | aduanas.strixai.es
+STRIX AI SL | aduanas.strixai.ai
 ```
 
 ### Paso 6: Las primeras reuniones (Semana 5-8)
@@ -409,7 +409,7 @@ data-room/
 - [ ] Data room basico montado en Google Drive
 - [ ] Ensayar pitch 3 min (elevator) + 10 min (completo)
 - [ ] Preparar respuestas a 10 preguntas mas comunes
-- [ ] Demo en vivo ensayada (aduanas.strixai.es con datos demo)
+- [ ] Demo en vivo ensayada (aduanas.strixai.ai con datos demo)
 - [ ] LinkedIn personal actualizado (founder de STRIX AI)
 - [ ] Perfil en Crunchbase/AngelList creado
 
@@ -538,7 +538,7 @@ Total: $400,000 - $600,000 con solo 10-15% dilucion
 - [ ] Financial model (Excel/Google Sheets, 24 meses)
 - [ ] Video demo (2:30 min)
 - [ ] Data room completo (Google Drive)
-- [ ] Producto funcionando (aduanas.strixai.es)
+- [ ] Producto funcionando (aduanas.strixai.ai)
 
 ### Preparacion personal
 - [ ] Pitch de 30 segundos ensayado (elevator pitch)
@@ -553,7 +553,7 @@ Total: $400,000 - $600,000 con solo 10-15% dilucion
 - [ ] Perfil en Crunchbase creado
 - [ ] Perfil en AngelList/Wellfound creado
 - [ ] DocSend configurado (tracking de deck)
-- [ ] Email profesional (nombre@strixai.es)
+- [ ] Email profesional (nombre@strixai.ai)
 - [ ] Calendario con slots para reuniones
 
 ### Legal y financiero
@@ -600,9 +600,9 @@ Total: $400,000 - $600,000 con solo 10-15% dilucion
 - ENISA.es - Financiacion publica espanola
 
 ### Contactos STRIX AI para fundraising
-- **Jenifer Romero** (jenifer.romero@strixai.es) - Representante, contacto ENISA/Lanzadera
-- **Rodrigo Godoy** (rodrigo.godoy@strixai.es) - Comercial, red de contactos
-- **Luis Rodriguez** (luis.rodriguez@strixai.es) - Tech Lead, demos y producto
+- **Jenifer Romero** (jenifer.romero@strixai.ai) - Representante, contacto ENISA/Lanzadera
+- **Rodrigo Godoy** (rodrigo.godoy@strixai.ai) - Comercial, red de contactos
+- **Luis Rodriguez** (luis.rodriguez@strixai.ai) - Tech Lead, demos y producto
 
 ---
 

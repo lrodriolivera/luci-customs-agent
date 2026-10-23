@@ -40,8 +40,8 @@ const CONFIG_SET = process.env.SES_CONFIGURATION_SET || 'luci-feedback-v1';
 class EmailService {
   constructor() {
     this.sesClient = null;
-    this.fromEmail = process.env.SES_FROM_EMAIL || 'noreply@strixai.es';
-    this.appUrl = process.env.FRONTEND_URL || 'https://aduanas.strixai.es';
+    this.fromEmail = process.env.SES_FROM_EMAIL || 'noreply@strixai.ai';
+    this.appUrl = process.env.FRONTEND_URL || 'https://aduanas.strixai.ai';
 
     // Initialize SES if credentials available
     // SES production access aprobado en us-east-1 (case 177676372400012, 22/Abr/2026);
@@ -150,7 +150,7 @@ class EmailService {
     const boundary = `----=_LUCI_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
     const primary = to[0];
     const unsubUrl = `${this.appUrl}/api/email/unsubscribe?token=${unsubscribeToken.sign(primary)}`;
-    const unsubMailto = `mailto:unsubscribe@strixai.es?subject=unsubscribe%20${encodeURIComponent(primary)}`;
+    const unsubMailto = `mailto:unsubscribe@strixai.ai?subject=unsubscribe%20${encodeURIComponent(primary)}`;
 
     const headers = [
       `From: ${from}`,

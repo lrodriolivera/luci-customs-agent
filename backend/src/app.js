@@ -120,8 +120,8 @@ app.use(compression({
 
 // CORS configuration
 const allowedOrigins = [
-  'https://aduanas.strixai.es',
-  'http://aduanas.strixai.es',
+  'https://aduanas.strixai.ai',
+  'http://aduanas.strixai.ai',
   process.env.FRONTEND_URL,
   'http://localhost:3001',
   'http://localhost:3002',
@@ -310,9 +310,9 @@ app.post('/api/contact', authLimiter, express.json(), async (req, res) => {
     }
     const emailService = require('./services/emailService');
     await emailService.sendEmail(
-      'luci@strixai.es',
+      'luci@strixai.ai',
       `[LUCI Contact] ${name} - ${company || 'Sin empresa'}`,
-      `<h3>Nuevo contacto desde aduanas.strixai.es</h3>
+      `<h3>Nuevo contacto desde aduanas.strixai.ai</h3>
        <p><strong>Nombre:</strong> ${name}</p>
        <p><strong>Email:</strong> ${email}</p>
        <p><strong>Empresa:</strong> ${company || 'No indicada'}</p>

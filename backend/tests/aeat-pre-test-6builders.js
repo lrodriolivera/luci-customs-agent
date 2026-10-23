@@ -28,7 +28,7 @@ const STRIX = {
   poblacion: 'Zaragoza',
   cp: '50001',
   pais: 'ES',
-  email: 'despacho@strixai.es'
+  email: 'despacho@strixai.ai'
 };
 
 // Aduana de pruebas

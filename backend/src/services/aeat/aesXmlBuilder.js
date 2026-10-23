@@ -147,7 +147,7 @@ function buildAESExportXML(data) {
           <ent:ContactPerson>
             <ent:name>${declarantContactName || declarantName || 'Despacho'}</ent:name>
             <ent:phoneNumber>${declarantContactPhone || '+34976000000'}</ent:phoneNumber>
-            <ent:eMailAddress>${declarantContactEmail || 'despacho@strixai.es'}</ent:eMailAddress>
+            <ent:eMailAddress>${declarantContactEmail || 'despacho@strixai.ai'}</ent:eMailAddress>
           </ent:ContactPerson>
         </ent:Declarant>
         <ent:GoodsShipment>

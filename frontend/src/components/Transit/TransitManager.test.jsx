@@ -1542,7 +1542,7 @@ describe('<TransitManager /> ciclo en destino: descarga (CC044) y estado unloade
 // Los tests que ya existian mas arriba mockeaban el contrato inventado
 // (`{ isValid, riskLevel: 'medium', amount, overallScore }`), asi que pasaban
 // en verde mientras la pantalla real no mostraba nada. Estos usan las
-// respuestas REALES capturadas contra https://aduanas.strixai.es el 8/Ago/2026.
+// respuestas REALES capturadas contra https://aduanas.strixai.ai el 8/Ago/2026.
 //
 // El fallo no es cosmetico: `riskLevel` viene en MAYUSCULAS ('MEDIUM', 'HIGH')
 // y el JSX compara con 'high'/'medium' en minusculas, asi que un transito de
@@ -1973,7 +1973,7 @@ describe('<TransitManager /> filtros y paginacion', () => {
  * E2E 8/Ago: "Autocompletar con IA" del formulario de creacion leia otro contrato.
  *
  * Respuesta real de POST /api/transit/ai/auto-complete (verificada contra
- * https://aduanas.strixai.es, HTTP 200):
+ * https://aduanas.strixai.ai, HTTP 200):
  *   suggestedData, fieldsCompleted, fieldsRequiringConfirmation,
  *   warnings, confidence, model, tokensUsed, generatedAt
  *

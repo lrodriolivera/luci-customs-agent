@@ -3,7 +3,7 @@ Cypress.Commands.add('login', (email = 'test@luci.es', password = 'test123') => 
   cy.session([email, password], () => {
     cy.request({
       method: 'POST',
-      url: 'https://aduanas.strixai.es/api/auth/login',
+      url: 'https://aduanas.strixai.ai/api/auth/login',
       body: { email, password },
       failOnStatusCode: false,
     }).then((resp) => {

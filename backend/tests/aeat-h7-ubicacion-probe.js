@@ -24,7 +24,7 @@ const TIMEOUT = 30000;
 const STRIX = {
   nif: 'B22477020', eori: 'ESB22477020', nombre: 'STRIX AI SL',
   direccion: 'Calle Ejemplo 1', poblacion: 'Zaragoza', cp: '50001',
-  pais: 'ES', email: 'despacho@strixai.es'
+  pais: 'ES', email: 'despacho@strixai.ai'
 };
 const ADUANA_TEST = '002801';
 

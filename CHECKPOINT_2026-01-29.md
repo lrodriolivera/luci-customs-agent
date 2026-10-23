@@ -2,7 +2,7 @@
 
 **Fecha:** 29 de Enero de 2026
 **Proyecto:** LUCI - Agente Aduanero Inteligente
-**Servidor Produccion:** https://aduanas.strixai.es
+**Servidor Produccion:** https://aduanas.strixai.ai
 **IP AWS:** 46.137.105.47
 
 ---

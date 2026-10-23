@@ -168,7 +168,7 @@ router.post('/:expeditionId', async (req, res) => {
         sender: 'luci',
         senderInfo: {
           name: 'LUCI',
-          email: 'luci@strixai.es'
+          email: 'luci@strixai.ai'
         },
         content: luciResponse.message,
         messageType: 'text',

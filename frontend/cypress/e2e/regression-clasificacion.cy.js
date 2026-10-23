@@ -4,7 +4,7 @@
  * No depende de IA en tiempo real (usa endpoints deterministas con DB local).
  */
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' }
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' }
 let token = null
 let user = null
 

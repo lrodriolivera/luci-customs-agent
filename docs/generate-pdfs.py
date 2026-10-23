@@ -84,7 +84,7 @@ def generate_client_report():
     story.append(Paragraph('Informe de Pruebas E2E - Produccion', subtitle_style))
     story.append(Spacer(1, 1*cm))
     story.append(Paragraph('Fecha: 3 de marzo de 2026', ParagraphStyle('Date', parent=body_style, alignment=TA_CENTER, fontSize=11)))
-    story.append(Paragraph('Entorno: https://aduanas.strixai.es (AWS)', ParagraphStyle('Env', parent=body_style, alignment=TA_CENTER, fontSize=11, textColor=GRAY)))
+    story.append(Paragraph('Entorno: https://aduanas.strixai.ai (AWS)', ParagraphStyle('Env', parent=body_style, alignment=TA_CENTER, fontSize=11, textColor=GRAY)))
     story.append(Paragraph('STRIX AI SL - NIF B22477020', ParagraphStyle('Co', parent=body_style, alignment=TA_CENTER, fontSize=10, textColor=GRAY)))
     story.append(Spacer(1, 2*cm))
 
@@ -109,7 +109,7 @@ def generate_client_report():
 
     # Seccion 1: Login
     story.append(Paragraph('1. Login al sistema', h1_style))
-    story.append(Paragraph('El usuario accede a https://aduanas.strixai.es e introduce sus credenciales.', body_style))
+    story.append(Paragraph('El usuario accede a https://aduanas.strixai.ai e introduce sus credenciales.', body_style))
     add_screenshot(story, find_screenshot('01-01-login-page.png'), 'Pantalla de inicio de sesion')
     add_screenshot(story, find_screenshot('01-03-dashboard-cargado.png'), 'Dashboard despues del login exitoso')
     story.append(PageBreak())
@@ -208,7 +208,7 @@ def generate_tester_guide():
 
     # Acceso
     story.append(Paragraph('1. Acceso al sistema', h1_style))
-    story.append(Paragraph('URL: https://aduanas.strixai.es', bold_style))
+    story.append(Paragraph('URL: https://aduanas.strixai.ai', bold_style))
     data = [['Campo', 'Valor'], ['Email', 'test@luci.es'], ['Password', 'test123'], ['Rol', 'Admin (todos los permisos)']]
     story.append(make_table(data, col_widths=[5*cm, 9*cm]))
     add_screenshot(story, find_screenshot('01-01-login-page.png'), 'Pantalla de login')
@@ -245,7 +245,7 @@ def generate_tester_guide():
     story.append(Paragraph('3. Prueba H1 - Importacion Completa', h1_style))
     story.append(Paragraph('Pasos:', bold_style))
     steps = [
-        '1. Login en https://aduanas.strixai.es',
+        '1. Login en https://aduanas.strixai.ai',
         '2. Ir a Expedientes > Nuevo Expediente',
         '3. Seleccionar "Importacion"',
         '4. Rellenar: Razon Social, NIF (B22477020), Email',
@@ -352,7 +352,7 @@ def generate_video_index():
     story.append(Paragraph('Indice de Videos de Pruebas E2E', subtitle_style))
     story.append(Spacer(1, 0.5*cm))
     story.append(Paragraph('Videos grabados automaticamente con Cypress', ParagraphStyle('Sub2', parent=body_style, alignment=TA_CENTER, textColor=GRAY)))
-    story.append(Paragraph('Entorno: https://aduanas.strixai.es (Produccion AWS)', ParagraphStyle('Env', parent=body_style, alignment=TA_CENTER, textColor=GRAY)))
+    story.append(Paragraph('Entorno: https://aduanas.strixai.ai (Produccion AWS)', ParagraphStyle('Env', parent=body_style, alignment=TA_CENTER, textColor=GRAY)))
     story.append(Spacer(1, 1*cm))
     story.append(Paragraph('Fecha: 3 de marzo de 2026', ParagraphStyle('Date', parent=body_style, alignment=TA_CENTER)))
     story.append(PageBreak())

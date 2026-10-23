@@ -8,7 +8,7 @@
 
 - Navegador limpio (sin pestanas extras, sin extensiones visibles)
 - Pantalla completa o ventana grande
-- Tener abierto: https://aduanas.strixai.es/landing
+- Tener abierto: https://aduanas.strixai.ai/landing
 - Estar logueado en otra pestana (test@luci.es / test123)
 - Desactivar notificaciones del sistema
 - Resolucion 1920x1080
@@ -146,7 +146,7 @@
         LUCI
   Agente Aduanero con IA
 
-  aduanas.strixai.es
+  aduanas.strixai.ai
 
       by Strix AI
 ```

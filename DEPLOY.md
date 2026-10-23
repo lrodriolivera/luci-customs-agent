@@ -1,7 +1,7 @@
 # Despliegue LUCI — homelab
 
 Este directorio es un **checkout de git** del repo Forgejo
-`https://git.strixai.es/strixai/luci-customs-agent` (rama `main`).
+`https://git.strixai.ai/strixai/luci-customs-agent` (rama `main`).
 
 Convertido el 1/Ago/2026. Antes era una copia manual de ficheros, y por eso
 varios cambios hechos aqui (SMTP de Resend, el fix de `formaRepresentacion`

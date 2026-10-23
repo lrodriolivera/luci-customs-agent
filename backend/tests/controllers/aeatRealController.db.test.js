@@ -92,8 +92,8 @@ const aeatRealController = require('../../src/controllers/aeatRealController');
 
 const TENANT_A = new mongoose.Types.ObjectId();
 const TENANT_B = new mongoose.Types.ObjectId();
-const USER_A = { _id: new mongoose.Types.ObjectId(), name: 'Alice', email: 'alice@strixai.es', tenantId: TENANT_A, role: 'user' };
-const USER_ADMIN = { _id: new mongoose.Types.ObjectId(), name: 'Admin', email: 'admin@strixai.es', tenantId: TENANT_A, role: 'admin' };
+const USER_A = { _id: new mongoose.Types.ObjectId(), name: 'Alice', email: 'alice@strixai.ai', tenantId: TENANT_A, role: 'user' };
+const USER_ADMIN = { _id: new mongoose.Types.ObjectId(), name: 'Admin', email: 'admin@strixai.ai', tenantId: TENANT_A, role: 'admin' };
 
 function app(handler, metodo = 'post', ruta = '/r', user = USER_A) {
   const a = express();

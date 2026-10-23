@@ -85,7 +85,7 @@ function buildPayload(caso) {
     cantidadMercancia: 10,
     codCice: '28',
     codPi: '01',
-    email: 'despacho@strixai.es',
+    email: 'despacho@strixai.ai',
     tipoDeclaracion: '01',
     certificadoROHS: '01',
     certificadoRAEE: '02'

@@ -30,7 +30,7 @@
           <ent:ContactPerson>
             <ent:name>Jenifer Romero</ent:name>
             <ent:phoneNumber>+34976000000</ent:phoneNumber>
-            <ent:eMailAddress>despacho@strixai.es</ent:eMailAddress>
+            <ent:eMailAddress>despacho@strixai.ai</ent:eMailAddress>
           </ent:ContactPerson>
         </ent:Declarant>
         <ent:GoodsShipment>

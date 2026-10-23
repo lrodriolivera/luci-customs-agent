@@ -19,7 +19,7 @@ describe('emailService', () => {
     process.env.AWS_ACCESS_KEY_ID = 'AKIATEST';
     process.env.AWS_SECRET_ACCESS_KEY = 'secret';
     process.env.SES_REGION = 'us-east-1';
-    process.env.SES_FROM_EMAIL = 'noreply@strixai.es';
+    process.env.SES_FROM_EMAIL = 'noreply@strixai.ai';
     process.env.UNSUBSCRIBE_SECRET = 'test-unsubscribe-secret-32chars-min-length-XXXX';
     sesMock = require('@aws-sdk/client-ses').__sendMock;
     suppressionService = require('../src/services/suppressionService');
@@ -40,11 +40,11 @@ describe('emailService', () => {
     expect(cmd.kind).toBe('raw');
     expect(cmd.input.ConfigurationSetName).toBe('luci-feedback-v1');
     const raw = cmd.input.RawMessage.Data.toString();
-    expect(raw).toContain('List-Unsubscribe: <mailto:unsubscribe@strixai.es');
+    expect(raw).toContain('List-Unsubscribe: <mailto:unsubscribe@strixai.ai');
     expect(raw).toContain('List-Unsubscribe-Post: List-Unsubscribe=One-Click');
     expect(raw).toContain('Content-Type: multipart/alternative');
     expect(raw).toContain('To: user@example.com');
-    expect(raw).toContain('From: LUCI <noreply@strixai.es>');
+    expect(raw).toContain('From: LUCI <noreply@strixai.ai>');
     expect(raw).toContain('Content-Transfer-Encoding: base64');
   });
 

@@ -2,7 +2,7 @@
 # (eu-west-1) el 2026-07-15 tras la suspensión de la cuenta AWS. Dockerizado.
 # IA: Bedrock con cuenta UMMIA (405894862059). Auth: JWT_LEGACY_MODE (sin Cognito).
 # BD nueva (el Mongo del EC2 se perdió; TARIC se re-importa con los scripts del backend).
-# Cert FNMT (AEAT) montado read-only. El túnel sirve aduanas.strixai.es → frontend.
+# Cert FNMT (AEAT) montado read-only. El túnel sirve aduanas.strixai.ai → frontend.
 #
 # Healthchecks (1/Ago/2026): "restart: unless-stopped" solo reacciona si el proceso
 # muere. No cubre el fallo más habitual —proceso vivo pero sin servir— ni evita que

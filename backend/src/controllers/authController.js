@@ -390,7 +390,7 @@ const forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save({ validateBeforeSave: false });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'https://aduanas.strixai.es';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://aduanas.strixai.ai';
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     // `emailService.sendEmail` NO lanza en sus tres modos de fallo (sin SMTP/SES

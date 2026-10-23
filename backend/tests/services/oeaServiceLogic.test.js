@@ -30,7 +30,7 @@ function solicitud(overrides = {}) {
       nif: 'B22477020',
       eori: 'ESB22477020',
       address: { street: 'Calle 1', city: 'Madrid', postalCode: '28001', country: 'ES' },
-      contact: { name: 'Luis Rodriguez', email: 'luis@strixai.es', phone: '+34600000000' },
+      contact: { name: 'Luis Rodriguez', email: 'luis@strixai.ai', phone: '+34600000000' },
       legalRepresentative: { name: 'Jenifer Romero', nif: '70073780W' },
       ...overrides.organization
     }

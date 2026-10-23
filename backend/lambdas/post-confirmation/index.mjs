@@ -1,4 +1,4 @@
-const BACKEND_URL = process.env.BACKEND_URL || 'https://aduanas.strixai.es';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://aduanas.strixai.ai';
 const REGISTER_SYNC_SECRET = process.env.REGISTER_SYNC_SECRET;
 
 export const handler = async (event) => {

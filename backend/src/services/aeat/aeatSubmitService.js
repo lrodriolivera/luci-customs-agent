@@ -257,7 +257,7 @@ async function submitH7(h7Declaration, tenant) {
       street: tenant?.businessInfo?.address?.street || tenant?.address?.street || 'Calle Ejemplo 1',
       postcode: tenant?.businessInfo?.address?.postalCode || tenant?.address?.postalCode || '50001'
     },
-    emailDespacho: h7Declaration.recipient?.email || 'despacho@strixai.es',
+    emailDespacho: h7Declaration.recipient?.email || 'despacho@strixai.ai',
     representanteStatus,
     exportador: {
       name: h7Declaration.sender?.name || '',

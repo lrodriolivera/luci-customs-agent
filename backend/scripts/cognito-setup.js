@@ -15,8 +15,8 @@ const {
 const REGION = 'eu-west-1';
 const SES_REGION = 'us-east-1';
 const AWS_ACCOUNT_ID = '367509577730';
-const SES_SOURCE_ARN = `arn:aws:ses:${SES_REGION}:${AWS_ACCOUNT_ID}:identity/strixai.es`;
-const FROM_EMAIL = 'noreply@strixai.es';
+const SES_SOURCE_ARN = `arn:aws:ses:${SES_REGION}:${AWS_ACCOUNT_ID}:identity/strixai.ai`;
+const FROM_EMAIL = 'noreply@strixai.ai';
 const POOL_NAME = 'luci-customs-pool';
 
 const client = new CognitoIdentityProviderClient({ region: REGION });

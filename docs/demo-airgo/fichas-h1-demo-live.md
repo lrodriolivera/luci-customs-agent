@@ -1,6 +1,6 @@
 # FICHAS H1 DEMO LIVE - DUA IMPORTACION
 
-URL: https://aduanas.strixai.es/declarations/h1/new
+URL: https://aduanas.strixai.ai/declarations/h1/new
 
 ---
 

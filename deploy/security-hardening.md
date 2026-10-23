@@ -1,6 +1,6 @@
 # LUCI Customs Agent - Security Hardening
 **Fecha**: 12 de Febrero 2026
-**Servidor**: aduanas.strixai.es (EC2 Ubuntu 22.04)
+**Servidor**: aduanas.strixai.ai (EC2 Ubuntu 22.04)
 
 ---
 
@@ -180,17 +180,17 @@ mongosh --quiet 'mongodb://localhost:27017/luci-customs' --eval 'db.stats()'
 # Debe devolver: MongoServerError: requires authentication
 
 # Headers
-curl -sI https://aduanas.strixai.es | grep -iE 'server|security|referrer|x-frame|x-content|permissions'
+curl -sI https://aduanas.strixai.ai | grep -iE 'server|security|referrer|x-frame|x-content|permissions'
 
 # SSL
-curl -sI https://aduanas.strixai.es | head -3
+curl -sI https://aduanas.strixai.ai | head -3
 
 # Puerto 5001 bloqueado
 curl -s --max-time 3 http://46.137.105.47:5001/health
 # Debe fallar (timeout)
 
 # Backend health
-curl -s https://aduanas.strixai.es/health
+curl -s https://aduanas.strixai.ai/health
 
 # Backup manual
 /opt/luci-customs/backup-mongodb.sh

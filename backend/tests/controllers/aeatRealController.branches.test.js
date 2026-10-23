@@ -95,7 +95,7 @@ const TENANT_A = new mongoose.Types.ObjectId();
 const USER_A = {
   _id: new mongoose.Types.ObjectId(),
   name: 'Alice',
-  email: 'alice@strixai.es',
+  email: 'alice@strixai.ai',
   tenantId: TENANT_A,
   role: 'user'
 };
@@ -1041,7 +1041,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
       // Verificar que logger.info fue llamado con el email del usuario
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Certificado importado: CERT-OK',
-        { user: 'alice@strixai.es' }
+        { user: 'alice@strixai.ai' }
       );
     });
 
@@ -1350,7 +1350,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Certificado eliminado: CERT-TO-DELETE',
-        { user: 'alice@strixai.es' }
+        { user: 'alice@strixai.ai' }
       );
     });
 
@@ -1387,7 +1387,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
         'SSL Certificate reload requested',
         expect.objectContaining({
           success: true,
-          user: 'alice@strixai.es'
+          user: 'alice@strixai.ai'
         })
       );
     });
@@ -1405,7 +1405,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Entorno AEAT cambiado a: sandbox',
-        { user: 'alice@strixai.es' }
+        { user: 'alice@strixai.ai' }
       );
     });
   });

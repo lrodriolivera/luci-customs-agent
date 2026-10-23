@@ -2,7 +2,7 @@
 
 **Para**: Nationale Helpdesk Douane - Software Developer Support
 **Via**: Portal nh.douane.nl (tras registro) o tel. (088) 156 66 55
-**CC**: luis.rodriguez@strixai.es
+**CC**: luis.rodriguez@strixai.ai
 
 ---
 
@@ -47,7 +47,7 @@ We have already implemented:
 - **Company**: STRIX AI SL (Spain)
 - **EORI**: ESB22477020
 - **Software name**: LUCI Customs Agent
-- **Contact**: Luis Rodriguez (luis.rodriguez@strixai.es)
+- **Contact**: Luis Rodriguez (luis.rodriguez@strixai.ai)
 
 ## Questions
 
@@ -62,4 +62,4 @@ Kind regards,
 
 Luis Rodriguez
 STRIX AI SL
-luis.rodriguez@strixai.es
+luis.rodriguez@strixai.ai

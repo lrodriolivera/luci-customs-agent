@@ -212,7 +212,7 @@ describe('validateApplication: la solicitud exige datos completos', () => {
         nif: 'B22477020',
         eori: 'ESB22477020',
         address: { city: 'Madrid' },
-        contact: { name: 'Luis', email: 'luis@strixai.es' },
+        contact: { name: 'Luis', email: 'luis@strixai.ai' },
         legalRepresentative: { name: 'Jenifer' }
       },
       certification: { type: 'OEAC' },

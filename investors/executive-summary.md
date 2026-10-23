@@ -20,7 +20,7 @@ LUCI es una plataforma SaaS de gestion aduanera que integra:
 - **Envio directo a AEAT**: Firmado digitalmente con certificado FNMT, comunicacion SOAP con web services oficiales
 - **Asistente IA 24/7**: Experto en normativa aduanera (CAU, TARIC, regimenes) disponible desde cualquier pantalla
 
-La plataforma esta desplegada en produccion en aduanas.strixai.es con 67+ componentes frontend, 40+ servicios backend y 25+ endpoints API.
+La plataforma esta desplegada en produccion en aduanas.strixai.ai con 67+ componentes frontend, 40+ servicios backend y 25+ endpoints API.
 
 ## 3. VALIDACION
 
@@ -106,4 +106,4 @@ El equipo fundador combina expertise tecnico full-stack (React, Node.js, MongoDB
 
 ---
 
-**Contacto**: strixai.es | aduanas.strixai.es
+**Contacto**: strixai.ai | aduanas.strixai.ai

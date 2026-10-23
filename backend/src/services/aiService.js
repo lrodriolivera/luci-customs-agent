@@ -5202,7 +5202,7 @@ Responde en JSON:
       supportOptions: {
         chatAvailable: true,
         phoneSupport: '+34 900 XXX XXX',
-        emailSupport: 'soporte@strixai.es',
+        emailSupport: 'soporte@strixai.ai',
         faqLink: '/ayuda/faq'
       },
       analyzedAt: new Date().toISOString()

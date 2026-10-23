@@ -2,7 +2,7 @@
 
 **Fecha**: 12 de Febrero de 2026
 **Empresa**: STRIX AI SL (NIF: B22477020)
-**Plataforma**: https://aduanas.strixai.es
+**Plataforma**: https://aduanas.strixai.ai
 
 ---
 
@@ -129,7 +129,7 @@
 
 **Email:**
 - `emailService.js` existe pero SMTP_USER/SMTP_PASS vacios
-- `EMAIL_FROM` apunta a `noreply@luci-customs.com` (deberia ser `@strixai.es`)
+- `EMAIL_FROM` apunta a `noreply@luci-customs.com` (deberia ser `@strixai.ai`)
 - Sin email de bienvenida al registrarse
 - Sin templates con variables (nombre empresa hardcodeado)
 

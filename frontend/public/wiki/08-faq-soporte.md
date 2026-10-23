@@ -2,7 +2,7 @@
 
 [← Volver al índice](README.md)
 
-> Las preguntas más frecuentes con respuestas concisas. Si no encuentras la tuya, escribe a `soporte@strixai.es`.
+> Las preguntas más frecuentes con respuestas concisas. Si no encuentras la tuya, escribe a `soporte@strixai.ai`.
 
 ---
 
@@ -197,12 +197,12 @@ Los KPIs llaman a IA (Claude analiza tus datos). 30-60 segundos es normal en pri
 
 | Situación | A quién |
 |---|---|
-| Bug LUCI («Algo salió mal», pantalla rota, función que no responde) | `soporte@strixai.es` con captura + URL + hora |
+| Bug LUCI («Algo salió mal», pantalla rota, función que no responde) | `soporte@strixai.ai` con captura + URL + hora |
 | Duda funcional aduanera (no es bug) | Asistente LUCI + esta wiki |
 | AEAT me da error que no entiendo | Asistente LUCI: «Explícame el error AEAT código 1180» |
-| Mi certificado FNMT no se valida | `soporte@strixai.es` urgente — bloquea envíos |
+| Mi certificado FNMT no se valida | `soporte@strixai.ai` urgente — bloquea envíos |
 | Cambio en mi rol/permisos | Tu administrador del tenant (no a soporte) |
-| Solicitar nueva integración con sistema externo | `soporte@strixai.es` con caso de uso |
+| Solicitar nueva integración con sistema externo | `soporte@strixai.ai` con caso de uso |
 
 ---
 
@@ -210,11 +210,11 @@ Los KPIs llaman a IA (Claude analiza tus datos). 30-60 segundos es normal en pri
 
 | | |
 |---|---|
-| **Soporte general** | <soporte@strixai.es> |
-| **Comercial** | <rodrigo.godoy@strixai.es> |
-| **Tech Lead** | <luis.rodriguez@strixai.es> |
-| **CEO / Representante legal** | <jenifer.romero@strixai.es> |
-| **Plataforma** | <https://aduanas.strixai.es> |
+| **Soporte general** | <soporte@strixai.ai> |
+| **Comercial** | <rodrigo.godoy@strixai.ai> |
+| **Tech Lead** | <luis.rodriguez@strixai.ai> |
+| **CEO / Representante legal** | <jenifer.romero@strixai.ai> |
+| **Plataforma** | <https://aduanas.strixai.ai> |
 
 Horario de soporte: L-V 9:00-18:00 CET. Incidencias críticas (caída, no se puede declarar): respuesta < 2 h.
 

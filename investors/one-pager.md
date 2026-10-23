@@ -12,7 +12,7 @@ LUCI automatiza el ciclo aduanero completo: clasificacion TARIC con IA, calculo 
 ## TRACCION
 - 4/6 builders de declaraciones aceptados por AEAT con MRN reales
 - 47 rondas de testing en entorno PRE de la Agencia Tributaria
-- Producto completo desplegado en produccion (aduanas.strixai.es)
+- Producto completo desplegado en produccion (aduanas.strixai.ai)
 - POC adicional completada para 300dec/Correos de Espana
 - 10 suites de tests E2E automatizados
 
@@ -49,4 +49,4 @@ Full-stack tech team: React + Node.js + MongoDB + AWS + Claude API
 Relacion directa con AEAT/DIT para validacion de integraciones
 
 ---
-**Contacto**: strixai.es | aduanas.strixai.es
+**Contacto**: strixai.ai | aduanas.strixai.ai

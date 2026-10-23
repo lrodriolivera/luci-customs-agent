@@ -122,7 +122,7 @@ class PDFGenerator {
     doc.save();
     doc.rect(mx, bottom - 8, pageWidth, 0.5).fill(COLORS.border);
     doc.font('Helvetica').fontSize(6.5).fillColor(COLORS.gray);
-    doc.text('Generado por LUCI · aduanas.strixai.es · Strix AI', mx, bottom - 3, { width: pageWidth * 0.6, lineBreak: false });
+    doc.text('Generado por LUCI · aduanas.strixai.ai · Strix AI', mx, bottom - 3, { width: pageWidth * 0.6, lineBreak: false });
     doc.text('Pagina 1', mx + pageWidth * 0.6, bottom - 3, { width: pageWidth * 0.4, align: 'right', lineBreak: false });
     doc.restore();
   }

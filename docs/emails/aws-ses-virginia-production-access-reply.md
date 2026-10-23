@@ -1,6 +1,6 @@
 # Reply to AWS SES Production Access Request (us-east-1 / N. Virginia)
 
-**From:** luis.rodriguez@strixai.es (or whatever the original submitter was)
+**From:** luis.rodriguez@strixai.ai (or whatever the original submitter was)
 **To:** AWS SES support (reply to the original ticket thread)
 **Subject:** (reply on same thread — AWS will match automatically)
 **Date drafted:** 2026-04-21
@@ -13,17 +13,17 @@ Thank you for the quick response. Please find below the detailed information you
 
 ## Who we are
 
-We are **STRIX AI SL** (Spain, VAT B22477020), an early-stage B2B SaaS company building **LUCI Customs Agent** (https://aduanas.strixai.es), an AI-assisted customs-declaration platform used by Spanish and EU customs brokers (H1/H7/AES/ENS filings with AEAT España). Our first paying customer is AIRGO EXPRESS (express parcel courier, NL+ES operations). We also operate two sibling products on the same infrastructure — **AXEL** (freight quoting) and a Lambda-based notification service for **300dec / Correos** (state-owned Spanish postal carrier, customs notifications workflow).
+We are **STRIX AI SL** (Spain, VAT B22477020), an early-stage B2B SaaS company building **LUCI Customs Agent** (https://aduanas.strixai.ai), an AI-assisted customs-declaration platform used by Spanish and EU customs brokers (H1/H7/AES/ENS filings with AEAT España). Our first paying customer is AIRGO EXPRESS (express parcel courier, NL+ES operations). We also operate two sibling products on the same infrastructure — **AXEL** (freight quoting) and a Lambda-based notification service for **300dec / Correos** (state-owned Spanish postal carrier, customs notifications workflow).
 
-All three products send **transactional email only** from the verified domain `strixai.es` (already in SES as a domain identity with DKIM). There is no marketing, no newsletters, no cold outreach, and no purchased lists.
+All three products send **transactional email only** from the verified domain `strixai.ai` (already in SES as a domain identity with DKIM). There is no marketing, no newsletters, no cold outreach, and no purchased lists.
 
 ## Verified identities
 
-- Domain identity: `strixai.es` (DKIM verified, DMARC configured).
+- Domain identity: `strixai.ai` (DKIM verified, DMARC configured).
 - From addresses in use:
-  - `noreply@strixai.es` — LUCI + AXEL product emails
-  - `luci@strixai.es` — 300dec / Correos notification service
-  - `despacho@strixai.es` — human correspondence with AEAT and clients
+  - `noreply@strixai.ai` — LUCI + AXEL product emails
+  - `luci@strixai.ai` — 300dec / Correos notification service
+  - `despacho@strixai.ai` — human correspondence with AEAT and clients
 
 ## How often we send email
 
@@ -74,7 +74,7 @@ We will finish both items before we start sending significant volume from the us
 
 ## Why us-east-1 in addition to eu-west-1
 
-Our eu-west-1 SES is still in the sandbox; we were denied production access in eu-west-1 on an earlier review and are preparing a separate appeal for that region. In the meantime, us-east-1 lets us unblock customer-facing transactional email for our first paying customer (AIRGO EXPRESS) while we work through the EU review. Our recipients are almost entirely in Spain; from-domain is `strixai.es`.
+Our eu-west-1 SES is still in the sandbox; we were denied production access in eu-west-1 on an earlier review and are preparing a separate appeal for that region. In the meantime, us-east-1 lets us unblock customer-facing transactional email for our first paying customer (AIRGO EXPRESS) while we work through the EU review. Our recipients are almost entirely in Spain; from-domain is `strixai.ai`.
 
 ## Additional technical context
 
@@ -85,7 +85,7 @@ Our eu-west-1 SES is still in the sandbox; we were denied production access in e
 
 ## Summary request
 
-Please grant production access for SES in us-east-1 under the verified `strixai.es` identity, initial rate cap of our choosing (10 emails/second is more than enough). We will close the bounce/complaint and List-Unsubscribe gaps within two weeks of approval and are happy to follow up with confirmation once done.
+Please grant production access for SES in us-east-1 under the verified `strixai.ai` identity, initial rate cap of our choosing (10 emails/second is more than enough). We will close the bounce/complaint and List-Unsubscribe gaps within two weeks of approval and are happy to follow up with confirmation once done.
 
 Thank you very much for the review.
 
@@ -93,6 +93,6 @@ Best regards,
 
 Luis Rodríguez
 Tech Lead, STRIX AI SL
-luis.rodriguez@strixai.es
+luis.rodriguez@strixai.ai
 +34 ___ ___ ___  (add phone if you want them to have one)
-https://aduanas.strixai.es
+https://aduanas.strixai.ai

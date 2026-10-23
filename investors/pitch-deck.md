@@ -13,7 +13,7 @@ y las envia directamente a la Agencia Tributaria
 
 Pre-Seed Round: 150-300K EUR
 
-STRIX AI SL | strixai.es | aduanas.strixai.es
+STRIX AI SL | strixai.ai | aduanas.strixai.ai
 
 ---
 
@@ -48,7 +48,7 @@ STRIX AI SL | strixai.es | aduanas.strixai.es
 
 # SLIDE 4: DEMO / PRODUCTO
 
-**Plataforma en produccion: aduanas.strixai.es**
+**Plataforma en produccion: aduanas.strixai.ai**
 
 [Screenshot: Dashboard principal con KPIs]
 [Screenshot: Clasificacion TARIC con arbol interactivo]
@@ -308,8 +308,8 @@ Churn 5% Professional, 3% Business.
 **Siguiente paso**: Demo en vivo de 20 minutos
 
 **Contacto**:
-- Web: strixai.es
-- Producto: aduanas.strixai.es
+- Web: strixai.ai
+- Producto: aduanas.strixai.ai
 - Email: [email de contacto]
 - LinkedIn: [perfil]
 

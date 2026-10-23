@@ -14,7 +14,7 @@ function minimalData(overrides = {}) {
     supervisingCustomsOffice: 'ES002801',
     declaranteNIF: '89890001K',
     declaranteNombre: 'STRIX AI SL',
-    emailDespacho: 'despacho@strixai.es',
+    emailDespacho: 'despacho@strixai.ai',
     representanteStatus: '2',
     exportador: { name: 'Shenzhen Global Trading Co Ltd', city: 'Shenzhen', country: 'CN', street: '88 Nanshan', postcode: '518000' },
     importador: { name: 'Maria Garcia Lopez', nid: '12345678Z', city: 'Madrid', country: 'ES', street: 'Calle Alcala 200', postcode: '28028', naturalPerson: 'S', phone: '34600000000' },

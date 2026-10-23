@@ -124,4 +124,4 @@ Un cordial saludo,
 Luis Rodriguez
 STRIX AI SL
 NIF: B22477020 / EORI: ESB22477020
-luis.rodriguez@strixai.es
+luis.rodriguez@strixai.ai

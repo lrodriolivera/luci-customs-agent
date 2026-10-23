@@ -3,7 +3,7 @@ const { defineConfig, devices } = require('@playwright/test')
 
 /**
  * Playwright configuration — E2E smoke alternativo a Cypress.
- * Se ejecuta contra aduanas.strixai.es por defecto.
+ * Se ejecuta contra aduanas.strixai.ai por defecto.
  *
  *   npx playwright test --project=chromium-headless-shell
  */
@@ -18,7 +18,7 @@ module.exports = defineConfig({
     ['html', { outputFolder: 'playwright-report', open: 'never' }]
   ],
   use: {
-    baseURL: process.env.BASE_URL || 'https://aduanas.strixai.es',
+    baseURL: process.env.BASE_URL || 'https://aduanas.strixai.ai',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

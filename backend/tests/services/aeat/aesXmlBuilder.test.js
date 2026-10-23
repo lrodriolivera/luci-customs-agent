@@ -102,7 +102,7 @@ describe('regla 1289/1290: EORI excluye name/Address', () => {
 
   test('los contactos del declarante caen a valores por defecto de STRIX', () => {
     const xml = buildAESExportXML({ goodsItems: [item()] });
-    expect(xml).toContain('<ent:eMailAddress>despacho@strixai.es</ent:eMailAddress>');
+    expect(xml).toContain('<ent:eMailAddress>despacho@strixai.ai</ent:eMailAddress>');
     expect(xml).toContain('<ent:name>Despacho</ent:name>');
   });
 });

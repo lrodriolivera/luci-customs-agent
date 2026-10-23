@@ -6,10 +6,10 @@ const definition = {
     title: 'LUCI Customs Agent API',
     version: '1.0.0',
     description: 'Plataforma aduanera multi-país con IA (AEAT España + Douane Netherlands)',
-    contact: { name: 'STRIX AI', email: 'soporte@strixai.es', url: 'https://aduanas.strixai.es' }
+    contact: { name: 'STRIX AI', email: 'soporte@strixai.ai', url: 'https://aduanas.strixai.ai' }
   },
   servers: [
-    { url: 'https://aduanas.strixai.es', description: 'Production' },
+    { url: 'https://aduanas.strixai.ai', description: 'Production' },
     { url: 'http://localhost:5001', description: 'Local dev' }
   ],
   components: {

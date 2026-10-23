@@ -6,7 +6,7 @@
  * El token se reusa para todas las pruebas API de la suite.
  */
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' }
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' }
 let sharedToken = null
 
 function auth() {

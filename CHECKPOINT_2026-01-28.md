@@ -2,7 +2,7 @@
 
 **Fecha:** 28 de Enero de 2026
 **Proyecto:** LUCI - Agente Aduanero Inteligente
-**Servidor Produccion:** https://aduanas.strixai.es
+**Servidor Produccion:** https://aduanas.strixai.ai
 **IP AWS:** 46.137.105.47
 
 ---
@@ -101,8 +101,8 @@ PM2 Process List:
 - luci-ai-service : online (pid 50942)
 
 URLs verificadas:
-- Frontend: https://aduanas.strixai.es (HTTP 200)
-- API: https://aduanas.strixai.es/api/pue/ai/analyze-goods (requiere auth - OK)
+- Frontend: https://aduanas.strixai.ai (HTTP 200)
+- API: https://aduanas.strixai.ai/api/pue/ai/analyze-goods (requiere auth - OK)
 ```
 
 ---

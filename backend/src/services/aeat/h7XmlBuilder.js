@@ -290,7 +290,7 @@ function buildAltaH7V1XML(data) {
         <Declarant>
           <ContactPerson>
             <name>${esc(declaranteNombre)}</name>
-            <eMailAddress>${esc(emailDespacho || 'despacho@strixai.es')}</eMailAddress>
+            <eMailAddress>${esc(emailDespacho || 'despacho@strixai.ai')}</eMailAddress>
           </ContactPerson>
           <name>${esc(declaranteNombre)}</name>
           <identificationNumber>${esc(declaranteNIF)}</identificationNumber>

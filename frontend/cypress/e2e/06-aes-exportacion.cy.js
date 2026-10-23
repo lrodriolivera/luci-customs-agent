@@ -26,7 +26,7 @@ describe('06 - AES: Exportacion', () => {
     cy.contains('NIF').parent().find('input').clear().type('B22477020')
 
     // Email
-    cy.contains('Email').parent().find('input').clear().type('despacho@strixai.es')
+    cy.contains('Email').parent().find('input').clear().type('despacho@strixai.ai')
     cy.captureStep('06-04-datos-exportador')
 
     // Siguiente

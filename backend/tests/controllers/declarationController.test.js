@@ -38,7 +38,7 @@ jest.mock('../../src/services/customs', () => ({
 
 const declarationController = require('../../src/controllers/declarationController');
 
-const USER = { _id: 'u1', name: 'Tester', email: 'tester@strixai.es', tenantId: 't1' };
+const USER = { _id: 'u1', name: 'Tester', email: 'tester@strixai.ai', tenantId: 't1' };
 
 /** Expediente con declaracion lista para enviar. */
 function expedienteListo(overrides = {}) {

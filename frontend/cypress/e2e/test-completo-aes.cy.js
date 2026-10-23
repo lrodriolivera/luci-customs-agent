@@ -6,7 +6,7 @@
 // transporte por carretera > crear expedicion > generar AES XML >
 // previsualizar > enviar a AEAT > verificar MRN y canal verde
 //
-// Usuario: luis.rodriguez@strixai.es (superadmin)
+// Usuario: luis.rodriguez@strixai.ai (superadmin)
 // Datos de prueba: Equipos informaticos, TARIC 8471410000, 2000 kg, 25000 EUR
 // Exportador: STRIX AI SL (B22477020, EORI ESB22477020)
 // Destino: Francia (FR)
@@ -16,11 +16,11 @@
 describe('PRUEBA COMPLETA AES - Declaracion de Exportacion', () => {
 
   before(() => {
-    cy.login('luis.rodriguez@strixai.es', 'test123')
+    cy.login('luis.rodriguez@strixai.ai', 'test123')
   })
 
   beforeEach(() => {
-    cy.login('luis.rodriguez@strixai.es', 'test123')
+    cy.login('luis.rodriguez@strixai.ai', 'test123')
   })
 
   // -------------------------------------------------------------------------
@@ -137,10 +137,10 @@ describe('PRUEBA COMPLETA AES - Declaracion de Exportacion', () => {
     cy.get('body').then($body => {
       if ($body.find('input[type="email"]').length > 0) {
         cy.get('input[type="email"]').first()
-          .clear().type('despacho@strixai.es', { force: true })
+          .clear().type('despacho@strixai.ai', { force: true })
       } else if ($body.text().includes('Email')) {
         cy.contains('Email').parent().find('input').first()
-          .clear().type('despacho@strixai.es', { force: true })
+          .clear().type('despacho@strixai.ai', { force: true })
       }
     })
 
@@ -188,7 +188,7 @@ describe('PRUEBA COMPLETA AES - Declaracion de Exportacion', () => {
     cy.get('body').then($body => {
       if ($body.text().includes('Email')) {
         cy.contains('Email').parent().find('input').first()
-          .clear().type('despacho@strixai.es', { force: true })
+          .clear().type('despacho@strixai.ai', { force: true })
       }
     })
 
@@ -307,7 +307,7 @@ describe('PRUEBA COMPLETA AES - Declaracion de Exportacion', () => {
     cy.get('body').then($body => {
       if ($body.text().includes('Email')) {
         cy.contains('Email').parent().find('input').first()
-          .clear().type('export@strixai.es', { force: true })
+          .clear().type('export@strixai.ai', { force: true })
       }
     })
 

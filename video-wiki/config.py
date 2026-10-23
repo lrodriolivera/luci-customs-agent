@@ -13,8 +13,8 @@ ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")
 
 # === Plataforma ===
-PLATFORM_URL = os.getenv("PLATFORM_URL", "https://aduanas.strixai.es")
-LOGIN_EMAIL = os.getenv("LOGIN_EMAIL", "luis.rodriguez@strixai.es")
+PLATFORM_URL = os.getenv("PLATFORM_URL", "https://aduanas.strixai.ai")
+LOGIN_EMAIL = os.getenv("LOGIN_EMAIL", "luis.rodriguez@strixai.ai")
 LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD", "test123")
 
 # === Wiki source ===

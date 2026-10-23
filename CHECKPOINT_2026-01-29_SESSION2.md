@@ -124,4 +124,4 @@ frontend/src/components/Analytics/AnalyticsDashboard.jsx
 ```
 
 ## URL de Producción
-https://aduanas.strixai.es
+https://aduanas.strixai.ai

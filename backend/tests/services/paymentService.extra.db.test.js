@@ -36,7 +36,7 @@ async function crearExpedicion(extra = {}) {
   return Expedition.create({
     reference: 'EXP-PAY-1',
     tenantId: new mongoose.Types.ObjectId(),
-    client: { nif: 'B22477020', companyName: 'STRIX AI SL', contact: { email: 'pago@strixai.es' } },
+    client: { nif: 'B22477020', companyName: 'STRIX AI SL', contact: { email: 'pago@strixai.ai' } },
     transportMode: 'maritime',
     operationType: 'import',
     calculations: { totalDuties: 100, totalVat: 210, totalSpecialTaxes: 0 },

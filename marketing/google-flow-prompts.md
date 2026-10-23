@@ -166,9 +166,9 @@ flat corporate illustration style, smooth animation, 4K
 
 ```
 Clean dark screen fade-in showing the STRIX AI logo centered, 
-below it the URL "aduanas.strixai.es" in white bold text with orange underline, 
+below it the URL "aduanas.strixai.ai" in white bold text with orange underline, 
 subtle animated background: slow moving dark blue particles, 
-contact line at bottom: "luis.rodriguez@strixai.es", 
+contact line at bottom: "luis.rodriguez@strixai.ai", 
 minimalist corporate end card, 
 slow zoom out, cinematic fade to black, 4K
 ```
@@ -205,7 +205,7 @@ professional SaaS product video style similar to Stripe or Vercel product demos
 | 9 | Expansión Europa | 10 seg | "El mercado alcanzable en la UE..." |
 | 10 | Proyección financiera | 5 seg | "Retorno proyectado: 16 veces..." |
 | 11 | Comparativa 1 vs 3 | 8 seg | "Un agente con LUCI hace el trabajo..." |
-| 12 | Pantalla final | 8 seg | "LUCI — aduanas.strixai.es" |
+| 12 | Pantalla final | 8 seg | "LUCI — aduanas.strixai.ai" |
 | | **TOTAL** | **86 seg** | |
 
 ---
@@ -221,4 +221,4 @@ professional SaaS product video style similar to Stripe or Vercel product demos
 
 ---
 
-*STRIX AI Pioneer Solutions SL · aduanas.strixai.es*
+*STRIX AI Pioneer Solutions SL · aduanas.strixai.ai*

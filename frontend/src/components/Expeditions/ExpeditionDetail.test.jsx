@@ -183,7 +183,7 @@ describe('<ExpeditionDetail />', () => {
 
   test('botón de portal link llama a sendPortalLink', async () => {
     expeditionsAPI.sendPortalLink.mockResolvedValue({
-      data: { data: { portalUrl: 'https://portal.strixai.es/exp123' } }
+      data: { data: { portalUrl: 'https://portal.strixai.ai/exp123' } }
     })
     renderExpeditionDetail()
     await waitFor(() => expect(screen.getByText('expeditions.sendPortal')).toBeInTheDocument())
@@ -196,13 +196,13 @@ describe('<ExpeditionDetail />', () => {
 
   test('abre y cierra modal de portal link', async () => {
     expeditionsAPI.sendPortalLink.mockResolvedValue({
-      data: { data: { portalUrl: 'https://portal.strixai.es/exp123' } }
+      data: { data: { portalUrl: 'https://portal.strixai.ai/exp123' } }
     })
     renderExpeditionDetail()
     await waitFor(() => screen.getByText('expeditions.sendPortal'))
     fireEvent.click(screen.getByText('expeditions.sendPortal'))
     await waitFor(() => expect(screen.getByText('expeditions.portalLinkTitle')).toBeInTheDocument())
-    expect(screen.getByDisplayValue('https://portal.strixai.es/exp123')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('https://portal.strixai.ai/exp123')).toBeInTheDocument()
     fireEvent.click(screen.getAllByText('common.close')[0])
     await waitFor(() => expect(screen.queryByText('expeditions.portalLinkTitle')).not.toBeInTheDocument())
   })
@@ -626,7 +626,7 @@ describe('<ExpeditionDetail />', () => {
 
   test('copia link del portal al portapapeles', async () => {
     expeditionsAPI.sendPortalLink.mockResolvedValue({
-      data: { data: { portalUrl: 'https://portal.strixai.es/exp123' } }
+      data: { data: { portalUrl: 'https://portal.strixai.ai/exp123' } }
     })
     navigator.clipboard = { writeText: vi.fn().mockResolvedValue() }
     renderExpeditionDetail()
@@ -635,7 +635,7 @@ describe('<ExpeditionDetail />', () => {
     await waitFor(() => screen.getByText('expeditions.portalLinkTitle'))
     const copyButton = screen.getAllByRole('button').find(btn => btn.title === 'expeditions.copyLink')
     if (copyButton) fireEvent.click(copyButton)
-    await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith('https://portal.strixai.es/exp123'))
+    await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith('https://portal.strixai.ai/exp123'))
     expect(toast.success).toHaveBeenCalledWith('expeditions.linkCopied')
   })
 
@@ -663,7 +663,7 @@ describe('<ExpeditionDetail />', () => {
     })
     global.window.prompt = vi.fn(() => 'prompt@test.es')
     expeditionsAPI.sendPortalLink.mockResolvedValue({
-      data: { data: { portalUrl: 'https://portal.strixai.es/exp123' } }
+      data: { data: { portalUrl: 'https://portal.strixai.ai/exp123' } }
     })
     renderExpeditionDetail()
     await waitFor(() => screen.getByText('expeditions.sendPortal'))

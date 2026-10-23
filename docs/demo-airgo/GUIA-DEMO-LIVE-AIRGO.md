@@ -10,7 +10,7 @@
 
 | | |
 |---|---|
-| **URL** | https://aduanas.strixai.es |
+| **URL** | https://aduanas.strixai.ai |
 | **Navegador** | Chrome o Firefox actualizado |
 
 ### Usuarios AIRGO EXPRESS
@@ -154,9 +154,9 @@ Se puede descargar la plantilla directamente desde la plataforma (boton "Descarg
 
 | Contacto | Email | Rol |
 |----------|-------|-----|
-| Rodrigo Godoy | rodrigo.godoy@strixai.es | Comercial |
-| Luis Rodriguez | luis.rodriguez@strixai.es | Tecnico |
-| Jenifer Romero | jenifer.romero@strixai.es | Representante |
+| Rodrigo Godoy | rodrigo.godoy@strixai.ai | Comercial |
+| Luis Rodriguez | luis.rodriguez@strixai.ai | Tecnico |
+| Jenifer Romero | jenifer.romero@strixai.ai | Representante |
 
 ---
 

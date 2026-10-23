@@ -50,7 +50,7 @@ jobs:
         working-directory: frontend
         run: npm run build
         env:
-          VITE_API_URL: https://aduanas.strixai.es
+          VITE_API_URL: https://aduanas.strixai.ai
           VITE_APP_NAME: LUCI Customs Agent
           VITE_COGNITO_USER_POOL_ID: eu-west-1_nPgP4hCF3
           VITE_COGNITO_CLIENT_ID: 3sjai6tmg2onposaaiul0trau2

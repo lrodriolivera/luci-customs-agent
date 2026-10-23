@@ -121,7 +121,7 @@ const BillingDashboard = () => {
     if (planId === billingData?.subscription?.plan) return;
 
     if (planId === 'enterprise') {
-      window.open('mailto:luci@strixai.es?subject=Plan Enterprise LUCI', '_blank');
+      window.open('mailto:luci@strixai.ai?subject=Plan Enterprise LUCI', '_blank');
       return;
     }
 

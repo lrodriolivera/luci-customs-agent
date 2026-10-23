@@ -850,7 +850,7 @@ async function seedCommunications(userId, expeditions, requirements) {
         subject: `Comunicacion ${commType.replace(/_/g, ' ')}`,
         content: `Comunicacion presentada ante ${authorityType}.`,
         sentAt: ['sent', 'awaiting_response', 'responded', 'resolved'].includes(status) ? createdAt : undefined,
-        sender: { name: 'STRIX AI SL', role: 'Representante Aduanero', organization: 'STRIX AI', email: 'aduanas@strixai.es' },
+        sender: { name: 'STRIX AI SL', role: 'Representante Aduanero', organization: 'STRIX AI', email: 'aduanas@strixai.ai' },
         recipient: { name: authorityType, role: 'Autoridad competente', organization: authorityType },
         channel: randomItem(['email', 'portal', 'electronic'])
       }],
@@ -896,9 +896,9 @@ async function seedAll() {
     await connectDB();
 
     // Find tester user
-    const tester = await User.findOne({ email: 'tester@strixai.es' });
+    const tester = await User.findOne({ email: 'tester@strixai.ai' });
     if (!tester) {
-      console.error('ERROR: Usuario tester@strixai.es no encontrado. Ejecuta createSuperAdmin.js primero.');
+      console.error('ERROR: Usuario tester@strixai.ai no encontrado. Ejecuta createSuperAdmin.js primero.');
       process.exit(1);
     }
 
@@ -942,7 +942,7 @@ async function seedAll() {
 
     // Summary
     console.log('\n=== Seed completado ===\n');
-    console.log('Datos creados para tester@strixai.es:');
+    console.log('Datos creados para tester@strixai.ai:');
     console.log(`  Expedientes:          25`);
     console.log(`  Requerimientos:       ~15`);
     console.log(`  Plazos:               20`);

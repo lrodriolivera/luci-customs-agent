@@ -125,7 +125,7 @@ DELETE /api/classification/cache/clean        - Limpiar cache antiguo
 
 ## Servidor de Produccion
 - **IP:** 46.137.105.47
-- **URL:** https://aduanas.strixai.es
+- **URL:** https://aduanas.strixai.ai
 - **SSH Key:** ~/.ssh/aws-keys/luci-customs-key.pem
 - **Usuario:** ubuntu
 - **PM2 Backend:** luci-backend
@@ -134,7 +134,7 @@ DELETE /api/classification/cache/clean        - Limpiar cache antiguo
 ## Como Probar
 
 ### Buscar por Codigo
-1. Ir a https://aduanas.strixai.es
+1. Ir a https://aduanas.strixai.ai
 2. Login: `test@luci.es` / `test123`
 3. Menu lateral -> **Clasificacion TARIC**
 4. Tab **"Buscar por Codigo"**

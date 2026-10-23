@@ -5,7 +5,7 @@
 // login > dashboard > crear expedicion exportacion > rellenar todos los campos >
 // generar AES XML > enviar a AEAT PRE > verificar MRN y Canal V (verde)
 //
-// Usuario: luis.rodriguez@strixai.es (superadmin)
+// Usuario: luis.rodriguez@strixai.ai (superadmin)
 // Datos: Equipos informaticos a Francia, TARIC 8471410000, 2000kg, 25000 EUR
 // Exportador: STRIX AI SL (B22477020, ESB22477020)
 // Destino: Francia (FR)
@@ -15,11 +15,11 @@
 describe('AES REAL AEAT PRE - Exportacion Completa', () => {
 
   before(() => {
-    cy.login('luis.rodriguez@strixai.es', 'test123')
+    cy.login('luis.rodriguez@strixai.ai', 'test123')
   })
 
   beforeEach(() => {
-    cy.login('luis.rodriguez@strixai.es', 'test123')
+    cy.login('luis.rodriguez@strixai.ai', 'test123')
   })
 
   // Auto-accept all confirmation dialogs
@@ -131,7 +131,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
     cy.wait(3000)
 
     // Email
-    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-aes-real@strixai.es', { force: true })
+    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-aes-real@strixai.ai', { force: true })
     cy.wait(3000)
 
     // Phone
@@ -191,7 +191,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       const nif = $body.find('input[pattern="[A-Z0-9]{8,10}"]')
       if (nif.length > 0) cy.wrap(nif.first()).clear({ force: true }).type('B22477020', { force: true })
     })
-    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-aes-real@strixai.es', { force: true })
+    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-aes-real@strixai.ai', { force: true })
     // Consignee country (required)
     cy.get('body').then($body => {
       const allText = $body.find('input[type="text"]')
@@ -320,7 +320,7 @@ describe('AES REAL AEAT PRE - Exportacion Completa', () => {
       if (allText.length > 5) cy.wrap(allText.eq(5)).clear({ force: true }).type('46001', { force: true })
     })
     // Email
-    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-aes-real@strixai.es', { force: true })
+    cy.get('input[type="email"]').first().clear({ force: true }).type('prueba-aes-real@strixai.ai', { force: true })
     // Phone
     cy.get('body').then($body => {
       const tel = $body.find('input[type="tel"]')

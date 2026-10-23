@@ -7,7 +7,7 @@
 const puppeteer = require('puppeteer-core');
 const path = require('path');
 
-const BASE_URL = 'https://aduanas.strixai.es';
+const BASE_URL = 'https://aduanas.strixai.ai';
 const EVIDENCE_DIR = path.join(__dirname, '..', '..', 'observaciones_test', 'EVIDENCIA_CORRECCION_ARANCELES');
 
 const TEST_CASES = [

@@ -1,5 +1,5 @@
 const BRAND_COLOR = '#0284c7';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://aduanas.strixai.es';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://aduanas.strixai.ai';
 
 function wrapHtml(content) {
   return `<!DOCTYPE html>

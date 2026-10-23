@@ -3,7 +3,7 @@
 **Fecha de elaboración**: 2026-03-11
 **Última verificación**: **2026-08-15**
 **Responsable**: STRIX AI PIONEER SOLUTIONS, S.L. (CIF: B22477020)
-**Aplicacion**: LUCI Customs Agent (aduanas.strixai.es)
+**Aplicacion**: LUCI Customs Agent (aduanas.strixai.ai)
 
 ---
 
@@ -95,7 +95,7 @@
   - **Falta**: Habilitar MongoDB encryption at rest o EBS encryption
 
 - [x] **Data encryption in transit (HTTPS/TLS)** - **DONE**
-  - Nginx con certificado SSL en `aduanas.strixai.es`
+  - Nginx con certificado SSL en `aduanas.strixai.ai`
   - Todas las conexiones API via HTTPS
   - Certificado FNMT `.p12` con permisos `chmod 600`
 

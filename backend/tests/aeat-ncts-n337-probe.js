@@ -26,7 +26,7 @@ const { buildNCTSTransitXML } = require('../src/services/aeat/nctsXmlBuilder');
 
 const STRIX = {
   eori: 'ESB22477020',
-  email: 'despacho@strixai.es'
+  email: 'despacho@strixai.ai'
 };
 const ADUANA = '002801';
 const SUMARIA_MRN = '25ES00280180003993';

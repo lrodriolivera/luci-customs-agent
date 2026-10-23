@@ -13,8 +13,8 @@
 - **Fecha constitucion**: 2025
 - **CNAE principal**: 6201 - Actividades de programacion informatica
 - **CNAE secundario**: 6311 - Proceso de datos, hosting
-- **Web**: strixai.es
-- **Producto**: aduanas.strixai.es
+- **Web**: strixai.ai
+- **Producto**: aduanas.strixai.ai
 - **Numero de empleados**: [Completar]
 - **Capital social**: [Completar]
 
@@ -142,7 +142,7 @@ SaaS B2B con suscripcion mensual:
 |----------|--------------|---------|
 | Infraestructura AWS | 15 EUR | EC2 t3.micro + EBS + transferencia |
 | IA (Anthropic) | ~7 EUR/usuario | 51 llamadas/mes a modelos Claude |
-| Dominio + SSL | 1 EUR | strixai.es + Let's Encrypt |
+| Dominio + SSL | 1 EUR | strixai.ai + Let's Encrypt |
 | Stripe comisiones | 2.9% + 0.25 EUR | Por transaccion |
 | **Total fijo (0 usuarios)** | **21 EUR** | |
 | **Coste variable por usuario** | **~10 EUR** | IA + infra proporcional |
@@ -206,7 +206,7 @@ SaaS B2B con suscripcion mensual:
 
 ### Producto
 
-- **Plataforma completa desplegada**: aduanas.strixai.es
+- **Plataforma completa desplegada**: aduanas.strixai.ai
 - **67+ componentes frontend** (React + Tailwind) - 42.500 lineas
 - **40+ servicios backend** (Node.js + Express + MongoDB) - 25.000 lineas
 - **6 tipos de declaracion** soportados (H1, H7, AES, ENS, NCTS, PUE)

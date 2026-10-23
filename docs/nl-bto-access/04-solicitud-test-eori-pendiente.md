@@ -23,7 +23,7 @@ Lo que necesitamos es un **test EORI para BTO** (entorno de pruebas).
 |-------|-------|
 | Nombre | Luis Rodriguez |
 | Empresa | STRIX AI SL |
-| Email | luis.rodriguez@strixai.es |
+| Email | luis.rodriguez@strixai.ai |
 | Proceso | Marcar: DECO, DMS, NCTS |
 | Pregunta sobre instalaciones de prueba? | Si |
 
@@ -40,7 +40,7 @@ Wij ontwikkelen LUCI Customs Agent (EORI: ESB22477020) en willen graag aanvragen
 
 Onze software genereert XML-berichten conform MIG DMS 1.30 en MIG DECO 2.0. Wij hebben beide MIG-pakketten gedownload en onze berichten succesvol gevalideerd tegen de officiele XSD-schema's. Wij zijn klaar om te testen zodra wij de benodigde toegang en het test EORI-nummer ontvangen.
 
-Contactpersoon: Luis Rodriguez, luis.rodriguez@strixai.es, +34 614 814 140
+Contactpersoon: Luis Rodriguez, luis.rodriguez@strixai.ai, +34 614 814 140
 
 Met vriendelijke groet, Luis Rodriguez - STRIX AI SL
 ```

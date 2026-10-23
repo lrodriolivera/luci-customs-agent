@@ -4,7 +4,7 @@
  * upload con un CSV pequeño no rompa (incluso sin clasificación IA completa).
  */
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' }
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' }
 let token = null
 
 before(() => {

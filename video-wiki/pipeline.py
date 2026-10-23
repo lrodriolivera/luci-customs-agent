@@ -753,7 +753,7 @@ def _make_outro_clip(w, h, duration):
     from moviepy.editor import ColorClip, ImageClip, CompositeVideoClip
     bg = ColorClip(size=(w, h), color=(12, 74, 110)).set_duration(duration)
     line1 = _text_to_png("Más información en", (w, 70), font_size=40, weight="regular")
-    line2 = _text_to_png("aduanas.strixai.es/wiki", (w, 90), font_size=52, weight="bold")
+    line2 = _text_to_png("aduanas.strixai.ai/wiki", (w, 90), font_size=52, weight="bold")
     c1 = ImageClip(str(line1)).set_duration(duration).set_position(("center", h//2 - 60))
     c2 = ImageClip(str(line2)).set_duration(duration).set_position(("center", h//2 + 10))
     return CompositeVideoClip([bg, c1, c2], size=(w, h)).set_duration(duration)\

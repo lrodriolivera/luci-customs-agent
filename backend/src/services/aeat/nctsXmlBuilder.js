@@ -153,7 +153,7 @@ function buildNCTSTransitXML(data) {
           <ent:ContactPerson>
             <ent:name>${holderContactName || holderName || 'Despacho'}</ent:name>
             <ent:phoneNumber>${holderContactPhone || '+34976000000'}</ent:phoneNumber>
-            <ent:eMailAddress>${holderContactEmail || 'despacho@strixai.es'}</ent:eMailAddress>
+            <ent:eMailAddress>${holderContactEmail || 'despacho@strixai.ai'}</ent:eMailAddress>
           </ent:ContactPerson>
         </ent:HolderOfTheTransitProcedure>
         <ent:Guarantee>

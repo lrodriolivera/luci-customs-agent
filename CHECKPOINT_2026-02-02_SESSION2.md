@@ -143,12 +143,12 @@ POST /api/calculation/duties
 
 ## Servidor de Produccion
 - **IP:** 46.137.105.47
-- **URL:** https://aduanas.strixai.es
+- **URL:** https://aduanas.strixai.ai
 - **Estado:** Desplegado y funcionando
 
 ## Como Probar
 
-1. Ir a https://aduanas.strixai.es
+1. Ir a https://aduanas.strixai.ai
 2. Login: `test@luci.es` / `test123`
 3. Menu lateral -> **Calculadoras** -> **Calculadora de Derechos**
 4. Ingresar:

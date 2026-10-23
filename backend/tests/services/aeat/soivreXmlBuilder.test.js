@@ -137,11 +137,11 @@ describe('certificados y codigos RII', () => {
   });
 
   test('vuelca centro (CodCice), punto de inspeccion (CodPI) y email', () => {
-    const xml = buildSOIVREAltaXML({ codCice: '11', codPi: '02', email: 'pue@strixai.es', tipoDeclaracion: '03' });
+    const xml = buildSOIVREAltaXML({ codCice: '11', codPi: '02', email: 'pue@strixai.ai', tipoDeclaracion: '03' });
 
     expect(xml).toContain('<CodCice>11</CodCice>');
     expect(xml).toContain('<CodPI>02</CodPI>');
-    expect(xml).toContain('<email>pue@strixai.es</email>');
+    expect(xml).toContain('<email>pue@strixai.ai</email>');
     expect(xml).toContain('<TipoDeclaracion>03</TipoDeclaracion>');
   });
 });

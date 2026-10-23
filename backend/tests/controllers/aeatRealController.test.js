@@ -60,7 +60,7 @@ jest.mock('../../src/services/aiService', () => ({ askLuci: undefined }));
 
 const aeatRealController = require('../../src/controllers/aeatRealController');
 
-const USER = { _id: 'u1', email: 'tester@strixai.es', tenantId: 't1' };
+const USER = { _id: 'u1', email: 'tester@strixai.ai', tenantId: 't1' };
 const PASSWORD_P12 = 'AbadiaSuperSecreta2026';
 
 function app(handler, metodo = 'post', ruta = '/r') {
