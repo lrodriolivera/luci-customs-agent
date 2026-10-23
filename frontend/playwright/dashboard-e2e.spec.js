@@ -10,7 +10,7 @@ const { test, expect } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' };
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' };
 const SCREENS_DIR = path.join(__dirname, 'dashboard-test-screens');
 const REPORT_PATH = path.join(SCREENS_DIR, 'report.json');
 if (!fs.existsSync(SCREENS_DIR)) fs.mkdirSync(SCREENS_DIR, { recursive: true });
@@ -87,7 +87,7 @@ test.describe('Dashboard E2E LUCI', () => {
       const u = res.url();
       if (u.includes('/api/') && res.status() >= 400 && !u.includes('/api/email')) {
         record('http-error', res.status() >= 500 ? 'critical' : 'high',
-          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.es', '')}`);
+          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.ai', '')}`);
       }
     });
   });

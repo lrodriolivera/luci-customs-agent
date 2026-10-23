@@ -6,7 +6,7 @@
     {
       "cat": "login",
       "sev": "low",
-      "msg": "auth ok user=luis.rodriguez@strixai.es role=admin"
+      "msg": "auth ok user=luis.rodriguez@strixai.ai role=admin"
     },
     {
       "cat": "list-h1",

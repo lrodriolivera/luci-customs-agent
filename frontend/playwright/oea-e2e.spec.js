@@ -24,7 +24,7 @@ const { test, expect } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' };
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' };
 const SCREENS = path.join(__dirname, 'oea-e2e-screens');
 const REPORT = path.join(SCREENS, 'report.json');
 if (!fs.existsSync(SCREENS)) fs.mkdirSync(SCREENS, { recursive: true });
@@ -70,7 +70,7 @@ test.describe('Operador Economico Autorizado /oea', () => {
       const u = res.url();
       if (u.includes('/api/') && res.status() >= 400 && !u.includes('cache-stats')) {
         log('http-error', res.status() >= 500 ? 'critical' : 'high',
-          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.es', '')}`);
+          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.ai', '')}`);
       }
     });
   });

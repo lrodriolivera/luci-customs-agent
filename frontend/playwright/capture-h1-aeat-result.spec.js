@@ -3,7 +3,7 @@ const { test } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' };
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' };
 const SCREENS = path.join(__dirname, 'submit-h1-screens');
 
 test('Capturar detail con MRN real', async ({ context, page, request }) => {

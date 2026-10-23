@@ -11,7 +11,7 @@ const { test, expect } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' };
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' };
 const SCREENS = path.join(__dirname, 'expedition-full-cycle-screens');
 const REPORT = path.join(SCREENS, 'report.json');
 if (!fs.existsSync(SCREENS)) fs.mkdirSync(SCREENS, { recursive: true });
@@ -89,7 +89,7 @@ test.describe('Ciclo completo expediente', () => {
       const u = res.url();
       if (u.includes('/api/') && res.status() >= 400 && !u.includes('/cache-stats')) {
         log('http-error', res.status() >= 500 ? 'critical' : 'high',
-          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.es', '')}`);
+          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.ai', '')}`);
       }
     });
   });
@@ -110,7 +110,7 @@ test.describe('Ciclo completo expediente', () => {
         address: 'Calle Aduana 12', city: 'Madrid', postalCode: '28013',
         country: 'ES',
         contactPerson: 'Luis Rodriguez',
-        email: 'luis.rodriguez@strixai.es', phone: '+34 911 222 333'
+        email: 'luis.rodriguez@strixai.ai', phone: '+34 911 222 333'
       },
       exporter: {
         companyName: 'Anatolian Mobilya AS',
@@ -265,7 +265,7 @@ test.describe('Ciclo completo expediente', () => {
     expect(r.status()).toBeLessThan(400);
     const body = await r.json();
     portalUrl = body?.portalUrl;
-    // Extract token from URL: https://aduanas.strixai.es/portal/<token>
+    // Extract token from URL: https://aduanas.strixai.ai/portal/<token>
     const match = portalUrl?.match(/\/portal\/([0-9a-f-]+)/);
     portalToken = match?.[1];
     log('portal-token', portalToken ? 'low' : 'high',
@@ -319,7 +319,7 @@ test.describe('Ciclo completo expediente', () => {
       const u = res.url();
       if (u.includes('/api/') && res.status() >= 400) {
         log('portal-page-http', 'medium',
-          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.es', '')}`);
+          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.ai', '')}`);
       }
     });
     await page.goto(`/portal/${portalToken}`);

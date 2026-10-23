@@ -6,7 +6,7 @@ const { test, expect } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' };
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' };
 const SCREENS = path.join(__dirname, 'submit-h1-screens');
 if (!fs.existsSync(SCREENS)) fs.mkdirSync(SCREENS, { recursive: true });
 
@@ -113,7 +113,7 @@ test('Enviar H1 EXP-2026-MOKAF2T9 a AEAT PRE', async ({ context, page, request }
     uiTexts: { mrnText: mrnText?.trim(), channelText: channelText?.trim() },
     apiCalls: apiCalls.map((c) => ({
       status: c.status,
-      url: c.url.replace('https://aduanas.strixai.es', ''),
+      url: c.url.replace('https://aduanas.strixai.ai', ''),
       response: { success: c.body?.success, mrn: c.body?.data?.mrn || c.body?.mrn, channel: c.body?.data?.channel || c.body?.channel, error: c.body?.error }
     }))
   }, null, 2));

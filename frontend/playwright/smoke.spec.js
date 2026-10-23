@@ -5,7 +5,7 @@
  */
 const { test, expect } = require('@playwright/test')
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' }
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' }
 let sharedToken = null
 let sharedUser = null
 

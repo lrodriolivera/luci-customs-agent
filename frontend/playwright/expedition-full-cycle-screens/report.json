@@ -8,7 +8,7 @@
   },
   "portal": {
     "token": "500916d4-93ac-4049-b0bd-07aaed27c976",
-    "url": "https://aduanas.strixai.es/portal/500916d4-93ac-4049-b0bd-07aaed27c976"
+    "url": "https://aduanas.strixai.ai/portal/500916d4-93ac-4049-b0bd-07aaed27c976"
   },
   "paymentId": "PAY-MOK3KVGZ-7KSMRQ",
   "docIds": 4,
@@ -86,7 +86,7 @@
     {
       "cat": "portal-token",
       "sev": "low",
-      "msg": "Portal token extracted: 500916d4... URL=https://aduanas.strixai.es/portal/500916d4-93ac-4049-b0bd-07aaed27c976"
+      "msg": "Portal token extracted: 500916d4... URL=https://aduanas.strixai.ai/portal/500916d4-93ac-4049-b0bd-07aaed27c976"
     },
     {
       "cat": "portal-get",

@@ -38,7 +38,7 @@
     {
       "cat": "ui-create-redirect",
       "sev": "low",
-      "msg": "URL post-submit: https://aduanas.strixai.es/expeditions/69f1f231adb11278e00b3774"
+      "msg": "URL post-submit: https://aduanas.strixai.ai/expeditions/69f1f231adb11278e00b3774"
     },
     {
       "cat": "ui-create-ok",
@@ -143,7 +143,7 @@
     {
       "cat": "portal-url",
       "sev": "low",
-      "msg": "Portal URL: https://aduanas.strixai.es/portal/5c8f4811-18a0-49cc-93a9-4950c053a050"
+      "msg": "Portal URL: https://aduanas.strixai.ai/portal/5c8f4811-18a0-49cc-93a9-4950c053a050"
     },
     {
       "cat": "portal-message",

@@ -8,7 +8,7 @@ const { test, expect } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' };
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' };
 const SCREENS = path.join(__dirname, 'h7-new-screens');
 const REPORT = path.join(SCREENS, 'report.json');
 if (!fs.existsSync(SCREENS)) fs.mkdirSync(SCREENS, { recursive: true });
@@ -172,7 +172,7 @@ test.describe('H7 directo /h7/new — flujo completo + AEAT', () => {
       const u = res.url();
       if (u.includes('/api/') && res.status() >= 400 && !u.includes('cache-stats')) {
         log('http-error', res.status() >= 500 ? 'critical' : 'high',
-          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.es', '')}`);
+          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.ai', '')}`);
       }
     });
   });
@@ -320,7 +320,7 @@ test.describe('H7 directo /h7/new — flujo completo + AEAT', () => {
     // Verificar redirect a /h7/:id
     const url = page.url();
     log('h7-redirect', /\/h7\/[a-f0-9]{20,}/.test(url) ? 'low' : 'medium',
-      `URL post-submit: ${url.split('strixai.es')[1] || url}`);
+      `URL post-submit: ${url.split('strixai.ai')[1] || url}`);
 
     if (!createdH7Id && /\/h7\/[a-f0-9]{20,}/.test(url)) {
       createdH7Id = url.split('/h7/')[1].split('?')[0];

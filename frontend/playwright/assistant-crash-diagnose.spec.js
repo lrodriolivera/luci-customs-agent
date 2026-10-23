@@ -3,7 +3,7 @@ const { test } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' };
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' };
 const OUT = path.join(__dirname, 'assistant-crash-diagnose');
 if (!fs.existsSync(OUT)) fs.mkdirSync(OUT, { recursive: true });
 let token, user;

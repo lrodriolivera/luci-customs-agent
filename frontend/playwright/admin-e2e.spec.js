@@ -23,7 +23,7 @@ const { test, expect } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' };
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' };
 const SCREENS = path.join(__dirname, 'admin-e2e-screens');
 const REPORT = path.join(SCREENS, 'report.json');
 if (!fs.existsSync(SCREENS)) fs.mkdirSync(SCREENS, { recursive: true });
@@ -73,7 +73,7 @@ test.describe('Panel Administracion /admin', () => {
       const u = res.url();
       if (u.includes('/api/') && res.status() >= 400 && !u.includes('cache-stats')) {
         log('http-error', res.status() >= 500 ? 'critical' : 'high',
-          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.es', '')}`);
+          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.ai', '')}`);
       }
     });
   });
@@ -130,7 +130,7 @@ test.describe('Panel Administracion /admin', () => {
       if (r.url().match(/\/api\/admin\/(users|roles)$/)) {
         try {
           const body = await r.json();
-          apiCalls.push({ url: r.url().replace('https://aduanas.strixai.es', ''), status: r.status(), count: (body?.users || body?.roles || []).length });
+          apiCalls.push({ url: r.url().replace('https://aduanas.strixai.ai', ''), status: r.status(), count: (body?.users || body?.roles || []).length });
         } catch {}
       }
     });
@@ -255,7 +255,7 @@ test.describe('Panel Administracion /admin', () => {
         try {
           const body = await r.json();
           apiCalls.push({
-            url: r.url().replace('https://aduanas.strixai.es', '').split('?')[0],
+            url: r.url().replace('https://aduanas.strixai.ai', '').split('?')[0],
             status: r.status(),
             count: body?.logs?.length || (body?.stats ? 'stats' : 0)
           });

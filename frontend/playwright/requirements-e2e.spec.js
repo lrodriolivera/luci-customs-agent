@@ -8,7 +8,7 @@ const { test, expect } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' };
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' };
 const SCREENS = path.join(__dirname, 'requirements-test-screens');
 const REPORT = path.join(SCREENS, 'report.json');
 if (!fs.existsSync(SCREENS)) fs.mkdirSync(SCREENS, { recursive: true });
@@ -66,7 +66,7 @@ test.describe('Requirements (Requerimientos) E2E', () => {
       const u = res.url();
       if (u.includes('/api/') && res.status() >= 400 && !u.includes('cache-stats')) {
         log('http-error', res.status() >= 500 ? 'critical' : 'high',
-          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.es', '')}`);
+          `${res.status()} ${res.request().method()} ${u.replace('https://aduanas.strixai.ai', '')}`);
       }
     });
   });
@@ -257,7 +257,7 @@ test.describe('Requirements (Requerimientos) E2E', () => {
     await page.waitForTimeout(1500);
     const url = page.url();
     log('row-nav', url.includes(href) ? 'low' : 'high',
-      `Click fila → ${url.split('strixai.es')[1]} (esperado ${href})`);
+      `Click fila → ${url.split('strixai.ai')[1]} (esperado ${href})`);
     await page.screenshot({ path: path.join(SCREENS, '08-detail-from-req.png'), fullPage: true });
   });
 

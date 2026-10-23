@@ -3,7 +3,7 @@ const { test } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.es', password: 'test123' };
+const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' };
 const OUT = path.join(__dirname, 'crash-diagnose');
 if (!fs.existsSync(OUT)) fs.mkdirSync(OUT, { recursive: true });
 
@@ -40,7 +40,7 @@ for (const route of ROUTES) {
     page.on('response', (res) => {
       const u = res.url();
       if (u.includes('/api/') && res.status() >= 400) {
-        network.push({ status: res.status(), method: res.request().method(), url: u.replace('https://aduanas.strixai.es', '') });
+        network.push({ status: res.status(), method: res.request().method(), url: u.replace('https://aduanas.strixai.ai', '') });
       }
     });
 
