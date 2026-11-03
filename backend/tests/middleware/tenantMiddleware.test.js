@@ -16,6 +16,7 @@ jest.mock('../../src/services/tenant/rbacService', () => ({
   hasAllPermissions: jest.fn(() => true),
   hasAnyPermission: jest.fn(() => true)
 }));
+jest.mock('../../src/services/auditService', () => ({ log: jest.fn() }));
 jest.mock('../../src/services/tenant/tenantService', () => ({
   getTenant: jest.fn(),
   getTenantBySlug: jest.fn(),
@@ -43,6 +44,7 @@ const {
 } = require('../../src/middleware/tenantMiddleware');
 const rbacService = require('../../src/services/tenant/rbacService');
 const tenantService = require('../../src/services/tenant/tenantService');
+const auditService = require('../../src/services/auditService');
 
 // jest.config tiene resetMocks:true -> borra las implementaciones de fabrica de
 // los jest.fn(() => ...) antes de cada test. Se restauran los defaults aqui; los
@@ -207,74 +209,134 @@ describe('tenantMiddleware.scopeQuery', () => {
 });
 
 // ==================== extractTenant ====================
+//
+// El tenant de un usuario normal sale SIEMPRE de req.user.tenantId: la cabecera
+// X-Tenant-ID (y X-Tenant-Slug, subdominio o path) la controla el cliente y ya
+// no cuenta (hallazgos F18, F35, F45 y F63). Solo un super_admin puede usarla
+// para actuar sobre otro tenant, y cada vez queda en la auditoria.
 
 describe('tenantMiddleware.extractTenant', () => {
-  test('resuelve por header X-Tenant-ID e inyecta el pais del tenant', async () => {
-    tenantService.getTenant.mockReturnValue({
-      success: true, tenant: { id: 't1', slug: 's1', customsConfig: { country: 'NL' } }
+  const USER_A = { _id: 'uA', role: 'admin', tenantId: 'tA' };
+  const SUPER = { _id: 'uS', role: 'super_admin', tenantId: 'tS' };
+
+  beforeEach(() => {
+    auditService.log.mockResolvedValue(undefined);
+    tenantService.isActive.mockReturnValue(true);
+  });
+
+  describe('usuario normal', () => {
+    test('usa su propio tenant aunque mande X-Tenant-ID de otro', async () => {
+      tenantService.getTenant.mockReturnValue({ success: false });
+      const req = { headers: { 'x-tenant-id': 'tVictima' }, user: USER_A };
+      await extractTenant()(req, mockRes(), jest.fn());
+      expect(req.tenantId).toBe('tA');
+      expect(tenantService.getTenant).not.toHaveBeenCalledWith('tVictima');
     });
-    const req = { headers: { 'x-tenant-id': 't1' } };
-    const next = jest.fn();
-    await extractTenant()(req, mockRes(), next);
-    expect(req.tenantId).toBe('t1');
-    expect(req.country).toBe('NL');
-    expect(next).toHaveBeenCalledWith();
-  });
 
-  test('resuelve por header X-Tenant-Slug y aplica pais por defecto ES', async () => {
-    tenantService.getTenantBySlug.mockReturnValue({
-      success: true, tenant: { id: 't2', slug: 'acme' }
+    test('ignora tambien X-Tenant-Slug, el subdominio y el path', async () => {
+      tenantService.getTenant.mockReturnValue({ success: false });
+      const req = {
+        headers: { 'x-tenant-slug': 'victima', host: 'victima.luci.es' },
+        hostname: 'victima.luci.es',
+        path: '/api/t/victima/x',
+        user: USER_A
+      };
+      await extractTenant({ useSubdomain: true, usePath: true })(req, mockRes(), jest.fn());
+      expect(tenantService.getTenantBySlug).not.toHaveBeenCalled();
+      expect(req.tenantId).toBe('tA');
     });
-    const req = { headers: { 'x-tenant-slug': 'acme' } };
-    await extractTenant()(req, mockRes(), jest.fn());
-    expect(req.tenantId).toBe('t2');
-    expect(req.country).toBe('ES');
+
+    test('resuelve su tenant del Map demo e inyecta el pais', async () => {
+      tenantService.getTenant.mockReturnValue({
+        success: true, tenant: { id: 'tA', slug: 'a', customsConfig: { country: 'NL' } }
+      });
+      const req = { headers: {}, user: USER_A };
+      await extractTenant()(req, mockRes(), jest.fn());
+      expect(tenantService.getTenant).toHaveBeenCalledWith('tA');
+      expect(req.tenantId).toBe('tA');
+      expect(req.country).toBe('NL');
+    });
+
+    test('propaga su tenantId de Mongo aunque no este en el Map demo', async () => {
+      tenantService.getTenant.mockReturnValue({ success: false });
+      const req = { headers: {}, user: { ...USER_A, tenantId: { toString: () => 'oidA' } } };
+      await extractTenant()(req, mockRes(), jest.fn());
+      expect(req.tenant).toBeNull();
+      expect(String(req.tenantId)).toBe('oidA');
+    });
+
+    test('no deja auditoria: no ha cruzado de tenant', async () => {
+      tenantService.getTenant.mockReturnValue({ success: false });
+      const req = { headers: { 'x-tenant-id': 'tVictima' }, user: USER_A };
+      await extractTenant()(req, mockRes(), jest.fn());
+      expect(auditService.log).not.toHaveBeenCalled();
+    });
   });
 
-  test('resuelve el slug por subdominio cuando useSubdomain', async () => {
-    tenantService.getTenantBySlug.mockReturnValue({ success: false });
-    const req = { headers: { host: 'acme.luci.es' }, hostname: 'acme.luci.es' };
-    await extractTenant({ useSubdomain: true })(req, mockRes(), jest.fn());
-    expect(tenantService.getTenantBySlug).toHaveBeenCalledWith('acme');
+  describe('sin usuario autenticado', () => {
+    test('la cabecera no da contexto de tenant', async () => {
+      const req = { headers: { 'x-tenant-id': 'tVictima', 'x-tenant-slug': 'victima' } };
+      await extractTenant()(req, mockRes(), jest.fn());
+      expect(req.tenantId).toBeNull();
+      expect(req.tenant).toBeNull();
+    });
+
+    test('required sin tenant devuelve 400 TENANT_REQUIRED', async () => {
+      const req = { headers: { 'x-tenant-id': 'tVictima' } };
+      const res = mockRes();
+      const next = jest.fn();
+      await extractTenant({ required: true })(req, res, next);
+      expect(res.statusCode).toBe(400);
+      expect(res.body.code).toBe('TENANT_REQUIRED');
+      expect(next).not.toHaveBeenCalled();
+    });
   });
 
-  test('resuelve el slug por path /api/t/{tenant} cuando usePath', async () => {
-    tenantService.getTenantBySlug.mockReturnValue({ success: false });
-    const req = { headers: {}, path: '/api/t/acme/declarations' };
-    await extractTenant({ usePath: true })(req, mockRes(), jest.fn());
-    expect(tenantService.getTenantBySlug).toHaveBeenCalledWith('acme');
-  });
+  describe('super_admin', () => {
+    test('puede actuar sobre otro tenant con X-Tenant-ID y queda auditado', async () => {
+      tenantService.getTenant.mockReturnValue({ success: true, tenant: { id: 'tOtro', slug: 'o' } });
+      const req = { headers: { 'x-tenant-id': 'tOtro' }, user: SUPER };
+      await extractTenant()(req, mockRes(), jest.fn());
+      expect(req.tenantId).toBe('tOtro');
+      expect(auditService.log).toHaveBeenCalledWith(expect.objectContaining({
+        req,
+        action: 'tenant_override',
+        resource: 'Tenant',
+        resourceId: 'tOtro',
+        metadata: expect.objectContaining({ fromTenant: 'tS', toTenant: 'tOtro', via: 'x-tenant-id' })
+      }));
+    });
 
-  test('cae al tenant del usuario autenticado si no viene por otra via', async () => {
-    tenantService.getTenant.mockReturnValue({ success: true, tenant: { id: 'tU', slug: 's' } });
-    const req = { headers: {}, user: { tenantId: 'tU' } };
-    await extractTenant()(req, mockRes(), jest.fn());
-    expect(tenantService.getTenant).toHaveBeenCalledWith('tU');
-    expect(req.tenantId).toBe('tU');
-  });
+    test('puede usar X-Tenant-Slug', async () => {
+      tenantService.getTenantBySlug.mockReturnValue({ success: true, tenant: { id: 't2', slug: 'acme' } });
+      const req = { headers: { 'x-tenant-slug': 'acme' }, user: SUPER };
+      await extractTenant()(req, mockRes(), jest.fn());
+      expect(req.tenantId).toBe('t2');
+      expect(req.country).toBe('ES');
+      expect(auditService.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'tenant_override' }));
+    });
 
-  test('propaga el tenantId del JWT aunque no exista en el Map demo (tenant=null)', async () => {
-    tenantService.getTenant.mockReturnValue({ success: false });
-    const req = { headers: { 'x-tenant-id': 'objectid-mongo' } };
-    await extractTenant()(req, mockRes(), jest.fn());
-    expect(req.tenant).toBeNull();
-    expect(req.tenantId).toBe('objectid-mongo');
-  });
+    test('sin cabecera usa su propio tenant y no audita', async () => {
+      tenantService.getTenant.mockReturnValue({ success: false });
+      const req = { headers: {}, user: SUPER };
+      await extractTenant()(req, mockRes(), jest.fn());
+      expect(req.tenantId).toBe('tS');
+      expect(auditService.log).not.toHaveBeenCalled();
+    });
 
-  test('required sin tenant resuelto devuelve 400 TENANT_REQUIRED', async () => {
-    const req = { headers: {} };
-    const res = mockRes();
-    const next = jest.fn();
-    await extractTenant({ required: true })(req, res, next);
-    expect(res.statusCode).toBe(400);
-    expect(res.body.code).toBe('TENANT_REQUIRED');
-    expect(next).not.toHaveBeenCalled();
+    test('con la cabecera de su propio tenant no audita', async () => {
+      tenantService.getTenant.mockReturnValue({ success: false });
+      const req = { headers: { 'x-tenant-id': 'tS' }, user: SUPER };
+      await extractTenant()(req, mockRes(), jest.fn());
+      expect(req.tenantId).toBe('tS');
+      expect(auditService.log).not.toHaveBeenCalled();
+    });
   });
 
   test('tenant inactivo devuelve 403 TENANT_INACTIVE', async () => {
-    tenantService.getTenant.mockReturnValue({ success: true, tenant: { id: 't1', slug: 's' } });
+    tenantService.getTenant.mockReturnValue({ success: true, tenant: { id: 'tA', slug: 's' } });
     tenantService.isActive.mockReturnValue(false);
-    const req = { headers: { 'x-tenant-id': 't1' } };
+    const req = { headers: {}, user: USER_A };
     const res = mockRes();
     const next = jest.fn();
     await extractTenant()(req, res, next);
@@ -285,7 +347,7 @@ describe('tenantMiddleware.extractTenant', () => {
 
   test('un error inesperado se delega a next(error)', async () => {
     tenantService.getTenant.mockImplementation(() => { throw new Error('boom'); });
-    const req = { headers: { 'x-tenant-id': 't1' } };
+    const req = { headers: {}, user: USER_A };
     const next = jest.fn();
     await extractTenant()(req, mockRes(), next);
     expect(next).toHaveBeenCalledWith(expect.any(Error));
