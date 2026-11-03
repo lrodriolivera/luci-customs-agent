@@ -766,10 +766,19 @@ exports.lookupMRN = async (req, res) => {
   try {
     const { mrn, claveZeta } = req.body;
 
-    if (!mrn) {
+    // F1: un objeto ({"$ne": null}, {"$regex": ...}) llegaba tal cual a
+    // Expedition.findOne y se ejecutaba como operador.
+    if (!mrn || typeof mrn !== 'string') {
       return res.status(400).json({
         success: false,
         error: 'MRN es obligatorio'
+      });
+    }
+
+    if (claveZeta !== undefined && typeof claveZeta !== 'string' && typeof claveZeta !== 'number') {
+      return res.status(400).json({
+        success: false,
+        error: 'Clave Zeta (numero de partida) no valida'
       });
     }
 
@@ -780,7 +789,7 @@ exports.lookupMRN = async (req, res) => {
       });
     }
 
-    const result = await pueService.lookupMRN(mrn, claveZeta);
+    const result = await pueService.lookupMRN(mrn, claveZeta, filtroTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error('PUE Controller: Error looking up MRN:', error);

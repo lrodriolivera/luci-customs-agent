@@ -337,7 +337,7 @@ describe('lookupMRN', () => {
     const res = mockRes();
     await ctrl.lookupMRN(req({ mrn: '25ES001', claveZeta: '1' }), res);
     expect(res.body.declaration.mrn).toBe('25ES001');
-    expect(pueService.lookupMRN).toHaveBeenCalledWith('25ES001', '1');
+    expect(pueService.lookupMRN).toHaveBeenCalledWith('25ES001', '1', { tenantId: null });
   });
 
   test('500 si lanza', async () => {

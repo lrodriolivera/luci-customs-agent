@@ -208,6 +208,11 @@ app.post('/api/payments/webhook',
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Operadores de MongoDB fuera de body, query y params ({"mrn": {"$ne": null}}
+// llegaba tal cual a las consultas: F1). Ver middleware/sanitizeOperators.
+const { sanitizeOperators } = require('./middleware/sanitizeOperators');
+app.use(sanitizeOperators);
+
 // Saneo de errores salientes: los controllers responden con error.message en
 // 448 catch, que en produccion filtra CastError de Mongoose con el nombre del
 // modelo, cadenas de conexion y rutas del servidor. Va antes que las rutas

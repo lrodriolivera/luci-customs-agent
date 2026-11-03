@@ -1017,10 +1017,12 @@ class PUEService {
   /**
    * Buscar declaracion por MRN y extraer datos para autorrelleno
    */
-  async lookupMRN(mrn, claveZeta) {
+  async lookupMRN(mrn, claveZeta, tenantFilter = {}) {
     try {
       const Expedition = require('../models/Expedition');
-      const expedition = await Expedition.findOne({ 'declaration.mrn': mrn });
+      // tenantFilter = filtroTenant(req.user): sin el, el MRN de otro tenant
+      // devolvia su importador, NIF, EORI y partidas (F1).
+      const expedition = await Expedition.findOne({ 'declaration.mrn': mrn, ...tenantFilter });
 
       if (!expedition) {
         return {
