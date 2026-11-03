@@ -81,4 +81,15 @@ function puedeAsignarRol(actor, rol) {
   return esSuperAdmin(actor) || DE_TENANT.includes(rol);
 }
 
-module.exports = { ROLES, TODOS, DE_TENANT, esSuperAdmin, puedeAsignarRol, SUPER_ADMIN, ADMIN, SUPERVISOR, AGENT, VIEWER };
+/**
+ * ¿Puede `actor` cambiar la contraseña, el email o el rol de `objetivo`?
+ *
+ * Un admin de tenant gestiona a los usuarios de su tenant, pero no a un
+ * super_admin que viva en el (o sin tenant): cambiarle o restablecerle la
+ * contraseña le daba la cuenta de plataforma. Solo otro super_admin puede.
+ */
+function puedeGestionarUsuario(actor, objetivo) {
+  return esSuperAdmin(actor) || !esSuperAdmin(objetivo);
+}
+
+module.exports = { ROLES, TODOS, DE_TENANT, esSuperAdmin, puedeAsignarRol, puedeGestionarUsuario, SUPER_ADMIN, ADMIN, SUPERVISOR, AGENT, VIEWER };

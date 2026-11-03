@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const logger = require('../config/logger');
 const crypto = require('crypto');
-const { puedeAsignarRol } = require('../constants/roles');
+const { puedeAsignarRol, puedeGestionarUsuario } = require('../constants/roles');
 
 const { escapeRegex } = require('../utils/escapeRegex');
 // ==================== In-Memory Storage (Settings & Logs) ====================
@@ -272,6 +272,13 @@ const updateUser = async (req, res) => {
 
     const { name, role, status, password } = req.body;
 
+    // Un admin de tenant no puede cambiar la contraseña, el email ni el rol de
+    // un super_admin: con la contraseña nueva entraba con la cuenta de plataforma.
+    const tocaCredenciales = role !== undefined || password !== undefined || req.body.email !== undefined;
+    if (tocaCredenciales && !puedeGestionarUsuario(req.user, user)) {
+      return res.status(403).json({ success: false, error: 'No puedes modificar a un super administrador.' });
+    }
+
     // Un admin de tenant no puede ascender a nadie (ni a si mismo) a super_admin.
     if (role && !puedeAsignarRol(req.user, role)) {
       return res.status(403).json({ success: false, error: 'No tienes permisos para asignar ese rol.' });
@@ -364,6 +371,12 @@ const resetUserPassword = async (req, res) => {
     const user = await User.findById(req.params.id);
     const { ensureSameTenant } = require('../utils/tenantGuard');
     if (!ensureSameTenant(user, req, res, { resource: 'Usuario' })) return;
+
+    // La contraseña temporal vuelve en la respuesta: restablecer la de un
+    // super_admin era tomar su cuenta.
+    if (!puedeGestionarUsuario(req.user, user)) {
+      return res.status(403).json({ success: false, error: 'No puedes modificar a un super administrador.' });
+    }
 
     // Generar nueva contraseña temporal
     const newPassword = crypto.randomBytes(6).toString('hex');

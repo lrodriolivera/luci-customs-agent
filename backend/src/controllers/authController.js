@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const { User, Tenant } = require('../models');
 const logger = require('../config/logger');
 const cognitoService = require('../utils/cognitoService');
-const { puedeAsignarRol } = require('../constants/roles');
+const { puedeAsignarRol, puedeGestionarUsuario } = require('../constants/roles');
 
 /**
  * Registro de nuevo usuario
@@ -346,6 +346,14 @@ const updateUser = async (req, res) => {
     // permisos de un usuario de otro cliente conociendo su id.
     const filtro = { _id: id };
     if (req.user.tenantId) filtro.tenantId = req.user.tenantId;
+
+    // Un admin de tenant no puede quitarle (ni cambiarle) el rol a un super_admin.
+    if (allowedUpdates.role !== undefined) {
+      const objetivo = await User.findOne(filtro);
+      if (objetivo && !puedeGestionarUsuario(req.user, objetivo)) {
+        return res.status(403).json({ success: false, error: 'No puedes modificar a un super administrador.' });
+      }
+    }
 
     const user = await User.findOneAndUpdate(
       filtro,
