@@ -112,34 +112,41 @@ describe('Tenant Service - Branch Coverage', () => {
 
   describe('listTenants - filter branch coverage', () => {
     let freeTenantId, starterTenantId, professionalTenantId;
+    // Date.now() alone collides when two beforeEach run in the same millisecond,
+    // and createTenant then returns "Slug already exists" without a tenant.
+    let slugCounter = 0;
 
     beforeEach(async () => {
       // Create tenants with different plans and statuses (unique slugs per run)
-      const timestamp = Date.now();
+      slugCounter += 1;
+      const suffix = `${Date.now()}-${slugCounter}`;
 
       const freeTenant = await tenantService.createTenant({
         name: 'Free Plan Tenant',
-        slug: `free-plan-tenant-${timestamp}`,
+        slug: `free-plan-tenant-${suffix}`,
         plan: tenantService.PLAN_TYPES.FREE,
         nif: 'B11111111'
       });
+      expect(freeTenant.success).toBe(true);
       freeTenantId = freeTenant.tenant.id;
 
       const starterTenant = await tenantService.createTenant({
         name: 'Starter Plan Tenant',
-        slug: `starter-plan-tenant-${timestamp}`,
+        slug: `starter-plan-tenant-${suffix}`,
         plan: tenantService.PLAN_TYPES.STARTER,
         nif: 'B22222222'
       });
+      expect(starterTenant.success).toBe(true);
       starterTenantId = starterTenant.tenant.id;
       await tenantService.activateTenant(starterTenantId);
 
       const professionalTenant = await tenantService.createTenant({
         name: 'Professional Plan Tenant',
-        slug: `professional-plan-tenant-${timestamp}`,
+        slug: `professional-plan-tenant-${suffix}`,
         plan: tenantService.PLAN_TYPES.PROFESSIONAL,
         nif: 'B33333333'
       });
+      expect(professionalTenant.success).toBe(true);
       professionalTenantId = professionalTenant.tenant.id;
     });
 
