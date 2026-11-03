@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const { puedeAsignarRol, puedeGestionarUsuario } = require('../constants/roles');
 
 const { escapeRegex } = require('../utils/escapeRegex');
+const { scrub } = require('../services/auditService');
 // ==================== In-Memory Storage (Settings & Logs) ====================
 
 // Roles disponibles
@@ -230,7 +231,7 @@ const createUser = async (req, res) => {
     await newUser.save();
 
     // Log de auditoría
-    addAuditLog(req.user?.id || 'system', req.user?.name || 'Sistema', 'USER_CREATE', 'users',
+    addAuditLog(req, 'USER_CREATE', 'users',
       `Creó nuevo usuario: ${email}`, { newUserId: newUser._id.toString(), role });
 
     logger.info('User created', { userId: newUser._id, email });
@@ -309,7 +310,7 @@ const updateUser = async (req, res) => {
     await user.save();
 
     // Log de auditoría
-    addAuditLog(req.user?.id || 'system', req.user?.name || 'Sistema', 'USER_UPDATE', 'users',
+    addAuditLog(req, 'USER_UPDATE', 'users',
       `Actualizó usuario: ${user.email}`, { userId: req.params.id, changes: req.body });
 
     res.json({
@@ -354,7 +355,7 @@ const deleteUser = async (req, res) => {
     await user.softDelete(req.user?._id);
 
     // Log de auditoría
-    addAuditLog(req.user?.id || 'system', req.user?.name || 'Sistema', 'USER_DELETE', 'users',
+    addAuditLog(req, 'USER_DELETE', 'users',
       `Eliminó usuario: ${user.email}`, { userId: req.params.id });
 
     res.json({ success: true, message: 'Usuario eliminado exitosamente' });
@@ -384,7 +385,7 @@ const resetUserPassword = async (req, res) => {
     await user.save();
 
     // Log de auditoría
-    addAuditLog(req.user?.id || 'system', req.user?.name || 'Sistema', 'PASSWORD_RESET', 'users',
+    addAuditLog(req, 'PASSWORD_RESET', 'users',
       `Restableció contraseña de: ${user.email}`, { userId: req.params.id });
 
     res.json({
@@ -436,7 +437,7 @@ const updateSettings = async (req, res) => {
     systemSettings[section] = { ...systemSettings[section], ...settings };
 
     // Log de auditoría
-    addAuditLog(req.user?.id || 'system', req.user?.name || 'Sistema', 'CONFIG_CHANGE', 'settings',
+    addAuditLog(req, 'CONFIG_CHANGE', 'settings',
       `Modificó configuración: ${section}`, { section, oldSettings, newSettings: settings });
 
     logger.info('Settings updated', { section });
@@ -454,7 +455,7 @@ const getAuditLogs = async (req, res) => {
   try {
     const { module, action, userId, startDate, endDate, limit = 50, offset = 0 } = req.query;
 
-    let filteredLogs = [...auditLogs];
+    let filteredLogs = logsVisibles(req.user);
 
     if (module) {
       filteredLogs = filteredLogs.filter(l => l.module === module);
@@ -501,7 +502,8 @@ const getAuditStats = async (req, res) => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const recentLogs = auditLogs.filter(l => new Date(l.timestamp) >= sevenDaysAgo);
+    const visibles = logsVisibles(req.user);
+    const recentLogs = visibles.filter(l => new Date(l.timestamp) >= sevenDaysAgo);
 
     // Por módulo
     const byModule = recentLogs.reduce((acc, l) => {
@@ -531,7 +533,7 @@ const getAuditStats = async (req, res) => {
     res.json({
       success: true,
       stats: {
-        totalLogs: auditLogs.length,
+        totalLogs: visibles.length,
         last7Days: recentLogs.length,
         byModule,
         byAction,
@@ -577,7 +579,8 @@ const getDashboardStats = async (req, res) => {
     // Actividad reciente (últimas 24h)
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-    const recentActivity = auditLogs.filter(l => new Date(l.timestamp) >= oneDayAgo).length;
+    const visibles = logsVisibles(req.user);
+    const recentActivity = visibles.filter(l => new Date(l.timestamp) >= oneDayAgo).length;
 
     res.json({
       success: true,
@@ -590,7 +593,7 @@ const getDashboardStats = async (req, res) => {
         },
         activity: {
           last24h: recentActivity,
-          totalLogs: auditLogs.length
+          totalLogs: visibles.length
         },
         system: {
           aeatStatus: systemSettings.integrations.aeatEnabled ? 'connected' : 'disconnected',
@@ -606,17 +609,26 @@ const getDashboardStats = async (req, res) => {
 
 // ==================== Helper Functions ====================
 
-function addAuditLog(userId, userName, action, module, description, details = {}) {
+/**
+ * Registra una entrada en el log de auditoria de admin (en memoria).
+ *
+ * - Guarda el tenant de quien actua: el log es uno para todo el proceso y se
+ *   filtra por tenant al leerlo (F8, F19).
+ * - `details` pasa por auditService.scrub antes de guardarse: USER_UPDATE
+ *   guardaba `changes: req.body` y la contraseña nueva quedaba en claro (F5).
+ */
+function addAuditLog(req, action, module, description, details = {}) {
   const log = {
     id: String(auditLogs.length + 1),
     timestamp: new Date().toISOString(),
-    userId,
-    userName,
+    userId: req?.user?.id || 'system',
+    userName: req?.user?.name || 'Sistema',
+    tenantId: req?.user?.tenantId ? String(req.user.tenantId) : null,
     action,
     module,
     description,
     ip: '192.168.1.100',
-    details
+    details: scrub(details)
   };
 
   auditLogs.unshift(log);
@@ -627,7 +639,27 @@ function addAuditLog(userId, userName, action, module, description, details = {}
   }
 }
 
+/**
+ * Entradas visibles para quien pregunta: las de su tenant, o todas para un
+ * super_admin. Las entradas sin tenant (anteriores a este cambio o del
+ * sistema) solo las ve un super_admin. Se vuelven a pasar por scrub al leerlas
+ * por si alguna entrada antigua tuviera una contraseña.
+ */
+function logsVisibles(user) {
+  const { isSuperAdmin } = require('../utils/tenantGuard');
+  const propios = isSuperAdmin(user)
+    ? auditLogs
+    : auditLogs.filter((l) => l.tenantId && user?.tenantId && l.tenantId === String(user.tenantId));
+  return propios.map((l) => ({ ...l, details: scrub(l.details) }));
+}
+
+/** Solo para tests: inserta una entrada tal cual (simula una antigua). */
+function _registrarAuditoriaParaTest(entrada) {
+  auditLogs.unshift({ id: String(auditLogs.length + 1), timestamp: new Date().toISOString(), ...entrada });
+}
+
 module.exports = {
+  _registrarAuditoriaParaTest,
   // Users
   listUsers,
   getUser,
