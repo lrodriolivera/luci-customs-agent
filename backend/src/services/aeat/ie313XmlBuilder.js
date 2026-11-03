@@ -56,6 +56,7 @@
  * Regla C501, como en el IE315: si viaja el EORI, NO se manda el nombre.
  */
 
+const { xml } = require('./xmlTemplate');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/aden/enswsv5/IE313V5Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 
@@ -166,7 +167,7 @@ function buildIE313AmendmentXML(data) {
     const num = item.sequenceNumber || idx + 1;
     const consignor = item.consignor || {};
     const consignee = item.consignee || {};
-    return `
+    return xml`
       <GOOITEGDS>
         <IteNumGDS7>${num}</IteNumGDS7>
         <GooDesGDS23>${(item.description || '').substring(0, 280)}</GooDesGDS23>
@@ -190,7 +191,7 @@ function buildIE313AmendmentXML(data) {
           <PosCodCE223>${consignee.postcode || '00000'}</PosCodCE223>
           <CitCE224>${consignee.city || '-'}</CitCE224>
           <CouCE225>${consignee.country || 'ES'}</CouCE225>
-        </TRACONCE2>${hasContainer ? `
+        </TRACONCE2>${hasContainer ? xml`
         <CONNR2>
           <ConNumNR21>${consignment.containerNumber}</ConNumNR21>
         </CONNR2>` : ''}
@@ -200,7 +201,7 @@ function buildIE313AmendmentXML(data) {
           <MarNumOfPacGSL21>${item.marksOfPackages || 'N/M'}</MarNumOfPacGSL21>
         </PACGS2>
       </GOOITEGDS>`;
-  }).join('');
+  });
 
   // Itinerario (ITI): AEAT lo exige con las reglas C570 y R879, y ademas impone que
   // "The Place of loading and the Place unloading shall be included in the itinerary".
@@ -235,12 +236,12 @@ function buildIE313AmendmentXML(data) {
     ruta.splice(ruta.indexOf(paisDescarga), 1);
     ruta.push(paisDescarga);
   }
-  const itiXML = ruta.map(c => `
+  const itiXML = ruta.map(c => xml`
       <ITI>
         <CouOfRouCodITI1>${c}</CouOfRouCodITI1>
-      </ITI>`).join('');
+      </ITI>`);
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  return xml`<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
   <soapenv:Body>
     <ent:CC313A xmlns:ent="${NS_ENT}">
@@ -254,7 +255,7 @@ function buildIE313AmendmentXML(data) {
       <HEAHEA>
         <DocNumHEA5>${mrn}</DocNumHEA5>
         <TraModAtBorHEA76>${tMode}</TraModAtBorHEA76>
-        <IdeOfMeaOfTraCroHEA85>${transportId}</IdeOfMeaOfTraCroHEA85>${tMode !== '2' ? `
+        <IdeOfMeaOfTraCroHEA85>${transportId}</IdeOfMeaOfTraCroHEA85>${tMode !== '2' ? xml`
         <NatOfMeaOfTraCroHEA87>${transportCountry}</NatOfMeaOfTraCroHEA87>` : ''}
         <TotNumOfIteHEA305>${goodsItems.length || 1}</TotNumOfIteHEA305>
         <TotNumOfPacHEA306>${totalPackages}</TotNumOfPacHEA306>
@@ -262,7 +263,7 @@ function buildIE313AmendmentXML(data) {
         <AmdPlaHEA598>${(amendmentPlace || entryOffice.substring(0, 2) || 'ES').substring(0, 35)}</AmdPlaHEA598>
         <DatTimAmeHEA113>${selloAAAAMMDDHHMM}</DatTimAmeHEA113>
       </HEAHEA>${goodsItemsXML}${itiXML}
-      <TRAREP>${carrierEORI ? '' : `
+      <TRAREP>${carrierEORI ? '' : xml`
         <NamTRE1>${carrierName}</NamTRE1>`}
         <TINTRE1>${carrierEORI}</TINTRE1>
       </TRAREP>
@@ -275,7 +276,7 @@ function buildIE313AmendmentXML(data) {
       </CUSOFFFENT730>
     </ent:CC313A>
   </soapenv:Body>
-</soapenv:Envelope>`;
+</soapenv:Envelope>`.toString();
 }
 
 module.exports = { buildIE313AmendmentXML };

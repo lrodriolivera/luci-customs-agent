@@ -7,6 +7,7 @@
  * Sent when goods arrive at the office of destination in a transit operation.
  */
 
+const { xml } = require('./xmlTemplate');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC007CV1Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 
@@ -131,16 +132,16 @@ function buildCC007ArrivalXML(data) {
 
   // 2068 dice "si no, no debe venir": cada companero solo acompana a su indicador.
   const referenciaPrevia = tipoSumaria === 'GP'
-    ? `
+    ? xml`
           <ent:G4Previos>
             <ent:sequenceNumber>1</ent:sequenceNumber>
             <ent:mrnG4Previo>${mrnG4Previo}</ent:mrnG4Previo>
           </ent:G4Previos>`
-    : `
+    : xml`
           <ent:numeroSumariaRecepcion>${numeroSumariaRecepcion}</ent:numeroSumariaRecepcion>`;
 
   const bloqueAutorizacion = esSimplificado
-    ? `
+    ? xml`
         <ent:Authorisation>
           <ent:sequenceNumber>1</ent:sequenceNumber>
           <ent:type>${TIPO_AUTORIZACION_DESTINATARIO}</ent:type>
@@ -148,7 +149,7 @@ function buildCC007ArrivalXML(data) {
         </ent:Authorisation>`
     : '';
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  return xml`<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
   <soapenv:Body>
     <ent:CC007CV1Ent xmlns:ent="${NS_ENT}" Id="${transId}">
@@ -183,7 +184,7 @@ function buildCC007ArrivalXML(data) {
       </ent:CC007C>
     </ent:CC007CV1Ent>
   </soapenv:Body>
-</soapenv:Envelope>`;
+</soapenv:Envelope>`.toString();
 }
 
 module.exports = { buildCC007ArrivalXML };

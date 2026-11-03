@@ -22,6 +22,7 @@
  * Basado en: Guia del Desarrollador AEAT SOIVRE (PUE ROHS/RAEE)
  */
 
+const { xml } = require('./xmlTemplate');
 const { generateTransactionId } = require('./queryXmlBuilder');
 const NS_ENT = 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/ad44/jdit/ws/rohs/ROHSSolicitudCertificadoV1Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
@@ -92,41 +93,41 @@ function buildSOIVREAltaXML(data) {
 
   // Especificidades XML
   const especXML = especificidades.length > 0
-    ? `\n      <Especificidades>${especificidades.map(v => `\n        <Valor>${v}</Valor>`).join('')}\n      </Especificidades>`
+    ? xml`\n      <Especificidades>${especificidades.map(v => xml`\n        <Valor>${v}</Valor>`)}\n      </Especificidades>`
     : '';
 
   // Referencias DOCUCICE XML
   const refXML = referenciasDocucice.length > 0
-    ? `\n      <ReferenciaDocucice>${referenciasDocucice.map(v => `\n        <Valor>${v}</Valor>`).join('')}\n      </ReferenciaDocucice>`
+    ? xml`\n      <ReferenciaDocucice>${referenciasDocucice.map(v => xml`\n        <Valor>${v}</Valor>`)}\n      </ReferenciaDocucice>`
     : '';
 
   // MRN partido: si viene mrnPartidaClaveZeta del legacy, usarlo
   const mrn = mrnPartida || data.mrnPartidaClaveZeta || '';
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  return xml`<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}" xmlns:roh="${NS_ENT}">
   <soapenv:Header/>
   <soapenv:Body>
     <roh:ROHSSolicitudCertificadoV1Ent>
-      <SegmentosDeServicio Id="${transId}" fecha="${fecha}" hora="${hora}"${test ? ' Test="S"' : ''}/>
+      <SegmentosDeServicio Id="${transId}" fecha="${fecha}" hora="${hora}"${test ? xml` Test="S"` : ''}/>
       <TipoOperacion>${tipoOperacion}</TipoOperacion>${especXML}${refXML}
       <TipoDocumento>${tipoDocumento}</TipoDocumento>
       <MRNPartida>${mrn}</MRNPartida>
       <UnidadDeMedidaDeMercancia>${unidadMercancia || 'unidades fisicas'}</UnidadDeMedidaDeMercancia>
-      <CantidadDeUnidadesDeMercancia>${cantidadMercancia || 1}</CantidadDeUnidadesDeMercancia>${mrnPartidaPrecedente ? `
-      <MRNPartidaPrecedente>${mrnPartidaPrecedente}</MRNPartidaPrecedente>` : ''}${idSolSoivrePrecedente ? `
+      <CantidadDeUnidadesDeMercancia>${cantidadMercancia || 1}</CantidadDeUnidadesDeMercancia>${mrnPartidaPrecedente ? xml`
+      <MRNPartidaPrecedente>${mrnPartidaPrecedente}</MRNPartidaPrecedente>` : ''}${idSolSoivrePrecedente ? xml`
       <IdSolSoivrePrecedente>${idSolSoivrePrecedente}</IdSolSoivrePrecedente>` : ''}
       <CodCice>${codCice}</CodCice>
       <CodPI>${codPi}</CodPI>
       <email>${email}</email>
       <TipoDeclaracion>${tipoDeclaracion}</TipoDeclaracion>
       <CertificadoSolicitadoROHS>${certificadoROHS}</CertificadoSolicitadoROHS>
-      <CertificadoSolicitadoRAEE>${certificadoRAEE}</CertificadoSolicitadoRAEE>${codigoRAEE ? `
-      <CodigoRAEE>${codigoRAEE}</CodigoRAEE>` : ''}${codigoPYA ? `
+      <CertificadoSolicitadoRAEE>${certificadoRAEE}</CertificadoSolicitadoRAEE>${codigoRAEE ? xml`
+      <CodigoRAEE>${codigoRAEE}</CodigoRAEE>` : ''}${codigoPYA ? xml`
       <CodigoPYA>${codigoPYA}</CodigoPYA>` : ''}
     </roh:ROHSSolicitudCertificadoV1Ent>
   </soapenv:Body>
-</soapenv:Envelope>`;
+</soapenv:Envelope>`.toString();
 }
 
 module.exports = { buildSOIVREAltaXML, ENDPOINT_PRE, ENDPOINT_PROD };

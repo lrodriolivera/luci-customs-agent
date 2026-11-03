@@ -7,6 +7,7 @@
  * y obtener el circuito asignado (verde/naranja/rojo)
  */
 
+const { xml } = require('./xmlTemplate');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/adip/ws/ConsultaImportacionV2Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 
@@ -33,16 +34,16 @@ function buildQueryImportXML(mrn, options = {}) {
   const hora = transId.substring(8, 14);
   const isTest = options.test !== false;
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  return xml`<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
   <soapenv:Body>
     <ent:ConsultaImportacionV2Ent xmlns:ent="${NS_ENT}">
-      <SegmentosDeServicio Id="${transId}" fecha="${fecha}" hora="${hora}"${isTest ? ' Test="S"' : ''}/>
-      <NumeroDeReferencia>${mrn}</NumeroDeReferencia>${options.datosATC ? `
+      <SegmentosDeServicio Id="${transId}" fecha="${fecha}" hora="${hora}"${isTest ? xml` Test="S"` : ''}/>
+      <NumeroDeReferencia>${mrn}</NumeroDeReferencia>${options.datosATC ? xml`
       <DatosEnATC>${options.datosATC}</DatosEnATC>` : ''}
     </ent:ConsultaImportacionV2Ent>
   </soapenv:Body>
-</soapenv:Envelope>`;
+</soapenv:Envelope>`.toString();
 }
 
 module.exports = { buildQueryImportXML, generateTransactionId };

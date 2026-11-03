@@ -5,6 +5,7 @@
  * elementFormDefault: unqualified
  */
 
+const { xml } = require('./xmlTemplate');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/adip/ws/AnulaImportacionV1Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 
@@ -42,18 +43,18 @@ function buildH1CancelXML(data) {
   const fecha = transId.substring(0, 8);
   const hora = transId.substring(8, 14);
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  return xml`<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
   <soapenv:Body>
     <ent:AnulaImportacionV1Ent xmlns:ent="${NS_ENT}">
-      <SegmentosDeServicio Id="${transId}" fecha="${fecha}" hora="${hora}"${test ? ' Test="S"' : ''}/>
+      <SegmentosDeServicio Id="${transId}" fecha="${fecha}" hora="${hora}"${test ? xml` Test="S"` : ''}/>
       <CAaduana>${(aduanaDespacho || '').replace(/^ES/, '').substring(0, 6)}</CAaduana>
       <MRN>${mrn}</MRN>
       <MotivoAnulacion>${reason}</MotivoAnulacion>
       <NifDeclarante>${declaranteNIF}</NifDeclarante>
     </ent:AnulaImportacionV1Ent>
   </soapenv:Body>
-</soapenv:Envelope>`;
+</soapenv:Envelope>`.toString();
 }
 
 module.exports = { buildH1CancelXML };
