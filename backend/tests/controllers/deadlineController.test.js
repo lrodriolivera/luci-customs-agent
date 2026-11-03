@@ -44,11 +44,11 @@ describe('list', () => {
     expect(opts.limit).toBe(5);
   });
 
-  test('sin tenantId en el token no fuerza filtro de tenant', async () => {
+  test('sin tenantId en el token el filtro es tenantId null (solo documentos sin tenant)', async () => {
     deadlineService.list.mockResolvedValue({ data: [] });
     const res = mockRes();
     await ctrl.list(req({ user: { id: 'u1' }, query: {} }), res);
-    expect(deadlineService.list.mock.calls[0][0].tenantId).toBeUndefined();
+    expect(deadlineService.list.mock.calls[0][0].tenantId).toBeNull();
   });
 
   test('500 si el service lanza', async () => {
@@ -204,7 +204,7 @@ describe('getPending', () => {
     deadlineService.getPending.mockResolvedValue([{ _id: 'd1' }]);
     const res = mockRes();
     await ctrl.getPending(req({ query: { assignedTo: 'u9' } }), res);
-    expect(deadlineService.getPending).toHaveBeenCalledWith({ assignedTo: 'u9' });
+    expect(deadlineService.getPending).toHaveBeenCalledWith({ tenantId: 't1', assignedTo: 'u9' });
   });
 
   test('500 si lanza', async () => {
@@ -236,14 +236,14 @@ describe('getUrgent', () => {
     deadlineService.getUrgent.mockResolvedValue([]);
     const res = mockRes();
     await ctrl.getUrgent(req({ query: {} }), res);
-    expect(deadlineService.getUrgent).toHaveBeenCalledWith(48);
+    expect(deadlineService.getUrgent).toHaveBeenCalledWith(48, { tenantId: 't1' });
   });
 
   test('respeta el umbral de la query', async () => {
     deadlineService.getUrgent.mockResolvedValue([]);
     const res = mockRes();
     await ctrl.getUrgent(req({ query: { hours: '12' } }), res);
-    expect(deadlineService.getUrgent).toHaveBeenCalledWith(12);
+    expect(deadlineService.getUrgent).toHaveBeenCalledWith(12, { tenantId: 't1' });
   });
 
   test('500 si lanza', async () => {
@@ -284,11 +284,11 @@ describe('getDashboard', () => {
     deadlineService.getDashboard.mockResolvedValue({ total: 0 });
     const res = mockRes();
     await ctrl.getDashboard(req({ query: { userId: 'u9' } }), res);
-    expect(deadlineService.getDashboard).toHaveBeenCalledWith('u9');
+    expect(deadlineService.getDashboard).toHaveBeenCalledWith('u9', { tenantId: 't1' });
 
     const res2 = mockRes();
     await ctrl.getDashboard(req({ query: {} }), res2);
-    expect(deadlineService.getDashboard).toHaveBeenLastCalledWith('u1');
+    expect(deadlineService.getDashboard).toHaveBeenLastCalledWith('u1', { tenantId: 't1' });
   });
 
   test('500 si lanza', async () => {
@@ -304,7 +304,7 @@ describe('getStats', () => {
     deadlineService.getStats.mockResolvedValue({ total: 5 });
     const res = mockRes();
     await ctrl.getStats(req({ query: { category: 'aduanas', assignedTo: 'u9' } }), res);
-    expect(deadlineService.getStats).toHaveBeenCalledWith({ category: 'aduanas', assignedTo: 'u9' });
+    expect(deadlineService.getStats).toHaveBeenCalledWith({ tenantId: 't1', category: 'aduanas', assignedTo: 'u9' });
   });
 
   test('500 si lanza', async () => {

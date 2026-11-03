@@ -24,9 +24,14 @@ usarBaseDeDatosEnMemoria({ limpiarEntreTests: true });
 /**
  * Helper: crea un PUERequest válido mínimo. Overrides permiten variar escenarios.
  */
+// Todos los PUE del helper son de este tenant: los estaticos de listado exigen
+// tenantId (utils/tenantListGuard).
+const TENANT_TEST = new mongoose.Types.ObjectId();
+const DEL_TENANT = { tenantId: TENANT_TEST };
+
 async function crearPUERequest(overrides = {}) {
   const base = {
-    tenantId: new mongoose.Types.ObjectId(),
+    tenantId: TENANT_TEST,
     pueType: 'ROHS',
     createdBy: new mongoose.Types.ObjectId(),
     operator: {
@@ -830,7 +835,7 @@ describe('Modelo PUERequest - Ramas', () => {
       // Act
       const stats = await PUERequest.getStats({
         startDate: manana.toISOString()
-      });
+      }, DEL_TENANT);
 
       // Assert: filtro excluye el documento de ayer
       expect(stats.totals.total).toBe(0);
@@ -847,7 +852,7 @@ describe('Modelo PUERequest - Ramas', () => {
       // Act: solo endDate, sin startDate
       const stats = await PUERequest.getStats({
         endDate: ayer.toISOString()
-      });
+      }, DEL_TENANT);
 
       // Assert: filtro excluye el documento de hoy
       expect(stats.totals.total).toBe(0);
@@ -859,7 +864,7 @@ describe('Modelo PUERequest - Ramas', () => {
       await crearPUERequest({ pueType: 'COM' });
 
       // Act
-      const stats = await PUERequest.getStats({ pueType: 'ROHS' });
+      const stats = await PUERequest.getStats({ pueType: 'ROHS' }, DEL_TENANT);
 
       // Assert
       expect(stats.totals.total).toBe(1);
@@ -873,7 +878,7 @@ describe('Modelo PUERequest - Ramas', () => {
       await crearPUERequest({ createdBy: user2 });
 
       // Act
-      const stats = await PUERequest.getStats({ createdBy: user1.toString() });
+      const stats = await PUERequest.getStats({ createdBy: user1.toString() }, DEL_TENANT);
 
       // Assert
       expect(stats.totals.total).toBe(1);
@@ -885,7 +890,7 @@ describe('Modelo PUERequest - Ramas', () => {
       await crearPUERequest({ status: 'approved' });
 
       // Act
-      const stats = await PUERequest.getStats();
+      const stats = await PUERequest.getStats({}, DEL_TENANT);
 
       // Assert
       expect(stats.byStatus).toBeInstanceOf(Array);
@@ -899,7 +904,7 @@ describe('Modelo PUERequest - Ramas', () => {
       await crearPUERequest({ pueType: 'ROHS', status: 'submitted' });
 
       // Act
-      const stats = await PUERequest.getStats();
+      const stats = await PUERequest.getStats({}, DEL_TENANT);
 
       // Assert
       const rohs = stats.byType.find(t => t._id === 'ROHS');
@@ -915,7 +920,7 @@ describe('Modelo PUERequest - Ramas', () => {
       await crearPUERequest({ status: 'approved' });
 
       // Act
-      const stats = await PUERequest.getStats();
+      const stats = await PUERequest.getStats({}, DEL_TENANT);
 
       // Assert
       expect(stats.pendingInspections).toBe(2);
@@ -929,7 +934,7 @@ describe('Modelo PUERequest - Ramas', () => {
       await crearPUERequest({ status: 'approved', deadline: ayer }); // no cuenta: aprobado
 
       // Act
-      const stats = await PUERequest.getStats();
+      const stats = await PUERequest.getStats({}, DEL_TENANT);
 
       // Assert
       expect(stats.overdueDeadlines).toBe(1);
@@ -945,7 +950,7 @@ describe('Modelo PUERequest - Ramas', () => {
       await crearPUERequest({ expedition: new mongoose.Types.ObjectId() });
 
       // Act
-      const docs = await PUERequest.findByExpedition(expId);
+      const docs = await PUERequest.findByExpedition(expId, DEL_TENANT);
 
       // Assert
       expect(docs).toHaveLength(2);
@@ -961,7 +966,7 @@ describe('Modelo PUERequest - Ramas', () => {
       await crearPUERequest({ declarationMRN: 'otro-mrn' });
 
       // Act
-      const docs = await PUERequest.findByDeclaration(mrn);
+      const docs = await PUERequest.findByDeclaration(mrn, DEL_TENANT);
 
       // Assert
       expect(docs).toHaveLength(1);
@@ -982,7 +987,7 @@ describe('Modelo PUERequest - Ramas', () => {
       await crearPUERequest({ status: 'approved', deadline: en3Dias }); // excluido por status
 
       // Act: buscar en próximos 7 días
-      const docs = await PUERequest.getUpcomingDeadlines(7);
+      const docs = await PUERequest.getUpcomingDeadlines(7, DEL_TENANT);
 
       // Assert
       expect(docs).toHaveLength(1);
@@ -1002,7 +1007,7 @@ describe('Modelo PUERequest - Ramas', () => {
       await crearPUERequest({ status: 'draft', deadline: en3Dias }); // excluido (draft también está en la exclusión)
 
       // Act
-      const docs = await PUERequest.getUpcomingDeadlines(7);
+      const docs = await PUERequest.getUpcomingDeadlines(7, DEL_TENANT);
 
       // Assert: solo submitted
       expect(docs).toHaveLength(1);
@@ -1020,7 +1025,7 @@ describe('Modelo PUERequest - Ramas', () => {
       await crearPUERequest({ status: 'submitted', deadline: en8Dias }); // > 7
 
       // Act
-      const docs = await PUERequest.getUpcomingDeadlines(7);
+      const docs = await PUERequest.getUpcomingDeadlines(7, DEL_TENANT);
 
       // Assert: ambos fuera de rango
       expect(docs).toHaveLength(0);

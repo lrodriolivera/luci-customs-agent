@@ -45,14 +45,14 @@ describe('getStats', () => {
     const res = mockRes();
     await ctrl.getStats(req({}, {}, {}, { _id: 'u1', role: 'agent' }), res);
     expect(res.body.data.total).toBe(3);
-    expect(pueService.getStats).toHaveBeenCalledWith(expect.objectContaining({ createdBy: 'u1' }));
+    expect(pueService.getStats).toHaveBeenCalledWith(expect.objectContaining({ createdBy: 'u1' }), { tenantId: null });
   });
 
-  test('admin: createdBy null (ve todo)', async () => {
+  test('admin: createdBy null (ve todo SU tenant)', async () => {
     pueService.getStats.mockResolvedValue({ total: 9 });
     const res = mockRes();
     await ctrl.getStats(req({}, { pueType: 'ROHS' }, {}, { _id: 'admin1', role: 'admin' }), res);
-    expect(pueService.getStats).toHaveBeenCalledWith(expect.objectContaining({ createdBy: null, pueType: 'ROHS' }));
+    expect(pueService.getStats).toHaveBeenCalledWith(expect.objectContaining({ createdBy: null, pueType: 'ROHS' }), { tenantId: null });
   });
 
   test('500 si el service lanza', async () => {
@@ -203,14 +203,14 @@ describe('list', () => {
     pueService.list.mockResolvedValue({ data: [], pagination: { total: 0 } });
     const res = mockRes();
     await ctrl.list(req({}, { page: '1' }, {}, { _id: 'u1', role: 'agent' }), res);
-    expect(pueService.list).toHaveBeenCalledWith(expect.objectContaining({ createdBy: 'u1', page: '1' }));
+    expect(pueService.list).toHaveBeenCalledWith(expect.objectContaining({ createdBy: 'u1', page: '1' }), { tenantId: null });
   });
 
   test('admin: respeta createdBy de la query', async () => {
     pueService.list.mockResolvedValue({ data: [], pagination: {} });
     const res = mockRes();
     await ctrl.list(req({}, { createdBy: 'otro' }, {}, { _id: 'a', role: 'admin' }), res);
-    expect(pueService.list).toHaveBeenCalledWith(expect.objectContaining({ createdBy: 'otro' }));
+    expect(pueService.list).toHaveBeenCalledWith(expect.objectContaining({ createdBy: 'otro' }), { tenantId: null });
   });
 
   test('500 si lanza', async () => {

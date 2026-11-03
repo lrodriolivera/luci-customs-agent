@@ -12,6 +12,7 @@
 const InspectorCommunication = require('../models/InspectorCommunication');
 const Deadline = require('../models/Deadline');
 const deadlineService = require('./deadlineService');
+const User = require('../models/User');
 const logger = require('../config/logger');
 
 const { escapeRegex } = require('../utils/escapeRegex');
@@ -209,7 +210,10 @@ class InspectorCommunicationService {
           law: typeConfig.legalBasis,
           description: typeConfig.description
         }] : []),
-        createdBy: userId
+        createdBy: userId,
+        // El tenant es el del usuario que la crea, nunca uno del body: los
+        // listados se acotan por el (utils/tenantListGuard).
+        tenantId: userId ? (await User.findById(userId).select('tenantId').lean())?.tenantId || null : null
       };
 
       const communication = new InspectorCommunication(communicationData);
@@ -369,8 +373,8 @@ class InspectorCommunicationService {
   /**
    * Obtener comunicaciones pendientes
    */
-  async getPending(userId = null) {
-    return InspectorCommunication.findPending(userId)
+  async getPending(userId = null, filters = {}) {
+    return InspectorCommunication.findPending(userId, filters)
       .populate('references.expeditionId', 'reference clientName')
       .populate('assignedTo', 'name email');
   }
@@ -378,8 +382,8 @@ class InspectorCommunicationService {
   /**
    * Obtener alegaciones/recursos
    */
-  async getAppeals(status = null) {
-    return InspectorCommunication.findAppeals(status)
+  async getAppeals(status = null, filters = {}) {
+    return InspectorCommunication.findAppeals(status, filters)
       .populate('references.expeditionId', 'reference clientName')
       .populate('assignedTo', 'name email');
   }
@@ -387,8 +391,8 @@ class InspectorCommunicationService {
   /**
    * Obtener comunicaciones vencidas
    */
-  async getOverdue() {
-    return InspectorCommunication.findOverdue()
+  async getOverdue(filters = {}) {
+    return InspectorCommunication.findOverdue(filters)
       .populate('assignedTo', 'name email');
   }
 
@@ -540,13 +544,14 @@ class InspectorCommunicationService {
   /**
    * Obtener resumen del dashboard
    */
-  async getDashboard(userId = null) {
-    const filters = userId ? { assignedTo: userId } : {};
+  async getDashboard(userId = null, tenantFilter = {}) {
+    // tenantFilter = filtroTenant(req.user): el dashboard es del tenant del usuario.
+    const filters = { ...tenantFilter, ...(userId ? { assignedTo: userId } : {}) };
 
     const [stats, pending, overdue, recentResolved] = await Promise.all([
       this.getStats(filters),
-      this.getPending(userId),
-      this.getOverdue(),
+      this.getPending(userId, tenantFilter),
+      this.getOverdue(tenantFilter),
       InspectorCommunication.find({
         ...filters,
         status: 'resolved',

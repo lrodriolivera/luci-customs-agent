@@ -11,6 +11,7 @@
  */
 
 const mongoose = require('mongoose');
+const { tenantListGuard } = require('../utils/tenantListGuard');
 // Contador atomico: el patron countDocuments()+1 reutilizaba referencias vivas
 // tras un borrado (E11000) y repartia el mismo numero en altas concurrentes.
 const { nextReference } = require('../utils/sequence');
@@ -299,6 +300,9 @@ const InspectorCommunicationSchema = new mongoose.Schema({
   reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  // Tenant del creador: lo fija el service al crear. Los listados filtran por
+  // el (utils/tenantListGuard); antes no existia y se listaba todo.
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },
 
   // Timeline
   timeline: [{
@@ -493,10 +497,11 @@ InspectorCommunicationSchema.methods.addArgument = function(argumentData) {
 };
 
 // Statics
-InspectorCommunicationSchema.statics.findPending = function(userId = null) {
+InspectorCommunicationSchema.statics.findPending = function(userId = null, filters = {}) {
   const query = {
     status: { $in: ['draft', 'pending_review', 'approved', 'awaiting_response', 'in_process'] },
-    active: true
+    active: true,
+    ...filters
   };
   if (userId) {
     query.assignedTo = userId;
@@ -504,34 +509,36 @@ InspectorCommunicationSchema.statics.findPending = function(userId = null) {
   return this.find(query).sort({ 'deadlines.submissionDeadline': 1 });
 };
 
-InspectorCommunicationSchema.statics.findByType = function(communicationType, status = null) {
-  const query = { communicationType, active: true };
+InspectorCommunicationSchema.statics.findByType = function(communicationType, status = null, filters = {}) {
+  const query = { communicationType, active: true, ...filters };
   if (status) {
     query.status = status;
   }
   return this.find(query).sort({ createdAt: -1 });
 };
 
-InspectorCommunicationSchema.statics.findByExpedition = function(expeditionId) {
-  return this.find({ 'references.expeditionId': expeditionId, active: true }).sort({ createdAt: -1 });
+InspectorCommunicationSchema.statics.findByExpedition = function(expeditionId, filters = {}) {
+  return this.find({ 'references.expeditionId': expeditionId, active: true, ...filters }).sort({ createdAt: -1 });
 };
 
-InspectorCommunicationSchema.statics.findByRequirement = function(requirementId) {
-  return this.find({ 'references.requirementId': requirementId, active: true }).sort({ createdAt: -1 });
+InspectorCommunicationSchema.statics.findByRequirement = function(requirementId, filters = {}) {
+  return this.find({ 'references.requirementId': requirementId, active: true, ...filters }).sort({ createdAt: -1 });
 };
 
-InspectorCommunicationSchema.statics.findOverdue = function() {
+InspectorCommunicationSchema.statics.findOverdue = function(filters = {}) {
   return this.find({
     'deadlines.submissionDeadline': { $lt: new Date() },
     status: { $in: ['draft', 'pending_review', 'approved'] },
-    active: true
+    active: true,
+    ...filters
   }).sort({ 'deadlines.submissionDeadline': 1 });
 };
 
-InspectorCommunicationSchema.statics.findAppeals = function(status = null) {
+InspectorCommunicationSchema.statics.findAppeals = function(status = null, filters = {}) {
   const query = {
     communicationType: { $in: ['allegation', 'administrative_appeal', 'economic_appeal', 'judicial_appeal'] },
-    active: true
+    active: true,
+    ...filters
   };
   if (status) {
     query.status = status;
@@ -582,5 +589,8 @@ InspectorCommunicationSchema.statics.getStats = async function(filters = {}) {
     total: await this.countDocuments(match)
   };
 };
+
+// Listados sin tenantId fallan: ver utils/tenantListGuard.
+InspectorCommunicationSchema.plugin(tenantListGuard, { modelo: 'InspectorCommunication' });
 
 module.exports = mongoose.model('InspectorCommunication', InspectorCommunicationSchema);

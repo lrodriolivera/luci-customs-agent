@@ -596,32 +596,32 @@ class DeadlineService {
   /**
    * Obtener deadlines urgentes (próximas 48h)
    */
-  async getUrgent(hoursThreshold = 48) {
-    return Deadline.findUrgent(hoursThreshold)
+  async getUrgent(hoursThreshold = 48, filters = {}) {
+    return Deadline.findUrgent(hoursThreshold, filters)
       .populate('assignedTo', 'name email');
   }
 
   /**
    * Obtener deadlines por categoría
    */
-  async getByCategory(category, status = null) {
-    return Deadline.findByCategory(category, status)
+  async getByCategory(category, status = null, filters = {}) {
+    return Deadline.findByCategory(category, status, filters)
       .populate('assignedTo', 'name email');
   }
 
   /**
    * Obtener deadlines por tipo
    */
-  async getByType(deadlineType, status = null) {
-    return Deadline.findByType(deadlineType, status)
+  async getByType(deadlineType, status = null, filters = {}) {
+    return Deadline.findByType(deadlineType, status, filters)
       .populate('assignedTo', 'name email');
   }
 
   /**
    * Obtener deadlines asignados a un usuario
    */
-  async getByAssignee(userId, includeCompleted = false) {
-    return Deadline.findByAssignee(userId, includeCompleted)
+  async getByAssignee(userId, includeCompleted = false, filters = {}) {
+    return Deadline.findByAssignee(userId, includeCompleted, filters)
       .populate('assignedTo', 'name email');
   }
 
@@ -659,12 +659,13 @@ class DeadlineService {
   /**
    * Obtener resumen del dashboard
    */
-  async getDashboard(userId = null) {
-    const filters = userId ? { assignedTo: userId } : {};
+  async getDashboard(userId = null, tenantFilter = {}) {
+    // tenantFilter = filtroTenant(req.user): el dashboard es del tenant del usuario.
+    const filters = { ...tenantFilter, ...(userId ? { assignedTo: userId } : {}) };
 
     const [stats, urgent, overdue, dueToday] = await Promise.all([
       this.getStats(filters),
-      this.getUrgent(48),
+      this.getUrgent(48, tenantFilter),
       this.getOverdue(filters),
       Deadline.find({
         ...filters,

@@ -33,6 +33,10 @@ usarBaseDeDatosEnMemoria();
 // Datos base de una solicitud ROHS valida. Incluye lo que exige
 // validateForSubmission (fabricante en el good para ROHS + oficina SOIVRE), de
 // modo que tras aportar documentos la solicitud pueda enviarse.
+// createRequest no fija el tenant (lo hace el controller desde req.user), asi que
+// estas solicitudes no tienen tenant y se listan con { tenantId: null }.
+const SIN_TENANT = { tenantId: null };
+
 function datosSolicitud(overrides = {}) {
   return {
     pueType: 'ROHS',
@@ -311,7 +315,7 @@ describe('list / getById / getStats', () => {
     await crearPersistida();
     await crearPersistida({ pueType: 'COM', goods: [{ sequenceNumber: 1, description: 'Juguete', taricCode: '95030000' }] });
 
-    const res = await pueService.list({ pueType: 'ROHS', page: 1, limit: 10 });
+    const res = await pueService.list({ pueType: 'ROHS', page: 1, limit: 10 }, SIN_TENANT);
     expect(res.data.every(d => d.pueType === 'ROHS')).toBe(true);
     expect(res.pagination.total).toBe(1);
     expect(res.pagination.pages).toBe(1);
@@ -319,7 +323,7 @@ describe('list / getById / getStats', () => {
 
   test('list con busqueda por texto', async () => {
     const r = await crearPersistida();
-    const res = await pueService.list({ search: r.reference });
+    const res = await pueService.list({ search: r.reference }, SIN_TENANT);
     expect(res.data.length).toBeGreaterThanOrEqual(1);
   });
 

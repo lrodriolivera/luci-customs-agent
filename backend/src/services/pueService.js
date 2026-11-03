@@ -835,15 +835,17 @@ class PUEService {
   /**
    * Obtener estadisticas
    */
-  async getStats(filters = {}) {
-    return PUERequest.getStats(filters);
+  async getStats(filters = {}, tenantFilter = {}) {
+    return PUERequest.getStats(filters, tenantFilter);
   }
 
   /**
    * Listar solicitudes
    */
-  async list(filters = {}) {
-    const query = {};
+  async list(filters = {}, tenantFilter = {}) {
+    // tenantFilter = filtroTenant(req.user), aparte de filters (que incluye
+    // req.query): 'admin' es un rol de tenant y antes listaba todos los tenants.
+    const query = { ...tenantFilter };
 
     if (filters.pueType) query.pueType = filters.pueType;
     if (filters.status) query.status = filters.status;

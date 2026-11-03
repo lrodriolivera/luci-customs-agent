@@ -5,7 +5,7 @@
 
 const deadlineService = require('../services/deadlineService');
 const logger = require('../config/logger');
-const { ensureSameTenant } = require('../utils/tenantGuard');
+const { ensureSameTenant, filtroTenant } = require('../utils/tenantGuard');
 
 const deadlineController = {
   /**
@@ -25,10 +25,9 @@ const deadlineController = {
         sortOrder = 'asc'
       } = req.query;
 
-      const filters = {};
-      // El tenant sale SIEMPRE del token, nunca de req.query: el resto de este
+      // El tenant sale SIEMPRE del usuario, nunca de req.query: el resto de este
       // filtro lo construye el cliente y seria trivial de suplantar.
-      if (req.user?.tenantId) filters.tenantId = req.user.tenantId;
+      const filters = filtroTenant(req.user);
       if (status) filters.status = status;
       if (category) filters.category = category;
       if (deadlineType) filters.deadlineType = deadlineType;
@@ -240,7 +239,7 @@ const deadlineController = {
    */
   async getPending(req, res) {
     try {
-      const filters = {};
+      const filters = filtroTenant(req.user);
       if (req.query.assignedTo) filters.assignedTo = req.query.assignedTo;
 
       const deadlines = await deadlineService.getPending(filters);
@@ -264,7 +263,7 @@ const deadlineController = {
    */
   async getOverdue(req, res) {
     try {
-      const deadlines = await deadlineService.getOverdue();
+      const deadlines = await deadlineService.getOverdue(filtroTenant(req.user));
 
       res.json({
         success: true,
@@ -286,7 +285,7 @@ const deadlineController = {
   async getUrgent(req, res) {
     try {
       const hoursThreshold = parseInt(req.query.hours) || 48;
-      const deadlines = await deadlineService.getUrgent(hoursThreshold);
+      const deadlines = await deadlineService.getUrgent(hoursThreshold, filtroTenant(req.user));
 
       res.json({
         success: true,
@@ -318,7 +317,8 @@ const deadlineController = {
 
       const result = await deadlineService.getCalendarView(
         new Date(startDate),
-        new Date(endDate)
+        new Date(endDate),
+        filtroTenant(req.user)
       );
 
       res.json({
@@ -341,7 +341,7 @@ const deadlineController = {
   async getDashboard(req, res) {
     try {
       const userId = req.query.userId || req.user?.id;
-      const dashboard = await deadlineService.getDashboard(userId);
+      const dashboard = await deadlineService.getDashboard(userId, filtroTenant(req.user));
 
       res.json({
         success: true,
@@ -362,7 +362,7 @@ const deadlineController = {
    */
   async getStats(req, res) {
     try {
-      const filters = {};
+      const filters = filtroTenant(req.user);
       if (req.query.category) filters.category = req.query.category;
       if (req.query.assignedTo) filters.assignedTo = req.query.assignedTo;
 

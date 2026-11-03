@@ -5,6 +5,7 @@
 
 const inspectorCommunicationService = require('../services/inspectorCommunicationService');
 const logger = require('../config/logger');
+const { filtroTenant } = require('../utils/tenantGuard');
 
 /**
  * InspectorCommunication no tiene tenantId, solo createdBy. Misma regla que
@@ -37,7 +38,8 @@ const inspectorCommunicationController = {
         sortOrder = 'desc'
       } = req.query;
 
-      const filters = {};
+      // El tenant sale SIEMPRE del usuario; el resto del filtro viene de la query.
+      const filters = filtroTenant(req.user);
       if (status) filters.status = status;
       if (communicationType) filters.communicationType = communicationType;
       if (category) filters.category = category;
@@ -429,7 +431,7 @@ const inspectorCommunicationController = {
   async getPending(req, res) {
     try {
       const userId = req.query.userId || req.user?.id;
-      const communications = await inspectorCommunicationService.getPending(userId);
+      const communications = await inspectorCommunicationService.getPending(userId, filtroTenant(req.user));
 
       res.json({
         success: true,
@@ -451,7 +453,7 @@ const inspectorCommunicationController = {
   async getAppeals(req, res) {
     try {
       const { status } = req.query;
-      const communications = await inspectorCommunicationService.getAppeals(status);
+      const communications = await inspectorCommunicationService.getAppeals(status, filtroTenant(req.user));
 
       res.json({
         success: true,
@@ -472,7 +474,7 @@ const inspectorCommunicationController = {
    */
   async getOverdue(req, res) {
     try {
-      const communications = await inspectorCommunicationService.getOverdue();
+      const communications = await inspectorCommunicationService.getOverdue(filtroTenant(req.user));
 
       res.json({
         success: true,
@@ -494,7 +496,7 @@ const inspectorCommunicationController = {
   async getDashboard(req, res) {
     try {
       const userId = req.query.userId || req.user?.id;
-      const dashboard = await inspectorCommunicationService.getDashboard(userId);
+      const dashboard = await inspectorCommunicationService.getDashboard(userId, filtroTenant(req.user));
 
       res.json({
         success: true,
@@ -515,7 +517,7 @@ const inspectorCommunicationController = {
    */
   async getStats(req, res) {
     try {
-      const filters = {};
+      const filters = filtroTenant(req.user);
       if (req.query.category) filters.category = req.query.category;
       if (req.query.assignedTo) filters.assignedTo = req.query.assignedTo;
 

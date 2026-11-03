@@ -4,7 +4,7 @@ const { ChatMessage, Expedition } = require('../models');
 const { auth } = require('../middleware/auth');
 const aiService = require('../services/aiService');
 const logger = require('../config/logger');
-const { ensureSameTenant } = require('../utils/tenantGuard');
+const { ensureSameTenant, filtroTenant } = require('../utils/tenantGuard');
 
 // Todas las rutas requieren autenticacion
 router.use(auth);
@@ -17,7 +17,8 @@ router.get('/history', async (req, res) => {
   try {
     const { limit = 50, before } = req.query;
 
-    const query = {};
+    // F7: antes la query iba vacia y devolvia los mensajes de TODOS los tenants.
+    const query = filtroTenant(req.user);
     if (before) {
       query.createdAt = { $lt: new Date(before) };
     }

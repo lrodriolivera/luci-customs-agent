@@ -54,7 +54,7 @@ describe('deadlineController.list: acota por tenant', () => {
     await deadlineController.list(req(TENANT_A), res());
 
     const [filters] = deadlineService.list.mock.calls[0];
-    expect(filters.tenantId).toBe(TENANT_A);
+    expect(String(filters.tenantId)).toBe(TENANT_A);
   });
 
   test('un usuario no puede pedir los plazos de otro tenant por query string', async () => {
@@ -63,23 +63,25 @@ describe('deadlineController.list: acota por tenant', () => {
     await deadlineController.list(req(TENANT_A, { tenantId: TENANT_B }), res());
 
     const [filters] = deadlineService.list.mock.calls[0];
-    expect(filters.tenantId).toBe(TENANT_A);
+    expect(String(filters.tenantId)).toBe(TENANT_A);
   });
 
   test('conserva los filtros legitimos de la peticion', async () => {
     await deadlineController.list(req(TENANT_A, { status: 'pending', category: 'aeat' }), res());
 
     const [filters] = deadlineService.list.mock.calls[0];
-    expect(filters).toMatchObject({ status: 'pending', category: 'aeat', tenantId: TENANT_A });
+    expect(filters).toMatchObject({ status: 'pending', category: 'aeat' });
+    expect(String(filters.tenantId)).toBe(TENANT_A);
   });
 
-  test('un usuario sin tenant no fuerza un filtro vacio', async () => {
-    // Usuarios legacy anteriores al multi-tenant: no se les inventa un tenantId
-    // undefined, que en Mongo casaria con los documentos sin el campo.
+  test('un usuario sin tenant solo ve documentos sin tenant', async () => {
+    // Antes, sin tenantId en el filtro, el listado devolvia los plazos de TODOS
+    // los tenants. Ahora el filtro es { tenantId: null }, que en Mongo casa solo
+    // con los documentos sin tenant (los legacy de ese usuario).
     await deadlineController.list(req(undefined), res());
 
     const [filters] = deadlineService.list.mock.calls[0];
-    expect('tenantId' in filters).toBe(false);
+    expect(filters.tenantId).toBeNull();
   });
 });
 
@@ -88,27 +90,28 @@ describe('inspectionController.list: acota por tenant', () => {
     await inspectionController.list(req(TENANT_A), res());
 
     const [filters] = inspectionService.list.mock.calls[0];
-    expect(filters.tenantId).toBe(TENANT_A);
+    expect(String(filters.tenantId)).toBe(TENANT_A);
   });
 
   test('un usuario no puede pedir las inspecciones de otro tenant por query string', async () => {
     await inspectionController.list(req(TENANT_A, { tenantId: TENANT_B }), res());
 
     const [filters] = inspectionService.list.mock.calls[0];
-    expect(filters.tenantId).toBe(TENANT_A);
+    expect(String(filters.tenantId)).toBe(TENANT_A);
   });
 
   test('conserva los filtros legitimos de la peticion', async () => {
     await inspectionController.list(req(TENANT_A, { status: 'scheduled', authorityType: 'SOIVRE' }), res());
 
     const [filters] = inspectionService.list.mock.calls[0];
-    expect(filters).toMatchObject({ status: 'scheduled', tenantId: TENANT_A });
+    expect(filters).toMatchObject({ status: 'scheduled' });
+    expect(String(filters.tenantId)).toBe(TENANT_A);
   });
 
-  test('un usuario sin tenant no fuerza un filtro vacio', async () => {
+  test('un usuario sin tenant solo ve documentos sin tenant', async () => {
     await inspectionController.list(req(undefined), res());
 
     const [filters] = inspectionService.list.mock.calls[0];
-    expect('tenantId' in filters).toBe(false);
+    expect(filters.tenantId).toBeNull();
   });
 });

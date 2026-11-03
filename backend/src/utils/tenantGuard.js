@@ -13,6 +13,7 @@
  * false. We use 404 (not 403) to avoid leaking existence across tenants.
  */
 
+const mongoose = require('mongoose');
 const { esSuperAdmin } = require('../constants/roles');
 
 function extractTenantId(doc) {
@@ -53,4 +54,20 @@ function ensureSameTenant(doc, req, res, { resource = 'Resource' } = {}) {
   return true;
 }
 
-module.exports = { ensureSameTenant, extractTenantId, isSuperAdmin };
+/**
+ * Filtro de tenant para LISTADOS: el tenant del usuario autenticado, nunca uno
+ * que venga de la peticion. Un usuario sin tenant (legacy) solo ve documentos
+ * sin tenant. Lo exige utils/tenantListGuard en PUE, plazos, inspecciones,
+ * comunicaciones al inspector y chat.
+ */
+function filtroTenant(user) {
+  const tenantId = user?.tenantId || null;
+  // aggregate no castea el filtro: un tenantId en string no casaria con el
+  // ObjectId guardado y las estadisticas saldrian a cero.
+  if (typeof tenantId === 'string' && mongoose.Types.ObjectId.isValid(tenantId)) {
+    return { tenantId: new mongoose.Types.ObjectId(tenantId) };
+  }
+  return { tenantId };
+}
+
+module.exports = { ensureSameTenant, extractTenantId, isSuperAdmin, filtroTenant };

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { tenantListGuard } = require('../utils/tenantListGuard');
 
 const ChatMessageSchema = new mongoose.Schema({
   // Referencia al expediente
@@ -8,6 +9,10 @@ const ChatMessageSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+
+  // Tenant del expediente. Se rellena solo al validar (hook de abajo) para que
+  // el historial global se pueda acotar al tenant del usuario.
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },
 
   // Tipo de participante
   sender: {
@@ -93,7 +98,10 @@ ChatMessageSchema.statics.getConversation = function(expeditionId, limit = 50, b
   if (before) {
     query.createdAt = { $lt: before };
   }
+  // Los mensajes legacy no tienen tenantId: filtrar por el los ocultaria de su
+  // propia conversacion.
   return this.find(query)
+    .setOptions({ sinTenant: 'acotado por expediente: quien llama ya comprobo que el expediente es del tenant (ensureSameTenant o token del portal)' })
     .sort({ createdAt: -1 })
     .limit(limit)
     .lean();
@@ -111,7 +119,19 @@ ChatMessageSchema.statics.getUnreadCount = function(expeditionId, forSender) {
     expedition: expeditionId,
     sender: { $ne: forSender },
     isRead: false
-  });
+  }).setOptions({ sinTenant: 'acotado por expediente: quien llama ya comprobo que el expediente es del tenant (ensureSameTenant o token del portal)' });
 };
+
+// El tenant sale del expediente: los diez sitios que crean mensajes solo
+// conocen el expediente, asi que se resuelve aqui una vez.
+ChatMessageSchema.pre('validate', async function () {
+  if (this.tenantId || !this.expedition) return;
+  const Expedition = mongoose.model('Expedition');
+  const exp = await Expedition.findById(this.expedition).select('tenantId').lean();
+  if (exp?.tenantId) this.tenantId = exp.tenantId;
+});
+
+// Listados sin tenantId fallan: ver utils/tenantListGuard.
+ChatMessageSchema.plugin(tenantListGuard, { modelo: 'ChatMessage' });
 
 module.exports = mongoose.model('ChatMessage', ChatMessageSchema);

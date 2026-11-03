@@ -10,6 +10,11 @@ const InspectorCommunication = require('../../src/models/InspectorCommunication'
 const Deadline = require('../../src/models/Deadline');
 const deadlineService = require('../../src/services/deadlineService');
 
+// Las comunicaciones de estos tests se crean sin tenant (el usuario no existe en
+// BD): los listados se acotan al tenant (utils/tenantListGuard) y
+// { tenantId: null } es el de un usuario sin tenant, que solo ve las sin tenant.
+const SIN_TENANT = { tenantId: null };
+
 // Mock solo deadlineService (frontera) y logger
 jest.mock('../../src/services/deadlineService');
 jest.mock('../../src/config/logger');
@@ -1053,7 +1058,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('list debe retornar todas las comunicaciones activas', async () => {
-      const result = await inspectorCommunicationService.list({}, {});
+      const result = await inspectorCommunicationService.list({ ...SIN_TENANT }, {});
 
       expect(result.communications).toBeDefined();
       expect(result.communications.length).toBe(3);
@@ -1063,7 +1068,7 @@ describe('Inspector Communication Service', () => {
 
     test('list debe filtrar por communicationType', async () => {
       const result = await inspectorCommunicationService.list(
-        { communicationType: 'allegation' },
+        { ...SIN_TENANT, communicationType: 'allegation' },
         {}
       );
 
@@ -1073,7 +1078,7 @@ describe('Inspector Communication Service', () => {
 
     test('list debe filtrar por status', async () => {
       const result = await inspectorCommunicationService.list(
-        { status: 'sent' },
+        { ...SIN_TENANT, status: 'sent' },
         {}
       );
 
@@ -1083,7 +1088,7 @@ describe('Inspector Communication Service', () => {
 
     test('list debe paginar correctamente', async () => {
       const result = await inspectorCommunicationService.list(
-        {},
+        { ...SIN_TENANT },
         { page: 1, limit: 2 }
       );
 
@@ -1094,7 +1099,7 @@ describe('Inspector Communication Service', () => {
 
     test('list debe ordenar por campo especificado', async () => {
       const result = await inspectorCommunicationService.list(
-        {},
+        { ...SIN_TENANT },
         { sortBy: 'subject', sortOrder: 'asc' }
       );
 
@@ -1103,7 +1108,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('list debe usar defaults si options está vacío', async () => {
-      const result = await inspectorCommunicationService.list({}, {});
+      const result = await inspectorCommunicationService.list({ ...SIN_TENANT }, {});
 
       expect(result.page).toBe(1);
       expect(result.limit).toBe(20);
@@ -1112,13 +1117,13 @@ describe('Inspector Communication Service', () => {
     });
 
     test('list debe calcular páginas correctamente', async () => {
-      const result = await inspectorCommunicationService.list({}, { limit: 2 });
+      const result = await inspectorCommunicationService.list({ ...SIN_TENANT }, { limit: 2 });
 
       expect(result.pages).toBe(2); // 3 comunicaciones / 2 por página = 2 páginas
     });
 
     test('list debe funcionar sin argumentos (todos defaults)', async () => {
-      const result = await inspectorCommunicationService.list();
+      const result = await inspectorCommunicationService.list({ ...SIN_TENANT });
 
       expect(result.communications).toBeDefined();
       expect(result.page).toBe(1);
@@ -1167,7 +1172,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('debe retornar comunicaciones pendientes de un usuario', async () => {
-      const pending = await inspectorCommunicationService.getPending(user1);
+      const pending = await inspectorCommunicationService.getPending(user1, SIN_TENANT);
 
       expect(pending.length).toBe(2);
       // No verifica el every porque populate podría no devolver el ObjectId completo
@@ -1175,7 +1180,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('debe retornar todas las pendientes sin filtro de usuario', async () => {
-      const pending = await inspectorCommunicationService.getPending(null);
+      const pending = await inspectorCommunicationService.getPending(null, SIN_TENANT);
 
       expect(pending.length).toBe(3);
     });
@@ -1207,21 +1212,21 @@ describe('Inspector Communication Service', () => {
     });
 
     test('debe retornar solo alegaciones y recursos', async () => {
-      const appeals = await inspectorCommunicationService.getAppeals();
+      const appeals = await inspectorCommunicationService.getAppeals(null, SIN_TENANT);
 
       expect(appeals.length).toBe(2);
       expect(appeals.every(a => ['allegation', 'administrative_appeal', 'economic_appeal', 'judicial_appeal'].includes(a.communicationType))).toBe(true);
     });
 
     test('debe filtrar por status', async () => {
-      const appeals = await inspectorCommunicationService.getAppeals('sent');
+      const appeals = await inspectorCommunicationService.getAppeals('sent', SIN_TENANT);
 
       expect(appeals.length).toBe(1);
       expect(appeals[0].status).toBe('sent');
     });
 
     test('debe retornar todos los appeals sin filtro de status', async () => {
-      const appeals = await inspectorCommunicationService.getAppeals(null);
+      const appeals = await inspectorCommunicationService.getAppeals(null, SIN_TENANT);
 
       expect(appeals.length).toBe(2);
     });
@@ -1263,7 +1268,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('debe retornar solo comunicaciones vencidas no enviadas', async () => {
-      const overdue = await inspectorCommunicationService.getOverdue();
+      const overdue = await inspectorCommunicationService.getOverdue(SIN_TENANT);
 
       expect(overdue.length).toBe(1);
       expect(overdue[0].subject).toBe('Vencida');
@@ -1770,7 +1775,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('debe retornar estadísticas completas', async () => {
-      const stats = await inspectorCommunicationService.getStats();
+      const stats = await inspectorCommunicationService.getStats(SIN_TENANT);
 
       expect(stats).toBeDefined();
       expect(stats.byType).toBeDefined();
@@ -1800,7 +1805,7 @@ describe('Inspector Communication Service', () => {
         assignedTo: user2
       }, user2);
 
-      const stats = await inspectorCommunicationService.getStats({ assignedTo: user1 });
+      const stats = await inspectorCommunicationService.getStats({ ...SIN_TENANT, assignedTo: user1 });
 
       expect(stats.total).toBe(1);
     });
@@ -1846,7 +1851,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('debe retornar dashboard completo', async () => {
-      const dashboard = await inspectorCommunicationService.getDashboard();
+      const dashboard = await inspectorCommunicationService.getDashboard(null, SIN_TENANT);
 
       expect(dashboard).toBeDefined();
       expect(dashboard.stats).toBeDefined();
@@ -1867,7 +1872,7 @@ describe('Inspector Communication Service', () => {
         assignedTo: user1
       }, user1);
 
-      const dashboard = await inspectorCommunicationService.getDashboard(user1);
+      const dashboard = await inspectorCommunicationService.getDashboard(user1, SIN_TENANT);
 
       expect(dashboard.stats.total).toBe(1);
     });
@@ -1876,7 +1881,7 @@ describe('Inspector Communication Service', () => {
       // Crear una suite vacía limpiando todo
       await InspectorCommunication.deleteMany({});
 
-      const dashboard = await inspectorCommunicationService.getDashboard();
+      const dashboard = await inspectorCommunicationService.getDashboard(null, SIN_TENANT);
 
       expect(dashboard.stats.total).toBe(0);
       expect(dashboard.summary.overdue).toBe(0);
@@ -1910,7 +1915,7 @@ describe('Inspector Communication Service', () => {
         await inspectorCommunicationService.updateStatus(comm._id, 'approved', '', userId);
       }
 
-      const dashboard = await inspectorCommunicationService.getDashboard();
+      const dashboard = await inspectorCommunicationService.getDashboard(null, SIN_TENANT);
 
       // 2 draft + 3 approved = 5. El comportamiento buggy habría devuelto 2
       // (el conteo de 'draft', primer operando truthy), no la suma.
@@ -1939,7 +1944,7 @@ describe('Inspector Communication Service', () => {
         authority: { type: 'AEAT' }
       }, userId);
 
-      const result = await inspectorCommunicationService.list({}, {
+      const result = await inspectorCommunicationService.list({ ...SIN_TENANT }, {
         sortBy: 'subject'
         // sortOrder no especificado, debe ser 'desc' por defecto
       });
@@ -1956,7 +1961,7 @@ describe('Inspector Communication Service', () => {
         authority: { type: 'AEAT' }
       }, userId);
 
-      const stats = await inspectorCommunicationService.getStats();
+      const stats = await inspectorCommunicationService.getStats(SIN_TENANT);
 
       expect(stats.byCategory.response).toBeDefined();
       // Categoría 'appeal' no tiene datos, debe faltar o ser undefined

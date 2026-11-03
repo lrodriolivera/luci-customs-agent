@@ -119,7 +119,7 @@ describe('create', () => {
     await ctrl.create({ body: { pueType: 'ROHS' }, user }, res);
 
     expect(res.statusCode).toBe(400);
-    expect(await PUERequest.countDocuments()).toBe(0);
+    expect(await PUERequest.countDocuments({}).setOptions({ sinTenant: 'test: comprobar que no se creo ninguna' })).toBe(0);
   });
 
   test('un pueType inexistente se rechaza con 400', async () => {
@@ -183,9 +183,10 @@ describe('list: filtro por propiedad y por tenant del handler', () => {
     expect(res.body.data[0].createdBy._id.toString()).toBe(op._id.toString());
   });
 
-  test('el admin ve todas y el filtro por pueType funciona', async () => {
-    const admin = await usuario({ role: 'admin' });
-    const op = await usuario();
+  test('el admin ve todas las de SU tenant y el filtro por pueType funciona', async () => {
+    const tenant = new mongoose.Types.ObjectId();
+    const admin = await usuario({ role: 'admin', tenant });
+    const op = await usuario({ tenant });
     await crearSolicitud({ user: op, pueType: 'ROHS' });
     await crearSolicitud({ user: op, pueType: 'CAL', extra: { goods: [{ sequenceNumber: 1, description: 'Textil', taricCode: '62011100' }] } });
 
@@ -194,6 +195,19 @@ describe('list: filtro por propiedad y por tenant del handler', () => {
 
     expect(res.body.data).toHaveLength(1);
     expect(res.body.data[0].pueType).toBe('CAL');
+  });
+
+  // F17: 'admin' es un rol de tenant (el registro publico lo da) y antes el
+  // listado de un admin no filtraba por tenant: veia los PUE de todos.
+  test('el admin de OTRO tenant no ve ninguna, ni pidiendo tenantId por query', async () => {
+    const op = await usuario();
+    await crearSolicitud({ user: op, pueType: 'ROHS' });
+    const adminAjeno = await usuario({ role: 'admin' });
+
+    const res = crearRes();
+    await ctrl.list({ user: adminAjeno, query: { tenantId: String(op.tenantId) } }, res);
+
+    expect(res.body.data).toHaveLength(0);
   });
 });
 
