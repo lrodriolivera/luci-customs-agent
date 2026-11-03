@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Restriccion arancelaria por pais de origen.
  *
@@ -220,7 +221,7 @@ TaricCodeSchema.methods.getChildren = function() {
   const nextLevel = this.level + 2;
   const prefix = this.code;
   return this.model('TaricCode').find({
-    code: new RegExp(`^${prefix}`),
+    code: new RegExp(`^${escapeRegex(prefix)}`),
     level: nextLevel,
     isActive: true
   }).sort({ code: 1 });

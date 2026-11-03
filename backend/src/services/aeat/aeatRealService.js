@@ -17,6 +17,7 @@ const logger = require('../../config/logger');
 const certificateService = require('./certificateService');
 const xadesSignatureService = require('./xadesSignatureService');
 
+const { escapeRegex } = require('../../utils/escapeRegex');
 class AEATRealService {
   constructor() {
     // Configuración de entornos AEAT
@@ -1198,7 +1199,7 @@ class AEATRealService {
    * no <Tag ...>; ver aesXmlBuilder.js/nctsXmlBuilder.js/h1XmlBuilder.js).
    */
   _xmlHasTag(xml, tagName) {
-    return new RegExp(`<(?:[\\w.-]+:)?${tagName}(?=[\\s/>])`).test(xml);
+    return new RegExp(`<(?:[\\w.-]+:)?${escapeRegex(tagName)}(?=[\\s/>])`).test(xml);
   }
 
   async _luciPreSubmitValidation(declarationXML, service, options) {
@@ -1518,7 +1519,7 @@ class AEATRealService {
   }
 
   _extractField(xml, fieldName) {
-    const match = xml.match(new RegExp(`<aeat:${fieldName}>([^<]+)<\/aeat:${fieldName}>`));
+    const match = xml.match(new RegExp(`<aeat:${escapeRegex(fieldName)}>([^<]+)<\/aeat:${escapeRegex(fieldName)}>`));
     return match ? match[1] : null;
   }
 

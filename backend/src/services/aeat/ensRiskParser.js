@@ -22,6 +22,8 @@
  * no hay un analisis de riesgo aplicable, para que quien llame no escriba nada.
  */
 
+const { escapeRegex } = require('../../utils/escapeRegex');
+
 // Estados admitidos por ENSDeclaration.riskAssessment.status. Un valor fuera de
 // esta lista se rechaza en lugar de guardarse: Mongoose lo tiraria en silencio y
 // nos quedariamos sin saber que AEAT dijo algo que no entendemos.
@@ -36,12 +38,12 @@ const TIPOS = ['CC351A', 'CC324A', 'CC328A'];
  * hijo del body, asi que exigir la etiqueta desnuda no casa nunca en produccion.
  */
 function _valor(xml, tag) {
-  const m = xml.match(new RegExp(`<(?:\\w+:)?${tag}[^>]*>([\\s\\S]*?)</(?:\\w+:)?${tag}>`));
+  const m = xml.match(new RegExp(`<(?:\\w+:)?${escapeRegex(tag)}[^>]*>([\\s\\S]*?)</(?:\\w+:)?${escapeRegex(tag)}>`));
   return m ? m[1].trim() : undefined;
 }
 
 function _bloques(xml, tag) {
-  return [...xml.matchAll(new RegExp(`<(?:\\w+:)?${tag}[^>]*>([\\s\\S]*?)</(?:\\w+:)?${tag}>`, 'g'))]
+  return [...xml.matchAll(new RegExp(`<(?:\\w+:)?${escapeRegex(tag)}[^>]*>([\\s\\S]*?)</(?:\\w+:)?${escapeRegex(tag)}>`, 'g'))]
     .map(m => m[1]);
 }
 
@@ -65,7 +67,7 @@ function parseENSRiskMessage(xml) {
     return _rechazo('Mensaje vacio o no textual');
   }
 
-  const messageType = TIPOS.find(t => new RegExp(`<(?:\\w+:)?${t}[^>]*>`).test(xml));
+  const messageType = TIPOS.find(t => new RegExp(`<(?:\\w+:)?${escapeRegex(t)}[^>]*>`).test(xml));
   if (!messageType) {
     return _rechazo('El mensaje no es de un tipo que porte analisis de riesgo de ENS');
   }

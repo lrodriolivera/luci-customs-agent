@@ -74,6 +74,36 @@ describe('guardia: todo $regex de src/ pasa por escapeRegex', () => {
     expect(sinEscapar).toEqual([]);
   });
 
+  // El guard de arriba solo miraba `$regex:` y new RegExp(variable): no vio
+  // new RegExp(`Artículo\\s*${article}...`) de regulationService.searchArticle
+  // (F2 de noviembre, F17 de septiembre), un ReDoS sin autenticar. Este recorre
+  // cada new RegExp(`...`) aunque ocupe varias lineas y exige escapeRegex en
+  // cada interpolacion ${...}.
+  // Unica excepcion: la alternancia (A|B|C) se construye a proposito con
+  // constantes del propio script de auditoria; escaparla romperia el '|'.
+  const EXCEPCIONES_PLANTILLA = {
+    'scripts/auditTenantFilters.js': 'alternancia de nombres de modelos y metodos, constantes del propio script'
+  };
+
+  test('ninguna new RegExp con plantilla interpola un valor sin escapar', () => {
+    const sinEscapar = [];
+    for (const f of ficheros(SRC)) {
+      if (EXCEPCIONES_PLANTILLA[path.relative(SRC, f)]) continue;
+      const codigo = fs.readFileSync(f, 'utf8');
+      const plantillas = /new RegExp\(\s*`((?:[^`\\]|\\[\s\S])*)`/g;
+      let m;
+      while ((m = plantillas.exec(codigo))) {
+        const linea = codigo.slice(0, m.index).split('\n').length;
+        for (const interp of m[1].matchAll(/\$\{([^}]*)\}/g)) {
+          if (!/^\s*escapeRegex\(/.test(interp[1])) {
+            sinEscapar.push(`${path.relative(SRC, f)}:${linea}  \${${interp[1].trim()}}`);
+          }
+        }
+      }
+    }
+    expect(sinEscapar).toEqual([]);
+  });
+
   test('ninguna RegExp de consulta se construye con un termino de busqueda crudo', () => {
     const sinEscapar = [];
     for (const f of ficheros(SRC)) {

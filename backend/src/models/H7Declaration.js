@@ -13,6 +13,7 @@ const mongoose = require('mongoose');
 // Reglamento (UE) 2026/382: derecho fijo transitorio 3 EUR/articulo (ver config).
 const { REG_2026_382, aplicaDerechoFijo2026 } = require('../config/reg2026382');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 // Esquema de articulo individual en el envio
 const H7ItemSchema = new mongoose.Schema({
   // Descripcion del articulo
@@ -489,7 +490,7 @@ H7DeclarationSchema.pre('save', async function(next) {
     // el número más alto (p. ej. tras borrados intermedios o huecos del seeder).
     const prefijo = `H7-${year}-`;
     const ultima = await this.constructor
-      .findOne({ reference: new RegExp(`^${prefijo}`) })
+      .findOne({ reference: new RegExp(`^${escapeRegex(prefijo)}`) })
       .sort({ reference: -1 })
       .select('reference')
       .lean();
