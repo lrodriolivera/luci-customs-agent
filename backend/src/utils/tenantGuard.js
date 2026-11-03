@@ -35,7 +35,10 @@ function ensureSameTenant(doc, req, res, { resource = 'Resource' } = {}) {
   if (isSuperAdmin(req.user)) return true;
 
   const docTenant = extractTenantId(doc);
-  const userTenant = req.tenantId || (req.user?.tenantId ? String(req.user.tenantId) : null);
+  // Siempre el tenant del usuario autenticado (cargado de BD por requireAuth).
+  // Nunca req.tenantId: extractTenant lo copia de la cabecera X-Tenant-ID que
+  // controla el cliente, así que permitiría abrir documentos de otro tenant.
+  const userTenant = req.user?.tenantId ? String(req.user.tenantId) : null;
 
   // If the doc has no tenant (legacy) allow but log a warning once
   if (!docTenant) return true;
