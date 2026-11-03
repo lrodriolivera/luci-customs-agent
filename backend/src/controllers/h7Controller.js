@@ -402,7 +402,7 @@ exports.processBatch = async (req, res) => {
       });
     }
 
-    const result = await h7Service.processBatch(declarations, req.user._id);
+    const result = await h7Service.processBatch(declarations, req.user._id, { tenantId: req.user.tenantId });
 
     res.json({
       success: true,
@@ -440,7 +440,8 @@ exports.importCSV = async (req, res) => {
 
     // Procesar lote
     const result = await h7Service.processBatch(declarations, req.user._id, {
-      autoSubmit
+      autoSubmit,
+      tenantId: req.user.tenantId
     });
 
     res.json({

@@ -415,6 +415,10 @@ class H7Service {
    * Procesar lote de declaraciones H7
    */
   async processBatch(declarations, userId, options = {}) {
+    // options.tenantId = req.user.tenantId. El tenantId de cada declaracion del
+    // body se descarta: se conservaba y permitia crear declaraciones (y
+    // presentarlas a la AEAT con la identidad de declarante) de otro tenant.
+    const tenantId = options.tenantId || null;
     const batchId = `BATCH-${Date.now()}`;
     const results = {
       batchId,
@@ -428,6 +432,7 @@ class H7Service {
       try {
         const data = {
           ...declarations[i],
+          tenantId,
           batch: {
             id: batchId,
             sequence: i + 1,
