@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const { User, Tenant } = require('../models');
 const logger = require('../config/logger');
 const cognitoService = require('../utils/cognitoService');
+const { puedeAsignarRol } = require('../constants/roles');
 
 /**
  * Registro de nuevo usuario
@@ -335,6 +336,11 @@ const updateUser = async (req, res) => {
       }
     });
 
+    // Un admin de tenant no puede ascender a nadie (ni a si mismo) a super_admin.
+    if (allowedUpdates.role !== undefined && !puedeAsignarRol(req.user, allowedUpdates.role)) {
+      return res.status(403).json({ success: false, error: 'No tienes permisos para asignar ese rol.' });
+    }
+
     // El filtro incluye el tenant del solicitante: requireRole('admin') es un
     // rol DE TENANT, asi que sin esto un admin podia cambiar el rol y los
     // permisos de un usuario de otro cliente conociendo su id.
@@ -622,6 +628,11 @@ const adminInvite = async (req, res) => {
 
     if (!email || !givenName || !familyName) {
       return res.status(400).json({ success: false, error: 'email, givenName y familyName son obligatorios' });
+    }
+
+    // Antes de tocar Cognito: un admin de tenant no puede invitar a un super_admin.
+    if (!puedeAsignarRol(req.user, role)) {
+      return res.status(403).json({ success: false, error: 'No tienes permisos para asignar ese rol.' });
     }
 
     const tempPassword = crypto.randomBytes(12).toString('base64').slice(0, 12) + 'A1!';

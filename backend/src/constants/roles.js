@@ -65,4 +65,20 @@ function esSuperAdmin(user) {
   );
 }
 
-module.exports = { ROLES, TODOS, DE_TENANT, esSuperAdmin, SUPER_ADMIN, ADMIN, SUPERVISOR, AGENT, VIEWER };
+/**
+ * ¿Puede `actor` asignar el rol `rol` a un usuario (crear, invitar o editar)?
+ *
+ * Un admin de tenant solo concede roles DE_TENANT. Sin esta comprobacion, el
+ * enum de User.role -- que SI admite super_admin -- era la unica barrera, y un
+ * admin de tenant podia convertirse a si mismo (o a cualquier usuario de su
+ * organizacion) en super administrador de plataforma enviando role en el body.
+ * Solo un super_admin puede conceder SUPER_ADMIN.
+ *
+ * La comparacion es estricta contra DE_TENANT: cualquier valor que no sea
+ * exactamente uno de esos strings (objetos, arrays...) se rechaza.
+ */
+function puedeAsignarRol(actor, rol) {
+  return esSuperAdmin(actor) || DE_TENANT.includes(rol);
+}
+
+module.exports = { ROLES, TODOS, DE_TENANT, esSuperAdmin, puedeAsignarRol, SUPER_ADMIN, ADMIN, SUPERVISOR, AGENT, VIEWER };
