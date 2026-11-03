@@ -175,7 +175,7 @@ describe('OEA Controller', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(oeaService.findExpiring).toHaveBeenCalledWith(90);
+      expect(oeaService.findExpiring).toHaveBeenCalledWith(90, undefined);
     });
 
     test('should default to 90 days', async () => {
@@ -184,7 +184,7 @@ describe('OEA Controller', () => {
       await request(app)
         .get('/api/oea/expiring');
 
-      expect(oeaService.findExpiring).toHaveBeenCalledWith(90);
+      expect(oeaService.findExpiring).toHaveBeenCalledWith(90, undefined);
     });
   });
 

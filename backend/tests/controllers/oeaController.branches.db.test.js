@@ -1295,5 +1295,41 @@ describe('OEA Controller - Branch Coverage', () => {
       expect(oeas.length).toBe(1);
       expect(oeas[0].organization.nif).toBe('B22222222');
     });
+
+    test('should filter expiring endpoint by user ownership', async () => {
+      // findExpiring(days, userId) filtra por createdBy: antes devolvia las OEA
+      // aprobadas de todas las cuentas a cualquier usuario autenticado.
+      const soon = new Date();
+      soon.setDate(soon.getDate() + 30);
+
+      await OEA.create({
+        organization: {
+          name: 'Company A',
+          nif: 'A11111111',
+          eori: 'ESA11111111'
+        },
+        certification: { type: 'OEAC', status: 'approved', expirationDate: soon },
+        createdBy: userA._id
+      });
+
+      await OEA.create({
+        organization: {
+          name: 'Company B',
+          nif: 'B22222222',
+          eori: 'ESB22222222'
+        },
+        certification: { type: 'OEAS', status: 'approved', expirationDate: soon },
+        createdBy: userB._id
+      });
+
+      const response = await request(app)
+        .get('/api/oea/expiring')
+        .query({ days: '100000' })
+        .set('x-user-id', userB._id.toString());
+
+      expect(response.status).toBe(200);
+      expect(response.body.count).toBe(1);
+      expect(response.body.data[0].organization.nif).toBe('B22222222');
+    });
   });
 });

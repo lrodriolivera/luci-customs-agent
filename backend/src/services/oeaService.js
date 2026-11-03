@@ -1415,8 +1415,8 @@ oeaServiceInstance.findByNIF = async function(nif) {
   return OEA.findOne({ 'organization.nif': nif });
 };
 
-oeaServiceInstance.findExpiring = async function(daysAhead = 90) {
-  return OEA.findExpiring(daysAhead);
+oeaServiceInstance.findExpiring = async function(daysAhead = 90, userId = null) {
+  return OEA.findExpiring(daysAhead, userId);
 };
 
 module.exports = oeaServiceInstance;

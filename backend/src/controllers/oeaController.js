@@ -112,7 +112,7 @@ exports.getStats = async (req, res) => {
 exports.getExpiring = async (req, res) => {
   try {
     const days = parseInt(req.query.days) || 90;
-    const expiring = await oeaService.findExpiring(days);
+    const expiring = await oeaService.findExpiring(days, req.user?._id || req.user?.id);
     const expiringList = expiring || [];
 
     res.json({
