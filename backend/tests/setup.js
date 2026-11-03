@@ -15,6 +15,9 @@ process.env.MONGODB_URI = 'mongodb://localhost:27017/luci-test';
 // Increase timeout for integration tests
 jest.setTimeout(10000);
 
+// supertest escucha en 127.0.0.1, no en '::': ver tests/helpers/supertestLocalhost.js.
+require('./helpers/supertestLocalhost');
+
 // Mongoose bufferea las operaciones cuando no hay conexion y las rechaza al
 // agotarse bufferTimeoutMS, que por defecto son los mismos 10000ms del
 // testTimeout de arriba. Con ambos valores empatados, el rechazo llega justo
