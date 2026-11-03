@@ -10,6 +10,7 @@ const { ensureSameTenant } = require('../utils/tenantGuard');
 const { parseENSRiskMessage } = require('../services/aeat/ensRiskParser');
 const { ROLES, esSuperAdmin } = require('../constants/roles');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Comprobar que los cambios pedidos han quedado REALMENTE aplicados al documento.
  *
@@ -104,13 +105,13 @@ exports.list = async (req, res) => {
 
     if (search) {
       query.$or = [
-        { reference: { $regex: search, $options: 'i' } },
-        { mrn: { $regex: search, $options: 'i' } },
-        { lrn: { $regex: search, $options: 'i' } },
-        { 'consignment.referenceNumber': { $regex: search, $options: 'i' } },
-        { 'consignment.containerNumber': { $regex: search, $options: 'i' } },
-        { 'carrier.eori': { $regex: search, $options: 'i' } },
-        { 'carrier.name': { $regex: search, $options: 'i' } }
+        { reference: { $regex: escapeRegex(search), $options: 'i' } },
+        { mrn: { $regex: escapeRegex(search), $options: 'i' } },
+        { lrn: { $regex: escapeRegex(search), $options: 'i' } },
+        { 'consignment.referenceNumber': { $regex: escapeRegex(search), $options: 'i' } },
+        { 'consignment.containerNumber': { $regex: escapeRegex(search), $options: 'i' } },
+        { 'carrier.eori': { $regex: escapeRegex(search), $options: 'i' } },
+        { 'carrier.name': { $regex: escapeRegex(search), $options: 'i' } }
       ];
     }
 

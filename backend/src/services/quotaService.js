@@ -43,6 +43,7 @@
 const logger = require('../config/logger');
 const TariffQuota = require('../models/TariffQuota');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 const URL_OFICIAL = 'https://ec.europa.eu/taxation_customs/dds2/taric/quota_consultation.jsp';
 
 /** Antiguedad a partir de la cual el saldo se considera claramente caducado. */
@@ -243,7 +244,7 @@ async function buscarPorTaric(taricCode, year) {
     year,
     $or: [
       { taricCodes: { $in: candidatos } },
-      { taricCodes: { $regex: `^${prefijoDeBusqueda(normalizado)}` } }
+      { taricCodes: { $regex: `^${escapeRegex(prefijoDeBusqueda(normalizado))}` } }
     ]
   }).lean();
 }

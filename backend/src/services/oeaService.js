@@ -7,6 +7,7 @@
 
 const OEA = require('../models/OEA');
 const logger = require('../config/logger');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 /**
  * Carga una certificacion OEA comprobando que pertenece a quien la pide.
@@ -1082,10 +1083,10 @@ class OEAService {
     }
     if (filters.search) {
       query.$or = [
-        { 'organization.name': new RegExp(filters.search, 'i') },
-        { 'organization.nif': new RegExp(filters.search, 'i') },
-        { 'organization.eori': new RegExp(filters.search, 'i') },
-        { 'certification.number': new RegExp(filters.search, 'i') }
+        { 'organization.name': new RegExp(escapeRegex(filters.search), 'i') },
+        { 'organization.nif': new RegExp(escapeRegex(filters.search), 'i') },
+        { 'organization.eori': new RegExp(escapeRegex(filters.search), 'i') },
+        { 'certification.number': new RegExp(escapeRegex(filters.search), 'i') }
       ];
     }
 

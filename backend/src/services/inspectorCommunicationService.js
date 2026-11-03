@@ -14,6 +14,7 @@ const Deadline = require('../models/Deadline');
 const deadlineService = require('./deadlineService');
 const logger = require('../config/logger');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Carga el documento comprobando que pertenece a quien lo pide.
  * Las escrituras pasaban el id directo al servicio sin mirar createdBy.
@@ -465,7 +466,7 @@ class InspectorCommunicationService {
     const deadline = await Deadline.findOne({
       $or: [
         { 'references.requirementId': communication.references.requirementId },
-        { title: { $regex: communication.communicationNumber } }
+        { title: { $regex: escapeRegex(communication.communicationNumber) } }
       ],
       status: { $nin: ['completed', 'cancelled'] }
     });

@@ -6,6 +6,7 @@ const taricService = require('../services/taricService');
 const { hasSeasonalTariff, getSeasonalTariff } = require('../data/seasonalTariffs');
 const { ensureSameTenant } = require('../utils/tenantGuard');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Sugerir codigo TARIC basado en descripcion
  * POST /api/classification/suggest
@@ -422,7 +423,7 @@ const searchTaric = async (req, res) => {
           // Buscar por prefijo
           const prefix = cleanCode.substring(0, Math.min(cleanCode.length, 10));
           results = await TaricCode.find({
-            code: { $regex: `^${prefix}` },
+            code: { $regex: `^${escapeRegex(prefix)}` },
             isActive: true,
             level: { $gte: 4 }
           }).sort({ code: 1 }).limit(parseInt(limit)).lean();
@@ -458,7 +459,7 @@ const searchTaric = async (req, res) => {
       // Si no hay resultados por texto, buscar en todo lo cacheado con regex
       if (results.length === 0) {
         results = await TaricCode.find({
-          'description.es': { $regex: q, $options: 'i' },
+          'description.es': { $regex: escapeRegex(q), $options: 'i' },
           isActive: true,
           level: { $gte: 4 }
         }).sort({ code: 1 }).limit(parseInt(limit)).lean();

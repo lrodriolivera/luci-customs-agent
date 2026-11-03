@@ -12,6 +12,7 @@
 const SpecialRegime = require('../models/SpecialRegime');
 const Guarantee = require('../models/Guarantee');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Carga el documento comprobando que pertenece a quien lo pide.
  * Las escrituras pasaban el id directo al servicio sin mirar owner.
@@ -670,9 +671,9 @@ const specialRegimeService = {
     if (filters.status) query.status = filters.status;
     if (filters.search) {
       query.$or = [
-        { reference: { $regex: filters.search, $options: 'i' } },
-        { 'authorization.number': { $regex: filters.search, $options: 'i' } },
-        { 'declarant.name': { $regex: filters.search, $options: 'i' } }
+        { reference: { $regex: escapeRegex(filters.search), $options: 'i' } },
+        { 'authorization.number': { $regex: escapeRegex(filters.search), $options: 'i' } },
+        { 'declarant.name': { $regex: escapeRegex(filters.search), $options: 'i' } }
       ];
     }
 

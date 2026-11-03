@@ -6,6 +6,7 @@ const { H7Declaration } = require('../models');
 const h7Service = require('../services/h7Service');
 const logger = require('../config/logger');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Listar declaraciones H7
  * GET /api/h7
@@ -38,11 +39,11 @@ exports.list = async (req, res) => {
 
     if (search) {
       query.$or = [
-        { reference: { $regex: search, $options: 'i' } },
-        { trackingNumber: { $regex: search, $options: 'i' } },
-        { mrn: { $regex: search, $options: 'i' } },
-        { 'recipient.name': { $regex: search, $options: 'i' } },
-        { 'recipient.taxId': { $regex: search, $options: 'i' } }
+        { reference: { $regex: escapeRegex(search), $options: 'i' } },
+        { trackingNumber: { $regex: escapeRegex(search), $options: 'i' } },
+        { mrn: { $regex: escapeRegex(search), $options: 'i' } },
+        { 'recipient.name': { $regex: escapeRegex(search), $options: 'i' } },
+        { 'recipient.taxId': { $regex: escapeRegex(search), $options: 'i' } }
       ];
     }
 

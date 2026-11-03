@@ -33,6 +33,7 @@ async function _loadOwnedRequest(requestId, userId) {
 
 const crypto = require('crypto');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 // Configuracion PUE
 const PUE_CONFIG = {
   // Endpoint AEAT para envio de mensajes PUE
@@ -850,11 +851,11 @@ class PUEService {
 
     if (filters.search) {
       query.$or = [
-        { reference: { $regex: filters.search, $options: 'i' } },
-        { pueReference: { $regex: filters.search, $options: 'i' } },
-        { 'operator.name': { $regex: filters.search, $options: 'i' } },
-        { 'operator.eori': { $regex: filters.search, $options: 'i' } },
-        { 'goods.taricCode': { $regex: filters.search, $options: 'i' } }
+        { reference: { $regex: escapeRegex(filters.search), $options: 'i' } },
+        { pueReference: { $regex: escapeRegex(filters.search), $options: 'i' } },
+        { 'operator.name': { $regex: escapeRegex(filters.search), $options: 'i' } },
+        { 'operator.eori': { $regex: escapeRegex(filters.search), $options: 'i' } },
+        { 'goods.taricCode': { $regex: escapeRegex(filters.search), $options: 'i' } }
       ];
     }
 

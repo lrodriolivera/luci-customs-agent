@@ -18,6 +18,7 @@ const logger = require('../config/logger');
 // Catalogo unico de aduanas de entrada, compartido con el frontend.
 const { getEntryOffice, listEntryOffices } = require('../config/entryOffices');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Carga una declaracion ENS comprobando que pertenece a quien la pide.
  * Las escrituras (submitToAEAT, amend, cancel, notifyArrival) pasaban el id
@@ -35,10 +36,6 @@ async function _loadOwnedENS(id, userId) {
   return doc;
 }
 
-/** Escapa un termino de busqueda para usarlo literal dentro de $regex. */
-function _escapeRegex(texto) {
-  return String(texto).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 /**
  * Alcance de las busquedas por contenedor y por conocimiento: el mismo que el
@@ -652,7 +649,7 @@ class ENSService {
 
     const query = {
       ...scope,
-      'consignment.containerNumber': { $regex: _escapeRegex(containerNumber), $options: 'i' }
+      'consignment.containerNumber': { $regex: escapeRegex(containerNumber), $options: 'i' }
     };
 
     const declarations = await ENSDeclaration.find(query)
@@ -673,12 +670,11 @@ class ENSService {
     const scope = await _searchScope(userId);
     if (!scope) return { success: true, data: [], count: 0 };
 
-    const termino = _escapeRegex(bol);
     const declarations = await ENSDeclaration.find({
       ...scope,
       $or: [
-        { 'consignment.referenceNumber': { $regex: termino, $options: 'i' } },
-        { 'houseConsignments.referenceNumber': { $regex: termino, $options: 'i' } }
+        { 'consignment.referenceNumber': { $regex: escapeRegex(bol), $options: 'i' } },
+        { 'houseConsignments.referenceNumber': { $regex: escapeRegex(bol), $options: 'i' } }
       ]
     }).sort({ createdAt: -1 }).limit(50);
 

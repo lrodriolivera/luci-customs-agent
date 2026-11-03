@@ -10,6 +10,7 @@ const logger = require('../config/logger');
 const crypto = require('crypto');
 const { puedeAsignarRol } = require('../constants/roles');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 // ==================== In-Memory Storage (Settings & Logs) ====================
 
 // Roles disponibles
@@ -104,8 +105,8 @@ const listUsers = async (req, res) => {
 
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
+        { name: { $regex: escapeRegex(search), $options: 'i' } },
+        { email: { $regex: escapeRegex(search), $options: 'i' } }
       ];
     }
 
