@@ -13,6 +13,7 @@
 
 const request = require('supertest');
 const express = require('express');
+const http = require('http');
 const mongoose = require('mongoose');
 const { usarBaseDeDatosEnMemoria } = require('../helpers/memoryDb');
 const { Expedition } = require('../../src/models');
@@ -95,7 +96,19 @@ const TENANT_B = new mongoose.Types.ObjectId();
 const USER_A = { _id: new mongoose.Types.ObjectId(), name: 'Alice', email: 'alice@strixai.ai', tenantId: TENANT_A, role: 'user' };
 const USER_ADMIN = { _id: new mongoose.Types.ObjectId(), name: 'Admin', email: 'admin@strixai.ai', tenantId: TENANT_A, role: 'admin' };
 
-function app(handler, metodo = 'post', ruta = '/r', user = USER_A) {
+/**
+ * Servidor de test escuchando SOLO en 127.0.0.1, cerrado en afterEach.
+ *
+ * request(expressApp) hace app.listen(0), que en macOS escucha en '::'
+ * (todas las interfaces), y luego conecta a 127.0.0.1. Si el puerto efimero
+ * que da el sistema ya lo tiene otro proceso en 127.0.0.1 (un tunel ssh, otra
+ * app local), la peticion le llega a el y el test recibe su respuesta: era el
+ * 404 intermitente de "querySILICIE > 500 si el servicio lanza". Escuchando en
+ * 127.0.0.1 el sistema nunca asigna un puerto ocupado ahi.
+ */
+const servidores = [];
+
+async function app(handler, metodo = 'post', ruta = '/r', user = USER_A) {
   const a = express();
   a.use(express.json());
   a[metodo](ruta, (req, _res, next) => {
@@ -104,8 +117,15 @@ function app(handler, metodo = 'post', ruta = '/r', user = USER_A) {
     req.tenantId = String(user.tenantId);
     next();
   }, handler);
-  return a;
+  const servidor = http.createServer(a);
+  await new Promise((resolve) => servidor.listen(0, '127.0.0.1', resolve));
+  servidores.push(servidor);
+  return servidor;
 }
+
+afterEach(async () => {
+  await Promise.all(servidores.splice(0).map((s) => new Promise((resolve) => s.close(resolve))));
+});
 
 /**
  * Helper: crea un Expedition VÁLIDO con los campos requeridos por el schema.
@@ -160,7 +180,7 @@ describe('aeatRealController con Mongo real', () => {
         mrn: null
       });
 
-      const res = await request(app(aeatRealController.submitH1Declaration))
+      const res = await request(await app(aeatRealController.submitH1Declaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
@@ -188,7 +208,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('submitH1Declaration', () => {
     test('400 si falta expeditionId, certificateAlias o password', async () => {
-      const res = await request(app(aeatRealController.submitH1Declaration))
+      const res = await request(await app(aeatRealController.submitH1Declaration))
         .post('/r')
         .send({ expeditionId: 'abc123' }); // falta certificateAlias y password
 
@@ -200,7 +220,7 @@ describe('aeatRealController con Mongo real', () => {
     test('404 si el expediente es de otro tenant (ensureSameTenant)', async () => {
       const expOtroTenant = await crearExpedicion({ tenantId: TENANT_B });
 
-      const res = await request(app(aeatRealController.submitH1Declaration))
+      const res = await request(await app(aeatRealController.submitH1Declaration))
         .post('/r')
         .send({
           expeditionId: expOtroTenant._id.toString(),
@@ -218,7 +238,7 @@ describe('aeatRealController con Mongo real', () => {
         declaration: { status: 'draft' } // sin xmlContent
       });
 
-      const res = await request(app(aeatRealController.submitH1Declaration))
+      const res = await request(await app(aeatRealController.submitH1Declaration))
         .post('/r')
         .send({
           expeditionId: expSinXml._id.toString(),
@@ -234,7 +254,7 @@ describe('aeatRealController con Mongo real', () => {
       const exp = await crearExpedicion();
       mockCertService.getCertificateIdByAlias.mockReturnValue(null);
 
-      const res = await request(app(aeatRealController.submitH1Declaration))
+      const res = await request(await app(aeatRealController.submitH1Declaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
@@ -255,7 +275,7 @@ describe('aeatRealController con Mongo real', () => {
         channel: 'green'
       });
 
-      const res = await request(app(aeatRealController.submitH1Declaration))
+      const res = await request(await app(aeatRealController.submitH1Declaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
@@ -302,7 +322,7 @@ describe('aeatRealController con Mongo real', () => {
         new Error('Timeout conectando con AEAT')
       );
 
-      const res = await request(app(aeatRealController.submitH1Declaration))
+      const res = await request(await app(aeatRealController.submitH1Declaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
@@ -320,7 +340,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('submitH7Declaration', () => {
     test('400 si falta expeditionId', async () => {
-      const res = await request(app(aeatRealController.submitH7Declaration))
+      const res = await request(await app(aeatRealController.submitH7Declaration))
         .post('/r')
         .send({ certificateAlias: 'FNMT-STRIX' });
 
@@ -331,7 +351,7 @@ describe('aeatRealController con Mongo real', () => {
     test('404 si el expediente es de otro tenant', async () => {
       const expOtro = await crearExpedicion({ tenantId: TENANT_B });
 
-      const res = await request(app(aeatRealController.submitH7Declaration))
+      const res = await request(await app(aeatRealController.submitH7Declaration))
         .post('/r')
         .send({
           expeditionId: expOtro._id.toString(),
@@ -351,7 +371,7 @@ describe('aeatRealController con Mongo real', () => {
         channel: 'yellow'
       });
 
-      const res = await request(app(aeatRealController.submitH7Declaration))
+      const res = await request(await app(aeatRealController.submitH7Declaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
@@ -376,7 +396,7 @@ describe('aeatRealController con Mongo real', () => {
         new Error('Certificado expirado')
       );
 
-      const res = await request(app(aeatRealController.submitH7Declaration))
+      const res = await request(await app(aeatRealController.submitH7Declaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
@@ -394,7 +414,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('submitAESDeclaration', () => {
     test('400 sin certificateAlias', async () => {
-      const res = await request(app(aeatRealController.submitAESDeclaration))
+      const res = await request(await app(aeatRealController.submitAESDeclaration))
         .post('/r')
         .send({ expeditionId: new mongoose.Types.ObjectId().toString() });
 
@@ -404,7 +424,7 @@ describe('aeatRealController con Mongo real', () => {
     test('404 si expediente de otro tenant', async () => {
       const expOtro = await crearExpedicion({ tenantId: TENANT_B });
 
-      const res = await request(app(aeatRealController.submitAESDeclaration))
+      const res = await request(await app(aeatRealController.submitAESDeclaration))
         .post('/r')
         .send({
           expeditionId: expOtro._id.toString(),
@@ -423,7 +443,7 @@ describe('aeatRealController con Mongo real', () => {
         mrn: '26ES111222333444555'
       });
 
-      const res = await request(app(aeatRealController.submitAESDeclaration))
+      const res = await request(await app(aeatRealController.submitAESDeclaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
@@ -446,7 +466,7 @@ describe('aeatRealController con Mongo real', () => {
         new Error('Red no disponible')
       );
 
-      const res = await request(app(aeatRealController.submitAESDeclaration))
+      const res = await request(await app(aeatRealController.submitAESDeclaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
@@ -464,7 +484,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('submitNCTSDeclaration', () => {
     test('400 sin expeditionId o certificateAlias', async () => {
-      const res = await request(app(aeatRealController.submitNCTSDeclaration))
+      const res = await request(await app(aeatRealController.submitNCTSDeclaration))
         .post('/r')
         .send({ expeditionId: 'abc' });
 
@@ -474,7 +494,7 @@ describe('aeatRealController con Mongo real', () => {
     test('404 si expediente de otro tenant', async () => {
       const expOtro = await crearExpedicion({ tenantId: TENANT_B });
 
-      const res = await request(app(aeatRealController.submitNCTSDeclaration))
+      const res = await request(await app(aeatRealController.submitNCTSDeclaration))
         .post('/r')
         .send({
           expeditionId: expOtro._id.toString(),
@@ -493,7 +513,7 @@ describe('aeatRealController con Mongo real', () => {
         mrn: '26ES555666777888999'
       });
 
-      const res = await request(app(aeatRealController.submitNCTSDeclaration))
+      const res = await request(await app(aeatRealController.submitNCTSDeclaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
@@ -521,7 +541,7 @@ describe('aeatRealController con Mongo real', () => {
         new Error('Servicio NCTS no disponible')
       );
 
-      const res = await request(app(aeatRealController.submitNCTSDeclaration))
+      const res = await request(await app(aeatRealController.submitNCTSDeclaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
@@ -539,7 +559,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('submitICS2Declaration', () => {
     test('400 sin expeditionId', async () => {
-      const res = await request(app(aeatRealController.submitICS2Declaration))
+      const res = await request(await app(aeatRealController.submitICS2Declaration))
         .post('/r')
         .send({ certificateAlias: 'FNMT-STRIX' });
 
@@ -549,7 +569,7 @@ describe('aeatRealController con Mongo real', () => {
     test('404 si expediente de otro tenant', async () => {
       const expOtro = await crearExpedicion({ tenantId: TENANT_B });
 
-      const res = await request(app(aeatRealController.submitICS2Declaration))
+      const res = await request(await app(aeatRealController.submitICS2Declaration))
         .post('/r')
         .send({
           expeditionId: expOtro._id.toString(),
@@ -568,7 +588,7 @@ describe('aeatRealController con Mongo real', () => {
         acknowledgement: 'ICS2-ACK-123'
       });
 
-      const res = await request(app(aeatRealController.submitICS2Declaration))
+      const res = await request(await app(aeatRealController.submitICS2Declaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
@@ -598,7 +618,7 @@ describe('aeatRealController con Mongo real', () => {
         new Error('Timeout ICS2')
       );
 
-      const res = await request(app(aeatRealController.submitICS2Declaration))
+      const res = await request(await app(aeatRealController.submitICS2Declaration))
         .post('/r')
         .send({
           expeditionId: exp._id.toString(),
@@ -616,7 +636,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('getDeclarationStatus', () => {
     test('400 si falta certificateAlias', async () => {
-      const res = await request(app(aeatRealController.getDeclarationStatus, 'get', '/r/26ES123456789012345'))
+      const res = await request(await app(aeatRealController.getDeclarationStatus, 'get', '/r/26ES123456789012345'))
         .get('/r/26ES123456789012345')
         .query({});
 
@@ -635,7 +655,7 @@ describe('aeatRealController con Mongo real', () => {
         message: 'Declaración aceptada sin incidencias'
       });
 
-      const res = await request(app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
+      const res = await request(await app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
         .get('/r/26ES123456789012345')
         .query({ certificateAlias: 'FNMT-STRIX', declarationType: 'H1' });
 
@@ -655,7 +675,7 @@ describe('aeatRealController con Mongo real', () => {
         new Error('AEAT no responde')
       );
 
-      const res = await request(app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
+      const res = await request(await app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
         .get('/r/26ES123456789012345')
         .query({ certificateAlias: 'FNMT-STRIX' });
 
@@ -669,7 +689,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('getInbox', () => {
     test('400 si falta certificateAlias', async () => {
-      const res = await request(app(aeatRealController.getInbox, 'get', '/r'))
+      const res = await request(await app(aeatRealController.getInbox, 'get', '/r'))
         .get('/r')
         .query({});
 
@@ -682,7 +702,7 @@ describe('aeatRealController con Mongo real', () => {
         messages: [{ id: 'msg1', type: 'IE328' }]
       });
 
-      const res = await request(app(aeatRealController.getInbox, 'get', '/r'))
+      const res = await request(await app(aeatRealController.getInbox, 'get', '/r'))
         .get('/r')
         .query({
           certificateAlias: 'FNMT-STRIX',
@@ -707,7 +727,7 @@ describe('aeatRealController con Mongo real', () => {
     test('500 si el servicio lanza', async () => {
       mockAeatRealService.getInbox.mockRejectedValue(new Error('Bandeja no accesible'));
 
-      const res = await request(app(aeatRealController.getInbox, 'get', '/r'))
+      const res = await request(await app(aeatRealController.getInbox, 'get', '/r'))
         .get('/r')
         .query({ certificateAlias: 'FNMT-STRIX' });
 
@@ -721,7 +741,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('trackDeclaration', () => {
     test('400 sin mrn o declarationType', async () => {
-      const res = await request(app(aeatRealController.trackDeclaration))
+      const res = await request(await app(aeatRealController.trackDeclaration))
         .post('/r')
         .send({ mrn: '26ES123' });
 
@@ -732,7 +752,7 @@ describe('aeatRealController con Mongo real', () => {
     test('camino feliz: inicia tracking con userId', async () => {
       mockStatusMonitor.trackDeclaration.mockResolvedValue({ tracked: true });
 
-      const res = await request(app(aeatRealController.trackDeclaration))
+      const res = await request(await app(aeatRealController.trackDeclaration))
         .post('/r')
         .send({
           mrn: '26ES123456789012345',
@@ -755,7 +775,7 @@ describe('aeatRealController con Mongo real', () => {
     test('500 si el monitor lanza', async () => {
       mockStatusMonitor.trackDeclaration.mockRejectedValue(new Error('Monitor offline'));
 
-      const res = await request(app(aeatRealController.trackDeclaration))
+      const res = await request(await app(aeatRealController.trackDeclaration))
         .post('/r')
         .send({ mrn: '26ES123', declarationType: 'H1' });
 
@@ -769,7 +789,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('refreshDeclarationStatus', () => {
     test('400 sin certificateAlias', async () => {
-      const res = await request(app(aeatRealController.refreshDeclarationStatus, 'post', '/r/:mrn/refresh'))
+      const res = await request(await app(aeatRealController.refreshDeclarationStatus, 'post', '/r/:mrn/refresh'))
         .post('/r/26ES123/refresh')
         .send({});
 
@@ -783,7 +803,7 @@ describe('aeatRealController con Mongo real', () => {
         updatedAt: new Date()
       });
 
-      const res = await request(app(aeatRealController.refreshDeclarationStatus, 'post', '/r/:mrn/refresh'))
+      const res = await request(await app(aeatRealController.refreshDeclarationStatus, 'post', '/r/:mrn/refresh'))
         .post('/r/26ES999/refresh')
         .send({ certificateAlias: 'FNMT-STRIX' });
 
@@ -796,7 +816,7 @@ describe('aeatRealController con Mongo real', () => {
         new Error('Refresh failed')
       );
 
-      const res = await request(app(aeatRealController.refreshDeclarationStatus, 'post', '/r/:mrn/refresh'))
+      const res = await request(await app(aeatRealController.refreshDeclarationStatus, 'post', '/r/:mrn/refresh'))
         .post('/r/26ES999/refresh')
         .send({ certificateAlias: 'FNMT-STRIX' });
 
@@ -810,7 +830,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('predictInspectionChannel', () => {
     test('400 sin operationData', async () => {
-      const res = await request(app(aeatRealController.predictInspectionChannel))
+      const res = await request(await app(aeatRealController.predictInspectionChannel))
         .post('/r')
         .send({ goods: [] });
 
@@ -824,7 +844,7 @@ describe('aeatRealController con Mongo real', () => {
         confidence: 0.85
       });
 
-      const res = await request(app(aeatRealController.predictInspectionChannel))
+      const res = await request(await app(aeatRealController.predictInspectionChannel))
         .post('/r')
         .send({
           operationData: { declarationType: 'H1', value: 5000 },
@@ -841,7 +861,7 @@ describe('aeatRealController con Mongo real', () => {
         new Error('Modelo no disponible')
       );
 
-      const res = await request(app(aeatRealController.predictInspectionChannel))
+      const res = await request(await app(aeatRealController.predictInspectionChannel))
         .post('/r')
         .send({ operationData: { value: 1000 } });
 
@@ -855,7 +875,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('submitDigitalDocuments', () => {
     test('400 sin mrn, documents o certificateAlias', async () => {
-      const res = await request(app(aeatRealController.submitDigitalDocuments))
+      const res = await request(await app(aeatRealController.submitDigitalDocuments))
         .post('/r')
         .send({ mrn: '26ES123', documents: [] });
 
@@ -869,7 +889,7 @@ describe('aeatRealController con Mongo real', () => {
         documentsSubmitted: 2
       });
 
-      const res = await request(app(aeatRealController.submitDigitalDocuments))
+      const res = await request(await app(aeatRealController.submitDigitalDocuments))
         .post('/r')
         .send({
           mrn: '26ES123456789012345',
@@ -886,7 +906,7 @@ describe('aeatRealController con Mongo real', () => {
         new Error('Documentos rechazados')
       );
 
-      const res = await request(app(aeatRealController.submitDigitalDocuments))
+      const res = await request(await app(aeatRealController.submitDigitalDocuments))
         .post('/r')
         .send({
           mrn: '26ES123',
@@ -904,7 +924,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('testConnectivity', () => {
     test('400 sin certificateAlias', async () => {
-      const res = await request(app(aeatRealController.testConnectivity))
+      const res = await request(await app(aeatRealController.testConnectivity))
         .post('/r')
         .send({});
 
@@ -918,7 +938,7 @@ describe('aeatRealController con Mongo real', () => {
         AES_STATUS: { available: true }
       });
 
-      const res = await request(app(aeatRealController.testConnectivity))
+      const res = await request(await app(aeatRealController.testConnectivity))
         .post('/r')
         .send({ certificateAlias: 'FNMT-STRIX' });
 
@@ -936,7 +956,7 @@ describe('aeatRealController con Mongo real', () => {
         new Error('Red no alcanzable')
       );
 
-      const res = await request(app(aeatRealController.testConnectivity))
+      const res = await request(await app(aeatRealController.testConnectivity))
         .post('/r')
         .send({ certificateAlias: 'FNMT-STRIX' });
 
@@ -950,7 +970,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('setEnvironment', () => {
     test('400 si environment no es sandbox ni production', async () => {
-      const res = await request(app(aeatRealController.setEnvironment))
+      const res = await request(await app(aeatRealController.setEnvironment))
         .post('/r')
         .send({ environment: 'staging' });
 
@@ -959,7 +979,7 @@ describe('aeatRealController con Mongo real', () => {
     });
 
     test('permite sandbox a usuario no-admin', async () => {
-      const res = await request(app(aeatRealController.setEnvironment))
+      const res = await request(await app(aeatRealController.setEnvironment))
         .post('/r')
         .send({ environment: 'sandbox' });
 
@@ -972,7 +992,7 @@ describe('aeatRealController con Mongo real', () => {
     });
 
     test('403 si usuario no-admin intenta production', async () => {
-      const res = await request(app(aeatRealController.setEnvironment, 'post', '/r', USER_A))
+      const res = await request(await app(aeatRealController.setEnvironment, 'post', '/r', USER_A))
         .post('/r')
         .send({ environment: 'production' });
 
@@ -981,7 +1001,7 @@ describe('aeatRealController con Mongo real', () => {
     });
 
     test('permite production a admin', async () => {
-      const res = await request(app(aeatRealController.setEnvironment, 'post', '/r', USER_ADMIN))
+      const res = await request(await app(aeatRealController.setEnvironment, 'post', '/r', USER_ADMIN))
         .post('/r')
         .send({ environment: 'production' });
 
@@ -998,7 +1018,7 @@ describe('aeatRealController con Mongo real', () => {
         configurable: true
       });
 
-      const res = await request(app(aeatRealController.setEnvironment))
+      const res = await request(await app(aeatRealController.setEnvironment))
         .post('/r')
         .send({ environment: 'sandbox' });
 
@@ -1037,7 +1057,7 @@ describe('aeatRealController con Mongo real', () => {
       mockStatusMonitor.listTrackedDeclarations = jest.fn().mockResolvedValue({ total: 5 });
       mockStatusMonitor.alerts = [{ id: 'a1' }];
 
-      const res = await request(app(aeatRealController.getServiceStatus, 'get', '/r'))
+      const res = await request(await app(aeatRealController.getServiceStatus, 'get', '/r'))
         .get('/r');
 
       expect(res.status).toBe(200);
@@ -1053,7 +1073,7 @@ describe('aeatRealController con Mongo real', () => {
         throw new Error('Info no disponible');
       });
 
-      const res = await request(app(aeatRealController.getServiceStatus, 'get', '/r'))
+      const res = await request(await app(aeatRealController.getServiceStatus, 'get', '/r'))
         .get('/r');
 
       expect(res.status).toBe(500);
@@ -1071,7 +1091,7 @@ describe('aeatRealController con Mongo real', () => {
         message: 'Certificado recargado'
       });
 
-      const res = await request(app(aeatRealController.reloadSSLCertificate))
+      const res = await request(await app(aeatRealController.reloadSSLCertificate))
         .post('/r')
         .send({});
 
@@ -1085,7 +1105,7 @@ describe('aeatRealController con Mongo real', () => {
         throw new Error('Archivo no encontrado');
       });
 
-      const res = await request(app(aeatRealController.reloadSSLCertificate))
+      const res = await request(await app(aeatRealController.reloadSSLCertificate))
         .post('/r')
         .send({});
 
@@ -1099,7 +1119,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('submitEMCSMovement', () => {
     test('400 sin xmlContent o certificateAlias', async () => {
-      const res = await request(app(aeatRealController.submitEMCSMovement))
+      const res = await request(await app(aeatRealController.submitEMCSMovement))
         .post('/r')
         .send({ xmlContent: '<IE801/>' });
 
@@ -1113,7 +1133,7 @@ describe('aeatRealController con Mongo real', () => {
         arc: 'ARC26ES123456789'
       });
 
-      const res = await request(app(aeatRealController.submitEMCSMovement))
+      const res = await request(await app(aeatRealController.submitEMCSMovement))
         .post('/r')
         .send({
           xmlContent: '<IE801>...</IE801>',
@@ -1136,7 +1156,7 @@ describe('aeatRealController con Mongo real', () => {
         new Error('EMCS no disponible')
       );
 
-      const res = await request(app(aeatRealController.submitEMCSMovement))
+      const res = await request(await app(aeatRealController.submitEMCSMovement))
         .post('/r')
         .send({
           xmlContent: '<IE801/>',
@@ -1153,7 +1173,7 @@ describe('aeatRealController con Mongo real', () => {
   // ============================================
   describe('querySILICIE', () => {
     test('400 sin queryXml o certificateAlias', async () => {
-      const res = await request(app(aeatRealController.querySILICIE))
+      const res = await request(await app(aeatRealController.querySILICIE))
         .post('/r')
         .send({ queryXml: '<query/>' });
 
@@ -1167,7 +1187,7 @@ describe('aeatRealController con Mongo real', () => {
         results: [{ product: 'Alcohol' }]
       });
 
-      const res = await request(app(aeatRealController.querySILICIE))
+      const res = await request(await app(aeatRealController.querySILICIE))
         .post('/r')
         .send({
           queryXml: '<query>...</query>',
@@ -1183,7 +1203,7 @@ describe('aeatRealController con Mongo real', () => {
         new Error('SILICIE timeout')
       );
 
-      const res = await request(app(aeatRealController.querySILICIE))
+      const res = await request(await app(aeatRealController.querySILICIE))
         .post('/r')
         .send({
           queryXml: '<query/>',
