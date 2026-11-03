@@ -97,5 +97,25 @@ describe('jwtService', () => {
       expect(decoded.id).toBe('u1');
       delete process.env.JWT_SECRET_PREVIOUS;
     });
+
+    test('rejects tokens signed with a placeholder JWT_SECRET_PREVIOUS', () => {
+      const originalLegacy = process.env.JWT_LEGACY_MODE;
+      process.env.JWT_SECRET_PREVIOUS = 'luci-customs-agent-jwt-secret-key-2025';
+      process.env.JWT_LEGACY_MODE = 'true';
+      jest.resetModules();
+      const svc = require('../src/utils/jwtService');
+      const forged = jwt.sign({ id: 'u1', role: 'admin' }, process.env.JWT_SECRET_PREVIOUS, {
+        issuer: 'luci-customs-agent',
+        audience: 'luci-api'
+      });
+      const forgedLegacy = jwt.sign({ id: 'u1', role: 'admin' }, process.env.JWT_SECRET_PREVIOUS);
+      try {
+        expect(() => svc.verify(forged)).toThrow(/signature/i);
+        expect(() => svc.verify(forgedLegacy)).toThrow(/signature/i);
+      } finally {
+        delete process.env.JWT_SECRET_PREVIOUS;
+        process.env.JWT_LEGACY_MODE = originalLegacy;
+      }
+    });
   });
 });
