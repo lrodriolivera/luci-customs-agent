@@ -440,6 +440,44 @@ describe('searchByContainer / searchByBOL', () => {
     }), res);
     expect(res.body.success).toBe(true);
   });
+
+  const conContenedor = (c) => ({
+    consignment: { ...datosENS().consignment, containerNumber: c }
+  });
+
+  test('no devuelve ENS de otro tenant aunque el termino sea `.*`', async () => {
+    await sembrarENS(otroTenantUser, conContenedor('MSCU7654321'));
+
+    for (const user of [operadorUser, adminUser]) {
+      const resC = mockRes();
+      await ensController.searchByContainer(mockReq({ user, params: { container: '.*' } }), resC);
+      expect(resC.body.success).toBe(true);
+      expect(resC.body.count).toBe(0);
+
+      const resB = mockRes();
+      await ensController.searchByBOL(mockReq({ user, params: { bol: '.*' } }), resB);
+      expect(resB.body.success).toBe(true);
+      expect(resB.body.count).toBe(0);
+    }
+  });
+
+  test('el termino se busca literal (parcial, sin mayusculas) y solo en el tenant propio', async () => {
+    await sembrarENS(operadorUser, conContenedor('MSCU1234567'));
+    await sembrarENS(otroTenantUser, conContenedor('MSCU1234567'));
+
+    const literal = mockRes();
+    await ensController.searchByContainer(mockReq({
+      user: operadorUser, params: { container: 'mscu123' }
+    }), literal);
+    expect(literal.body.count).toBe(1);
+    expect(String(literal.body.data[0].tenantId)).toBe(String(TENANT_A));
+
+    const comodin = mockRes();
+    await ensController.searchByContainer(mockReq({
+      user: operadorUser, params: { container: 'MSCU.*' }
+    }), comodin);
+    expect(comodin.body.count).toBe(0);
+  });
 });
 
 // ==================== catalogos puros ====================

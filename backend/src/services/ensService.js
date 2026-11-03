@@ -35,6 +35,28 @@ async function _loadOwnedENS(id, userId) {
   return doc;
 }
 
+/** Escapa un termino de busqueda para usarlo literal dentro de $regex. */
+function _escapeRegex(texto) {
+  return String(texto).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Alcance de las busquedas por contenedor y por conocimiento: el mismo que el
+ * listado (ensController.list). Tenant del usuario y, si no es admin, solo lo
+ * que ha creado el. Sin estas condiciones, `.*` devolvia ENS de todos los
+ * tenants. Si no hay usuario no hay alcance: devuelve null y no se busca nada.
+ */
+async function _searchScope(userId) {
+  if (!userId) return null;
+  const User = require('../models/User');
+  const user = await User.findById(userId).select('tenantId role').lean();
+  if (!user) return null;
+  const scope = {};
+  if (user.tenantId) scope.tenantId = user.tenantId;
+  if (user.role !== 'admin') scope.createdBy = user._id;
+  return scope;
+}
+
 
 // Configuracion ENS
 const ENS_CONFIG = {
@@ -625,10 +647,14 @@ class ENSService {
    * Buscar por contenedor
    */
   async getByContainer(containerNumber, userId) {
-    const query = { 'consignment.containerNumber': { $regex: containerNumber, $options: 'i' } };
+    const scope = await _searchScope(userId);
+    if (!scope) return { success: true, data: [], count: 0 };
 
-    // Filtrar por usuario si no es admin
-    // En produccion, verificar rol del usuario
+    const query = {
+      ...scope,
+      'consignment.containerNumber': { $regex: _escapeRegex(containerNumber), $options: 'i' }
+    };
+
     const declarations = await ENSDeclaration.find(query)
       .sort({ createdAt: -1 })
       .limit(50);
@@ -644,10 +670,15 @@ class ENSService {
    * Buscar por conocimiento (B/L, AWB, CMR)
    */
   async getByBillOfLading(bol, userId) {
+    const scope = await _searchScope(userId);
+    if (!scope) return { success: true, data: [], count: 0 };
+
+    const termino = _escapeRegex(bol);
     const declarations = await ENSDeclaration.find({
+      ...scope,
       $or: [
-        { 'consignment.referenceNumber': { $regex: bol, $options: 'i' } },
-        { 'houseConsignments.referenceNumber': { $regex: bol, $options: 'i' } }
+        { 'consignment.referenceNumber': { $regex: termino, $options: 'i' } },
+        { 'houseConsignments.referenceNumber': { $regex: termino, $options: 'i' } }
       ]
     }).sort({ createdAt: -1 }).limit(50);
 
