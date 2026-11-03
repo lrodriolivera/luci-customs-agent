@@ -5,6 +5,7 @@
 
 const deadlineService = require('../services/deadlineService');
 const logger = require('../config/logger');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 const deadlineController = {
   /**
@@ -61,7 +62,9 @@ const deadlineController = {
     try {
       const deadline = await deadlineService.getById(req.params.id);
 
-      if (!deadline) {
+      // El service hace un findById plano: sin esto cualquier usuario leia el
+      // plazo de otro tenant conociendo su id. Mismo 404 que "no existe".
+      if (!deadline || !ensureSameTenant(deadline, req, null)) {
         return res.status(404).json({
           success: false,
           error: 'Deadline no encontrado'

@@ -220,7 +220,9 @@ exports.get = async (req, res) => {
     const declaration = await ENSDeclaration.findOne(query)
       .populate('expedition', 'reference status');
 
-    if (!declaration) {
+    // 'admin' es rol de tenant: sin esto veia la ENS de cualquier tenant por id.
+    // res=null: el 404 es el mismo que el de "no existe", sin confirmar el id.
+    if (!declaration || !ensureSameTenant(declaration, req, null)) {
       return res.status(404).json({
         success: false,
         message: 'Declaracion ENS no encontrada'
@@ -255,7 +257,7 @@ exports.update = async (req, res) => {
 
     const declaration = await ENSDeclaration.findOne(query);
 
-    if (!declaration) {
+    if (!declaration || !ensureSameTenant(declaration, req, null)) {
       return res.status(404).json({
         success: false,
         message: 'Declaracion ENS no encontrada'
@@ -664,7 +666,7 @@ exports.addDocument = async (req, res) => {
 
     const declaration = await ENSDeclaration.findOne(query);
 
-    if (!declaration) {
+    if (!declaration || !ensureSameTenant(declaration, req, null)) {
       return res.status(404).json({
         success: false,
         message: 'Declaracion no encontrada'
@@ -724,9 +726,11 @@ exports.getXML = async (req, res) => {
     }
 
     const declaration = await ENSDeclaration.findOne(query)
-      .select('reference mrn generatedXML');
+      .select('reference mrn generatedXML tenantId');
 
-    if (!declaration) {
+    // tenantId en el select: sin el, el guard veria un documento "sin tenant"
+    // (legacy) y lo dejaria pasar. No se envia en la respuesta.
+    if (!declaration || !ensureSameTenant(declaration, req, null)) {
       return res.status(404).json({
         success: false,
         message: 'Declaracion no encontrada'

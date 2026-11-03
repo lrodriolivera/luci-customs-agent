@@ -6,6 +6,18 @@
 const inspectorCommunicationService = require('../services/inspectorCommunicationService');
 const logger = require('../config/logger');
 
+/**
+ * InspectorCommunication no tiene tenantId, solo createdBy. Misma regla que
+ * _loadOwnedComm aplica en las escrituras: si tiene creador, solo el lo ve;
+ * los documentos legacy sin createdBy pasan.
+ */
+function esDelUsuario(communication, user) {
+  const creador = communication.createdBy?._id || communication.createdBy;
+  if (!creador) return true;
+  const userId = user?._id || user?.id;
+  return Boolean(userId) && String(creador) === String(userId);
+}
+
 const inspectorCommunicationController = {
   /**
    * Listar comunicaciones con filtros
@@ -60,7 +72,9 @@ const inspectorCommunicationController = {
     try {
       const communication = await inspectorCommunicationService.getById(req.params.id);
 
-      if (!communication) {
+      // El service hace un findById plano: sin esto cualquier usuario leia la
+      // comunicacion de otra cuenta conociendo su id. Mismo 404 que "no existe".
+      if (!communication || !esDelUsuario(communication, req.user)) {
         return res.status(404).json({
           success: false,
           error: 'Comunicación no encontrada'

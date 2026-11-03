@@ -5,6 +5,7 @@
 
 const inspectionService = require('../services/inspectionService');
 const logger = require('../config/logger');
+const { ensureSameTenant } = require('../utils/tenantGuard');
 
 const inspectionController = {
   /**
@@ -61,7 +62,9 @@ const inspectionController = {
     try {
       const inspection = await inspectionService.getById(req.params.id);
 
-      if (!inspection) {
+      // El service hace un findById plano: sin esto cualquier usuario leia la
+      // inspeccion de otro tenant conociendo su id. Mismo 404 que "no existe".
+      if (!inspection || !ensureSameTenant(inspection, req, null)) {
         return res.status(404).json({
           success: false,
           error: 'Inspección no encontrada'
