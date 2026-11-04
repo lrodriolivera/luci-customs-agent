@@ -7,8 +7,17 @@ on:
     branches: [main]
 
 jobs:
+  # El runner corre en el Mac Studio (ARM64) desde el 25-sep-2026, y MongoDB no
+  # publica binarios de Debian 12 para ARM64: mongodb-memory-server pedia
+  # mongodb-linux-aarch64-debian12-*.tgz, recibia 403 y los tests se quedaban
+  # esperando el mongod sin fin. El binario de Ubuntu 22.04 funciona en la
+  # imagen node:20-bookworm del runner (comprobado con mongod 8.2.6).
+  # El timeout evita que un cuelgue asi vuelva a bloquear el unico runner.
   backend-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      MONGOMS_DISTRO: ubuntu-22.04
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v4
 
