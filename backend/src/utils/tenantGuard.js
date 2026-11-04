@@ -70,4 +70,18 @@ function filtroTenant(user) {
   return { tenantId };
 }
 
-module.exports = { ensureSameTenant, extractTenantId, isSuperAdmin, filtroTenant };
+/**
+ * Filtro de tenant para consultas que un super_admin de plataforma puede hacer
+ * sobre TODOS los tenants (gestion de usuarios, ENS, H7...). Un super_admin sin
+ * tenant no se acota; cualquier otro usuario se acota a su tenant y, si no lo
+ * tiene, solo a los documentos sin tenant (filtroTenant).
+ *
+ * Sustituye a `if (user.tenantId) filtro.tenantId = user.tenantId`, que con un
+ * admin sin tenant dejaba la consulta sin ningun filtro.
+ */
+function filtroTenantOPlataforma(user) {
+  if (isSuperAdmin(user) && !user.tenantId) return {};
+  return filtroTenant(user);
+}
+
+module.exports = { ensureSameTenant, extractTenantId, isSuperAdmin, filtroTenant, filtroTenantOPlataforma };

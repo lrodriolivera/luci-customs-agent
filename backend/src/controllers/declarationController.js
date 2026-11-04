@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { Expedition } = require('../models');
 const logger = require('../config/logger');
 const aiService = require('../services/aiService');
-const { ensureSameTenant } = require('../utils/tenantGuard');
+const { ensureSameTenant, filtroTenantOPlataforma } = require('../utils/tenantGuard');
 const h1Generator = require('../services/forms/h1Generator');
 const aesGenerator = require('../services/forms/aesGenerator');
 const h7Generator = require('../services/forms/h7Generator');
@@ -1148,10 +1148,9 @@ const getH7Stats = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
-    const query = { 'declaration.type': 'H7' };
-
-    // Sin esto las estadisticas agregan las expediciones de TODOS los clientes.
-    if (req.user?.tenantId) query.tenantId = req.user.tenantId;
+    // Sin el tenant las estadisticas agregan las expediciones de TODOS los
+    // clientes. filtroTenantOPlataforma: tambien con un usuario sin tenant (legacy).
+    const query = { 'declaration.type': 'H7', ...filtroTenantOPlataforma(req.user) };
 
     if (startDate || endDate) {
       query['declaration.declarationDate'] = {};

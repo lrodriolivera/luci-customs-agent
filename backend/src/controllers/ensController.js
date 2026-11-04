@@ -6,7 +6,7 @@ const { ENSDeclaration, Expedition } = require('../models');
 const ensService = require('../services/ensService');
 const aiService = require('../services/aiService');
 const logger = require('../config/logger');
-const { ensureSameTenant } = require('../utils/tenantGuard');
+const { ensureSameTenant, filtroTenantOPlataforma } = require('../utils/tenantGuard');
 const { parseENSRiskMessage } = require('../services/aeat/ensRiskParser');
 const { ROLES, esSuperAdmin } = require('../constants/roles');
 
@@ -81,8 +81,8 @@ exports.list = async (req, res) => {
     } = req.query;
 
     // Scope by tenant + role
-    const query = {};
-    if (req.user.tenantId) query.tenantId = req.user.tenantId;
+    // filtroTenantOPlataforma: un admin sin tenant (legacy) no debe ver las ENS de todos.
+    const query = { ...filtroTenantOPlataforma(req.user) };
     if (req.user.role !== 'admin') query.createdBy = req.user._id;
 
     if (status) query.status = status;

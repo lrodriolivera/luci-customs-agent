@@ -4,7 +4,7 @@ const aiService = require('../services/aiService');
 const { SONNET, labelFor } = require('../config/bedrockModels');
 const taricService = require('../services/taricService');
 const { hasSeasonalTariff, getSeasonalTariff } = require('../data/seasonalTariffs');
-const { ensureSameTenant } = require('../utils/tenantGuard');
+const { ensureSameTenant, filtroTenantOPlataforma } = require('../utils/tenantGuard');
 
 const { escapeRegex } = require('../utils/escapeRegex');
 /**
@@ -1062,8 +1062,7 @@ const markSearchAsUsed = async (req, res) => {
 
     // Acotado al tenant: sin esto cualquier usuario autenticado podia marcar
     // como usada la busqueda de otro cliente conociendo su id.
-    const filtro = { _id: searchId };
-    if (req.user?.tenantId) filtro.tenantId = req.user.tenantId;
+    const filtro = { _id: searchId, ...filtroTenantOPlataforma(req.user) };
 
     const search = await TaricSearchHistory.findOneAndUpdate(
       filtro,

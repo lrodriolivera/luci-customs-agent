@@ -7,6 +7,7 @@ const h7Service = require('../services/h7Service');
 const logger = require('../config/logger');
 
 const { escapeRegex } = require('../utils/escapeRegex');
+const { filtroTenantOPlataforma } = require('../utils/tenantGuard');
 /**
  * Listar declaraciones H7
  * GET /api/h7
@@ -24,8 +25,8 @@ exports.list = async (req, res) => {
     } = req.query;
 
     // Scope by tenant + role
-    const query = {};
-    if (req.user.tenantId) query.tenantId = req.user.tenantId;
+    // filtroTenantOPlataforma: un admin sin tenant (legacy) no debe ver los H7 de todos.
+    const query = { ...filtroTenantOPlataforma(req.user) };
     if (req.user.role !== 'admin') query.createdBy = req.user._id;
 
     if (status) query.status = status;
@@ -89,8 +90,7 @@ exports.getStats = async (req, res) => {
     // administrador de SU tenant, no de la plataforma: sin este tenantId veia
     // los agregados H7 (valor en aduana, aranceles, transportistas) de todas
     // las organizaciones. El agent ademas queda acotado a lo que el crea.
-    const queryParams = { ...req.query };
-    if (req.user.tenantId) queryParams.tenantId = req.user.tenantId;
+    const queryParams = { ...req.query, ...filtroTenantOPlataforma(req.user) };
     if (req.user.role !== 'admin') queryParams.createdBy = req.user._id;
 
     const stats = await h7Service.getStats(queryParams);

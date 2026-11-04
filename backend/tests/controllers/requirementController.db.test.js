@@ -1213,17 +1213,16 @@ describe('requirementController (BD real)', () => {
   // --- Edge cases adicionales para aumentar cobertura de ramas ---------------
 
   describe('edge cases adicionales', () => {
-    it('getRequirements sin usuario devuelve los requerimientos (sin tenant filter)', async () => {
+    it('getRequirements de un usuario sin tenant no devuelve los de otros tenants', async () => {
       await crearRequerimiento(TENANT_A);
       await crearRequerimiento(TENANT_B);
 
       const res = crearRes();
-      // req.user undefined o sin tenantId
+      // Antes, sin tenantId el filtro quedaba vacio y devolvia los de todos.
       await controller.getRequirements({ query: {}, user: { _id: new mongoose.Types.ObjectId() } }, res);
 
       expect(res.statusCode).toBe(200);
-      // sin tenantId, devuelve todos
-      expect(res.body.data.length).toBeGreaterThanOrEqual(2);
+      expect(res.body.data).toHaveLength(0);
     });
 
     it('getRequirementById devuelve 404 cuando el requerimiento no existe (null)', async () => {

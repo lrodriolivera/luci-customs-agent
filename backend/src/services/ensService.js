@@ -48,10 +48,13 @@ async function _searchScope(userId) {
   const User = require('../models/User');
   const user = await User.findById(userId).select('tenantId role').lean();
   if (!user) return null;
-  const scope = {};
-  if (user.tenantId) scope.tenantId = user.tenantId;
-  if (user.role !== 'admin') scope.createdBy = user._id;
-  return scope;
+  // filtroTenantOPlataforma y no `if (user.tenantId)`: sin tenant la clave no se anadia y
+  // un admin legacy buscaba en las ENS de todos los tenants.
+  const { filtroTenantOPlataforma } = require('../utils/tenantGuard');
+  return {
+    ...filtroTenantOPlataforma(user),
+    ...(user.role !== 'admin' ? { createdBy: user._id } : {})
+  };
 }
 
 

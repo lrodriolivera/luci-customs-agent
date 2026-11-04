@@ -3,6 +3,7 @@ const { User, Tenant } = require('../models');
 const logger = require('../config/logger');
 const cognitoService = require('../utils/cognitoService');
 const { puedeAsignarRol, puedeGestionarUsuario } = require('../constants/roles');
+const { filtroTenantOPlataforma } = require('../utils/tenantGuard');
 
 /**
  * Registro de nuevo usuario
@@ -286,8 +287,8 @@ const listUsers = async (req, res) => {
   try {
     const { page = 1, limit = 20, role, isActive } = req.query;
 
-    const query = {};
-    if (req.user.tenantId) query.tenantId = req.user.tenantId;
+    // filtroTenantOPlataforma: un admin sin tenant (legacy) no debe listar los usuarios de todos.
+    const query = { ...filtroTenantOPlataforma(req.user) };
     if (role) query.role = role;
     if (isActive !== undefined) query.isActive = isActive === 'true';
 
@@ -344,8 +345,7 @@ const updateUser = async (req, res) => {
     // El filtro incluye el tenant del solicitante: requireRole('admin') es un
     // rol DE TENANT, asi que sin esto un admin podia cambiar el rol y los
     // permisos de un usuario de otro cliente conociendo su id.
-    const filtro = { _id: id };
-    if (req.user.tenantId) filtro.tenantId = req.user.tenantId;
+    const filtro = { _id: id, ...filtroTenantOPlataforma(req.user) };
 
     // Un admin de tenant no puede quitarle (ni cambiarle) el rol a un super_admin.
     if (allowedUpdates.role !== undefined) {
@@ -704,8 +704,7 @@ const adminDisableUser = async (req, res) => {
 
     // Acotado al tenant del solicitante, igual que listUsers: 'admin' es un rol
     // de tenant y sin esto se podia desactivar a un usuario de otro cliente.
-    const filtro = { _id: id };
-    if (req.user.tenantId) filtro.tenantId = req.user.tenantId;
+    const filtro = { _id: id, ...filtroTenantOPlataforma(req.user) };
 
     const user = await User.findOne(filtro);
     if (!user) {
