@@ -12,7 +12,12 @@ const ChatMessageSchema = new mongoose.Schema({
 
   // Tenant del expediente. Se rellena solo al validar (hook de abajo) para que
   // el historial global se pueda acotar al tenant del usuario.
-  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },
+  // Obligatorio solo al crear (los antiguos se pueden seguir modificando): un
+  // mensaje en un expediente sin tenant se rechaza.
+  tenantId: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true,
+    required: [function () { return this.isNew; }, 'tenantId es obligatorio en un mensaje nuevo (el expediente no tiene tenant)']
+  },
 
   // Tipo de participante
   sender: {

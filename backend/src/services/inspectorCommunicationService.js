@@ -22,6 +22,21 @@ const { escapeRegex } = require('../utils/escapeRegex');
  * Mismo error que cuando no existe, para no confirmar ids de otra cuenta.
  * Sin userId (jobs) no se comprueba; los documentos legacy sin createdBy pasan.
  */
+/** Tenant del creador; si no tiene, el del expediente referenciado. */
+async function tenantDeLaComunicacion(userId, expeditionId) {
+  if (userId) {
+    const user = await User.findById(userId).select('tenantId').lean();
+    if (user?.tenantId) return user.tenantId;
+  }
+  if (expeditionId) {
+    // El modelo ya registrado si lo esta (evita registrarlo dos veces).
+    const Expedition = require('mongoose').models.Expedition || require('../models/Expedition');
+    const exp = await Expedition.findById(expeditionId).select('tenantId').lean();
+    if (exp?.tenantId) return exp.tenantId;
+  }
+  return null;
+}
+
 async function _loadOwnedComm(id, userId) {
   const doc = await InspectorCommunication.findById(id);
   if (!doc) {
@@ -211,9 +226,9 @@ class InspectorCommunicationService {
           description: typeConfig.description
         }] : []),
         createdBy: userId,
-        // El tenant es el del usuario que la crea, nunca uno del body: los
-        // listados se acotan por el (utils/tenantListGuard).
-        tenantId: userId ? (await User.findById(userId).select('tenantId').lean())?.tenantId || null : null
+        // El tenant es el del usuario que la crea, o si no tiene, el de su
+        // expediente; nunca uno del body. Es obligatorio en el esquema.
+        tenantId: await tenantDeLaComunicacion(userId, data.references?.expeditionId)
       };
 
       const communication = new InspectorCommunication(communicationData);

@@ -10,10 +10,13 @@ const InspectorCommunication = require('../../src/models/InspectorCommunication'
 const Deadline = require('../../src/models/Deadline');
 const deadlineService = require('../../src/services/deadlineService');
 
-// Las comunicaciones de estos tests se crean sin tenant (el usuario no existe en
-// BD): los listados se acotan al tenant (utils/tenantListGuard) y
-// { tenantId: null } es el de un usuario sin tenant, que solo ve las sin tenant.
-const SIN_TENANT = { tenantId: null };
+// tenantId es obligatorio en una comunicacion nueva y el service lo toma del
+// usuario que la crea. Los usuarios de estos tests no existen en BD, asi que
+// User.findById se simula (beforeEach de abajo) con un usuario de TENANT_TEST, y
+// los listados se acotan a ese tenant (utils/tenantListGuard).
+const UserReal = require('../../src/models/User');
+const TENANT_TEST = new mongoose.Types.ObjectId();
+const SIN_TENANT = { tenantId: TENANT_TEST };
 
 // Mock solo deadlineService (frontera) y logger
 jest.mock('../../src/services/deadlineService');
@@ -47,6 +50,12 @@ if (!mongoose.models.Requirement) {
 
 describe('Inspector Communication Service', () => {
   usarBaseDeDatosEnMemoria();
+
+  beforeEach(() => {
+    jest.spyOn(UserReal, 'findById').mockReturnValue({
+      select: () => ({ lean: () => Promise.resolve({ tenantId: TENANT_TEST }) })
+    });
+  });
 
   describe('Configuration', () => {
     test('should have communication types defined', () => {
@@ -561,16 +570,31 @@ describe('Inspector Communication Service', () => {
       expect(comm.legalBasis[0].law).toMatch(/LGT/);
     });
 
-    test('debe crear comunicación sin userId (jobs automáticos)', async () => {
+    // tenantId es obligatorio en una comunicacion nueva: sin usuario se toma el
+    // del expediente referenciado, y sin ninguno de los dos no se crea.
+    test('sin userId ni expediente no se crea (no hay de donde sacar el tenant)', async () => {
       const data = {
         communicationType: 'information_request',
         subject: 'Solicitud automática',
         authority: { type: 'MAPA' }
       };
 
+      await expect(inspectorCommunicationService.create(data, null)).rejects.toThrow(/tenantId/);
+    });
+
+    test('sin userId toma el tenant del expediente referenciado', async () => {
+      const tenantExp = new mongoose.Types.ObjectId();
+      const { insertedId } = await mongoose.model('Expedition').collection.insertOne({ tenantId: tenantExp });
+      const data = {
+        communicationType: 'information_request',
+        subject: 'Solicitud automática',
+        authority: { type: 'MAPA' },
+        references: { expeditionId: insertedId }
+      };
+
       const comm = await inspectorCommunicationService.create(data, null);
 
-      expect(comm).toBeDefined();
+      expect(String(comm.tenantId)).toBe(String(tenantExp));
       // Mongoose devuelve null para campos no establecidos, no undefined
       expect(comm.createdBy).toBeNull();
     });
@@ -796,15 +820,12 @@ describe('Inspector Communication Service', () => {
       expect(comm.client.name).toBe('Test Client SL');
     });
 
-    test('debe crear respuesta sin userId', async () => {
-      const comm = await inspectorCommunicationService.createRequirementResponse(
+    test('sin userId y con un expediente inexistente no crea la respuesta (tenantId obligatorio)', async () => {
+      await expect(inspectorCommunicationService.createRequirementResponse(
         requirement,
         {},
         null
-      );
-
-      expect(comm).toBeDefined();
-      expect(comm.createdBy).toBeNull();
+      )).rejects.toThrow(/tenantId/);
     });
 
     test('debe usar AEAT por defecto si issuingAuthority no está definido', async () => {
@@ -892,10 +913,7 @@ describe('Inspector Communication Service', () => {
         authority: { type: 'AEAT' }
       };
 
-      const comm = await inspectorCommunicationService.createAllegation(data, null);
-
-      expect(comm).toBeDefined();
-      expect(comm.createdBy).toBeNull();
+      await expect(inspectorCommunicationService.createAllegation(data, null)).rejects.toThrow(/tenantId/);
     });
   });
 
@@ -924,16 +942,13 @@ describe('Inspector Communication Service', () => {
       expect(comm.category).toBe('appeal');
     });
 
-    test('debe crear recurso administrativo sin userId', async () => {
+    test('sin userId ni expediente no crea recurso administrativo (tenantId obligatorio)', async () => {
       const data = {
         subject: 'Recurso automático',
         authority: { type: 'AEAT' }
       };
 
-      const comm = await inspectorCommunicationService.createAdministrativeAppeal(data, null);
-
-      expect(comm).toBeDefined();
-      expect(comm.createdBy).toBeNull();
+      await expect(inspectorCommunicationService.createAdministrativeAppeal(data, null)).rejects.toThrow(/tenantId/);
     });
   });
 
@@ -985,16 +1000,13 @@ describe('Inspector Communication Service', () => {
       expect(comm.authority.type).toBe('TEAR');
     });
 
-    test('debe crear recurso económico sin userId', async () => {
+    test('sin userId ni expediente no crea recurso económico (tenantId obligatorio)', async () => {
       const data = {
         subject: 'Recurso automático',
         toTEAC: false
       };
 
-      const comm = await inspectorCommunicationService.createEconomicAppeal(data, null);
-
-      expect(comm).toBeDefined();
-      expect(comm.createdBy).toBeNull();
+      await expect(inspectorCommunicationService.createEconomicAppeal(data, null)).rejects.toThrow(/tenantId/);
     });
   });
 
@@ -1412,6 +1424,7 @@ describe('Inspector Communication Service', () => {
     test('comunicación sin createdBy permite acceso a cualquier userId', async () => {
       // Crear comunicación legacy sin createdBy
       const legacyComm = new InspectorCommunication({
+        tenantId: TENANT_TEST,
         communicationType: 'requirement_response',
         subject: 'Legacy sin owner',
         authority: { type: 'AEAT' },

@@ -302,7 +302,12 @@ const InspectorCommunicationSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   // Tenant del creador: lo fija el service al crear. Los listados filtran por
   // el (utils/tenantListGuard); antes no existia y se listaba todo.
-  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },
+  // Obligatorio solo al crear: los antiguos sin tenant (hasta que corra
+  // scripts/backfillTenantId.js) se pueden seguir modificando.
+  tenantId: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true,
+    required: [function () { return this.isNew; }, 'tenantId es obligatorio en una comunicacion nueva']
+  },
 
   // Timeline
   timeline: [{

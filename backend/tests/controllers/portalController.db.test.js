@@ -66,6 +66,8 @@ beforeEach(() => {
 // Crea un expediente accesible por su token de portal.
 async function sembrarExp(over = {}) {
   return Expedition.create({
+    // Los mensajes de chat nuevos exigen tenant, que heredan del expediente.
+    tenantId: new mongoose.Types.ObjectId(),
     operationType: 'import', transportMode: 'maritime',
     client: { companyName: 'Cliente SL', nif: 'B12345678', contact: { email: 'c@cliente.es' } },
     status: 'pending_documents',
