@@ -5,15 +5,21 @@ const logger = require('../config/logger');
 // mongoose.connection.readyState === 1 significa "connected".
 const MONGOOSE_CONNECTED = 1;
 
-// Las claves se comparan con k.toLowerCase(), asi que TODAS deben ir en
-// minusculas o nunca coincidiran (apiKey en camelCase jamas se redactaba).
-const SENSITIVE_KEYS = new Set(['password', 'token', 'authorization', 'cookie', 'apikey', 'secret']);
+// Se busca el fragmento dentro de la clave (en minusculas), no la clave exacta:
+// con la comparacion exacta 'newPassword', 'currentPassword' o 'contraseña'
+// pasaban en claro al log.
+const SENSITIVE_FRAGMENTS = ['password', 'passwd', 'contrase', 'token', 'authorization', 'cookie', 'apikey', 'api_key', 'secret'];
+
+function esClaveSensible(clave) {
+  const k = String(clave).toLowerCase();
+  return SENSITIVE_FRAGMENTS.some((f) => k.includes(f));
+}
 
 function scrub(obj) {
   if (!obj || typeof obj !== 'object') return obj;
   const out = Array.isArray(obj) ? [] : {};
   for (const [k, v] of Object.entries(obj)) {
-    if (SENSITIVE_KEYS.has(k.toLowerCase())) out[k] = '[REDACTED]';
+    if (esClaveSensible(k)) out[k] = '[REDACTED]';
     else if (v && typeof v === 'object') out[k] = scrub(v);
     else out[k] = v;
   }
@@ -105,4 +111,4 @@ async function query({ tenantId, userId, resource, resourceId, from, to, limit =
   return AuditLog.find(q).sort({ timestamp: -1 }).limit(Math.min(limit, 1000)).lean();
 }
 
-module.exports = { log, middleware, query };
+module.exports = { log, middleware, query, scrub };

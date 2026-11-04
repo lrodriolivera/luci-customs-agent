@@ -12,14 +12,31 @@
 const InspectorCommunication = require('../models/InspectorCommunication');
 const Deadline = require('../models/Deadline');
 const deadlineService = require('./deadlineService');
+const User = require('../models/User');
 const logger = require('../config/logger');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Carga el documento comprobando que pertenece a quien lo pide.
  * Las escrituras pasaban el id directo al servicio sin mirar createdBy.
  * Mismo error que cuando no existe, para no confirmar ids de otra cuenta.
  * Sin userId (jobs) no se comprueba; los documentos legacy sin createdBy pasan.
  */
+/** Tenant del creador; si no tiene, el del expediente referenciado. */
+async function tenantDeLaComunicacion(userId, expeditionId) {
+  if (userId) {
+    const user = await User.findById(userId).select('tenantId').lean();
+    if (user?.tenantId) return user.tenantId;
+  }
+  if (expeditionId) {
+    // El modelo ya registrado si lo esta (evita registrarlo dos veces).
+    const Expedition = require('mongoose').models.Expedition || require('../models/Expedition');
+    const exp = await Expedition.findById(expeditionId).select('tenantId').lean();
+    if (exp?.tenantId) return exp.tenantId;
+  }
+  return null;
+}
+
 async function _loadOwnedComm(id, userId) {
   const doc = await InspectorCommunication.findById(id);
   if (!doc) {
@@ -208,7 +225,10 @@ class InspectorCommunicationService {
           law: typeConfig.legalBasis,
           description: typeConfig.description
         }] : []),
-        createdBy: userId
+        createdBy: userId,
+        // El tenant es el del usuario que la crea, o si no tiene, el de su
+        // expediente; nunca uno del body. Es obligatorio en el esquema.
+        tenantId: await tenantDeLaComunicacion(userId, data.references?.expeditionId)
       };
 
       const communication = new InspectorCommunication(communicationData);
@@ -368,8 +388,8 @@ class InspectorCommunicationService {
   /**
    * Obtener comunicaciones pendientes
    */
-  async getPending(userId = null) {
-    return InspectorCommunication.findPending(userId)
+  async getPending(userId = null, filters = {}) {
+    return InspectorCommunication.findPending(userId, filters)
       .populate('references.expeditionId', 'reference clientName')
       .populate('assignedTo', 'name email');
   }
@@ -377,8 +397,8 @@ class InspectorCommunicationService {
   /**
    * Obtener alegaciones/recursos
    */
-  async getAppeals(status = null) {
-    return InspectorCommunication.findAppeals(status)
+  async getAppeals(status = null, filters = {}) {
+    return InspectorCommunication.findAppeals(status, filters)
       .populate('references.expeditionId', 'reference clientName')
       .populate('assignedTo', 'name email');
   }
@@ -386,8 +406,8 @@ class InspectorCommunicationService {
   /**
    * Obtener comunicaciones vencidas
    */
-  async getOverdue() {
-    return InspectorCommunication.findOverdue()
+  async getOverdue(filters = {}) {
+    return InspectorCommunication.findOverdue(filters)
       .populate('assignedTo', 'name email');
   }
 
@@ -465,7 +485,7 @@ class InspectorCommunicationService {
     const deadline = await Deadline.findOne({
       $or: [
         { 'references.requirementId': communication.references.requirementId },
-        { title: { $regex: communication.communicationNumber } }
+        { title: { $regex: escapeRegex(communication.communicationNumber) } }
       ],
       status: { $nin: ['completed', 'cancelled'] }
     });
@@ -539,13 +559,14 @@ class InspectorCommunicationService {
   /**
    * Obtener resumen del dashboard
    */
-  async getDashboard(userId = null) {
-    const filters = userId ? { assignedTo: userId } : {};
+  async getDashboard(userId = null, tenantFilter = {}) {
+    // tenantFilter = filtroTenant(req.user): el dashboard es del tenant del usuario.
+    const filters = { ...tenantFilter, ...(userId ? { assignedTo: userId } : {}) };
 
     const [stats, pending, overdue, recentResolved] = await Promise.all([
       this.getStats(filters),
-      this.getPending(userId),
-      this.getOverdue(),
+      this.getPending(userId, tenantFilter),
+      this.getOverdue(tenantFilter),
       InspectorCommunication.find({
         ...filters,
         status: 'resolved',

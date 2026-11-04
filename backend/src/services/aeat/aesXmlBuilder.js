@@ -16,6 +16,7 @@
  * - Origin obligatorio si countryOfExport=ES
  */
 
+const { xml } = require('./xmlTemplate');
 const { generateTransactionId } = require('./queryXmlBuilder');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/CC515CV1Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
@@ -59,16 +60,16 @@ function buildAESExportXML(data) {
   const totalGross = goodsItems.reduce((s, g) => s + (g.grossWeight || 0), 0);
   const totalInvoiced = totalAmountInvoiced || goodsItems.reduce((s, g) => s + (g.value || g.statisticalValue || 0), 0);
 
-  const itemsXML = goodsItems.map((g, i) => `
+  const itemsXML = goodsItems.map((g, i) => xml`
         <ent:GoodsItem>
           <ent:declarationGoodsItemNumber>${i + 1}</ent:declarationGoodsItemNumber>
           <ent:statisticalValue>${Number(g.statisticalValue || g.value || 0).toFixed(2)}</ent:statisticalValue>
           <ent:Procedure>
             <ent:requestedProcedure>10</ent:requestedProcedure>
             <ent:previousProcedure>00</ent:previousProcedure>
-          </ent:Procedure>${g.countryOfOrigin ? `
+          </ent:Procedure>${g.countryOfOrigin ? xml`
           <ent:Origin>
-            <ent:countryOfOrigin>${g.countryOfOrigin}</ent:countryOfOrigin>${countryOfExport === 'ES' ? `
+            <ent:countryOfOrigin>${g.countryOfOrigin}</ent:countryOfOrigin>${countryOfExport === 'ES' ? xml`
             <ent:regionOfDispatch>${g.regionOfDispatch || data.provinciaExport || '28'}</ent:regionOfDispatch>` : ''}
           </ent:Origin>` : ''}
           <ent:Commodity>
@@ -79,7 +80,7 @@ function buildAESExportXML(data) {
             </ent:CommodityCode>
             <ent:GoodsMeasure>
               <ent:grossMass>${Number(g.grossWeight || 0).toFixed(3)}</ent:grossMass>
-              <ent:netMass>${Number(g.netWeight || 0).toFixed(3)}</ent:netMass>${g.supplementaryUnits != null ? `
+              <ent:netMass>${Number(g.netWeight || 0).toFixed(3)}</ent:netMass>${g.supplementaryUnits != null ? xml`
               <ent:supplementaryUnits>${g.supplementaryUnits}</ent:supplementaryUnits>` : ''}
             </ent:GoodsMeasure>
           </ent:Commodity>
@@ -94,21 +95,21 @@ function buildAESExportXML(data) {
             <ent:type>N380</ent:type>
             <ent:referenceNumber>${g.invoiceRef || 'INV-001'}</ent:referenceNumber>
           </ent:SupportingDocument>
-        </ent:GoodsItem>`).join('');
+        </ent:GoodsItem>`);
 
   // DeliveryTerms: opcion 1 = UNLocode (R), opcion 2 = location (R) + country (R)
   const deliveryTermsXML = incotermUNLocode
-    ? `<ent:DeliveryTerms>
+    ? xml`<ent:DeliveryTerms>
             <ent:incotermCode>${incotermCode}</ent:incotermCode>
             <ent:UNLocode>${incotermUNLocode}</ent:UNLocode>
           </ent:DeliveryTerms>`
-    : `<ent:DeliveryTerms>
+    : xml`<ent:DeliveryTerms>
             <ent:incotermCode>${incotermCode}</ent:incotermCode>
             <ent:location>${incotermLocation || 'Destino'}</ent:location>
             <ent:country>${incotermCountry || destinationCountry}</ent:country>
           </ent:DeliveryTerms>`;
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  return xml`<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
   <soapenv:Body>
     <ent:CC515CV1Ent xmlns:ent="${NS_ENT}" Id="${transId}">
@@ -133,7 +134,7 @@ function buildAESExportXML(data) {
           <ent:referenceNumber>${customsOfficeExit}</ent:referenceNumber>
         </ent:CustomsOfficeOfExitDeclared>
         <ent:Exporter>
-          <ent:identificationNumber>${exporterEORI}</ent:identificationNumber>${!exporterEORI ? `
+          <ent:identificationNumber>${exporterEORI}</ent:identificationNumber>${!exporterEORI ? xml`
           <ent:name>${exporterName}</ent:name>
           <ent:Address>
             <ent:streetAndNumber>${exporterStreet}</ent:streetAndNumber>
@@ -156,12 +157,12 @@ function buildAESExportXML(data) {
           <ent:countryOfDestination>${destinationCountry}</ent:countryOfDestination>
           ${deliveryTermsXML}
           <ent:Consignment>
-            <ent:containerIndicator>0</ent:containerIndicator>${!data.directExport && inlandModeOfTransport ? `
+            <ent:containerIndicator>0</ent:containerIndicator>${!data.directExport && inlandModeOfTransport ? xml`
             <ent:inlandModeOfTransport>${inlandModeOfTransport}</ent:inlandModeOfTransport>` : ''}
             <ent:modeOfTransportAtTheBorder>${modeOfTransportAtBorder}</ent:modeOfTransportAtTheBorder>
             <ent:grossMass>${totalGross.toFixed(3)}</ent:grossMass>
             <ent:Consignee>
-              <ent:identificationNumber>${consigneeEORI}</ent:identificationNumber>${!consigneeEORI ? `
+              <ent:identificationNumber>${consigneeEORI}</ent:identificationNumber>${!consigneeEORI ? xml`
               <ent:name>${consigneeName}</ent:name>
               <ent:Address>
                 <ent:streetAndNumber>${consigneeStreet}</ent:streetAndNumber>
@@ -175,12 +176,12 @@ function buildAESExportXML(data) {
               <ent:qualifierOfIdentification>${locationOfGoodsQualifier}</ent:qualifierOfIdentification>
               <ent:authorisationNumber>${locationAuthorisationNumber || customsOfficeExport}</ent:authorisationNumber>
             </ent:LocationOfGoods>
-${!data.directExport ? `            <ent:DepartureTransportMeans>
+${!data.directExport ? xml`            <ent:DepartureTransportMeans>
               <ent:sequenceNumber>1</ent:sequenceNumber>
               <ent:typeOfIdentification>${departureTransportType}</ent:typeOfIdentification>
               <ent:identificationNumber>${departureTransportId || 'UNKNOWN'}</ent:identificationNumber>
               <ent:nationality>${departureTransportCountry || countryOfExport}</ent:nationality>
-            </ent:DepartureTransportMeans>` : ''}${security === '2' ? `
+            </ent:DepartureTransportMeans>` : ''}${security === '2' ? xml`
             <ent:CountryOfRoutingOfConsignment>
               <ent:sequenceNumber>1</ent:sequenceNumber>
               <ent:country>${countryOfExport}</ent:country>
@@ -204,7 +205,7 @@ ${!data.directExport ? `            <ent:DepartureTransportMeans>
       </ent:CC515C>
     </ent:CC515CV1Ent>
   </soapenv:Body>
-</soapenv:Envelope>`;
+</soapenv:Envelope>`.toString();
 }
 
 module.exports = { buildAESExportXML };

@@ -307,8 +307,8 @@ class InspectionService {
   /**
    * Obtener inspecciones programadas para una fecha
    */
-  async getScheduledForDate(date) {
-    return Inspection.findScheduledForDate(date)
+  async getScheduledForDate(date, filters = {}) {
+    return Inspection.findScheduledForDate(date, filters)
       .populate('expeditionId', 'reference clientName')
       .populate('assignedTo', 'name email');
   }
@@ -316,8 +316,8 @@ class InspectionService {
   /**
    * Obtener inspecciones pendientes
    */
-  async getPending(userId = null) {
-    return Inspection.findPending(userId)
+  async getPending(userId = null, filters = {}) {
+    return Inspection.findPending(userId, filters)
       .populate('expeditionId', 'reference clientName')
       .populate('assignedTo', 'name email');
   }
@@ -325,9 +325,9 @@ class InspectionService {
   /**
    * Obtener inspecciones de hoy
    */
-  async getToday() {
+  async getToday(filters = {}) {
     const today = new Date();
-    return this.getScheduledForDate(today);
+    return this.getScheduledForDate(today, filters);
   }
 
   /**
@@ -605,13 +605,14 @@ class InspectionService {
   /**
    * Obtener resumen del dashboard
    */
-  async getDashboard(userId = null) {
-    const filters = userId ? { assignedTo: userId } : {};
+  async getDashboard(userId = null, tenantFilter = {}) {
+    // tenantFilter = filtroTenant(req.user): el dashboard es del tenant del usuario.
+    const filters = { ...tenantFilter, ...(userId ? { assignedTo: userId } : {}) };
 
     const [stats, today, pending, recentCompleted] = await Promise.all([
       this.getStats(filters),
-      this.getToday(),
-      this.getPending(userId),
+      this.getToday(tenantFilter),
+      this.getPending(userId, tenantFilter),
       Inspection.find({
         ...filters,
         status: 'completed',

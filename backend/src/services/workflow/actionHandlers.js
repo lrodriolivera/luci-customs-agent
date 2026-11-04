@@ -8,6 +8,7 @@ const logger = require('../../config/logger');
 const emailService = require('../emailService');
 const { Expedition, Deadline, Requirement } = require('../../models');
 const axios = require('axios');
+const { opcionesAxiosSeguras } = require('../../utils/safeOutboundRequest');
 
 // ==================== Action Handlers ====================
 
@@ -276,12 +277,16 @@ const actionHandlers = {
       throw new Error('Webhook URL is required');
     }
 
+    // F3 (SSRF): solo https, IP de destino publica comprobada al conectar y sin
+    // redirecciones. Lanza antes de llamar si la URL no es aceptable.
+    const seguras = opcionesAxiosSeguras(webhookUrl);
+
     execution.addActionLog(execution.actionResults[execution.actionResults.length - 1].actionId,
       'info', `Calling webhook: ${webhookMethod} ${webhookUrl}`);
 
     const response = await axios({
+      ...seguras,
       method: webhookMethod,
-      url: webhookUrl,
       headers: {
         'Content-Type': 'application/json',
         'X-Workflow-Execution': execution.executionId,
@@ -309,9 +314,12 @@ const actionHandlers = {
   call_api: async (config, context, execution) => {
     const { apiUrl, apiMethod = 'GET', apiHeaders = {}, apiBody, apiTimeout = 30000 } = config;
 
+    // Mismo riesgo que call_webhook (SSRF con lectura de la respuesta).
+    const seguras = opcionesAxiosSeguras(apiUrl);
+
     const response = await axios({
+      ...seguras,
       method: apiMethod,
-      url: apiUrl,
       headers: apiHeaders,
       data: apiBody,
       timeout: apiTimeout

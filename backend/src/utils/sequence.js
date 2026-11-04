@@ -17,6 +17,7 @@
  */
 const Counter = require('../models/Counter');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Reserva el siguiente numero de una secuencia.
  *
@@ -51,17 +52,13 @@ async function nextSequence(key, options = {}) {
 }
 
 /** Escapa un prefijo para meterlo en una expresion regular sin sorpresas. */
-function _escapar(texto) {
-  return String(texto).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 /**
  * Mayor numero ya usado con este prefijo en la coleccion. Solo se consulta una
  * vez por prefijo (al sembrar el contador).
  */
 async function _maximoExistente(Model, field, prefix) {
   const docs = await Model.find(
-    { [field]: { $regex: `^${_escapar(prefix)}-\\d+$` } },
+    { [field]: { $regex: `^${escapeRegex(prefix)}-\\d+$` } },
     { [field]: 1 }
   ).lean();
 

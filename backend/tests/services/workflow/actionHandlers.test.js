@@ -704,7 +704,7 @@ describe('actionHandlers', () => {
       expect(result.statusCode).toBe(200);
       expect(result.responseData).toEqual({ success: true, received: 'ok' });
 
-      expect(axios).toHaveBeenCalledWith({
+      expect(axios).toHaveBeenCalledWith(expect.objectContaining({
         method: 'POST',
         url: 'https://api.example.com/webhook',
         headers: {
@@ -714,7 +714,7 @@ describe('actionHandlers', () => {
         },
         data: { custom: 'data' },
         timeout: 5000
-      });
+      }));
 
       expect(execution.addActionLog).toHaveBeenCalled();
     });
@@ -815,13 +815,13 @@ describe('actionHandlers', () => {
       expect(result.statusCode).toBe(200);
       expect(result.data).toEqual({ result: 'success' });
 
-      expect(axios).toHaveBeenCalledWith({
+      expect(axios).toHaveBeenCalledWith(expect.objectContaining({
         method: 'GET',
         url: 'https://api.example.com/data',
         headers: { 'Authorization': 'Bearer token123' },
         data: undefined,
         timeout: 10000
-      });
+      }));
     });
 
     it('debe llamar API con método POST y cuerpo', async () => {
@@ -856,13 +856,13 @@ describe('actionHandlers', () => {
 
       await actionHandlers.call_api(config, {}, {});
 
-      expect(axios).toHaveBeenCalledWith({
+      expect(axios).toHaveBeenCalledWith(expect.objectContaining({
         method: 'GET',
         url: 'https://api.example.com/default',
         headers: {},
         data: undefined,
         timeout: 30000
-      });
+      }));
     });
   });
 

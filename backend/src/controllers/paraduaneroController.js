@@ -6,7 +6,7 @@
 const { ParaduaneroControl, Expedition } = require('../models');
 const logger = require('../config/logger');
 const paraduaneroService = require('../services/paraduaneroService');
-const { ensureSameTenant } = require('../utils/tenantGuard');
+const { ensureSameTenant, filtroTenantOPlataforma } = require('../utils/tenantGuard');
 
 /**
  * Analizar expediente para determinar controles necesarios
@@ -86,10 +86,9 @@ exports.list = async (req, res) => {
       limit = 20
     } = req.query;
 
-    const filter = {};
     // Aislamiento por tenant: ParaduaneroControl hereda el tenant de su
     // expediente; sin este filtro el listado mezcla clientes.
-    if (req.user?.tenantId) filter.tenantId = req.user.tenantId;
+    const filter = { ...filtroTenantOPlataforma(req.user) };
     if (status) filter.status = status;
     if (controlType) filter.controlType = controlType;
     if (priority) filter.priority = priority;

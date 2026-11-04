@@ -8,7 +8,7 @@ const pueGenerator = require('../services/forms/pueGenerator');
 const aiService = require('../services/aiService');
 const { PUERequest } = require('../models');
 const logger = require('../config/logger');
-const { ensureSameTenant } = require('../utils/tenantGuard');
+const { ensureSameTenant, filtroTenant } = require('../utils/tenantGuard');
 
 /**
  * GET /api/pue/stats
@@ -22,7 +22,7 @@ exports.getStats = async (req, res) => {
       endDate,
       pueType,
       createdBy: req.user?.role !== 'admin' ? req.user?._id : null
-    });
+    }, filtroTenant(req.user));
 
     res.json({
       success: true,
@@ -196,7 +196,7 @@ exports.processBatch = async (req, res) => {
 exports.getByExpedition = async (req, res) => {
   try {
     const { id } = req.params;
-    const requests = await PUERequest.findByExpedition(id);
+    const requests = await PUERequest.findByExpedition(id, filtroTenant(req.user));
 
     res.json({
       success: true,
@@ -218,7 +218,7 @@ exports.getByExpedition = async (req, res) => {
 exports.getByDeclaration = async (req, res) => {
   try {
     const { mrn } = req.params;
-    const requests = await PUERequest.findByDeclaration(mrn);
+    const requests = await PUERequest.findByDeclaration(mrn, filtroTenant(req.user));
 
     res.json({
       success: true,
@@ -244,7 +244,7 @@ exports.list = async (req, res) => {
       createdBy: req.user?.role !== 'admin' ? req.user?._id : req.query.createdBy
     };
 
-    const result = await pueService.list(filters);
+    const result = await pueService.list(filters, filtroTenant(req.user));
 
     res.json({
       success: true,
@@ -620,7 +620,7 @@ exports.getInfo = async (req, res) => {
 exports.getUpcomingDeadlines = async (req, res) => {
   try {
     const { days = 7 } = req.query;
-    const requests = await PUERequest.getUpcomingDeadlines(parseInt(days));
+    const requests = await PUERequest.getUpcomingDeadlines(parseInt(days), filtroTenant(req.user));
 
     res.json({
       success: true,
@@ -766,10 +766,19 @@ exports.lookupMRN = async (req, res) => {
   try {
     const { mrn, claveZeta } = req.body;
 
-    if (!mrn) {
+    // F1: un objeto ({"$ne": null}, {"$regex": ...}) llegaba tal cual a
+    // Expedition.findOne y se ejecutaba como operador.
+    if (!mrn || typeof mrn !== 'string') {
       return res.status(400).json({
         success: false,
         error: 'MRN es obligatorio'
+      });
+    }
+
+    if (claveZeta !== undefined && typeof claveZeta !== 'string' && typeof claveZeta !== 'number') {
+      return res.status(400).json({
+        success: false,
+        error: 'Clave Zeta (numero de partida) no valida'
       });
     }
 
@@ -780,7 +789,7 @@ exports.lookupMRN = async (req, res) => {
       });
     }
 
-    const result = await pueService.lookupMRN(mrn, claveZeta);
+    const result = await pueService.lookupMRN(mrn, claveZeta, filtroTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error('PUE Controller: Error looking up MRN:', error);
@@ -897,6 +906,7 @@ exports.aiPredictInspection = async (req, res) => {
     let operatorHistory = null;
     if (request.operator?.eori) {
       const previousRequests = await PUERequest.find({
+        ...filtroTenant(req.user),
         'operator.eori': request.operator.eori,
         status: { $in: ['approved', 'approved_conditions', 'rejected'] }
       }).limit(50);

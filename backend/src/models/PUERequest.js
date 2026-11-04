@@ -11,6 +11,7 @@
  * Endpoint AEAT: https://www7.aeat.es/wlpl/AD44-JDIT/EnvioMensajePUE
  */
 const mongoose = require('mongoose');
+const { tenantListGuard } = require('../utils/tenantListGuard');
 // Contador atomico: el patron countDocuments()+1 reutilizaba referencias vivas
 // tras un borrado (E11000) y repartia el mismo numero en altas concurrentes.
 const { nextReference } = require('../utils/sequence');
@@ -964,8 +965,10 @@ PUERequestSchema.methods.recordInspectionResult = function(result, notes, findin
 };
 
 // Metodo estatico: Obtener estadisticas
-PUERequestSchema.statics.getStats = async function(filters = {}) {
-  const match = {};
+PUERequestSchema.statics.getStats = async function(filters = {}, tenantFilter = {}) {
+  // tenantFilter va aparte de filters (que llega de la query) para que no se
+  // pueda suplantar desde la peticion.
+  const match = { ...tenantFilter };
 
   if (filters.startDate || filters.endDate) {
     match.createdAt = {};
@@ -1046,17 +1049,17 @@ PUERequestSchema.statics.getStats = async function(filters = {}) {
 };
 
 // Metodo estatico: Buscar por expedicion
-PUERequestSchema.statics.findByExpedition = async function(expeditionId) {
-  return this.find({ expedition: expeditionId }).sort({ createdAt: -1 });
+PUERequestSchema.statics.findByExpedition = async function(expeditionId, tenantFilter = {}) {
+  return this.find({ expedition: expeditionId, ...tenantFilter }).sort({ createdAt: -1 });
 };
 
 // Metodo estatico: Buscar por declaracion
-PUERequestSchema.statics.findByDeclaration = async function(mrn) {
-  return this.find({ declarationMRN: mrn }).sort({ createdAt: -1 });
+PUERequestSchema.statics.findByDeclaration = async function(mrn, tenantFilter = {}) {
+  return this.find({ declarationMRN: mrn, ...tenantFilter }).sort({ createdAt: -1 });
 };
 
 // Metodo estatico: Obtener vencimientos proximos
-PUERequestSchema.statics.getUpcomingDeadlines = async function(days = 7) {
+PUERequestSchema.statics.getUpcomingDeadlines = async function(days = 7, tenantFilter = {}) {
   const futureDate = new Date();
   futureDate.setDate(futureDate.getDate() + days);
 
@@ -1065,8 +1068,12 @@ PUERequestSchema.statics.getUpcomingDeadlines = async function(days = 7) {
     deadline: {
       $gte: new Date(),
       $lte: futureDate
-    }
+    },
+    ...tenantFilter
   }).sort({ deadline: 1 });
 };
+
+// Listados sin tenantId fallan: ver utils/tenantListGuard.
+PUERequestSchema.plugin(tenantListGuard, { modelo: 'PUERequest' });
 
 module.exports = mongoose.model('PUERequest', PUERequestSchema);

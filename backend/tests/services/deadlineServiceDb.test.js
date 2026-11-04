@@ -30,6 +30,11 @@ const Expedition = require('../../src/models/Expedition');
 const User = require('../../src/models/User');
 const mongoose = require('mongoose');
 
+// Los deadlines de estos tests se crean sin tenant: los listados se acotan al
+// tenant (utils/tenantListGuard) y { tenantId: null } es el de un usuario sin
+// tenant, que solo ve documentos sin tenant.
+const SIN_TENANT = { tenantId: null };
+
 usarBaseDeDatosEnMemoria();
 
 /** Fecha a N dias desde ahora (positivo futuro, negativo pasado). */
@@ -407,7 +412,7 @@ describe('consultas — getById, list, pending/overdue/urgent/byCategory/byType/
   test('list pagina y filtra por active', async () => {
     await deadlineService.create({ deadlineType: 'other', title: 'A', dueDate: enDias(5) });
     await deadlineService.create({ deadlineType: 'other', title: 'B', dueDate: enDias(6) });
-    const res = await deadlineService.list({}, { page: 1, limit: 1 });
+    const res = await deadlineService.list({ ...SIN_TENANT }, { page: 1, limit: 1 });
     expect(res.total).toBe(2);
     expect(res.deadlines).toHaveLength(1);
     expect(res.pages).toBe(2);
@@ -417,10 +422,10 @@ describe('consultas — getById, list, pending/overdue/urgent/byCategory/byType/
     await deadlineService.create({ deadlineType: 'guarantee_expiration', title: 'G', dueDate: enDias(20) });
     await deadlineService.create({ deadlineType: 'transit_arrival', title: 'T', dueDate: enDias(2) });
 
-    const garantias = await deadlineService.getByCategory('guarantee');
+    const garantias = await deadlineService.getByCategory('guarantee', null, SIN_TENANT);
     expect(garantias).toHaveLength(1);
 
-    const transitos = await deadlineService.getByType('transit_arrival');
+    const transitos = await deadlineService.getByType('transit_arrival', null, SIN_TENANT);
     expect(transitos).toHaveLength(1);
   });
 
@@ -429,14 +434,14 @@ describe('consultas — getById, list, pending/overdue/urgent/byCategory/byType/
     await deadlineService.create({ deadlineType: 'other', title: 'Mia', dueDate: enDias(5), assignedTo: userId });
     await deadlineService.create({ deadlineType: 'other', title: 'Ajena', dueDate: enDias(5) });
 
-    const mias = await deadlineService.getByAssignee(userId);
+    const mias = await deadlineService.getByAssignee(userId, false, SIN_TENANT);
     expect(mias).toHaveLength(1);
     expect(mias[0].title).toBe('Mia');
   });
 
   test('getOverdue devuelve los vencidos (status overdue por pre-save)', async () => {
     await deadlineService.create({ deadlineType: 'other', title: 'Vencido', dueDate: enDias(-5) });
-    const vencidos = await deadlineService.getOverdue();
+    const vencidos = await deadlineService.getOverdue(SIN_TENANT);
     expect(vencidos).toHaveLength(1);
     expect(vencidos[0].status).toBe('overdue');
   });
@@ -444,7 +449,7 @@ describe('consultas — getById, list, pending/overdue/urgent/byCategory/byType/
   test('getUrgent devuelve los que vencen dentro del umbral de horas', async () => {
     await deadlineService.create({ deadlineType: 'other', title: 'Ya', dueDate: enDias(1) });
     await deadlineService.create({ deadlineType: 'other', title: 'Lejos', dueDate: enDias(20) });
-    const urgentes = await deadlineService.getUrgent(48);
+    const urgentes = await deadlineService.getUrgent(48, SIN_TENANT);
     expect(urgentes.some(d => d.title === 'Ya')).toBe(true);
     expect(urgentes.some(d => d.title === 'Lejos')).toBe(false);
   });
@@ -454,7 +459,7 @@ describe('calendario, estadisticas y dashboard', () => {
   test('getCalendarView agrupa por fecha ISO', async () => {
     const fecha = enDias(3);
     await deadlineService.create({ deadlineType: 'other', title: 'Cal', dueDate: fecha });
-    const vista = await deadlineService.getCalendarView(enDias(0), enDias(10));
+    const vista = await deadlineService.getCalendarView(enDias(0), enDias(10), SIN_TENANT);
     expect(vista.deadlines.length).toBeGreaterThanOrEqual(1);
     const key = fecha.toISOString().split('T')[0];
     expect(vista.grouped[key]).toBeDefined();
@@ -463,7 +468,7 @@ describe('calendario, estadisticas y dashboard', () => {
   test('getStats agrega por estado/categoria/urgencia', async () => {
     await deadlineService.create({ deadlineType: 'other', title: 'A', dueDate: enDias(-2) }); // overdue
     await deadlineService.create({ deadlineType: 'other', title: 'B', dueDate: enDias(5) });  // approaching
-    const stats = await deadlineService.getStats();
+    const stats = await deadlineService.getStats(SIN_TENANT);
     expect(stats.total).toBe(2);
     expect(stats.overdue).toBeGreaterThanOrEqual(1);
     expect(stats.byCategory.other).toBe(2);
@@ -472,7 +477,7 @@ describe('calendario, estadisticas y dashboard', () => {
   test('getDashboard combina stats, urgentes, vencidos y los de hoy', async () => {
     await deadlineService.create({ deadlineType: 'other', title: 'Hoy', dueDate: new Date() });
     await deadlineService.create({ deadlineType: 'other', title: 'Vencido', dueDate: enDias(-3) });
-    const dash = await deadlineService.getDashboard();
+    const dash = await deadlineService.getDashboard(null, SIN_TENANT);
     expect(dash.stats).toBeDefined();
     expect(Array.isArray(dash.urgent)).toBe(true);
     expect(Array.isArray(dash.overdue)).toBe(true);
@@ -483,7 +488,7 @@ describe('calendario, estadisticas y dashboard', () => {
     const userId = new mongoose.Types.ObjectId();
     await deadlineService.create({ deadlineType: 'other', title: 'Suya', dueDate: enDias(-1), assignedTo: userId });
     await deadlineService.create({ deadlineType: 'other', title: 'Ajena', dueDate: enDias(-1) });
-    const dash = await deadlineService.getDashboard(userId);
+    const dash = await deadlineService.getDashboard(userId, SIN_TENANT);
     // getOverdue({assignedTo:userId}) acota por usuario: solo debe salir "Suya".
     // (assignedTo llega null tras el populate porque no existe el User; lo que se
     // valida aqui es el FILTRO, no el documento poblado.)

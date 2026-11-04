@@ -19,6 +19,7 @@
  * provoca CC316A "MES.MesSenMES3: <EORI>-Message Sender is not valid".
  */
 
+const { xml } = require('./xmlTemplate');
 const { generateTransactionId } = require('./queryXmlBuilder');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/aden/enswsv5/IE315V5Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
@@ -88,13 +89,13 @@ function buildENSDeclarationXML(data) {
     const consignorPostcode = h.consignor?.postcode || h.consignor?.address?.postcode || '';
     const consigneePostcode = h.consignee?.postcode || h.consignee?.address?.postcode || '';
 
-    return `
+    return xml`
   <GOOITEGDS>
     <IteNumGDS7>${i + 1}</IteNumGDS7>
     <GooDesGDS23>${(h.goodsDescription || h.goods?.[0]?.description || '').substring(0, 280)}</GooDesGDS23>
-    <GroMasGDS46>${Number(h.grossMass || 0).toFixed(3)}</GroMasGDS46>${h.commercialReference || h.goodsDescription ? `
-    <ComRefNumGIM1>${h.commercialReference || ('REF-' + (i + 1))}</ComRefNumGIM1>` : ''}${placeOfLoading ? `
-    <PlaLoaGOOITE333>${placeOfLoading}</PlaLoaGOOITE333>` : ''}${placeOfUnloading ? `
+    <GroMasGDS46>${Number(h.grossMass || 0).toFixed(3)}</GroMasGDS46>${h.commercialReference || h.goodsDescription ? xml`
+    <ComRefNumGIM1>${h.commercialReference || ('REF-' + (i + 1))}</ComRefNumGIM1>` : ''}${placeOfLoading ? xml`
+    <PlaLoaGOOITE333>${placeOfLoading}</PlaLoaGOOITE333>` : ''}${placeOfUnloading ? xml`
     <PlaUnlGOOITE333>${placeOfUnloading}</PlaUnlGOOITE333>` : ''}
     <TRACONCO2>
       <NamCO27>${h.consignor?.name || 'Expedidor'}</NamCO27>
@@ -112,25 +113,25 @@ function buildENSDeclarationXML(data) {
       <PosCodCE223>${consigneePostcode || '00000'}</PosCodCE223>
       <CitCE224>${h.consignee?.city || h.consignee?.address?.city || '-'}</CitCE224>
       <CouCE225>${h.consignee?.country || h.consignee?.address?.country || 'ES'}</CouCE225>
-    </TRACONCE2>${hasContainer ? `
+    </TRACONCE2>${hasContainer ? xml`
     <CONNR2>
       <ConNumNR21>${consignment.containerNumber}</ConNumNR21>
     </CONNR2>` : ''}
     <PACGS2>
       <KinOfPacGS23>${h.packageType || 'PK'}</KinOfPacGS23>
-      <NumOfPacGS24>${h.numberOfPackages || 1}</NumOfPacGS24>${h.marksOfPackages ? `
+      <NumOfPacGS24>${h.numberOfPackages || 1}</NumOfPacGS24>${h.marksOfPackages ? xml`
       <MarNumOfPacGSL21>${h.marksOfPackages}</MarNumOfPacGSL21>` : ''}
     </PACGS2>
   </GOOITEGDS>`;
-  }).join('');
+  });
 
   // Itinerario: pais origen + ES (o custom)
   const itiXML = itinerary.length > 0
-    ? itinerary.map(c => `
+    ? itinerary.map(c => xml`
   <ITI>
     <CouOfRouCodITI1>${c}</CouOfRouCodITI1>
-  </ITI>`).join('')
-    : `
+  </ITI>`)
+    : xml`
   <ITI>
     <CouOfRouCodITI1>${houseConsignments[0]?.consignor?.country || houseConsignments[0]?.consignor?.address?.country || 'CN'}</CouOfRouCodITI1>
   </ITI>
@@ -138,7 +139,7 @@ function buildENSDeclarationXML(data) {
     <CouOfRouCodITI1>ES</CouOfRouCodITI1>
   </ITI>`;
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  return xml`<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
   <soapenv:Body>
     <ent:CC315A xmlns:ent="${NS_ENT}">
@@ -152,7 +153,7 @@ function buildENSDeclarationXML(data) {
   <HEAHEA>
     <RefNumHEA4>${lrn || transId.substring(0, 22)}</RefNumHEA4>
     <TraModAtBorHEA76>${tMode}</TraModAtBorHEA76>
-    <IdeOfMeaOfTraCroHEA85>${transportId}</IdeOfMeaOfTraCroHEA85>${tMode !== '2' ? `
+    <IdeOfMeaOfTraCroHEA85>${transportId}</IdeOfMeaOfTraCroHEA85>${tMode !== '2' ? xml`
     <NatOfMeaOfTraCroHEA87>${transportCountry}</NatOfMeaOfTraCroHEA87>` : ''}
     <TotNumOfIteHEA305>${houseConsignments.length || 1}</TotNumOfIteHEA305>
     <TotNumOfPacHEA306>${totalPackages || 1}</TotNumOfPacHEA306>
@@ -161,7 +162,7 @@ function buildENSDeclarationXML(data) {
     <DecDatTimHEA114>${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}</DecDatTimHEA114>
   </HEAHEA>
 ${goodsXML}${itiXML}
-  <TRAREP>${carrierEORI ? '' : `
+  <TRAREP>${carrierEORI ? '' : xml`
     <NamTRE1>${carrierName}</NamTRE1>`}
     <TINTRE1>${carrierEORI}</TINTRE1>
   </TRAREP>
@@ -177,7 +178,7 @@ ${goodsXML}${itiXML}
   </TRACARENT601>
     </ent:CC315A>
   </soapenv:Body>
-</soapenv:Envelope>`;
+</soapenv:Envelope>`.toString();
 }
 
 module.exports = { buildENSDeclarationXML };

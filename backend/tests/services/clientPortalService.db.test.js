@@ -122,7 +122,7 @@ describe('clientPortalService (BD real)', () => {
       expect(exp.goods[0].description).toBe('Camisetas');
 
       // mensaje de bienvenida
-      const msgs = await ChatMessage.find({ expedition: exp._id });
+      const msgs = await ChatMessage.find({ expedition: exp._id }).setOptions({ sinTenant: 'test: mensajes del expediente' });
       expect(msgs).toHaveLength(1);
       expect(msgs[0].sender).toBe('luci');
     });
@@ -204,7 +204,7 @@ describe('clientPortalService (BD real)', () => {
       expect(resultado.status).toBe('pending_documents');
 
       // mensaje de sistema anadido
-      const msgs = await ChatMessage.find({ expedition: exp._id, messageType: 'system' });
+      const msgs = await ChatMessage.find({ expedition: exp._id, messageType: 'system' }).setOptions({ sinTenant: 'test: mensajes del expediente' });
       expect(msgs.length).toBeGreaterThanOrEqual(1);
     });
 

@@ -15,6 +15,7 @@ const mongoose = require('mongoose');
 // tras un borrado (E11000) y repartia el mismo numero en altas concurrentes.
 const { nextReference } = require('../utils/sequence');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 // Esquema de direccion
 const AddressSchema = new mongoose.Schema({
   streetAndNumber: String,
@@ -753,7 +754,7 @@ ENSDeclarationSchema.statics.getStats = async function(filters = {}) {
 // Metodo estatico: Buscar por contenedor
 ENSDeclarationSchema.statics.findByContainer = async function(containerNumber) {
   return this.find({
-    'consignment.containerNumber': { $regex: containerNumber, $options: 'i' }
+    'consignment.containerNumber': { $regex: escapeRegex(containerNumber), $options: 'i' }
   }).sort({ createdAt: -1 });
 };
 
@@ -761,8 +762,8 @@ ENSDeclarationSchema.statics.findByContainer = async function(containerNumber) {
 ENSDeclarationSchema.statics.findByBillOfLading = async function(bol) {
   return this.find({
     $or: [
-      { 'consignment.referenceNumber': { $regex: bol, $options: 'i' } },
-      { 'houseConsignments.referenceNumber': { $regex: bol, $options: 'i' } }
+      { 'consignment.referenceNumber': { $regex: escapeRegex(bol), $options: 'i' } },
+      { 'houseConsignments.referenceNumber': { $regex: escapeRegex(bol), $options: 'i' } }
     ]
   }).sort({ createdAt: -1 });
 };

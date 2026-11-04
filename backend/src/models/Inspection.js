@@ -10,6 +10,7 @@
  */
 
 const mongoose = require('mongoose');
+const { tenantListGuard } = require('../utils/tenantListGuard');
 // Contador atomico: el patron countDocuments()+1 reutilizaba referencias vivas
 // tras un borrado (E11000) y repartia el mismo numero en altas concurrentes.
 const { nextReference } = require('../utils/sequence');
@@ -552,7 +553,7 @@ InspectionSchema.methods.addResultingAction = function(actionData) {
 };
 
 // Statics
-InspectionSchema.statics.findScheduledForDate = function(date) {
+InspectionSchema.statics.findScheduledForDate = function(date, filters = {}) {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(date);
@@ -560,17 +561,19 @@ InspectionSchema.statics.findScheduledForDate = function(date) {
 
   return this.find({
     'scheduling.scheduledDate': { $gte: startOfDay, $lte: endOfDay },
-    status: { $in: ['scheduled', 'confirmed'] }
+    status: { $in: ['scheduled', 'confirmed'] },
+    ...filters
   }).sort({ 'scheduling.scheduledTime': 1 });
 };
 
-InspectionSchema.statics.findByExpedition = function(expeditionId) {
-  return this.find({ expeditionId }).sort({ createdAt: -1 });
+InspectionSchema.statics.findByExpedition = function(expeditionId, filters = {}) {
+  return this.find({ expeditionId, ...filters }).sort({ createdAt: -1 });
 };
 
-InspectionSchema.statics.findPending = function(userId = null) {
+InspectionSchema.statics.findPending = function(userId = null, filters = {}) {
   const query = {
-    status: { $in: ['requested', 'scheduled', 'confirmed', 'in_progress'] }
+    status: { $in: ['requested', 'scheduled', 'confirmed', 'in_progress'] },
+    ...filters
   };
   if (userId) {
     query.assignedTo = userId;
@@ -578,8 +581,8 @@ InspectionSchema.statics.findPending = function(userId = null) {
   return this.find(query).sort({ 'scheduling.scheduledDate': 1 });
 };
 
-InspectionSchema.statics.findByAuthority = function(authorityType) {
-  return this.find({ 'authority.type': authorityType }).sort({ createdAt: -1 });
+InspectionSchema.statics.findByAuthority = function(authorityType, filters = {}) {
+  return this.find({ 'authority.type': authorityType, ...filters }).sort({ createdAt: -1 });
 };
 
 InspectionSchema.statics.getStats = async function(filters = {}) {
@@ -629,5 +632,8 @@ InspectionSchema.statics.getCalendar = async function(startDate, endDate, filter
     ...filters
   }).sort({ 'scheduling.scheduledDate': 1, 'scheduling.scheduledTime': 1 });
 };
+
+// Listados sin tenantId fallan: ver utils/tenantListGuard.
+InspectionSchema.plugin(tenantListGuard, { modelo: 'Inspection' });
 
 module.exports = mongoose.model('Inspection', InspectionSchema);

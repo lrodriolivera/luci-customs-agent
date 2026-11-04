@@ -6,6 +6,7 @@
 const { RESPONSE_CODES, INSPECTION_CHANNELS } = require('./aeatConfig');
 const logger = require('../../config/logger');
 
+const { escapeRegex } = require('../../utils/escapeRegex');
 class XMLParser {
   /**
    * Parsear respuesta de envio de declaracion
@@ -183,13 +184,13 @@ class XMLParser {
   _extractValue(xml, tag) {
     const patterns = [
       // Sin namespace
-      new RegExp(`<${tag}>([^<]*)</${tag}>`, 'i'),
+      new RegExp(`<${escapeRegex(tag)}>([^<]*)</${escapeRegex(tag)}>`, 'i'),
       // Con namespace prefijo
-      new RegExp(`<[a-z]+:${tag}>([^<]*)</[a-z]+:${tag}>`, 'i'),
+      new RegExp(`<[a-z]+:${escapeRegex(tag)}>([^<]*)</[a-z]+:${escapeRegex(tag)}>`, 'i'),
       // Con atributos
-      new RegExp(`<${tag}[^>]*>([^<]*)</${tag}>`, 'i'),
+      new RegExp(`<${escapeRegex(tag)}[^>]*>([^<]*)</${escapeRegex(tag)}>`, 'i'),
       // CDATA
-      new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([^\\]]*?)\\]\\]></${tag}>`, 'i')
+      new RegExp(`<${escapeRegex(tag)}[^>]*><!\\[CDATA\\[([^\\]]*?)\\]\\]></${escapeRegex(tag)}>`, 'i')
     ];
 
     for (const pattern of patterns) {
@@ -206,7 +207,7 @@ class XMLParser {
    * Extraer todos los valores de un tag
    */
   _extractAllValues(xml, tag) {
-    const pattern = new RegExp(`<${tag}[^>]*>([^<]*)</${tag}>`, 'gi');
+    const pattern = new RegExp(`<${escapeRegex(tag)}[^>]*>([^<]*)</${escapeRegex(tag)}>`, 'gi');
     const matches = [...xml.matchAll(pattern)];
     return matches.map(m => m[1].trim()).filter(v => v);
   }

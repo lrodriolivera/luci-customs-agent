@@ -65,7 +65,8 @@ describe('list', () => {
     svc.list.mockResolvedValue({});
     const res = mockRes();
     await ctrl.list(req({ query: {} }), res);
-    expect(svc.list.mock.calls[0][0]).toEqual({});
+    // Sin tenant en el token: solo documentos sin tenant, nunca todo el sistema.
+    expect(svc.list.mock.calls[0][0]).toEqual({ tenantId: null });
   });
 
   test('500 si lanza', async () => {
@@ -242,21 +243,21 @@ describe('getPending / getDashboard: fallback userId', () => {
     svc.getPending.mockResolvedValue([]);
     const res = mockRes();
     await ctrl.getPending(req({ query: { userId: 'qU' } }), res);
-    expect(svc.getPending).toHaveBeenCalledWith('qU');
+    expect(svc.getPending).toHaveBeenCalledWith('qU', { tenantId: null });
   });
 
   test('getPending cae al token', async () => {
     svc.getPending.mockResolvedValue([]);
     const res = mockRes();
     await ctrl.getPending(req({ query: {} }), res);
-    expect(svc.getPending).toHaveBeenCalledWith('u1');
+    expect(svc.getPending).toHaveBeenCalledWith('u1', { tenantId: null });
   });
 
   test('getDashboard usa query.userId', async () => {
     svc.getDashboard.mockResolvedValue({});
     const res = mockRes();
     await ctrl.getDashboard(req({ query: { userId: 'qU' } }), res);
-    expect(svc.getDashboard).toHaveBeenCalledWith('qU');
+    expect(svc.getDashboard).toHaveBeenCalledWith('qU', { tenantId: null });
   });
 
   test('getPending 500 si lanza', async () => {
@@ -280,7 +281,7 @@ describe('getAppeals', () => {
     svc.getAppeals.mockResolvedValue([]);
     const res = mockRes();
     await ctrl.getAppeals(req({ query: { status: 'pending' } }), res);
-    expect(svc.getAppeals).toHaveBeenCalledWith('pending');
+    expect(svc.getAppeals).toHaveBeenCalledWith('pending', { tenantId: null });
   });
 
   test('500 si lanza', async () => {
@@ -296,7 +297,7 @@ describe('getStats', () => {
     svc.getStats.mockResolvedValue({ total: 2 });
     const res = mockRes();
     await ctrl.getStats(req({ query: { category: 'appeal', assignedTo: 'u9' } }), res);
-    expect(svc.getStats.mock.calls[0][0]).toEqual({ category: 'appeal', assignedTo: 'u9' });
+    expect(svc.getStats.mock.calls[0][0]).toEqual({ tenantId: null, category: 'appeal', assignedTo: 'u9' });
   });
 
   test('500 si lanza', async () => {

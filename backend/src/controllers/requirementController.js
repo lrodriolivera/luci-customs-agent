@@ -27,12 +27,10 @@ exports.getRequirements = async (req, res) => {
     } = req.query;
 
     // Construir filtro
-    const filter = {};
-
     // Aislamiento por tenant: sin esto el listado devuelve los requerimientos
     // de todos los clientes. El campo se anadio al schema en 1a41c3c pero el
     // listado no lo usaba.
-    if (req.user?.tenantId) filter.tenantId = req.user.tenantId;
+    const filter = { ...filtroTenantOPlataforma(req.user) };
 
     if (status) {
       filter.status = Array.isArray(status) ? { $in: status } : status;
@@ -789,7 +787,7 @@ exports.generateAIResponse = async (req, res) => {
 // ===========================================
 
 const aiService = require('../services/aiService');
-const { ensureSameTenant } = require('../utils/tenantGuard');
+const { ensureSameTenant, filtroTenantOPlataforma } = require('../utils/tenantGuard');
 
 /**
  * Analizar documentación solicitada con IA

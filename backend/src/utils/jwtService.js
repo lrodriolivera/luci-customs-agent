@@ -32,6 +32,9 @@ function getPreviousSecret() {
   const secret = process.env.JWT_SECRET_PREVIOUS;
   if (!secret) return null;
   if (secret.length < 32) return null;
+  // A known placeholder is public: anyone could forge tokens with it, so it is
+  // never accepted as a verification key, not even during a rotation window.
+  if (PLACEHOLDER_SECRETS.has(secret)) return null;
   return secret;
 }
 

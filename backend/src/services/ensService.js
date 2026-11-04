@@ -18,6 +18,7 @@ const logger = require('../config/logger');
 // Catalogo unico de aduanas de entrada, compartido con el frontend.
 const { getEntryOffice, listEntryOffices } = require('../config/entryOffices');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Carga una declaracion ENS comprobando que pertenece a quien la pide.
  * Las escrituras (submitToAEAT, amend, cancel, notifyArrival) pasaban el id
@@ -33,6 +34,27 @@ async function _loadOwnedENS(id, userId) {
     throw new Error('Declaracion no encontrada');
   }
   return doc;
+}
+
+
+/**
+ * Alcance de las busquedas por contenedor y por conocimiento: el mismo que el
+ * listado (ensController.list). Tenant del usuario y, si no es admin, solo lo
+ * que ha creado el. Sin estas condiciones, `.*` devolvia ENS de todos los
+ * tenants. Si no hay usuario no hay alcance: devuelve null y no se busca nada.
+ */
+async function _searchScope(userId) {
+  if (!userId) return null;
+  const User = require('../models/User');
+  const user = await User.findById(userId).select('tenantId role').lean();
+  if (!user) return null;
+  // filtroTenantOPlataforma y no `if (user.tenantId)`: sin tenant la clave no se anadia y
+  // un admin legacy buscaba en las ENS de todos los tenants.
+  const { filtroTenantOPlataforma } = require('../utils/tenantGuard');
+  return {
+    ...filtroTenantOPlataforma(user),
+    ...(user.role !== 'admin' ? { createdBy: user._id } : {})
+  };
 }
 
 
@@ -625,10 +647,14 @@ class ENSService {
    * Buscar por contenedor
    */
   async getByContainer(containerNumber, userId) {
-    const query = { 'consignment.containerNumber': { $regex: containerNumber, $options: 'i' } };
+    const scope = await _searchScope(userId);
+    if (!scope) return { success: true, data: [], count: 0 };
 
-    // Filtrar por usuario si no es admin
-    // En produccion, verificar rol del usuario
+    const query = {
+      ...scope,
+      'consignment.containerNumber': { $regex: escapeRegex(containerNumber), $options: 'i' }
+    };
+
     const declarations = await ENSDeclaration.find(query)
       .sort({ createdAt: -1 })
       .limit(50);
@@ -644,10 +670,14 @@ class ENSService {
    * Buscar por conocimiento (B/L, AWB, CMR)
    */
   async getByBillOfLading(bol, userId) {
+    const scope = await _searchScope(userId);
+    if (!scope) return { success: true, data: [], count: 0 };
+
     const declarations = await ENSDeclaration.find({
+      ...scope,
       $or: [
-        { 'consignment.referenceNumber': { $regex: bol, $options: 'i' } },
-        { 'houseConsignments.referenceNumber': { $regex: bol, $options: 'i' } }
+        { 'consignment.referenceNumber': { $regex: escapeRegex(bol), $options: 'i' } },
+        { 'houseConsignments.referenceNumber': { $regex: escapeRegex(bol), $options: 'i' } }
       ]
     }).sort({ createdAt: -1 }).limit(50);
 

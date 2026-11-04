@@ -65,11 +65,30 @@ describe('tenantGuard.ensureSameTenant', () => {
     expect(ensureSameTenant({ organizationId: 't1' }, { user: { tenantId: 't1' } }, res)).toBe(true);
   });
 
-  test('req.tenantId tiene prioridad sobre req.user.tenantId', () => {
-    const res = mockRes();
-    const ok = ensureSameTenant({ tenantId: 't9' }, { tenantId: 't9', user: { tenantId: 't1' } }, res);
+  describe('req.tenantId (cabecera X-Tenant-ID) no cuenta', () => {
+    test('una cabecera X-Tenant-ID falsificada no abre un documento de otro tenant', () => {
+      const res = mockRes();
+      // extractTenant copia la cabecera X-Tenant-ID del cliente en req.tenantId
+      const ok = ensureSameTenant({ tenantId: 't9' }, { tenantId: 't9', user: { tenantId: 't1' } }, res);
 
-    expect(ok).toBe(true);
+      expect(ok).toBe(false);
+      expect(res.status).toHaveBeenCalledWith(404);
+    });
+
+    test('el propio documento sigue accesible aunque la cabecera diga otro tenant', () => {
+      const res = mockRes();
+      const ok = ensureSameTenant({ tenantId: 't1' }, { tenantId: 't9', user: { tenantId: 't1' } }, res);
+
+      expect(ok).toBe(true);
+    });
+
+    test('un usuario sin tenant no se autentica con solo la cabecera', () => {
+      const res = mockRes();
+      const ok = ensureSameTenant({ tenantId: 't9' }, { tenantId: 't9', user: {} }, res);
+
+      expect(ok).toBe(false);
+      expect(res.status).toHaveBeenCalledWith(401);
+    });
   });
 
   describe('superadmin', () => {

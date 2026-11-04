@@ -6,6 +6,7 @@
 
 const logger = require('../../config/logger');
 
+const { escapeRegex } = require('../../utils/escapeRegex');
 // ==================== Response Templates ====================
 
 /**
@@ -348,7 +349,7 @@ function generateSection(templateInfo, expeditionData, options) {
   // Fill template
   let content = template.template;
   Object.entries(fields).forEach(([key, value]) => {
-    content = content.replace(new RegExp(`{${key}}`, 'g'), value || `[${key}]`);
+    content = content.replace(new RegExp(`{${escapeRegex(key)}}`, 'g'), value || `[${key}]`);
   });
 
   return {

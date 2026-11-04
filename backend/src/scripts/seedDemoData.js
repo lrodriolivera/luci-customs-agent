@@ -1015,6 +1015,8 @@ async function seedCommunications(demoUserId, expeditions, requirements) {
       category,
       status,
       priority: randomItem(priorities),
+      // tenantId es obligatorio en una comunicacion nueva.
+      tenantId: expedition.tenantId,
       references: {
         expeditionId: expedition._id,
         requirementId: requirement?._id
@@ -1228,14 +1230,14 @@ async function seedAll() {
     console.log('📊 Resumen de datos creados:');
     console.log(`   - Expedientes: ${await Expedition.countDocuments()}`);
     console.log(`   - Requerimientos: ${await Requirement.countDocuments()}`);
-    console.log(`   - Plazos: ${await Deadline.countDocuments()}`);
-    console.log(`   - Inspecciones: ${await Inspection.countDocuments()}`);
+    console.log(`   - Plazos: ${await Deadline.countDocuments({}).setOptions({ sinTenant: 'seed: resumen global de lo que hay en la base tras sembrar' })}`);
+    console.log(`   - Inspecciones: ${await Inspection.countDocuments({}).setOptions({ sinTenant: 'seed: resumen global de lo que hay en la base tras sembrar' })}`);
     console.log(`   - Garantías: ${await Guarantee.countDocuments()}`);
     console.log(`   - H7 Declaraciones: ${await H7Declaration.countDocuments()}`);
     console.log(`   - Tránsitos: ${await Transit.countDocuments()}`);
     console.log(`   - Regímenes Especiales: ${await SpecialRegime.countDocuments()}`);
     console.log(`   - OEA: ${await OEA.countDocuments()}`);
-    console.log(`   - Comunicaciones: ${await InspectorCommunication.countDocuments()}`);
+    console.log(`   - Comunicaciones: ${await InspectorCommunication.countDocuments({}).setOptions({ sinTenant: 'seed: resumen global de lo que hay en la base tras sembrar' })}`);
 
     process.exit(0);
   } catch (error) {

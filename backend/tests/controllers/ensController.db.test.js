@@ -440,6 +440,44 @@ describe('searchByContainer / searchByBOL', () => {
     }), res);
     expect(res.body.success).toBe(true);
   });
+
+  const conContenedor = (c) => ({
+    consignment: { ...datosENS().consignment, containerNumber: c }
+  });
+
+  test('no devuelve ENS de otro tenant aunque el termino sea `.*`', async () => {
+    await sembrarENS(otroTenantUser, conContenedor('MSCU7654321'));
+
+    for (const user of [operadorUser, adminUser]) {
+      const resC = mockRes();
+      await ensController.searchByContainer(mockReq({ user, params: { container: '.*' } }), resC);
+      expect(resC.body.success).toBe(true);
+      expect(resC.body.count).toBe(0);
+
+      const resB = mockRes();
+      await ensController.searchByBOL(mockReq({ user, params: { bol: '.*' } }), resB);
+      expect(resB.body.success).toBe(true);
+      expect(resB.body.count).toBe(0);
+    }
+  });
+
+  test('el termino se busca literal (parcial, sin mayusculas) y solo en el tenant propio', async () => {
+    await sembrarENS(operadorUser, conContenedor('MSCU1234567'));
+    await sembrarENS(otroTenantUser, conContenedor('MSCU1234567'));
+
+    const literal = mockRes();
+    await ensController.searchByContainer(mockReq({
+      user: operadorUser, params: { container: 'mscu123' }
+    }), literal);
+    expect(literal.body.count).toBe(1);
+    expect(String(literal.body.data[0].tenantId)).toBe(String(TENANT_A));
+
+    const comodin = mockRes();
+    await ensController.searchByContainer(mockReq({
+      user: operadorUser, params: { container: 'MSCU.*' }
+    }), comodin);
+    expect(comodin.body.count).toBe(0);
+  });
 });
 
 // ==================== catalogos puros ====================
@@ -1065,5 +1103,73 @@ describe('amend (IE313)', () => {
       expect(enviado.amendmentPlace).toBe('ES');
       expect(enviado.amendmentReason).toBeUndefined();
     });
+  });
+});
+
+// ==================== aislamiento por tenant en accesos por id ====================
+// 'admin' es un rol de tenant: get/update/addDocument/getXML no pueden abrir la
+// ENS de otro tenant por id, ni aunque el cliente mande X-Tenant-ID con el
+// tenant victima (req.tenantId).
+
+describe('acceso por id: admin de otro tenant', () => {
+  let adminOtroTenant;
+
+  beforeEach(async () => {
+    adminOtroTenant = await User.create({
+      name: 'Admin B', email: `adminb-${Date.now()}-${Math.round(performance.now())}@b.es`,
+      password: 'secret123', role: 'admin', tenantId: TENANT_B
+    });
+  });
+
+  const reqAtacante = (params, extra = {}) => ({
+    ...mockReq({ user: adminOtroTenant, params, ...extra }),
+    tenantId: String(TENANT_A) // cabecera X-Tenant-ID falsificada
+  });
+
+  test('get devuelve 404 igual que si no existiera', async () => {
+    const ens = await sembrarENS(operadorUser);
+    const res = mockRes();
+    await ensController.get(reqAtacante({ id: String(ens._id) }), res);
+    expect(res.statusCode).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
+
+  test('getXML devuelve 404 y no envia el XML', async () => {
+    const ens = await sembrarENS(operadorUser);
+    await ENSDeclaration.updateOne({ _id: ens._id }, { generatedXML: '<secreto/>' });
+    const res = mockRes();
+    await ensController.getXML(reqAtacante({ id: String(ens._id) }), res);
+    expect(res.statusCode).toBe(404);
+    expect(res.send).not.toHaveBeenCalled();
+  });
+
+  test('update devuelve 404 y no modifica la ENS', async () => {
+    const ens = await sembrarENS(operadorUser);
+    const res = mockRes();
+    await ensController.update(reqAtacante({ id: String(ens._id) }, { body: { notes: 'pwned' } }), res);
+    expect(res.statusCode).toBe(404);
+    const fresca = await ENSDeclaration.findById(ens._id).lean();
+    expect(fresca.notes).not.toBe('pwned');
+  });
+
+  test('addDocument devuelve 404 y no anade nada', async () => {
+    const ens = await sembrarENS(operadorUser);
+    const antes = (await ENSDeclaration.findById(ens._id).lean()).documents?.length || 0;
+    const res = mockRes();
+    await ensController.addDocument(
+      reqAtacante({ id: String(ens._id) }, { body: { type: 'N380', reference: 'X' } }),
+      res
+    );
+    expect(res.statusCode).toBe(404);
+    const despues = (await ENSDeclaration.findById(ens._id).lean()).documents?.length || 0;
+    expect(despues).toBe(antes);
+  });
+
+  test('el admin del propio tenant sigue leyendo la ENS', async () => {
+    const ens = await sembrarENS(operadorUser);
+    const res = mockRes();
+    await ensController.get(mockReq({ user: adminUser, params: { id: String(ens._id) } }), res);
+    expect(res.body.success).toBe(true);
+    expect(String(res.body.data._id)).toBe(String(ens._id));
   });
 });

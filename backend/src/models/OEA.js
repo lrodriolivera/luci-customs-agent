@@ -436,18 +436,26 @@ oeaSchema.methods.getGuaranteeReductionPercentage = function() {
   }
 };
 
-// Static method to find expiring certifications
-oeaSchema.statics.findExpiring = function(daysAhead = 90) {
+// Static method to find expiring certifications.
+// userId acota por createdBy igual que list() en oeaService: sin el filtro,
+// GET /api/oea/expiring devolvia las OEA aprobadas de todas las cuentas (NIF,
+// EORI, representante legal). Sin userId (getStats, jobs) no se acota.
+oeaSchema.statics.findExpiring = function(daysAhead = 90, userId = null) {
   const futureDate = new Date();
   futureDate.setDate(futureDate.getDate() + daysAhead);
 
-  return this.find({
+  const query = {
     'certification.status': 'approved',
     'certification.expirationDate': {
       $lte: futureDate,
       $gte: new Date()
     }
-  });
+  };
+  if (userId) {
+    query.createdBy = userId;
+  }
+
+  return this.find(query);
 };
 
 // Static method to find by EORI

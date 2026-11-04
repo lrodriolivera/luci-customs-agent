@@ -8,6 +8,7 @@
  * the state of seals and goods against the transit declaration.
  */
 
+const { xml } = require('./xmlTemplate');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC044CV1Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 
@@ -44,12 +45,6 @@ function toDateTime(valor) {
   return isNaN(fecha) ? new Date().toISOString().substring(0, 19) : fecha.toISOString().substring(0, 19);
 }
 
-function escaparXML(valor) {
-  return String(valor ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
-}
-
 /**
  * Resume las discrepancias en el texto libre de `unloadingRemark`.
  *
@@ -68,7 +63,9 @@ function resumirDiscrepancias(discrepancias) {
     return `${cabecera}${d.description || 'sin detalle'}`;
   }).join(' | ');
 
-  return escaparXML(texto).substring(0, MAX_REMARK).trim();
+  // Se trunca el texto, no su forma escapada: el limite del XSD cuenta
+  // caracteres, y asi nunca se parte una entidad. `xml` escapa al volcarlo.
+  return String(texto).substring(0, MAX_REMARK).trim();
 }
 
 /**
@@ -114,12 +111,12 @@ function buildCC044UnloadingXML(data) {
   const conforme = hayDiscrepancias ? '0' : (goodsConform ? '1' : '0');
   const observaciones = hayDiscrepancias
     ? resumirDiscrepancias(goodsDiscrepancies)
-    : escaparXML(unloadingRemark).substring(0, MAX_REMARK).trim();
+    : String(unloadingRemark ?? '').substring(0, MAX_REMARK).trim();
   const observacionesXML = observaciones
-    ? `\n          <ent:unloadingRemark>${observaciones}</ent:unloadingRemark>`
+    ? xml`\n          <ent:unloadingRemark>${observaciones}</ent:unloadingRemark>`
     : '';
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  return xml`<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
   <soapenv:Body>
     <ent:CC044CV1Ent xmlns:ent="${NS_ENT}" Id="${transId}">
@@ -147,7 +144,7 @@ function buildCC044UnloadingXML(data) {
       </ent:CC044C>
     </ent:CC044CV1Ent>
   </soapenv:Body>
-</soapenv:Envelope>`;
+</soapenv:Envelope>`.toString();
 }
 
 module.exports = { buildCC044UnloadingXML };

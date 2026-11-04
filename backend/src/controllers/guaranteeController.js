@@ -7,6 +7,7 @@ const guaranteeService = require('../services/guaranteeService');
 const aiService = require('../services/aiService');
 const logger = require('../config/logger');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Listar garantias
  * GET /api/guarantees
@@ -30,9 +31,9 @@ exports.list = async (req, res) => {
 
     if (search) {
       query.$or = [
-        { reference: { $regex: search, $options: 'i' } },
-        { grn: { $regex: search, $options: 'i' } },
-        { name: { $regex: search, $options: 'i' } }
+        { reference: { $regex: escapeRegex(search), $options: 'i' } },
+        { grn: { $regex: escapeRegex(search), $options: 'i' } },
+        { name: { $regex: escapeRegex(search), $options: 'i' } }
       ];
     }
 

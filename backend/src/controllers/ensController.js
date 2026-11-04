@@ -6,10 +6,11 @@ const { ENSDeclaration, Expedition } = require('../models');
 const ensService = require('../services/ensService');
 const aiService = require('../services/aiService');
 const logger = require('../config/logger');
-const { ensureSameTenant } = require('../utils/tenantGuard');
+const { ensureSameTenant, filtroTenantOPlataforma } = require('../utils/tenantGuard');
 const { parseENSRiskMessage } = require('../services/aeat/ensRiskParser');
 const { ROLES, esSuperAdmin } = require('../constants/roles');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Comprobar que los cambios pedidos han quedado REALMENTE aplicados al documento.
  *
@@ -80,8 +81,8 @@ exports.list = async (req, res) => {
     } = req.query;
 
     // Scope by tenant + role
-    const query = {};
-    if (req.user.tenantId) query.tenantId = req.user.tenantId;
+    // filtroTenantOPlataforma: un admin sin tenant (legacy) no debe ver las ENS de todos.
+    const query = { ...filtroTenantOPlataforma(req.user) };
     if (req.user.role !== 'admin') query.createdBy = req.user._id;
 
     if (status) query.status = status;
@@ -104,13 +105,13 @@ exports.list = async (req, res) => {
 
     if (search) {
       query.$or = [
-        { reference: { $regex: search, $options: 'i' } },
-        { mrn: { $regex: search, $options: 'i' } },
-        { lrn: { $regex: search, $options: 'i' } },
-        { 'consignment.referenceNumber': { $regex: search, $options: 'i' } },
-        { 'consignment.containerNumber': { $regex: search, $options: 'i' } },
-        { 'carrier.eori': { $regex: search, $options: 'i' } },
-        { 'carrier.name': { $regex: search, $options: 'i' } }
+        { reference: { $regex: escapeRegex(search), $options: 'i' } },
+        { mrn: { $regex: escapeRegex(search), $options: 'i' } },
+        { lrn: { $regex: escapeRegex(search), $options: 'i' } },
+        { 'consignment.referenceNumber': { $regex: escapeRegex(search), $options: 'i' } },
+        { 'consignment.containerNumber': { $regex: escapeRegex(search), $options: 'i' } },
+        { 'carrier.eori': { $regex: escapeRegex(search), $options: 'i' } },
+        { 'carrier.name': { $regex: escapeRegex(search), $options: 'i' } }
       ];
     }
 
@@ -220,7 +221,9 @@ exports.get = async (req, res) => {
     const declaration = await ENSDeclaration.findOne(query)
       .populate('expedition', 'reference status');
 
-    if (!declaration) {
+    // 'admin' es rol de tenant: sin esto veia la ENS de cualquier tenant por id.
+    // res=null: el 404 es el mismo que el de "no existe", sin confirmar el id.
+    if (!declaration || !ensureSameTenant(declaration, req, null)) {
       return res.status(404).json({
         success: false,
         message: 'Declaracion ENS no encontrada'
@@ -255,7 +258,7 @@ exports.update = async (req, res) => {
 
     const declaration = await ENSDeclaration.findOne(query);
 
-    if (!declaration) {
+    if (!declaration || !ensureSameTenant(declaration, req, null)) {
       return res.status(404).json({
         success: false,
         message: 'Declaracion ENS no encontrada'
@@ -664,7 +667,7 @@ exports.addDocument = async (req, res) => {
 
     const declaration = await ENSDeclaration.findOne(query);
 
-    if (!declaration) {
+    if (!declaration || !ensureSameTenant(declaration, req, null)) {
       return res.status(404).json({
         success: false,
         message: 'Declaracion no encontrada'
@@ -724,9 +727,11 @@ exports.getXML = async (req, res) => {
     }
 
     const declaration = await ENSDeclaration.findOne(query)
-      .select('reference mrn generatedXML');
+      .select('reference mrn generatedXML tenantId');
 
-    if (!declaration) {
+    // tenantId en el select: sin el, el guard veria un documento "sin tenant"
+    // (legacy) y lo dejaria pasar. No se envia en la respuesta.
+    if (!declaration || !ensureSameTenant(declaration, req, null)) {
       return res.status(404).json({
         success: false,
         message: 'Declaracion no encontrada'

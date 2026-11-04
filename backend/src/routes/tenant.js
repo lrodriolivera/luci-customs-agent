@@ -22,6 +22,13 @@ const { auth } = require('../middleware/auth');
 router.use(extractTenant({ required: false }));
 router.use(attachTenantContext);
 
+// Contexto de tenant para las rutas que lo necesitan. El router.use de arriba
+// corre antes de autenticar, asi que alli req.user no existe y no hay tenant:
+// extractTenant toma el tenant del usuario autenticado (nunca de X-Tenant-ID,
+// salvo un super_admin, que queda auditado). Por eso cada ruta con
+// requireTenant autentica y vuelve a resolver el tenant.
+const conTenant = [auth, extractTenant({ required: false })];
+
 // =====================================================
 // SUPER ADMIN - TENANT MANAGEMENT
 // =====================================================
@@ -69,22 +76,22 @@ router.post('/tenants/:id/cancel', auth, superAdminOnly, tenantController.cancel
 // =====================================================
 
 // Get current tenant
-router.get('/tenant', requireTenant, tenantController.getCurrentTenant);
+router.get('/tenant', ...conTenant, requireTenant, tenantController.getCurrentTenant);
 
 // Get available plans
 router.get('/tenant/plans', tenantController.getAvailablePlans);
 
 // Get tenant settings
-router.get('/tenant/settings', requireTenant, tenantController.getTenantSettings);
+router.get('/tenant/settings', ...conTenant, requireTenant, tenantController.getTenantSettings);
 
 // Update tenant settings (admin only)
-router.put('/tenant/settings', requireTenant, adminOnly, tenantController.updateTenantSettings);
+router.put('/tenant/settings', ...conTenant, requireTenant, adminOnly, tenantController.updateTenantSettings);
 
 // Get tenant usage stats
-router.get('/tenant/usage', requireTenant, tenantController.getTenantUsage);
+router.get('/tenant/usage', ...conTenant, requireTenant, tenantController.getTenantUsage);
 
 // Change tenant plan (admin only)
-router.post('/tenant/plan', requireTenant, adminOnly, tenantController.changeTenantPlan);
+router.post('/tenant/plan', ...conTenant, requireTenant, adminOnly, tenantController.changeTenantPlan);
 
 // =====================================================
 // RBAC - ROLES
@@ -97,22 +104,22 @@ router.get('/tenant/permissions/info', tenantController.getPermissionInfo);
 router.get('/tenant/roles/builtin', tenantController.getBuiltInRoles);
 
 // List all roles for tenant
-router.get('/tenant/roles', requireTenant, tenantController.listRoles);
+router.get('/tenant/roles', ...conTenant, requireTenant, tenantController.listRoles);
 
 // Get role by ID
-router.get('/tenant/roles/:roleId', requireTenant, tenantController.getRole);
+router.get('/tenant/roles/:roleId', ...conTenant, requireTenant, tenantController.getRole);
 
 // Create custom role (admin only)
-router.post('/tenant/roles', requireTenant, adminOnly, tenantController.createRole);
+router.post('/tenant/roles', ...conTenant, requireTenant, adminOnly, tenantController.createRole);
 
 // Update role (admin only)
-router.put('/tenant/roles/:roleId', requireTenant, adminOnly, tenantController.updateRole);
+router.put('/tenant/roles/:roleId', ...conTenant, requireTenant, adminOnly, tenantController.updateRole);
 
 // Delete role (admin only)
-router.delete('/tenant/roles/:roleId', requireTenant, adminOnly, tenantController.deleteRole);
+router.delete('/tenant/roles/:roleId', ...conTenant, requireTenant, adminOnly, tenantController.deleteRole);
 
 // Clone role (admin only)
-router.post('/tenant/roles/:roleId/clone', requireTenant, adminOnly, tenantController.cloneRole);
+router.post('/tenant/roles/:roleId/clone', ...conTenant, requireTenant, adminOnly, tenantController.cloneRole);
 
 // =====================================================
 // RBAC - USER ROLES
@@ -121,6 +128,7 @@ router.post('/tenant/roles/:roleId/clone', requireTenant, adminOnly, tenantContr
 // Get user roles
 router.get(
   '/tenant/users/:userId/roles',
+  ...conTenant,
   requireTenant,
   checkPermission('user', 'read'),
   tenantController.getUserRoles
@@ -129,6 +137,7 @@ router.get(
 // Set user roles (replace all)
 router.put(
   '/tenant/users/:userId/roles',
+  ...conTenant,
   requireTenant,
   adminOnly,
   tenantController.setUserRoles
@@ -137,6 +146,7 @@ router.put(
 // Assign role to user
 router.post(
   '/tenant/users/:userId/roles/:roleId',
+  ...conTenant,
   requireTenant,
   adminOnly,
   tenantController.assignRole
@@ -145,6 +155,7 @@ router.post(
 // Remove role from user
 router.delete(
   '/tenant/users/:userId/roles/:roleId',
+  ...conTenant,
   requireTenant,
   adminOnly,
   tenantController.removeRole
@@ -153,6 +164,7 @@ router.delete(
 // Get user permissions
 router.get(
   '/tenant/users/:userId/permissions',
+  ...conTenant,
   requireTenant,
   checkPermission('user', 'read'),
   tenantController.getUserPermissions
@@ -161,6 +173,7 @@ router.get(
 // Check specific permission
 router.get(
   '/tenant/users/:userId/permissions/check',
+  ...conTenant,
   requireTenant,
   tenantController.checkPermission
 );
@@ -170,17 +183,18 @@ router.get(
 // =====================================================
 
 // Get billing overview
-router.get('/tenant/billing', requireTenant, tenantController.getBillingOverview);
+router.get('/tenant/billing', ...conTenant, requireTenant, tenantController.getBillingOverview);
 
 // Get plan pricing
 router.get('/tenant/billing/pricing', tenantController.getPlanPricing);
 
 // Get subscription
-router.get('/tenant/billing/subscription', requireTenant, tenantController.getSubscription);
+router.get('/tenant/billing/subscription', ...conTenant, requireTenant, tenantController.getSubscription);
 
 // Update subscription
 router.put(
   '/tenant/billing/subscription',
+  ...conTenant,
   requireTenant,
   adminOnly,
   tenantController.updateSubscription
@@ -189,6 +203,7 @@ router.put(
 // Change plan
 router.post(
   '/tenant/billing/change-plan',
+  ...conTenant,
   requireTenant,
   adminOnly,
   tenantController.changeBillingPlan
@@ -197,6 +212,7 @@ router.post(
 // Cancel subscription
 router.post(
   '/tenant/billing/cancel',
+  ...conTenant,
   requireTenant,
   adminOnly,
   tenantController.cancelSubscription
@@ -205,6 +221,7 @@ router.post(
 // Reactivate subscription
 router.post(
   '/tenant/billing/reactivate',
+  ...conTenant,
   requireTenant,
   adminOnly,
   tenantController.reactivateSubscription
@@ -217,6 +234,7 @@ router.post(
 // List invoices
 router.get(
   '/tenant/billing/invoices',
+  ...conTenant,
   requireTenant,
   checkPermission('billing', 'read'),
   tenantController.listInvoices
@@ -225,6 +243,7 @@ router.get(
 // Get invoice by ID
 router.get(
   '/tenant/billing/invoices/:invoiceId',
+  ...conTenant,
   requireTenant,
   checkPermission('billing', 'read'),
   tenantController.getInvoice
@@ -237,6 +256,7 @@ router.get(
 // List payment methods
 router.get(
   '/tenant/billing/payment-methods',
+  ...conTenant,
   requireTenant,
   checkPermission('billing', 'read'),
   tenantController.listPaymentMethods
@@ -245,6 +265,7 @@ router.get(
 // Add payment method
 router.post(
   '/tenant/billing/payment-methods',
+  ...conTenant,
   requireTenant,
   adminOnly,
   tenantController.addPaymentMethod
@@ -253,6 +274,7 @@ router.post(
 // Remove payment method
 router.delete(
   '/tenant/billing/payment-methods/:methodId',
+  ...conTenant,
   requireTenant,
   adminOnly,
   tenantController.removePaymentMethod
@@ -261,6 +283,7 @@ router.delete(
 // Set default payment method
 router.put(
   '/tenant/billing/payment-methods/:methodId/default',
+  ...conTenant,
   requireTenant,
   adminOnly,
   tenantController.setDefaultPaymentMethod
@@ -273,6 +296,7 @@ router.put(
 // Get usage summary
 router.get(
   '/tenant/billing/usage',
+  ...conTenant,
   requireTenant,
   checkPermission('billing', 'read'),
   tenantController.getUsageSummary
@@ -281,6 +305,7 @@ router.get(
 // Get billing statement
 router.get(
   '/tenant/billing/statement',
+  ...conTenant,
   requireTenant,
   checkPermission('billing', 'read'),
   tenantController.getBillingStatement

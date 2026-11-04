@@ -429,10 +429,12 @@ describe('classificationController - Cobertura de ramas simples', () => {
 
       expect(res.status).toBe(200);
       expect(mockSearchHistory.findOneAndUpdate).toHaveBeenCalledWith(
-        { _id: 'search1', tenantId: TENANT_A },
+        expect.objectContaining({ _id: 'search1' }),
         expect.any(Object),
         expect.any(Object)
       );
+      const [filtro] = mockSearchHistory.findOneAndUpdate.mock.calls[0];
+      expect(String(filtro.tenantId)).toBe(TENANT_A);
     });
   });
 

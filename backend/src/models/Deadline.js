@@ -13,6 +13,7 @@
  */
 
 const mongoose = require('mongoose');
+const { tenantListGuard } = require('../utils/tenantListGuard');
 
 // Schema para configuración de alertas
 const AlertConfigSchema = new mongoose.Schema({
@@ -381,37 +382,39 @@ DeadlineSchema.statics.findOverdue = function(filters = {}) {
   }).sort({ dueDate: 1 });
 };
 
-DeadlineSchema.statics.findUrgent = function(hoursThreshold = 48) {
+DeadlineSchema.statics.findUrgent = function(hoursThreshold = 48, filters = {}) {
   const threshold = new Date();
   threshold.setHours(threshold.getHours() + hoursThreshold);
 
   return this.find({
     dueDate: { $lte: threshold },
     status: { $nin: ['completed', 'cancelled'] },
-    active: true
+    active: true,
+    ...filters
   }).sort({ dueDate: 1 });
 };
 
-DeadlineSchema.statics.findByCategory = function(category, status = null) {
-  const query = { category, active: true };
+DeadlineSchema.statics.findByCategory = function(category, status = null, filters = {}) {
+  const query = { category, active: true, ...filters };
   if (status) {
     query.status = status;
   }
   return this.find(query).sort({ dueDate: 1 });
 };
 
-DeadlineSchema.statics.findByType = function(deadlineType, status = null) {
-  const query = { deadlineType, active: true };
+DeadlineSchema.statics.findByType = function(deadlineType, status = null, filters = {}) {
+  const query = { deadlineType, active: true, ...filters };
   if (status) {
     query.status = status;
   }
   return this.find(query).sort({ dueDate: 1 });
 };
 
-DeadlineSchema.statics.findByAssignee = function(userId, includeCompleted = false) {
+DeadlineSchema.statics.findByAssignee = function(userId, includeCompleted = false, filters = {}) {
   const query = {
     assignedTo: userId,
-    active: true
+    active: true,
+    ...filters
   };
   if (!includeCompleted) {
     query.status = { $nin: ['completed', 'cancelled'] };
@@ -425,7 +428,7 @@ DeadlineSchema.statics.findDueForAlerts = function() {
     status: { $nin: ['completed', 'cancelled'] },
     'alertConfig.enabled': true,
     active: true
-  });
+  }).setOptions({ sinTenant: 'cron de alertas: recorre los plazos de todos los tenants y avisa a cada asignado' });
 };
 
 DeadlineSchema.statics.getStats = async function(filters = {}) {
@@ -503,5 +506,8 @@ DeadlineSchema.statics.getCalendarView = async function(startDate, endDate, filt
     ...filters
   }).sort({ dueDate: 1 });
 };
+
+// Listados sin tenantId fallan: ver utils/tenantListGuard.
+DeadlineSchema.plugin(tenantListGuard, { modelo: 'Deadline' });
 
 module.exports = mongoose.model('Deadline', DeadlineSchema);

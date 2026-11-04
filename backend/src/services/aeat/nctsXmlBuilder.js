@@ -17,6 +17,7 @@
  * - shippingMarks obligatorio para ciertos tipos de bultos
  */
 
+const { xml } = require('./xmlTemplate');
 const { generateTransactionId } = require('./queryXmlBuilder');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC015CV1Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
@@ -53,19 +54,19 @@ function buildNCTSTransitXML(data) {
   const totalGross = (consignment.goodsItems || []).reduce((s, g) => s + (g.grossWeight || 0), 0);
   const totalItems = (consignment.goodsItems || []).length || 1;
 
-  const transitOfficesXML = transitOffices.map(o => `
+  const transitOfficesXML = transitOffices.map(o => xml`
         <ent:CustomsOfficeOfTransitDeclared>
           <ent:sequenceNumber>${o.sequence || 1}</ent:sequenceNumber>
           <ent:referenceNumber>${o.code}</ent:referenceNumber>
-        </ent:CustomsOfficeOfTransitDeclared>`).join('');
+        </ent:CustomsOfficeOfTransitDeclared>`);
 
-  const itemsXML = (consignment.goodsItems || []).map((g, i) => `
+  const itemsXML = (consignment.goodsItems || []).map((g, i) => xml`
           <ent:HouseConsignment>
             <ent:sequenceNumber>${i + 1}</ent:sequenceNumber>
-            <ent:grossMass>${Number(g.grossWeight || 0).toFixed(3)}</ent:grossMass>${g.consigneeEORI || data.consigneeEORI || consignment.consigneeEORI ? `
+            <ent:grossMass>${Number(g.grossWeight || 0).toFixed(3)}</ent:grossMass>${g.consigneeEORI || data.consigneeEORI || consignment.consigneeEORI ? xml`
             <ent:Consignee>
               <ent:identificationNumber>${g.consigneeEORI || data.consigneeEORI || consignment.consigneeEORI}</ent:identificationNumber>
-            </ent:Consignee>` : (g.consigneeName || consignment.consigneeName) ? `
+            </ent:Consignee>` : (g.consigneeName || consignment.consigneeName) ? xml`
             <ent:Consignee>
               <ent:name>${g.consigneeName || consignment.consigneeName}</ent:name>
               <ent:Address>
@@ -96,23 +97,23 @@ function buildNCTSTransitXML(data) {
                 <ent:typeOfPackages>${g.packageType || 'PK'}</ent:typeOfPackages>
                 <ent:numberOfPackages>${g.packages || 1}</ent:numberOfPackages>
                 <ent:shippingMarks>${g.shippingMarks || 'N/M'}</ent:shippingMarks>
-              </ent:Packaging>${g.previousDocumentType ? `
+              </ent:Packaging>${g.previousDocumentType ? xml`
               <ent:PreviousDocument>
                 <ent:sequenceNumber>1</ent:sequenceNumber>
                 <ent:type>${g.previousDocumentType}</ent:type>
                 <ent:referenceNumber>${g.previousDocumentRef}</ent:referenceNumber>
-                <ent:goodsItemNumber>${parseInt(g.previousDocumentItem || '1', 10)}</ent:goodsItemNumber>${g.previousDocumentType === 'NMRN' ? `
+                <ent:goodsItemNumber>${parseInt(g.previousDocumentItem || '1', 10)}</ent:goodsItemNumber>${g.previousDocumentType === 'NMRN' ? xml`
                 <ent:measurementUnitAndQualifier>KGM</ent:measurementUnitAndQualifier>
                 <ent:quantity>${Number(g.netWeight || g.grossWeight || 1).toFixed(3)}</ent:quantity>` : ''}
               </ent:PreviousDocument>` : ''}
             </ent:ConsignmentItem>
-          </ent:HouseConsignment>`).join('');
+          </ent:HouseConsignment>`);
 
   // Garantia: tipo 0,1,3,4 necesitan GRN; tipo 2,6,8 necesitan 1 GuaranteeReference sin GRN
   const needsGRN = ['0', '1', '3', '4'].includes(guaranteeType);
   const needsRefNoGRN = ['2', '6', '8'].includes(guaranteeType);
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  return xml`<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
   <soapenv:Body>
     <ent:CC015CV1Ent xmlns:ent="${NS_ENT}" Id="${transId}">
@@ -129,7 +130,7 @@ function buildNCTSTransitXML(data) {
           <ent:security>${securityIndicator}</ent:security>
           <ent:reducedDatasetIndicator>0</ent:reducedDatasetIndicator>
           <ent:bindingItinerary>0</ent:bindingItinerary>
-        </ent:TransitOperation>${data.authorisationNumber ? `
+        </ent:TransitOperation>${data.authorisationNumber ? xml`
         <ent:Authorisation>
           <ent:sequenceNumber>1</ent:sequenceNumber>
           <ent:type>C521</ent:type>
@@ -142,7 +143,7 @@ function buildNCTSTransitXML(data) {
           <ent:referenceNumber>${officeOfDestination}</ent:referenceNumber>
         </ent:CustomsOfficeOfDestinationDeclared>${transitOfficesXML}
         <ent:HolderOfTheTransitProcedure>
-          <ent:identificationNumber>${holderEORI}</ent:identificationNumber>${!holderEORI ? `
+          <ent:identificationNumber>${holderEORI}</ent:identificationNumber>${!holderEORI ? xml`
           <ent:name>${holderName}</ent:name>
           <ent:Address>
             <ent:streetAndNumber>${holderStreet}</ent:streetAndNumber>
@@ -158,13 +159,13 @@ function buildNCTSTransitXML(data) {
         </ent:HolderOfTheTransitProcedure>
         <ent:Guarantee>
           <ent:sequenceNumber>1</ent:sequenceNumber>
-          <ent:guaranteeType>${guaranteeType}</ent:guaranteeType>${needsGRN ? `
+          <ent:guaranteeType>${guaranteeType}</ent:guaranteeType>${needsGRN ? xml`
           <ent:GuaranteeReference>
             <ent:sequenceNumber>1</ent:sequenceNumber>
             <ent:GRN>${guaranteeGRN}</ent:GRN>
             <ent:accessCode>${guaranteeAccessCode || '0000'}</ent:accessCode>
             <ent:amountToBeCovered>${Number(data.guaranteeAmount || totalGross * 10 || 10000).toFixed(2)}</ent:amountToBeCovered>
-          </ent:GuaranteeReference>` : ''}${needsRefNoGRN ? `
+          </ent:GuaranteeReference>` : ''}${needsRefNoGRN ? xml`
           <ent:GuaranteeReference>
             <ent:sequenceNumber>1</ent:sequenceNumber>
             <ent:amountToBeCovered>0.00</ent:amountToBeCovered>
@@ -187,7 +188,7 @@ function buildNCTSTransitXML(data) {
       </ent:CC015C>
     </ent:CC015CV1Ent>
   </soapenv:Body>
-</soapenv:Envelope>`;
+</soapenv:Envelope>`.toString();
 }
 
 module.exports = { buildNCTSTransitXML };

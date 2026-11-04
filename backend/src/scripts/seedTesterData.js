@@ -813,6 +813,8 @@ async function seedCommunications(userId, expeditions, requirements) {
       category,
       status,
       priority: randomItem(['low', 'normal', 'high', 'urgent']),
+      // tenantId es obligatorio en una comunicacion nueva.
+      tenantId: expedition.tenantId,
       references: {
         expeditionId: expedition._id,
         requirementId: requirement?._id

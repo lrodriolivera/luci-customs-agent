@@ -66,6 +66,8 @@ beforeEach(() => {
 // Crea un expediente accesible por su token de portal.
 async function sembrarExp(over = {}) {
   return Expedition.create({
+    // Los mensajes de chat nuevos exigen tenant, que heredan del expediente.
+    tenantId: new mongoose.Types.ObjectId(),
     operationType: 'import', transportMode: 'maritime',
     client: { companyName: 'Cliente SL', nif: 'B12345678', contact: { email: 'c@cliente.es' } },
     status: 'pending_documents',
@@ -170,7 +172,7 @@ describe('sendMessage', () => {
     expect(res.body.data.clientMessage.content).toBe('¿Como va mi envio?');
     expect(res.body.data.luciResponse.content).toBe('Hola, soy LUCI');
     // Ambos mensajes deben quedar persistidos.
-    const mensajes = await ChatMessage.find({ expedition: exp._id }).sort({ createdAt: 1 });
+    const mensajes = await ChatMessage.find({ expedition: exp._id }).setOptions({ sinTenant: 'test: mensajes del expediente' }).sort({ createdAt: 1 });
     expect(mensajes.map(m => m.sender)).toEqual(expect.arrayContaining(['client', 'luci']));
   });
 
@@ -215,7 +217,7 @@ describe('uploadDocument', () => {
     expect(guardado.documents).toHaveLength(1);
     expect(guardado.documentChecklist[0].received).toBe(true);
     // Debe haberse creado el mensaje de chat de documento recibido.
-    const chat = await ChatMessage.find({ expedition: exp._id, messageType: 'document_received' });
+    const chat = await ChatMessage.find({ expedition: exp._id, messageType: 'document_received' }).setOptions({ sinTenant: 'test: mensajes del expediente' });
     expect(chat).toHaveLength(1);
   });
 });
@@ -272,7 +274,7 @@ describe('endpoints IA', () => {
       mockReq({ params: { token: exp.clientPortal.token }, body: { message: '¿que falta?' } }), res);
     expect(aiService.enhancedPortalChat).toHaveBeenCalled();
     expect(res.body.data.intent).toBe('status_query');
-    const mensajes = await ChatMessage.find({ expedition: exp._id });
+    const mensajes = await ChatMessage.find({ expedition: exp._id }).setOptions({ sinTenant: 'test: mensajes del expediente' });
     expect(mensajes).toHaveLength(2);
   });
 

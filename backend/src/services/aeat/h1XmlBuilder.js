@@ -5,6 +5,7 @@
  * Basado en el XSD oficial descargado de www3.agenciatributaria.gob.es
  */
 
+const { xml, joinXml } = require('./xmlTemplate');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/adip/ws/ImportacionCompletaV1Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 
@@ -103,7 +104,7 @@ function buildH1ImportXML(data) {
     const tributos = [];
     // A00 - Derechos arancelarios
     if (p.arancelTipo != null) {
-      tributos.push(`
+      tributos.push(xml`
         <C47TributoDeclarado>
           <C47TributoClase>A00</C47TributoClase>
           <C47TributoBaseImponible>${Number(p.valorFactura || 0).toFixed(3)}</C47TributoBaseImponible>
@@ -116,7 +117,7 @@ function buildH1ImportXML(data) {
     // B00 - IVA
     if (p.ivaTipo != null) {
       const baseIVA = (p.valorFactura || 0) + (p.arancelImporte || 0);
-      tributos.push(`
+      tributos.push(xml`
         <C47TributoDeclarado>
           <C47TributoClase>B00</C47TributoClase>
           <C47TributoBaseImponible>${Number(baseIVA).toFixed(3)}</C47TributoBaseImponible>
@@ -129,7 +130,7 @@ function buildH1ImportXML(data) {
 
     const importeTotal = (p.arancelImporte || 0) + (p.ivaImporte || 0);
 
-    return `
+    return xml`
     <Partida>
       <C32NumeroDePartida>${i + 1}</C32NumeroDePartida>
       <C31EmpaquetamientoInterno>
@@ -145,28 +146,28 @@ function buildH1ImportXML(data) {
       <C36Reduccion>${(p.preferencia || '100').substring(1) || '00'}</C36Reduccion>
       <C37RegimenAduanero>
         <C371RegimenSolicitado>${p.regimen || '40'}</C371RegimenSolicitado>
-        <C371RegimenPrecedente>${p.regimenPrecedente || '00'}</C371RegimenPrecedente>${(p.codigoAdicional && !['000','00','0',''].includes(String(p.codigoAdicional))) ? `
+        <C371RegimenPrecedente>${p.regimenPrecedente || '00'}</C371RegimenPrecedente>${(p.codigoAdicional && !['000','00','0',''].includes(String(p.codigoAdicional))) ? xml`
         <C372CodigoAdicional>${p.codigoAdicional}</C372CodigoAdicional>` : ''}
       </C37RegimenAduanero>
       <C38MasaNetaEnKg>${Number(p.pesoneto || 0).toFixed(3)}</C38MasaNetaEnKg>
-      ${p.unidadesSuplementarias ? `<C41UnidadesSuplementarias>
+      ${p.unidadesSuplementarias ? xml`<C41UnidadesSuplementarias>
         <C41UnidadesCodigo>${p.unidadesCodigo || 'NAR'}</C41UnidadesCodigo>
         <C41UnidadesNumero>${Number(p.unidadesSuplementarias).toFixed(3)}</C41UnidadesNumero>
       </C41UnidadesSuplementarias>` : ''}
       <C42ValorFactura>${Number(p.valorFactura || 0).toFixed(3)}</C42ValorFactura>
-      ${(p.documentos || [{ tipo: p.docTipo || 'N380', referencia: p.docId || data.referenciaComercial || 'FACTURA-001' }]).map(d => `<C44DocumentosYCertificados>
+      ${joinXml((p.documentos || [{ tipo: p.docTipo || 'N380', referencia: p.docId || data.referenciaComercial || 'FACTURA-001' }]).map(d => xml`<C44DocumentosYCertificados>
         <C44Tipo>${d.tipo}</C44Tipo>
         <C44Referencia>${d.referencia}</C44Referencia>
-      </C44DocumentosYCertificados>`).join('\n      ')}
-      <C46ValorEstadistico>${Number(p.valorEstadistico || p.valorFactura || 0).toFixed(2)}</C46ValorEstadistico>${tributos.join('')}
+      </C44DocumentosYCertificados>`), '\n      ')}
+      <C46ValorEstadistico>${Number(p.valorEstadistico || p.valorFactura || 0).toFixed(2)}</C46ValorEstadistico>${joinXml(tributos)}
       <C47ImporteTotal>${Number(importeTotal).toFixed(2)}</C47ImporteTotal>
     </Partida>`;
-  }).join('');
+  });
 
   // XML principal - NOTA: elementFormDefault="unqualified" en el XSD
   // Los hijos NO deben tener namespace, solo el root element
-  const bodyXML = `<ent:ImportacionCompletaV1Ent xmlns:ent="${NS_ENT}">
-  <SegmentosDeServicio Id="${transId}" fecha="${fecha}" hora="${hora}"${isTest ? ' Test="S"' : ''}/>${mrn ? `
+  const bodyXML = xml`<ent:ImportacionCompletaV1Ent xmlns:ent="${NS_ENT}">
+  <SegmentosDeServicio Id="${transId}" fecha="${fecha}" hora="${hora}"${isTest ? xml` Test="S"` : ''}/>${mrn ? xml`
   <NumeroReferenciaDUA>${mrn}</NumeroReferenciaDUA>` : ''}
   <CAaduana>${(data.aduanaDespacho || data.customsOffice || '002801').replace(/^ES/, '').substring(0, 6)}</CAaduana>
   <C011EstatutoMercancias>${estatutoMercancias}</C011EstatutoMercancias>
@@ -180,7 +181,7 @@ function buildH1ImportXML(data) {
     <C02ExportadorPais>${exportadorPais}</C02ExportadorPais>
   </C02Exportador>
   <C05NumeroDePartidas>${numPartidas}</C05NumeroDePartidas>
-  <C06TotalBultos>${totalBultos}</C06TotalBultos>${referenciaComercial ? `
+  <C06TotalBultos>${totalBultos}</C06TotalBultos>${referenciaComercial ? xml`
   <C07ReferenciaComercial>${referenciaComercial}</C07ReferenciaComercial>` : ''}
   <C08Importador>
     <C08ImportadorNID>${importadorNIF}</C08ImportadorNID>
@@ -199,7 +200,7 @@ function buildH1ImportXML(data) {
   </C14Declarante>
   <EmailNotificaDespacho>${emailDespacho}</EmailNotificaDespacho>
   <C15aPaisExpedicion>${paisExpedicion}</C15aPaisExpedicion>
-  <C17aPaisDestino>${paisDestino}</C17aPaisDestino>${provinciaDestino ? `
+  <C17aPaisDestino>${paisDestino}</C17aPaisDestino>${provinciaDestino ? xml`
   <C17bProvinciaIslaDestino>${provinciaDestino}</C17bProvinciaIslaDestino>` : ''}
   <C181IdentMedioTransporteLlegada>${identidadTransporteFrontera || ''}</C181IdentMedioTransporteLlegada>
   <C19TransporteEnContenedores>${contenedores}</C19TransporteEnContenedores>
@@ -215,17 +216,17 @@ function buildH1ImportXML(data) {
   <C25ModoTransporteFrontera>${modoTransporteFrontera}</C25ModoTransporteFrontera>
   <C30LocalizacionMercancias>${localizacionMercancias || 'ES' + (data.aduanaDespacho || '002801') + 'LUCI01'}</C30LocalizacionMercancias>
   <CBImporteTotalTributos>${Number(importeTotalTributos).toFixed(2)}</CBImporteTotalTributos>
-  <CBmodalidadDePago>${modalidadPago}</CBmodalidadDePago>${garantiaLevante ? `
+  <CBmodalidadDePago>${modalidadPago}</CBmodalidadDePago>${garantiaLevante ? xml`
   <CBgarantiaLevante>${garantiaLevante}</CBgarantiaLevante>` : ''}${partidasXML}
 </ent:ImportacionCompletaV1Ent>`;
 
   // SOAP Envelope
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  return xml`<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
   <soapenv:Body>
     ${bodyXML}
   </soapenv:Body>
-</soapenv:Envelope>`;
+</soapenv:Envelope>`.toString();
 }
 
 /**

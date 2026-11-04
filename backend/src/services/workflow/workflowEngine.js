@@ -14,6 +14,53 @@ const EventEmitter = require('events');
 const logger = require('../../config/logger');
 const { Workflow, WorkflowExecution } = require('../../models');
 
+/**
+ * Longitud maxima del patron del operador 'regex' de las condiciones.
+ */
+const MAX_REGEX_PATTERN_LENGTH = 200;
+
+/**
+ * ¿Es seguro evaluar este patron con new RegExp contra datos de entidades?
+ *
+ * El patron lo escribe quien configura el workflow y se evalua en el proceso
+ * de Node: un patron con cuantificadores anidados como (a+)+$ tarda un tiempo
+ * exponencial con ciertas entradas y bloquea el servidor (ReDoS). Se rechazan
+ * los patrones demasiado largos y los que aplican un cuantificador (* + {n,m})
+ * a un grupo que ya contiene otro. Los escapes y las clases [...] no cuentan.
+ *
+ * @param {*} patron
+ * @returns {boolean}
+ */
+function esPatronRegexSeguro(patron) {
+  if (typeof patron !== 'string' || patron.length > MAX_REGEX_PATTERN_LENGTH) return false;
+
+  const esCuantificador = (i) => patron[i] === '*' || patron[i] === '+' || patron[i] === '{';
+  // Por cada grupo abierto: ¿contiene ya algun cuantificador?
+  const grupos = [];
+  let enClase = false;
+
+  for (let i = 0; i < patron.length; i++) {
+    const c = patron[i];
+    if (c === '\\') { i++; continue; }
+    if (enClase) { if (c === ']') enClase = false; continue; }
+    if (c === '[') { enClase = true; continue; }
+
+    if (c === '(') { grupos.push(false); continue; }
+    if (c === ')') {
+      const conCuantificador = grupos.pop() || false;
+      if (conCuantificador && esCuantificador(i + 1)) return false;
+      // El grupo cerrado cuenta como cuantificado dentro de su padre si lo
+      // tenia dentro o si va cuantificado el mismo.
+      if (grupos.length && (conCuantificador || esCuantificador(i + 1))) {
+        grupos[grupos.length - 1] = true;
+      }
+      continue;
+    }
+    if (esCuantificador(i) && grupos.length) grupos[grupos.length - 1] = true;
+  }
+  return true;
+}
+
 // ==================== Workflow Engine Class ====================
 
 class WorkflowEngine extends EventEmitter {
@@ -130,6 +177,12 @@ class WorkflowEngine extends EventEmitter {
         return fieldValue === false || fieldValue === 'false' || fieldValue === 0;
 
       case 'regex':
+        // La funcion se mantiene, pero un patron largo o con cuantificadores
+        // anidados se evalua como false, igual que uno invalido (ReDoS).
+        if (!esPatronRegexSeguro(compareValue)) {
+          logger.warn(`[WorkflowEngine] Patron regex rechazado en la condicion sobre '${field}'`);
+          return false;
+        }
         try {
           const regex = new RegExp(compareValue, caseSensitive ? '' : 'i');
           return regex.test(String(fieldValue));
@@ -378,3 +431,5 @@ class WorkflowEngine extends EventEmitter {
 const workflowEngine = new WorkflowEngine();
 
 module.exports = workflowEngine;
+module.exports.esPatronRegexSeguro = esPatronRegexSeguro;
+module.exports.MAX_REGEX_PATTERN_LENGTH = MAX_REGEX_PATTERN_LENGTH;

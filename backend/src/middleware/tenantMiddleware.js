@@ -9,49 +9,59 @@ const logger = require('../config/logger');
 const tenantService = require('../services/tenant/tenantService');
 const rbacService = require('../services/tenant/rbacService');
 const { esSuperAdmin, ROLES } = require('../constants/roles');
+const auditService = require('../services/auditService');
 
 /**
- * Extract tenant from request
- * Supports multiple methods: header, subdomain, path
+ * Extract tenant from request.
+ *
+ * El tenant de un usuario normal sale SIEMPRE de req.user.tenantId (cargado de
+ * BD por auth). X-Tenant-ID, X-Tenant-Slug, el subdominio y el path los
+ * controla el cliente y se ignoran: antes se copiaban en req.tenantId y,
+ * como tenantRoutes se monta en /api antes que el resto, cualquier usuario (o
+ * peticion anonima) podia actuar sobre otro tenant.
+ *
+ * Solo un super_admin puede elegir otro tenant con esas vias, y cada vez que
+ * lo hace queda una entrada 'tenant_override' en la auditoria.
+ *
+ * Sin usuario autenticado no hay contexto de tenant. Las rutas que lo
+ * necesitan deben poner `auth` antes de este middleware.
  */
 const extractTenant = (options = {}) => {
   return async (req, res, next) => {
     try {
+      const user = req.user;
+      const ownTenant = user?.tenantId || null;
       let tenantId = null;
       let tenantSlug = null;
+      let via = null;
 
-      // 1. Try from header (X-Tenant-ID)
-      if (req.headers['x-tenant-id']) {
-        tenantId = req.headers['x-tenant-id'];
-      }
-
-      // 2. Try from header (X-Tenant-Slug)
-      if (!tenantId && req.headers['x-tenant-slug']) {
-        tenantSlug = req.headers['x-tenant-slug'];
-      }
-
-      // 3. Try from subdomain (tenant.domain.com)
-      if (!tenantId && !tenantSlug && options.useSubdomain) {
-        const host = req.hostname || req.headers.host;
-        if (host) {
-          const parts = host.split('.');
+      if (esSuperAdmin(user)) {
+        if (req.headers['x-tenant-id']) {
+          tenantId = req.headers['x-tenant-id'];
+          via = 'x-tenant-id';
+        } else if (req.headers['x-tenant-slug']) {
+          tenantSlug = req.headers['x-tenant-slug'];
+          via = 'x-tenant-slug';
+        } else if (options.useSubdomain) {
+          const host = req.hostname || req.headers.host;
+          const parts = host ? host.split('.') : [];
           if (parts.length > 2) {
             tenantSlug = parts[0];
+            via = 'subdomain';
+          }
+        }
+        if (!tenantId && !tenantSlug && options.usePath) {
+          const match = req.path?.match(/^\/api\/t\/([^\/]+)/);
+          if (match) {
+            tenantSlug = match[1];
+            via = 'path';
           }
         }
       }
 
-      // 4. Try from path (/api/t/{tenant}/...)
-      if (!tenantId && !tenantSlug && options.usePath) {
-        const match = req.path.match(/^\/api\/t\/([^\/]+)/);
-        if (match) {
-          tenantSlug = match[1];
-        }
-      }
-
-      // 5. Try from user's tenant (if authenticated)
-      if (!tenantId && !tenantSlug && req.user?.tenantId) {
-        tenantId = req.user.tenantId;
+      if (!tenantId && !tenantSlug && ownTenant) {
+        tenantId = ownTenant;
+        via = null;
       }
 
       // Resolve tenant
@@ -89,10 +99,25 @@ const extractTenant = (options = {}) => {
 
       // Attach tenant to request.
       // tenantService es Map in-memory (datos demo); si el tenant no esta ahi pero
-      // tenemos un ObjectId del JWT, propagar igualmente para que las rutas que
-      // hacen Tenant.findById(req.tenantId) sobre MongoDB funcionen.
+      // tenemos el ObjectId del usuario, propagar igualmente para que las rutas
+      // que hacen Tenant.findById(req.tenantId) sobre MongoDB funcionen.
       req.tenant = tenant;
       req.tenantId = tenant?.id || tenantId || null;
+
+      if (via && req.tenantId && String(req.tenantId) !== String(ownTenant)) {
+        logger.warn(`[TenantMiddleware] super_admin ${user?._id} actua sobre el tenant ${req.tenantId} via ${via}`);
+        await auditService.log({
+          req,
+          action: 'tenant_override',
+          resource: 'Tenant',
+          resourceId: String(req.tenantId),
+          metadata: {
+            fromTenant: ownTenant ? String(ownTenant) : null,
+            toTenant: String(req.tenantId),
+            via
+          }
+        });
+      }
 
       // Inject country from tenant config (for multi-country routing)
       if (tenant?.customsConfig?.country) {

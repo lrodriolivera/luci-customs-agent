@@ -317,7 +317,9 @@ describe('H1 Complete Flow Integration Tests', () => {
       // Simulate AEAT response
       const simulateAEATSubmission = (exp) => {
         const year = new Date().getFullYear().toString().slice(-2);
-        const random = Math.random().toString(36).substring(2, 14).toUpperCase();
+        // padEnd: toString(36) de algunos aleatorios da menos de 12 cifras y el
+        // MRN salia mas corto que el minimo que comprueba el test.
+        const random = Math.random().toString(36).substring(2, 14).padEnd(12, '0').toUpperCase();
         const mrn = `${year}ESIM${random}`;
 
         // Simulate channel assignment (70% green, 25% orange, 5% red)

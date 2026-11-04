@@ -7,17 +7,24 @@
 # codigos TARIC y de las declaraciones vivia en un bind mount sobre disco sin
 # RAID. Este script cierra ese agujero.
 #
-# Uso: ./backup-mongo.sh   (sin argumentos; pensado para cron)
+# Uso: ./backup-mongo.sh   (sin argumentos; lo lanza el LaunchAgent
+#      es.strixai.homelab.backup-luci a las 03:30)
+#
+# 25-sep-2026: portado al Mac Studio (macOS). Sin GNU stat/numfmt; destino en
+# ~/homelab-backups. Original del ProBook en backup-mongo.sh.bak-probook.
 
 set -Eeuo pipefail
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 readonly CONTAINER="luci-mongo"
 readonly DB="luci"
-readonly DEST="/srv/backups/luci"
+readonly DEST="${HOME}/homelab-backups/luci"
 readonly RETENTION_DAYS=30
 readonly STAMP="$(date +%Y%m%d-%H%M%S)"
 readonly ARCHIVE="${DEST}/luci-${STAMP}.archive.gz"
 readonly LOG="${DEST}/backup.log"
+
+human() { awk -v b="$1" 'BEGIN{split("B K M G T",u);i=1;while(b>=1024&&i<5){b/=1024;i++}printf("%.1f%s",b,u[i])}'; }
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG"; }
 
@@ -44,7 +51,7 @@ docker exec "$CONTAINER" mongodump --db="$DB" --archive --gzip > "$ARCHIVE"
 
 # Un dump vacio pesa unos pocos cientos de bytes; por debajo de 1 KB algo fue mal
 # aunque mongodump haya devuelto 0.
-readonly SIZE=$(stat -c%s "$ARCHIVE")
+readonly SIZE=$(wc -c < "$ARCHIVE" | tr -d " ")
 if (( SIZE < 1024 )); then
   log "ERROR: el archivo resultante es sospechosamente pequeno (${SIZE} bytes)."
   rm -f "$ARCHIVE"
@@ -54,7 +61,7 @@ fi
 # Verificar que el archivo es restaurable de verdad, no solo que existe.
 # --dryRun lee el archivo entero sin escribir en la BD.
 docker exec -i "$CONTAINER" mongorestore --archive --gzip --dryRun < "$ARCHIVE" >/dev/null 2>&1
-log "Backup OK: ${ARCHIVE} ($(numfmt --to=iec "$SIZE")) - integridad verificada"
+log "Backup OK: ${ARCHIVE} ($(human "$SIZE")) - integridad verificada"
 
 # Retencion: borrar copias mas viejas que RETENTION_DAYS.
 readonly DELETED=$(find "$DEST" -name 'luci-*.archive.gz' -mtime "+${RETENTION_DAYS}" -print -delete | wc -l)

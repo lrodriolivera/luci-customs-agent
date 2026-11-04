@@ -63,11 +63,16 @@ function getBaseUrl() {
  */
 async function sendSoap(soapXML, endpoint) {
   const { cert, key } = loadCertificate();
-  const url = getBaseUrl() + endpoint;
+  const baseUrl = getBaseUrl();
+  const url = baseUrl + endpoint;
 
-  // rejectUnauthorized:false se mantiene del original: la cadena de PRE no
-  // valida contra el almacen por defecto de Node.
-  const agent = new https.Agent({ cert, key, rejectUnauthorized: false });
+  // Solo PRE desactiva la verificacion del certificado del servidor: su cadena
+  // no valida contra el almacen por defecto de Node. Contra cualquier otro host
+  // (la AEAT real en produccion) se verifica siempre; si no, quien este en la
+  // ruta de red podria suplantar a Hacienda, leer la declaracion y devolver
+  // MRN/circuito falsos que se guardarian como respuesta oficial.
+  const rejectUnauthorized = baseUrl !== AEAT_BASE_URL_TEST;
+  const agent = new https.Agent({ cert, key, rejectUnauthorized });
 
   logger.info(`[AEAT-SUBMIT] Enviando a ${url}`);
 

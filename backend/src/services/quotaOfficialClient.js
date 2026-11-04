@@ -38,6 +38,8 @@
  * caliente debe tolerar el fallo de red y no presentar un timeout como "sin
  * contingente".
  */
+
+const { escapeRegex } = require('../utils/escapeRegex');
 const https = require('https');
 
 const BASE = 'https://ec.europa.eu/taxation_customs/dds2/taric/';
@@ -127,7 +129,7 @@ function parsearListado(html) {
 function campo(texto, etiqueta) {
   // El valor va tras la etiqueta separado por celdas vacias; se corta en la
   // siguiente etiqueta para no arrastrar el campo de al lado.
-  const re = new RegExp(`${etiqueta}\\s*\\|[\\s|]*([^|]*)`);
+  const re = new RegExp(`${escapeRegex(etiqueta)}\\s*\\|[\\s|]*([^|]*)`);
   const m = re.exec(texto);
   return m ? m[1].trim() : '';
 }

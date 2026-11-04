@@ -8,6 +8,7 @@
 const axios = require('axios');
 const logger = require('../config/logger');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 // BOE API Configuration
 const BOE_API_BASE = 'https://www.boe.es/datosabiertos/api';
 const BOE_LEGISLATION_ENDPOINT = '/legislacion-consolidada';
@@ -702,8 +703,8 @@ class RegulationService {
 
       // Search for article pattern
       const articlePatterns = [
-        new RegExp(`Artículo\\s*${article}[^0-9]`, 'gi'),
-        new RegExp(`Art\\.?\\s*${article}[^0-9]`, 'gi')
+        new RegExp(`Artículo\\s*${escapeRegex(article)}[^0-9]`, 'gi'),
+        new RegExp(`Art\\.?\\s*${escapeRegex(article)}[^0-9]`, 'gi')
       ];
 
       let found = false;

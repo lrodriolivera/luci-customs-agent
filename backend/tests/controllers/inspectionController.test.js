@@ -64,12 +64,12 @@ describe('list', () => {
     expect(opts.sortOrder).toBe('desc');
   });
 
-  test('sin tenant en el token no añade tenantId al filtro', async () => {
+  test('sin tenant en el token el filtro es tenantId null (solo documentos sin tenant)', async () => {
     svc.list.mockResolvedValue({ items: [] });
     const res = mockRes();
     await ctrl.list(req({ user: { id: 'u1' } }), res);
     const [filters] = svc.list.mock.calls[0];
-    expect(filters.tenantId).toBeUndefined();
+    expect(filters.tenantId).toBeNull();
   });
 
   test('500 si el service lanza', async () => {
@@ -234,21 +234,21 @@ describe('getPending / getDashboard: fallback de userId', () => {
     svc.getPending.mockResolvedValue([]);
     const res = mockRes();
     await ctrl.getPending(req({ query: { userId: 'qUser' } }), res);
-    expect(svc.getPending).toHaveBeenCalledWith('qUser');
+    expect(svc.getPending).toHaveBeenCalledWith('qUser', { tenantId: 'T1' });
   });
 
   test('getPending cae al id del token', async () => {
     svc.getPending.mockResolvedValue([]);
     const res = mockRes();
     await ctrl.getPending(req({ query: {} }), res);
-    expect(svc.getPending).toHaveBeenCalledWith('u1');
+    expect(svc.getPending).toHaveBeenCalledWith('u1', { tenantId: 'T1' });
   });
 
   test('getDashboard usa query.userId si viene', async () => {
     svc.getDashboard.mockResolvedValue({});
     const res = mockRes();
     await ctrl.getDashboard(req({ query: { userId: 'qUser' } }), res);
-    expect(svc.getDashboard).toHaveBeenCalledWith('qUser');
+    expect(svc.getDashboard).toHaveBeenCalledWith('qUser', { tenantId: 'T1' });
   });
 
   test('getPending 500 si lanza', async () => {
@@ -273,14 +273,14 @@ describe('getStats', () => {
     const res = mockRes();
     await ctrl.getStats(req({ query: { inspectionType: 'physical', assignedTo: 'u9' } }), res);
     const [filters] = svc.getStats.mock.calls[0];
-    expect(filters).toEqual({ inspectionType: 'physical', assignedTo: 'u9' });
+    expect(filters).toEqual({ tenantId: 'T1', inspectionType: 'physical', assignedTo: 'u9' });
   });
 
-  test('sin filtros pasa objeto vacío', async () => {
+  test('sin filtros pasa solo el tenant del usuario', async () => {
     svc.getStats.mockResolvedValue({});
     const res = mockRes();
     await ctrl.getStats(req({ query: {} }), res);
-    expect(svc.getStats.mock.calls[0][0]).toEqual({});
+    expect(svc.getStats.mock.calls[0][0]).toEqual({ tenantId: 'T1' });
   });
 
   test('500 si lanza', async () => {

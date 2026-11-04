@@ -33,6 +33,7 @@ async function _loadOwnedRequest(requestId, userId) {
 
 const crypto = require('crypto');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 // Configuracion PUE
 const PUE_CONFIG = {
   // Endpoint AEAT para envio de mensajes PUE
@@ -834,15 +835,17 @@ class PUEService {
   /**
    * Obtener estadisticas
    */
-  async getStats(filters = {}) {
-    return PUERequest.getStats(filters);
+  async getStats(filters = {}, tenantFilter = {}) {
+    return PUERequest.getStats(filters, tenantFilter);
   }
 
   /**
    * Listar solicitudes
    */
-  async list(filters = {}) {
-    const query = {};
+  async list(filters = {}, tenantFilter = {}) {
+    // tenantFilter = filtroTenant(req.user), aparte de filters (que incluye
+    // req.query): 'admin' es un rol de tenant y antes listaba todos los tenants.
+    const query = { ...tenantFilter };
 
     if (filters.pueType) query.pueType = filters.pueType;
     if (filters.status) query.status = filters.status;
@@ -850,11 +853,11 @@ class PUEService {
 
     if (filters.search) {
       query.$or = [
-        { reference: { $regex: filters.search, $options: 'i' } },
-        { pueReference: { $regex: filters.search, $options: 'i' } },
-        { 'operator.name': { $regex: filters.search, $options: 'i' } },
-        { 'operator.eori': { $regex: filters.search, $options: 'i' } },
-        { 'goods.taricCode': { $regex: filters.search, $options: 'i' } }
+        { reference: { $regex: escapeRegex(filters.search), $options: 'i' } },
+        { pueReference: { $regex: escapeRegex(filters.search), $options: 'i' } },
+        { 'operator.name': { $regex: escapeRegex(filters.search), $options: 'i' } },
+        { 'operator.eori': { $regex: escapeRegex(filters.search), $options: 'i' } },
+        { 'goods.taricCode': { $regex: escapeRegex(filters.search), $options: 'i' } }
       ];
     }
 
@@ -1014,10 +1017,12 @@ class PUEService {
   /**
    * Buscar declaracion por MRN y extraer datos para autorrelleno
    */
-  async lookupMRN(mrn, claveZeta) {
+  async lookupMRN(mrn, claveZeta, tenantFilter = {}) {
     try {
       const Expedition = require('../models/Expedition');
-      const expedition = await Expedition.findOne({ 'declaration.mrn': mrn });
+      // tenantFilter = filtroTenant(req.user): sin el, el MRN de otro tenant
+      // devolvia su importador, NIF, EORI y partidas (F1).
+      const expedition = await Expedition.findOne({ 'declaration.mrn': mrn, ...tenantFilter });
 
       if (!expedition) {
         return {

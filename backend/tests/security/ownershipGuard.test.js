@@ -44,7 +44,7 @@ const ID_DEL_CLIENTE = /\((req\.params|req\.body|body\.|data\.|\bid\b|\w+Id\b)/;
 
 /** Señales de que la propiedad se comprueba en esa funcion. */
 const COMPRUEBA_PROPIEDAD =
-  /ensureSameTenant|_loadOwned|createdBy|owner|tenantId|organizationId|req\.user\._id/;
+  /ensureSameTenant|_loadOwned|createdBy|owner|tenantId|organizationId|req\.user\._id|filtroTenant/;
 
 /**
  * Accesos permitidos, con el motivo por el que no necesitan guard.

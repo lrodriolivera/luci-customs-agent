@@ -67,7 +67,7 @@ describe('listados: aislamiento por tenant', () => {
     await request(app(ctrl.getRequirements)).get('/r');
 
     const [filtro] = mockRequirement.find.mock.calls[0];
-    expect(filtro.tenantId).toBe(TENANT_A);
+    expect(String(filtro.tenantId)).toBe(TENANT_A);
   });
 
   test('los filtros de negocio conviven con el de tenant', async () => {
@@ -78,7 +78,7 @@ describe('listados: aislamiento por tenant', () => {
     await request(app(ctrl.getRequirements)).get('/r?status=pending&channel=orange');
 
     const [filtro] = mockRequirement.find.mock.calls[0];
-    expect(filtro.tenantId).toBe(TENANT_A);
+    expect(String(filtro.tenantId)).toBe(TENANT_A);
     expect(filtro.status).toBe('pending');
     expect(filtro.channel).toBe('orange');
   });
@@ -91,7 +91,7 @@ describe('listados: aislamiento por tenant', () => {
     await request(app(ctrl.getRequirements)).get('/r?tenantId=otro');
 
     const [filtro] = mockRequirement.find.mock.calls[0];
-    expect(filtro.tenantId).toBe(TENANT_A);
+    expect(String(filtro.tenantId)).toBe(TENANT_A);
   });
 
   test('GET /paraduanero acota el filtro al tenant', async () => {
@@ -102,7 +102,7 @@ describe('listados: aislamiento por tenant', () => {
     await request(app(ctrl.list)).get('/r');
 
     const [filtro] = mockControl.find.mock.calls[0];
-    expect(filtro.tenantId).toBe(TENANT_A);
+    expect(String(filtro.tenantId)).toBe(TENANT_A);
   });
 
   test('las estadisticas H7 solo agregan expediciones del propio tenant', async () => {
@@ -114,7 +114,7 @@ describe('listados: aislamiento por tenant', () => {
     await request(app(ctrl.getH7Stats)).get('/r');
 
     const [query] = mockExpedition.find.mock.calls[0];
-    expect(query.tenantId).toBe(TENANT_A);
+    expect(String(query.tenantId)).toBe(TENANT_A);
     expect(query['declaration.type']).toBe('H7');
   });
 });

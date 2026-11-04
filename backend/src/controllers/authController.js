@@ -2,6 +2,8 @@ const crypto = require('crypto');
 const { User, Tenant } = require('../models');
 const logger = require('../config/logger');
 const cognitoService = require('../utils/cognitoService');
+const { puedeAsignarRol, puedeGestionarUsuario } = require('../constants/roles');
+const { filtroTenantOPlataforma } = require('../utils/tenantGuard');
 
 /**
  * Registro de nuevo usuario
@@ -285,8 +287,8 @@ const listUsers = async (req, res) => {
   try {
     const { page = 1, limit = 20, role, isActive } = req.query;
 
-    const query = {};
-    if (req.user.tenantId) query.tenantId = req.user.tenantId;
+    // filtroTenantOPlataforma: un admin sin tenant (legacy) no debe listar los usuarios de todos.
+    const query = { ...filtroTenantOPlataforma(req.user) };
     if (role) query.role = role;
     if (isActive !== undefined) query.isActive = isActive === 'true';
 
@@ -335,11 +337,23 @@ const updateUser = async (req, res) => {
       }
     });
 
+    // Un admin de tenant no puede ascender a nadie (ni a si mismo) a super_admin.
+    if (allowedUpdates.role !== undefined && !puedeAsignarRol(req.user, allowedUpdates.role)) {
+      return res.status(403).json({ success: false, error: 'No tienes permisos para asignar ese rol.' });
+    }
+
     // El filtro incluye el tenant del solicitante: requireRole('admin') es un
     // rol DE TENANT, asi que sin esto un admin podia cambiar el rol y los
     // permisos de un usuario de otro cliente conociendo su id.
-    const filtro = { _id: id };
-    if (req.user.tenantId) filtro.tenantId = req.user.tenantId;
+    const filtro = { _id: id, ...filtroTenantOPlataforma(req.user) };
+
+    // Un admin de tenant no puede quitarle (ni cambiarle) el rol a un super_admin.
+    if (allowedUpdates.role !== undefined) {
+      const objetivo = await User.findOne(filtro);
+      if (objetivo && !puedeGestionarUsuario(req.user, objetivo)) {
+        return res.status(403).json({ success: false, error: 'No puedes modificar a un super administrador.' });
+      }
+    }
 
     const user = await User.findOneAndUpdate(
       filtro,
@@ -624,6 +638,11 @@ const adminInvite = async (req, res) => {
       return res.status(400).json({ success: false, error: 'email, givenName y familyName son obligatorios' });
     }
 
+    // Antes de tocar Cognito: un admin de tenant no puede invitar a un super_admin.
+    if (!puedeAsignarRol(req.user, role)) {
+      return res.status(403).json({ success: false, error: 'No tienes permisos para asignar ese rol.' });
+    }
+
     const tempPassword = crypto.randomBytes(12).toString('base64').slice(0, 12) + 'A1!';
 
     const cognitoResult = await cognitoService.adminCreateUser(
@@ -685,8 +704,7 @@ const adminDisableUser = async (req, res) => {
 
     // Acotado al tenant del solicitante, igual que listUsers: 'admin' es un rol
     // de tenant y sin esto se podia desactivar a un usuario de otro cliente.
-    const filtro = { _id: id };
-    if (req.user.tenantId) filtro.tenantId = req.user.tenantId;
+    const filtro = { _id: id, ...filtroTenantOPlataforma(req.user) };
 
     const user = await User.findOne(filtro);
     if (!user) {

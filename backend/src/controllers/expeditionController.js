@@ -5,6 +5,7 @@ const emailService = require('../services/emailService');
 const aiService = require('../services/aiService');
 const { ensureSameTenant } = require('../utils/tenantGuard');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Crear nuevo expediente
  * POST /api/expeditions
@@ -219,10 +220,10 @@ const list = async (req, res) => {
     if (search) {
       andConditions.push({
         $or: [
-          { expeditionId: new RegExp(search, 'i') },
-          { 'client.companyName': new RegExp(search, 'i') },
-          { 'client.nif': new RegExp(search, 'i') },
-          { clientReference: new RegExp(search, 'i') }
+          { expeditionId: new RegExp(escapeRegex(search), 'i') },
+          { 'client.companyName': new RegExp(escapeRegex(search), 'i') },
+          { 'client.nif': new RegExp(escapeRegex(search), 'i') },
+          { clientReference: new RegExp(escapeRegex(search), 'i') }
         ]
       });
     }

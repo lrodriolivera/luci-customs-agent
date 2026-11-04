@@ -30,6 +30,7 @@ async function _loadOwnedExpedition(expeditionId, userId) {
 const aeatSubmitService = require('./aeat/aeatSubmitService');
 const logger = require('../config/logger');
 
+const { escapeRegex } = require('../utils/escapeRegex');
 /**
  * Traduce los rechazos del CC007 que llegan en jerga interna de AEAT.
  *
@@ -216,10 +217,10 @@ const transitService = {
     if (filters.status) query.status = filters.status;
     if (filters.search) {
       query.$or = [
-        { mrn: { $regex: filters.search, $options: 'i' } },
-        { lrn: { $regex: filters.search, $options: 'i' } },
-        { reference: { $regex: filters.search, $options: 'i' } },
-        { 'principal.name': { $regex: filters.search, $options: 'i' } }
+        { mrn: { $regex: escapeRegex(filters.search), $options: 'i' } },
+        { lrn: { $regex: escapeRegex(filters.search), $options: 'i' } },
+        { reference: { $regex: escapeRegex(filters.search), $options: 'i' } },
+        { 'principal.name': { $regex: escapeRegex(filters.search), $options: 'i' } }
       ];
     }
 

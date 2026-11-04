@@ -17,6 +17,7 @@ const workflowEngine = require('./workflowEngine');
 const { registerAllHandlers } = require('./actionHandlers');
 const { workflowEvents } = require('./eventEmitter');
 
+const { escapeRegex } = require('../../utils/escapeRegex');
 // ==================== Workflow Service ====================
 
 class WorkflowService {
@@ -289,9 +290,9 @@ class WorkflowService {
     if (enabled !== undefined) query.enabled = enabled;
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } }
+        { name: { $regex: escapeRegex(search), $options: 'i' } },
+        { description: { $regex: escapeRegex(search), $options: 'i' } },
+        { tags: { $in: [new RegExp(escapeRegex(search), 'i')] } }
       ];
     }
 

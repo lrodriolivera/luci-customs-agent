@@ -5,6 +5,7 @@
 
 const inspectionService = require('../services/inspectionService');
 const logger = require('../config/logger');
+const { ensureSameTenant, filtroTenant } = require('../utils/tenantGuard');
 
 const inspectionController = {
   /**
@@ -24,10 +25,9 @@ const inspectionController = {
         sortOrder = 'asc'
       } = req.query;
 
-      const filters = {};
-      // El tenant sale SIEMPRE del token, nunca de req.query: el resto de este
+      // El tenant sale SIEMPRE del usuario, nunca de req.query: el resto de este
       // filtro lo construye el cliente y seria trivial de suplantar.
-      if (req.user?.tenantId) filters.tenantId = req.user.tenantId;
+      const filters = filtroTenant(req.user);
       if (status) filters.status = status;
       if (inspectionType) filters.inspectionType = inspectionType;
       if (authorityType) filters['authority.type'] = authorityType;
@@ -61,7 +61,9 @@ const inspectionController = {
     try {
       const inspection = await inspectionService.getById(req.params.id);
 
-      if (!inspection) {
+      // El service hace un findById plano: sin esto cualquier usuario leia la
+      // inspeccion de otro tenant conociendo su id. Mismo 404 que "no existe".
+      if (!inspection || !ensureSameTenant(inspection, req, null)) {
         return res.status(404).json({
           success: false,
           error: 'Inspección no encontrada'
@@ -448,7 +450,7 @@ const inspectionController = {
    */
   async getToday(req, res) {
     try {
-      const inspections = await inspectionService.getToday();
+      const inspections = await inspectionService.getToday(filtroTenant(req.user));
 
       res.json({
         success: true,
@@ -470,7 +472,7 @@ const inspectionController = {
   async getPending(req, res) {
     try {
       const userId = req.query.userId || req.user?.id;
-      const inspections = await inspectionService.getPending(userId);
+      const inspections = await inspectionService.getPending(userId, filtroTenant(req.user));
 
       res.json({
         success: true,
@@ -502,7 +504,8 @@ const inspectionController = {
 
       const result = await inspectionService.getCalendar(
         new Date(startDate),
-        new Date(endDate)
+        new Date(endDate),
+        filtroTenant(req.user)
       );
 
       res.json({
@@ -525,7 +528,7 @@ const inspectionController = {
   async getDashboard(req, res) {
     try {
       const userId = req.query.userId || req.user?.id;
-      const dashboard = await inspectionService.getDashboard(userId);
+      const dashboard = await inspectionService.getDashboard(userId, filtroTenant(req.user));
 
       res.json({
         success: true,
@@ -546,7 +549,7 @@ const inspectionController = {
    */
   async getStats(req, res) {
     try {
-      const filters = {};
+      const filters = filtroTenant(req.user);
       if (req.query.inspectionType) filters.inspectionType = req.query.inspectionType;
       if (req.query.assignedTo) filters.assignedTo = req.query.assignedTo;
 

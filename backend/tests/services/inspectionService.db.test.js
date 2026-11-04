@@ -40,6 +40,9 @@ beforeEach(() => {
 });
 
 const TENANT_A = new mongoose.Types.ObjectId();
+// Las inspecciones heredan TENANT_A del expediente, y los listados se acotan al
+// tenant del usuario (utils/tenantListGuard).
+const DEL_TENANT_A = { tenantId: TENANT_A };
 const TENANT_B = new mongoose.Types.ObjectId();
 
 /** Ubicación mínima válida (type y name son requeridos por el schema). */
@@ -180,7 +183,7 @@ describe('list', () => {
   test('pagina y filtra', async () => {
     await crearInspeccion({ inspectionType: 'physical' });
     await crearInspeccion({ inspectionType: 'scanner' });
-    const r = await svc.list({ inspectionType: 'physical' }, { limit: 10 });
+    const r = await svc.list({ ...DEL_TENANT_A, inspectionType: 'physical' }, { limit: 10 });
     expect(r.total).toBe(1);
     expect(r.inspections[0].inspectionType).toBe('physical');
     expect(r.pages).toBe(1);
@@ -189,7 +192,7 @@ describe('list', () => {
   test('sin filtros devuelve todo con paginación por defecto', async () => {
     await crearInspeccion();
     await crearInspeccion();
-    const r = await svc.list();
+    const r = await svc.list({ ...DEL_TENANT_A });
     expect(r.total).toBe(2);
     expect(r.page).toBe(1);
     expect(r.limit).toBe(20);
@@ -197,7 +200,7 @@ describe('list', () => {
 
   test('sortOrder desc no lanza', async () => {
     await crearInspeccion();
-    const r = await svc.list({}, { sortOrder: 'desc', sortBy: 'createdAt' });
+    const r = await svc.list({ ...DEL_TENANT_A }, { sortOrder: 'desc', sortBy: 'createdAt' });
     expect(r.inspections.length).toBe(1);
   });
 });
@@ -208,7 +211,7 @@ describe('calendario y consultas por fecha', () => {
     const fecha = new Date();
     fecha.setHours(10, 0, 0, 0);
     await crearInspeccion({ scheduling: { scheduledDate: fecha }, status: 'scheduled' });
-    const r = await svc.getScheduledForDate(fecha);
+    const r = await svc.getScheduledForDate(fecha, DEL_TENANT_A);
     expect(r.length).toBe(1);
   });
 
@@ -216,7 +219,7 @@ describe('calendario y consultas por fecha', () => {
     const hoy = new Date();
     hoy.setHours(9, 0, 0, 0);
     await crearInspeccion({ scheduling: { scheduledDate: hoy }, status: 'confirmed' });
-    const r = await svc.getToday();
+    const r = await svc.getToday(DEL_TENANT_A);
     expect(r.length).toBe(1);
   });
 
@@ -224,9 +227,9 @@ describe('calendario y consultas por fecha', () => {
     const user = new mongoose.Types.ObjectId();
     await crearInspeccion({ status: 'requested', assignedTo: user });
     await crearInspeccion({ status: 'completed' });
-    const todas = await svc.getPending();
+    const todas = await svc.getPending(null, DEL_TENANT_A);
     expect(todas.length).toBe(1);
-    const mias = await svc.getPending(user);
+    const mias = await svc.getPending(user, DEL_TENANT_A);
     expect(mias.length).toBe(1);
   });
 
@@ -236,7 +239,7 @@ describe('calendario y consultas por fecha', () => {
     await crearInspeccion({ scheduling: { scheduledDate: fecha }, status: 'scheduled' });
     const inicio = new Date(Date.now() - 86400000);
     const fin = new Date(Date.now() + 172800000);
-    const r = await svc.getCalendar(inicio, fin);
+    const r = await svc.getCalendar(inicio, fin, DEL_TENANT_A);
     const clave = fecha.toISOString().split('T')[0];
     expect(r.grouped[clave]).toHaveLength(1);
     expect(r.inspections.length).toBe(1);
@@ -446,7 +449,7 @@ describe('estadísticas y dashboard', () => {
   test('getStats agrega por estado/tipo/resultado', async () => {
     await crearInspeccion({ status: 'requested' });
     await crearInspeccion({ status: 'completed', result: 'approved' });
-    const stats = await svc.getStats();
+    const stats = await svc.getStats(DEL_TENANT_A);
     expect(stats.total).toBe(2);
     expect(stats.byStatus.requested).toBe(1);
     expect(stats.byResult.approved).toBe(1);
@@ -459,7 +462,7 @@ describe('estadísticas y dashboard', () => {
     await Inspection.findByIdAndUpdate(completadaReciente._id, {
       'execution.completedAt': new Date()
     });
-    const dash = await svc.getDashboard();
+    const dash = await svc.getDashboard(null, DEL_TENANT_A);
     expect(dash.stats).toBeDefined();
     expect(dash.summary.totalPending).toBeGreaterThanOrEqual(1);
     expect(Array.isArray(dash.recentCompleted)).toBe(true);
@@ -468,7 +471,7 @@ describe('estadísticas y dashboard', () => {
   test('getDashboard con userId filtra por assignedTo', async () => {
     const user = new mongoose.Types.ObjectId();
     await crearInspeccion({ status: 'requested', assignedTo: user });
-    const dash = await svc.getDashboard(user);
+    const dash = await svc.getDashboard(user, DEL_TENANT_A);
     expect(dash.summary.totalPending).toBe(1);
   });
 });

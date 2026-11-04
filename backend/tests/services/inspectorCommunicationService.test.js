@@ -10,6 +10,14 @@ const InspectorCommunication = require('../../src/models/InspectorCommunication'
 const Deadline = require('../../src/models/Deadline');
 const deadlineService = require('../../src/services/deadlineService');
 
+// tenantId es obligatorio en una comunicacion nueva y el service lo toma del
+// usuario que la crea. Los usuarios de estos tests no existen en BD, asi que
+// User.findById se simula (beforeEach de abajo) con un usuario de TENANT_TEST, y
+// los listados se acotan a ese tenant (utils/tenantListGuard).
+const UserReal = require('../../src/models/User');
+const TENANT_TEST = new mongoose.Types.ObjectId();
+const SIN_TENANT = { tenantId: TENANT_TEST };
+
 // Mock solo deadlineService (frontera) y logger
 jest.mock('../../src/services/deadlineService');
 jest.mock('../../src/config/logger');
@@ -42,6 +50,12 @@ if (!mongoose.models.Requirement) {
 
 describe('Inspector Communication Service', () => {
   usarBaseDeDatosEnMemoria();
+
+  beforeEach(() => {
+    jest.spyOn(UserReal, 'findById').mockReturnValue({
+      select: () => ({ lean: () => Promise.resolve({ tenantId: TENANT_TEST }) })
+    });
+  });
 
   describe('Configuration', () => {
     test('should have communication types defined', () => {
@@ -556,16 +570,31 @@ describe('Inspector Communication Service', () => {
       expect(comm.legalBasis[0].law).toMatch(/LGT/);
     });
 
-    test('debe crear comunicación sin userId (jobs automáticos)', async () => {
+    // tenantId es obligatorio en una comunicacion nueva: sin usuario se toma el
+    // del expediente referenciado, y sin ninguno de los dos no se crea.
+    test('sin userId ni expediente no se crea (no hay de donde sacar el tenant)', async () => {
       const data = {
         communicationType: 'information_request',
         subject: 'Solicitud automática',
         authority: { type: 'MAPA' }
       };
 
+      await expect(inspectorCommunicationService.create(data, null)).rejects.toThrow(/tenantId/);
+    });
+
+    test('sin userId toma el tenant del expediente referenciado', async () => {
+      const tenantExp = new mongoose.Types.ObjectId();
+      const { insertedId } = await mongoose.model('Expedition').collection.insertOne({ tenantId: tenantExp });
+      const data = {
+        communicationType: 'information_request',
+        subject: 'Solicitud automática',
+        authority: { type: 'MAPA' },
+        references: { expeditionId: insertedId }
+      };
+
       const comm = await inspectorCommunicationService.create(data, null);
 
-      expect(comm).toBeDefined();
+      expect(String(comm.tenantId)).toBe(String(tenantExp));
       // Mongoose devuelve null para campos no establecidos, no undefined
       expect(comm.createdBy).toBeNull();
     });
@@ -791,15 +820,12 @@ describe('Inspector Communication Service', () => {
       expect(comm.client.name).toBe('Test Client SL');
     });
 
-    test('debe crear respuesta sin userId', async () => {
-      const comm = await inspectorCommunicationService.createRequirementResponse(
+    test('sin userId y con un expediente inexistente no crea la respuesta (tenantId obligatorio)', async () => {
+      await expect(inspectorCommunicationService.createRequirementResponse(
         requirement,
         {},
         null
-      );
-
-      expect(comm).toBeDefined();
-      expect(comm.createdBy).toBeNull();
+      )).rejects.toThrow(/tenantId/);
     });
 
     test('debe usar AEAT por defecto si issuingAuthority no está definido', async () => {
@@ -887,10 +913,7 @@ describe('Inspector Communication Service', () => {
         authority: { type: 'AEAT' }
       };
 
-      const comm = await inspectorCommunicationService.createAllegation(data, null);
-
-      expect(comm).toBeDefined();
-      expect(comm.createdBy).toBeNull();
+      await expect(inspectorCommunicationService.createAllegation(data, null)).rejects.toThrow(/tenantId/);
     });
   });
 
@@ -919,16 +942,13 @@ describe('Inspector Communication Service', () => {
       expect(comm.category).toBe('appeal');
     });
 
-    test('debe crear recurso administrativo sin userId', async () => {
+    test('sin userId ni expediente no crea recurso administrativo (tenantId obligatorio)', async () => {
       const data = {
         subject: 'Recurso automático',
         authority: { type: 'AEAT' }
       };
 
-      const comm = await inspectorCommunicationService.createAdministrativeAppeal(data, null);
-
-      expect(comm).toBeDefined();
-      expect(comm.createdBy).toBeNull();
+      await expect(inspectorCommunicationService.createAdministrativeAppeal(data, null)).rejects.toThrow(/tenantId/);
     });
   });
 
@@ -980,16 +1000,13 @@ describe('Inspector Communication Service', () => {
       expect(comm.authority.type).toBe('TEAR');
     });
 
-    test('debe crear recurso económico sin userId', async () => {
+    test('sin userId ni expediente no crea recurso económico (tenantId obligatorio)', async () => {
       const data = {
         subject: 'Recurso automático',
         toTEAC: false
       };
 
-      const comm = await inspectorCommunicationService.createEconomicAppeal(data, null);
-
-      expect(comm).toBeDefined();
-      expect(comm.createdBy).toBeNull();
+      await expect(inspectorCommunicationService.createEconomicAppeal(data, null)).rejects.toThrow(/tenantId/);
     });
   });
 
@@ -1053,7 +1070,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('list debe retornar todas las comunicaciones activas', async () => {
-      const result = await inspectorCommunicationService.list({}, {});
+      const result = await inspectorCommunicationService.list({ ...SIN_TENANT }, {});
 
       expect(result.communications).toBeDefined();
       expect(result.communications.length).toBe(3);
@@ -1063,7 +1080,7 @@ describe('Inspector Communication Service', () => {
 
     test('list debe filtrar por communicationType', async () => {
       const result = await inspectorCommunicationService.list(
-        { communicationType: 'allegation' },
+        { ...SIN_TENANT, communicationType: 'allegation' },
         {}
       );
 
@@ -1073,7 +1090,7 @@ describe('Inspector Communication Service', () => {
 
     test('list debe filtrar por status', async () => {
       const result = await inspectorCommunicationService.list(
-        { status: 'sent' },
+        { ...SIN_TENANT, status: 'sent' },
         {}
       );
 
@@ -1083,7 +1100,7 @@ describe('Inspector Communication Service', () => {
 
     test('list debe paginar correctamente', async () => {
       const result = await inspectorCommunicationService.list(
-        {},
+        { ...SIN_TENANT },
         { page: 1, limit: 2 }
       );
 
@@ -1094,7 +1111,7 @@ describe('Inspector Communication Service', () => {
 
     test('list debe ordenar por campo especificado', async () => {
       const result = await inspectorCommunicationService.list(
-        {},
+        { ...SIN_TENANT },
         { sortBy: 'subject', sortOrder: 'asc' }
       );
 
@@ -1103,7 +1120,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('list debe usar defaults si options está vacío', async () => {
-      const result = await inspectorCommunicationService.list({}, {});
+      const result = await inspectorCommunicationService.list({ ...SIN_TENANT }, {});
 
       expect(result.page).toBe(1);
       expect(result.limit).toBe(20);
@@ -1112,13 +1129,13 @@ describe('Inspector Communication Service', () => {
     });
 
     test('list debe calcular páginas correctamente', async () => {
-      const result = await inspectorCommunicationService.list({}, { limit: 2 });
+      const result = await inspectorCommunicationService.list({ ...SIN_TENANT }, { limit: 2 });
 
       expect(result.pages).toBe(2); // 3 comunicaciones / 2 por página = 2 páginas
     });
 
     test('list debe funcionar sin argumentos (todos defaults)', async () => {
-      const result = await inspectorCommunicationService.list();
+      const result = await inspectorCommunicationService.list({ ...SIN_TENANT });
 
       expect(result.communications).toBeDefined();
       expect(result.page).toBe(1);
@@ -1167,7 +1184,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('debe retornar comunicaciones pendientes de un usuario', async () => {
-      const pending = await inspectorCommunicationService.getPending(user1);
+      const pending = await inspectorCommunicationService.getPending(user1, SIN_TENANT);
 
       expect(pending.length).toBe(2);
       // No verifica el every porque populate podría no devolver el ObjectId completo
@@ -1175,7 +1192,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('debe retornar todas las pendientes sin filtro de usuario', async () => {
-      const pending = await inspectorCommunicationService.getPending(null);
+      const pending = await inspectorCommunicationService.getPending(null, SIN_TENANT);
 
       expect(pending.length).toBe(3);
     });
@@ -1207,21 +1224,21 @@ describe('Inspector Communication Service', () => {
     });
 
     test('debe retornar solo alegaciones y recursos', async () => {
-      const appeals = await inspectorCommunicationService.getAppeals();
+      const appeals = await inspectorCommunicationService.getAppeals(null, SIN_TENANT);
 
       expect(appeals.length).toBe(2);
       expect(appeals.every(a => ['allegation', 'administrative_appeal', 'economic_appeal', 'judicial_appeal'].includes(a.communicationType))).toBe(true);
     });
 
     test('debe filtrar por status', async () => {
-      const appeals = await inspectorCommunicationService.getAppeals('sent');
+      const appeals = await inspectorCommunicationService.getAppeals('sent', SIN_TENANT);
 
       expect(appeals.length).toBe(1);
       expect(appeals[0].status).toBe('sent');
     });
 
     test('debe retornar todos los appeals sin filtro de status', async () => {
-      const appeals = await inspectorCommunicationService.getAppeals(null);
+      const appeals = await inspectorCommunicationService.getAppeals(null, SIN_TENANT);
 
       expect(appeals.length).toBe(2);
     });
@@ -1263,7 +1280,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('debe retornar solo comunicaciones vencidas no enviadas', async () => {
-      const overdue = await inspectorCommunicationService.getOverdue();
+      const overdue = await inspectorCommunicationService.getOverdue(SIN_TENANT);
 
       expect(overdue.length).toBe(1);
       expect(overdue[0].subject).toBe('Vencida');
@@ -1407,6 +1424,7 @@ describe('Inspector Communication Service', () => {
     test('comunicación sin createdBy permite acceso a cualquier userId', async () => {
       // Crear comunicación legacy sin createdBy
       const legacyComm = new InspectorCommunication({
+        tenantId: TENANT_TEST,
         communicationType: 'requirement_response',
         subject: 'Legacy sin owner',
         authority: { type: 'AEAT' },
@@ -1770,7 +1788,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('debe retornar estadísticas completas', async () => {
-      const stats = await inspectorCommunicationService.getStats();
+      const stats = await inspectorCommunicationService.getStats(SIN_TENANT);
 
       expect(stats).toBeDefined();
       expect(stats.byType).toBeDefined();
@@ -1800,7 +1818,7 @@ describe('Inspector Communication Service', () => {
         assignedTo: user2
       }, user2);
 
-      const stats = await inspectorCommunicationService.getStats({ assignedTo: user1 });
+      const stats = await inspectorCommunicationService.getStats({ ...SIN_TENANT, assignedTo: user1 });
 
       expect(stats.total).toBe(1);
     });
@@ -1846,7 +1864,7 @@ describe('Inspector Communication Service', () => {
     });
 
     test('debe retornar dashboard completo', async () => {
-      const dashboard = await inspectorCommunicationService.getDashboard();
+      const dashboard = await inspectorCommunicationService.getDashboard(null, SIN_TENANT);
 
       expect(dashboard).toBeDefined();
       expect(dashboard.stats).toBeDefined();
@@ -1867,7 +1885,7 @@ describe('Inspector Communication Service', () => {
         assignedTo: user1
       }, user1);
 
-      const dashboard = await inspectorCommunicationService.getDashboard(user1);
+      const dashboard = await inspectorCommunicationService.getDashboard(user1, SIN_TENANT);
 
       expect(dashboard.stats.total).toBe(1);
     });
@@ -1876,7 +1894,7 @@ describe('Inspector Communication Service', () => {
       // Crear una suite vacía limpiando todo
       await InspectorCommunication.deleteMany({});
 
-      const dashboard = await inspectorCommunicationService.getDashboard();
+      const dashboard = await inspectorCommunicationService.getDashboard(null, SIN_TENANT);
 
       expect(dashboard.stats.total).toBe(0);
       expect(dashboard.summary.overdue).toBe(0);
@@ -1910,7 +1928,7 @@ describe('Inspector Communication Service', () => {
         await inspectorCommunicationService.updateStatus(comm._id, 'approved', '', userId);
       }
 
-      const dashboard = await inspectorCommunicationService.getDashboard();
+      const dashboard = await inspectorCommunicationService.getDashboard(null, SIN_TENANT);
 
       // 2 draft + 3 approved = 5. El comportamiento buggy habría devuelto 2
       // (el conteo de 'draft', primer operando truthy), no la suma.
@@ -1939,7 +1957,7 @@ describe('Inspector Communication Service', () => {
         authority: { type: 'AEAT' }
       }, userId);
 
-      const result = await inspectorCommunicationService.list({}, {
+      const result = await inspectorCommunicationService.list({ ...SIN_TENANT }, {
         sortBy: 'subject'
         // sortOrder no especificado, debe ser 'desc' por defecto
       });
@@ -1956,7 +1974,7 @@ describe('Inspector Communication Service', () => {
         authority: { type: 'AEAT' }
       }, userId);
 
-      const stats = await inspectorCommunicationService.getStats();
+      const stats = await inspectorCommunicationService.getStats(SIN_TENANT);
 
       expect(stats.byCategory.response).toBeDefined();
       // Categoría 'appeal' no tiene datos, debe faltar o ser undefined

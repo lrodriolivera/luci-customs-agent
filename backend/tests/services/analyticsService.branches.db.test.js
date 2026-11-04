@@ -55,26 +55,41 @@ describe('analyticsService - Cobertura de Ramas', () => {
 
     test('LAST_7_DAYS retorna 7 días hacia atrás', () => {
       const range = analyticsService.getDateRange('last_7_days');
-      const daysDiff = Math.ceil((range.end - range.start) / (24 * 60 * 60 * 1000));
+      // Se comparan dias de calendario, no milisegundos: si el rango cruza un
+      // cambio de hora, (end - start) / 24h sale con una hora de mas o de menos
+      // y Math.ceil sumaba un dia (fallaba en noviembre, tras el cambio de octubre).
+      const esperado = new Date();
+      esperado.setHours(0, 0, 0, 0);
+      esperado.setDate(esperado.getDate() - 7);
 
-      expect(daysDiff).toBeGreaterThanOrEqual(7);
-      expect(daysDiff).toBeLessThanOrEqual(8);
+      expect(range.start.getTime()).toBe(esperado.getTime());
+      expect(range.end.getTime()).toBeGreaterThanOrEqual(range.start.getTime());
     });
 
     test('LAST_30_DAYS retorna 30 días hacia atrás', () => {
       const range = analyticsService.getDateRange('last_30_days');
-      const daysDiff = Math.ceil((range.end - range.start) / (24 * 60 * 60 * 1000));
+      // Se comparan dias de calendario, no milisegundos: si el rango cruza un
+      // cambio de hora, (end - start) / 24h sale con una hora de mas o de menos
+      // y Math.ceil sumaba un dia (fallaba en noviembre, tras el cambio de octubre).
+      const esperado = new Date();
+      esperado.setHours(0, 0, 0, 0);
+      esperado.setDate(esperado.getDate() - 30);
 
-      expect(daysDiff).toBeGreaterThanOrEqual(30);
-      expect(daysDiff).toBeLessThanOrEqual(31);
+      expect(range.start.getTime()).toBe(esperado.getTime());
+      expect(range.end.getTime()).toBeGreaterThanOrEqual(range.start.getTime());
     });
 
     test('LAST_90_DAYS retorna 90 días hacia atrás', () => {
       const range = analyticsService.getDateRange('last_90_days');
-      const daysDiff = Math.ceil((range.end - range.start) / (24 * 60 * 60 * 1000));
+      // Se comparan dias de calendario, no milisegundos: si el rango cruza un
+      // cambio de hora, (end - start) / 24h sale con una hora de mas o de menos
+      // y Math.ceil sumaba un dia (fallaba en noviembre, tras el cambio de octubre).
+      const esperado = new Date();
+      esperado.setHours(0, 0, 0, 0);
+      esperado.setDate(esperado.getDate() - 90);
 
-      expect(daysDiff).toBeGreaterThanOrEqual(90);
-      expect(daysDiff).toBeLessThanOrEqual(91);
+      expect(range.start.getTime()).toBe(esperado.getTime());
+      expect(range.end.getTime()).toBeGreaterThanOrEqual(range.start.getTime());
     });
 
     test('THIS_MONTH retorna desde el día 1 del mes actual', () => {

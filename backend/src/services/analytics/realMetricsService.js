@@ -228,7 +228,9 @@ async function cumplimiento(tenantId, { desde, hasta } = {}) {
     : {};
 
   const [inspecciones, requerimientos, garantias, reqPendientes] = await Promise.all([
-    Inspection.countDocuments(rango({})),
+    // Sin tenant: solo inspecciones sin tenant, nunca las de toda la plataforma
+    // (utils/tenantListGuard exige tenantId en el filtro).
+    Inspection.countDocuments(_conRango({ tenantId: tenantId ? _comoObjectId(tenantId) : null }, desde, hasta)),
     Requirement.countDocuments(rango({})),
     Guarantee.countDocuments(_conRango(garantiasDeUsuarios, desde, hasta)),
     Requirement.countDocuments(rango({ status: { $in: ['pending', 'in_progress'] } }))

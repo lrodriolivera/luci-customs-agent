@@ -164,7 +164,7 @@ describe('classificationController.markSearchAsUsed', () => {
     await request(app(ctrl.markSearchAsUsed, 'put', '/r/:searchId')).put('/r/s1').send({});
 
     const [filtro] = mockSearchHistory.findOneAndUpdate.mock.calls[0];
-    expect(filtro).toEqual({ _id: 's1', tenantId: TENANT_A });
+    expect({ ...filtro, tenantId: String(filtro.tenantId) }).toEqual({ _id: 's1', tenantId: TENANT_A });
   });
 
   test('404 si la busqueda es de otro tenant', async () => {
