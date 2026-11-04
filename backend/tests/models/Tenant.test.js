@@ -89,7 +89,10 @@ describe('Modelo Tenant', () => {
     });
 
     it('impide dos tenants con el mismo slug (unique)', async () => {
-      // Arrange
+      // Arrange: Mongoose crea los indices en segundo plano al compilar el
+      // modelo. Con los workers en paralelo del CI el duplicado llegaba antes
+      // que el indice unique y se insertaba sin error. init() espera al indice.
+      await Tenant.init();
       await crearTenant({ slug: 'slug-repetido' });
 
       // Act
