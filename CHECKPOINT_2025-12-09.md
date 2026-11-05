@@ -57,7 +57,7 @@ luci-customs-agent/
 ### Usuario de prueba
 ```
 Email: admin@stocklogistic.com
-Password: admin123
+Password: <ver 1Password>
 Rol: admin
 ```
 
@@ -318,7 +318,7 @@ curl http://localhost:8003/health
 ```
 URL: http://localhost:3003/login
 Email: admin@stocklogistic.com
-Password: admin123
+Password: <ver 1Password>
 ```
 
 ---

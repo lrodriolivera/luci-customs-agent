@@ -13,7 +13,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -59,24 +58,6 @@ export default function LoginScreen() {
       }
     } catch (err) {
       setError('Error de conexion. Verifica tu red.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Demo login for testing
-  const handleDemoLogin = async () => {
-    setEmail('admin@stocklogistic.es');
-    setPassword('admin123');
-    setLoading(true);
-
-    try {
-      const result = await login('admin@stocklogistic.es', 'admin123');
-      if (!result.success) {
-        Alert.alert('Demo', 'Usuario demo: admin@stocklogistic.es / admin123');
-      }
-    } catch (err) {
-      Alert.alert('Error', 'No se pudo conectar con el servidor');
     } finally {
       setLoading(false);
     }
@@ -158,15 +139,6 @@ export default function LoginScreen() {
             ) : (
               <Text style={styles.loginButtonText}>Iniciar Sesion</Text>
             )}
-          </TouchableOpacity>
-
-          {/* Demo Button */}
-          <TouchableOpacity
-            style={styles.demoButton}
-            onPress={handleDemoLogin}
-            disabled={loading}
-          >
-            <Text style={styles.demoButtonText}>Entrar con cuenta demo</Text>
           </TouchableOpacity>
         </View>
 
@@ -280,14 +252,6 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
-  },
-  demoButton: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  demoButtonText: {
-    color: COLORS.gray,
-    fontSize: 14,
   },
   footer: {
     alignItems: 'center',
