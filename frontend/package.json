@@ -59,5 +59,8 @@
     "test:e2e:cypress": "cypress run --spec 'cypress/e2e/smoke-*.cy.js' --config 'specPattern=cypress/e2e/smoke-*.cy.js,video=false' --browser electron --headless",
     "test:e2e:playwright": "playwright test --project=chromium-headless-shell",
     "test:regression": "cypress run --spec 'cypress/e2e/regression-*.cy.js' --config 'specPattern=cypress/e2e/regression-*.cy.js,video=false' --browser electron --headless"
+  },
+  "overrides": {
+    "esbuild": "^0.25.0"
   }
 }
