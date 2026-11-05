@@ -4,6 +4,9 @@ import * as cognitoService from '../services/cognitoService'
 
 const AuthContext = createContext(null)
 
+// Claves de localStorage con datos del tenant (TenantSettings, Dashboard, H7).
+const TENANT_STORAGE_KEYS = ['customsCountries', 'customsCountryConfigs', 'activeCustomsCountry']
+
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) throw new Error('useAuth must be used within an AuthProvider')
@@ -151,6 +154,9 @@ export const AuthProvider = ({ children }) => {
     } catch (_) {}
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    // Datos por tenant cacheados en el navegador: no deben pasar al siguiente usuario (F10).
+    // Se conservan las preferencias del dispositivo (sidebar-collapsed, cookie_consent, luci-help-seen).
+    TENANT_STORAGE_KEYS.forEach((clave) => localStorage.removeItem(clave))
     delete api.defaults.headers.common['Authorization']
     setUser(null)
   }
