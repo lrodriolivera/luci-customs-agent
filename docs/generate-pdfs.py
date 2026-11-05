@@ -209,7 +209,7 @@ def generate_tester_guide():
     # Acceso
     story.append(Paragraph('1. Acceso al sistema', h1_style))
     story.append(Paragraph('URL: https://aduanas.strixai.ai', bold_style))
-    data = [['Campo', 'Valor'], ['Email', 'test@luci.es'], ['Password', 'test123'], ['Rol', 'Admin (todos los permisos)']]
+    data = [['Campo', 'Valor'], ['Email', 'test@luci.es'], ['Password', '<ver 1Password>'], ['Rol', 'Admin (todos los permisos)']]
     story.append(make_table(data, col_widths=[5*cm, 9*cm]))
     add_screenshot(story, find_screenshot('01-01-login-page.png'), 'Pantalla de login')
     story.append(PageBreak())

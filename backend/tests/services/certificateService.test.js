@@ -35,7 +35,7 @@ beforeEach(() => {
  * Por defecto: emisor FNMT, persona fisica, con permiso de firma y vigente.
  */
 function generarP12({
-  password = 'test123',
+  password = 'dummy-test-pass',
   diasHastaExpiracion = 365,
   diasDesdeInicio = 1,
   cn = 'JUAN PEREZ GARCIA',
@@ -81,7 +81,7 @@ function generarP12({
 
 /** Importa un P12 recien generado y devuelve el resultado del servicio. */
 async function importarCertValido(opts = {}) {
-  const { password = 'test123', metadata = {}, ...certOpts } = opts;
+  const { password = 'dummy-test-pass', metadata = {}, ...certOpts } = opts;
   const p12 = generarP12({ password, ...certOpts });
   return certificateService.importCertificate(p12, password, metadata);
 }
@@ -189,7 +189,7 @@ describe('getCertificateForSigning', () => {
   test('certificado no activo (revocado) no se entrega para firmar', async () => {
     const imp = await importarCertValido();
     certificateService.certificates.get(imp.certificateId).status = 'revoked';
-    const r = await certificateService.getCertificateForSigning(imp.certificateId, 'test123');
+    const r = await certificateService.getCertificateForSigning(imp.certificateId, 'dummy-test-pass');
     expect(r.success).toBe(false);
     expect(r.error).toMatch(/no activo/i);
   });
@@ -199,7 +199,7 @@ describe('getCertificateForSigning', () => {
     // forzamos validTo al pasado
     const rec = certificateService.certificates.get(imp.certificateId);
     rec.validTo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-    const r = await certificateService.getCertificateForSigning(imp.certificateId, 'test123');
+    const r = await certificateService.getCertificateForSigning(imp.certificateId, 'dummy-test-pass');
     expect(r.success).toBe(false);
     expect(r.error).toMatch(/expirado/i);
     expect(rec.status).toBe('expired');

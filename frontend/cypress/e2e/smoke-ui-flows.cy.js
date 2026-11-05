@@ -6,7 +6,8 @@
  * mantienen selectores específicos en tests de regresión dedicados).
  */
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' }
+const { getE2ECredentials } = require('../../e2e/env')
+const TEST_USER = getE2ECredentials()
 let sharedToken = null
 let sharedUser = null
 

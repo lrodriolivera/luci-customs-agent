@@ -21,7 +21,8 @@ const fs = require('fs');
 const path = require('path');
 
 const CERT_PATH = path.resolve(__dirname, '../Certificados/copia firma strix 70073780W_JENIFER_ROMERO__R__B22477020_.p12');
-const CERT_PASS = 'Abadianubaraul90@';
+const { getE2ECertPassword } = require('../../frontend/e2e/env');
+const CERT_PASS = getE2ECertPassword();
 const BASE_URL = 'https://prewww1.aeat.es';
 const ENDPOINT_H1 = '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.ImportacionCompletaV1SOAP';
 const TIMEOUT = 30000;

@@ -5,18 +5,18 @@
 // login > dashboard > crear expedicion importacion > rellenar todos los campos >
 // generar H1 XML > enviar a AEAT PRE > verificar MRN/canal > dashboard canales
 //
-// Usuario: luis.rodriguez@strixai.ai (superadmin)
+// Usuario: el definido en E2E_USER (superadmin)
 // Datos: Ordenadores portatiles Lenovo desde China, TARIC 8471300000, 150kg, 5000 EUR
 // =============================================================================
 
 describe('H1 REAL AEAT PRE - Importacion Completa', () => {
 
   before(() => {
-    cy.login('luis.rodriguez@strixai.ai', 'test123')
+    cy.login()
   })
 
   beforeEach(() => {
-    cy.login('luis.rodriguez@strixai.ai', 'test123')
+    cy.login()
   })
 
   // Auto-accept all confirmation dialogs

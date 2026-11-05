@@ -123,7 +123,7 @@ backend/src/services/aiService.js
 ## Cómo Probar
 
 1. Ir a https://aduanas.strixai.ai
-2. Login: `test@luci.es` / `test123`
+2. Login: `test@luci.es` / `<ver 1Password>`
 3. Menú lateral → **Clasificación TARIC**
 4. Seleccionar pestaña **"Buscar por Código"**
 5. Ingresar código (ej: `6109100021`)

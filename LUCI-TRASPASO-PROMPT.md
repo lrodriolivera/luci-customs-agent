@@ -38,7 +38,7 @@ LUCI corría en un EC2 de AWS (`aduanas.strixai.ai`, eu-west-1). La **cuenta AWS
 **Datos cargados** (BD nueva, ejecutados dentro de `luci-backend`):
 - `node src/scripts/createIndexes.js` → 29 índices Mongo.
 - `node src/scripts/seedDemoData.js` → datos demo (25 expedientes, 35 H7, requerimientos, inspecciones, etc.).
-- `node src/scripts/createSuperAdmin.js` → usuario **`tester@strixai.ai` / `Tester2026!`** (admin, 9/9 permisos, Enterprise). Login verificado por API. ⚠️ El usuario `test@luci.es`/`test123` que menciona el MEMORY.md original NO existe en esta BD — ningún seed actual lo crea.
+- `node src/scripts/createSuperAdmin.js` → usuario **`tester@strixai.ai` / `<ver 1Password>`** (admin, 9/9 permisos, Enterprise). Login verificado por API. ⚠️ El usuario `test@luci.es`/`<ver 1Password>` que menciona el MEMORY.md original NO existe en esta BD — ningún seed actual lo crea.
 
 ## Estado verificado al cierre de la migración
 - 5/5 contenedores `Up`, `/health` = OK (mongo+redis connected), ai-service `/health` 200.

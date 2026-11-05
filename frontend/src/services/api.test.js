@@ -1003,7 +1003,7 @@ describe('api.js — oeaAPI', () => {
   it('oeaAPI.approve llama a POST con data', async () => {
     const api = await import('./api.js')
 
-    const data = { approvedBy: 'admin123', date: '2026-08-06' }
+    const data = { approvedBy: 'approver-1', date: '2026-08-06' }
     await api.oeaAPI.approve('oea123', data)
 
     expect(mockApi.post).toHaveBeenCalledWith('/api/oea/oea123/approve', data)

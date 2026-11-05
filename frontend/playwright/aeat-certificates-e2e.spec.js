@@ -15,10 +15,11 @@
  * (NO probamos import real con password correcto para no afectar el almacen del backend)
  */
 const { test, expect } = require('@playwright/test');
+const { getE2ECredentials, getE2ECertPassword } = require('../e2e/env');
 const path = require('path');
 const fs = require('fs');
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' };
+const TEST_USER = getE2ECredentials();
 const SCREENS = path.join(__dirname, 'aeat-certificates-e2e-screens');
 const REPORT = path.join(SCREENS, 'report.json');
 if (!fs.existsSync(SCREENS)) fs.mkdirSync(SCREENS, { recursive: true });
@@ -225,7 +226,7 @@ test.describe('Certificados Digitales AEAT /aeat/certificates', () => {
     }
 
     // Password CORRECTO
-    await page.locator('input[type="password"]').first().fill('Abadianubaraul90@');
+    await page.locator('input[type="password"]').first().fill(getE2ECertPassword());
     await page.waitForTimeout(300);
 
     // Alias

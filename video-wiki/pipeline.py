@@ -286,9 +286,10 @@ def capture_visuals(script: list[dict], skip_live: bool = False, force: bool = F
     # Obtener token JWT vía API (se inyecta manualmente en cada context).
     token = None
     user = None
+    login_password = config.require_login_password()  # fuera del try: si falta, abortar
     try:
         api = f"{config.PLATFORM_URL}/api/auth/login"
-        r = requests.post(api, json={"email": config.LOGIN_EMAIL, "password": config.LOGIN_PASSWORD},
+        r = requests.post(api, json={"email": config.LOGIN_EMAIL, "password": login_password},
                           timeout=15, verify=False)
         if r.status_code == 200:
             data = r.json().get("data", {})
@@ -448,7 +449,8 @@ def capture_visuals(script: list[dict], skip_live: bool = False, force: bool = F
 def _login(context) -> bool:
     """Inyecta token JWT en localStorage tras login API. Más rápido que UI."""
     api = f"{config.PLATFORM_URL}/api/auth/login"
-    r = requests.post(api, json={"email": config.LOGIN_EMAIL, "password": config.LOGIN_PASSWORD}, timeout=15, verify=False)
+    login_password = config.require_login_password()
+    r = requests.post(api, json={"email": config.LOGIN_EMAIL, "password": login_password}, timeout=15, verify=False)
     if r.status_code != 200:
         print(f"  Login API status {r.status_code}")
         return False

@@ -4,7 +4,8 @@
  * No depende de IA en tiempo real (usa endpoints deterministas con DB local).
  */
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' }
+const { getE2ECredentials } = require('../../e2e/env')
+const TEST_USER = getE2ECredentials()
 let token = null
 let user = null
 

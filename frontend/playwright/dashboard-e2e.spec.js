@@ -10,7 +10,8 @@ const { test, expect } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' };
+const { getE2ECredentials } = require('../e2e/env');
+const TEST_USER = getE2ECredentials();
 const SCREENS_DIR = path.join(__dirname, 'dashboard-test-screens');
 const REPORT_PATH = path.join(SCREENS_DIR, 'report.json');
 if (!fs.existsSync(SCREENS_DIR)) fs.mkdirSync(SCREENS_DIR, { recursive: true });

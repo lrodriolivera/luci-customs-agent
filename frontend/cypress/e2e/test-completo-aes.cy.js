@@ -6,7 +6,7 @@
 // transporte por carretera > crear expedicion > generar AES XML >
 // previsualizar > enviar a AEAT > verificar MRN y canal verde
 //
-// Usuario: luis.rodriguez@strixai.ai (superadmin)
+// Usuario: el definido en E2E_USER (superadmin)
 // Datos de prueba: Equipos informaticos, TARIC 8471410000, 2000 kg, 25000 EUR
 // Exportador: STRIX AI SL (B22477020, EORI ESB22477020)
 // Destino: Francia (FR)
@@ -16,11 +16,11 @@
 describe('PRUEBA COMPLETA AES - Declaracion de Exportacion', () => {
 
   before(() => {
-    cy.login('luis.rodriguez@strixai.ai', 'test123')
+    cy.login()
   })
 
   beforeEach(() => {
-    cy.login('luis.rodriguez@strixai.ai', 'test123')
+    cy.login()
   })
 
   // -------------------------------------------------------------------------

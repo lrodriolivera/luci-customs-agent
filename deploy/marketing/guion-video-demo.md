@@ -9,7 +9,7 @@
 - Navegador limpio (sin pestanas extras, sin extensiones visibles)
 - Pantalla completa o ventana grande
 - Tener abierto: https://aduanas.strixai.ai/landing
-- Estar logueado en otra pestana (test@luci.es / test123)
+- Estar logueado en otra pestana (test@luci.es / <ver 1Password>)
 - Desactivar notificaciones del sistema
 - Resolucion 1920x1080
 - Herramienta: OBS Studio (gratis) o Loom (gratis hasta 5 min)

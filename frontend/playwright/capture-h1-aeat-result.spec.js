@@ -3,7 +3,8 @@ const { test } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' };
+const { getE2ECredentials } = require('../e2e/env');
+const TEST_USER = getE2ECredentials();
 const SCREENS = path.join(__dirname, 'submit-h1-screens');
 
 test('Capturar detail con MRN real', async ({ context, page, request }) => {

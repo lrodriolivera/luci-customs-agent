@@ -6,7 +6,8 @@
  * El token se reusa para todas las pruebas API de la suite.
  */
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' }
+const { getE2ECredentials } = require('../../e2e/env')
+const TEST_USER = getE2ECredentials()
 let sharedToken = null
 
 function auth() {

@@ -60,7 +60,7 @@ describe('authController', () => {
       User.findByCredentials.mockResolvedValue(user);
 
       const res = await request(app).post('/api/auth/login')
-        .send({ email: 'tester@strixai.ai', password: 'Tester2026!' });
+        .send({ email: 'tester@strixai.ai', password: 'dummy-test-pass' });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -85,7 +85,7 @@ describe('authController', () => {
       User.findByCredentials.mockResolvedValue(user);
 
       const res = await request(app).post('/api/auth/login')
-        .send({ email: 'tester@strixai.ai', password: 'Tester2026!' });
+        .send({ email: 'tester@strixai.ai', password: 'dummy-test-pass' });
 
       expect(JSON.stringify(res.body)).not.toMatch(/password|\$2[aby]\$/);
     });
@@ -263,7 +263,7 @@ describe('authController', () => {
       User.findById.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
 
       const res = await request(app).post('/api/auth/change-password')
-        .send({ currentPassword: 'Tester2026!', newPassword: 'Nueva2026!' });
+        .send({ currentPassword: 'dummy-test-pass', newPassword: 'Nueva2026!' });
 
       expect(res.status).toBe(200);
       expect(user.password).toBe('Nueva2026!');

@@ -15,7 +15,17 @@ load_dotenv(ROOT / ".env")
 # === Plataforma ===
 PLATFORM_URL = os.getenv("PLATFORM_URL", "https://aduanas.strixai.ai")
 LOGIN_EMAIL = os.getenv("LOGIN_EMAIL", "luis.rodriguez@strixai.ai")
-LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD", "test123")
+LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD", "")
+
+
+def require_login_password() -> str:
+    """Contraseña de la plataforma, solo desde el entorno (.env). Sin valor por defecto."""
+    if not LOGIN_PASSWORD.strip():
+        raise RuntimeError(
+            "Falta LOGIN_PASSWORD. Defínela en video-wiki/.env (ver .env.example); "
+            "el valor está en 1Password."
+        )
+    return LOGIN_PASSWORD
 
 # === Wiki source ===
 # Carpeta canónica del wiki (no la copia servida en frontend/public).

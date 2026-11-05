@@ -5,18 +5,18 @@
 // rellenar importador > mercancia > transporte > crear > generar H1 XML >
 // previsualizar > enviar a AEAT > verificar MRN/canal > dashboard canales
 //
-// Usuario: luis.rodriguez@strixai.ai (superadmin)
+// Usuario: el definido en E2E_USER (superadmin)
 // Datos de prueba: Cafe verde Colombia, TARIC 0901110000, 5000 kg, 15000 EUR
 // =============================================================================
 
 describe('PRUEBA COMPLETA H1 - Importacion Completa', () => {
 
   before(() => {
-    cy.login('luis.rodriguez@strixai.ai', 'test123')
+    cy.login()
   })
 
   beforeEach(() => {
-    cy.login('luis.rodriguez@strixai.ai', 'test123')
+    cy.login()
   })
 
   // -------------------------------------------------------------------------
