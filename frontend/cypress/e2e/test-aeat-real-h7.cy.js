@@ -5,7 +5,7 @@
 // login > crear expedicion importacion bajo valor > navegar a H7 >
 // generar H7 > enviar a AEAT PRE > verificar MRN y garantia
 //
-// Usuario: luis.rodriguez@strixai.ai (superadmin)
+// Usuario: el definido en E2E_USER (superadmin)
 // Datos: Camisetas de algodon desde China, HS 6109100000, 50kg, 120 EUR
 // Garantia: 26ESAGL2800000054 | IOSS: IMES000000123
 // =============================================================================
@@ -13,11 +13,11 @@
 describe('H7 REAL AEAT PRE - Importacion Bajo Valor (e-commerce)', () => {
 
   before(() => {
-    cy.login('luis.rodriguez@strixai.ai', 'test123')
+    cy.login()
   })
 
   beforeEach(() => {
-    cy.login('luis.rodriguez@strixai.ai', 'test123')
+    cy.login()
   })
 
   // Auto-accept all confirmation dialogs

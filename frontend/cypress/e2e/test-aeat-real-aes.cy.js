@@ -5,7 +5,7 @@
 // login > dashboard > crear expedicion exportacion > rellenar todos los campos >
 // generar AES XML > enviar a AEAT PRE > verificar MRN y Canal V (verde)
 //
-// Usuario: luis.rodriguez@strixai.ai (superadmin)
+// Usuario: el definido en E2E_USER (superadmin)
 // Datos: Equipos informaticos a Francia, TARIC 8471410000, 2000kg, 25000 EUR
 // Exportador: STRIX AI SL (B22477020, ESB22477020)
 // Destino: Francia (FR)
@@ -15,11 +15,11 @@
 describe('AES REAL AEAT PRE - Exportacion Completa', () => {
 
   before(() => {
-    cy.login('luis.rodriguez@strixai.ai', 'test123')
+    cy.login()
   })
 
   beforeEach(() => {
-    cy.login('luis.rodriguez@strixai.ai', 'test123')
+    cy.login()
   })
 
   // Auto-accept all confirmation dialogs

@@ -6,7 +6,8 @@
  * Usa data-testid añadidos a DutyCalculator.jsx.
  */
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' }
+const { getE2ECredentials } = require('../../e2e/env')
+const TEST_USER = getE2ECredentials()
 let token = null
 let user = null
 

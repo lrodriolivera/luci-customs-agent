@@ -4,7 +4,8 @@
  * upload con un CSV pequeño no rompa (incluso sin clasificación IA completa).
  */
 
-const TEST_USER = { email: 'luis.rodriguez@strixai.ai', password: 'test123' }
+const { getE2ECredentials } = require('../../e2e/env')
+const TEST_USER = getE2ECredentials()
 let token = null
 
 before(() => {

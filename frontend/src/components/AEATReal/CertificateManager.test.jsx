@@ -407,7 +407,7 @@ describe('CertificateManager', () => {
       fireEvent.click(importButtons[0])
 
       const passwordInput = screen.getByPlaceholderText('Contraseña')
-      fireEvent.change(passwordInput, { target: { value: 'test123' } })
+      fireEvent.change(passwordInput, { target: { value: 'dummy-test-pass' } })
 
       // Submit form
       const form = passwordInput.closest('form')
@@ -461,7 +461,7 @@ describe('CertificateManager', () => {
       let passwordInput
       await waitFor(() => {
         passwordInput = screen.getByPlaceholderText('Contraseña')
-        fireEvent.change(passwordInput, { target: { value: 'test123' } })
+        fireEvent.change(passwordInput, { target: { value: 'dummy-test-pass' } })
       })
 
       const aliasInput = screen.getByPlaceholderText('Nombre identificativo')
@@ -476,7 +476,7 @@ describe('CertificateManager', () => {
       await waitFor(() => {
         expect(aeatRealAPI.certificates.import).toHaveBeenCalledWith({
           certificateBase64: 'QUJDREVG',
-          password: 'test123',
+          password: 'dummy-test-pass',
           type: 'FNMT_PF',
           alias: 'mi-cert'
         })
@@ -505,7 +505,7 @@ describe('CertificateManager', () => {
       let passwordInput
       await waitFor(() => {
         passwordInput = screen.getByPlaceholderText('Contraseña')
-        fireEvent.change(passwordInput, { target: { value: 'test123' } })
+        fireEvent.change(passwordInput, { target: { value: 'dummy-test-pass' } })
       })
 
       const form = passwordInput.closest('form')
@@ -514,7 +514,7 @@ describe('CertificateManager', () => {
       await waitFor(() => {
         expect(aeatRealAPI.certificates.import).toHaveBeenCalledWith({
           certificateBase64: 'QUJDREVG',
-          password: 'test123',
+          password: 'dummy-test-pass',
           type: 'FNMT_PJ',
           alias: undefined
         })
@@ -547,7 +547,7 @@ describe('CertificateManager', () => {
       let passwordInput
       await waitFor(() => {
         passwordInput = screen.getByPlaceholderText('Contraseña')
-        fireEvent.change(passwordInput, { target: { value: 'test123' } })
+        fireEvent.change(passwordInput, { target: { value: 'dummy-test-pass' } })
       })
 
       const form = passwordInput.closest('form')
@@ -579,7 +579,7 @@ describe('CertificateManager', () => {
       let passwordInput
       await waitFor(() => {
         passwordInput = screen.getByPlaceholderText('Contraseña')
-        fireEvent.change(passwordInput, { target: { value: 'test123' } })
+        fireEvent.change(passwordInput, { target: { value: 'dummy-test-pass' } })
       })
 
       const form = passwordInput.closest('form')
@@ -610,7 +610,7 @@ describe('CertificateManager', () => {
       let passwordInput
       await waitFor(() => {
         passwordInput = screen.getByPlaceholderText('Contraseña')
-        fireEvent.change(passwordInput, { target: { value: 'test123' } })
+        fireEvent.change(passwordInput, { target: { value: 'dummy-test-pass' } })
       })
 
       const form = passwordInput.closest('form')
@@ -642,7 +642,7 @@ describe('CertificateManager', () => {
       let passwordInput
       await waitFor(() => {
         passwordInput = screen.getByPlaceholderText('Contraseña')
-        fireEvent.change(passwordInput, { target: { value: 'test123' } })
+        fireEvent.change(passwordInput, { target: { value: 'dummy-test-pass' } })
       })
 
       const aliasInput = screen.getByPlaceholderText('Nombre identificativo')
