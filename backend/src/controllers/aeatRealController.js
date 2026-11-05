@@ -15,16 +15,18 @@ const {
 } = require('../services/aeat');
 const { Expedition } = require('../models');
 const aiService = require('../services/aiService');
-const { ensureSameTenant, isSuperAdmin } = require('../utils/tenantGuard');
+const { ensureSameTenant, ambitoTenant } = require('../utils/tenantGuard');
 const { esMRNValido } = require('../utils/mrnFormat');
+const { esAliasCertificadoValido } = require('../utils/aliasCertificado');
+
 
 /**
  * Filtro de tenant del seguimiento AEAT (mismo criterio que filtroTenantOPlataforma):
  * super admin de plataforma sin tenant -> sin acotar; el resto, solo su tenant.
  */
 const filtroSeguimiento = (user) => {
-  if (isSuperAdmin(user) && !user?.tenantId) return {};
-  return { tenantId: user?.tenantId ? String(user.tenantId) : null };
+  const tenantId = ambitoTenant(user);
+  return tenantId === undefined ? {} : { tenantId };
 };
 
 // ============================================
@@ -46,6 +48,14 @@ const importCertificate = async (req, res) => {
       });
     }
 
+    // El alias va en rutas y listados: conjunto seguro (F9). Sin alias se permite.
+    if (alias !== undefined && alias !== null && alias !== '' && !esAliasCertificadoValido(alias)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Alias no válido: use letras, números, ".", "_" o "-" (máx. 64)'
+      });
+    }
+
     const certificateBuffer = Buffer.from(certificateBase64, 'base64');
 
     const result = await certificateService.importCertificate(
@@ -53,7 +63,9 @@ const importCertificate = async (req, res) => {
       password,
       {
         type: type || 'FNMT_PJ',
-        alias: alias
+        alias: alias,
+        // Siempre el del usuario autenticado (F9): el body no decide el tenant.
+        tenantId: req.user?.tenantId ? String(req.user.tenantId) : null
       }
     );
 
@@ -104,7 +116,7 @@ const listCertificates = async (req, res) => {
   try {
     const { includeExpired } = req.query;
 
-    const result = await certificateService.listCertificates();
+    const result = await certificateService.listCertificates(null, ambitoTenant(req.user));
 
     // Filtrar expirados si no se solicitan
     let certs = result.certificates || [];
@@ -150,7 +162,11 @@ const getCertificateInfo = async (req, res) => {
   try {
     const { alias } = req.params;
 
-    const result = await certificateService.listCertificates();
+    if (!esAliasCertificadoValido(alias)) {
+      return res.status(400).json({ success: false, error: 'Alias no válido' });
+    }
+
+    const result = await certificateService.listCertificates(null, ambitoTenant(req.user));
     const certificates = result.certificates || [];
     const certificate = certificates.find(c => (c.metadata?.alias || c.id) === alias);
 
@@ -189,7 +205,17 @@ const verifyCertificate = async (req, res) => {
   try {
     const { alias } = req.params;
 
-    const verification = await certificateService.verifyCertificateStatus(alias);
+    if (!esAliasCertificadoValido(alias)) {
+      return res.status(400).json({ success: false, error: 'Alias no válido' });
+    }
+
+    // Se resuelve dentro del tenant del usuario: el certId de otro tenant no se alcanza.
+    const certificateId = certificateService.getCertificateIdByAlias(alias, ambitoTenant(req.user));
+    if (!certificateId) {
+      return res.status(404).json({ success: false, error: 'Certificado no encontrado' });
+    }
+
+    const verification = await certificateService.verifyCertificateStatus(certificateId, ambitoTenant(req.user));
 
     res.json({
       success: true,
@@ -213,7 +239,16 @@ const deleteCertificate = async (req, res) => {
   try {
     const { alias } = req.params;
 
-    await certificateService.deleteCertificate(alias);
+    if (!esAliasCertificadoValido(alias)) {
+      return res.status(400).json({ success: false, error: 'Alias no válido' });
+    }
+
+    const certificateId = certificateService.getCertificateIdByAlias(alias, ambitoTenant(req.user));
+    if (!certificateId) {
+      return res.status(404).json({ success: false, error: 'Certificado no encontrado' });
+    }
+
+    await certificateService.deleteCertificate(certificateId, ambitoTenant(req.user));
 
     logger.info(`Certificado eliminado: ${alias}`, { user: req.user?.email });
 
@@ -246,7 +281,7 @@ const validateCertificateForOperation = async (req, res) => {
       });
     }
 
-    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias, ambitoTenant(req.user));
     if (!certificateId) {
       return res.status(404).json({
         success: false,
@@ -293,7 +328,7 @@ const signDocument = async (req, res) => {
       });
     }
 
-    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias, ambitoTenant(req.user));
     if (!certificateId) {
       return res.status(404).json({
         success: false,
@@ -382,7 +417,7 @@ const submitH1Declaration = async (req, res) => {
       });
     }
 
-    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias, ambitoTenant(req.user));
     if (!certificateId) {
       return res.status(404).json({
         success: false,
@@ -479,7 +514,7 @@ const submitH7Declaration = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId).populate('documents');
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
-    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias, ambitoTenant(req.user));
     if (!certificateId) {
       return res.status(404).json({
         success: false,
@@ -553,7 +588,7 @@ const submitAESDeclaration = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId).populate('documents');
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
-    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias, ambitoTenant(req.user));
     if (!certificateId) {
       return res.status(404).json({
         success: false,
@@ -623,7 +658,7 @@ const submitNCTSDeclaration = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId);
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
-    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias, ambitoTenant(req.user));
     if (!certificateId) {
       return res.status(404).json({
         success: false,
@@ -684,7 +719,7 @@ const submitICS2Declaration = async (req, res) => {
     const expedition = await Expedition.findById(expeditionId);
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
-    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias);
+    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias, ambitoTenant(req.user));
     if (!certificateId) {
       return res.status(404).json({
         success: false,
@@ -1128,7 +1163,7 @@ const getServiceStatus = async (req, res) => {
       supportedDeclarations: serviceInfo.supportedDeclarations,
       sslStatus: serviceInfo.sslStatus,
       simulationMode: serviceInfo.simulationMode,
-      certificatesLoaded: (await certificateService.listCertificates()).certificates?.length || 0,
+      certificatesLoaded: (await certificateService.listCertificates(null, ambitoTenant(req.user))).certificates?.length || 0,
       activeMonitoring: ((await aeatStatusMonitorService.listTrackedDeclarations?.(filtroSeguimiento(req.user))) || {}).total || 0,
       activeAlerts: aeatStatusMonitorService.alerts?.length || 0,
       timestamp: new Date().toISOString()

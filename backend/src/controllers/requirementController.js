@@ -409,7 +409,7 @@ exports.submitToAEAT = async (req, res) => {
     const response = requirement.responses[responseIndex];
 
     // Enviar documentacion a AEAT real
-    const certResult = await certificateService.listCertificates();
+    const certResult = await certificateService.listCertificates(null, ambitoTenant(req.user));
     const certs = certResult.certificates || [];
     const certAlias = certs.length > 0 ? (certs[0].metadata?.alias || certs[0].id) : null;
 
@@ -787,7 +787,7 @@ exports.generateAIResponse = async (req, res) => {
 // ===========================================
 
 const aiService = require('../services/aiService');
-const { ensureSameTenant, filtroTenantOPlataforma } = require('../utils/tenantGuard');
+const { ensureSameTenant, filtroTenantOPlataforma, ambitoTenant } = require('../utils/tenantGuard');
 
 /**
  * Analizar documentación solicitada con IA
