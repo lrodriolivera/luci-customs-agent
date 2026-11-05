@@ -264,20 +264,62 @@ describe('cognitoService', () => {
   })
 
   describe('signOut', () => {
-    it('should sign out when user exists', () => {
+    // amazon-cognito-identity-js 6.3.22: signOut() sin callback solo limpia el
+    // almacenamiento local; con callback hace getSession -> revokeTokens
+    // (RevokeToken) -> cleanClientData -> callback(err).
+    it('pasa un callback a signOut para que se revoquen los tokens y resuelve', async () => {
       mockUserPool.getCurrentUser.mockReturnValue(mockCognitoUser)
+      mockCognitoUser.signOut.mockImplementation((cb) => cb())
 
-      signOut()
+      await expect(signOut()).resolves.toEqual({ revoked: true })
 
-      expect(mockUserPool.getCurrentUser).toHaveBeenCalled()
-      expect(mockCognitoUser.signOut).toHaveBeenCalled()
+      expect(mockCognitoUser.signOut).toHaveBeenCalledTimes(1)
+      expect(typeof mockCognitoUser.signOut.mock.calls[0][0]).toBe('function')
     })
 
-    it('should not throw when no user is logged in', () => {
+    it('si la revocación falla, limpia igualmente el estado local y resuelve', async () => {
+      mockUserPool.getCurrentUser.mockReturnValue(mockCognitoUser)
+      mockCognitoUser.signOut.mockImplementation((cb) => {
+        if (typeof cb === 'function') cb(new Error('red caída'))
+      })
+
+      await expect(signOut()).resolves.toEqual({ revoked: false })
+
+      // 1ª llamada con callback (revocar), 2ª sin callback (limpieza local)
+      expect(mockCognitoUser.signOut).toHaveBeenCalledTimes(2)
+      expect(mockCognitoUser.signOut.mock.calls[1]).toEqual([])
+    })
+
+    it('si signOut lanza, limpia localmente y no propaga el error', async () => {
+      mockUserPool.getCurrentUser.mockReturnValue(mockCognitoUser)
+      mockCognitoUser.signOut.mockImplementationOnce(() => {
+        throw new Error('boom')
+      })
+
+      await expect(signOut()).resolves.toEqual({ revoked: false })
+      expect(mockCognitoUser.signOut).toHaveBeenCalledTimes(2)
+    })
+
+    it('no se queda colgado si Cognito no responde (tiempo máximo)', async () => {
+      vi.useFakeTimers()
+      try {
+        mockUserPool.getCurrentUser.mockReturnValue(mockCognitoUser)
+        mockCognitoUser.signOut.mockImplementation(() => {})
+
+        const promesa = signOut()
+        await vi.advanceTimersByTimeAsync(6000)
+
+        await expect(promesa).resolves.toEqual({ revoked: false })
+        expect(mockCognitoUser.signOut.mock.calls.at(-1)).toEqual([])
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('no falla cuando no hay usuario', async () => {
       mockUserPool.getCurrentUser.mockReturnValue(null)
 
-      expect(() => signOut()).not.toThrow()
-      expect(mockUserPool.getCurrentUser).toHaveBeenCalled()
+      await expect(signOut()).resolves.toEqual({ revoked: false })
       expect(mockCognitoUser.signOut).not.toHaveBeenCalled()
     })
   })

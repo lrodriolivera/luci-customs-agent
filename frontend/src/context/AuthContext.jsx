@@ -146,7 +146,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      if (cognitoService.isConfigured()) cognitoService.signOut()
+      // Revoca los tokens en Cognito; el estado local se limpia igualmente si falla.
+      if (cognitoService.isConfigured()) await cognitoService.signOut()
     } catch (_) {}
     localStorage.removeItem('token')
     localStorage.removeItem('user')
