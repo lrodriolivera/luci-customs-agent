@@ -15,6 +15,9 @@ describe('esRutaPublica', () => {
   })
 
   it.each([
+    '/api/portal/api-keys',
+    '/api/portal/api-keys/abc',
+    '/api/portal/api-keys/abc?x=1',
     '/api/auth/me',
     '/api/expeditions/1',
     '/api/tenant/billing/cancel',
