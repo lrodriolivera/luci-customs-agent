@@ -135,7 +135,7 @@ DELETE /api/classification/cache/clean        - Limpiar cache antiguo
 
 ### Buscar por Codigo
 1. Ir a https://aduanas.strixai.ai
-2. Login: `test@luci.es` / `test123`
+2. Login: `test@luci.es` / `<ver 1Password>`
 3. Menu lateral -> **Clasificacion TARIC**
 4. Tab **"Buscar por Codigo"**
 5. Ingresar codigo (ej: `8471300000`, `6109100000`)

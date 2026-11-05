@@ -26,7 +26,7 @@
   `backend/.env`, `ai-service/.env`, `certs/strixai_fnmt.p12`, `data/` (volumenes Mongo/uploads)
 - Backup Mongo: cron diario 03:30 → `/srv/backups/luci/`, retencion 30 dias (solo Mongo, no `.env`/certs)
 - Homelab sin salida directa a internet → Surfshark VPN necesaria (MTU 1280 rompe TLS de contenedores); salida siempre por WiFi
-- **URL**: `https://aduanas.strixai.ai` | admin `luis.rodriguez@strixai.ai`/`Juancho_1301`, `tester@strixai.ai`/`Tester2026!`
+- **URL**: `https://aduanas.strixai.ai` | admin `luis.rodriguez@strixai.ai`/`<ver 1Password>`, `tester@strixai.ai`/`<ver 1Password>`
 - Auth: **Cognito muerto** (caido en incidente AWS 15/Jul–6/Ago, no restaurado) → login por JWT legacy
 
 ## Project Structure

@@ -8,7 +8,7 @@
 
 - Navegador Chrome limpio, sin extensiones visibles
 - Resolucion 1920x1080
-- Logueado en aduanas.strixai.ai (test@luci.es / test123)
+- Logueado en aduanas.strixai.ai (test@luci.es / <ver 1Password>)
 - Tener preparada una busqueda TARIC y una declaracion H1
 - Herramienta: OBS Studio (gratis) o Loom
 - Musica de fondo: "corporate technology" de YouTube Audio Library (volumen al 15%)
