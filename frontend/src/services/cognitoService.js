@@ -87,11 +87,47 @@ export function completeNewPassword(cognitoUser, newPassword) {
   })
 }
 
+const SIGN_OUT_TIMEOUT_MS = 5000
+
+/**
+ * Cierra la sesión revocando los tokens en Cognito.
+ *
+ * En amazon-cognito-identity-js 6.3.22, signOut() sin callback solo llama a
+ * cleanClientData() (borra el almacenamiento local, el refresh token sigue
+ * válido en el servidor). Con callback hace getSession -> revokeTokens
+ * (RevokeToken sobre el refresh token) -> cleanClientData -> callback(err).
+ * Si getSession falla, el callback se invoca SIN limpiar: por eso, ante error
+ * o falta de respuesta, se limpia el estado local con signOut() sin callback.
+ * Nunca rechaza: resuelve { revoked } para que el logout local siempre termine.
+ */
 export function signOut() {
-  const cognitoUser = getPool().getCurrentUser()
-  if (cognitoUser) {
-    cognitoUser.signOut()
-  }
+  return new Promise((resolve) => {
+    let cognitoUser
+    try {
+      cognitoUser = getPool().getCurrentUser()
+    } catch (_) {
+      return resolve({ revoked: false })
+    }
+    if (!cognitoUser) return resolve({ revoked: false })
+
+    let terminado = false
+    const terminar = (revoked) => {
+      if (terminado) return
+      terminado = true
+      clearTimeout(temporizador)
+      if (!revoked) {
+        try { cognitoUser.signOut() } catch (_) { /* nada más que limpiar */ }
+      }
+      resolve({ revoked })
+    }
+    const temporizador = setTimeout(() => terminar(false), SIGN_OUT_TIMEOUT_MS)
+
+    try {
+      cognitoUser.signOut((err) => terminar(!err))
+    } catch (_) {
+      terminar(false)
+    }
+  })
 }
 
 export function forgotPassword(email) {

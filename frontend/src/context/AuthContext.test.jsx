@@ -844,6 +844,24 @@ describe('AuthContext', () => {
       expect(api.defaults.headers.common['Authorization']).toBeUndefined()
     })
 
+    it('borra las claves de localStorage que son por tenant y conserva las preferencias del dispositivo', async () => {
+      const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
+
+      await act(async () => {
+        await result.current.logout()
+      })
+
+      for (const clave of ['customsCountries', 'customsCountryConfigs', 'activeCustomsCountry']) {
+        expect(localStorage.removeItem).toHaveBeenCalledWith(clave)
+      }
+      for (const clave of ['sidebar-collapsed', 'cookie_consent', 'luci-help-seen']) {
+        expect(localStorage.removeItem).not.toHaveBeenCalledWith(clave)
+      }
+    })
+
     it('calls Cognito signOut when configured', async () => {
       cognitoService.isConfigured = vi.fn(() => true)
       cognitoService.signOut = vi.fn(() => Promise.resolve())

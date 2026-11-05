@@ -1,19 +1,26 @@
 import React, { useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { authAPI } from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
 export default function ResetPassword() {
   const { t } = useTranslation()
   const { token } = useParams()
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
 
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
   })
   const [loading, setLoading] = useState(false)
+
+  // Con sesión iniciada este formulario no tiene sentido y es el vector de F7.
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()

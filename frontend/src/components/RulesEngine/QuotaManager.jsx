@@ -35,6 +35,7 @@ import {
   InformationCircleIcon,
   ClockIcon
 } from '@heroicons/react/24/outline'
+import { hrefSeguro } from '../../utils/url'
 
 const POR_PAGINA = 25
 
@@ -219,7 +220,7 @@ export default function QuotaManager() {
           : 'El saldo no tiene fecha de consulta registrada.'}
         {' '}
         <a
-          href={volume?.officialSource}
+          href={hrefSeguro(volume?.officialSource)}
           target="_blank"
           rel="noopener noreferrer"
           className="underline font-medium"
@@ -484,7 +485,7 @@ export default function QuotaManager() {
                     <p className="text-sm text-gray-500 mt-2">
                       Confirmarlo en{' '}
                       <a
-                        href={availability.officialSource}
+                        href={hrefSeguro(availability.officialSource)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="underline"

@@ -19,6 +19,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { portalAPI } from '../../services/api';
+import { hrefSeguro } from '../../utils/url'
 
 const PortalPayments = ({ token, expedition }) => {
   const { t } = useTranslation();
@@ -300,7 +301,7 @@ const PortalPayments = ({ token, expedition }) => {
                         ))}
                         {payment.receiptUrl && (
                           <a
-                            href={payment.receiptUrl}
+                            href={hrefSeguro(payment.receiptUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm mt-2"

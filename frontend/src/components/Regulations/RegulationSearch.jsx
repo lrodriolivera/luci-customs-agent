@@ -17,6 +17,7 @@ import {
   PaperAirplaneIcon,
   LightBulbIcon
 } from '@heroicons/react/24/outline'
+import { hrefSeguro } from '../../utils/url'
 
 const SOURCE_TABS = [
   { key: 'all', label: 'Todos', icon: GlobeEuropeAfricaIcon },
@@ -358,7 +359,7 @@ export default function RegulationSearch() {
               </div>
               {selectedRegulation.url && (
                 <a
-                  href={selectedRegulation.url}
+                  href={hrefSeguro(selectedRegulation.url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-800 p-1"
@@ -584,7 +585,7 @@ export default function RegulationSearch() {
                         <p className="text-xs text-gray-500 mt-1">CELEX: {reg.celex}</p>
                       </div>
                       <a
-                        href={reg.url}
+                        href={hrefSeguro(reg.url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
@@ -650,7 +651,7 @@ export default function RegulationSearch() {
                         <p className="text-xs text-gray-400 mt-1">{reg.department} - {reg.date}</p>
                       </div>
                       <a
-                        href={reg.url}
+                        href={hrefSeguro(reg.url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
@@ -746,7 +747,7 @@ export default function RegulationSearch() {
                     Articulo {articleResult.article}
                   </h3>
                   <a
-                    href={articleResult.url}
+                    href={hrefSeguro(articleResult.url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={articleResult.found ? 'text-green-600 hover:text-green-800' : 'text-amber-700 hover:text-amber-900'}
@@ -762,7 +763,7 @@ export default function RegulationSearch() {
                   <p className="text-sm text-amber-800">
                     No se ha podido recuperar el texto de este articulo. Consultelo en{' '}
                     <a
-                      href={articleResult.url}
+                      href={hrefSeguro(articleResult.url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline font-medium"
@@ -823,7 +824,7 @@ function ResultCard({ item, onSelect, isSelected }) {
         </div>
         <div className="flex flex-col gap-1 ml-2">
           <a
-            href={item.url}
+            href={hrefSeguro(item.url)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
@@ -834,7 +835,7 @@ function ResultCard({ item, onSelect, isSelected }) {
           </a>
           {item.pdfUrl && (
             <a
-              href={item.pdfUrl}
+              href={hrefSeguro(item.pdfUrl)}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}

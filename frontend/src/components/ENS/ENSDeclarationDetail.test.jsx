@@ -887,6 +887,36 @@ describe('ENSDeclarationDetail', () => {
       expect(links[0]).toHaveAttribute('href', 'https://strixai.ai/docs/bl123456.pdf')
     })
 
+    it.each(['javascript:alert(1)', 'data:text/html,x', 'vbscript:msgbox(1)'])(
+      'no pinta enlace para la URL %s y deja el nombre sin enlace',
+      async (url) => {
+        const user = userEvent.setup()
+        ensAPI.get.mockResolvedValue({
+          data: {
+            success: true,
+            data: createMockDeclaration({
+              documents: [{ type: 'Bill of Lading', documentNumber: 'BL1', name: 'malicioso.pdf', url }]
+            })
+          }
+        })
+        render(<ENSDeclarationDetail />)
+        await screen.findByRole('heading', { name: 'ENS-2026-001' })
+        await user.click(screen.getByRole('tab', { name: 'ens.tabDocuments' }))
+        expect(await screen.findByText('malicioso.pdf')).toBeInTheDocument()
+        expect(document.querySelector(`a[href^="${url.split(':')[0]}:"]`)).toBeNull()
+      }
+    )
+
+    it('el enlace de un documento http(s) lleva rel="noopener noreferrer"', async () => {
+      const user = userEvent.setup()
+      render(<ENSDeclarationDetail />)
+      await screen.findByRole('heading', { name: 'ENS-2026-001' })
+      await user.click(screen.getByRole('tab', { name: 'ens.tabDocuments' }))
+      const link = await screen.findByRole('link', { name: '' })
+      expect(link).toHaveAttribute('href', 'https://strixai.ai/docs/bl123456.pdf')
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    })
+
     it('renders no documents message when empty', async () => {
       const user = userEvent.setup()
       ensAPI.get.mockResolvedValue({
