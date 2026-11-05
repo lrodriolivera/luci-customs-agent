@@ -11,6 +11,7 @@
  * Normativa: Reglamento (UE) 2019/1896 - ICS2 (Import Control System 2)
  */
 const mongoose = require('mongoose');
+const { esUrlDocumentoValida } = require('../utils/urlDocumento');
 // Contador atomico: el patron countDocuments()+1 reutilizaba referencias vivas
 // tras un borrado (E11000) y repartia el mismo numero en altas concurrentes.
 const { nextReference } = require('../utils/sequence');
@@ -479,7 +480,14 @@ const ENSDeclarationSchema = new mongoose.Schema({
     },
     documentNumber: String,
     name: String,
-    url: String,
+    // http(s) o ruta relativa; nunca javascript:/data:/vbscript: (F2)
+    url: {
+      type: String,
+      validate: {
+        validator: esUrlDocumentoValida,
+        message: 'url del documento no valida: solo http(s) o ruta relativa'
+      }
+    },
     uploadedAt: { type: Date, default: Date.now }
   }],
 

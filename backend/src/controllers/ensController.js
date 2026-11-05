@@ -3,6 +3,7 @@
  * Controlador para Declaraciones Sumarias de Entrada (ENS/ICS2)
  */
 const { ENSDeclaration, Expedition } = require('../models');
+const { esUrlDocumentoValida, documentosConUrlInvalida } = require('../utils/urlDocumento');
 const ensService = require('../services/ensService');
 const aiService = require('../services/aiService');
 const logger = require('../config/logger');
@@ -180,6 +181,14 @@ exports.getStats = async (req, res) => {
  */
 exports.create = async (req, res) => {
   try {
+    const urlsMalas = documentosConUrlInvalida(req.body?.documents);
+    if (urlsMalas.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `url de documento no valida (documentos ${urlsMalas.join(', ')}): solo http(s) o ruta relativa`
+      });
+    }
+
     const result = await ensService.createDeclaration(req.body, req.user._id);
 
     if (!result.success) {
@@ -269,6 +278,15 @@ exports.update = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: `No se puede modificar declaracion en estado ${declaration.status}. Use la funcion de rectificacion.`
+      });
+    }
+
+    // F2: la url de los documentos va a un href; solo http(s) o ruta relativa.
+    const urlsMalas = documentosConUrlInvalida(req.body.documents);
+    if (urlsMalas.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `url de documento no valida (documentos ${urlsMalas.join(', ')}): solo http(s) o ruta relativa`
       });
     }
 
@@ -675,6 +693,15 @@ exports.addDocument = async (req, res) => {
     }
 
     const { type, documentNumber, name, url } = req.body;
+
+    // F2: la url va a un href en el detalle; solo http(s) o ruta relativa.
+    if (!esUrlDocumentoValida(url)) {
+      return res.status(400).json({
+        success: false,
+        message: 'url de documento no valida',
+        error: 'La url del documento debe ser http(s) o una ruta relativa del sitio'
+      });
+    }
 
     // Un `type` invalido hacia estallar el save() y el catch generico respondia
     // 500 "Error al agregar documento", sin decir que el tipo era el problema ni
