@@ -5,10 +5,14 @@
  *
  * Idempotente: se puede reejecutar tras un re-seed. Reutiliza el tenant de
  * testing si existe y crea/omite cada usuario segun ya exista o no.
- * NOTA: las contrasenas aqui son de arranque; los usuarios deberian cambiarlas.
+ * Contrasenas: NO hay valores por defecto en el codigo. Cada cuenta lee
+ * SUPERADMIN_<TESTER|LUIS|JENIFER>_PASSWORD o, si no existe, SUPERADMIN_PASSWORD.
+ * Si falta alguna el script aborta antes de conectar a la BD. Los usuarios
+ * deberian cambiarlas tras el primer acceso.
  */
 
 require('dotenv').config();
+const { resolveAdminPasswords } = require('./superAdminPasswords');
 const mongoose = require('mongoose');
 const connectDB = require('../config/database');
 const User = require('../models/User');
@@ -28,15 +32,23 @@ const ALL_PERMISSIONS = {
 };
 
 // Usuarios admin de STRIX AI. El primero se usa como owner del tenant.
-// Las contrasenas se leen del .env (gitignored). El fallback solo aplica en
-// entornos sin esas variables; en prod deben venir de SUPERADMIN_*_PASSWORD.
-const ADMINS = [
-  { email: 'tester@strixai.ai',         password: process.env.SUPERADMIN_TESTER_PASSWORD  || 'Tester2026!',    name: 'Tester STRIX',   position: 'QA Tester' },
-  { email: 'luis.rodriguez@strixai.ai', password: process.env.SUPERADMIN_LUIS_PASSWORD    || 'ChangeMe2026!', name: 'Luis Rodriguez', position: 'Tech Lead' },
-  { email: 'jenifer.romero@strixai.ai', password: process.env.SUPERADMIN_JENIFER_PASSWORD || 'ChangeMe2026!', name: 'Jenifer Romero', position: 'CEO' }
+// Las contrasenas se resuelven en resolveAdminPasswords (ver superAdminPasswords.js).
+const ADMIN_ACCOUNTS = [
+  { email: 'tester@strixai.ai',         passwordEnvKey: 'TESTER',    name: 'Tester STRIX',   position: 'QA Tester' },
+  { email: 'luis.rodriguez@strixai.ai', passwordEnvKey: 'LUIS', name: 'Luis Rodriguez', position: 'Tech Lead' },
+  { email: 'jenifer.romero@strixai.ai', passwordEnvKey: 'JENIFER', name: 'Jenifer Romero', position: 'CEO' }
 ];
 
 const createSuperAdmins = async () => {
+  // Antes de tocar la BD: sin contrasena para alguna cuenta, abortar.
+  let ADMINS;
+  try {
+    ADMINS = resolveAdminPasswords(ADMIN_ACCOUNTS);
+  } catch (error) {
+    console.error(`\n✗ ${error.message}\n`);
+    process.exit(1);
+  }
+
   try {
     await connectDB();
 
