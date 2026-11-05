@@ -8,6 +8,7 @@
  */
 
 const { usarBaseDeDatosEnMemoria } = require('../helpers/memoryDb');
+const { esperarHasta } = require('../helpers/esperarHasta');
 const { requireFeature, requireUsage, PLAN_FEATURES, PLAN_LIMITS } = require('../../src/middleware/planLimits');
 const { Tenant } = require('../../src/models');
 const mongoose = require('mongoose');
@@ -225,13 +226,12 @@ describe('planLimits middleware - branches', () => {
 
       // El incremento es $inc fire-and-forget (sin await en el middleware): bajo
       // carga/paralelismo un solo setImmediate no basta para que la promesa a Mongo
-      // se resuelva. Poll determinista con reintentos hasta ver el valor esperado.
-      let declarations = 49;
-      for (let intento = 0; intento < 50 && declarations !== 50; intento++) {
-        await new Promise((resolve) => setImmediate(resolve));
-        const updated = await Tenant.findById(tenantProfessional._id);
-        declarations = updated.currentUsage.declarations;
-      }
+      // se resuelva. Espera acotada (esperarHasta): sondea hasta ver el valor o agotar 2 s.
+      const declarations = await esperarHasta(
+        async () => (await Tenant.findById(tenantProfessional._id)).currentUsage.declarations,
+        50,
+        { descripcion: 'currentUsage.declarations tras requireUsage' }
+      );
       expect(declarations).toBe(50);
     });
 
@@ -288,9 +288,15 @@ describe('planLimits middleware - branches', () => {
 
       expect(next).toHaveBeenCalledWith();
 
-      await new Promise((resolve) => setImmediate(resolve));
-      const updated = await Tenant.findById(tenantProfessional._id);
-      expect(updated.currentUsage.declarations).toBe(11);
+      // El $inc del middleware es fire-and-forget a propósito (sin await): un solo
+      // setImmediate no garantiza que la escritura haya llegado (en el runner ARM64 con
+      // workers en paralelo se leía 10). Espera acotada: sondea hasta ver 11 o agotar 2 s.
+      const declarations = await esperarHasta(
+        async () => (await Tenant.findById(tenantProfessional._id)).currentUsage.declarations,
+        11,
+        { descripcion: 'currentUsage.declarations tras requireUsage' }
+      );
+      expect(declarations).toBe(11);
     });
 
     test('no incrementa uso si tenant no existe (tenantId inválido)', async () => {
@@ -491,13 +497,12 @@ describe('planLimits middleware - branches', () => {
       // El incremento es $inc fire-and-forget (sin await en el middleware): bajo
       // carga/paralelismo un solo setImmediate no basta para que la promesa a
       // Mongo se resuelva, de ahi el flaky que daba 49 en la bateria completa.
-      // Poll determinista con reintentos hasta ver el valor esperado.
-      let declarations = 49;
-      for (let intento = 0; intento < 50 && declarations !== 50; intento++) {
-        await new Promise((resolve) => setImmediate(resolve));
-        const updated = await Tenant.findById(tenantProfessional._id);
-        declarations = updated.currentUsage.declarations;
-      }
+      // Espera acotada (esperarHasta): sondea hasta ver el valor o agotar 2 s.
+      const declarations = await esperarHasta(
+        async () => (await Tenant.findById(tenantProfessional._id)).currentUsage.declarations,
+        50,
+        { descripcion: 'currentUsage.declarations tras requireUsage' }
+      );
       expect(declarations).toBe(50);
     });
 
