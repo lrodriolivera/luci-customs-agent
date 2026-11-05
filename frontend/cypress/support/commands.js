@@ -1,5 +1,13 @@
-// Login via API (mas rapido, evita rate limiting en UI)
-Cypress.Commands.add('login', (email = 'test@luci.es', password = 'test123') => {
+const { getE2ECredentials } = require('../../e2e/env')
+
+// Login via API (mas rapido, evita rate limiting en UI).
+// Sin credenciales en el codigo: sin argumentos usa E2E_USER / E2E_PASS
+// (ver e2e/env.js) y falla con un error claro si faltan.
+Cypress.Commands.add('login', (emailOverride, passwordOverride) => {
+  const { email, password } =
+    emailOverride && passwordOverride
+      ? { email: emailOverride, password: passwordOverride }
+      : getE2ECredentials()
   cy.session([email, password], () => {
     cy.request({
       method: 'POST',

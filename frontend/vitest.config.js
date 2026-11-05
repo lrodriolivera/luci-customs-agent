@@ -15,7 +15,7 @@ export default defineConfig({
     // no determinista (en aislamiento terminan en <1s). 15s da margen sin
     // enmascarar cuelgues reales (bucles infinitos siguen atrapados).
     testTimeout: 15000,
-    include: ['src/**/*.{test,spec}.{js,jsx}'],
+    include: ['src/**/*.{test,spec}.{js,jsx}', 'e2e/**/*.test.js'],
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'json-summary', 'json'],
