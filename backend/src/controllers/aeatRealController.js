@@ -15,7 +15,17 @@ const {
 } = require('../services/aeat');
 const { Expedition } = require('../models');
 const aiService = require('../services/aiService');
-const { ensureSameTenant } = require('../utils/tenantGuard');
+const { ensureSameTenant, isSuperAdmin } = require('../utils/tenantGuard');
+const { esMRNValido } = require('../utils/mrnFormat');
+
+/**
+ * Filtro de tenant del seguimiento AEAT (mismo criterio que filtroTenantOPlataforma):
+ * super admin de plataforma sin tenant -> sin acotar; el resto, solo su tenant.
+ */
+const filtroSeguimiento = (user) => {
+  if (isSuperAdmin(user) && !user?.tenantId) return {};
+  return { tenantId: user?.tenantId ? String(user.tenantId) : null };
+};
 
 // ============================================
 // GESTIÓN DE CERTIFICADOS DIGITALES
@@ -421,7 +431,8 @@ const submitH1Declaration = async (req, res) => {
       await aeatStatusMonitorService.trackDeclaration(result.mrn, {
         expeditionId: expedition._id,
         declarationType: 'H1',
-        userId: req.user?._id
+        userId: req.user?._id,
+        tenantId: req.user?.tenantId
       });
     }
 
@@ -505,7 +516,8 @@ const submitH7Declaration = async (req, res) => {
     if (result.success && result.mrn) {
       await aeatStatusMonitorService.trackDeclaration(result.mrn, {
         expeditionId: expedition._id,
-        declarationType: 'H7'
+        declarationType: 'H7',
+        tenantId: req.user?.tenantId
       });
     }
 
@@ -574,7 +586,8 @@ const submitAESDeclaration = async (req, res) => {
     if (result.success && result.mrn) {
       await aeatStatusMonitorService.trackDeclaration(result.mrn, {
         expeditionId: expedition._id,
-        declarationType: 'AES'
+        declarationType: 'AES',
+        tenantId: req.user?.tenantId
       });
     }
 
@@ -634,7 +647,8 @@ const submitNCTSDeclaration = async (req, res) => {
     if (result.success && result.mrn) {
       await aeatStatusMonitorService.trackDeclaration(result.mrn, {
         expeditionId: expedition._id,
-        declarationType: 'NCTS'
+        declarationType: 'NCTS',
+        tenantId: req.user?.tenantId
       });
     }
 
@@ -810,11 +824,21 @@ const trackDeclaration = async (req, res) => {
       });
     }
 
+    // Formato oficial de AEAT (utils/mrnFormat): un MRN libre acaba en rutas y claves.
+    if (!esMRNValido(mrn)) {
+      return res.status(400).json({
+        success: false,
+        error: 'MRN con formato no válido'
+      });
+    }
+
     const result = await aeatStatusMonitorService.trackDeclaration(mrn, {
       declarationType,
       expeditionId,
       userId: req.user?._id,
-      ...metadata
+      ...metadata,
+      // Siempre el del usuario autenticado, después del spread: el cliente no lo decide.
+      tenantId: req.user?.tenantId ? String(req.user.tenantId) : null
     });
 
     res.json({
@@ -837,7 +861,7 @@ const trackDeclaration = async (req, res) => {
  */
 const getTrackedDeclarations = async (req, res) => {
   try {
-    const tracked = await aeatStatusMonitorService.listTrackedDeclarations();
+    const tracked = await aeatStatusMonitorService.listTrackedDeclarations(filtroSeguimiento(req.user));
 
     res.json({
       success: true,
@@ -862,6 +886,13 @@ const refreshDeclarationStatus = async (req, res) => {
     const { mrn } = req.params;
     const { certificateAlias } = req.body;
 
+    if (!esMRNValido(mrn)) {
+      return res.status(400).json({
+        success: false,
+        error: 'MRN con formato no válido'
+      });
+    }
+
     if (!certificateAlias) {
       return res.status(400).json({
         success: false,
@@ -871,7 +902,9 @@ const refreshDeclarationStatus = async (req, res) => {
 
     const result = await aeatStatusMonitorService.refreshDeclarationStatus(
       mrn,
-      certificateAlias
+      certificateAlias,
+      undefined,
+      req.user?.tenantId ? String(req.user.tenantId) : null
     );
 
     res.json({
@@ -898,7 +931,8 @@ const getActiveAlerts = async (req, res) => {
 
     const alerts = await aeatStatusMonitorService.getActiveAlerts({
       severity,
-      unacknowledgedOnly: unacknowledgedOnly === 'true'
+      unacknowledgedOnly: unacknowledgedOnly === 'true',
+      ...filtroSeguimiento(req.user)
     });
 
     res.json({
@@ -1095,7 +1129,7 @@ const getServiceStatus = async (req, res) => {
       sslStatus: serviceInfo.sslStatus,
       simulationMode: serviceInfo.simulationMode,
       certificatesLoaded: (await certificateService.listCertificates()).certificates?.length || 0,
-      activeMonitoring: ((await aeatStatusMonitorService.listTrackedDeclarations?.()) || {}).total || 0,
+      activeMonitoring: ((await aeatStatusMonitorService.listTrackedDeclarations?.(filtroSeguimiento(req.user))) || {}).total || 0,
       activeAlerts: aeatStatusMonitorService.alerts?.length || 0,
       timestamp: new Date().toISOString()
     };

@@ -169,6 +169,15 @@ class AEATStatusMonitorService extends EventEmitter {
   // ============== SEGUIMIENTO DE DECLARACIONES ==============
 
   /**
+   * Clave del almacen: `${tenantId}:${mrn}` cuando hay tenant, el mrn a secas si
+   * no (legacy / procesos internos). Antes la clave era solo el mrn: un tenant
+   * podia ver, refrescar o pisar el seguimiento de otro (F4).
+   */
+  _clave(mrn, tenantId) {
+    return tenantId ? `${tenantId}:${mrn}` : mrn;
+  }
+
+  /**
    * Agregar declaración al seguimiento
    *
    * Acepta dos firmas (mantenemos retrocompat con el controller existente):
@@ -187,8 +196,10 @@ class AEATStatusMonitorService extends EventEmitter {
       declarationType = dt || 'UNKNOWN';
       meta = { ...rest, ...metadata };
     }
+    const tenantId = meta.tenantId ? String(meta.tenantId) : null;
     const tracking = {
       mrn,
+      tenantId,
       type: typeof declarationType === 'string' ? declarationType : 'UNKNOWN',
       addedAt: new Date().toISOString(),
       lastChecked: null,
@@ -200,7 +211,7 @@ class AEATStatusMonitorService extends EventEmitter {
       luciPredictions: null
     };
 
-    await this.trackedDeclarations.set(mrn, tracking);
+    await this.trackedDeclarations.set(this._clave(mrn, tenantId), tracking);
 
     logger.info(`StatusMonitor: Agregada declaración al seguimiento`, { mrn, type: tracking.type });
 
@@ -218,8 +229,8 @@ class AEATStatusMonitorService extends EventEmitter {
   /**
    * Remover declaración del seguimiento
    */
-  async untrackDeclaration(mrn) {
-    const existed = await this.trackedDeclarations.delete(mrn);
+  async untrackDeclaration(mrn, tenantId = null) {
+    const existed = await this.trackedDeclarations.delete(this._clave(mrn, tenantId));
 
     return {
       success: existed,
@@ -231,8 +242,8 @@ class AEATStatusMonitorService extends EventEmitter {
   /**
    * Obtener estado de declaración
    */
-  async getTrackedDeclaration(mrn) {
-    return await this.trackedDeclarations.get(mrn);
+  async getTrackedDeclaration(mrn, tenantId = null) {
+    return await this.trackedDeclarations.get(this._clave(mrn, tenantId));
   }
 
   /**
@@ -240,6 +251,14 @@ class AEATStatusMonitorService extends EventEmitter {
    */
   async listTrackedDeclarations(filters = {}) {
     let declarations = await this.trackedDeclarations.values();
+
+    // Tenant: undefined = sin acotar (solo super admin de plataforma); un valor
+    // (incluido null) = solo ese tenant. Las entradas sin tenant (anteriores a F4)
+    // no se muestran a ningun tenant.
+    if (filters.tenantId !== undefined) {
+      const tenant = filters.tenantId ? String(filters.tenantId) : null;
+      declarations = declarations.filter(d => (d.tenantId || null) === tenant);
+    }
 
     // Aplicar filtros
     if (filters.type) {
@@ -325,8 +344,8 @@ class AEATStatusMonitorService extends EventEmitter {
   /**
    * Actualizar estado de una declaración específica
    */
-  async refreshDeclarationStatus(mrn, certificateId, password) {
-    const tracking = await this.trackedDeclarations.get(mrn);
+  async refreshDeclarationStatus(mrn, certificateId, password, tenantId = null) {
+    const tracking = await this.trackedDeclarations.get(this._clave(mrn, tenantId));
 
     if (!tracking) {
       return {
@@ -383,7 +402,7 @@ class AEATStatusMonitorService extends EventEmitter {
         tracking.luciPredictions = await this._updatePredictions(tracking, result);
 
         // Persistir cambios en Redis
-        await this.trackedDeclarations.set(mrn, tracking);
+        await this.trackedDeclarations.set(this._clave(mrn, tenantId), tracking);
 
         return {
           success: true,
@@ -475,7 +494,7 @@ class AEATStatusMonitorService extends EventEmitter {
 
     // Persistir prediccion inicial en Redis
     if (tracking.mrn) {
-      await this.trackedDeclarations.set(tracking.mrn, tracking).catch(() => {});
+      await this.trackedDeclarations.set(this._clave(tracking.mrn, tracking.tenantId), tracking).catch(() => {});
     }
 
     return tracking.luciPredictions;
@@ -853,7 +872,8 @@ class AEATStatusMonitorService extends EventEmitter {
         await this.refreshDeclarationStatus(
           tracking.mrn,
           this.pollingConfig.certificateId,
-          this.pollingConfig.password
+          this.pollingConfig.password,
+          tracking.tenantId || null
         );
 
         // Pequeño delay entre consultas para no saturar AEAT
@@ -907,9 +927,13 @@ class AEATStatusMonitorService extends EventEmitter {
   /**
    * Obtener alertas activas
    */
-  async getActiveAlerts() {
+  async getActiveAlerts(opciones = {}) {
     const alerts = [];
-    const declarations = await this.trackedDeclarations.values();
+    let declarations = await this.trackedDeclarations.values();
+    if (opciones.tenantId !== undefined) {
+      const tenant = opciones.tenantId ? String(opciones.tenantId) : null;
+      declarations = declarations.filter(d => (d.tenantId || null) === tenant);
+    }
 
     for (const tracking of declarations) {
       for (const alert of (tracking.alerts || [])) {

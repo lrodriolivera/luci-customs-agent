@@ -516,10 +516,10 @@ describe('aeatRealController.getActiveAlerts', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data).toHaveLength(1);
-    expect(mockStatusMonitor.getActiveAlerts).toHaveBeenCalledWith({
+    expect(mockStatusMonitor.getActiveAlerts).toHaveBeenCalledWith(expect.objectContaining({
       severity: 'high',
       unacknowledgedOnly: true
-    });
+    }));
   });
 
   test('500 si el monitor lanza', async () => {
