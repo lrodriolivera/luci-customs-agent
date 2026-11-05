@@ -63,8 +63,9 @@ router.get('/:token/ai/full-analysis', portalValidators.getByToken, portalContro
 
 // ==================== Self-Service Routes ====================
 
-// Create new expedition (self-service)
-router.post('/self-service/expeditions', clientPortalController.createExpedition);
+// Create new expedition (self-service). Exige sesion: el tenant sale de req.user.tenantId,
+// nunca del body (F6). Antes de crear no existe ningun token de portal que lo acredite.
+router.post('/self-service/expeditions', authenticate, clientPortalController.createExpedition);
 
 // Update expedition from portal
 router.put('/:token/expedition', portalValidators.getByToken, clientPortalController.updateExpedition);

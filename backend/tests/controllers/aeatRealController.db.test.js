@@ -755,7 +755,7 @@ describe('aeatRealController con Mongo real', () => {
       const res = await request(await app(aeatRealController.trackDeclaration))
         .post('/r')
         .send({
-          mrn: '26ES123456789012345',
+          mrn: '26ES12345678901234',
           declarationType: 'H7',
           expeditionId: new mongoose.Types.ObjectId().toString()
         });
@@ -764,7 +764,7 @@ describe('aeatRealController con Mongo real', () => {
       expect(res.body.data.tracked).toBe(true);
 
       expect(mockStatusMonitor.trackDeclaration).toHaveBeenCalledWith(
-        '26ES123456789012345',
+        '26ES12345678901234',
         expect.objectContaining({
           declarationType: 'H7',
           userId: USER_A._id
@@ -777,7 +777,7 @@ describe('aeatRealController con Mongo real', () => {
 
       const res = await request(await app(aeatRealController.trackDeclaration))
         .post('/r')
-        .send({ mrn: '26ES123', declarationType: 'H1' });
+        .send({ mrn: '26ES12345678901234', declarationType: 'H1' });
 
       expect(res.status).toBe(500);
       expect(res.body.error).toContain('Monitor offline');
@@ -790,7 +790,7 @@ describe('aeatRealController con Mongo real', () => {
   describe('refreshDeclarationStatus', () => {
     test('400 sin certificateAlias', async () => {
       const res = await request(await app(aeatRealController.refreshDeclarationStatus, 'post', '/r/:mrn/refresh'))
-        .post('/r/26ES123/refresh')
+        .post('/r/26ES12345678901234/refresh')
         .send({});
 
       expect(res.status).toBe(400);
@@ -804,7 +804,7 @@ describe('aeatRealController con Mongo real', () => {
       });
 
       const res = await request(await app(aeatRealController.refreshDeclarationStatus, 'post', '/r/:mrn/refresh'))
-        .post('/r/26ES999/refresh')
+        .post('/r/26ES12345678901234/refresh')
         .send({ certificateAlias: 'FNMT-STRIX' });
 
       expect(res.status).toBe(200);
@@ -817,7 +817,7 @@ describe('aeatRealController con Mongo real', () => {
       );
 
       const res = await request(await app(aeatRealController.refreshDeclarationStatus, 'post', '/r/:mrn/refresh'))
-        .post('/r/26ES999/refresh')
+        .post('/r/26ES12345678901234/refresh')
         .send({ certificateAlias: 'FNMT-STRIX' });
 
       expect(res.status).toBe(500);

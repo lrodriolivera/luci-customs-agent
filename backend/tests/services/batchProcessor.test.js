@@ -196,29 +196,29 @@ describe('fase de procesamiento (HALLAZGO: create* rompe con el esquema actual)'
 describe('gestion de jobs', () => {
   test('getJobStatus resume estado y ultimos logs; null si no existe', async () => {
     const job = await batchProcessor.createBatchJob(orgId(), orgId(), [itemH1Valido()]);
-    const status = batchProcessor.getJobStatus(job.id);
+    const status = batchProcessor.getJobStatus(job.id, job.organizationId);
     expect(status.id).toBe(job.id);
     expect(status.status).toBe('pending');
     expect(Array.isArray(status.logs)).toBe(true);
-    expect(batchProcessor.getJobStatus('nope')).toBeNull();
+    expect(batchProcessor.getJobStatus('nope', job.organizationId)).toBeNull();
   });
 
   test('getJobDetail devuelve el job completo', async () => {
     const job = await batchProcessor.createBatchJob(orgId(), orgId(), [itemH1Valido()]);
-    expect(batchProcessor.getJobDetail(job.id)).toBe(job);
+    expect(batchProcessor.getJobDetail(job.id, job.organizationId)).toBe(job);
   });
 
   test('cancelJob marca cancelled; no cancela finalizados; lanza si no existe', async () => {
     const job = await batchProcessor.createBatchJob(orgId(), orgId(), [itemH1Valido()]);
-    const cancelled = batchProcessor.cancelJob(job.id);
+    const cancelled = batchProcessor.cancelJob(job.id, job.organizationId);
     expect(cancelled.status).toBe('cancelled');
     expect(cancelled.completedAt).toBeInstanceOf(Date);
 
-    expect(() => batchProcessor.cancelJob('nope')).toThrow(/not found/i);
+    expect(() => batchProcessor.cancelJob('nope', job.organizationId)).toThrow(/not found/i);
 
     const finished = await batchProcessor.createBatchJob(orgId(), orgId(), [itemH1Valido()]);
     finished.status = 'completed';
-    expect(() => batchProcessor.cancelJob(finished.id)).toThrow(/Cannot cancel/);
+    expect(() => batchProcessor.cancelJob(finished.id, finished.organizationId)).toThrow(/Cannot cancel/);
   });
 
   test('listJobs acota por organizacion y filtra por estado', async () => {
@@ -246,8 +246,8 @@ describe('gestion de jobs', () => {
 
     batchProcessor.cleanupOldJobs(24);
 
-    expect(batchProcessor.getJobDetail(viejo.id)).toBeUndefined();
-    expect(batchProcessor.getJobDetail(reciente.id)).toBeDefined();
+    expect(batchProcessor.getJobDetail(viejo.id, org)).toBeUndefined();
+    expect(batchProcessor.getJobDetail(reciente.id, org)).toBeDefined();
   });
 });
 

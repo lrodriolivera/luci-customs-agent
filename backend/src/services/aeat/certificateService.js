@@ -68,6 +68,18 @@ class CertificateService {
   }
 
   /**
+   * Ambito de tenant de un certificado (F9). `tenantId` undefined = sin acotar
+   * (procesos internos y super admin de plataforma); string = solo los de ese
+   * tenant; null = solo los sin tenant. El almacen es un unico Map en memoria
+   * compartido, asi que cada consulta de usuario DEBE pasar su ambito.
+   */
+  _esDelAmbito(cert, tenantId) {
+    if (tenantId === undefined) return true;
+    const dueno = cert.metadata?.tenantId ? String(cert.metadata.tenantId) : null;
+    return dueno === (tenantId ? String(tenantId) : null);
+  }
+
+  /**
    * Importar certificado P12/PFX
    */
   async importCertificate(p12Buffer, password, metadata = {}) {
@@ -246,11 +258,14 @@ class CertificateService {
   /**
    * Listar certificados
    */
-  async listCertificates(organizationId = null) {
+  async listCertificates(organizationId = null, tenantId = undefined) {
     const certs = [];
 
     for (const [id, cert] of this.certificates) {
       if (organizationId && cert.metadata.organizationId !== organizationId) {
+        continue;
+      }
+      if (!this._esDelAmbito(cert, tenantId)) {
         continue;
       }
 
@@ -300,11 +315,11 @@ class CertificateService {
   /**
    * Verificar certificado contra OCSP/CRL
    */
-  async verifyCertificateStatus(certId) {
+  async verifyCertificateStatus(certId, tenantId = undefined) {
     try {
       const certRecord = this.certificates.get(certId);
 
-      if (!certRecord) {
+      if (!certRecord || !this._esDelAmbito(certRecord, tenantId)) {
         throw new Error('Certificado no encontrado');
       }
 
@@ -385,10 +400,10 @@ class CertificateService {
   /**
    * Eliminar certificado
    */
-  async deleteCertificate(certId) {
+  async deleteCertificate(certId, tenantId = undefined) {
     const cert = this.certificates.get(certId);
 
-    if (!cert) {
+    if (!cert || !this._esDelAmbito(cert, tenantId)) {
       return { success: false, error: 'Certificado no encontrado' };
     }
 
@@ -416,9 +431,11 @@ class CertificateService {
    * cualquier endpoint que reciba "certificateAlias" no puede localizar el
    * certificado.
    */
-  getCertificateIdByAlias(alias) {
+  getCertificateIdByAlias(alias, tenantId = undefined) {
     for (const [id, cert] of this.certificates) {
-      if (cert.metadata?.alias === alias) return id;
+      if (!this._esDelAmbito(cert, tenantId)) continue;
+      // Sin alias, el certificado se direcciona por su id (como en el listado).
+      if ((cert.metadata?.alias || id) === alias) return id;
     }
     return null;
   }

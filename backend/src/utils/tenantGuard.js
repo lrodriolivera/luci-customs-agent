@@ -84,4 +84,15 @@ function filtroTenantOPlataforma(user) {
   return filtroTenant(user);
 }
 
-module.exports = { ensureSameTenant, extractTenantId, isSuperAdmin, filtroTenant, filtroTenantOPlataforma };
+/**
+ * Ambito de tenant para almacenes en memoria o servicios que reciben el tenant
+ * como valor suelto (certificados AEAT, seguimiento): undefined = sin acotar
+ * (super admin de plataforma sin tenant); si no, el tenant del usuario como
+ * string, o null si no tiene (solo ve lo que tampoco tiene tenant).
+ */
+function ambitoTenant(user) {
+  if (isSuperAdmin(user) && !user?.tenantId) return undefined;
+  return user?.tenantId ? String(user.tenantId) : null;
+}
+
+module.exports = { ensureSameTenant, extractTenantId, isSuperAdmin, filtroTenant, filtroTenantOPlataforma, ambitoTenant };

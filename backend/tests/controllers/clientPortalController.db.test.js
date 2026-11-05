@@ -103,14 +103,22 @@ describe('createExpedition', () => {
       ORG_A, { companyName: 'X', email: 'a@b.c' }, { operationType: 'import' });
   });
 
-  test('usa organizationId del body cuando no viene en req', async () => {
+  test('usa el tenant del usuario autenticado y no el organizationId del body (F6)', async () => {
     clientPortalService.createExpeditionFromPortal.mockResolvedValue({ expeditionId: 'IMP-2' });
     const res = mockRes();
     await clientPortalController.createExpedition(
-      mockReq({ body: { organizationId: String(ORG_A), client: { companyName: 'X', email: 'a@b.c' }, operation: { operationType: 'import' } } }), res);
+      mockReq({ user: { tenantId: ORG_A }, body: { organizationId: String(new mongoose.Types.ObjectId()), client: { companyName: 'X', email: 'a@b.c' }, operation: { operationType: 'import' } } }), res);
     expect(res.statusCode).toBe(201);
     expect(clientPortalService.createExpeditionFromPortal).toHaveBeenCalledWith(
-      String(ORG_A), expect.any(Object), expect.any(Object));
+      ORG_A, expect.any(Object), expect.any(Object));
+  });
+
+  test('400 si solo hay organizationId en el body (no es fuente fiable)', async () => {
+    const res = mockRes();
+    await clientPortalController.createExpedition(
+      mockReq({ body: { organizationId: String(ORG_A), client: { companyName: 'X', email: 'a@b.c' }, operation: { operationType: 'import' } } }), res);
+    expect(res.statusCode).toBe(400);
+    expect(clientPortalService.createExpeditionFromPortal).not.toHaveBeenCalled();
   });
 
   test('500 si el service falla', async () => {

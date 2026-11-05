@@ -34,8 +34,9 @@ const createExpedition = async (req, res) => {
       });
     }
 
-    // Get organization ID from request or use default
-    const organizationId = req.organizationId || req.body.organizationId;
+    // El tenant lo fija el servidor: el del usuario autenticado o el de la API key
+    // (req.organizationId). NUNCA req.body.organizationId (F6, CWE-639).
+    const organizationId = req.user?.tenantId || req.organizationId;
     if (!organizationId) {
       return res.status(400).json({
         success: false,

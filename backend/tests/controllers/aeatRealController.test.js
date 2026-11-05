@@ -272,6 +272,7 @@ describe('aeatRealController.verifyCertificate', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCertService.verifyCertificateStatus.mockResolvedValue({ valid: true, revoked: false });
+    mockCertService.getCertificateIdByAlias.mockReturnValue('cert-id-real-1');
   });
 
   test('camino feliz: verifica estado del certificado', async () => {
@@ -280,7 +281,9 @@ describe('aeatRealController.verifyCertificate', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.valid).toBe(true);
-    expect(mockCertService.verifyCertificateStatus).toHaveBeenCalledWith('FNMT-STRIX');
+    // El alias se resuelve a certId dentro del tenant del usuario (F9)
+    expect(mockCertService.getCertificateIdByAlias.mock.calls[0][0]).toBe('FNMT-STRIX');
+    expect(mockCertService.verifyCertificateStatus.mock.calls[0][0]).toBe('cert-id-real-1');
   });
 
   test('500 si el servicio lanza', async () => {
@@ -298,6 +301,7 @@ describe('aeatRealController.deleteCertificate', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCertService.deleteCertificate.mockResolvedValue();
+    mockCertService.getCertificateIdByAlias.mockReturnValue('cert-id-real-1');
   });
 
   test('camino feliz: elimina certificado', async () => {
@@ -306,7 +310,8 @@ describe('aeatRealController.deleteCertificate', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.message).toMatch(/eliminado/i);
-    expect(mockCertService.deleteCertificate).toHaveBeenCalledWith('FNMT-STRIX');
+    expect(mockCertService.getCertificateIdByAlias.mock.calls[0][0]).toBe('FNMT-STRIX');
+    expect(mockCertService.deleteCertificate.mock.calls[0][0]).toBe('cert-id-real-1');
   });
 
   test('500 si el servicio lanza', async () => {
@@ -358,7 +363,7 @@ describe('aeatRealController.validateCertificateForOperation', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.valid).toBe(true);
-    expect(mockCertService.getCertificateIdByAlias).toHaveBeenCalledWith('FNMT-STRIX');
+    expect(mockCertService.getCertificateIdByAlias.mock.calls[0][0]).toBe('FNMT-STRIX');
     expect(mockCertService.validateCertificateForOperation).toHaveBeenCalledWith(
       'cert-id-real-1',
       'import',
@@ -516,10 +521,10 @@ describe('aeatRealController.getActiveAlerts', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data).toHaveLength(1);
-    expect(mockStatusMonitor.getActiveAlerts).toHaveBeenCalledWith({
+    expect(mockStatusMonitor.getActiveAlerts).toHaveBeenCalledWith(expect.objectContaining({
       severity: 'high',
       unacknowledgedOnly: true
-    });
+    }));
   });
 
   test('500 si el monitor lanza', async () => {
@@ -636,7 +641,7 @@ describe('aeatRealController.submitH1Declaration', () => {
       .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX', password: 'clave-real-p12' });
 
     expect(res.status).toBe(200);
-    expect(mockCertService.getCertificateIdByAlias).toHaveBeenCalledWith('FNMT-STRIX');
+    expect(mockCertService.getCertificateIdByAlias.mock.calls[0][0]).toBe('FNMT-STRIX');
     expect(mockAeatReal.submitH1Declaration).toHaveBeenCalledWith(
       '<ent:ImportacionCompletaV1Ent/>',
       'cert-id-real-1',

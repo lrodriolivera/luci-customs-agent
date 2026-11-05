@@ -465,10 +465,20 @@ class BatchProcessor {
   // ==================== Job Management ====================
 
   /**
+   * Busca un job por id Y organizacion. Sin organizationId, o de otra
+   * organizacion, devuelve null: el job no existe para quien pregunta.
+   */
+  _jobDeOrganizacion(jobId, organizationId) {
+    const job = batchJobs.get(jobId);
+    if (!job || !organizationId || !job.organizationId) return null;
+    return String(job.organizationId) === String(organizationId) ? job : null;
+  }
+
+  /**
    * Obtener estado de un trabajo
    */
-  getJobStatus(jobId) {
-    const job = batchJobs.get(jobId);
+  getJobStatus(jobId, organizationId) {
+    const job = this._jobDeOrganizacion(jobId, organizationId);
     if (!job) return null;
 
     return {
@@ -486,15 +496,15 @@ class BatchProcessor {
   /**
    * Obtener detalle completo de un trabajo
    */
-  getJobDetail(jobId) {
-    return batchJobs.get(jobId);
+  getJobDetail(jobId, organizationId) {
+    return this._jobDeOrganizacion(jobId, organizationId) || undefined;
   }
 
   /**
    * Cancelar trabajo
    */
-  cancelJob(jobId) {
-    const job = batchJobs.get(jobId);
+  cancelJob(jobId, organizationId) {
+    const job = this._jobDeOrganizacion(jobId, organizationId);
     if (!job) {
       throw new Error('Job not found');
     }

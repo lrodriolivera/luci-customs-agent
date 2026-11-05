@@ -623,10 +623,10 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .get('/r')
         .query({ unacknowledgedOnly: 'true' });
 
-      expect(mockStatusMonitor.getActiveAlerts).toHaveBeenCalledWith({
+      expect(mockStatusMonitor.getActiveAlerts).toHaveBeenCalledWith(expect.objectContaining({
         severity: undefined,
         unacknowledgedOnly: true
-      });
+      }));
     });
 
     test('pasa unacknowledgedOnly=false cuando query NO es "true"', async () => {
@@ -636,10 +636,10 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .get('/r')
         .query({ unacknowledgedOnly: 'false' });
 
-      expect(mockStatusMonitor.getActiveAlerts).toHaveBeenCalledWith({
+      expect(mockStatusMonitor.getActiveAlerts).toHaveBeenCalledWith(expect.objectContaining({
         severity: undefined,
         unacknowledgedOnly: false
-      });
+      }));
     });
   });
 
@@ -1249,7 +1249,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
       await request(app(aeatRealController.trackDeclaration))
         .post('/r')
         .send({
-          mrn: '26ES123456789012345',
+          mrn: '26ES12345678901234',
           declarationType: 'H1',
           expeditionId: new mongoose.Types.ObjectId().toString(),
           metadata: {
@@ -1260,7 +1260,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
 
       // Línea 764: ...metadata
       expect(mockStatusMonitor.trackDeclaration).toHaveBeenCalledWith(
-        '26ES123456789012345',
+        '26ES12345678901234',
         expect.objectContaining({
           declarationType: 'H1',
           userId: USER_A._id,
@@ -1283,10 +1283,10 @@ describe('aeatRealController - ramas sin cubrir', () => {
         .get('/r')
         .query({ severity: 'critical' });
 
-      expect(mockStatusMonitor.getActiveAlerts).toHaveBeenCalledWith({
+      expect(mockStatusMonitor.getActiveAlerts).toHaveBeenCalledWith(expect.objectContaining({
         severity: 'critical',
         unacknowledgedOnly: false
-      });
+      }));
     });
   });
 
@@ -1546,12 +1546,12 @@ describe('aeatRealController - ramas sin cubrir', () => {
       await request(app(aeatRealController.trackDeclaration))
         .post('/r')
         .send({
-          mrn: '26ES123',
+          mrn: '26ES12345678901234',
           declarationType: 'H1'
         });
 
       expect(mockStatusMonitor.trackDeclaration).toHaveBeenCalledWith(
-        '26ES123',
+        '26ES12345678901234',
         expect.objectContaining({
           userId: USER_A._id
         })
@@ -1568,12 +1568,12 @@ describe('aeatRealController - ramas sin cubrir', () => {
       await request(appSinUsuario)
         .post('/r')
         .send({
-          mrn: '26ES123',
+          mrn: '26ES12345678901234',
           declarationType: 'H1'
         });
 
       expect(mockStatusMonitor.trackDeclaration).toHaveBeenCalledWith(
-        '26ES123',
+        '26ES12345678901234',
         expect.objectContaining({
           userId: undefined
         })
@@ -1816,7 +1816,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
 
       const res = await request(app(aeatRealController.trackDeclaration))
         .post('/r')
-        .send({ mrn: '26ES123', declarationType: 'H1' });
+        .send({ mrn: '26ES12345678901234', declarationType: 'H1' });
 
       expect(res.status).toBe(500);
       expect(res.body.error).toBe('Error iniciando tracking');
@@ -1836,7 +1836,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
       mockStatusMonitor.refreshDeclarationStatus.mockRejectedValue({});
 
       const res = await request(app(aeatRealController.refreshDeclarationStatus, 'post', '/r/:mrn/refresh'))
-        .post('/r/26ES123/refresh')
+        .post('/r/26ES12345678901234/refresh')
         .send({ certificateAlias: 'CERT-X' });
 
       expect(res.status).toBe(500);
