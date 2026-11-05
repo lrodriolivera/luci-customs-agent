@@ -11,7 +11,7 @@ Cypress.Commands.add('login', (emailOverride, passwordOverride) => {
   cy.session([email, password], () => {
     cy.request({
       method: 'POST',
-      url: 'https://aduanas.strixai.ai/api/auth/login',
+      url: '/api/auth/login', // relativa a baseUrl (BASE_URL)
       body: { email, password },
       failOnStatusCode: false,
     }).then((resp) => {

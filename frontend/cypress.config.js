@@ -9,7 +9,9 @@ const e2eEnv = Object.fromEntries(
 
 module.exports = defineConfig({
   e2e: {
-    baseUrl: 'https://aduanas.strixai.ai',
+    // Por defecto el servidor local de Vite. Produccion solo si se pasa BASE_URL
+    // explicitamente (BASE_URL=https://... npm run test:e2e:cypress).
+    baseUrl: process.env.BASE_URL || 'http://localhost:5173',
     viewportWidth: 1440,
     viewportHeight: 900,
     video: true,
