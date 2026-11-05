@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/react'
 import i18n from '../i18n/i18n'
 import * as cognitoService from './cognitoService'
 import { seg } from '../utils/seg'
+import { esRutaPublica } from './rutasPublicas'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
@@ -15,7 +16,7 @@ const api = axios.create({
 // Request interceptor — Cognito token primero, legacy fallback
 api.interceptors.request.use(
   async (config) => {
-    if (!config.headers.Authorization) {
+    if (!config.headers.Authorization && !esRutaPublica(config.url)) {
       if (cognitoService.isConfigured()) {
         try {
           const accessToken = await cognitoService.getAccessToken()
@@ -47,6 +48,11 @@ api.interceptors.response.use(
   async (error) => {
     const status = error.response?.status
     const originalRequest = error.config
+
+    // Llamadas públicas: sin reintento con token ni cierre de sesión forzado.
+    if (esRutaPublica(originalRequest?.url)) {
+      return Promise.reject(error)
+    }
 
     if (status === 401 && !originalRequest._retry && !originalRequest?.url?.includes('/session')) {
       originalRequest._retry = true
