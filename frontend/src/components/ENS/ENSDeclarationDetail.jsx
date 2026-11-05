@@ -33,6 +33,7 @@ import {
   Info as InfoIcon
 } from '@mui/icons-material'
 import { ensAPI } from '../../services/api'
+import { esUrlSegura } from '../../utils/url'
 
 const ENSDeclarationDetail = () => {
   const { t } = useTranslation()
@@ -770,8 +771,8 @@ const ENSDeclarationDetail = () => {
                         <TableCell>{doc.name || '-'}</TableCell>
                         <TableCell>{formatDate(doc.uploadedAt)}</TableCell>
                         <TableCell>
-                          {doc.url && (
-                            <IconButton size="small" href={doc.url} target="_blank">
+                          {esUrlSegura(doc.url) && (
+                            <IconButton size="small" href={doc.url} target="_blank" rel="noopener noreferrer">
                               <DownloadIcon fontSize="small" />
                             </IconButton>
                           )}

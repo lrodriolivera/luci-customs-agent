@@ -25,6 +25,7 @@ import {
 import RequirementManager from '../Requirements/RequirementManager'
 import ChannelStatus from '../Channels/ChannelStatus'
 import ParaduaneroManager from '../Paraduanero/ParaduaneroManager'
+import { hrefSeguro } from '../../utils/url'
 
 // ==================== Expedition AI Panel Component ====================
 function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
@@ -1319,7 +1320,7 @@ export default function ExpeditionDetail() {
                 {t('expeditions.copyLink')}
               </button>
               <a
-                href={portalLink}
+                href={hrefSeguro(portalLink)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 btn-secondary flex items-center justify-center gap-2"

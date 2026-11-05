@@ -25,6 +25,7 @@ import {
   FileText
 } from 'lucide-react';
 import { portalAPI } from '../../services/api';
+import { hrefSeguro } from '../../utils/url'
 
 const PortalSelfService = ({ organizationId }) => {
   const { t } = useTranslation();
@@ -228,7 +229,7 @@ const PortalSelfService = ({ organizationId }) => {
           </div>
 
           <a
-            href={success.portalUrl}
+            href={hrefSeguro(success.portalUrl)}
             className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             {t('portal.accessPortal')}

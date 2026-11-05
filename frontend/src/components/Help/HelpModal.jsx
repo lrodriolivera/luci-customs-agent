@@ -8,6 +8,7 @@ import {
   SparklesIcon,
   ArrowTopRightOnSquareIcon
 } from '@heroicons/react/24/outline'
+import { hrefSeguro } from '../../utils/url'
 
 function UsageTab({ data }) {
   const { t } = useTranslation()
@@ -52,7 +53,7 @@ function NormativaTab({ data }) {
             </span>
             {reg.url && (
               <a
-                href={reg.url}
+                href={hrefSeguro(reg.url)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-luci hover:text-luci-dark flex-shrink-0"
