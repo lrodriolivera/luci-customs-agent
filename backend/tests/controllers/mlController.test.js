@@ -95,7 +95,7 @@ describe('recordChannelFeedback', () => {
     const res = mockRes();
     await ml.recordChannelFeedback(req({ predictionId: 'p1', actualChannel: 'red', notes: 'n' }), res);
     expect(res.body.success).toBe(true);
-    expect(mlServices.recordChannelFeedback).toHaveBeenCalledWith('p1', 'red', 'n');
+    expect(mlServices.recordChannelFeedback).toHaveBeenCalledWith('p1', 'red', null); // 3er arg: ámbito de tenant (notes ya no se pasaba al servicio)
   });
 
   test('500 si lanza', async () => {
@@ -497,5 +497,31 @@ describe('getOverallStats', () => {
     const res = mockRes();
     await ml.getOverallStats(req(), res);
     expect(res.statusCode).toBe(500);
+  });
+});
+
+describe('mlController: ámbito de tenant en predict/classify/feedback/stats', () => {
+  const conTenant = { id: 'u1', tenantId: 't1', role: 'user' };
+  const plataforma = { id: 'root', role: 'super_admin' };
+  const resMock = () => ({ json: jest.fn(), status: jest.fn().mockReturnThis() });
+
+  test('pasa el tenant del usuario, undefined al super admin de plataforma y null sin tenant', async () => {
+    mlServices.predictChannel.mockReturnValue({ success: true });
+    mlServices.classifyProduct.mockReturnValue({ success: true });
+    mlServices.getChannelStats.mockReturnValue({ success: true });
+    mlServices.getClassificationStats.mockReturnValue({ success: true });
+    mlServices.recordClassificationFeedback.mockReturnValue({ success: true });
+
+    const body = { originCountry: 'DE', goods: [{}], description: 'x', classificationId: 'c1', correctCode: '1' };
+    await ml.predictChannel({ body, user: conTenant }, resMock());
+    expect(mlServices.predictChannel).toHaveBeenLastCalledWith(body, 't1');
+    await ml.classifyProduct({ body, user: plataforma }, resMock());
+    expect(mlServices.classifyProduct).toHaveBeenLastCalledWith(body, undefined);
+    await ml.getChannelStats({ body: {}, user: conTenant }, resMock());
+    expect(mlServices.getChannelStats).toHaveBeenLastCalledWith('t1');
+    await ml.getClassificationStats({ body: {}, user: { id: 'u2', role: 'user' } }, resMock());
+    expect(mlServices.getClassificationStats).toHaveBeenLastCalledWith(null);
+    await ml.recordClassificationFeedback({ body, user: conTenant }, resMock());
+    expect(mlServices.recordClassificationFeedback).toHaveBeenLastCalledWith('c1', '1', undefined, 't1');
   });
 });

@@ -301,6 +301,8 @@ const KPI_DEFINITIONS = {
 // Ambito (parametro tenantId): undefined = super admin de plataforma (lee todo y
 // escribe en su propio cubo); null = sin tenant (no lee nada); string = ese tenant.
 const estadoPorTenant = new Map();
+// Contador para que dos alertas del mismo KPI creadas en el mismo ms (p. ej. de tenants distintos) no compartan id.
+let secuenciaAlertas = 0;
 const CLAVE_PLATAFORMA = '__plataforma__';
 const CLAVE_SIN_TENANT = '__sin_tenant__';
 
@@ -766,7 +768,7 @@ function _checkKPIAlert(kpiId, result, definition, tenantId) {
   }
 
   const alert = {
-    id: `ALR-${Date.now()}-${kpiId}`,
+    id: `ALR-${Date.now()}-${kpiId}-${++secuenciaAlertas}`,
     kpiId,
     kpiName: definition.name,
     category: definition.category,

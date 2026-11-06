@@ -5,6 +5,7 @@
  */
 
 const logger = require('../../config/logger');
+const { crearEstadoPorTenant } = require('./estadoPorTenant');
 
 // ==================== Classification Knowledge Base ====================
 
@@ -107,9 +108,21 @@ const CLASSIFICATION_PATTERNS = {
 /**
  * Classification history for learning
  */
-const classificationHistory = [];
-const feedbackHistory = [];
-let modelConfidence = 0.85;
+// Historial y feedback por tenant (ver estadoPorTenant). La confianza del modelo
+// se deriva del feedback del propio ambito, no de una variable global.
+const estado = crearEstadoPorTenant(() => ({ history: [], feedback: [] }));
+const CONFIANZA_INICIAL = 0.85;
+
+const _ordenar = (a, b) => a.timestamp - b.timestamp;
+const _feedbackVisible = (tenantId) => estado.visibles(tenantId).flatMap(c => c.feedback).sort(_ordenar);
+const _historialVisible = (tenantId) => estado.visibles(tenantId).flatMap(c => c.history).sort(_ordenar);
+
+/** Confianza movil de los ultimos 100 feedback del ambito (0.85 si aun no hay). */
+function _confianza(tenantId) {
+  const recientes = _feedbackVisible(tenantId).slice(-100);
+  if (recientes.length === 0) return CONFIANZA_INICIAL;
+  return Math.max(0.5, recientes.filter(f => f.wasCorrect).length / recientes.length);
+}
 
 // ==================== Classification Functions ====================
 
@@ -195,7 +208,7 @@ function findBestCategory(description) {
  * @param {Object} input - Classification input
  * @returns {Object} Classification result
  */
-function classifyProduct(input) {
+function classifyProduct(input, tenantId) {
   try {
     const {
       description,
@@ -233,11 +246,11 @@ function classifyProduct(input) {
     const suggestions = generateSuggestions(match, fullDescription);
 
     // Calculate confidence based on score and historical accuracy
-    const confidence = Math.round(match.score * modelConfidence * 100);
+    const confidence = Math.round(match.score * _confianza(tenantId) * 100);
 
     // Store for learning
     const classificationId = `class_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    classificationHistory.push({
+    estado.escribir(tenantId).history.push({
       id: classificationId,
       input: fullDescription,
       result: match,
@@ -407,8 +420,9 @@ function getGeneralSuggestions(description) {
 /**
  * Record feedback for learning
  */
-function recordClassificationFeedback(classificationId, correctCode, notes = '') {
-  const original = classificationHistory.find(c => c.id === classificationId);
+function recordClassificationFeedback(classificationId, correctCode, notes = '', tenantId) {
+  const cubo = estado.visibles(tenantId).find(c => c.history.some(h => h.id === classificationId));
+  const original = cubo && cubo.history.find(h => h.id === classificationId);
 
   if (!original) {
     return { success: false, error: 'Classification not found' };
@@ -423,12 +437,10 @@ function recordClassificationFeedback(classificationId, correctCode, notes = '')
     timestamp: new Date()
   };
 
-  feedbackHistory.push(feedback);
+  cubo.feedback.push(feedback);
 
-  // Update model confidence based on feedback
-  const recentFeedback = feedbackHistory.slice(-100);
-  const correctCount = recentFeedback.filter(f => f.wasCorrect).length;
-  modelConfidence = Math.max(0.5, correctCount / recentFeedback.length);
+  // Model confidence derived from the scope's feedback
+  const modelConfidence = _confianza(tenantId);
 
   logger.info('Classification feedback recorded', {
     classificationId,
@@ -446,7 +458,10 @@ function recordClassificationFeedback(classificationId, correctCode, notes = '')
 /**
  * Get classification statistics
  */
-function getClassificationStats() {
+function getClassificationStats(tenantId) {
+  const classificationHistory = _historialVisible(tenantId);
+  const feedbackHistory = _feedbackVisible(tenantId);
+  const modelConfidence = _confianza(tenantId);
   const totalClassifications = classificationHistory.length;
   const totalFeedback = feedbackHistory.length;
   const correctCount = feedbackHistory.filter(f => f.wasCorrect).length;

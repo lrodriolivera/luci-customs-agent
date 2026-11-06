@@ -5,6 +5,7 @@
  */
 
 const logger = require('../../config/logger');
+const { crearEstadoPorTenant } = require('./estadoPorTenant');
 
 // ==================== Risk Factors Configuration ====================
 
@@ -48,10 +49,24 @@ const RISK_WEIGHTS = {
 // ==================== Historical Data Storage ====================
 
 // In-memory storage for demo (use MongoDB in production)
-const predictionHistory = new Map();
-const feedbackData = [];
+// Historial y feedback por tenant (ver estadoPorTenant). La precision del modelo
+// se deriva del feedback del propio ambito, no de una variable global.
+const estado = crearEstadoPorTenant(() => ({ predictions: new Map(), feedback: [] }));
+const PRECISION_INICIAL = 0.85;
+
+function _feedbackVisible(tenantId) {
+  return estado.visibles(tenantId)
+    .flatMap(c => c.feedback)
+    .sort((a, b) => a.timestamp - b.timestamp);
+}
+
+/** Precision movil de los ultimos 100 feedback del ambito (0.85 si aun no hay). */
+function _precision(tenantId) {
+  const recientes = _feedbackVisible(tenantId).slice(-100);
+  if (recientes.length === 0) return PRECISION_INICIAL;
+  return recientes.filter(f => f.wasCorrect).length / recientes.length;
+}
 let modelVersion = '1.0.0';
-let modelAccuracy = 0.85;
 
 // ==================== Feature Extraction ====================
 
@@ -257,7 +272,7 @@ function determineChannel(probabilities) {
  * @param {Object} operationData - Operation details
  * @returns {Object} Prediction result
  */
-function predictChannel(operationData) {
+function predictChannel(operationData, tenantId) {
   try {
     // Extract features
     const features = extractFeatures(operationData);
@@ -297,13 +312,13 @@ function predictChannel(operationData) {
         valueCategory: features.valueCategory
       },
       modelVersion,
-      modelAccuracy: Math.round(modelAccuracy * 100),
+      modelAccuracy: Math.round(_precision(tenantId) * 100),
       timestamp: new Date().toISOString()
     };
 
     // Store prediction for feedback loop
     const predictionId = `pred_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    predictionHistory.set(predictionId, {
+    estado.escribir(tenantId).predictions.set(predictionId, {
       ...prediction,
       operationData,
       createdAt: new Date()
@@ -475,8 +490,9 @@ function generateRecommendations(features, riskFactors) {
  * @param {string} predictionId - Prediction ID
  * @param {string} actualChannel - Actual assigned channel
  */
-function recordFeedback(predictionId, actualChannel) {
-  const prediction = predictionHistory.get(predictionId);
+function recordFeedback(predictionId, actualChannel, tenantId) {
+  const cubo = estado.visibles(tenantId).find(c => c.predictions.has(predictionId));
+  const prediction = cubo && cubo.predictions.get(predictionId);
 
   if (!prediction) {
     return { success: false, error: 'Prediction not found' };
@@ -491,12 +507,10 @@ function recordFeedback(predictionId, actualChannel) {
     timestamp: new Date()
   };
 
-  feedbackData.push(feedback);
+  cubo.feedback.push(feedback);
 
-  // Update model accuracy (rolling average of last 100)
-  const recentFeedback = feedbackData.slice(-100);
-  const correctPredictions = recentFeedback.filter(f => f.wasCorrect).length;
-  modelAccuracy = correctPredictions / recentFeedback.length;
+  // Model accuracy: rolling average of last 100 feedback of the scope
+  const modelAccuracy = _precision(tenantId);
 
   logger.info('Feedback recorded', {
     predictionId,
@@ -514,8 +528,9 @@ function recordFeedback(predictionId, actualChannel) {
 /**
  * Get prediction statistics
  */
-function getStatistics() {
-  const totalPredictions = predictionHistory.size;
+function getStatistics(tenantId) {
+  const feedbackData = _feedbackVisible(tenantId);
+  const totalPredictions = estado.visibles(tenantId).reduce((n, c) => n + c.predictions.size, 0);
   const totalFeedback = feedbackData.length;
   const correctPredictions = feedbackData.filter(f => f.wasCorrect).length;
 
@@ -541,9 +556,9 @@ function getStatistics() {
 /**
  * Batch prediction for multiple operations
  */
-function batchPredict(operations) {
+function batchPredict(operations, tenantId) {
   const results = operations.map(op => {
-    const result = predictChannel(op);
+    const result = predictChannel(op, tenantId);
     return {
       operationId: op.id || op.reference,
       ...result.prediction
