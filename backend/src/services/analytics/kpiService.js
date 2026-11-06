@@ -297,8 +297,42 @@ const KPI_DEFINITIONS = {
 /**
  * In-memory storage for KPI history and alerts
  */
-let kpiHistory = new Map();
-let activeAlerts = [];
+// Estado por tenant: tenantKey -> { history: Map<kpiId, []>, alerts: [] }.
+// Ambito (parametro tenantId): undefined = super admin de plataforma (lee todo y
+// escribe en su propio cubo); null = sin tenant (no lee nada); string = ese tenant.
+const estadoPorTenant = new Map();
+// Contador para que dos alertas del mismo KPI creadas en el mismo ms (p. ej. de tenants distintos) no compartan id.
+let secuenciaAlertas = 0;
+const CLAVE_PLATAFORMA = '__plataforma__';
+const CLAVE_SIN_TENANT = '__sin_tenant__';
+
+function _clave(tenantId) {
+  if (tenantId === undefined) return CLAVE_PLATAFORMA;
+  if (tenantId === null) return CLAVE_SIN_TENANT;
+  return String(tenantId);
+}
+
+function _estado(tenantId) {
+  const clave = _clave(tenantId);
+  if (!estadoPorTenant.has(clave)) {
+    estadoPorTenant.set(clave, { history: new Map(), alerts: [] });
+  }
+  return estadoPorTenant.get(clave);
+}
+
+/** Cubos que el ambito puede leer: todos (undefined), ninguno (null) o el suyo. */
+function _estadosVisibles(tenantId) {
+  if (tenantId === undefined) return [...estadoPorTenant.values()];
+  if (tenantId === null) return [];
+  const e = estadoPorTenant.get(String(tenantId));
+  return e ? [e] : [];
+}
+
+function _historialVisible(kpiId, tenantId) {
+  return _estadosVisibles(tenantId)
+    .flatMap(e => e.history.get(kpiId) || [])
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+}
 let kpiTargets = new Map();
 
 /**
@@ -318,7 +352,7 @@ function getKPIsByCategory(category) {
 /**
  * Calculate current KPI value
  */
-async function calculateKPI(kpiId, data = {}) {
+async function calculateKPI(kpiId, data = {}, tenantId) {
   const definition = KPI_DEFINITIONS[kpiId];
   if (!definition) {
     return { success: false, error: `Unknown KPI: ${kpiId}` };
@@ -404,15 +438,15 @@ async function calculateKPI(kpiId, data = {}) {
       unit: definition.unit,
       target: definition.thresholds.target,
       status: _evaluateKPIStatus(value, definition),
-      trend: _calculateTrend(kpiId, value),
+      trend: _calculateTrend(kpiId, value, tenantId),
       timestamp: new Date()
     };
 
     // Record in history
-    _recordKPIValue(kpiId, result);
+    _recordKPIValue(kpiId, result, tenantId);
 
     // Check for alerts
-    _checkKPIAlert(kpiId, result, definition);
+    _checkKPIAlert(kpiId, result, definition, tenantId);
 
     return { success: true, data: result };
 
@@ -425,11 +459,11 @@ async function calculateKPI(kpiId, data = {}) {
 /**
  * Get all current KPI values
  */
-async function getAllKPIs(data = {}) {
+async function getAllKPIs(data = {}, tenantId) {
   const results = [];
 
   for (const kpiId of Object.keys(KPI_DEFINITIONS)) {
-    const result = await calculateKPI(kpiId, data);
+    const result = await calculateKPI(kpiId, data, tenantId);
     if (result.success) {
       results.push(result.data);
     }
@@ -457,8 +491,8 @@ async function getAllKPIs(data = {}) {
 /**
  * Get KPI history
  */
-function getKPIHistory(kpiId, period = 'last_30_days') {
-  const history = kpiHistory.get(kpiId) || [];
+function getKPIHistory(kpiId, period = 'last_30_days', tenantId) {
+  const history = _historialVisible(kpiId, tenantId);
 
   // Filter by period
   const now = new Date();
@@ -511,8 +545,8 @@ function setKPITarget(kpiId, target) {
 /**
  * Get active alerts
  */
-function getActiveAlerts(filters = {}) {
-  let alerts = [...activeAlerts];
+function getActiveAlerts(filters = {}, tenantId) {
+  let alerts = _estadosVisibles(tenantId).flatMap(e => e.alerts);
 
   if (filters.severity) {
     alerts = alerts.filter(a => a.severity === filters.severity);
@@ -539,16 +573,18 @@ function getActiveAlerts(filters = {}) {
 /**
  * Acknowledge an alert
  */
-function acknowledgeAlert(alertId, userId) {
-  const alertIndex = activeAlerts.findIndex(a => a.id === alertId);
+function acknowledgeAlert(alertId, userId, tenantId) {
+  const alert = _estadosVisibles(tenantId)
+    .flatMap(e => e.alerts)
+    .find(a => a.id === alertId);
 
-  if (alertIndex === -1) {
+  if (!alert) {
     return { success: false, error: 'Alert not found' };
   }
 
-  activeAlerts[alertIndex].acknowledged = true;
-  activeAlerts[alertIndex].acknowledgedBy = userId;
-  activeAlerts[alertIndex].acknowledgedAt = new Date();
+  alert.acknowledged = true;
+  alert.acknowledgedBy = userId;
+  alert.acknowledgedAt = new Date();
 
   logger.info(`[KPI] Alert ${alertId} acknowledged by ${userId}`);
 
@@ -558,13 +594,13 @@ function acknowledgeAlert(alertId, userId) {
 /**
  * Dismiss an alert
  */
-function dismissAlert(alertId) {
-  const initialLength = activeAlerts.length;
-  activeAlerts = activeAlerts.filter(a => a.id !== alertId);
+function dismissAlert(alertId, tenantId) {
+  const estado = _estadosVisibles(tenantId).find(e => e.alerts.some(a => a.id === alertId));
 
-  if (activeAlerts.length === initialLength) {
+  if (!estado) {
     return { success: false, error: 'Alert not found' };
   }
+  estado.alerts = estado.alerts.filter(a => a.id !== alertId);
 
   logger.info(`[KPI] Alert ${alertId} dismissed`);
   return { success: true };
@@ -573,8 +609,8 @@ function dismissAlert(alertId) {
 /**
  * Get KPI dashboard data
  */
-async function getKPIDashboard() {
-  const allKPIs = await getAllKPIs();
+async function getKPIDashboard(tenantId) {
+  const allKPIs = await getAllKPIs({}, tenantId);
 
   if (!allKPIs.success) {
     return allKPIs;
@@ -592,7 +628,7 @@ async function getKPIDashboard() {
     success: true,
     data: {
       kpis: allKPIs.data,
-      alerts: getActiveAlerts().alerts,
+      alerts: getActiveAlerts({}, tenantId).alerts,
       healthScore: _calculateHealthScore(allKPIs.data.all),
       trends: _getOverallTrends(allKPIs.data.all),
       luciAnalysis,
@@ -683,8 +719,8 @@ function _evaluateKPIStatus(value, definition) {
   return 'ok';
 }
 
-function _calculateTrend(kpiId, currentValue) {
-  const history = kpiHistory.get(kpiId) || [];
+function _calculateTrend(kpiId, currentValue, tenantId) {
+  const history = _historialVisible(kpiId, tenantId);
 
   if (history.length < 2) {
     return { direction: 'stable', percentage: 0 };
@@ -699,12 +735,13 @@ function _calculateTrend(kpiId, currentValue) {
   };
 }
 
-function _recordKPIValue(kpiId, result) {
-  if (!kpiHistory.has(kpiId)) {
-    kpiHistory.set(kpiId, []);
+function _recordKPIValue(kpiId, result, tenantId) {
+  const { history: porKpi } = _estado(tenantId);
+  if (!porKpi.has(kpiId)) {
+    porKpi.set(kpiId, []);
   }
 
-  const history = kpiHistory.get(kpiId);
+  const history = porKpi.get(kpiId);
   history.push({
     value: result.value,
     status: result.status,
@@ -717,7 +754,9 @@ function _recordKPIValue(kpiId, result) {
   }
 }
 
-function _checkKPIAlert(kpiId, result, definition) {
+function _checkKPIAlert(kpiId, result, definition, tenantId) {
+  const estado = _estado(tenantId);
+  const activeAlerts = estado.alerts;
   // Remove existing alert for this KPI if status improved
   const existingIndex = activeAlerts.findIndex(a => a.kpiId === kpiId);
 
@@ -729,7 +768,7 @@ function _checkKPIAlert(kpiId, result, definition) {
   }
 
   const alert = {
-    id: `ALR-${Date.now()}-${kpiId}`,
+    id: `ALR-${Date.now()}-${kpiId}-${++secuenciaAlertas}`,
     kpiId,
     kpiName: definition.name,
     category: definition.category,

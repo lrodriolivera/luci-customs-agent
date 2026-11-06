@@ -6,6 +6,7 @@
 
 const mlServices = require('../services/ml');
 const logger = require('../config/logger');
+const { ambitoTenant } = require('../utils/tenantGuard');
 
 // ==================== Channel Prediction ====================
 
@@ -24,7 +25,7 @@ const predictChannel = async (req, res) => {
       });
     }
 
-    const result = mlServices.predictChannel(declaration);
+    const result = mlServices.predictChannel(declaration, ambitoTenant(req.user));
 
     logger.info('Channel prediction requested', {
       country: declaration.originCountry,
@@ -57,7 +58,7 @@ const batchPredictChannels = async (req, res) => {
       });
     }
 
-    const result = mlServices.batchPredictChannels(declarations);
+    const result = mlServices.batchPredictChannels(declarations, ambitoTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error('Batch channel prediction error:', error);
@@ -74,7 +75,7 @@ const batchPredictChannels = async (req, res) => {
  */
 const recordChannelFeedback = async (req, res) => {
   try {
-    const { predictionId, actualChannel, notes } = req.body;
+    const { predictionId, actualChannel } = req.body;
 
     if (!predictionId || !actualChannel) {
       return res.status(400).json({
@@ -83,7 +84,7 @@ const recordChannelFeedback = async (req, res) => {
       });
     }
 
-    const result = mlServices.recordChannelFeedback(predictionId, actualChannel, notes);
+    const result = mlServices.recordChannelFeedback(predictionId, actualChannel, ambitoTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error('Channel feedback error:', error);
@@ -100,7 +101,7 @@ const recordChannelFeedback = async (req, res) => {
  */
 const getChannelStats = async (req, res) => {
   try {
-    const result = mlServices.getChannelStats();
+    const result = mlServices.getChannelStats(ambitoTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error('Channel stats error:', error);
@@ -224,7 +225,7 @@ const classifyProduct = async (req, res) => {
       });
     }
 
-    const result = mlServices.classifyProduct(productData);
+    const result = mlServices.classifyProduct(productData, ambitoTenant(req.user));
 
     logger.info('Product classified', {
       code: result.classification?.code,
@@ -256,7 +257,7 @@ const recordClassificationFeedback = async (req, res) => {
       });
     }
 
-    const result = mlServices.recordClassificationFeedback(classificationId, correctCode, notes);
+    const result = mlServices.recordClassificationFeedback(classificationId, correctCode, notes, ambitoTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error('Classification feedback error:', error);
@@ -273,7 +274,7 @@ const recordClassificationFeedback = async (req, res) => {
  */
 const getClassificationStats = async (req, res) => {
   try {
-    const result = mlServices.getClassificationStats();
+    const result = mlServices.getClassificationStats(ambitoTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error('Classification stats error:', error);
@@ -546,9 +547,9 @@ const recordResponseFeedback = async (req, res) => {
  */
 const getOverallStats = async (req, res) => {
   try {
-    const channelStats = mlServices.getChannelStats();
+    const channelStats = mlServices.getChannelStats(ambitoTenant(req.user));
     const fraudStats = mlServices.getFraudStats();
-    const classificationStats = mlServices.getClassificationStats();
+    const classificationStats = mlServices.getClassificationStats(ambitoTenant(req.user));
     const recommendationStats = mlServices.getRecommendationStats();
     const autoResponseStats = mlServices.getAutoResponseStats();
 
