@@ -311,7 +311,22 @@ describe('KPIs', () => {
     kpiService.acknowledgeAlert.mockReturnValue({ success: true });
     const res = crearRes();
     await ctrl.acknowledgeKPIAlert(req({}, {}, { id: 'a1' }, { id: 'u9' }), res);
-    expect(kpiService.acknowledgeAlert).toHaveBeenCalledWith('a1', 'u9');
+    expect(kpiService.acknowledgeAlert).toHaveBeenCalledWith('a1', 'u9', null);
+  });
+
+  test('las alertas KPI se acotan con el ámbito del usuario (tenant, plataforma o sin tenant)', async () => {
+    kpiService.acknowledgeAlert.mockReturnValue({ success: true });
+    kpiService.dismissAlert.mockReturnValue({ success: true });
+    kpiService.getActiveAlerts.mockReturnValue({ success: true });
+    const conTenant = { id: 'u1', tenantId: 't1', role: 'user' };
+    const plataforma = { id: 'root', role: 'super_admin' };
+
+    await ctrl.acknowledgeKPIAlert({ params: { id: 'a1' }, query: {}, body: {}, user: conTenant }, crearRes());
+    expect(kpiService.acknowledgeAlert).toHaveBeenLastCalledWith('a1', 'u1', 't1');
+    await ctrl.dismissKPIAlert({ params: { id: 'a1' }, query: {}, body: {}, user: conTenant }, crearRes());
+    expect(kpiService.dismissAlert).toHaveBeenLastCalledWith('a1', 't1');
+    await ctrl.getKPIAlerts({ params: {}, query: {}, body: {}, user: plataforma }, crearRes());
+    expect(kpiService.getActiveAlerts).toHaveBeenLastCalledWith(expect.any(Object), undefined);
   });
 
   test('dismissKPIAlert devuelve 404 si no existe', async () => {

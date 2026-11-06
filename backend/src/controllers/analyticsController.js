@@ -9,6 +9,7 @@ const { analyticsService, reportsService, kpiService, predictionsService } = req
 const realMetrics = require('../services/analytics/realMetricsService');
 const aiService = require('../services/aiService');
 const logger = require('../config/logger');
+const { ambitoTenant } = require('../utils/tenantGuard');
 
 // ==================== Dashboard & Metrics ====================
 
@@ -400,7 +401,7 @@ async function scheduleReport(req, res) {
  */
 async function getKPIDashboard(req, res) {
   try {
-    const result = await kpiService.getKPIDashboard();
+    const result = await kpiService.getKPIDashboard(ambitoTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] KPI dashboard error: ${error.message}`);
@@ -414,7 +415,7 @@ async function getKPIDashboard(req, res) {
  */
 async function getAllKPIs(req, res) {
   try {
-    const result = await kpiService.getAllKPIs();
+    const result = await kpiService.getAllKPIs({}, ambitoTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Get all KPIs error: ${error.message}`);
@@ -450,7 +451,7 @@ async function calculateKPI(req, res) {
     const { id } = req.params;
     const data = req.query;
 
-    const result = await kpiService.calculateKPI(id, data);
+    const result = await kpiService.calculateKPI(id, data, ambitoTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Calculate KPI error: ${error.message}`);
@@ -467,7 +468,7 @@ async function getKPIHistory(req, res) {
     const { id } = req.params;
     const { period } = req.query;
 
-    const result = kpiService.getKPIHistory(id, period || 'last_30_days');
+    const result = kpiService.getKPIHistory(id, period || 'last_30_days', ambitoTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Get KPI history error: ${error.message}`);
@@ -529,7 +530,7 @@ async function compareKPIs(req, res) {
 async function getKPIAlerts(req, res) {
   try {
     const { severity, category, kpiId } = req.query;
-    const result = kpiService.getActiveAlerts({ severity, category, kpiId });
+    const result = kpiService.getActiveAlerts({ severity, category, kpiId }, ambitoTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Get KPI alerts error: ${error.message}`);
@@ -544,7 +545,7 @@ async function getKPIAlerts(req, res) {
 async function acknowledgeKPIAlert(req, res) {
   try {
     const { id } = req.params;
-    const result = kpiService.acknowledgeAlert(id, req.user?.id || 'system');
+    const result = kpiService.acknowledgeAlert(id, req.user?.id || 'system', ambitoTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Acknowledge alert error: ${error.message}`);
@@ -559,7 +560,7 @@ async function acknowledgeKPIAlert(req, res) {
 async function dismissKPIAlert(req, res) {
   try {
     const { id } = req.params;
-    const result = kpiService.dismissAlert(id);
+    const result = kpiService.dismissAlert(id, ambitoTenant(req.user));
 
     if (!result.success) {
       return res.status(404).json(result);
