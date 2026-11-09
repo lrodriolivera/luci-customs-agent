@@ -382,7 +382,7 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
       });
     });
 
-    test.skip('RAMA NO TOMADA (línea 397-405): calcula impuestos especiales cuando están presentes', async () => {
+    test('RAMA NO TOMADA (línea 397-405): calcula impuestos especiales cuando están presentes', async () => {
       // Crear un código separado solo para este test sin duties.specific
       await TaricCode.create({
         code: '2203000000',
@@ -425,7 +425,7 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
       expect(resultado.totalSpecialTaxes).toBe(30);
     });
 
-    test.skip('RAMA NO TOMADA: impuesto especial ad valorem (porcentaje)', async () => {
+    test('RAMA NO TOMADA: impuesto especial ad valorem (porcentaje)', async () => {
       // Código con impuesto especial en % (sin derecho específico para evitar el error)
       await TaricCode.create({
         code: '8703230000',
@@ -465,7 +465,7 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
       expect(resultado.specialTaxes[0].amount).toBe(950);
     });
 
-    test.skip('RAMA TOMADA: sin impuestos especiales', async () => {
+    test('RAMA TOMADA: sin impuestos especiales', async () => {
       // Crear un código simple sin duties.specific ni specialTaxes
       await TaricCode.create({
         code: '9503007000',
@@ -1042,11 +1042,11 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
   });
 
   describe('getFromAICache y saveToAICache - líneas 837-855', () => {
-    test.skip('RAMA TOMADA (línea 839): getFromAICache devuelve valor del cache', async () => {
+    test('RAMA TOMADA (línea 839): getFromAICache devuelve valor del cache', async () => {
       // Siembra entrada en cache de IA
       await TaricAICache.create({
         code: '8471300000',
-        aiResponse: { classification: 'Portable computers', confidence: 95 },
+        aiResponse: { description: 'Portable computers', chapter: '84' },
         aiModel: 'claude-3',
         tokensUsed: { input: 150, output: 100 },
         hits: 0, // Empieza en 0, el getFromCache lo incrementa
@@ -1059,8 +1059,9 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
       expect(cached).not.toBeNull();
       // Verificar que tiene la estructura correcta
       expect(cached).toHaveProperty('aiResponse');
-      expect(cached.aiResponse).toHaveProperty('classification');
-      expect(cached.aiResponse.classification).toBe('Portable computers');
+      // aiResponse solo conserva los campos que declara TaricAICache
+      expect(cached.aiResponse).toHaveProperty('description');
+      expect(cached.aiResponse.description).toBe('Portable computers');
     });
 
     test('RAMA NO TOMADA (línea 841): error en getFromAICache devuelve null', async () => {
@@ -1071,10 +1072,10 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
       expect(cached).toBeNull();
     });
 
-    test.skip('RAMA TOMADA (línea 851): saveToAICache guarda en cache', async () => {
+    test('RAMA TOMADA (línea 851): saveToAICache guarda en cache', async () => {
       const resultado = await taricService.saveToAICache(
         '6109100010',
-        { classification: 'T-shirts', confidence: 98 },
+        { description: 'T-shirts', chapter: '61' },
         { model: 'claude-3-sonnet', tokensUsed: { input: 120, output: 60 } }
       );
 
@@ -1082,7 +1083,7 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
 
       const cached = await TaricAICache.findOne({ code: '6109100010' });
       expect(cached).not.toBeNull();
-      expect(cached.aiResponse.classification).toBe('T-shirts');
+      expect(cached.aiResponse.description).toBe('T-shirts');
     });
 
     test('RAMA NO TOMADA (línea 853): error en saveToAICache no lanza', async () => {
@@ -1096,7 +1097,7 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
   });
 
   describe('seedCommonCodes - líneas 584-585: supplementaryUnit handling', () => {
-    test.skip('RAMA NO TOMADA (línea 584): supplementaryUnit como objeto con type', async () => {
+    test('RAMA NO TOMADA (línea 584): supplementaryUnit como objeto con type', async () => {
       // El código común tiene supplementaryUnit = { required: true, type: 'p/st', description: 'Número de artículos' }
       const resultado = await taricService.seedCommonCodes();
 
@@ -1104,8 +1105,7 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
 
       const codigo = await TaricCode.findOne({ code: '6109100000' });
       expect(codigo).not.toBeNull();
-      // La línea 584 extrae el type cuando existe
-      expect(codigo.supplementaryUnit).toEqual(expect.stringContaining('p/st'));
+      expect(codigo.toObject().supplementaryUnit).toEqual(expect.stringContaining('p/st'));
     });
 
     test('RAMA TOMADA (línea 585): supplementaryUnit como objeto sin type usa description', async () => {
@@ -1193,7 +1193,7 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
       expect(warning).toContain('Litros');
     });
 
-    test.skip('RAMA NO TOMADA (línea 892): advertencia sobre impuestos especiales', async () => {
+    test('RAMA NO TOMADA (línea 892): advertencia sobre impuestos especiales', async () => {
       // Usar el código de cerveza sin duties.specific
       const resultado = await taricService.calculateDuties({
         taricCode: '2203000000',
@@ -1224,7 +1224,7 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
       expect(warning).toContain('200');
     });
 
-    test.skip('RAMA TOMADA: sin advertencias cuando todo es correcto', async () => {
+    test('RAMA TOMADA: sin advertencias cuando todo es correcto', async () => {
       await TaricCode.create({
         code: '8471300000',
         description: {
@@ -1401,7 +1401,7 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
   });
 
   describe('calculateDuties - más cobertura de ramas (sin spec.unit bug)', () => {
-    test.skip('RAMA: calculateDuties con código sin specialTaxes', async () => {
+    test('RAMA: calculateDuties con código sin specialTaxes', async () => {
       // Crear código sin specialTaxes para evitar el bug
       await TaricCode.create({
         code: '3926909700',
@@ -1436,7 +1436,7 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
       expect(resultado.totalSpecialTaxes).toBe(0);
     });
 
-    test.skip('RAMA: preferencia aplicada con éxito', async () => {
+    test('RAMA: preferencia aplicada con éxito', async () => {
       await TaricCode.create({
         code: '6204620000',
         description: {
@@ -1474,7 +1474,7 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
   });
 
   describe('_generateDutyWarnings - más cobertura de advertencias', () => {
-    test.skip('RAMA: advertencia cuando no hay warnings', async () => {
+    test('RAMA: advertencia cuando no hay warnings', async () => {
       await TaricCode.create({
         code: '9405409900',
         description: {
