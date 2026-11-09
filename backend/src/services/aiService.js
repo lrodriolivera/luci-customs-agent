@@ -29,6 +29,10 @@ const LANGUAGE_INSTRUCTIONS = {
   pt: 'Responde sempre em portugues europeu.'
 };
 
+// Regla comun de los prompts de analitica: el modelo solo puede citar cifras que
+// vengan en los datos que se le pasan.
+const REGLA_SIN_INVENTAR = 'No inventes cifras que no estén en los datos recibidos: si un dato falta o es null, indica "Sin datos"; no estimes, extrapoles ni completes valores que no figuren en ellos.';
+
 function getLanguageInstruction(lang) {
   return LANGUAGE_INSTRUCTIONS[lang] || LANGUAGE_INSTRUCTIONS['es'];
 }
@@ -5273,6 +5277,7 @@ CONTEXTO:
 - Comparación con período anterior: ${context.comparison ? 'Sí' : 'No'}
 
 INSTRUCCIONES:
+0. ${REGLA_SIN_INVENTAR}
 1. Identifica tendencias significativas (positivas y negativas)
 2. Detecta anomalías o patrones inusuales
 3. Genera insights accionables para mejorar operaciones
@@ -5390,6 +5395,7 @@ TIPOS DE ANOMALÍAS A DETECTAR:
 6. Tendencias que rompen estacionalidad
 
 INSTRUCCIONES:
+0. ${REGLA_SIN_INVENTAR}
 1. Identifica todas las anomalías significativas
 2. Calcula el score de anomalía (0-100)
 3. Explica la causa probable de cada anomalía
@@ -5500,6 +5506,7 @@ ${JSON.stringify(historicalData, null, 2)}
 HORIZONTE DE PREDICCIÓN: ${horizon} días
 
 INSTRUCCIONES:
+0. ${REGLA_SIN_INVENTAR}
 1. Analiza patrones estacionales, cíclicos y tendenciales
 2. Genera predicciones para métricas clave
 3. Calcula intervalos de confianza
@@ -5618,6 +5625,7 @@ OPCIONES DEL REPORTE:
 - Idioma: ${options.language || 'es'}
 
 INSTRUCCIONES:
+0. ${REGLA_SIN_INVENTAR}
 1. Genera un resumen ejecutivo claro y conciso
 2. Destaca los KPIs más importantes
 3. Incluye análisis de tendencias
@@ -5747,6 +5755,7 @@ OBJETIVOS/TARGETS:
 ${JSON.stringify(targets, null, 2)}
 
 INSTRUCCIONES:
+0. ${REGLA_SIN_INVENTAR}
 1. Identifica KPIs que están fuera de objetivo
 2. Analiza la causa raíz de cada desviación
 3. Prioriza por impacto en el negocio
