@@ -24,6 +24,15 @@ jest.mock('../../../src/services/aiService', () => ({
 const aiService = require('../../../src/services/aiService');
 const kpiService = require('../../../src/services/analytics/kpiService');
 
+// Datos explicitos de los 16 KPI: ningun KPI se inventa, asi que los tests que
+// necesitan valores los aportan (antes dependian del aleatorio de demo).
+const DATOS = {
+  totalDeclarations: 300, days: 30, greenChannel: 75, avgProcessingTime: 4, activeExpeditions: 25,
+  totalDuties: 250000, savings: 15000, guaranteeUtilization: 50, errorRate: 2, rejectionRate: 1.5,
+  onTimeRate: 95, complianceScore: 92, documentCompleteness: 95, luciAccuracy: 94,
+  automationRate: 70, firstTimeResolution: 88, aeatConnectivity: 98
+};
+
 describe('KPI Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -102,7 +111,7 @@ describe('KPI Service', () => {
 
   describe('calculateKPI', () => {
     test('should calculate declarations_per_day KPI', async () => {
-      const result = await kpiService.calculateKPI('declarations_per_day');
+      const result = await kpiService.calculateKPI('declarations_per_day', DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
@@ -118,21 +127,21 @@ describe('KPI Service', () => {
     });
 
     test('should include status in result', async () => {
-      const result = await kpiService.calculateKPI('green_channel_rate');
+      const result = await kpiService.calculateKPI('green_channel_rate', DATOS);
 
       expect(result.data.status).toBeDefined();
       expect(['good', 'ok', 'warning', 'critical']).toContain(result.data.status);
     });
 
     test('should include trend in result', async () => {
-      const result = await kpiService.calculateKPI('error_rate');
+      const result = await kpiService.calculateKPI('error_rate', DATOS);
 
       expect(result.data.trend).toBeDefined();
       expect(result.data.trend).toHaveProperty('direction');
     });
 
     test('should include target in result', async () => {
-      const result = await kpiService.calculateKPI('compliance_score');
+      const result = await kpiService.calculateKPI('compliance_score', DATOS);
 
       expect(result.data.target).toBeDefined();
     });
@@ -140,7 +149,7 @@ describe('KPI Service', () => {
 
   describe('getAllKPIs', () => {
     test('should return all KPIs with values', async () => {
-      const result = await kpiService.getAllKPIs();
+      const result = await kpiService.getAllKPIs(DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.all).toBeDefined();
@@ -148,7 +157,7 @@ describe('KPI Service', () => {
     });
 
     test('should group KPIs by category', async () => {
-      const result = await kpiService.getAllKPIs();
+      const result = await kpiService.getAllKPIs(DATOS);
 
       expect(result.data.byCategory).toBeDefined();
       expect(result.data.byCategory.operational).toBeDefined();
@@ -156,7 +165,7 @@ describe('KPI Service', () => {
     });
 
     test('should include summary', async () => {
-      const result = await kpiService.getAllKPIs();
+      const result = await kpiService.getAllKPIs(DATOS);
 
       expect(result.data.summary).toBeDefined();
       expect(result.data.summary).toHaveProperty('total');
@@ -248,33 +257,33 @@ describe('KPI Service', () => {
 
   describe('getKPIDashboard', () => {
     test('should return KPI dashboard data', async () => {
-      const result = await kpiService.getKPIDashboard();
+      const result = await kpiService.getKPIDashboard(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
     });
 
     test('should include health score', async () => {
-      const result = await kpiService.getKPIDashboard();
+      const result = await kpiService.getKPIDashboard(undefined, DATOS);
 
       expect(result.data.healthScore).toBeDefined();
       expect(typeof result.data.healthScore).toBe('number');
     });
 
     test('should include KPIs data', async () => {
-      const result = await kpiService.getKPIDashboard();
+      const result = await kpiService.getKPIDashboard(undefined, DATOS);
 
       expect(result.data.kpis).toBeDefined();
     });
 
     test('should include alerts', async () => {
-      const result = await kpiService.getKPIDashboard();
+      const result = await kpiService.getKPIDashboard(undefined, DATOS);
 
       expect(result.data.alerts).toBeDefined();
     });
 
     test('should include trends', async () => {
-      const result = await kpiService.getKPIDashboard();
+      const result = await kpiService.getKPIDashboard(undefined, DATOS);
 
       expect(result.data.trends).toBeDefined();
     });
@@ -282,28 +291,28 @@ describe('KPI Service', () => {
 
   describe('compareKPIs', () => {
     test('should compare KPIs between periods', async () => {
-      const result = await kpiService.compareKPIs('this_month', 'last_month');
+      const result = await kpiService.compareKPIs('this_month', 'last_month', { period1: DATOS, period2: { ...DATOS, totalDeclarations: 270, errorRate: 3, activeExpeditions: 20 } });
 
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
     });
 
     test('should include period information', async () => {
-      const result = await kpiService.compareKPIs('this_month', 'last_month');
+      const result = await kpiService.compareKPIs('this_month', 'last_month', { period1: DATOS, period2: { ...DATOS, totalDeclarations: 270, errorRate: 3, activeExpeditions: 20 } });
 
       expect(result.data.period1).toBe('this_month');
       expect(result.data.period2).toBe('last_month');
     });
 
     test('should include KPI comparison data', async () => {
-      const result = await kpiService.compareKPIs('this_month', 'last_month');
+      const result = await kpiService.compareKPIs('this_month', 'last_month', { period1: DATOS, period2: { ...DATOS, totalDeclarations: 270, errorRate: 3, activeExpeditions: 20 } });
 
       expect(result.data.kpis).toBeDefined();
       expect(Object.keys(result.data.kpis).length).toBeGreaterThan(0);
     });
 
     test('should include change percentage for each KPI', async () => {
-      const result = await kpiService.compareKPIs('this_month', 'last_month');
+      const result = await kpiService.compareKPIs('this_month', 'last_month', { period1: DATOS, period2: { ...DATOS, totalDeclarations: 270, errorRate: 3, activeExpeditions: 20 } });
 
       Object.values(result.data.kpis).forEach(kpi => {
         expect(kpi).toHaveProperty('change');
@@ -312,7 +321,7 @@ describe('KPI Service', () => {
     });
 
     test('should handle higher_is_better direction for improved flag', async () => {
-      const result = await kpiService.compareKPIs('this_month', 'last_month');
+      const result = await kpiService.compareKPIs('this_month', 'last_month', { period1: DATOS, period2: { ...DATOS, totalDeclarations: 270, errorRate: 3, activeExpeditions: 20 } });
 
       const higherIsBetter = result.data.kpis.declarations_per_day;
       expect(higherIsBetter).toBeDefined();
@@ -320,7 +329,7 @@ describe('KPI Service', () => {
     });
 
     test('should handle lower_is_better direction for improved flag', async () => {
-      const result = await kpiService.compareKPIs('this_month', 'last_month');
+      const result = await kpiService.compareKPIs('this_month', 'last_month', { period1: DATOS, period2: { ...DATOS, totalDeclarations: 270, errorRate: 3, activeExpeditions: 20 } });
 
       const lowerIsBetter = result.data.kpis.error_rate;
       expect(lowerIsBetter).toBeDefined();
@@ -328,7 +337,7 @@ describe('KPI Service', () => {
     });
 
     test('should handle neutral direction for improved flag', async () => {
-      const result = await kpiService.compareKPIs('this_month', 'last_month');
+      const result = await kpiService.compareKPIs('this_month', 'last_month', { period1: DATOS, period2: { ...DATOS, totalDeclarations: 270, errorRate: 3, activeExpeditions: 20 } });
 
       const neutral = result.data.kpis.active_expeditions;
       expect(neutral).toBeDefined();
@@ -590,7 +599,7 @@ describe('KPI Service', () => {
         ]
       });
 
-      const result = await kpiService.getKPIDashboard();
+      const result = await kpiService.getKPIDashboard(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis).toBeDefined();
@@ -609,7 +618,7 @@ describe('KPI Service', () => {
         risks: ['Data quality issues', 'System downtime']
       });
 
-      const result = await kpiService.getKPIDashboard();
+      const result = await kpiService.getKPIDashboard(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis).toBeDefined();
@@ -623,7 +632,7 @@ describe('KPI Service', () => {
     test('should handle LUCI analysis failure gracefully', async () => {
       aiService.analyzeKPIDeviations.mockRejectedValue(new Error('AI service unavailable'));
 
-      const result = await kpiService.getKPIDashboard();
+      const result = await kpiService.getKPIDashboard(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis).toBeNull();
@@ -661,7 +670,7 @@ describe('KPI Service', () => {
         ]
       });
 
-      const result = await kpiService.getKPIDashboard();
+      const result = await kpiService.getKPIDashboard(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis).toBeDefined();
@@ -682,7 +691,7 @@ describe('KPI Service', () => {
   describe('getKPIDashboard - without critical/warning KPIs', () => {
     test('should handle dashboard when all KPIs are good', async () => {
       // Mock para devolver KPIs todos en buen estado (no debería llamar a analyzeKPIDeviations)
-      const result = await kpiService.getKPIDashboard();
+      const result = await kpiService.getKPIDashboard(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
@@ -728,7 +737,7 @@ describe('KPI Service', () => {
         summary: 'Simple summary'
       });
 
-      const result = await kpiService.getKPIDashboard();
+      const result = await kpiService.getKPIDashboard(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis.summary).toBe('Simple summary');
@@ -759,7 +768,7 @@ describe('KPI Service', () => {
         ]
       });
 
-      const result = await kpiService.getKPIDashboard();
+      const result = await kpiService.getKPIDashboard(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis.priorities).toContain('Real action');
@@ -778,7 +787,7 @@ describe('KPI Service', () => {
         ]
       });
 
-      const result = await kpiService.getKPIDashboard();
+      const result = await kpiService.getKPIDashboard(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis.risks).toContain('Root cause 1');

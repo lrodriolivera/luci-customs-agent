@@ -300,6 +300,7 @@ const KPI_DEFINITIONS = {
 // Estado por tenant: tenantKey -> { history: Map<kpiId, []>, alerts: [] }.
 // Ambito (parametro tenantId): undefined = super admin de plataforma (lee todo y
 // escribe en su propio cubo); null = sin tenant (no lee nada); string = ese tenant.
+const STATUS_SIN_DATOS = 'sin_datos';
 const estadoPorTenant = new Map();
 // Contador para que dos alertas del mismo KPI creadas en el mismo ms (p. ej. de tenants distintos) no compartan id.
 let secuenciaAlertas = 0;
@@ -359,76 +360,23 @@ async function calculateKPI(kpiId, data = {}, tenantId) {
   }
 
   try {
-    let value;
+    const value = _valorDeDatos(kpiId, data);
 
-    // Calculate based on KPI type
-    switch (kpiId) {
-      case 'declarations_per_day':
-        value = data.totalDeclarations ? data.totalDeclarations / (data.days || 30) : _generateValue(5, 15);
-        break;
-
-      case 'green_channel_rate':
-        value = data.greenChannel ?? _generateValue(60, 80);
-        break;
-
-      case 'average_processing_time':
-        value = data.avgProcessingTime ?? _generateValue(2, 8);
-        break;
-
-      case 'active_expeditions':
-        value = data.activeExpeditions ?? _generateValue(15, 40);
-        break;
-
-      case 'total_duties_collected':
-        value = data.totalDuties ?? _generateValue(100000, 500000);
-        break;
-
-      case 'savings_achieved':
-        value = data.savings ?? _generateValue(5000, 30000);
-        break;
-
-      case 'guarantee_utilization':
-        value = data.guaranteeUtilization ?? _generateValue(30, 70);
-        break;
-
-      case 'error_rate':
-        value = data.errorRate ?? _generateValue(1, 4);
-        break;
-
-      case 'rejection_rate':
-        value = data.rejectionRate ?? _generateValue(0.5, 3);
-        break;
-
-      case 'on_time_submissions':
-        value = data.onTimeRate ?? _generateValue(92, 99);
-        break;
-
-      case 'compliance_score':
-        value = data.complianceScore ?? _generateValue(85, 98);
-        break;
-
-      case 'document_completeness':
-        value = data.documentCompleteness ?? _generateValue(90, 99);
-        break;
-
-      case 'luci_accuracy':
-        value = data.luciAccuracy ?? _generateValue(90, 98);
-        break;
-
-      case 'automation_rate':
-        value = data.automationRate ?? _generateValue(60, 85);
-        break;
-
-      case 'first_time_resolution':
-        value = data.firstTimeResolution ?? _generateValue(80, 95);
-        break;
-
-      case 'aeat_connectivity':
-        value = data.aeatConnectivity ?? _generateValue(95, 99.5);
-        break;
-
-      default:
-        value = 0;
+    // Sin dato real no hay cifra: ni valor inventado, ni alerta, ni historico.
+    if (value === null) {
+      return {
+        success: true,
+        data: {
+          kpiId,
+          name: definition.name,
+          value: null,
+          unit: definition.unit,
+          target: definition.thresholds.target,
+          status: STATUS_SIN_DATOS,
+          trend: null,
+          timestamp: new Date()
+        }
+      };
     }
 
     const result = {
@@ -609,17 +557,22 @@ function dismissAlert(alertId, tenantId) {
 /**
  * Get KPI dashboard data
  */
-async function getKPIDashboard(tenantId) {
-  const allKPIs = await getAllKPIs({}, tenantId);
+async function getKPIDashboard(tenantId, data = {}) {
+  const allKPIs = await getAllKPIs(data, tenantId);
 
   if (!allKPIs.success) {
     return allKPIs;
   }
 
-  // Get LUCI analysis
+  // Solo los KPI con dato real cuentan para el health score, las tendencias y el analisis
+  const calculados = allKPIs.data.all.filter(k => k.value !== null);
+
+  // Get LUCI analysis (nada que analizar si no hay ningun KPI calculado)
   let luciAnalysis = null;
   try {
-    luciAnalysis = await _getLuciKPIAnalysis(allKPIs.data);
+    if (calculados.length > 0) {
+      luciAnalysis = await _getLuciKPIAnalysis(allKPIs.data);
+    }
   } catch (error) {
     logger.warn(`[KPI] Could not get LUCI analysis: ${error.message}`);
   }
@@ -629,8 +582,10 @@ async function getKPIDashboard(tenantId) {
     data: {
       kpis: allKPIs.data,
       alerts: getActiveAlerts({}, tenantId).alerts,
-      healthScore: _calculateHealthScore(allKPIs.data.all),
-      trends: _getOverallTrends(allKPIs.data.all),
+      healthScore: _calculateHealthScore(calculados),
+      kpisCalculados: calculados.length,
+      kpisTotal: allKPIs.data.all.length,
+      trends: _getOverallTrends(calculados),
       luciAnalysis,
       lastUpdated: new Date()
     }
@@ -640,8 +595,9 @@ async function getKPIDashboard(tenantId) {
 /**
  * Compare KPIs between periods
  */
-async function compareKPIs(period1, period2) {
-  // Generate mock comparison data
+async function compareKPIs(period1, period2, datos = {}) {
+  // `datos` = { period1: data, period2: data } con datos reales de cada periodo.
+  // Sin ellos no se inventa nada: valores y cambio quedan en null.
   const comparison = {
     period1,
     period2,
@@ -651,14 +607,19 @@ async function compareKPIs(period1, period2) {
   for (const kpiId of Object.keys(KPI_DEFINITIONS)) {
     const definition = KPI_DEFINITIONS[kpiId];
 
-    const value1 = _generateValue(
-      definition.thresholds.target * 0.8,
-      definition.thresholds.target * 1.2
-    );
-    const value2 = _generateValue(
-      definition.thresholds.target * 0.75,
-      definition.thresholds.target * 1.15
-    );
+    const value1 = _valorDeDatos(kpiId, datos.period1);
+    const value2 = _valorDeDatos(kpiId, datos.period2);
+
+    if (value1 === null || value2 === null || value2 === 0) {
+      comparison.kpis[kpiId] = {
+        name: definition.name,
+        period1Value: value1 === null ? null : Math.round(value1 * 100) / 100,
+        period2Value: value2 === null ? null : Math.round(value2 * 100) / 100,
+        change: null,
+        improved: null
+      };
+      continue;
+    }
 
     const change = ((value1 - value2) / value2 * 100);
 
@@ -680,8 +641,36 @@ async function compareKPIs(period1, period2) {
 
 // ==================== Helper Functions ====================
 
-function _generateValue(min, max) {
-  return Math.random() * (max - min) + min;
+/**
+ * Valor de un KPI a partir de datos reales (ver kpiDatos.datosParaKPIs).
+ * Devuelve null cuando no hay dato: solo cuenta un numero finito, nunca se inventa.
+ */
+const CLAVE_DE_DATOS = {
+  green_channel_rate: 'greenChannel',
+  average_processing_time: 'avgProcessingTime',
+  active_expeditions: 'activeExpeditions',
+  total_duties_collected: 'totalDuties',
+  savings_achieved: 'savings',
+  guarantee_utilization: 'guaranteeUtilization',
+  error_rate: 'errorRate',
+  rejection_rate: 'rejectionRate',
+  on_time_submissions: 'onTimeRate',
+  compliance_score: 'complianceScore',
+  document_completeness: 'documentCompleteness',
+  luci_accuracy: 'luciAccuracy',
+  automation_rate: 'automationRate',
+  first_time_resolution: 'firstTimeResolution',
+  aeat_connectivity: 'aeatConnectivity'
+};
+
+const _esNumero = (v) => typeof v === 'number' && Number.isFinite(v);
+
+function _valorDeDatos(kpiId, data = {}) {
+  if (kpiId === 'declarations_per_day') {
+    return _esNumero(data.totalDeclarations) ? data.totalDeclarations / (data.days || 30) : null;
+  }
+  const clave = CLAVE_DE_DATOS[kpiId];
+  return clave && _esNumero(data[clave]) ? data[clave] : null;
 }
 
 function _evaluateKPIStatus(value, definition) {
@@ -842,11 +831,15 @@ function _generateKPISummary(kpis) {
     good: statuses.filter(s => s === 'good').length,
     ok: statuses.filter(s => s === 'ok').length,
     warning: statuses.filter(s => s === 'warning').length,
-    critical: statuses.filter(s => s === 'critical').length
+    critical: statuses.filter(s => s === 'critical').length,
+    sin_datos: statuses.filter(s => s === STATUS_SIN_DATOS).length
   };
 }
 
 function _calculateHealthScore(kpis) {
+  // Sin ningun KPI calculado no hay puntuacion (no un 0 ni un 50 inventado)
+  if (kpis.length === 0) return null;
+
   const weights = {
     good: 100,
     ok: 75,

@@ -57,6 +57,9 @@ jest.mock('../../src/services/analytics', () => ({
     getModelMetrics: jest.fn()
   }
 }));
+jest.mock('../../src/services/analytics/kpiDatos', () => ({
+  datosParaKPIs: jest.fn()
+}));
 jest.mock('../../src/services/analytics/realMetricsService', () => ({
   cuadroDeMando: jest.fn(),
   derechosLiquidados: jest.fn(),
@@ -78,6 +81,7 @@ jest.mock('../../src/services/aiService', () => ({
 }));
 
 const { analyticsService, reportsService, kpiService, predictionsService } = require('../../src/services/analytics');
+const { datosParaKPIs } = require('../../src/services/analytics/kpiDatos');
 const realMetrics = require('../../src/services/analytics/realMetricsService');
 const aiService = require('../../src/services/aiService');
 const ctrl = require('../../src/controllers/analyticsController');
@@ -343,6 +347,8 @@ describe('KPIs', () => {
     kpiService.getKPIHistory.mockReturnValue({ success: true });
     kpiService.getActiveAlerts.mockReturnValue({ success: true });
 
+    datosParaKPIs.mockResolvedValue({ totalDeclarations: 10, days: 30 });
+
     for (const [fn, args] of [
       [ctrl.getKPIDashboard, [req()]],
       [ctrl.getAllKPIs, [req()]],
@@ -354,6 +360,53 @@ describe('KPIs', () => {
       await fn(...args, res);
       expect(res.statusCode).toBe(200);
     }
+  });
+});
+
+describe('KPIs con datos reales del tenant', () => {
+  const DATOS = { totalDeclarations: 90, days: 30, greenChannel: 80 };
+  const conUsuario = (user, query = {}, params = {}) => ({ user, query, body: {}, params });
+  const usuario = { id: 'u1', tenantId: 't1', role: 'user' };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    datosParaKPIs.mockResolvedValue(DATOS);
+    kpiService.getKPIDashboard.mockResolvedValue({ success: true });
+    kpiService.getAllKPIs.mockResolvedValue({ success: true });
+    kpiService.calculateKPI.mockResolvedValue({ success: true });
+  });
+
+  test('dashboard, todos y uno reciben los datos reales del ámbito del usuario', async () => {
+    await ctrl.getKPIDashboard(conUsuario(usuario), crearRes());
+    expect(datosParaKPIs).toHaveBeenLastCalledWith('t1', {});
+    expect(kpiService.getKPIDashboard).toHaveBeenLastCalledWith('t1', DATOS);
+
+    await ctrl.getAllKPIs(conUsuario(usuario), crearRes());
+    expect(kpiService.getAllKPIs).toHaveBeenLastCalledWith(DATOS, 't1');
+
+    await ctrl.calculateKPI(conUsuario(usuario, {}, { id: 'error_rate' }), crearRes());
+    expect(kpiService.calculateKPI).toHaveBeenLastCalledWith('error_rate', DATOS, 't1');
+  });
+
+  test('el super admin de plataforma agrega (undefined) y sin tenant no ve nada (null)', async () => {
+    await ctrl.getKPIDashboard(conUsuario({ id: 'root', role: 'super_admin' }), crearRes());
+    expect(datosParaKPIs).toHaveBeenLastCalledWith(undefined, {});
+    await ctrl.getKPIDashboard(conUsuario({ id: 'u2', role: 'user' }), crearRes());
+    expect(datosParaKPIs).toHaveBeenLastCalledWith(null, {});
+  });
+
+  test('la query no puede forzar valores de KPI: solo `days` se lee', async () => {
+    await ctrl.calculateKPI(conUsuario(usuario, { errorRate: '9', days: '7' }, { id: 'error_rate' }), crearRes());
+    expect(datosParaKPIs).toHaveBeenLastCalledWith('t1', { dias: 7 });
+    expect(kpiService.calculateKPI.mock.calls.at(-1)[1]).toBe(DATOS);
+    expect(kpiService.calculateKPI.mock.calls.at(-1)[1]).not.toHaveProperty('errorRate');
+  });
+
+  test('si no se pueden obtener los datos responde 500', async () => {
+    datosParaKPIs.mockRejectedValue(new Error('db caída'));
+    const res = crearRes();
+    await ctrl.getKPIDashboard(conUsuario(usuario), res);
+    expect(res.statusCode).toBe(500);
   });
 });
 
