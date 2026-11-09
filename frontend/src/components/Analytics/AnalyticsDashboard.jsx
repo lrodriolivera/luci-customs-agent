@@ -775,18 +775,21 @@ export default function AnalyticsDashboard() {
   }
 
   const formatNumber = (num) => {
+    // Sin dato no se muestra un "0" inventado; un 0 real sigue siendo 0
+    if (sinDato(num)) return t('analyticsPage.kpiSinDatos', 'Sin datos')
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
     return num?.toLocaleString('es-ES') || '0'
   }
 
   const formatCurrency = (num) => {
+    if (sinDato(num)) return t('analyticsPage.kpiSinDatos', 'Sin datos')
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'EUR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(num || 0)
+    }).format(num)
   }
 
   // Metricas del cuadro de mando que llegan null/undefined: "Sin datos", nunca "%" o "h" sin cifra
@@ -922,20 +925,29 @@ export default function AnalyticsDashboard() {
 
             <div className="text-sm">
               <span className="text-gray-500">Declaraciones activas: </span>
-              <span className="font-medium">{realTimeData.activeDeclarations}</span>
+              <span className="font-medium">{sinDato(realTimeData.activeDeclarations) ? t('analyticsPage.kpiSinDatos', 'Sin datos') : realTimeData.activeDeclarations}</span>
             </div>
 
             <div className="text-sm">
               <span className="text-gray-500">Pendientes: </span>
-              <span className="font-medium">{realTimeData.pendingSubmissions}</span>
+              <span className="font-medium">{sinDato(realTimeData.pendingSubmissions) ? t('analyticsPage.kpiSinDatos', 'Sin datos') : realTimeData.pendingSubmissions}</span>
             </div>
 
             <div className="flex items-center gap-2 text-sm">
               <span className="text-gray-500">AEAT: </span>
-              <span className={`font-medium ${realTimeData.aeatStatus?.connected ? 'text-green-600' : 'text-red-600'}`}>
-                {realTimeData.aeatStatus?.connected ? 'Conectado' : 'Desconectado'}
-              </span>
-              <span className="text-gray-400">({realTimeData.aeatStatus?.latency}ms)</span>
+              {realTimeData.aeatStatus == null ? (
+                // Sin comprobacion real de conectividad: ni "Conectado" ni latencia
+                <span className="font-medium text-gray-500">{t('analyticsPage.aeatSinComprobacion', 'Sin comprobación')}</span>
+              ) : (
+                <>
+                  <span className={`font-medium ${realTimeData.aeatStatus.connected ? 'text-green-600' : 'text-red-600'}`}>
+                    {realTimeData.aeatStatus.connected ? 'Conectado' : 'Desconectado'}
+                  </span>
+                  {!sinDato(realTimeData.aeatStatus.latency) && (
+                    <span className="text-gray-400">({realTimeData.aeatStatus.latency}ms)</span>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
@@ -972,15 +984,19 @@ export default function AnalyticsDashboard() {
                   <DocumentChartBarIcon className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
-              <div className="mt-4 flex items-center gap-2">
-                {getTrendIcon(dashboardData.trends?.operations?.direction)}
-                <span className={`text-sm ${
-                  dashboardData.trends?.operations?.direction === 'up' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {dashboardData.trends?.operations?.percentage}%
-                </span>
-                <span className="text-sm text-gray-500">vs periodo anterior</span>
-              </div>
+              {sinDato(dashboardData.trends?.operations?.percentage) ? (
+                <div className="mt-4">{sinDatosEl('text-sm text-gray-400')}</div>
+              ) : (
+                <div className="mt-4 flex items-center gap-2">
+                  {getTrendIcon(dashboardData.trends?.operations?.direction)}
+                  <span className={`text-sm ${
+                    dashboardData.trends?.operations?.direction === 'up' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {dashboardData.trends.operations.percentage}%
+                  </span>
+                  <span className="text-sm text-gray-500">vs periodo anterior</span>
+                </div>
+              )}
             </div>
 
             <div className="card">
@@ -995,15 +1011,19 @@ export default function AnalyticsDashboard() {
                   <CurrencyEuroIcon className="w-6 h-6 text-green-600" />
                 </div>
               </div>
-              <div className="mt-4 flex items-center gap-2">
-                {getTrendIcon(dashboardData.trends?.financial?.direction)}
-                <span className={`text-sm ${
-                  dashboardData.trends?.financial?.direction === 'up' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {dashboardData.trends?.financial?.percentage}%
-                </span>
-                <span className="text-sm text-gray-500">vs periodo anterior</span>
-              </div>
+              {sinDato(dashboardData.trends?.financial?.percentage) ? (
+                <div className="mt-4">{sinDatosEl('text-sm text-gray-400')}</div>
+              ) : (
+                <div className="mt-4 flex items-center gap-2">
+                  {getTrendIcon(dashboardData.trends?.financial?.direction)}
+                  <span className={`text-sm ${
+                    dashboardData.trends?.financial?.direction === 'up' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {dashboardData.trends.financial.percentage}%
+                  </span>
+                  <span className="text-sm text-gray-500">vs periodo anterior</span>
+                </div>
+              )}
             </div>
 
             <div className="card">

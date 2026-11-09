@@ -3447,7 +3447,8 @@
     "kpiAnalisisVacio": "Sin análisis disponible",
     "kpiAnalisisTitulo": "Análisis de LUCI",
     "kpiPrioridades": "Prioridades",
-    "kpiRiesgos": "Riesgos"
+    "kpiRiesgos": "Riesgos",
+    "aeatSinComprobacion": "Sin comprobación"
   },
   "inspections": {
     "title": "Inspecciones"

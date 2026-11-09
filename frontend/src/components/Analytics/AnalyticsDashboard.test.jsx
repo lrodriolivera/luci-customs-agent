@@ -1603,4 +1603,147 @@ describe('<AnalyticsDashboard />', () => {
     expect(within(c).getByText('72%')).toBeInTheDocument()
     expect(c.querySelector('.bg-gray-200 > div').style.width).toBe('72%')
   })
+
+  // ==================== BARRA EN TIEMPO REAL, TENDENCIAS Y FORMATEADORES SIN DATOS ====================
+  const abrirTiempoReal = async (realTime, dashboard = mockDashboardData) => {
+    analyticsAPI.getRealTime.mockResolvedValue({ data: { success: true, data: realTime } })
+    analyticsAPI.getDashboard.mockResolvedValue({ data: { success: true, data: dashboard } })
+    render(<AnalyticsDashboard />)
+    await waitFor(() => {
+      expect(screen.getByText('En tiempo real')).toBeInTheDocument()
+    })
+    return screen.getByText('En tiempo real').closest('.bg-gray-50')
+  }
+  const SIN_DATOS = 'analyticsPage.kpiSinDatos'
+
+  test('barra en tiempo real: declaraciones activas y pendientes null muestran "Sin datos"', async () => {
+    const barra = await abrirTiempoReal({
+      ...mockRealTimeData, activeDeclarations: null, pendingSubmissions: undefined
+    })
+
+    const activas = within(barra).getByText('Declaraciones activas:').parentElement
+    const pendientes = within(barra).getByText('Pendientes:').parentElement
+    expect(within(activas).getByText(SIN_DATOS)).toBeInTheDocument()
+    expect(within(pendientes).getByText(SIN_DATOS)).toBeInTheDocument()
+    expect(barra.textContent).not.toMatch(/null|undefined|NaN/)
+  })
+
+  test('barra en tiempo real: AEAT null muestra "Sin comprobación", no "Conectado" ni latencia', async () => {
+    const barra = await abrirTiempoReal({ ...mockRealTimeData, aeatStatus: null })
+
+    expect(within(barra).getByText('analyticsPage.aeatSinComprobacion')).toBeInTheDocument()
+    expect(within(barra).queryByText('Conectado')).toBeNull()
+    expect(within(barra).queryByText('Desconectado')).toBeNull()
+    expect(barra.textContent).not.toMatch(/ms\)|undefined|null/)
+  })
+
+  test('barra en tiempo real: con datos reales muestra las cifras y el estado de AEAT', async () => {
+    const barra = await abrirTiempoReal(mockRealTimeData)
+
+    expect(within(barra).getByText('45')).toBeInTheDocument()
+    expect(within(barra).getByText('12')).toBeInTheDocument()
+    expect(within(barra).getByText('Conectado')).toBeInTheDocument()
+    expect(within(barra).queryByText('analyticsPage.aeatSinComprobacion')).toBeNull()
+  })
+
+  test('barra en tiempo real: un 0 real no es "Sin datos"', async () => {
+    const barra = await abrirTiempoReal({ ...mockRealTimeData, activeDeclarations: 0, pendingSubmissions: 0 })
+
+    const activas = within(barra).getByText('Declaraciones activas:').parentElement
+    expect(within(activas).getByText('0')).toBeInTheDocument()
+    expect(within(activas).queryByText(SIN_DATOS)).toBeNull()
+  })
+
+  test.each([
+    ['Declaraciones', 'operations', null],
+    ['Declaraciones', 'operations', undefined],
+    ['Valor Aduanero', 'financial', null],
+    ['Valor Aduanero', 'financial', undefined]
+  ])('Visión General: %s con tendencia %s.percentage=%s muestra "Sin datos" en vez de "%" ni "vs periodo anterior"', async (etiqueta, clave, valor) => {
+    await abrirTiempoReal(mockRealTimeData, {
+      ...mockDashboardData,
+      trends: { ...mockDashboardData.trends, [clave]: { direction: 'up', percentage: valor } }
+    })
+
+    const card = screen.getByText(etiqueta).closest('.card')
+    expect(within(card).getByText(SIN_DATOS)).toBeInTheDocument()
+    expect(card.textContent).not.toMatch(/undefined|null|NaN/)
+    expect(card.textContent).not.toMatch(/%/)
+    expect(within(card).queryByText('vs periodo anterior')).toBeNull()
+  })
+
+  test('Visión General: con tendencia real mantiene el porcentaje y "vs periodo anterior"', async () => {
+    await abrirTiempoReal(mockRealTimeData)
+
+    const card = screen.getByText('Declaraciones').closest('.card')
+    expect(within(card).getByText('12%')).toBeInTheDocument()
+    expect(within(card).getByText('vs periodo anterior')).toBeInTheDocument()
+  })
+
+  test('Visión General: una tendencia real de 0% no es "Sin datos"', async () => {
+    await abrirTiempoReal(mockRealTimeData, {
+      ...mockDashboardData,
+      trends: { ...mockDashboardData.trends, operations: { direction: 'up', percentage: 0 } }
+    })
+
+    const card = screen.getByText('Declaraciones').closest('.card')
+    expect(within(card).getByText('0%')).toBeInTheDocument()
+  })
+
+  test('formatNumber: totalDeclarations null muestra "Sin datos", no "0"; un 0 real sigue siendo 0', async () => {
+    await abrirTiempoReal(mockRealTimeData, {
+      ...mockDashboardData,
+      operations: { ...mockDashboardData.operations, totalDeclarations: null }
+    })
+    let card = screen.getByText('Declaraciones').closest('.card')
+    expect(within(card).getByText(SIN_DATOS)).toBeInTheDocument()
+  })
+
+  test('formatNumber: un 0 real de declaraciones se muestra como 0', async () => {
+    await abrirTiempoReal(mockRealTimeData, {
+      ...mockDashboardData,
+      operations: { ...mockDashboardData.operations, totalDeclarations: 0 }
+    })
+    const card = screen.getByText('Declaraciones').closest('.card')
+    expect(within(card).getByText('0')).toBeInTheDocument()
+    expect(within(card).queryByText(SIN_DATOS)).toBeNull()
+  })
+
+  test('formatCurrency: importes null muestran "Sin datos", no "0 €"', async () => {
+    const user = userEvent.setup()
+    await abrirTiempoReal(mockRealTimeData, {
+      ...mockDashboardData,
+      financial: { ...mockDashboardData.financial, totalDutiesCalculated: null, totalDutiesPaid: undefined, potentialSavings: null }
+    })
+    expect(within(screen.getByText('Valor Aduanero').closest('.card')).getByText(SIN_DATOS)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Financiero/i }))
+    for (const etiqueta of ['Derechos Calculados', 'Derechos Pagados', 'Ahorros Potenciales']) {
+      const card = screen.getByText(etiqueta).closest('.card')
+      expect(within(card).getByText(SIN_DATOS)).toBeInTheDocument()
+      expect(card.textContent).not.toMatch(/€/)
+    }
+  })
+
+  test('formatCurrency: un 0 real sigue siendo 0 €', async () => {
+    const user = userEvent.setup()
+    await abrirTiempoReal(mockRealTimeData, {
+      ...mockDashboardData,
+      financial: { ...mockDashboardData.financial, totalDutiesPaid: 0 }
+    })
+    await user.click(screen.getByRole('button', { name: /Financiero/i }))
+
+    const card = screen.getByText('Derechos Pagados').closest('.card')
+    expect(card.textContent).toMatch(/0\s€/)
+    expect(within(card).queryByText(SIN_DATOS)).toBeNull()
+  })
+
+  test('formatCurrency: con importes reales mantiene el formato en euros', async () => {
+    const user = userEvent.setup()
+    await abrirTiempoReal(mockRealTimeData)
+    await user.click(screen.getByRole('button', { name: /Financiero/i }))
+
+    const card = screen.getByText('Derechos Calculados').closest('.card')
+    expect(card.textContent).toMatch(/458\.000\s€/)
+  })
 })

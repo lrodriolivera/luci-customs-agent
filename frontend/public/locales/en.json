@@ -3441,7 +3441,8 @@
     "kpiAnalisisVacio": "No analysis available",
     "kpiAnalisisTitulo": "LUCI analysis",
     "kpiPrioridades": "Priorities",
-    "kpiRiesgos": "Risks"
+    "kpiRiesgos": "Risks",
+    "aeatSinComprobacion": "Not checked"
   },
   "errorBoundary": {
     "title": "Something went wrong",
