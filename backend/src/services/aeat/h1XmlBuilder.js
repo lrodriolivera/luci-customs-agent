@@ -6,6 +6,7 @@
  */
 
 const { xml, joinXml } = require('./xmlTemplate');
+const { ErrorValidacion, exigirEori } = require('../forms/identificadorAduanero');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/adip/ws/ImportacionCompletaV1Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 
@@ -232,12 +233,31 @@ function buildH1ImportXML(data) {
 /**
  * Convertir datos de expedicion LUCI al formato AEAT
  */
-function expeditionToH1Data(expedition) {
+function expeditionToH1Data(expedition, { declarante } = {}) {
   const decl = expedition.declaration || {};
   const client = expedition.client || {};
   const transport = expedition.transport || {};
   const goods = expedition.goods || [];
   const calc = expedition.calculations || {};
+
+  // Sin identificacion o direccion del exportador no se construye el SOAP:
+  // antes salian un NIF y una direccion de Zaragoza inventados.
+  const exportadorNIF = expedition.exporter?.eori || expedition.exporter?.nif || client.taxId;
+  const exportadorDireccion = expedition.exporter?.address || client.address?.street;
+  const exportadorPoblacion = expedition.exporter?.city || client.address?.city;
+  if (!exportadorNIF) {
+    throw new ErrorValidacion('Falta el EORI del exportador: complétalo en el expediente', { quien: 'exportador' });
+  }
+  if (!exportadorDireccion || !exportadorPoblacion) {
+    throw new ErrorValidacion('Falta la dirección del exportador (calle y población): complétala en el expediente',
+      { code: 'DIRECCION_FALTANTE', quien: 'exportador' });
+  }
+  // El declarante lo resuelve quien llama (representante del expediente o del tenant).
+  const declaranteNIF = exigirEori(declarante?.eori, 'representante');
+  if (!declarante?.companyName) {
+    throw new ErrorValidacion('Falta el nombre del representante: configúralo en Ajustes > Aduanas',
+      { code: 'NOMBRE_FALTANTE', quien: 'representante' });
+  }
 
   const modeMap = { air: '4', sea: '1', road: '3', rail: '2', maritime: '1' };
   const totalValue = goods.reduce((s, g) => s + (g.invoiceValue || g.value || 0), 0);
@@ -247,11 +267,11 @@ function expeditionToH1Data(expedition) {
     mrn: decl.mrn || '',
     referenciaComercial: expedition.expeditionId,
     // Exportador
-    exportadorNIF: expedition.exporter?.eori || expedition.exporter?.nif || client.taxId || 'ESB22477020',
+    exportadorNIF,
     exportadorNombre: expedition.exporter?.companyName || client.companyName || '',
-    exportadorDireccion: expedition.exporter?.address || client.address?.street || 'Calle Ejemplo 1',
-    exportadorPoblacion: expedition.exporter?.city || client.address?.city || 'Zaragoza',
-    exportadorCP: expedition.exporter?.postalCode || client.address?.postalCode || '50001',
+    exportadorDireccion,
+    exportadorPoblacion,
+    exportadorCP: expedition.exporter?.postalCode || client.address?.postalCode || '',
     exportadorPais: expedition.exporter?.country || goods[0]?.countryOfOrigin || expedition.origin?.country || 'CN',
     // Importador
     importadorNIF: client.taxId || client.nif || '',
@@ -264,13 +284,13 @@ function expeditionToH1Data(expedition) {
     aduanaDespacho: decl.customsOffice || '002801',
     // Ubicacion
     localizacionMercancias: decl.goodsLocation || 'ES002801AAAAAC',
-    // Declarante (STRIX AI SL como representante aduanero)
-    declaranteNIF: process.env.DECLARANTE_EORI || 'ESB22477020',
-    declaranteNombre: process.env.DECLARANTE_NOMBRE || 'STRIX AI SL',
+    // Declarante: representante del expediente o del tenant (nunca un literal)
+    declaranteNIF,
+    declaranteNombre: declarante.companyName,
     formaRepresentacion: '1',
     tipoAutorizaDespacho: 'O',
     // Emails
-    emailDespacho: client.contact?.email || 'despacho@strixai.ai',
+    emailDespacho: client.contact?.email || declarante.contact?.email || '',
     // Paises
     paisExpedicion: goods[0]?.countryOfOrigin || expedition.exporter?.country || 'CN',
     paisDestino: 'ES',

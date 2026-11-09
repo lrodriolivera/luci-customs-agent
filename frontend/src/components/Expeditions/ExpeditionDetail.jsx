@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { expeditionsAPI, documentsAPI, declarationsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { mensajeErrorGeneracion } from '../../utils/errorGeneracion'
 import {
   ArrowLeftIcon,
   DocumentArrowUpIcon,
@@ -635,7 +636,7 @@ export default function ExpeditionDetail() {
       toast.success(t('expeditions.h1GeneratedSuccess'))
     } catch (error) {
       console.error('H1 generation error:', error)
-      toast.error(error.response?.data?.error || t('expeditions.h1GenerateError'))
+      toast.error(mensajeErrorGeneracion(error, t('expeditions.h1GenerateError'), t))
     } finally {
       setGeneratingH1(false)
     }

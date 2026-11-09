@@ -701,6 +701,7 @@
     "selectExpeditionError": "Seleccione un expediente",
     "declarationGeneratedType": "Declaración {{type}} generada",
     "errorGenerating": "Error al generar declaración",
+    "irAAjustesAduanas": "Ir a Ajustes > Aduanas",
     "xmlDownloaded": "XML descargado",
     "errorExportXml": "Error al exportar XML",
     "confirmSendAeat": "¿Enviar declaración {{type}} a AEAT?",

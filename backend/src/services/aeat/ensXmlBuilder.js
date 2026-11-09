@@ -143,7 +143,7 @@ function buildENSDeclarationXML(data) {
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
   <soapenv:Body>
     <ent:CC315A xmlns:ent="${NS_ENT}">
-  <MesSenMES3>${senderEORI || process.env.DECLARANTE_EORI || 'ESB22477020'}</MesSenMES3>
+  <MesSenMES3>${senderEORI}</MesSenMES3>
   <MesRecMES6>NICA.ES</MesRecMES6>
   <DatOfPreMES9>${datPrep}</DatOfPreMES9>
   <TimOfPreMES10>${timPrep}</TimOfPreMES10>

@@ -14,7 +14,21 @@
  * - Valores condicionales en valoración (additions/deductions)
  */
 
-const h1Generator = require('../../../src/services/forms/h1Generator');
+const h1GeneratorReal = require('../../../src/services/forms/h1Generator');
+
+// El declarante sale del tenant cuando el expediente no trae representante
+// con EORI: estos tests ejercitan ramas del generador, no la resolucion del
+// declarante (esa vive en identificadorAduanero.test.js y h1Generator.eori.test.js).
+const TENANT_TEST = {
+  name: 'Agencia Test SL',
+  customsConfig: { eoriNumbers: { ES: 'ESA00000001' } }
+};
+const h1Generator = Object.create(h1GeneratorReal, {
+  generate: { value: (expedition, aiData = {}, ctx = { tenant: TENANT_TEST }) =>
+    h1GeneratorReal.generate(expedition, aiData, ctx) },
+  buildDeclarationHeader: { value: (expedition, aiData = {}, ctx = { tenant: TENANT_TEST }) =>
+    h1GeneratorReal.buildDeclarationHeader(expedition, aiData, ctx) }
+});
 
 describe('h1Generator - Cobertura de Ramas', () => {
   describe('buildDeclarationHeader - ramas XML condicionales campos opcionales', () => {
@@ -114,7 +128,7 @@ describe('h1Generator - Cobertura de Ramas', () => {
         representative: {
           eori: 'ESREP123',
           companyName: 'Rep Test'
-          // Sin contact → usa fallback "Departamento Aduanas" línea 201
+          // Sin contact: no se inventa un nombre de contacto
         }
       };
 
@@ -125,8 +139,7 @@ describe('h1Generator - Cobertura de Ramas', () => {
         result.xml.indexOf('<Declarant>'),
         result.xml.indexOf('</Declarant>')
       );
-      expect(declarantBlock).toContain('<Contact>');
-      expect(declarantBlock).toContain('<Name>Departamento Aduanas</Name>');
+      expect(declarantBlock).not.toContain('Departamento Aduanas');
       // Phone y email no deben aparecer (línea 816-817 condicional false)
       expect(declarantBlock).not.toContain('<PhoneNumber>');
       expect(declarantBlock).not.toContain('<Email>');
@@ -620,9 +633,11 @@ describe('h1Generator - Cobertura de Ramas', () => {
       // Pero si NO hay representative, el código en línea 197 devuelve undefined || `ES${undefined}` = 'ESundefined'
       // El problema es que el código usa expedition.representative?.eori primero, no client
       // Verificar que usa el client como declarante cuando no hay representative
-      expect(result.data.declarationHeader.declarant.name).toBe('STRIX AI SL');
+      // El declarante sale del tenant: ni 'STRIX AI SL' ni contacto inventado.
+      expect(result.data.declarationHeader.declarant.identificationNumber).toBe('ESA00000001');
+      expect(result.data.declarationHeader.declarant.name).toBe('Agencia Test SL');
       expect(result.data.declarationHeader.declarant.representativeStatus).toBe('3');
-      expect(result.data.declarationHeader.declarant.contact.name).toBe('Departamento Aduanas');
+      expect(result.data.declarationHeader.declarant.contact.name).toBeNull();
     });
 
     test('debe usar customsOfficeSupervision cuando presente (línea 175)', () => {

@@ -16,7 +16,8 @@ import {
   ArrowUpTrayIcon,
   SignalIcon
 } from '@heroicons/react/24/outline';
-import api from '../../services/api';
+import api, { tenantEoriAPI } from '../../services/api';
+import { PAISES_ADUANEROS, codigosHabilitados, eoriPorPais } from '../../constants/paisesAduaneros';
 
 const TenantSettings = () => {
   const { t } = useTranslation();
@@ -748,54 +749,36 @@ function CustomsTab({ tenant, setTenant, eoriNumbers, setEoriNumbers, eoriSaving
   certFile, setCertFile, certPassword, setCertPassword, certUploading, setCertUploading,
   certInfo, setCertInfo, message, setMessage }) {
 
-  const availableCountries = [
-    { code: 'ES', name: 'Espana', system: 'AEAT', systemFull: 'Agencia Estatal de Administracion Tributaria', flag: '\u{1F1EA}\u{1F1F8}', placeholder: 'ESB22477020', certLabel: 'Certificado FNMT / Digital' },
-    { code: 'NL', name: 'Paises Bajos', system: 'DMS/DECO', systemFull: 'Douane Management Systeem', flag: '\u{1F1F3}\u{1F1F1}', placeholder: 'NL123456789012', certLabel: 'Certificado PKIoverheid / eHerkenning' },
-    { code: 'BE', name: 'Belgica', system: 'PLDA', systemFull: 'Paperless Douane en Accijnzen', flag: '\u{1F1E7}\u{1F1EA}', disabled: true, label: 'Proximamente' },
-    { code: 'DE', name: 'Alemania', system: 'ATLAS', systemFull: 'Automatisiertes Tarif- und Lokales Zoll-Abwicklungssystem', flag: '\u{1F1E9}\u{1F1EA}', disabled: true, label: 'Proximamente' },
-    { code: 'FR', name: 'Francia', system: 'DELTA', systemFull: 'Dedouanement En Ligne par Traitement Automatise', flag: '\u{1F1EB}\u{1F1F7}', disabled: true, label: 'Proximamente' },
-  ];
+  const availableCountries = PAISES_ADUANEROS;
 
-  // Enabled countries state (stored in localStorage)
-  const [enabledCountries, setEnabledCountries] = useState(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('customsCountries') || '[]');
-      if (stored.length > 0) return stored.map(c => c.code);
-    } catch {}
-    return [tenant?.customsConfig?.country || 'ES'];
-  });
+  // El EORI vive en el tenant (GET/PUT /api/tenant/eori), no en el navegador:
+  // los paises habilitados son los que tienen EORI mas el pais base del tenant.
+  const [enabledCountries, setEnabledCountries] = useState([tenant?.customsConfig?.country || 'ES']);
+  const [countryConfigs, setCountryConfigs] = useState({});
 
-  // Per-country config state
-  const [countryConfigs, setCountryConfigs] = useState(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('customsCountryConfigs') || '{}');
-      if (Object.keys(stored).length > 0) return stored;
-    } catch {}
-    return {
-      ES: { eori: tenant?.customsConfig?.eori || '', environment: tenant?.customsConfig?.environment || 'test' },
-      NL: { eori: eoriNumbers?.NL || '', environment: 'test' },
-    };
-  });
+  useEffect(() => {
+    let vivo = true;
+    tenantEoriAPI.get()
+      .then((res) => {
+        if (!vivo) return;
+        const datos = res?.data?.data || {};
+        const numeros = eoriPorPais(datos);
+        setEnabledCountries(codigosHabilitados(datos));
+        setCountryConfigs(Object.fromEntries(Object.entries(numeros).map(([code, eori]) => [code, { eori }])));
+      })
+      .catch((err) => {
+        if (!vivo) return;
+        setMessage({ type: 'error', text: err?.response?.data?.error || 'No se pudo cargar el EORI del tenant' });
+      });
+    return () => { vivo = false; };
+  }, []);
 
   const toggleCountry = (code) => {
-    setEnabledCountries(prev => {
-      const next = prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code];
-      // Save to localStorage
-      const countriesData = next.map(c => {
-        const info = availableCountries.find(ac => ac.code === c);
-        return { code: c, name: info?.name, system: info?.system, flag: info?.flag };
-      });
-      localStorage.setItem('customsCountries', JSON.stringify(countriesData));
-      return next;
-    });
+    setEnabledCountries(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]);
   };
 
   const updateCountryConfig = (code, key, value) => {
-    setCountryConfigs(prev => {
-      const next = { ...prev, [code]: { ...prev[code], [key]: value } };
-      localStorage.setItem('customsCountryConfigs', JSON.stringify(next));
-      return next;
-    });
+    setCountryConfigs(prev => ({ ...prev, [code]: { ...prev[code], [key]: value } }));
   };
 
   const saveAllConfigs = async () => {
@@ -805,7 +788,7 @@ function CustomsTab({ tenant, setTenant, eoriNumbers, setEoriNumbers, eoriSaving
       enabledCountries.forEach(code => {
         eoriMap[code] = countryConfigs[code]?.eori || '';
       });
-      await api.put('/api/tenant/eori', { eoriNumbers: eoriMap });
+      await tenantEoriAPI.update(eoriMap);
       setMessage({ type: 'success', text: 'Configuracion de paises guardada correctamente' });
       setTimeout(() => setMessage(null), 3000);
     } catch (err) {
@@ -819,7 +802,7 @@ function CustomsTab({ tenant, setTenant, eoriNumbers, setEoriNumbers, eoriSaving
     <div className="space-y-6">
       <h2 className="text-lg font-medium text-gray-900">Configuracion de Paises y Aduanas</h2>
       <p className="text-sm text-gray-500">
-        Activa los paises donde opera tu organizacion. Cada pais tiene su propia configuracion de EORI, certificado y entorno.
+        Activa los paises donde opera tu organizacion. Cada pais tiene su propia configuracion de EORI y certificado. El EORI se guarda en tu organizacion y es el que identifica al declarante en las declaraciones.
       </p>
 
       {/* Country toggles */}
@@ -882,20 +865,6 @@ function CustomsTab({ tenant, setTenant, eoriNumbers, setEoriNumbers, eoriSaving
                       />
                     </div>
 
-                    {/* Environment */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Entorno
-                      </label>
-                      <select
-                        value={config.environment || 'test'}
-                        onChange={(e) => updateCountryConfig(country.code, 'environment', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                      >
-                        <option value="test">Test / Pre-produccion</option>
-                        <option value="production">Produccion</option>
-                      </select>
-                    </div>
                   </div>
 
                   {/* Certificate status */}
@@ -1054,7 +1023,6 @@ function CustomsTab({ tenant, setTenant, eoriNumbers, setEoriNumbers, eoriSaving
                   <span className="text-sm font-medium text-gray-700">{info?.name} ({info?.system})</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500">{config.environment === 'production' ? 'Produccion' : 'Test'}</span>
                   {isReady ? (
                     <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
                       <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>

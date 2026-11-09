@@ -105,6 +105,7 @@ async function expedienteImportacion(user, extra = {}) {
     operationType: 'import',
     transportMode: 'maritime',
     client: { companyName: 'Importadora SL', nif: 'B12345678' },
+    representative: { eori: 'ESREP00001', companyName: 'Representante SL' },
     goods: [{ itemNumber: 1, description: 'Cafe', quantity: 10, invoiceValue: 1000, taricCode: '0901210000', dutyAmount: 75, vatAmount: 220 }],
     goodsSummary: { totalValue: 1000 },
     documents: [doc('commercial_invoice'), doc('packing_list'), doc('bill_of_lading')],
@@ -120,6 +121,7 @@ async function expedienteExportacion(user, extra = {}) {
     operationType: 'export',
     transportMode: 'road',
     client: { companyName: 'Exportadora SA', nif: 'B87654321' },
+    representative: { eori: 'ESREP00001', companyName: 'Representante SL' },
     goods: [{ itemNumber: 1, description: 'Vino', quantity: 100, invoiceValue: 5000, taricCode: '2204210000', dutyAmount: 0, vatAmount: 0 }],
     goodsSummary: { totalValue: 5000 },
     documents: [doc('commercial_invoice'), doc('packing_list'), doc('cmr')],
@@ -666,7 +668,8 @@ describe('generateH7: ramas iossNumber y goodsSummary', () => {
     // h7Generator.generate recibe el iossNumber del body
     expect(h7Generator.generate).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ iossNumber: 'IM1234567890' })
+      expect.objectContaining({ iossNumber: 'IM1234567890' }),
+      expect.any(Object)  // contexto { tenant } del declarante
     );
     // ...y el IOSS queda persistido en el campo declarado del schema (antes se perdia)
     const guardado = await Expedition.findById(exp._id);
@@ -687,7 +690,8 @@ describe('generateH7: ramas iossNumber y goodsSummary', () => {
     expect(res.statusCode).toBe(200);
     expect(h7Generator.generate).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ iossNumber: 'IM9999999999' })
+      expect.objectContaining({ iossNumber: 'IM9999999999' }),
+      expect.any(Object)  // contexto { tenant } del declarante
     );
   });
 

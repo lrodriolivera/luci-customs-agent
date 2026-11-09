@@ -142,8 +142,8 @@ describe('PortalSelfService', () => {
       await avanzarAPaso2(user)
 
       expect(screen.getByPlaceholderText('portal.companyNamePlaceholder')).toBeInTheDocument()
-      expect(screen.getByPlaceholderText('B12345678')).toBeInTheDocument()
-      expect(screen.getByPlaceholderText('ESB12345678')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('X0000000X')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('ESX0000000X')).toBeInTheDocument()
       expect(screen.getByPlaceholderText('portal.contactPersonPlaceholder')).toBeInTheDocument()
       expect(screen.getByPlaceholderText('portal.emailPlaceholder')).toBeInTheDocument()
       expect(screen.getByPlaceholderText('portal.phonePlaceholder')).toBeInTheDocument()
@@ -724,7 +724,7 @@ describe('PortalSelfService', () => {
       await user.click(screen.getByRole('button', { name: /portal.operationImport/i }))
       await user.click(screen.getByRole('button', { name: /common.next/i }))
 
-      const taxIdInput = screen.getByPlaceholderText('B12345678')
+      const taxIdInput = screen.getByPlaceholderText('X0000000X')
       fireEvent.change(taxIdInput, { target: { value: 'B99999999' } })
 
       expect(taxIdInput).toHaveValue('B99999999')

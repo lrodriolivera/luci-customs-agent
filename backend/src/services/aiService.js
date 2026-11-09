@@ -6,6 +6,7 @@
 const fs = require('fs');
 const { BedrockRuntimeClient, ConverseCommand } = require('@aws-sdk/client-bedrock-runtime');
 const logger = require('../config/logger');
+const { eoriDe } = require('./forms/identificadorAduanero');
 const { getCache } = require('./cacheService');
 
 const BEDROCK_REGION = process.env.BEDROCK_REGION || 'us-east-1';
@@ -857,7 +858,7 @@ Responde en JSON con el formato especificado en el system prompt.`;
 EXPEDIENTE:
 - ID: ${expedition.expeditionId}
 - Cliente/Importador: ${expedition.client?.companyName} (NIF: ${expedition.client?.nif})
-- EORI: ${expedition.client?.eori || 'ES' + expedition.client?.nif}
+- EORI: ${eoriDe(expedition.client) || 'no informado'}
 - Exportador: ${expedition.exporter?.companyName} (${expedition.exporter?.country})
 
 MERCANCIAS:
@@ -999,7 +1000,7 @@ Directrices:
 DATOS DEL EXPEDIENTE:
 - ID: ${expedition.expeditionId}
 - Tipo: ${expedition.operationType}
-- Cliente/Importador: ${expedition.client?.companyName} (EORI: ${expedition.client?.eori || 'ES' + expedition.client?.nif})
+- Cliente/Importador: ${expedition.client?.companyName} (EORI: ${eoriDe(expedition.client) || 'no informado'})
 - Exportador: ${expedition.exporter?.companyName} (${expedition.exporter?.country})
 - Transporte: ${expedition.transportMode}
 - Puerto/Aduana entrada: ${expedition.transport?.entryCustomsOffice || expedition.transport?.arrivalPort}
@@ -2721,7 +2722,7 @@ DECLARACIÓN ACTUAL:
 IMPORTADOR/DECLARANTE:
 - Empresa: ${expedition.client?.companyName}
 - NIF: ${expedition.client?.nif}
-- EORI: ${expedition.client?.eori || 'ES' + expedition.client?.nif}
+- EORI: ${eoriDe(expedition.client) || 'no informado'}
 
 EXPORTADOR:
 - Empresa: ${expedition.exporter?.companyName || 'N/A'}
@@ -3106,7 +3107,7 @@ TIPO DECLARACIÓN: ${declarationType}
 
 OPERADORES:
 - Importador: ${expedition.client?.companyName}
-- EORI: ${expedition.client?.eori || 'ES' + expedition.client?.nif}
+- EORI: ${eoriDe(expedition.client) || 'no informado'}
 - ¿Primera importación?: ${expedition.client?.isFirstImport ? 'Sí' : 'No especificado'}
 - ¿Tiene OEA?: ${expedition.client?.hasOEA ? 'Sí' : 'No'}
 - Exportador: ${expedition.exporter?.companyName} (${expedition.exporter?.country})

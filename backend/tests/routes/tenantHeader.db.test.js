@@ -106,6 +106,8 @@ describe('GET/PUT /api/tenant/eori', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.defaultEori).toBe('ESA0000000A');
+    // El frontend habilita paises con EORI + el pais base del tenant
+    expect(res.body.data.country).toBe('ES');
   });
 
   test('PUT escribe en el propio tenant y deja intacto el de la cabecera', async () => {

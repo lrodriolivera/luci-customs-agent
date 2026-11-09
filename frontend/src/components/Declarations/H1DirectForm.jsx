@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { declarationsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { mensajeErrorGeneracion } from '../../utils/errorGeneracion'
 import {
   PlusIcon,
   TrashIcon,
@@ -405,7 +406,7 @@ export default function H1DirectForm() {
         }
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.response?.data?.error || 'Error al crear declaracion H1'
+      const msg = mensajeErrorGeneracion(err, 'Error al crear declaracion H1')
       toast.error(msg)
       if (err.response?.data?.errors) {
         err.response.data.errors.forEach(e => toast.error(e.message || JSON.stringify(e)))
@@ -527,7 +528,7 @@ export default function H1DirectForm() {
             </div>
             <div>
               <label className={labelClass}>NIF / EORI</label>
-              <input name="recipientEori" value={form.recipientEori} onChange={handleChange} className={inputClass} placeholder="ESB12345678" />
+              <input name="recipientEori" value={form.recipientEori} onChange={handleChange} className={inputClass} placeholder="ESX0000000X" />
             </div>
             <div>
               <label className={labelClass}>Pais</label>
@@ -571,7 +572,7 @@ export default function H1DirectForm() {
             </div>
             <div>
               <label className={labelClass}>EORI *</label>
-              <input name="declarantEori" value={form.declarantEori} onChange={handleChange} className={inputClass} placeholder="ESB22477020" required />
+              <input name="declarantEori" value={form.declarantEori} onChange={handleChange} className={inputClass} placeholder="ESX0000000X" required />
             </div>
             <div>
               <label className={labelClass}>Nombre</label>

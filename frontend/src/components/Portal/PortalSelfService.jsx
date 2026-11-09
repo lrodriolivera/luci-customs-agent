@@ -381,7 +381,7 @@ const PortalSelfService = ({ organizationId }) => {
                     value={formData.client.taxId}
                     onChange={(e) => updateFormData('client', 'taxId', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="B12345678"
+                    placeholder="X0000000X"
                   />
                 </div>
               </div>
@@ -395,7 +395,7 @@ const PortalSelfService = ({ organizationId }) => {
                   value={formData.client.eoriNumber}
                   onChange={(e) => updateFormData('client', 'eoriNumber', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="ESB12345678"
+                  placeholder="ESX0000000X"
                 />
               </div>
 

@@ -422,6 +422,7 @@ const createElectronicsExpedition = (overrides = {}) => ({
   client: testClient,
   exporter: testExporter,
   declarant: testDeclarant,
+  representative: testDeclarant,
   goods: testGoodsElectronics,
   transport: testTransportMaritime,
   incoterm: testIncoterms.cifBarcelona,
@@ -442,6 +443,7 @@ const createTextileExpedition = (overrides = {}) => ({
   client: testClient,
   exporter: testExporter,
   declarant: testDeclarant,
+  representative: testDeclarant,
   goods: testGoodsTextiles,
   transport: testTransportMaritime,
   incoterm: testIncoterms.cifBarcelona,
@@ -467,6 +469,7 @@ const createFoodExpedition = (overrides = {}) => ({
     country: 'TN'
   },
   declarant: testDeclarant,
+  representative: testDeclarant,
   goods: testGoodsFood,
   transport: {
     ...testTransportMaritime,

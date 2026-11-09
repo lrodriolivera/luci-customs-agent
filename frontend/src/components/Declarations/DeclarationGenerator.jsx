@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { expeditionsAPI, declarationsAPI, knowledgeAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { mensajeErrorGeneracion } from '../../utils/errorGeneracion'
 import {
   DocumentTextIcon,
   ArrowDownTrayIcon,
@@ -95,7 +96,7 @@ export default function DeclarationGenerator() {
       setGeneratedDeclaration(response.data)
       toast.success(t('declarations.declarationGeneratedType', { type: declarationType }))
     } catch (error) {
-      toast.error(t('declarations.errorGenerating'))
+      toast.error(mensajeErrorGeneracion(error, t('declarations.errorGenerating'), t))
     } finally {
       setGenerating(false)
     }

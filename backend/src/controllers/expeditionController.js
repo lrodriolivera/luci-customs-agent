@@ -4,6 +4,7 @@ const documentChecklists = require('../utils/documentChecklists');
 const emailService = require('../services/emailService');
 const aiService = require('../services/aiService');
 const { ensureSameTenant } = require('../utils/tenantGuard');
+const { eoriDe } = require('../services/forms/identificadorAduanero');
 
 const { escapeRegex } = require('../utils/escapeRegex');
 /**
@@ -44,7 +45,7 @@ const create = async (req, res) => {
       const transformedClient = {
         companyName: client.companyName,
         nif: client.nif?.toUpperCase(),
-        eori: client.eori || (client.nif ? `ES${client.nif.toUpperCase()}` : ''),
+        eori: eoriDe(client) || '',
         address: clientAddress,
         contact: {
           name: client.contactPerson || client.contact?.name || '',
@@ -134,12 +135,16 @@ const create = async (req, res) => {
       status: 'draft',
       createdBy: req.user._id,
       assignedTo: req.user._id,
-      representative: {
-        companyName: req.user.profile?.company || 'STRIX AI SL',
-        nif: req.user.profile?.eoriNumber?.replace('ES', '') || '',
-        eori: req.user.profile?.eoriNumber || '',
-        representationType: 'indirect'
-      }
+      // Representante: solo si el usuario tiene EORI propio; si no, el declarante
+      // sale del tenant al generar (sin nombre ni NIF por defecto).
+      ...(req.user.profile?.eoriNumber ? {
+        representative: {
+          companyName: req.user.profile?.company,
+          nif: req.user.profile.eoriNumber.replace('ES', ''),
+          eori: req.user.profile.eoriNumber,
+          representationType: 'indirect'
+        }
+      } : {})
     });
 
     // Generar checklist de documentos automaticamente

@@ -77,6 +77,7 @@ async function expedienteImportacion(user, extra = {}) {
     operationType: 'import',
     transportMode: 'maritime',
     client: { companyName: 'Importadora SL', nif: 'B12345678' },
+    representative: { eori: 'ESREP00001', companyName: 'Representante SL' },
     goods: [{ itemNumber: 1, description: 'Cafe', quantity: 10, invoiceValue: 1000, taricCode: '0901210000', dutyAmount: 75, vatAmount: 220 }],
     goodsSummary: { totalValue: 1000 },
     documents: [doc('commercial_invoice'), doc('packing_list'), doc('bill_of_lading')],

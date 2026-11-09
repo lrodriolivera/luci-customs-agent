@@ -11,7 +11,14 @@
  * NO se mockea nada: el codigo bajo prueba es justo el que genera el XML.
  */
 
-const { buildH1ImportXML, expeditionToH1Data, NS_ENT, NS_SOAP } = require('../../../src/services/aeat/h1XmlBuilder');
+const { buildH1ImportXML, expeditionToH1Data: expeditionToH1DataReal, NS_ENT, NS_SOAP } = require('../../../src/services/aeat/h1XmlBuilder');
+
+// Sin identificacion/direccion del exportador ni declarante resuelto no se
+// construye el SOAP (422): estos tests de mapeo parten de un expediente valido.
+const DECLARANTE = { eori: 'ESA11111111', companyName: 'Agencia SL', contact: {} };
+const EXPORTADOR = { eori: 'CN000000001', companyName: 'Shenzhen Co', address: 'Calle 1', city: 'Shenzhen', country: 'CN' };
+const expeditionToH1Data = (e, ctx = { declarante: DECLARANTE }) =>
+  expeditionToH1DataReal({ exporter: EXPORTADOR, ...e }, ctx);
 
 /** Una partida minima con arancel e IVA. */
 function partida(extra = {}) {
@@ -263,5 +270,30 @@ describe('expeditionToH1Data: mapeo desde el expediente LUCI', () => {
     expect(xml).toContain('<C3312CodigoPosicionTaric>0901210000</C3312CodigoPosicionTaric>');
     expect(xml).toContain('<C08ImportadorRazonSocial>Importadora SL</C08ImportadorRazonSocial>');
     expect(xml).toContain('<C47TributoClase>B00</C47TributoClase>');
+  });
+});
+
+describe('expeditionToH1Data: sin identificadores inventados (422)', () => {
+  const real = expeditionToH1DataReal;
+  const cliente = { companyName: 'Cliente SL', nif: 'B00000000' };
+
+  test('exportador sin identificacion: 422 antes de construir el SOAP', () => {
+    expect(() => real({ client: cliente, goods: [], exporter: { address: 'Calle 1', city: 'X' } }, { declarante: DECLARANTE }))
+      .toThrow(/Falta el EORI del exportador/);
+  });
+  test('exportador sin direccion: 422, no "Calle Ejemplo 1" ni Zaragoza', () => {
+    let e;
+    try { real({ goods: [], exporter: { eori: 'CN1' } }, { declarante: DECLARANTE }); } catch (x) { e = x; }
+    expect(e.status).toBe(422);
+    expect(e.message).toMatch(/dirección del exportador/);
+  });
+  test('sin declarante resuelto: 422, no ESB22477020', () => {
+    expect(() => real({ goods: [], exporter: EXPORTADOR }, {})).toThrow(/Falta el EORI del representante/);
+  });
+  test('con todo, nada fijo en el resultado', () => {
+    const d = real({ goods: [], exporter: EXPORTADOR }, { declarante: DECLARANTE });
+    expect(d.declaranteNIF).toBe('ESA11111111');
+    expect(d.declaranteNombre).toBe('Agencia SL');
+    expect(JSON.stringify(d)).not.toMatch(/B22477020|STRIX AI|Calle Ejemplo|Zaragoza|strixai\.ai/);
   });
 });
