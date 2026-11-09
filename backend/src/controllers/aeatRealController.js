@@ -166,9 +166,11 @@ const getCertificateInfo = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Alias no válido' });
     }
 
-    const result = await certificateService.listCertificates(null, ambitoTenant(req.user));
-    const certificates = result.certificates || [];
-    const certificate = certificates.find(c => (c.metadata?.alias || c.id) === alias);
+    // Se resuelve dentro del tenant del usuario: un alias de otro tenant es un 404.
+    const ambito = ambitoTenant(req.user);
+    const certificateId = certificateService.getCertificateIdByAlias(alias, ambito);
+    const result = certificateId ? await certificateService.listCertificates(null, ambito) : null;
+    const certificate = result?.certificates?.find(c => c.id === certificateId);
 
     if (!certificate) {
       return res.status(404).json({
@@ -177,14 +179,11 @@ const getCertificateInfo = async (req, res) => {
       });
     }
 
-    // LUCI analiza el estado del certificado
-    const analysis = await certificateService.analyzeCertificateWithLuci(alias);
-
+    // Solo metadatos del certificado (alias, sujeto, emisor, validez, tipo, estado); sin analisis de LUCI.
     res.json({
       success: true,
       data: {
-        certificate,
-        analysis
+        certificate
       }
     });
 
