@@ -61,7 +61,7 @@ function noImplementado(res, motivo) {
  */
 async function getRealTimeMetrics(req, res) {
   try {
-    const metrics = analyticsService.getRealTimeMetrics();
+    const metrics = await analyticsService.getRealTimeMetrics(ambitoTenant(req.user));
     res.json({ success: true, data: metrics });
   } catch (error) {
     logger.error(`[AnalyticsController] Realtime metrics error: ${error.message}`);

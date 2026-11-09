@@ -147,6 +147,16 @@ describe('Dashboard y metricas', () => {
     expect(res.body.data.activos).toBe(3);
   });
 
+  test('getRealTimeMetrics pasa el ámbito del usuario: tenant, undefined (plataforma) o null (sin tenant)', async () => {
+    analyticsService.getRealTimeMetrics.mockResolvedValue({ activos: 3 });
+    await ctrl.getRealTimeMetrics({ ...req(), user: { id: 'u1', tenantId: 't1', role: 'user' } }, crearRes());
+    expect(analyticsService.getRealTimeMetrics).toHaveBeenLastCalledWith('t1');
+    await ctrl.getRealTimeMetrics({ ...req(), user: { id: 'root', role: 'super_admin' } }, crearRes());
+    expect(analyticsService.getRealTimeMetrics).toHaveBeenLastCalledWith(undefined);
+    await ctrl.getRealTimeMetrics({ ...req(), user: { id: 'u2', role: 'user' } }, crearRes());
+    expect(analyticsService.getRealTimeMetrics).toHaveBeenLastCalledWith(null);
+  });
+
   test('getDeclarationAnalytics usa el periodo por defecto last_30_days', async () => {
     analyticsService.getDeclarationAnalytics.mockResolvedValue({ success: true });
     const res = crearRes();

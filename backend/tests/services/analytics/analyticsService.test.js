@@ -20,6 +20,10 @@ jest.mock('../../../src/services/aiService', () => ({
   })
 }));
 
+// Las metricas en tiempo real salen de realMetricsService (BD): aqui se simula
+const mockRealMetrics = { expedientesActivos: jest.fn(), volumenDeclaraciones: jest.fn() };
+jest.mock('../../../src/services/analytics/realMetricsService', () => mockRealMetrics);
+
 const analyticsService = require('../../../src/services/analytics/analyticsService');
 
 describe('Analytics Service', () => {
@@ -294,19 +298,25 @@ describe('Analytics Service', () => {
   });
 
   describe('getRealTimeMetrics', () => {
-    test('should return real-time metrics', () => {
-      const metrics = analyticsService.getRealTimeMetrics();
+    beforeEach(() => {
+      mockRealMetrics.expedientesActivos.mockResolvedValue(3);
+      mockRealMetrics.volumenDeclaraciones.mockResolvedValue({ total: 10, pendientes: 2 });
+    });
+
+    test('should return real-time metrics', async () => {
+      const metrics = await analyticsService.getRealTimeMetrics('t1');
 
       expect(metrics).toBeDefined();
       expect(metrics).toHaveProperty('timestamp');
-      expect(metrics).toHaveProperty('activeDeclarations');
+      expect(metrics.activeDeclarations).toBe(3);
+      expect(metrics.pendingSubmissions).toBe(2);
       expect(metrics).toHaveProperty('aeatStatus');
     });
 
-    test('should include queue status', () => {
-      const metrics = analyticsService.getRealTimeMetrics();
+    test('should not include invented queue status', async () => {
+      const metrics = await analyticsService.getRealTimeMetrics('t1');
 
-      expect(metrics.queueStatus).toBeDefined();
+      expect(metrics.queueStatus).toBeUndefined();
     });
   });
 

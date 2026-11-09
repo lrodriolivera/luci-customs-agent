@@ -23,6 +23,13 @@ jest.mock('../../src/services/aiService', () => ({
   generateAutomaticInsights: mockGenerateAutomaticInsights
 }));
 
+// Las metricas en tiempo real salen de realMetricsService (BD): aqui se simula
+const mockRealMetrics = {
+  expedientesActivos: jest.fn(),
+  volumenDeclaraciones: jest.fn()
+};
+jest.mock('../../src/services/analytics/realMetricsService', () => mockRealMetrics);
+
 const analyticsService = require('../../src/services/analytics/analyticsService');
 
 describe('analyticsService - Cobertura de Ramas', () => {
@@ -772,34 +779,29 @@ describe('analyticsService - Cobertura de Ramas', () => {
     });
   });
 
-  describe('getRealTimeMetrics - sin período', () => {
-    test('retorna métricas en tiempo real sin período', () => {
-      const metrics = analyticsService.getRealTimeMetrics();
-
-      expect(metrics).toBeDefined();
-      expect(metrics).toHaveProperty('timestamp');
-      expect(metrics.timestamp).toBeInstanceOf(Date);
-      expect(metrics).toHaveProperty('activeDeclarations');
-      expect(metrics).toHaveProperty('pendingSubmissions');
-      expect(metrics).toHaveProperty('aeatStatus');
-      expect(metrics.aeatStatus).toHaveProperty('connected');
-      expect(metrics.aeatStatus).toHaveProperty('lastCheck');
-      expect(metrics.aeatStatus).toHaveProperty('latency');
-      expect(metrics).toHaveProperty('recentActivity');
-      expect(Array.isArray(metrics.recentActivity)).toBe(true);
-      expect(metrics).toHaveProperty('alerts');
-      expect(metrics).toHaveProperty('queueStatus');
+  describe('getRealTimeMetrics - datos reales del ámbito', () => {
+    beforeEach(() => {
+      mockRealMetrics.expedientesActivos.mockResolvedValue(5);
+      mockRealMetrics.volumenDeclaraciones.mockResolvedValue({ total: 20, pendientes: 3 });
     });
 
-    test('recentActivity contiene eventos con estructura correcta', () => {
-      const metrics = analyticsService.getRealTimeMetrics();
+    test('retorna métricas en tiempo real sin período', async () => {
+      const metrics = await analyticsService.getRealTimeMetrics('t1');
 
-      expect(metrics.recentActivity.length).toBeGreaterThan(0);
-      metrics.recentActivity.forEach(activity => {
-        expect(activity).toHaveProperty('type');
-        expect(activity).toHaveProperty('time');
-        expect(activity.time).toBeInstanceOf(Date);
-      });
+      expect(metrics).toBeDefined();
+      expect(metrics.timestamp).toBeInstanceOf(Date);
+      expect(metrics.activeDeclarations).toBe(5);
+      expect(metrics.pendingSubmissions).toBe(3);
+      // sin comprobación real de conectividad AEAT: null, no "Conectado" inventado
+      expect(metrics.aeatStatus).toBeNull();
+      expect(metrics.alerts).toEqual({ critical: 0, warning: 0, info: 0 });
+    });
+
+    test('no inventa actividad reciente ni colas', async () => {
+      const metrics = await analyticsService.getRealTimeMetrics('t1');
+
+      expect(metrics).not.toHaveProperty('recentActivity');
+      expect(metrics).not.toHaveProperty('queueStatus');
     });
   });
 
