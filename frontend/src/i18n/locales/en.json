@@ -3432,7 +3432,16 @@
     "errorLoadingReports": "Could not load the reports",
     "kpiSinDatos": "No data",
     "kpiHealthBase": "Calculated from {{calculados}} of {{total}} KPIs",
-    "kpiHealthSinDatos": "Not enough data"
+    "kpiHealthSinDatos": "Not enough data",
+    "kpiCargando": "Loading KPIs...",
+    "kpiErrorCarga": "Could not load the KPIs",
+    "kpiReintentar": "Retry",
+    "kpiAnalizando": "Analyzing with LUCI...",
+    "kpiAnalisisError": "Could not get the LUCI analysis",
+    "kpiAnalisisVacio": "No analysis available",
+    "kpiAnalisisTitulo": "LUCI analysis",
+    "kpiPrioridades": "Priorities",
+    "kpiRiesgos": "Risks"
   },
   "errorBoundary": {
     "title": "Something went wrong",

@@ -37,7 +37,8 @@ vi.mock('../../services/api', () => ({
     getDashboard: vi.fn(),
     getRealTime: vi.fn(),
     kpis: {
-      getDashboard: vi.fn()
+      getDashboard: vi.fn(),
+      getAnalysis: vi.fn()
     },
     ai: {
       generateInsights: vi.fn(),
@@ -166,6 +167,7 @@ describe('<AnalyticsDashboard />', () => {
     vi.clearAllMocks()
     analyticsAPI.getDashboard.mockResolvedValue({ data: { success: true, data: mockDashboardData } })
     analyticsAPI.kpis.getDashboard.mockResolvedValue({ data: { success: true, data: mockKPIData } })
+    analyticsAPI.kpis.getAnalysis.mockResolvedValue({ data: { success: true, data: { luciAnalysis: null } } })
     analyticsAPI.getRealTime.mockResolvedValue({ data: { success: true, data: mockRealTimeData } })
   })
 
@@ -1386,5 +1388,116 @@ describe('<AnalyticsDashboard />', () => {
     expect(tarjeta.textContent).not.toMatch(/null|NaN/)
     // el círculo de progreso no se pinta
     expect(tarjeta.querySelectorAll('circle').length).toBeLessThanOrEqual(1)
+  })
+
+  // ==================== PESTAÑA KPIs: CARGA, ERROR Y ANÁLISIS APARTE ====================
+  const irAKPIs = async (user) => {
+    await waitFor(() => {
+      expect(screen.getByText('analyticsPage.title')).toBeInTheDocument()
+    })
+    await user.click(screen.getByRole('button', { name: /KPIs/i }))
+  }
+  const sinResolver = () => new Promise(() => {})
+
+  test('muestra un estado de carga en la pestaña KPIs mientras llegan los datos', async () => {
+    analyticsAPI.kpis.getDashboard.mockImplementation(sinResolver)
+    const user = userEvent.setup()
+    render(<AnalyticsDashboard />)
+    await irAKPIs(user)
+
+    expect(screen.getByText('analyticsPage.kpiCargando')).toBeInTheDocument()
+    expect(screen.queryByText('Score general de KPIs')).toBeNull()
+  })
+
+  test('si la petición de KPIs falla muestra un mensaje con "Reintentar" y reintenta', async () => {
+    analyticsAPI.kpis.getDashboard
+      .mockRejectedValueOnce(new Error('timeout of 30000ms exceeded'))
+      .mockResolvedValue({ data: { success: true, data: mockKPIData } })
+    const user = userEvent.setup()
+    render(<AnalyticsDashboard />)
+    await irAKPIs(user)
+
+    expect(await screen.findByText('analyticsPage.kpiErrorCarga')).toBeInTheDocument()
+    expect(screen.queryByText('analyticsPage.kpiCargando')).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: 'analyticsPage.kpiReintentar' }))
+
+    expect(await screen.findByText('Score general de KPIs')).toBeInTheDocument()
+    expect(screen.queryByText('analyticsPage.kpiErrorCarga')).toBeNull()
+    expect(analyticsAPI.kpis.getDashboard).toHaveBeenCalledTimes(2)
+  })
+
+  test('una respuesta sin éxito también se trata como error con reintento', async () => {
+    analyticsAPI.kpis.getDashboard.mockResolvedValue({ data: { success: false, error: 'x' } })
+    const user = userEvent.setup()
+    render(<AnalyticsDashboard />)
+    await irAKPIs(user)
+
+    expect(await screen.findByText('analyticsPage.kpiErrorCarga')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'analyticsPage.kpiReintentar' })).toBeInTheDocument()
+  })
+
+  test('el análisis de LUCI se pide aparte al abrir la pestaña, no antes', async () => {
+    const user = userEvent.setup()
+    render(<AnalyticsDashboard />)
+    await waitFor(() => {
+      expect(screen.getByText('analyticsPage.title')).toBeInTheDocument()
+    })
+    expect(analyticsAPI.kpis.getAnalysis).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: /KPIs/i }))
+    await waitFor(() => {
+      expect(analyticsAPI.kpis.getAnalysis).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  test('las tarjetas de KPI se ven antes de que llegue el análisis, que muestra "Analizando con LUCI..."', async () => {
+    let resolverAnalisis
+    analyticsAPI.kpis.getAnalysis.mockImplementation(() => new Promise((r) => { resolverAnalisis = r }))
+    const user = userEvent.setup()
+    render(<AnalyticsDashboard />)
+    await irAKPIs(user)
+
+    expect(await screen.findByText('Tiempo Promedio')).toBeInTheDocument()
+    expect(screen.getByText('Score general de KPIs')).toBeInTheDocument()
+    expect(screen.getByText('analyticsPage.kpiAnalizando')).toBeInTheDocument()
+
+    resolverAnalisis({ data: { success: true, data: { luciAnalysis: {
+      summary: 'Resumen de LUCI', priorities: ['Prioridad uno'], risks: ['Riesgo uno']
+    } } } })
+
+    expect(await screen.findByText('Resumen de LUCI')).toBeInTheDocument()
+    expect(screen.getByText('Prioridad uno')).toBeInTheDocument()
+    expect(screen.getByText('Riesgo uno')).toBeInTheDocument()
+    expect(screen.queryByText('analyticsPage.kpiAnalizando')).toBeNull()
+    expect(screen.getByText('Tiempo Promedio')).toBeInTheDocument()
+  })
+
+  test('si el análisis falla, las tarjetas siguen y hay "Reintentar" propio del análisis', async () => {
+    analyticsAPI.kpis.getAnalysis
+      .mockRejectedValueOnce(new Error('timeout of 90000ms exceeded'))
+      .mockResolvedValue({ data: { success: true, data: { luciAnalysis: { summary: 'Segundo intento', priorities: [], risks: [] } } } })
+    const user = userEvent.setup()
+    render(<AnalyticsDashboard />)
+    await irAKPIs(user)
+
+    expect(await screen.findByText('analyticsPage.kpiAnalisisError')).toBeInTheDocument()
+    expect(screen.getByText('Tiempo Promedio')).toBeInTheDocument()
+    expect(screen.queryByText('analyticsPage.kpiErrorCarga')).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: 'analyticsPage.kpiReintentar' }))
+    expect(await screen.findByText('Segundo intento')).toBeInTheDocument()
+    expect(analyticsAPI.kpis.getAnalysis).toHaveBeenCalledTimes(2)
+    // el reintento del análisis no vuelve a pedir los KPI
+    expect(analyticsAPI.kpis.getDashboard).toHaveBeenCalledTimes(1)
+  })
+
+  test('sin análisis disponible (luciAnalysis null) lo dice sin error', async () => {
+    const user = userEvent.setup()
+    render(<AnalyticsDashboard />)
+    await irAKPIs(user)
+
+    expect(await screen.findByText('analyticsPage.kpiAnalisisVacio')).toBeInTheDocument()
+    expect(screen.queryByText('analyticsPage.kpiAnalisisError')).toBeNull()
   })
 })
