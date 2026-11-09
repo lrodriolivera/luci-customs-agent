@@ -1098,6 +1098,15 @@ export default function AnalyticsDashboard() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Salud del Sistema</h3>
                 <p className="text-sm text-gray-500">Score general de KPIs</p>
+                {kpiData.healthScore != null && kpiData.kpisCalculados != null && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    {t('analyticsPage.kpiHealthBase', {
+                      calculados: kpiData.kpisCalculados,
+                      total: kpiData.kpisTotal,
+                      defaultValue: 'Calculado sobre {{calculados}} de {{total}} KPIs'
+                    })}
+                  </p>
+                )}
               </div>
               <div className="text-center">
                 <div className="relative w-24 h-24">
@@ -1110,19 +1119,27 @@ export default function AnalyticsDashboard() {
                       strokeWidth="8"
                       fill="none"
                     />
-                    <circle
-                      cx="48"
-                      cy="48"
-                      r="40"
-                      stroke={kpiData.healthScore >= 80 ? '#10b981' : kpiData.healthScore >= 60 ? '#f59e0b' : '#ef4444'}
-                      strokeWidth="8"
-                      fill="none"
-                      strokeDasharray={`${kpiData.healthScore * 2.51} 251`}
-                    />
+                    {kpiData.healthScore != null && (
+                      <circle
+                        cx="48"
+                        cy="48"
+                        r="40"
+                        stroke={kpiData.healthScore >= 80 ? '#10b981' : kpiData.healthScore >= 60 ? '#f59e0b' : '#ef4444'}
+                        strokeWidth="8"
+                        fill="none"
+                        strokeDasharray={`${kpiData.healthScore * 2.51} 251`}
+                      />
+                    )}
                   </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold">
-                    {kpiData.healthScore}
-                  </span>
+                  {kpiData.healthScore != null ? (
+                    <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold">
+                      {kpiData.healthScore}
+                    </span>
+                  ) : (
+                    <span className="absolute inset-0 flex items-center justify-center text-center text-xs font-medium text-gray-500 px-2">
+                      {t('analyticsPage.kpiHealthSinDatos', 'Sin datos suficientes')}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -1138,24 +1155,40 @@ export default function AnalyticsDashboard() {
                  category === 'quality' ? 'Calidad' : 'Eficiencia'}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {kpis.map((kpi) => (
+                {kpis.map((kpi) => {
+                  // Sin dato real el KPI no muestra cifra, tendencia ni color de estado
+                  const sinDatos = kpi.value == null
+                  const textoSinDatos = t('analyticsPage.kpiSinDatos', 'Sin datos')
+                  return (
                   <div key={kpi.kpiId} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-700">{kpi.name}</span>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(kpi.status)}`}>
-                        {kpi.status === 'good' ? 'Bueno' :
-                         kpi.status === 'ok' ? 'OK' :
-                         kpi.status === 'warning' ? 'Alerta' : 'Critico'}
-                      </span>
+                      {sinDatos ? (
+                        <span className="px-2 py-1 text-xs font-medium rounded-full text-gray-500 bg-gray-100">
+                          {textoSinDatos}
+                        </span>
+                      ) : (
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(kpi.status)}`}>
+                          {kpi.status === 'good' ? 'Bueno' :
+                           kpi.status === 'ok' ? 'OK' :
+                           kpi.status === 'warning' ? 'Alerta' : 'Critico'}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-end justify-between">
-                      <span className="text-2xl font-bold text-gray-900">
-                        {kpi.value}{kpi.unit === '%' ? '%' : kpi.unit === 'EUR' ? '' : ` ${kpi.unit}`}
-                      </span>
-                      <div className="flex items-center gap-1 text-sm text-gray-500">
-                        {getTrendIcon(kpi.trend?.direction)}
-                        <span>{kpi.trend?.percentage}%</span>
-                      </div>
+                      {sinDatos ? (
+                        <span className="text-lg font-medium text-gray-400">{textoSinDatos}</span>
+                      ) : (
+                        <>
+                          <span className="text-2xl font-bold text-gray-900">
+                            {kpi.value}{kpi.unit === '%' ? '%' : kpi.unit === 'EUR' ? '' : ` ${kpi.unit}`}
+                          </span>
+                          <div className="flex items-center gap-1 text-sm text-gray-500">
+                            {getTrendIcon(kpi.trend?.direction)}
+                            <span>{kpi.trend?.percentage}%</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                     {kpi.target && (
                       <div className="mt-2 text-xs text-gray-500">
@@ -1163,7 +1196,8 @@ export default function AnalyticsDashboard() {
                       </div>
                     )}
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           ))}

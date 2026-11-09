@@ -3429,7 +3429,10 @@
     "noReportsHint": "Create your first one with the Generate Report button",
     "reportGenerated": "Report generated",
     "errorGeneratingReport": "Could not generate the report",
-    "errorLoadingReports": "Could not load the reports"
+    "errorLoadingReports": "Could not load the reports",
+    "kpiSinDatos": "No data",
+    "kpiHealthBase": "Calculated from {{calculados}} of {{total}} KPIs",
+    "kpiHealthSinDatos": "Not enough data"
   },
   "errorBoundary": {
     "title": "Something went wrong",

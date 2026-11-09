@@ -10,6 +10,7 @@ const realMetrics = require('../services/analytics/realMetricsService');
 const aiService = require('../services/aiService');
 const logger = require('../config/logger');
 const { ambitoTenant } = require('../utils/tenantGuard');
+const { datosParaKPIs } = require('../services/analytics/kpiDatos');
 
 // ==================== Dashboard & Metrics ====================
 
@@ -396,12 +397,21 @@ async function scheduleReport(req, res) {
 // ==================== KPIs ====================
 
 /**
+ * Datos reales del tenant para los KPI. Los valores nunca vienen de la query
+ * (se podrian forzar cifras y alertas): solo `days` (ventana en dias) se lee de ella.
+ */
+const datosKPIsDe = (req) => {
+  const dias = Number.parseInt(req.query?.days, 10);
+  return datosParaKPIs(ambitoTenant(req.user), Number.isNaN(dias) ? {} : { dias });
+};
+
+/**
  * Get KPI dashboard
  * GET /api/analytics/kpis/dashboard
  */
 async function getKPIDashboard(req, res) {
   try {
-    const result = await kpiService.getKPIDashboard(ambitoTenant(req.user));
+    const result = await kpiService.getKPIDashboard(ambitoTenant(req.user), await datosKPIsDe(req));
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] KPI dashboard error: ${error.message}`);
@@ -415,7 +425,7 @@ async function getKPIDashboard(req, res) {
  */
 async function getAllKPIs(req, res) {
   try {
-    const result = await kpiService.getAllKPIs({}, ambitoTenant(req.user));
+    const result = await kpiService.getAllKPIs(await datosKPIsDe(req), ambitoTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Get all KPIs error: ${error.message}`);
@@ -449,9 +459,8 @@ async function getKPIDefinitions(req, res) {
 async function calculateKPI(req, res) {
   try {
     const { id } = req.params;
-    const data = req.query;
 
-    const result = await kpiService.calculateKPI(id, data, ambitoTenant(req.user));
+    const result = await kpiService.calculateKPI(id, await datosKPIsDe(req), ambitoTenant(req.user));
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Calculate KPI error: ${error.message}`);

@@ -3435,7 +3435,10 @@
     "noReportsHint": "Genere el primero con el botón Generar Informe",
     "reportGenerated": "Informe generado",
     "errorGeneratingReport": "No se pudo generar el informe",
-    "errorLoadingReports": "No se pudieron cargar los informes"
+    "errorLoadingReports": "No se pudieron cargar los informes",
+    "kpiSinDatos": "Sin datos",
+    "kpiHealthBase": "Calculado sobre {{calculados}} de {{total}} KPIs",
+    "kpiHealthSinDatos": "Sin datos suficientes"
   },
   "inspections": {
     "title": "Inspecciones"
