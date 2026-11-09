@@ -1500,4 +1500,107 @@ describe('<AnalyticsDashboard />', () => {
     expect(await screen.findByText('analyticsPage.kpiAnalisisVacio')).toBeInTheDocument()
     expect(screen.queryByText('analyticsPage.kpiAnalisisError')).toBeNull()
   })
+
+  // ==================== MÉTRICAS DEL CUADRO DE MANDO SIN DATOS ====================
+  const abrirConDatos = async (datos, pestana) => {
+    analyticsAPI.getDashboard.mockResolvedValue({ data: { success: true, data: datos } })
+    const user = userEvent.setup()
+    render(<AnalyticsDashboard />)
+    await waitFor(() => {
+      expect(screen.getByText('analyticsPage.title')).toBeInTheDocument()
+    })
+    if (pestana) await user.click(screen.getByRole('button', { name: pestana }))
+    return user
+  }
+  // la etiqueta puede coincidir con el botón de una pestaña: se toma la que está dentro de un .card
+  const tarjeta = (etiqueta) => screen.getAllByText(etiqueta).map((e) => e.closest('.card')).find(Boolean)
+  const SIN = 'analyticsPage.kpiSinDatos'
+  const vacio = (v) => ({ ...v })
+
+  test('Visión General: cumplimiento y tiempo medio null/undefined muestran "Sin datos", no "%" ni "h" sueltos', async () => {
+    await abrirConDatos({
+      ...mockDashboardData,
+      operations: { ...mockDashboardData.operations, averageProcessingTime: null },
+      compliance: { ...mockDashboardData.compliance, documentCompleteness: undefined }
+    })
+
+    for (const etiqueta of ['Cumplimiento', 'Tiempo Medio']) {
+      const c = tarjeta(etiqueta)
+      expect(within(c).getByText(SIN)).toBeInTheDocument()
+      expect(c.textContent).not.toMatch(/(^|[^\d.])(%|h)(?![a-zA-Z])/)
+      expect(c.textContent).not.toMatch(/null|undefined|NaN/)
+    }
+  })
+
+  test('Visión General: con datos sigue mostrando la cifra', async () => {
+    await abrirConDatos(vacio(mockDashboardData))
+
+    expect(within(tarjeta('Cumplimiento')).getByText('95%')).toBeInTheDocument()
+    expect(within(tarjeta('Tiempo Medio')).getByText('2.5h')).toBeInTheDocument()
+    expect(within(tarjeta('Cumplimiento')).queryByText(SIN)).toBeNull()
+  })
+
+  test('un 0 real no es "Sin datos"', async () => {
+    await abrirConDatos({
+      ...mockDashboardData,
+      compliance: { ...mockDashboardData.compliance, documentCompleteness: 0 }
+    })
+    expect(within(tarjeta('Cumplimiento')).getByText('0%')).toBeInTheDocument()
+  })
+
+  test.each([
+    ['Tasa de Error', 'errorRate'],
+    ['Tasa de Rechazo', 'rejectionRate'],
+    ['Envios a Tiempo', 'onTimeSubmissions'],
+    ['Tasa de Inspeccion', 'inspectionRate']
+  ])('Cumplimiento: %s sin dato muestra "Sin datos"', async (etiqueta, clave) => {
+    await abrirConDatos({
+      ...mockDashboardData,
+      compliance: { ...mockDashboardData.compliance, [clave]: null }
+    }, /Cumplimiento/i)
+
+    const c = tarjeta(etiqueta)
+    expect(within(c).getByText(SIN)).toBeInTheDocument()
+    expect(c.textContent).not.toMatch(/%|null|undefined|NaN/)
+  })
+
+  test('Cumplimiento: completitud documental sin dato no pinta círculo de progreso ni la frase con "undefined%"', async () => {
+    await abrirConDatos({
+      ...mockDashboardData,
+      compliance: { ...mockDashboardData.compliance, documentCompleteness: null }
+    }, /Cumplimiento/i)
+
+    const c = tarjeta('Completitud Documental')
+    expect(within(c).getAllByText(SIN).length).toBeGreaterThan(0)
+    expect(c.querySelectorAll('circle').length).toBeLessThanOrEqual(1)
+    expect(c.textContent).not.toMatch(/null|undefined|NaN|El\s*%/)
+  })
+
+  test('Cumplimiento: con datos mantiene el círculo y la frase', async () => {
+    await abrirConDatos(vacio(mockDashboardData), /Cumplimiento/i)
+
+    const c = tarjeta('Completitud Documental')
+    expect(c.querySelectorAll('circle').length).toBe(2)
+    expect(c.textContent).toMatch(/El 95% de los expedientes/)
+  })
+
+  test('Financiero: utilización de garantías sin dato muestra "Sin datos" y sin barra de progreso', async () => {
+    await abrirConDatos({
+      ...mockDashboardData,
+      financial: { ...mockDashboardData.financial, guaranteesUtilization: undefined }
+    }, /Financiero/i)
+
+    const c = tarjeta('Utilizacion de Garantias')
+    expect(within(c).getByText(SIN)).toBeInTheDocument()
+    expect(c.querySelector('.bg-gray-200 > div')).toBeNull()
+    expect(c.textContent).not.toMatch(/%|undefined|NaN/)
+  })
+
+  test('Financiero: con datos mantiene la barra', async () => {
+    await abrirConDatos(vacio(mockDashboardData), /Financiero/i)
+
+    const c = tarjeta('Utilizacion de Garantias')
+    expect(within(c).getByText('72%')).toBeInTheDocument()
+    expect(c.querySelector('.bg-gray-200 > div').style.width).toBe('72%')
+  })
 })

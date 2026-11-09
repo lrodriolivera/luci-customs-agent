@@ -789,6 +789,13 @@ export default function AnalyticsDashboard() {
     }).format(num || 0)
   }
 
+  // Metricas del cuadro de mando que llegan null/undefined: "Sin datos", nunca "%" o "h" sin cifra
+  const sinDato = (valor) => valor == null || (typeof valor === 'number' && !Number.isFinite(valor))
+  const sinDatosEl = (clase = 'text-gray-400') => (
+    <span className={clase}>{t('analyticsPage.kpiSinDatos', 'Sin datos')}</span>
+  )
+  const conUnidad = (valor, unidad) => (sinDato(valor) ? sinDatosEl() : `${valor}${unidad}`)
+
   const getTrendIcon = (direction) => {
     switch (direction) {
       case 'up':
@@ -1004,7 +1011,7 @@ export default function AnalyticsDashboard() {
                 <div>
                   <p className="text-sm text-gray-500">Cumplimiento</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {dashboardData.compliance?.documentCompleteness}%
+                    {conUnidad(dashboardData.compliance?.documentCompleteness, '%')}
                   </p>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-lg">
@@ -1027,7 +1034,7 @@ export default function AnalyticsDashboard() {
                 <div>
                   <p className="text-sm text-gray-500">Tiempo Medio</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {dashboardData.operations?.averageProcessingTime}h
+                    {conUnidad(dashboardData.operations?.averageProcessingTime, 'h')}
                   </p>
                 </div>
                 <div className="p-3 bg-orange-100 rounded-lg">
@@ -1358,17 +1365,19 @@ export default function AnalyticsDashboard() {
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
                 <span>Utilizacion actual</span>
-                <span className="font-medium">{dashboardData.financial?.guaranteesUtilization}%</span>
+                <span className="font-medium">{conUnidad(dashboardData.financial?.guaranteesUtilization, '%')}</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-4">
-                <div
-                  className={`h-4 rounded-full ${
-                    dashboardData.financial?.guaranteesUtilization > 80 ? 'bg-red-500' :
-                    dashboardData.financial?.guaranteesUtilization > 60 ? 'bg-yellow-500' : 'bg-green-500'
-                  }`}
-                  style={{ width: `${dashboardData.financial?.guaranteesUtilization}%` }}
-                ></div>
-              </div>
+              {!sinDato(dashboardData.financial?.guaranteesUtilization) && (
+                <div className="w-full bg-gray-200 rounded-full h-4">
+                  <div
+                    className={`h-4 rounded-full ${
+                      dashboardData.financial.guaranteesUtilization > 80 ? 'bg-red-500' :
+                      dashboardData.financial.guaranteesUtilization > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}
+                    style={{ width: `${dashboardData.financial.guaranteesUtilization}%` }}
+                  ></div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1381,25 +1390,25 @@ export default function AnalyticsDashboard() {
             <div className="card">
               <p className="text-sm text-gray-500">Tasa de Error</p>
               <p className="text-2xl font-bold text-gray-900">
-                {dashboardData.compliance?.errorRate}%
+                {conUnidad(dashboardData.compliance?.errorRate, '%')}
               </p>
             </div>
             <div className="card">
               <p className="text-sm text-gray-500">Tasa de Rechazo</p>
               <p className="text-2xl font-bold text-gray-900">
-                {dashboardData.compliance?.rejectionRate}%
+                {conUnidad(dashboardData.compliance?.rejectionRate, '%')}
               </p>
             </div>
             <div className="card">
               <p className="text-sm text-gray-500">Envios a Tiempo</p>
               <p className="text-2xl font-bold text-gray-900">
-                {dashboardData.compliance?.onTimeSubmissions}%
+                {conUnidad(dashboardData.compliance?.onTimeSubmissions, '%')}
               </p>
             </div>
             <div className="card">
               <p className="text-sm text-gray-500">Tasa de Inspeccion</p>
               <p className="text-2xl font-bold text-gray-900">
-                {dashboardData.compliance?.inspectionRate}%
+                {conUnidad(dashboardData.compliance?.inspectionRate, '%')}
               </p>
             </div>
           </div>
@@ -1417,24 +1426,28 @@ export default function AnalyticsDashboard() {
                     strokeWidth="12"
                     fill="none"
                   />
-                  <circle
-                    cx="64"
-                    cy="64"
-                    r="56"
-                    stroke="#10b981"
-                    strokeWidth="12"
-                    fill="none"
-                    strokeDasharray={`${(dashboardData.compliance?.documentCompleteness || 0) * 3.52} 352`}
-                  />
+                  {!sinDato(dashboardData.compliance?.documentCompleteness) && (
+                    <circle
+                      cx="64"
+                      cy="64"
+                      r="56"
+                      stroke="#10b981"
+                      strokeWidth="12"
+                      fill="none"
+                      strokeDasharray={`${dashboardData.compliance.documentCompleteness * 3.52} 352`}
+                    />
+                  )}
                 </svg>
                 <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold">
-                  {dashboardData.compliance?.documentCompleteness}%
+                  {conUnidad(dashboardData.compliance?.documentCompleteness, '%')}
                 </span>
               </div>
               <div className="flex-1">
-                <p className="text-gray-600">
-                  El {dashboardData.compliance?.documentCompleteness}% de los expedientes tienen toda la documentacion requerida completa.
-                </p>
+                {!sinDato(dashboardData.compliance?.documentCompleteness) && (
+                  <p className="text-gray-600">
+                    {`El ${dashboardData.compliance.documentCompleteness}% de los expedientes tienen toda la documentacion requerida completa.`}
+                  </p>
+                )}
               </div>
             </div>
           </div>
