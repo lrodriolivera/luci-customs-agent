@@ -11,6 +11,7 @@
  */
 
 const { v4: uuidv4 } = require('uuid');
+const { eoriDe, exigirEori, declarantePara } = require('./identificadorAduanero');
 
 /**
  * Codigos de regimen aduanero
@@ -117,9 +118,11 @@ const LOCATION_QUALIFIERS = {
 
 class H1Generator {
   /**
-   * Generar declaracion H1 completa
+   * Generar declaracion H1 completa.
+   * `tenant` aporta el representante cuando el expediente no lo trae; sin EORI
+   * de declarante o de cliente lanza ErrorValidacion (422).
    */
-  generate(expedition, aiData = {}) {
+  generate(expedition, aiData = {}, { tenant } = {}) {
     // Generar LRN unico
     const lrn = this.generateLRN();
 
@@ -127,7 +130,7 @@ class H1Generator {
     const h1Data = {
       lrn,
       declarationType: aiData.declarationType || 'A',
-      declarationHeader: this.buildDeclarationHeader(expedition, aiData),
+      declarationHeader: this.buildDeclarationHeader(expedition, aiData, { tenant }),
       goodsShipment: this.buildGoodsShipment(expedition, aiData),
       goodsItems: this.buildGoodsItems(expedition, aiData),
       valuation: this.buildValuation(expedition, aiData),
@@ -187,7 +190,9 @@ class H1Generator {
   /**
    * Construir cabecera de declaracion (D10)
    */
-  buildDeclarationHeader(expedition, aiData) {
+  buildDeclarationHeader(expedition, aiData, { tenant } = {}) {
+    const importadorEori = exigirEori(eoriDe(expedition.client), 'cliente');
+    const declarante = declarantePara(expedition, tenant);
     return {
       // Identificacion
       lrn: aiData.lrn || this.generateLRN(),
@@ -203,7 +208,7 @@ class H1Generator {
 
       // Importador
       importer: {
-        identificationNumber: expedition.client?.eori || `ES${expedition.client?.nif}`,
+        identificationNumber: importadorEori,
         name: expedition.client?.companyName,
         address: {
           streetAndNumber: expedition.client?.address?.street,
@@ -220,13 +225,13 @@ class H1Generator {
 
       // Declarante (representante)
       declarant: {
-        identificationNumber: expedition.representative?.eori || `ES${expedition.representative?.nif}`,
-        name: expedition.representative?.companyName || 'STRIX AI SL',
-        representativeStatus: expedition.representative?.representationType === 'direct' ? '2' : '3',
+        identificationNumber: declarante.eori,
+        name: declarante.companyName,
+        representativeStatus: declarante.representationType === 'direct' ? '2' : '3',
         contact: {
-          name: expedition.representative?.contact?.name || 'Departamento Aduanas',
-          phone: expedition.representative?.contact?.phone,
-          email: expedition.representative?.contact?.email
+          name: declarante.contact.name,
+          phone: declarante.contact.phone,
+          email: declarante.contact.email
         }
       },
 

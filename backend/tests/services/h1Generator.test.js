@@ -335,7 +335,7 @@ describe('buildDeclarationHeader: partes opcionales', () => {
 
   test('representante sin eori compone ES + nif y estatus 3 (indirecto)', () => {
     const exp = expedicionCompleta(createElectronicsExpedition(), {
-      representative: { nif: 'B999', representationType: 'indirect' }
+      representative: { nif: 'B999', companyName: 'Rep SL', representationType: 'indirect' }
     });
     const h = h1.buildDeclarationHeader(exp, {});
     expect(h.declarant.identificationNumber).toBe('ESB999');
@@ -384,14 +384,16 @@ describe('buildDeclarationHeader: partes opcionales', () => {
     expect(h.totalGrossMass).toBe(0);
   });
 
-  test('BUG documentado: la fixture usa "declarant", el codigo lee "representative" -> ESundefined', () => {
-    // Con la fixture tal cual (sin representative), el id del declarante es
-    // `ES${undefined}` = "ESundefined" y el nombre cae al literal por defecto.
-    // No es explotable, pero se fija por escrito: si alguien renombra el campo
-    // a "declarant" en el codigo, este test se rompe y avisa.
-    const h = h1.buildDeclarationHeader(createElectronicsExpedition(), {});
-    expect(h.declarant.identificationNumber).toBe('ESundefined');
-    expect(h.declarant.name).toBe('STRIX AI SL');
+  test('sin representante ni tenant: 422, nunca ESundefined', () => {
+    const exp = createElectronicsExpedition({ representative: undefined });
+    expect(() => h1.buildDeclarationHeader(exp, {})).toThrow(/Falta el EORI del representante/);
+  });
+
+  test('sin representante el declarante es el del tenant', () => {
+    const exp = createElectronicsExpedition({ representative: undefined });
+    const h = h1.buildDeclarationHeader(exp, {}, { tenant: { name: 'Agencia SL', customsConfig: { eoriNumbers: { ES: 'ESA1' } } } });
+    expect(h.declarant.identificationNumber).toBe('ESA1');
+    expect(h.declarant.name).toBe('Agencia SL');
     expect(h.declarant.representativeStatus).toBe('3');
   });
 });

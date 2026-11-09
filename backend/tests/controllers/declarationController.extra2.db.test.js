@@ -76,6 +76,7 @@ async function expedienteImportacion(user, extra = {}) {
     tenantId: user.tenantId, createdBy: user._id, assignedTo: user._id,
     operationType: 'import', transportMode: 'maritime',
     client: { companyName: 'Importadora SL', nif: 'B12345678' },
+    representative: { eori: 'ESREP00001', companyName: 'Representante SL' },
     goods: [{ itemNumber: 1, description: 'Cafe', quantity: 10, invoiceValue: 1000, taricCode: '0901210000' }],
     goodsSummary: { totalValue: 1000 },
     ...extra
@@ -139,6 +140,7 @@ describe('generateAES: catch block', () => {
       tenantId: user.tenantId, createdBy: user._id, assignedTo: user._id,
       operationType: 'export', transportMode: 'air',
       client: { companyName: 'Exportadora', nif: 'B99999999' },
+      representative: { eori: 'ESREP00001', companyName: 'Representante SL' },
       goods: [{ itemNumber: 1, description: 'Vino', quantity: 10, invoiceValue: 500, taricCode: '2204210000' }]
     });
     const res = crearRes();
@@ -186,6 +188,7 @@ describe('updateDeclaration: catch block + ramas tipo AES', () => {
       tenantId: user.tenantId, createdBy: user._id, assignedTo: user._id,
       operationType: 'export', transportMode: 'air',
       client: { companyName: 'Exp', nif: 'B11111111' },
+      representative: { eori: 'ESREP00001', companyName: 'Representante SL' },
       goods: [{ itemNumber: 1, description: 'Textil', quantity: 1, invoiceValue: 100, taricCode: '6109100000' }],
       declaration: { type: 'AES', regime: '10', xmlContent: '<viejo/>' }
     });
@@ -700,6 +703,7 @@ describe('submitDeclaration: email fallbacks y ramas adicionales', () => {
       tenantId: user.tenantId, createdBy: user._id, assignedTo: user._id,
       operationType: 'export', transportMode: 'air',
       client: { companyName: 'Exp', nif: 'B11111111' },
+      representative: { eori: 'ESREP00001', companyName: 'Representante SL' },
       goods: [{ itemNumber: 1, description: 'Item', quantity: 1, invoiceValue: 100, taricCode: '6109100000' }],
       declaration: { type: 'AES', status: 'draft', xmlContent: '<AES/>', lrn: 'LRN-AES' }
     });

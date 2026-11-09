@@ -4,7 +4,21 @@
  * Estrategia: inputs variados que disparan condiciones no tomadas
  */
 
-const aesGenerator = require('../../../src/services/forms/aesGenerator');
+const aesGeneratorReal = require('../../../src/services/forms/aesGenerator');
+
+// El declarante sale del tenant cuando el expediente no trae representante
+// con EORI: estos tests ejercitan ramas del generador, no la resolucion del
+// declarante (esa vive en identificadorAduanero.test.js y aesGenerator.eori.test.js).
+const TENANT_TEST = {
+  name: 'Agencia Test SL',
+  customsConfig: { eoriNumbers: { ES: 'ESA00000001' } }
+};
+const aesGenerator = Object.create(aesGeneratorReal, {
+  generate: { value: (expedition, aiData = {}, ctx = { tenant: TENANT_TEST }) =>
+    aesGeneratorReal.generate(expedition, aiData, ctx) },
+  buildDeclarationHeader: { value: (expedition, aiData, lrn, ctx = { tenant: TENANT_TEST }) =>
+    aesGeneratorReal.buildDeclarationHeader(expedition, aiData, lrn, ctx) }
+});
 
 // Helpers para construir inputs variados
 function buildBaseExpedition(overrides = {}) {
@@ -372,11 +386,12 @@ describe('AESGenerator - Coverage de Ramas', () => {
       expect(header.declarant.representativeStatus).toBe('3');
     });
 
-    test('usa STRIX AI como declarante por defecto (L366)', () => {
+    test('sin representante el declarante es el del tenant, no un literal (L366)', () => {
       const exp = buildBaseExpedition();
       const header = aesGenerator.buildDeclarationHeader(exp, {}, 'TEST-LRN');
 
-      expect(header.declarant.name).toBe('STRIX AI SL');
+      expect(header.declarant.name).toBe('Agencia Test SL');
+      expect(header.declarant.identificationNumber).toBe('ESA00000001');
     });
 
     test('consignee null cuando no existe (L378)', () => {

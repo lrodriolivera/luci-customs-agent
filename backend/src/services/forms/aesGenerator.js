@@ -5,6 +5,7 @@
  */
 
 const { v4: uuidv4 } = require('uuid');
+const { eoriDe, exigirEori, declarantePara } = require('./identificadorAduanero');
 
 /**
  * Tipos de exportacion
@@ -305,14 +306,14 @@ class AESGenerator {
   /**
    * Generar declaracion AES completa
    */
-  generate(expedition, aiData = {}) {
+  generate(expedition, aiData = {}, { tenant } = {}) {
     const lrn = this.generateLRN();
 
     const aesData = {
       lrn,
       declarationType: aiData.declarationType || 'EX',
       exportType: aiData.exportType || '10',
-      declarationHeader: this.buildDeclarationHeader(expedition, aiData, lrn),
+      declarationHeader: this.buildDeclarationHeader(expedition, aiData, lrn, { tenant }),
       consignment: this.buildConsignment(expedition, aiData),
       goodsItems: this.buildGoodsItems(expedition, aiData)
     };
@@ -340,7 +341,9 @@ class AESGenerator {
   /**
    * Construir cabecera de declaracion
    */
-  buildDeclarationHeader(expedition, aiData, lrn) {
+  buildDeclarationHeader(expedition, aiData, lrn, { tenant } = {}) {
+    const exportadorEori = exigirEori(eoriDe(expedition.client), 'cliente');
+    const declarante = declarantePara(expedition, tenant);
     return {
       lrn,
       declarationType: 'EX',
@@ -352,7 +355,7 @@ class AESGenerator {
 
       // Exportador
       exporter: {
-        identificationNumber: expedition.client?.eori || `ES${expedition.client?.nif}`,
+        identificationNumber: exportadorEori,
         name: expedition.client?.companyName,
         address: {
           streetAndNumber: expedition.client?.address?.street,
@@ -364,9 +367,9 @@ class AESGenerator {
 
       // Declarante/Representante
       declarant: {
-        identificationNumber: expedition.representative?.eori || `ES${expedition.representative?.nif}`,
-        name: expedition.representative?.companyName || 'STRIX AI SL',
-        representativeStatus: expedition.representative?.representationType === 'direct' ? '2' : '3'
+        identificationNumber: declarante.eori,
+        name: declarante.companyName,
+        representativeStatus: declarante.representationType === 'direct' ? '2' : '3'
       },
 
       // Consignatario/Destinatario

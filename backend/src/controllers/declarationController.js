@@ -6,8 +6,32 @@ const { ensureSameTenant, filtroTenantOPlataforma } = require('../utils/tenantGu
 const h1Generator = require('../services/forms/h1Generator');
 const aesGenerator = require('../services/forms/aesGenerator');
 const h7Generator = require('../services/forms/h7Generator');
+const Tenant = require('../models/Tenant');
+const { ErrorValidacion, exigirIdentificacion } = require('../services/forms/identificadorAduanero');
 const aeatSubmitService = require('../services/aeat/aeatSubmitService');
 const channelService = require('../services/channelService');
+
+/**
+ * Tenant del expediente: de el salen el declarante y su EORI. Se carga una vez
+ * por peticion (ensureSameTenant ya comprobo que el expediente es del usuario).
+ */
+const tenantDelExpediente = (expedition) =>
+  expedition?.tenantId ? Tenant.findById(expedition.tenantId).lean() : null;
+
+/**
+ * Un EORI que falta no es un 500: es 422 con el mensaje que dice donde
+ * completarlo. Devuelve true si respondio.
+ */
+const responderSiFaltaIdentificacion = (res, error) => {
+  if (!(error instanceof ErrorValidacion)) return false;
+  res.status(422).json({
+    success: false,
+    error: error.message,
+    code: error.code,
+    quien: error.quien || null
+  });
+  return true;
+};
 
 /**
  * Generar declaracion H1 (Importacion)
@@ -57,6 +81,10 @@ const generateH1 = async (req, res) => {
       });
     }
 
+    // Sin EORI de declarante o de cliente no se gasta la IA ni se genera XML (422).
+    const tenant = await tenantDelExpediente(expedition);
+    exigirIdentificacion(expedition, tenant);
+
     // Generar H1 con IA
     const h1Data = await aiService.generateH1Declaration(expedition, {
       regime: regime || '40',
@@ -73,7 +101,7 @@ const generateH1 = async (req, res) => {
     }
 
     // Generar estructura H1 completa
-    const h1Declaration = h1Generator.generate(expedition, h1Data);
+    const h1Declaration = h1Generator.generate(expedition, h1Data, { tenant });
 
     // Actualizar expediente
     expedition.declaration = {
@@ -115,6 +143,7 @@ const generateH1 = async (req, res) => {
     });
 
   } catch (error) {
+    if (responderSiFaltaIdentificacion(res, error)) return;
     logger.error('Error generando H1:', error);
     res.status(500).json({
       success: false,
@@ -143,13 +172,17 @@ const generateAES = async (req, res) => {
       });
     }
 
+    // Sin EORI de declarante o de cliente no se gasta la IA ni se genera XML (422).
+    const tenant = await tenantDelExpediente(expedition);
+    exigirIdentificacion(expedition, tenant);
+
     // Generar AES con IA
     const aesData = await aiService.generateAESDeclaration(expedition, {
       exportType: exportType || '10'
     });
 
     // Generar estructura AES completa
-    const aesDeclaration = aesGenerator.generate(expedition, aesData);
+    const aesDeclaration = aesGenerator.generate(expedition, aesData, { tenant });
 
     // Actualizar expediente
     expedition.declaration = {
@@ -188,6 +221,7 @@ const generateAES = async (req, res) => {
     });
 
   } catch (error) {
+    if (responderSiFaltaIdentificacion(res, error)) return;
     logger.error('Error generando AES:', error);
     res.status(500).json({
       success: false,
@@ -262,17 +296,18 @@ const updateDeclaration = async (req, res) => {
 
     // Regenerar XML si hay cambios
     if (Object.keys(updates).length > 0) {
+      const tenant = await tenantDelExpediente(expedition);
       if (expedition.declaration.type === 'H1') {
         const h1Declaration = h1Generator.generate(expedition, {
           ...expedition.declaration,
           ...updates
-        });
+        }, { tenant });
         expedition.declaration.xmlContent = h1Declaration.xml;
       } else if (expedition.declaration.type === 'AES') {
         const aesDeclaration = aesGenerator.generate(expedition, {
           ...expedition.declaration,
           ...updates
-        });
+        }, { tenant });
         expedition.declaration.xmlContent = aesDeclaration.xml;
       }
     }
@@ -294,6 +329,7 @@ const updateDeclaration = async (req, res) => {
     });
 
   } catch (error) {
+    if (responderSiFaltaIdentificacion(res, error)) return;
     logger.error('Error actualizando declaracion:', error);
     res.status(500).json({
       success: false,
@@ -720,11 +756,12 @@ const generateH1Direct = async (req, res) => {
     }
 
     // Generar H1 directamente con h1Generator
+    const tenant = await tenantDelExpediente(expedition);
     const h1Declaration = h1Generator.generate(expedition, {
       regime,
       additionalProcedure,
       preference
-    });
+    }, { tenant });
 
     // Actualizar expediente
     expedition.declaration = {
@@ -773,6 +810,7 @@ const generateH1Direct = async (req, res) => {
     });
 
   } catch (error) {
+    if (responderSiFaltaIdentificacion(res, error)) return;
     logger.error('Error generando H1 directo:', error);
     res.status(500).json({
       success: false,
@@ -933,11 +971,12 @@ const generateH7 = async (req, res) => {
     }
 
     // Generar H7
+    const tenant = await tenantDelExpediente(expedition);
     const h7Declaration = h7Generator.generate(expedition, {
       iossNumber: iossNumber || expedition.iossNumber || expedition.ecommerce?.iossNumber,
       customsOffice,
       forceGenerate
-    });
+    }, { tenant });
 
     // Actualizar expediente
     expedition.declaration = {
@@ -995,6 +1034,7 @@ const generateH7 = async (req, res) => {
     });
 
   } catch (error) {
+    if (responderSiFaltaIdentificacion(res, error)) return;
     logger.error('Error generando H7:', error);
     res.status(500).json({
       success: false,

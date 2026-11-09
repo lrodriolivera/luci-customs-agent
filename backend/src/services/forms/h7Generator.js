@@ -12,6 +12,7 @@
  */
 
 const { v4: uuidv4 } = require('uuid');
+const { declarantePara } = require('./identificadorAduanero');
 
 /**
  * Limite de valor para H7
@@ -102,7 +103,7 @@ class H7Generator {
   /**
    * Generar declaracion H7 completa
    */
-  generate(expedition, options = {}) {
+  generate(expedition, options = {}, { tenant } = {}) {
     // Verificar elegibilidad
     const eligibility = this.isEligibleForH7(expedition);
     if (!eligibility.eligible && !options.forceGenerate) {
@@ -116,7 +117,7 @@ class H7Generator {
       lrn,
       declarationType: hasIOSS ? 'H7A' : 'H7B',
       h7Type: hasIOSS ? 'I1' : '40',
-      declarationHeader: this.buildDeclarationHeader(expedition, options, lrn),
+      declarationHeader: this.buildDeclarationHeader(expedition, options, lrn, { tenant }),
       shipment: this.buildShipment(expedition, options),
       goodsItem: this.buildGoodsItem(expedition, options),
       iossData: hasIOSS ? this.buildIOSSData(expedition, options) : null,
@@ -147,7 +148,8 @@ class H7Generator {
   /**
    * Construir cabecera de declaracion H7
    */
-  buildDeclarationHeader(expedition, options, lrn) {
+  buildDeclarationHeader(expedition, options, lrn, { tenant } = {}) {
+    const declarante = declarantePara(expedition, tenant);
     return {
       lrn,
       declarationType: 'H7',
@@ -173,10 +175,8 @@ class H7Generator {
 
       // Declarante (operador postal/expres o representante)
       declarant: {
-        identificationNumber: expedition.representative?.eori ||
-          `ES${expedition.representative?.nif}` ||
-          'ESB12345678', // Operador por defecto
-        name: expedition.representative?.companyName || 'STRIX AI SL',
+        identificationNumber: declarante.eori,
+        name: declarante.companyName,
         representativeStatus: '3' // Representacion indirecta para H7
       },
 

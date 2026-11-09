@@ -14,6 +14,15 @@
  */
 
 const h7 = require('../../src/services/forms/h7Generator');
+const { ErrorValidacion } = require('../../src/services/forms/identificadorAduanero');
+
+// El declarante sale del tenant cuando el expediente no trae representante.
+const TENANT = {
+  name: 'Agencia Test SL',
+  customsConfig: { eoriNumbers: { ES: 'ESA00000001' } }
+};
+const cabecera = (e, o, l, ctx = { tenant: TENANT }) => h7.buildDeclarationHeader(e, o, l, ctx);
+const generar = (e, o = {}, ctx = { tenant: TENANT }) => h7.generate(e, o, ctx);
 
 /** Expediente minimo elegible (valor 0, sin bienes). */
 function expedicion(extra = {}) {
@@ -79,18 +88,18 @@ describe('checkRestrictedGoods', () => {
 
 describe('generate: elegibilidad y forzado', () => {
   test('un envio no elegible lanza con el motivo', () => {
-    expect(() => h7.generate({ goodsSummary: { totalValue: 200 } }))
+    expect(() => generar({ goodsSummary: { totalValue: 200 } }))
       .toThrow(/excede limite/i);
   });
 
   test('forceGenerate ignora la elegibilidad y genera igual', () => {
-    const r = h7.generate({ goodsSummary: { totalValue: 200 } }, { forceGenerate: true });
+    const r = generar({ goodsSummary: { totalValue: 200 } }, { forceGenerate: true });
     expect(r.xml).toMatch(/<TypeCode>H7<\/TypeCode>/);
     expect(r.eligibility.eligible).toBe(false); // se conserva el veredicto real
   });
 
   test('un expediente vacio genera un H7B (sin IOSS) valido', () => {
-    const r = h7.generate({});
+    const r = generar({});
     expect(r.data.declarationType).toBe('H7B');
     expect(r.data.h7Type).toBe('40');
     expect(r.data.iossData).toBeNull();
@@ -98,7 +107,7 @@ describe('generate: elegibilidad y forzado', () => {
   });
 
   test('devuelve lrn, data, xml, summary y eligibility', () => {
-    const r = h7.generate({});
+    const r = generar({});
     expect(r).toHaveProperty('lrn');
     expect(r).toHaveProperty('data');
     expect(r).toHaveProperty('xml');
@@ -120,7 +129,7 @@ describe('generateLRN', () => {
 
 describe('IOSS: modo A vs modo B', () => {
   test('con iossNumber en options es H7A/I1 y arma el bloque IOSS', () => {
-    const r = h7.generate({}, { iossNumber: 'IMES1234567890' });
+    const r = generar({}, { iossNumber: 'IMES1234567890' });
     expect(r.data.declarationType).toBe('H7A');
     expect(r.data.h7Type).toBe('I1');
     expect(r.data.iossData.isValid).toBe(true);
@@ -129,13 +138,13 @@ describe('IOSS: modo A vs modo B', () => {
   });
 
   test('el IOSS puede venir en ecommerce y tambien activa el modo A', () => {
-    const r = h7.generate({ ecommerce: { iossNumber: 'IMDE9876543210' } });
+    const r = generar({ ecommerce: { iossNumber: 'IMDE9876543210' } });
     expect(r.data.declarationType).toBe('H7A');
     expect(r.xml).toMatch(/<IOSSRegistration>/);
   });
 
   test('un IOSS con formato invalido se marca isValid=false', () => {
-    const r = h7.generate({}, { iossNumber: 'INVALIDO' });
+    const r = generar({}, { iossNumber: 'INVALIDO' });
     expect(r.data.iossData.isValid).toBe(false);
   });
 
@@ -144,7 +153,7 @@ describe('IOSS: modo A vs modo B', () => {
   // additionalDeclarationType 'B'. Se fija con test para que el desajuste no pase
   // por descuido si alguien toca la cabecera.
   test('IOSS solo en ecommerce: declarationType H7A pero additionalDeclarationType B', () => {
-    const h = h7.buildDeclarationHeader({ ecommerce: { iossNumber: 'IMES1234567890' } }, {}, 'LRN1');
+    const h = cabecera({ ecommerce: { iossNumber: 'IMES1234567890' } }, {}, 'LRN1');
     expect(h.additionalDeclarationType).toBe('B');
     expect(h.iossNumber).toBe('IMES1234567890');
   });
@@ -152,51 +161,58 @@ describe('IOSS: modo A vs modo B', () => {
 
 describe('buildDeclarationHeader: consignatario y declarante', () => {
   test('el id del consignatario usa EORI si existe (y no es persona fisica)', () => {
-    const h = h7.buildDeclarationHeader({ client: { eori: 'ES999', name: 'Ana' } }, {}, 'L');
+    const h = cabecera({ client: { eori: 'ES999', name: 'Ana' } }, {}, 'L');
     expect(h.consignee.identificationNumber).toBe('ES999');
     expect(h.consignee.isPrivateIndividual).toBe(false);
   });
 
   test('sin EORI cae al NIF y marca persona fisica (B2C)', () => {
-    const h = h7.buildDeclarationHeader({ client: { nif: '12345678Z', name: 'Ana' } }, {}, 'L');
+    const h = cabecera({ client: { nif: '12345678Z', name: 'Ana' } }, {}, 'L');
     expect(h.consignee.identificationNumber).toBe('12345678Z');
     expect(h.consignee.isPrivateIndividual).toBe(true);
   });
 
   test('sin EORI ni NIF cae al pasaporte', () => {
-    const h = h7.buildDeclarationHeader({ client: { passport: 'X123', name: 'Ana' } }, {}, 'L');
+    const h = cabecera({ client: { passport: 'X123', name: 'Ana' } }, {}, 'L');
     expect(h.consignee.identificationNumber).toBe('X123');
   });
 
   test('el declarante usa el EORI del representante si existe', () => {
-    const h = h7.buildDeclarationHeader({ representative: { eori: 'ESREP1', companyName: 'Rep SL' } }, {}, 'L');
+    const h = cabecera({ representative: { eori: 'ESREP1', companyName: 'Rep SL' } }, {}, 'L');
     expect(h.declarant.identificationNumber).toBe('ESREP1');
     expect(h.declarant.name).toBe('Rep SL');
   });
 
-  // Comportamiento sutil documentado: sin representative.eori, el id del
-  // declarante es `ES${nif}`; si tampoco hay nif queda 'ESundefined' (el
-  // fallback 'ESB12345678' es inalcanzable porque 'ESundefined' es truthy).
-  // No es explotable —solo afecta al formato del id del declarante— pero se fija
-  // por escrito para que no se de por hecho que el fallback funciona.
   test('sin EORI del representante compone ES + nif', () => {
-    const h = h7.buildDeclarationHeader({ representative: { nif: 'B111' } }, {}, 'L');
+    const h = cabecera({ representative: { nif: 'B111', companyName: 'Rep SL' } }, {}, 'L');
     expect(h.declarant.identificationNumber).toBe('ESB111');
   });
 
-  test('sin representante alguno el id del declarante es "ESundefined" (fallback inalcanzable)', () => {
-    const h = h7.buildDeclarationHeader({}, {}, 'L');
-    expect(h.declarant.identificationNumber).toBe('ESundefined');
-    expect(h.declarant.name).toBe('STRIX AI SL'); // este fallback SI se alcanza
+  test('sin representante en el expediente el declarante es el del tenant', () => {
+    const h = cabecera({}, {}, 'L');
+    expect(h.declarant.identificationNumber).toBe('ESA00000001');
+    expect(h.declarant.name).toBe('Agencia Test SL');
+  });
+
+  test('sin representante ni tenant: 422, nunca ESundefined ni un operador por defecto', () => {
+    let e;
+    try { cabecera({}, {}, 'L', {}); } catch (x) { e = x; }
+    expect(e).toBeInstanceOf(ErrorValidacion);
+    expect(e.status).toBe(422);
+    expect(e.message).toMatch(/Falta el EORI del representante/);
+  });
+
+  test('generate sin EORI de declarante no produce XML', () => {
+    expect(() => h7.generate({ goods: [] }, {}, {})).toThrow(/Falta el EORI del representante/);
   });
 
   test('sin exporter no hay vendedor (seller null)', () => {
-    const h = h7.buildDeclarationHeader({}, {}, 'L');
+    const h = cabecera({}, {}, 'L');
     expect(h.seller).toBeNull();
   });
 
   test('con exporter arma el vendedor', () => {
-    const h = h7.buildDeclarationHeader({ exporter: { companyName: 'China Co', country: 'CN' } }, {}, 'L');
+    const h = cabecera({ exporter: { companyName: 'China Co', country: 'CN' } }, {}, 'L');
     expect(h.seller.name).toBe('China Co');
   });
 });
@@ -395,7 +411,7 @@ describe('generateXML: estructura del mensaje', () => {
   };
 
   test('modo IOSS + B2B + multi-item: bloques presentes y sin & sin escapar', () => {
-    const r = h7.generate(completa, { iossNumber: 'IMES1234567890', customsOffice: 'ES002805', vatRate: 0.10 });
+    const r = generar(completa, { iossNumber: 'IMES1234567890', customsOffice: 'ES002805', vatRate: 0.10 });
     const xml = r.xml;
     expect(xml).toMatch(/<IOSSRegistration>/);
     expect(xml).toMatch(/<Seller>/);
@@ -407,7 +423,7 @@ describe('generateXML: estructura del mensaje', () => {
   });
 
   test('modo B2C sin IOSS: PersonTypeCode presente, sin seller, IVA a pagar', () => {
-    const r = h7.generate({
+    const r = generar({
       goodsSummary: { totalValue: 50 },
       goods: [{ description: 'Libro', invoiceValue: 50, taricCode: '4901990000' }],
       client: { passport: 'X1', name: 'Ana', address: { postalCode: '28001' } },
@@ -424,7 +440,7 @@ describe('generateXML: estructura del mensaje', () => {
 
 describe('calculateSummary', () => {
   test('modo IOSS: resumen con hasIOSS, aduana conocida y despacho < 1 hora', () => {
-    const r = h7.generate({
+    const r = generar({
       goodsSummary: { totalValue: 100 },
       client: { eori: 'ES1', address: { postalCode: '08001' } },
       transportMode: 'air'
@@ -438,7 +454,7 @@ describe('calculateSummary', () => {
   });
 
   test('modo postal sin IOSS: resumen Postal, sin IOSS, despacho 1-4 horas', () => {
-    const r = h7.generate({
+    const r = generar({
       goodsSummary: { totalValue: 30 },
       client: { passport: 'X', address: { postalCode: '00000' } },
       transportMode: 'postal'
@@ -457,7 +473,7 @@ describe('calculateSummary', () => {
   test('una aduana forzada fuera del catalogo se resuelve como "Desconocido"', () => {
     // customsOffice del options entra tal cual en la cabecera; si no esta en
     // H7_CUSTOMS_OFFICES, el nombre cae al literal por defecto.
-    const r = h7.generate({ goodsSummary: { totalValue: 10 } }, { customsOffice: 'ESRARO99' });
+    const r = generar({ goodsSummary: { totalValue: 10 } }, { customsOffice: 'ESRARO99' });
     expect(r.summary.customsOfficeName).toBe('Desconocido');
   });
 });

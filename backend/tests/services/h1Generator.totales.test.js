@@ -68,7 +68,9 @@ describe('h1Generator — totales de la declaracion', () => {
     });
 
     expect(h1Generator.totalesNoDeclarables(expedicion)).toBeNull();
-    const h1 = h1Generator.generate(expedicion);
+    const h1 = h1Generator.generate(expedicion, {}, {
+      tenant: { name: 'Agencia SL', customsConfig: { eoriNumbers: { ES: 'ESA00000001' } } }
+    });
 
     expect(h1.data.declarationHeader.totalGrossMass).toBe(120);
     expect(h1.data.declarationHeader.totalPackages).toBe(20);

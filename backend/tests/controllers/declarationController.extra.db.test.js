@@ -89,6 +89,7 @@ async function expedienteImportacion(user, extra = {}) {
     tenantId: user.tenantId, createdBy: user._id, assignedTo: user._id,
     operationType: 'import', transportMode: 'maritime',
     client: { companyName: 'Importadora SL', nif: 'B12345678' },
+    representative: { eori: 'ESREP00001', companyName: 'Representante SL' },
     goods: [{ itemNumber: 1, description: 'Cafe', quantity: 10, invoiceValue: 1000, taricCode: '0901210000' }],
     ...extra
   });
@@ -99,6 +100,7 @@ async function expedienteExportacion(user, extra = {}) {
     tenantId: user.tenantId, createdBy: user._id, assignedTo: user._id,
     operationType: 'export', transportMode: 'air',
     client: { companyName: 'Exportadora SL', nif: 'B87654321' },
+    representative: { eori: 'ESREP00001', companyName: 'Representante SL' },
     goods: [{ itemNumber: 1, description: 'Aceite', quantity: 5, invoiceValue: 500, taricCode: '1509100000' }],
     ...extra
   });
