@@ -11,6 +11,7 @@ const aiService = require('../services/aiService');
 const logger = require('../config/logger');
 const { ambitoTenant } = require('../utils/tenantGuard');
 const { datosParaKPIs } = require('../services/analytics/kpiDatos');
+const { panelDelAmbito } = require('../services/analytics/cuadroParaPanel');
 
 // ==================== Dashboard & Metrics ====================
 
@@ -22,15 +23,10 @@ async function getDashboardMetrics(req, res) {
   try {
     const { startDate, endDate } = req.query;
 
-    // Agregaciones reales sobre la BD. Antes esto devolvia
-    // _generateMetricValue(150, 300) declaraciones cuando en la base habia 35,
-    // y la cifra cambiaba en cada recarga. Las secciones que no se pueden
-    // calcular hoy vienen con { disponible: false, motivo }, nunca con un
-    // numero inventado.
-    const data = await realMetrics.cuadroDeMando(req.user?.tenantId, {
-      desde: startDate,
-      hasta: endDate
-    });
+    // Agregaciones reales sobre la BD, adaptadas al contrato que lee el panel
+    // (operations/financial/compliance/trends). Lo que no tiene fuente es null:
+    // el frontend lo muestra como "Sin datos", nunca como un numero inventado.
+    const data = await panelDelAmbito(ambitoTenant(req.user), { desde: startDate, hasta: endDate });
 
     res.json({ success: true, data });
   } catch (error) {

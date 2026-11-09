@@ -28,6 +28,17 @@ const MS_POR_DIA = 86400000;
 
 const redondear1 = (x) => Math.round(x * 10) / 10;
 
+/**
+ * % de H7 rechazadas sobre las H7, redondeado a 1 decimal; null si no hay H7.
+ * porEstado solo cubre H7, asi que el denominador son las H7 (no el total con
+ * transitos). Unica fuente de esta formula: la usan los KPI y el panel.
+ * @param {{ porTipo?: object, porEstado?: object }} volumen
+ */
+function tasaRechazoH7(volumen) {
+  const h7 = volumen?.porTipo?.H7;
+  return h7 > 0 ? redondear1(((volumen.porEstado?.rejected || 0) / h7) * 100) : null;
+}
+
 function _dias(dias) {
   return Number.isInteger(dias) && dias >= 1 && dias <= DIAS_MAXIMOS ? dias : DIAS_POR_DEFECTO;
 }
@@ -64,11 +75,8 @@ async function datosParaKPIs(tenantId, { dias = DIAS_POR_DEFECTO } = {}) {
     avgProcessingTime: tiempos.muestra > 0 ? tiempos.mediaHoras : null,
     activeExpeditions: activos,
     totalDuties: derechos.total,
-    // porEstado solo cubre H7, asi que el denominador son las H7 (no el total con transitos)
-    rejectionRate: volumen.porTipo?.H7 > 0
-      ? redondear1(((volumen.porEstado?.rejected || 0) / volumen.porTipo.H7) * 100)
-      : null
+    rejectionRate: tasaRechazoH7(volumen)
   };
 }
 
-module.exports = { datosParaKPIs };
+module.exports = { datosParaKPIs, tasaRechazoH7, redondear1 };

@@ -58,6 +58,9 @@ jest.mock('../../src/services/analytics', () => ({
     getModelMetrics: jest.fn()
   }
 }));
+jest.mock('../../src/services/analytics/cuadroParaPanel', () => ({
+  panelDelAmbito: jest.fn()
+}));
 jest.mock('../../src/services/analytics/kpiDatos', () => ({
   datosParaKPIs: jest.fn()
 }));
@@ -82,6 +85,7 @@ jest.mock('../../src/services/aiService', () => ({
 }));
 
 const { analyticsService, reportsService, kpiService, predictionsService } = require('../../src/services/analytics');
+const { panelDelAmbito } = require('../../src/services/analytics/cuadroParaPanel');
 const { datosParaKPIs } = require('../../src/services/analytics/kpiDatos');
 const realMetrics = require('../../src/services/analytics/realMetricsService');
 const aiService = require('../../src/services/aiService');
@@ -99,24 +103,31 @@ const req = (body = {}, query = {}, params = {}, user = { id: 'u1', tenantId: 't
 
 beforeEach(() => {
   // resetMocks borra las implementaciones: se re-dan los defaults del happy path.
-  realMetrics.cuadroDeMando.mockResolvedValue({ total: 35, porTipo: { H7: 35 } });
+  panelDelAmbito.mockResolvedValue({ operations: { totalDeclarations: 35 }, simulated: false });
   realMetrics.derechosLiquidados.mockResolvedValue({ total: 1000 });
   realMetrics.recaudacionCobrada.mockResolvedValue({ disponible: false, motivo: 'sin pagos' });
   realMetrics.valorMercancia.mockResolvedValue({ total: 5000 });
 });
 
 describe('Dashboard y metricas', () => {
-  test('getDashboardMetrics acota por tenant y devuelve el cuadro de mando', async () => {
+  test('getDashboardMetrics devuelve el panel (operations/financial/compliance/trends) del ambito', async () => {
     const res = crearRes();
     await ctrl.getDashboardMetrics(req({}, { startDate: '2026-01-01' }), res);
 
     expect(res.statusCode).toBe(200);
-    expect(res.body.data.total).toBe(35);
-    expect(realMetrics.cuadroDeMando).toHaveBeenCalledWith('t1', expect.objectContaining({ desde: '2026-01-01' }));
+    expect(res.body.data.operations.totalDeclarations).toBe(35);
+    expect(panelDelAmbito).toHaveBeenCalledWith('t1', { desde: '2026-01-01', hasta: undefined });
+  });
+
+  test('getDashboardMetrics: super admin sin tenant -> ambito undefined; sin tenant -> null', async () => {
+    await ctrl.getDashboardMetrics(req({}, {}, {}, { id: 'a', role: 'super_admin' }), crearRes());
+    expect(panelDelAmbito.mock.calls[0][0]).toBeUndefined();
+    await ctrl.getDashboardMetrics(req({}, {}, {}, { id: 'b', role: 'user' }), crearRes());
+    expect(panelDelAmbito.mock.calls[1][0]).toBeNull();
   });
 
   test('getDashboardMetrics propaga 500 si el servicio lanza', async () => {
-    realMetrics.cuadroDeMando.mockRejectedValue(new Error('boom'));
+    panelDelAmbito.mockRejectedValue(new Error('boom'));
     const res = crearRes();
     await ctrl.getDashboardMetrics(req(), res);
     expect(res.statusCode).toBe(500);
