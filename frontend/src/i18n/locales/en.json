@@ -3442,7 +3442,9 @@
     "kpiAnalisisTitulo": "LUCI analysis",
     "kpiPrioridades": "Priorities",
     "kpiRiesgos": "Risks",
-    "aeatSinComprobacion": "Not checked"
+    "aeatSinComprobacion": "Not checked",
+    "iaSinDatos": "Not enough data in the period to analyze",
+    "expedientesActivos": "Active expeditions"
   },
   "errorBoundary": {
     "title": "Something went wrong",
