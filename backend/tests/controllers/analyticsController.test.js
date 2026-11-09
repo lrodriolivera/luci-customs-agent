@@ -104,6 +104,7 @@ function crearRes() {
 const req = (body = {}, query = {}, params = {}, user = { id: 'u1', tenantId: 't1' }) => ({ body, query, params, user });
 
 beforeEach(() => {
+  analyticsService.getDateRange.mockReturnValue({ start: new Date('2026-10-10'), end: new Date('2026-11-09') });
   // resetMocks borra las implementaciones: se re-dan los defaults del happy path.
   panelDelAmbito.mockResolvedValue({ operations: { totalDeclarations: 35 }, simulated: false });
   realMetrics.derechosLiquidados.mockResolvedValue({ total: 1000 });
@@ -114,11 +115,11 @@ beforeEach(() => {
 describe('Dashboard y metricas', () => {
   test('getDashboardMetrics devuelve el panel (operations/financial/compliance/trends) del ambito', async () => {
     const res = crearRes();
-    await ctrl.getDashboardMetrics(req({}, { startDate: '2026-01-01' }), res);
+    await ctrl.getDashboardMetrics(req({}, { startDate: '2026-01-01', endDate: '2026-02-01' }), res);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.data.operations.totalDeclarations).toBe(35);
-    expect(panelDelAmbito).toHaveBeenCalledWith('t1', { desde: '2026-01-01', hasta: undefined });
+    expect(panelDelAmbito).toHaveBeenCalledWith('t1', { desde: new Date('2026-01-01'), hasta: new Date('2026-02-01') });
   });
 
   test('getDashboardMetrics: super admin sin tenant -> ambito undefined; sin tenant -> null', async () => {

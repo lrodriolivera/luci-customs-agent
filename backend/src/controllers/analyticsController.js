@@ -13,6 +13,57 @@ const { ambitoTenant } = require('../utils/tenantGuard');
 const { datosParaKPIs } = require('../services/analytics/kpiDatos');
 const { panelDelAmbito } = require('../services/analytics/cuadroParaPanel');
 
+// ==================== Rango de fechas de la query ====================
+
+// Periodos admitidos (analyticsService.getDateRange). 'custom' queda fuera: exige fechas.
+const PERIODOS = new Set([
+  'today', 'yesterday', 'last_7_days', 'last_30_days', 'last_90_days',
+  'this_month', 'last_month', 'this_quarter', 'this_year'
+]);
+
+const peticionInvalida = (mensaje) => Object.assign(new Error(mensaje), { status: 400 });
+
+/**
+ * Rango de una consulta de analitica: `startDate` y `endDate` (ambos, validos),
+ * o `period` (el selector del frontend), o los ultimos 30 dias. Lanza un error
+ * con status 400 si las fechas o el periodo no son validos.
+ * @returns {{ desde: Date, hasta: Date }}
+ */
+function rangoDeLaQuery(query = {}) {
+  const { startDate, endDate, period } = query;
+
+  if (startDate !== undefined || endDate !== undefined) {
+    if (startDate === undefined || endDate === undefined) {
+      throw peticionInvalida('startDate y endDate deben venir juntos');
+    }
+    const desde = new Date(startDate);
+    const hasta = new Date(endDate);
+    if (Number.isNaN(desde.getTime()) || Number.isNaN(hasta.getTime())) {
+      throw peticionInvalida('startDate y endDate deben ser fechas validas');
+    }
+    if (desde > hasta) {
+      throw peticionInvalida('startDate no puede ser posterior a endDate');
+    }
+    return { desde, hasta };
+  }
+
+  if (period !== undefined && !PERIODOS.has(period)) {
+    throw peticionInvalida(`period no valido: use ${[...PERIODOS].join(', ')} o startDate y endDate`);
+  }
+
+  const { start, end } = analyticsService.getDateRange(period || 'last_30_days');
+  return { desde: start, hasta: end };
+}
+
+/** Responde 400 a un error de validacion del rango; 500 al resto. */
+function responderError(res, error, etiqueta) {
+  if (error.status === 400) {
+    return res.status(400).json({ success: false, error: error.message });
+  }
+  logger.error(`[AnalyticsController] ${etiqueta} error: ${error.message}`);
+  return res.status(500).json({ success: false, error: error.message });
+}
+
 // ==================== Dashboard & Metrics ====================
 
 /**
@@ -21,17 +72,16 @@ const { panelDelAmbito } = require('../services/analytics/cuadroParaPanel');
  */
 async function getDashboardMetrics(req, res) {
   try {
-    const { startDate, endDate } = req.query;
+    const rango = rangoDeLaQuery(req.query);
 
     // Agregaciones reales sobre la BD, adaptadas al contrato que lee el panel
     // (operations/financial/compliance/trends). Lo que no tiene fuente es null:
     // el frontend lo muestra como "Sin datos", nunca como un numero inventado.
-    const data = await panelDelAmbito(ambitoTenant(req.user), { desde: startDate, hasta: endDate });
+    const data = await panelDelAmbito(ambitoTenant(req.user), rango);
 
     res.json({ success: true, data });
   } catch (error) {
-    logger.error(`[AnalyticsController] Dashboard error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
+    responderError(res, error, 'Dashboard');
   }
 }
 
@@ -73,7 +123,7 @@ async function getRealTimeMetrics(req, res) {
  */
 async function getDeclarationAnalytics(req, res) {
   try {
-    const { startDate, endDate } = req.query;
+    const rango = rangoDeLaQuery(req.query);
     const tenantId = ambitoTenant(req.user);
 
     // Sin tenant no se ve nada (realMetrics no filtra con null).
@@ -84,7 +134,6 @@ async function getDeclarationAnalytics(req, res) {
       });
     }
 
-    const rango = { desde: startDate, hasta: endDate };
     const [volumen, canales] = await Promise.all([
       realMetrics.volumenDeclaraciones(tenantId, rango),
       realMetrics.repartoPorCanal(tenantId, rango)
@@ -92,8 +141,7 @@ async function getDeclarationAnalytics(req, res) {
 
     res.json({ success: true, data: { simulated: false, volumen, canales } });
   } catch (error) {
-    logger.error(`[AnalyticsController] Declaration analytics error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
+    responderError(res, error, 'Declaration analytics');
   }
 }
 
@@ -103,9 +151,14 @@ async function getDeclarationAnalytics(req, res) {
  */
 async function getFinancialAnalytics(req, res) {
   try {
-    const { startDate, endDate } = req.query;
-    const rango = { desde: startDate, hasta: endDate };
-    const tenantId = req.user?.tenantId;
+    const rango = rangoDeLaQuery(req.query);
+    const tenantId = ambitoTenant(req.user);
+
+    // Sin tenant no se ve nada (realMetrics no filtra con null): no hay pagos
+    // visibles, asi que no hay recaudacion que analizar.
+    if (tenantId === null) {
+      return noImplementado(res, realMetrics.NO_DISPONIBLE.SIN_PAGOS);
+    }
 
     const [derechos, recaudacion, valor] = await Promise.all([
       realMetrics.derechosLiquidados(tenantId, rango),
@@ -126,8 +179,7 @@ async function getFinancialAnalytics(req, res) {
       data: { simulated: false, derechosLiquidados: derechos, recaudacion, valorMercancia: valor }
     });
   } catch (error) {
-    logger.error(`[AnalyticsController] Financial analytics error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
+    responderError(res, error, 'Financial analytics');
   }
 }
 
@@ -736,11 +788,6 @@ async function getModelMetrics(req, res) {
 
 // ==================== AI Endpoints - LUCI Integration ====================
 
-// Periodos admitidos (analyticsService.getDateRange). 'custom' queda fuera: exige fechas.
-const PERIODOS_IA = new Set([
-  'today', 'yesterday', 'last_7_days', 'last_30_days', 'last_90_days',
-  'this_month', 'last_month', 'this_quarter', 'this_year'
-]);
 const HORIZONTE_DEFECTO = 30;
 const HORIZONTE_MAXIMO = 365;
 
@@ -756,7 +803,7 @@ function periodoIA(body = {}) {
     ?? body.data?.period
     ?? body.historicalData?.period
     ?? body.kpiData?.period;
-  return PERIODOS_IA.has(candidato) ? candidato : 'last_30_days';
+  return PERIODOS.has(candidato) ? candidato : 'last_30_days';
 }
 
 const horizonteIA = (body = {}) => {
