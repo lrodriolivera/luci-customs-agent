@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
-import { expeditionsAPI, dashboardAPI, classificationAPI } from '../../services/api'
+import { expeditionsAPI, dashboardAPI, classificationAPI, tenantEoriAPI } from '../../services/api'
+import { PAISES_ADUANEROS, codigosHabilitados } from '../../constants/paisesAduaneros'
 import {
   FolderIcon,
   DocumentCheckIcon,
@@ -29,17 +30,19 @@ export default function Dashboard() {
   const { t } = useTranslation()
   const { user } = useAuth()
 
-  // Multi-country: configurable countries with active selector
-  const configuredCountries = (() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('customsCountries') || '[]')
-      if (stored.length > 0) return stored
-    } catch {}
-    return [
-      { code: 'ES', name: 'Espana', system: 'AEAT', flag: '\u{1F1EA}\u{1F1F8}' },
-      { code: 'NL', name: 'Paises Bajos', system: 'DMS/DECO', flag: '\u{1F1F3}\u{1F1F1}' },
-    ]
-  })()
+  // Multi-country: los paises salen del tenant (GET /api/tenant/eori), no del
+  // navegador. Hasta que responde, solo el pais base (ES por defecto).
+  const [codigosPaises, setCodigosPaises] = useState(['ES'])
+  useEffect(() => {
+    let vivo = true
+    tenantEoriAPI.get()
+      .then((res) => { if (vivo) setCodigosPaises(codigosHabilitados(res?.data?.data)) })
+      .catch(() => {})
+    return () => { vivo = false }
+  }, [])
+  const configuredCountries = PAISES_ADUANEROS
+    .filter((p) => codigosPaises.includes(p.code))
+    .map(({ code, name, system, flag }) => ({ code, name, system, flag }))
 
   const [activeCountry, setActiveCountry] = useState(
     localStorage.getItem('activeCustomsCountry') || 'ES'

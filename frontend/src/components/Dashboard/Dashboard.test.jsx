@@ -15,11 +15,12 @@ vi.mock('../../context/AuthContext', () => ({
 vi.mock('../../services/api', () => ({
   expeditionsAPI: { list: vi.fn() },
   dashboardAPI: { getAlerts: vi.fn(), getStats: vi.fn() },
-  classificationAPI: { getCacheStats: vi.fn() }
+  classificationAPI: { getCacheStats: vi.fn() },
+  tenantEoriAPI: { get: vi.fn() }
 }))
 
 import { useAuth } from '../../context/AuthContext'
-import { expeditionsAPI, dashboardAPI, classificationAPI } from '../../services/api'
+import { expeditionsAPI, dashboardAPI, classificationAPI, tenantEoriAPI } from '../../services/api'
 
 describe('Dashboard', () => {
   beforeEach(() => {
@@ -35,6 +36,10 @@ describe('Dashboard', () => {
     })
     classificationAPI.getCacheStats.mockResolvedValue({
       data: { success: true, data: {} }
+    })
+    // Paises del tenant: ES (base) y NL (con EORI configurado)
+    tenantEoriAPI.get.mockResolvedValue({
+      data: { success: true, data: { eoriNumbers: { ES: 'ESA00000001', NL: 'NL000000001' }, defaultEori: '', country: 'ES' } }
     })
     dashboardAPI.getStats.mockResolvedValue({
       data: { success: true, data: { expeditions: { total: 0, byStatus: {} } } }
@@ -248,38 +253,34 @@ describe('Dashboard', () => {
   })
 
   describe('Country selector', () => {
-    it('should load countries from localStorage', async () => {
-      localStorage.setItem('customsCountries', JSON.stringify([
-        { code: 'ES', name: 'España', system: 'AEAT', flag: '🇪🇸' },
-        { code: 'FR', name: 'Francia', system: 'DOUANE', flag: '🇫🇷' }
-      ]))
-
-      renderDashboard()
-
-      await waitFor(() => {
-        expect(screen.getByText('AEAT')).toBeTruthy()
-        expect(screen.getByText('DOUANE')).toBeTruthy()
-      })
-    })
-
-    it('should use default countries when localStorage is empty', async () => {
+    it('toma los paises del tenant (GET /api/tenant/eori), no de localStorage', async () => {
+      localStorage.setItem('customsCountries', JSON.stringify([{ code: 'FR', name: 'Francia', system: 'DOUANE', flag: 'x' }]))
       renderDashboard()
 
       await waitFor(() => {
         expect(screen.getByText('AEAT')).toBeTruthy()
         expect(screen.getByText('DMS/DECO')).toBeTruthy()
       })
+      expect(tenantEoriAPI.get).toHaveBeenCalled()
+      expect(screen.queryByText('DOUANE')).toBeNull()
     })
 
-    it('should use default countries when JSON parse fails', async () => {
-      localStorage.setItem('customsCountries', 'invalid-json{')
-
+    it('un pais sin EORI en el tenant no aparece', async () => {
+      tenantEoriAPI.get.mockResolvedValue({
+        data: { success: true, data: { eoriNumbers: { ES: 'ESA00000001' }, country: 'ES' } }
+      })
       renderDashboard()
 
-      await waitFor(() => {
-        expect(screen.getByText('AEAT')).toBeTruthy()
-        expect(screen.getByText('DMS/DECO')).toBeTruthy()
-      })
+      await waitFor(() => expect(screen.getByText('AEAT')).toBeTruthy())
+      expect(screen.queryByText('DMS/DECO')).toBeNull()
+    })
+
+    it('si el API falla queda solo el pais base, sin inventar otros', async () => {
+      tenantEoriAPI.get.mockRejectedValue(new Error('403'))
+      renderDashboard()
+
+      await waitFor(() => expect(screen.getByText('AEAT')).toBeTruthy())
+      expect(screen.queryByText('DMS/DECO')).toBeNull()
     })
 
     it('should set active country from localStorage', async () => {

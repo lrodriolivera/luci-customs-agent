@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import ConfirmDialog from '../common/ConfirmDialog'
 import { useConfirm } from '../../hooks/useConfirm'
 import { declarationsAPI } from '../../services/api'
+import { mensajeErrorGeneracion } from '../../utils/errorGeneracion'
 
 /**
  * Componente para declaraciones H7 (bajo valor <= 150 EUR)
@@ -56,7 +57,7 @@ const H7Declaration = ({ expedition, onUpdate }) => {
       if (onUpdate) onUpdate()
 
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al generar H7')
+      setError(mensajeErrorGeneracion(err, 'Error al generar H7', t))
     } finally {
       setLoading(false)
     }

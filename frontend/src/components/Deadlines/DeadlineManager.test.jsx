@@ -780,7 +780,7 @@ describe('<DeadlineManager />', () => {
     const clientNameInput = screen.getByPlaceholderText('Empresa S.L.')
     fireEvent.change(clientNameInput, { target: { value: 'Cliente Test' } })
 
-    const clientNifInput = screen.getByPlaceholderText('B12345678')
+    const clientNifInput = screen.getByPlaceholderText('X0000000X')
     fireEvent.change(clientNifInput, { target: { value: 'B98765432' } })
 
     const submitButton = screen.getByText('Crear Plazo')

@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import TenantSettings from './TenantSettings'
-import api from '../../services/api'
+import api, { tenantEoriAPI } from '../../services/api'
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key) => key })
@@ -12,7 +12,8 @@ vi.mock('../../services/api', () => ({
     get: vi.fn(),
     put: vi.fn(),
     post: vi.fn()
-  }
+  },
+  tenantEoriAPI: { get: vi.fn(), update: vi.fn() }
 }))
 
 const mockTenantData = {
@@ -50,6 +51,11 @@ describe('<TenantSettings />', () => {
     vi.clearAllMocks()
     localStorage.clear()
     api.get.mockResolvedValue(mockTenantData)
+    // El EORI vive en el tenant: ES (con EORI) y nada mas
+    tenantEoriAPI.get.mockResolvedValue({
+      data: { success: true, data: { eoriNumbers: { ES: 'ESA00000001' }, defaultEori: '', country: 'ES' } }
+    })
+    tenantEoriAPI.update.mockResolvedValue({ data: { success: true } })
   })
 
   // ================== CARGA INICIAL ==================
@@ -551,7 +557,7 @@ describe('<TenantSettings />', () => {
 
     // El bloque expandido debe desaparecer
     await waitFor(() => {
-      const eoriInput = document.querySelector('input[placeholder="ESB22477020"]')
+      const eoriInput = document.querySelector('input[placeholder="ESX0000000X"]')
       expect(eoriInput).not.toBeInTheDocument()
     })
   })
@@ -571,7 +577,7 @@ describe('<TenantSettings />', () => {
 
     // Debe aparecer el input de EORI con placeholder NL
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('NL123456789012')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('NL000000000000')).toBeInTheDocument()
     })
   })
 
@@ -582,40 +588,36 @@ describe('<TenantSettings />', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     // ES está habilitado por defecto
-    const eoriInput = screen.getByPlaceholderText('ESB22477020')
+    const eoriInput = screen.getByPlaceholderText('ESX0000000X')
     fireEvent.change(eoriInput, { target: { value: 'ESB99999999' } })
 
     expect(eoriInput.value).toBe('ESB99999999')
   })
 
-  test('customs tab permite cambiar environment de un país', async () => {
+  test('customs tab ya no ofrece un selector de entorno por país (nadie lo lee en el backend)', async () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
     fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
+    await screen.findByDisplayValue('ESA00000001')
 
-    // Busca el select de entorno (debe haber al menos uno para ES)
-    const envSelect = screen.getByDisplayValue('Test / Pre-produccion')
-    fireEvent.change(envSelect, { target: { value: 'production' } })
-
-    expect(screen.getByDisplayValue('Produccion')).toBeInTheDocument()
+    expect(screen.queryByDisplayValue('Test / Pre-produccion')).not.toBeInTheDocument()
+    expect(screen.queryByText('Entorno')).not.toBeInTheDocument()
   })
 
   test('customs tab guarda configuración de países via API', async () => {
-    api.put.mockResolvedValueOnce({ data: { success: true } })
-
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
     fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
+    await screen.findByDisplayValue('ESA00000001')
 
+    fireEvent.change(screen.getByDisplayValue('ESA00000001'), { target: { value: 'ESB99999999' } })
     const saveConfigButton = screen.getByRole('button', { name: /Guardar configuracion de paises/i })
     fireEvent.click(saveConfigButton)
 
     await waitFor(() => {
-      expect(api.put).toHaveBeenCalledWith('/api/tenant/eori', expect.objectContaining({
-        eoriNumbers: expect.any(Object)
-      }))
+      expect(tenantEoriAPI.update).toHaveBeenCalledWith({ ES: 'ESB99999999' })
     })
 
     await waitFor(() => {
@@ -624,7 +626,7 @@ describe('<TenantSettings />', () => {
   })
 
   test('customs tab maneja error al guardar configuración de países', async () => {
-    api.put.mockRejectedValueOnce({ response: { data: { error: 'EORI inválido' } } })
+    tenantEoriAPI.update.mockRejectedValueOnce({ response: { data: { error: 'EORI inválido' } } })
 
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
@@ -823,8 +825,8 @@ describe('<TenantSettings />', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
     expect(screen.getByText('Estado de conexion por pais')).toBeInTheDocument()
-    // ES debe estar "Listo" (tiene EORI y cert configurado en mock)
-    expect(screen.getByText('Listo')).toBeInTheDocument()
+    // ES debe estar "Listo" (EORI del tenant y cert configurado en mock)
+    expect(await screen.findByText('Listo')).toBeInTheDocument()
   })
 
   test('customs tab muestra "Pendiente" cuando falta EORI o certificado', async () => {
@@ -859,37 +861,56 @@ describe('<TenantSettings />', () => {
     expect(beToggle).toBeDisabled()
   })
 
-  test('customs tab persiste enabledCountries en localStorage', async () => {
+  test('customs tab carga el EORI del tenant (GET /api/tenant/eori), no de localStorage', async () => {
+    localStorage.setItem('customsCountryConfigs', JSON.stringify({ ES: { eori: 'ESDELNAVEGADOR' } }))
+    tenantEoriAPI.get.mockResolvedValue({
+      data: { success: true, data: { eoriNumbers: { ES: 'ESA00000001', NL: 'NL000000001' }, country: 'ES' } }
+    })
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
     fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
-    // Activa NL
-    const checkboxes = document.querySelectorAll('input[type="checkbox"]')
-    const nlToggle = checkboxes[1]
-    fireEvent.click(nlToggle)
-
-    // Verifica que se escribió en localStorage
-    const stored = JSON.parse(localStorage.getItem('customsCountries') || '[]')
-    expect(stored).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ code: 'NL' })
-      ])
-    )
+    expect(await screen.findByDisplayValue('ESA00000001')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('NL000000001')).toBeInTheDocument() // NL habilitado por tener EORI
+    expect(screen.queryByDisplayValue('ESDELNAVEGADOR')).not.toBeInTheDocument()
+    expect(tenantEoriAPI.get).toHaveBeenCalled()
   })
 
-  test('customs tab persiste countryConfigs en localStorage', async () => {
+  test('customs tab: sin EORI de ES usa el de la ficha de empresa (defaultEori)', async () => {
+    tenantEoriAPI.get.mockResolvedValue({
+      data: { success: true, data: { eoriNumbers: {}, defaultEori: 'ESF00000001', country: 'ES' } }
+    })
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
     fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
 
-    const eoriInput = screen.getByPlaceholderText('ESB22477020')
-    fireEvent.change(eoriInput, { target: { value: 'ESB11111111' } })
+    expect(await screen.findByDisplayValue('ESF00000001')).toBeInTheDocument()
+  })
 
-    const stored = JSON.parse(localStorage.getItem('customsCountryConfigs') || '{}')
-    expect(stored.ES.eori).toBe('ESB11111111')
+  test('customs tab no escribe customsCountries ni customsCountryConfigs en localStorage', async () => {
+    render(<TenantSettings />)
+    await waitFor(() => expect(api.get).toHaveBeenCalled())
+
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
+    await screen.findByDisplayValue('ESA00000001')
+
+    fireEvent.click(document.querySelectorAll('input[type="checkbox"]')[1]) // activa NL
+    fireEvent.change(screen.getByDisplayValue('ESA00000001'), { target: { value: 'ESB11111111' } })
+
+    expect(localStorage.getItem('customsCountries')).toBeNull()
+    expect(localStorage.getItem('customsCountryConfigs')).toBeNull()
+  })
+
+  test('customs tab muestra el error si no se puede cargar el EORI del tenant', async () => {
+    tenantEoriAPI.get.mockRejectedValue({ response: { data: { error: 'Sin tenant' } } })
+    render(<TenantSettings />)
+    await waitFor(() => expect(api.get).toHaveBeenCalled())
+
+    fireEvent.click(await screen.findByRole('button', { name: /Aduanas/i }))
+
+    expect(await screen.findByText('Sin tenant')).toBeInTheDocument()
   })
 
   // ================== EDGE CASES ==================

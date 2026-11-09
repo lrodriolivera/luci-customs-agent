@@ -701,6 +701,7 @@
     "selectExpeditionError": "Select an expedition",
     "declarationGeneratedType": "{{type}} declaration generated",
     "errorGenerating": "Error generating declaration",
+    "irAAjustesAduanas": "Go to Settings > Customs",
     "xmlDownloaded": "XML downloaded",
     "errorExportXml": "Error exporting XML",
     "confirmSendAeat": "Submit {{type}} declaration to AEAT?",

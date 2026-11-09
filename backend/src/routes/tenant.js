@@ -356,7 +356,8 @@ router.get('/tenant/eori', auth, extractTenant({ required: false }), requireTena
       success: true,
       data: {
         eoriNumbers: tenant.customsConfig?.eoriNumbers || {},
-        defaultEori: tenant.businessInfo?.eori || ''
+        defaultEori: tenant.businessInfo?.eori || '',
+        country: tenant.customsConfig?.country || 'ES'
       }
     });
   } catch (error) {

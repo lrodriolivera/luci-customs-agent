@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router-dom'
 import { declarationsAPI, expeditionsAPI } from '../../services/api'
+import { mensajeErrorGeneracion } from '../../utils/errorGeneracion'
 import EU2026382Banner from './EU2026382Banner'
 import {
   DocumentTextIcon,
@@ -111,7 +112,7 @@ export default function H7DeclarationForm({ expeditionId: propExpeditionId, onSu
         setTimeout(() => setSuccess(null), 3000)
       }
     } catch (err) {
-      setError(err.response?.data?.error || t('h7.errorGenerating'))
+      setError(mensajeErrorGeneracion(err, t('h7.errorGenerating'), t))
     } finally {
       setGenerating(false)
     }

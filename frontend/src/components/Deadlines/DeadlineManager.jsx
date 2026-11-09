@@ -846,7 +846,7 @@ function CreateDeadlineModal({ onClose, onCreate }) {
                     value={formData.client.nif}
                     onChange={handleChange}
                     className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="B12345678"
+                    placeholder="X0000000X"
                   />
                 </div>
               </div>
