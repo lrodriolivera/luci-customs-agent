@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Avda. de la Innovacion, 3
     41703 Barcelona (Zona Franca)
     Espana (Zona Franca de Barcelona)
-    NIF: B-41678912 | EORI: ESB41678912
+    NIF: B-41678913 | EORI: ESB41678913
 
 Factura No.: INV-H1-17-EXTRANA-b-2026-1376657  Fecha: 20/09/2026
 Documento de transporte: MSCU20261376657

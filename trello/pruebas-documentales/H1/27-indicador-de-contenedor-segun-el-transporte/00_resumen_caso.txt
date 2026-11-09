@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 690723  Cantidad: 3600 MTK  Precio unit.: 5.1 EUR
 
 NOTA DEL CASO (que se prueba):
+  Transporte por carretera sin contenedor (grupaje): el indicador de contenedor de la casilla 19 debe reflejar 'no contenerizado'.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Road transport, non-containerized (LTL) — container indicator per box 19 must reflect 'not containerized'.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

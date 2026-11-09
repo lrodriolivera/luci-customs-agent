@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Asipo, Parcela 22
     33428 Llanera (Asturias)
     Espana
-    NIF: A-33456789 | EORI: ESA33456789
+    NIF: A-33456781 | EORI: ESA33456781
 
 COMPRADOR/IMPORTADOR:
     Pampa Cueros y Marroquineria S.A.

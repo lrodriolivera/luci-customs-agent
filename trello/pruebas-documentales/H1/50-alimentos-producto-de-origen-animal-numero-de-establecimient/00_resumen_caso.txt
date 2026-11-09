@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Ctra. Nacional 401, Km 12
     13004 Ciudad Real
     Espana
-    NIF: B-13456789 | EORI: ESB13456789
+    NIF: B-13456785 | EORI: ESB13456785
 
 Factura No.: INV-H1-50-2026-5037567  Fecha: 05/02/2026
 Documento de transporte: CMR-20265037567
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 040690  Cantidad: 3200 KGM  Precio unit.: 9.8 EUR
 
 NOTA DEL CASO (que se prueba):
+  El numero de autorizacion sanitaria del establecimiento de origen declarado en el certificado veterinario debe coincidir EXACTAMENTE con el indicado en el CHED-P y figurar en la lista de establecimientos de terceros paises autorizados a exportar a la UE — una discrepancia entre ambos documentos provoca el rechazo en el Puesto de Control Fronterizo.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   El numero de autorizacion sanitaria del establecimiento de origen declarado en el certificado veterinario debe coincidir EXACTAMENTE con el indicado en el CHED-P y figurar en la lista de establecimientos de terceros paises autorizados a exportar a la UE — una discrepancia entre ambos documentos provoca el rechazo en el Puesto de Control Fronterizo.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

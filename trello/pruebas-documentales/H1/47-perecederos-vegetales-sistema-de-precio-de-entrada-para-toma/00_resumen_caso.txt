@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Avda. de la Innovacion, 3
     41703 Dos Hermanas (Sevilla)
     Espana
-    NIF: B-41678912 | EORI: ESB41678912
+    NIF: B-41678913 | EORI: ESB41678913
 
 Factura No.: INV-H1-47-2026-5970348  Fecha: 26/09/2026
 Documento de transporte: CMR-20265970348
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 070200  Cantidad: 16000 KGM  Precio unit.: 0.78 EUR
 
 NOTA DEL CASO (que se prueba):
+  Sistema de precio de entrada para tomates de terceros paises (OCM unica, Reg. (UE) 1308/2013 y normativa de desarrollo): si el valor declarado en factura es inferior al precio de entrada de referencia vigente en el periodo, se aplica un derecho de importacion adicional especifico sobre la diferencia, ademas del arancel ad valorem ordinario.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Sistema de precio de entrada para tomates de terceros paises (OCM unica, Reg. (UE) 1308/2013 y normativa de desarrollo): si el valor declarado en factura es inferior al precio de entrada de referencia vigente en el periodo, se aplica un derecho de importacion adicional especifico sobre la diferencia, ademas del arancel ad valorem ordinario.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

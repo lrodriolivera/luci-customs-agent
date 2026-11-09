@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Muelle de Poniente s/n, Edif. Lonja
     35008 Las Palmas de Gran Canaria
     Espana
-    NIF: A-35678901 | EORI: ESA35678901
+    NIF: A-35678903 | EORI: ESA35678903
 
 Factura No.: INV-H1-49-2026-2637782  Fecha: 04/11/2026
 Documento de transporte: MSCU20262637782
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 160414  Cantidad: 14000 KGM  Precio unit.: 2.6 USD
 
 NOTA DEL CASO (que se prueba):
+  Producto de la pesca transformado: requiere el Certificado de Captura validado por el Estado de abanderamiento del buque pesquero (Reg. (CE) 1005/2008, regimen INDNR) Y que el establecimiento elaborador figure en el listado de establecimientos autorizados por la UE. Ambos controles son independientes — cumplir uno no dispensa del otro.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Producto de la pesca transformado: requiere el Certificado de Captura validado por el Estado de abanderamiento del buque pesquero (Reg. (CE) 1005/2008, regimen INDNR) Y que el establecimiento elaborador figure en el listado de establecimientos autorizados por la UE. Ambos controles son independientes — cumplir uno no dispensa del otro.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

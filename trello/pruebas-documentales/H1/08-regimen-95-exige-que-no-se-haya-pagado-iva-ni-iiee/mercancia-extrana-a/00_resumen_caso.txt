@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Calle 2, Sector A, Nave 12
     08040 Barcelona (Zona Franca)
     Espana
-    NIF: B-08987651 | EORI: ESB08987651
+    NIF: B-08987653 | EORI: ESB08987653
 
 Factura No.: INV-H1-08-EXTRANA-a-2026-1144022  Fecha: 11/10/2026
 Documento de transporte: MSCU20261144022

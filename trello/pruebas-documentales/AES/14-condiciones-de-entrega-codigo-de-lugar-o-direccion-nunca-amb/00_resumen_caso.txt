@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 030617  Cantidad: 3800 KGM  Precio unit.: 7.4 EUR
 
 NOTA DEL CASO (que se prueba):
+  Condiciones de entrega: se declara O BIEN un código de lugar UN/LOCODE O BIEN una dirección en texto libre, nunca los dos a la vez.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Delivery conditions: EITHER a UN/LOCODE place code OR a free-text address may be declared — never both simultaneously.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

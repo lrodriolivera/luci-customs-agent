@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Avda. de la Constitucion, 4
     06011 Badajoz
     Espana
-    NIF: B-06345678 | EORI: ESB06345678
+    NIF: B-06345672 | EORI: ESB06345672
 
 COMPRADOR/IMPORTADOR:
     Hanwoori Electronics Co., Ltd.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 160414  Cantidad: 16000 KGM  Precio unit.: 2.95 USD
 
 NOTA DEL CASO (que se prueba):
+  Exportacion de producto de la pesca transformado: Espana, como Estado de elaboracion, debe emitir el certificado de captura de salida y el certificado sanitario de exportacion, aunque la materia prima proceda originalmente de aguas de terceros paises — se declara la trazabilidad completa del origen del pescado, no solo el lugar de fabricacion de la conserva.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Exportacion de producto de la pesca transformado: Espana, como Estado de elaboracion, debe emitir el certificado de captura de salida y el certificado sanitario de exportacion, aunque la materia prima proceda originalmente de aguas de terceros paises — se declara la trazabilidad completa del origen del pescado, no solo el lugar de fabricacion de la conserva.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

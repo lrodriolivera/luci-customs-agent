@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Industrial Fuente del Jarro, Calle 4 nº 12
     46988 Paterna (Valencia)
     Espana
-    NIF: B-46123456 | EORI: ESB46123456
+    NIF: B-46123451 | EORI: ESB46123451
 
 Factura No.: INV-H1-16-2026-6128258  Fecha: 19/08/2026
 Documento de transporte: MSCU20266128258
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 510610  Cantidad: 8800 KGM  Precio unit.: 5.6 USD
 
 NOTA DEL CASO (que se prueba):
+  Declaración simplificada presentada con documentos justificativos pendientes (códigos 9AR a 9VI para los certificados que faltan).
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Simplified declaration lodged with supporting documents pending (codes 9AR-9VI apply to missing certificates).
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

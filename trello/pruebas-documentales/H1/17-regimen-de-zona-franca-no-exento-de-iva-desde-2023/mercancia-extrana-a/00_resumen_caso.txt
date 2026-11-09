@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Asipo, Parcela 22
     33428 Barcelona (Zona Franca)
     Espana (Zona Franca de Barcelona)
-    NIF: A-33456789 | EORI: ESA33456789
+    NIF: A-33456781 | EORI: ESA33456781
 
 Factura No.: INV-H1-17-EXTRANA-a-2026-5902193  Fecha: 20/09/2026
 Documento de transporte: MSCU20265902193

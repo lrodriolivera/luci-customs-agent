@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Avda. de la Constitucion, 4
     06011 Badajoz
     Espana
-    NIF: B-06345678 | EORI: ESB06345678
+    NIF: B-06345672 | EORI: ESB06345672
 
 COMPRADOR/IMPORTADOR:
     Cafe de los Andes Exportadora S.A.S.

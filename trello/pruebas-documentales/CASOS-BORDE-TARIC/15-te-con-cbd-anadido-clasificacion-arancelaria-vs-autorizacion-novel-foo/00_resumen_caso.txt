@@ -3,24 +3,24 @@ CASO BORDE-15 — Te con CBD añadido: clasificacion arancelaria vs. autorizacio
 
 Operacion: IMPORTACION (H1)
 Modo de transporte: Maritimo
-Origen mercancia: Suiza (Zug)
+Origen mercancia: Suiza (Gruyères)
 Destino: Espana
-Incoterm: FCA Zug
+Incoterm: FCA Gruyères
 Moneda: CHF
 
 VENDEDOR/EXPORTADOR:
-    Alpina Precision Instruments AG
-    Industriestrasse 14
-    6300 Zug
+    Gruyère Alpin Affineurs SA
+    Route de Bulle 22
+    1663 Gruyères
     Suiza
-    Tax ID: CHE-123.456.789
+    Tax ID: CHE-456.789.123
 
 COMPRADOR/IMPORTADOR:
     Zona Franca Trading Barcelona S.L.
     Calle 2, Sector A, Nave 12
     08040 Barcelona (Zona Franca)
     Espana
-    NIF: B-08987651 | EORI: ESB08987651
+    NIF: B-08987653 | EORI: ESB08987653
 
 Factura No.: INV-BORDE-15-2026-9086242  Fecha: 18/07/2026
 Documento de transporte: MSCU20269086242

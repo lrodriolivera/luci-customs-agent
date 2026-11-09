@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Industrial Fuente del Jarro, Calle 4 nº 12
     46988 Paterna (Valencia)
     Espana
-    NIF: B-46123456 | EORI: ESB46123456
+    NIF: B-46123451 | EORI: ESB46123451
 
 COMPRADOR/IMPORTADOR:
     Nile Cotton Export Co.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 691010  Cantidad: 620 PCE  Precio unit.: 38.0 USD
 
 NOTA DEL CASO (que se prueba):
+  Factura de referencia: el documento de levante NO se regenera automáticamente cuando la declaración se modifica después.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Reference invoice: release document (levante) is NOT automatically refreshed after this declaration is later amended.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

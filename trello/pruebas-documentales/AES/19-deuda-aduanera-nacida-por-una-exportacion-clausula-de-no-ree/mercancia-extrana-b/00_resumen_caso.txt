@@ -13,14 +13,14 @@ VENDEDOR/EXPORTADOR:
     Avda. de la Innovacion, 3
     41703 Dos Hermanas (Sevilla)
     Espana
-    NIF: B-41678912 | EORI: ESB41678912
+    NIF: B-41678913 | EORI: ESB41678913
 
 COMPRADOR/IMPORTADOR:
-    Pampa Cueros y Marroquineria S.A.
-    Av. Corrientes 2340, Piso 4
-    C1046AAQ Buenos Aires
+    Pampa Apicola Exportadora S.A.
+    Ruta Nacional 5, Km 340
+    L6360 General Pico
     Argentina
-    Tax ID: 30-71234567-8
+    Tax ID: 30-87654321-0
 
 Factura No.: INV-AES-19-EXTRANA-b-2026-4819785  Fecha: 22/11/2026
 Documento de transporte: MSCU20264819785

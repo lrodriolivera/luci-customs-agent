@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Asipo, Parcela 22
     33428 Las Palmas de Gran Canaria
     Espana (Canarias) - IGIC, fuera del territorio IVA UE
-    NIF: A-33456789 | EORI: ESA33456789
+    NIF: A-33456781 | EORI: ESA33456781
 
 Factura No.: INV-H1-09-EXTRANA-b-2026-5634178  Fecha: 12/11/2026
 Documento de transporte: MSCU20265634178

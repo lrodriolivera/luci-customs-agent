@@ -5,9 +5,20 @@ const {
 } = require('docx');
 
 const DATA_PATH = path.join(__dirname, 'casos_documento_agente.json');
+const FUNC_PATH = path.join(__dirname, 'casos_funcionales.json');
 const OUT_PATH = path.join(__dirname, '..', 'LUCI-Guia-Casos-Prueba-Agente-Aduanera.docx');
 
 const casos = JSON.parse(fs.readFileSync(DATA_PATH, 'utf-8'));
+// 48 pruebas funcionales de pantalla (sin documentos adjuntos), exportadas del tablero.
+const funcionales = fs.existsSync(FUNC_PATH) ? JSON.parse(fs.readFileSync(FUNC_PATH, 'utf-8')) : [];
+
+// Datos de acceso para la ronda. La URL es la de produccion; el usuario lo entrega STRIX aparte.
+const ACCESO = {
+  url: 'https://aduanas.strixai.ai',
+  contacto: 'Luis Rodríguez (STRIX AI) — luis.rodriguez@strixai.ai',
+};
+
+const sinMarkdown = (t) => (t || '').replace(/\*\*/g, '');
 
 const ACCENT = '0B5D4A';
 const GREY = '5E6C66';
@@ -84,7 +95,7 @@ const introChildren = [
     spacing: { after: 100 },
   }),
   new Paragraph({
-    children: [new TextRun({ text: 'Ronda de pruebas de usuario (UAT) — Importación (H1) y Exportación (AES)', size: 26, color: GREY })],
+    children: [new TextRun({ text: 'Ronda de pruebas de usuario (UAT) — Importación (H1), Exportación (AES), clasificación TARIC y pruebas funcionales', size: 26, color: GREY })],
     spacing: { after: 400 },
   }),
   new Paragraph({
@@ -93,11 +104,31 @@ const introChildren = [
   }),
   new Paragraph({ children: [new PageBreak()] }),
 
+  h1('Antes de empezar'),
+  labelLine('Aplicación', ACCESO.url),
+  labelLine('Usuario y contraseña', 'te los entrega STRIX AI por un canal aparte; no están en este documento ni en Trello. Tu usuario pertenece a una organización de pruebas con su EORI ya configurado en Ajustes > Aduanas.'),
+  labelLine('Tablero de seguimiento', 'Trello “LUCI — Pruebas de usuario” (https://trello.com/b/twFILESR). Una tarjeta por caso; en ella anotas el resultado.'),
+  labelLine('Entorno de la AEAT', 'las declaraciones de esta ronda se envían al entorno de PREPRODUCCIÓN de la AEAT, sin efectos reales. Los importadores y exportadores de los casos son empresas ficticias con NIF de formato válido. Si al enviar ves un MRN y un canal, es el de preproducción. Confirma con STRIX este punto antes de la primera prueba de envío y no envíes nunca estos casos contra producción.'),
+  labelLine('Contacto', ACCESO.contacto),
+
+  h2('Cómo anotar el resultado de cada caso'),
+  new Paragraph({ text: 'Al empezar un caso cambia su etiqueta de “Estado: Pendiente” a “Estado: En curso”.', bullet: { level: 0 }, spacing: { after: 40 } }),
+  new Paragraph({ text: 'Al terminar: “Estado: Hecho” si el resultado coincide con lo esperado, o “Estado: Bug encontrado” si no.', bullet: { level: 0 }, spacing: { after: 40 } }),
+  new Paragraph({ text: 'Si hay fallo, añade la severidad: Bloqueante (impide seguir), Importante (resultado incorrecto), Menor (estético o de texto) o Sin problema.', bullet: { level: 0 }, spacing: { after: 40 } }),
+  new Paragraph({ text: 'Rellena en la descripción de la tarjeta los campos “Resultado obtenido”, “Probado por / fecha” y adjunta una captura de pantalla como evidencia. Cuando no haya plantilla, escribe un comentario con esos tres datos.', bullet: { level: 0 }, spacing: { after: 40 } }),
+  new Paragraph({ text: 'Si un caso no se puede ejecutar (falta un dato, un permiso, una pantalla), ponlo en “Bug encontrado” con severidad Bloqueante y explica qué faltó: eso también es un resultado.', bullet: { level: 0 }, spacing: { after: 200 } }),
+
+  h2('Orden recomendado'),
+  new Paragraph({ text: 'Ronda 1: los 43 casos base de H1, los 21 casos base de AES y las pruebas funcionales de prioridad ALTA. Son los flujos reales de un despacho.', bullet: { level: 0 }, spacing: { after: 40 } }),
+  new Paragraph({ text: 'Ronda 2: categorías especiales, mercancía extraña y casos de borde de clasificación TARIC, y las funcionales de prioridad MEDIA y BAJA.', bullet: { level: 0 }, spacing: { after: 200 } }),
+
+  new Paragraph({ children: [new PageBreak()] }),
+
   h1('Cómo usar este documento'),
-  p('Este documento reúne el detalle de los 241 casos de prueba preparados en el tablero real de Trello ' +
-    '(“luci-pruebas-de-usuario”, board twFILESR), organizados en 7 bloques. Cada caso tiene ya su propia ' +
-    'tarjeta en Trello con los documentos PDF de prueba adjuntos (factura comercial, packing list, ' +
-    'documento de transporte y certificados según el caso) — no hace falta pedir ni generar nada aparte.'),
+  p(`Este documento reúne el detalle de los ${casos.length} casos de prueba documentales y las ${funcionales.length} pruebas ` +
+    'funcionales de pantalla preparados en el tablero real de Trello (“luci-pruebas-de-usuario”, board twFILESR). ' +
+    'Cada caso documental tiene ya su propia tarjeta en Trello con los documentos PDF de prueba adjuntos (factura ' +
+    'comercial, packing list, documento de transporte y certificados según el caso) — no hace falta pedir ni generar nada aparte.'),
   p('Para localizar un caso en Trello, busca la tarjeta cuyo nombre coincide EXACTAMENTE con el campo ' +
     '“Tarjeta en Trello” de cada caso en este documento.'),
 
@@ -113,9 +144,9 @@ const introChildren = [
     bullet: { level: 0 }, spacing: { after: 200 } }),
 
   h2('Cómo leer el campo “Qué se prueba”'),
-  p('En los CASOS BASE (H1-01 a H1-43, AES-01 a AES-21) la nota de qué se prueba suele aparecer también, ' +
-    'literalmente, impresa en la propia factura comercial del caso — es información de contexto para la agente, ' +
-    'visible en el propio documento.'),
+  p('En los CASOS BASE (H1-01 a H1-43, AES-01 a AES-21) la explicación está en español. A continuación se cita, ' +
+    'entre comillas, la nota en inglés que lleva impresa la propia factura comercial del caso: la emite un proveedor ' +
+    'extranjero y por eso va en inglés, como en un envío real. Es información de contexto visible en el documento.'),
   p('En los casos de MERCANCÍA EXTRAÑA y en los CASOS DE BORDE de clasificación TARIC, en cambio, esa nota es ' +
     'deliberadamente interna: no aparece en ningún documento del caso. El objetivo de estos casos es que la ' +
     'clasificación arancelaria (código TARIC) se razone de verdad a partir de la descripción de la mercancía, ' +
@@ -140,6 +171,10 @@ const introChildren = [
   new Paragraph({ text: 'H1 / AES — Categorías especiales (34): perecederos vegetales, alimentos con controles ' +
     'sanitarios reforzados, productos químicos, mercancías peligrosas para el transporte y productos con cadena ' +
     'de frío farmacéutica/biológica.',
+    bullet: { level: 0 }, spacing: { after: 40 } }),
+  new Paragraph({ text: `Pruebas funcionales de pantalla (${funcionales.length}): clasificación y calculadora, contingentes y normativa, ` +
+    'H7 bajo valor, impuestos especiales, portal del cliente, preferencias arancelarias y requerimientos. Sin documentos ' +
+    'adjuntos: cada tarjeta dice cómo llegar a la pantalla, qué condición probar y qué resultado se espera.',
     bullet: { level: 0 }, spacing: { after: 200 } }),
 
   p('Todas las tarjetas están en la etiqueta “Estado: Pendiente” al empezar la ronda — muévelas a ' +
@@ -174,6 +209,19 @@ SUPER_GROUPS.forEach((sg, i) => {
     }));
   });
 });
+// Listas de pruebas funcionales en el indice, a continuacion de las documentales.
+const listasFuncionales = [...new Set(funcionales.map((f) => f.lista))];
+listasFuncionales.forEach((lista, i) => {
+  const n = funcionales.filter((f) => f.lista === lista).length;
+  introChildren.push(new Paragraph({
+    spacing: { after: 40 },
+    children: [
+      new TextRun({ text: `${SUPER_GROUPS.length + i + 1}. `, bold: true }),
+      new TextRun({ text: `Lista Trello “${lista}” `, bold: true, color: ACCENT }),
+      new TextRun({ text: `— ${n} pruebas funcionales (sin adjuntos)`, color: GREY, bold: true }),
+    ],
+  }));
+});
 introChildren.push(new Paragraph({ children: [new PageBreak()] }));
 
 // --- Cuerpo: Heading1 = lista real de Trello, Heading2 = sub-bloque, Heading3 = caso ---
@@ -197,6 +245,32 @@ for (const sg of SUPER_GROUPS) {
           new TextRun({ text: c.que_se_prueba }),
         ],
       }));
+    }
+  }
+}
+
+// --- Pruebas funcionales de pantalla: Heading1 = lista de Trello, Heading3 = tarjeta ---
+if (funcionales.length) {
+  body.push(h1(`Pruebas funcionales de pantalla (${funcionales.length} tarjetas, sin documentos adjuntos)`));
+  body.push(p('Estas tarjetas no llevan PDF: se prueban directamente en la pantalla que indica “Cómo llegar”. ' +
+    'La prioridad ALTA marcada como REGRESIÓN corresponde a fallos ya corregidos que no deben volver a aparecer.'));
+  for (const lista of listasFuncionales) {
+    const items = funcionales.filter((f) => f.lista === lista);
+    body.push(h2(`${lista} — ${items.length} pruebas`));
+    for (const f of items) {
+      body.push(h3(f.tarjeta_trello));
+      body.push(labelLine('Tarjeta en Trello', f.tarjeta_trello));
+      body.push(labelLine('Prioridad', f.prioridad));
+      body.push(labelLine('Cómo llegar', sinMarkdown(f.como_llegar)));
+      body.push(labelLine('Condición a probar', sinMarkdown(f.condicion)));
+      body.push(new Paragraph({
+        spacing: { before: 60, after: f.fuente ? 60 : 200 },
+        children: [
+          new TextRun({ text: 'Resultado esperado: ', bold: true, color: ACCENT }),
+          new TextRun({ text: sinMarkdown(f.resultado_esperado) }),
+        ],
+      }));
+      if (f.fuente) body.push(labelLine('Fuente', f.fuente));
     }
   }
 }

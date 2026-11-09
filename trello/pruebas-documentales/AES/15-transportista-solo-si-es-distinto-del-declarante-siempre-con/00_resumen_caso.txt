@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Calle Real, 45
     51001 Ceuta
     Espana
-    NIF: B-51123456 | EORI: ESB51123456
+    NIF: B-51123453 | EORI: ESB51123453
 
 COMPRADOR/IMPORTADOR:
     Cafe de los Andes Exportadora S.A.S.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 520911  Cantidad: 7200 KGM  Precio unit.: 2.3 USD
 
 NOTA DEL CASO (que se prueba):
+  El transportista solo se declara cuando es distinto del declarante, y en ese caso su EORI es obligatorio.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Carrier is declared only when different from the declarant, and in that case an EORI number is mandatory for the carrier.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

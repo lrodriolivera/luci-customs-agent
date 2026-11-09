@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Avda. de la Innovacion, 3
     41703 Dos Hermanas (Sevilla)
     Espana
-    NIF: B-41678912 | EORI: ESB41678912
+    NIF: B-41678913 | EORI: ESB41678913
 
 Factura No.: INV-H1-40-EXTRANA-a-2026-3184495  Fecha: 19/02/2026
 Documento de transporte: MSCU20263184495

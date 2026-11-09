@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Tres Culturas, Nave 6
     52006 Melilla
     Espana
-    NIF: A-52234567 | EORI: ESA52234567
+    NIF: A-52234564 | EORI: ESA52234564
 
 COMPRADOR/IMPORTADOR:
     Textiles Alpaca del Sur S.A.C.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 420221  Cantidad: 1400 PCE  Precio unit.: 26.0 USD
 
 NOTA DEL CASO (que se prueba):
+  El expedidor a efectos de seguridad (quien aporta los datos de protección y seguridad) es una parte distinta del exportador.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Security consignor (dispatcher for safety/security data) is a party distinct from the exporter of record.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Carrer de la Indústria, 8
     17005 Barcelona (Zona Franca)
     Espana (Zona Franca de Barcelona)
-    NIF: B-17987654 | EORI: ESB17987654
+    NIF: B-17987652 | EORI: ESB17987652
 
 Factura No.: INV-H1-32-2026-2425506  Fecha: 11/04/2026
 Documento de transporte: MSCU20262425506
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 330300  Cantidad: 5400 LTR  Precio unit.: 6.2 USD
 
 NOTA DEL CASO (que se prueba):
+  La mercancía se vincula al régimen de zona franca nada más entrar (vinculación automática a la introducción).
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Goods to be placed under Free Zone arrangement immediately upon entry (automatic linkage on introduction).
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

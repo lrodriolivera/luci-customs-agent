@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Muelle de Poniente s/n, Edif. Lonja
     35008 Las Palmas de Gran Canaria
     Espana
-    NIF: A-35678901 | EORI: ESA35678901
+    NIF: A-35678903 | EORI: ESA35678903
 
 COMPRADOR/IMPORTADOR:
     Chiang Mai Ceramics Export Co., Ltd.

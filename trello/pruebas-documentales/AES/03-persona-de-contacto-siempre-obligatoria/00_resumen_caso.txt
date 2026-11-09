@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Industrial Fuente del Jarro, Calle 4 nº 12
     46988 Paterna (Valencia)
     Espana
-    NIF: B-46123456 | EORI: ESB46123456
+    NIF: B-46123451 | EORI: ESB46123451
 
 COMPRADOR/IMPORTADOR:
     Comercial Amazonia Exportacao Ltda.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 690723  Cantidad: 9600 MTK  Precio unit.: 5.6 USD
 
 NOTA DEL CASO (que se prueba):
+  Persona de contacto del envío: Sra. Marta Alonso Ruiz. Es un dato obligatorio siempre, con independencia del tipo de representación.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Contact person for this consignment: Sra. Marta Alonso Ruiz — mandatory field, always required regardless of representation type.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

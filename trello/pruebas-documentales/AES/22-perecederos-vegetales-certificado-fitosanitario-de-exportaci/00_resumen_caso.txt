@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Muelle de Poniente s/n, Edif. Lonja
     35008 Las Palmas de Gran Canaria
     Espana
-    NIF: A-35678901 | EORI: ESA35678901
+    NIF: A-35678903 | EORI: ESA35678903
 
 COMPRADOR/IMPORTADOR:
     Al Maha General Trading LLC
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 081010  Cantidad: 4000 KGM  Precio unit.: 6.5 EUR
 
 NOTA DEL CASO (que se prueba):
+  Certificado fitosanitario de exportacion emitido por Sanidad Vegetal espanola. El limite de residuos de plaguicidas exigido por Emiratos Arabes Unidos es un requisito del pais de destino, no de la UE — la aduana espanola de salida verifica la correccion documental del certificado, no el limite de residuos del pais tercero.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Certificado fitosanitario de exportacion emitido por Sanidad Vegetal espanola. El limite de residuos de plaguicidas exigido por Emiratos Arabes Unidos es un requisito del pais de destino, no de la UE — la aduana espanola de salida verifica la correccion documental del certificado, no el limite de residuos del pais tercero.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Calle 2, Sector A, Nave 12
     08040 Barcelona (Zona Franca)
     Espana
-    NIF: B-08987651 | EORI: ESB08987651
+    NIF: B-08987653 | EORI: ESB08987653
 
 Factura No.: INV-H1-58-2026-3127219  Fecha: 13/10/2026
 Documento de transporte: MSCU20263127219
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 330720  Cantidad: 48000 PCE  Precio unit.: 0.85 USD
 
 NOTA DEL CASO (que se prueba):
+  Aerosoles bajo la exencion de 'cantidades limitadas' (Limited Quantities, LQ) del codigo IMDG: si cada bulto no supera el volumen limite, se simplifica el marcado individual, pero la obligacion de declarar la carga como mercancia peligrosa en el conocimiento de embarque y en el manifiesto del buque NO desaparece.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Aerosoles bajo la exencion de 'cantidades limitadas' (Limited Quantities, LQ) del codigo IMDG: si cada bulto no supera el volumen limite, se simplifica el marcado individual, pero la obligacion de declarar la carga como mercancia peligrosa en el conocimiento de embarque y en el manifiesto del buque NO desaparece.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

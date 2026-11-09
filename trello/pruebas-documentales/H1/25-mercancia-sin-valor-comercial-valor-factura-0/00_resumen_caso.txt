@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Avda. de la Constitucion, 4
     06011 Badajoz
     Espana
-    NIF: B-06345678 | EORI: ESB06345678
+    NIF: B-06345672 | EORI: ESB06345672
 
 Factura No.: INV-H1-25-2026-4955024  Fecha: 04/07/2026
 Documento de transporte: 020-20264955024
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 950300  Cantidad: 3200 PCE  Precio unit.: 0.0 USD
 
 NOTA DEL CASO (que se prueba):
+  Sin valor comercial: unidades de sustitución en garantía suministradas gratis. Valor estadístico solo a efectos aduaneros.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   COMMERCIAL VALUE: NIL — goods supplied free of charge as warranty replacement units. No commercial value. Statistical value for customs purposes only.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

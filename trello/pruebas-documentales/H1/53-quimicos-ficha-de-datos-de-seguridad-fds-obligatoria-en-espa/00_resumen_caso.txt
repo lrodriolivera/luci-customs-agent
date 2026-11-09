@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Avda. de la Constitucion, 4
     06011 Badajoz
     Espana
-    NIF: B-06345678 | EORI: ESB06345678
+    NIF: B-06345672 | EORI: ESB06345672
 
 Factura No.: INV-H1-53-2026-9916901  Fecha: 08/05/2026
 Documento de transporte: MSCU20269916901
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 280700  Cantidad: 180000 KGM  Precio unit.: 0.18 USD
 
 NOTA DEL CASO (que se prueba):
+  Sustancia quimica a granel: la Ficha de Datos de Seguridad (FDS) es obligatoria en espanol conforme al Anexo II REACH (Reg. (CE) 1907/2006), con las 16 secciones normalizadas. El registro REACH previo del proveedor NO exime al importador de la UE de verificar su propio estatus como importador si supera el umbral de 1 tonelada/ano.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Sustancia quimica a granel: la Ficha de Datos de Seguridad (FDS) es obligatoria en espanol conforme al Anexo II REACH (Reg. (CE) 1907/2006), con las 16 secciones normalizadas. El registro REACH previo del proveedor NO exime al importador de la UE de verificar su propio estatus como importador si supera el umbral de 1 tonelada/ano.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

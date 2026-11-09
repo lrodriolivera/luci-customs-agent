@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Asipo, Parcela 22
     33428 Llanera (Asturias)
     Espana
-    NIF: A-33456789 | EORI: ESA33456789
+    NIF: A-33456781 | EORI: ESA33456781
 
 COMPRADOR/IMPORTADOR:
     Bangkok Rice Trading Co., Ltd.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 950300  Cantidad: 28000 PCE  Precio unit.: 1.15 USD
 
 NOTA DEL CASO (que se prueba):
+  Envío multicontenedor: referencia para el límite de la declaración de 30 precintos y 99 contenedores como máximo.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Multi-container shipment — reference for the declaration limit of maximum 30 seals and 99 containers.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

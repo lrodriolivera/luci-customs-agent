@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Tres Culturas, Nave 6
     52006 Melilla
     Espana
-    NIF: A-52234567 | EORI: ESA52234567
+    NIF: A-52234564 | EORI: ESA52234564
 
 COMPRADOR/IMPORTADOR:
     Sfax Huile d'Olive Export S.A.R.L.

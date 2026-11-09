@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Avda. de la Constitucion, 4
     06011 Badajoz
     Espana
-    NIF: B-06345678 | EORI: ESB06345678
+    NIF: B-06345672 | EORI: ESB06345672
 
 Factura No.: INV-H1-40-2026-2429328  Fecha: 19/02/2026
 Documento de transporte: MSCU20262429328
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 870830  Cantidad: 480 PCE  Precio unit.: 3800 JPY
 
 NOTA DEL CASO (que se prueba):
+  La referencia del documento de transporte (número de conocimiento de embarque) debe coincidir exactamente con el documento adjunto: ver el B/L.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Transport document reference (Bill of Lading number) must match exactly the attached transport document — see B/L.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

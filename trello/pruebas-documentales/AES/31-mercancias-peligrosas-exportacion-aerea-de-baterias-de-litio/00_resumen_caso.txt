@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Calle 2, Sector A, Nave 12
     08040 Barcelona (Zona Franca)
     Espana
-    NIF: B-08987651 | EORI: ESB08987651
+    NIF: B-08987653 | EORI: ESB08987653
 
 COMPRADOR/IMPORTADOR:
     Pacific Coast Machinery LLC
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 850760  Cantidad: 3200 PCE  Precio unit.: 7.1 USD
 
 NOTA DEL CASO (que se prueba):
+  Exportacion aerea de baterias de litio-ion solas: el expedidor espanol debe estar certificado/formado en mercancias peligrosas (IATA DGR, categoria de expedidor), y la aerolinea exige el Estado de Carga (SoC) declarado por escrito antes de aceptar la reserva — sin la formacion certificada del expedidor, ninguna aerolinea de carga acepta la DGD.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Exportacion aerea de baterias de litio-ion solas: el expedidor espanol debe estar certificado/formado en mercancias peligrosas (IATA DGR, categoria de expedidor), y la aerolinea exige el Estado de Carga (SoC) declarado por escrito antes de aceptar la reserva — sin la formacion certificada del expedidor, ninguna aerolinea de carga acepta la DGD.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

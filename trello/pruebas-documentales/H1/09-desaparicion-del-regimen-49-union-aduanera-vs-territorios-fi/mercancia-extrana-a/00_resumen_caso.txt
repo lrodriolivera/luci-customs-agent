@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Carrer de la Indústria, 8
     17005 Las Palmas de Gran Canaria
     Espana (Canarias) - IGIC, fuera del territorio IVA UE
-    NIF: B-17987654 | EORI: ESB17987654
+    NIF: B-17987652 | EORI: ESB17987652
 
 Factura No.: INV-H1-09-EXTRANA-a-2026-1950505  Fecha: 12/11/2026
 Documento de transporte: MSCU20261950505

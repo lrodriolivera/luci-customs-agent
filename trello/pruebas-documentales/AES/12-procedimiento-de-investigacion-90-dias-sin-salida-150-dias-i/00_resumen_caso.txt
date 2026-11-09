@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Avda. de la Constitucion, 4
     06011 Badajoz
     Espana
-    NIF: B-06345678 | EORI: ESB06345678
+    NIF: B-06345672 | EORI: ESB06345672
 
 COMPRADOR/IMPORTADOR:
     Thames Valley Precision Ltd.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 940350  Cantidad: 180 PCE  Precio unit.: 165.0 GBP
 
 NOTA DEL CASO (que se prueba):
+  Referencia para el procedimiento de investigación AES: sin confirmación de salida en 90 días se abre indagación; a los 150 días la declaración se invalida.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Reference for the AES investigation procedure: no exit confirmation within 90 days triggers inquiry; 150 days invalidates the declaration.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

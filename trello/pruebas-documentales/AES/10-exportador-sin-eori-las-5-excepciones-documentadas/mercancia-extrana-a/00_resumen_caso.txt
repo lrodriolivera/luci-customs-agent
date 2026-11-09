@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Calle 2, Sector A, Nave 12
     08040 Barcelona (Zona Franca)
     Espana
-    NIF: B-08987651 | EORI: ESB08987651
+    NIF: B-08987653 | EORI: ESB08987653
 
 COMPRADOR/IMPORTADOR:
     Al Maha General Trading LLC

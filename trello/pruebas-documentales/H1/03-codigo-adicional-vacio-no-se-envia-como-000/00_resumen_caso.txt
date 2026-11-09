@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Asipo, Parcela 22
     33428 Llanera (Asturias)
     Espana
-    NIF: A-33456789 | EORI: ESA33456789
+    NIF: A-33456781 | EORI: ESA33456781
 
 Factura No.: INV-H1-03-2026-7525127  Fecha: 06/05/2026
 Documento de transporte: MSCU20267525127
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 520911  Cantidad: 8500 KGM  Precio unit.: 2.15 USD
 
 NOTA DEL CASO (que se prueba):
+  La partida no lleva código adicional TARIC: debe declararse como '000', no dejarse en blanco.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Additional TARIC code: N/A for this heading (no additional code applicable — must be declared as '000', not left blank).
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

@@ -1,0 +1,482 @@
+[
+ {
+  "lista": "Clasificación y calculadora",
+  "tarjeta_trello": "01. [REGRESIÓN] Portátil TARIC 8471300000 con arancel real 0%",
+  "url": "https://trello.com/c/kDhY9pha",
+  "prioridad": "ALTA — REGRESIÓN (bug ya corregido antes)",
+  "como_llegar": "Menú lateral → \"Declaraciones\" → \"Clasificacion TARIC\". Pestañas: \"Basico\", \"Avanzado IA\", \"Navegador TARIC\". Completa Descripción del Producto / Material / Composición / País de Origen y pulsa **Clasificar** o **Análisis Completo IA**.",
+  "condicion": "se clasifica exactamente este código",
+  "resultado_esperado": "el arancel debe salir 0%, nunca un valor genérico de todo el capítulo 84",
+  "fuente": ""
+ },
+ {
+  "lista": "Clasificación y calculadora",
+  "tarjeta_trello": "02. [REGRESIÓN] Tipo de derecho: ad valorem vs mixto según el TARIC real",
+  "url": "https://trello.com/c/FDZFW39d",
+  "prioridad": "ALTA — REGRESIÓN (bug ya corregido antes)",
+  "como_llegar": "Menú lateral → \"Declaraciones\" → \"Clasificacion TARIC\". Pestañas: \"Basico\", \"Avanzado IA\", \"Navegador TARIC\". Completa Descripción del Producto / Material / Composición / País de Origen y pulsa **Clasificar** o **Análisis Completo IA**.",
+  "condicion": "se calcula un TARIC sin derecho específico real, y por separado uno que sí lo tiene",
+  "resultado_esperado": "el primero sale \"ad valorem\" (nunca \"mixto\" por defecto); el segundo sale \"mixto\"/\"específico\" correctamente",
+  "fuente": ""
+ },
+ {
+  "lista": "Clasificación y calculadora",
+  "tarjeta_trello": "03. Comparar 5 códigos TARIC contra la web oficial de la UE",
+  "url": "https://trello.com/c/Ptld1AgF",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Declaraciones\" → \"Clasificacion TARIC\". Pestañas: \"Basico\", \"Avanzado IA\", \"Navegador TARIC\". Completa Descripción del Producto / Material / Composición / País de Origen y pulsa **Clasificar** o **Análisis Completo IA**.",
+  "condicion": "la agente elige 5 códigos de productos que conoce bien y los clasifica en LUCI",
+  "resultado_esperado": "arancel, descripción y medidas coinciden con la consulta directa en TARIC de la UE",
+  "fuente": ""
+ },
+ {
+  "lista": "Clasificación y calculadora",
+  "tarjeta_trello": "04. Orden de los métodos secundarios de valoración en aduana",
+  "url": "https://trello.com/c/4rl3rvgI",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Declaraciones\" → \"Clasificacion TARIC\". Pestañas: \"Basico\", \"Avanzado IA\", \"Navegador TARIC\". Completa Descripción del Producto / Material / Composición / País de Origen y pulsa **Clasificar** o **Análisis Completo IA**.",
+  "condicion": "el valor de transacción no es aplicable y no existen mercancías idénticas",
+  "resultado_esperado": "debe probarse el método de mercancías similares antes que el deductivo o el calculado; el orden entre deductivo y calculado solo puede invertirse si el declarante lo solicita expresamente (art. 74.2 CAU)",
+  "fuente": "06. Valor Aduana FIGAD 29 sept 2025.pdf"
+ },
+ {
+  "lista": "Clasificación y calculadora",
+  "tarjeta_trello": "05. Vinculación entre comprador y vendedor exige test de comparabilidad",
+  "url": "https://trello.com/c/1BzFrIlX",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Declaraciones\" → \"Clasificacion TARIC\". Pestañas: \"Basico\", \"Avanzado IA\", \"Navegador TARIC\". Completa Descripción del Producto / Material / Composición / País de Origen y pulsa **Clasificar** o **Análisis Completo IA**.",
+  "condicion": "existe vinculación societaria entre comprador y vendedor (ej. accionariado compartido)",
+  "resultado_esperado": "antes de aceptar el valor de transacción debe aplicarse el análisis de comparación del art. 134 RECAU (\"valor de ensayo\") contra operaciones similares no vinculadas, no aceptarlo automáticamente",
+  "fuente": "06. Valor Aduana FIGAD 29 sept 2025.pdf"
+ },
+ {
+  "lista": "Clasificación y calculadora",
+  "tarjeta_trello": "06. Arancel estacional según la fecha",
+  "url": "https://trello.com/c/2vWzObow",
+  "prioridad": "MEDIA",
+  "como_llegar": "Menú lateral → \"Declaraciones\" → \"Clasificacion TARIC\". Pestañas: \"Basico\", \"Avanzado IA\", \"Navegador TARIC\". Completa Descripción del Producto / Material / Composición / País de Origen y pulsa **Clasificar** o **Análisis Completo IA**.",
+  "condicion": "se calcula el mismo TARIC de fruta/verdura en temporada alta y en temporada baja",
+  "resultado_esperado": "el tipo aplicado cambia según la fecha, no queda fijo todo el año",
+  "fuente": ""
+ },
+ {
+  "lista": "Contingentes, reglas y normativa",
+  "tarjeta_trello": "01. [REGRESIÓN] País sancionado exige autorización visible",
+  "url": "https://trello.com/c/uZQV3neK",
+  "prioridad": "ALTA — REGRESIÓN (bug ya corregido antes)",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Motor de Reglas\" (Tipo de Operación, País Origen/Destino, Productos → **Analizar Operación**), o \"Contingentes\" para saldos TRQ, o \"Normativa CAU/BOE\" para buscar un artículo concreto.",
+  "condicion": "se clasifica una mercancía con destino u origen Rusia (sanciones sectoriales)",
+  "resultado_esperado": "la documentación exigida incluye la autorización por sanciones, no solo un aviso genérico",
+  "fuente": ""
+ },
+ {
+  "lista": "Contingentes, reglas y normativa",
+  "tarjeta_trello": "02. [REGRESIÓN] Artículo de normativa que la fuente devuelve vacío",
+  "url": "https://trello.com/c/f34UO6hv",
+  "prioridad": "ALTA — REGRESIÓN (bug ya corregido antes)",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Motor de Reglas\" (Tipo de Operación, País Origen/Destino, Productos → **Analizar Operación**), o \"Contingentes\" para saldos TRQ, o \"Normativa CAU/BOE\" para buscar un artículo concreto.",
+  "condicion": "se abre un artículo cuya consulta en vivo a la fuente normativa falla o devuelve vacío",
+  "resultado_esperado": "la pantalla debe indicar claramente que no se pudo obtener el texto, nunca mostrarlo \"encontrado\" en verde",
+  "fuente": ""
+ },
+ {
+  "lista": "Contingentes, reglas y normativa",
+  "tarjeta_trello": "03. Saldo de contingente con fecha de sincronización visible",
+  "url": "https://trello.com/c/6J5LLyOZ",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Motor de Reglas\" (Tipo de Operación, País Origen/Destino, Productos → **Analizar Operación**), o \"Contingentes\" para saldos TRQ, o \"Normativa CAU/BOE\" para buscar un artículo concreto.",
+  "condicion": "se consulta un contingente de reparto simultáneo (FCFS)",
+  "resultado_esperado": "se muestra la fecha/hora de la última sincronización junto al saldo, advirtiendo que puede agotarse en horas",
+  "fuente": ""
+ },
+ {
+  "lista": "Contingentes, reglas y normativa",
+  "tarjeta_trello": "04. Saldo comparado contra la fuente oficial DDS2",
+  "url": "https://trello.com/c/SDutO9ZY",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Motor de Reglas\" (Tipo de Operación, País Origen/Destino, Productos → **Analizar Operación**), o \"Contingentes\" para saldos TRQ, o \"Normativa CAU/BOE\" para buscar un artículo concreto.",
+  "condicion": "la agente consulta 2-3 contingentes activos en LUCI y los compara con DDS2 directamente",
+  "resultado_esperado": "los saldos coinciden dentro de la ventana de sincronización",
+  "fuente": ""
+ },
+ {
+  "lista": "Contingentes, reglas y normativa",
+  "tarjeta_trello": "05. Los 3 niveles de sanción se distinguen",
+  "url": "https://trello.com/c/i8CgkXbo",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Motor de Reglas\" (Tipo de Operación, País Origen/Destino, Productos → **Analizar Operación**), o \"Contingentes\" para saldos TRQ, o \"Normativa CAU/BOE\" para buscar un artículo concreto.",
+  "condicion": "se prueba Corea del Norte (embargo total), Rusia (sectorial) y Venezuela (parcial)",
+  "resultado_esperado": "cada nivel produce un mensaje y una exigencia documental distintos, no uno genérico igual para los tres",
+  "fuente": ""
+ },
+ {
+  "lista": "Contingentes, reglas y normativa",
+  "tarjeta_trello": "06. Umbrales de contrabando por tipo de mercancía",
+  "url": "https://trello.com/c/jUdP3n0H",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Motor de Reglas\" (Tipo de Operación, País Origen/Destino, Productos → **Analizar Operación**), o \"Contingentes\" para saldos TRQ, o \"Normativa CAU/BOE\" para buscar un artículo concreto.",
+  "condicion": "el valor de la operación es ≥150.000€ (mercancías generales)",
+  "resultado_esperado": "riesgo de contrabando; SI es material de defensa/doble uso/patrimonio histórico/géneros estancados ≥50.000€ → mismo riesgo; SI son labores de tabaco ≥15.000€ → mismo riesgo. No debe aplicarse un único umbral genérico",
+  "fuente": "22. Ponencia_Taric Contrabando 2025.pdf"
+ },
+ {
+  "lista": "Contingentes, reglas y normativa",
+  "tarjeta_trello": "07. CITES: exención Y932 para efectos personales",
+  "url": "https://trello.com/c/34hJAe8d",
+  "prioridad": "MEDIA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Motor de Reglas\" (Tipo de Operación, País Origen/Destino, Productos → **Analizar Operación**), o \"Contingentes\" para saldos TRQ, o \"Normativa CAU/BOE\" para buscar un artículo concreto.",
+  "condicion": "la mercancía CITES corresponde a efectos personales/enseres domésticos (art. 7.3 Reg. 338/97)",
+  "resultado_esperado": "código de exención Y932 sin certificado \"no CITES\" previo; fuera de ese supuesto, sí debe exigirse",
+  "fuente": "08. VUA SOIVRE.pdf"
+ },
+ {
+  "lista": "Contingentes, reglas y normativa",
+  "tarjeta_trello": "08. Incidencias durante el trayecto exigen presentación inmediata en la aduana más próxima",
+  "url": "https://trello.com/c/zn0uZn9H",
+  "prioridad": "MEDIA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Motor de Reglas\" (Tipo de Operación, País Origen/Destino, Productos → **Analizar Operación**), o \"Contingentes\" para saldos TRQ, o \"Normativa CAU/BOE\" para buscar un artículo concreto.",
+  "condicion": "durante el tránsito hay desvío de itinerario, rotura de precintos, peligro inminente o cambio de medio de transporte",
+  "resultado_esperado": "presentación de la mercancía y documentos en la aduana más próxima sin demora; LUCI debería tener flujo para esta incidencia",
+  "fuente": "09. Tránsito 2025 sin soluciones.pdf"
+ },
+ {
+  "lista": "H7 — Bajo valor",
+  "tarjeta_trello": "01. Derecho fijo de 3€/artículo bajo el nuevo régimen",
+  "url": "https://trello.com/c/j9MPDR32",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Declaraciones\" → \"H7 E-commerce\" (ver lista) o \"+ Nueva H7\" (crear). Campos: Número de Tracking, Número IOSS (si aplica), Remitente, Destinatario/NIF-NIE, Artículos (botón \"Agregar artículo\").",
+  "condicion": "valor intrínseco ≤150€, exento de IVA por IOSS o transportista Correos, entre 1/Jul/2026 y 1/Jul/2028",
+  "resultado_esperado": "se aplica el derecho fijo de 3€/artículo; fuera de esas condiciones NO debe aplicarse",
+  "fuente": ""
+ },
+ {
+  "lista": "H7 — Bajo valor",
+  "tarjeta_trello": "02. Código de IVA según modalidad IOSS",
+  "url": "https://trello.com/c/PZyarXUm",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Declaraciones\" → \"H7 E-commerce\" (ver lista) o \"+ Nueva H7\" (crear). Campos: Número de Tracking, Número IOSS (si aplica), Remitente, Destinatario/NIF-NIE, Artículos (botón \"Agregar artículo\").",
+  "condicion": "el envío tiene IOSS válido, y por separado si no lo tiene",
+  "resultado_esperado": "con IOSS usa código F48; sin IOSS usa F53, y F48 con representación indirecta exige el documento de autorización del declarante",
+  "fuente": ""
+ },
+ {
+  "lista": "Impuestos especiales (IIEE)",
+  "tarjeta_trello": "01. [REGRESIÓN] Cerveza: los 5 tramos de grado Plato",
+  "url": "https://trello.com/c/HBdK61X7",
+  "prioridad": "ALTA — REGRESIÓN (bug ya corregido antes)",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Imp. Especiales\" (pantalla \"Calculadora de Impuestos Especiales - SILICIE\"). Paso 1: Código TARIC → **Detectar Producto**. Paso 2: Cantidad, Grado Alcohólico, Precio Venta al Público → **Calcular Impuesto**.",
+  "condicion": "se da de alta cerveza cruzando los tramos de grado alcohólico y Plato",
+  "resultado_esperado": "cada tramo aplica su tipo exacto por hectolitro, nunca la fórmula antigua por litro/grado",
+  "fuente": ""
+ },
+ {
+  "lista": "Impuestos especiales (IIEE)",
+  "tarjeta_trello": "02. [REGRESIÓN] Vino tranquilo y espumoso a tipo cero",
+  "url": "https://trello.com/c/Q0ba6te7",
+  "prioridad": "ALTA — REGRESIÓN (bug ya corregido antes)",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Imp. Especiales\" (pantalla \"Calculadora de Impuestos Especiales - SILICIE\"). Paso 1: Código TARIC → **Detectar Producto**. Paso 2: Cantidad, Grado Alcohólico, Precio Venta al Público → **Calcular Impuesto**.",
+  "condicion": "se declara vino tranquilo y vino espumoso",
+  "resultado_esperado": "el impuesto especial sale 0€ en ambos (art. 30 Ley 38/1992)",
+  "fuente": ""
+ },
+ {
+  "lista": "Impuestos especiales (IIEE)",
+  "tarjeta_trello": "03. [REGRESIÓN] Producto intermedio como categoría propia",
+  "url": "https://trello.com/c/cYkSiM4h",
+  "prioridad": "ALTA — REGRESIÓN (bug ya corregido antes)",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Imp. Especiales\" (pantalla \"Calculadora de Impuestos Especiales - SILICIE\"). Paso 1: Código TARIC → **Detectar Producto**. Paso 2: Cantidad, Grado Alcohólico, Precio Venta al Público → **Calcular Impuesto**.",
+  "condicion": "se declara un producto intermedio (vermú, jerez) con grado ≤15% y con >15%",
+  "resultado_esperado": "aplican 38,48€/hl y 64,13€/hl respectivamente, como categoría separada del vino",
+  "fuente": ""
+ },
+ {
+  "lista": "Impuestos especiales (IIEE)",
+  "tarjeta_trello": "04. [REGRESIÓN] Alcohol etílico al tipo legal correcto",
+  "url": "https://trello.com/c/vaHIzvXC",
+  "prioridad": "ALTA — REGRESIÓN (bug ya corregido antes)",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Imp. Especiales\" (pantalla \"Calculadora de Impuestos Especiales - SILICIE\"). Paso 1: Código TARIC → **Detectar Producto**. Paso 2: Cantidad, Grado Alcohólico, Precio Venta al Público → **Calcular Impuesto**.",
+  "condicion": "se declara alcohol etílico estándar, y por separado bajo régimen de cosechero",
+  "resultado_esperado": "958,94€/hl en el estándar; 226,36€/hl en cosechero — ninguno con el valor antiguo inflado ~14%",
+  "fuente": ""
+ },
+ {
+  "lista": "Impuestos especiales (IIEE)",
+  "tarjeta_trello": "05. [REGRESIÓN] Tabaco: los 4 epígrafes con su mínimo",
+  "url": "https://trello.com/c/aumMEvhu",
+  "prioridad": "ALTA — REGRESIÓN (bug ya corregido antes)",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Imp. Especiales\" (pantalla \"Calculadora de Impuestos Especiales - SILICIE\"). Paso 1: Código TARIC → **Detectar Producto**. Paso 2: Cantidad, Grado Alcohólico, Precio Venta al Público → **Calcular Impuesto**.",
+  "condicion": "se declaran cigarrillos, cigarros, picadura fina y \"demás labores\" en cantidades bajas",
+  "resultado_esperado": "cada uno respeta su mínimo por 1000 unidades/kg (150€ / 47€ / 112,50€ / 30€)",
+  "fuente": ""
+ },
+ {
+  "lista": "Impuestos especiales (IIEE)",
+  "tarjeta_trello": "06. Importación de IIEE en régimen suspensivo requiere \"expedidor registrado\"",
+  "url": "https://trello.com/c/FWylIeEd",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Imp. Especiales\" (pantalla \"Calculadora de Impuestos Especiales - SILICIE\"). Paso 1: Código TARIC → **Detectar Producto**. Paso 2: Cantidad, Grado Alcohólico, Precio Venta al Público → **Calcular Impuesto**.",
+  "condicion": "un H1 introduce productos con IIEE con destino a fábrica/depósito fiscal en régimen suspensivo",
+  "resultado_esperado": "el importador/representante necesita ser \"expedidor registrado\" (CAE), y el impuesto se devenga por \"fabricación\", no por \"importación\". LUCI no debería liquidar IIEE al admitir el DUA en este caso",
+  "fuente": "18. Ponencia_Presentación IIEE COMEX_actualizada_ NOV 25.pdf"
+ },
+ {
+  "lista": "Impuestos especiales (IIEE)",
+  "tarjeta_trello": "07. Hidrocarburos: tipo general + especial sumados",
+  "url": "https://trello.com/c/H31GnyFK",
+  "prioridad": "MEDIA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Imp. Especiales\" (pantalla \"Calculadora de Impuestos Especiales - SILICIE\"). Paso 1: Código TARIC → **Detectar Producto**. Paso 2: Cantidad, Grado Alcohólico, Precio Venta al Público → **Calcular Impuesto**.",
+  "condicion": "se calcula gasolina 95 y gasóleo estándar",
+  "resultado_esperado": "472,69€/1000L y 379€/1000L respectivamente (tipo general + especial de automoción sumados)",
+  "fuente": ""
+ },
+ {
+  "lista": "Impuestos especiales (IIEE)",
+  "tarjeta_trello": "08. Precintas obligatorias fuera de régimen suspensivo",
+  "url": "https://trello.com/c/g62MMlrW",
+  "prioridad": "MEDIA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Imp. Especiales\" (pantalla \"Calculadora de Impuestos Especiales - SILICIE\"). Paso 1: Código TARIC → **Detectar Producto**. Paso 2: Cantidad, Grado Alcohólico, Precio Venta al Público → **Calcular Impuesto**.",
+  "condicion": "se despacha tabaco o bebidas derivadas embotelladas con IIEE devengado (fuera de régimen suspensivo)",
+  "resultado_esperado": "deben llevar precintas, salvo destino a planta embotelladora independiente o volumen muy pequeño",
+  "fuente": "18. Ponencia_Presentación IIEE COMEX_actualizada_ NOV 25.pdf"
+ },
+ {
+  "lista": "Portal cliente y documentos",
+  "tarjeta_trello": "01. [REGRESIÓN] Checklist del cliente nunca marca nada como subido — mismatch de campos",
+  "url": "https://trello.com/c/lo67rCZF",
+  "prioridad": "ALTA",
+  "como_llegar": "Como AGENTE: menú lateral → \"Operaciones\" → \"Expedientes\" → abrir un expediente → botón **\"Copiar enlace\"** (copia la URL del Portal del cliente) → sección **\"Documentos\"** (checklist) más abajo en la misma pantalla del expediente. Como CLIENTE: pega el enlace copiado en una pestaña nueva o en modo incógnito (no requiere iniciar sesión) → llegas a `/portal/:token` → pestaña **\"Documentos\"** → elige el tipo de documento → arrastra o selecciona el archivo → revisa el checklist al final de esa misma pantalla.",
+  "condicion": "un cliente sube un documento en el Portal (factura, packing list, etc.)",
+  "resultado_esperado": "el checklist de esa misma pantalla debería marcar el ítem en verde con el nombre del documento, pero el componente lee los campos `.name`/`.uploaded` mientras el backend del Portal devuelve `documentName`/`received` — el checklist SIEMPRE muestra el ítem como pendiente y sin nombre visible, aunque la subida fue exitosa",
+  "fuente": "PortalDocuments.jsx (líneas ~188-208) vs portalController.js (líneas ~69-76)"
+ },
+ {
+  "lista": "Portal cliente y documentos",
+  "tarjeta_trello": "02. [REGRESIÓN] \"Validar todos\" puede marcar el expediente como completo sin todos los documentos obligatorios",
+  "url": "https://trello.com/c/fKuWxvXK",
+  "prioridad": "ALTA",
+  "como_llegar": "Como AGENTE: menú lateral → \"Operaciones\" → \"Expedientes\" → abrir un expediente → botón **\"Copiar enlace\"** (copia la URL del Portal del cliente) → sección **\"Documentos\"** (checklist) más abajo en la misma pantalla del expediente. Como CLIENTE: pega el enlace copiado en una pestaña nueva o en modo incógnito (no requiere iniciar sesión) → llegas a `/portal/:token` → pestaña **\"Documentos\"** → elige el tipo de documento → arrastra o selecciona el archivo → revisa el checklist al final de esa misma pantalla.",
+  "condicion": "un expediente tiene un documento obligatorio (ej. Bill of Lading) que nunca se subió, pero sí se subieron y validaron otros documentos opcionales",
+  "resultado_esperado": "\"Validar todos\" calcula si el expediente está completo mirando SOLO los documentos ya subidos e ignora los obligatorios ausentes — puede marcar el expediente como \"documents_validated\" sin el documento obligatorio",
+  "fuente": "documentController.js validateAll (líneas ~373-382)"
+ },
+ {
+  "lista": "Portal cliente y documentos",
+  "tarjeta_trello": "03. [REGRESIÓN] La validación con IA no lee el archivo real, genera datos de ejemplo simulados",
+  "url": "https://trello.com/c/IL9YuIvA",
+  "prioridad": "ALTA",
+  "como_llegar": "Como AGENTE: menú lateral → \"Operaciones\" → \"Expedientes\" → abrir un expediente → botón **\"Copiar enlace\"** (copia la URL del Portal del cliente) → sección **\"Documentos\"** (checklist) más abajo en la misma pantalla del expediente. Como CLIENTE: pega el enlace copiado en una pestaña nueva o en modo incógnito (no requiere iniciar sesión) → llegas a `/portal/:token` → pestaña **\"Documentos\"** → elige el tipo de documento → arrastra o selecciona el archivo → revisa el checklist al final de esa misma pantalla.",
+  "condicion": "se sube cualquier documento (incluso uno irrelevante, en blanco, o con datos erróneos) y se pulsa \"Validar\"",
+  "resultado_esperado": "`aiService.validateDocument` no envía el PDF/imagen al modelo — le pide \"simular\" datos de ejemplo plausibles para ese tipo de documento sin haberlo leído nunca; puede devolver isValid:true con datos extraídos inventados. LUCI presenta como verificado algo que nunca fue analizado",
+  "fuente": "aiService.js validateDocument, líneas 723-748 — comentario explícito \"Por ahora, simulamos la validacion\""
+ },
+ {
+  "lista": "Portal cliente y documentos",
+  "tarjeta_trello": "04. [REGRESIÓN] Alta de expediente self-service no debe fallar por createdBy",
+  "url": "https://trello.com/c/E9xOuV34",
+  "prioridad": "MEDIA — REGRESIÓN (bug ya corregido antes)",
+  "como_llegar": "Como AGENTE: menú lateral → \"Operaciones\" → \"Expedientes\" → abrir un expediente → botón **\"Copiar enlace\"** (copia la URL del Portal del cliente) → sección **\"Documentos\"** (checklist) más abajo en la misma pantalla del expediente. Como CLIENTE: pega el enlace copiado en una pestaña nueva o en modo incógnito (no requiere iniciar sesión) → llegas a `/portal/:token` → pestaña **\"Documentos\"** → elige el tipo de documento → arrastra o selecciona el archivo → revisa el checklist al final de esa misma pantalla.",
+  "condicion": "un cliente crea un expediente nuevo desde el Portal en modo self-service, sin que un agente lo haya dado de alta antes",
+  "resultado_esperado": "debe completarse sin error \"Cast to ObjectId failed\" — createdBy es un ObjectId de referencia a User y el alta self-service no tiene usuario de plataforma asociado (bug ya corregido, verificar que sigue corregido)",
+  "fuente": "clientPortalService.js, comentario líneas 118-122"
+ },
+ {
+  "lista": "Portal cliente y documentos",
+  "tarjeta_trello": "05. Checklist se desvincula si se sube un segundo documento del mismo tipo",
+  "url": "https://trello.com/c/OxnrL3LW",
+  "prioridad": "MEDIA",
+  "como_llegar": "Como AGENTE: menú lateral → \"Operaciones\" → \"Expedientes\" → abrir un expediente → botón **\"Copiar enlace\"** (copia la URL del Portal del cliente) → sección **\"Documentos\"** (checklist) más abajo en la misma pantalla del expediente. Como CLIENTE: pega el enlace copiado en una pestaña nueva o en modo incógnito (no requiere iniciar sesión) → llegas a `/portal/:token` → pestaña **\"Documentos\"** → elige el tipo de documento → arrastra o selecciona el archivo → revisa el checklist al final de esa misma pantalla.",
+  "condicion": "se sube un segundo documento del mismo tipo (ej. dos facturas comerciales)",
+  "resultado_esperado": "el checklist solo tiene una entrada por tipo y su documentId se sobrescribe con el último subido; el primer documento queda sin checklist que lo referencie, y si se elimina, el checklist no lo detecta (busca por un documentId que ya no coincide)",
+  "fuente": "documentController.js upload/deleteDocument (líneas 42-48, 285-292)"
+ },
+ {
+  "lista": "Portal cliente y documentos",
+  "tarjeta_trello": "06. Checklist de documentos varía según el tipo de operación",
+  "url": "https://trello.com/c/5DXfSLo6",
+  "prioridad": "MEDIA",
+  "como_llegar": "Como AGENTE: menú lateral → \"Operaciones\" → \"Expedientes\" → abrir un expediente → botón **\"Copiar enlace\"** (copia la URL del Portal del cliente) → sección **\"Documentos\"** (checklist) más abajo en la misma pantalla del expediente. Como CLIENTE: pega el enlace copiado en una pestaña nueva o en modo incógnito (no requiere iniciar sesión) → llegas a `/portal/:token` → pestaña **\"Documentos\"** → elige el tipo de documento → arrastra o selecciona el archivo → revisa el checklist al final de esa misma pantalla.",
+  "condicion": "se crea un expediente de importación, y por separado uno de exportación y uno de tránsito",
+  "resultado_esperado": "importación exige Factura+Packing List+BL/AWB/CMR obligatorios y Certificado de Origen opcional condicional a preferencia; exportación hace el BL/AWB/CMR OPCIONAL y añade Licencia de Exportación opcional condicional a producto controlado; tránsito solo exige Documento de Transporte además de la base. No debe mostrarse el mismo checklist en los tres casos",
+  "fuente": "clientPortalService.js generateDocumentChecklist (líneas 176-208)"
+ },
+ {
+  "lista": "Portal cliente y documentos",
+  "tarjeta_trello": "07. La vista del agente sí traduce received→uploaded — contrastar contra la del cliente",
+  "url": "https://trello.com/c/tUh9qjrk",
+  "prioridad": "MEDIA",
+  "como_llegar": "Como AGENTE: menú lateral → \"Operaciones\" → \"Expedientes\" → abrir un expediente → botón **\"Copiar enlace\"** (copia la URL del Portal del cliente) → sección **\"Documentos\"** (checklist) más abajo en la misma pantalla del expediente. Como CLIENTE: pega el enlace copiado en una pestaña nueva o en modo incógnito (no requiere iniciar sesión) → llegas a `/portal/:token` → pestaña **\"Documentos\"** → elige el tipo de documento → arrastra o selecciona el archivo → revisa el checklist al final de esa misma pantalla.",
+  "condicion": "se sube un documento y luego se revisa el checklist desde la vista del AGENTE (Expediente → sección Documentos), no desde el Portal del cliente",
+  "resultado_esperado": "ahí SÍ debe aparecer correctamente marcado como subido — ese endpoint traduce bien los campos, a diferencia del Portal del cliente (ver caso 1). Usar este contraste para confirmar cuál vista está realmente rota",
+  "fuente": "expeditionController.js (líneas 458-465) vs portalController.js"
+ },
+ {
+  "lista": "Portal cliente y documentos",
+  "tarjeta_trello": "08. Tipos de archivo aceptados: el frontend del Portal es más restrictivo que el backend",
+  "url": "https://trello.com/c/aHfFDnL8",
+  "prioridad": "BAJA",
+  "como_llegar": "Como AGENTE: menú lateral → \"Operaciones\" → \"Expedientes\" → abrir un expediente → botón **\"Copiar enlace\"** (copia la URL del Portal del cliente) → sección **\"Documentos\"** (checklist) más abajo en la misma pantalla del expediente. Como CLIENTE: pega el enlace copiado en una pestaña nueva o en modo incógnito (no requiere iniciar sesión) → llegas a `/portal/:token` → pestaña **\"Documentos\"** → elige el tipo de documento → arrastra o selecciona el archivo → revisa el checklist al final de esa misma pantalla.",
+  "condicion": "se intenta subir un archivo .webp, o de más de 10MB pero menos de 50MB",
+  "resultado_esperado": "el frontend del Portal lo bloquea antes de enviarlo (acepta solo PDF/JPG/PNG/TIFF/DOC/DOCX hasta 10MB), aunque el backend permitiría hasta 50MB y también WEBP/XLS/CSV/TXT/XML; verificar que el mensaje al cliente sea claro sobre el límite real de 10MB",
+  "fuente": "PortalDocuments.jsx (líneas 74-84) vs upload.js (líneas 40-76)"
+ },
+ {
+  "lista": "Preferencias arancelarias",
+  "tarjeta_trello": "01. [REGRESIÓN] Ahorro real, no una tabla por capítulo",
+  "url": "https://trello.com/c/JMG6fK6u",
+  "prioridad": "ALTA — REGRESIÓN (bug ya corregido antes)",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Preferencias\" (pantalla \"Calculadora de Preferencias Arancelarias\"). Completa Valor Aduanero, Certificado de Origen Disponible, Tipo de Exportador (Normal/EA/REX). Pulsa **Verificar Elegibilidad** o **Verificar Preferencias**. Revisa \"Arancel NMF\", \"Arancel Preferencial\", \"Ahorro Estimado\" y \"Reglas de Origen\".",
+  "condicion": "se pide preferencia para un TARIC con arancel base real 0%",
+  "resultado_esperado": "el ahorro estimado debe salir 0€, nunca un ahorro inventado sobre una tabla genérica de capítulo",
+  "fuente": ""
+ },
+ {
+  "lista": "Preferencias arancelarias",
+  "tarjeta_trello": "02. Umbral REX de 6.000€ (10.000€ PTU) confirmado en fuente primaria",
+  "url": "https://trello.com/c/OeJx2rjd",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Preferencias\" (pantalla \"Calculadora de Preferencias Arancelarias\"). Completa Valor Aduanero, Certificado de Origen Disponible, Tipo de Exportador (Normal/EA/REX). Pulsa **Verificar Elegibilidad** o **Verificar Preferencias**. Revisa \"Arancel NMF\", \"Arancel Preferencial\", \"Ahorro Estimado\" y \"Reglas de Origen\".",
+  "condicion": "el valor total del envío (precio franco fábrica) es ≤6.000€",
+  "resultado_esperado": "cualquier exportador puede declarar el origen en factura; si supera 6.000€ (10.000€ para PTU) → solo un exportador registrado en el sistema REX puede hacerlo",
+  "fuente": "04. Ponencia_Origen de las mercancias_Preferencial.pdf"
+ },
+ {
+  "lista": "Preferencias arancelarias",
+  "tarjeta_trello": "03. Operaciones mínimas no confieren origen",
+  "url": "https://trello.com/c/2TDp2fbx",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Preferencias\" (pantalla \"Calculadora de Preferencias Arancelarias\"). Completa Valor Aduanero, Certificado de Origen Disponible, Tipo de Exportador (Normal/EA/REX). Pulsa **Verificar Elegibilidad** o **Verificar Preferencias**. Revisa \"Arancel NMF\", \"Arancel Preferencial\", \"Ahorro Estimado\" y \"Reglas de Origen\".",
+  "condicion": "la única transformación realizada es embalaje, etiquetado, simple montaje, desempolvado/cribado/lavado, o cualquier combinación",
+  "resultado_esperado": "NO debe conferirse origen no preferencial del país donde se realizó (art. 34 RDCAU), aunque el producto cambie de partida arancelaria",
+  "fuente": "04. Ponencias_ Origen de las mercancías_No preferencial CUARTA CLASE.pdf"
+ },
+ {
+  "lista": "Preferencias arancelarias",
+  "tarjeta_trello": "04. Sin arancel conocido, ahorro en cero",
+  "url": "https://trello.com/c/G7iJSbMy",
+  "prioridad": "MEDIA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Preferencias\" (pantalla \"Calculadora de Preferencias Arancelarias\"). Completa Valor Aduanero, Certificado de Origen Disponible, Tipo de Exportador (Normal/EA/REX). Pulsa **Verificar Elegibilidad** o **Verificar Preferencias**. Revisa \"Arancel NMF\", \"Arancel Preferencial\", \"Ahorro Estimado\" y \"Reglas de Origen\".",
+  "condicion": "el TARIC no tiene arancel disponible ni en catálogo ni por IA",
+  "resultado_esperado": "el ahorro mostrado debe ser 0€, nunca un valor inventado",
+  "fuente": ""
+ },
+ {
+  "lista": "Preferencias arancelarias",
+  "tarjeta_trello": "05. Comunicación de origen REX no admite retroactividad para Japón",
+  "url": "https://trello.com/c/E9bvlbo6",
+  "prioridad": "MEDIA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Preferencias\" (pantalla \"Calculadora de Preferencias Arancelarias\"). Completa Valor Aduanero, Certificado de Origen Disponible, Tipo de Exportador (Normal/EA/REX). Pulsa **Verificar Elegibilidad** o **Verificar Preferencias**. Revisa \"Arancel NMF\", \"Arancel Preferencial\", \"Ahorro Estimado\" y \"Reglas de Origen\".",
+  "condicion": "el país de origen preferencial es Japón",
+  "resultado_esperado": "NO se admite extender la comunicación de origen después de la exportación (a diferencia del resto de acuerdos REX, que permiten hasta 2 años a posteriori)",
+  "fuente": "04. Ponencia_Origen de las mercancias_Preferencial.pdf"
+ },
+ {
+  "lista": "Preferencias arancelarias",
+  "tarjeta_trello": "06. Elementos neutros excluidos del cálculo de origen por valor añadido",
+  "url": "https://trello.com/c/SIHXhldt",
+  "prioridad": "MEDIA",
+  "como_llegar": "Menú lateral → \"Calculo y Normativa\" → \"Preferencias\" (pantalla \"Calculadora de Preferencias Arancelarias\"). Completa Valor Aduanero, Certificado de Origen Disponible, Tipo de Exportador (Normal/EA/REX). Pulsa **Verificar Elegibilidad** o **Verificar Preferencias**. Revisa \"Arancel NMF\", \"Arancel Preferencial\", \"Ahorro Estimado\" y \"Reglas de Origen\".",
+  "condicion": "el origen se determina por la regla del valor añadido X%",
+  "resultado_esperado": "energía, combustible, instalaciones, máquinas y herramientas usadas en la producción NO deben incluirse en ese cálculo (art. 36 RDCAU)",
+  "fuente": "04. Ponencias_ Origen de las mercancías_No preferencial CUARTA CLASE.pdf"
+ },
+ {
+  "lista": "Requerimientos y controles no arancelarios",
+  "tarjeta_trello": "01. Plazo de 90 días en depósito temporal antes de vencer",
+  "url": "https://trello.com/c/KAy3WYEw",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Operaciones\" → \"Requerimientos\" (pantalla \"Requerimientos AEAT\", filtros por Estado/Canal/Tipo). Si el caso es sobre documentación exigida en una operación concreta, revisa también el resultado \"Documentación Requerida\" del **Motor de Reglas** (\"Calculo y Normativa\" → \"Motor de Reglas\") tras pulsar Analizar Operación.",
+  "condicion": "una mercancía no perteneciente a la Unión lleva más de 90 días en depósito temporal sin haberse incluido en un régimen aduanero ni haberse reexportado",
+  "resultado_esperado": "LUCI debe alertar del vencimiento del plazo (art. 149 CAU), no dejarlo pasar en silencio",
+  "fuente": "10. 1-INCLUSIÓN DE MERCANCÍA A UN RÉGIMEN ADUANERO.pdf"
+ },
+ {
+  "lista": "Requerimientos y controles no arancelarios",
+  "tarjeta_trello": "02. CHED según tipo de mercancía (Sanidad/MAPA)",
+  "url": "https://trello.com/c/zxoUWXIF",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Operaciones\" → \"Requerimientos\" (pantalla \"Requerimientos AEAT\", filtros por Estado/Canal/Tipo). Si el caso es sobre documentación exigida en una operación concreta, revisa también el resultado \"Documentación Requerida\" del **Motor de Reglas** (\"Calculo y Normativa\" → \"Motor de Reglas\") tras pulsar Analizar Operación.",
+  "condicion": "se declara una mercancía de origen animal",
+  "resultado_esperado": "CHED-P (o CHED-A si son animales vivos); SI es vegetal → CHED-PP; SI es alimento/pienso de origen NO animal → NOA. LUCI no debe tratar estos documentos como intercambiables",
+  "fuente": "06. Controles MAPA Parte 2 (actualizada).pdf"
+ },
+ {
+  "lista": "Requerimientos y controles no arancelarios",
+  "tarjeta_trello": "03. Certificado fitosanitario obligatorio salvo lista de exentos (parte C)",
+  "url": "https://trello.com/c/9vqGMCuB",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Operaciones\" → \"Requerimientos\" (pantalla \"Requerimientos AEAT\", filtros por Estado/Canal/Tipo). Si el caso es sobre documentación exigida en una operación concreta, revisa también el resultado \"Documentación Requerida\" del **Motor de Reglas** (\"Calculo y Normativa\" → \"Motor de Reglas\") tras pulsar Analizar Operación.",
+  "condicion": "se importa un vegetal no incluido en la lista de prohibidos ni en la parte C (exentos)",
+  "resultado_esperado": "certificado fitosanitario obligatorio; SI está en la lista de plagas cuarentenarias prohibidas → LUCI debe bloquear la operación, no solo advertir",
+  "fuente": "06. Introducción y controles Sanidad Parte 1.pdf"
+ },
+ {
+  "lista": "Requerimientos y controles no arancelarios",
+  "tarjeta_trello": "04. Traslado de residuos: Reglamento 2024/1157 ya vigente en su totalidad (desde 21/5/2026)",
+  "url": "https://trello.com/c/PwFNzmfo",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Operaciones\" → \"Requerimientos\" (pantalla \"Requerimientos AEAT\", filtros por Estado/Canal/Tipo). Si el caso es sobre documentación exigida en una operación concreta, revisa también el resultado \"Documentación Requerida\" del **Motor de Reglas** (\"Calculo y Normativa\" → \"Motor de Reglas\") tras pulsar Analizar Operación.",
+  "condicion": "se declara un traslado de residuos con fecha posterior al 21/5/2026",
+  "resultado_esperado": "debe aplicarse el Reglamento (UE) 2024/1157, no el derogado 1013/2006 salvo excepciones de sus arts. 85-86",
+  "fuente": "06. Controles MITERD Parte 3.pdf"
+ },
+ {
+  "lista": "Requerimientos y controles no arancelarios",
+  "tarjeta_trello": "05. Mercancía de control técnico-sanitario declarada \"no sujeto\" es rechazada exigiendo documento FARMACIA",
+  "url": "https://trello.com/c/qili40kE",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Operaciones\" → \"Requerimientos\" (pantalla \"Requerimientos AEAT\", filtros por Estado/Canal/Tipo). Si el caso es sobre documentación exigida en una operación concreta, revisa también el resultado \"Documentación Requerida\" del **Motor de Reglas** (\"Calculo y Normativa\" → \"Motor de Reglas\") tras pulsar Analizar Operación.",
+  "condicion": "se declara un equipo de medición óptica/laboratorio (ej. espectrofotómetro) marcando la partida como \"no sujeto\" a control sanitario",
+  "resultado_esperado": "AEAT puede rechazar el despacho con el motivo textual \"Aporte FARMACIA, no se admite declaración de no sujeto\"; LUCI debe advertir sobre partidas de equipos de laboratorio/medición que pueden estar sujetas a control sanitario antes de permitir marcarlas \"no sujeto\"",
+  "fuente": "Naranja. Requerimiento inspección aduana Madrid.pdf (DUA real 25ES002801...) + H1.pdf"
+ },
+ {
+  "lista": "Requerimientos y controles no arancelarios",
+  "tarjeta_trello": "06. Ficha técnica de material constitutivo exigida para partidas de cables (partida 85.44) antes del levante",
+  "url": "https://trello.com/c/b2RopMI8",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Operaciones\" → \"Requerimientos\" (pantalla \"Requerimientos AEAT\", filtros por Estado/Canal/Tipo). Si el caso es sobre documentación exigida en una operación concreta, revisa también el resultado \"Documentación Requerida\" del **Motor de Reglas** (\"Calculo y Normativa\" → \"Motor de Reglas\") tras pulsar Analizar Operación.",
+  "condicion": "se declara una partida de \"hilos/cables\" sin adjuntar ficha técnica que especifique el material conductor/aislante",
+  "resultado_esperado": "AEAT puede rechazar con el motivo \"Aporte ficha técnica donde se indique la materia constitutiva\"; LUCI debería exigir la ficha técnica como documento obligatorio para códigos de la partida 85.44",
+  "fuente": "DUA Cumplimentado.pdf"
+ },
+ {
+  "lista": "Requerimientos y controles no arancelarios",
+  "tarjeta_trello": "07. Plazo de 30 días naturales para responder a un requerimiento, contado desde el día siguiente a la recepción",
+  "url": "https://trello.com/c/7cGxotOn",
+  "prioridad": "ALTA",
+  "como_llegar": "Menú lateral → \"Operaciones\" → \"Requerimientos\" (pantalla \"Requerimientos AEAT\", filtros por Estado/Canal/Tipo). Si el caso es sobre documentación exigida en una operación concreta, revisa también el resultado \"Documentación Requerida\" del **Motor de Reglas** (\"Calculo y Normativa\" → \"Motor de Reglas\") tras pulsar Analizar Operación.",
+  "condicion": "se genera un requerimiento de documentación (art. 15 CAU + art. 13.1 Rgto. Delegado 2015/2446)",
+  "resultado_esperado": "LUCI debería registrar la fecha de recepción y calcular/alertar sobre el plazo de 30 días naturales para responder, no solo mostrar el requerimiento sin seguimiento de plazo",
+  "fuente": "Naranja. Requerimiento inspección aduana Madrid.pdf (texto literal citando art. 13.1 Rgto. Delegado 2015/2446)"
+ },
+ {
+  "lista": "Requerimientos y controles no arancelarios",
+  "tarjeta_trello": "08. Pilas/baterías de litio o níquel exigen notificación y autorización previa",
+  "url": "https://trello.com/c/KcCUQnpG",
+  "prioridad": "MEDIA",
+  "como_llegar": "Menú lateral → \"Operaciones\" → \"Requerimientos\" (pantalla \"Requerimientos AEAT\", filtros por Estado/Canal/Tipo). Si el caso es sobre documentación exigida en una operación concreta, revisa también el resultado \"Documentación Requerida\" del **Motor de Reglas** (\"Calculo y Normativa\" → \"Motor de Reglas\") tras pulsar Analizar Operación.",
+  "condicion": "se traslada un residuo de pilas o baterías con litio o níquel",
+  "resultado_esperado": "código Basilea A1170, exige notificación y autorización previa (arts. 3 y 4 Reg. 1013/2006/2024-1157)",
+  "fuente": "06. Controles MITERD Parte 3.pdf"
+ },
+ {
+  "lista": "Requerimientos y controles no arancelarios",
+  "tarjeta_trello": "09. Distinción AEE usado vs RAEE (residuo electrónico)",
+  "url": "https://trello.com/c/w2TqAanV",
+  "prioridad": "MEDIA",
+  "como_llegar": "Menú lateral → \"Operaciones\" → \"Requerimientos\" (pantalla \"Requerimientos AEAT\", filtros por Estado/Canal/Tipo). Si el caso es sobre documentación exigida en una operación concreta, revisa también el resultado \"Documentación Requerida\" del **Motor de Reglas** (\"Calculo y Normativa\" → \"Motor de Reglas\") tras pulsar Analizar Operación.",
+  "condicion": "se declara un aparato eléctrico/electrónico usado",
+  "resultado_esperado": "debe acompañarse documentación del Anexo XV del RD 110/2015 que demuestre que es usado y no un residuo (RAEE); sin ella, tratarlo como posible RAEE",
+  "fuente": "06. Controles MITERD Parte 3.pdf"
+ },
+ {
+  "lista": "Requerimientos y controles no arancelarios",
+  "tarjeta_trello": "10. Aportación de documentación requerida vía \"Anexar Documentación\" en la Sede Electrónica, no solo por email",
+  "url": "https://trello.com/c/5LWhrlhH",
+  "prioridad": "MEDIA",
+  "como_llegar": "Menú lateral → \"Operaciones\" → \"Requerimientos\" (pantalla \"Requerimientos AEAT\", filtros por Estado/Canal/Tipo). Si el caso es sobre documentación exigida en una operación concreta, revisa también el resultado \"Documentación Requerida\" del **Motor de Reglas** (\"Calculo y Normativa\" → \"Motor de Reglas\") tras pulsar Analizar Operación.",
+  "condicion": "se recibe un requerimiento de documentación",
+  "resultado_esperado": "la vía recomendada oficial es incorporarla directamente a la declaración por internet (Sede Electrónica → \"Anexar Documentación\" → Aduanas → Entrada y salida de mercancías); LUCI debería guiar hacia ese flujo específico, no limitarse a texto libre",
+  "fuente": "Naranja. Requerimiento inspección aduana Madrid.pdf"
+ }
+]

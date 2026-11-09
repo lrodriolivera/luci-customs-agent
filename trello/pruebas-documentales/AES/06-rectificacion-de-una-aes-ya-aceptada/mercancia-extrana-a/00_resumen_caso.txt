@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Ctra. Nacional 401, Km 12
     13004 Ciudad Real
     Espana
-    NIF: B-13456789 | EORI: ESB13456789
+    NIF: B-13456785 | EORI: ESB13456785
 
 COMPRADOR/IMPORTADOR:
     Anadolu Tekstil San. ve Tic. A.S.

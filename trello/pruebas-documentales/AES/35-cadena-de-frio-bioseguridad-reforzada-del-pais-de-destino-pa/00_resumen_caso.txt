@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Avda. de la Innovacion, 3
     41703 Dos Hermanas (Sevilla)
     Espana
-    NIF: B-41678912 | EORI: ESB41678912
+    NIF: B-41678913 | EORI: ESB41678913
 
 COMPRADOR/IMPORTADOR:
     Outback Mining Supplies Pty Ltd
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 030617  Cantidad: 15000 KGM  Precio unit.: 7.2 USD
 
 NOTA DEL CASO (que se prueba):
+  Exportacion de producto de acuicultura espanola a un pais con bioseguridad de frontera muy estricta: Australia exige un certificado veterinario adicional de ausencia de enfermedades especificas de crustaceos, requisito propio del pais de destino que se suma (no sustituye) al certificado sanitario UE estandar.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Exportacion de producto de acuicultura espanola a un pais con bioseguridad de frontera muy estricta: Australia exige un certificado veterinario adicional de ausencia de enfermedades especificas de crustaceos, requisito propio del pais de destino que se suma (no sustituye) al certificado sanitario UE estandar.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

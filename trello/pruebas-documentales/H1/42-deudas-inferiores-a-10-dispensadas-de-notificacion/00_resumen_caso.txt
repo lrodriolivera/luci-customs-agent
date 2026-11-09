@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 520911  Cantidad: 600 KGM  Precio unit.: 1.2 USD
 
 NOTA DEL CASO (que se prueba):
+  Envío con deuda aduanera baja: referencia para el umbral de dispensa de notificación de la deuda (menos de 10 €).
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Low customs debt shipment — reference for debt-notification dispensation threshold (< EUR 10).
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

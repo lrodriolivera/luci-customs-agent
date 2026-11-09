@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Ctra. Nacional 401, Km 12
     13004 Ciudad Real
     Espana
-    NIF: B-13456789 | EORI: ESB13456789
+    NIF: B-13456785 | EORI: ESB13456785
 
 Factura No.: INV-BORDE-07-2026-3058425  Fecha: 10/09/2026
 Documento de transporte: 020-20263058425

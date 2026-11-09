@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Asipo, Parcela 22
     33428 Ceuta
     Espana (Ceuta) - fuera del territorio aduanero UE
-    NIF: A-33456789 | EORI: ESA33456789
+    NIF: A-33456781 | EORI: ESA33456781
 
 Factura No.: INV-H1-33-2026-8003479  Fecha: 12/05/2026
 Documento de transporte: MSCU20268003479
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 691110  Cantidad: 7200 PCE  Precio unit.: 1.6 EUR
 
 NOTA DEL CASO (que se prueba):
+  El destinatario está establecido en Ceuta: el despacho centralizado queda excluido para este destino.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Consignee established in Ceuta — centralised clearance procedure is excluded for this destination.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

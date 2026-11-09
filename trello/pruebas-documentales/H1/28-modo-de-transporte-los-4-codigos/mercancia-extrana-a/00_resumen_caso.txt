@@ -3,24 +3,24 @@ CASO H1-28-EXTRANA-a — Modo de transporte: los 4 códigos — mercancia extran
 
 Operacion: IMPORTACION (H1)
 Modo de transporte: Carretera
-Origen mercancia: Suiza (Zug)
+Origen mercancia: Suiza (Gruyères)
 Destino: Espana
-Incoterm: EXW Zug
+Incoterm: EXW Gruyères
 Moneda: CHF
 
 VENDEDOR/EXPORTADOR:
-    Alpina Precision Instruments AG
-    Industriestrasse 14
-    6300 Zug
+    Gruyère Alpin Affineurs SA
+    Route de Bulle 22
+    1663 Gruyères
     Suiza
-    Tax ID: CHE-123.456.789
+    Tax ID: CHE-456.789.123
 
 COMPRADOR/IMPORTADOR:
     Extremadura Trading Company S.L.
     Avda. de la Constitucion, 4
     06011 Badajoz
     Espana
-    NIF: B-06345678 | EORI: ESB06345678
+    NIF: B-06345672 | EORI: ESB06345672
 
 Factura No.: INV-H1-28-EXTRANA-a-2026-7176954  Fecha: 07/10/2026
 Documento de transporte: CMR-20267176954

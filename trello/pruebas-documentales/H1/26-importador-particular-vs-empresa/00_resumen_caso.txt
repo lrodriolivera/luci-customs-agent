@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Guarnizo, Parcela 14
     39611 Guarnizo (Cantabria)
     Espana
-    NIF: 12345678Z | EORI: ESA39456782
+    NIF: 12345678Z | EORI: ESA39456785
 
 Factura No.: INV-H1-26-2026-3138576  Fecha: 05/08/2026
 Documento de transporte: MSCU20263138576
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 691010  Cantidad: 480 PCE  Precio unit.: 42.0 USD
 
 NOTA DEL CASO (que se prueba):
+  El importador es un particular (NIF, sin empresa ni EORI), no un operador registrado.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Importer is a private individual (NIF, no company/EORI) — not a registered business entity.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

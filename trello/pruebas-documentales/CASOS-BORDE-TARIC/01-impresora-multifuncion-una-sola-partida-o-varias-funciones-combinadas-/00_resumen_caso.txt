@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Industrial Fuente del Jarro, Calle 4 nº 12
     46988 Paterna (Valencia)
     Espana
-    NIF: B-46123456 | EORI: ESB46123456
+    NIF: B-46123451 | EORI: ESB46123451
 
 Factura No.: INV-BORDE-01-2026-4831390  Fecha: 04/03/2026
 Documento de transporte: MSCU20264831390

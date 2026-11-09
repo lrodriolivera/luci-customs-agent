@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Ctra. Nacional 401, Km 12
     13004 Ciudad Real
     Espana
-    NIF: B-13456789 | EORI: ESB13456789
+    NIF: B-13456785 | EORI: ESB13456785
 
 COMPRADOR/IMPORTADOR:
     Hanwoori Electronics Co., Ltd.
@@ -37,6 +37,8 @@ MERCANCIAS:
     HS: 870830  Cantidad: 2100 PCE  Precio unit.: 34.0 USD
 
 NOTA DEL CASO (que se prueba):
+  El exportador a efectos legales es quien decide que la mercancía salga de la UE (el mandante), que NO es necesariamente quien emite la factura.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Legal exporter is the party who decides that the goods leave the EU (contracting principal) — NOT necessarily the party issuing this invoice.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

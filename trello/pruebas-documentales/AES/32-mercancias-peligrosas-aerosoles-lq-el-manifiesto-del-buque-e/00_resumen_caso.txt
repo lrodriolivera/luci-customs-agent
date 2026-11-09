@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Industrial Fuente del Jarro, Calle 4 nº 12
     46988 Paterna (Valencia)
     Espana
-    NIF: B-46123456 | EORI: ESB46123456
+    NIF: B-46123451 | EORI: ESB46123451
 
 COMPRADOR/IMPORTADOR:
     Vinedos del Maule Exportadora S.A.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 330720  Cantidad: 36000 PCE  Precio unit.: 0.98 USD
 
 NOTA DEL CASO (que se prueba):
+  Exportacion maritima de aerosoles bajo 'cantidades limitadas' (LQ): aun con la exencion de marcado individual reducido, el conocimiento de embarque y el manifiesto de mercancias peligrosas del buque SI deben declarar la carga como IMDG — no es opcional aunque el bulto individual este exento de algunas marcas.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Exportacion maritima de aerosoles bajo 'cantidades limitadas' (LQ): aun con la exencion de marcado individual reducido, el conocimiento de embarque y el manifiesto de mercancias peligrosas del buque SI deben declarar la carga como IMDG — no es opcional aunque el bulto individual este exento de algunas marcas.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

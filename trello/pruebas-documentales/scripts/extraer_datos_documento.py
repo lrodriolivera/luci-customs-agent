@@ -16,6 +16,7 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 
 from casos_common import expand_case, build_extrano_variant
+from notas_es import nota_es
 from casos_h1 import RAW_H1
 from casos_aes import RAW_AES
 from casos_borde import RAW_BORDE
@@ -58,7 +59,9 @@ def base_docs(case):
 def que_se_prueba(case):
     parts = []
     if case.get('invoice_extra_note'):
-        parts.append(case['invoice_extra_note'])
+        # Explicacion en español para la agente; la nota en ingles es la impresa en la factura.
+        parts.append(nota_es(case['id']) or case['invoice_extra_note'])
+        parts.append(f"Nota impresa en la factura (en inglés): «{case['invoice_extra_note']}»")
     if case.get('classification_challenge'):
         parts.append("Reto de clasificación TARIC: " + case['classification_challenge'])
     if case.get('gri_basis'):

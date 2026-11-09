@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Industrial Fuente del Jarro, Calle 4 nº 12
     46988 Paterna (Valencia)
     Espana
-    NIF: B-46123456 | EORI: ESB46123456
+    NIF: B-46123451 | EORI: ESB46123451
 
 COMPRADOR/IMPORTADOR:
     Emirates Perfume Trading Co. LLC

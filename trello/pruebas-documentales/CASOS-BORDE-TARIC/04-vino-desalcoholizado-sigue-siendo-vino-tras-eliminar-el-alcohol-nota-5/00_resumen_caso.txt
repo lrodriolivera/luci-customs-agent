@@ -3,24 +3,24 @@ CASO BORDE-04 — Vino desalcoholizado: ¿sigue siendo 'vino' tras eliminar el a
 
 Operacion: IMPORTACION (H1)
 Modo de transporte: Maritimo
-Origen mercancia: Argentina (Buenos Aires)
+Origen mercancia: Argentina (General Pico)
 Destino: Espana
-Incoterm: FOB Buenos Aires
+Incoterm: FOB General Pico
 Moneda: USD
 
 VENDEDOR/EXPORTADOR:
-    Pampa Cueros y Marroquineria S.A.
-    Av. Corrientes 2340, Piso 4
-    C1046AAQ Buenos Aires
+    Pampa Apicola Exportadora S.A.
+    Ruta Nacional 5, Km 340
+    L6360 General Pico
     Argentina
-    Tax ID: 30-71234567-8
+    Tax ID: 30-87654321-0
 
 COMPRADOR/IMPORTADOR:
     Mercantil Andaluza de Importacion S.L.
     Avda. de la Innovacion, 3
     41703 Dos Hermanas (Sevilla)
     Espana
-    NIF: B-41678912 | EORI: ESB41678912
+    NIF: B-41678913 | EORI: ESB41678913
 
 Factura No.: INV-BORDE-04-2026-3648533  Fecha: 07/06/2026
 Documento de transporte: MSCU20263648533

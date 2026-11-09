@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Son Castello, Calle Gremi de Fusters 22
     07009 Palma de Mallorca
     Espana
-    NIF: B-07234561 | EORI: ESB07234561
+    NIF: B-07234560 | EORI: ESB07234560
 
 COMPRADOR/IMPORTADOR:
     Fujimoto Precision Instruments Co., Ltd.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 040690  Cantidad: 1800 KGM  Precio unit.: 12.4 EUR
 
 NOTA DEL CASO (que se prueba):
+  Exportacion de producto de origen animal: el establecimiento espanol debe figurar en el listado bilateral de establecimientos autorizados a exportar a Japon (acuerdo sanitario especifico UE-Japon). El certificado veterinario de exportacion sigue el modelo pactado bilateralmente, no el modelo generico de importacion a la UE.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Exportacion de producto de origen animal: el establecimiento espanol debe figurar en el listado bilateral de establecimientos autorizados a exportar a Japon (acuerdo sanitario especifico UE-Japon). El certificado veterinario de exportacion sigue el modelo pactado bilateralmente, no el modelo generico de importacion a la UE.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:
