@@ -19,13 +19,13 @@
 - Convertido a checkout de git el 1/Ago/2026 (antes era copia manual de ficheros,
   lo que dejo meses de cambios sin commitear: SMTP Resend, fix `formaRepresentacion`,
   migracion a Bedrock del ai-service, los Dockerfile)
-- Ruta: `/srv/homelab/luci/`, vía Cloudflare Tunnel
+- Host: **Mac Studio**, ruta `~/homelab/luci/` (antes ProBook, `/srv/homelab/luci/`), vía Cloudflare. Contenedores: `luci-backend`, `luci-frontend`, `luci-ai`, `luci-mongo`, `luci-redis`
 - **Actualizar**: `git pull` → `docker compose build luci-backend luci-frontend luci-ai` → `docker compose up -d` (backend antes que frontend)
 - **Antes de tocar nada**: `git status` debe estar limpio salvo lo no versionado; si hay modificados, alguien edito el servidor a mano — commitear o descartar antes de seguir
 - No versionado (en `.gitignore`, con copia solo en el servidor, SIN backup externo):
   `backend/.env`, `ai-service/.env`, `certs/strixai_fnmt.p12`, `data/` (volumenes Mongo/uploads)
-- Backup Mongo: cron diario 03:30 → `/srv/backups/luci/`, retencion 30 dias (solo Mongo, no `.env`/certs)
-- Homelab sin salida directa a internet → Surfshark VPN necesaria (MTU 1280 rompe TLS de contenedores); salida siempre por WiFi
+- Backup Mongo: cron diario 03:30 → `/srv/backups/luci/`, retencion 30 dias (solo Mongo, no `.env`/certs) — **descrito para el ProBook; confirmar ruta y cron en el Mac Studio**
+- (Descrito para el ProBook; confirmar en el Mac Studio) Homelab sin salida directa a internet → Surfshark VPN necesaria (MTU 1280 rompe TLS de contenedores); salida siempre por WiFi
 - **URL**: `https://aduanas.strixai.ai` | admin `luis.rodriguez@strixai.ai`/`<ver 1Password>`, `tester@strixai.ai`/`<ver 1Password>`
 - Auth: **Cognito muerto** (caido en incidente AWS 15/Jul–6/Ago, no restaurado) → login por JWT legacy
 
