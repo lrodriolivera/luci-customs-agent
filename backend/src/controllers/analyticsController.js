@@ -233,7 +233,8 @@ async function generateReport(req, res) {
       title,
       subtitle,
       includeLuciAnalysis: includeLuciAnalysis !== false,
-      userId: req.user?.id
+      userId: req.user?.id,
+      tenantId: ambitoTenant(req.user)
     });
 
     res.json(result);
@@ -359,7 +360,7 @@ async function previewReport(req, res) {
       });
     }
 
-    const result = await reportsService.previewReport(type, { period });
+    const result = await reportsService.previewReport(type, { period, tenantId: ambitoTenant(req.user) });
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Preview report error: ${error.message}`);

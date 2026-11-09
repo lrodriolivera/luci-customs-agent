@@ -17,28 +17,43 @@
  * propiedad— se ejecuta de verdad; nada de eso se mockea.
  */
 
-jest.mock('../../../src/services/analytics/analyticsService', () => ({
-  getDashboardMetrics: jest.fn(),
-  getDeclarationAnalytics: jest.fn(),
-  getFinancialAnalytics: jest.fn(),
-  getComplianceAnalytics: jest.fn()
+jest.mock('../../../src/services/analytics/realMetricsService', () => ({
+  NO_DISPONIBLE: {},
+  cuadroDeMando: jest.fn(),
+  expedientesActivos: jest.fn(),
+  volumenDeclaraciones: jest.fn(),
+  repartoPorCanal: jest.fn(),
+  derechosLiquidados: jest.fn(),
+  tiemposDeDespacho: jest.fn(),
+  valorMercancia: jest.fn()
 }));
 jest.mock('../../../src/services/aiService', () => ({
   generateExecutiveReport: jest.fn()
 }));
 
-const analyticsService = require('../../../src/services/analytics/analyticsService');
+const realMetrics = require('../../../src/services/analytics/realMetricsService');
 const aiService = require('../../../src/services/aiService');
 const reports = require('../../../src/services/analytics/reportsService');
 
 beforeEach(() => {
   // resetMocks borra la implementacion de fabrica antes de cada test: hay que
   // dotar a los mocks de datos coherentes aqui, no en el jest.mock.
-  const vacio = { data: {} };
-  analyticsService.getDashboardMetrics.mockResolvedValue(vacio);
-  analyticsService.getDeclarationAnalytics.mockResolvedValue(vacio);
-  analyticsService.getFinancialAnalytics.mockResolvedValue(vacio);
-  analyticsService.getComplianceAnalytics.mockResolvedValue(vacio);
+  const declaraciones = { total: 12, porTipo: { H7: 10, NCTS: 2 }, porEstado: { rejected: 1 } };
+  realMetrics.cuadroDeMando.mockResolvedValue({
+    simulated: false,
+    generadoEn: new Date().toISOString(),
+    declaraciones,
+    derechos: { total: 100, arancel: 40, iva: 60 },
+    tiempos: { muestra: 0, mediaHoras: null },
+    cumplimiento: { inspecciones: 0 },
+    recaudacion: { disponible: false }
+  });
+  realMetrics.expedientesActivos.mockResolvedValue(3);
+  realMetrics.volumenDeclaraciones.mockResolvedValue(declaraciones);
+  realMetrics.repartoPorCanal.mockResolvedValue({ canales: {}, conCanalAsignado: 0, porcentajes: {} });
+  realMetrics.derechosLiquidados.mockResolvedValue({ total: 100, arancel: 40, iva: 60 });
+  realMetrics.tiemposDeDespacho.mockResolvedValue({ muestra: 0, mediaHoras: null });
+  realMetrics.valorMercancia.mockResolvedValue({ disponible: false });
   aiService.generateExecutiveReport.mockResolvedValue({ summary: 'ok' });
 });
 
@@ -168,9 +183,10 @@ describe('generateReport: tipos y formatos completos', () => {
     const r = await reports.generateReport('client_report', { userId: 'u2', clientId: 'CL-123', includeLuciAnalysis: false });
     expect(r.success).toBe(true);
     const full = reports.getReport(r.report.id, 'u2');
-    // _getClientData siempre devuelve un objeto con id, name, nif, operations, totalValue
-    expect(full.report.sections.operations).toBeDefined();
-    expect(full.report.sections.status).toEqual({ active: true });
+    // No hay fuente por cliente: ni nombre/NIF de ejemplo ni "active: true" inventado
+    expect(full.report.sections.operations.totalDeclarations).toBe(12);
+    expect(full.report.sections.status).toEqual({ estado: 'Sin datos' });
+    expect(JSON.stringify(full.report)).not.toMatch(/Cliente Demo|B12345678/);
   });
 
   test('AUDIT_TRAIL obtiene logs de auditoria', async () => {
@@ -390,39 +406,39 @@ describe('control de propiedad: userId ausente permite acceso', () => {
 });
 
 describe('_generateSectionData: cobertura de secciones especificas', () => {
-  test('genera overview con totalDeclarations, totalValue, complianceScore', async () => {
-    analyticsService.getDashboardMetrics.mockResolvedValue({
-      data: { operations: { totalDeclarations: 123 }, channels: { green: 80 } }
-    });
-    analyticsService.getFinancialAnalytics.mockResolvedValue({
-      data: { summary: { totalCustomsValue: 500000 } }
-    });
-    analyticsService.getComplianceAnalytics.mockResolvedValue({
-      data: { summary: { overallScore: 95 } }
-    });
+  const cuadroCon = (extra) => realMetrics.cuadroDeMando.mockResolvedValue({
+    simulated: false,
+    generadoEn: new Date().toISOString(),
+    declaraciones: { total: 123, porTipo: { H7: 123 }, porEstado: {} },
+    derechos: { total: 100, arancel: 40, iva: 25000 },
+    tiempos: { muestra: 5, mediaHoras: 1200 },
+    cumplimiento: { inspecciones: 0 },
+    recaudacion: { disponible: false },
+    ...extra
+  });
+
+  test('genera overview con totalDeclarations real, valor y score sin fuente como "Sin datos"', async () => {
+    cuadroCon({});
+    realMetrics.valorMercancia.mockResolvedValue({ disponible: true, total: 500000 });
 
     const r = await reports.generateReport('executive_summary', { userId: 'sec1', includeLuciAnalysis: false });
     const full = reports.getReport(r.report.id, 'sec1');
     expect(full.report.sections.overview.totalDeclarations).toBe(123);
     expect(full.report.sections.overview.totalValue).toBe(500000);
-    expect(full.report.sections.overview.complianceScore).toBe(95);
+    expect(full.report.sections.overview.complianceScore).toBe('Sin datos');
   });
 
   test('genera kpis con declarationsPerDay y averageProcessingTime', async () => {
-    analyticsService.getDashboardMetrics.mockResolvedValue({
-      data: { operations: { totalDeclarations: 90, averageProcessingTime: 1200 } }
-    });
+    cuadroCon({ declaraciones: { total: 90, porTipo: {}, porEstado: {} } });
 
-    const r = await reports.generateReport('executive_summary', { userId: 'sec2', includeLuciAnalysis: false });
+    const r = await reports.generateReport('executive_summary', { userId: 'sec2', period: 'last_30_days', includeLuciAnalysis: false });
     const full = reports.getReport(r.report.id, 'sec2');
-    expect(full.report.sections.kpis.declarationsPerDay).toBe(3); // Math.round(90/30)
+    expect(full.report.sections.kpis.declarationsPerDay).toBeCloseTo(3, 0);
     expect(full.report.sections.kpis.averageProcessingTime).toBe(1200);
   });
 
-  test('genera vat con total', async () => {
-    analyticsService.getFinancialAnalytics.mockResolvedValue({
-      data: { summary: { totalVAT: 25000 } }
-    });
+  test('genera vat con el IVA liquidado real', async () => {
+    realMetrics.derechosLiquidados.mockResolvedValue({ total: 25100, arancel: 100, iva: 25000 });
 
     const r = await reports.generateReport('financial_report', { userId: 'sec3', includeLuciAnalysis: false });
     const full = reports.getReport(r.report.id, 'sec3');
@@ -430,23 +446,21 @@ describe('_generateSectionData: cobertura de secciones especificas', () => {
   });
 
   test('genera volumes con total', async () => {
-    analyticsService.getDashboardMetrics.mockResolvedValue({
-      data: { operations: { totalDeclarations: 456 } }
-    });
+    cuadroCon({ declaraciones: { total: 456, porTipo: {}, porEstado: {} } });
 
     const r = await reports.generateReport('customs_statistics', { userId: 'sec4', includeLuciAnalysis: false });
     const full = reports.getReport(r.report.id, 'sec4');
     expect(full.report.sections.volumes.total).toBe(456);
   });
 
-  test('genera values con total', async () => {
-    analyticsService.getFinancialAnalytics.mockResolvedValue({
-      data: { summary: { totalCustomsValue: 999999 } }
-    });
+  test('genera values con total real, o "Sin datos" si los expedientes no informan valor', async () => {
+    realMetrics.valorMercancia.mockResolvedValue({ disponible: true, total: 999999 });
+    let r = await reports.generateReport('customs_statistics', { userId: 'sec5', includeLuciAnalysis: false });
+    expect(reports.getReport(r.report.id, 'sec5').report.sections.values.total).toBe(999999);
 
-    const r = await reports.generateReport('customs_statistics', { userId: 'sec5', includeLuciAnalysis: false });
-    const full = reports.getReport(r.report.id, 'sec5');
-    expect(full.report.sections.values.total).toBe(999999);
+    realMetrics.valorMercancia.mockResolvedValue({ disponible: false });
+    r = await reports.generateReport('customs_statistics', { userId: 'sec5', includeLuciAnalysis: false });
+    expect(reports.getReport(r.report.id, 'sec5').report.sections.values.total).toBe('Sin datos');
   });
 });
 
@@ -484,79 +498,44 @@ describe('formateadores: _formatPeriodName y _formatSectionName', () => {
   });
 });
 
-describe('helpers de Excel: _arrayToExcelData y _objectToExcelData', () => {
-  test('exportToExcel con seccion array genera headers + rows', async () => {
-    analyticsService.getDeclarationAnalytics.mockResolvedValue({
-      data: {
-        topCommodities: [
-          { code: '8471', description: 'Ordenadores', value: 10000 },
-          { code: '8517', description: 'Telefonos', value: 5000 }
-        ]
-      }
-    });
+describe('exportToExcel: secciones', () => {
+  test('seccion objeto genera pares clave-valor', async () => {
+    realMetrics.derechosLiquidados.mockResolvedValue({ total: 100, arancel: 40, iva: 60 });
 
-    const r = await reports.generateReport('declaration_report', { userId: 'excel1', includeLuciAnalysis: false });
-    const exp = await reports.exportReport(r.report.id, 'xlsx', 'excel1');
-    const wb = JSON.parse(exp.data.toString());
-
-    // buscar sheet de commodities (nombre formateado: Mercancías)
-    const sheet = wb.sheets.find(s => s.name.includes('Mercanc'));
-    expect(sheet).toBeDefined();
-    expect(sheet.data.length).toBeGreaterThan(0);
-    // primera fila headers, luego rows
-    expect(sheet.data[0]).toEqual(['code', 'description', 'value']);
-  });
-
-  test('exportToExcel con seccion objeto genera pares clave-valor', async () => {
-    analyticsService.getComplianceAnalytics.mockResolvedValue({
-      data: {
-        summary: { overallScore: 88, errorRate: 2.5, onTimeRate: 95 }
-      }
-    });
-
-    const r = await reports.generateReport('compliance_report', { userId: 'excel2', includeLuciAnalysis: false });
+    const r = await reports.generateReport('financial_report', { userId: 'excel2', includeLuciAnalysis: false });
     const exp = await reports.exportReport(r.report.id, 'xlsx', 'excel2');
     const wb = JSON.parse(exp.data.toString());
 
-    // buscar sheet de summary (Resumen o score/Puntuación)
-    const scoreSheet = wb.sheets.find(s => s.name === 'Resumen' || s.name.includes('Puntuac'));
-    expect(scoreSheet).toBeDefined();
-    // _objectToExcelData devuelve [[k,v], [k,v], ...]
-    expect(scoreSheet.data.some(row => row.includes('overallScore') || row.includes(88))).toBe(true);
+    const duties = wb.sheets.find(s => s.name === 'Derechos');
+    expect(duties).toBeDefined();
+    expect(duties.data).toContainEqual(['totalCalculado', 100]);
   });
 
-  test('exportToExcel con array vacio devuelve array vacio', async () => {
-    analyticsService.getDeclarationAnalytics.mockResolvedValue({
-      data: { byOffice: [] }
-    });
-
-    const r = await reports.generateReport('declaration_report', { userId: 'excel3', includeLuciAnalysis: false });
+  test('una seccion sin fuente se exporta como "Sin datos", no como 0', async () => {
+    const r = await reports.generateReport('financial_report', { userId: 'excel3', includeLuciAnalysis: false });
     const exp = await reports.exportReport(r.report.id, 'xlsx', 'excel3');
     const wb = JSON.parse(exp.data.toString());
 
-    // byOffice formatea a Por Oficina, el helper devuelve [] para array vacio
-    const officeSheet = wb.sheets.find(s => s.name.includes('Oficina'));
-    if (officeSheet) {
-      // si se genero sheet, data es []
-      expect(officeSheet.data).toEqual([]);
-    }
+    const ahorros = wb.sheets.find(s => s.name === 'Ahorros');
+    expect(ahorros.data).toEqual([['estado', 'Sin datos']]);
   });
 });
 
 describe('_generateExecutiveSummary: highlights y keyMetrics', () => {
-  test('highlights incluyen declaraciones, canal verde, valor y compliance', async () => {
-    analyticsService.getDashboardMetrics.mockResolvedValue({
-      data: {
-        operations: { totalDeclarations: 200 },
-        channels: { green: 75 }
-      }
-    });
-    analyticsService.getFinancialAnalytics.mockResolvedValue({
-      data: { summary: { totalCustomsValue: 1234567 } }
-    });
-    analyticsService.getComplianceAnalytics.mockResolvedValue({
-      data: { summary: { overallScore: 92 } }
-    });
+  const cuadro = (declaraciones, derechos) => realMetrics.cuadroDeMando.mockResolvedValue({
+    simulated: false,
+    generadoEn: new Date().toISOString(),
+    declaraciones,
+    derechos,
+    tiempos: { muestra: 0, mediaHoras: null },
+    cumplimiento: { inspecciones: 0 },
+    recaudacion: { disponible: false }
+  });
+
+  test('highlights con datos reales; lo que no tiene fuente dice "Sin datos"', async () => {
+    cuadro({ total: 200, porTipo: {}, porEstado: {} }, { total: 10 });
+    realMetrics.repartoPorCanal.mockResolvedValue({ conCanalAsignado: 4, canales: {}, porcentajes: { green: 75 } });
+    realMetrics.valorMercancia.mockResolvedValue({ disponible: true, total: 1234567 });
 
     const r = await reports.generateReport('executive_summary', { userId: 'summ1', includeLuciAnalysis: false });
     const full = reports.getReport(r.report.id, 'summ1');
@@ -564,26 +543,20 @@ describe('_generateExecutiveSummary: highlights y keyMetrics', () => {
     expect(full.report.summary.highlights[0]).toContain('200 declaraciones procesadas');
     expect(full.report.summary.highlights[1]).toContain('75% canal verde');
     expect(full.report.summary.highlights[2]).toContain('1.234.567 EUR');
-    expect(full.report.summary.highlights[3]).toContain('92% score');
+    expect(full.report.summary.highlights[3]).toBe('Sin datos score de cumplimiento');
   });
 
-  test('keyMetrics contiene operations, value, duties, compliance', async () => {
-    analyticsService.getDashboardMetrics.mockResolvedValue({
-      data: { operations: { totalDeclarations: 300 } }
-    });
-    analyticsService.getFinancialAnalytics.mockResolvedValue({
-      data: { summary: { totalCustomsValue: 500000, totalDuties: 25000 } }
-    });
-    analyticsService.getComplianceAnalytics.mockResolvedValue({
-      data: { summary: { overallScore: 88 } }
-    });
+  test('keyMetrics contiene operations, value, duties y compliance (sin fuente = "Sin datos")', async () => {
+    cuadro({ total: 300, porTipo: {}, porEstado: {} }, { total: 25000 });
+    realMetrics.derechosLiquidados.mockResolvedValue({ total: 25000 });
+    realMetrics.valorMercancia.mockResolvedValue({ disponible: true, total: 500000 });
 
     const r = await reports.generateReport('financial_report', { userId: 'summ2', includeLuciAnalysis: false });
     const full = reports.getReport(r.report.id, 'summ2');
     expect(full.report.summary.keyMetrics.operations).toBe(300);
     expect(full.report.summary.keyMetrics.value).toBe(500000);
     expect(full.report.summary.keyMetrics.duties).toBe(25000);
-    expect(full.report.summary.keyMetrics.compliance).toBe(88);
+    expect(full.report.summary.keyMetrics.compliance).toBe('Sin datos');
   });
 });
 
@@ -649,24 +622,17 @@ describe('exportToPDF: pagina de insights cuando existe', () => {
   });
 });
 
-describe('exportToCSV: seccion con array de objetos', () => {
-  test('seccion array no vacio genera headers y rows en CSV', async () => {
-    analyticsService.getDeclarationAnalytics.mockResolvedValue({
-      data: {
-        topCommodities: [
-          { code: '1234', description: 'Producto A', value: 1000 },
-          { code: '5678', description: 'Producto B', value: 2000 }
-        ]
-      }
-    });
+describe('exportToCSV: secciones', () => {
+  test('una seccion objeto genera lineas clave,valor', async () => {
+    realMetrics.derechosLiquidados.mockResolvedValue({ total: 100, arancel: 40, iva: 60 });
 
-    const r = await reports.generateReport('declaration_report', { userId: 'csvArr', includeLuciAnalysis: false });
-    const exp = await reports.exportReport(r.report.id, 'csv', 'csvArr');
+    const r = await reports.generateReport('financial_report', { userId: 'csvObj', includeLuciAnalysis: false });
+    const exp = await reports.exportReport(r.report.id, 'csv', 'csvObj');
     const csvText = exp.data.toString();
 
-    expect(csvText).toContain('code,description,value');
-    expect(csvText).toContain('1234');
-    expect(csvText).toContain('5678');
+    expect(csvText).toContain('[Derechos]');
+    expect(csvText).toContain('totalCalculado,100');
+    expect(csvText).toContain('estado,Sin datos');
   });
 });
 
