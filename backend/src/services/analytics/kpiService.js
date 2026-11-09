@@ -836,25 +836,43 @@ function _checkKPIAlert(kpiId, result, definition, tenantId) {
   }
 }
 
+/**
+ * Cifra + unidad para el texto de una alerta: numero en es-ES (miles con punto,
+ * decimales con coma) y un espacio entre cifra y unidad ("50.000 EUR",
+ * "0 declaraciones"); el % va pegado a la cifra ("9%").
+ */
+function _formatearCifra(valor, unit) {
+  const numero = Number(valor).toLocaleString('es-ES', { maximumFractionDigits: 2 });
+  if (!unit) return numero;
+  return unit === '%' ? `${numero}%` : `${numero} ${unit}`;
+}
+
 function _generateAlertMessage(kpiId, result, definition) {
   const { value, status } = result;
   const { name, unit, thresholds, direction } = definition;
+  const cifra = (v) => _formatearCifra(v, unit);
+
+  // Para los KPI neutrales (sin objetivo) el umbral citado es el que se ha superado
+  const superaMaximo = (limite) => thresholds[limite] != null && value > thresholds[limite];
 
   if (status === 'critical') {
-    if (direction === 'lower_is_better') {
-      return `${name} crítico: ${value}${unit} (máximo recomendado: ${thresholds.critical_high}${unit})`;
+    if (direction === 'lower_is_better' || superaMaximo('critical_high')) {
+      return `${name} crítico: ${cifra(value)} (máximo recomendado: ${cifra(thresholds.critical_high)})`;
     }
-    return `${name} crítico: ${value}${unit} (mínimo requerido: ${thresholds.critical_low}${unit})`;
+    return `${name} crítico: ${cifra(value)} (mínimo requerido: ${cifra(thresholds.critical_low)})`;
   }
 
   if (status === 'warning') {
     if (direction === 'lower_is_better') {
-      return `${name} en alerta: ${value}${unit} (objetivo: ${thresholds.target}${unit})`;
+      return `${name} en alerta: ${cifra(value)} (objetivo: ${cifra(thresholds.target)})`;
     }
-    return `${name} por debajo del objetivo: ${value}${unit} (objetivo: ${thresholds.target}${unit})`;
+    if (thresholds.target == null && superaMaximo('warning_high')) {
+      return `${name} en alerta: ${cifra(value)} (máximo recomendado: ${cifra(thresholds.warning_high)})`;
+    }
+    return `${name} por debajo del objetivo: ${cifra(value)} (objetivo: ${cifra(thresholds.target)})`;
   }
 
-  return `${name}: ${value}${unit}`;
+  return `${name}: ${cifra(value)}`;
 }
 
 function _calculateHistoryStats(history) {

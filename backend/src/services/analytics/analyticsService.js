@@ -8,6 +8,8 @@
 
 const logger = require('../../config/logger');
 const aiService = require('../aiService');
+const realMetrics = require('./realMetricsService');
+const kpiService = require('./kpiService');
 
 /**
  * Time periods for analytics
@@ -552,39 +554,47 @@ async function getPerformanceAnalytics(period = TIME_PERIODS.LAST_30_DAYS, optio
 }
 
 /**
- * Get real-time metrics
+ * Metricas "en tiempo real" del ambito, con datos reales; lo que no tiene fuente
+ * es null (nunca se inventa).
+ *
+ * Ambito (tenantId): undefined = super admin de plataforma (agrega todo); null =
+ * sin tenant (no ve nada); string = ese tenant.
+ *
+ *   activeDeclarations <- realMetrics.expedientesActivos (expedientes no terminales)
+ *   pendingSubmissions <- volumenDeclaraciones(...).pendientes de los ultimos 30 dias
+ *   alerts             <- alertas de KPI activas del ambito, por severidad
+ *   aeatStatus         <- null: no hay una comprobacion real de conectividad
  */
-function getRealTimeMetrics() {
+async function getRealTimeMetrics(tenantId) {
+  const alertas = kpiService.getActiveAlerts({}, tenantId).counts;
+
+  // realMetrics no filtra con tenantId null, y aqui "sin tenant" no ve nada.
+  const sinAmbito = tenantId === null;
+  const hasta = new Date();
+  const desde = new Date(hasta.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  // Si una fuente falla, solo esa metrica queda en null
+  const [activos, volumen] = await Promise.all([
+    sinAmbito ? 0 : realMetrics.expedientesActivos(tenantId).catch((e) => _fallo('expedientesActivos', e)),
+    sinAmbito ? { pendientes: 0 } : realMetrics.volumenDeclaraciones(tenantId, { desde, hasta }).catch((e) => _fallo('volumenDeclaraciones', e))
+  ]);
+
   return {
     timestamp: new Date(),
-
-    activeDeclarations: _generateMetricValue(5, 20),
-    pendingSubmissions: _generateMetricValue(2, 10),
-
-    aeatStatus: {
-      connected: true,
-      lastCheck: new Date(Date.now() - _generateMetricValue(1, 5) * 60000),
-      latency: _generateMetricValue(200, 800)
-    },
-
-    recentActivity: [
-      { type: 'declaration_submitted', mrn: `26ES${Date.now().toString().slice(-10)}`, time: new Date(Date.now() - 120000) },
-      { type: 'channel_assigned', mrn: `26ES${Date.now().toString().slice(-10)}1`, channel: 'green', time: new Date(Date.now() - 300000) },
-      { type: 'document_uploaded', expedition: 'EXP-001', time: new Date(Date.now() - 600000) }
-    ],
-
+    activeDeclarations: activos,
+    pendingSubmissions: volumen ? volumen.pendientes : null,
+    aeatStatus: null,
     alerts: {
-      critical: _generateMetricValue(0, 2),
-      warning: _generateMetricValue(1, 5),
-      info: _generateMetricValue(2, 10)
-    },
-
-    queueStatus: {
-      submissions: _generateMetricValue(0, 5),
-      processing: _generateMetricValue(1, 8),
-      completed: _generateMetricValue(10, 50)
+      critical: alertas.critical,
+      warning: alertas.warning,
+      info: alertas.info
     }
   };
+}
+
+function _fallo(fuente, error) {
+  logger.error(`[Analytics] Realtime: fallo en ${fuente}: ${error.message}`);
+  return null;
 }
 
 /**
