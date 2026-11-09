@@ -14,11 +14,32 @@
  * marca de tiempo, no un secreto -- podia leer, descargar o BORRAR el informe
  * de cualquier otro.
  *
- * Hoy los informes se alimentan del dashboard, cuyas metricas son simuladas
- * (ver el flag `simulated` de 7a084e4), asi que la fuga no expone operativa
- * real todavia. Cuando esas agregaciones sean reales, estos informes llevaran
+ * Los informes se alimentan de metricas reales del ambito (PR K), asi que la fuga
+ * expondria operativa real: llevan
  * volumenes, aranceles liquidados e incidencias del cliente.
  */
+
+// Los informes leen metricas reales (Mongo): aqui solo importa la propiedad del
+// informe, asi que las fuentes devuelven vacio.
+jest.mock('../../src/services/analytics/realMetricsService', () => {
+  const vacio = {
+    simulated: false,
+    generadoEn: new Date().toISOString(),
+    declaraciones: { total: 0, porTipo: {}, porEstado: {} },
+    derechos: { total: 0 },
+    tiempos: { muestra: 0, mediaHoras: null },
+    cumplimiento: { inspecciones: 0 },
+    recaudacion: { disponible: false }
+  };
+  return {
+    NO_DISPONIBLE: {},
+    cuadroDeMando: () => Promise.resolve(vacio),
+    expedientesActivos: () => Promise.resolve(0),
+    repartoPorCanal: () => Promise.resolve({ conCanalAsignado: 0, porcentajes: {} }),
+    derechosLiquidados: () => Promise.resolve({ total: 0 }),
+    valorMercancia: () => Promise.resolve({ disponible: false })
+  };
+});
 
 const reportsService = require('../../src/services/analytics/reportsService');
 
