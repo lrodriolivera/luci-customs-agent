@@ -1038,15 +1038,19 @@ export default function AnalyticsDashboard() {
                   <ShieldCheckIcon className="w-6 h-6 text-purple-600" />
                 </div>
               </div>
-              <div className="mt-4 flex items-center gap-2">
-                {getTrendIcon(dashboardData.trends?.compliance?.direction)}
-                <span className={`text-sm ${
-                  dashboardData.trends?.compliance?.direction === 'up' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {Math.abs(dashboardData.trends?.compliance?.percentage || 0)}%
-                </span>
-                <span className="text-sm text-gray-500">variacion</span>
-              </div>
+              {sinDato(dashboardData.trends?.compliance?.percentage) ? (
+                <div className="mt-4">{sinDatosEl('text-sm text-gray-400')}</div>
+              ) : (
+                <div className="mt-4 flex items-center gap-2">
+                  {getTrendIcon(dashboardData.trends?.compliance?.direction)}
+                  <span className={`text-sm ${
+                    dashboardData.trends?.compliance?.direction === 'up' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {Math.abs(dashboardData.trends.compliance.percentage)}%
+                  </span>
+                  <span className="text-sm text-gray-500">variacion</span>
+                </div>
+              )}
             </div>
 
             <div className="card">

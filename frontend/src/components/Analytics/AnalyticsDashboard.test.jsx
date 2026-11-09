@@ -1690,6 +1690,26 @@ describe('<AnalyticsDashboard />', () => {
     expect(within(card).getByText('0%')).toBeInTheDocument()
   })
 
+  test.each([null, undefined])('Visión General: tendencia de cumplimiento %s muestra "Sin datos", no "0%%"', async (valor) => {
+    await abrirTiempoReal(mockRealTimeData, {
+      ...mockDashboardData,
+      compliance: { ...mockDashboardData.compliance, documentCompleteness: 90 },
+      trends: { ...mockDashboardData.trends, compliance: valor === null ? null : { direction: 'up', percentage: valor } }
+    })
+
+    const card = screen.getAllByText('Cumplimiento').map((e) => e.closest('.card')).find(Boolean)
+    expect(within(card).getByText(SIN_DATOS)).toBeInTheDocument()
+    expect(card.textContent).not.toMatch(/\b0%/)
+    expect(within(card).queryByText('variacion')).toBeNull()
+  })
+
+  test('Visión General: con tendencia de cumplimiento real mantiene el porcentaje y "variacion"', async () => {
+    await abrirTiempoReal(mockRealTimeData)
+    const card = screen.getAllByText('Cumplimiento').map((e) => e.closest('.card')).find(Boolean)
+    expect(within(card).getByText('3%')).toBeInTheDocument()
+    expect(within(card).getByText('variacion')).toBeInTheDocument()
+  })
+
   test('formatNumber: totalDeclarations null muestra "Sin datos", no "0"; un 0 real sigue siendo 0', async () => {
     await abrirTiempoReal(mockRealTimeData, {
       ...mockDashboardData,
