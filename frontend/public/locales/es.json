@@ -3438,7 +3438,16 @@
     "errorLoadingReports": "No se pudieron cargar los informes",
     "kpiSinDatos": "Sin datos",
     "kpiHealthBase": "Calculado sobre {{calculados}} de {{total}} KPIs",
-    "kpiHealthSinDatos": "Sin datos suficientes"
+    "kpiHealthSinDatos": "Sin datos suficientes",
+    "kpiCargando": "Cargando KPIs...",
+    "kpiErrorCarga": "No se pudieron cargar los KPIs",
+    "kpiReintentar": "Reintentar",
+    "kpiAnalizando": "Analizando con LUCI...",
+    "kpiAnalisisError": "No se pudo obtener el análisis de LUCI",
+    "kpiAnalisisVacio": "Sin análisis disponible",
+    "kpiAnalisisTitulo": "Análisis de LUCI",
+    "kpiPrioridades": "Prioridades",
+    "kpiRiesgos": "Riesgos"
   },
   "inspections": {
     "title": "Inspecciones"

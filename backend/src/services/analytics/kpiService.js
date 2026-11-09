@@ -6,6 +6,7 @@
  */
 
 const logger = require('../../config/logger');
+const { crearEstadoPorTenant } = require('../ml/estadoPorTenant');
 const aiService = require('../aiService');
 
 /**
@@ -353,33 +354,32 @@ function getKPIsByCategory(category) {
 /**
  * Calculate current KPI value
  */
-async function calculateKPI(kpiId, data = {}, tenantId) {
+function _evaluarKPI(kpiId, data, tenantId) {
   const definition = KPI_DEFINITIONS[kpiId];
-  if (!definition) {
-    return { success: false, error: `Unknown KPI: ${kpiId}` };
+  const value = _valorDeDatos(kpiId, data);
+
+  // Sin dato real no hay cifra: ni valor inventado.
+  if (value === null) {
+    return {
+      definition,
+      value: null,
+      result: {
+        kpiId,
+        name: definition.name,
+        value: null,
+        unit: definition.unit,
+        target: definition.thresholds.target,
+        status: STATUS_SIN_DATOS,
+        trend: null,
+        timestamp: new Date()
+      }
+    };
   }
 
-  try {
-    const value = _valorDeDatos(kpiId, data);
-
-    // Sin dato real no hay cifra: ni valor inventado, ni alerta, ni historico.
-    if (value === null) {
-      return {
-        success: true,
-        data: {
-          kpiId,
-          name: definition.name,
-          value: null,
-          unit: definition.unit,
-          target: definition.thresholds.target,
-          status: STATUS_SIN_DATOS,
-          trend: null,
-          timestamp: new Date()
-        }
-      };
-    }
-
-    const result = {
+  return {
+    definition,
+    value,
+    result: {
       kpiId,
       name: definition.name,
       value: Math.round(value * 100) / 100,
@@ -388,13 +388,26 @@ async function calculateKPI(kpiId, data = {}, tenantId) {
       status: _evaluateKPIStatus(value, definition),
       trend: _calculateTrend(kpiId, value, tenantId),
       timestamp: new Date()
-    };
+    }
+  };
+}
 
-    // Record in history
-    _recordKPIValue(kpiId, result, tenantId);
+async function calculateKPI(kpiId, data = {}, tenantId) {
+  if (!KPI_DEFINITIONS[kpiId]) {
+    return { success: false, error: `Unknown KPI: ${kpiId}` };
+  }
 
-    // Check for alerts
-    _checkKPIAlert(kpiId, result, definition, tenantId);
+  try {
+    const { definition, value, result } = _evaluarKPI(kpiId, data, tenantId);
+
+    // Sin dato real: ni alerta ni historico.
+    if (value !== null) {
+      // Record in history
+      _recordKPIValue(kpiId, result, tenantId);
+
+      // Check for alerts
+      _checkKPIAlert(kpiId, result, definition, tenantId);
+    }
 
     return { success: true, data: result };
 
@@ -567,16 +580,6 @@ async function getKPIDashboard(tenantId, data = {}) {
   // Solo los KPI con dato real cuentan para el health score, las tendencias y el analisis
   const calculados = allKPIs.data.all.filter(k => k.value !== null);
 
-  // Get LUCI analysis (nada que analizar si no hay ningun KPI calculado)
-  let luciAnalysis = null;
-  try {
-    if (calculados.length > 0) {
-      luciAnalysis = await _getLuciKPIAnalysis(allKPIs.data);
-    }
-  } catch (error) {
-    logger.warn(`[KPI] Could not get LUCI analysis: ${error.message}`);
-  }
-
   return {
     success: true,
     data: {
@@ -586,10 +589,62 @@ async function getKPIDashboard(tenantId, data = {}) {
       kpisCalculados: calculados.length,
       kpisTotal: allKPIs.data.all.length,
       trends: _getOverallTrends(calculados),
-      luciAnalysis,
+      // El analisis de LUCI (Bedrock, lento) va aparte: getKPIAnalysis / GET /kpis/analysis
+      luciAnalysis: null,
       lastUpdated: new Date()
     }
   };
+}
+
+// Analisis de LUCI cacheado por tenant: un Bedrock por tenant cada 10 minutos, no uno por recarga.
+const TTL_ANALISIS_MS = 10 * 60 * 1000;
+const cacheAnalisis = crearEstadoPorTenant(() => ({ entrada: null, pendiente: null }));
+
+/** Vacia la cache del analisis (tests). */
+function limpiarCacheAnalisis() {
+  for (const cubo of cacheAnalisis.visibles(undefined)) {
+    cubo.entrada = null;
+    cubo.pendiente = null;
+  }
+}
+
+async function _calcularAnalisis(data, tenantId) {
+  // Evaluacion pura: el dashboard ya registro historico y alertas al cargar.
+  const all = Object.keys(KPI_DEFINITIONS).map(id => _evaluarKPI(id, data, tenantId).result);
+  if (!all.some(k => k.value !== null)) return null;   // nada que analizar
+  return _getLuciKPIAnalysis({ all, summary: _generateKPISummary(all) });
+}
+
+/**
+ * Analisis de LUCI de los KPI del ambito, aparte del dashboard (que no lo espera).
+ * Cache en memoria por tenant (10 min); los fallos (null) no se cachean y las
+ * peticiones simultaneas comparten una sola llamada a Bedrock.
+ */
+async function getKPIAnalysis(tenantId, data = {}) {
+  const cubo = cacheAnalisis.escribir(tenantId);
+  const ahora = Date.now();
+
+  if (cubo.entrada && ahora < cubo.entrada.expira) {
+    return {
+      success: true,
+      data: { luciAnalysis: cubo.entrada.luciAnalysis, generatedAt: cubo.entrada.generatedAt, fromCache: true }
+    };
+  }
+
+  if (!cubo.pendiente) {
+    cubo.pendiente = _calcularAnalisis(data, tenantId)
+      .then((luciAnalysis) => {
+        const generatedAt = new Date(Date.now()).toISOString();
+        if (luciAnalysis) {
+          cubo.entrada = { luciAnalysis, generatedAt, expira: Date.now() + TTL_ANALISIS_MS };
+        }
+        return { luciAnalysis, generatedAt };
+      })
+      .finally(() => { cubo.pendiente = null; });
+  }
+
+  const { luciAnalysis, generatedAt } = await cubo.pendiente;
+  return { success: true, data: { luciAnalysis, generatedAt, fromCache: false } };
 }
 
 /**
@@ -934,6 +989,8 @@ module.exports = {
   getKPIHistory,
   setKPITarget,
   getKPIDashboard,
+  getKPIAnalysis,
+  limpiarCacheAnalisis,
   compareKPIs,
 
   // Alert methods

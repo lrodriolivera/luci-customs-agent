@@ -941,6 +941,8 @@ export const analyticsAPI = {
   // KPIs
   kpis: {
     getDashboard: () => api.get('/api/analytics/kpis/dashboard'),
+    // El analisis de LUCI (Bedrock) tarda mas que el resto: timeout propio, aparte del dashboard
+    getAnalysis: () => api.get('/api/analytics/kpis/analysis', { timeout: 90000 }),
     getAll: () => api.get('/api/analytics/kpis'),
     getDefinitions: (category) => api.get('/api/analytics/kpis/definitions', { params: { category } }),
     calculate: (id) => api.get(`/api/analytics/kpis/${seg(id)}`),

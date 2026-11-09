@@ -690,6 +690,10 @@ export default function AnalyticsDashboard() {
   const [period, setPeriod] = useState('last_30_days')
   const [dashboardData, setDashboardData] = useState(null)
   const [kpiData, setKpiData] = useState(null)
+  const [kpiLoading, setKpiLoading] = useState(true)
+  const [kpiError, setKpiError] = useState(false)
+  // Analisis de LUCI de los KPI: se pide aparte para no bloquear las tarjetas
+  const [luciKPI, setLuciKPI] = useState({ estado: 'idle', data: null })
   const [realTimeData, setRealTimeData] = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
   const [showAIPanel, setShowAIPanel] = useState(false)
@@ -720,15 +724,44 @@ export default function AnalyticsDashboard() {
   }
 
   const loadKPIData = async () => {
+    setKpiLoading(true)
+    setKpiError(false)
     try {
       const response = await analyticsAPI.kpis.getDashboard()
       if (response.data.success) {
         setKpiData(response.data.data)
+      } else {
+        setKpiError(true)
       }
     } catch (error) {
       console.error('Error loading KPIs:', error)
+      setKpiError(true)
+    } finally {
+      setKpiLoading(false)
     }
   }
+
+  const loadKPIAnalysis = async () => {
+    setLuciKPI({ estado: 'loading', data: null })
+    try {
+      const response = await analyticsAPI.kpis.getAnalysis()
+      if (response.data.success) {
+        setLuciKPI({ estado: 'ok', data: response.data.data?.luciAnalysis ?? null })
+      } else {
+        setLuciKPI({ estado: 'error', data: null })
+      }
+    } catch (error) {
+      console.error('Error loading KPI analysis:', error)
+      setLuciKPI({ estado: 'error', data: null })
+    }
+  }
+
+  // El analisis se pide al abrir la pestana KPIs, cuando ya hay tarjetas que mostrar
+  useEffect(() => {
+    if (activeTab === 'kpis' && kpiData && luciKPI.estado === 'idle') {
+      loadKPIAnalysis()
+    }
+  }, [activeTab, kpiData, luciKPI.estado])
 
   const loadRealTimeData = async () => {
     try {
@@ -755,6 +788,13 @@ export default function AnalyticsDashboard() {
       maximumFractionDigits: 0
     }).format(num || 0)
   }
+
+  // Metricas del cuadro de mando que llegan null/undefined: "Sin datos", nunca "%" o "h" sin cifra
+  const sinDato = (valor) => valor == null || (typeof valor === 'number' && !Number.isFinite(valor))
+  const sinDatosEl = (clase = 'text-gray-400') => (
+    <span className={clase}>{t('analyticsPage.kpiSinDatos', 'Sin datos')}</span>
+  )
+  const conUnidad = (valor, unidad) => (sinDato(valor) ? sinDatosEl() : `${valor}${unidad}`)
 
   const getTrendIcon = (direction) => {
     switch (direction) {
@@ -971,7 +1011,7 @@ export default function AnalyticsDashboard() {
                 <div>
                   <p className="text-sm text-gray-500">Cumplimiento</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {dashboardData.compliance?.documentCompleteness}%
+                    {conUnidad(dashboardData.compliance?.documentCompleteness, '%')}
                   </p>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-lg">
@@ -994,7 +1034,7 @@ export default function AnalyticsDashboard() {
                 <div>
                   <p className="text-sm text-gray-500">Tiempo Medio</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {dashboardData.operations?.averageProcessingTime}h
+                    {conUnidad(dashboardData.operations?.averageProcessingTime, 'h')}
                   </p>
                 </div>
                 <div className="p-3 bg-orange-100 rounded-lg">
@@ -1089,6 +1129,22 @@ export default function AnalyticsDashboard() {
         </div>
       )}
 
+      {/* KPIs Tab: carga y error (la peticion de KPIs no puede dejar la pestana en blanco) */}
+      {activeTab === 'kpis' && !kpiData && kpiLoading && (
+        <div className="card text-center text-gray-500 py-12">
+          {t('analyticsPage.kpiCargando', 'Cargando KPIs...')}
+        </div>
+      )}
+
+      {activeTab === 'kpis' && !kpiData && !kpiLoading && kpiError && (
+        <div className="card text-center py-12 space-y-4">
+          <p className="text-gray-700">{t('analyticsPage.kpiErrorCarga', 'No se pudieron cargar los KPIs')}</p>
+          <button className="btn-secondary" onClick={loadKPIData}>
+            {t('analyticsPage.kpiReintentar', 'Reintentar')}
+          </button>
+        </div>
+      )}
+
       {/* KPIs Tab */}
       {activeTab === 'kpis' && kpiData && (
         <div className="space-y-6">
@@ -1143,6 +1199,49 @@ export default function AnalyticsDashboard() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Analisis de LUCI (aparte de las tarjetas: no las bloquea) */}
+          <div className="card">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              {t('analyticsPage.kpiAnalisisTitulo', 'Análisis de LUCI')}
+            </h3>
+            {luciKPI.estado === 'loading' || luciKPI.estado === 'idle' ? (
+              <p className="text-sm text-gray-500">{t('analyticsPage.kpiAnalizando', 'Analizando con LUCI...')}</p>
+            ) : luciKPI.estado === 'error' ? (
+              <div className="flex items-center gap-4">
+                <p className="text-sm text-gray-700">
+                  {t('analyticsPage.kpiAnalisisError', 'No se pudo obtener el análisis de LUCI')}
+                </p>
+                <button className="btn-secondary text-sm py-1 px-3" onClick={loadKPIAnalysis}>
+                  {t('analyticsPage.kpiReintentar', 'Reintentar')}
+                </button>
+              </div>
+            ) : !luciKPI.data ? (
+              <p className="text-sm text-gray-500">
+                {t('analyticsPage.kpiAnalisisVacio', 'Sin análisis disponible')}
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {luciKPI.data.summary && <p className="text-gray-700">{luciKPI.data.summary}</p>}
+                {luciKPI.data.priorities?.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-1">{t('analyticsPage.kpiPrioridades', 'Prioridades')}</h4>
+                    <ul className="list-disc list-inside space-y-1 text-gray-600">
+                      {luciKPI.data.priorities.map((p, i) => <li key={i}>{p}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {luciKPI.data.risks?.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-1">{t('analyticsPage.kpiRiesgos', 'Riesgos')}</h4>
+                    <ul className="list-disc list-inside space-y-1 text-gray-600">
+                      {luciKPI.data.risks.map((r, i) => <li key={i}>{r}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* KPIs by Category */}
@@ -1266,17 +1365,19 @@ export default function AnalyticsDashboard() {
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
                 <span>Utilizacion actual</span>
-                <span className="font-medium">{dashboardData.financial?.guaranteesUtilization}%</span>
+                <span className="font-medium">{conUnidad(dashboardData.financial?.guaranteesUtilization, '%')}</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-4">
-                <div
-                  className={`h-4 rounded-full ${
-                    dashboardData.financial?.guaranteesUtilization > 80 ? 'bg-red-500' :
-                    dashboardData.financial?.guaranteesUtilization > 60 ? 'bg-yellow-500' : 'bg-green-500'
-                  }`}
-                  style={{ width: `${dashboardData.financial?.guaranteesUtilization}%` }}
-                ></div>
-              </div>
+              {!sinDato(dashboardData.financial?.guaranteesUtilization) && (
+                <div className="w-full bg-gray-200 rounded-full h-4">
+                  <div
+                    className={`h-4 rounded-full ${
+                      dashboardData.financial.guaranteesUtilization > 80 ? 'bg-red-500' :
+                      dashboardData.financial.guaranteesUtilization > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}
+                    style={{ width: `${dashboardData.financial.guaranteesUtilization}%` }}
+                  ></div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1289,25 +1390,25 @@ export default function AnalyticsDashboard() {
             <div className="card">
               <p className="text-sm text-gray-500">Tasa de Error</p>
               <p className="text-2xl font-bold text-gray-900">
-                {dashboardData.compliance?.errorRate}%
+                {conUnidad(dashboardData.compliance?.errorRate, '%')}
               </p>
             </div>
             <div className="card">
               <p className="text-sm text-gray-500">Tasa de Rechazo</p>
               <p className="text-2xl font-bold text-gray-900">
-                {dashboardData.compliance?.rejectionRate}%
+                {conUnidad(dashboardData.compliance?.rejectionRate, '%')}
               </p>
             </div>
             <div className="card">
               <p className="text-sm text-gray-500">Envios a Tiempo</p>
               <p className="text-2xl font-bold text-gray-900">
-                {dashboardData.compliance?.onTimeSubmissions}%
+                {conUnidad(dashboardData.compliance?.onTimeSubmissions, '%')}
               </p>
             </div>
             <div className="card">
               <p className="text-sm text-gray-500">Tasa de Inspeccion</p>
               <p className="text-2xl font-bold text-gray-900">
-                {dashboardData.compliance?.inspectionRate}%
+                {conUnidad(dashboardData.compliance?.inspectionRate, '%')}
               </p>
             </div>
           </div>
@@ -1325,24 +1426,28 @@ export default function AnalyticsDashboard() {
                     strokeWidth="12"
                     fill="none"
                   />
-                  <circle
-                    cx="64"
-                    cy="64"
-                    r="56"
-                    stroke="#10b981"
-                    strokeWidth="12"
-                    fill="none"
-                    strokeDasharray={`${(dashboardData.compliance?.documentCompleteness || 0) * 3.52} 352`}
-                  />
+                  {!sinDato(dashboardData.compliance?.documentCompleteness) && (
+                    <circle
+                      cx="64"
+                      cy="64"
+                      r="56"
+                      stroke="#10b981"
+                      strokeWidth="12"
+                      fill="none"
+                      strokeDasharray={`${dashboardData.compliance.documentCompleteness * 3.52} 352`}
+                    />
+                  )}
                 </svg>
                 <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold">
-                  {dashboardData.compliance?.documentCompleteness}%
+                  {conUnidad(dashboardData.compliance?.documentCompleteness, '%')}
                 </span>
               </div>
               <div className="flex-1">
-                <p className="text-gray-600">
-                  El {dashboardData.compliance?.documentCompleteness}% de los expedientes tienen toda la documentacion requerida completa.
-                </p>
+                {!sinDato(dashboardData.compliance?.documentCompleteness) && (
+                  <p className="text-gray-600">
+                    {`El ${dashboardData.compliance.documentCompleteness}% de los expedientes tienen toda la documentacion requerida completa.`}
+                  </p>
+                )}
               </div>
             </div>
           </div>

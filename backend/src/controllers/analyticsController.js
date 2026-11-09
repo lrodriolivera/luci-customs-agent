@@ -420,6 +420,20 @@ async function getKPIDashboard(req, res) {
 }
 
 /**
+ * Analisis de LUCI de los KPI (aparte del dashboard, que no lo espera).
+ * GET /api/analytics/kpis/analysis
+ */
+async function getKPIAnalysis(req, res) {
+  try {
+    const result = await kpiService.getKPIAnalysis(ambitoTenant(req.user), await datosKPIsDe(req));
+    res.json(result);
+  } catch (error) {
+    logger.error(`[AnalyticsController] KPI analysis error: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+/**
  * Get all KPIs
  * GET /api/analytics/kpis
  */
@@ -939,6 +953,7 @@ module.exports = {
 
   // KPIs
   getKPIDashboard,
+  getKPIAnalysis,
   getAllKPIs,
   getKPIDefinitions,
   calculateKPI,
