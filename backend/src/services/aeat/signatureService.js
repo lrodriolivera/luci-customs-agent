@@ -13,7 +13,7 @@ class SignatureService {
   constructor() {
     this.certificatePath = process.env.AEAT_CERTIFICATE_PATH;
     this.certificatePassword = process.env.AEAT_CERTIFICATE_PASSWORD;
-    this.representativeNIF = process.env.AEAT_REPRESENTATIVE_NIF || 'B12345678';
+    this.representativeNIF = process.env.AEAT_REPRESENTATIVE_NIF || '';
   }
 
   /**

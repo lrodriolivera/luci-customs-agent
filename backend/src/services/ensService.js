@@ -503,8 +503,9 @@ class ENSService {
       const aeatResult = await aeatSubmitService.submitENSCancellation({
         mrn: declaration.mrn,
         reason: reason || 'Anulacion solicitada por el declarante',
-        declarantEORI: declaration.carrier?.eori || process.env.DECLARANTE_EORI || '',
-        declarantName: declaration.carrier?.name || process.env.DECLARANTE_NOMBRE || '',
+        declarantEORI: declaration.carrier?.eori || '',
+        declarantName: declaration.carrier?.name || '',
+        tenantId: declaration.tenantId,
         entryOffice: declaration.entryOffice?.code || ''
       });
 

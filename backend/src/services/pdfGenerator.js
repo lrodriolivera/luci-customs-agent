@@ -8,6 +8,7 @@
 
 const PDFDocument = require('pdfkit');
 const logger = require('../config/logger');
+const { eoriDe, representanteDelTenant } = require('./forms/identificadorAduanero');
 
 // Colores corporativos
 const COLORS = {
@@ -201,6 +202,17 @@ class PDFGenerator {
   }
 
   async generateH1PDF(expedition, options = {}) {
+    // Casilla 14: el declarante del expediente o del tenant; sin dato, "Sin datos"
+    // (antes salia siempre un nombre y un NIF fijos).
+    const tenant = options.tenant
+      || (expedition.tenantId ? await require('../models/Tenant').findById(expedition.tenantId).lean() : null);
+    const rep = expedition.representative || {};
+    const delTenant = representanteDelTenant(tenant);
+    const eoriDeclarante = eoriDe(rep) || delTenant.eori;
+    const nombreDeclarante = rep.companyName || delTenant.companyName;
+    const declaranteTexto = eoriDeclarante && nombreDeclarante
+      ? `${nombreDeclarante}\n${eoriDeclarante}`
+      : 'Sin datos';
     const doc = new PDFDocument({ size: 'A4', margin: 30, autoFirstPage: true });
     const decl = expedition.declaration || {};
     const goods = expedition.goods || [];
@@ -252,7 +264,7 @@ class PDFGenerator {
 
     // ===== FILA 2: Destinatario, Representante =====
     this._drawBox(doc, '8', 'DESTINATARIO - EORI', `${client.companyName || ''}\n${client.taxId || client.nif || ''}`, mx, y, pw * 0.5, rh2);
-    this._drawBox(doc, '14', 'DECLARANTE / REPRESENTANTE', `STRIX AI SL\nB22477020 / ESB22477020000`, mx + pw * 0.5, y, pw * 0.5, rh2);
+    this._drawBox(doc, '14', 'DECLARANTE / REPRESENTANTE', declaranteTexto, mx + pw * 0.5, y, pw * 0.5, rh2);
     y += rh2;
 
     // ===== FILA 3: Paises, transporte =====

@@ -6,7 +6,7 @@
  * cannot be queried by equality. We store alongside each encrypted field a
  * `<field>_hash` computed by this module. Lookup query:
  *
- *   await Tenant.findOne({ 'businessInfo.nif_hash': piiHash('B22477020') });
+ *   await Tenant.findOne({ 'businessInfo.nif_hash': piiHash('<NIF>') });
  *
  * The hash is computed with HMAC using PII_HASH_KEY as the secret so a dump of
  * the database alone cannot be dictionary-attacked.

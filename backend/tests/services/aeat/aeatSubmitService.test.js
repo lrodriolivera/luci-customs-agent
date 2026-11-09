@@ -23,7 +23,27 @@
 jest.mock('../../../src/services/aeat/aeatTransport');
 
 const aeatTransport = require('../../../src/services/aeat/aeatTransport');
-const submitService = require('../../../src/services/aeat/aeatSubmitService');
+const submitServiceReal = require('../../../src/services/aeat/aeatSubmitService');
+
+// El declarante, el exportador por defecto y el remitente del ENS salen del
+// tenant del documento (sin literales de respaldo). Estos tests ejercitan el
+// mapeo y la respuesta de la AEAT, asi que parten de un tenant que es titular
+// con EORI; los casos sin tenant/EORI estan al final del fichero.
+const TENANT_TEST = {
+  name: 'Operador Test SL',
+  businessInfo: { type: 'exporter', eori: 'ESA00000001' },
+  customsConfig: { eoriNumbers: { ES: 'ESA00000001' } }
+};
+const conTenant = (fn) => (doc, ctx = { tenant: TENANT_TEST }) => fn(doc, ctx);
+const submitService = {
+  ...submitServiceReal,
+  submitH1: conTenant(submitServiceReal.submitH1),
+  submitAES: conTenant(submitServiceReal.submitAES),
+  submitNCTS: conTenant(submitServiceReal.submitNCTS),
+  submitENS: conTenant(submitServiceReal.submitENS),
+  submitENSAmendment: (data) => submitServiceReal.submitENSAmendment({ senderEORI: 'ESA00000001', ...data }),
+  submitENSCancellation: (data) => submitServiceReal.submitENSCancellation({ declarantEORI: 'ESA00000001', ...data })
+};
 
 /** Respuesta OK generica de AEAT (CodigoRespuesta 0 + MRN). */
 const RESPUESTA_OK = {
@@ -523,6 +543,7 @@ describe('requestXML: el resultado incluye el XML enviado', () => {
 describe('submitH1', () => {
   const expedition = {
     client: { companyName: 'Cliente SL', eori: 'ESB11111111', nif: 'B11111111' },
+    exporter: { eori: 'CN000000001', companyName: 'Shenzhen Co', address: 'Calle 1', city: 'Shenzhen', country: 'CN' },
     goods: [{ description: 'Tornillos', taricCode: '7318150090', invoiceValue: 100, grossWeight: 5, netWeight: 4 }],
     declaration: { customsOffice: 'ES002801' }
   };
@@ -776,7 +797,7 @@ describe('submitENS', () => {
       consignee: { name: 'ES Co', address: { country: 'ES' } }
     });
     const xml = soapEnviado();
-    expect(xml).toContain(`<MesSenMES3>${process.env.DECLARANTE_EORI || 'ESB22477020'}</MesSenMES3>`);
+    expect(xml).toContain('<MesSenMES3>ESA00000001</MesSenMES3>');
     expect(xml).not.toContain('<MesSenMES3>ESA12345678</MesSenMES3>');
     expect(xml).toContain('<TINTRE1>ESA12345678</TINTRE1>');
   });
@@ -957,5 +978,71 @@ describe('operaciones auxiliares', () => {
     process.env.AEAT_ENVIRONMENT = 'production';
     const r = await submitService.cancelH1({ mrn: '26ES00280100000000' });
     expect(r.success).toBe(true);
+  });
+});
+
+// ==========================================================================
+// Sin respaldos fijos: parte.eori || EORI del tenant (si el tenant es el
+// titular) || 422. Nada de ESB22477020 ni de DECLARANTE_EORI.
+// ==========================================================================
+describe('envio sin identificadores de respaldo', () => {
+  const { ErrorValidacion } = require('../../../src/services/forms/identificadorAduanero');
+  const AGENTE = { name: 'Agencia SL', businessInfo: { type: 'customs_agent' }, customsConfig: { eoriNumbers: { ES: 'ESG00000001' } } };
+  const exportacion = (client) => ({
+    client, goods: [], declaration: {}, consignee: { companyName: 'US Co', address: { country: 'US' } }
+  });
+
+  beforeEach(() => { process.env.DECLARANTE_EORI = 'ESNOSEUSA0001'; });
+  afterEach(() => { delete process.env.DECLARANTE_EORI; });
+
+  test('AES: el exportador es el cliente; el EORI del agente NO lo sustituye', async () => {
+    await expect(submitServiceReal.submitAES(exportacion({ companyName: 'Sin EORI SL' }), { tenant: AGENTE }))
+      .rejects.toThrow(ErrorValidacion);
+    expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
+  });
+
+  test('AES: el declarante es el del tenant y la variable DECLARANTE_EORI ya no se usa', async () => {
+    await submitServiceReal.submitAES(exportacion({ companyName: 'Exp SL', eori: 'ESC00000001' }), { tenant: AGENTE });
+    const xml = soapEnviado();
+    expect(xml).toContain('ESG00000001');
+    expect(xml).toContain('ESC00000001');
+    expect(xml).not.toMatch(/ESNOSEUSA0001|B22477020|STRIX AI SL/);
+  });
+
+  test('AES: si el tenant ES el exportador, su EORI sirve de respaldo', async () => {
+    await submitServiceReal.submitAES(exportacion({ companyName: '' }), { tenant: TENANT_TEST });
+    expect(soapEnviado()).toContain('ESA00000001');
+  });
+
+  test('AES sin tenant ni representante: 422', async () => {
+    await expect(submitServiceReal.submitAES(exportacion({ companyName: 'X', eori: 'ES1' }), {}))
+      .rejects.toThrow(/Falta el EORI del representante/);
+  });
+
+  test('NCTS: sin EORI del principal y con un agente como tenant: 422 del titular', async () => {
+    await expect(submitServiceReal.submitNCTS({ principal: { name: 'P' }, goodsItems: [] }, { tenant: AGENTE }))
+      .rejects.toThrow(/Falta el EORI del titular/);
+    expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
+  });
+
+  test('NCTS: con el EORI del principal envia', async () => {
+    await submitServiceReal.submitNCTS({ principal: { name: 'P', eori: 'ESP00000001' }, goodsItems: [] }, { tenant: AGENTE });
+    expect(soapEnviado()).toContain('ESP00000001');
+  });
+
+  test('ENS sin tenant: 422, nunca el remitente fijo', async () => {
+    await expect(submitServiceReal.submitENS({ lrn: 'L', carrier: { eori: 'ESA12345678' }, goods: [] }, {}))
+      .rejects.toThrow(/Falta el EORI del representante/);
+  });
+
+  test('H1 sin exportador identificado: 422 y no se envia nada', async () => {
+    await expect(submitServiceReal.submitH1(
+      { client: { companyName: 'C', eori: 'ES1' }, representative: { eori: 'ESR1', companyName: 'R' }, goods: [], exporter: {} }, {}))
+      .rejects.toThrow(/Falta el EORI del exportador/);
+    expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
+  });
+
+  test('H7 sin EORI de tenant ni declarante: 422', async () => {
+    await expect(submitServiceReal.submitH7(h7(), {})).rejects.toThrow(/Falta el EORI del representante/);
   });
 });

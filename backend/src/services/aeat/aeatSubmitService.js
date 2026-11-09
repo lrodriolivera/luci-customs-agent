@@ -20,6 +20,34 @@ const { buildCC044UnloadingXML } = require('./cc044XmlBuilder');
 const { buildIE313AmendmentXML } = require('./ie313XmlBuilder');
 const { buildIE314CancelXML } = require('./ie314XmlBuilder');
 const { buildQueryImportXML } = require('./queryXmlBuilder');
+const {
+  eoriDe, exigirEori, declarantePara, representanteDelTenant
+} = require('../forms/identificadorAduanero');
+
+/**
+ * Tenant al que pertenece el documento: lo pasa quien llama o se carga por
+ * `tenantId`. De el salen el declarante y su EORI; no hay literales de respaldo.
+ */
+async function _tenantDe(doc, ctx = {}) {
+  if (ctx.tenant) return ctx.tenant;
+  if (!doc?.tenantId) return null;
+  const Tenant = require('../../models/Tenant');
+  return Tenant.findById(doc.tenantId).lean();
+}
+
+/** EORI y nombre del tenant como remitente/declarante que firma (422 si faltan). */
+function _firmanteDelTenant(tenant) {
+  const rep = representanteDelTenant(tenant);
+  return { eori: exigirEori(rep.eori, 'representante'), nombre: rep.companyName };
+}
+
+/**
+ * El tenant solo sustituye a la parte (exportador, titular) cuando el tenant ES
+ * esa parte; un agente de aduanas no es el titular de la operacion de su cliente.
+ */
+function _tenantEsLaParte(tenant) {
+  return !!tenant && (tenant.businessInfo?.type || 'customs_agent') !== 'customs_agent';
+}
 
 // Helper: parsear respuesta SOAP de la AEAT
 function _parseAEATResponse(responseData) {
@@ -178,8 +206,9 @@ async function _sendToAEAT(soapXML, endpoint) {
 /**
  * Enviar declaracion H1 de importacion
  */
-async function submitH1(expedition) {
-  const data = expeditionToH1Data(expedition);
+async function submitH1(expedition, ctx = {}) {
+  const tenant = await _tenantDe(expedition, ctx);
+  const data = expeditionToH1Data(expedition, { declarante: declarantePara(expedition, tenant) });
   data.test = process.env.AEAT_ENVIRONMENT !== 'production';
   const soapXML = buildH1ImportXML(data);
   return _sendToAEAT(soapXML, '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.ImportacionCompletaV1SOAP');
@@ -190,8 +219,8 @@ async function submitH1(expedition) {
  */
 async function submitH7(h7Declaration, tenant) {
   // Declarante: EORI/NIF del tenant (representante).
-  const declaranteNIF = tenant?.businessInfo?.eori || tenant?.businessInfo?.nif || tenant?.eori || tenant?.nif || h7Declaration.declarantNIF || process.env.DECLARANTE_EORI || '';
-  const declaranteNombre = tenant?.companyName || tenant?.name || h7Declaration.declarantName || process.env.DECLARANTE_NOMBRE || '';
+  const declaranteNIF = exigirEori(tenant?.businessInfo?.eori || tenant?.businessInfo?.nif || tenant?.eori || tenant?.nif || h7Declaration.declarantNIF || '', 'representante');
+  const declaranteNombre = tenant?.companyName || tenant?.name || h7Declaration.declarantName || '';
 
   // Representacion: '2' (directa) si declarante = importador; '3' (indirecta por
   // representante aduanero) en el resto. AEAT exige que en representacion indirecta
@@ -273,8 +302,17 @@ async function submitH7(h7Declaration, tenant) {
 /**
  * Enviar declaracion AES exportacion
  */
-async function submitAES(expedition) {
+async function submitAES(expedition, ctx = {}) {
+  const tenant = await _tenantDe(expedition, ctx);
+  const declarante = declarantePara(expedition, tenant);
   const client = expedition.client || {};
+  // Exportador: la parte del expediente; si falta, el tenant solo cuando el
+  // tenant es el exportador; si tampoco, 422 (antes salia un NIF fijo).
+  const exporterEORI = exigirEori(
+    eoriDe(client) || (_tenantEsLaParte(tenant) ? representanteDelTenant(tenant).eori : null),
+    'cliente'
+  );
+  const exporterName = client.companyName || (_tenantEsLaParte(tenant) ? representanteDelTenant(tenant).companyName : '') || '';
   const goods = expedition.goods || [];
   const decl = expedition.declaration || {};
   const transport = expedition.transport || {};
@@ -303,13 +341,13 @@ async function submitAES(expedition) {
     directExport,
     customsOfficeExport: officeExport,
     customsOfficeExit: officeExit,
-    exporterEORI: client.eori || process.env.DECLARANTE_EORI || 'ESB22477020',
-    exporterName: client.companyName || process.env.DECLARANTE_NOMBRE || 'STRIX AI SL',
+    exporterEORI,
+    exporterName,
     exporterStreet: client.address?.street || '',
     exporterCity: client.address?.city || '',
     exporterPostcode: client.address?.postalCode || '',
-    declarantEORI: process.env.DECLARANTE_EORI || 'ESB22477020',
-    declarantName: process.env.DECLARANTE_NOMBRE || 'STRIX AI SL',
+    declarantEORI: declarante.eori,
+    declarantName: declarante.companyName,
     consigneeEORI: expedition.consignee?.eori || '',
     consigneeName: expedition.consignee?.companyName || '',
     consigneeStreet: expedition.consignee?.address?.street || '',
@@ -355,10 +393,17 @@ async function submitAES(expedition) {
 /**
  * Enviar declaracion NCTS transito
  */
-async function submitNCTS(transit) {
+async function submitNCTS(transit, ctx = {}) {
   const principal = transit.principal || {};
   const guarantee = transit.guarantee || {};
-  const holderEORI = principal.eori || process.env.DECLARANTE_EORI || 'ESB22477020';
+  const tenant = await _tenantDe(transit, ctx);
+  // Titular: el principal del transito; si falta, el tenant solo cuando es el
+  // titular; si tampoco, 422 (antes salia un EORI fijo).
+  const holderEORI = exigirEori(
+    eoriDe(principal) || (_tenantEsLaParte(tenant) ? representanteDelTenant(tenant).eori : null),
+    'titular del tránsito'
+  );
+  const holderNameDefault = _tenantEsLaParte(tenant) ? (representanteDelTenant(tenant).companyName || '') : '';
   const isPRE = process.env.AEAT_ENVIRONMENT !== 'production';
   // Datos Jose Antonio AEAT PRE (2/Mar/2026): solo aplicar en entorno test
   // Datos Jose Antonio AEAT PRE: GRN 26ES0002800000010, autorizacion expedicion
@@ -375,7 +420,7 @@ async function submitNCTS(transit) {
     officeOfDestination: transit.destinationOffice?.code || '',
     transitOffices: (transit.transitOffices || []).map((o, i) => ({ sequence: i + 1, code: o.code })),
     holderEORI: holderEORI,
-    holderName: principal.name || process.env.DECLARANTE_NOMBRE || 'STRIX AI SL',
+    holderName: principal.name || holderNameDefault,
     holderStreet: principal.address?.street || '',
     holderCity: principal.address?.city || 'Valencia',
     holderPostcode: principal.address?.postalCode || '',
@@ -422,7 +467,8 @@ async function submitNCTS(transit) {
 /**
  * Enviar declaracion ENS/ICS2
  */
-async function submitENS(ensDeclaration) {
+async function submitENS(ensDeclaration, ctx = {}) {
+  const firmante = _firmanteDelTenant(await _tenantDe(ensDeclaration, ctx));
   const carrier = ensDeclaration.carrier || {};
   const cons = ensDeclaration.consignment || {};
   const modeMap = { 'AIR': '4', 'SEA': '1', 'ROAD': '3', 'RAIL': '2', '1': '1', '2': '2', '3': '3', '4': '4' };
@@ -490,7 +536,7 @@ async function submitENS(ensDeclaration) {
     lrn: ensDeclaration.lrn || '',
     // Remitente del mensaje: el declarante que firma, NO el transportista (CC316A
     // "Message Sender is not valid" si se envia el EORI de un transportista ajeno).
-    senderEORI: process.env.DECLARANTE_EORI || 'ESB22477020',
+    senderEORI: firmante.eori,
     carrierEORI: carrier.eori || '',
     entryOffice: ensDeclaration.entryOffice?.code || 'ES002801',
     transportMode: modeMap[ensDeclaration.transportMode] || ensDeclaration.transportMode || '3',
@@ -626,6 +672,10 @@ async function submitNCTSUnloading(data) {
  * ENS Amendment (IE313)
  */
 async function submitENSAmendment(data) {
+  // Remitente del mensaje: el declarante que firma (el tenant), sin literal.
+  if (!data.senderEORI) {
+    data.senderEORI = _firmanteDelTenant(await _tenantDe({ tenantId: data.tenantId })).eori;
+  }
   data.test = process.env.AEAT_ENVIRONMENT !== 'production';
   const xml = buildIE313AmendmentXML(data);
   logger.info(`[AEAT] ENS Amendment: MRN=${data.mrn}`);
@@ -640,6 +690,11 @@ async function submitENSAmendment(data) {
  * declaracion sin mandarlo a nadie. Para AEAT la sumaria seguia viva con su MRN.
  */
 async function submitENSCancellation(data) {
+  if (!data.declarantEORI) {
+    const firmante = _firmanteDelTenant(await _tenantDe({ tenantId: data.tenantId }));
+    data.declarantEORI = firmante.eori;
+    data.declarantName = data.declarantName || firmante.nombre || '';
+  }
   data.test = process.env.AEAT_ENVIRONMENT !== 'production';
   const xml = buildIE314CancelXML(data);
   logger.info(`[AEAT] ENS Cancellation: MRN=${data.mrn}`);

@@ -392,7 +392,7 @@ class OEAService {
       // Generate OEA number.
       // this.generateOEANumber es la version reasignada en la instancia
       // (linea ~1302), cuya firma es (type, EORI): usa eori.substring(0,2) como
-      // codigo de pais. Pasarle el NIF (p.ej. "B12345678") producia numeros con
+      // codigo de pais. Pasarle el NIF (una letra y ocho cifras) producia numeros con
       // prefijo de pais invalido ("B1OEAC...") en vez de "ESOEAC..." — el numero
       // OEA es un identificador oficial ante AEAT. Se pasa el EORI, que ya
       // empieza por el codigo ISO de pais.

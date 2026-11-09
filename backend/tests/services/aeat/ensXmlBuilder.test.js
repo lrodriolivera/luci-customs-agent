@@ -120,10 +120,11 @@ describe('MesSenMES3: remitente del mensaje = declarante, no transportista', () 
     expect(xml).toContain('<TINPLD1>ESA12345678</TINPLD1>');
   });
 
-  test('sin senderEORI cae al declarante de la configuracion, nunca al transportista', () => {
+  test('sin senderEORI el remitente queda vacio: nunca el transportista ni un literal', () => {
     const xml = buildENSDeclarationXML(base({ senderEORI: '', carrierEORI: 'ESA12345678' }));
 
-    expect(xml).toContain(`<MesSenMES3>${process.env.DECLARANTE_EORI || 'ESB22477020'}</MesSenMES3>`);
+    expect(xml).toContain('<MesSenMES3></MesSenMES3>');
+    expect(xml).not.toContain('<MesSenMES3>ESA12345678</MesSenMES3>');
   });
 });
 

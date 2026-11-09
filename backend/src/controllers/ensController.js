@@ -1064,7 +1064,7 @@ exports.amend = async (req, res) => {
       amendmentPlace: declaration.entryOffice?.code?.substring(0, 2) || 'ES',
       // Remitente del MENSAJE: el declarante que firma, no el transportista (el
       // CC315A da "Message Sender is not valid" si se manda un EORI ajeno).
-      senderEORI: process.env.DECLARANTE_EORI || 'ESB22477020',
+      tenantId: declaration.tenantId, // de el sale el remitente (EORI del tenant)
       // El CC313A lleva el mismo cuerpo que el CC315A, asi que necesita el modo y
       // el medio de transporte DECLARADOS. El builder los tenia fijos a maritimo y
       // AEAT rechazaba toda rectificacion remitiendo a ICS2 (regla del sector
