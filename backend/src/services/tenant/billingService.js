@@ -392,7 +392,7 @@ function listInvoices(tenantId, options = {}) {
 }
 
 /**
- * Update invoice status
+ * Update invoice status. Hoy no hay ninguna ruta ni servicio que la use.
  */
 function updateInvoiceStatus(invoiceId, status, metadata = {}) {
   const invoice = invoices.get(invoiceId);
@@ -422,7 +422,7 @@ function updateInvoiceStatus(invoiceId, status, metadata = {}) {
 }
 
 /**
- * Record payment
+ * Record payment. Hoy no hay ninguna ruta ni servicio que la use.
  */
 function recordPayment(invoiceId, paymentData) {
   const invoice = invoices.get(invoiceId);

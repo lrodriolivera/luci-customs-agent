@@ -82,6 +82,11 @@ function app(handler, metodo = 'post', ruta = '/r') {
   return a;
 }
 
+// El controlador encadena .sort().limit().lean() en find y .lean() en findOne: los mocks
+// de estos tests (antes saltados) devolvian una promesa plana y el controlador respondia 500.
+const cadenaFind = (valor) => ({ sort: () => ({ limit: () => ({ lean: () => Promise.resolve(valor) }) }) });
+const cadenaLean = (valor) => Object.assign(Promise.resolve(valor), { lean: () => Promise.resolve(valor) });
+
 describe('classificationController - Cobertura de ramas simples', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -771,10 +776,11 @@ describe('classificationController - Cobertura de ramas simples', () => {
   });
 
   describe('searchTaric - Ramas de code vs q', () => {
-    test.skip('cuando se envía code, lo usa en lugar de q', async () => {
-      mockTaricCode.find.mockResolvedValue([
+    test('cuando se envía code, lo usa en lugar de q', async () => {
+      mockTaricCode.findOne.mockReturnValue(cadenaLean(null));
+      mockTaricCode.find.mockReturnValue(cadenaFind([
         { code: '0807000000', description: { es: 'Melones' } }
-      ]);
+      ]));
 
       const res = await request(app(ctrl.searchTaric, 'get', '/r'))
         .get('/r?code=0807&q=ignorado');
@@ -808,12 +814,12 @@ describe('classificationController - Cobertura de ramas simples', () => {
   });
 
   describe('searchTaric - isCodeSearch regex', () => {
-    test.skip('cuando q es código numérico con puntos', async () => {
-      mockTaricCode.findOne.mockResolvedValue({
+    test('cuando q es código numérico con puntos', async () => {
+      mockTaricCode.findOne.mockReturnValue(cadenaLean({
         code: '0807000000',
         description: { es: 'Melones' }
-      });
-      mockTaricCode.find.mockResolvedValue([]);
+      }));
+      mockTaricCode.find.mockReturnValue(cadenaFind([]));
 
       const res = await request(app(ctrl.searchTaric, 'get', '/r'))
         .get('/r?q=08.07');
@@ -835,8 +841,8 @@ describe('classificationController - Cobertura de ramas simples', () => {
   });
 
   describe('searchTaric - Códigos con aiNodes.length > 0', () => {
-    test.skip('cuando IA genera nodos para capítulo sin datos', async () => {
-      mockTaricCode.find.mockResolvedValueOnce([]).mockResolvedValue([]);
+    test('cuando IA genera nodos para capítulo sin datos', async () => {
+      mockTaricCode.find.mockReturnValue(cadenaFind([]));
       mockAiService.generateTreeLevel.mockResolvedValue([
         { code: '0807', description: 'Melones' }
       ]);
@@ -1269,6 +1275,7 @@ describe('classificationController - Cobertura de ramas simples', () => {
   });
 
   describe('getTaricInfo - description.es y description.en y description fallbacks en hierarchy', () => {
+    // BUG DEL CÓDIGO (no se toca aquí): classificationController.js:170/174 devuelve el objeto `{}` en vez de '' cuando description no tiene es/en.
     test.skip('cuando hierarchy tiene description vacío', async () => {
       const mockTaric = {
         code: '0807000000',
@@ -1290,6 +1297,7 @@ describe('classificationController - Cobertura de ramas simples', () => {
       expect(res.body.data.hierarchy[0].description).toBe('');
     });
 
+    // BUG DEL CÓDIGO (no se toca aquí): classificationController.js:170/174 devuelve el objeto `{}` en vez de '' cuando description no tiene es/en.
     test.skip('cuando children tiene description vacío', async () => {
       const mockTaric = {
         code: '0807000000',
@@ -1484,13 +1492,13 @@ describe('classificationController - Cobertura de ramas simples', () => {
   });
 
   describe('suggestTaricCode - expeditionId pero sin itemIndex', () => {
-    test.skip('cuando hay expeditionId pero itemIndex es undefined, no guarda en expediente', async () => {
+    test('cuando hay expeditionId pero itemIndex es undefined, no guarda en expediente', async () => {
       const expediente = {
         _id: 'exp1',
         tenantId: TENANT_A,
         save: jest.fn().mockResolvedValue(true)
       };
-      mockExpedition.findById.mockResolvedValue(expediente);
+      mockExpedition.findById.mockReturnValue(cadenaLean(expediente));
       mockAiService.classifyProduct.mockResolvedValue([
         { code: '6109100010', confidence: 0.9, reasoning: 'Textil' }
       ]);
@@ -1537,10 +1545,11 @@ describe('classificationController - Cobertura de ramas simples', () => {
   });
 
   describe('searchTaric - Operador binary searchTerm && regex', () => {
-    test.skip('cuando searchTerm existe y pasa regex, isCodeSearch es true', async () => {
-      mockTaricCode.find.mockResolvedValue([
+    test('cuando searchTerm existe y pasa regex, isCodeSearch es true', async () => {
+      mockTaricCode.findOne.mockReturnValue(cadenaLean(null));
+      mockTaricCode.find.mockReturnValue(cadenaFind([
         { code: '0807000000', description: { es: 'Melones' } }
-      ]);
+      ]));
 
       const res = await request(app(ctrl.searchTaric, 'get', '/r'))
         .get('/r?q=0807');

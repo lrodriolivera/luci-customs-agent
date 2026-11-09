@@ -25,7 +25,6 @@ const mockCertService = {
   deleteCertificate: jest.fn(),
   verifyCertificateStatus: jest.fn(),
   validateCertificateForOperation: jest.fn(),
-  analyzeCertificateWithLuci: jest.fn(),
   getCertificateIdByAlias: jest.fn(alias => alias)
 };
 

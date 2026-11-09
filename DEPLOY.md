@@ -1,5 +1,9 @@
 # Despliegue LUCI — homelab
 
+Produccion corre en el **Mac Studio**, en `~/homelab/luci` (antes en el ProBook, `/srv/homelab/luci`),
+con los contenedores `luci-backend`, `luci-frontend`, `luci-ai`, `luci-mongo` y `luci-redis`,
+expuesto via Cloudflare.
+
 Este directorio es un **checkout de git** del repo Forgejo
 `https://git.strixai.ai/strixai/luci-customs-agent` (rama `main`).
 
@@ -11,7 +15,7 @@ meses sin estar en el repo.
 ## Actualizar a la ultima version
 
 ```bash
-cd /srv/homelab/luci
+cd ~/homelab/luci
 git pull
 docker compose build luci-backend luci-frontend luci-ai
 docker compose up -d

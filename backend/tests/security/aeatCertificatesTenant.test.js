@@ -133,3 +133,30 @@ describe('F9 — el almacen esta acotado por tenant', () => {
     expect(res.body.data.map((c) => c.alias)).toEqual(['CERT-A']);
   });
 });
+
+describe('GET /certificates/:alias — metadatos del certificado (antes siempre 500)', () => {
+  test('el propietario recibe 200 con alias, sujeto, emisor, validez y tipo', async () => {
+    const res = await llamar(aeatRealController.getCertificateInfo, TENANT_A, { params: { alias: 'CERT-A' } });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.success).toBe(true);
+    const c = res.body.data.certificate;
+    expect(c.metadata.alias).toBe('CERT-A');
+    expect(c.subject).toEqual({ CN: 'Titular CERT-A' });
+    expect(c.issuer).toEqual({ CN: 'FNMT' });
+    expect(c.validFrom).toBeDefined();
+    expect(c.validTo).toBeDefined();
+    expect(c.type).toBe('FNMT_PJ');
+    expect(res.body.data.analysis).toBeUndefined();
+  });
+
+  test('otro tenant recibe 404 con el alias de un certificado ajeno', async () => {
+    const res = await llamar(aeatRealController.getCertificateInfo, TENANT_B, { params: { alias: 'CERT-A' } });
+    expect(res.statusCode).toBe(404);
+    expect(JSON.stringify(res.body)).not.toMatch(/Titular CERT-A/);
+  });
+
+  test('un alias inexistente recibe 404', async () => {
+    const res = await llamar(aeatRealController.getCertificateInfo, TENANT_A, { params: { alias: 'NO-EXISTE' } });
+    expect(res.statusCode).toBe(404);
+  });
+});

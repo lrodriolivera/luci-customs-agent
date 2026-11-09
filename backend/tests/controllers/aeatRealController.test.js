@@ -17,7 +17,6 @@ const mockCertService = {
   deleteCertificate: jest.fn(),
   verifyCertificateStatus: jest.fn(),
   validateCertificateForOperation: jest.fn(),
-  analyzeCertificateWithLuci: jest.fn(),
   getCertificateIdByAlias: jest.fn()
 };
 
@@ -237,7 +236,7 @@ describe('aeatRealController.getCertificateInfo', () => {
         { id: 'c1', metadata: { alias: 'FNMT-STRIX' }, validTo: '2027-10-14' }
       ]
     });
-    mockCertService.analyzeCertificateWithLuci.mockResolvedValue({ message: 'Válido' });
+    mockCertService.getCertificateIdByAlias.mockImplementation(alias => (alias === 'FNMT-STRIX' ? 'c1' : null));
   });
 
   test('404 si el alias no existe', async () => {
@@ -245,26 +244,25 @@ describe('aeatRealController.getCertificateInfo', () => {
       .get('/r/INEXISTENTE');
 
     expect(res.status).toBe(404);
-    expect(mockCertService.analyzeCertificateWithLuci).not.toHaveBeenCalled();
   });
 
-  test('camino feliz: devuelve certificado y análisis LUCI', async () => {
+  test('camino feliz: devuelve los metadatos del certificado, sin análisis', async () => {
     const res = await request(app(aeatRealController.getCertificateInfo, 'get', '/r/:alias'))
       .get('/r/FNMT-STRIX');
 
     expect(res.status).toBe(200);
     expect(res.body.data.certificate.metadata.alias).toBe('FNMT-STRIX');
-    expect(res.body.data.analysis.message).toBe('Válido');
+    expect(res.body.data.analysis).toBeUndefined();
   });
 
-  test('500 si analyzeCertificateWithLuci lanza', async () => {
-    mockCertService.analyzeCertificateWithLuci.mockRejectedValue(new Error('LUCI offline'));
+  test('500 si el servicio de certificados lanza', async () => {
+    mockCertService.listCertificates.mockRejectedValue(new Error('Keystore corrupto'));
 
     const res = await request(app(aeatRealController.getCertificateInfo, 'get', '/r/:alias'))
       .get('/r/FNMT-STRIX');
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toContain('LUCI offline');
+    expect(res.body.error).toContain('Keystore corrupto');
   });
 });
 

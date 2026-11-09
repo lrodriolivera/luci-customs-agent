@@ -22,7 +22,6 @@ const mockCertService = {
   deleteCertificate: jest.fn(),
   verifyCertificateStatus: jest.fn(),
   validateCertificateForOperation: jest.fn(),
-  analyzeCertificateWithLuci: jest.fn(),
   getCertificateForSigning: jest.fn(),
   // Identidad: estos tests verifican ramas del controller, no la resolución
   // alias->certId en sí (eso lo cubre certificateService.test.js), así que
@@ -279,7 +278,6 @@ describe('aeatRealController - ramas sin cubrir', () => {
 
       expect(res.status).toBe(404);
       expect(res.body.error).toMatch(/no encontrado/i);
-      expect(mockCertService.analyzeCertificateWithLuci).not.toHaveBeenCalled();
     });
 
     test('200 cuando el alias existe', async () => {
@@ -296,17 +294,14 @@ describe('aeatRealController - ramas sin cubrir', () => {
         ]
       });
 
-      mockCertService.analyzeCertificateWithLuci.mockResolvedValue({
-        status: 'valid',
-        message: 'Certificado válido'
-      });
+      mockCertService.getCertificateIdByAlias.mockReturnValue('c1');
 
       const res = await request(app(aeatRealController.getCertificateInfo, 'get', '/r/:alias'))
         .get('/r/CERT-OK');
 
       expect(res.status).toBe(200);
       expect(res.body.data.certificate.type).toBe('FNMT_PJ');
-      expect(res.body.data.analysis.status).toBe('valid');
+      expect(res.body.data.analysis).toBeUndefined();
     });
   });
 
@@ -1161,15 +1156,13 @@ describe('aeatRealController - ramas sin cubrir', () => {
         ]
       });
 
-      mockCertService.analyzeCertificateWithLuci.mockResolvedValue({
-        status: 'valid'
-      });
+      mockCertService.getCertificateIdByAlias.mockReturnValue('cert-id-123');
 
       const res = await request(app(aeatRealController.getCertificateInfo, 'get', '/r/:alias'))
         .get('/r/cert-id-123');
 
       expect(res.status).toBe(200);
-      // Línea 145: (c.metadata?.alias || c.id) === alias
+      // getCertificateIdByAlias resuelve por id cuando el certificado no tiene alias
       expect(res.body.data.certificate.id).toBe('cert-id-123');
     });
   });

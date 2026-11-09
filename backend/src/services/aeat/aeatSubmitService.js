@@ -6,7 +6,6 @@
 
 const logger = require('../../config/logger');
 const aeatRealService = require('./aeatRealService');
-const certificateService = require('./certificateService');
 const aeatTransport = require('./aeatTransport');
 const { buildH1ImportXML, expeditionToH1Data } = require('./h1XmlBuilder');
 const { buildH7ImportXML, buildAltaH7V1XML } = require('./h7XmlBuilder');
@@ -21,31 +20,6 @@ const { buildCC044UnloadingXML } = require('./cc044XmlBuilder');
 const { buildIE313AmendmentXML } = require('./ie313XmlBuilder');
 const { buildIE314CancelXML } = require('./ie314XmlBuilder');
 const { buildQueryImportXML } = require('./queryXmlBuilder');
-
-// Helper: obtener certificado activo
-async function _getCertificate() {
-  const result = await certificateService.listCertificates();
-  const certs = result.certificates || [];
-  if (certs.length > 0) return certs[0];
-
-  // Intentar importar del .env
-  const fs = require('fs');
-  const path = require('path');
-  const certPath = process.env.AEAT_CERTIFICATE_PATH;
-  const certPass = process.env.AEAT_CERTIFICATE_PASSWORD;
-
-  if (certPath && certPass) {
-    const fullPath = path.resolve(process.cwd(), certPath);
-    if (fs.existsSync(fullPath)) {
-      const p12Buffer = fs.readFileSync(fullPath);
-      const result = await certificateService.importCertificate(p12Buffer, certPass, {
-        alias: 'AEAT-AUTO', organizationId: 'system', userId: 'system'
-      });
-      if (result.success) return { id: result.certificateId, password: certPass };
-    }
-  }
-  return null;
-}
 
 // Helper: parsear respuesta SOAP de la AEAT
 function _parseAEATResponse(responseData) {
