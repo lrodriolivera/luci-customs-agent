@@ -583,7 +583,7 @@ class TaricService {
         level: 10,
         duties: data.duties,
         vat: data.vat,
-        supplementaryUnit: typeof data.supplementaryUnit === 'object' ? (data.supplementaryUnit?.type || data.supplementaryUnit?.description || '') : (data.supplementaryUnit || ''),
+        supplementaryUnit: this._normalizarSupplementaryUnit(data.supplementaryUnit),
         specialTaxes: data.specialTaxes || [],
         isLeaf: true,
         isActive: true,
@@ -609,6 +609,18 @@ class TaricService {
   }
 
   // ============== Metodos privados ==============
+
+  /**
+   * supplementaryUnit tal como lo declara el schema de TaricCode: objeto
+   * { required, type, description }. Un objeto se guarda tal cual; un string se
+   * convierte en { required: true, type: <string>, description: '' }.
+   */
+  _normalizarSupplementaryUnit(unidad) {
+    if (typeof unidad === 'string') {
+      return unidad ? { required: true, type: unidad, description: '' } : undefined;
+    }
+    return unidad && typeof unidad === 'object' ? unidad : undefined;
+  }
 
   _normalizeCode(code) {
     // Eliminar espacios y puntos, asegurar 10 digitos
