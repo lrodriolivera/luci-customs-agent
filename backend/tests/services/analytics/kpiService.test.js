@@ -36,6 +36,7 @@ const DATOS = {
 describe('KPI Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    kpiService.limpiarCacheAnalisis();
     // Resetear el mock de aiService antes de cada test
     aiService.analyzeKPIDeviations.mockResolvedValue({
       overallPerformance: {
@@ -592,7 +593,7 @@ describe('KPI Service', () => {
     });
   });
 
-  describe('getKPIDashboard - with LUCI analysis', () => {
+  describe('getKPIAnalysis - with LUCI analysis', () => {
     test('should include LUCI analysis with overallPerformance shape', async () => {
       aiService.analyzeKPIDeviations.mockResolvedValue({
         overallPerformance: {
@@ -613,7 +614,7 @@ describe('KPI Service', () => {
         ]
       });
 
-      const result = await kpiService.getKPIDashboard(undefined, DATOS);
+      const result = await kpiService.getKPIAnalysis(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis).toBeDefined();
@@ -632,7 +633,7 @@ describe('KPI Service', () => {
         risks: ['Data quality issues', 'System downtime']
       });
 
-      const result = await kpiService.getKPIDashboard(undefined, DATOS);
+      const result = await kpiService.getKPIAnalysis(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis).toBeDefined();
@@ -646,12 +647,10 @@ describe('KPI Service', () => {
     test('should handle LUCI analysis failure gracefully', async () => {
       aiService.analyzeKPIDeviations.mockRejectedValue(new Error('AI service unavailable'));
 
-      const result = await kpiService.getKPIDashboard(undefined, DATOS);
+      const result = await kpiService.getKPIAnalysis(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis).toBeNull();
-      expect(result.data.kpis).toBeDefined();
-      expect(result.data.healthScore).toBeDefined();
     });
 
     test('should handle LUCI analysis with complex nested structures', async () => {
@@ -684,7 +683,7 @@ describe('KPI Service', () => {
         ]
       });
 
-      const result = await kpiService.getKPIDashboard(undefined, DATOS);
+      const result = await kpiService.getKPIAnalysis(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis).toBeDefined();
@@ -751,7 +750,7 @@ describe('KPI Service', () => {
         summary: 'Simple summary'
       });
 
-      const result = await kpiService.getKPIDashboard(undefined, DATOS);
+      const result = await kpiService.getKPIAnalysis(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis.summary).toBe('Simple summary');
@@ -782,7 +781,7 @@ describe('KPI Service', () => {
         ]
       });
 
-      const result = await kpiService.getKPIDashboard(undefined, DATOS);
+      const result = await kpiService.getKPIAnalysis(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis.priorities).toContain('Real action');
@@ -801,7 +800,7 @@ describe('KPI Service', () => {
         ]
       });
 
-      const result = await kpiService.getKPIDashboard(undefined, DATOS);
+      const result = await kpiService.getKPIAnalysis(undefined, DATOS);
 
       expect(result.success).toBe(true);
       expect(result.data.luciAnalysis.risks).toContain('Root cause 1');

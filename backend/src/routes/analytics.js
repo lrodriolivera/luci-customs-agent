@@ -75,6 +75,9 @@ router.delete('/reports/:id', analyticsController.deleteReport);
 // GET /api/analytics/kpis/dashboard - Get KPI dashboard
 router.get('/kpis/dashboard', analyticsController.getKPIDashboard);
 
+// GET /api/analytics/kpis/analysis - LUCI analysis of the KPIs (separate: Bedrock is slow, cached 10 min per tenant)
+router.get('/kpis/analysis', analyticsController.getKPIAnalysis);
+
 // GET /api/analytics/kpis/definitions - Get KPI definitions
 router.get('/kpis/definitions', analyticsController.getKPIDefinitions);
 

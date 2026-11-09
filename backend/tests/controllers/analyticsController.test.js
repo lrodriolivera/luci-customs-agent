@@ -37,6 +37,7 @@ jest.mock('../../src/services/analytics', () => ({
   },
   kpiService: {
     getKPIDashboard: jest.fn(),
+    getKPIAnalysis: jest.fn(),
     getAllKPIs: jest.fn(),
     getKPIDefinitions: jest.fn(),
     getKPIsByCategory: jest.fn(),
@@ -400,6 +401,31 @@ describe('KPIs con datos reales del tenant', () => {
     expect(datosParaKPIs).toHaveBeenLastCalledWith('t1', { dias: 7 });
     expect(kpiService.calculateKPI.mock.calls.at(-1)[1]).toBe(DATOS);
     expect(kpiService.calculateKPI.mock.calls.at(-1)[1]).not.toHaveProperty('errorRate');
+  });
+
+  test('getKPIAnalysis pide a kpiService el análisis del ámbito con los datos reales', async () => {
+    kpiService.getKPIAnalysis.mockResolvedValue({ success: true, data: { luciAnalysis: null } });
+    const res = crearRes();
+    await ctrl.getKPIAnalysis(conUsuario(usuario), res);
+    expect(datosParaKPIs).toHaveBeenLastCalledWith('t1', {});
+    expect(kpiService.getKPIAnalysis).toHaveBeenLastCalledWith('t1', DATOS);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  test('getKPIAnalysis: plataforma undefined, sin tenant null', async () => {
+    kpiService.getKPIAnalysis.mockResolvedValue({ success: true, data: {} });
+    await ctrl.getKPIAnalysis(conUsuario({ id: 'root', role: 'super_admin' }), crearRes());
+    expect(kpiService.getKPIAnalysis).toHaveBeenLastCalledWith(undefined, DATOS);
+    await ctrl.getKPIAnalysis(conUsuario({ id: 'u2', role: 'user' }), crearRes());
+    expect(kpiService.getKPIAnalysis).toHaveBeenLastCalledWith(null, DATOS);
+  });
+
+  test('getKPIAnalysis responde 500 si falla', async () => {
+    kpiService.getKPIAnalysis.mockRejectedValue(new Error('boom'));
+    const res = crearRes();
+    await ctrl.getKPIAnalysis(conUsuario(usuario), res);
+    expect(res.statusCode).toBe(500);
   });
 
   test('si no se pueden obtener los datos responde 500', async () => {
