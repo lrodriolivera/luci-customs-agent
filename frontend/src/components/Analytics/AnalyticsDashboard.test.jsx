@@ -1299,4 +1299,92 @@ describe('<AnalyticsDashboard />', () => {
     expect(screen.getByText('Objeto con action')).toBeInTheDocument()
     expect(screen.getByText('Objeto con rationale')).toBeInTheDocument()
   })
+
+  // ==================== KPIs SIN DATOS ====================
+  const kpiSinDatos = (kpiId, name, unit = '%') => ({
+    kpiId, name, value: null, unit, target: 1, status: 'sin_datos', trend: null
+  })
+  const mockKPISinDatos = {
+    healthScore: 90,
+    kpisCalculados: 1,
+    kpisTotal: 3,
+    kpis: {
+      byCategory: {
+        operational: [
+          { kpiId: 'op1', name: 'Tiempo Promedio', value: 2.5, unit: 'h', target: 3, status: 'good', trend: { direction: 'down', percentage: 5 } }
+        ],
+        compliance: [
+          kpiSinDatos('err', 'Tasa de Error'),
+          kpiSinDatos('rej', 'Tasa de Rechazo')
+        ]
+      }
+    },
+    alerts: []
+  }
+
+  const abrirKPIs = async (datos) => {
+    analyticsAPI.kpis.getDashboard.mockResolvedValue({ data: { success: true, data: datos } })
+    const user = userEvent.setup()
+    render(<AnalyticsDashboard />)
+    await waitFor(() => {
+      expect(screen.getByText('analyticsPage.title')).toBeInTheDocument()
+    })
+    await user.click(screen.getByRole('button', { name: /KPIs/i }))
+    await waitFor(() => {
+      expect(screen.getByText('Score general de KPIs')).toBeInTheDocument()
+    })
+  }
+
+  test('un KPI con value null muestra "Sin datos" y no la cifra, ni "null", ni tendencia', async () => {
+    await abrirKPIs(mockKPISinDatos)
+
+    const tarjeta = screen.getByText('Tasa de Error').closest('div.border')
+    expect(within(tarjeta).getAllByText('analyticsPage.kpiSinDatos').length).toBeGreaterThan(0)
+    expect(tarjeta.textContent).not.toMatch(/null|undefined|NaN/)
+    // salvo la línea de objetivo, la tarjeta no contiene ninguna cifra
+    expect(tarjeta.textContent.replace(/Objetivo:.*$/, '')).not.toMatch(/\d/)
+    // sin tendencia (ni icono de flecha ni porcentaje)
+    expect(tarjeta.querySelector('svg')).toBeNull()
+    // las etiquetas de estado no pintan "Critico" para un KPI sin datos
+    expect(within(tarjeta).queryByText('Critico')).toBeNull()
+  })
+
+  test('un KPI sin datos no usa color de estado', async () => {
+    await abrirKPIs(mockKPISinDatos)
+
+    const tarjeta = screen.getByText('Tasa de Rechazo').closest('div.border')
+    const insignia = within(tarjeta).getAllByText('analyticsPage.kpiSinDatos')[0]
+    expect(insignia.className).not.toMatch(/green|blue|yellow|red/)
+  })
+
+  test('los KPI con datos siguen mostrando su cifra y estado', async () => {
+    await abrirKPIs(mockKPISinDatos)
+
+    const tarjeta = screen.getByText('Tiempo Promedio').closest('div.border')
+    expect(within(tarjeta).getByText('Bueno')).toBeInTheDocument()
+    expect(within(tarjeta).getByText(/2\.5/)).toBeInTheDocument()
+  })
+
+  test('el health score indica sobre cuántos KPIs se calcula', async () => {
+    await abrirKPIs(mockKPISinDatos)
+
+    const tarjeta = screen.getByText('Score general de KPIs').closest('.card')
+    expect(within(tarjeta).getByText('90')).toBeInTheDocument()
+    expect(within(tarjeta).getByText('analyticsPage.kpiHealthBase')).toBeInTheDocument()
+  })
+
+  test('sin ningún KPI calculado (healthScore null) no hay score ni círculo de color', async () => {
+    await abrirKPIs({
+      ...mockKPISinDatos,
+      healthScore: null,
+      kpisCalculados: 0,
+      kpis: { byCategory: { compliance: [kpiSinDatos('err', 'Tasa de Error')] } }
+    })
+
+    const tarjeta = screen.getByText('Score general de KPIs').closest('.card')
+    expect(within(tarjeta).getByText('analyticsPage.kpiHealthSinDatos')).toBeInTheDocument()
+    expect(tarjeta.textContent).not.toMatch(/null|NaN/)
+    // el círculo de progreso no se pinta
+    expect(tarjeta.querySelectorAll('circle').length).toBeLessThanOrEqual(1)
+  })
 })
