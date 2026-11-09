@@ -573,6 +573,19 @@ function AnalyticsAIPanel({ period, onClose }) {
       )
     }
 
+    // El servidor responde { sinDatos: true } (sin llamar al modelo) cuando no hay
+    // ninguna declaracion ni expediente en el periodo.
+    if (currentResult.sinDatos) {
+      return (
+        <div className="text-center py-8">
+          <SparklesIcon className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+          <p className="text-gray-500">
+            {t('analyticsPage.iaSinDatos', 'No hay datos suficientes en el periodo para analizar')}
+          </p>
+        </div>
+      )
+    }
+
     switch (activeTab) {
       case 'insights':
         return renderInsights(currentResult)
@@ -924,7 +937,7 @@ export default function AnalyticsDashboard() {
             </div>
 
             <div className="text-sm">
-              <span className="text-gray-500">Declaraciones activas: </span>
+              <span className="text-gray-500">{t('analyticsPage.expedientesActivos', 'Expedientes activos')}: </span>
               <span className="font-medium">{sinDato(realTimeData.activeDeclarations) ? t('analyticsPage.kpiSinDatos', 'Sin datos') : realTimeData.activeDeclarations}</span>
             </div>
 
@@ -1038,15 +1051,19 @@ export default function AnalyticsDashboard() {
                   <ShieldCheckIcon className="w-6 h-6 text-purple-600" />
                 </div>
               </div>
-              <div className="mt-4 flex items-center gap-2">
-                {getTrendIcon(dashboardData.trends?.compliance?.direction)}
-                <span className={`text-sm ${
-                  dashboardData.trends?.compliance?.direction === 'up' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {Math.abs(dashboardData.trends?.compliance?.percentage || 0)}%
-                </span>
-                <span className="text-sm text-gray-500">variacion</span>
-              </div>
+              {sinDato(dashboardData.trends?.compliance?.percentage) ? (
+                <div className="mt-4">{sinDatosEl('text-sm text-gray-400')}</div>
+              ) : (
+                <div className="mt-4 flex items-center gap-2">
+                  {getTrendIcon(dashboardData.trends?.compliance?.direction)}
+                  <span className={`text-sm ${
+                    dashboardData.trends?.compliance?.direction === 'up' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {Math.abs(dashboardData.trends.compliance.percentage)}%
+                  </span>
+                  <span className="text-sm text-gray-500">variacion</span>
+                </div>
+              )}
             </div>
 
             <div className="card">

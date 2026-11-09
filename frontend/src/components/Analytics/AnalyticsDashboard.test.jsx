@@ -285,7 +285,7 @@ describe('<AnalyticsDashboard />', () => {
       expect(screen.getByText('En tiempo real')).toBeInTheDocument()
     })
 
-    expect(screen.getByText('Declaraciones activas:')).toBeInTheDocument()
+    expect(screen.getByText('analyticsPage.expedientesActivos:')).toBeInTheDocument()
     expect(screen.getByText('45')).toBeInTheDocument()
     expect(screen.getByText('Pendientes:')).toBeInTheDocument()
     expect(screen.getByText('Conectado')).toBeInTheDocument()
@@ -918,6 +918,24 @@ describe('<AnalyticsDashboard />', () => {
     expect(screen.getByText('15%')).toBeInTheDocument()
     expect(screen.getByText('Patrón estacional detectado')).toBeInTheDocument()
     expect(screen.getByText('Diciembre, Enero, Marzo')).toBeInTheDocument()
+  })
+
+  test.each([
+    ['insights', 'generateInsights', 'analyticsPage.insights'],
+    ['trends', 'predictTrends', 'analyticsPage.trends']
+  ])('panel IA: %s con { sinDatos: true } muestra el aviso y no renderiza un análisis', async (_tab, fn, etiqueta) => {
+    const user = userEvent.setup()
+    analyticsAPI.ai[fn].mockResolvedValue({ data: { success: true, data: { sinDatos: true } } })
+
+    render(<AnalyticsDashboard />)
+    await waitFor(() => expect(screen.getByText('analyticsPage.title')).toBeInTheDocument())
+
+    await user.click(screen.getByText('Centro de Analisis IA'))
+    await user.click(screen.getByText(etiqueta))
+    await user.click(screen.getByText('Ejecutar Analisis'))
+
+    expect(await screen.findByText('analyticsPage.iaSinDatos')).toBeInTheDocument()
+    expect(screen.queryByText('undefined')).toBeNull()
   })
 
   test('panel IA: trends muestra dirección correcta de predicciones', async () => {
@@ -1621,7 +1639,7 @@ describe('<AnalyticsDashboard />', () => {
       ...mockRealTimeData, activeDeclarations: null, pendingSubmissions: undefined
     })
 
-    const activas = within(barra).getByText('Declaraciones activas:').parentElement
+    const activas = within(barra).getByText('analyticsPage.expedientesActivos:').parentElement
     const pendientes = within(barra).getByText('Pendientes:').parentElement
     expect(within(activas).getByText(SIN_DATOS)).toBeInTheDocument()
     expect(within(pendientes).getByText(SIN_DATOS)).toBeInTheDocument()
@@ -1649,7 +1667,7 @@ describe('<AnalyticsDashboard />', () => {
   test('barra en tiempo real: un 0 real no es "Sin datos"', async () => {
     const barra = await abrirTiempoReal({ ...mockRealTimeData, activeDeclarations: 0, pendingSubmissions: 0 })
 
-    const activas = within(barra).getByText('Declaraciones activas:').parentElement
+    const activas = within(barra).getByText('analyticsPage.expedientesActivos:').parentElement
     expect(within(activas).getByText('0')).toBeInTheDocument()
     expect(within(activas).queryByText(SIN_DATOS)).toBeNull()
   })
@@ -1688,6 +1706,26 @@ describe('<AnalyticsDashboard />', () => {
 
     const card = screen.getByText('Declaraciones').closest('.card')
     expect(within(card).getByText('0%')).toBeInTheDocument()
+  })
+
+  test.each([null, undefined])('Visión General: tendencia de cumplimiento %s muestra "Sin datos", no "0%%"', async (valor) => {
+    await abrirTiempoReal(mockRealTimeData, {
+      ...mockDashboardData,
+      compliance: { ...mockDashboardData.compliance, documentCompleteness: 90 },
+      trends: { ...mockDashboardData.trends, compliance: valor === null ? null : { direction: 'up', percentage: valor } }
+    })
+
+    const card = screen.getAllByText('Cumplimiento').map((e) => e.closest('.card')).find(Boolean)
+    expect(within(card).getByText(SIN_DATOS)).toBeInTheDocument()
+    expect(card.textContent).not.toMatch(/\b0%/)
+    expect(within(card).queryByText('variacion')).toBeNull()
+  })
+
+  test('Visión General: con tendencia de cumplimiento real mantiene el porcentaje y "variacion"', async () => {
+    await abrirTiempoReal(mockRealTimeData)
+    const card = screen.getAllByText('Cumplimiento').map((e) => e.closest('.card')).find(Boolean)
+    expect(within(card).getByText('3%')).toBeInTheDocument()
+    expect(within(card).getByText('variacion')).toBeInTheDocument()
   })
 
   test('formatNumber: totalDeclarations null muestra "Sin datos", no "0"; un 0 real sigue siendo 0', async () => {

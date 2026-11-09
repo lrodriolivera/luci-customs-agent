@@ -11,6 +11,58 @@ const aiService = require('../services/aiService');
 const logger = require('../config/logger');
 const { ambitoTenant } = require('../utils/tenantGuard');
 const { datosParaKPIs } = require('../services/analytics/kpiDatos');
+const { panelDelAmbito } = require('../services/analytics/cuadroParaPanel');
+
+// ==================== Rango de fechas de la query ====================
+
+// Periodos admitidos (analyticsService.getDateRange). 'custom' queda fuera: exige fechas.
+const PERIODOS = new Set([
+  'today', 'yesterday', 'last_7_days', 'last_30_days', 'last_90_days',
+  'this_month', 'last_month', 'this_quarter', 'this_year'
+]);
+
+const peticionInvalida = (mensaje) => Object.assign(new Error(mensaje), { status: 400 });
+
+/**
+ * Rango de una consulta de analitica: `startDate` y `endDate` (ambos, validos),
+ * o `period` (el selector del frontend), o los ultimos 30 dias. Lanza un error
+ * con status 400 si las fechas o el periodo no son validos.
+ * @returns {{ desde: Date, hasta: Date }}
+ */
+function rangoDeLaQuery(query = {}) {
+  const { startDate, endDate, period } = query;
+
+  if (startDate !== undefined || endDate !== undefined) {
+    if (startDate === undefined || endDate === undefined) {
+      throw peticionInvalida('startDate y endDate deben venir juntos');
+    }
+    const desde = new Date(startDate);
+    const hasta = new Date(endDate);
+    if (Number.isNaN(desde.getTime()) || Number.isNaN(hasta.getTime())) {
+      throw peticionInvalida('startDate y endDate deben ser fechas validas');
+    }
+    if (desde > hasta) {
+      throw peticionInvalida('startDate no puede ser posterior a endDate');
+    }
+    return { desde, hasta };
+  }
+
+  if (period !== undefined && !PERIODOS.has(period)) {
+    throw peticionInvalida(`period no valido: use ${[...PERIODOS].join(', ')} o startDate y endDate`);
+  }
+
+  const { start, end } = analyticsService.getDateRange(period || 'last_30_days');
+  return { desde: start, hasta: end };
+}
+
+/** Responde 400 a un error de validacion del rango; 500 al resto. */
+function responderError(res, error, etiqueta) {
+  if (error.status === 400) {
+    return res.status(400).json({ success: false, error: error.message });
+  }
+  logger.error(`[AnalyticsController] ${etiqueta} error: ${error.message}`);
+  return res.status(500).json({ success: false, error: error.message });
+}
 
 // ==================== Dashboard & Metrics ====================
 
@@ -20,22 +72,16 @@ const { datosParaKPIs } = require('../services/analytics/kpiDatos');
  */
 async function getDashboardMetrics(req, res) {
   try {
-    const { startDate, endDate } = req.query;
+    const rango = rangoDeLaQuery(req.query);
 
-    // Agregaciones reales sobre la BD. Antes esto devolvia
-    // _generateMetricValue(150, 300) declaraciones cuando en la base habia 35,
-    // y la cifra cambiaba en cada recarga. Las secciones que no se pueden
-    // calcular hoy vienen con { disponible: false, motivo }, nunca con un
-    // numero inventado.
-    const data = await realMetrics.cuadroDeMando(req.user?.tenantId, {
-      desde: startDate,
-      hasta: endDate
-    });
+    // Agregaciones reales sobre la BD, adaptadas al contrato que lee el panel
+    // (operations/financial/compliance/trends). Lo que no tiene fuente es null:
+    // el frontend lo muestra como "Sin datos", nunca como un numero inventado.
+    const data = await panelDelAmbito(ambitoTenant(req.user), rango);
 
     res.json({ success: true, data });
   } catch (error) {
-    logger.error(`[AnalyticsController] Dashboard error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
+    responderError(res, error, 'Dashboard');
   }
 }
 
@@ -72,20 +118,30 @@ async function getRealTimeMetrics(req, res) {
 /**
  * Get declaration analytics
  * GET /api/analytics/declarations
+ *
+ * Volumen y reparto por canal reales del ambito del usuario (antes: simulador).
  */
 async function getDeclarationAnalytics(req, res) {
   try {
-    const { period, startDate, endDate, includeAnalysis } = req.query;
+    const rango = rangoDeLaQuery(req.query);
+    const tenantId = ambitoTenant(req.user);
 
-    const result = await analyticsService.getDeclarationAnalytics(
-      period || 'last_30_days',
-      { startDate, endDate, includeAnalysis: includeAnalysis !== 'false' }
-    );
+    // Sin tenant no se ve nada (realMetrics no filtra con null).
+    if (tenantId === null) {
+      return res.json({
+        success: true,
+        data: { simulated: false, volumen: { total: 0, porTipo: {}, porEstado: {}, aceptadas: 0, pendientes: 0 }, canales: null }
+      });
+    }
 
-    res.json(result);
+    const [volumen, canales] = await Promise.all([
+      realMetrics.volumenDeclaraciones(tenantId, rango),
+      realMetrics.repartoPorCanal(tenantId, rango)
+    ]);
+
+    res.json({ success: true, data: { simulated: false, volumen, canales } });
   } catch (error) {
-    logger.error(`[AnalyticsController] Declaration analytics error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
+    responderError(res, error, 'Declaration analytics');
   }
 }
 
@@ -95,9 +151,14 @@ async function getDeclarationAnalytics(req, res) {
  */
 async function getFinancialAnalytics(req, res) {
   try {
-    const { startDate, endDate } = req.query;
-    const rango = { desde: startDate, hasta: endDate };
-    const tenantId = req.user?.tenantId;
+    const rango = rangoDeLaQuery(req.query);
+    const tenantId = ambitoTenant(req.user);
+
+    // Sin tenant no se ve nada (realMetrics no filtra con null): no hay pagos
+    // visibles, asi que no hay recaudacion que analizar.
+    if (tenantId === null) {
+      return noImplementado(res, realMetrics.NO_DISPONIBLE.SIN_PAGOS);
+    }
 
     const [derechos, recaudacion, valor] = await Promise.all([
       realMetrics.derechosLiquidados(tenantId, rango),
@@ -118,8 +179,7 @@ async function getFinancialAnalytics(req, res) {
       data: { simulated: false, derechosLiquidados: derechos, recaudacion, valorMercancia: valor }
     });
   } catch (error) {
-    logger.error(`[AnalyticsController] Financial analytics error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
+    responderError(res, error, 'Financial analytics');
   }
 }
 
@@ -128,19 +188,7 @@ async function getFinancialAnalytics(req, res) {
  * GET /api/analytics/compliance
  */
 async function getComplianceAnalytics(req, res) {
-  try {
-    const { period, startDate, endDate, includeAnalysis } = req.query;
-
-    const result = await analyticsService.getComplianceAnalytics(
-      period || 'last_30_days',
-      { startDate, endDate, includeAnalysis: includeAnalysis !== 'false' }
-    );
-
-    res.json(result);
-  } catch (error) {
-    logger.error(`[AnalyticsController] Compliance analytics error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
-  }
+  return noImplementado(res, realMetrics.NO_DISPONIBLE.SIN_FUENTE_CUMPLIMIENTO);
 }
 
 /**
@@ -148,19 +196,7 @@ async function getComplianceAnalytics(req, res) {
  * GET /api/analytics/performance
  */
 async function getPerformanceAnalytics(req, res) {
-  try {
-    const { period, startDate, endDate } = req.query;
-
-    const result = await analyticsService.getPerformanceAnalytics(
-      period || 'last_30_days',
-      { startDate, endDate }
-    );
-
-    res.json(result);
-  } catch (error) {
-    logger.error(`[AnalyticsController] Performance analytics error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
-  }
+  return noImplementado(res, realMetrics.NO_DISPONIBLE.SIN_FUENTE_RENDIMIENTO);
 }
 
 /**
@@ -168,27 +204,16 @@ async function getPerformanceAnalytics(req, res) {
  * GET /api/analytics/compare
  */
 async function getComparisonReport(req, res) {
-  try {
-    const { period1, period2, includeAnalysis } = req.query;
+  const { period1, period2 } = req.query;
 
-    if (!period1 || !period2) {
-      return res.status(400).json({
-        success: false,
-        error: 'Both period1 and period2 are required'
-      });
-    }
-
-    const result = await analyticsService.getComparisonReport(
-      period1,
-      period2,
-      { includeAnalysis: includeAnalysis !== 'false' }
-    );
-
-    res.json(result);
-  } catch (error) {
-    logger.error(`[AnalyticsController] Comparison error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
+  if (!period1 || !period2) {
+    return res.status(400).json({
+      success: false,
+      error: 'Both period1 and period2 are required'
+    });
   }
+
+  return noImplementado(res, realMetrics.NO_DISPONIBLE.SIN_FUENTE_COMPARATIVA);
 }
 
 /**
@@ -196,22 +221,16 @@ async function getComparisonReport(req, res) {
  * POST /api/analytics/query
  */
 async function executeQuery(req, res) {
-  try {
-    const query = req.body;
+  const query = req.body;
 
-    if (!query.metrics || !Array.isArray(query.metrics)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Query must include metrics array'
-      });
-    }
-
-    const result = await analyticsService.queryAnalytics(query);
-    res.json(result);
-  } catch (error) {
-    logger.error(`[AnalyticsController] Query error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
+  if (!query.metrics || !Array.isArray(query.metrics)) {
+    return res.status(400).json({
+      success: false,
+      error: 'Query must include metrics array'
+    });
   }
+
+  return noImplementado(res, realMetrics.NO_DISPONIBLE.SIN_FUENTE_CONSULTA);
 }
 
 // ==================== Reports ====================
@@ -237,7 +256,8 @@ async function generateReport(req, res) {
       title,
       subtitle,
       includeLuciAnalysis: includeLuciAnalysis !== false,
-      userId: req.user?.id
+      userId: req.user?.id,
+      tenantId: ambitoTenant(req.user)
     });
 
     res.json(result);
@@ -363,7 +383,7 @@ async function previewReport(req, res) {
       });
     }
 
-    const result = await reportsService.previewReport(type, { period });
+    const result = await reportsService.previewReport(type, { period, tenantId: ambitoTenant(req.user) });
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Preview report error: ${error.message}`);
@@ -634,7 +654,7 @@ async function predictChannel(req, res) {
       });
     }
 
-    const result = await predictionsService.predictChannel(declarationData);
+    const result = await predictionsService.predictChannel(declarationData, { tenantId: ambitoTenant(req.user) });
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Predict channel error: ${error.message}`);
@@ -657,7 +677,7 @@ async function predictInspection(req, res) {
       });
     }
 
-    const result = await predictionsService.predictInspection(declarationData);
+    const result = await predictionsService.predictInspection(declarationData, { tenantId: ambitoTenant(req.user) });
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Predict inspection error: ${error.message}`);
@@ -739,6 +759,12 @@ async function analyzeTrends(req, res) {
     const { data, period } = req.body;
 
     const result = await predictionsService.analyzeTrends(data || {}, { period });
+
+    // Sin series en `data` no hay tendencia que calcular: 501, no series sinteticas.
+    if (!result.success && result.code === 'SIN_HISTORICO') {
+      return noImplementado(res, realMetrics.NO_DISPONIBLE.SIN_HISTORICO);
+    }
+
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Analyze trends error: ${error.message}`);
@@ -762,173 +788,131 @@ async function getModelMetrics(req, res) {
 
 // ==================== AI Endpoints - LUCI Integration ====================
 
+const HORIZONTE_DEFECTO = 30;
+const HORIZONTE_MAXIMO = 365;
+
+/**
+ * Del cuerpo de la peticion solo se lee `period` (el frontend lo manda como
+ * { period } en el primer argumento de analyticsAPI.ai.*, de ahi que pueda venir
+ * dentro de analyticsData/data/historicalData/kpiData). Cualquier otro dato del
+ * cliente se ignora: nunca llega al modelo.
+ */
+function periodoIA(body = {}) {
+  const candidato = body.period
+    ?? body.analyticsData?.period
+    ?? body.data?.period
+    ?? body.historicalData?.period
+    ?? body.kpiData?.period;
+  return PERIODOS.has(candidato) ? candidato : 'last_30_days';
+}
+
+const horizonteIA = (body = {}) => {
+  const h = Number.parseInt(body.horizon, 10);
+  return Number.isNaN(h) || h < 1 ? HORIZONTE_DEFECTO : Math.min(h, HORIZONTE_MAXIMO);
+};
+
+/** Opciones del informe: solo campos conocidos y del tipo esperado. */
+function opcionesIA(body = {}) {
+  const o = body.options && typeof body.options === 'object' ? body.options : {};
+  const texto = (v) => (typeof v === 'string' && v.length > 0 && v.length <= 100 ? v : undefined);
+  return {
+    audience: texto(o.audience),
+    focus: texto(o.focus),
+    language: texto(o.language),
+    includeComparison: o.includeComparison === true ? true : undefined
+  };
+}
+
+/**
+ * Datos reales del ambito para LUCI: cuadro de mando del periodo + KPI. Si no hay
+ * ninguna declaracion ni expediente, `sinDatos` es true y no se llama al modelo.
+ */
+async function datosParaIA(req) {
+  const tenantId = ambitoTenant(req.user);
+  const period = periodoIA(req.body);
+  const { start, end } = analyticsService.getDateRange(period);
+  const dias = Math.max(1, Math.round((end - start) / 86400000));
+
+  const panel = await panelDelAmbito(tenantId, { desde: start, hasta: end });
+  const sinDatos = !(panel.operations.totalDeclarations > 0 || panel.operations.activeExpeditions > 0);
+  if (sinDatos) return { sinDatos: true, period };
+
+  const kpis = (await kpiService.getAllKPIs(await datosParaKPIs(tenantId, { dias }), tenantId)).data;
+
+  return {
+    sinDatos: false,
+    period,
+    analyticsData: {
+      periodo: period,
+      operaciones: panel.operations,
+      financiero: panel.financial,
+      cumplimiento: panel.compliance,
+      tendencias: panel.trends,
+      kpis: kpis.all,
+      resumenKpis: kpis.summary
+    }
+  };
+}
+
+/** Plantilla de los seis endpoints: datos del servidor -> LUCI, o sinDatos sin llamar al modelo. */
+function manejadorIA(nombre, llamar) {
+  return async function (req, res) {
+    try {
+      const datos = await datosParaIA(req);
+      if (datos.sinDatos) {
+        return res.json({ success: true, data: { sinDatos: true } });
+      }
+      const result = await llamar(datos, req.body || {});
+      res.json({ success: true, data: result });
+    } catch (error) {
+      logger.error(`[AnalyticsController] AI ${nombre} error: ${error.message}`);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  };
+}
+
 /**
  * Generate automatic insights from analytics data
  * POST /api/analytics/ai/insights
  */
-async function aiGenerateInsights(req, res) {
-  try {
-    const { analyticsData, context } = req.body;
-
-    if (!analyticsData) {
-      return res.status(400).json({
-        success: false,
-        error: 'analyticsData es requerido'
-      });
-    }
-
-    const result = await aiService.generateAutomaticInsights(analyticsData, context || {});
-
-    res.json({
-      success: true,
-      data: result
-    });
-
-  } catch (error) {
-    logger.error(`[AnalyticsController] AI insights error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
-  }
-}
+const aiGenerateInsights = manejadorIA('insights', (d) =>
+  aiService.generateAutomaticInsights(d.analyticsData, { period: d.period }));
 
 /**
- * Detect anomalies with AI
+ * Detect anomalies with AI (umbrales: los de LUCI, no los del cliente)
  * POST /api/analytics/ai/anomalies
  */
-async function aiDetectAnomalies(req, res) {
-  try {
-    const { data, thresholds } = req.body;
-
-    if (!data) {
-      return res.status(400).json({
-        success: false,
-        error: 'data es requerido'
-      });
-    }
-
-    const result = await aiService.detectAnomaliesAI(data, thresholds || {});
-
-    res.json({
-      success: true,
-      data: result
-    });
-
-  } catch (error) {
-    logger.error(`[AnalyticsController] AI anomalies error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
-  }
-}
+const aiDetectAnomalies = manejadorIA('anomalies', (d) =>
+  aiService.detectAnomaliesAI(d.analyticsData, {}));
 
 /**
- * Predict trends with AI
+ * Predict trends with AI. No hay series historicas: se pasa la foto del periodo
+ * con su tendencia contra el anterior, y el prompt prohibe inventar cifras.
  * POST /api/analytics/ai/trends
  */
-async function aiPredictTrends(req, res) {
-  try {
-    const { historicalData, horizon } = req.body;
-
-    if (!historicalData) {
-      return res.status(400).json({
-        success: false,
-        error: 'historicalData es requerido'
-      });
-    }
-
-    const result = await aiService.predictTrendsAI(historicalData, horizon || 30);
-
-    res.json({
-      success: true,
-      data: result
-    });
-
-  } catch (error) {
-    logger.error(`[AnalyticsController] AI trends error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
-  }
-}
+const aiPredictTrends = manejadorIA('trends', (d, body) =>
+  aiService.predictTrendsAI(d.analyticsData, horizonteIA(body)));
 
 /**
  * Generate executive report with AI
  * POST /api/analytics/ai/executive-report
  */
-async function aiGenerateExecutiveReport(req, res) {
-  try {
-    const { analyticsData, options } = req.body;
-
-    if (!analyticsData) {
-      return res.status(400).json({
-        success: false,
-        error: 'analyticsData es requerido'
-      });
-    }
-
-    const result = await aiService.generateExecutiveReport(analyticsData, options || {});
-
-    res.json({
-      success: true,
-      data: result
-    });
-
-  } catch (error) {
-    logger.error(`[AnalyticsController] AI executive report error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
-  }
-}
+const aiGenerateExecutiveReport = manejadorIA('executive report', (d, body) =>
+  aiService.generateExecutiveReport(d.analyticsData, { ...opcionesIA(body), period: d.period }));
 
 /**
  * Analyze KPI deviations with AI
  * POST /api/analytics/ai/kpi-analysis
  */
-async function aiAnalyzeKPIDeviations(req, res) {
-  try {
-    const { kpiData, targets } = req.body;
-
-    if (!kpiData) {
-      return res.status(400).json({
-        success: false,
-        error: 'kpiData es requerido'
-      });
-    }
-
-    const result = await aiService.analyzeKPIDeviations(kpiData, targets || {});
-
-    res.json({
-      success: true,
-      data: result
-    });
-
-  } catch (error) {
-    logger.error(`[AnalyticsController] AI KPI analysis error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
-  }
-}
+const aiAnalyzeKPIDeviations = manejadorIA('KPI analysis', (d) =>
+  aiService.analyzeKPIDeviations(d.analyticsData.kpis, {}));
 
 /**
  * Full analytics analysis with AI
  * POST /api/analytics/ai/full-analysis
  */
-async function aiFullAnalysis(req, res) {
-  try {
-    const { analyticsData, options } = req.body;
-
-    if (!analyticsData) {
-      return res.status(400).json({
-        success: false,
-        error: 'analyticsData es requerido'
-      });
-    }
-
-    const result = await aiService.fullAnalyticsAnalysis(analyticsData, options || {});
-
-    res.json({
-      success: true,
-      data: result
-    });
-
-  } catch (error) {
-    logger.error(`[AnalyticsController] AI full analysis error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
-  }
-}
+const aiFullAnalysis = manejadorIA('full analysis', (d, body) =>
+  aiService.fullAnalyticsAnalysis(d.analyticsData, { period: d.period, horizon: horizonteIA(body) }));
 
 module.exports = {
   // Dashboard & Metrics

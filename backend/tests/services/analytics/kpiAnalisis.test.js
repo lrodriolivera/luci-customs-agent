@@ -101,6 +101,25 @@ describe('getKPIAnalysis: caché de 10 minutos por tenant', () => {
     expect(r.data.fromCache).toBe(false);
   });
 
+  test('la caché distingue la ventana en días: un análisis de 30 días no se sirve para 7', async () => {
+    await kpiService.getKPIAnalysis(A, { ...DATOS, days: 30 });
+    aiService.analyzeKPIDeviations.mockResolvedValue(respuesta('Análisis de 7 días'));
+
+    const r7 = await kpiService.getKPIAnalysis(A, { ...DATOS, days: 7 });
+    expect(r7.data.fromCache).toBe(false);
+    expect(r7.data.luciAnalysis.summary).toBe('Análisis de 7 días');
+    expect(aiService.analyzeKPIDeviations).toHaveBeenCalledTimes(2);
+
+    // ambas ventanas siguen cacheadas, cada una con lo suyo
+    const r7b = await kpiService.getKPIAnalysis(A, { ...DATOS, days: 7 });
+    const r30 = await kpiService.getKPIAnalysis(A, { ...DATOS, days: 30 });
+    expect(r7b.data.fromCache).toBe(true);
+    expect(r7b.data.luciAnalysis.summary).toBe('Análisis de 7 días');
+    expect(r30.data.fromCache).toBe(true);
+    expect(r30.data.luciAnalysis.summary).toBe('Análisis 1');
+    expect(aiService.analyzeKPIDeviations).toHaveBeenCalledTimes(2);
+  });
+
   test('cada tenant tiene su caché: el análisis de A no se sirve a B', async () => {
     await kpiService.getKPIAnalysis(A, DATOS);
     aiService.analyzeKPIDeviations.mockResolvedValue(respuesta('Análisis de B'));

@@ -8,6 +8,7 @@
 
 const logger = require('../../config/logger');
 const aiService = require('../aiService');
+const realMetrics = require('./realMetricsService');
 
 /**
  * Prediction types
@@ -42,104 +43,23 @@ const ANOMALY_TYPES = {
   SEASONAL_DEVIATION: 'seasonal_deviation'
 };
 
-/**
- * In-memory cache for predictions
- */
-let predictionCache = new Map();
-let modelMetrics = {
-  volumeModel: { accuracy: 0.87, lastTrained: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-  channelModel: { accuracy: 0.92, lastTrained: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
-  inspectionModel: { accuracy: 0.85, lastTrained: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) },
-  anomalyModel: { accuracy: 0.89, lastTrained: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) }
+// No hay modelos entrenados ni medidos: no se publica ninguna precision. Antes
+// habia valores fijos (0.87, 0.92...) presentados como metricas de modelo.
+const SIN_MODELO = Object.freeze({ disponible: false, accuracy: null, lastTrained: null });
+const modelMetrics = {
+  volumeModel: SIN_MODELO,
+  channelModel: SIN_MODELO,
+  inspectionModel: SIN_MODELO,
+  anomalyModel: SIN_MODELO
 };
 
-/**
- * Predict declaration volume
- */
-async function predictVolume(options = {}) {
-  try {
-    const horizon = options.horizon || 30; // days
-    const granularity = options.granularity || 'daily';
-
-    logger.info(`[Predictions] Generating volume prediction for ${horizon} days`);
-
-    // Generate predictions based on historical patterns
-    const predictions = [];
-    const baseVolume = options.baseVolume || _generateBaseValue(8, 15);
-    const today = new Date();
-
-    for (let i = 1; i <= horizon; i++) {
-      const date = new Date(today);
-      date.setDate(date.getDate() + i);
-
-      // Apply seasonality and day-of-week factors
-      const dayOfWeek = date.getDay();
-      const seasonalFactor = _getSeasonalFactor(date);
-      const dayFactor = _getDayOfWeekFactor(dayOfWeek);
-
-      const predictedVolume = Math.round(
-        baseVolume * seasonalFactor * dayFactor * (0.9 + Math.random() * 0.2)
-      );
-
-      const confidence = _calculateConfidence(i, horizon);
-
-      predictions.push({
-        date: date.toISOString().split('T')[0],
-        predictedVolume,
-        lowerBound: Math.round(predictedVolume * 0.8),
-        upperBound: Math.round(predictedVolume * 1.2),
-        confidence,
-        factors: {
-          seasonal: seasonalFactor,
-          dayOfWeek: dayFactor
-        }
-      });
-    }
-
-    // Aggregate by granularity if needed
-    const aggregated = granularity === 'weekly'
-      ? _aggregateWeekly(predictions)
-      : granularity === 'monthly'
-        ? _aggregateMonthly(predictions)
-        : predictions;
-
-    // LUCI analysis
-    const luciAnalysis = await _getLuciVolumeInsights(aggregated, options);
-
-    const result = {
-      type: PREDICTION_TYPES.VOLUME,
-      horizon,
-      granularity,
-      predictions: aggregated,
-      summary: {
-        totalPredicted: aggregated.reduce((sum, p) => sum + p.predictedVolume, 0),
-        averageDaily: Math.round(baseVolume * 0.95 + Math.random() * baseVolume * 0.1),
-        peakDay: aggregated.reduce((max, p) => p.predictedVolume > max.predictedVolume ? p : max),
-        lowDay: aggregated.reduce((min, p) => p.predictedVolume < min.predictedVolume ? p : min)
-      },
-      modelInfo: {
-        accuracy: modelMetrics.volumeModel.accuracy,
-        lastTrained: modelMetrics.volumeModel.lastTrained
-      },
-      luciAnalysis,
-      generatedAt: new Date()
-    };
-
-    // Cache result
-    _cacheResult('volume', result);
-
-    return { success: true, data: result };
-
-  } catch (error) {
-    logger.error(`[Predictions] Volume prediction error: ${error.message}`);
-    return { success: false, error: error.message };
-  }
-}
+const MS_POR_DIA = 86400000;
+const DIAS_HISTORICO = 90;
 
 /**
  * Predict channel assignment probability
  */
-async function predictChannel(declarationData) {
+async function predictChannel(declarationData, options = {}) {
   try {
     logger.debug(`[Predictions] Predicting channel for declaration`);
 
@@ -172,10 +92,8 @@ async function predictChannel(declarationData) {
       confidence: _getConfidenceLevel(Math.max(...Object.values(probabilities))),
       factors: _identifyRiskFactors(declarationData),
       recommendations: _getChannelRecommendations(predictedChannel, riskScore),
-      modelInfo: {
-        accuracy: modelMetrics.channelModel.accuracy,
-        lastTrained: modelMetrics.channelModel.lastTrained
-      },
+      historicalDistribution: await _distribucionHistoricaDeCanales(options.tenantId),
+      modelInfo: { ...SIN_MODELO },
       generatedAt: new Date()
     };
 
@@ -190,7 +108,7 @@ async function predictChannel(declarationData) {
 /**
  * Predict inspection likelihood
  */
-async function predictInspection(declarationData) {
+async function predictInspection(declarationData, options = {}) {
   try {
     const riskScore = _calculateRiskScore(declarationData);
 
@@ -214,11 +132,8 @@ async function predictInspection(declarationData) {
       riskLevel: inspectionProbability > 70 ? 'high' : inspectionProbability > 40 ? 'medium' : 'low',
       contributingFactors: _getInspectionFactors(declarationData, riskScore),
       mitigationSuggestions: _getInspectionMitigations(inspectionProbability),
-      historicalRate: _generateBaseValue(8, 15),
-      modelInfo: {
-        accuracy: modelMetrics.inspectionModel.accuracy,
-        lastTrained: modelMetrics.inspectionModel.lastTrained
-      },
+      historicalRate: await _tasaHistoricaDeInspeccion(options.tenantId),
+      modelInfo: { ...SIN_MODELO },
       generatedAt: new Date()
     };
 
@@ -226,73 +141,6 @@ async function predictInspection(declarationData) {
 
   } catch (error) {
     logger.error(`[Predictions] Inspection prediction error: ${error.message}`);
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * Predict processing time
- */
-async function predictProcessingTime(declarationData) {
-  try {
-    // Base processing time in hours
-    let baseTime = 2;
-
-    // Adjust for declaration type
-    const typeMultipliers = {
-      H1: 1.5,
-      H7: 0.5,
-      AES: 1.2,
-      NCTS: 1.3,
-      ICS2: 1.4
-    };
-    baseTime *= typeMultipliers[declarationData.type] || 1;
-
-    // Adjust for channel
-    const channelAdders = {
-      green: 0,
-      orange: 4,
-      red: 24,
-      yellow: 2
-    };
-    baseTime += channelAdders[declarationData.channel] || 0;
-
-    // Adjust for document completeness
-    if (declarationData.documentsComplete === false) {
-      baseTime += 8;
-    }
-
-    // Add variability
-    const minTime = baseTime * 0.7;
-    const maxTime = baseTime * 1.5;
-    const predictedTime = baseTime * (0.9 + Math.random() * 0.2);
-
-    const result = {
-      type: PREDICTION_TYPES.PROCESSING_TIME,
-      predictedHours: Math.round(predictedTime * 10) / 10,
-      rangeHours: {
-        min: Math.round(minTime * 10) / 10,
-        max: Math.round(maxTime * 10) / 10
-      },
-      confidence: _getConfidenceLevel(75 + Math.random() * 15),
-      breakdown: {
-        baseProcessing: 2,
-        channelDelay: channelAdders[declarationData.channel] || 0,
-        documentReview: declarationData.documentsComplete === false ? 8 : 0,
-        other: Math.max(0, predictedTime - 2 - (channelAdders[declarationData.channel] || 0))
-      },
-      factors: [
-        `Tipo de declaración: ${declarationData.type || 'H1'}`,
-        `Canal esperado: ${declarationData.channel || 'verde'}`,
-        declarationData.documentsComplete === false ? 'Documentación incompleta' : 'Documentación completa'
-      ],
-      generatedAt: new Date()
-    };
-
-    return { success: true, data: result };
-
-  } catch (error) {
-    logger.error(`[Predictions] Processing time prediction error: ${error.message}`);
     return { success: false, error: error.message };
   }
 }
@@ -336,7 +184,9 @@ async function predictDuties(declarationData) {
         quotas: potentialSavings.quotas,
         total: potentialSavings.total
       },
-      confidence: _getConfidenceLevel(85 + Math.random() * 10),
+      // Alta solo si el capitulo arancelario esta en la tabla de tipos; si no, el
+      // tipo aplicado es el generico y la prediccion es poco fiable.
+      confidence: _tieneTipoArancelario(commodityCode) ? CONFIDENCE_LEVELS.HIGH : CONFIDENCE_LEVELS.LOW,
       notes: [
         `Código TARIC: ${commodityCode}`,
         `Tipo arancelario aplicado: ${dutyRate}%`,
@@ -393,10 +243,7 @@ async function detectAnomalies(data, options = {}) {
       anomaliesFound: anomalies.length,
       anomalies,
       riskAssessment: anomalies.length > 5 ? 'high' : anomalies.length > 2 ? 'medium' : 'low',
-      modelInfo: {
-        accuracy: modelMetrics.anomalyModel.accuracy,
-        lastTrained: modelMetrics.anomalyModel.lastTrained
-      },
+      modelInfo: { ...SIN_MODELO },
       luciAnalysis,
       generatedAt: new Date()
     };
@@ -416,21 +263,28 @@ async function analyzeTrends(data, options = {}) {
   try {
     const period = options.period || 'last_30_days';
 
-    // Calculate trends for different metrics
-    const trends = {
-      volume: _calculateTrend(data.volumes || _generateTimeSeries(30)),
-      value: _calculateTrend(data.values || _generateTimeSeries(30, 10000, 50000)),
-      compliance: _calculateTrend(data.compliance || _generateTimeSeries(30, 90, 98)),
-      efficiency: _calculateTrend(data.efficiency || _generateTimeSeries(30, 70, 90))
+    // Solo series REALES recibidas en `data`; nunca series sinteticas.
+    const series = {
+      volume: _serieValida(data?.volumes),
+      value: _serieValida(data?.values),
+      compliance: _serieValida(data?.compliance),
+      efficiency: _serieValida(data?.efficiency)
     };
 
-    // Forecast next period
-    const forecasts = {
-      volume: _forecastNext(trends.volume),
-      value: _forecastNext(trends.value),
-      compliance: _forecastNext(trends.compliance),
-      efficiency: _forecastNext(trends.efficiency)
-    };
+    if (!Object.values(series).some(Boolean)) {
+      return {
+        success: false,
+        code: 'SIN_HISTORICO',
+        error: realMetrics.NO_DISPONIBLE.SIN_HISTORICO
+      };
+    }
+
+    const trends = Object.fromEntries(
+      Object.entries(series).map(([k, v]) => [k, v ? _calculateTrend(v) : null])
+    );
+    const forecasts = Object.fromEntries(
+      Object.entries(series).map(([k, v]) => [k, v ? _forecastNext(trends[k], v) : null])
+    );
 
     // LUCI trend insights
     const luciInsights = await _getLuciTrendInsights(trends, forecasts);
@@ -453,6 +307,9 @@ async function analyzeTrends(data, options = {}) {
   }
 }
 
+const _serieValida = (v) =>
+  Array.isArray(v) && v.length >= 2 && v.every((x) => typeof x === 'number' && Number.isFinite(x)) ? v : null;
+
 /**
  * Get model performance metrics
  */
@@ -460,8 +317,9 @@ function getModelMetrics() {
   return {
     success: true,
     data: {
-      models: modelMetrics,
-      overallAccuracy: Object.values(modelMetrics).reduce((sum, m) => sum + m.accuracy, 0) / Object.keys(modelMetrics).length,
+      disponible: false,
+      models: { ...modelMetrics },
+      overallAccuracy: null,
       lastUpdated: new Date()
     }
   };
@@ -469,66 +327,10 @@ function getModelMetrics() {
 
 // ==================== Helper Functions ====================
 
-function _generateBaseValue(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function _getSeasonalFactor(date) {
-  const month = date.getMonth();
-  // Higher volumes in Q4 (Oct-Dec) and Q2 (Apr-Jun)
-  const seasonalFactors = [0.9, 0.85, 0.95, 1.0, 1.05, 1.1, 0.95, 0.9, 1.0, 1.1, 1.15, 1.2];
-  return seasonalFactors[month];
-}
-
-function _getDayOfWeekFactor(dayOfWeek) {
-  // Lower on weekends
-  const dayFactors = [0.3, 1.0, 1.1, 1.0, 0.95, 0.9, 0.2];
-  return dayFactors[dayOfWeek];
-}
-
-function _calculateConfidence(daysAhead, horizon) {
-  // Confidence decreases as we predict further ahead
-  const baseConfidence = 90;
-  const decay = (daysAhead / horizon) * 20;
-  return Math.max(60, baseConfidence - decay);
-}
-
 function _getConfidenceLevel(confidence) {
   if (confidence > 85) return CONFIDENCE_LEVELS.HIGH;
   if (confidence > 70) return CONFIDENCE_LEVELS.MEDIUM;
   return CONFIDENCE_LEVELS.LOW;
-}
-
-function _aggregateWeekly(predictions) {
-  const weeks = [];
-  for (let i = 0; i < predictions.length; i += 7) {
-    const weekData = predictions.slice(i, i + 7);
-    weeks.push({
-      weekStart: weekData[0].date,
-      weekEnd: weekData[weekData.length - 1].date,
-      predictedVolume: weekData.reduce((sum, d) => sum + d.predictedVolume, 0),
-      confidence: weekData.reduce((sum, d) => sum + d.confidence, 0) / weekData.length
-    });
-  }
-  return weeks;
-}
-
-function _aggregateMonthly(predictions) {
-  const months = {};
-  predictions.forEach(p => {
-    const month = p.date.substring(0, 7);
-    if (!months[month]) {
-      months[month] = { month, predictedVolume: 0, count: 0, totalConfidence: 0 };
-    }
-    months[month].predictedVolume += p.predictedVolume;
-    months[month].count++;
-    months[month].totalConfidence += p.confidence;
-  });
-  return Object.values(months).map(m => ({
-    month: m.month,
-    predictedVolume: m.predictedVolume,
-    confidence: m.totalConfidence / m.count
-  }));
 }
 
 function _calculateRiskScore(data) {
@@ -609,23 +411,58 @@ function _getInspectionMitigations(probability) {
   ];
 }
 
-function _getDutyRate(commodityCode) {
-  // Simplified duty rates
-  const rates = {
-    '84': 0,      // Machines
-    '85': 0,      // Electronics
-    '61': 12,     // Knitted apparel
-    '62': 12,     // Non-knitted apparel
-    '64': 8,      // Footwear
-    '87': 10,     // Vehicles
-    '94': 5.6,    // Furniture
-  };
+// Tipos arancelarios simplificados por capitulo (los capitulos fuera de la tabla
+// usan el generico 4,5%).
+const TIPOS_POR_CAPITULO = {
+  '84': 0,      // Machines
+  '85': 0,      // Electronics
+  '61': 12,     // Knitted apparel
+  '62': 12,     // Non-knitted apparel
+  '64': 8,      // Footwear
+  '87': 10,     // Vehicles
+  '94': 5.6     // Furniture
+};
+const TIPO_GENERICO = 4.5;
 
+const _tieneTipoArancelario = (commodityCode) =>
+  Object.prototype.hasOwnProperty.call(TIPOS_POR_CAPITULO, String(commodityCode).substring(0, 2));
+
+function _getDutyRate(commodityCode) {
   const chapter = commodityCode.substring(0, 2);
   // Ojo: usar ?? y no ||. Los capítulos 84/85 tienen tipo 0% legítimo y `||`
   // los trataría como falsy, devolviendo 4,5% sobre mercancía en realidad
   // exenta (máquinas y electrónica, el grueso del volumen).
-  return rates[chapter] ?? 4.5;
+  return TIPOS_POR_CAPITULO[chapter] ?? TIPO_GENERICO;
+}
+
+/** Reparto historico real de canales del tenant; null si no hay dato o no hay ambito. */
+async function _distribucionHistoricaDeCanales(tenantId) {
+  // realMetrics no filtra con tenantId null/undefined: sin ambito no se consulta.
+  if (!tenantId) return null;
+  try {
+    const r = await realMetrics.repartoPorCanal(tenantId, {});
+    return r.conCanalAsignado > 0 ? r.porcentajes : null;
+  } catch (error) {
+    logger.warn(`[Predictions] Sin distribucion historica de canales: ${error.message}`);
+    return null;
+  }
+}
+
+/** % de declaraciones inspeccionadas en los ultimos 90 dias del tenant; null sin base. */
+async function _tasaHistoricaDeInspeccion(tenantId) {
+  if (!tenantId) return null;
+  try {
+    const hasta = new Date();
+    const rango = { desde: new Date(hasta.getTime() - DIAS_HISTORICO * MS_POR_DIA), hasta };
+    const [volumen, cumpl] = await Promise.all([
+      realMetrics.volumenDeclaraciones(tenantId, rango),
+      realMetrics.cumplimiento(tenantId, rango)
+    ]);
+    return volumen.total > 0 ? Math.round((cumpl.inspecciones / volumen.total) * 1000) / 10 : null;
+  } catch (error) {
+    logger.warn(`[Predictions] Sin tasa historica de inspeccion: ${error.message}`);
+    return null;
+  }
 }
 
 function _calculatePotentialSavings(data) {
@@ -676,10 +513,6 @@ function _detectPatternAnomalies(patterns) {
   return [];
 }
 
-function _generateTimeSeries(days, min = 5, max = 20) {
-  return Array.from({ length: days }, () => _generateBaseValue(min, max));
-}
-
 function _calculateTrend(data) {
   if (!data.length) return { direction: 'stable', slope: 0, strength: 0 };
 
@@ -702,25 +535,29 @@ function _calculateTrend(data) {
   return { direction, slope: Math.round(slope * 100) / 100, strength: Math.round(strength) };
 }
 
-function _forecastNext(trend) {
-  const baseValue = 100;
-  const forecast = baseValue * (1 + trend.slope * 0.1);
+/** Siguiente punto de la serie por extrapolacion lineal de la propia serie (no un valor base fijo). */
+function _forecastNext(trend, serie) {
+  const n = serie.length;
+  const media = serie.reduce((a, b) => a + b, 0) / n;
+  const siguiente = media + trend.slope * (n - (n - 1) / 2);
   return {
-    value: Math.round(forecast),
-    confidence: trend.strength > 50 ? CONFIDENCE_LEVELS.HIGH : CONFIDENCE_LEVELS.MEDIUM
+    value: Math.round(siguiente * 100) / 100,
+    confidence: n >= 14 && trend.strength > 50 ? CONFIDENCE_LEVELS.HIGH
+      : n >= 7 ? CONFIDENCE_LEVELS.MEDIUM
+        : CONFIDENCE_LEVELS.LOW
   };
 }
 
 function _generateTrendHighlights(trends) {
   const highlights = [];
 
-  if (trends.volume.direction === 'up') {
+  if (trends.volume?.direction === 'up') {
     highlights.push({ type: 'positive', message: 'Volumen de operaciones en aumento' });
   }
-  if (trends.compliance.direction === 'up') {
+  if (trends.compliance?.direction === 'up') {
     highlights.push({ type: 'positive', message: 'Mejora en indicadores de cumplimiento' });
   }
-  if (trends.efficiency.direction === 'down') {
+  if (trends.efficiency?.direction === 'down') {
     highlights.push({ type: 'warning', message: 'Descenso en eficiencia operativa' });
   }
 
@@ -744,39 +581,6 @@ function _normalizeRecommendations(recsRaw) {
              '';
     })
     .filter(Boolean);
-}
-
-async function _getLuciVolumeInsights(predictions, options) {
-  try {
-    const analyticsData = {
-      type: 'volume_prediction',
-      predictions: predictions.slice(0, 7),
-      summary: {
-        total: predictions.reduce((s, p) => s + p.predictedVolume, 0),
-        average: predictions.reduce((s, p) => s + p.predictedVolume, 0) / predictions.length
-      }
-    };
-
-    const analysis = await aiService.generateAutomaticInsights(analyticsData, {
-      period: options?.horizon ? `${options.horizon} dias` : 'proxima semana',
-      operationType: 'volume forecast'
-    });
-
-    const summary = analysis.executiveSummary || analysis.summary || 'Previsión de volumen dentro de parámetros normales.';
-    const recommendations = _normalizeRecommendations(analysis.recommendations);
-    const resourcePlanning = (analysis.opportunities || [])
-      .map(o => o.description || o.area || (typeof o === 'string' ? o : ''))
-      .filter(Boolean);
-
-    return {
-      summary,
-      recommendations,
-      resourcePlanning: resourcePlanning.length > 0 ? resourcePlanning : ['Mantener capacidad operativa actual']
-    };
-  } catch (error) {
-    logger.warn(`[Predictions] Could not get LUCI volume insights: ${error.message}`);
-    return null;
-  }
 }
 
 async function _getLuciAnomalyInsights(anomalies) {
@@ -862,14 +666,6 @@ async function _getLuciTrendInsights(trends, forecasts) {
   }
 }
 
-function _cacheResult(key, result) {
-  predictionCache.set(key, {
-    result,
-    timestamp: new Date(),
-    expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
-  });
-}
-
 module.exports = {
   // Constants
   PREDICTION_TYPES,
@@ -877,10 +673,8 @@ module.exports = {
   ANOMALY_TYPES,
 
   // Prediction methods
-  predictVolume,
   predictChannel,
   predictInspection,
-  predictProcessingTime,
   predictDuties,
   detectAnomalies,
   analyzeTrends,

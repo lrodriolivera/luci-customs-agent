@@ -25,6 +25,7 @@ jest.mock('../../src/services/analytics/realMetricsService', () => ({
     SIN_MODELO: 'No hay modelo entrenado: las predicciones requieren un historico del que aun no se dispone'
   },
   cuadroDeMando: jest.fn(),
+  expedientesActivos: jest.fn(),
   derechosLiquidados: jest.fn(),
   recaudacionCobrada: jest.fn(),
   valorMercancia: jest.fn()
@@ -45,7 +46,10 @@ function res() {
   return r;
 }
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  realMetrics.expedientesActivos.mockResolvedValue(4);
+});
 
 describe('GET /api/analytics/dashboard', () => {
   test('sirve las agregaciones reales y las declara no simuladas', async () => {
@@ -59,7 +63,9 @@ describe('GET /api/analytics/dashboard', () => {
 
     expect(r.statusCode).toBe(200);
     expect(r.body.data.simulated).toBe(false);
-    expect(r.body.data.declaraciones.total).toBe(50);
+    expect(r.body.data.operations.totalDeclarations).toBe(50);
+    expect(r.body.data.operations.declarationsByType).toEqual({ H7: 35, NCTS: 15 });
+    expect(r.body.data.operations.activeExpeditions).toBe(4);
   });
 
   test('acota por el tenant del token', async () => {
@@ -85,7 +91,7 @@ describe('GET /api/analytics/dashboard', () => {
     await controller.getDashboardMetrics(req({ startDate: '2026-07-01', endDate: '2026-07-31' }), res());
 
     expect(realMetrics.cuadroDeMando.mock.calls[0][1])
-      .toEqual({ desde: '2026-07-01', hasta: '2026-07-31' });
+      .toEqual({ desde: new Date('2026-07-01'), hasta: new Date('2026-07-31') });
   });
 });
 
@@ -159,7 +165,7 @@ describe('predicciones basadas en Math.random', () => {
     const r = res();
     await controller.getDashboardMetrics(req(), r);
 
-    expect(r.body.data.tiempos.mediaHoras).toBe(323.9);
+    expect(r.body.data.operations.averageProcessingTime).toBe(323.9);
   });
 });
 

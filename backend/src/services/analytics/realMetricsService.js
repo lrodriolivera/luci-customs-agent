@@ -36,7 +36,11 @@ const NO_DISPONIBLE = Object.freeze({
   SIN_PAGOS: 'No hay pagos registrados en el sistema: la recaudacion cobrada no se puede calcular',
   SIN_VALOR_MERCANCIA: 'Los expedientes no tienen valor de mercancia informado (goodsSummary.totalValue = 0)',
   SIN_HISTORICO: 'No hay suficiente historico para proyectar: se necesitan al menos 90 dias de datos',
-  SIN_MODELO: 'No hay modelo entrenado: las predicciones requieren un historico del que aun no se dispone'
+  SIN_MODELO: 'No hay modelo entrenado: las predicciones requieren un historico del que aun no se dispone',
+  SIN_FUENTE_CUMPLIMIENTO: 'La analitica de cumplimiento detallada (errores, plazos, puntuacion, OEA, riesgos) no tiene datos de origen: solo se calculan las tasas de rechazo e inspeccion, disponibles en /api/analytics/dashboard',
+  SIN_FUENTE_RENDIMIENTO: 'La analitica de rendimiento (productividad, tiempos por fase, automatizacion) no tiene datos de origen: solo el tiempo medio de despacho se mide, y esta en /api/analytics/dashboard',
+  SIN_FUENTE_COMPARATIVA: 'La comparativa entre periodos no esta disponible: el cuadro de mando (/api/analytics/dashboard) ya incluye la tendencia contra el periodo anterior',
+  SIN_FUENTE_CONSULTA: 'Las consultas analiticas libres no estan disponibles: no hay un motor de consulta sobre los datos reales; use los endpoints del cuadro de mando'
 });
 
 /**

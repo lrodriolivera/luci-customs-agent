@@ -7,6 +7,9 @@
 
 const logger = require('../../config/logger');
 const analyticsService = require('./analyticsService');
+const realMetrics = require('./realMetricsService');
+const kpiService = require('./kpiService');
+const { panelDelAmbito } = require('./cuadroParaPanel');
 const aiService = require('../aiService');
 
 /**
@@ -134,7 +137,9 @@ async function generateReport(type, options = {}) {
 
     // Populate sections based on template
     for (const section of template.sections) {
-      report.sections[section] = reportData[section] || await _generateSectionData(section, reportData);
+      // Siempre por _generateSectionData: tomar reportData[section] mezclaba
+      // claves internas (p. ej. `kpis`) con secciones del informe.
+      report.sections[section] = await _generateSectionData(section, reportData);
     }
 
     // Generate executive summary
@@ -353,32 +358,49 @@ async function previewReport(type, options = {}) {
       sections: template.sections,
       period,
       estimatedPages: _estimatePages(template.sections),
-      sampleData: await _getSampleData(type)
+      sampleData: await _getSampleData(type, options.tenantId)
     }
   };
 }
 
 // ==================== Private Functions ====================
 
-async function _gatherReportData(type, period, options) {
-  const data = {};
+// Criterio de producto: ninguna cifra inventada. Lo que no tiene fuente real se
+// emite como "Sin datos" (escalar) o { estado: 'Sin datos' } (seccion), nunca 0.
+const SIN_DATOS = 'Sin datos';
+const dato = (x) => (x === null || x === undefined ? SIN_DATOS : x);
+const seccionSinDatos = () => ({ estado: SIN_DATOS });
+const MS_POR_DIA = 86400000;
 
-  // Get base analytics data
-  const [dashboard, declarations, financial, compliance] = await Promise.all([
-    analyticsService.getDashboardMetrics(period),
-    analyticsService.getDeclarationAnalytics(period),
-    analyticsService.getFinancialAnalytics(period),
-    analyticsService.getComplianceAnalytics(period)
+/**
+ * Reune los datos reales del ambito (ambitoTenant: undefined = plataforma,
+ * null = sin tenant, string = ese tenant). Solo consultas de lectura.
+ */
+async function _gatherReportData(type, period, options) {
+  const tenantId = options.tenantId;
+  const { start, end } = analyticsService.getDateRange(period);
+  const rango = { desde: start, hasta: end };
+  const dias = Math.max(1, Math.round((end - start) / MS_POR_DIA));
+  const sinAmbito = tenantId === null;
+
+  const [dashboard, canales, derechos, valor] = await Promise.all([
+    panelDelAmbito(tenantId, rango),
+    sinAmbito ? null : realMetrics.repartoPorCanal(tenantId, rango),
+    sinAmbito ? null : realMetrics.derechosLiquidados(tenantId, rango),
+    sinAmbito ? null : realMetrics.valorMercancia(tenantId, rango)
   ]);
 
-  data.dashboard = dashboard.data;
-  data.declarations = declarations.data;
-  data.financial = financial.data;
-  data.compliance = compliance.data;
-  data.period = period;
-  data.options = options;
+  const data = {
+    dashboard,
+    canales: canales && canales.conCanalAsignado > 0 ? canales : null,
+    derechos,
+    valorMercancia: valor && valor.disponible ? valor.total : null,
+    alertas: kpiService.getActiveAlerts({}, tenantId).alerts,
+    dias,
+    period,
+    options
+  };
 
-  // Add specific data based on report type
   switch (type) {
     case REPORT_TYPES.CLIENT_REPORT:
       data.client = options.clientId ? await _getClientData(options.clientId) : null;
@@ -391,141 +413,127 @@ async function _gatherReportData(type, period, options) {
   return data;
 }
 
+const _porGravedad = (alertas, severidad) =>
+  alertas.filter(a => a.severity === severidad).map(a => a.message);
+
 async function _generateSectionData(section, reportData) {
+  const op = reportData.dashboard?.operations || {};
+  const fin = reportData.dashboard?.financial || {};
+  const cumpl = reportData.dashboard?.compliance || {};
+  const tendencias = reportData.dashboard?.trends || {};
+  const distribucionCanales = reportData.canales ? reportData.canales.porcentajes : seccionSinDatos();
+
   switch (section) {
     case 'overview':
       return {
-        totalDeclarations: reportData.dashboard?.operations?.totalDeclarations || 0,
-        totalValue: reportData.financial?.summary?.totalCustomsValue || 0,
-        complianceScore: reportData.compliance?.summary?.overallScore || 0,
-        channelDistribution: reportData.dashboard?.channels || {}
+        totalDeclarations: dato(op.totalDeclarations),
+        totalValue: dato(reportData.valorMercancia),
+        complianceScore: SIN_DATOS,
+        channelDistribution: distribucionCanales
       };
 
     case 'kpis':
       return {
-        declarationsPerDay: Math.round((reportData.dashboard?.operations?.totalDeclarations || 0) / 30),
-        averageProcessingTime: reportData.dashboard?.operations?.averageProcessingTime || 0,
-        errorRate: reportData.compliance?.errors?.errorRate || 0,
-        onTimeRate: reportData.compliance?.deadlines?.onTime || 0
+        declarationsPerDay: op.totalDeclarations == null
+          ? SIN_DATOS
+          : Math.round((op.totalDeclarations / reportData.dias) * 10) / 10,
+        averageProcessingTime: dato(op.averageProcessingTime),
+        errorRate: SIN_DATOS,
+        onTimeRate: SIN_DATOS
       };
 
     case 'trends':
-      return reportData.dashboard?.trends || {};
+      return {
+        operations: dato(tendencias.operations?.percentage),
+        financial: dato(tendencias.financial?.percentage)
+      };
 
     case 'alerts':
       return {
-        critical: [],
-        warnings: [],
-        info: []
+        critical: _porGravedad(reportData.alertas, 'critical'),
+        warnings: _porGravedad(reportData.alertas, 'warning'),
+        info: _porGravedad(reportData.alertas, 'info')
       };
 
-    case 'recommendations':
-      return reportData.dashboard?.luciInsights?.recommendations || [];
+    case 'declarations':
+      return { total: dato(op.totalDeclarations), porTipo: dato(op.declarationsByType) };
 
-    case 'timeline':
-      return reportData.declarations?.timeline || [];
+    case 'expeditions':
+      return { activos: dato(op.activeExpeditions) };
+
+    case 'channels':
+    case 'by_channel':
+      return distribucionCanales;
 
     case 'by_type':
-      return reportData.declarations?.byType || {};
+      return dato(op.declarationsByType);
 
     case 'summary':
-      return reportData.financial?.summary || reportData.compliance?.summary || {};
+      return { declaraciones: dato(op.totalDeclarations), derechosCalculados: dato(fin.totalDutiesCalculated) };
 
     case 'duties':
-      return reportData.financial?.duties || {};
+      return {
+        totalCalculado: dato(reportData.derechos?.total),
+        arancel: dato(reportData.derechos?.arancel),
+        cobrado: dato(fin.totalDutiesPaid)
+      };
 
     case 'vat':
-      return { total: reportData.financial?.summary?.totalVAT || 0 };
-
-    case 'savings':
-      return reportData.financial?.savings || {};
-
-    case 'guarantees':
-      return reportData.financial?.guarantees || {};
-
-    case 'projections':
-      return reportData.financial?.projections || {};
-
-    case 'score':
-      return reportData.compliance?.summary || {};
-
-    case 'errors':
-      return reportData.compliance?.errors || {};
+      return { total: dato(reportData.derechos?.iva) };
 
     case 'rejections':
-      return reportData.compliance?.rejections || {};
+      return { rejectionRate: dato(cumpl.rejectionRate) };
 
     case 'inspections':
-      return reportData.compliance?.inspections || {};
-
-    case 'risks':
-      return reportData.compliance?.riskIndicators || [];
-
-    case 'oea':
-      return reportData.compliance?.oeaStatus || {};
-
-    case 'by_channel':
-      return reportData.declarations?.byChannel || {};
-
-    case 'by_office':
-      return reportData.declarations?.byOffice || [];
-
-    case 'commodities':
-      return reportData.declarations?.topCommodities || [];
-
-    case 'origins':
-      return reportData.declarations?.topOrigins || [];
+      return { inspectionRate: dato(cumpl.inspectionRate) };
 
     case 'volumes':
-      return { total: reportData.dashboard?.operations?.totalDeclarations || 0 };
+      return { total: dato(op.totalDeclarations) };
 
     case 'values':
-      return { total: reportData.financial?.summary?.totalCustomsValue || 0 };
-
-    case 'regimes':
-      return [];
-
-    case 'actions':
-      return reportData.auditLogs?.actions || [];
-
-    case 'users':
-      return reportData.auditLogs?.users || [];
-
-    case 'changes':
-      return reportData.auditLogs?.changes || [];
+      return { total: dato(reportData.valorMercancia) };
 
     case 'operations':
-      return reportData.dashboard?.operations || {};
+      return {
+        totalDeclarations: dato(op.totalDeclarations),
+        declarationsByType: dato(op.declarationsByType),
+        averageProcessingTime: dato(op.averageProcessingTime),
+        activeExpeditions: dato(op.activeExpeditions)
+      };
 
-    case 'documents':
-      return [];
+    case 'actions':
+    case 'users':
+    case 'changes': {
+      const filas = reportData.auditLogs?.[section];
+      return filas && filas.length ? filas : seccionSinDatos();
+    }
 
-    case 'status':
-      return { active: true };
-
+    // recommendations, timeline, savings, guarantees, projections, score, errors,
+    // risks, oea, by_office, commodities, origins, regimes, documents, status:
+    // no hay fuente real hoy.
     default:
-      return {};
+      return seccionSinDatos();
   }
 }
 
 async function _generateExecutiveSummary(report, reportData) {
-  const dashboard = reportData.dashboard || {};
-  const financial = reportData.financial || {};
-  const compliance = reportData.compliance || {};
+  const op = reportData.dashboard?.operations || {};
+  const canalVerde = reportData.canales ? reportData.canales.porcentajes.green : null;
+  const valor = reportData.valorMercancia;
 
   return {
     period: _formatPeriodName(report.period),
     highlights: [
-      `${dashboard.operations?.totalDeclarations || 0} declaraciones procesadas`,
-      `${((dashboard.channels?.green || 0)).toFixed(0)}% canal verde`,
-      `${(financial.summary?.totalCustomsValue || 0).toLocaleString('es-ES')} EUR valor total`,
-      `${compliance.summary?.overallScore || 0}% score de cumplimiento`
+      op.totalDeclarations == null ? `${SIN_DATOS} declaraciones procesadas` : `${op.totalDeclarations} declaraciones procesadas`,
+      canalVerde == null ? `${SIN_DATOS} canal verde` : `${canalVerde.toFixed(0)}% canal verde`,
+      valor == null ? `${SIN_DATOS} valor total` : `${valor.toLocaleString('es-ES')} EUR valor total`,
+      `${SIN_DATOS} score de cumplimiento`
     ],
     keyMetrics: {
-      operations: dashboard.operations?.totalDeclarations || 0,
-      value: financial.summary?.totalCustomsValue || 0,
-      duties: financial.summary?.totalDuties || 0,
-      compliance: compliance.summary?.overallScore || 0
+      operations: dato(op.totalDeclarations),
+      value: dato(valor),
+      duties: dato(reportData.derechos?.total),
+      compliance: SIN_DATOS
     }
   };
 }
@@ -535,8 +543,8 @@ async function _getLuciReportInsights(type, reportData) {
     const analyticsData = {
       reportType: type,
       operations: reportData.dashboard?.operations,
-      financial: reportData.financial?.summary,
-      compliance: reportData.compliance?.summary
+      financial: reportData.dashboard?.financial,
+      compliance: reportData.dashboard?.compliance
     };
 
     const analysis = await aiService.generateExecutiveReport(analyticsData, {
@@ -712,14 +720,9 @@ async function _exportToCSV(report) {
 }
 
 async function _getClientData(clientId) {
-  // In production, fetch from database
-  return {
-    id: clientId,
-    name: 'Cliente Demo',
-    nif: 'B12345678',
-    operations: 25,
-    totalValue: 500000
-  };
+  // No hay fuente de datos por cliente: antes devolvia un "Cliente Demo" con
+  // NIF y cifras inventadas. Sin fuente, el informe no lleva bloque de cliente.
+  return null;
 }
 
 async function _getAuditLogs(period, options) {
@@ -820,11 +823,16 @@ function _estimatePages(sections) {
   return 2 + Math.ceil(sections.length * 1.5);
 }
 
-async function _getSampleData(type) {
+/** Muestra de la vista previa: cifras reales del ambito, no valores de ejemplo. */
+async function _getSampleData(type, tenantId) {
+  if (tenantId === null) {
+    return { declarations: 0, dutiesCalculated: 0, rejectionRate: null };
+  }
+  const panel = await panelDelAmbito(tenantId, {});
   return {
-    declarations: 150,
-    value: 1500000,
-    compliance: 95
+    declarations: panel.operations.totalDeclarations,
+    dutiesCalculated: panel.financial.totalDutiesCalculated,
+    rejectionRate: panel.compliance.rejectionRate
   };
 }
 
