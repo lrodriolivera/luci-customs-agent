@@ -598,13 +598,14 @@ async function getKPIDashboard(tenantId, data = {}) {
 
 // Analisis de LUCI cacheado por tenant: un Bedrock por tenant cada 10 minutos, no uno por recarga.
 const TTL_ANALISIS_MS = 10 * 60 * 1000;
-const cacheAnalisis = crearEstadoPorTenant(() => ({ entrada: null, pendiente: null }));
+// Clave interna: la ventana en dias (`data.days`), porque el analisis depende de ella.
+const cacheAnalisis = crearEstadoPorTenant(() => ({ entradas: new Map(), pendientes: new Map() }));
 
 /** Vacia la cache del analisis (tests). */
 function limpiarCacheAnalisis() {
   for (const cubo of cacheAnalisis.visibles(undefined)) {
-    cubo.entrada = null;
-    cubo.pendiente = null;
+    cubo.entradas.clear();
+    cubo.pendientes.clear();
   }
 }
 
@@ -622,28 +623,30 @@ async function _calcularAnalisis(data, tenantId) {
  */
 async function getKPIAnalysis(tenantId, data = {}) {
   const cubo = cacheAnalisis.escribir(tenantId);
+  const clave = data.days ?? 'sin-ventana';
   const ahora = Date.now();
 
-  if (cubo.entrada && ahora < cubo.entrada.expira) {
+  const entrada = cubo.entradas.get(clave);
+  if (entrada && ahora < entrada.expira) {
     return {
       success: true,
-      data: { luciAnalysis: cubo.entrada.luciAnalysis, generatedAt: cubo.entrada.generatedAt, fromCache: true }
+      data: { luciAnalysis: entrada.luciAnalysis, generatedAt: entrada.generatedAt, fromCache: true }
     };
   }
 
-  if (!cubo.pendiente) {
-    cubo.pendiente = _calcularAnalisis(data, tenantId)
+  if (!cubo.pendientes.has(clave)) {
+    cubo.pendientes.set(clave, _calcularAnalisis(data, tenantId)
       .then((luciAnalysis) => {
         const generatedAt = new Date(Date.now()).toISOString();
         if (luciAnalysis) {
-          cubo.entrada = { luciAnalysis, generatedAt, expira: Date.now() + TTL_ANALISIS_MS };
+          cubo.entradas.set(clave, { luciAnalysis, generatedAt, expira: Date.now() + TTL_ANALISIS_MS });
         }
         return { luciAnalysis, generatedAt };
       })
-      .finally(() => { cubo.pendiente = null; });
+      .finally(() => { cubo.pendientes.delete(clave); }));
   }
 
-  const { luciAnalysis, generatedAt } = await cubo.pendiente;
+  const { luciAnalysis, generatedAt } = await cubo.pendientes.get(clave);
   return { success: true, data: { luciAnalysis, generatedAt, fromCache: false } };
 }
 
