@@ -1096,34 +1096,51 @@ describe('taricService.branches - cobertura de ramas no tomadas', () => {
     });
   });
 
-  describe('seedCommonCodes - líneas 584-585: supplementaryUnit handling', () => {
-    test('RAMA NO TOMADA (línea 584): supplementaryUnit como objeto con type', async () => {
-      // El código común tiene supplementaryUnit = { required: true, type: 'p/st', description: 'Número de artículos' }
+  describe('seedCommonCodes - supplementaryUnit handling', () => {
+    test('guarda supplementaryUnit como objeto { required, type, description }', async () => {
       const resultado = await taricService.seedCommonCodes();
 
       expect(resultado.success).toBe(true);
 
       const codigo = await TaricCode.findOne({ code: '6109100000' });
       expect(codigo).not.toBeNull();
-      expect(codigo.toObject().supplementaryUnit).toEqual(expect.stringContaining('p/st'));
+      expect(codigo.toObject().supplementaryUnit).toEqual({
+        required: true,
+        type: 'p/st',
+        description: 'Numero de articulos'
+      });
     });
 
-    test('RAMA TOMADA (línea 585): supplementaryUnit como objeto sin type usa description', async () => {
-      // Algunos códigos comunes pueden tener solo description
-      // Verificar que se maneja correctamente
-      const resultado = await taricService.seedCommonCodes();
-
-      expect(resultado.success).toBe(true);
-      expect(resultado.count).toBeGreaterThan(0);
-    });
-
-    test('supplementaryUnit como string directo', async () => {
-      // Algunos códigos pueden tener supplementaryUnit como string
-      const resultado = await taricService.seedCommonCodes();
+    test('un codigo con supplementaryUnit { required: false } lo conserva', async () => {
+      await taricService.seedCommonCodes();
 
       const codigo = await TaricCode.findOne({ code: '9403300000' });
       expect(codigo).not.toBeNull();
-      // supplementaryUnit puede estar vacío o como string
+      expect(codigo.toObject().supplementaryUnit.required).toBe(false);
+    });
+
+    test('el aviso de unidades suplementarias usa el objeto guardado', async () => {
+      await taricService.seedCommonCodes();
+
+      const codigo = await TaricCode.findOne({ code: '6109100000' }).lean();
+      expect(taricService._generateDutyWarnings(codigo, {})).toEqual(
+        expect.arrayContaining([expect.stringContaining('Numero de articulos (p/st)')])
+      );
+    });
+  });
+
+  describe('_normalizarSupplementaryUnit', () => {
+    test('un objeto se devuelve tal cual', () => {
+      const u = { required: true, type: 'l', description: 'Litros' };
+      expect(taricService._normalizarSupplementaryUnit(u)).toEqual(u);
+    });
+
+    test('un string se convierte en { required: true, type, description: "" }', () => {
+      expect(taricService._normalizarSupplementaryUnit('p/st')).toEqual({ required: true, type: 'p/st', description: '' });
+    });
+
+    test.each([[undefined], [null], ['']])('sin dato (%j) devuelve undefined', (v) => {
+      expect(taricService._normalizarSupplementaryUnit(v)).toBeUndefined();
     });
   });
 

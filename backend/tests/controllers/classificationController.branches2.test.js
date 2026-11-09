@@ -1275,8 +1275,7 @@ describe('classificationController - Cobertura de ramas simples', () => {
   });
 
   describe('getTaricInfo - description.es y description.en y description fallbacks en hierarchy', () => {
-    // BUG DEL CÓDIGO (no se toca aquí): classificationController.js:170/174 devuelve el objeto `{}` en vez de '' cuando description no tiene es/en.
-    test.skip('cuando hierarchy tiene description vacío', async () => {
+    test('cuando hierarchy tiene description vacío', async () => {
       const mockTaric = {
         code: '0807000000',
         isLeaf: true,
@@ -1297,8 +1296,7 @@ describe('classificationController - Cobertura de ramas simples', () => {
       expect(res.body.data.hierarchy[0].description).toBe('');
     });
 
-    // BUG DEL CÓDIGO (no se toca aquí): classificationController.js:170/174 devuelve el objeto `{}` en vez de '' cuando description no tiene es/en.
-    test.skip('cuando children tiene description vacío', async () => {
+    test('cuando children tiene description vacío', async () => {
       const mockTaric = {
         code: '0807000000',
         isLeaf: false,

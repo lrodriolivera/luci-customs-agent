@@ -1,5 +1,6 @@
 const { TaricCode, Expedition, TaricSearchHistory, TaricAICache } = require('../models');
 const logger = require('../config/logger');
+const { textoDescripcion } = require('../utils/descripcionTaric');
 const aiService = require('../services/aiService');
 const { SONNET, labelFor } = require('../config/bedrockModels');
 const taricService = require('../services/taricService');
@@ -148,7 +149,7 @@ const getTaricInfo = async (req, res) => {
           code: obj.code,
           found: true,
           source: 'local_db',
-          description: obj.description?.es || obj.description?.en || '',
+          description: textoDescripcion(obj.description),
           description_es: obj.description?.es || '',
           chapter: obj.breakdown?.chapter,
           heading: obj.breakdown?.heading,
@@ -167,11 +168,11 @@ const getTaricInfo = async (req, res) => {
           hierarchy: hierarchy.map(h => ({
             code: h.code,
             level: h.level,
-            description: h.description?.es || h.description?.en || h.description || ''
+            description: textoDescripcion(h.description)
           })),
           children: children.map(c => ({
             code: c.code,
-            description: c.description?.es || c.description?.en || c.description || ''
+            description: textoDescripcion(c.description)
           }))
         }
       });
