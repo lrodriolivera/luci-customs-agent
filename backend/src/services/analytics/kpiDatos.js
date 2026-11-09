@@ -11,9 +11,9 @@
  *   totalDeclarations + days <- volumenDeclaraciones.total en los ultimos `dias`
  *   greenChannel             <- % de canal verde sobre los que tienen canal (null si ninguno)
  *   avgProcessingTime        <- tiemposDeDespacho.mediaHoras (null si muestra 0)
- *   activeExpeditions        <- volumenDeclaraciones.pendientes
+ *   activeExpeditions        <- expedientesActivos (expedientes no terminales, sin rango de fechas)
  *   totalDuties              <- derechosLiquidados.total
- *   rejectionRate            <- % de rechazadas sobre el total (null si total 0)
+ *   rejectionRate            <- % de H7 rechazadas sobre las H7 (porTipo.H7), null si no hay H7
  *
  * Sin fuente (no se calculan): savings, guaranteeUtilization, errorRate,
  * onTimeRate, complianceScore, documentCompleteness, luciAccuracy, automationRate,
@@ -47,11 +47,12 @@ async function datosParaKPIs(tenantId, { dias = DIAS_POR_DEFECTO } = {}) {
   const desde = new Date(hasta.getTime() - days * MS_POR_DIA);
   const rango = { desde, hasta };
 
-  const [volumen, canales, derechos, tiempos] = await Promise.all([
+  const [volumen, canales, derechos, tiempos, activos] = await Promise.all([
     realMetrics.volumenDeclaraciones(tenantId, rango),
     realMetrics.repartoPorCanal(tenantId, rango),
     realMetrics.derechosLiquidados(tenantId, rango),
-    realMetrics.tiemposDeDespacho(tenantId, rango)
+    realMetrics.tiemposDeDespacho(tenantId, rango),
+    realMetrics.expedientesActivos(tenantId)
   ]);
 
   return {
@@ -61,10 +62,11 @@ async function datosParaKPIs(tenantId, { dias = DIAS_POR_DEFECTO } = {}) {
       ? redondear1((canales.canales.green / canales.conCanalAsignado) * 100)
       : null,
     avgProcessingTime: tiempos.muestra > 0 ? tiempos.mediaHoras : null,
-    activeExpeditions: volumen.pendientes,
+    activeExpeditions: activos,
     totalDuties: derechos.total,
-    rejectionRate: volumen.total > 0
-      ? redondear1(((volumen.porEstado?.rejected || 0) / volumen.total) * 100)
+    // porEstado solo cubre H7, asi que el denominador son las H7 (no el total con transitos)
+    rejectionRate: volumen.porTipo?.H7 > 0
+      ? redondear1(((volumen.porEstado?.rejected || 0) / volumen.porTipo.H7) * 100)
       : null
   };
 }

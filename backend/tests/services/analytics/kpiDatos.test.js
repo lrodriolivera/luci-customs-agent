@@ -9,14 +9,15 @@ const mockMetricas = {
   volumenDeclaraciones: jest.fn(),
   repartoPorCanal: jest.fn(),
   derechosLiquidados: jest.fn(),
-  tiemposDeDespacho: jest.fn()
+  tiemposDeDespacho: jest.fn(),
+  expedientesActivos: jest.fn()
 };
 jest.mock('../../../src/services/analytics/realMetricsService', () => mockMetricas);
 
 const { datosParaKPIs } = require('../../../src/services/analytics/kpiDatos');
 
 const volumen = (extra = {}) => ({
-  total: 60, porTipo: { H7: 50, NCTS: 10 }, porEstado: { accepted: 30, rejected: 6 },
+  total: 60, porTipo: { H7: 50, NCTS: 10 }, porEstado: { accepted: 30, rejected: 5 },
   aceptadas: 30, pendientes: 12, ...extra
 });
 
@@ -28,6 +29,7 @@ beforeEach(() => {
   });
   mockMetricas.derechosLiquidados.mockResolvedValue({ declaraciones: 50, total: 12345.67 });
   mockMetricas.tiemposDeDespacho.mockResolvedValue({ muestra: 8, mediaHoras: 4.5 });
+  mockMetricas.expedientesActivos.mockResolvedValue(7);
 });
 
 describe('datosParaKPIs: mapeo de métricas reales a KPIs', () => {
@@ -38,10 +40,35 @@ describe('datosParaKPIs: mapeo de métricas reales a KPIs', () => {
       days: 30,
       greenChannel: 75,            // 15 de 20 con canal
       avgProcessingTime: 4.5,
-      activeExpeditions: 12,
+      activeExpeditions: 7,        // expedientes no terminales, NO volumen.pendientes (12)
       totalDuties: 12345.67,
-      rejectionRate: 10            // 6 rechazadas de 60
+      rejectionRate: 10            // 5 rechazadas de 50 H7 (no de 60 con tránsitos)
     });
+  });
+
+  test('activeExpeditions sale de expedientesActivos y sin rango de fechas', async () => {
+    await datosParaKPIs('64f000000000000000000001', { dias: 7 });
+    expect(mockMetricas.expedientesActivos).toHaveBeenCalledTimes(1);
+    expect(mockMetricas.expedientesActivos.mock.calls[0]).toEqual(['64f000000000000000000001']);
+  });
+
+  test('un cero real de expedientes activos sigue siendo 0 (no null)', async () => {
+    mockMetricas.expedientesActivos.mockResolvedValue(0);
+    expect((await datosParaKPIs('t')).activeExpeditions).toBe(0);
+  });
+
+  test('rejectionRate divide entre las H7, no entre el total con tránsitos', async () => {
+    mockMetricas.volumenDeclaraciones.mockResolvedValue(volumen({
+      total: 100, porTipo: { H7: 20, NCTS: 80 }, porEstado: { rejected: 4 }
+    }));
+    expect((await datosParaKPIs('t')).rejectionRate).toBe(20);   // 4/20, no 4/100
+  });
+
+  test('rejectionRate es null si no hay H7 aunque haya tránsitos', async () => {
+    mockMetricas.volumenDeclaraciones.mockResolvedValue(volumen({
+      total: 10, porTipo: { H7: 0, NCTS: 10 }, porEstado: {}
+    }));
+    expect((await datosParaKPIs('t')).rejectionRate).toBeNull();
   });
 
   test('declarations_per_day usa total y días (por defecto 30)', async () => {
@@ -73,7 +100,8 @@ describe('datosParaKPIs: mapeo de métricas reales a KPIs', () => {
   });
 
   test('sin declaraciones: rejectionRate es null y el resto son ceros reales', async () => {
-    mockMetricas.volumenDeclaraciones.mockResolvedValue(volumen({ total: 0, porEstado: {}, pendientes: 0 }));
+    mockMetricas.volumenDeclaraciones.mockResolvedValue(volumen({ total: 0, porTipo: { H7: 0, NCTS: 0 }, porEstado: {}, pendientes: 0 }));
+    mockMetricas.expedientesActivos.mockResolvedValue(0);
     const d = await datosParaKPIs('t');
     expect(d.rejectionRate).toBeNull();
     expect(d.totalDeclarations).toBe(0);

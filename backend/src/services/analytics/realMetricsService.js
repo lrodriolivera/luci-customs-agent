@@ -214,6 +214,24 @@ async function tiemposDeDespacho(tenantId, { desde, hasta } = {}) {
 }
 
 /**
+ * Estados terminales de un expediente: ya no estan en curso. 'on_hold' NO lo es
+ * (esta en pausa, sigue abierto) ni 'draft'.
+ */
+const ESTADOS_EXPEDIENTE_TERMINALES = ['levante', 'completed', 'cancelled'];
+
+/**
+ * Expedientes activos: los del tenant cuyo status no es terminal.
+ *
+ * Sin rango de fechas a proposito: un expediente sigue activo aunque se abriera
+ * hace meses. Devuelve un numero (0 es un cero real).
+ */
+async function expedientesActivos(tenantId) {
+  return Expedition.countDocuments(
+    _filtro(tenantId, { deletedAt: null, status: { $nin: ESTADOS_EXPEDIENTE_TERMINALES } })
+  );
+}
+
+/**
  * Cumplimiento: inspecciones, requerimientos y garantias.
  */
 async function cumplimiento(tenantId, { desde, hasta } = {}) {
@@ -343,6 +361,7 @@ module.exports = {
   repartoPorCanal,
   derechosLiquidados,
   tiemposDeDespacho,
+  expedientesActivos,
   cumplimiento,
   recaudacionCobrada,
   valorMercancia,

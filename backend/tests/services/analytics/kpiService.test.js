@@ -109,6 +109,20 @@ describe('KPI Service', () => {
     });
   });
 
+  describe('KPI_DEFINITIONS: el nombre coincide con la fuente', () => {
+    test('total_duties_collected se llama "Derechos liquidados" (lo liquidado, no lo cobrado) y mantiene su id', () => {
+      const def = kpiService.KPI_DEFINITIONS.total_duties_collected;
+      expect(def.id).toBe('total_duties_collected');
+      expect(def.name).toBe('Derechos liquidados');
+      expect(def.description).toMatch(/liquidad/i);
+      expect(def.name).not.toMatch(/gestionad|cobrad/i);
+    });
+
+    test('active_expeditions describe expedientes no terminales', () => {
+      expect(kpiService.KPI_DEFINITIONS.active_expeditions.description).toMatch(/no (han )?(finalizado|terminado)|no terminal|sin cerrar|en curso/i);
+    });
+  });
+
   describe('calculateKPI', () => {
     test('should calculate declarations_per_day KPI', async () => {
       const result = await kpiService.calculateKPI('declarations_per_day', DATOS);

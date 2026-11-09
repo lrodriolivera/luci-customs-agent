@@ -278,3 +278,24 @@ describe('el cuadro de mando declara que NO es simulado', () => {
     expect(fuente).not.toMatch(/Math\.random/);
   });
 });
+
+describe('expedientesActivos', () => {
+  test('cuenta los no terminales del tenant, sin rango de fechas', async () => {
+    mockContar.mockResolvedValue(9);
+
+    const n = await metricas.expedientesActivos(TENANT);
+
+    expect(n).toBe(9);
+    const [filtro] = mockContar.mock.calls[0];
+    expect(String(filtro.tenantId)).toBe(TENANT);
+    expect(filtro.tenantId).toBeInstanceOf(mongoose.Types.ObjectId);
+    expect(filtro.deletedAt).toBeNull();
+    expect(filtro.status).toEqual({ $nin: ['levante', 'completed', 'cancelled'] });
+    expect(filtro).not.toHaveProperty('createdAt');
+  });
+
+  test('sin tenantId no se filtra (informes de plataforma)', async () => {
+    await metricas.expedientesActivos(undefined);
+    expect(mockContar.mock.calls[0][0]).not.toHaveProperty('tenantId');
+  });
+});

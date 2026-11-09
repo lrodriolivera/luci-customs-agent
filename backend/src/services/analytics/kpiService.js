@@ -84,7 +84,7 @@ const KPI_DEFINITIONS = {
   active_expeditions: {
     id: 'active_expeditions',
     name: 'Expedientes activos',
-    description: 'Número de expedientes en proceso',
+    description: 'Número de expedientes que no han terminado (excluye levante, completados y cancelados)',
     category: KPI_CATEGORIES.OPERATIONAL,
     unit: 'expedientes',
     direction: 'neutral',
@@ -100,8 +100,8 @@ const KPI_DEFINITIONS = {
   // Financial KPIs
   total_duties_collected: {
     id: 'total_duties_collected',
-    name: 'Derechos totales gestionados',
-    description: 'Suma de derechos de aduana gestionados',
+    name: 'Derechos liquidados',
+    description: 'Suma de derechos de aduana liquidados en las declaraciones (no es lo cobrado)',
     category: KPI_CATEGORIES.FINANCIAL,
     unit: 'EUR',
     direction: 'higher_is_better',
