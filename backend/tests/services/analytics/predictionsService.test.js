@@ -73,105 +73,6 @@ describe('Predictions Service', () => {
     });
   });
 
-  describe('predictVolume', () => {
-    test('should predict volume for default horizon', async () => {
-      const result = await predictionsService.predictVolume();
-
-      expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
-      expect(result.data.type).toBe('volume');
-    });
-
-    test('should include predictions array', async () => {
-      const result = await predictionsService.predictVolume({ horizon: 30 });
-
-      expect(result.data.predictions).toBeDefined();
-      expect(Array.isArray(result.data.predictions)).toBe(true);
-      expect(result.data.predictions.length).toBeGreaterThan(0);
-    });
-
-    test('should include summary', async () => {
-      const result = await predictionsService.predictVolume();
-
-      expect(result.data.summary).toBeDefined();
-      expect(result.data.summary).toHaveProperty('totalPredicted');
-      expect(result.data.summary).toHaveProperty('averageDaily');
-    });
-
-    test('should include model info', async () => {
-      const result = await predictionsService.predictVolume();
-
-      expect(result.data.modelInfo).toBeDefined();
-      expect(result.data.modelInfo).toHaveProperty('accuracy');
-    });
-
-    test('should respect granularity option', async () => {
-      const dailyResult = await predictionsService.predictVolume({ horizon: 30, granularity: 'daily' });
-      const weeklyResult = await predictionsService.predictVolume({ horizon: 30, granularity: 'weekly' });
-
-      expect(dailyResult.data.granularity).toBe('daily');
-      expect(weeklyResult.data.granularity).toBe('weekly');
-      expect(weeklyResult.data.predictions.length).toBeLessThan(dailyResult.data.predictions.length);
-    });
-
-    test('should handle monthly granularity aggregation', async () => {
-      const result = await predictionsService.predictVolume({ horizon: 60, granularity: 'monthly' });
-
-      expect(result.success).toBe(true);
-      expect(result.data.granularity).toBe('monthly');
-      expect(result.data.predictions.length).toBeGreaterThan(0);
-      expect(result.data.predictions[0]).toHaveProperty('month');
-      expect(result.data.predictions[0]).toHaveProperty('predictedVolume');
-      expect(result.data.predictions[0]).toHaveProperty('confidence');
-    });
-
-    test('should include LUCI analysis', async () => {
-      const aiService = require('../../../src/services/aiService');
-      aiService.generateAutomaticInsights.mockResolvedValueOnce({
-        executiveSummary: 'Volume predictions within normal range',
-        recommendations: ['Monitor capacity', 'Plan resources'],
-        opportunities: [{ description: 'Optimize processing during peak days' }]
-      });
-
-      const result = await predictionsService.predictVolume({ horizon: 30 });
-
-      expect(result.data.luciAnalysis).toBeDefined();
-      if (result.data.luciAnalysis) {
-        expect(result.data.luciAnalysis.summary).toBeDefined();
-        expect(result.data.luciAnalysis.recommendations).toBeDefined();
-      }
-    });
-
-    test('should handle error when prediction fails', async () => {
-      // Create a scenario that forces an error in predictVolume's try block
-      // by causing an error during prediction generation (not in LUCI call)
-      jest.spyOn(Array.prototype, 'push').mockImplementationOnce(() => {
-        throw new Error('Array operation failed');
-      });
-
-      const result = await predictionsService.predictVolume();
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Array operation failed');
-
-      Array.prototype.push.mockRestore();
-    });
-
-    test('should handle LUCI analysis when opportunities are missing', async () => {
-      const aiService = require('../../../src/services/aiService');
-      aiService.generateAutomaticInsights.mockResolvedValueOnce({
-        executiveSummary: 'Volume stable',
-        recommendations: ['Continue monitoring']
-        // No opportunities field
-      });
-
-      const result = await predictionsService.predictVolume({ horizon: 30 });
-
-      expect(result.success).toBe(true);
-      expect(result.data.luciAnalysis.resourcePlanning).toContain('Mantener capacidad operativa actual');
-    });
-  });
-
   describe('predictChannel', () => {
     test('should predict channel for declaration data', async () => {
       const declarationData = {
@@ -398,62 +299,6 @@ describe('Predictions Service', () => {
       expect(result.error).toBeDefined();
 
       global.Math.min.mockRestore();
-    });
-  });
-
-  describe('predictProcessingTime', () => {
-    test('should predict processing time', async () => {
-      const result = await predictionsService.predictProcessingTime({
-        type: 'H1',
-        channel: 'green'
-      });
-
-      expect(result.success).toBe(true);
-      expect(result.data.type).toBe('processing_time');
-      expect(result.data.predictedHours).toBeDefined();
-    });
-
-    test('should include time range', async () => {
-      const result = await predictionsService.predictProcessingTime({});
-
-      expect(result.data.rangeHours).toBeDefined();
-      expect(result.data.rangeHours).toHaveProperty('min');
-      expect(result.data.rangeHours).toHaveProperty('max');
-    });
-
-    test('should include time breakdown', async () => {
-      const result = await predictionsService.predictProcessingTime({
-        type: 'H1',
-        channel: 'orange'
-      });
-
-      expect(result.data.breakdown).toBeDefined();
-      expect(result.data.breakdown).toHaveProperty('baseProcessing');
-    });
-
-    test('should account for document completeness', async () => {
-      const completeResult = await predictionsService.predictProcessingTime({
-        documentsComplete: true
-      });
-
-      const incompleteResult = await predictionsService.predictProcessingTime({
-        documentsComplete: false
-      });
-
-      expect(incompleteResult.data.predictedHours).toBeGreaterThan(completeResult.data.predictedHours);
-    });
-
-    test('should handle error when processing time prediction fails', async () => {
-      jest.spyOn(global.Math, 'round').mockImplementationOnce(() => {
-        throw new Error('Calculation error');
-      });
-
-      const result = await predictionsService.predictProcessingTime({ type: 'H1' });
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-
-      global.Math.round.mockRestore();
     });
   });
 
@@ -740,14 +585,14 @@ describe('Predictions Service', () => {
 
   describe('analyzeTrends', () => {
     test('should analyze trends in data', async () => {
-      const result = await predictionsService.analyzeTrends({});
+      const result = await predictionsService.analyzeTrends({ volumes: [1, 2, 3, 4, 5, 6, 7, 8] });
 
       expect(result.success).toBe(true);
       expect(result.data.type).toBe('trend');
     });
 
     test('should include trend analysis', async () => {
-      const result = await predictionsService.analyzeTrends({});
+      const result = await predictionsService.analyzeTrends({ volumes: [1, 2, 3, 4, 5, 6, 7, 8] });
 
       expect(result.data.trends).toBeDefined();
       expect(result.data.trends).toHaveProperty('volume');
@@ -755,13 +600,13 @@ describe('Predictions Service', () => {
     });
 
     test('should include forecasts', async () => {
-      const result = await predictionsService.analyzeTrends({});
+      const result = await predictionsService.analyzeTrends({ volumes: [1, 2, 3, 4, 5, 6, 7, 8] });
 
       expect(result.data.forecasts).toBeDefined();
     });
 
     test('should include highlights', async () => {
-      const result = await predictionsService.analyzeTrends({});
+      const result = await predictionsService.analyzeTrends({ volumes: [1, 2, 3, 4, 5, 6, 7, 8] });
 
       expect(result.data.highlights).toBeDefined();
       expect(Array.isArray(result.data.highlights)).toBe(true);
@@ -810,7 +655,7 @@ describe('Predictions Service', () => {
         modelConfidence: 'high'
       });
 
-      const result = await predictionsService.analyzeTrends({});
+      const result = await predictionsService.analyzeTrends({ volumes: [1, 2, 3, 4, 5, 6, 7, 8] });
 
       expect(result.data.luciInsights).toBeDefined();
       if (result.data.luciInsights) {
@@ -826,7 +671,7 @@ describe('Predictions Service', () => {
         modelConfidence: 'high'
       });
 
-      const result = await predictionsService.analyzeTrends({});
+      const result = await predictionsService.analyzeTrends({ volumes: [1, 2, 3, 4, 5, 6, 7, 8] });
 
       expect(result.success).toBe(true);
       expect(result.data.luciInsights.summary).toBeDefined();
@@ -839,23 +684,22 @@ describe('Predictions Service', () => {
         predictions: [{ metric: 'test', value: 100 }]
       });
 
-      const result = await predictionsService.analyzeTrends({});
+      const result = await predictionsService.analyzeTrends({ volumes: [1, 2, 3, 4, 5, 6, 7, 8] });
 
       expect(result.success).toBe(true);
       expect(result.data.luciInsights.summary).toContain('confianza');
     });
 
-    test('should handle empty data in trend calculation', async () => {
+    test('series vacias o no numericas no cuentan como historico: SIN_HISTORICO', async () => {
       const result = await predictionsService.analyzeTrends({
         volumes: [],
         values: [],
-        compliance: [],
-        efficiency: []
+        compliance: ['a', 'b'],
+        efficiency: [1]
       });
 
-      expect(result.success).toBe(true);
-      // Empty arrays should default to generated time series
-      expect(result.data.trends.volume).toBeDefined();
+      expect(result.success).toBe(false);
+      expect(result.code).toBe('SIN_HISTORICO');
     });
 
     test('should calculate stable trend for flat data', async () => {
@@ -884,7 +728,7 @@ describe('Predictions Service', () => {
         throw new Error('Calculation error');
       });
 
-      const result = await predictionsService.analyzeTrends({});
+      const result = await predictionsService.analyzeTrends({ volumes: [1, 2, 3, 4, 5, 6, 7, 8] });
 
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
@@ -912,8 +756,9 @@ describe('Predictions Service', () => {
     test('should include overall accuracy', () => {
       const result = predictionsService.getModelMetrics();
 
-      expect(result.data.overallAccuracy).toBeDefined();
-      expect(typeof result.data.overallAccuracy).toBe('number');
+      // No hay modelos entrenados: sin precision inventada
+      expect(result.data.overallAccuracy).toBeNull();
+      expect(result.data.disponible).toBe(false);
     });
   });
 });

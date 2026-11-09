@@ -602,7 +602,7 @@ async function predictChannel(req, res) {
       });
     }
 
-    const result = await predictionsService.predictChannel(declarationData);
+    const result = await predictionsService.predictChannel(declarationData, { tenantId: ambitoTenant(req.user) });
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Predict channel error: ${error.message}`);
@@ -625,7 +625,7 @@ async function predictInspection(req, res) {
       });
     }
 
-    const result = await predictionsService.predictInspection(declarationData);
+    const result = await predictionsService.predictInspection(declarationData, { tenantId: ambitoTenant(req.user) });
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Predict inspection error: ${error.message}`);
@@ -707,6 +707,12 @@ async function analyzeTrends(req, res) {
     const { data, period } = req.body;
 
     const result = await predictionsService.analyzeTrends(data || {}, { period });
+
+    // Sin series en `data` no hay tendencia que calcular: 501, no series sinteticas.
+    if (!result.success && result.code === 'SIN_HISTORICO') {
+      return noImplementado(res, realMetrics.NO_DISPONIBLE.SIN_HISTORICO);
+    }
+
     res.json(result);
   } catch (error) {
     logger.error(`[AnalyticsController] Analyze trends error: ${error.message}`);

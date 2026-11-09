@@ -43,55 +43,6 @@ beforeEach(() => {
   });
 });
 
-describe('predictVolume', () => {
-  test('genera una prediccion diaria para el horizonte pedido', async () => {
-    const r = await predictions.predictVolume({ horizon: 10, baseVolume: 12 });
-    expect(r.success).toBe(true);
-    expect(r.data.predictions).toHaveLength(10);
-    expect(r.data.type).toBe('volume');
-    // cada punto tiene banda inferior <= volumen <= banda superior
-    for (const p of r.data.predictions) {
-      expect(p.lowerBound).toBeLessThanOrEqual(p.predictedVolume);
-      expect(p.upperBound).toBeGreaterThanOrEqual(p.predictedVolume);
-      expect(p.confidence).toBeGreaterThanOrEqual(60);
-    }
-  });
-
-  test('agregacion semanal reduce el numero de puntos', async () => {
-    const r = await predictions.predictVolume({ horizon: 28, baseVolume: 10, granularity: 'weekly' });
-    expect(r.data.granularity).toBe('weekly');
-    expect(r.data.predictions.length).toBe(4); // 28/7
-    expect(r.data.predictions[0]).toHaveProperty('weekStart');
-  });
-
-  test('agregacion mensual agrupa por mes', async () => {
-    const r = await predictions.predictVolume({ horizon: 30, baseVolume: 10, granularity: 'monthly' });
-    expect(r.data.granularity).toBe('monthly');
-    expect(r.data.predictions[0]).toHaveProperty('month');
-  });
-
-  test('incorpora los insights de LUCI cuando aiService responde', async () => {
-    const r = await predictions.predictVolume({ horizon: 5, baseVolume: 10 });
-    expect(r.data.luciAnalysis.summary).toBe('Resumen IA');
-    expect(r.data.luciAnalysis.recommendations).toContain('Contratar refuerzo en pico');
-    expect(r.data.luciAnalysis.resourcePlanning).toContain('Automatizar despachos verdes');
-  });
-
-  test('si aiService falla, luciAnalysis queda null y no rompe', async () => {
-    aiService.generateAutomaticInsights.mockRejectedValue(new Error('Bedrock caido'));
-    const r = await predictions.predictVolume({ horizon: 3, baseVolume: 10 });
-    expect(r.success).toBe(true);
-    expect(r.data.luciAnalysis).toBeNull();
-  });
-
-  test('sin executiveSummary usa el fallback de resumen y planning por defecto', async () => {
-    aiService.generateAutomaticInsights.mockResolvedValue({}); // sin campos
-    const r = await predictions.predictVolume({ horizon: 3, baseVolume: 10 });
-    expect(r.data.luciAnalysis.summary).toMatch(/parámetros normales/i);
-    expect(r.data.luciAnalysis.resourcePlanning).toContain('Mantener capacidad operativa actual');
-  });
-});
-
 describe('predictChannel', () => {
   test('las probabilidades suman ~100 y el canal predicho es el de mayor prob', async () => {
     const r = await predictions.predictChannel({ originCountry: 'ES', customsValue: 5000 });
@@ -144,22 +95,6 @@ describe('predictInspection', () => {
       originCountry: 'CN', customsValue: 999999, firstTimeImporter: true, commodityCode: '8471300000'
     });
     expect(r.data.inspectionProbability).toBeLessThanOrEqual(95);
-  });
-});
-
-describe('predictProcessingTime', () => {
-  test('H7 verde es rapido; H1 rojo con docs incompletos es lento', async () => {
-    const rapido = await predictions.predictProcessingTime({ type: 'H7', channel: 'green' });
-    const lento = await predictions.predictProcessingTime({ type: 'H1', channel: 'red', documentsComplete: false });
-    expect(lento.data.predictedHours).toBeGreaterThan(rapido.data.predictedHours);
-    expect(lento.data.breakdown.channelDelay).toBe(24);
-    expect(lento.data.breakdown.documentReview).toBe(8);
-  });
-
-  test('tipo/canal desconocidos usan multiplicadores por defecto sin romper', async () => {
-    const r = await predictions.predictProcessingTime({ type: 'ZZZ', channel: 'morado' });
-    expect(r.success).toBe(true);
-    expect(r.data.breakdown.channelDelay).toBe(0);
   });
 });
 
@@ -262,19 +197,19 @@ describe('analyzeTrends', () => {
     expect(r.data.luciInsights.keyInsights.length).toBeGreaterThan(0);
   });
 
-  test('sin datos genera series sinteticas y no rompe', async () => {
+  test('sin series no se inventan series sinteticas: SIN_HISTORICO', async () => {
     const r = await predictions.analyzeTrends({});
-    expect(r.success).toBe(true);
-    expect(r.data.trends).toHaveProperty('compliance');
+    expect(r.success).toBe(false);
+    expect(r.code).toBe('SIN_HISTORICO');
   });
 });
 
 describe('getModelMetrics', () => {
-  test('devuelve los 4 modelos y una precision media', () => {
+  test('devuelve los 4 modelos sin precision: no hay modelos entrenados', () => {
     const r = predictions.getModelMetrics();
     expect(r.success).toBe(true);
     expect(Object.keys(r.data.models)).toHaveLength(4);
-    expect(r.data.overallAccuracy).toBeGreaterThan(0.8);
-    expect(r.data.overallAccuracy).toBeLessThanOrEqual(1);
+    expect(r.data.overallAccuracy).toBeNull();
+    expect(r.data.disponible).toBe(false);
   });
 });

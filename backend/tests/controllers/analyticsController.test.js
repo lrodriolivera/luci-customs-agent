@@ -506,6 +506,24 @@ describe('Predicciones', () => {
     expect(r2.statusCode).toBe(200);
   });
 
+  test('analyzeTrends responde 501 SIN_HISTORICO si el servicio no tiene series', async () => {
+    predictionsService.analyzeTrends.mockResolvedValue({ success: false, code: 'SIN_HISTORICO', error: 'x' });
+    const res = crearRes();
+    await ctrl.analyzeTrends(req({ data: {} }), res);
+    expect(res.statusCode).toBe(501);
+    expect(res.body.code).toBe('NOT_IMPLEMENTED');
+    expect(res.body.reason).toBe('sin historico');
+  });
+
+  test('predictChannel y predictInspection pasan el ambito del usuario', async () => {
+    predictionsService.predictChannel.mockResolvedValue({ success: true });
+    predictionsService.predictInspection.mockResolvedValue({ success: true });
+    await ctrl.predictChannel(req({ value: 1 }), crearRes());
+    await ctrl.predictInspection(req({ value: 1 }, {}, {}, { id: 'u', role: 'user' }), crearRes());
+    expect(predictionsService.predictChannel).toHaveBeenCalledWith({ value: 1 }, { tenantId: 't1' });
+    expect(predictionsService.predictInspection).toHaveBeenCalledWith({ value: 1 }, { tenantId: null });
+  });
+
   test('analyzeTrends y getModelMetrics delegan', async () => {
     predictionsService.analyzeTrends.mockResolvedValue({ success: true });
     predictionsService.getModelMetrics.mockReturnValue({ success: true });
