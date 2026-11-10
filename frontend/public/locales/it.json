@@ -3646,5 +3646,45 @@
       "exporterCountry": "Paese dell'esportatore",
       "exporterCity": "Città dell'esportatore"
     }
+  },
+  "draftDocs": {
+    "title": "Iniziare dalla documentazione",
+    "intro": "Carica la fattura, la packing list e il documento di trasporto. LUCI li legge e compila il modulo; tu controlli prima di creare la pratica. I documenti restano allegati alla pratica.",
+    "selectFiles": "Seleziona documenti",
+    "reading": "Lettura di {{name}}...",
+    "notReadable": "LUCI non è riuscita a leggere questo documento. Resterà allegato alla pratica, ma non è stato compilato nulla.",
+    "filledCount": "{{count}} dato/i compilati",
+    "nothingFilled": "non ha aggiunto nuovi dati al modulo",
+    "showFilled": "Vedi i dati compilati",
+    "remove": "Rimuovi",
+    "readError": "Impossibile leggere il documento",
+    "removeError": "Impossibile rimuovere il documento",
+    "tooMany": "Al massimo {{max}} documenti per nuova pratica",
+    "review": "Controlla i tre passaggi prima di creare la pratica: LUCI ha compilato solo i campi che erano vuoti.",
+    "warnTitle": "Controlla questi punti:",
+    "transportDetails": "Dati del documento di trasporto (facoltativo)",
+    "containersHint": "Più container, separati da virgole.",
+    "warn": {
+      "differs": "{{field}}: il documento indica «{{value}}» e nel modulo c'è «{{current}}». Non è stato modificato.",
+      "itemsMismatch": "Il documento contiene {{value}} articolo/i e il modulo ne ha {{current}}: non è stato possibile abbinarli e gli articoli non sono stati modificati.",
+      "currencyNotAvailable": "La fattura è in {{value}}, una valuta che il modulo non offre: controlla la valuta dell'articolo.",
+      "fiscalIdNotRecognised": "L'identificativo fiscale letto («{{value}}») non ha il formato di un NIF: non è stato compilato."
+    },
+    "field": {
+      "clientName": "Cliente",
+      "clientNif": "NIF del cliente",
+      "clientEori": "EORI del cliente",
+      "clientAddress": "Indirizzo del cliente",
+      "clientCity": "Città del cliente",
+      "counterpartName": "Esportatore / destinatario",
+      "counterpartCountry": "Paese dell'esportatore / destinatario",
+      "counterpartCity": "Città dell'esportatore / destinatario",
+      "counterpartAddress": "Indirizzo dell'esportatore / destinatario",
+      "description": "Descrizione",
+      "quantity": "Quantità",
+      "transportMode": "Modalità di trasporto"
+    },
+    "summary": "{{documents}} documento/i letti · {{count}} dato/i compilati da LUCI. Controllali prima di creare la pratica.",
+    "summaryWarnings": "{{count}} avviso/i nel passaggio 1."
   }
 }

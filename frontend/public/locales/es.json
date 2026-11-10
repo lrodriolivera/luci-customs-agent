@@ -3662,5 +3662,45 @@
       "exporterCountry": "País del exportador",
       "exporterCity": "Ciudad del exportador"
     }
+  },
+  "draftDocs": {
+    "title": "Empezar por la documentación",
+    "intro": "Sube la factura, el packing list y el documento de transporte. LUCI los lee y rellena el alta; tú revisas antes de crear el expediente. Los documentos quedan adjuntos al expediente.",
+    "selectFiles": "Seleccionar documentos",
+    "reading": "Leyendo {{name}}...",
+    "notReadable": "LUCI no ha podido leer este documento. Quedará adjunto al expediente, pero no ha rellenado nada.",
+    "filledCount": "{{count}} dato(s) rellenados",
+    "nothingFilled": "no ha aportado datos nuevos al formulario",
+    "showFilled": "Ver los datos rellenados",
+    "remove": "Quitar",
+    "readError": "No se pudo leer el documento",
+    "removeError": "No se pudo quitar el documento",
+    "tooMany": "Como máximo {{max}} documentos por alta",
+    "review": "Revisa los tres pasos antes de crear el expediente: LUCI solo ha rellenado los campos que estaban vacíos.",
+    "warnTitle": "Revisa estos puntos:",
+    "transportDetails": "Datos del documento de transporte (opcional)",
+    "containersHint": "Varios contenedores, separados por comas.",
+    "warn": {
+      "differs": "{{field}}: el documento indica «{{value}}» y en el formulario hay «{{current}}». No se ha cambiado.",
+      "itemsMismatch": "El documento trae {{value}} partida(s) y el formulario tiene {{current}}: no se han podido casar y las partidas no se han tocado.",
+      "currencyNotAvailable": "La factura está en {{value}}, una moneda que el alta no ofrece: revisa la moneda de la partida.",
+      "fiscalIdNotRecognised": "La identificación fiscal leída («{{value}}») no tiene formato de NIF: no se ha rellenado."
+    },
+    "field": {
+      "clientName": "Cliente",
+      "clientNif": "NIF del cliente",
+      "clientEori": "EORI del cliente",
+      "clientAddress": "Dirección del cliente",
+      "clientCity": "Ciudad del cliente",
+      "counterpartName": "Exportador / destinatario",
+      "counterpartCountry": "País del exportador / destinatario",
+      "counterpartCity": "Ciudad del exportador / destinatario",
+      "counterpartAddress": "Dirección del exportador / destinatario",
+      "description": "Descripción",
+      "quantity": "Cantidad",
+      "transportMode": "Modo de transporte"
+    },
+    "summary": "{{documents}} documento(s) leídos · {{count}} dato(s) rellenados por LUCI. Revísalos antes de crear el expediente.",
+    "summaryWarnings": "{{count}} aviso(s) en el paso 1."
   }
 }

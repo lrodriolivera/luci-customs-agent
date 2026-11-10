@@ -28,9 +28,11 @@ const TaricAICache = require('./TaricAICache');
 const Tenant = require('./Tenant');
 const AuditLog = require('./AuditLog');
 const EmailSuppression = require('./EmailSuppression');
+const DocumentDraft = require('./DocumentDraft');
 
 module.exports = {
   AuditLog,
+  DocumentDraft,
   EmailSuppression,
   User,
   Expedition,

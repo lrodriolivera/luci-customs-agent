@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { expeditionsAPI, classificationAPI } from '../../services/api'
@@ -6,6 +6,9 @@ import { interpretarImporte } from '../../utils/importe'
 import ImporteInput from '../common/ImporteInput'
 import { LOAD_TYPES } from './GroupageCard'
 import { PACKAGE_TYPES, DEFAULT_PACKAGE_TYPE, toNumberOrUndefined } from './packageTypes'
+import DraftDocuments from './DraftDocuments'
+import TransportDetailsFields from './TransportDetailsFields'
+import { prerrellenarAlta, transporteParaAlta, partidaVacia, transporteVacio, INCOTERMS } from '../../utils/prerrellenoAlta'
 import toast from 'react-hot-toast'
 import { ArrowLeftIcon, PlusIcon, TrashIcon, SparklesIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
 
@@ -77,23 +80,36 @@ export default function ExpeditionNew() {
       city: '',
       country: ''
     },
-    goods: [{
-      description: '',
-      taricCode: '',
-      originCountry: '',
-      quantity: '',
-      quantityUnit: 'KGM',
-      netWeight: '',
-      grossWeight: '',
-      packages: { quantity: '', type: DEFAULT_PACKAGE_TYPE },
-      invoiceValue: '',
-      currency: 'EUR'
-    }],
+    goods: [partidaVacia()],
     transportMode: 'SEA',
     loadType: '',
+    transportDetails: transporteVacio(),
     incoterm: 'CIF',
     incotermPlace: ''
   })
+
+  // Documentos subidos en el alta. Las lecturas llegan seguidas (varios
+  // archivos a la vez): cada una se aplica sobre el formulario que dejo la
+  // anterior, por eso se lee de una referencia y no del estado del render.
+  const [drafts, setDrafts] = useState([])
+  const formDataRef = useRef(formData)
+  formDataRef.current = formData
+  const draftsRef = useRef(drafts)
+  draftsRef.current = drafts
+
+  const handleDraftRead = (draft, extraction) => {
+    const { formData: next, rellenados, avisos } = prerrellenarAlta(formDataRef.current, extraction, {
+      tipoDocumento: draft.type,
+      fijados: draftsRef.current.flatMap((d) => d.rellenados.map((r) => r.clave))
+    })
+    formDataRef.current = next
+    draftsRef.current = [...draftsRef.current, { ...draft, extraction, rellenados, avisos }]
+    setFormData(next)
+    setDrafts(draftsRef.current)
+  }
+
+  const handleDraftRemove = (id) => setDrafts((prev) => prev.filter((d) => d.id !== id))
+  const handleDraftType = (id, type) => setDrafts((prev) => prev.map((d) => (d.id === id ? { ...d, type } : d)))
 
   const handleChange = (section, field, value) => {
     if (section) {
@@ -124,9 +140,10 @@ export default function ExpeditionNew() {
     ...formData,
     // El tipo de carga solo tiene sentido en maritimo; '' no se envia.
     loadType: undefined,
-    transport: formData.transportMode === 'SEA' && formData.loadType
-      ? { loadType: formData.loadType }
-      : undefined,
+    transportDetails: undefined,
+    transport: transporteParaAlta(formData),
+    // Documentos subidos y leidos en el alta: se adjuntan al expediente.
+    draftDocuments: drafts.length > 0 ? drafts.map(({ id, type }) => ({ id, type })) : undefined,
     goods: formData.goods.map((item) => ({
       ...item,
       // El importe se teclea en formato español y viaja como numero.
@@ -144,18 +161,7 @@ export default function ExpeditionNew() {
   const addGoodsItem = () => {
     setFormData({
       ...formData,
-      goods: [...formData.goods, {
-        description: '',
-        taricCode: '',
-        originCountry: '',
-        quantity: '',
-        quantityUnit: 'KGM',
-        netWeight: '',
-        grossWeight: '',
-        packages: { quantity: '', type: DEFAULT_PACKAGE_TYPE },
-        invoiceValue: '',
-        currency: 'EUR'
-      }]
+      goods: [...formData.goods, partidaVacia()]
     })
   }
 
@@ -276,7 +282,7 @@ export default function ExpeditionNew() {
     { value: 'MULTIMODAL', label: t('expeditions.multimodal') }
   ]
 
-  const incoterms = ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP']
+  const incoterms = INCOTERMS
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -316,6 +322,14 @@ export default function ExpeditionNew() {
         <span className={step === 2 ? 'text-luci font-medium' : ''}>{t('expeditions.stepGoods')}</span>
         <span className={step === 3 ? 'text-luci font-medium' : ''}>{t('expeditions.stepTransport')}</span>
       </div>
+
+      <DraftDocuments
+        drafts={drafts}
+        onRead={handleDraftRead}
+        onRemove={handleDraftRemove}
+        onTypeChange={handleDraftType}
+        compact={step !== 1}
+      />
 
       <form onSubmit={handleSubmit}>
         {/* Step 1: Operation Type and Client */}
@@ -955,6 +969,10 @@ export default function ExpeditionNew() {
                   placeholder={t('expeditions.incotermPlaceholder')}
                 />
               </div>
+              <TransportDetailsFields
+                value={formData.transportDetails}
+                onChange={(campo, valor) => handleChange('transportDetails', campo, valor)}
+              />
             </div>
 
             <hr className="my-6" />
