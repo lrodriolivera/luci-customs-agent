@@ -162,7 +162,9 @@ export const documentsAPI = {
     api.post(`/api/documents/${seg(expeditionId)}/${seg(docId)}/apply`, { fields }),
   // Fichero original, para abrirlo en otra pestaña.
   download: (expeditionId, docId) =>
-    api.get(`/api/documents/${seg(expeditionId)}/${seg(docId)}`, { responseType: 'blob', timeout: 120000 })
+    api.get(`/api/documents/${seg(expeditionId)}/${seg(docId)}`, { responseType: 'blob', timeout: 120000 }),
+  // Elimina un documento del expediente (subido por error). Devuelve el expediente.
+  remove: (expeditionId, docId) => api.delete(`/api/documents/${seg(expeditionId)}/${seg(docId)}`)
 }
 
 // Classification

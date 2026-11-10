@@ -277,8 +277,16 @@ const deleteDocument = async (req, res) => {
       });
     }
 
-    // Eliminar archivo fisico
-    fileUtils.deleteFile(document.fileName);
+    // Con la declaracion presentada, la documentacion es la que la respalda
+    // ante la AEAT: ya no se puede quitar.
+    if (ESTADOS_SIN_CAMBIOS.includes(expedition.status)) {
+      return res.status(409).json({
+        success: false,
+        error: 'La declaracion ya esta presentada: sus documentos no se pueden eliminar'
+      });
+    }
+
+    const { fileName, originalName, type } = document;
 
     // Eliminar de la lista de documentos
     document.deleteOne();
@@ -296,18 +304,24 @@ const deleteDocument = async (req, res) => {
     // Timeline
     expedition.timeline.push({
       action: 'document_deleted',
-      description: `Documento ${document.type} eliminado`,
+      description: `Documento ${originalName || type} eliminado`,
       userId: req.user._id,
-      performedBy: req.user.name
+      performedBy: req.user.name,
+      metadata: { documentType: type, fileName: originalName }
     });
 
     await expedition.save();
 
-    logger.info(`Documento eliminado: ${expedition.expeditionId} - ${document.type}`);
+    // El archivo se borra DESPUES de guardar: si el guardado falla, el
+    // documento sigue en el expediente y su archivo tiene que seguir ahi.
+    fileUtils.deleteFile(fileName);
+
+    logger.info(`Documento eliminado: ${expedition.expeditionId} - ${type}`);
 
     res.json({
       success: true,
-      message: 'Documento eliminado correctamente'
+      message: 'Documento eliminado correctamente',
+      data: { expedition }
     });
 
   } catch (error) {

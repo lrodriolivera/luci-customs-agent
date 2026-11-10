@@ -3661,7 +3661,13 @@
       "exporterName": "Exporter",
       "exporterCountry": "Exporter country",
       "exporterCity": "Exporter city"
-    }
+    },
+    "delete": "Delete",
+    "deleteConfirm": "Delete this document? This cannot be undone.",
+    "deleteYes": "Yes, delete",
+    "deleting": "Deleting...",
+    "deleted": "Document deleted",
+    "deleteError": "The document could not be deleted"
   },
   "draftDocs": {
     "title": "Start from the documents",

@@ -1011,6 +1011,8 @@ export default function ExpeditionDetail() {
                         document={doc}
                         autoRead={documentToRead === doc._id}
                         canApply={canEditGoods}
+                        canDelete={canEditGoods}
+                        onDeleted={(actualizado) => (actualizado ? setExpedition(actualizado) : reloadExpedition())}
                         onApplied={(actualizado) => setExpedition(actualizado)}
                         onRead={() => setDocumentToRead(null)}
                       />
