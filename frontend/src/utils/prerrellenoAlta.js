@@ -159,6 +159,7 @@ export function prerrellenarAlta(formData, extraccion, { tipoDocumento, fijados 
   proponer('clientName', next.client, 'companyName', cliente.nombre)
   proponer('clientAddress', next.client, 'address', cliente.direccion)
   proponer('clientCity', next.client, 'city', cliente.ciudad)
+  proponer('clientPostalCode', next.client, 'postalCode', cliente.codigoPostal)
   if (!vacio(cliente.identificacionFiscal)) {
     const { nif, eori } = identificacionFiscal(cliente.identificacionFiscal)
     if (!nif) avisos.push({ campo: 'fiscalIdNotRecognised', valor: cliente.identificacionFiscal })

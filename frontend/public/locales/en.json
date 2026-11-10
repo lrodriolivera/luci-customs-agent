@@ -3692,6 +3692,7 @@
       "clientEori": "Client EORI",
       "clientAddress": "Client address",
       "clientCity": "Client city",
+      "clientPostalCode": "Client postal code",
       "counterpartName": "Exporter / consignee",
       "counterpartCountry": "Exporter / consignee country",
       "counterpartCity": "Exporter / consignee city",

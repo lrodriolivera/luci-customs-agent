@@ -58,6 +58,21 @@ describe('prerrellenarAlta', () => {
     expect(rellenados.map((r) => r.campo)).toEqual(expect.arrayContaining(['clientName', 'clientNif', 'counterpartName', 'description', 'invoiceValue', 'currency', 'incotermCode']))
   })
 
+  test('el codigo postal del cliente va a su campo y no a la ciudad', () => {
+    const conCp = lectura({ importador: { ...FACTURA.importador, ciudad: 'Paterna (Valencia)', codigoPostal: '46988' } })
+
+    const { formData, rellenados } = prerrellenarAlta(formulario(), conCp, {})
+
+    expect(formData.client.city).toBe('Paterna (Valencia)')
+    expect(formData.client.postalCode).toBe('46988')
+    expect(rellenados.map((r) => r.campo)).toContain('clientPostalCode')
+  })
+
+  test('una lectura antigua sin codigo postal no rompe nada', () => {
+    const { formData } = prerrellenarAlta(formulario(), FACTURA, {})
+    expect(formData.client.postalCode).toBe('')
+  })
+
   test('un codigo de mercancia de 6 digitos no se pone como TARIC', () => {
     const { formData } = prerrellenarAlta(formulario(), FACTURA, { tipoDocumento: 'commercial_invoice' })
     expect(formData.goods[0].taricCode).toBe('')
