@@ -411,6 +411,29 @@ describe('Paraduanero Service', () => {
       expect(controls[0].notes).toContain('2023-02-09');
     });
 
+    test('RoHS/RAEE no procede para los origenes que la medida excluye (TR, NO, IS, LI)', async () => {
+      // Consulta TARIC de la AEAT para la 8471 30: «ROS — todos erga omnes.
+      // Exclusiones: Turquia, Noruega, Islandia, Liechtenstein».
+      for (const origen of ['TR', 'NO', 'IS', 'LI', 'tr']) {
+        expect(await analizar('8471300000', origen)).toEqual([]);
+      }
+      expect((await analizar('8471300000', 'CN')).map(c => c.subType)).toEqual(['rohs_raee']);
+      expect((await analizar('8471300000', undefined)).map(c => c.subType)).toEqual(['rohs_raee']);
+    });
+
+    test('en un expediente mixto solo cuenta la partida de origen no excluido', async () => {
+      const controls = await paraduaneroService.analyzeExpedition({
+        expeditionId: 'EXP-MIXTO',
+        goods: [
+          { itemNumber: 1, description: 'Portatiles de Turquia', taricCode: '8471300000', originCountry: 'TR' },
+          { itemNumber: 2, description: 'Portatiles de China', taricCode: '8471300000', originCountry: 'CN' }
+        ]
+      });
+
+      expect(controls).toHaveLength(1);
+      expect(controls[0].affectedGoods.map(g => g.itemNumber)).toEqual([2]);
+    });
+
     test('maquinaria del capitulo 84 que no esta en ninguna lista no lleva control', async () => {
       // 8408 10: motores diesel para barcos. Antes: «SOIVRE machinery» por ser del 84.
       expect(await analizar('8408101100')).toEqual([]);

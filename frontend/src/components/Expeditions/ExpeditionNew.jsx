@@ -2,7 +2,8 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { expeditionsAPI, classificationAPI } from '../../services/api'
-import { formatearImporte } from '../../utils/importe'
+import { interpretarImporte } from '../../utils/importe'
+import ImporteInput from '../common/ImporteInput'
 import { LOAD_TYPES } from './GroupageCard'
 import { PACKAGE_TYPES, DEFAULT_PACKAGE_TYPE, toNumberOrUndefined } from './packageTypes'
 import toast from 'react-hot-toast'
@@ -128,6 +129,8 @@ export default function ExpeditionNew() {
       : undefined,
     goods: formData.goods.map((item) => ({
       ...item,
+      // El importe se teclea en formato español y viaja como numero.
+      invoiceValue: interpretarImporte(item.invoiceValue) ?? item.invoiceValue,
       packages: { ...item.packages, quantity: toNumberOrUndefined(item.packages?.quantity) }
     }))
   })
@@ -847,14 +850,15 @@ export default function ExpeditionNew() {
                   <div>
                     <label className="label">{t('expeditions.invoiceValue')} *</label>
                     <div className="flex gap-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={item.invoiceValue}
-                        onChange={(e) => handleGoodsChange(index, 'invoiceValue', e.target.value)}
-                        className="input flex-1"
-                        required
-                      />
+                      <div className="flex-1">
+                        <ImporteInput
+                          value={item.invoiceValue}
+                          currency={item.currency}
+                          onChange={(texto) => handleGoodsChange(index, 'invoiceValue', texto)}
+                          className="input w-full"
+                          required
+                        />
+                      </div>
                       <select
                         value={item.currency}
                         onChange={(e) => handleGoodsChange(index, 'currency', e.target.value)}
@@ -866,11 +870,6 @@ export default function ExpeditionNew() {
                         <option value="CNY">CNY</option>
                       </select>
                     </div>
-                    {formatearImporte(item.invoiceValue, item.currency) && (
-                      <p className="mt-1 text-xs text-gray-500">
-                        {t('expeditions.valueWillBeSaved', { amount: formatearImporte(item.invoiceValue, item.currency) })}
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
