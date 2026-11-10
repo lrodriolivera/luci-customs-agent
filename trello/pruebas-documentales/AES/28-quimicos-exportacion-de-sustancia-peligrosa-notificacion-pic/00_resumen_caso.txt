@@ -31,6 +31,8 @@ MERCANCIAS:
 
 NOTA DEL CASO (que se prueba):
   Exportacion de sustancia quimica peligrosa a un tercer pais: si la sustancia figura en el Anexo I del Reglamento (UE) 649/2012 (PIC — consentimiento fundamentado previo), el exportador debe notificar la exportacion al MITECO como autoridad designada antes del primer envio del ano a ese pais de destino, independientemente del tramite aduanero ordinario.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
+  Exportacion de sustancia quimica peligrosa a un tercer pais: si la sustancia figura en el Anexo I del Reglamento (UE) 649/2012 (PIC — consentimiento fundamentado previo), el exportador debe notificar la exportacion al MITECO como autoridad designada antes del primer envio del ano a ese pais de destino, independientemente del tramite aduanero ordinario.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:
   - 01_factura_comercial.pdf

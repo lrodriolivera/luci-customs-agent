@@ -20,14 +20,14 @@ COMPRADOR/IMPORTADOR:
     Avda. de la Innovacion, 3
     41703 Dos Hermanas (Sevilla)
     Espana
-    NIF: B-41678912 | EORI: ESB41678912
+    NIF: B-41678913 | EORI: ESB41678913
 
 CONSIGNATARIO:
-    Alpina Precision Instruments AG
-    Industriestrasse 14
-    6300 Zug
+    Gruyère Alpin Affineurs SA
+    Route de Bulle 22
+    1663 Gruyères
     Suiza
-    Tax ID: CHE-123.456.789
+    Tax ID: CHE-456.789.123
 
 Factura No.: INV-H1-19-2026-6123135  Fecha: 22/11/2026
 Documento de transporte: MSCU20266123135
@@ -37,6 +37,8 @@ MERCANCIAS:
     HS: 610910  Cantidad: 26000 PCE  Precio unit.: 2.75 USD
 
 NOTA DEL CASO (que se prueba):
+  El destinatario (importador final) está establecido en Suiza, fuera del territorio aduanero de la Unión: el agente aduanero español NO puede actuar como representante directo de un principal no establecido; la representación indirecta es obligatoria (CAU, arts. 18 y 19).
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Consignee (ultimate importer) is established in Switzerland, OUTSIDE the EU customs territory (TAU) — the Spanish customs agent CANNOT act as direct representative for a non-established principal; indirect representation is mandatory per CAU Art. 18-19.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

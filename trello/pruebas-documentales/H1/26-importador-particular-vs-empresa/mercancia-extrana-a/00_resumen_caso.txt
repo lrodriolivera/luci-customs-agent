@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Muelle de Poniente s/n, Edif. Lonja
     35008 Las Palmas de Gran Canaria
     Espana
-    NIF: A-35678901 | EORI: ESA35678901
+    NIF: A-35678903 | EORI: ESA35678903
 
 Factura No.: INV-H1-26-EXTRANA-a-2026-7015058  Fecha: 05/08/2026
 Documento de transporte: MSCU20267015058

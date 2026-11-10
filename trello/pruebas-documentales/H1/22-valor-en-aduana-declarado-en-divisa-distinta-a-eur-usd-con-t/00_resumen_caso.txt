@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Ctra. Nacional 401, Km 12
     13004 Ciudad Real
     Espana
-    NIF: B-13456789 | EORI: ESB13456789
+    NIF: B-13456785 | EORI: ESB13456785
 
 Factura No.: INV-H1-22-2026-1359417  Fecha: 25/04/2026
 Documento de transporte: 020-20261359417
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 901819  Cantidad: 640 PCE  Precio unit.: 96.0 USD
 
 NOTA DEL CASO (que se prueba):
+  Valor en aduana declarado en USD (divisa distinta del euro) en un envío aéreo: se aplica el tipo de cambio de la tabla diaria de la AEAT.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Customs value declared in USD (non-EUR currency) for an air freight shipment — exchange rate per AEAT daily rate table applies.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

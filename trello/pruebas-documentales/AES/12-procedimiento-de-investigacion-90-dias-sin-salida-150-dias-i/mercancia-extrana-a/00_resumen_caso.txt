@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Avda. de la Innovacion, 3
     41703 Dos Hermanas (Sevilla)
     Espana
-    NIF: B-41678912 | EORI: ESB41678912
+    NIF: B-41678913 | EORI: ESB41678913
 
 COMPRADOR/IMPORTADOR:
     Thames Valley Precision Ltd.

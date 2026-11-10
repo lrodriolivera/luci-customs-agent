@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Carrer de la Indústria, 8
     17005 Girona
     Espana
-    NIF: B-17987654 | EORI: ESB17987654
+    NIF: B-17987652 | EORI: ESB17987652
 
 Factura No.: INV-BORDE-02-2026-2676924  Fecha: 05/04/2026
 Documento de transporte: 020-20262676924

@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Tres Culturas, Nave 6
     52006 Melilla
     Espana
-    NIF: A-52234567 | EORI: ESA52234567
+    NIF: A-52234564 | EORI: ESA52234564
 
 Factura No.: INV-H1-14-2026-5919903  Fecha: 17/06/2026
 Documento de transporte: MSCU20265919903
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 940350  Cantidad: 340 PCE  Precio unit.: 210.0 USD
 
 NOTA DEL CASO (que se prueba):
+  La comisión de venta (agente de compras, 4 %) va incluida según el Incoterm; la comisión de compra que paga el comprador a su propio agente NO forma parte del valor de la factura.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Sales commission (buying agent fee, 4%) included per Incoterm; buying commission paid separately by Buyer to its own agent is NOT included in this invoice value.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

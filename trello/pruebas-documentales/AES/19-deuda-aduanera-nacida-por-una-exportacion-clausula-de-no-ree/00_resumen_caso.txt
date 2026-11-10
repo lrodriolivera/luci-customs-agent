@@ -13,14 +13,14 @@ VENDEDOR/EXPORTADOR:
     Carrer de la Indústria, 8
     17005 Girona
     Espana
-    NIF: B-17987654 | EORI: ESB17987654
+    NIF: B-17987652 | EORI: ESB17987652
 
 COMPRADOR/IMPORTADOR:
-    Pampa Cueros y Marroquineria S.A.
-    Av. Corrientes 2340, Piso 4
-    C1046AAQ Buenos Aires
+    Patagonia BioFarma Import S.A.
+    Av. Rivadavia 3200, Piso 6
+    C1203AAM Buenos Aires
     Argentina
-    Tax ID: 30-71234567-8
+    Tax ID: 30-98765432-1
 
 Factura No.: INV-AES-19-2026-4227521  Fecha: 22/11/2026
 Documento de transporte: MSCU20264227521
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 871200  Cantidad: 640 PCE  Precio unit.: 145.0 USD
 
 NOTA DEL CASO (que se prueba):
+  Deuda aduanera nacida de una declaración de exportación: no hay devolución aunque la mercancía finalmente no se embarque.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Customs debt arising from an export declaration — no-refund clause applies even if goods are not ultimately shipped.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

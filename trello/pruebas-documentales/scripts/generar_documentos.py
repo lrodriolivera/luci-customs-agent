@@ -12,6 +12,7 @@ import traceback
 sys.path.insert(0, os.path.dirname(__file__))
 
 from casos_common import expand_case, slugify
+from notas_es import nota_es
 from casos_h1 import RAW_H1
 from casos_aes import RAW_AES
 import pdfgen
@@ -80,7 +81,11 @@ def write_manifest(folder, case, generated_files):
                     f"Precio unit.: {g['unit_price']} {case['currency']}\n")
         f.write('\n')
         if case.get('invoice_extra_note'):
-            f.write("NOTA DEL CASO (que se prueba):\n  " + case['invoice_extra_note'] + '\n\n')
+            # La agente lee la explicacion en español; la nota en ingles es la que
+            # va impresa en la factura del proveedor extranjero (asi es realista).
+            f.write("NOTA DEL CASO (que se prueba):\n  " + (nota_es(case['id']) or case['invoice_extra_note']) + '\n')
+            f.write("  Nota impresa en la factura (en ingles, tal como la emite el proveedor):\n  "
+                    + case['invoice_extra_note'] + '\n\n')
         f.write("DOCUMENTOS GENERADOS EN ESTA CARPETA:\n")
         for fn in generated_files:
             f.write(f"  - {fn}\n")

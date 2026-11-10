@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Asipo, Parcela 22
     33428 Llanera (Asturias)
     Espana
-    NIF: A-33456789 | EORI: ESA33456789
+    NIF: A-33456781 | EORI: ESA33456781
 
 COMPRADOR/IMPORTADOR:
     Cafe de los Andes Exportadora S.A.S.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 300431  Cantidad: 6000 PCE  Precio unit.: 15.8 EUR
 
 NOTA DEL CASO (que se prueba):
+  Exportacion de medicamento biologico termosensible por via aerea: control de temperatura mediante contenedor activo certificado (tipo Envirotainer) con registro propio, no una mera anotacion manual de temperatura en el AWB — el dispositivo certificado es lo que acredita el cumplimiento, no la declaracion del transportista.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Exportacion de medicamento biologico termosensible por via aerea: control de temperatura mediante contenedor activo certificado (tipo Envirotainer) con registro propio, no una mera anotacion manual de temperatura en el AWB — el dispositivo certificado es lo que acredita el cumplimiento, no la declaracion del transportista.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

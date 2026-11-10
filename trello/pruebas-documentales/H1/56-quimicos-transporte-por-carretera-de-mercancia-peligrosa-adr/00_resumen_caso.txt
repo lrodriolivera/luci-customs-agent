@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Calle Real, 45
     51001 Ceuta
     Espana
-    NIF: B-51123456 | EORI: ESB51123456
+    NIF: B-51123453 | EORI: ESB51123453
 
 Factura No.: INV-H1-56-2026-5629624  Fecha: 11/08/2026
 Documento de transporte: CMR-20265629624
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 291411  Cantidad: 20000 LTR  Precio unit.: 0.68 EUR
 
 NOTA DEL CASO (que se prueba):
+  Transporte por carretera de mercancia peligrosa bajo ADR: el conductor debe portar su certificado de formacion ADR y el vehiculo debe llevar los paneles naranja de numero de peligro/ONU visibles. El CMR debe incluir la descripcion reglamentaria completa de mercancias peligrosas en su casilla especifica — no basta con adjuntar solo la factura.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Transporte por carretera de mercancia peligrosa bajo ADR: el conductor debe portar su certificado de formacion ADR y el vehiculo debe llevar los paneles naranja de numero de peligro/ONU visibles. El CMR debe incluir la descripcion reglamentaria completa de mercancias peligrosas en su casilla especifica — no basta con adjuntar solo la factura.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Industrial Fuente del Jarro, Calle 4 nº 12
     46988 Paterna (Valencia)
     Espana
-    NIF: B-46123456 | EORI: ESB46123456
+    NIF: B-46123451 | EORI: ESB46123451
 
 Factura No.: INV-H1-01-2026-8198800  Fecha: 04/03/2026
 Documento de transporte: MSCU20268198800
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 847130  Cantidad: 480 PCE  Precio unit.: 385.0 USD
 
 NOTA DEL CASO (que se prueba):
+  El declarante es el propio importador (representación directa).
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Declarant acts as Importer of Record (direct representation).
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

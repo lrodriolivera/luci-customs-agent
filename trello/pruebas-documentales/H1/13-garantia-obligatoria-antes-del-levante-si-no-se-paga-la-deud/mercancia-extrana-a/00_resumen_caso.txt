@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Avda. de la Constitucion, 4
     06011 Badajoz
     Espana
-    NIF: B-06345678 | EORI: ESB06345678
+    NIF: B-06345672 | EORI: ESB06345672
 
 Factura No.: INV-H1-13-EXTRANA-a-2026-2298230  Fecha: 16/05/2026
 Documento de transporte: MSCU20262298230

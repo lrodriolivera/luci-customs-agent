@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Carrer de la Indústria, 8
     17005 Girona
     Espana
-    NIF: B-17987654 | EORI: ESB17987654
+    NIF: B-17987652 | EORI: ESB17987652
 
 Factura No.: INV-H1-02-2026-4312418  Fecha: 05/04/2026
 Documento de transporte: MSCU20264312418
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 610910  Cantidad: 12000 PCE  Precio unit.: 3.2 USD
 
 NOTA DEL CASO (que se prueba):
+  No hay representante aduanero registrado ante la AEAT en el momento de facturar: la representación indirecta está pendiente de nombramiento.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   NOTE: No customs representative registered with AEAT at time of invoicing — indirect representation pending appointment.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

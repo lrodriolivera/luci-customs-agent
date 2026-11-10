@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Avda. de la Constitucion, 4
     06011 Badajoz
     Espana
-    NIF: B-06345678 | EORI: ESB06345678
+    NIF: B-06345672 | EORI: ESB06345672
 
 Factura No.: INV-H1-10-2026-4836991  Fecha: 13/02/2026
 Documento de transporte: MSCU20264836991
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 090111  Cantidad: 19000 KGM  Precio unit.: 2.85 USD
 
 NOTA DEL CASO (que se prueba):
+  La mercancía queda en depósito temporal en un almacén autorizado hasta que se autorice la ubicación para el levante.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Goods placed in temporary storage at bonded warehouse pending location authorization for release.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

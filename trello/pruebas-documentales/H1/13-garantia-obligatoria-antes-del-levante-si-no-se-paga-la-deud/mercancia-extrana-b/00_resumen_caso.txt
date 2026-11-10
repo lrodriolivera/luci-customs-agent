@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Guarnizo, Parcela 14
     39611 Guarnizo (Cantabria)
     Espana
-    NIF: A-39456782 | EORI: ESA39456782
+    NIF: A-39456785 | EORI: ESA39456785
 
 Factura No.: INV-H1-13-EXTRANA-b-2026-3346569  Fecha: 16/05/2026
 Documento de transporte: MSCU20263346569

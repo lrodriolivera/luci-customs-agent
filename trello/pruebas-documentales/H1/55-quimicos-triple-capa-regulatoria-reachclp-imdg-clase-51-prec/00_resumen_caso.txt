@@ -31,6 +31,8 @@ MERCANCIAS:
 
 NOTA DEL CASO (que se prueba):
   Triple capa regulatoria sobre un solo producto: (1) REACH/CLP — ficha de seguridad; (2) IMDG clase 5.1 (comburente), UN2067 — declaracion de mercancias peligrosas para el transporte maritimo; (3) precursor de explosivos regulado por el Reglamento (UE) 2019/1148 — por encima del umbral de nitrogeno, uso final restringido y control reforzado.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
+  Triple capa regulatoria sobre un solo producto: (1) REACH/CLP — ficha de seguridad; (2) IMDG clase 5.1 (comburente), UN2067 — declaracion de mercancias peligrosas para el transporte maritimo; (3) precursor de explosivos regulado por el Reglamento (UE) 2019/1148 — por encima del umbral de nitrogeno, uso final restringido y control reforzado.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:
   - 01_factura_comercial.pdf

@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Tres Culturas, Nave 6
     52006 Melilla
     Espana
-    NIF: A-52234567 | EORI: ESA52234567
+    NIF: A-52234564 | EORI: ESA52234564
 
 COMPRADOR/IMPORTADOR:
     Nile Cotton Export Co.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 310230  Cantidad: 300000 KGM  Precio unit.: 0.29 EUR
 
 NOTA DEL CASO (que se prueba):
+  Exportacion de fertilizante a base de nitrato de amonio: licencia de exportacion de seguridad si la concentracion de nitrogeno supera el umbral que lo califica como precursor de explosivos regulado (Reglamento (UE) 2019/1148), ademas de la declaracion de mercancias peligrosas ordinaria del transporte maritimo.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Exportacion de fertilizante a base de nitrato de amonio: licencia de exportacion de seguridad si la concentracion de nitrogeno supera el umbral que lo califica como precursor de explosivos regulado (Reglamento (UE) 2019/1148), ademas de la declaracion de mercancias peligrosas ordinaria del transporte maritimo.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

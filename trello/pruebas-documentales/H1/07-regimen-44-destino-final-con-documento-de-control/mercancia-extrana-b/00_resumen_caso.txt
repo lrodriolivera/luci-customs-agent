@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Tres Culturas, Nave 6
     52006 Melilla
     Espana
-    NIF: A-52234567 | EORI: ESA52234567
+    NIF: A-52234564 | EORI: ESA52234564
 
 Factura No.: INV-H1-07-EXTRANA-b-2026-1414236  Fecha: 10/09/2026
 Documento de transporte: MSCU20261414236

@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Son Castello, Calle Gremi de Fusters 22
     07009 Palma de Mallorca
     Espana
-    NIF: B-07234561 | EORI: ESB07234561
+    NIF: B-07234560 | EORI: ESB07234560
 
 Factura No.: INV-H1-39-2026-3043524  Fecha: 18/11/2026
 Documento de transporte: MSCU20263043524
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 520911  Cantidad: 15500 KGM  Precio unit.: 1.75 USD
 
 NOTA DEL CASO (que se prueba):
+  Régimen 82: en este régimen las unidades suplementarias son OPCIONALES, no obligatorias.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Regime 82 declared — supplementary units are OPTIONAL (not mandatory) specifically under this regime.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

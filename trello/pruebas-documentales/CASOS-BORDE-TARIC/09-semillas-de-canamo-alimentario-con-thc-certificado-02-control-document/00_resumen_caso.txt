@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Son Castello, Calle Gremi de Fusters 22
     07009 Palma de Mallorca
     Espana
-    NIF: B-07234561 | EORI: ESB07234561
+    NIF: B-07234560 | EORI: ESB07234560
 
 Factura No.: INV-BORDE-09-2026-7177977  Fecha: 12/11/2026
 Documento de transporte: MSCU20267177977

@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Muelle de Poniente s/n, Edif. Lonja
     35008 Las Palmas de Gran Canaria
     Espana
-    NIF: A-35678901 | EORI: ESA35678901
+    NIF: A-35678903 | EORI: ESA35678903
 
 Factura No.: INV-H1-06-2026-4751021  Fecha: 09/08/2026
 Documento de transporte: 020-20264751021
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 910219  Cantidad: 220 PCE  Precio unit.: 18500 JPY
 
 NOTA DEL CASO (que se prueba):
+  La factura respalda una declaración que se modifica después de tener MRN asignado (ver notas del caso).
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Reference: this invoice supports a declaration subsequently amended after MRN assignment (see case notes).
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

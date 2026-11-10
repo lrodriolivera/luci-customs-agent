@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Carrer de la Indústria, 8
     17005 Girona
     Espana
-    NIF: B-17987654 | EORI: ESB17987654
+    NIF: B-17987652 | EORI: ESB17987652
 
 COMPRADOR/IMPORTADOR:
     Souss Massa BioVet Import-Export S.A.R.L.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 300220  Cantidad: 3000 PCE  Precio unit.: 3.6 EUR
 
 NOTA DEL CASO (que se prueba):
+  Exportacion de producto biologico veterinario por carretera de corta distancia (Algeciras — Tanger Med): la brevedad del trayecto no exime de mantener y documentar la cadena de frio continua, ni de la licencia de exportacion de medicamentos veterinarios de la AEMPS.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Exportacion de producto biologico veterinario por carretera de corta distancia (Algeciras — Tanger Med): la brevedad del trayecto no exime de mantener y documentar la cadena de frio continua, ni de la licencia de exportacion de medicamentos veterinarios de la AEMPS.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Calle 2, Sector A, Nave 12
     08040 Barcelona (Zona Franca)
     Espana
-    NIF: B-08987651 | EORI: ESB08987651
+    NIF: B-08987653 | EORI: ESB08987653
 
 Factura No.: INV-H1-15-2026-6660626  Fecha: 18/07/2026
 Documento de transporte: MSCU20266660626
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 180100  Cantidad: 21000 KGM  Precio unit.: 3.1 USD
 
 NOTA DEL CASO (que se prueba):
+  Declaración simplificada, casilla 1.2 tipo C: faltan algunos datos que se completarán en la declaración complementaria.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Simplified declaration — box 1.2 type C: certain particulars pending, to be completed in supplementary declaration.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Calle 2, Sector A, Nave 12
     08040 Barcelona (Zona Franca)
     Espana
-    NIF: B-08987651 | EORI: ESB08987651
+    NIF: B-08987653 | EORI: ESB08987653
 
 Factura No.: INV-H1-30-2026-8339956  Fecha: 09/02/2026
 Documento de transporte: MSCU20268339956
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 845959  Cantidad: 90 PCE  Precio unit.: 410.0 CAD
 
 NOTA DEL CASO (que se prueba):
+  El importador tiene estatus OEA-C (operador económico autorizado, simplificaciones aduaneras), que se referencia en la declaración.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Importer holds AEOC (Authorised Economic Operator — Customs Simplifications) status, referenced for this declaration.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

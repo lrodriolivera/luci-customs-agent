@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Ctra. Nacional 401, Km 12
     13004 Ciudad Real
     Espana
-    NIF: B-13456789 | EORI: ESB13456789
+    NIF: B-13456785 | EORI: ESB13456785
 
 Factura No.: INV-H1-07-2026-7264146  Fecha: 10/09/2026
 Documento de transporte: MSCU20267264146
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 854143  Cantidad: 900 PCE  Precio unit.: 68.0 EUR
 
 NOTA DEL CASO (que se prueba):
+  Régimen 44, destino final: se solicita la franquicia y la mercancía queda bajo control de destino final (Reglamento (UE) 952/2013, art. 254).
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Regime 44 — End-use relief requested; goods subject to end-use control per Reg. (EU) 952/2013 Art. 254.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

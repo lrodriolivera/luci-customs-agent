@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Calle Real, 45
     51001 Ceuta
     Espana
-    NIF: B-51123456 | EORI: ESB51123456
+    NIF: B-51123453 | EORI: ESB51123453
 
 COMPRADOR/IMPORTADOR:
     Comercial Amazonia Exportacao Ltda.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 390730  Cantidad: 18000 KGM  Precio unit.: 1.85 USD
 
 NOTA DEL CASO (que se prueba):
+  Exportacion de producto quimico NO peligroso para el transporte — mismo contraste que el caso H1-54 pero en sentido exportador: se prueba que no se exige Declaracion de Mercancias Peligrosas, unicamente la Ficha de Datos de Seguridad.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Exportacion de producto quimico NO peligroso para el transporte — mismo contraste que el caso H1-54 pero en sentido exportador: se prueba que no se exige Declaracion de Mercancias Peligrosas, unicamente la Ficha de Datos de Seguridad.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

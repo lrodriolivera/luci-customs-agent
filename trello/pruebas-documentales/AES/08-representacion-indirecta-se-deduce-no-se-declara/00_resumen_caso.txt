@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Muelle de Poniente s/n, Edif. Lonja
     35008 Las Palmas de Gran Canaria
     Espana
-    NIF: A-35678901 | EORI: ESA35678901
+    NIF: A-35678903 | EORI: ESA35678903
 
 COMPRADOR/IMPORTADOR:
     Osaka Kiko Trading Corporation
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 901839  Cantidad: 480 PCE  Precio unit.: 145.0 JPY
 
 NOTA DEL CASO (que se prueba):
+  La representación indirecta se deduce de las partes que intervienen: NO se declara como dato aparte.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Indirect representation applies by deduction from the parties involved — it is NOT separately declared as a data element.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

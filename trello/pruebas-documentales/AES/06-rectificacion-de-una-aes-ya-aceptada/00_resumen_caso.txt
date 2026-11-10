@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Avda. de la Innovacion, 3
     41703 Dos Hermanas (Sevilla)
     Espana
-    NIF: B-41678912 | EORI: ESB41678912
+    NIF: B-41678913 | EORI: ESB41678913
 
 COMPRADOR/IMPORTADOR:
     Anadolu Tekstil San. ve Tic. A.S.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 691110  Cantidad: 6800 PCE  Precio unit.: 1.75 EUR
 
 NOTA DEL CASO (que se prueba):
+  La factura respalda una declaración AES RECTIFICADA después de ser aceptada por la aduana (ver el detalle de la rectificación en las notas del caso).
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   This invoice supports an AES declaration subsequently RECTIFIED after acceptance by customs (see case notes for amendment detail).
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

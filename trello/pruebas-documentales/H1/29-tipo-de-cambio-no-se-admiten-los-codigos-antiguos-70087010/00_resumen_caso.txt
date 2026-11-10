@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Tres Culturas, Nave 6
     52006 Melilla
     Espana
-    NIF: A-52234567 | EORI: ESA52234567
+    NIF: A-52234564 | EORI: ESA52234564
 
 Factura No.: INV-H1-29-2026-7015903  Fecha: 08/11/2026
 Documento de transporte: 020-20267015903
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 901819  Cantidad: 210 PCE  Precio unit.: 340.0 USD
 
 NOTA DEL CASO (que se prueba):
+  Tipo de cambio aplicable: el diario de la AEAT; los códigos antiguos 7008/7010 no se admiten en esta declaración.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Exchange rate applicable: current AEAT daily rate — legacy codes 7008/7010 are not accepted for this declaration.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

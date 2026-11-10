@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Muelle de Poniente s/n, Edif. Lonja
     35008 Las Palmas de Gran Canaria
     Espana
-    NIF: A-35678901 | EORI: ESA35678901
+    NIF: A-35678903 | EORI: ESA35678903
 
 Factura No.: INV-H1-36-2026-3452020  Fecha: 15/08/2026
 Documento de transporte: MSCU20263452020
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 080440  Cantidad: 18000 KGM  Precio unit.: 1.1 ZAR
 
 NOTA DEL CASO (que se prueba):
+  Factura de referencia para el plazo de notificación de la deuda posterior al despacho (prescripción general de 3 años).
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Reference invoice for post-clearance debt notification timing (general 3-year limitation period).
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

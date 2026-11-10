@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Tres Culturas, Nave 6
     52006 Melilla
     Espana
-    NIF: A-52234567 | EORI: ESA52234567
+    NIF: A-52234564 | EORI: ESA52234564
 
 COMPRADOR/IMPORTADOR:
     Meridian Industrial Supply Inc.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 150910  Cantidad: 8400 LTR  Precio unit.: 5.2 USD
 
 NOTA DEL CASO (que se prueba):
+  El comprador tiene un EORI/identificación válido: según la regla AES NO se declaran además su nombre y dirección.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Buyer holds a valid EORI/identification number — company name and address are NOT to be additionally declared per AES rule.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

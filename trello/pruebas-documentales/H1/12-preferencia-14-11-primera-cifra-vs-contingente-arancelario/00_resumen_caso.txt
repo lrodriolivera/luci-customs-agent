@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 520911  Cantidad: 14000 KGM  Precio unit.: 1.95 USD
 
 NOTA DEL CASO (que se prueba):
+  Se solicita la preferencia con número de orden 14 11, sujeta al saldo disponible del contingente arancelario, no a una exención por orden de llegada.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Preferential order number 14 11 claimed — subject to available tariff quota balance, not first-come-first-served waiver.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

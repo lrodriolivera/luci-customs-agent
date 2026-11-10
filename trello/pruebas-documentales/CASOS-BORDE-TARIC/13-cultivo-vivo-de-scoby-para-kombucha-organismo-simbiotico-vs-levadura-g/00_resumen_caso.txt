@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Calle Real, 45
     51001 Ceuta
     Espana
-    NIF: B-51123456 | EORI: ESB51123456
+    NIF: B-51123453 | EORI: ESB51123453
 
 Factura No.: INV-BORDE-13-2026-1938791  Fecha: 16/05/2026
 Documento de transporte: 020-20261938791

@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono Asipo, Parcela 22
     33428 Llanera (Asturias)
     Espana
-    NIF: A-33456789 | EORI: ESA33456789
+    NIF: A-33456781 | EORI: ESA33456781
 
 Factura No.: INV-H1-39-EXTRANA-b-2026-4901389  Fecha: 18/11/2026
 Documento de transporte: MSCU20264901389

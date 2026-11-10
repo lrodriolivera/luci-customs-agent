@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Guarnizo, Parcela 14
     39611 Guarnizo (Cantabria)
     Espana
-    NIF: A-39456782 | EORI: ESA39456782
+    NIF: A-39456785 | EORI: ESA39456785
 
 COMPRADOR/IMPORTADOR:
     Shanghai Hongtai Import & Export Co., Ltd.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 150910  Cantidad: 20000 LTR  Precio unit.: 4.6 USD
 
 NOTA DEL CASO (que se prueba):
+  China exige un certificado de analisis de laboratorio (acidez, indice de peroxidos, parametros de calidad) ADEMAS del certificado sanitario UE estandar de exportacion — requisito bilateral especifico de China para aceite de oliva, no armonizado a nivel UE.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   China exige un certificado de analisis de laboratorio (acidez, indice de peroxidos, parametros de calidad) ADEMAS del certificado sanitario UE estandar de exportacion — requisito bilateral especifico de China para aceite de oliva, no armonizado a nivel UE.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

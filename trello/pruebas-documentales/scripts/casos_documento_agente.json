@@ -5,7 +5,7 @@
     "tarjeta_trello": "H1-01 — Declarante = importador → representación directa",
     "titulo": "Declarante = importador → representación directa",
     "ruta": "China → España | Maritimo | Incoterm FOB Shanghai",
-    "que_se_prueba": "Declarant acts as Importer of Record (direct representation).",
+    "que_se_prueba": "El declarante es el propio importador (representación directa). Nota impresa en la factura (en inglés): «Declarant acts as Importer of Record (direct representation).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -19,7 +19,7 @@
     "tarjeta_trello": "H1-02 — Representación indirecta sin representante registrado",
     "titulo": "Representación indirecta sin representante registrado",
     "ruta": "Vietnam → España | Maritimo | Incoterm CIF Hanoi",
-    "que_se_prueba": "NOTE: No customs representative registered with AEAT at time of invoicing — indirect representation pending appointment.",
+    "que_se_prueba": "No hay representante aduanero registrado ante la AEAT en el momento de facturar: la representación indirecta está pendiente de nombramiento. Nota impresa en la factura (en inglés): «NOTE: No customs representative registered with AEAT at time of invoicing — indirect representation pending appointment.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -33,7 +33,7 @@
     "tarjeta_trello": "H1-03 — Código adicional vacío no se envía como '000'",
     "titulo": "Código adicional vacío no se envía como '000'",
     "ruta": "India → España | Maritimo | Incoterm FOB Mumbai",
-    "que_se_prueba": "Additional TARIC code: N/A for this heading (no additional code applicable — must be declared as '000', not left blank).",
+    "que_se_prueba": "La partida no lleva código adicional TARIC: debe declararse como '000', no dejarse en blanco. Nota impresa en la factura (en inglés): «Additional TARIC code: N/A for this heading (no additional code applicable — must be declared as '000', not left blank).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -46,7 +46,7 @@
     "tarjeta_trello": "H1-04 — Unidades suplementarias obligatorias según TARIC",
     "titulo": "Unidades suplementarias obligatorias según TARIC",
     "ruta": "Turquia → España | Carretera | Incoterm EXW Istanbul",
-    "que_se_prueba": "Product subheading requires mandatory supplementary unit (litres of pure alcohol) per TARIC — see quantity in 'l alc. 100%'.",
+    "que_se_prueba": "La subpartida exige unidad suplementaria obligatoria según TARIC (litros de alcohol puro): ver la cantidad en 'l alc. 100%'. Nota impresa en la factura (en inglés): «Product subheading requires mandatory supplementary unit (litres of pure alcohol) per TARIC — see quantity in 'l alc. 100%'.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -59,7 +59,7 @@
     "tarjeta_trello": "H1-05 — Múltiples partidas con régimen y origen distintos",
     "titulo": "Múltiples partidas con régimen y origen distintos",
     "ruta": "Estados Unidos → España | Maritimo | Incoterm FCA Charlotte",
-    "que_se_prueba": "Shipment contains 3 tariff lines under different customs regimes (40, 42, 51) and different countries of origin (see per-line origin).",
+    "que_se_prueba": "El envío tiene 3 partidas arancelarias con regímenes distintos (40, 42, 51) y países de origen distintos (ver origen por línea). Nota impresa en la factura (en inglés): «Shipment contains 3 tariff lines under different customs regimes (40, 42, 51) and different countries of origin (see per-line origin).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -72,7 +72,7 @@
     "tarjeta_trello": "H1-06 — Modificar una declaración con MRN ya asignado",
     "titulo": "Modificar una declaración con MRN ya asignado",
     "ruta": "Japon → España | Aereo | Incoterm CPT Tokyo",
-    "que_se_prueba": "Reference: this invoice supports a declaration subsequently amended after MRN assignment (see case notes).",
+    "que_se_prueba": "La factura respalda una declaración que se modifica después de tener MRN asignado (ver notas del caso). Nota impresa en la factura (en inglés): «Reference: this invoice supports a declaration subsequently amended after MRN assignment (see case notes).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -85,7 +85,7 @@
     "tarjeta_trello": "H1-07 — Régimen 44 (destino final) con documento de control",
     "titulo": "Régimen 44 (destino final) con documento de control",
     "ruta": "Corea del Sur → España | Maritimo | Incoterm DAP Seoul",
-    "que_se_prueba": "Regime 44 — End-use relief requested; goods subject to end-use control per Reg. (EU) 952/2013 Art. 254.",
+    "que_se_prueba": "Régimen 44, destino final: se solicita la franquicia y la mercancía queda bajo control de destino final (Reglamento (UE) 952/2013, art. 254). Nota impresa en la factura (en inglés): «Regime 44 — End-use relief requested; goods subject to end-use control per Reg. (EU) 952/2013 Art. 254.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -99,7 +99,7 @@
     "tarjeta_trello": "H1-08 — Régimen 95 exige que no se haya pagado IVA ni IIEE",
     "titulo": "Régimen 95 exige que no se haya pagado IVA ni IIEE",
     "ruta": "Sudafrica → España | Maritimo | Incoterm EXW Cape Town",
-    "que_se_prueba": "Regime 95 declared — VAT and excise NOT yet paid at time of this invoice (condition precedent for regime eligibility).",
+    "que_se_prueba": "Régimen 95: en el momento de la factura no se han pagado ni el IVA ni los impuestos especiales, condición necesaria para acogerse al régimen. Nota impresa en la factura (en inglés): «Regime 95 declared — VAT and excise NOT yet paid at time of this invoice (condition precedent for regime eligibility).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -112,7 +112,7 @@
     "tarjeta_trello": "H1-09 — Desaparición del régimen 49: unión aduanera vs territorios fiscales especiales",
     "titulo": "Desaparición del régimen 49: unión aduanera vs territorios fiscales especiales",
     "ruta": "Marruecos → España (Canarias) - IGIC, fuera del territorio IVA UE | Maritimo | Incoterm FOB Casablanca",
-    "que_se_prueba": "Consignee established in the Canary Islands (special fiscal territory — outside EU VAT area, inside customs union).",
+    "que_se_prueba": "El destinatario está establecido en Canarias: territorio fiscal especial, fuera del área del IVA de la UE pero dentro de la unión aduanera. Nota impresa en la factura (en inglés): «Consignee established in the Canary Islands (special fiscal territory — outside EU VAT area, inside customs union).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -125,7 +125,7 @@
     "tarjeta_trello": "H1-10 — Ubicación de la mercancía condiciona si se puede importar",
     "titulo": "Ubicación de la mercancía condiciona si se puede importar",
     "ruta": "Brasil → España | Maritimo | Incoterm CIF Sao Paulo",
-    "que_se_prueba": "Goods placed in temporary storage at bonded warehouse pending location authorization for release.",
+    "que_se_prueba": "La mercancía queda en depósito temporal en un almacén autorizado hasta que se autorice la ubicación para el levante. Nota impresa en la factura (en inglés): «Goods placed in temporary storage at bonded warehouse pending location authorization for release.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -139,7 +139,7 @@
     "tarjeta_trello": "H1-11 — No se puede modificar el declarante/representante tras la fase PREDUA con control",
     "titulo": "No se puede modificar el declarante/representante tras la fase PREDUA con control",
     "ruta": "Mexico → España | Maritimo | Incoterm FOB Leon",
-    "que_se_prueba": "PREDUA phase reached with control flag active — declarant/representative locked pending customs decision.",
+    "que_se_prueba": "Se ha alcanzado la fase PREDUA con indicador de control activo: el declarante/representante queda bloqueado hasta la decisión de la aduana. Nota impresa en la factura (en inglés): «PREDUA phase reached with control flag active — declarant/representative locked pending customs decision.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -152,7 +152,7 @@
     "tarjeta_trello": "H1-12 — Preferencia 14 11: primera cifra vs contingente arancelario",
     "titulo": "Preferencia 14 11: primera cifra vs contingente arancelario",
     "ruta": "Egipto → España | Maritimo | Incoterm FOB Cairo",
-    "que_se_prueba": "Preferential order number 14 11 claimed — subject to available tariff quota balance, not first-come-first-served waiver.",
+    "que_se_prueba": "Se solicita la preferencia con número de orden 14 11, sujeta al saldo disponible del contingente arancelario, no a una exención por orden de llegada. Nota impresa en la factura (en inglés): «Preferential order number 14 11 claimed — subject to available tariff quota balance, not first-come-first-served waiver.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -166,7 +166,7 @@
     "tarjeta_trello": "H1-13 — Garantía obligatoria antes del levante si no se paga la deuda",
     "titulo": "Garantía obligatoria antes del levante si no se paga la deuda",
     "ruta": "Tailandia → España | Maritimo | Incoterm CIF Bangkok",
-    "que_se_prueba": "Customs debt not settled at time of clearance — guarantee (CGU) required before release (levante).",
+    "que_se_prueba": "La deuda aduanera no está pagada en el despacho: hace falta garantía (CGU) antes del levante. Nota impresa en la factura (en inglés): «Customs debt not settled at time of clearance — guarantee (CGU) required before release (levante).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -179,7 +179,7 @@
     "tarjeta_trello": "H1-14 — Valor en aduana: cánones y comisiones de venta se suman, comisiones de compra no",
     "titulo": "Valor en aduana: cánones y comisiones de venta se suman, comisiones de compra no",
     "ruta": "Indonesia → España | Maritimo | Incoterm FOB Jakarta",
-    "que_se_prueba": "Sales commission (buying agent fee, 4%) included per Incoterm; buying commission paid separately by Buyer to its own agent is NOT included in this invoice value.",
+    "que_se_prueba": "La comisión de venta (agente de compras, 4 %) va incluida según el Incoterm; la comisión de compra que paga el comprador a su propio agente NO forma parte del valor de la factura. Nota impresa en la factura (en inglés): «Sales commission (buying agent fee, 4%) included per Incoterm; buying commission paid separately by Buyer to its own agent is NOT included in this invoice value.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -192,7 +192,7 @@
     "tarjeta_trello": "H1-15 — Declaración simplificada por falta de datos — casilla 1.2 tipo C",
     "titulo": "Declaración simplificada por falta de datos — casilla 1.2 tipo C",
     "ruta": "Colombia → España | Maritimo | Incoterm FOB Bogota",
-    "que_se_prueba": "Simplified declaration — box 1.2 type C: certain particulars pending, to be completed in supplementary declaration.",
+    "que_se_prueba": "Declaración simplificada, casilla 1.2 tipo C: faltan algunos datos que se completarán en la declaración complementaria. Nota impresa en la factura (en inglés): «Simplified declaration — box 1.2 type C: certain particulars pending, to be completed in supplementary declaration.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -205,7 +205,7 @@
     "tarjeta_trello": "H1-16 — Declaración simplificada por falta de documentos — códigos 9AR a 9VI",
     "titulo": "Declaración simplificada por falta de documentos — códigos 9AR a 9VI",
     "ruta": "Peru → España | Maritimo | Incoterm FOB Lima",
-    "que_se_prueba": "Simplified declaration lodged with supporting documents pending (codes 9AR-9VI apply to missing certificates).",
+    "que_se_prueba": "Declaración simplificada presentada con documentos justificativos pendientes (códigos 9AR a 9VI para los certificados que faltan). Nota impresa en la factura (en inglés): «Simplified declaration lodged with supporting documents pending (codes 9AR-9VI apply to missing certificates).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -218,7 +218,7 @@
     "tarjeta_trello": "H1-17 — Régimen de zona franca no exento de IVA desde 2023",
     "titulo": "Régimen de zona franca no exento de IVA desde 2023",
     "ruta": "Tunez → España (Zona Franca de Barcelona) | Maritimo | Incoterm FOB Sfax",
-    "que_se_prueba": "Goods placed under Free Zone procedure on entry (Barcelona Free Zone) — VAT suspension does NOT apply since 2023 reform.",
+    "que_se_prueba": "Mercancía incluida en zona franca a la entrada (Zona Franca de Barcelona): desde la reforma de 2023 NO se aplica la suspensión del IVA. Nota impresa en la factura (en inglés): «Goods placed under Free Zone procedure on entry (Barcelona Free Zone) — VAT suspension does NOT apply since 2023 reform.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -231,7 +231,7 @@
     "tarjeta_trello": "H1-18 — Casilla 14 — código de representación entre corchetes antes del nombre",
     "titulo": "Casilla 14 — código de representación entre corchetes antes del nombre",
     "ruta": "Pakistan → España | Maritimo | Incoterm FOB Lahore",
-    "que_se_prueba": "Box 14 representation code to be declared in brackets before the representative's name, per AEAT format.",
+    "que_se_prueba": "En la casilla 14 el código de representación va entre corchetes delante del nombre del representante, según el formato de la AEAT. Nota impresa en la factura (en inglés): «Box 14 representation code to be declared in brackets before the representative's name, per AEAT format.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -244,7 +244,7 @@
     "tarjeta_trello": "H1-19 — Representante de un no establecido en el TAU no puede ser representación directa",
     "titulo": "Representante de un no establecido en el TAU no puede ser representación directa",
     "ruta": "Bangladesh → España | Maritimo | Incoterm FOB Dhaka",
-    "que_se_prueba": "Consignee (ultimate importer) is established in Switzerland, OUTSIDE the EU customs territory (TAU) — the Spanish customs agent CANNOT act as direct representative for a non-established principal; indirect representation is mandatory per CAU Art. 18-19.",
+    "que_se_prueba": "El destinatario (importador final) está establecido en Suiza, fuera del territorio aduanero de la Unión: el agente aduanero español NO puede actuar como representante directo de un principal no establecido; la representación indirecta es obligatoria (CAU, arts. 18 y 19). Nota impresa en la factura (en inglés): «Consignee (ultimate importer) is established in Switzerland, OUTSIDE the EU customs territory (TAU) — the Spanish customs agent CANNOT act as direct representative for a non-established principal; indirect representation is mandatory per CAU Art. 18-19.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -257,7 +257,7 @@
     "tarjeta_trello": "H1-20 — Canal Verde + Levante concedido no impide un requerimiento posterior",
     "titulo": "Canal Verde + Levante concedido no impide un requerimiento posterior",
     "ruta": "China → España | Aereo | Incoterm FCA Shenzhen",
-    "que_se_prueba": "Green channel assigned and release (levante) granted — subsequent AEAT post-clearance requirement remains possible.",
+    "que_se_prueba": "Canal verde y levante concedido: aun así la AEAT puede emitir un requerimiento posterior al despacho. Nota impresa en la factura (en inglés): «Green channel assigned and release (levante) granted — subsequent AEAT post-clearance requirement remains possible.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -271,7 +271,7 @@
     "tarjeta_trello": "H1-21 — Multi-factura dentro de un mismo DUA con un solo conocimiento de embarque",
     "titulo": "Multi-factura dentro de un mismo DUA con un solo conocimiento de embarque",
     "ruta": "Vietnam → España | Maritimo | Incoterm FOB Binh Duong",
-    "que_se_prueba": "Multi-invoice shipment: this is INVOICE 1 of 2 covering a single consolidated Bill of Lading (see companion invoice for line 2).",
+    "que_se_prueba": "Envío multifactura: esta es la factura 1 de 2 amparadas por un único conocimiento de embarque consolidado (ver la factura compañera para la línea 2). Nota impresa en la factura (en inglés): «Multi-invoice shipment: this is INVOICE 1 of 2 covering a single consolidated Bill of Lading (see companion invoice for line 2).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -284,7 +284,7 @@
     "tarjeta_trello": "H1-22 — Valor en aduana declarado en divisa distinta a EUR (USD) con transporte aéreo",
     "titulo": "Valor en aduana declarado en divisa distinta a EUR (USD) con transporte aéreo",
     "ruta": "Japon → España | Aereo | Incoterm DAP Osaka",
-    "que_se_prueba": "Customs value declared in USD (non-EUR currency) for an air freight shipment — exchange rate per AEAT daily rate table applies.",
+    "que_se_prueba": "Valor en aduana declarado en USD (divisa distinta del euro) en un envío aéreo: se aplica el tipo de cambio de la tabla diaria de la AEAT. Nota impresa en la factura (en inglés): «Customs value declared in USD (non-EUR currency) for an air freight shipment — exchange rate per AEAT daily rate table applies.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -297,7 +297,7 @@
     "tarjeta_trello": "H1-23 — Servicio Web AEAT específico para presentar documentos justificativos pendientes TRAS el levante",
     "titulo": "Servicio Web AEAT específico para presentar documentos justificativos pendientes TRAS el levante",
     "ruta": "Corea del Sur → España | Maritimo | Incoterm CIF Busan",
-    "que_se_prueba": "Supporting documents (test certificates) to be submitted via the dedicated AEAT web service AFTER release (levante) has been granted.",
+    "que_se_prueba": "Los documentos justificativos (certificados de ensayo) se presentan por el servicio web específico de la AEAT DESPUÉS de concedido el levante. Nota impresa en la factura (en inglés): «Supporting documents (test certificates) to be submitted via the dedicated AEAT web service AFTER release (levante) has been granted.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -311,7 +311,7 @@
     "tarjeta_trello": "H1-24 — Régimen 82 (salida de depósito distinto del aduanero) con 6 exclusiones simultáneas",
     "titulo": "Régimen 82 (salida de depósito distinto del aduanero) con 6 exclusiones simultáneas",
     "ruta": "Australia → España | Maritimo | Incoterm FOB Brisbane",
-    "que_se_prueba": "Regime 82 declared (removal from a place other than a customs warehouse) — 6 simultaneous regime exclusions apply per CDU Annex 71-05.",
+    "que_se_prueba": "Régimen 82 (salida de un lugar distinto del depósito aduanero): se aplican 6 exclusiones de régimen simultáneas según el anexo 71-05 del CDU. Nota impresa en la factura (en inglés): «Regime 82 declared (removal from a place other than a customs warehouse) — 6 simultaneous regime exclusions apply per CDU Annex 71-05.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -324,7 +324,7 @@
     "tarjeta_trello": "H1-25 — Mercancía sin valor comercial (valor factura = 0)",
     "titulo": "Mercancía sin valor comercial (valor factura = 0)",
     "ruta": "China → España | Aereo | Incoterm FCA Ningbo",
-    "que_se_prueba": "COMMERCIAL VALUE: NIL — goods supplied free of charge as warranty replacement units. No commercial value. Statistical value for customs purposes only.",
+    "que_se_prueba": "Sin valor comercial: unidades de sustitución en garantía suministradas gratis. Valor estadístico solo a efectos aduaneros. Nota impresa en la factura (en inglés): «COMMERCIAL VALUE: NIL — goods supplied free of charge as warranty replacement units. No commercial value. Statistical value for customs purposes only.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -337,7 +337,7 @@
     "tarjeta_trello": "H1-26 — Importador particular vs empresa",
     "titulo": "Importador particular vs empresa",
     "ruta": "Mexico → España | Maritimo | Incoterm DAP Uruapan",
-    "que_se_prueba": "Importer is a private individual (NIF, no company/EORI) — not a registered business entity.",
+    "que_se_prueba": "El importador es un particular (NIF, sin empresa ni EORI), no un operador registrado. Nota impresa en la factura (en inglés): «Importer is a private individual (NIF, no company/EORI) — not a registered business entity.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -350,7 +350,7 @@
     "tarjeta_trello": "H1-27 — Indicador de contenedor según el transporte",
     "titulo": "Indicador de contenedor según el transporte",
     "ruta": "Turquia → España | Carretera | Incoterm EXW Izmir",
-    "que_se_prueba": "Road transport, non-containerized (LTL) — container indicator per box 19 must reflect 'not containerized'.",
+    "que_se_prueba": "Transporte por carretera sin contenedor (grupaje): el indicador de contenedor de la casilla 19 debe reflejar 'no contenerizado'. Nota impresa en la factura (en inglés): «Road transport, non-containerized (LTL) — container indicator per box 19 must reflect 'not containerized'.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -363,7 +363,7 @@
     "tarjeta_trello": "H1-28 — Modo de transporte: los 4 códigos",
     "titulo": "Modo de transporte: los 4 códigos",
     "ruta": "Suiza → España | Carretera | Incoterm EXW Zug",
-    "que_se_prueba": "Reference shipment for transport mode coding exercise (box 21/26 — inland transport by road).",
+    "que_se_prueba": "Envío de referencia para la codificación del modo de transporte (casillas 21/26: transporte interior por carretera). Nota impresa en la factura (en inglés): «Reference shipment for transport mode coding exercise (box 21/26 — inland transport by road).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -376,7 +376,7 @@
     "tarjeta_trello": "H1-29 — Tipo de cambio: no se admiten los códigos antiguos 7008/7010",
     "titulo": "Tipo de cambio: no se admiten los códigos antiguos 7008/7010",
     "ruta": "Estados Unidos → España | Aereo | Incoterm CPT Long Beach",
-    "que_se_prueba": "Exchange rate applicable: current AEAT daily rate — legacy codes 7008/7010 are not accepted for this declaration.",
+    "que_se_prueba": "Tipo de cambio aplicable: el diario de la AEAT; los códigos antiguos 7008/7010 no se admiten en esta declaración. Nota impresa en la factura (en inglés): «Exchange rate applicable: current AEAT daily rate — legacy codes 7008/7010 are not accepted for this declaration.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -389,7 +389,7 @@
     "tarjeta_trello": "H1-30 — Estatus OEA no puede aparecer ni desaparecer en una modificación",
     "titulo": "Estatus OEA no puede aparecer ni desaparecer en una modificación",
     "ruta": "Canada → España | Maritimo | Incoterm FOB Mississauga",
-    "que_se_prueba": "Importer holds AEOC (Authorised Economic Operator — Customs Simplifications) status, referenced for this declaration.",
+    "que_se_prueba": "El importador tiene estatus OEA-C (operador económico autorizado, simplificaciones aduaneras), que se referencia en la declaración. Nota impresa en la factura (en inglés): «Importer holds AEOC (Authorised Economic Operator — Customs Simplifications) status, referenced for this declaration.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -402,7 +402,7 @@
     "tarjeta_trello": "H1-31 — Dispensa de garantía para operador OEA/AEOC",
     "titulo": "Dispensa de garantía para operador OEA/AEOC",
     "ruta": "Canada → España | Maritimo | Incoterm FOB Trois-Rivieres",
-    "que_se_prueba": "Importer holds AEOC status — guarantee waiver requested per CAU Art. 95(2).",
+    "que_se_prueba": "El importador tiene estatus OEA-C y solicita la dispensa de garantía (CAU, art. 95.2). Nota impresa en la factura (en inglés): «Importer holds AEOC status — guarantee waiver requested per CAU Art. 95(2).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -415,7 +415,7 @@
     "tarjeta_trello": "H1-32 — Vinculación automática a zona franca al introducir mercancía",
     "titulo": "Vinculación automática a zona franca al introducir mercancía",
     "ruta": "Emiratos Arabes Unidos → España (Zona Franca de Barcelona) | Maritimo | Incoterm FOB Dubai",
-    "que_se_prueba": "Goods to be placed under Free Zone arrangement immediately upon entry (automatic linkage on introduction).",
+    "que_se_prueba": "La mercancía se vincula al régimen de zona franca nada más entrar (vinculación automática a la introducción). Nota impresa en la factura (en inglés): «Goods to be placed under Free Zone arrangement immediately upon entry (automatic linkage on introduction).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -428,7 +428,7 @@
     "tarjeta_trello": "H1-33 — Despacho centralizado excluye Canarias, Ceuta, Melilla y tránsito",
     "titulo": "Despacho centralizado excluye Canarias, Ceuta, Melilla y tránsito",
     "ruta": "Marruecos → España (Ceuta) - fuera del territorio aduanero UE | Maritimo | Incoterm FOB Marrakech",
-    "que_se_prueba": "Consignee established in Ceuta — centralised clearance procedure is excluded for this destination.",
+    "que_se_prueba": "El destinatario está establecido en Ceuta: el despacho centralizado queda excluido para este destino. Nota impresa en la factura (en inglés): «Consignee established in Ceuta — centralised clearance procedure is excluded for this destination.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -441,7 +441,7 @@
     "tarjeta_trello": "H1-34 — Inscripción en registros del declarante (IRD) no aplicable a régimen 42/63 ni tránsito",
     "titulo": "Inscripción en registros del declarante (IRD) no aplicable a régimen 42/63 ni tránsito",
     "ruta": "India → España | Maritimo | Incoterm FCA Jaipur",
-    "que_se_prueba": "Regime 42 declared (release for free circulation with subsequent intra-EU supply) — declarant registration (IRD) not applicable.",
+    "que_se_prueba": "Régimen 42 (despacho a libre práctica con entrega intracomunitaria posterior): no aplica la inscripción en registros del declarante (IRD). Nota impresa en la factura (en inglés): «Regime 42 declared (release for free circulation with subsequent intra-EU supply) — declarant registration (IRD) not applicable.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -454,7 +454,7 @@
     "tarjeta_trello": "H1-35 — Reducción de garantía global 30%/50% depende de la modalidad de representación",
     "titulo": "Reducción de garantía global 30%/50% depende de la modalidad de representación",
     "ruta": "Brasil → España | Maritimo | Incoterm FOB Santos",
-    "que_se_prueba": "Indirect representation by customs agent — comprehensive guarantee reduction (30%) applies per representation modality.",
+    "que_se_prueba": "Representación indirecta por agente aduanero: la reducción de la garantía global (30 %) depende de la modalidad de representación. Nota impresa en la factura (en inglés): «Indirect representation by customs agent — comprehensive guarantee reduction (30%) applies per representation modality.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -468,7 +468,7 @@
     "tarjeta_trello": "H1-36 — Notificación de la deuda: plazo general 3 años, especial 5-10 años",
     "titulo": "Notificación de la deuda: plazo general 3 años, especial 5-10 años",
     "ruta": "Sudafrica → España | Maritimo | Incoterm FOB Sandton",
-    "que_se_prueba": "Reference invoice for post-clearance debt notification timing (general 3-year limitation period).",
+    "que_se_prueba": "Factura de referencia para el plazo de notificación de la deuda posterior al despacho (prescripción general de 3 años). Nota impresa en la factura (en inglés): «Reference invoice for post-clearance debt notification timing (general 3-year limitation period).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -482,7 +482,7 @@
     "tarjeta_trello": "H1-37 — Incoterm DAP con lugar de destino específico debe coincidir con la aduana/ubicación declarada",
     "titulo": "Incoterm DAP con lugar de destino específico debe coincidir con la aduana/ubicación declarada",
     "ruta": "Tailandia → España | Maritimo | Incoterm DAP Chiang Mai",
-    "que_se_prueba": "Incoterm DAP — named place of destination: Poligono Industrial Fuente del Jarro, Paterna (Valencia) — must match declared customs location.",
+    "que_se_prueba": "Incoterm DAP con lugar de destino designado (Polígono Industrial Fuente del Jarro, Paterna, Valencia): debe coincidir con la ubicación aduanera declarada. Nota impresa en la factura (en inglés): «Incoterm DAP — named place of destination: Poligono Industrial Fuente del Jarro, Paterna (Valencia) — must match declared customs location.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -495,7 +495,7 @@
     "tarjeta_trello": "H1-38 — Documento 9018 (GRN) no puede declararse en el mismo lugar según el tipo de declaración",
     "titulo": "Documento 9018 (GRN) no puede declararse en el mismo lugar según el tipo de declaración",
     "ruta": "Indonesia → España | Maritimo | Incoterm FOB Surabaya",
-    "que_se_prueba": "Document code 9018 (Guarantee Reference Number) referenced — location of declaration restricted by declaration type.",
+    "que_se_prueba": "Se referencia el documento 9018 (número de referencia de la garantía, GRN): el lugar de la declaración está restringido según el tipo de declaración. Nota impresa en la factura (en inglés): «Document code 9018 (Guarantee Reference Number) referenced — location of declaration restricted by declaration type.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -508,7 +508,7 @@
     "tarjeta_trello": "H1-39 — Unidades suplementarias opcionales (no obligatorias) específicamente bajo régimen 82",
     "titulo": "Unidades suplementarias opcionales (no obligatorias) específicamente bajo régimen 82",
     "ruta": "Pakistan → España | Maritimo | Incoterm FOB Karachi",
-    "que_se_prueba": "Regime 82 declared — supplementary units are OPTIONAL (not mandatory) specifically under this regime.",
+    "que_se_prueba": "Régimen 82: en este régimen las unidades suplementarias son OPCIONALES, no obligatorias. Nota impresa en la factura (en inglés): «Regime 82 declared — supplementary units are OPTIONAL (not mandatory) specifically under this regime.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -521,7 +521,7 @@
     "tarjeta_trello": "H1-40 — Referencia de conocimiento de transporte (BL/AWB) debe validarse contra el documento adjunto",
     "titulo": "Referencia de conocimiento de transporte (BL/AWB) debe validarse contra el documento adjunto",
     "ruta": "Japon → España | Maritimo | Incoterm FOB Tokyo",
-    "que_se_prueba": "Transport document reference (Bill of Lading number) must match exactly the attached transport document — see B/L.",
+    "que_se_prueba": "La referencia del documento de transporte (número de conocimiento de embarque) debe coincidir exactamente con el documento adjunto: ver el B/L. Nota impresa en la factura (en inglés): «Transport document reference (Bill of Lading number) must match exactly the attached transport document — see B/L.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -534,7 +534,7 @@
     "tarjeta_trello": "H1-41 — Descripción de mercancía muy larga",
     "titulo": "Descripción de mercancía muy larga",
     "ruta": "China → España | Maritimo | Incoterm FOB Yiwu",
-    "que_se_prueba": "LONG DESCRIPTION TEST: single tariff line with an unusually long, fully-detailed goods description (see line 1).",
+    "que_se_prueba": "Prueba de descripción larga: una sola partida con una descripción de mercancía inusualmente larga y detallada (ver línea 1). Nota impresa en la factura (en inglés): «LONG DESCRIPTION TEST: single tariff line with an unusually long, fully-detailed goods description (see line 1).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -547,7 +547,7 @@
     "tarjeta_trello": "H1-42 — Deudas inferiores a 10€ dispensadas de notificación",
     "titulo": "Deudas inferiores a 10€ dispensadas de notificación",
     "ruta": "Egipto → España | Maritimo | Incoterm FOB Alexandria",
-    "que_se_prueba": "Low customs debt shipment — reference for debt-notification dispensation threshold (< EUR 10).",
+    "que_se_prueba": "Envío con deuda aduanera baja: referencia para el umbral de dispensa de notificación de la deuda (menos de 10 €). Nota impresa en la factura (en inglés): «Low customs debt shipment — reference for debt-notification dispensation threshold (< EUR 10).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -560,7 +560,7 @@
     "tarjeta_trello": "H1-43 — Exportador extracomunitario sin NIF español vs. importador con NIF/EORI español",
     "titulo": "Exportador extracomunitario sin NIF español vs. importador con NIF/EORI español",
     "ruta": "Argentina → España | Maritimo | Incoterm FOB General Pico",
-    "que_se_prueba": "Seller (extra-Community exporter) has no Spanish tax ID; Buyer (importer) holds Spanish NIF and EORI number ES.",
+    "que_se_prueba": "El vendedor (exportador extracomunitario) no tiene identificación fiscal española; el comprador (importador) tiene NIF y EORI españoles. Nota impresa en la factura (en inglés): «Seller (extra-Community exporter) has no Spanish tax ID; Buyer (importer) holds Spanish NIF and EORI number ES.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -573,7 +573,7 @@
     "tarjeta_trello": "AES-01 — EORI presente → nunca enviar nombre/dirección",
     "titulo": "EORI presente → nunca enviar nombre/dirección",
     "ruta": "España → Estados Unidos | Maritimo | Incoterm FOB Melilla",
-    "que_se_prueba": "Buyer holds a valid EORI/identification number — company name and address are NOT to be additionally declared per AES rule.",
+    "que_se_prueba": "El comprador tiene un EORI/identificación válido: según la regla AES NO se declaran además su nombre y dirección. Nota impresa en la factura (en inglés): «Buyer holds a valid EORI/identification number — company name and address are NOT to be additionally declared per AES rule.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -586,7 +586,7 @@
     "tarjeta_trello": "AES-02 — Exportación directa vs indirecta según oficinas",
     "titulo": "Exportación directa vs indirecta según oficinas",
     "ruta": "España → Mexico | Maritimo | Incoterm CIF Barcelona (Zona Franca)",
-    "que_se_prueba": "Direct export declared at the customs office of exit — compare with indirect-export scenario via a different office.",
+    "que_se_prueba": "Exportación directa declarada en la aduana de salida: compárese con el escenario de exportación indirecta por otra oficina. Nota impresa en la factura (en inglés): «Direct export declared at the customs office of exit — compare with indirect-export scenario via a different office.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -600,7 +600,7 @@
     "tarjeta_trello": "AES-03 — Persona de contacto siempre obligatoria",
     "titulo": "Persona de contacto siempre obligatoria",
     "ruta": "España → Brasil | Maritimo | Incoterm FOB Paterna (Valencia)",
-    "que_se_prueba": "Contact person for this consignment: Sra. Marta Alonso Ruiz — mandatory field, always required regardless of representation type.",
+    "que_se_prueba": "Persona de contacto del envío: Sra. Marta Alonso Ruiz. Es un dato obligatorio siempre, con independencia del tipo de representación. Nota impresa en la factura (en inglés): «Contact person for this consignment: Sra. Marta Alonso Ruiz — mandatory field, always required regardless of representation type.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -613,7 +613,7 @@
     "tarjeta_trello": "AES-04 — Doble país de ruta cuando el destino es extra-UE",
     "titulo": "Doble país de ruta cuando el destino es extra-UE",
     "ruta": "España → Australia | Maritimo | Incoterm CFR Girona",
-    "que_se_prueba": "Routing countries: goods transit via a third country (Singapore) before reaching the extra-EU destination — dual routing country applies.",
+    "que_se_prueba": "Países de ruta: la mercancía transita por un tercer país (Singapur) antes de llegar al destino extracomunitario; aplican dos países de ruta. Nota impresa en la factura (en inglés): «Routing countries: goods transit via a third country (Singapore) before reaching the extra-EU destination — dual routing country applies.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -626,7 +626,7 @@
     "tarjeta_trello": "AES-05 — Unidades suplementarias exigidas por TARIC",
     "titulo": "Unidades suplementarias exigidas por TARIC",
     "ruta": "España → Sudafrica | Maritimo | Incoterm FOB Llanera (Asturias)",
-    "que_se_prueba": "TARIC heading requires mandatory supplementary unit (litres of pure alcohol).",
+    "que_se_prueba": "La partida TARIC exige unidad suplementaria obligatoria (litros de alcohol puro). Nota impresa en la factura (en inglés): «TARIC heading requires mandatory supplementary unit (litres of pure alcohol).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -639,7 +639,7 @@
     "tarjeta_trello": "AES-06 — Rectificación de una AES ya aceptada",
     "titulo": "Rectificación de una AES ya aceptada",
     "ruta": "España → Turquia | Carretera | Incoterm EXW Dos Hermanas (Sevilla)",
-    "que_se_prueba": "This invoice supports an AES declaration subsequently RECTIFIED after acceptance by customs (see case notes for amendment detail).",
+    "que_se_prueba": "La factura respalda una declaración AES RECTIFICADA después de ser aceptada por la aduana (ver el detalle de la rectificación en las notas del caso). Nota impresa en la factura (en inglés): «This invoice supports an AES declaration subsequently RECTIFIED after acceptance by customs (see case notes for amendment detail).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -652,7 +652,7 @@
     "tarjeta_trello": "AES-07 — Declaración EX tipo A (sin seguridad) vs tipo B (con seguridad)",
     "titulo": "Declaración EX tipo A (sin seguridad) vs tipo B (con seguridad)",
     "ruta": "España → Canada | Maritimo | Incoterm FOB Vitoria-Gasteiz",
-    "que_se_prueba": "Declaration type EX-A (no security data) — compare against EX-B (with entry summary/security data) for the same commodity.",
+    "que_se_prueba": "Declaración tipo EX-A (sin datos de seguridad): compárese con una EX-B (con datos de declaración sumaria de entrada/seguridad) para la misma mercancía. Nota impresa en la factura (en inglés): «Declaration type EX-A (no security data) — compare against EX-B (with entry summary/security data) for the same commodity.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -665,7 +665,7 @@
     "tarjeta_trello": "AES-08 — Representación indirecta se deduce, no se declara",
     "titulo": "Representación indirecta se deduce, no se declara",
     "ruta": "España → Japon | Aereo | Incoterm DAP Las Palmas de Gran Canaria",
-    "que_se_prueba": "Indirect representation applies by deduction from the parties involved — it is NOT separately declared as a data element.",
+    "que_se_prueba": "La representación indirecta se deduce de las partes que intervienen: NO se declara como dato aparte. Nota impresa en la factura (en inglés): «Indirect representation applies by deduction from the parties involved — it is NOT separately declared as a data element.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -678,7 +678,7 @@
     "tarjeta_trello": "AES-09 — Definición legal de exportador: quien decide sacar la mercancía, no quien factura",
     "titulo": "Definición legal de exportador: quien decide sacar la mercancía, no quien factura",
     "ruta": "España → Corea del Sur | Maritimo | Incoterm FOB Ciudad Real",
-    "que_se_prueba": "Legal exporter is the party who decides that the goods leave the EU (contracting principal) — NOT necessarily the party issuing this invoice.",
+    "que_se_prueba": "El exportador a efectos legales es quien decide que la mercancía salga de la UE (el mandante), que NO es necesariamente quien emite la factura. Nota impresa en la factura (en inglés): «Legal exporter is the party who decides that the goods leave the EU (contracting principal) — NOT necessarily the party issuing this invoice.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -691,7 +691,7 @@
     "tarjeta_trello": "AES-10 — Exportador sin EORI: las 5 excepciones documentadas",
     "titulo": "Exportador sin EORI: las 5 excepciones documentadas",
     "ruta": "España → Emiratos Arabes Unidos | Aereo | Incoterm CPT Zaragoza",
-    "que_se_prueba": "Exporter without EORI — one of the 5 documented exceptions applies (occasional exporter, private individual shipment).",
+    "que_se_prueba": "Exportador sin EORI: se aplica una de las 5 excepciones documentadas (exportador ocasional, envío de un particular). Nota impresa en la factura (en inglés): «Exporter without EORI — one of the 5 documented exceptions applies (occasional exporter, private individual shipment).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -704,7 +704,7 @@
     "tarjeta_trello": "AES-11 — Pre-DUA de exportación caduca a los 30 días sin presentación de mercancía",
     "titulo": "Pre-DUA de exportación caduca a los 30 días sin presentación de mercancía",
     "ruta": "España → Arabia Saudita | Maritimo | Incoterm FOB Palma de Mallorca",
-    "que_se_prueba": "Pre-DUA lodged in advance of goods arrival at the customs office of exit — lapses automatically after 30 days without presentation.",
+    "que_se_prueba": "Pre-DUA presentado antes de la llegada de la mercancía a la aduana de salida: caduca automáticamente a los 30 días sin presentación. Nota impresa en la factura (en inglés): «Pre-DUA lodged in advance of goods arrival at the customs office of exit — lapses automatically after 30 days without presentation.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -717,7 +717,7 @@
     "tarjeta_trello": "AES-12 — Procedimiento de investigación: 90 días sin salida, 150 días invalida la declaración",
     "titulo": "Procedimiento de investigación: 90 días sin salida, 150 días invalida la declaración",
     "ruta": "España → Reino Unido | Carretera | Incoterm DAP Badajoz",
-    "que_se_prueba": "Reference for the AES investigation procedure: no exit confirmation within 90 days triggers inquiry; 150 days invalidates the declaration.",
+    "que_se_prueba": "Referencia para el procedimiento de investigación AES: sin confirmación de salida en 90 días se abre indagación; a los 150 días la declaración se invalida. Nota impresa en la factura (en inglés): «Reference for the AES investigation procedure: no exit confirmation within 90 days triggers inquiry; 150 days invalidates the declaration.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -730,7 +730,7 @@
     "tarjeta_trello": "AES-13 — Exportación indirecta requiere notificación de llegada a la aduana de salida",
     "titulo": "Exportación indirecta requiere notificación de llegada a la aduana de salida",
     "ruta": "España → Suiza | Carretera | Incoterm FCA Guarnizo (Cantabria)",
-    "que_se_prueba": "Indirect export via another Member State's office of exit — requires arrival notification (IE507/IE521) at the actual office of exit.",
+    "que_se_prueba": "Exportación indirecta por la aduana de salida de otro Estado miembro: exige aviso de llegada (IE507/IE521) en la aduana de salida real. Nota impresa en la factura (en inglés): «Indirect export via another Member State's office of exit — requires arrival notification (IE507/IE521) at the actual office of exit.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -743,7 +743,7 @@
     "tarjeta_trello": "AES-14 — Condiciones de entrega: código de lugar o dirección, nunca ambos",
     "titulo": "Condiciones de entrega: código de lugar o dirección, nunca ambos",
     "ruta": "España → Noruega | Carretera | Incoterm DAP Logroño",
-    "que_se_prueba": "Delivery conditions: EITHER a UN/LOCODE place code OR a free-text address may be declared — never both simultaneously.",
+    "que_se_prueba": "Condiciones de entrega: se declara O BIEN un código de lugar UN/LOCODE O BIEN una dirección en texto libre, nunca los dos a la vez. Nota impresa en la factura (en inglés): «Delivery conditions: EITHER a UN/LOCODE place code OR a free-text address may be declared — never both simultaneously.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -756,7 +756,7 @@
     "tarjeta_trello": "AES-15 — Transportista solo si es distinto del declarante, siempre con EORI",
     "titulo": "Transportista solo si es distinto del declarante, siempre con EORI",
     "ruta": "España → Colombia | Maritimo | Incoterm FOB Ceuta",
-    "que_se_prueba": "Carrier is declared only when different from the declarant, and in that case an EORI number is mandatory for the carrier.",
+    "que_se_prueba": "El transportista solo se declara cuando es distinto del declarante, y en ese caso su EORI es obligatorio. Nota impresa en la factura (en inglés): «Carrier is declared only when different from the declarant, and in that case an EORI number is mandatory for the carrier.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -769,7 +769,7 @@
     "tarjeta_trello": "AES-16 — Expedidor de seguridad distinto del exportador",
     "titulo": "Expedidor de seguridad distinto del exportador",
     "ruta": "España → Peru | Maritimo | Incoterm FOB Melilla",
-    "que_se_prueba": "Security consignor (dispatcher for safety/security data) is a party distinct from the exporter of record.",
+    "que_se_prueba": "El expedidor a efectos de seguridad (quien aporta los datos de protección y seguridad) es una parte distinta del exportador. Nota impresa en la factura (en inglés): «Security consignor (dispatcher for safety/security data) is a party distinct from the exporter of record.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -782,7 +782,7 @@
     "tarjeta_trello": "AES-17 — EUR.1 no se puede firmar antes de que la exportación sea efectiva o esté asegurada",
     "titulo": "EUR.1 no se puede firmar antes de que la exportación sea efectiva o esté asegurada",
     "ruta": "España → Tunez | Carretera | Incoterm FOB Barcelona (Zona Franca)",
-    "que_se_prueba": "EUR.1 certificate of origin must NOT be endorsed until the export is effective or otherwise assured — see accompanying EUR.1 draft status.",
+    "que_se_prueba": "El certificado de origen EUR.1 NO debe visarse hasta que la exportación sea efectiva o esté asegurada: ver el estado de borrador del EUR.1 adjunto. Nota impresa en la factura (en inglés): «EUR.1 certificate of origin must NOT be endorsed until the export is effective or otherwise assured — see accompanying EUR.1 draft status.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -796,7 +796,7 @@
     "tarjeta_trello": "AES-18 — Documento de levante no se actualiza tras modificar la declaración",
     "titulo": "Documento de levante no se actualiza tras modificar la declaración",
     "ruta": "España → Egipto | Maritimo | Incoterm FOB Paterna (Valencia)",
-    "que_se_prueba": "Reference invoice: release document (levante) is NOT automatically refreshed after this declaration is later amended.",
+    "que_se_prueba": "Factura de referencia: el documento de levante NO se regenera automáticamente cuando la declaración se modifica después. Nota impresa en la factura (en inglés): «Reference invoice: release document (levante) is NOT automatically refreshed after this declaration is later amended.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -809,7 +809,7 @@
     "tarjeta_trello": "AES-19 — Deuda aduanera nacida por una exportación — cláusula de no reembolso",
     "titulo": "Deuda aduanera nacida por una exportación — cláusula de no reembolso",
     "ruta": "España → Argentina | Maritimo | Incoterm FOB Girona",
-    "que_se_prueba": "Customs debt arising from an export declaration — no-refund clause applies even if goods are not ultimately shipped.",
+    "que_se_prueba": "Deuda aduanera nacida de una declaración de exportación: no hay devolución aunque la mercancía finalmente no se embarque. Nota impresa en la factura (en inglés): «Customs debt arising from an export declaration — no-refund clause applies even if goods are not ultimately shipped.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -822,7 +822,7 @@
     "tarjeta_trello": "AES-20 — Máximo 30 precintos y 99 contenedores por declaración",
     "titulo": "Máximo 30 precintos y 99 contenedores por declaración",
     "ruta": "España → Tailandia | Maritimo | Incoterm FOB Llanera (Asturias)",
-    "que_se_prueba": "Multi-container shipment — reference for the declaration limit of maximum 30 seals and 99 containers.",
+    "que_se_prueba": "Envío multicontenedor: referencia para el límite de la declaración de 30 precintos y 99 contenedores como máximo. Nota impresa en la factura (en inglés): «Multi-container shipment — reference for the declaration limit of maximum 30 seals and 99 containers.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -835,7 +835,7 @@
     "tarjeta_trello": "AES-21 — Masa bruta sin decimales si es ≥1kg, con hasta 3 decimales si es <1kg",
     "titulo": "Masa bruta sin decimales si es ≥1kg, con hasta 3 decimales si es <1kg",
     "ruta": "España → Pakistan | Maritimo | Incoterm FOB Dos Hermanas (Sevilla)",
-    "que_se_prueba": "Gross mass declared without decimals (≥1kg lines) and with up to 3 decimals for sub-1kg lines — see packing list for exact figures.",
+    "que_se_prueba": "Masa bruta sin decimales en las líneas de 1 kg o más y con hasta 3 decimales en las de menos de 1 kg: ver las cifras exactas en el packing list. Nota impresa en la factura (en inglés): «Gross mass declared without decimals (≥1kg lines) and with up to 3 decimals for sub-1kg lines — see packing list for exact figures.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2708,7 +2708,7 @@
     "tarjeta_trello": "H1-44 — Perecederos vegetales: CHED-PP sin pre-notificar en TRACES antes de la llegada fisica",
     "titulo": "Perecederos vegetales: CHED-PP sin pre-notificar en TRACES antes de la llegada fisica",
     "ruta": "Kenia → España | Aereo | Incoterm FCA Naivasha",
-    "que_se_prueba": "CHED-PP debe completarse en TRACES NT y estar disponible ANTES de la llegada fisica de la mercancia al Puesto de Control Fronterizo (Reg. (UE) 2017/625, Art. 133). Envio de prueba: el CHED-PP se registro despues de la llegada del vuelo — retencion en el PCF hasta subsanar.",
+    "que_se_prueba": "CHED-PP debe completarse en TRACES NT y estar disponible ANTES de la llegada fisica de la mercancia al Puesto de Control Fronterizo (Reg. (UE) 2017/625, Art. 133). Envio de prueba: el CHED-PP se registro despues de la llegada del vuelo — retencion en el PCF hasta subsanar. Nota impresa en la factura (en inglés): «CHED-PP debe completarse en TRACES NT y estar disponible ANTES de la llegada fisica de la mercancia al Puesto de Control Fronterizo (Reg. (UE) 2017/625, Art. 133). Envio de prueba: el CHED-PP se registro despues de la llegada del vuelo — retencion en el PCF hasta subsanar.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2723,7 +2723,7 @@
     "tarjeta_trello": "H1-45 — Perecederos vegetales: discrepancia entre temperatura de consigna y temperatura real registrada",
     "titulo": "Perecederos vegetales: discrepancia entre temperatura de consigna y temperatura real registrada",
     "ruta": "Costa Rica → España | Maritimo | Incoterm CIF Guácimo",
-    "que_se_prueba": "Data logger del contenedor reefer registra una excursion de temperatura de 6 horas por encima del punto de consigna durante el transito maritimo. Se prueba si esto es un asunto de control aduanero/documental (no lo es, el certificado fitosanitario sigue siendo valido) o un asunto puramente comercial/de calidad entre comprador y vendedor.",
+    "que_se_prueba": "Data logger del contenedor reefer registra una excursion de temperatura de 6 horas por encima del punto de consigna durante el transito maritimo. Se prueba si esto es un asunto de control aduanero/documental (no lo es, el certificado fitosanitario sigue siendo valido) o un asunto puramente comercial/de calidad entre comprador y vendedor. Nota impresa en la factura (en inglés): «Data logger del contenedor reefer registra una excursion de temperatura de 6 horas por encima del punto de consigna durante el transito maritimo. Se prueba si esto es un asunto de control aduanero/documental (no lo es, el certificado fitosanitario sigue siendo valido) o un asunto puramente comercial/de calidad entre comprador y vendedor.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2739,7 +2739,7 @@
     "tarjeta_trello": "H1-46 — Perecederos vegetales: declaracion adicional fitosanitaria obligatoria por plaga de zona (citrus black spot)",
     "titulo": "Perecederos vegetales: declaracion adicional fitosanitaria obligatoria por plaga de zona (citrus black spot)",
     "ruta": "Sudafrica → España | Maritimo | Incoterm FOB Sandton",
-    "que_se_prueba": "Origen sujeto a riesgo de Phyllosticta citricarpa (mancha negra de los citricos): el certificado fitosanitario debe incluir declaracion adicional de zona de produccion reconocida como de baja prevalencia, conforme al Reglamento de Ejecucion (UE) 2019/2072. Sin esa declaracion adicional especifica, el certificado fitosanitario generico no basta.",
+    "que_se_prueba": "Origen sujeto a riesgo de Phyllosticta citricarpa (mancha negra de los citricos): el certificado fitosanitario debe incluir declaracion adicional de zona de produccion reconocida como de baja prevalencia, conforme al Reglamento de Ejecucion (UE) 2019/2072. Sin esa declaracion adicional especifica, el certificado fitosanitario generico no basta. Nota impresa en la factura (en inglés): «Origen sujeto a riesgo de Phyllosticta citricarpa (mancha negra de los citricos): el certificado fitosanitario debe incluir declaracion adicional de zona de produccion reconocida como de baja prevalencia, conforme al Reglamento de Ejecucion (UE) 2019/2072. Sin esa declaracion adicional especifica, el certificado fitosanitario generico no basta.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2753,7 +2753,7 @@
     "tarjeta_trello": "H1-47 — Perecederos vegetales: sistema de precio de entrada para tomates de terceros paises",
     "titulo": "Perecederos vegetales: sistema de precio de entrada para tomates de terceros paises",
     "ruta": "Marruecos → España | Carretera | Incoterm FOB Marrakech",
-    "que_se_prueba": "Sistema de precio de entrada para tomates de terceros paises (OCM unica, Reg. (UE) 1308/2013 y normativa de desarrollo): si el valor declarado en factura es inferior al precio de entrada de referencia vigente en el periodo, se aplica un derecho de importacion adicional especifico sobre la diferencia, ademas del arancel ad valorem ordinario.",
+    "que_se_prueba": "Sistema de precio de entrada para tomates de terceros paises (OCM unica, Reg. (UE) 1308/2013 y normativa de desarrollo): si el valor declarado en factura es inferior al precio de entrada de referencia vigente en el periodo, se aplica un derecho de importacion adicional especifico sobre la diferencia, ademas del arancel ad valorem ordinario. Nota impresa en la factura (en inglés): «Sistema de precio de entrada para tomates de terceros paises (OCM unica, Reg. (UE) 1308/2013 y normativa de desarrollo): si el valor declarado en factura es inferior al precio de entrada de referencia vigente en el periodo, se aplica un derecho de importacion adicional especifico sobre la diferencia, ademas del arancel ad valorem ordinario.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2767,7 +2767,7 @@
     "tarjeta_trello": "H1-48 — Alimentos: control oficial reforzado en frontera (Reg. 2019/1793) — muestreo obligatorio 20%",
     "titulo": "Alimentos: control oficial reforzado en frontera (Reg. 2019/1793) — muestreo obligatorio 20%",
     "ruta": "India → España | Maritimo | Incoterm FOB Mumbai",
-    "que_se_prueba": "Producto incluido en el Anexo I del Reglamento de Ejecucion (UE) 2019/1793 (controles oficiales reforzados en frontera) por riesgo de aflatoxinas, con frecuencia de muestreo documental/fisico del 20%. El CHED-D debe reflejar el resultado analitico si el envio fue seleccionado para muestreo — sin ese resultado no procede el levante.",
+    "que_se_prueba": "Producto incluido en el Anexo I del Reglamento de Ejecucion (UE) 2019/1793 (controles oficiales reforzados en frontera) por riesgo de aflatoxinas, con frecuencia de muestreo documental/fisico del 20%. El CHED-D debe reflejar el resultado analitico si el envio fue seleccionado para muestreo — sin ese resultado no procede el levante. Nota impresa en la factura (en inglés): «Producto incluido en el Anexo I del Reglamento de Ejecucion (UE) 2019/1793 (controles oficiales reforzados en frontera) por riesgo de aflatoxinas, con frecuencia de muestreo documental/fisico del 20%. El CHED-D debe reflejar el resultado analitico si el envio fue seleccionado para muestreo — sin ese resultado no procede el levante.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2782,7 +2782,7 @@
     "tarjeta_trello": "H1-49 — Alimentos: doble control sobre producto de la pesca — certificado de captura INDNR + establecimiento UE-listado",
     "titulo": "Alimentos: doble control sobre producto de la pesca — certificado de captura INDNR + establecimiento UE-listado",
     "ruta": "Tailandia → España | Maritimo | Incoterm FOB Chiang Mai",
-    "que_se_prueba": "Producto de la pesca transformado: requiere el Certificado de Captura validado por el Estado de abanderamiento del buque pesquero (Reg. (CE) 1005/2008, regimen INDNR) Y que el establecimiento elaborador figure en el listado de establecimientos autorizados por la UE. Ambos controles son independientes — cumplir uno no dispensa del otro.",
+    "que_se_prueba": "Producto de la pesca transformado: requiere el Certificado de Captura validado por el Estado de abanderamiento del buque pesquero (Reg. (CE) 1005/2008, regimen INDNR) Y que el establecimiento elaborador figure en el listado de establecimientos autorizados por la UE. Ambos controles son independientes — cumplir uno no dispensa del otro. Nota impresa en la factura (en inglés): «Producto de la pesca transformado: requiere el Certificado de Captura validado por el Estado de abanderamiento del buque pesquero (Reg. (CE) 1005/2008, regimen INDNR) Y que el establecimiento elaborador figure en el listado de establecimientos autorizados por la UE. Ambos controles son independientes — cumplir uno no dispensa del otro.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2797,7 +2797,7 @@
     "tarjeta_trello": "H1-50 — Alimentos: producto de origen animal — numero de establecimiento en el certificado veterinario vs. CHED-P",
     "titulo": "Alimentos: producto de origen animal — numero de establecimiento en el certificado veterinario vs. CHED-P",
     "ruta": "Suiza → España | Carretera | Incoterm DAP Zug",
-    "que_se_prueba": "El numero de autorizacion sanitaria del establecimiento de origen declarado en el certificado veterinario debe coincidir EXACTAMENTE con el indicado en el CHED-P y figurar en la lista de establecimientos de terceros paises autorizados a exportar a la UE — una discrepancia entre ambos documentos provoca el rechazo en el Puesto de Control Fronterizo.",
+    "que_se_prueba": "El numero de autorizacion sanitaria del establecimiento de origen declarado en el certificado veterinario debe coincidir EXACTAMENTE con el indicado en el CHED-P y figurar en la lista de establecimientos de terceros paises autorizados a exportar a la UE — una discrepancia entre ambos documentos provoca el rechazo en el Puesto de Control Fronterizo. Nota impresa en la factura (en inglés): «El numero de autorizacion sanitaria del establecimiento de origen declarado en el certificado veterinario debe coincidir EXACTAMENTE con el indicado en el CHED-P y figurar en la lista de establecimientos de terceros paises autorizados a exportar a la UE — una discrepancia entre ambos documentos provoca el rechazo en el Puesto de Control Fronterizo.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2812,7 +2812,7 @@
     "tarjeta_trello": "H1-51 — Alimentos: triple control simultaneo (pesquero INDNR + veterinario + cadena de frio) sobre una sola partida",
     "titulo": "Alimentos: triple control simultaneo (pesquero INDNR + veterinario + cadena de frio) sobre una sola partida",
     "ruta": "Peru → España | Maritimo | Incoterm CIF Lima",
-    "que_se_prueba": "Triple control no arancelario simultaneo sobre una sola partida: pesquero INDNR (certificado de captura), sanitario veterinario (establecimiento autorizado) y cadena de frio ininterrumpida a -18°C desde la captura hasta el Puesto de Control Fronterizo — los tres deben superarse independientemente para el levante.",
+    "que_se_prueba": "Triple control no arancelario simultaneo sobre una sola partida: pesquero INDNR (certificado de captura), sanitario veterinario (establecimiento autorizado) y cadena de frio ininterrumpida a -18°C desde la captura hasta el Puesto de Control Fronterizo — los tres deben superarse independientemente para el levante. Nota impresa en la factura (en inglés): «Triple control no arancelario simultaneo sobre una sola partida: pesquero INDNR (certificado de captura), sanitario veterinario (establecimiento autorizado) y cadena de frio ininterrumpida a -18°C desde la captura hasta el Puesto de Control Fronterizo — los tres deben superarse independientemente para el levante.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2828,7 +2828,7 @@
     "tarjeta_trello": "H1-52 — Alimentos: vigilancia intensiva 100% por historial de alertas RASFF (residuos de antibioticos)",
     "titulo": "Alimentos: vigilancia intensiva 100% por historial de alertas RASFF (residuos de antibioticos)",
     "ruta": "Argentina → España | Maritimo | Incoterm FOB Buenos Aires",
-    "que_se_prueba": "Origen bajo vigilancia intensiva del 100% (no el 20% ordinario de otros origenes/productos) por historial de alertas RASFF de residuos de antibioticos (cloranfenicol) en envios previos del mismo origen — contrastar con el 20% aplicado a la pimienta india del caso H1-48: la frecuencia de control depende del historial de riesgo especifico, no es un porcentaje fijo.",
+    "que_se_prueba": "Origen bajo vigilancia intensiva del 100% (no el 20% ordinario de otros origenes/productos) por historial de alertas RASFF de residuos de antibioticos (cloranfenicol) en envios previos del mismo origen — contrastar con el 20% aplicado a la pimienta india del caso H1-48: la frecuencia de control depende del historial de riesgo especifico, no es un porcentaje fijo. Nota impresa en la factura (en inglés): «Origen bajo vigilancia intensiva del 100% (no el 20% ordinario de otros origenes/productos) por historial de alertas RASFF de residuos de antibioticos (cloranfenicol) en envios previos del mismo origen — contrastar con el 20% aplicado a la pimienta india del caso H1-48: la frecuencia de control depende del historial de riesgo especifico, no es un porcentaje fijo.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2843,7 +2843,7 @@
     "tarjeta_trello": "H1-53 — Quimicos: ficha de datos de seguridad (FDS) obligatoria en espanol — REACH/CLP",
     "titulo": "Quimicos: ficha de datos de seguridad (FDS) obligatoria en espanol — REACH/CLP",
     "ruta": "Israel → España | Maritimo | Incoterm FOB Haifa",
-    "que_se_prueba": "Sustancia quimica a granel: la Ficha de Datos de Seguridad (FDS) es obligatoria en espanol conforme al Anexo II REACH (Reg. (CE) 1907/2006), con las 16 secciones normalizadas. El registro REACH previo del proveedor NO exime al importador de la UE de verificar su propio estatus como importador si supera el umbral de 1 tonelada/ano.",
+    "que_se_prueba": "Sustancia quimica a granel: la Ficha de Datos de Seguridad (FDS) es obligatoria en espanol conforme al Anexo II REACH (Reg. (CE) 1907/2006), con las 16 secciones normalizadas. El registro REACH previo del proveedor NO exime al importador de la UE de verificar su propio estatus como importador si supera el umbral de 1 tonelada/ano. Nota impresa en la factura (en inglés): «Sustancia quimica a granel: la Ficha de Datos de Seguridad (FDS) es obligatoria en espanol conforme al Anexo II REACH (Reg. (CE) 1907/2006), con las 16 secciones normalizadas. El registro REACH previo del proveedor NO exime al importador de la UE de verificar su propio estatus como importador si supera el umbral de 1 tonelada/ano.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2857,7 +2857,7 @@
     "tarjeta_trello": "H1-54 — Quimicos: contraste — sustancia quimica NO clasificada como mercancia peligrosa para el transporte",
     "titulo": "Quimicos: contraste — sustancia quimica NO clasificada como mercancia peligrosa para el transporte",
     "ruta": "China → España | Maritimo | Incoterm FOB Shanghai",
-    "que_se_prueba": "Contraste deliberado: mercancia quimica sujeta a REACH/CLP (requiere FDS) pero SIN numero ONU asignado — NO es mercancia peligrosa para el transporte y por tanto NO requiere Declaracion de Mercancias Peligrosas. 'Quimico' y 'peligroso para el transporte' no son sinonimos, aunque coincidan con frecuencia.",
+    "que_se_prueba": "Contraste deliberado: mercancia quimica sujeta a REACH/CLP (requiere FDS) pero SIN numero ONU asignado — NO es mercancia peligrosa para el transporte y por tanto NO requiere Declaracion de Mercancias Peligrosas. 'Quimico' y 'peligroso para el transporte' no son sinonimos, aunque coincidan con frecuencia. Nota impresa en la factura (en inglés): «Contraste deliberado: mercancia quimica sujeta a REACH/CLP (requiere FDS) pero SIN numero ONU asignado — NO es mercancia peligrosa para el transporte y por tanto NO requiere Declaracion de Mercancias Peligrosas. 'Quimico' y 'peligroso para el transporte' no son sinonimos, aunque coincidan con frecuencia.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2871,7 +2871,7 @@
     "tarjeta_trello": "H1-55 — Quimicos: triple capa regulatoria — REACH/CLP + IMDG clase 5.1 + precursor de explosivos",
     "titulo": "Quimicos: triple capa regulatoria — REACH/CLP + IMDG clase 5.1 + precursor de explosivos",
     "ruta": "Estados Unidos → España | Maritimo | Incoterm FOB Charlotte",
-    "que_se_prueba": "Triple capa regulatoria sobre un solo producto: (1) REACH/CLP — ficha de seguridad; (2) IMDG clase 5.1 (comburente), UN2067 — declaracion de mercancias peligrosas para el transporte maritimo; (3) precursor de explosivos regulado por el Reglamento (UE) 2019/1148 — por encima del umbral de nitrogeno, uso final restringido y control reforzado.",
+    "que_se_prueba": "Triple capa regulatoria sobre un solo producto: (1) REACH/CLP — ficha de seguridad; (2) IMDG clase 5.1 (comburente), UN2067 — declaracion de mercancias peligrosas para el transporte maritimo; (3) precursor de explosivos regulado por el Reglamento (UE) 2019/1148 — por encima del umbral de nitrogeno, uso final restringido y control reforzado. Nota impresa en la factura (en inglés): «Triple capa regulatoria sobre un solo producto: (1) REACH/CLP — ficha de seguridad; (2) IMDG clase 5.1 (comburente), UN2067 — declaracion de mercancias peligrosas para el transporte maritimo; (3) precursor de explosivos regulado por el Reglamento (UE) 2019/1148 — por encima del umbral de nitrogeno, uso final restringido y control reforzado.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2887,7 +2887,7 @@
     "tarjeta_trello": "H1-56 — Quimicos: transporte por carretera de mercancia peligrosa (ADR) — senalizacion y formacion del conductor",
     "titulo": "Quimicos: transporte por carretera de mercancia peligrosa (ADR) — senalizacion y formacion del conductor",
     "ruta": "Turquia → España | Carretera | Incoterm DAP Izmir",
-    "que_se_prueba": "Transporte por carretera de mercancia peligrosa bajo ADR: el conductor debe portar su certificado de formacion ADR y el vehiculo debe llevar los paneles naranja de numero de peligro/ONU visibles. El CMR debe incluir la descripcion reglamentaria completa de mercancias peligrosas en su casilla especifica — no basta con adjuntar solo la factura.",
+    "que_se_prueba": "Transporte por carretera de mercancia peligrosa bajo ADR: el conductor debe portar su certificado de formacion ADR y el vehiculo debe llevar los paneles naranja de numero de peligro/ONU visibles. El CMR debe incluir la descripcion reglamentaria completa de mercancias peligrosas en su casilla especifica — no basta con adjuntar solo la factura. Nota impresa en la factura (en inglés): «Transporte por carretera de mercancia peligrosa bajo ADR: el conductor debe portar su certificado de formacion ADR y el vehiculo debe llevar los paneles naranja de numero de peligro/ONU visibles. El CMR debe incluir la descripcion reglamentaria completa de mercancias peligrosas en su casilla especifica — no basta con adjuntar solo la factura.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2902,7 +2902,7 @@
     "tarjeta_trello": "H1-57 — Mercancias peligrosas: baterias de litio-ion solas por via aerea — restriccion de estado de carga (SoC)",
     "titulo": "Mercancias peligrosas: baterias de litio-ion solas por via aerea — restriccion de estado de carga (SoC)",
     "ruta": "China → España | Aereo | Incoterm CPT Shenzhen",
-    "que_se_prueba": "Baterias de litio-ion transportadas SOLAS (no instaladas en equipo) por via aerea: la IATA restringe el estado de carga (SoC) declarado a <=30% para transporte como carga aerea, y numerosas aerolineas de carga las excluyen directamente de aviones de pasajeros. La aduana no valida el SoC, pero exige la DGD firmada antes de aceptar el despacho.",
+    "que_se_prueba": "Baterias de litio-ion transportadas SOLAS (no instaladas en equipo) por via aerea: la IATA restringe el estado de carga (SoC) declarado a <=30% para transporte como carga aerea, y numerosas aerolineas de carga las excluyen directamente de aviones de pasajeros. La aduana no valida el SoC, pero exige la DGD firmada antes de aceptar el despacho. Nota impresa en la factura (en inglés): «Baterias de litio-ion transportadas SOLAS (no instaladas en equipo) por via aerea: la IATA restringe el estado de carga (SoC) declarado a <=30% para transporte como carga aerea, y numerosas aerolineas de carga las excluyen directamente de aviones de pasajeros. La aduana no valida el SoC, pero exige la DGD firmada antes de aceptar el despacho.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2917,7 +2917,7 @@
     "tarjeta_trello": "H1-58 — Mercancias peligrosas: aerosoles bajo exencion de cantidades limitadas (LQ) en el codigo IMDG",
     "titulo": "Mercancias peligrosas: aerosoles bajo exencion de cantidades limitadas (LQ) en el codigo IMDG",
     "ruta": "China → España | Maritimo | Incoterm FOB Ningbo",
-    "que_se_prueba": "Aerosoles bajo la exencion de 'cantidades limitadas' (Limited Quantities, LQ) del codigo IMDG: si cada bulto no supera el volumen limite, se simplifica el marcado individual, pero la obligacion de declarar la carga como mercancia peligrosa en el conocimiento de embarque y en el manifiesto del buque NO desaparece.",
+    "que_se_prueba": "Aerosoles bajo la exencion de 'cantidades limitadas' (Limited Quantities, LQ) del codigo IMDG: si cada bulto no supera el volumen limite, se simplifica el marcado individual, pero la obligacion de declarar la carga como mercancia peligrosa en el conocimiento de embarque y en el manifiesto del buque NO desaparece. Nota impresa en la factura (en inglés): «Aerosoles bajo la exencion de 'cantidades limitadas' (Limited Quantities, LQ) del codigo IMDG: si cada bulto no supera el volumen limite, se simplifica el marcado individual, pero la obligacion de declarar la carga como mercancia peligrosa en el conocimiento de embarque y en el manifiesto del buque NO desaparece.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2932,7 +2932,7 @@
     "tarjeta_trello": "H1-59 — Mercancias peligrosas: explosivos de Clase 1 — autorizacion previa de naviera y autoridad portuaria",
     "titulo": "Mercancias peligrosas: explosivos de Clase 1 — autorizacion previa de naviera y autoridad portuaria",
     "ruta": "China → España | Maritimo | Incoterm FOB Yiwu",
-    "que_se_prueba": "Mercancia de Clase 1 (explosivos, UN0335): requiere autorizacion previa expresa de la naviera y de la autoridad portuaria antes de aceptar la reserva de espacio, ademas de la licencia de importacion de articulos pirotecnicos. El rechazo, si se produce, ocurre en origen — mucho antes de que la carga llegue a la aduana espanola.",
+    "que_se_prueba": "Mercancia de Clase 1 (explosivos, UN0335): requiere autorizacion previa expresa de la naviera y de la autoridad portuaria antes de aceptar la reserva de espacio, ademas de la licencia de importacion de articulos pirotecnicos. El rechazo, si se produce, ocurre en origen — mucho antes de que la carga llegue a la aduana espanola. Nota impresa en la factura (en inglés): «Mercancia de Clase 1 (explosivos, UN0335): requiere autorizacion previa expresa de la naviera y de la autoridad portuaria antes de aceptar la reserva de espacio, ademas de la licencia de importacion de articulos pirotecnicos. El rechazo, si se produce, ocurre en origen — mucho antes de que la carga llegue a la aduana espanola.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2948,7 +2948,7 @@
     "tarjeta_trello": "H1-60 — Cadena de frio farmaceutica: medicamento biologico — licencia AEMPS + GDP + serializacion antifalsificacion",
     "titulo": "Cadena de frio farmaceutica: medicamento biologico — licencia AEMPS + GDP + serializacion antifalsificacion",
     "ruta": "Suiza → España | Aereo | Incoterm CPT Zug",
-    "que_se_prueba": "Medicamento biologico: requiere autorizacion de importacion de la AEMPS (Agencia Espanola de Medicamentos y Productos Sanitarios) ademas del control aduanero ordinario, cadena de frio +2°C/+8°C certificada por transportista con GDP vigente, y dispositivo de seguridad/serializacion anti-manipulacion conforme a la Directiva 2011/62/UE.",
+    "que_se_prueba": "Medicamento biologico: requiere autorizacion de importacion de la AEMPS (Agencia Espanola de Medicamentos y Productos Sanitarios) ademas del control aduanero ordinario, cadena de frio +2°C/+8°C certificada por transportista con GDP vigente, y dispositivo de seguridad/serializacion anti-manipulacion conforme a la Directiva 2011/62/UE. Nota impresa en la factura (en inglés): «Medicamento biologico: requiere autorizacion de importacion de la AEMPS (Agencia Espanola de Medicamentos y Productos Sanitarios) ademas del control aduanero ordinario, cadena de frio +2°C/+8°C certificada por transportista con GDP vigente, y dispositivo de seguridad/serializacion anti-manipulacion conforme a la Directiva 2011/62/UE.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2964,7 +2964,7 @@
     "tarjeta_trello": "H1-61 — Cadena de frio farmaceutica: producto veterinario biologico en transito maritimo de larga duracion",
     "titulo": "Cadena de frio farmaceutica: producto veterinario biologico en transito maritimo de larga duracion",
     "ruta": "Argentina → España | Maritimo | Incoterm CIF Buenos Aires",
-    "que_se_prueba": "Producto biologico veterinario en cadena de frio maritima de larga duracion (30+ dias de transito): el certificado de control de temperatura debe cubrir la totalidad del trayecto sin discontinuidad, incluido el tiempo de espera en deposito temporal antes del levante — cualquier hueco documental invalida la cadena de frio aunque el resto sea correcto.",
+    "que_se_prueba": "Producto biologico veterinario en cadena de frio maritima de larga duracion (30+ dias de transito): el certificado de control de temperatura debe cubrir la totalidad del trayecto sin discontinuidad, incluido el tiempo de espera en deposito temporal antes del levante — cualquier hueco documental invalida la cadena de frio aunque el resto sea correcto. Nota impresa en la factura (en inglés): «Producto biologico veterinario en cadena de frio maritima de larga duracion (30+ dias de transito): el certificado de control de temperatura debe cubrir la totalidad del trayecto sin discontinuidad, incluido el tiempo de espera en deposito temporal antes del levante — cualquier hueco documental invalida la cadena de frio aunque el resto sea correcto.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2980,7 +2980,7 @@
     "tarjeta_trello": "H1-62 — Cadena de frio: acuicultura vs. pesca INDNR — el certificado de captura no aplica a productos de piscifactoria",
     "titulo": "Cadena de frio: acuicultura vs. pesca INDNR — el certificado de captura no aplica a productos de piscifactoria",
     "ruta": "Ecuador → España | Maritimo | Incoterm CIF Guayaquil",
-    "que_se_prueba": "Producto de ACUICULTURA (piscifactoria/camaronera), NO de captura salvaje: el certificado de captura INDNR (Reg. (CE) 1005/2008) NO aplica a este envio — se sustituye por una declaracion de origen de explotacion acuicola registrada. Error frecuente: exigir el certificado de captura para el mismo capitulo arancelario (0306) sin distinguir el regimen.",
+    "que_se_prueba": "Producto de ACUICULTURA (piscifactoria/camaronera), NO de captura salvaje: el certificado de captura INDNR (Reg. (CE) 1005/2008) NO aplica a este envio — se sustituye por una declaracion de origen de explotacion acuicola registrada. Error frecuente: exigir el certificado de captura para el mismo capitulo arancelario (0306) sin distinguir el regimen. Nota impresa en la factura (en inglés): «Producto de ACUICULTURA (piscifactoria/camaronera), NO de captura salvaje: el certificado de captura INDNR (Reg. (CE) 1005/2008) NO aplica a este envio — se sustituye por una declaracion de origen de explotacion acuicola registrada. Error frecuente: exigir el certificado de captura para el mismo capitulo arancelario (0306) sin distinguir el regimen.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -2996,7 +2996,7 @@
     "tarjeta_trello": "H1-63 — Perecederos vegetales: flor cortada de alta perecibilidad por via aerea con control de temperatura continuo",
     "titulo": "Perecederos vegetales: flor cortada de alta perecibilidad por via aerea con control de temperatura continuo",
     "ruta": "Ecuador → España | Aereo | Incoterm CPT Latacunga",
-    "que_se_prueba": "Flor cortada de altisima perecibilidad y valor unitario alto, transportada por via aerea con control de temperatura continuo desde el cultivo (+2°C/+4°C). El mismo patron fitosanitario que la fruta/verdura fresca, pero con un vector comercial distinto: envios concentrados en picos de demanda estacional (San Valentin, Dia de la Madre).",
+    "que_se_prueba": "Flor cortada de altisima perecibilidad y valor unitario alto, transportada por via aerea con control de temperatura continuo desde el cultivo (+2°C/+4°C). El mismo patron fitosanitario que la fruta/verdura fresca, pero con un vector comercial distinto: envios concentrados en picos de demanda estacional (San Valentin, Dia de la Madre). Nota impresa en la factura (en inglés): «Flor cortada de altisima perecibilidad y valor unitario alto, transportada por via aerea con control de temperatura continuo desde el cultivo (+2°C/+4°C). El mismo patron fitosanitario que la fruta/verdura fresca, pero con un vector comercial distinto: envios concentrados en picos de demanda estacional (San Valentin, Dia de la Madre).»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3011,7 +3011,7 @@
     "tarjeta_trello": "AES-22 — Perecederos vegetales: certificado fitosanitario de exportacion — limite de residuos exigido por el pais tercero",
     "titulo": "Perecederos vegetales: certificado fitosanitario de exportacion — limite de residuos exigido por el pais tercero",
     "ruta": "España → Emiratos Arabes Unidos | Aereo | Incoterm CPT Llanera (Asturias)",
-    "que_se_prueba": "Certificado fitosanitario de exportacion emitido por Sanidad Vegetal espanola. El limite de residuos de plaguicidas exigido por Emiratos Arabes Unidos es un requisito del pais de destino, no de la UE — la aduana espanola de salida verifica la correccion documental del certificado, no el limite de residuos del pais tercero.",
+    "que_se_prueba": "Certificado fitosanitario de exportacion emitido por Sanidad Vegetal espanola. El limite de residuos de plaguicidas exigido por Emiratos Arabes Unidos es un requisito del pais de destino, no de la UE — la aduana espanola de salida verifica la correccion documental del certificado, no el limite de residuos del pais tercero. Nota impresa en la factura (en inglés): «Certificado fitosanitario de exportacion emitido por Sanidad Vegetal espanola. El limite de residuos de plaguicidas exigido por Emiratos Arabes Unidos es un requisito del pais de destino, no de la UE — la aduana espanola de salida verifica la correccion documental del certificado, no el limite de residuos del pais tercero.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3025,7 +3025,7 @@
     "tarjeta_trello": "AES-23 — Perecederos vegetales: Reino Unido post-Brexit exige su propio Plant Health Certificate",
     "titulo": "Perecederos vegetales: Reino Unido post-Brexit exige su propio Plant Health Certificate",
     "ruta": "España → Reino Unido | Carretera | Incoterm DAP Dos Hermanas (Sevilla)",
-    "que_se_prueba": "Desde el Brexit, Reino Unido exige su propio 'Plant Health Certificate' britanico para importar citricos espanoles — Sanidad Vegetal emite este certificado bajo el modelo GB especifico, distinto del modelo IPPC interno de la UE. Doble anotacion de temperatura de transito en el CMR del remolque reefer, salida via Eurotunnel Calais-Folkestone.",
+    "que_se_prueba": "Desde el Brexit, Reino Unido exige su propio 'Plant Health Certificate' britanico para importar citricos espanoles — Sanidad Vegetal emite este certificado bajo el modelo GB especifico, distinto del modelo IPPC interno de la UE. Doble anotacion de temperatura de transito en el CMR del remolque reefer, salida via Eurotunnel Calais-Folkestone. Nota impresa en la factura (en inglés): «Desde el Brexit, Reino Unido exige su propio 'Plant Health Certificate' britanico para importar citricos espanoles — Sanidad Vegetal emite este certificado bajo el modelo GB especifico, distinto del modelo IPPC interno de la UE. Doble anotacion de temperatura de transito en el CMR del remolque reefer, salida via Eurotunnel Calais-Folkestone.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3039,7 +3039,7 @@
     "tarjeta_trello": "AES-24 — Perecederos vegetales: GLOBALG.A.P. como exigencia comercial del comprador, no requisito legal aduanero",
     "titulo": "Perecederos vegetales: GLOBALG.A.P. como exigencia comercial del comprador, no requisito legal aduanero",
     "ruta": "España → Canada | Maritimo | Incoterm CIF Vitoria-Gasteiz",
-    "que_se_prueba": "El certificado GLOBALG.A.P. lo exige comercialmente el comprador canadiense de la cadena de distribucion minorista — NO es un requisito legal aduanero ni fitosanitario de la UE ni de Canada, sino un estandar privado. El agente debe distinguir requisito legal de exigencia puramente comercial del cliente.",
+    "que_se_prueba": "El certificado GLOBALG.A.P. lo exige comercialmente el comprador canadiense de la cadena de distribucion minorista — NO es un requisito legal aduanero ni fitosanitario de la UE ni de Canada, sino un estandar privado. El agente debe distinguir requisito legal de exigencia puramente comercial del cliente. Nota impresa en la factura (en inglés): «El certificado GLOBALG.A.P. lo exige comercialmente el comprador canadiense de la cadena de distribucion minorista — NO es un requisito legal aduanero ni fitosanitario de la UE ni de Canada, sino un estandar privado. El agente debe distinguir requisito legal de exigencia puramente comercial del cliente.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3054,7 +3054,7 @@
     "tarjeta_trello": "AES-25 — Alimentos: producto de origen animal — establecimiento debe figurar en listado bilateral UE-Japon",
     "titulo": "Alimentos: producto de origen animal — establecimiento debe figurar en listado bilateral UE-Japon",
     "ruta": "España → Japon | Aereo | Incoterm CPT Las Palmas de Gran Canaria",
-    "que_se_prueba": "Exportacion de producto de origen animal: el establecimiento espanol debe figurar en el listado bilateral de establecimientos autorizados a exportar a Japon (acuerdo sanitario especifico UE-Japon). El certificado veterinario de exportacion sigue el modelo pactado bilateralmente, no el modelo generico de importacion a la UE.",
+    "que_se_prueba": "Exportacion de producto de origen animal: el establecimiento espanol debe figurar en el listado bilateral de establecimientos autorizados a exportar a Japon (acuerdo sanitario especifico UE-Japon). El certificado veterinario de exportacion sigue el modelo pactado bilateralmente, no el modelo generico de importacion a la UE. Nota impresa en la factura (en inglés): «Exportacion de producto de origen animal: el establecimiento espanol debe figurar en el listado bilateral de establecimientos autorizados a exportar a Japon (acuerdo sanitario especifico UE-Japon). El certificado veterinario de exportacion sigue el modelo pactado bilateralmente, no el modelo generico de importacion a la UE.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3068,7 +3068,7 @@
     "tarjeta_trello": "AES-26 — Alimentos: trazabilidad pesquera completa en la exportacion de conserva transformada",
     "titulo": "Alimentos: trazabilidad pesquera completa en la exportacion de conserva transformada",
     "ruta": "España → Corea del Sur | Maritimo | Incoterm FOB Ciudad Real",
-    "que_se_prueba": "Exportacion de producto de la pesca transformado: Espana, como Estado de elaboracion, debe emitir el certificado de captura de salida y el certificado sanitario de exportacion, aunque la materia prima proceda originalmente de aguas de terceros paises — se declara la trazabilidad completa del origen del pescado, no solo el lugar de fabricacion de la conserva.",
+    "que_se_prueba": "Exportacion de producto de la pesca transformado: Espana, como Estado de elaboracion, debe emitir el certificado de captura de salida y el certificado sanitario de exportacion, aunque la materia prima proceda originalmente de aguas de terceros paises — se declara la trazabilidad completa del origen del pescado, no solo el lugar de fabricacion de la conserva. Nota impresa en la factura (en inglés): «Exportacion de producto de la pesca transformado: Espana, como Estado de elaboracion, debe emitir el certificado de captura de salida y el certificado sanitario de exportacion, aunque la materia prima proceda originalmente de aguas de terceros paises — se declara la trazabilidad completa del origen del pescado, no solo el lugar de fabricacion de la conserva.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3083,7 +3083,7 @@
     "tarjeta_trello": "AES-27 — Alimentos: requisito bilateral de analisis de laboratorio no armonizado a nivel UE (China)",
     "titulo": "Alimentos: requisito bilateral de analisis de laboratorio no armonizado a nivel UE (China)",
     "ruta": "España → China | Maritimo | Incoterm FOB Zaragoza",
-    "que_se_prueba": "China exige un certificado de analisis de laboratorio (acidez, indice de peroxidos, parametros de calidad) ADEMAS del certificado sanitario UE estandar de exportacion — requisito bilateral especifico de China para aceite de oliva, no armonizado a nivel UE.",
+    "que_se_prueba": "China exige un certificado de analisis de laboratorio (acidez, indice de peroxidos, parametros de calidad) ADEMAS del certificado sanitario UE estandar de exportacion — requisito bilateral especifico de China para aceite de oliva, no armonizado a nivel UE. Nota impresa en la factura (en inglés): «China exige un certificado de analisis de laboratorio (acidez, indice de peroxidos, parametros de calidad) ADEMAS del certificado sanitario UE estandar de exportacion — requisito bilateral especifico de China para aceite de oliva, no armonizado a nivel UE.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3098,7 +3098,7 @@
     "tarjeta_trello": "AES-28 — Quimicos: exportacion de sustancia peligrosa — notificacion PIC (Reg. 649/2012) a la autoridad designada",
     "titulo": "Quimicos: exportacion de sustancia peligrosa — notificacion PIC (Reg. 649/2012) a la autoridad designada",
     "ruta": "España → Marruecos | Carretera | Incoterm FOB Palma de Mallorca",
-    "que_se_prueba": "Exportacion de sustancia quimica peligrosa a un tercer pais: si la sustancia figura en el Anexo I del Reglamento (UE) 649/2012 (PIC — consentimiento fundamentado previo), el exportador debe notificar la exportacion al MITECO como autoridad designada antes del primer envio del ano a ese pais de destino, independientemente del tramite aduanero ordinario.",
+    "que_se_prueba": "Exportacion de sustancia quimica peligrosa a un tercer pais: si la sustancia figura en el Anexo I del Reglamento (UE) 649/2012 (PIC — consentimiento fundamentado previo), el exportador debe notificar la exportacion al MITECO como autoridad designada antes del primer envio del ano a ese pais de destino, independientemente del tramite aduanero ordinario. Nota impresa en la factura (en inglés): «Exportacion de sustancia quimica peligrosa a un tercer pais: si la sustancia figura en el Anexo I del Reglamento (UE) 649/2012 (PIC — consentimiento fundamentado previo), el exportador debe notificar la exportacion al MITECO como autoridad designada antes del primer envio del ano a ese pais de destino, independientemente del tramite aduanero ordinario.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3113,7 +3113,7 @@
     "tarjeta_trello": "AES-29 — Quimicos: exportacion de producto quimico no peligroso para el transporte — solo FDS, sin DGD",
     "titulo": "Quimicos: exportacion de producto quimico no peligroso para el transporte — solo FDS, sin DGD",
     "ruta": "España → Brasil | Maritimo | Incoterm FOB Badajoz",
-    "que_se_prueba": "Exportacion de producto quimico NO peligroso para el transporte — mismo contraste que el caso H1-54 pero en sentido exportador: se prueba que no se exige Declaracion de Mercancias Peligrosas, unicamente la Ficha de Datos de Seguridad.",
+    "que_se_prueba": "Exportacion de producto quimico NO peligroso para el transporte — mismo contraste que el caso H1-54 pero en sentido exportador: se prueba que no se exige Declaracion de Mercancias Peligrosas, unicamente la Ficha de Datos de Seguridad. Nota impresa en la factura (en inglés): «Exportacion de producto quimico NO peligroso para el transporte — mismo contraste que el caso H1-54 pero en sentido exportador: se prueba que no se exige Declaracion de Mercancias Peligrosas, unicamente la Ficha de Datos de Seguridad.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3127,7 +3127,7 @@
     "tarjeta_trello": "AES-30 — Quimicos: licencia de exportacion de doble uso/seguridad para fertilizante precursor de explosivos",
     "titulo": "Quimicos: licencia de exportacion de doble uso/seguridad para fertilizante precursor de explosivos",
     "ruta": "España → Egipto | Maritimo | Incoterm FOB Guarnizo (Cantabria)",
-    "que_se_prueba": "Exportacion de fertilizante a base de nitrato de amonio: licencia de exportacion de seguridad si la concentracion de nitrogeno supera el umbral que lo califica como precursor de explosivos regulado (Reglamento (UE) 2019/1148), ademas de la declaracion de mercancias peligrosas ordinaria del transporte maritimo.",
+    "que_se_prueba": "Exportacion de fertilizante a base de nitrato de amonio: licencia de exportacion de seguridad si la concentracion de nitrogeno supera el umbral que lo califica como precursor de explosivos regulado (Reglamento (UE) 2019/1148), ademas de la declaracion de mercancias peligrosas ordinaria del transporte maritimo. Nota impresa en la factura (en inglés): «Exportacion de fertilizante a base de nitrato de amonio: licencia de exportacion de seguridad si la concentracion de nitrogeno supera el umbral que lo califica como precursor de explosivos regulado (Reglamento (UE) 2019/1148), ademas de la declaracion de mercancias peligrosas ordinaria del transporte maritimo.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3143,7 +3143,7 @@
     "tarjeta_trello": "AES-31 — Mercancias peligrosas: exportacion aerea de baterias de litio — formacion IATA DGR del expedidor",
     "titulo": "Mercancias peligrosas: exportacion aerea de baterias de litio — formacion IATA DGR del expedidor",
     "ruta": "España → Estados Unidos | Aereo | Incoterm CPT Logroño",
-    "que_se_prueba": "Exportacion aerea de baterias de litio-ion solas: el expedidor espanol debe estar certificado/formado en mercancias peligrosas (IATA DGR, categoria de expedidor), y la aerolinea exige el Estado de Carga (SoC) declarado por escrito antes de aceptar la reserva — sin la formacion certificada del expedidor, ninguna aerolinea de carga acepta la DGD.",
+    "que_se_prueba": "Exportacion aerea de baterias de litio-ion solas: el expedidor espanol debe estar certificado/formado en mercancias peligrosas (IATA DGR, categoria de expedidor), y la aerolinea exige el Estado de Carga (SoC) declarado por escrito antes de aceptar la reserva — sin la formacion certificada del expedidor, ninguna aerolinea de carga acepta la DGD. Nota impresa en la factura (en inglés): «Exportacion aerea de baterias de litio-ion solas: el expedidor espanol debe estar certificado/formado en mercancias peligrosas (IATA DGR, categoria de expedidor), y la aerolinea exige el Estado de Carga (SoC) declarado por escrito antes de aceptar la reserva — sin la formacion certificada del expedidor, ninguna aerolinea de carga acepta la DGD.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3158,7 +3158,7 @@
     "tarjeta_trello": "AES-32 — Mercancias peligrosas: aerosoles LQ — el manifiesto del buque exige declaracion IMDG igualmente",
     "titulo": "Mercancias peligrosas: aerosoles LQ — el manifiesto del buque exige declaracion IMDG igualmente",
     "ruta": "España → Chile | Maritimo | Incoterm FOB Ceuta",
-    "que_se_prueba": "Exportacion maritima de aerosoles bajo 'cantidades limitadas' (LQ): aun con la exencion de marcado individual reducido, el conocimiento de embarque y el manifiesto de mercancias peligrosas del buque SI deben declarar la carga como IMDG — no es opcional aunque el bulto individual este exento de algunas marcas.",
+    "que_se_prueba": "Exportacion maritima de aerosoles bajo 'cantidades limitadas' (LQ): aun con la exencion de marcado individual reducido, el conocimiento de embarque y el manifiesto de mercancias peligrosas del buque SI deben declarar la carga como IMDG — no es opcional aunque el bulto individual este exento de algunas marcas. Nota impresa en la factura (en inglés): «Exportacion maritima de aerosoles bajo 'cantidades limitadas' (LQ): aun con la exencion de marcado individual reducido, el conocimiento de embarque y el manifiesto de mercancias peligrosas del buque SI deben declarar la carga como IMDG — no es opcional aunque el bulto individual este exento de algunas marcas.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3173,7 +3173,7 @@
     "tarjeta_trello": "AES-33 — Cadena de frio farmaceutica: exportacion veterinaria de corta distancia — la brevedad no exime la cadena de frio",
     "titulo": "Cadena de frio farmaceutica: exportacion veterinaria de corta distancia — la brevedad no exime la cadena de frio",
     "ruta": "España → Marruecos | Carretera | Incoterm DAP Melilla",
-    "que_se_prueba": "Exportacion de producto biologico veterinario por carretera de corta distancia (Algeciras — Tanger Med): la brevedad del trayecto no exime de mantener y documentar la cadena de frio continua, ni de la licencia de exportacion de medicamentos veterinarios de la AEMPS.",
+    "que_se_prueba": "Exportacion de producto biologico veterinario por carretera de corta distancia (Algeciras — Tanger Med): la brevedad del trayecto no exime de mantener y documentar la cadena de frio continua, ni de la licencia de exportacion de medicamentos veterinarios de la AEMPS. Nota impresa en la factura (en inglés): «Exportacion de producto biologico veterinario por carretera de corta distancia (Algeciras — Tanger Med): la brevedad del trayecto no exime de mantener y documentar la cadena de frio continua, ni de la licencia de exportacion de medicamentos veterinarios de la AEMPS.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3189,7 +3189,7 @@
     "tarjeta_trello": "AES-34 — Cadena de frio farmaceutica: contenedor activo certificado (tipo Envirotainer) vs. anotacion manual en AWB",
     "titulo": "Cadena de frio farmaceutica: contenedor activo certificado (tipo Envirotainer) vs. anotacion manual en AWB",
     "ruta": "España → Colombia | Aereo | Incoterm CPT Barcelona (Zona Franca)",
-    "que_se_prueba": "Exportacion de medicamento biologico termosensible por via aerea: control de temperatura mediante contenedor activo certificado (tipo Envirotainer) con registro propio, no una mera anotacion manual de temperatura en el AWB — el dispositivo certificado es lo que acredita el cumplimiento, no la declaracion del transportista.",
+    "que_se_prueba": "Exportacion de medicamento biologico termosensible por via aerea: control de temperatura mediante contenedor activo certificado (tipo Envirotainer) con registro propio, no una mera anotacion manual de temperatura en el AWB — el dispositivo certificado es lo que acredita el cumplimiento, no la declaracion del transportista. Nota impresa en la factura (en inglés): «Exportacion de medicamento biologico termosensible por via aerea: control de temperatura mediante contenedor activo certificado (tipo Envirotainer) con registro propio, no una mera anotacion manual de temperatura en el AWB — el dispositivo certificado es lo que acredita el cumplimiento, no la declaracion del transportista.»",
     "documentos": [
       "Factura comercial",
       "Packing list",
@@ -3205,7 +3205,7 @@
     "tarjeta_trello": "AES-35 — Cadena de frio: bioseguridad reforzada del pais de destino para acuicultura espanola",
     "titulo": "Cadena de frio: bioseguridad reforzada del pais de destino para acuicultura espanola",
     "ruta": "España → Australia | Maritimo | Incoterm CIF Paterna (Valencia)",
-    "que_se_prueba": "Exportacion de producto de acuicultura espanola a un pais con bioseguridad de frontera muy estricta: Australia exige un certificado veterinario adicional de ausencia de enfermedades especificas de crustaceos, requisito propio del pais de destino que se suma (no sustituye) al certificado sanitario UE estandar.",
+    "que_se_prueba": "Exportacion de producto de acuicultura espanola a un pais con bioseguridad de frontera muy estricta: Australia exige un certificado veterinario adicional de ausencia de enfermedades especificas de crustaceos, requisito propio del pais de destino que se suma (no sustituye) al certificado sanitario UE estandar. Nota impresa en la factura (en inglés): «Exportacion de producto de acuicultura espanola a un pais con bioseguridad de frontera muy estricta: Australia exige un certificado veterinario adicional de ausencia de enfermedades especificas de crustaceos, requisito propio del pais de destino que se suma (no sustituye) al certificado sanitario UE estandar.»",
     "documentos": [
       "Factura comercial",
       "Packing list",

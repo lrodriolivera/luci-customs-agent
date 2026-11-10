@@ -3,24 +3,24 @@ CASO H1-43 — Exportador extracomunitario sin NIF español vs. importador con N
 
 Operacion: IMPORTACION (H1)
 Modo de transporte: Maritimo
-Origen mercancia: Argentina (Buenos Aires)
+Origen mercancia: Argentina (General Pico)
 Destino: Espana
-Incoterm: FOB Buenos Aires
+Incoterm: FOB General Pico
 Moneda: USD
 
 VENDEDOR/EXPORTADOR:
-    Pampa Cueros y Marroquineria S.A.
-    Av. Corrientes 2340, Piso 4
-    C1046AAQ Buenos Aires
+    Pampa Apicola Exportadora S.A.
+    Ruta Nacional 5, Km 340
+    L6360 General Pico
     Argentina
-    Tax ID: 30-71234567-8
+    Tax ID: 30-87654321-0
 
 COMPRADOR/IMPORTADOR:
     Ceutrade Comercio Exterior S.L.
     Calle Real, 45
     51001 Ceuta
     Espana
-    NIF: B-51123456 | EORI: ESB51123456
+    NIF: B-51123453 | EORI: ESB51123453
 
 Factura No.: INV-H1-43-2026-8192011  Fecha: 22/05/2026
 Documento de transporte: MSCU20268192011
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 420221  Cantidad: 1800 PCE  Precio unit.: 22.0 USD
 
 NOTA DEL CASO (que se prueba):
+  El vendedor (exportador extracomunitario) no tiene identificación fiscal española; el comprador (importador) tiene NIF y EORI españoles.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Seller (extra-Community exporter) has no Spanish tax ID; Buyer (importer) holds Spanish NIF and EORI number ES.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

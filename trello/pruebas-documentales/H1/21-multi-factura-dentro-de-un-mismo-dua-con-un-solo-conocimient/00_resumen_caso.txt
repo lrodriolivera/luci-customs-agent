@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Muelle de Poniente s/n, Edif. Lonja
     35008 Las Palmas de Gran Canaria
     Espana
-    NIF: A-35678901 | EORI: ESA35678901
+    NIF: A-35678903 | EORI: ESA35678903
 
 Factura No.: INV-H1-21-2026-6597168  Fecha: 24/03/2026
 Documento de transporte: MSCU20266597168
@@ -32,6 +32,8 @@ MERCANCIAS:
     HS: 620342  Cantidad: 4000 PCE  Precio unit.: 9.4 USD
 
 NOTA DEL CASO (que se prueba):
+  Envío multifactura: esta es la factura 1 de 2 amparadas por un único conocimiento de embarque consolidado (ver la factura compañera para la línea 2).
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Multi-invoice shipment: this is INVOICE 1 of 2 covering a single consolidated Bill of Lading (see companion invoice for line 2).
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

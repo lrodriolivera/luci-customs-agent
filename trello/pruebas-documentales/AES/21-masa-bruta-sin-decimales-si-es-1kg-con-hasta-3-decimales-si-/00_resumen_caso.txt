@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Avda. de la Innovacion, 3
     41703 Dos Hermanas (Sevilla)
     Espana
-    NIF: B-41678912 | EORI: ESB41678912
+    NIF: B-41678913 | EORI: ESB41678913
 
 COMPRADOR/IMPORTADOR:
     Lahore Surgical Instruments Ltd.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 901839  Cantidad: 3200 PCE  Precio unit.: 4.9 USD
 
 NOTA DEL CASO (que se prueba):
+  Masa bruta sin decimales en las líneas de 1 kg o más y con hasta 3 decimales en las de menos de 1 kg: ver las cifras exactas en el packing list.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Gross mass declared without decimals (≥1kg lines) and with up to 3 decimals for sub-1kg lines — see packing list for exact figures.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

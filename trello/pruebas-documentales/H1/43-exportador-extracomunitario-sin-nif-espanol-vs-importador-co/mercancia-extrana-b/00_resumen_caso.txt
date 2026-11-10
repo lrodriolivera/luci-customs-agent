@@ -9,18 +9,18 @@ Incoterm: FOB Buenos Aires
 Moneda: USD
 
 VENDEDOR/EXPORTADOR:
-    Pampa Cueros y Marroquineria S.A.
-    Av. Corrientes 2340, Piso 4
-    C1046AAQ Buenos Aires
+    Patagonia BioFarma Import S.A.
+    Av. Rivadavia 3200, Piso 6
+    C1203AAM Buenos Aires
     Argentina
-    Tax ID: 30-71234567-8
+    Tax ID: 30-98765432-1
 
 COMPRADOR/IMPORTADOR:
     Cantabrica Import S.A.
     Poligono Guarnizo, Parcela 14
     39611 Guarnizo (Cantabria)
     Espana
-    NIF: A-39456782 | EORI: ESA39456782
+    NIF: A-39456785 | EORI: ESA39456785
 
 Factura No.: INV-H1-43-EXTRANA-b-2026-8971916  Fecha: 22/05/2026
 Documento de transporte: MSCU20268971916

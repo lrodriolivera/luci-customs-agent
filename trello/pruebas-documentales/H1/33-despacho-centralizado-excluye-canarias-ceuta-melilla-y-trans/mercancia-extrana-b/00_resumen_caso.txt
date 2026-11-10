@@ -3,24 +3,24 @@ CASO H1-33-EXTRANA-b — Despacho centralizado excluye Canarias, Ceuta, Melilla 
 
 Operacion: IMPORTACION (H1)
 Modo de transporte: Maritimo
-Origen mercancia: Marruecos (Marrakech)
+Origen mercancia: Marruecos (Casablanca)
 Destino: Espana (Ceuta) - fuera del territorio aduanero UE
-Incoterm: FOB Marrakech
+Incoterm: FOB Casablanca
 Moneda: EUR
 
 VENDEDOR/EXPORTADOR:
-    Marrakech Artisanat Export
-    Route de Safi, Km 5
-    40000 Marrakech
+    Atlas Agrumes S.A.R.L.
+    Zone Industrielle Sidi Bernoussi, Lot 34
+    20600 Casablanca
     Marruecos
-    Tax ID: IF40987654
+    Tax ID: IF40123456
 
 COMPRADOR/IMPORTADOR:
     Ibertrade Import-Export S.A.
     Muelle de Poniente s/n, Edif. Lonja
     35008 Ceuta
     Espana (Ceuta) - fuera del territorio aduanero UE
-    NIF: A-35678901 | EORI: ESA35678901
+    NIF: A-35678903 | EORI: ESA35678903
 
 Factura No.: INV-H1-33-EXTRANA-b-2026-8006367  Fecha: 12/05/2026
 Documento de transporte: MSCU20268006367

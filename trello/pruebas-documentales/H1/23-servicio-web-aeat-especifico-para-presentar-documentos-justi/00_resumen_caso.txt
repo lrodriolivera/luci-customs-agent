@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono El Pilar, Nave 8
     50197 Zaragoza
     Espana
-    NIF: A-50123890 | EORI: ESA50123890
+    NIF: A-50123892 | EORI: ESA50123892
 
 Factura No.: INV-H1-23-2026-3799830  Fecha: 26/05/2026
 Documento de transporte: MSCU20263799830
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 940540  Cantidad: 5200 PCE  Precio unit.: 11.4 USD
 
 NOTA DEL CASO (que se prueba):
+  Los documentos justificativos (certificados de ensayo) se presentan por el servicio web específico de la AEAT DESPUÉS de concedido el levante.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Supporting documents (test certificates) to be submitted via the dedicated AEAT web service AFTER release (levante) has been granted.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

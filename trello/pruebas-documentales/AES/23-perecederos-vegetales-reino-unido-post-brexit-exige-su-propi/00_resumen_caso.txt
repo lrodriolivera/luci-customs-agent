@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Ctra. Nacional 401, Km 12
     13004 Ciudad Real
     Espana
-    NIF: B-13456789 | EORI: ESB13456789
+    NIF: B-13456785 | EORI: ESB13456785
 
 COMPRADOR/IMPORTADOR:
     Thames Valley Precision Ltd.
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 080510  Cantidad: 18000 KGM  Precio unit.: 0.72 EUR
 
 NOTA DEL CASO (que se prueba):
+  Desde el Brexit, Reino Unido exige su propio 'Plant Health Certificate' britanico para importar citricos espanoles — Sanidad Vegetal emite este certificado bajo el modelo GB especifico, distinto del modelo IPPC interno de la UE. Doble anotacion de temperatura de transito en el CMR del remolque reefer, salida via Eurotunnel Calais-Folkestone.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Desde el Brexit, Reino Unido exige su propio 'Plant Health Certificate' britanico para importar citricos espanoles — Sanidad Vegetal emite este certificado bajo el modelo GB especifico, distinto del modelo IPPC interno de la UE. Doble anotacion de temperatura de transito en el CMR del remolque reefer, salida via Eurotunnel Calais-Folkestone.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

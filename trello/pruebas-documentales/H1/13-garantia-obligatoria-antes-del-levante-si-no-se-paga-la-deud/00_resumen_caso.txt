@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Calle Real, 45
     51001 Ceuta
     Espana
-    NIF: B-51123456 | EORI: ESB51123456
+    NIF: B-51123453 | EORI: ESB51123453
 
 Factura No.: INV-H1-13-2026-6478636  Fecha: 16/05/2026
 Documento de transporte: MSCU20266478636
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 690723  Cantidad: 5200 MTK  Precio unit.: 6.8 USD
 
 NOTA DEL CASO (que se prueba):
+  La deuda aduanera no está pagada en el despacho: hace falta garantía (CGU) antes del levante.
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Customs debt not settled at time of clearance — guarantee (CGU) required before release (levante).
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

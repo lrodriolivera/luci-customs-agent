@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Avda. de la Innovacion, 3
     41703 Dos Hermanas (Sevilla)
     Espana
-    NIF: B-41678912 | EORI: ESB41678912
+    NIF: B-41678913 | EORI: ESB41678913
 
 Factura No.: INV-H1-34-2026-8112880  Fecha: 13/06/2026
 Documento de transporte: MSCU20268112880
@@ -30,6 +30,8 @@ MERCANCIAS:
     HS: 520911  Cantidad: 9800 KGM  Precio unit.: 2.05 USD
 
 NOTA DEL CASO (que se prueba):
+  Régimen 42 (despacho a libre práctica con entrega intracomunitaria posterior): no aplica la inscripción en registros del declarante (IRD).
+  Nota impresa en la factura (en ingles, tal como la emite el proveedor):
   Regime 42 declared (release for free circulation with subsequent intra-EU supply) — declarant registration (IRD) not applicable.
 
 DOCUMENTOS GENERADOS EN ESTA CARPETA:

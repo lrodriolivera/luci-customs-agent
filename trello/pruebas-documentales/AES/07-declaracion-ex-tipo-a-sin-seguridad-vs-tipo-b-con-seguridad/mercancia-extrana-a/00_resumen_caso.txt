@@ -13,7 +13,7 @@ VENDEDOR/EXPORTADOR:
     Poligono Son Castello, Calle Gremi de Fusters 22
     07009 Palma de Mallorca
     Espana
-    NIF: B-07234561 | EORI: ESB07234561
+    NIF: B-07234560 | EORI: ESB07234560
 
 COMPRADOR/IMPORTADOR:
     Great Lakes Industrial Equipment Inc.

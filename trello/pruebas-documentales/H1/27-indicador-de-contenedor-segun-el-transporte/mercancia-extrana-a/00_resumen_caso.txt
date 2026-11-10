@@ -20,7 +20,7 @@ COMPRADOR/IMPORTADOR:
     Poligono El Pilar, Nave 8
     50197 Zaragoza
     Espana
-    NIF: A-50123890 | EORI: ESA50123890
+    NIF: A-50123892 | EORI: ESA50123892
 
 Factura No.: INV-H1-27-EXTRANA-a-2026-8803642  Fecha: 06/09/2026
 Documento de transporte: CMR-20268803642
