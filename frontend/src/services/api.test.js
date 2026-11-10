@@ -515,16 +515,17 @@ describe('api.js — documentsAPI', () => {
   it('documentsAPI.upload llama a POST con multipart/form-data', async () => {
     const api = await import('./api.js')
 
-    const formData = new FormData()
-    formData.append('file', new Blob(['test']), 'test.pdf')
+    const file = new File(['test'], 'factura.pdf', { type: 'application/pdf' })
 
-    await api.documentsAPI.upload('exp123', formData)
+    await api.documentsAPI.upload('exp123', file, 'commercial_invoice')
 
-    expect(mockApi.post).toHaveBeenCalledWith(
-      '/api/expeditions/exp123/documents',
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
-    )
+    // /api/expeditions/:id/documents no existe en el backend.
+    const [url, formData, config] = mockApi.post.mock.calls.at(-1)
+    expect(url).toBe('/api/documents/upload')
+    expect(formData.get('expeditionId')).toBe('exp123')
+    expect(formData.get('documentType')).toBe('commercial_invoice')
+    expect(formData.get('file').name).toBe('factura.pdf')
+    expect(config).toEqual({ headers: { 'Content-Type': 'multipart/form-data' }, timeout: 120000 })
   })
 
   it('documentsAPI.validate llama a POST /api/documents/:docId/validate', async () => {
