@@ -96,6 +96,16 @@ describe('extraccionDocumento', () => {
       expect(normalizarExtraccion({ partidas: [{ tipoBulto: 'Pallets' }, { tipoBulto: 'cosas' }] }).partidas.map(p => p.tipoBulto)).toEqual(['PX', null]);
     });
 
+    test('del contenedor se guarda solo la matricula ISO, sin el tipo ni el precinto', () => {
+      // Lectura real de un Excel: «TGHU8842217 (40HC, FCL/FCL)» llegaba como «TGHU8842217(40HC)».
+      const cont = (lista) => normalizarExtraccion({ transporte: { contenedores: lista } }).transporte.contenedores;
+
+      expect(cont(['TGHU8842217 (40HC)', 'tghu 884221-7', 'Container MSCU1150584 / seal 99'])).toEqual(['TGHU8842217', 'TGHU8842217', 'MSCU1150584']);
+      // Si no hay una matricula valida se conserva lo leido, para que el agente lo vea.
+      expect(cont(['MSCU1150584400'])).toEqual(['MSCU1150584400']);
+      expect(cont([null, '', 'N/A'])).toEqual([]);
+    });
+
     test('numeros negativos, textos y objetos donde va un dato quedan en null', () => {
       const d = normalizarExtraccion({ partidas: [{ bultos: -3, pesoBrutoKg: 'mucho', descripcion: { x: 1 }, importe: '1500.50' }], factura: { numero: 'N/A' } });
 
@@ -117,7 +127,7 @@ describe('extraccionDocumento', () => {
 
       expect(claves(cambios)).toEqual([
         'goods.0.originCountry', 'goods.0.currency', 'incoterm.code', 'incoterm.place',
-        'exporter.companyName', 'exporter.country', 'exporter.address.city'
+        'exporter.companyName', 'exporter.country', 'exporter.city'
       ]);
       expect(cambios.find(c => c.clave === 'incoterm.code')).toMatchObject({ actual: 'CIF', nuevo: 'FOB', grupo: 'condiciones' });
       expect(cambios.find(c => c.clave === 'goods.0.originCountry')).toMatchObject({ actual: null, nuevo: 'CN', partida: 1 });
@@ -183,7 +193,7 @@ describe('extraccionDocumento', () => {
       const exp = expediente({
         goods: [{ taricCode: '8471300000', originCountry: 'cn', currency: 'usd', invoiceValue: '184800', packages: {} }],
         incoterm: { code: 'fob', place: 'SHANGHAI' },
-        exporter: { companyName: 'shanghai hongtai import & export co., ltd.', country: 'CN', address: { city: 'Shanghai' } }
+        exporter: { companyName: 'shanghai hongtai import & export co., ltd.', country: 'CN', city: 'Shanghai' }
       });
 
       expect(proponerCambios(exp, normalizarExtraccion(LECTURA_FACTURA), 'commercial_invoice')).toEqual([]);

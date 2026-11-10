@@ -184,6 +184,56 @@ describe('applyExtraction', () => {
     expect(guardado.timeline.some(t => t.action === 'document_data_applied')).toBe(true);
   });
 
+  test('los datos del exportador se guardan en los campos reales del expediente', async () => {
+    // Fallo visto en produccion el 10/Nov/2026: la ciudad se escribia en
+    // `exporter.address.city`, que no existe (la direccion del exportador es
+    // un texto). Mongoose lo descartaba y aun asi se anunciaba como aplicada.
+    aiService.extractDocumentData.mockResolvedValue({
+      ...normalizarExtraccion({ legible: true, confianza: 90, exportador: { nombre: 'Shanghai Hongtai Ltd', ciudad: 'Shanghai', pais: 'CN' } }),
+      leido: true
+    });
+    const user = usuario();
+    const { exp, docId } = await leer(user, { exporter: { companyName: 'Otro nombre', country: 'CN' } });
+    const res = crearRes();
+
+    await ctrl.applyExtraction({ params: { expeditionId: exp._id, docId }, user, body: { fields: ['exporter.city', 'exporter.companyName'] } }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.applied.map(c => c.clave)).toEqual(['exporter.companyName', 'exporter.city']);
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.exporter.city).toBe('Shanghai');
+    expect(guardado.exporter.companyName).toBe('Shanghai Hongtai Ltd');
+    // Una vez aplicada deja de proponerse.
+    expect(res.body.data.proposal.map(c => c.clave)).not.toContain('exporter.city');
+  });
+
+  test('todas las claves que puede proponer existen en el esquema del expediente', async () => {
+    // Guardia: un campo mal mapeado se descartaria en silencio al guardar.
+    const lecturaCompleta = normalizarExtraccion({
+      legible: true, confianza: 90,
+      exportador: { nombre: 'X Ltd', ciudad: 'Shanghai', pais: 'CN' },
+      factura: { moneda: 'USD', incoterm: 'FOB', lugarIncoterm: 'Shanghai' },
+      transporte: { numeroDocumento: 'BL-1', medio: 'MSC OSCAR', puertoCarga: 'Shanghai', puertoDescarga: 'Valencia', contenedores: ['MSCU1150584'], tipoCarga: 'LCL' },
+      partidas: [{ codigoMercancia: '8471300000', paisOrigen: 'VN', bultos: 7, tipoBulto: 'PLT', pesoBrutoKg: 70, pesoNetoKg: 60, importe: 999 }],
+      totales: { bultos: 7, pesoBrutoKg: 70, pesoNetoKg: 60 }
+    });
+    aiService.extractDocumentData.mockResolvedValue({ ...lecturaCompleta, leido: true });
+    const user = usuario();
+    const { exp, docId } = await leer(user, {
+      goods: [{ itemNumber: 1, description: 'Portatiles', quantity: 1, invoiceValue: 1 }],
+      documents: [{ type: 'bill_of_lading', fileName: 'a.pdf', originalName: 'bl.pdf', filePath: '/tmp/a.pdf', mimeType: 'application/pdf', uploadedBy: user._id }]
+    });
+    const propuesta = (await (async () => { const r = crearRes(); await ctrl.getProposal({ params: { expeditionId: exp._id, docId }, user }, r); return r.body.data.proposal; })());
+    const res = crearRes();
+
+    await ctrl.applyExtraction({ params: { expeditionId: exp._id, docId }, user, body: { fields: propuesta.map(c => c.clave) } }, res);
+
+    expect(propuesta.length).toBeGreaterThanOrEqual(18);
+    expect(res.body.data.applied.map(c => c.clave).sort()).toEqual(propuesta.map(c => c.clave).sort());
+    // Todo quedo escrito: no queda nada por proponer.
+    expect(res.body.data.proposal).toEqual([]);
+  });
+
   test('una clave ajena a la propuesta no modifica el expediente', async () => {
     const user = usuario();
     const { exp, docId } = await leer(user);
