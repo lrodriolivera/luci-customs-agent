@@ -55,10 +55,29 @@ export const transporteVacio = () => ({
 
 const vacio = (v) => v === '' || v === null || v === undefined
 const esNumero = (v) => !vacio(v) && Number.isFinite(Number(String(v).replace(',', '.')))
+// Palabras de un texto sin tildes, signos ni mayusculas: «S.L.», «nº 12» y
+// «Polígono» se escriben distinto en cada documento y son el mismo dato.
+const palabras = (v) => String(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase()
+  .replace(/[^A-Z0-9]+/g, ' ').trim().split(' ').filter(Boolean)
+
 const iguales = (a, b) => {
   if (esNumero(a) && esNumero(b)) return Number(String(a).replace(',', '.')) === Number(String(b).replace(',', '.'))
-  return String(a).trim().toUpperCase() === String(b).trim().toUpperCase()
+  return palabras(a).join('') === palabras(b).join('')
 }
+
+// Direcciones y ciudades: un documento trae el codigo postal y otro no
+// («Paterna (Valencia)» / «Paterna (Valencia), 46988»). Es el mismo sitio
+// salvo que los dos traigan codigo postal y no coincida.
+const CAMPOS_DE_LUGAR = ['clientAddress', 'clientCity', 'counterpartAddress', 'counterpartCity']
+const esCodigoPostal = (palabra) => /^\d{5,6}$/.test(palabra)
+const mismoLugar = (a, b) => {
+  const [pa, pb] = [palabras(a), palabras(b)]
+  const [cpA, cpB] = [pa.filter(esCodigoPostal), pb.filter(esCodigoPostal)]
+  if (cpA.length > 0 && cpB.length > 0 && cpA.join(' ') !== cpB.join(' ')) return false
+  const sinPostal = (lista) => lista.filter((p) => !esCodigoPostal(p)).join('')
+  return sinPostal(pa) !== '' && sinPostal(pa) === sinPostal(pb)
+}
+const coinciden = (campo, a, b) => iguales(a, b) || (CAMPOS_DE_LUGAR.includes(campo) && mismoLugar(a, b))
 
 // El importe se teclea a la española: coma decimal y sin separador de millares.
 const importeParaFormulario = (n) => String(n).replace('.', ',')
@@ -126,7 +145,7 @@ export function prerrellenarAlta(formData, extraccion, { tipoDocumento, fijados 
       rellenados.push({ campo, valor: nuevo, clave, ...(partida ? { partida } : {}) })
       return
     }
-    if (!sinAviso && !iguales(actual, nuevo)) avisos.push({ campo, valor: nuevo, actual, ...(partida ? { partida } : {}) })
+    if (!sinAviso && !coinciden(campo, actual, nuevo)) avisos.push({ campo, valor: nuevo, actual, ...(partida ? { partida } : {}) })
   }
 
   // ---- Partes -----------------------------------------------------------------
