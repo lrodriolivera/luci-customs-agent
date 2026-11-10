@@ -49,7 +49,7 @@ jest.mock('../../src/services/forms/h1Generator', () => ({
 jest.mock('../../src/services/forms/aesGenerator', () => ({ generate: jest.fn() }));
 jest.mock('../../src/services/forms/h7Generator', () => ({ isEligibleForH7: jest.fn(), generate: jest.fn() }));
 jest.mock('../../src/services/aeat/aeatSubmitService', () => ({
-  submitH1: jest.fn(), submitAES: jest.fn(), cancelH1: jest.fn()
+  submitH1: jest.fn(), submitAES: jest.fn(), cancelH1: jest.fn(), consultarSumaria: jest.fn()
 }));
 jest.mock('../../src/services/channelService', () => ({ processChannelAssignment: jest.fn() }));
 jest.mock('../../src/services/emailService', () => ({
@@ -565,7 +565,8 @@ describe('cancelDeclaration', () => {
 
 /**
  * Grupaje maritimo (LCL), UAT 10/Nov/2026: el H1 no puede apoyarse en la
- * declaracion sumaria del contenedor completo. Ver services/forms/grupajeLcl.js.
+ * declaracion sumaria del contenedor completo. La sumaria se consulta en la
+ * AEAT (DSDTCons); ver services/forms/grupajeLcl.js.
  */
 describe('grupaje maritimo (LCL)', () => {
   const partida = [{
@@ -573,8 +574,27 @@ describe('grupaje maritimo (LCL)', () => {
     grossWeight: 1050, netWeight: 980, packages: { quantity: 12, type: 'CT' }
   }];
   const borrador = { type: 'H1', status: 'draft', xmlContent: '<H1/>', lrn: 'LRN-1' };
+  const sumaria = { number: '46116000123', item: '3', packages: 12, grossWeight: 1050 };
 
-  test('generateH1Direct: sin la sumaria de la desconsolidacion responde 422 y no genera el H1', async () => {
+  // Respuesta ya interpretada del servicio DSDTCons de la AEAT.
+  const respuestaAeat = (parcial = {}) => ({
+    aceptada: true, noEncontrada: false, entorno: 'PRE.AEAT', errores: [],
+    dsdt: {
+      mrn: '26ES00461180001234', clave: '46116000123', recinto: '4611', activada: true,
+      partidas: [{
+        partida: 3, estado: 'AC', estadoDescripcion: 'Activa', esMaster: false,
+        bultosDeclarados: 12, pesoBrutoDeclarado: 1050, bultosSaldo: 12, pesoBrutoSaldo: 1050,
+        conocimiento: 'BL-1', ubicaciones: [{ ubicacion: '4611ADT001' }], contenedores: [],
+        ...parcial
+      }]
+    }
+  });
+
+  beforeEach(() => {
+    aeatSubmitService.consultarSumaria.mockResolvedValue(respuestaAeat());
+  });
+
+  test('generateH1Direct: sin la sumaria de la desconsolidacion responde 422, sin consultar ni generar', async () => {
     const user = usuario();
     const exp = await expedienteImportacion(user, { goods: partida, transport: { loadType: 'LCL' } });
     const res = crearRes();
@@ -584,15 +604,17 @@ describe('grupaje maritimo (LCL)', () => {
     expect(res.statusCode).toBe(422);
     expect(res.body.code).toBe('GRUPAJE_SUMARIA');
     expect(res.body.error).toMatch(/falta la declaracion sumaria de la desconsolidacion/);
+    expect(aeatSubmitService.consultarSumaria).not.toHaveBeenCalled();
     expect(h1Generator.generate).not.toHaveBeenCalled();
   });
 
-  test('submitDeclaration: con la sumaria del contenedor completo responde 422 y no llama a la AEAT', async () => {
+  test('submitDeclaration: la AEAT dice que la partida es master (contenedor) -> 422 y no se presenta', async () => {
+    aeatSubmitService.consultarSumaria.mockResolvedValue(respuestaAeat({
+      estado: 'MA', estadoDescripcion: 'Máster activo', esMaster: true, bultosDeclarados: 820, pesoBrutoDeclarado: 14200
+    }));
     const user = usuario();
     const exp = await expedienteImportacion(user, {
-      goods: partida,
-      declaration: borrador,
-      transport: { loadType: 'LCL', summaryDeclaration: { number: 'S-CONTENEDOR', packages: 820, grossWeight: 14200 } }
+      goods: partida, declaration: borrador, transport: { loadType: 'LCL', summaryDeclaration: sumaria }
     });
     const res = crearRes();
 
@@ -600,17 +622,38 @@ describe('grupaje maritimo (LCL)', () => {
 
     expect(res.statusCode).toBe(422);
     expect(res.body.code).toBe('GRUPAJE_SUMARIA');
-    expect(res.body.error).toMatch(/820 bultos y 14200 kg/);
+    expect(res.body.error).toMatch(/partida master \(Máster activo\)/);
+    expect(aeatSubmitService.consultarSumaria).toHaveBeenCalledWith(
+      expect.anything(), { clave: '46116000123', partida: '3' }, expect.anything()
+    );
     expect(aeatSubmitService.submitH1).not.toHaveBeenCalled();
-    expect((await Expedition.findById(exp._id)).declaration.status).toBe('draft');
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.declaration.status).toBe('draft');
+    // Lo que respondio la AEAT queda en el expediente aunque se bloquee.
+    expect(guardado.transport.summaryDeclaration.aeat).toMatchObject({
+      verified: true, isMaster: true, itemStatus: 'MA', packages: 820, environment: 'PRE.AEAT'
+    });
   });
 
-  test('submitDeclaration: con la sumaria de nuestros bultos y kilos se presenta', async () => {
+  test('submitDeclaration: los bultos de la AEAT no son los del expediente -> 422 con las dos cifras', async () => {
+    aeatSubmitService.consultarSumaria.mockResolvedValue(respuestaAeat({ bultosDeclarados: 40, pesoBrutoDeclarado: 3500 }));
     const user = usuario();
     const exp = await expedienteImportacion(user, {
-      goods: partida,
-      declaration: borrador,
-      transport: { loadType: 'LCL', summaryDeclaration: { number: 'S-PARTIDA', item: '3', packages: 12, grossWeight: 1050 } }
+      goods: partida, declaration: borrador, transport: { loadType: 'LCL', summaryDeclaration: sumaria }
+    });
+    const res = crearRes();
+
+    await ctrl.submitDeclaration({ params: { expeditionId: exp._id }, user }, res);
+
+    expect(res.statusCode).toBe(422);
+    expect(res.body.error).toMatch(/en la AEAT figura con 40 bultos y 3500 kg, y el expediente declara 12 bultos y 1050 kg/);
+    expect(aeatSubmitService.submitH1).not.toHaveBeenCalled();
+  });
+
+  test('submitDeclaration: la AEAT confirma la partida desconsolidada con nuestros bultos y kilos -> se presenta', async () => {
+    const user = usuario();
+    const exp = await expedienteImportacion(user, {
+      goods: partida, declaration: borrador, transport: { loadType: 'LCL', summaryDeclaration: sumaria }
     });
     const res = crearRes();
 
@@ -618,9 +661,28 @@ describe('grupaje maritimo (LCL)', () => {
 
     expect(res.statusCode).toBe(200);
     expect(aeatSubmitService.submitH1).toHaveBeenCalled();
+    expect((await Expedition.findById(exp._id)).transport.summaryDeclaration.aeat).toMatchObject({
+      verified: true, isMaster: false, clave: '46116000123', billOfLading: 'BL-1', location: '4611ADT001'
+    });
   });
 
-  test('un contenedor completo (FCL) se presenta sin sumaria registrada', async () => {
+  test('submitDeclaration: si la AEAT no responde se contrasta a mano y queda como no verificada', async () => {
+    aeatSubmitService.consultarSumaria.mockRejectedValue(new Error('socket hang up'));
+    const user = usuario();
+    const exp = await expedienteImportacion(user, {
+      goods: partida, declaration: borrador, transport: { loadType: 'LCL', summaryDeclaration: sumaria }
+    });
+    const res = crearRes();
+
+    await ctrl.submitDeclaration({ params: { expeditionId: exp._id }, user }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect((await Expedition.findById(exp._id)).transport.summaryDeclaration.aeat).toMatchObject({
+      verified: false, error: 'socket hang up'
+    });
+  });
+
+  test('un contenedor completo (FCL) sin sumaria se presenta sin consultar a la AEAT', async () => {
     const user = usuario();
     const exp = await expedienteImportacion(user, { goods: partida, declaration: borrador, transport: { loadType: 'FCL' } });
     const res = crearRes();
@@ -628,5 +690,34 @@ describe('grupaje maritimo (LCL)', () => {
     await ctrl.submitDeclaration({ params: { expeditionId: exp._id }, user }, res);
 
     expect(res.statusCode).toBe(200);
+    expect(aeatSubmitService.consultarSumaria).not.toHaveBeenCalled();
+  });
+
+  test('verifySummaryDeclaration: devuelve el resultado de la AEAT sin generar ni presentar', async () => {
+    const user = usuario();
+    const exp = await expedienteImportacion(user, {
+      goods: partida, transport: { loadType: 'LCL', summaryDeclaration: sumaria }
+    });
+    const res = crearRes();
+
+    await ctrl.verifySummaryDeclaration({ params: { expeditionId: exp._id }, user }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data).toMatchObject({ blocked: false, reason: null });
+    expect(res.body.data.aeat).toMatchObject({ verified: true, packages: 12, itemStatus: 'AC' });
+    expect(aeatSubmitService.submitH1).not.toHaveBeenCalled();
+  });
+
+  test('verifySummaryDeclaration: sin sumaria registrada responde 400; de otro tenant, 404', async () => {
+    const user = usuario();
+    const exp = await expedienteImportacion(user, { goods: partida, transport: { loadType: 'LCL' } });
+    const sin = crearRes();
+    await ctrl.verifySummaryDeclaration({ params: { expeditionId: exp._id }, user }, sin);
+    expect(sin.statusCode).toBe(400);
+
+    const ajeno = crearRes();
+    await ctrl.verifySummaryDeclaration({ params: { expeditionId: exp._id }, user: usuario() }, ajeno);
+    expect(ajeno.statusCode).toBe(404);
+    expect(aeatSubmitService.consultarSumaria).not.toHaveBeenCalled();
   });
 });

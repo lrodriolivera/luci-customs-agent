@@ -129,3 +129,150 @@ describe('grupajeLcl', () => {
     });
   });
 });
+
+/**
+ * Contraste con la AEAT (servicio DSDTCons): aqui mandan los datos de la AEAT,
+ * no lo que teclea el agente.
+ */
+describe('grupajeLcl — consulta de la sumaria en la AEAT', () => {
+  const { verificarSumariaConAeat } = require('../../src/services/forms/grupajeLcl');
+
+  const lcl = (sumaria, resumen = { totalPackages: 12, totalGrossWeight: 1050.5 }) => ({
+    expeditionId: 'EXP-2026-LCL',
+    goodsSummary: resumen,
+    transport: { loadType: 'LCL', summaryDeclaration: sumaria }
+  });
+  const sumaria = { number: '46116000123', item: '3', packages: 12, grossWeight: 1050.5 };
+
+  const respuesta = (partida = {}, cabecera = {}) => ({
+    aceptada: true, noEncontrada: false, entorno: 'ES.AEAT', errores: [],
+    dsdt: {
+      mrn: '26ES00461180001234', clave: '46116000123', activada: true, ...cabecera,
+      partidas: [{
+        partida: 3, estado: 'AC', estadoDescripcion: 'Activa', esMaster: false,
+        bultosDeclarados: 12, pesoBrutoDeclarado: 1050.5, bultosSaldo: 12, pesoBrutoSaldo: 1050.5,
+        conocimiento: 'BL-1', ubicaciones: [{ ubicacion: '4611ADT001' }], contenedores: [], ...partida
+      }]
+    }
+  });
+  const consultar = (r) => jest.fn().mockResolvedValue(r);
+
+  test('consulta por clave y partida, y deja seguir si la AEAT confirma la partida', async () => {
+    const fn = consultar(respuesta());
+
+    const r = await verificarSumariaConAeat(lcl(sumaria), { consultar: fn });
+
+    expect(fn).toHaveBeenCalledWith({ clave: '46116000123', partida: '3' });
+    expect(r.bloqueo).toBeNull();
+    expect(r.consulta).toMatchObject({
+      verified: true, environment: 'ES.AEAT', clave: '46116000123', itemStatus: 'AC', isMaster: false,
+      packages: 12, grossWeight: 1050.5, packagesBalance: 12, billOfLading: 'BL-1', location: '4611ADT001'
+    });
+  });
+
+  test('una partida master bloquea aunque el agente haya tecleado nuestros bultos y kilos', async () => {
+    const r = await verificarSumariaConAeat(lcl(sumaria), {
+      consultar: consultar(respuesta({ estado: 'MD', estadoDescripcion: 'Máster desconsolidado', esMaster: true, bultosDeclarados: 820, pesoBrutoDeclarado: 14200, bultosSaldo: null }))
+    });
+
+    expect(r.bloqueo).toContain('es una partida master (Máster desconsolidado)');
+    expect(r.bloqueo).toContain('Hace falta la partida de la desconsolidacion');
+    expect(r.consulta.isMaster).toBe(true);
+  });
+
+  test('los bultos y kilos que valen son los de la AEAT, no los tecleados', async () => {
+    const r = await verificarSumariaConAeat(lcl(sumaria), {
+      consultar: consultar(respuesta({ bultosDeclarados: 40, pesoBrutoDeclarado: 3500 }))
+    });
+
+    expect(r.bloqueo).toContain('en la AEAT figura con 40 bultos y 3500 kg, y el expediente declara 12 bultos y 1050.5 kg');
+  });
+
+  test('sumaria no activada: el medio de transporte no ha llegado', async () => {
+    const r = await verificarSumariaConAeat(lcl(sumaria), { consultar: consultar(respuesta({}, { activada: false })) });
+    expect(r.bloqueo).toContain('todavia no esta activada en la AEAT');
+  });
+
+  test('partida retenida o saldada no admite el H1', async () => {
+    const retenida = await verificarSumariaConAeat(lcl(sumaria), { consultar: consultar(respuesta({ estado: 'RE', estadoDescripcion: 'Retenida' })) });
+    const saldada = await verificarSumariaConAeat(lcl(sumaria), { consultar: consultar(respuesta({ estado: 'SA', estadoDescripcion: 'Saldada' })) });
+
+    expect(retenida.bloqueo).toContain('esta retenida en la AEAT');
+    expect(saldada.bloqueo).toContain('esta saldada en la AEAT');
+  });
+
+  test('saldo de bultos insuficiente', async () => {
+    const r = await verificarSumariaConAeat(lcl(sumaria), { consultar: consultar(respuesta({ bultosSaldo: 5 })) });
+    expect(r.bloqueo).toContain('solo tiene 5 bultos de saldo en la AEAT y el expediente declara 12');
+  });
+
+  test('la AEAT no encuentra la partida: bloquea con su mensaje', async () => {
+    const r = await verificarSumariaConAeat(lcl(sumaria), {
+      consultar: consultar({ aceptada: false, noEncontrada: true, entorno: 'PRE.AEAT', errores: [{ codigo: '403', descripcion: 'Partida de DSDT no encontrada' }], dsdt: null })
+    });
+
+    expect(r.bloqueo).toContain('la AEAT no encuentra la partida 3 de la declaracion sumaria 46116000123');
+    expect(r.consulta).toMatchObject({ verified: true, environment: 'PRE.AEAT', error: 'Partida de DSDT no encontrada' });
+  });
+
+  test('si la AEAT no responde se contrasta a mano y se avisa de que no se pudo verificar', async () => {
+    const caida = { consultar: jest.fn().mockRejectedValue(new Error('ECONNRESET')) };
+
+    const cuadra = await verificarSumariaConAeat(lcl(sumaria), caida);
+    const noCuadra = await verificarSumariaConAeat(lcl({ ...sumaria, packages: 820, grossWeight: 14200 }), caida);
+
+    expect(cuadra.bloqueo).toBeNull();
+    expect(cuadra.aviso).toContain('No se pudo comprobar la declaracion sumaria 46116000123 en la AEAT (ECONNRESET)');
+    expect(cuadra.consulta).toMatchObject({ verified: false, error: 'ECONNRESET' });
+    expect(noCuadra.bloqueo).toContain('no corresponde a esta partida');
+  });
+
+  test('un rechazo que no es «no encontrada» (p. ej. el remitente) se trata como no verificable', async () => {
+    const r = await verificarSumariaConAeat(lcl(sumaria), {
+      consultar: consultar({ aceptada: false, noEncontrada: false, entorno: 'PRE.AEAT', errores: [{ codigo: '211', descripcion: 'El remitente no coincide con certificado digital' }], dsdt: null })
+    });
+
+    expect(r.bloqueo).toBeNull();
+    expect(r.aviso).toContain('211 El remitente no coincide con certificado digital');
+    expect(r.consulta.verified).toBe(false);
+  });
+
+  test('una referencia que no es clave ni MRN bloquea el grupaje sin llamar a la AEAT', async () => {
+    const fn = jest.fn();
+
+    const r = await verificarSumariaConAeat(lcl({ ...sumaria, number: 'S-PARTIDA' }), { consultar: fn });
+    const sinPartida = await verificarSumariaConAeat(lcl({ ...sumaria, item: '' }), { consultar: fn });
+
+    expect(r.bloqueo).toContain('debe ser la clave');
+    expect(sinPartida.bloqueo).toContain('con su numero de partida');
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  test('grupaje sin sumaria: bloquea sin consultar', async () => {
+    const fn = jest.fn();
+    const r = await verificarSumariaConAeat(lcl(undefined), { consultar: fn });
+
+    expect(r.bloqueo).toContain('falta la declaracion sumaria de la desconsolidacion');
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  test('fuera del grupaje la consulta informa pero nunca bloquea', async () => {
+    const fcl = { ...lcl(sumaria), transport: { loadType: 'FCL', summaryDeclaration: sumaria } };
+
+    const master = await verificarSumariaConAeat(fcl, { consultar: consultar(respuesta({ estado: 'MA', estadoDescripcion: 'Máster activo', esMaster: true })) });
+    const noEsta = await verificarSumariaConAeat(fcl, { consultar: consultar({ aceptada: false, noEncontrada: true, entorno: 'PRE.AEAT', errores: [{ codigo: '403', descripcion: 'x' }], dsdt: null }) });
+
+    expect(master.bloqueo).toBeNull();
+    expect(master.consulta.isMaster).toBe(true);
+    expect(noEsta.bloqueo).toBeNull();
+    expect(noEsta.aviso).toContain('La AEAT no encuentra la partida 3');
+  });
+
+  test('sin grupaje y sin sumaria no hay nada que comprobar', async () => {
+    const fn = jest.fn();
+    const r = await verificarSumariaConAeat({ transport: {} }, { consultar: fn });
+
+    expect(r).toEqual({ bloqueo: null, aviso: null, consulta: null });
+    expect(fn).not.toHaveBeenCalled();
+  });
+});

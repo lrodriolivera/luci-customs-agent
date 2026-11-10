@@ -3587,6 +3587,17 @@
     "summaryGrossWeight": "Pes brut de la sumària (kg)",
     "expeditionTotals": "L'expedient declara {{packages}} embalums i {{weight}} kg",
     "saved": "Dades de la càrrega desades",
-    "saveError": "No s'han pogut desar les dades de la càrrega"
+    "saveError": "No s'han pogut desar les dades de la càrrega",
+    "summaryNumberHint": "Clau de la sumària (recinte, any i número: 11 dígits) o el seu MRN. Amb ella es consulta a l'AEAT.",
+    "verify": "Consultar a l'AEAT",
+    "verifying": "Consultant...",
+    "verifyError": "No s'ha pogut consultar la declaració sumària",
+    "aeatVerified": "Consultada a l'AEAT",
+    "aeatNotVerified": "No s'ha pogut comprovar a l'AEAT",
+    "aeatItem": "Partida {{status}}: {{packages}} embalums i {{weight}} kg declarats.",
+    "aeatBalance": "Saldo: {{packages}} embalums.",
+    "aeatMaster": "És una partida màster: correspon a la càrrega agrupada, no a aquesta mercaderia.",
+    "aeatBillOfLading": "Coneixement: {{value}}",
+    "aeatLocation": "Ubicació: {{value}}"
   }
 }

@@ -21,10 +21,13 @@ export const isMaritime = (expedition) => MARITIME_MODES.includes(String(expedit
  * @param {{
  *   expedition: object,
  *   isSaving: boolean,
- *   onSave: (transport: { loadType?: string, summaryDeclaration?: object }) => void
+ *   onSave: (transport: { loadType?: string, summaryDeclaration?: object }) => void,
+ *   isVerifying?: boolean,
+ *   onVerify?: () => void,
+ *   verification?: { blocked: boolean, reason: string|null, warning: string|null } | null
  * }} props
  */
-export default function GroupageCard({ expedition, isSaving, onSave }) {
+export default function GroupageCard({ expedition, isSaving, onSave, isVerifying = false, onVerify, verification = null }) {
   const { t } = useTranslation()
   const transport = expedition.transport || {}
   const [loadType, setLoadType] = useState(transport.loadType || '')
@@ -59,6 +62,11 @@ export default function GroupageCard({ expedition, isSaving, onSave }) {
 
   const totals = expedition.goodsSummary || {}
   const isGroupage = loadType === 'LCL'
+  const savedSummary = transport.summaryDeclaration
+  const aeat = savedSummary?.aeat
+  const balance = aeat && aeat.packagesBalance !== null && aeat.packagesBalance !== undefined
+    ? t('groupage.aeatBalance', { packages: aeat.packagesBalance })
+    : ''
 
   return (
     <div className="card">
@@ -88,6 +96,7 @@ export default function GroupageCard({ expedition, isSaving, onSave }) {
               <div className="md:col-span-2">
                 <label className="label" htmlFor="summary-number">{t('groupage.summaryNumber')}</label>
                 <input id="summary-number" type="text" maxLength={40} value={form.number} onChange={handleChange('number')} className="input font-mono" />
+                <p className="mt-1 text-xs text-gray-500">{t('groupage.summaryNumberHint')}</p>
               </div>
               <div>
                 <label className="label" htmlFor="summary-item">{t('groupage.summaryItem')}</label>
@@ -112,12 +121,59 @@ export default function GroupageCard({ expedition, isSaving, onSave }) {
           </>
         )}
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {onVerify && savedSummary?.number && (
+            <button type="button" onClick={onVerify} disabled={isVerifying || isSaving} className="btn-secondary">
+              {isVerifying ? t('groupage.verifying') : t('groupage.verify')}
+            </button>
+          )}
           <button type="submit" disabled={isSaving} className="btn-primary">
             {isSaving ? t('common.saving') : t('common.save')}
           </button>
         </div>
       </form>
+
+      {/* Lo que respondio la AEAT la ultima vez que se consulto esta partida. */}
+      {aeat && (
+        <div
+          role="status"
+          className={`mt-4 p-3 rounded-lg border text-sm ${
+            aeat.verified && !aeat.error && !aeat.isMaster
+              ? 'bg-green-50 border-green-200 text-green-900'
+              : 'bg-amber-50 border-amber-200 text-amber-900'
+          }`}
+        >
+          <p className="font-medium">
+            {aeat.verified ? t('groupage.aeatVerified') : t('groupage.aeatNotVerified')}
+            {aeat.environment ? ` (${aeat.environment})` : ''}
+          </p>
+          {aeat.error && <p className="mt-1">{aeat.error}</p>}
+          {aeat.itemStatus && (
+            <p className="mt-1">
+              {t('groupage.aeatItem', {
+                status: aeat.itemStatusText || aeat.itemStatus,
+                packages: aeat.packages ?? '—',
+                weight: aeat.grossWeight ?? '—'
+              })}
+              {balance ? ` ${balance}` : ''}
+            </p>
+          )}
+          {aeat.isMaster && <p className="mt-1 font-medium">{t('groupage.aeatMaster')}</p>}
+          {(aeat.billOfLading || aeat.location) && (
+            <p className="mt-1">
+              {[aeat.billOfLading && t('groupage.aeatBillOfLading', { value: aeat.billOfLading }),
+                aeat.location && t('groupage.aeatLocation', { value: aeat.location })].filter(Boolean).join(' · ')}
+            </p>
+          )}
+        </div>
+      )}
+
+      {verification?.reason && (
+        <p role="alert" className="mt-3 p-3 rounded-lg border border-red-200 bg-red-50 text-sm text-red-800">{verification.reason}</p>
+      )}
+      {verification?.warning && (
+        <p className="mt-3 p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-900">{verification.warning}</p>
+      )}
     </div>
   )
 }

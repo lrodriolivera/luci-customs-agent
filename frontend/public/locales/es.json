@@ -3603,6 +3603,17 @@
     "summaryGrossWeight": "Peso bruto de la sumaria (kg)",
     "expeditionTotals": "El expediente declara {{packages}} bultos y {{weight}} kg",
     "saved": "Datos de la carga guardados",
-    "saveError": "No se pudieron guardar los datos de la carga"
+    "saveError": "No se pudieron guardar los datos de la carga",
+    "summaryNumberHint": "Clave de la sumaria (recinto, año y número: 11 dígitos) o su MRN. Con ella se consulta en la AEAT.",
+    "verify": "Consultar en la AEAT",
+    "verifying": "Consultando...",
+    "verifyError": "No se pudo consultar la declaración sumaria",
+    "aeatVerified": "Consultada en la AEAT",
+    "aeatNotVerified": "No se pudo comprobar en la AEAT",
+    "aeatItem": "Partida {{status}}: {{packages}} bultos y {{weight}} kg declarados.",
+    "aeatBalance": "Saldo: {{packages}} bultos.",
+    "aeatMaster": "Es una partida máster: corresponde a la carga agrupada, no a esta mercancía.",
+    "aeatBillOfLading": "Conocimiento: {{value}}",
+    "aeatLocation": "Ubicación: {{value}}"
   }
 }

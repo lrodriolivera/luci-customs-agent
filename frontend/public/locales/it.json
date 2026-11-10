@@ -3587,6 +3587,17 @@
     "summaryGrossWeight": "Peso lordo della dichiarazione sommaria (kg)",
     "expeditionTotals": "La pratica dichiara {{packages}} colli e {{weight}} kg",
     "saved": "Dati del carico salvati",
-    "saveError": "Impossibile salvare i dati del carico"
+    "saveError": "Impossibile salvare i dati del carico",
+    "summaryNumberHint": "Chiave della dichiarazione sommaria (recinto, anno e numero: 11 cifre) o il suo MRN. Serve per interrogare l'AEAT.",
+    "verify": "Verifica presso l'AEAT",
+    "verifying": "Verifica in corso...",
+    "verifyError": "Impossibile verificare la dichiarazione sommaria",
+    "aeatVerified": "Verificata presso l'AEAT",
+    "aeatNotVerified": "Impossibile verificare presso l'AEAT",
+    "aeatItem": "Articolo {{status}}: {{packages}} colli e {{weight}} kg dichiarati.",
+    "aeatBalance": "Saldo: {{packages}} colli.",
+    "aeatMaster": "È un articolo master: corrisponde al carico consolidato, non a questa merce.",
+    "aeatBillOfLading": "Polizza di carico: {{value}}",
+    "aeatLocation": "Ubicazione: {{value}}"
   }
 }

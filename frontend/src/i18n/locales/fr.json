@@ -3587,6 +3587,17 @@
     "summaryGrossWeight": "Poids brut de la déclaration sommaire (kg)",
     "expeditionTotals": "Le dossier déclare {{packages}} colis et {{weight}} kg",
     "saved": "Données du chargement enregistrées",
-    "saveError": "Impossible d'enregistrer les données du chargement"
+    "saveError": "Impossible d'enregistrer les données du chargement",
+    "summaryNumberHint": "Clé de la déclaration sommaire (enceinte, année et numéro : 11 chiffres) ou son MRN. Elle sert à interroger l'AEAT.",
+    "verify": "Vérifier auprès de l'AEAT",
+    "verifying": "Vérification...",
+    "verifyError": "Impossible de vérifier la déclaration sommaire",
+    "aeatVerified": "Vérifiée auprès de l'AEAT",
+    "aeatNotVerified": "Impossible de vérifier auprès de l'AEAT",
+    "aeatItem": "Article {{status}} : {{packages}} colis et {{weight}} kg déclarés.",
+    "aeatBalance": "Solde : {{packages}} colis.",
+    "aeatMaster": "C'est un article maître : il correspond au chargement groupé, pas à cette marchandise.",
+    "aeatBillOfLading": "Connaissement : {{value}}",
+    "aeatLocation": "Emplacement : {{value}}"
   }
 }

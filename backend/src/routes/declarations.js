@@ -162,6 +162,8 @@ router.get('/corrections/pending', async (req, res) => {
 
 // Obtener/actualizar declaracion
 router.get('/:expeditionId/summary', declarationController.getDeclarationSummary);
+// Consulta en la AEAT (DSDTCons) de la declaracion sumaria registrada en el expediente
+router.post('/:expeditionId/summary-declaration/verify', declarationController.verifySummaryDeclaration);
 router.get('/:expeditionId/xml', declarationController.getXML);
 router.put('/:expeditionId', declarationController.updateDeclaration);
 

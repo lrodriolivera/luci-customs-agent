@@ -30,7 +30,8 @@ vi.mock('../../services/api', () => ({
     exportXML: vi.fn(),
     submit: vi.fn(),
     downloadPDF: vi.fn(),
-    downloadSummaryPDF: vi.fn()
+    downloadSummaryPDF: vi.fn(),
+    verifySummaryDeclaration: vi.fn()
   }
 }))
 
@@ -973,6 +974,43 @@ describe('<ExpeditionDetail /> — edición de mercancía y documentos por el ag
       }
     }])
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith('groupage.saved'))
+  })
+
+  test('consultar la sumaria en la AEAT muestra el motivo del bloqueo y recarga el expediente', async () => {
+    const lcl = {
+      ...mockExpedition,
+      transportMode: 'SEA',
+      transport: { loadType: 'LCL', summaryDeclaration: { number: '46116000123', item: '3', packages: 12, grossWeight: 1050 } }
+    }
+    expeditionsAPI.get.mockResolvedValue({ data: { data: lcl } })
+    declarationsAPI.verifySummaryDeclaration.mockResolvedValue({
+      data: { success: true, data: { blocked: true, reason: 'La partida 3 es una partida master', warning: null, aeat: { verified: true } } }
+    })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getByText('groupage.verify')).toBeInTheDocument())
+    const cargasAntes = expeditionsAPI.get.mock.calls.length
+
+    fireEvent.click(screen.getByText('groupage.verify'))
+
+    await waitFor(() => expect(declarationsAPI.verifySummaryDeclaration).toHaveBeenCalledWith('exp123'))
+    await waitFor(() => expect(screen.getByText('La partida 3 es una partida master')).toBeInTheDocument())
+    expect(expeditionsAPI.get.mock.calls.length).toBeGreaterThan(cargasAntes)
+  })
+
+  test('si la consulta a la AEAT falla muestra el error del backend', async () => {
+    const lcl = {
+      ...mockExpedition,
+      transportMode: 'SEA',
+      transport: { loadType: 'LCL', summaryDeclaration: { number: '46116000123', item: '3' } }
+    }
+    expeditionsAPI.get.mockResolvedValue({ data: { data: lcl } })
+    declarationsAPI.verifySummaryDeclaration.mockRejectedValue({ response: { data: { error: 'Error al consultar la declaracion sumaria' } } })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getByText('groupage.verify')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByText('groupage.verify'))
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Error al consultar la declaracion sumaria'))
   })
 
   test('en aéreo no se pregunta por el tipo de carga', async () => {

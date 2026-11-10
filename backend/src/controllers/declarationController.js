@@ -8,7 +8,42 @@ const aesGenerator = require('../services/forms/aesGenerator');
 const h7Generator = require('../services/forms/h7Generator');
 const Tenant = require('../models/Tenant');
 const { ErrorValidacion, exigirIdentificacion } = require('../services/forms/identificadorAduanero');
-const { bloqueoPorGrupaje, exigirSumariaDeGrupaje, CODIGO_ERROR: CODIGO_GRUPAJE } = require('../services/forms/grupajeLcl');
+const { verificarSumariaConAeat, esGrupaje, CODIGO_ERROR: CODIGO_GRUPAJE } = require('../services/forms/grupajeLcl');
+
+/** Sin grupaje y sin sumaria registrada no hay nada que comprobar ni que consultar. */
+const hayQueComprobarSumaria = (expedition) =>
+  esGrupaje(expedition) || Boolean(String(expedition?.transport?.summaryDeclaration?.number || '').trim());
+
+/**
+ * Comprueba la declaracion sumaria del expediente antes del H1: la consulta en
+ * la AEAT y, en un grupaje (LCL), decide si se puede seguir. El resultado de la
+ * consulta se guarda en el expediente aunque acabe en bloqueo, para que el
+ * agente vea lo que respondio la AEAT.
+ *
+ * @returns {Promise<string|null>} motivo del bloqueo, o null si se puede seguir
+ */
+const comprobarSumaria = async (expedition, tenant) => {
+  const resultado = await verificarSumariaConAeat(expedition, {
+    consultar: (referencia) => aeatSubmitService.consultarSumaria(expedition, referencia, { tenant })
+  });
+
+  if (resultado.consulta && expedition.transport?.summaryDeclaration) {
+    expedition.transport.summaryDeclaration.aeat = resultado.consulta;
+    await Expedition.updateOne(
+      { _id: expedition._id },
+      { $set: { 'transport.summaryDeclaration.aeat': resultado.consulta } }
+    );
+  }
+  if (resultado.aviso) logger.warn(`[Sumaria] ${expedition.expeditionId}: ${resultado.aviso}`);
+
+  return resultado.bloqueo;
+};
+
+/** Lanza ErrorValidacion (422) si la sumaria impide seguir con el H1. */
+const exigirSumaria = async (expedition, tenant) => {
+  const bloqueo = await comprobarSumaria(expedition, tenant);
+  if (bloqueo) throw new ErrorValidacion(bloqueo, { code: CODIGO_GRUPAJE });
+};
 const aeatSubmitService = require('../services/aeat/aeatSubmitService');
 const channelService = require('../services/channelService');
 
@@ -87,7 +122,7 @@ const generateH1 = async (req, res) => {
     exigirIdentificacion(expedition, tenant);
 
     // Grupaje (LCL): sin la sumaria de la desconsolidacion no hay H1 (422).
-    exigirSumariaDeGrupaje(expedition);
+    if (hayQueComprobarSumaria(expedition)) await exigirSumaria(expedition, tenant);
 
     // Generar H1 con IA
     const h1Data = await aiService.generateH1Declaration(expedition, {
@@ -373,8 +408,8 @@ const submitDeclaration = async (req, res) => {
 
     // Grupaje (LCL): la sumaria pudo cambiarse o quitarse despues de generar el
     // H1. Se vuelve a comprobar justo antes de presentar; no admite excepcion.
-    if (expedition.declaration.type !== 'AES') {
-      const bloqueoGrupaje = bloqueoPorGrupaje(expedition);
+    if (expedition.declaration.type !== 'AES' && hayQueComprobarSumaria(expedition)) {
+      const bloqueoGrupaje = await comprobarSumaria(expedition, await tenantDelExpediente(expedition));
       if (bloqueoGrupaje) {
         return res.status(422).json({ success: false, error: bloqueoGrupaje, code: CODIGO_GRUPAJE });
       }
@@ -764,7 +799,9 @@ const generateH1Direct = async (req, res) => {
     const preference = body.items?.[0]?.preference || expedition.declaration?.preference || '100';
 
     // Grupaje (LCL): sin la sumaria de la desconsolidacion no hay H1 (422).
-    exigirSumariaDeGrupaje(expedition);
+    if (hayQueComprobarSumaria(expedition)) {
+      await exigirSumaria(expedition, await tenantDelExpediente(expedition));
+    }
 
     const totalesInvalidosDirecto = h1Generator.totalesNoDeclarables(expedition);
     if (totalesInvalidosDirecto) {
@@ -1628,7 +1665,52 @@ const cancelDeclaration = async (req, res) => {
   }
 };
 
+/**
+ * Consultar en la AEAT la declaracion sumaria registrada en el expediente
+ * POST /api/declarations/:expeditionId/summary-declaration/verify
+ *
+ * No genera ni presenta nada: devuelve si el H1 podria seguir y lo que
+ * respondio la AEAT, y lo deja guardado en el expediente.
+ */
+const verifySummaryDeclaration = async (req, res) => {
+  try {
+    const expedition = await Expedition.findById(req.params.expeditionId);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+
+    if (!String(expedition.transport?.summaryDeclaration?.number || '').trim()) {
+      return res.status(400).json({ success: false, error: 'El expediente no tiene declaracion sumaria registrada' });
+    }
+
+    const tenant = await tenantDelExpediente(expedition);
+    const resultado = await verificarSumariaConAeat(expedition, {
+      consultar: (referencia) => aeatSubmitService.consultarSumaria(expedition, referencia, { tenant })
+    });
+
+    if (resultado.consulta) {
+      await Expedition.updateOne(
+        { _id: expedition._id },
+        { $set: { 'transport.summaryDeclaration.aeat': resultado.consulta } }
+      );
+    }
+
+    res.json({
+      success: true,
+      data: {
+        blocked: Boolean(resultado.bloqueo),
+        reason: resultado.bloqueo,
+        warning: resultado.aviso,
+        aeat: resultado.consulta
+      }
+    });
+  } catch (error) {
+    if (responderSiFaltaIdentificacion(res, error)) return;
+    logger.error('Error consultando la declaracion sumaria:', error);
+    res.status(500).json({ success: false, error: 'Error al consultar la declaracion sumaria' });
+  }
+};
+
 module.exports = {
+  verifySummaryDeclaration,
   generateH1,
   generateH1Direct,
   validateH1DirectBody,

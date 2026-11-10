@@ -236,6 +236,9 @@ export const declarationsAPI = {
     }),
   submit: (expeditionId) => api.post(`/api/declarations/${seg(expeditionId)}/submit`),
   getSummary: (expeditionId) => api.get(`/api/declarations/${seg(expeditionId)}/summary`),
+  // Consulta en la AEAT (DSDTCons) la declaracion sumaria registrada en el expediente.
+  verifySummaryDeclaration: (expeditionId) =>
+    api.post(`/api/declarations/${seg(expeditionId)}/summary-declaration/verify`, {}, { timeout: 60000 }),
   update: (expeditionId, data) => api.put(`/api/declarations/${seg(expeditionId)}`, data),
 
   // PDF Generation

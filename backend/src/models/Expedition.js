@@ -388,7 +388,26 @@ const ExpeditionSchema = new mongoose.Schema({
       number: String,
       item: String,
       packages: Number,
-      grossWeight: Number
+      grossWeight: Number,
+      // Ultima consulta de esta partida en la AEAT (servicio DSDTCons).
+      aeat: {
+        consultedAt: Date,
+        verified: Boolean,
+        environment: String,
+        clave: String,
+        mrn: String,
+        activated: Boolean,
+        itemStatus: String,
+        itemStatusText: String,
+        isMaster: Boolean,
+        packages: Number,
+        grossWeight: Number,
+        packagesBalance: Number,
+        grossWeightBalance: Number,
+        billOfLading: String,
+        location: String,
+        error: String
+      }
     }
   },
 

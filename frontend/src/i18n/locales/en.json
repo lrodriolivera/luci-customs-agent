@@ -3603,6 +3603,17 @@
     "summaryGrossWeight": "Gross weight on the summary declaration (kg)",
     "expeditionTotals": "The file declares {{packages}} packages and {{weight}} kg",
     "saved": "Cargo details saved",
-    "saveError": "The cargo details could not be saved"
+    "saveError": "The cargo details could not be saved",
+    "summaryNumberHint": "Summary declaration key (customs area, year and number: 11 digits) or its MRN. It is used to query the AEAT.",
+    "verify": "Check with the AEAT",
+    "verifying": "Checking...",
+    "verifyError": "The summary declaration could not be checked",
+    "aeatVerified": "Checked with the AEAT",
+    "aeatNotVerified": "It could not be checked with the AEAT",
+    "aeatItem": "Item {{status}}: {{packages}} packages and {{weight}} kg declared.",
+    "aeatBalance": "Balance: {{packages}} packages.",
+    "aeatMaster": "This is a master item: it covers the consolidated cargo, not these goods.",
+    "aeatBillOfLading": "Bill of lading: {{value}}",
+    "aeatLocation": "Location: {{value}}"
   }
 }

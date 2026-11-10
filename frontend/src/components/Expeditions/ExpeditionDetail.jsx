@@ -577,6 +577,8 @@ export default function ExpeditionDetail() {
   const [editingGoodsIndex, setEditingGoodsIndex] = useState(null)
   const [savingGoods, setSavingGoods] = useState(false)
   const [savingTransport, setSavingTransport] = useState(false)
+  const [verifyingSummary, setVerifyingSummary] = useState(false)
+  const [summaryVerification, setSummaryVerification] = useState(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -637,11 +639,25 @@ export default function ExpeditionDetail() {
       const transport = { ...expedition.transport, ...changes }
       const response = await expeditionsAPI.update(id, { transport })
       setExpedition(response.data?.data || response.data)
+      setSummaryVerification(null)
       toast.success(t('groupage.saved'))
     } catch (error) {
       toast.error(error.response?.data?.error || t('groupage.saveError'))
     } finally {
       setSavingTransport(false)
+    }
+  }
+
+  const handleVerifySummary = async () => {
+    setVerifyingSummary(true)
+    try {
+      const response = await declarationsAPI.verifySummaryDeclaration(id)
+      setSummaryVerification(response.data?.data || null)
+      await reloadExpedition()
+    } catch (error) {
+      toast.error(error.response?.data?.error || t('groupage.verifyError'))
+    } finally {
+      setVerifyingSummary(false)
     }
   }
 
@@ -873,7 +889,14 @@ export default function ExpeditionDetail() {
           </div>
 
           {(isMaritime(expedition) || expedition.transport?.loadType) && canEditGoods && (
-            <GroupageCard expedition={expedition} isSaving={savingTransport} onSave={handleSaveGroupage} />
+            <GroupageCard
+              expedition={expedition}
+              isSaving={savingTransport}
+              onSave={handleSaveGroupage}
+              isVerifying={verifyingSummary}
+              onVerify={handleVerifySummary}
+              verification={summaryVerification}
+            />
           )}
 
           {/* Goods */}

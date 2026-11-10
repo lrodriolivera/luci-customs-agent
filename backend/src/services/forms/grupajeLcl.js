@@ -82,4 +82,155 @@ const exigirSumariaDeGrupaje = (expedition) => {
   throw new ErrorValidacion(motivo, { code: CODIGO_ERROR });
 };
 
-module.exports = { bloqueoPorGrupaje, exigirSumariaDeGrupaje, esGrupaje, CODIGO_ERROR };
+// ---- Contraste con la AEAT ---------------------------------------------------
+
+const { referenciaDeSumaria } = require('../aeat/dsdtConsXmlBuilder');
+
+const totalesDe = (expedition) => ({
+  bultos: numero(expedition?.goodsSummary?.totalPackages) || 0,
+  peso: numero(expedition?.goodsSummary?.totalGrossWeight) || 0
+});
+
+/** Lo que se guarda en el expediente de la respuesta de la AEAT. */
+const instantaneaDe = (respuesta, partida) => ({
+  consultedAt: new Date(),
+  verified: true,
+  environment: respuesta.entorno || null,
+  clave: respuesta.dsdt?.clave || null,
+  mrn: respuesta.dsdt?.mrn || null,
+  activated: respuesta.dsdt ? respuesta.dsdt.activada : null,
+  itemStatus: partida?.estado || null,
+  itemStatusText: partida?.estadoDescripcion || null,
+  isMaster: partida ? partida.esMaster : null,
+  packages: partida?.bultosDeclarados ?? null,
+  grossWeight: partida?.pesoBrutoDeclarado ?? null,
+  packagesBalance: partida?.bultosSaldo ?? null,
+  grossWeightBalance: partida?.pesoBrutoSaldo ?? null,
+  billOfLading: partida?.conocimiento || null,
+  location: partida?.ubicaciones?.[0]?.ubicacion || null,
+  error: null
+});
+
+/**
+ * Decide con la respuesta de la AEAT si la sumaria sirve para el H1 de un
+ * grupaje. A diferencia del contraste manual, aqui mandan los datos de la
+ * AEAT: estado de la partida (una partida master es la de la carga agrupada,
+ * no la de la desconsolidacion), bultos, peso y saldo.
+ *
+ * @returns {{ bloqueo: string|null, consulta: object }}
+ */
+const evaluarConsultaAeat = (expedition, respuesta) => {
+  const sumaria = expedition.transport.summaryDeclaration;
+  const ref = expedition.expeditionId || expedition._id || 'sin identificar';
+  const prefijo = `El expediente ${ref} es un grupaje maritimo (LCL)`;
+  const numeroPartida = Number(sumaria.item);
+
+  if (respuesta.noEncontrada) {
+    const detalle = respuesta.errores.map(e => e.descripcion).filter(Boolean).join('; ');
+    return {
+      bloqueo: `${prefijo} y la AEAT no encuentra la partida ${sumaria.item} de la declaracion sumaria ${sumaria.number}` +
+        `${detalle ? ` (${detalle})` : ''}. Comprueba el numero y la partida.`,
+      consulta: { ...instantaneaDe(respuesta, null), error: detalle || 'Partida de DSDT no encontrada' }
+    };
+  }
+
+  const partida = respuesta.dsdt.partidas.find(p => p.partida === numeroPartida) || respuesta.dsdt.partidas[0];
+  const consulta = instantaneaDe(respuesta, partida);
+  const bloquear = (motivo) => ({ bloqueo: `${prefijo} y ${motivo}`, consulta });
+
+  if (!partida) return bloquear(`la AEAT no devuelve la partida ${sumaria.item} de la declaracion sumaria ${sumaria.number}.`);
+
+  if (partida.esMaster) {
+    return bloquear(`la partida ${sumaria.item} de la declaracion sumaria ${sumaria.number} es una partida master ` +
+      `(${partida.estadoDescripcion}): corresponde a la carga agrupada, no a esta mercancia. ` +
+      'Hace falta la partida de la desconsolidacion.');
+  }
+  if (!respuesta.dsdt.activada) {
+    return bloquear(`la declaracion sumaria ${sumaria.number} todavia no esta activada en la AEAT: ` +
+      'el medio de transporte no consta como llegado.');
+  }
+  if (['RE', 'SA'].includes(partida.estado)) {
+    return bloquear(`la partida ${sumaria.item} de la declaracion sumaria ${sumaria.number} esta ` +
+      `${partida.estadoDescripcion.toLowerCase()} en la AEAT y no admite el H1.`);
+  }
+
+  const totales = totalesDe(expedition);
+  const bultosAeat = partida.bultosDeclarados;
+  const pesoAeat = partida.pesoBrutoDeclarado;
+  if (bultosAeat !== totales.bultos || pesoAeat === null || !pesoCuadra(pesoAeat, totales.peso)) {
+    return bloquear(`la partida ${sumaria.item} de la declaracion sumaria ${sumaria.number} no corresponde a esta mercancia: ` +
+      `en la AEAT figura con ${bultosAeat} bultos y ${pesoAeat} kg, y el expediente declara ${totales.bultos} bultos y ${totales.peso} kg.`);
+  }
+  if (partida.bultosSaldo !== null && partida.bultosSaldo < totales.bultos) {
+    return bloquear(`la partida ${sumaria.item} de la declaracion sumaria ${sumaria.number} solo tiene ` +
+      `${partida.bultosSaldo} bultos de saldo en la AEAT y el expediente declara ${totales.bultos}.`);
+  }
+
+  return { bloqueo: null, consulta };
+};
+
+/**
+ * Comprobacion completa de la sumaria de un expediente antes del H1.
+ *
+ * 1. Si no es grupaje y no hay sumaria registrada, no hay nada que comprobar.
+ * 2. Si hay sumaria con una referencia valida, se consulta en la AEAT. En un
+ *    grupaje el resultado bloquea; en el resto solo se guarda como informacion.
+ * 3. Si la AEAT no se puede consultar (servicio caido, no habilitado, error
+ *    del remitente...), en un grupaje se aplica el contraste manual de bultos y
+ *    kilos y la consulta queda marcada como no verificada, con el motivo.
+ *
+ * @param {object} expedition
+ * @param {{ consultar: (referencia: { clave?: string, mrn?: string, partida: string }) => Promise<object> }} deps
+ * @returns {Promise<{ bloqueo: string|null, aviso: string|null, consulta: object|null }>}
+ */
+const verificarSumariaConAeat = async (expedition, { consultar }) => {
+  const grupaje = esGrupaje(expedition);
+  const sumaria = expedition?.transport?.summaryDeclaration || {};
+  const numeroSumaria = String(sumaria.number || '').trim();
+
+  if (!numeroSumaria) return { bloqueo: bloqueoPorGrupaje(expedition), aviso: null, consulta: null };
+
+  const referencia = referenciaDeSumaria(numeroSumaria);
+  const partida = String(sumaria.item ?? '').trim();
+  if (!referencia || !/^\d{1,5}$/.test(partida)) {
+    const motivo = 'El numero de la declaracion sumaria debe ser la clave (recinto, año y numero: 11 digitos) ' +
+      'o el MRN (18 caracteres), con su numero de partida, para poder consultarla en la AEAT.';
+    return { bloqueo: grupaje ? motivo : null, aviso: grupaje ? null : motivo, consulta: null };
+  }
+
+  let respuesta;
+  try {
+    respuesta = await consultar({ ...referencia, partida });
+    if (!respuesta.aceptada && !respuesta.noEncontrada) {
+      const detalle = respuesta.errores.map(e => `${e.codigo} ${e.descripcion}`.trim()).join('; ');
+      throw new Error(detalle || 'respuesta de rechazo sin motivo');
+    }
+  } catch (error) {
+    const aviso = `No se pudo comprobar la declaracion sumaria ${numeroSumaria} en la AEAT (${error.message}). ` +
+      'Se han contrastado solo los bultos y el peso registrados a mano.';
+    return {
+      bloqueo: bloqueoPorGrupaje(expedition),
+      aviso,
+      consulta: { consultedAt: new Date(), verified: false, error: String(error.message).slice(0, 500) }
+    };
+  }
+
+  if (!grupaje) {
+    const partidaAeat = respuesta.dsdt?.partidas.find(p => p.partida === Number(partida)) || respuesta.dsdt?.partidas[0] || null;
+    const consulta = instantaneaDe(respuesta, partidaAeat);
+    return respuesta.noEncontrada
+      ? { bloqueo: null, aviso: `La AEAT no encuentra la partida ${partida} de la declaracion sumaria ${numeroSumaria}.`, consulta: { ...consulta, error: 'Partida de DSDT no encontrada' } }
+      : { bloqueo: null, aviso: null, consulta };
+  }
+
+  return { ...evaluarConsultaAeat(expedition, respuesta), aviso: null };
+};
+
+module.exports = {
+  bloqueoPorGrupaje,
+  exigirSumariaDeGrupaje,
+  verificarSumariaConAeat,
+  evaluarConsultaAeat,
+  esGrupaje,
+  CODIGO_ERROR
+};
