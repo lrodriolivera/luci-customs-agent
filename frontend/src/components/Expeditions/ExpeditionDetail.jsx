@@ -29,6 +29,7 @@ import ParaduaneroManager from '../Paraduanero/ParaduaneroManager'
 import { hrefSeguro } from '../../utils/url'
 import { formatearImporte } from '../../utils/importe'
 import GoodsEditor from './GoodsEditor'
+import H1Preview from './H1Preview'
 import DocumentUploader from './DocumentUploader'
 
 // Con la declaracion ya presentada, la mercancia del expediente es la que
@@ -1086,6 +1087,8 @@ export default function ExpeditionDetail() {
               )}
 
               {/* XML Preview */}
+              <H1Preview h1Data={h1Result?.h1Data || expedition.declaration?.h1Data} />
+
               {(h1Result?.xml || expedition.declaration?.xmlContent) && (
                 <div className="mt-4">
                   <p className="text-gray-600 font-medium text-sm mb-2">{t('expeditions.xmlForAeat')}</p>
