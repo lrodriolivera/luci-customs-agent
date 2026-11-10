@@ -78,6 +78,16 @@ describe('prerrellenarAlta', () => {
     expect(avisos).toContainEqual({ campo: 'clientName', valor: 'Importadora SL', actual: 'Otra Empresa SA' })
   })
 
+  test('una descripcion redactada de otra forma no se cambia ni genera aviso', () => {
+    const trasFactura = prerrellenarAlta(formulario(), FACTURA, {}).formData
+    const otra = lectura({ partidas: [{ ...PACKING.partidas[0], descripcion: 'Laptops 14 inch' }] })
+
+    const { formData, avisos } = prerrellenarAlta(trasFactura, otra, { tipoDocumento: 'packing_list' })
+
+    expect(formData.goods[0].description).toBe('Laptop 14"')
+    expect(avisos.filter((a) => a.campo === 'description')).toEqual([])
+  })
+
   test('no avisa cuando el documento dice lo mismo que hay, aunque cambie la caja', () => {
     const escrito = formulario({ client: { ...formulario().client, companyName: 'IMPORTADORA SL' } })
     const { avisos } = prerrellenarAlta(escrito, FACTURA, {})

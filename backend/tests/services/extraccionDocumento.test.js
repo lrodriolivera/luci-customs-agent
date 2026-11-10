@@ -96,6 +96,11 @@ describe('extraccionDocumento', () => {
       expect(normalizarExtraccion({ partidas: [{ tipoBulto: 'Pallets' }, { tipoBulto: 'cosas' }] }).partidas.map(p => p.tipoBulto)).toEqual(['PX', null]);
     });
 
+    test('una matricula que no cumple el formato ISO se guarda sola, sin el tipo ni el precinto', () => {
+      const d = normalizarExtraccion({ transporte: { contenedores: ['MSCU1150584400 (40HC, PRECINTO SL264686400)', 'TGHU 88422-170 / 20GP', 'sin numero'] } });
+      expect(d.transporte.contenedores).toEqual(['MSCU1150584400', 'TGHU88422170', 'SINNUMERO']);
+    });
+
     test('del contenedor se guarda solo la matricula ISO, sin el tipo ni el precinto', () => {
       // Lectura real de un Excel: «TGHU8842217 (40HC, FCL/FCL)» llegaba como «TGHU8842217(40HC)».
       const cont = (lista) => normalizarExtraccion({ transporte: { contenedores: lista } }).transporte.contenedores;

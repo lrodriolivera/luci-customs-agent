@@ -118,14 +118,18 @@ const medioDeTransporte = (valor) => {
 };
 
 // Matricula de contenedor ISO 6346: cuatro letras y siete cifras. Si el texto
-// la contiene, se devuelve sola («TGHU8842217 (40HC)» -> «TGHU8842217»); si
-// no, se devuelve el texto limpio, para que el agente vea lo que se leyo.
+// la contiene, se devuelve sola («TGHU8842217 (40HC)» -> «TGHU8842217»). Si
+// no, se devuelve la matricula tal como se leyo, sin lo que la acompaña
+// («MSCU1150584400 (40HC, precinto SL26)» -> «MSCU1150584400»): el agente ve
+// el numero del documento y no el tipo de contenedor ni el precinto.
 const numeroContenedor = (valor) => {
   const t = texto(valor);
   if (!t) return null;
-  const limpio = t.toUpperCase().replace(/[\s-]/g, '');
-  const iso = /[A-Z]{4}\d{7}(?!\d)/.exec(limpio);
-  return iso ? iso[0] : limpio;
+  const mayusculas = t.toUpperCase();
+  const iso = /[A-Z]{4}\d{7}(?!\d)/.exec(mayusculas.replace(/[\s-]/g, ''));
+  if (iso) return iso[0];
+  const matricula = /^[A-Z]{3,4}[\s-]?\d[\d\s-]*\d/.exec(mayusculas.trim());
+  return matricula ? matricula[0].replace(/[\s-]/g, '') : mayusculas.replace(/[\s-]/g, '');
 };
 
 const objeto = (valor) => (valor && typeof valor === 'object' && !Array.isArray(valor) ? valor : {});
