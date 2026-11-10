@@ -43,7 +43,7 @@ describe('extraccionDocumento', () => {
     test('una respuesta vacia o con forma inesperada da el esquema completo con nulos', () => {
       for (const bruto of [undefined, null, 'texto', [], {}]) {
         const d = normalizarExtraccion(bruto);
-        expect(d.exportador).toEqual({ nombre: null, direccion: null, ciudad: null, pais: null });
+        expect(d.exportador).toEqual({ nombre: null, direccion: null, ciudad: null, codigoPostal: null, pais: null });
         expect(d.partidas).toEqual([]);
         expect(d.totales).toEqual({ bultos: null, pesoBrutoKg: null, pesoNetoKg: null });
         expect(d.transporte.contenedores).toEqual([]);
@@ -94,6 +94,36 @@ describe('extraccionDocumento', () => {
       expect(d.partidas[0].tipoBulto).toBe('CT');
       expect(d.transporte.contenedores).toEqual(['MSCU1150584']);
       expect(normalizarExtraccion({ partidas: [{ tipoBulto: 'Pallets' }, { tipoBulto: 'cosas' }] }).partidas.map(p => p.tipoBulto)).toEqual(['PX', null]);
+    });
+
+    test('el codigo postal se guarda aparte y la ciudad queda sin el', () => {
+      const d = normalizarExtraccion({
+        exportador: { ciudad: 'Shanghai', codigoPostal: '200120' },
+        importador: { ciudad: 'Paterna (Valencia)', codigoPostal: ' 46988 ' }
+      });
+      expect(d.exportador).toMatchObject({ ciudad: 'Shanghai', codigoPostal: '200120' });
+      expect(d.importador).toMatchObject({ ciudad: 'Paterna (Valencia)', codigoPostal: '46988' });
+    });
+
+    test('si el modelo deja el codigo postal dentro de la ciudad, se separa', () => {
+      const d = normalizarExtraccion({
+        exportador: { ciudad: '200120, Shanghai' },
+        importador: { ciudad: 'Paterna (Valencia), 46988', codigoPostal: null }
+      });
+      expect(d.exportador).toMatchObject({ ciudad: 'Shanghai', codigoPostal: '200120' });
+      expect(d.importador).toMatchObject({ ciudad: 'Paterna (Valencia)', codigoPostal: '46988' });
+    });
+
+    test('un codigo postal repetido en la ciudad se quita de ella sin cambiar el que ya venia', () => {
+      const d = normalizarExtraccion({ importador: { ciudad: '46988 Paterna', codigoPostal: '46988' } });
+      expect(d.importador).toMatchObject({ ciudad: 'Paterna', codigoPostal: '46988' });
+    });
+
+    test('una ciudad sin codigo postal no se toca y el codigo postal queda en null', () => {
+      const d = normalizarExtraccion({ importador: { ciudad: 'L\'Hospitalet de Llobregat' }, exportador: { ciudad: '12345' } });
+      expect(d.importador).toMatchObject({ ciudad: 'L\'Hospitalet de Llobregat', codigoPostal: null });
+      // Solo cifras: no hay localidad que separar, se deja como se leyo.
+      expect(d.exportador).toMatchObject({ ciudad: '12345', codigoPostal: null });
     });
 
     test('una matricula que no cumple el formato ISO se guarda sola, sin el tipo ni el precinto', () => {

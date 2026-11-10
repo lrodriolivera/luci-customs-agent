@@ -24,6 +24,7 @@ Tu unica tarea es TRANSCRIBIR los datos que figuran en el documento adjunto. Reg
 - Escribe solo lo que se lee con certeza en el documento. Si un dato no esta, o no se lee bien, usa null. Nunca deduzcas, completes ni corrijas un valor.
 - Los importes y pesos van como numeros (punto decimal, sin separador de millares). Los pesos en kilogramos.
 - Los paises van con su codigo ISO de dos letras SOLO si el documento lo permite saber sin duda (nombre del pais o codigo); si no, null.
+- "ciudad" es solo el nombre de la localidad (y la provincia, si figura). El codigo postal va aparte, en "codigoPostal", tal como aparece; nunca dentro de "ciudad" ni de "direccion".
 - "codigoMercancia" es el codigo arancelario tal como aparece (HS, NC o TARIC), solo digitos.
 - "tipoCarga": "FCL" SOLO si el documento lleva escrito FCL, FCL/FCL o CY/CY; "LCL" SOLO si lleva escrito LCL, LCL/LCL, CFS/CFS, groupage, grupaje o consolidated. Si no aparece ninguna de esas expresiones literales, null. Esta PROHIBIDO deducirlo del numero o del tipo de contenedores, del peso o de cualquier otro dato: un contenedor de 40 pies puede ir en grupaje.
 - "medio" es el NOMBRE del medio de transporte: nombre del buque, numero de vuelo o matricula del camion. El modo (maritimo, aereo, carretera) NO es un medio: en ese caso, null.
@@ -37,8 +38,8 @@ Responde UNICAMENTE con un JSON con esta forma exacta:
   "tipoDetectado": "commercial_invoice | proforma_invoice | packing_list | bill_of_lading | air_waybill | cmr | certificate_origin | other",
   "confianza": 0,
   "notas": [],
-  "exportador": { "nombre": null, "direccion": null, "ciudad": null, "pais": null },
-  "importador": { "nombre": null, "identificacionFiscal": null, "direccion": null, "ciudad": null, "pais": null },
+  "exportador": { "nombre": null, "direccion": null, "ciudad": null, "codigoPostal": null, "pais": null },
+  "importador": { "nombre": null, "identificacionFiscal": null, "direccion": null, "ciudad": null, "codigoPostal": null, "pais": null },
   "factura": { "numero": null, "fecha": null, "moneda": null, "importeTotal": null, "incoterm": null, "lugarIncoterm": null },
   "transporte": { "numeroDocumento": null, "medio": null, "puertoCarga": null, "puertoDescarga": null, "contenedores": [], "tipoCarga": null },
   "partidas": [ { "descripcion": null, "codigoMercancia": null, "paisOrigen": null, "cantidad": null, "unidad": null, "bultos": null, "tipoBulto": null, "pesoBrutoKg": null, "pesoNetoKg": null, "importe": null } ],
@@ -132,6 +133,21 @@ const numeroContenedor = (valor) => {
   return matricula ? matricula[0].replace(/[\s-]/g, '') : mayusculas.replace(/[\s-]/g, '');
 };
 
+// Localidad y codigo postal. El codigo postal va en su campo; si el modelo lo
+// deja pegado a la ciudad («46988, Paterna» / «Shanghai 200120»), se separa:
+// en el expediente son dos datos distintos.
+const CP_AL_PRINCIPIO = /^(\d{4,6})[\s,;.-]+(?=\D)/;
+const CP_AL_FINAL = /[\s,;.-]+(\d{4,6})$/;
+const localidad = (ciudadBruta, codigoPostalBruto) => {
+  const ciudad = texto(ciudadBruta);
+  const codigoPostal = texto(codigoPostalBruto);
+  if (!ciudad) return { ciudad: null, codigoPostal };
+  const hallado = CP_AL_PRINCIPIO.exec(ciudad) || CP_AL_FINAL.exec(ciudad);
+  if (!hallado) return { ciudad, codigoPostal };
+  const sinCodigo = ciudad.replace(hallado[0], '').trim();
+  return { ciudad: sinCodigo || ciudad, codigoPostal: sinCodigo ? (codigoPostal || hallado[1]) : codigoPostal };
+};
+
 const objeto = (valor) => (valor && typeof valor === 'object' && !Array.isArray(valor) ? valor : {});
 const lista = (valor) => (Array.isArray(valor) ? valor : []);
 
@@ -157,10 +173,10 @@ function normalizarExtraccion(bruto) {
     tipoDetectado: TIPOS_DOCUMENTO.includes(r.tipoDetectado) ? r.tipoDetectado : null,
     confianza: escalaConfianza(r.confianza),
     notas: lista(r.notas).map(texto).filter(Boolean).slice(0, MAX_NOTAS),
-    exportador: { nombre: texto(exp.nombre), direccion: texto(exp.direccion), ciudad: texto(exp.ciudad), pais: pais(exp.pais) },
+    exportador: { nombre: texto(exp.nombre), direccion: texto(exp.direccion), ...localidad(exp.ciudad, exp.codigoPostal), pais: pais(exp.pais) },
     importador: {
       nombre: texto(imp.nombre), identificacionFiscal: texto(imp.identificacionFiscal),
-      direccion: texto(imp.direccion), ciudad: texto(imp.ciudad), pais: pais(imp.pais)
+      direccion: texto(imp.direccion), ...localidad(imp.ciudad, imp.codigoPostal), pais: pais(imp.pais)
     },
     factura: {
       numero: texto(fac.numero), fecha: texto(fac.fecha), moneda: moneda(fac.moneda), importeTotal: numero(fac.importeTotal),

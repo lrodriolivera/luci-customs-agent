@@ -3676,6 +3676,7 @@
       "clientEori": "EORI do cliente",
       "clientAddress": "Morada do cliente",
       "clientCity": "Cidade do cliente",
+      "clientPostalCode": "Código postal do cliente",
       "counterpartName": "Exportador / destinatário",
       "counterpartCountry": "País do exportador / destinatário",
       "counterpartCity": "Cidade do exportador / destinatário",
