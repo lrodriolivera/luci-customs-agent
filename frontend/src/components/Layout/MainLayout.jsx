@@ -404,7 +404,10 @@ export default function MainLayout() {
         </header>
 
         {/* Page content */}
-        <main id="main-content" role="main" className="flex-1 p-6 overflow-auto">
+        {/* pb-24: deja libre la franja de los botones flotantes (ayuda y
+            asistente, abajo a la derecha) para que el final de cada pagina
+            se pueda desplazar por encima de ellos y no quede tapado. */}
+        <main id="main-content" role="main" className="flex-1 p-6 pb-24 overflow-auto">
           <Outlet />
         </main>
       </div>
