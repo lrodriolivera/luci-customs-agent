@@ -977,6 +977,30 @@ export default function ClassificationTool() {
                       </p>
                     )}
 
+                    {/* El backend contrasta cada codigo con el catalogo TARIC:
+                        uno que no existe o no es declarable no se presenta como
+                        valido, y se ofrecen los codigos reales de la subpartida. */}
+                    {suggestion.verified === true && (
+                      <p className="mt-2 pl-9 text-sm text-green-700">{t('classification.codeVerified')}</p>
+                    )}
+                    {suggestion.verified === false && (
+                      <div role="alert" className="mt-2 ml-9 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900">
+                        <p className="font-medium">{t('classification.codeNotVerified')}</p>
+                        {suggestion.alternatives?.length > 0 && (
+                          <>
+                            <p className="mt-1">{t('classification.codeAlternatives')}</p>
+                            <ul className="mt-1 space-y-1">
+                              {suggestion.alternatives.map((alt) => (
+                                <li key={alt.code}>
+                                  <span className="font-mono font-semibold">{alt.code}</span> — {alt.description}
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
+                      </div>
+                    )}
+
                     <div className="mt-3 pl-9 flex flex-wrap gap-2">
                       <button
                         onClick={() => handleValidate(suggestion.code)}

@@ -211,6 +211,40 @@ describe('<ClassificationTool />', () => {
     expect(classificationAPI.classify).not.toHaveBeenCalled()
   })
 
+  test('clasificación básica: distingue el código verificado del que no está en el catálogo', async () => {
+    // El backend contrasta cada código con el catálogo TARIC (verified) y, si
+    // no es declarable, adjunta los códigos reales de la subpartida.
+    classificationAPI.classify.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          suggestions: [
+            { code: '8544429010', confidence: 90, verified: true },
+            {
+              code: '8544429000',
+              confidence: 60,
+              verified: false,
+              alternatives: [{ code: '8544429090', description: 'Los demás' }]
+            }
+          ]
+        }
+      }
+    })
+
+    renderComponent()
+    fireEvent.change(screen.getByPlaceholderText('classification.productPlaceholder'), {
+      target: { value: 'Cable de transmisión de datos de 600 Mbit/s' }
+    })
+    fireEvent.submit(document.querySelector('form'))
+
+    await waitFor(() => expect(screen.getByText('8544429010')).toBeInTheDocument())
+    expect(screen.getAllByText('classification.codeVerified')).toHaveLength(1)
+    const aviso = screen.getByRole('alert')
+    expect(aviso).toHaveTextContent('classification.codeNotVerified')
+    expect(aviso).toHaveTextContent('8544429090')
+    expect(aviso).toHaveTextContent('Los demás')
+  })
+
   test('clasificación básica: envía campos y recibe sugerencias', async () => {
     // Forma REAL del backend: { success, data: { suggestions, query } }.
     classificationAPI.classify.mockResolvedValue({

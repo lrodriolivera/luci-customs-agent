@@ -649,7 +649,10 @@
     "infoFoundSource": "Informacao encontrada (fonte: {{source}})",
     "explainAbout": "Explique-me sobre",
     "found": "encontrado",
-    "foundPlural": "encontrados"
+    "foundPlural": "encontrados",
+    "codeVerified": "Código verificado no catálogo TARIC: existe e é declarável.",
+    "codeNotVerified": "Este código não consta do catálogo TARIC como código declarável. Não o utilize sem o verificar.",
+    "codeAlternatives": "Códigos declaráveis da mesma subposição:"
   },
   "declarations": {
     "title": "Gerador de Declaracoes",
