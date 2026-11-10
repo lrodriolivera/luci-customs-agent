@@ -27,6 +27,7 @@ import RequirementManager from '../Requirements/RequirementManager'
 import ChannelStatus from '../Channels/ChannelStatus'
 import ParaduaneroManager from '../Paraduanero/ParaduaneroManager'
 import { hrefSeguro } from '../../utils/url'
+import { formatearImporte } from '../../utils/importe'
 import GoodsEditor from './GoodsEditor'
 import DocumentUploader from './DocumentUploader'
 
@@ -899,7 +900,7 @@ export default function ExpeditionDetail() {
                     </div>
                     <div>
                       <p className="text-gray-500">{t('expeditions.value')}</p>
-                      <p className="font-medium">{item.invoiceValue} {item.currency}</p>
+                      <p className="font-medium">{formatearImporte(item.invoiceValue, item.currency)}</p>
                     </div>
                   </div>
                   {editingGoodsIndex === index && (

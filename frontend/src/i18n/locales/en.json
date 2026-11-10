@@ -543,7 +543,10 @@
       "ce_certificate": "CE certificate",
       "quality_certificate": "Quality certificate",
       "other": "Other"
-    }
+    },
+    "descriptionTooShort": "The description needs at least {{min}} characters to be classified",
+    "valueWillBeSaved": "It will be saved as {{amount}}",
+    "taricNotVerified": "Not in the TARIC catalogue"
   },
   "classification": {
     "title": "TARIC Classification",
