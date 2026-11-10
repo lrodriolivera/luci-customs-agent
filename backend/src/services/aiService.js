@@ -947,6 +947,43 @@ Responde en JSON con el formato especificado en el system prompt.`;
   }
 
   /**
+   * Leer un documento del expediente y devolver sus datos con un esquema fijo
+   * (services/documentos/extraccionDocumento.js). No valida ni compara: solo
+   * transcribe lo que se lee. Nunca lanza por un documento ilegible o de un
+   * formato no soportado: lo devuelve como `legible: false` con el motivo.
+   *
+   * @param {object} document subdocumento del expediente (filePath, mimeType, type…)
+   * @returns {Promise<object>} extraccion normalizada, con `leido: boolean`
+   */
+  async extractDocumentData(document) {
+    const { SYSTEM_PROMPT, construirPrompt, normalizarExtraccion } = require('./documentos/extraccionDocumento');
+    const noLeido = (motivo) => ({ ...normalizarExtraccion({ legible: false, notas: [motivo] }), leido: false });
+
+    let fileBytes;
+    try {
+      fileBytes = await fs.promises.readFile(document.filePath);
+    } catch (err) {
+      return noLeido('No se pudo abrir el archivo en el servidor.');
+    }
+
+    const contentBlock = this._contentBlockParaArchivo(document.mimeType, fileBytes, document.originalName);
+    if (!contentBlock) {
+      return noLeido(`El formato ${document.mimeType} no se puede leer automaticamente (se admiten PDF, imagen, Word, Excel, TXT y CSV).`);
+    }
+
+    const result = await this.callClaudeWithDocument(
+      FAST_MODEL, SYSTEM_PROMPT, construirPrompt(document), contentBlock, { maxTokens: 8192 }
+    );
+
+    try {
+      return { ...normalizarExtraccion(this._parseJsonRespuesta(result.content)), leido: true, modelo: labelFor(result.model) };
+    } catch (e) {
+      logger.warn(`extractDocumentData: respuesta no interpretable (${e.message})`);
+      return noLeido('No se pudo interpretar la lectura del documento.');
+    }
+  }
+
+  /**
    * Generar declaracion H1
    */
   async generateH1Declaration(expedition, options) {

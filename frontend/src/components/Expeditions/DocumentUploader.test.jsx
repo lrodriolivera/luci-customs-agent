@@ -44,8 +44,24 @@ describe('DocumentUploader', () => {
     fireEvent.click(screen.getByText('expeditions.uploadButton'))
 
     await waitFor(() => expect(onUploaded).toHaveBeenCalled())
+    // Por defecto pide leer el documento recién subido (sin documento en la respuesta: null).
+    expect(onUploaded).toHaveBeenCalledWith(null, true)
     expect(documentsAPI.upload).toHaveBeenCalledWith('exp123', file, 'packing_list')
     expect(toast.success).toHaveBeenCalledWith('expeditions.uploadSuccess')
+  })
+
+  test('entrega al padre el documento creado y respeta la casilla de leer con IA', async () => {
+    const creado = { _id: 'doc1', type: 'commercial_invoice' }
+    documentsAPI.upload.mockResolvedValue({ data: { success: true, data: { document: creado } } })
+    const onUploaded = vi.fn()
+    render(<DocumentUploader expeditionId="exp123" onUploaded={onUploaded} />)
+
+    expect(screen.getByLabelText('docReading.readOnUpload')).toBeChecked()
+    fireEvent.click(screen.getByLabelText('docReading.readOnUpload'))
+    selectFile(pdf())
+    fireEvent.click(screen.getByText('expeditions.uploadButton'))
+
+    await waitFor(() => expect(onUploaded).toHaveBeenCalledWith(creado, false))
   })
 
   test('sin fichero no llama a la API', () => {

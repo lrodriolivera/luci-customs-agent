@@ -138,8 +138,18 @@ export const documentsAPI = {
       timeout: 120000
     })
   },
-  validate: (docId) => api.post(`/api/documents/${seg(docId)}/validate`),
-  extract: (docId) => api.post(`/api/documents/${seg(docId)}/extract`)
+  // Lee el documento con IA y devuelve lo leido y la propuesta de cambios. No
+  // modifica el expediente. La lectura tarda unos 10 s por documento.
+  read: (expeditionId, docId) =>
+    api.post(`/api/documents/${seg(expeditionId)}/${seg(docId)}/extract`, {}, { timeout: 120000 }),
+  // Propuesta de un documento ya leido, sin volver a llamar a la IA.
+  proposal: (expeditionId, docId) => api.get(`/api/documents/${seg(expeditionId)}/${seg(docId)}/proposal`),
+  // Aplica al expediente solo los datos marcados.
+  apply: (expeditionId, docId, fields) =>
+    api.post(`/api/documents/${seg(expeditionId)}/${seg(docId)}/apply`, { fields }),
+  // Fichero original, para abrirlo en otra pestaña.
+  download: (expeditionId, docId) =>
+    api.get(`/api/documents/${seg(expeditionId)}/${seg(docId)}`, { responseType: 'blob', timeout: 120000 })
 }
 
 // Classification

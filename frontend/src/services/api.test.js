@@ -528,20 +528,38 @@ describe('api.js — documentsAPI', () => {
     expect(config).toEqual({ headers: { 'Content-Type': 'multipart/form-data' }, timeout: 120000 })
   })
 
-  it('documentsAPI.validate llama a POST /api/documents/:docId/validate', async () => {
+  // validate/extract apuntaban a /api/documents/:docId/…, rutas que el backend
+  // no tiene (van con el expediente por delante) y que ninguna pantalla usaba.
+  it('documentsAPI.read pide la lectura del documento con margen de tiempo', async () => {
     const api = await import('./api.js')
 
-    await api.documentsAPI.validate('doc123')
+    await api.documentsAPI.read('exp123', 'doc456')
 
-    expect(mockApi.post).toHaveBeenCalledWith('/api/documents/doc123/validate')
+    expect(mockApi.post).toHaveBeenCalledWith('/api/documents/exp123/doc456/extract', {}, { timeout: 120000 })
   })
 
-  it('documentsAPI.extract llama a POST /api/documents/:docId/extract', async () => {
+  it('documentsAPI.proposal consulta la propuesta sin volver a leer', async () => {
     const api = await import('./api.js')
 
-    await api.documentsAPI.extract('doc123')
+    await api.documentsAPI.proposal('exp123', 'doc456')
 
-    expect(mockApi.post).toHaveBeenCalledWith('/api/documents/doc123/extract')
+    expect(mockApi.get).toHaveBeenCalledWith('/api/documents/exp123/doc456/proposal')
+  })
+
+  it('documentsAPI.apply envía solo los campos marcados', async () => {
+    const api = await import('./api.js')
+
+    await api.documentsAPI.apply('exp123', 'doc456', ['goods.0.grossWeight'])
+
+    expect(mockApi.post).toHaveBeenCalledWith('/api/documents/exp123/doc456/apply', { fields: ['goods.0.grossWeight'] })
+  })
+
+  it('documentsAPI.download pide el fichero como blob', async () => {
+    const api = await import('./api.js')
+
+    await api.documentsAPI.download('exp123', 'doc456')
+
+    expect(mockApi.get).toHaveBeenCalledWith('/api/documents/exp123/doc456', { responseType: 'blob', timeout: 120000 })
   })
 })
 

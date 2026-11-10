@@ -32,6 +32,7 @@ import GoodsEditor from './GoodsEditor'
 import H1Preview from './H1Preview'
 import GroupageCard, { isMaritime } from './GroupageCard'
 import DocumentUploader from './DocumentUploader'
+import DocumentReader from './DocumentReader'
 
 // Con la declaracion ya presentada, la mercancia del expediente es la que
 // consta ante la AEAT: no se edita desde aqui.
@@ -577,6 +578,8 @@ export default function ExpeditionDetail() {
   const [editingGoodsIndex, setEditingGoodsIndex] = useState(null)
   const [savingGoods, setSavingGoods] = useState(false)
   const [savingTransport, setSavingTransport] = useState(false)
+  // Documento recien subido que LUCI debe leer en cuanto aparezca en la lista.
+  const [documentToRead, setDocumentToRead] = useState(null)
   const [verifyingSummary, setVerifyingSummary] = useState(false)
   const [summaryVerification, setSummaryVerification] = useState(null)
 
@@ -661,7 +664,8 @@ export default function ExpeditionDetail() {
     }
   }
 
-  const handleDocumentUploaded = async () => {
+  const handleDocumentUploaded = async (document, leer) => {
+    if (document?._id && leer) setDocumentToRead(document._id)
     try {
       await reloadExpedition()
       const checklistResponse = await expeditionsAPI.getChecklist(id)
@@ -983,22 +987,34 @@ export default function ExpeditionDetail() {
             {expedition.documents?.length > 0 ? (
               <div className="space-y-2">
                 {expedition.documents.map((doc, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <DocumentTextIcon className="w-5 h-5 text-gray-400" />
-                      <div>
-                        <p className="font-medium text-sm">{doc.originalName}</p>
-                        {/* El backend guarda el tipo en `type`; `documentType` no existe. */}
-                        <p className="text-xs text-gray-500">{etiquetaTipoDocumento(doc.type || doc.documentType)}</p>
+                  <div key={doc._id || index} className="p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <DocumentTextIcon className="w-5 h-5 text-gray-400" />
+                        <div>
+                          <p className="font-medium text-sm">{doc.originalName}</p>
+                          {/* El backend guarda el tipo en `type`; `documentType` no existe. */}
+                          <p className="text-xs text-gray-500">{etiquetaTipoDocumento(doc.type || doc.documentType)}</p>
+                        </div>
                       </div>
+                      {/* El backend guarda el estado en `status`, en minusculas.
+                          Comparar `validationStatus === 'VALIDATED'` fallaba por
+                          partida doble —campo y caso— y todo documento validado
+                          aparecia como pendiente. */}
+                      <span className={`badge ${doc.status === 'validated' ? 'badge-completed' : 'badge-pending'}`}>
+                        {doc.status === 'validated' ? t('expeditions.validated') : t('expeditions.pendingValidation')}
+                      </span>
                     </div>
-                    {/* El backend guarda el estado en `status`, en minusculas.
-                        Comparar `validationStatus === 'VALIDATED'` fallaba por
-                        partida doble —campo y caso— y todo documento validado
-                        aparecia como pendiente. */}
-                    <span className={`badge ${doc.status === 'validated' ? 'badge-completed' : 'badge-pending'}`}>
-                      {doc.status === 'validated' ? t('expeditions.validated') : t('expeditions.pendingValidation')}
-                    </span>
+                    {doc._id && (
+                      <DocumentReader
+                        expeditionId={id}
+                        document={doc}
+                        autoRead={documentToRead === doc._id}
+                        canApply={canEditGoods}
+                        onApplied={(actualizado) => setExpedition(actualizado)}
+                        onRead={() => setDocumentToRead(null)}
+                      />
+                    )}
                   </div>
                 ))}
               </div>

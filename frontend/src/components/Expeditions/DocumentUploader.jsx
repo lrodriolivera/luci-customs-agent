@@ -21,7 +21,10 @@ const ACCEPTED_EXTENSIONS = '.pdf,.jpg,.jpeg,.png,.tif,.tiff,.webp,.doc,.docx,.x
  * Subida de documentos al expediente por el propio agente de aduanas. Hasta
  * ahora solo podia subirlos el cliente desde el portal.
  *
- * @param {{ expeditionId: string, onUploaded: () => void }} props
+ * Por defecto pide a LUCI que lea el documento recien subido; el agente puede
+ * desmarcarlo (cada lectura es una llamada a la IA).
+ *
+ * @param {{ expeditionId: string, onUploaded: (document: object|null, leer: boolean) => void }} props
  */
 export default function DocumentUploader({ expeditionId, onUploaded }) {
   const { t } = useTranslation()
@@ -29,6 +32,7 @@ export default function DocumentUploader({ expeditionId, onUploaded }) {
   const [documentType, setDocumentType] = useState('commercial_invoice')
   const [file, setFile] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [leerAlSubir, setLeerAlSubir] = useState(true)
 
   const handleFileChange = (e) => {
     const selected = e.target.files?.[0] || null
@@ -50,11 +54,11 @@ export default function DocumentUploader({ expeditionId, onUploaded }) {
 
     setIsUploading(true)
     try {
-      await documentsAPI.upload(expeditionId, file, documentType)
+      const response = await documentsAPI.upload(expeditionId, file, documentType)
       toast.success(t('expeditions.uploadSuccess'))
       setFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
-      onUploaded()
+      onUploaded(response?.data?.data?.document || null, leerAlSubir)
     } catch (error) {
       toast.error(error.response?.data?.error || t('expeditions.uploadError'))
     } finally {
@@ -91,7 +95,16 @@ export default function DocumentUploader({ expeditionId, onUploaded }) {
           />
         </div>
       </div>
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={leerAlSubir}
+            onChange={(e) => setLeerAlSubir(e.target.checked)}
+            className="rounded border-gray-300"
+          />
+          {t('docReading.readOnUpload')}
+        </label>
         <button type="submit" disabled={isUploading} className="btn-primary flex items-center gap-2">
           <CloudArrowUpIcon className="w-5 h-5" />
           {isUploading ? t('expeditions.uploading') : t('expeditions.uploadButton')}
