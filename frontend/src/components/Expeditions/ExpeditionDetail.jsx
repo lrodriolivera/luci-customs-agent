@@ -27,6 +27,15 @@ import RequirementManager from '../Requirements/RequirementManager'
 import ChannelStatus from '../Channels/ChannelStatus'
 import ParaduaneroManager from '../Paraduanero/ParaduaneroManager'
 import { hrefSeguro } from '../../utils/url'
+import GoodsEditor from './GoodsEditor'
+import DocumentUploader from './DocumentUploader'
+
+// Con la declaracion ya presentada, la mercancia del expediente es la que
+// consta ante la AEAT: no se edita desde aqui.
+const STATUSES_GOODS_LOCKED = [
+  'declaration_submitted', 'green_channel', 'orange_channel', 'red_channel',
+  'levante', 'completed', 'cancelled'
+]
 
 // ==================== Expedition AI Panel Component ====================
 function ExpeditionAIPanel({ expedition, onClose, onRefresh }) {
@@ -562,6 +571,8 @@ export default function ExpeditionDetail() {
   const [portalLink, setPortalLink] = useState(null)
   const [showPortalModal, setShowPortalModal] = useState(false)
   const [showAIPanel, setShowAIPanel] = useState(false)
+  const [editingGoodsIndex, setEditingGoodsIndex] = useState(null)
+  const [savingGoods, setSavingGoods] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -591,6 +602,39 @@ export default function ExpeditionDetail() {
 
     fetchData()
   }, [id, navigate, t])
+
+  const reloadExpedition = async () => {
+    const expResponse = await expeditionsAPI.get(id)
+    setExpedition(expResponse.data?.data || expResponse.data)
+  }
+
+  const handleSaveGoods = async (index, changes) => {
+    setSavingGoods(true)
+    try {
+      // Se envia la lista completa: el backend sustituye `goods` entero, asi
+      // que cada partida conserva sus demas campos y su _id.
+      const goods = expedition.goods.map((item, i) => (i === index ? { ...item, ...changes } : item))
+      const response = await expeditionsAPI.update(id, { goods })
+      setExpedition(response.data?.data || response.data)
+      setEditingGoodsIndex(null)
+      toast.success(t('expeditions.editGoodsSaved'))
+    } catch (error) {
+      toast.error(error.response?.data?.error || t('expeditions.editGoodsError'))
+    } finally {
+      setSavingGoods(false)
+    }
+  }
+
+  const handleDocumentUploaded = async () => {
+    try {
+      await reloadExpedition()
+      const checklistResponse = await expeditionsAPI.getChecklist(id)
+      setChecklist(checklistResponse.data?.data || checklistResponse.data)
+    } catch {
+      // El documento ya esta subido; si falla el refresco basta con recargar.
+      toast.error(t('expeditions.loadError'))
+    }
+  }
 
   const handleSendPortalLink = async () => {
     let clientEmail = expedition?.client?.contact?.email
@@ -723,6 +767,8 @@ export default function ExpeditionDetail() {
     )
   }
 
+  const canEditGoods = !STATUSES_GOODS_LOCKED.includes(expedition?.status)
+
   if (!expedition) {
     return null
   }
@@ -814,15 +860,34 @@ export default function ExpeditionDetail() {
                 <div key={index} className="p-4 bg-gray-50 rounded-xl">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-medium">{t('expeditions.itemNumber', { number: index + 1 })}</h3>
-                    <span className="text-sm text-gray-500">
-                      {item.taricCode || t('expeditions.noTaric')}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-500">
+                        {item.taricCode || t('expeditions.noTaric')}
+                      </span>
+                      {canEditGoods && editingGoodsIndex !== index && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingGoodsIndex(index)}
+                          className="text-sm text-primary-600 hover:text-primary-800 font-medium"
+                        >
+                          {t('common.edit')}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <p className="text-gray-700 mb-3">{item.description}</p>
-                  <div className="grid grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                     <div>
                       <p className="text-gray-500">{t('expeditions.origin')}</p>
                       <p className="font-medium">{item.originCountry}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">{t('expeditions.packagesLabel')}</p>
+                      <p className="font-medium">
+                        {item.packages?.quantity
+                          ? `${item.packages.quantity} ${item.packages.type || ''}`.trim()
+                          : t('expeditions.packagesMissing')}
+                      </p>
                     </div>
                     <div>
                       <p className="text-gray-500">{t('expeditions.netWeightLabel')}</p>
@@ -837,6 +902,15 @@ export default function ExpeditionDetail() {
                       <p className="font-medium">{item.invoiceValue} {item.currency}</p>
                     </div>
                   </div>
+                  {editingGoodsIndex === index && (
+                    <GoodsEditor
+                      item={item}
+                      index={index}
+                      isSaving={savingGoods}
+                      onSave={(changes) => handleSaveGoods(index, changes)}
+                      onCancel={() => setEditingGoodsIndex(null)}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -859,7 +933,8 @@ export default function ExpeditionDetail() {
                       <DocumentTextIcon className="w-5 h-5 text-gray-400" />
                       <div>
                         <p className="font-medium text-sm">{doc.originalName}</p>
-                        <p className="text-xs text-gray-500">{doc.documentType}</p>
+                        {/* El backend guarda el tipo en `type`; `documentType` no existe. */}
+                        <p className="text-xs text-gray-500">{doc.type || doc.documentType}</p>
                       </div>
                     </div>
                     {/* El backend guarda el estado en `status`, en minusculas.
@@ -879,6 +954,8 @@ export default function ExpeditionDetail() {
                 <p className="text-sm">{t('expeditions.clientCanUpload')}</p>
               </div>
             )}
+
+            <DocumentUploader expeditionId={id} onUploaded={handleDocumentUploaded} />
           </div>
         </div>
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { expeditionsAPI, classificationAPI } from '../../services/api'
+import { PACKAGE_TYPES, DEFAULT_PACKAGE_TYPE, toNumberOrUndefined } from './packageTypes'
 import toast from 'react-hot-toast'
 import { ArrowLeftIcon, PlusIcon, TrashIcon, SparklesIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
 
@@ -64,6 +65,7 @@ export default function ExpeditionNew() {
       quantityUnit: 'KGM',
       netWeight: '',
       grossWeight: '',
+      packages: { quantity: '', type: DEFAULT_PACKAGE_TYPE },
       invoiceValue: '',
       currency: 'EUR'
     }],
@@ -89,6 +91,22 @@ export default function ExpeditionNew() {
     }
   }
 
+  const handlePackagesChange = (index, field, value) => {
+    const newGoods = formData.goods.map((item, i) => (
+      i === index ? { ...item, packages: { ...item.packages, [field]: value } } : item
+    ))
+    setFormData({ ...formData, goods: newGoods })
+  }
+
+  // Los bultos viajan como numero; un campo vacio no se envia como 0.
+  const buildPayload = () => ({
+    ...formData,
+    goods: formData.goods.map((item) => ({
+      ...item,
+      packages: { ...item.packages, quantity: toNumberOrUndefined(item.packages?.quantity) }
+    }))
+  })
+
   const handleGoodsChange = (index, field, value) => {
     const newGoods = [...formData.goods]
     newGoods[index] = { ...newGoods[index], [field]: value }
@@ -106,6 +124,7 @@ export default function ExpeditionNew() {
         quantityUnit: 'KGM',
         netWeight: '',
         grossWeight: '',
+        packages: { quantity: '', type: DEFAULT_PACKAGE_TYPE },
         invoiceValue: '',
         currency: 'EUR'
       }]
@@ -184,7 +203,7 @@ export default function ExpeditionNew() {
     setLoading(true)
 
     try {
-      const response = await expeditionsAPI.create(formData)
+      const response = await expeditionsAPI.create(buildPayload())
       toast.success(t('expeditions.created'))
       // Handle different response formats
       const expeditionId = response.data?.data?._id || response.data?._id || response.data?.data?.id
@@ -748,6 +767,32 @@ export default function ExpeditionNew() {
                       onChange={(e) => handleGoodsChange(index, 'grossWeight', e.target.value)}
                       className="input"
                     />
+                  </div>
+                  <div>
+                    {/* El H1 no se genera sin bultos y el alta no los pedia. */}
+                    <label className="label" htmlFor={`goods-${index}-packages`}>{t('expeditions.packagesQuantity')} *</label>
+                    <div className="flex gap-2">
+                      <input
+                        id={`goods-${index}-packages`}
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={item.packages?.quantity ?? ''}
+                        onChange={(e) => handlePackagesChange(index, 'quantity', e.target.value)}
+                        className="input flex-1"
+                        required
+                      />
+                      <select
+                        aria-label={t('expeditions.packagesType')}
+                        value={item.packages?.type || DEFAULT_PACKAGE_TYPE}
+                        onChange={(e) => handlePackagesChange(index, 'type', e.target.value)}
+                        className="input w-40"
+                      >
+                        {PACKAGE_TYPES.map((type) => (
+                          <option key={type.code} value={type.code}>{t(type.labelKey)}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div>
                     <label className="label">{t('expeditions.invoiceValue')} *</label>

@@ -122,11 +122,22 @@ export const expeditionsAPI = {
 
 // Documents
 export const documentsAPI = {
-  upload: (expeditionId, formData) => api.post(
-    `/api/expeditions/${seg(expeditionId)}/documents`,
-    formData,
-    { headers: { 'Content-Type': 'multipart/form-data' } }
-  ),
+  // La ruta real es POST /api/documents/upload, con el expediente y el tipo en
+  // el cuerpo multipart. Apuntaba a /api/expeditions/:id/documents, que no
+  // existe en el backend, y ninguna pantalla la usaba: el agente no tenia forma
+  // de adjuntar documentacion al expediente.
+  upload: (expeditionId, file, documentType) => {
+    const formData = new FormData()
+    formData.append('expeditionId', expeditionId)
+    formData.append('documentType', documentType)
+    // El fichero va el ultimo: multer solo ve los campos de texto anteriores.
+    formData.append('file', file)
+    return api.post('/api/documents/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      // Un PDF escaneado de 50 MB no sube en los 30 s por defecto.
+      timeout: 120000
+    })
+  },
   validate: (docId) => api.post(`/api/documents/${seg(docId)}/validate`),
   extract: (docId) => api.post(`/api/documents/${seg(docId)}/extract`)
 }
