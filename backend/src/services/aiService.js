@@ -8,12 +8,18 @@ const { BedrockRuntimeClient, ConverseCommand } = require('@aws-sdk/client-bedro
 const logger = require('../config/logger');
 const { eoriDe } = require('./forms/identificadorAduanero');
 const { getCache } = require('./cacheService');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 const BEDROCK_REGION = process.env.BEDROCK_REGION || 'us-east-1';
 
 // Un TARIC no cambia de un dia para otro: 7 dias es conservador y aun asi
 // evita reclasificar el mismo articulo durante toda una campana de importacion.
 const CLASSIFICATION_CACHE_TTL = 7 * 24 * 60 * 60;
+// Candidatos del catalogo que se pasan al modelo y alternativas que se ofrecen
+// cuando el codigo devuelto no es declarable.
+const MAX_CANDIDATOS_CATALOGO = 15;
+const MAX_ALTERNATIVAS_CATALOGO = 20;
+const MAX_DESCRIPCION_BUSQUEDA = 500;
 // Los IDs viven en config/bedrockModels para que exista una unica fuente de
 // verdad: cuando estaban repartidos por el codigo, una migracion de modelo
 // dejo tres llamadas apuntando a un modelo inexistente.
@@ -692,7 +698,88 @@ CONTEXTO DEL EXPEDIENTE:
       .digest('hex')
       .substring(0, 32);
 
-    return `taric_class_${huella}`;
+    // v2: las respuestas anteriores se generaron sin candidatos del catalogo y
+    // pueden llevar los digitos 9-10 inventados; cambiar el prefijo las descarta.
+    return `taric_class_v2_${huella}`;
+  }
+
+  /**
+   * Codigos hoja del catalogo TARIC cuya descripcion oficial coincide por texto
+   * con la del producto. Se pasan al modelo como referencia: sin ellos elegia
+   * de memoria los digitos 9-10 y acertaba la subpartida SA (6 digitos) pero
+   * no la subdivision TARIC (caso UAT: 8544 42 10 00 en vez de 8544 42 90 10).
+   *
+   * Nunca lanza: sin base de datos o sin indice de texto se clasifica igual,
+   * solo que sin ancla.
+   */
+  async _candidatosCatalogo(description) {
+    try {
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState !== 1) return [];
+
+      const TaricCode = require('../models/TaricCode');
+      const consulta = String(description || '').slice(0, MAX_DESCRIPCION_BUSQUEDA);
+      if (!consulta.trim()) return [];
+
+      const encontrados = await TaricCode.search(consulta, MAX_CANDIDATOS_CATALOGO);
+      return encontrados.map(c => ({
+        code: c.code,
+        description: String(c.description?.es || c.description?.en || '').slice(0, 300)
+      }));
+    } catch (error) {
+      logger.warn(`Clasificacion: no se pudieron obtener candidatos del catalogo TARIC: ${error.message}`);
+      return [];
+    }
+  }
+
+  /**
+   * Marca cada sugerencia con `verified`: true solo si el codigo existe en el
+   * catalogo, esta activo y es declarable (hoja). Si no lo es, adjunta en
+   * `alternatives` los codigos declarables reales bajo la misma subpartida,
+   * para que el agente no tenga que buscarlos a mano.
+   *
+   * Sin base de datos no se marca nada (`verified` queda sin definir): no se
+   * puede afirmar ni que el codigo es valido ni que no lo es.
+   */
+  async _verificarContraCatalogo(suggestions) {
+    try {
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState !== 1) return suggestions;
+
+      const TaricCode = require('../models/TaricCode');
+      return await Promise.all(suggestions.map(async (sugerencia) => {
+        const code = String(sugerencia.code || '').replace(/[\s.]/g, '');
+        if (!/^\d{10}$/.test(code)) return { ...sugerencia, verified: false, alternatives: [] };
+
+        const enCatalogo = await TaricCode.findOne({ code }).lean();
+        if (enCatalogo && enCatalogo.isActive !== false && enCatalogo.isLeaf) {
+          return { ...sugerencia, code, verified: true };
+        }
+
+        let alternativas = [];
+        for (const longitud of [8, 6]) {
+          alternativas = await TaricCode.find({
+            code: new RegExp(`^${escapeRegex(code.slice(0, longitud))}`),
+            isActive: true,
+            isLeaf: true
+          }).sort({ code: 1 }).limit(MAX_ALTERNATIVAS_CATALOGO).lean();
+          if (alternativas.length > 0) break;
+        }
+
+        return {
+          ...sugerencia,
+          code,
+          verified: false,
+          alternatives: alternativas.map(a => ({
+            code: a.code,
+            description: String(a.description?.es || a.description?.en || '').slice(0, 300)
+          }))
+        };
+      }));
+    } catch (error) {
+      logger.warn(`Clasificacion: no se pudo verificar contra el catalogo TARIC: ${error.message}`);
+      return suggestions;
+    }
   }
 
   /**
@@ -720,6 +807,16 @@ CONTEXTO DEL EXPEDIENTE:
       prompt += `\n\nContexto: ${expeditionContext.operationType === 'import' ? 'Importacion' : 'Exportacion'} via ${expeditionContext.transportMode}`;
     }
 
+    const candidatos = await this._candidatosCatalogo(description);
+    if (candidatos.length > 0) {
+      prompt += '\n\nCODIGOS DEL CATALOGO TARIC VIGENTE cuya descripcion oficial coincide por texto ' +
+        '(ordenados por coincidencia; la lista es orientativa y puede no incluir el correcto):\n' +
+        candidatos.map(c => `- ${c.code}: ${c.description}`).join('\n') +
+        '\n\nSi alguno de estos codigos corresponde al producto, usa exactamente ese codigo de 10 digitos. ' +
+        'No deduzcas los digitos 9 y 10 de memoria: si ninguno encaja y no conoces con certeza la ' +
+        'subdivision TARIC, dilo en "warnings".';
+    }
+
     const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.classification, prompt);
 
     try {
@@ -728,7 +825,7 @@ CONTEXTO DEL EXPEDIENTE:
       jsonContent = this._extraerJsonString(jsonContent);
 
       const parsed = JSON.parse(jsonContent);
-      const suggestions = parsed.suggestions || [];
+      const suggestions = await this._verificarContraCatalogo(parsed.suggestions || []);
 
       // Solo se guarda lo aprovechable. Cachear una respuesta vacia o el
       // 0000000000 del catch dejaria servida una clasificacion invalida

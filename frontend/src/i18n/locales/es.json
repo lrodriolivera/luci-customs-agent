@@ -702,7 +702,10 @@
     "infoFoundSource": "Información encontrada (fuente: {{source}})",
     "explainAbout": "Explícame sobre",
     "found": "encontrado",
-    "foundPlural": "encontrados"
+    "foundPlural": "encontrados",
+    "codeVerified": "Código comprobado en el catálogo TARIC: existe y es declarable.",
+    "codeNotVerified": "Este código no está en el catálogo TARIC como código declarable. No lo uses sin comprobarlo.",
+    "codeAlternatives": "Códigos declarables de la misma subpartida:"
   },
   "declarations": {
     "title": "Generador de Declaraciones",

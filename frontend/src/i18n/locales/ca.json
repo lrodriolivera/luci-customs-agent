@@ -702,7 +702,10 @@
     "infoFoundSource": "Informació trobada (font: {{source}})",
     "explainAbout": "Explica'm sobre",
     "found": "trobat",
-    "foundPlural": "trobats"
+    "foundPlural": "trobats",
+    "codeVerified": "Codi comprovat al catàleg TARIC: existeix i és declarable.",
+    "codeNotVerified": "Aquest codi no és al catàleg TARIC com a codi declarable. No l'utilitzis sense comprovar-lo.",
+    "codeAlternatives": "Codis declarables de la mateixa subpartida:"
   },
   "declarations": {
     "title": "Generador de Declaracions",
