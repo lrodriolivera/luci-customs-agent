@@ -152,6 +152,13 @@ export default function ParaduaneroManager({ expeditionId, onControlsChange }) {
     }
   }
 
+  // Con el analisis ya hecho no se pide «pulse Analizar»: se dice que resulto.
+  const mensajeSinControles = !analysis
+    ? 'Pulse "Analizar" para detectar si se requieren controles'
+    : analysis.controlsRequired > 0
+      ? 'Use «Crear Controles» para darlos de alta en el expediente'
+      : 'El análisis no ha encontrado controles para esta mercancía'
+
   const handleCreateControls = async () => {
     setCreating(true)
     try {
@@ -235,30 +242,30 @@ export default function ParaduaneroManager({ expeditionId, onControlsChange }) {
       {/* Resultado del analisis */}
       {analysis && analysis.controlsRequired > 0 && (
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-medium text-yellow-800">
-                Se requieren {analysis.controlsRequired} control(es) paraduanero(s)
-              </p>
-              <ul className="mt-2 space-y-1 text-sm text-yellow-700">
-                {analysis.controls?.map((ctrl, idx) => (
-                  <li key={idx} className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full bg-${CONTROL_TYPES[ctrl.controlType]?.color || 'gray'}-500`} />
-                    <span className="font-medium">{ctrl.controlType}</span>
-                    <span>- {ctrl.reason}</span>
-                    {ctrl.notes && <span className="text-yellow-800 italic">({ctrl.notes})</span>}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <button
-              onClick={handleCreateControls}
-              disabled={creating}
-              className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 whitespace-nowrap"
-            >
-              {creating ? 'Creando...' : 'Crear Controles'}
-            </button>
-          </div>
+          {/* Apilado: el panel vive en la columna lateral y, en fila, el motivo
+              quedaba en columnas de una palabra y el boton se salia del panel. */}
+          <p className="font-medium text-yellow-800">
+            Se requieren {analysis.controlsRequired} control(es) paraduanero(s)
+          </p>
+          <ul className="mt-2 space-y-3 text-sm text-yellow-700">
+            {analysis.controls?.map((ctrl, idx) => (
+              <li key={idx}>
+                <p className="flex items-center gap-2 font-medium">
+                  <span className={`w-2 h-2 rounded-full bg-${CONTROL_TYPES[ctrl.controlType]?.color || 'gray'}-500`} />
+                  {ctrl.controlType}
+                </p>
+                <p className="mt-1">{ctrl.reason}</p>
+                {ctrl.notes && <p className="mt-1 text-yellow-800 italic">{ctrl.notes}</p>}
+              </li>
+            ))}
+          </ul>
+          <button
+            onClick={handleCreateControls}
+            disabled={creating}
+            className="mt-3 w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50"
+          >
+            {creating ? 'Creando...' : 'Crear Controles'}
+          </button>
         </div>
       )}
 
@@ -266,9 +273,11 @@ export default function ParaduaneroManager({ expeditionId, onControlsChange }) {
       {controls.length === 0 ? (
         <div className="p-6 text-center bg-gray-50 rounded-lg">
           <TruckIcon className="h-10 w-10 mx-auto text-gray-300 mb-2" />
-          <p className="text-gray-500">No hay controles paraduaneros</p>
+          <p className="text-gray-500">
+            {analysis ? 'Todavía no hay controles creados' : 'No hay controles paraduaneros'}
+          </p>
           <p className="text-sm text-gray-400">
-            Pulse "Analizar" para detectar si se requieren controles
+            {mensajeSinControles}
           </p>
         </div>
       ) : (

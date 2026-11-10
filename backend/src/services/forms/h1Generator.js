@@ -124,13 +124,16 @@ class H1Generator {
    */
   generate(expedition, aiData = {}, { tenant } = {}) {
     // Generar LRN unico
-    const lrn = this.generateLRN();
+    const lrn = aiData.lrn || this.generateLRN();
 
     // Construir datos estructurados
     const h1Data = {
       lrn,
       declarationType: aiData.declarationType || 'A',
-      declarationHeader: this.buildDeclarationHeader(expedition, aiData, { tenant }),
+      // La cabecera recibe el mismo LRN: generaba otro por su cuenta y la
+      // declaracion acababa con dos referencias distintas (la del XML y la de
+      // la cabecera), visibles a la vez en la pantalla del expediente.
+      declarationHeader: this.buildDeclarationHeader(expedition, { ...aiData, lrn }, { tenant }),
       goodsShipment: this.buildGoodsShipment(expedition, aiData),
       goodsItems: this.buildGoodsItems(expedition, aiData),
       valuation: this.buildValuation(expedition, aiData),

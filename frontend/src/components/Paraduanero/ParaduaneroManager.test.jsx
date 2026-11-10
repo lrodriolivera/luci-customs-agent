@@ -104,10 +104,28 @@ describe('ParaduaneroManager', () => {
       })
       render(<ParaduaneroManager expeditionId={mockExpeditionId} onControlsChange={mockOnControlsChange} />)
 
-      expect(await screen.findByText('- Procede control RoHS y RAEE')).toBeInTheDocument()
-      expect(screen.getByText('(Exclusivamente si son AEE)')).toBeInTheDocument()
+      expect(await screen.findByText('Procede control RoHS y RAEE')).toBeInTheDocument()
+      expect(screen.getByText('Exclusivamente si son AEE')).toBeInTheDocument()
       expect(paraduaneroAPI.analyze).toHaveBeenCalledTimes(1)
       expect(toast.success).not.toHaveBeenCalled()
+    })
+
+    it('con el análisis hecho no pide pulsar «Analizar»: dice qué resultó', async () => {
+      paraduaneroAPI.analyze.mockResolvedValue({
+        data: { data: { controlsRequired: 1, controls: [{ controlType: 'SOIVRE', subType: 'rohs_raee', reason: 'Procede control RoHS y RAEE' }] } }
+      })
+      render(<ParaduaneroManager expeditionId={mockExpeditionId} onControlsChange={mockOnControlsChange} />)
+
+      expect(await screen.findByText('Todavía no hay controles creados')).toBeInTheDocument()
+      expect(screen.getByText('Use «Crear Controles» para darlos de alta en el expediente')).toBeInTheDocument()
+      expect(screen.queryByText(/Pulse "Analizar"/)).not.toBeInTheDocument()
+    })
+
+    it('si el análisis no encuentra controles lo dice expresamente', async () => {
+      paraduaneroAPI.analyze.mockResolvedValue({ data: { data: { controlsRequired: 0, controls: [] } } })
+      render(<ParaduaneroManager expeditionId={mockExpeditionId} onControlsChange={mockOnControlsChange} />)
+
+      expect(await screen.findByText('El análisis no ha encontrado controles para esta mercancía')).toBeInTheDocument()
     })
 
     it('si el análisis automático falla no muestra error: queda el botón', async () => {
@@ -153,8 +171,8 @@ describe('ParaduaneroManager', () => {
       fireEvent.click(screen.getByText('Analizar'))
 
       await screen.findByText(/Se requieren 2 control/)
-      expect(screen.getByText('- Juguetes requieren inspeccion')).toBeInTheDocument()
-      expect(screen.getByText('- Productos veterinarios')).toBeInTheDocument()
+      expect(screen.getByText('Juguetes requieren inspeccion')).toBeInTheDocument()
+      expect(screen.getByText('Productos veterinarios')).toBeInTheDocument()
       expect(toast.success).toHaveBeenCalledWith('Se detectaron 2 controles necesarios')
     })
 
