@@ -229,7 +229,16 @@ const auditService = require('./services/auditService');
 app.use(auditService.middleware);
 
 // Logging
-app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
+// Formato «combined» de morgan con la ruta y el referer saneados: el token del
+// portal del cliente va en la URL y no debe quedar en el registro.
+morgan.token('url-segura', (req) => logger.sanitizarUrl(req.originalUrl || req.url));
+morgan.token('referer-seguro', (req) => logger.sanitizarUrl(req.headers.referer || req.headers.referrer) || '-');
+const FORMATO_ACCESO = ':remote-addr - :remote-user [:date[clf]] ":method :url-segura HTTP/:http-version" :status :res[content-length] ":referer-seguro" ":user-agent"';
+app.use(morgan(FORMATO_ACCESO, {
+  // El healthcheck del contenedor llama cada 30 s: no aporta nada al registro.
+  skip: (req) => req.path === '/health' || req.path === '/api/health',
+  stream: { write: message => logger.info(message.trim()) }
+}));
 
 // Static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
