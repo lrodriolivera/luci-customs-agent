@@ -6,6 +6,7 @@
  */
 
 const { xml, joinXml } = require('./xmlTemplate');
+const { codigoUnidadDua } = require('./unidadesSuplementarias');
 const { ErrorValidacion, exigirEori } = require('../forms/identificadorAduanero');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/adip/ws/ImportacionCompletaV1Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
@@ -157,7 +158,7 @@ function buildH1ImportXML(data) {
         <C40ReferenciaDocumento>${p.documentoCargo.referencia}</C40ReferenciaDocumento>
       </C40DocumentoCargoPrecedente>` : ''}
       ${p.unidadesSuplementarias ? xml`<C41UnidadesSuplementarias>
-        <C41UnidadesCodigo>${p.unidadesCodigo || 'NAR'}</C41UnidadesCodigo>
+        <C41UnidadesCodigo>${codigoUnidadDua(p.unidadesCodigo || 'NAR')}</C41UnidadesCodigo>
         <C41UnidadesNumero>${Number(p.unidadesSuplementarias).toFixed(3)}</C41UnidadesNumero>
       </C41UnidadesSuplementarias>` : ''}
       <C42ValorFactura>${Number(p.valorFactura || 0).toFixed(3)}</C42ValorFactura>

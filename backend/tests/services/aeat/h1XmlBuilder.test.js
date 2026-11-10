@@ -166,10 +166,12 @@ describe('buildH1ImportXML: codigo adicional (C372) y unidades suplementarias (C
     expect(xml).toContain('<C372CodigoAdicional>F44</C372CodigoAdicional>');
   });
 
-  test('emite C41 con el codigo por defecto NAR si hay unidades sin codigo', () => {
+  test('emite C41 con el codigo por defecto UN (unidades) si hay unidades sin codigo', () => {
+    // El defecto era NAR, el codigo TARIC: la AEAT lo rechaza (error 2019) y
+    // exige el del Anexo IX de la Resolucion del DUA, de dos caracteres.
     const xml = buildH1ImportXML({ partidas: [partida({ unidadesSuplementarias: 12 })] });
 
-    expect(xml).toContain('<C41UnidadesCodigo>NAR</C41UnidadesCodigo>');
+    expect(xml).toContain('<C41UnidadesCodigo>UN</C41UnidadesCodigo>');
     expect(xml).toContain('<C41UnidadesNumero>12.000</C41UnidadesNumero>');
   });
 
