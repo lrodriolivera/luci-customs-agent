@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { expeditionsAPI, classificationAPI } from '../../services/api'
+import { formatearImporte } from '../../utils/importe'
 import { PACKAGE_TYPES, DEFAULT_PACKAGE_TYPE, toNumberOrUndefined } from './packageTypes'
 import toast from 'react-hot-toast'
 import { ArrowLeftIcon, PlusIcon, TrashIcon, SparklesIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
@@ -15,6 +16,23 @@ const NL_CUSTOMS_OFFICES = [
   { code: 'NL000231', name: 'Breda' },
   { code: 'NL000251', name: 'Rotterdam Rijnmond' },
 ]
+
+const MIN_DESCRIPCION_CLASIFICACION = 10
+
+// El arancel a terceros viene del catalogo TARIC (taricInfo), no del modelo.
+const arancelDe = (suggestion) => {
+  const valor = suggestion?.taricInfo?.duties?.thirdCountry ?? suggestion?.duty_rate
+  return typeof valor === 'number' ? valor : undefined
+}
+
+// La descripcion del catalogo llega como { es, en } o como texto.
+const descripcionDe = (suggestion) => {
+  const descripcion = suggestion?.taricInfo?.description ?? suggestion?.description
+  if (!descripcion) return ''
+  const texto = typeof descripcion === 'string' ? descripcion : (descripcion.es || descripcion.en || '')
+  // El catalogo oficial trae saltos de linea como <br>.
+  return texto.replace(/<br\s*\/?>/gi, ' ')
+}
 
 export default function ExpeditionNew() {
   const { t } = useTranslation()
@@ -142,11 +160,25 @@ export default function ExpeditionNew() {
     }
   }
 
+  // Codigo y arancel se aplican en una sola actualizacion: dos
+  // handleGoodsChange seguidos parten del mismo estado y el segundo borraba el
+  // codigo TARIC que acababa de poner el primero.
+  const applyTaric = (index, suggestion) => {
+    setFormData((prev) => ({
+      ...prev,
+      goods: prev.goods.map((item, i) => (
+        i === index ? { ...item, taricCode: suggestion.code, dutyRate: arancelDe(suggestion) ?? 0 } : item
+      ))
+    }))
+  }
+
   // AI Classification function
   const handleClassifyWithAI = async (index) => {
     const item = formData.goods[index]
-    if (!item.description || item.description.trim().length < 3) {
-      toast.error(t('expeditions.enterDescription'))
+    // El backend exige entre 10 y 2000 caracteres: con menos respondia 400 y
+    // aqui solo se veia un error generico de clasificacion.
+    if (!item.description || item.description.trim().length < MIN_DESCRIPCION_CLASIFICACION) {
+      toast.error(t('expeditions.descriptionTooShort', { min: MIN_DESCRIPCION_CLASIFICACION }))
       return
     }
 
@@ -155,7 +187,8 @@ export default function ExpeditionNew() {
     try {
       const response = await classificationAPI.classify({
         description: item.description,
-        additional_info: {
+        // El backend lee additionalInfo (camelCase), no additional_info.
+        additionalInfo: {
           material: item.material || '',
           use: item.use || '',
           origin: item.originCountry || ''
@@ -163,7 +196,10 @@ export default function ExpeditionNew() {
         language: 'es'
       })
 
-      const data = response.data
+      // El backend responde { success, data: { suggestions } }. Se leia
+      // response.data.suggestions, que no existe: cualquier clasificacion
+      // acababa en "no se encontraron sugerencias" (UAT 10/Nov/2026).
+      const data = response.data?.data || response.data || {}
       if (data.suggestions && data.suggestions.length > 0) {
         // Store all suggestions
         setClassificationResults({
@@ -174,8 +210,7 @@ export default function ExpeditionNew() {
         // Auto-fill with the best suggestion
         const bestSuggestion = data.suggestions[0]
         if (bestSuggestion.code && bestSuggestion.code !== '0000000000') {
-          handleGoodsChange(index, 'taricCode', bestSuggestion.code)
-          handleGoodsChange(index, 'dutyRate', bestSuggestion.duty_rate || 0)
+          applyTaric(index, bestSuggestion)
           toast.success(`${t('expeditions.taricSuggested')} ${bestSuggestion.code} (${bestSuggestion.confidence}% ${t('expeditions.confidence')})`)
         } else {
           toast(t('expeditions.couldNotDetermine'), { icon: '⚠️' })
@@ -193,8 +228,7 @@ export default function ExpeditionNew() {
 
   // Apply a specific suggestion
   const applySuggestion = (index, suggestion) => {
-    handleGoodsChange(index, 'taricCode', suggestion.code)
-    handleGoodsChange(index, 'dutyRate', suggestion.duty_rate || 0)
+    applyTaric(index, suggestion)
     toast.success(t('expeditions.codeApplied', { code: suggestion.code }))
   }
 
@@ -696,11 +730,20 @@ export default function ExpeditionNew() {
                               }`}>
                                 {suggestion.confidence}%
                               </span>
-                              <span className="ml-2 text-sm text-gray-600">
-                                {t('expeditions.tariff')}: {suggestion.duty_rate || 0}%
-                              </span>
-                              {suggestion.description && (
-                                <p className="text-xs text-gray-500 mt-1">{suggestion.description}</p>
+                              {/* Solo se muestra el arancel que consta en el catalogo:
+                                  un 0% por defecto pasaria por dato real. */}
+                              {arancelDe(suggestion) !== undefined && (
+                                <span className="ml-2 text-sm text-gray-600">
+                                  {t('expeditions.tariff')}: {arancelDe(suggestion)}%
+                                </span>
+                              )}
+                              {suggestion.verified === false && (
+                                <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                                  {t('expeditions.taricNotVerified')}
+                                </span>
+                              )}
+                              {descripcionDe(suggestion) && (
+                                <p className="text-xs text-gray-500 mt-1">{descripcionDe(suggestion)}</p>
                               )}
                             </div>
                             {item.taricCode !== suggestion.code && (
@@ -816,6 +859,11 @@ export default function ExpeditionNew() {
                         <option value="CNY">CNY</option>
                       </select>
                     </div>
+                    {formatearImporte(item.invoiceValue, item.currency) && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        {t('expeditions.valueWillBeSaved', { amount: formatearImporte(item.invoiceValue, item.currency) })}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

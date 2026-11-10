@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { formatearImporte } from '../../utils/importe'
 import { PACKAGE_TYPES, DEFAULT_PACKAGE_TYPE, toNumberOrUndefined } from './packageTypes'
 
 const TARIC_PATTERN = /^\d{8,10}$/
@@ -156,6 +157,11 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
             onChange={handleChange('invoiceValue')}
             className="input"
           />
+          {formatearImporte(form.invoiceValue, item.currency || 'EUR') && (
+            <p className="mt-1 text-xs text-gray-500">
+              {t('expeditions.valueWillBeSaved', { amount: formatearImporte(form.invoiceValue, item.currency || 'EUR') })}
+            </p>
+          )}
         </div>
       </div>
 

@@ -543,7 +543,10 @@
       "ce_certificate": "Certificat CE",
       "quality_certificate": "Certificat de qualitat",
       "other": "Altre"
-    }
+    },
+    "descriptionTooShort": "La descripció ha de tenir almenys {{min}} caràcters per classificar-la",
+    "valueWillBeSaved": "Es desarà com a {{amount}}",
+    "taricNotVerified": "No és al catàleg TARIC"
   },
   "classification": {
     "title": "Classificació TARIC",

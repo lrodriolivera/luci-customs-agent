@@ -234,18 +234,18 @@ describe('<ExpeditionNew />', () => {
       fireEvent.click(screen.getByText('common.next')) // step 2
       const aiButton = screen.getAllByText('IA')[0].closest('button')
       fireEvent.click(aiButton)
-      await waitFor(() => expect(toast.error).toHaveBeenCalledWith('expeditions.enterDescription'))
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith('expeditions.descriptionTooShort:{"min":10}'))
       expect(classificationAPI.classify).not.toHaveBeenCalled()
     })
 
-    test('muestra error si descripción es muy corta (< 3 caracteres)', async () => {
+    test('muestra error si la descripción no llega a los 10 caracteres que exige el backend', async () => {
       renderComponent()
       fireEvent.click(screen.getByText('common.next'))
       const descInput = screen.getAllByPlaceholderText('expeditions.descriptionPlaceholder')[0]
-      fireEvent.change(descInput, { target: { value: 'ab' } })
+      fireEvent.change(descInput, { target: { value: 'Portátil' } })
       const aiButton = screen.getAllByText('IA')[0].closest('button')
       fireEvent.click(aiButton)
-      await waitFor(() => expect(toast.error).toHaveBeenCalledWith('expeditions.enterDescription'))
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith('expeditions.descriptionTooShort:{"min":10}'))
       expect(classificationAPI.classify).not.toHaveBeenCalled()
     })
 
@@ -267,7 +267,7 @@ describe('<ExpeditionNew />', () => {
 
       await waitFor(() => expect(classificationAPI.classify).toHaveBeenCalledWith({
         description: 'Pantalones de algodón para mujer',
-        additional_info: { material: '', use: '', origin: '' },
+        additionalInfo: { material: '', use: '', origin: '' },
         language: 'es'
       }))
       expect(toast.success).toHaveBeenCalled()
@@ -304,12 +304,58 @@ describe('<ExpeditionNew />', () => {
       await waitFor(() => expect(toast.error).toHaveBeenCalledWith('expeditions.noSuggestions'))
     })
 
+    test('lee la respuesta real del backend ({ success, data: { suggestions } }) y rellena TARIC y arancel', async () => {
+      // Se leía response.data.suggestions, que no existe: toda clasificación
+      // acababa en «no se encontraron sugerencias» (UAT 10/Nov/2026).
+      classificationAPI.classify.mockResolvedValue({
+        data: {
+          success: true,
+          data: {
+            suggestions: [
+              {
+                code: '8471300000',
+                confidence: 93,
+                verified: true,
+                taricInfo: { description: { es: 'Máquinas portátiles<br>de peso inferior a 10 kg' }, duties: { thirdCountry: 0 } }
+              },
+              { code: '8471410000', confidence: 40, verified: false, taricInfo: null }
+            ]
+          }
+        }
+      })
+      renderComponent()
+      fireEvent.click(screen.getByText('common.next'))
+      fireEvent.change(screen.getAllByPlaceholderText('expeditions.descriptionPlaceholder')[0], {
+        target: { value: 'Ordenadores portátiles de 14 pulgadas' }
+      })
+      fireEvent.click(screen.getAllByText('IA')[0].closest('button'))
+
+      await waitFor(() => expect(screen.getByText('expeditions.aiSuggestions')).toBeInTheDocument())
+      expect(toast.error).not.toHaveBeenCalledWith('expeditions.noSuggestions')
+      // El código queda en el campo: antes lo pisaba la actualización del arancel.
+      expect(screen.getByPlaceholderText('expeditions.tenDigits')).toHaveValue('8471300000')
+      expect(screen.getByText('Máquinas portátiles de peso inferior a 10 kg')).toBeInTheDocument()
+      expect(screen.getByText('expeditions.tariff: 0%')).toBeInTheDocument()
+      // Sin dato de catálogo no se inventa un arancel, y se avisa de que no está verificado.
+      expect(screen.getAllByText(/^expeditions\.tariff:/)).toHaveLength(1)
+      expect(screen.getByText('expeditions.taricNotVerified')).toBeInTheDocument()
+    })
+
+    test('el importe se muestra ya interpretado para delatar el punto usado como millar', () => {
+      renderComponent()
+      fireEvent.click(screen.getByText('common.next'))
+      const invoiceInput = Array.from(document.querySelectorAll('input[type="number"]')).find(inp => inp.step === '0.01')
+      fireEvent.change(invoiceInput, { target: { value: '184.800' } })
+
+      expect(screen.getByText('expeditions.valueWillBeSaved:{"amount":"184,80 EUR"}')).toBeInTheDocument()
+    })
+
     test('error de API en clasificación muestra toast de error', async () => {
       classificationAPI.classify.mockRejectedValue(new Error('Network error'))
       renderComponent()
       fireEvent.click(screen.getByText('common.next'))
       const descInput = screen.getAllByPlaceholderText('expeditions.descriptionPlaceholder')[0]
-      fireEvent.change(descInput, { target: { value: 'Test item' } })
+      fireEvent.change(descInput, { target: { value: 'Test item largo' } })
       const aiButton = screen.getAllByText('IA')[0].closest('button')
       fireEvent.click(aiButton)
 
@@ -620,7 +666,7 @@ describe('<ExpeditionNew />', () => {
   })
 
   describe('Edge cases y ramas condicionales', () => {
-    test('clasificación con additional_info relleno', async () => {
+    test('clasificación con additionalInfo relleno', async () => {
       classificationAPI.classify.mockResolvedValue({
         data: { suggestions: [{ code: '1111111111', confidence: 90, duty_rate: 5 }] }
       })
@@ -632,7 +678,7 @@ describe('<ExpeditionNew />', () => {
       const useInput = screen.getByPlaceholderText('expeditions.usePlaceholder')
       const originInput = screen.getAllByPlaceholderText('expeditions.isoCodePlaceholderShort')[0]
 
-      fireEvent.change(descInput, { target: { value: 'Herramienta' } })
+      fireEvent.change(descInput, { target: { value: 'Herramienta de corte' } })
       fireEvent.change(materialInput, { target: { value: 'Acero' } })
       fireEvent.change(useInput, { target: { value: 'Cortar' } })
       fireEvent.change(originInput, { target: { value: 'DE' } })
@@ -641,8 +687,8 @@ describe('<ExpeditionNew />', () => {
       fireEvent.click(aiButton)
 
       await waitFor(() => expect(classificationAPI.classify).toHaveBeenCalledWith({
-        description: 'Herramienta',
-        additional_info: { material: 'Acero', use: 'Cortar', origin: 'DE' },
+        description: 'Herramienta de corte',
+        additionalInfo: { material: 'Acero', use: 'Cortar', origin: 'DE' },
         language: 'es'
       }))
     })
@@ -669,7 +715,7 @@ describe('<ExpeditionNew />', () => {
       renderComponent()
       fireEvent.click(screen.getByText('common.next'))
       const descInput = screen.getByPlaceholderText('expeditions.descriptionPlaceholder')
-      fireEvent.change(descInput, { target: { value: 'Multi' } })
+      fireEvent.change(descInput, { target: { value: 'Multi producto' } })
       const aiButton = screen.getAllByText('IA')[0].closest('button')
       fireEvent.click(aiButton)
 
@@ -692,7 +738,7 @@ describe('<ExpeditionNew />', () => {
       renderComponent()
       fireEvent.click(screen.getByText('common.next'))
       const descInput = screen.getByPlaceholderText('expeditions.descriptionPlaceholder')
-      fireEvent.change(descInput, { target: { value: 'Tela' } })
+      fireEvent.change(descInput, { target: { value: 'Tela de algodón' } })
       const aiButton = screen.getAllByText('IA')[0].closest('button')
       fireEvent.click(aiButton)
 
@@ -711,7 +757,7 @@ describe('<ExpeditionNew />', () => {
       renderComponent()
       fireEvent.click(screen.getByText('common.next'))
       const descInput = screen.getByPlaceholderText('expeditions.descriptionPlaceholder')
-      fireEvent.change(descInput, { target: { value: 'Producto' } })
+      fireEvent.change(descInput, { target: { value: 'Producto de prueba' } })
       const aiButton = screen.getAllByText('IA')[0].closest('button')
       fireEvent.click(aiButton)
 
