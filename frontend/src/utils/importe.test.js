@@ -30,3 +30,48 @@ describe('formatearImporte', () => {
     expect(formatearImporte(0, 'EUR')).toBe('0,00 EUR')
   })
 })
+
+import { interpretarImporte } from './importe'
+
+describe('interpretarImporte (formato español)', () => {
+  test('el punto que agrupa de tres en tres es separador de millares', () => {
+    expect(interpretarImporte('184.800')).toBe(184800)
+    expect(interpretarImporte('1.234.567')).toBe(1234567)
+    expect(interpretarImporte('5.000')).toBe(5000)
+  })
+
+  test('la coma es el separador decimal', () => {
+    expect(interpretarImporte('184.800,50')).toBe(184800.5)
+    expect(interpretarImporte('184800,5')).toBe(184800.5)
+    expect(interpretarImporte('184,8')).toBe(184.8)
+    expect(interpretarImporte('0,75')).toBe(0.75)
+  })
+
+  test('un punto que no agrupa de tres en tres solo puede ser decimal', () => {
+    expect(interpretarImporte('1050.5')).toBe(1050.5)
+    expect(interpretarImporte('99.99')).toBe(99.99)
+    expect(interpretarImporte('0.5')).toBe(0.5)
+    expect(interpretarImporte('0.500')).toBe(0.5)
+  })
+
+  test('sin separadores es un entero', () => {
+    expect(interpretarImporte('184800')).toBe(184800)
+    expect(interpretarImporte(' 5000 ')).toBe(5000)
+  })
+
+  test('un número se devuelve tal cual', () => {
+    expect(interpretarImporte(184800)).toBe(184800)
+    expect(interpretarImporte(1.234)).toBe(1.234)
+  })
+
+  test('vacío o no interpretable devuelve null, nunca 0', () => {
+    expect(interpretarImporte('')).toBeNull()
+    expect(interpretarImporte(null)).toBeNull()
+    expect(interpretarImporte(undefined)).toBeNull()
+    expect(interpretarImporte('abc')).toBeNull()
+    expect(interpretarImporte('184,800,50')).toBeNull()
+    expect(interpretarImporte('1.23.456')).toBeNull()
+    expect(interpretarImporte('12.34,5')).toBeNull()
+    expect(interpretarImporte('-5')).toBeNull()
+  })
+})

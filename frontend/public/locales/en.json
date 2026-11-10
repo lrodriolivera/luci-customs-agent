@@ -546,7 +546,8 @@
     },
     "descriptionTooShort": "The description needs at least {{min}} characters to be classified",
     "valueWillBeSaved": "It will be saved as {{amount}}",
-    "taricNotVerified": "Not in the TARIC catalogue"
+    "taricNotVerified": "Not in the TARIC catalogue",
+    "valueNotValid": "Invalid amount. Use a dot for thousands and a comma for decimals: 184.800,50"
   },
   "classification": {
     "title": "TARIC Classification",

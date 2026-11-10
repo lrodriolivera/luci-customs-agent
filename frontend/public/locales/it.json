@@ -546,7 +546,8 @@
     },
     "descriptionTooShort": "La descrizione deve avere almeno {{min}} caratteri per essere classificata",
     "valueWillBeSaved": "Verrà salvato come {{amount}}",
-    "taricNotVerified": "Non presente nel catalogo TARIC"
+    "taricNotVerified": "Non presente nel catalogo TARIC",
+    "valueNotValid": "Importo non valido. Usa il punto per le migliaia e la virgola per i decimali: 184.800,50"
   },
   "classification": {
     "title": "Classificazione TARIC",

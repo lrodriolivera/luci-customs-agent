@@ -546,7 +546,8 @@
     },
     "descriptionTooShort": "La description doit comporter au moins {{min}} caractères pour être classée",
     "valueWillBeSaved": "Sera enregistré comme {{amount}}",
-    "taricNotVerified": "Absent du catalogue TARIC"
+    "taricNotVerified": "Absent du catalogue TARIC",
+    "valueNotValid": "Montant non valide. Utilisez le point pour les milliers et la virgule pour les décimales : 184.800,50"
   },
   "classification": {
     "title": "Classification TARIC",

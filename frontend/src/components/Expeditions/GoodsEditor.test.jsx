@@ -73,6 +73,35 @@ describe('GoodsEditor', () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
+  test('el importe se teclea en formato español: 184.800 se guarda como 184800', () => {
+    const { onSave } = renderEditor({ item: { ...item, invoiceValue: 100 } })
+
+    change('expeditions.invoiceValue (USD)', '184.800')
+    expect(screen.getByText('expeditions.valueWillBeSaved')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('common.save'))
+
+    expect(onSave.mock.calls[0][0].invoiceValue).toBe(184800)
+  })
+
+  test('un importe guardado con tres decimales no se convierte en millares al abrir el editor', () => {
+    const { onSave } = renderEditor({ item: { ...item, invoiceValue: 1.234 } })
+
+    expect(screen.getByLabelText('expeditions.invoiceValue (USD)')).toHaveValue('1,234')
+    fireEvent.click(screen.getByText('common.save'))
+
+    expect(onSave.mock.calls[0][0].invoiceValue).toBe(1.234)
+  })
+
+  test('un importe que no se puede interpretar se señala y no se guarda', () => {
+    const { onSave } = renderEditor()
+
+    change('expeditions.invoiceValue (USD)', '12.34,5')
+    expect(screen.getByText('expeditions.valueNotValid')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('common.save'))
+
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
   test('rechaza un valor de factura vacío', () => {
     const { onSave } = renderEditor()
 

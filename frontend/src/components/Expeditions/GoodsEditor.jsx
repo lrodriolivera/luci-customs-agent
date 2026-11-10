@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { formatearImporte } from '../../utils/importe'
+import { interpretarImporte } from '../../utils/importe'
+import ImporteInput from '../common/ImporteInput'
 import { PACKAGE_TYPES, DEFAULT_PACKAGE_TYPE, toNumberOrUndefined } from './packageTypes'
 
 const TARIC_PATTERN = /^\d{8,10}$/
@@ -28,7 +29,9 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
     packagesType: item.packages?.type || DEFAULT_PACKAGE_TYPE,
     netWeight: asInput(item.netWeight),
     grossWeight: asInput(item.grossWeight),
-    invoiceValue: asInput(item.invoiceValue)
+    // El importe guardado se muestra con coma decimal para que el campo, que
+    // lee formato español, no tome un decimal de tres cifras por millares.
+    invoiceValue: asInput(item.invoiceValue).replace('.', ',')
   })
   const [error, setError] = useState(null)
 
@@ -46,7 +49,7 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
       return t('expeditions.editGoodsPackagesInvalid')
     }
 
-    const invoiceValue = toNumberOrUndefined(form.invoiceValue)
+    const invoiceValue = interpretarImporte(form.invoiceValue)
     if (!(invoiceValue > 0)) return t('expeditions.editGoodsValueInvalid')
 
     const negativo = [form.netWeight, form.grossWeight].some((v) => toNumberOrUndefined(v) < 0)
@@ -69,7 +72,7 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
       taricCode: form.taricCode.replace(/[\s.]/g, ''),
       netWeight: toNumberOrUndefined(form.netWeight),
       grossWeight: toNumberOrUndefined(form.grossWeight),
-      invoiceValue: toNumberOrUndefined(form.invoiceValue),
+      invoiceValue: interpretarImporte(form.invoiceValue) ?? undefined,
       packages: {
         ...item.packages,
         quantity: packagesQuantity,
@@ -148,20 +151,12 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
           <label className="label" htmlFor={fieldId('value')}>
             {t('expeditions.invoiceValue')} ({item.currency || 'EUR'})
           </label>
-          <input
+          <ImporteInput
             id={fieldId('value')}
-            type="number"
-            min="0"
-            step="0.01"
             value={form.invoiceValue}
-            onChange={handleChange('invoiceValue')}
-            className="input"
+            currency={item.currency || 'EUR'}
+            onChange={(texto) => setForm((prev) => ({ ...prev, invoiceValue: texto }))}
           />
-          {formatearImporte(form.invoiceValue, item.currency || 'EUR') && (
-            <p className="mt-1 text-xs text-gray-500">
-              {t('expeditions.valueWillBeSaved', { amount: formatearImporte(form.invoiceValue, item.currency || 'EUR') })}
-            </p>
-          )}
         </div>
       </div>
 

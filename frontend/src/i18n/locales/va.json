@@ -546,7 +546,8 @@
     },
     "descriptionTooShort": "La descripció ha de tenir almenys {{min}} caràcters per classificar-la",
     "valueWillBeSaved": "Es desarà com a {{amount}}",
-    "taricNotVerified": "No és al catàleg TARIC"
+    "taricNotVerified": "No és al catàleg TARIC",
+    "valueNotValid": "Import no vàlid. Fes servir punt per als milers i coma per als decimals: 184.800,50"
   },
   "classification": {
     "title": "Classificacio TARIC",

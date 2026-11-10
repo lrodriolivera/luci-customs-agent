@@ -170,6 +170,12 @@ const SOIVRE_OTROS = { subType: 'industrial_products', documents: [
   { code: 'C057', name: 'Documentacion de conformidad del producto', mandatory: true }
 ] };
 
+// La medida TARIC de RoHS/RAEE (ROS, «todos erga omnes») excluye estos
+// origenes: Turquia, Noruega, Islandia y Liechtenstein. Dato de la consulta
+// TARIC de la AEAT para la 8471 30 que aporto la agente de aduanas en la UAT
+// (10/Nov/2026); se aplica a toda la lista RoHS/RAEE.
+const ORIGENES_EXCLUIDOS_ROHS_RAEE = ['TR', 'NO', 'IS', 'LI'];
+
 const DOCUMENTO_ROHS = { code: 'ROHS', name: 'Declaracion UE de conformidad RoHS (Directiva 2011/65/UE)', mandatory: true };
 const DOCUMENTO_RAEE = { code: 'RAEE', name: 'Numero de inscripcion en el Registro Integrado Industrial de AEE (RD 110/2015)', mandatory: true };
 
@@ -606,7 +612,8 @@ class ParaduaneroService {
     }
 
     const rohsRaee = buscarRohsRaee(good.taricCode);
-    if (rohsRaee && (rohsRaee.rohs || rohsRaee.raee)) {
+    const origenExcluido = ORIGENES_EXCLUIDOS_ROHS_RAEE.includes(String(good.originCountry || '').toUpperCase());
+    if (rohsRaee && (rohsRaee.rohs || rohsRaee.raee) && !origenExcluido) {
       const siglas = [rohsRaee.rohs && 'RoHS', rohsRaee.raee && 'RAEE'].filter(Boolean).join(' y ');
       controles.push({
         controlType: 'SOIVRE',

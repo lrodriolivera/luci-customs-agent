@@ -74,8 +74,8 @@ describe('<ExpeditionNew />', () => {
     // Step 2
     fireEvent.change(screen.getByPlaceholderText('expeditions.descriptionPlaceholder'), { target: { value: desc } })
     fireEvent.change(screen.getAllByPlaceholderText('expeditions.isoCodePlaceholderShort')[0], { target: { value: origin } })
-    const numberInputs = document.querySelectorAll('input[type="number"]')
-    const invoiceInput = Array.from(numberInputs).find(inp => inp.step === '0.01')
+    // El importe es un campo de texto que entiende el formato español.
+    const invoiceInput = document.querySelector('[data-campo="importe"]')
     fireEvent.change(invoiceInput, { target: { value: value } })
 
     fireEvent.click(screen.getByText('common.next'))
@@ -341,13 +341,14 @@ describe('<ExpeditionNew />', () => {
       expect(screen.getByText('expeditions.taricNotVerified')).toBeInTheDocument()
     })
 
-    test('el importe se muestra ya interpretado para delatar el punto usado como millar', () => {
+    test('el punto del importe se toma como separador de millares, a la española', () => {
       renderComponent()
       fireEvent.click(screen.getByText('common.next'))
-      const invoiceInput = Array.from(document.querySelectorAll('input[type="number"]')).find(inp => inp.step === '0.01')
+      const invoiceInput = document.querySelector('[data-campo="importe"]')
       fireEvent.change(invoiceInput, { target: { value: '184.800' } })
 
-      expect(screen.getByText('expeditions.valueWillBeSaved:{"amount":"184,80 EUR"}')).toBeInTheDocument()
+      // 184.800 son ciento ochenta y cuatro mil ochocientos, no 184,80.
+      expect(screen.getByText('expeditions.valueWillBeSaved:{"amount":"184.800,00 EUR"}')).toBeInTheDocument()
     })
 
     test('error de API en clasificación muestra toast de error', async () => {
@@ -499,6 +500,26 @@ describe('<ExpeditionNew />', () => {
 
       await waitFor(() => expect(expeditionsAPI.create).toHaveBeenCalled())
       expect(expeditionsAPI.create.mock.calls[0][0].transport).toBeUndefined()
+    })
+
+    test('184.800 tecleado como importe se envía como 184800, no como 184,8', async () => {
+      expeditionsAPI.create.mockResolvedValue({ data: { data: { _id: 'exp-123' } } })
+      renderComponent()
+      fillMinimalForm('B12345678', 'Test Co', 'test@test.com', 'Test', 'CN', '184.800')
+      fireEvent.submit(document.querySelector('form'))
+
+      await waitFor(() => expect(expeditionsAPI.create).toHaveBeenCalled())
+      expect(expeditionsAPI.create.mock.calls[0][0].goods[0].invoiceValue).toBe(184800)
+    })
+
+    test('un importe con coma decimal se envía con sus decimales', async () => {
+      expeditionsAPI.create.mockResolvedValue({ data: { data: { _id: 'exp-123' } } })
+      renderComponent()
+      fillMinimalForm('B12345678', 'Test Co', 'test@test.com', 'Test', 'CN', '1.250,75')
+      fireEvent.submit(document.querySelector('form'))
+
+      await waitFor(() => expect(expeditionsAPI.create).toHaveBeenCalled())
+      expect(expeditionsAPI.create.mock.calls[0][0].goods[0].invoiceValue).toBe(1250.75)
     })
 
     test('unos bultos en blanco no se envían como 0', async () => {
