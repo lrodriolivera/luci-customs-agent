@@ -91,6 +91,13 @@ const totalesDe = (expedition) => ({
   peso: numero(expedition?.goodsSummary?.totalGrossWeight) || 0
 });
 
+// En el entorno de pruebas de la AEAT no existen las sumarias reales de los
+// operadores: una sumaria de verdad sale siempre como no encontrada.
+const ENTORNO_PREPRODUCCION = 'PRE.AEAT';
+const avisoPreproduccion = (respuesta) => (respuesta.entorno === ENTORNO_PREPRODUCCION
+  ? ' LUCI esta consultando el entorno de pruebas de la AEAT, donde no existen las sumarias reales: usa una sumaria de prueba.'
+  : '');
+
 /** Lo que se guarda en el expediente de la respuesta de la AEAT. */
 const instantaneaDe = (respuesta, partida) => ({
   consultedAt: new Date(),
@@ -129,7 +136,7 @@ const evaluarConsultaAeat = (expedition, respuesta) => {
     const detalle = respuesta.errores.map(e => e.descripcion).filter(Boolean).join('; ');
     return {
       bloqueo: `${prefijo} y la AEAT no encuentra la partida ${sumaria.item} de la declaracion sumaria ${sumaria.number}` +
-        `${detalle ? ` (${detalle})` : ''}. Comprueba el numero y la partida.`,
+        `${detalle ? ` (${detalle})` : ''}. Comprueba el numero y la partida.${avisoPreproduccion(respuesta)}`,
       consulta: { ...instantaneaDe(respuesta, null), error: detalle || 'Partida de DSDT no encontrada' }
     };
   }
@@ -219,7 +226,7 @@ const verificarSumariaConAeat = async (expedition, { consultar }) => {
     const partidaAeat = respuesta.dsdt?.partidas.find(p => p.partida === Number(partida)) || respuesta.dsdt?.partidas[0] || null;
     const consulta = instantaneaDe(respuesta, partidaAeat);
     return respuesta.noEncontrada
-      ? { bloqueo: null, aviso: `La AEAT no encuentra la partida ${partida} de la declaracion sumaria ${numeroSumaria}.`, consulta: { ...consulta, error: 'Partida de DSDT no encontrada' } }
+      ? { bloqueo: null, aviso: `La AEAT no encuentra la partida ${partida} de la declaracion sumaria ${numeroSumaria}.${avisoPreproduccion(respuesta)}`, consulta: { ...consulta, error: 'Partida de DSDT no encontrada' } }
       : { bloqueo: null, aviso: null, consulta };
   }
 

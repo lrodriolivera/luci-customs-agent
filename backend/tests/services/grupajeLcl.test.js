@@ -215,6 +215,17 @@ describe('grupajeLcl — consulta de la sumaria en la AEAT', () => {
     expect(r.consulta).toMatchObject({ verified: true, environment: 'PRE.AEAT', error: 'Partida de DSDT no encontrada' });
   });
 
+  test('en el entorno de pruebas avisa de que alli no existen las sumarias reales; en produccion no', async () => {
+    const noEncontrada = (entorno) => ({ aceptada: false, noEncontrada: true, entorno, errores: [{ codigo: '403', descripcion: 'Partida de DSDT no encontrada.' }], dsdt: null });
+
+    const pre = await verificarSumariaConAeat(lcl(sumaria), { consultar: consultar(noEncontrada('PRE.AEAT')) });
+    const real = await verificarSumariaConAeat(lcl(sumaria), { consultar: consultar(noEncontrada('ES.AEAT')) });
+
+    expect(pre.bloqueo).toContain('entorno de pruebas de la AEAT');
+    expect(pre.bloqueo).toContain('usa una sumaria de prueba');
+    expect(real.bloqueo).not.toContain('entorno de pruebas');
+  });
+
   test('si la AEAT no responde se contrasta a mano y se avisa de que no se pudo verificar', async () => {
     const caida = { consultar: jest.fn().mockRejectedValue(new Error('ECONNRESET')) };
 
