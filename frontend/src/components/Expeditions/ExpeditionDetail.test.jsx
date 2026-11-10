@@ -18,12 +18,13 @@ vi.mock('../../services/api', () => ({
     get: vi.fn(),
     getChecklist: vi.fn(),
     sendPortalLink: vi.fn(),
+    update: vi.fn(),
     aiSuggestDocuments: vi.fn(),
     aiAnalyzeRisk: vi.fn(),
     aiDetectInconsistencies: vi.fn(),
     aiFullAnalysis: vi.fn()
   },
-  documentsAPI: {},
+  documentsAPI: { upload: vi.fn() },
   declarationsAPI: {
     generateH1: vi.fn(),
     exportXML: vi.fn(),
@@ -907,5 +908,85 @@ describe('<ExpeditionDetail />', () => {
     })
     renderExpeditionDetail()
     await waitFor(() => expect(screen.getByText('26ES123456789')).toBeInTheDocument())
+  })
+})
+
+describe('<ExpeditionDetail /> — edición de mercancía y documentos por el agente', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    expeditionsAPI.get.mockResolvedValue({ data: { data: mockExpedition } })
+    expeditionsAPI.getChecklist.mockResolvedValue({ data: { data: mockChecklist } })
+  })
+
+  test('una partida sin bultos lo indica en vez de dejar el hueco', async () => {
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getAllByText('expeditions.packagesMissing')).toHaveLength(2))
+  })
+
+  test('editar una partida envía la lista completa de mercancía con el cambio', async () => {
+    const actualizado = {
+      ...mockExpedition,
+      goods: [{ ...mockExpedition.goods[0], packages: { quantity: 12, type: 'CT' } }, mockExpedition.goods[1]]
+    }
+    // El `t` de este mock cambia en cada render y vuelve a disparar la carga
+    // inicial: tras guardar, el GET debe devolver ya el expediente actualizado.
+    expeditionsAPI.update.mockImplementation(async () => {
+      expeditionsAPI.get.mockResolvedValue({ data: { data: actualizado } })
+      return { data: { data: actualizado } }
+    })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getAllByText('common.edit')).toHaveLength(2))
+
+    fireEvent.click(screen.getAllByText('common.edit')[0])
+    fireEvent.change(screen.getByLabelText('expeditions.packagesQuantity'), { target: { value: '12' } })
+    fireEvent.click(screen.getByText('common.save'))
+
+    await waitFor(() => expect(expeditionsAPI.update).toHaveBeenCalled())
+    const [expId, body] = expeditionsAPI.update.mock.calls[0]
+    expect(expId).toBe('exp123')
+    expect(body.goods).toHaveLength(2)
+    expect(body.goods[0]).toMatchObject({ description: 'Café sin tostar', originCountry: 'BR', packages: { quantity: 12, type: 'CT' } })
+    expect(body.goods[1]).toEqual(mockExpedition.goods[1])
+    await waitFor(() => expect(screen.getByText('12 CT')).toBeInTheDocument())
+    expect(toast.success).toHaveBeenCalledWith('expeditions.editGoodsSaved')
+  })
+
+  test('si el guardado falla muestra el error del backend y mantiene el formulario', async () => {
+    expeditionsAPI.update.mockRejectedValue({ response: { data: { error: 'Error al actualizar expediente' } } })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getAllByText('common.edit')).toHaveLength(2))
+
+    fireEvent.click(screen.getAllByText('common.edit')[0])
+    fireEvent.click(screen.getByText('common.save'))
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Error al actualizar expediente'))
+    expect(screen.getByLabelText('expeditions.packagesQuantity')).toBeInTheDocument()
+  })
+
+  test('con la declaración presentada no se ofrece editar la mercancía', async () => {
+    expeditionsAPI.get.mockResolvedValue({ data: { data: { ...mockExpedition, status: 'declaration_submitted' } } })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getByText('Café sin tostar')).toBeInTheDocument())
+
+    expect(screen.queryByText('common.edit')).not.toBeInTheDocument()
+  })
+
+  test('el agente puede subir un documento y el expediente se recarga', async () => {
+    documentsAPI.upload.mockResolvedValue({ data: { success: true } })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getByText('expeditions.uploadTitle')).toBeInTheDocument())
+
+    const file = new File(['%PDF'], 'bl.pdf', { type: 'application/pdf' })
+    fireEvent.change(screen.getByLabelText('expeditions.uploadDocumentType'), { target: { value: 'bill_of_lading' } })
+    fireEvent.change(screen.getByLabelText('expeditions.uploadFile'), { target: { files: [file] } })
+
+    const cargasAntes = expeditionsAPI.get.mock.calls.length
+    const checklistAntes = expeditionsAPI.getChecklist.mock.calls.length
+    fireEvent.click(screen.getByText('expeditions.uploadButton'))
+
+    await waitFor(() => expect(documentsAPI.upload).toHaveBeenCalledWith('exp123', file, 'bill_of_lading'))
+    await waitFor(() => expect(expeditionsAPI.get.mock.calls.length).toBeGreaterThan(cargasAntes))
+    await waitFor(() => expect(expeditionsAPI.getChecklist.mock.calls.length).toBeGreaterThan(checklistAntes))
+    expect(toast.success).toHaveBeenCalledWith('expeditions.uploadSuccess')
   })
 })

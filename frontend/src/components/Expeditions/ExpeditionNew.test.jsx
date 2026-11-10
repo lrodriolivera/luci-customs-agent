@@ -417,6 +417,31 @@ describe('<ExpeditionNew />', () => {
       expect(toast.success).toHaveBeenCalledWith('expeditions.created')
     })
 
+    test('el alta pide los bultos y los envía como número en packages.quantity', async () => {
+      // Sin bultos el H1 no se genera, y el alta no los pedía.
+      expeditionsAPI.create.mockResolvedValue({ data: { data: { _id: 'exp-123' } } })
+      renderComponent()
+      fillMinimalForm()
+      // fillMinimalForm deja el asistente en el paso 3; la mercancía está en el 2.
+      fireEvent.click(screen.getByText('common.previous'))
+      fireEvent.change(screen.getByLabelText('expeditions.packagesQuantity *'), { target: { value: '12' } })
+      fireEvent.change(screen.getByLabelText('expeditions.packagesType'), { target: { value: 'PX' } })
+      fireEvent.submit(document.querySelector('form'))
+
+      await waitFor(() => expect(expeditionsAPI.create).toHaveBeenCalled())
+      expect(expeditionsAPI.create.mock.calls[0][0].goods[0].packages).toEqual({ quantity: 12, type: 'PX' })
+    })
+
+    test('unos bultos en blanco no se envían como 0', async () => {
+      expeditionsAPI.create.mockResolvedValue({ data: { data: { _id: 'exp-123' } } })
+      renderComponent()
+      fillMinimalForm()
+      fireEvent.submit(document.querySelector('form'))
+
+      await waitFor(() => expect(expeditionsAPI.create).toHaveBeenCalled())
+      expect(expeditionsAPI.create.mock.calls[0][0].goods[0].packages.quantity).toBeUndefined()
+    })
+
     test('submit exitoso navega al detalle (formato data._id)', async () => {
       expeditionsAPI.create.mockResolvedValue({
         data: { _id: 'exp-456' }
