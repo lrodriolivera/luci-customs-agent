@@ -150,7 +150,8 @@ describe('Paraduanero Service', () => {
         goods: [{
           itemNumber: 1,
           description: 'Cotton t-shirts',
-          taricCode: '6109100000',
+          // TARIC real de la lista SOIVRE: el control ya no se decide por capitulo.
+          taricCode: '6109100010',
           originCountry: 'BD',
           quantity: 500,
           unit: 'NAR',
@@ -361,9 +362,7 @@ describe('Paraduanero Service', () => {
       const testCases = [
         { chapter: '01', expectedControl: 'MAPA', subType: 'veterinary' },
         { chapter: '07', expectedControl: 'MAPA', subType: 'phytosanitary' },
-        { chapter: '30', expectedControl: 'AEMPS', subType: 'pharmaceuticals' },
-        { chapter: '84', expectedControl: 'SOIVRE', subType: 'machinery' },
-        { chapter: '95', expectedControl: 'SOIVRE', subType: 'toys' }
+        { chapter: '30', expectedControl: 'AEMPS', subType: 'pharmaceuticals' }
       ];
 
       for (const testCase of testCases) {
@@ -388,6 +387,105 @@ describe('Paraduanero Service', () => {
           expect(controls[0].subType).toBe(testCase.subType);
         }
       }
+    });
+  });
+  /**
+   * UAT 10/Nov/2026: unos portatiles (8471 30) salian con «control SOIVRE» por
+   * pertenecer al capitulo 84. Segun las listas oficiales no estan en la lista
+   * SOIVRE de seguridad y si en la de RoHS/RAEE. El SOIVRE se decide ahora por
+   * codigo TARIC contra esas listas.
+   */
+  describe('controles SOIVRE segun las listas oficiales por TARIC', () => {
+    const analizar = (taricCode, originCountry = 'CN') => paraduaneroService.analyzeExpedition({
+      expeditionId: 'EXP-LISTAS',
+      goods: [{ itemNumber: 1, description: 'Mercancia', taricCode, originCountry, quantity: 1, unit: 'NAR', grossWeight: 1 }]
+    });
+
+    test('portatiles 8471 30: solo RoHS/RAEE, sin control de seguridad', async () => {
+      const controls = await analizar('8471300000');
+
+      expect(controls).toHaveLength(1);
+      expect(controls[0]).toMatchObject({ controlType: 'SOIVRE', subType: 'rohs_raee', inspectionRequired: false });
+      expect(controls[0].documents.map(d => d.code)).toEqual(['ROHS', 'RAEE']);
+      expect(controls[0].reason).toContain('RoHS y RAEE');
+      expect(controls[0].notes).toContain('2023-02-09');
+    });
+
+    test('maquinaria del capitulo 84 que no esta en ninguna lista no lleva control', async () => {
+      // 8408 10: motores diesel para barcos. Antes: «SOIVRE machinery» por ser del 84.
+      expect(await analizar('8408101100')).toEqual([]);
+    });
+
+    test('un TARIC de la lista SOIVRE de juguetes lleva control de seguridad con inspeccion', async () => {
+      const controls = await analizar('9503001000');
+      const juguetes = controls.find(c => c.subType === 'toys');
+
+      expect(juguetes).toMatchObject({ controlType: 'SOIVRE', inspectionRequired: true });
+      expect(juguetes.documents.map(d => d.code)).toEqual(['C057', 'Y925']);
+      expect(juguetes.reason).toContain('grupo JUGUETES');
+    });
+
+    test('una subdivision de 10 digitos se reconoce por el prefijo de 8 de la lista', async () => {
+      // La lista RoHS/RAEE recoge 8516 40 00 (planchas); el TARIC lleva 10 digitos.
+      const controls = await analizar('8516400000');
+
+      expect(controls.map(c => c.subType)).toEqual(['rohs_raee']);
+    });
+
+    test('varias partidas con el mismo control se agrupan en uno', async () => {
+      const controls = await paraduaneroService.analyzeExpedition({
+        expeditionId: 'EXP-GRUPO',
+        goods: [
+          { itemNumber: 1, description: 'Portatiles', taricCode: '8471300000', originCountry: 'CN' },
+          { itemNumber: 2, description: 'Planchas', taricCode: '8516400000', originCountry: 'CN' }
+        ]
+      });
+
+      expect(controls).toHaveLength(1);
+      expect(controls[0].affectedGoods.map(g => g.itemNumber)).toEqual([1, 2]);
+    });
+
+    test('la nota que acota el control en la lista llega al agente', async () => {
+      const { buscarRohsRaee } = require('../../src/services/paraduanero/listasOficiales');
+      const rohsRaee = require('../../src/data/paraduanero/rohsRaee.json');
+      const conNota = rohsRaee.entradas.find(e => e.nota && (e.rohs || e.raee));
+
+      const controls = await analizar(conNota.prefijo.padEnd(10, '0'));
+
+      expect(buscarRohsRaee(conNota.prefijo.padEnd(10, '0'))).toBe(conNota);
+      expect(controls.find(c => c.subType === 'rohs_raee').notes).toContain(conNota.nota);
+    });
+  });
+
+  describe('listasOficiales', () => {
+    const { buscarRohsRaee, buscarSoivreSeguridad, normalizarTaric } = require('../../src/services/paraduanero/listasOficiales');
+
+    test('normaliza a 10 digitos y descarta lo que no es un TARIC', () => {
+      expect(normalizarTaric('8471 30 00')).toBe('8471300000');
+      expect(normalizarTaric('8471.30.00.00')).toBe('8471300000');
+      expect(normalizarTaric('8471')).toBeNull();
+      expect(normalizarTaric(undefined)).toBeNull();
+      expect(normalizarTaric('84713000001')).toBeNull();
+    });
+
+    test('la 8471 30 no esta en la lista SOIVRE de seguridad y si en RoHS/RAEE', () => {
+      expect(buscarSoivreSeguridad('8471300000')).toBeNull();
+      expect(buscarRohsRaee('8471300000')).toMatchObject({ prefijo: '84713000', rohs: true, raee: true });
+    });
+
+    test('un codigo fuera de las listas devuelve null en ambas', () => {
+      expect(buscarSoivreSeguridad('4011100000')).toBeNull();
+      expect(buscarRohsRaee('4011100000')).toBeNull();
+    });
+
+    test('las listas se cargan completas y sin prefijos duplicados', () => {
+      const rohsRaee = require('../../src/data/paraduanero/rohsRaee.json');
+      const soivre = require('../../src/data/paraduanero/soivreSeguridad.json');
+
+      expect(rohsRaee.entradas).toHaveLength(820);
+      expect(new Set(rohsRaee.entradas.map(e => e.prefijo)).size).toBe(820);
+      expect(soivre.entradas).toHaveLength(838);
+      expect(soivre.entradas.every(e => /^\d{10}$/.test(e.taric) && e.grupo)).toBe(true);
     });
   });
 });

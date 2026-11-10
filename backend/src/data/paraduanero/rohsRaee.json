@@ -1,0 +1,4989 @@
+{
+ "fuente": "LISTA TARIC ROHS RAEE PUE (Secretaria de Estado de Comercio, SOIVRE)",
+ "version": "2023-02-09",
+ "oficial": "https://estacice.comercio.es",
+ "entradas": [
+  {
+   "prefijo": "32159020",
+   "descripcion": "Cartuchos de tinta (sin cabezal impresor integrado) que incorporan componentes mecánicos o eléctricos para instalar en aparatos comprendidos en las subpartidas 844331, 844332 u 844339; tinta sólida diseñada a medida para instalar en aparatos comprendidos en las subpartidas 844331, 844332 u 844339",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "3603600000",
+   "descripcion": "Detonadores eléctricos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "3707902000",
+   "descripcion": "Reveladores y fijadores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "63011000",
+   "descripcion": "Mantas eléctricas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84021100",
+   "descripcion": "Calderas acuotubulares con una producción de vapor superior a 45 t por hora",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84021200",
+   "descripcion": "Calderas acuotubulares con una producción de vapor inferior o igual a 45 t por hora",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84021910",
+   "descripcion": "Calderas de tubos de humo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84021990",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84022000",
+   "descripcion": "Calderas denominadas «de agua sobrecalentada»",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84031010",
+   "descripcion": "De fundición",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84031090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84131100",
+   "descripcion": "Bombas para distribución de carburantes o lubricantes, de los tipos utilizados en gasolineras, estaciones de servicio o garajes",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84131900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84134000",
+   "descripcion": "Bombas para hormigón",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84135020",
+   "descripcion": "Conjuntos hidráulicos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84135040",
+   "descripcion": "Bombas dosificadoras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84135061",
+   "descripcion": "Bombas oleohidráulicas",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "84135069",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84135080",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84136020",
+   "descripcion": "Conjuntos hidráulicos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84136031",
+   "descripcion": "Bombas oleohidráulicas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84136039",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84136061",
+   "descripcion": "Bombas oleohidráulicas",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "84136069",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84136070",
+   "descripcion": "De tornillo helicoidal",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84136080",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "84137021",
+   "descripcion": "Monocelulares",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84137029",
+   "descripcion": "Multicelulares",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84137030",
+   "descripcion": "Para calefacción central y de agua caliente",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84137035",
+   "descripcion": "Inferior o igual a 15 mm",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84137045",
+   "descripcion": "De rodetes acanalados y de canal lateral",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84137051",
+   "descripcion": "Monobloques",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84137059",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84137065",
+   "descripcion": "De flujo múltiple",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84137075",
+   "descripcion": "Multicelulares",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84137081",
+   "descripcion": "Monocelulares",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84137089",
+   "descripcion": "Multicelulares",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84138100",
+   "descripcion": "Bombas",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "84138200",
+   "descripcion": "Elevadores de líquidos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84141015",
+   "descripcion": "De los tipos utilizados en la fabricación de semiconductores o, exclusiva o principalmente, en la fabricación de dispositivos de visualización de pantalla plana",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84141025",
+   "descripcion": "De pistón rotativo, de paletas, moleculares y bombas «Roots»",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84141081",
+   "descripcion": "De difusión, criostáticas y de absorción",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84141089",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "84145100",
+   "descripcion": "Ventiladores de mesa, suelo, pared, cielo raso, techo o ventana, con motor eléctrico incorporado de potencia inferior o igual a 125 W",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84145925",
+   "descripcion": "Ventiladores axiales",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "84145935",
+   "descripcion": "Ventiladores centrífugos",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "84145995",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84146000",
+   "descripcion": "Campanas aspirantes en las que el mayor lado horizontal sea inferior o igual a 120 cm",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84147000",
+   "descripcion": "Recintos de seguridad biológica herméticos a gases",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84151010",
+   "descripcion": "Formando un solo cuerpo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84151090",
+   "descripcion": "Del tipo sistema de elementos separados («split-system»)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84158100",
+   "descripcion": "Con equipo de enfriamiento y válvula de inversión del ciclo térmico (bombas de calor reversibles)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84158200",
+   "descripcion": "Los demás, con equipo de enfriamiento",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84158300",
+   "descripcion": "Sin equipo de enfriamiento",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84181020",
+   "descripcion": "De capacidad superior a 340 l",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84181080",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84182110",
+   "descripcion": "De capacidad superior a 340 l",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84182151",
+   "descripcion": "Modelos de mesa",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84182159",
+   "descripcion": "De empotrar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84182191",
+   "descripcion": "Inferior o igual a 250 l",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84182199",
+   "descripcion": "Superior a 250 l pero inferior o igual a 340 l",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84182900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84183020",
+   "descripcion": "De capacidad inferior o igual a 400 l",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84183080",
+   "descripcion": "De capacidad superior a 400 l pero inferior o igual a 800 l",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84184020",
+   "descripcion": "De capacidad inferior o igual a 250 l",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84184080",
+   "descripcion": "De capacidad superior a 250 l pero inferior o igual a 900 l",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84185011",
+   "descripcion": "Para productos congelados",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84185019",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84185090",
+   "descripcion": "Los demás muebles frigoríficos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84186100",
+   "descripcion": "Bombas de calor, excepto las máquinas y aparatos para acondicionamiento de aire de la partida 8415",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84186900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84192000",
+   "descripcion": "Esterilizadores médicos, quirúrgicos o de laboratorio",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84201010",
+   "descripcion": "De los tipos utilizados en la industria textil",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84201030",
+   "descripcion": "De los tipos utilizados en la industria del papel",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84201081",
+   "descripcion": "Laminadores de rodillos de los tipos utilizados, exclusiva o principalmente, en la fabricación de sustratos de circuitos impresos o circuitos impresos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84201089",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84211100",
+   "descripcion": "Desnatadoras (descremadoras)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84211200",
+   "descripcion": "Secadoras de ropa",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84211920",
+   "descripcion": "Centrifugadoras del tipo de las utilizadas en los laboratorios",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84211970",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84221100",
+   "descripcion": "De tipo doméstico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84221900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84222000",
+   "descripcion": "Máquinas y aparatos para limpiar o secar botellas o demás recipientes",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84223000",
+   "descripcion": "Máquinas y aparatos para llenar, cerrar, tapar, taponar o etiquetar botellas, botes o latas, cajas, sacos (bolsas) o demás continentes; máquinas y aparatos de capsular botellas, tarros, tubos y continentes análogos; máquinas y aparatos para gasear bebidas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84224000",
+   "descripcion": "Las demás máquinas y aparatos para empaquetar o envolver mercancías (incluidas las de envolver con película termorretráctil)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84231010",
+   "descripcion": "Balanzas domésticas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84231090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84232010",
+   "descripcion": "Que determinen el peso por medios electrónicos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84233010",
+   "descripcion": "Que determinen el peso por medios electrónicos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84238121",
+   "descripcion": "Instrumentos de control por referencia a un peso predeterminado, de funcionamiento automático, incluidas las clasificadoras ponderales",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84238123",
+   "descripcion": "Instrumentos y aparatos de pesar y etiquetar productos preenvasados",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84238125",
+   "descripcion": "Balanzas de tienda",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84238129",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84238220",
+   "descripcion": "Que determinen el peso por medios electrónicos, excepto las máquinas para pesar vehículos automóviles",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84238920",
+   "descripcion": "Que determinen el peso por medios electrónicos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84242000",
+   "descripcion": "Pistolas aerográficas y aparatos similares",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84243001",
+   "descripcion": "Con dispositivos de calentamiento",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84243090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84251100",
+   "descripcion": "Con motor eléctrico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84253100",
+   "descripcion": "Con motor eléctrico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84331110",
+   "descripcion": "Eléctrico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84331910",
+   "descripcion": "Eléctrico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84431200",
+   "descripcion": "Máquinas y aparatos de oficina para imprimir, offset, alimentados con hojas en las que un lado sea inferior o igual a 22 cm y el otro sea inferior o igual a 36 cm, medidas sin plegar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84431310",
+   "descripcion": "Usados",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84431332",
+   "descripcion": "Inferior o igual a 53 × 75 cm",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84431334",
+   "descripcion": "Superior a 53 × 75 cm pero inferior o igual a 75 × 107 cm",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84431338",
+   "descripcion": "Superior a 75 × 107 cm",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84431390",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84433100",
+   "descripcion": "Máquinas que efectúan dos o más de las siguientes funciones : impresión, copia o fax, aptas para ser conectadas a una máquina automática para tratamiento o procesamiento de datos o a una red",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84433210",
+   "descripcion": "Impresoras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84433280",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84433900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "8443991000",
+   "descripcion": "Las demás partes y accesorios de máquinas y aparatos para imprimir por medio de planchas, cilindros y demás elementos impresores de la partida 8442, que sean conjuntos electrónicos montados",
+   "raee": true,
+   "rohs": true,
+   "nota": "Exclusivamente aquellos que sean AEEs"
+  },
+  {
+   "prefijo": "8443999000",
+   "descripcion": "Las demás partes y accesorios de máquinas y aparatos para imprimir por medio de planchas, cilindros y demás elementos impresores de la partida 8442, distintos de los conjuntos electrónicos montados",
+   "raee": true,
+   "rohs": true,
+   "nota": "Exclusivamente aquellos que sean AEEs"
+  },
+  {
+   "prefijo": "84440010",
+   "descripcion": "Máquinas para extrudir",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84440090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84451100",
+   "descripcion": "Cardas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84451200",
+   "descripcion": "Peinadoras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84451300",
+   "descripcion": "Mecheras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84451900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84452000",
+   "descripcion": "Máquinas para hilar materia textil",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84453000",
+   "descripcion": "Máquinas para doblar o retorcer materia textil",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84454000",
+   "descripcion": "Máquinas para bobinar (incluidas las canilleras) o devanar materia textil",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84459000",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84461000",
+   "descripcion": "Para tejidos de anchura inferior o igual a 30 cm",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84462100",
+   "descripcion": "De motor",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84471100",
+   "descripcion": "Con cilindro de diámetro inferior o igual a 165 mm",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84471200",
+   "descripcion": "Con cilindro de diámetro superior a 165 mm",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84472020",
+   "descripcion": "Telares de urdimbres, incluidos los Raschel; máquinas de coser por cadeneta",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84472080",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84479000",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84481100",
+   "descripcion": "Maquinitas para lizos mecanismos Jacquard; reductoras, perforadoras y copiadoras de cartones; máquinas para unir los cartones después de perforados",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84481900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84490000",
+   "descripcion": "Máquinas y aparatos para la fabricación o acabado del fieltro o tela sin tejer, en pieza o con forma, incluidas las máquinas y aparatos para la fabricación de sombreros de fieltro; hormas de sombrerería",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84501111",
+   "descripcion": "De carga frontal",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84501119",
+   "descripcion": "De carga superior",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84501190",
+   "descripcion": "De capacidad unitaria, expresada en peso de ropa seca, superior a 6 kg pero inferior o igual a 10 kg",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84501200",
+   "descripcion": "Las demás máquinas, con secadora centrífuga incorporada",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84501900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84502000",
+   "descripcion": "Máquinas de capacidad unitaria, expresada en peso de ropa seca, superior a 10 kg",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84511000",
+   "descripcion": "Máquinas para limpieza en seco",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84512100",
+   "descripcion": "De capacidad unitaria, expresada en peso de ropa seca, inferior o igual a 10 kg",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84512900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84513000",
+   "descripcion": "Máquinas y prensas para planchar, incluidas las prensas para fijar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84514000",
+   "descripcion": "Máquinas para lavar, blanquear o teñir",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84515000",
+   "descripcion": "Máquinas para enrollar, desenrollar, plegar, cortar o dentar telas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84518010",
+   "descripcion": "Máquinas para fabricar linóleos u otros cubresuelos, aplicando pasta sobre telas u otros soportes",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84518030",
+   "descripcion": "Máquinas para aprestar o acabar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84518080",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84521011",
+   "descripcion": "Máquinas de coser de valor unitario (excluidos las armazones, mesas o muebles) superior a 65 €",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84521019",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84521090",
+   "descripcion": "Las demás máquinas de coser y los demás cabezales para máquinas de coser",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84522100",
+   "descripcion": "Unidades automáticas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84531000",
+   "descripcion": "Máquinas y aparatos para la preparación, curtido o trabajo de cuero o piel",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84532000",
+   "descripcion": "Máquinas y aparatos para la fabricación o reparación de calzado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84538000",
+   "descripcion": "Las demás máquinas y aparatos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84551000",
+   "descripcion": "Laminadores de tubos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84552100",
+   "descripcion": "Para laminar en caliente o combinados para laminar en caliente y en frío",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84552200",
+   "descripcion": "Para laminar en frío",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84561110",
+   "descripcion": "Exclusiva o principalmente, para la fabricación de circuitos impresos, estructuras de circuitos impresos, partes de los artículos de la partida 8517 o partes de máquinas automáticas para tratamiento o procesamiento de datos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84561190",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84561210",
+   "descripcion": "Exclusiva o principalmente, para la fabricación de circuitos impresos, estructuras de circuitos impresos, partes de los artículos de la partida 8517 o partes de máquinas automáticas para tratamiento o procesamiento de datos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84561290",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84562000",
+   "descripcion": "Que operen por ultrasonido",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84563011",
+   "descripcion": "De corte por hilo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84563019",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84563090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84564000",
+   "descripcion": "Que operen mediante chorro de plasma",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84565000",
+   "descripcion": "Máquinas para cortar por chorro de agua",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84569000",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84571010",
+   "descripcion": "Horizontales",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84571090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84572000",
+   "descripcion": "Máquinas de puesto fijo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84573010",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84573090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84581120",
+   "descripcion": "Centros de torneado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84581141",
+   "descripcion": "Monohusillo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84581149",
+   "descripcion": "Multihusillos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84581180",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84581900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84589120",
+   "descripcion": "Centros de torneado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84589180",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84589900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84591000",
+   "descripcion": "Unidades de mecanizado de correderas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84592100",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84592900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84593100",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84593900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84594100",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84594900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84595100",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84595900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84596110",
+   "descripcion": "De fresar útiles",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84596190",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "845969",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84597000",
+   "descripcion": "Las demás máquinas de roscar, incluso aterrajar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84601200",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84601900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84602200",
+   "descripcion": "Máquinas de rectificar sin centro, de control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84602300",
+   "descripcion": "Las demás máquinas de rectificar superficies cilíndricas, de control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84602400",
+   "descripcion": "Las demás, de control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84602910",
+   "descripcion": "Para superficies cilíndricas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84602990",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84603100",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84603900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84604010",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84604090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84609000",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84612000",
+   "descripcion": "Máquinas de limar o mortajar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84613010",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84613090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84614011",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84614019",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84614031",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84614039",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84614071",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84614079",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84614090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84615011",
+   "descripcion": "Circulares",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84615019",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84615090",
+   "descripcion": "Máquinas de trocear",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84621110",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "8462119000",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84621910",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84621990",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84622210",
+   "descripcion": "Para trabajar productos planos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84622290",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84622300",
+   "descripcion": "Prensas plegadoras, de control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84622400",
+   "descripcion": "Prensas para paneles, de control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84622500",
+   "descripcion": "Máquinas de perfilar rodillos, de control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84622600",
+   "descripcion": "Las demás máquinas de enrollar, curvar, plegar, enderezar o aplanar, de control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "8462290000",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84623210",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84623300",
+   "descripcion": "Máquinas de cizallar, de control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84624200",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84624900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84625100",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84625900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84626110",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84626190",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84626210",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84626290",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84626310",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84626390",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84626910",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84626990",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84629010",
+   "descripcion": "De control numérico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84629090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84631010",
+   "descripcion": "Bancos de estirar alambres",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84631090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84632000",
+   "descripcion": "Máquinas laminadoras de hacer roscas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84633000",
+   "descripcion": "Máquinas para trabajar alambre",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84639000",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84641000",
+   "descripcion": "Máquinas de aserrar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84642011",
+   "descripcion": "De cristales de óptica",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84642019",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84642080",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84649000",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84651010",
+   "descripcion": "Con colocación manual de la pieza entre cada operación",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84651090",
+   "descripcion": "Sin colocación manual de la pieza entre cada operación",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84652000",
+   "descripcion": "Centros de mecanizado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84659110",
+   "descripcion": "De cinta",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84659120",
+   "descripcion": "Circulares",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84659190",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84659200",
+   "descripcion": "Máquinas de cepillar; máquinas de fresar o moldurar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84659300",
+   "descripcion": "Máquinas de amolar, lijar o pulir",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "84659400",
+   "descripcion": "Máquinas de curvar o ensamblar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84659500",
+   "descripcion": "Máquinas de taladrar o mortajar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84659600",
+   "descripcion": "Máquinas de hendir, rebanar o desenrollar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84659900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84672110",
+   "descripcion": "Que funcionen sin fuente de energía exterior",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84672191",
+   "descripcion": "Electroneumáticos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84672199",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84672210",
+   "descripcion": "Tronzadoras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84672230",
+   "descripcion": "Sierras circulares",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84672290",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84672920",
+   "descripcion": "Que funcionen sin fuente de energía exterior",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84672951",
+   "descripcion": "Amoladoras angulares",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84672953",
+   "descripcion": "Lijadoras de banda",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84672959",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84672970",
+   "descripcion": "Cepillos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84672980",
+   "descripcion": "Cizallas para cortar setos, cizallas para césped y desherbadoras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84672985",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84701000",
+   "descripcion": "Calculadoras electrónicas que puedan funcionar sin fuente de energía eléctrica exterior y máquinas de bolsillo registradoras, reproductoras y visualizadoras de datos, con función de cálculo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84702100",
+   "descripcion": "Con dispositivo de impresión incorporado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84702900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84705000",
+   "descripcion": "Cajas registradoras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84709000",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84713000",
+   "descripcion": "Máquinas automáticas para tratamiento o procesamiento de datos, portátiles, de peso inferior o igual a 10 kg, que estén constituidas, al menos, por una unidad central de proceso, un teclado y un visualizador",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84714100",
+   "descripcion": "Que incluyan en la misma envoltura, al menos, una unidad central de proceso y, aunque estén combinadas, una unidad de entrada y una de salida",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84714900",
+   "descripcion": "Las demás presentadas en forma de sistemas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84715000",
+   "descripcion": "Unidades de proceso, excepto las de las subpartidas 847141 u 847149, aunque incluyan en la misma envoltura uno o dos de los tipos siguientes de unidades: unidad de memoria, unidad de entrada y unidad de salida",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84716060",
+   "descripcion": "Teclados",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84716070",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84717020",
+   "descripcion": "Unidades de memoria central",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84717030",
+   "descripcion": "Ópticas, incluidas las magneto-ópticas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84717050",
+   "descripcion": "Unidades de memoria de disco duro",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84717070",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84717080",
+   "descripcion": "Unidades de memoria de cinta",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84717098",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84718000",
+   "descripcion": "Las demás unidades de máquinas automáticas para tratamiento o procesamiento de datos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84719000",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84721000",
+   "descripcion": "Copiadoras, incluidos los mimeógrafos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84723000",
+   "descripcion": "Máquinas de clasificar, plegar, meter en sobres o colocar en fajas correspondencia, máquinas de abrir, cerrar o precintar correspondencia y máquinas de colocar u obliterar los sellos (estampillas)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84729010",
+   "descripcion": "Máquinas de clasificar, contar y encartuchar monedas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "8472908000",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84734080",
+   "descripcion": "Las demás Partes y accesorios de máquinas de la partida 8472 distintas de los conjuntos electrónicos montados",
+   "raee": true,
+   "rohs": true,
+   "nota": "Exclusivamente aquellos que sean AEEs"
+  },
+  {
+   "prefijo": "84735080",
+   "descripcion": "Partes y accesorios que puedan utilizarse indistintamente con máquinas o aparatos de varias de las partidas 8470 a 8472, distintos de los conjuntos electrónicos montados",
+   "raee": true,
+   "rohs": true,
+   "nota": "Exclusivamente aquellos que sean AEEs"
+  },
+  {
+   "prefijo": "84741000",
+   "descripcion": "Máquinas y aparatos de clasificar, cribar, separar o lavar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84742000",
+   "descripcion": "Máquinas y aparatos de quebrantar, triturar o pulverizar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84743100",
+   "descripcion": "Hormigoneras y aparatos de amasar mortero",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84743200",
+   "descripcion": "Máquinas de mezclar materia mineral con asfalto",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84743900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84748010",
+   "descripcion": "Máquinas de aglomerar, formar o moldear pastas cerámicas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84748090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84751000",
+   "descripcion": "Máquinas para montar lámparas, tubos o válvulas eléctricos o electrónicos o lámparas de destello, que tengan envoltura de vidrio",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84752100",
+   "descripcion": "Máquinas para fabricar fibras ópticas y sus esbozos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84752900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84762100",
+   "descripcion": "Con dispositivo de calentamiento o refrigeración, incorporado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84762900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84768100",
+   "descripcion": "Con dispositivo de calentamiento o refrigeración, incorporado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84768910",
+   "descripcion": "Máquinas para cambiar moneda",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84768990",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84771000",
+   "descripcion": "Máquinas de moldear por inyección",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84772000",
+   "descripcion": "Extrusoras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84773000",
+   "descripcion": "Máquinas de moldear por soplado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84774000",
+   "descripcion": "Máquinas de moldear en vacío y demás máquinas para termoformado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84775100",
+   "descripcion": "De moldear o recauchutar neumáticos (llantas neumáticos) o moldear o formar cámaras para neumáticos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84775910",
+   "descripcion": "Prensas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84775980",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84778011",
+   "descripcion": "Máquinas para la transformación de resinas reactivas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84778019",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84778091",
+   "descripcion": "Máquinas para fragmentar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84778093",
+   "descripcion": "Mezcladores, malaxadores y agitadores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84778095",
+   "descripcion": "Cortadoras y peladoras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84778099",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84781000",
+   "descripcion": "Máquinas y aparatos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84791000",
+   "descripcion": "Máquinas y aparatos para obras públicas, la construcción o trabajos análogos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84792000",
+   "descripcion": "Máquinas y aparatos para extracción o preparación de grasas o aceites vegetales fijos o animales",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84793010",
+   "descripcion": "Prensas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84793090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84794000",
+   "descripcion": "Máquinas de cordelería o cablería",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84795000",
+   "descripcion": "Robots industriales, no expresados ni comprendidos en otra parte",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84796000",
+   "descripcion": "Aparatos de evaporación para refrigerar el aire",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84798100",
+   "descripcion": "Para el tratamiento del metal, incluidas las bobinadoras de hilos eléctricos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84798200",
+   "descripcion": "Para mezclar, amasar o sobar, quebrantar, triturar, pulverizar, cribar, tamizar, homogeneizar, emulsionar o agitar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84798300",
+   "descripcion": "Prensas isostáticas en frío",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84798930",
+   "descripcion": "Entibados móviles hidráulicos para minas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84798960",
+   "descripcion": "Dispositivos llamados «de engrase centralizado»",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84798970",
+   "descripcion": "Máquinas automáticas de colocación de componentes electrónicos de los tipos utilizados, exclusiva o principalmente, para la fabricación de estructuras de circuitos impresos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84798997",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84851000",
+   "descripcion": "Por depósito de metal",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84852000",
+   "descripcion": "Por depósito de plástico o caucho",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84853010",
+   "descripcion": "Por depósito de yeso, cemento o cerámica",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84853090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84858000",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "8485801000",
+   "descripcion": "Máquinas para la fabricación aditiva por depósito de arena, hormigón u otros productos minerales",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "8485809000",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84861000",
+   "descripcion": "Máquinas y aparatos para la fabricación de semiconductores en forma de monocristales periformes u obleas («wafers»)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84862000",
+   "descripcion": "Máquinas y aparatos para la fabricación de dispositivos semiconductores o circuitos electrónicos integrados",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84863000",
+   "descripcion": "Máquinas y aparatos para la fabricación de dispositivos de visualización («display») de pantalla plana",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "84864000",
+   "descripcion": "Máquinas y aparatos descritos en la nota 9 C) de este capítulo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85011010",
+   "descripcion": "Motores síncronos de potencia inferior o igual a 18 W",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85011091",
+   "descripcion": "Motores universales",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85011093",
+   "descripcion": "Motores de corriente alterna",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85011099",
+   "descripcion": "Motores de corriente continua",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85012000",
+   "descripcion": "Motores universales de potencia superior a 37,5 W",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85013100",
+   "descripcion": "De potencia inferior o igual a 750 W",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85013200",
+   "descripcion": "De potencia superior a 750 W pero inferior o igual a 75 kW",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85013300",
+   "descripcion": "De potencia superior a 75 kW pero inferior o igual a 375 kW",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85013400",
+   "descripcion": "De potencia superior a 375 kW",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85014020",
+   "descripcion": "De potencia inferior o igual a 750 W",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85014080",
+   "descripcion": "De potencia superior a 750 W",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85015100",
+   "descripcion": "De potencia inferior o igual a 750 W",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85015220",
+   "descripcion": "De potencia superior a 750 W pero inferior o igual a 7,5 kW",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85015230",
+   "descripcion": "De potencia superior a 7,5 kW pero inferior o igual a 37 kW",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85015290",
+   "descripcion": "De potencia superior a 37 kW pero inferior o igual a 75 kW",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85015350",
+   "descripcion": "Motores de tracción",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85015381",
+   "descripcion": "Superior a 75 kW pero inferior o igual a 375 kW",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85015394",
+   "descripcion": "Superior a 375 kW pero inferior o igual a 750 kW",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85015399",
+   "descripcion": "Superior a 750 kW",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85016120",
+   "descripcion": "De potencia inferior o igual a 7,5 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85016180",
+   "descripcion": "De potencia superior a 7,5 kVA pero inferior o igual a 75 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85016200",
+   "descripcion": "De potencia superior a 75 kVA pero inferior o igual a 375 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85016300",
+   "descripcion": "De potencia superior a 375 kVA pero inferior o igual a 750 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85016400",
+   "descripcion": "De potencia superior a 750 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85017100",
+   "descripcion": "De potencia inferior o igual a 50 W",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85017200",
+   "descripcion": "De potencia superior a 50 W",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85018000",
+   "descripcion": "Generadores fotovoltaicos de corriente alterna",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85021120",
+   "descripcion": "De potencia inferior o igual a 7,5 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85021180",
+   "descripcion": "De potencia superior a 7,5 kVA pero inferior o igual a 75 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85021200",
+   "descripcion": "De potencia superior a 75 kVA pero inferior o igual a 375 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85021320",
+   "descripcion": "De potencia superior a 375 kVA pero inferior o igual a 750 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85021340",
+   "descripcion": "De potencia superior a 750 kVA pero inferior o igual a 2000 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85021380",
+   "descripcion": "De potencia superior a 2000 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85022020",
+   "descripcion": "De potencia inferior o igual a 7,5 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85022040",
+   "descripcion": "De potencia superior a 7,5 kVA pero inferior o igual a 375 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85022060",
+   "descripcion": "De potencia superior a 375 kVA pero inferior o igual a 750 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85022080",
+   "descripcion": "De potencia superior a 750 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85023100",
+   "descripcion": "De energía eólica",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85023920",
+   "descripcion": "Turbogeneradores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85023980",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85024000",
+   "descripcion": "Convertidores rotativos eléctricos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85041020",
+   "descripcion": "Bobinas de reactancia, incluso con condensador acoplado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85041080",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85042100",
+   "descripcion": "De potencia inferior o igual a 650 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85042210",
+   "descripcion": "De potencia superior a 650 kVA pero inferior o igual a 1600 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85042290",
+   "descripcion": "De potencia superior a 1600 kVA pero inferior o igual a 10000 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85042300",
+   "descripcion": "De potencia superior a 10000 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85043121",
+   "descripcion": "Para medir tensiones",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85043129",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85043180",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85043200",
+   "descripcion": "De potencia superior a 1 kVA pero inferior o igual a 16 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85043300",
+   "descripcion": "De potencia superior a 16 kVA pero inferior o igual a 500 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85043400",
+   "descripcion": "De potencia superior a 500 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85044060",
+   "descripcion": "Cargadores de acumuladores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85044083",
+   "descripcion": "Rectificadores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85044085",
+   "descripcion": "De potencia inferior o igual a 7,5 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85044086",
+   "descripcion": "De potencia superior a 7,5 kVA",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85044095",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "8504500090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85061011",
+   "descripcion": "Pilas cilíndricas",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85061018",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85061091",
+   "descripcion": "Pilas cilíndricas",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85061098",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85063000",
+   "descripcion": "De óxido de mercurio",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85064000",
+   "descripcion": "De óxido de plata",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85065010",
+   "descripcion": "Pilas cilíndricas",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85065030",
+   "descripcion": "Pilas de botón",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85065090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85066000",
+   "descripcion": "De aire-cinc",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85068005",
+   "descripcion": "Baterías secas de cinc-carbón, de una tensión superior o igual a 5,5 V pero inferior o igual a 6,5 V",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85068080",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85071020",
+   "descripcion": "Que funcionen con electrólito líquido",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85071080",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85072020",
+   "descripcion": "Que funcionen con electrólito líquido",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85072080",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85073020",
+   "descripcion": "Herméticamente cerrados",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85073080",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85075000",
+   "descripcion": "De níquel-hidruro metálico",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85076000",
+   "descripcion": "De iones de litio",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85078000",
+   "descripcion": "Los demás acumuladores",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "8507800090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85081100",
+   "descripcion": "De potencia inferior o igual a 1500 W y de capacidad del depósito o bolsa para el polvo inferior o igual a 20 l",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85081900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85086000",
+   "descripcion": "Las demás aspiradoras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85094000",
+   "descripcion": "Trituradoras y mezcladoras de alimentos; extractoras de jugo de frutos u hortalizas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85098000",
+   "descripcion": "Los demás aparatos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85101000",
+   "descripcion": "Afeitadoras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85102000",
+   "descripcion": "Máquinas de cortar el pelo o esquilar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85103000",
+   "descripcion": "Aparatos de depilar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85121000",
+   "descripcion": "Aparatos de alumbrado o señalización visual de los tipos utilizados en bicicletas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85131000",
+   "descripcion": "Lámparas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85141100",
+   "descripcion": "Prensas isostáticas en caliente",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85141910",
+   "descripcion": "Hornos de panadería, pastelería o galletería",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85141980",
+   "descripcion": "Los demás hornos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85142010",
+   "descripcion": "Que funcionen por inducción",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85142080",
+   "descripcion": "Que funcionen por pérdidas dieléctricas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85143110",
+   "descripcion": "De los tipos utilizados, exclusiva o principalmente, para la fabricación de circuitos impresos o estructuras de circuitos impresos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85143190",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85143210",
+   "descripcion": "De los tipos utilizados, exclusiva o principalmente, para la fabricación de circuitos impresos o estructuras de circuitos impresos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85143290",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85143910",
+   "descripcion": "De los tipos utilizados, exclusiva o principalmente, para la fabricación de circuitos impresos o estructuras de circuitos impresos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85143990",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85144000",
+   "descripcion": "Los demás aparatos para tratamiento térmico de materias por inducción o pérdidas dieléctricas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85151100",
+   "descripcion": "Soldadores y pistolas para soldar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85151910",
+   "descripcion": "Máquinas de soldadura por ola de los tipos utilizados, exclusiva o principalmente, para la fabricación de estructuras de circuitos impresos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85151990",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85152100",
+   "descripcion": "Total o parcialmente automáticos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85152900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85153100",
+   "descripcion": "Total o parcialmente automáticos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85153913",
+   "descripcion": "Un transformador",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85153918",
+   "descripcion": "Un generador o un convertidor rotativo o un convertidor estático",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85153990",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85158010",
+   "descripcion": "Para tratamiento de metales",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85158090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85161011",
+   "descripcion": "De calentamiento instantáneo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85161080",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85162100",
+   "descripcion": "Radiadores de acumulación",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85162910",
+   "descripcion": "Radiadores de circulación de líquido",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85162950",
+   "descripcion": "Radiadores por convección",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85162991",
+   "descripcion": "Con ventilador incorporado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85162999",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85163100",
+   "descripcion": "Secadores para el cabello",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85163200",
+   "descripcion": "Los demás aparatos para el cuidado del cabello",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85163300",
+   "descripcion": "Aparatos para secar las manos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85164000",
+   "descripcion": "Planchas eléctricas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85165000",
+   "descripcion": "Hornos de microondas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85166010",
+   "descripcion": "Cocinas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85166050",
+   "descripcion": "Hornillos (incluidas las mesas de cocción)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85166070",
+   "descripcion": "Parrillas y asadores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85166080",
+   "descripcion": "Hornos para empotrar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85166090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85167100",
+   "descripcion": "Aparatos para la preparación de café o té",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85167200",
+   "descripcion": "Tostadoras de pan",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85167920",
+   "descripcion": "Freidoras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85167970",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85171100",
+   "descripcion": "Teléfonos de auricular inalámbrico combinado con micrófono",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85171300",
+   "descripcion": "Teléfonos inteligentes",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85171400",
+   "descripcion": "Los demás teléfonos móviles (celulares) y los de otras redes inalámbricas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85171800",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85176100",
+   "descripcion": "Estaciones base",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85176200",
+   "descripcion": "Aparatos para la recepción, conversión, emisión y transmisión o regeneración de voz, imagen u otros datos, incluidos los de conmutación y encaminamiento (switching and routing apparatus)",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85176910",
+   "descripcion": "Videófonos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85176920",
+   "descripcion": "Interfonos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85176930",
+   "descripcion": "Aparatos receptores de radiotelefonía o radiotelegrafía",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85176990",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "8518100090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85182100",
+   "descripcion": "Un altavoz (altoparlante) montado en su caja",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85182200",
+   "descripcion": "Varios altavoces (altoparlantes) montados en una misma caja",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "8518300090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "8518400090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85185000",
+   "descripcion": "Equipos eléctricos para amplificación de sonido",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85192010",
+   "descripcion": "Tocadiscos que funcionen por ficha o moneda",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85192091",
+   "descripcion": "De sistema de lectura por rayo láser",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85192099",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85193000",
+   "descripcion": "Platos de gira-discos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "8519810090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "8519890000",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85211020",
+   "descripcion": "De anchura inferior o igual a 1,3 cm y que permitan la grabación o la reproducción a velocidad de avance inferior o igual a 50 mm por segundo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85211095",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85219000",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85232100",
+   "descripcion": "Tarjetas con banda magnética incorporada",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85235110",
+   "descripcion": "Sin grabar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85235190",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85235200",
+   "descripcion": "Tarjetas inteligentes (smart cards)",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85235910",
+   "descripcion": "Sin grabar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85235990",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85238010",
+   "descripcion": "Sin grabar",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85238090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85255000",
+   "descripcion": "Aparatos emisores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85256000",
+   "descripcion": "Aparatos emisores con aparato receptor incorporado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85258100",
+   "descripcion": "Ultrarrápidas, especificadas en la Nota 1 de subpartida de este Capítulo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85258200",
+   "descripcion": "Las demás, resistentes a radiaciones, especificadas en la Nota 2 de subpartida de este Capítulo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85258300",
+   "descripcion": "Las demás, de visión nocturna, especificadas en la Nota 3 de subpartida de este Capítulo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85258900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "8527120000",
+   "descripcion": "Radiocasetes de bolsillo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "8527130000",
+   "descripcion": "Los demás aparatos combinados con grabador o reproductor de sonido",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85271900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85272120",
+   "descripcion": "De sistema de lectura por rayos láser",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85272152",
+   "descripcion": "De casetes con sistema de lectura analógico y digital",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85272159",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85272170",
+   "descripcion": "De sistema de lectura por rayos láser",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85272192",
+   "descripcion": "De casetes con sistema de lectura analógico y digital",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85272198",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85272900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "8527910000",
+   "descripcion": "Los demás combinados grabador o reproductor de sonido",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "8527920000",
+   "descripcion": "Los demás sin combinar con grabador o reproductor de sonido, pero combinados con reloj",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85279900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85284200",
+   "descripcion": "Aptos para ser conectados directamente y diseñados para ser utilizados con una máquina automática para tratamiento o procesamiento de datos de la partida 8471",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85284900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85285210",
+   "descripcion": "De los tipos utilizados exclusiva o principalmente en un sistema automático para tratamiento o procesamiento de datos de la partida 8471",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85285291",
+   "descripcion": "Con pantalla de cristal líquido (LCD)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85285299",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85285900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85286200",
+   "descripcion": "Aptos para ser conectados directamente y diseñados para ser utilizados con una máquina automática para tratamiento o procesamiento de datos de la partida 8471",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85286920",
+   "descripcion": "Monocromos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85286980",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85287111",
+   "descripcion": "Conjuntos electrónicos montados, destinados a ser incorporados a una máquina automática para tratamiento o procesamiento de datos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85287115",
+   "descripcion": "Aparatos con un dispositivo de microprocesador con un módem incorporado para acceder a internet y con una función de intercambio de información interactivo con capacidad para captar señales televisivas [denominados «adaptadores multimedia que desempeñan una función de comunicación», set-top boxes (STB), incluidos los que tienen incorporado un dispositivo que desempeña una función de grabación o reproducción, siempre y cuando mantengan el carácter esencial de un adaptador multimedia que desempeña una función de comunicación]",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85287119",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85287191",
+   "descripcion": "Aparatos con un dispositivo de microprocesador con un módem incorporado para acceder a internet y con una función de intercambio de información interactivo con capacidad para captar señales televisivas [denominados «adaptadores multimedia que desempeñan una función de comunicación», set-top boxes (STB), incluidos los que tienen incorporado un dispositivo que desempeña una función de grabación o reproducción, siempre y cuando mantengan el carácter esencial de un adaptador multimedia que desempeña una función de comunicación]",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85287199",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85287210",
+   "descripcion": "Teleproyectores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85287220",
+   "descripcion": "Con aparato de grabación o reproducción de imagen y sonido incorporado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85287230",
+   "descripcion": "Con tubo de imagen incorporado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85287240",
+   "descripcion": "Con pantalla de cristal líquido (LCD)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85287260",
+   "descripcion": "Con pantalla de plasma (PDP)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85287280",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85287300",
+   "descripcion": "Los demás, monocromos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85301000",
+   "descripcion": "Aparatos para vías férreas o similares",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85308000",
+   "descripcion": "Los demás aparatos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85311030",
+   "descripcion": "De los tipos utilizados para edificios",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85311095",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85312020",
+   "descripcion": "Con diodos emisores de luz (LED)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85312040",
+   "descripcion": "De matriz activa",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85312095",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85318040",
+   "descripcion": "Timbres de puertas, carillones, vibradores y similares",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85318070",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85319000",
+   "descripcion": "Partes",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85321000",
+   "descripcion": "Condensadores fijos concebidos para redes eléctricas de 50/60 Hz, para una potencia reactiva superior o igual a 0,5 kvar (condensadores de potencia)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85322100",
+   "descripcion": "De tantalio",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85322200",
+   "descripcion": "Electrolíticos de aluminio",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85322300",
+   "descripcion": "Con dieléctrico de cerámica de una sola capa",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85322400",
+   "descripcion": "Con dieléctrico de cerámica, multicapas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85322500",
+   "descripcion": "Con dieléctrico de papel o plástico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85322900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85323000",
+   "descripcion": "Condensadores variables o ajustables",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85331000",
+   "descripcion": "Resistencias fijas de carbono, aglomeradas o de capa",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85332100",
+   "descripcion": "De potencia inferior o igual a 20 W",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85332900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85333100",
+   "descripcion": "De potencia inferior o igual a 20 W",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85333900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85334010",
+   "descripcion": "De potencia inferior o igual a 20 W",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85334090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85340011",
+   "descripcion": "Circuitos multicapas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85340019",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85340090",
+   "descripcion": "Que lleven otros elementos pasivos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85351000",
+   "descripcion": "Fusibles y cortacircuitos de fusible",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85352100",
+   "descripcion": "Para una tensión inferior a 72,5 kV",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85352900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85353010",
+   "descripcion": "Para una tensión inferior a 72,5 kV",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85353090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85354000",
+   "descripcion": "Pararrayos, limitadores de tensión y supresores de sobretensión transitoria",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85359000",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85361010",
+   "descripcion": "Para intensidades inferiores o iguales a 10 A",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85361050",
+   "descripcion": "Para intensidades superiores a 10 A pero inferiores o iguales a 63 A",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85361090",
+   "descripcion": "Para intensidades superiores a 63 A",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85362010",
+   "descripcion": "Para intensidades inferiores o iguales a 63 A",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85362090",
+   "descripcion": "Para intensidades superiores a 63 A",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85363010",
+   "descripcion": "Para intensidades inferiores o iguales a 16 A",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85363030",
+   "descripcion": "Para intensidades superiores a 16 A pero inferiores o iguales a 125 A",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85363090",
+   "descripcion": "Para intensidades superiores a 125 A",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85364110",
+   "descripcion": "Para intensidades inferiores o iguales a 2 A",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85364190",
+   "descripcion": "Para intensidades superiores a 2 A",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85364900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85365003",
+   "descripcion": "Interruptores electrónicos de CA que consistan en circuitos de entrada y salida de acoplamiento óptico (interruptores CA de tiristor aislado)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85365005",
+   "descripcion": "Interruptores electrónicos de protección térmica, compuestos por un transistor y una microplaquita lógica (tecnología chip-on-chip)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85365007",
+   "descripcion": "Interruptores electromecánicos de acción rápida para una corriente inferior o igual a 11 A",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85365011",
+   "descripcion": "De botón o pulsador",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85365015",
+   "descripcion": "Rotativos",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85365019",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85366190",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85366910",
+   "descripcion": "Para cables coaxiales",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85366930",
+   "descripcion": "Para circuitos impresos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85369040",
+   "descripcion": "Pinzas de batería del tipo utilizado para vehículos automóviles de las partidas 8702, 8703, 8704 u 8711",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85369095",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "8536909500",
+   "descripcion": "Los demas aparatos distintos de conectores, sin elementos prefabricados, sin conexiones y elementos de contacto, sin pinzas de batería",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85371010",
+   "descripcion": "Controles numéricos que incorporen una máquina automática para tratamiento o procesamiento de datos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85371091",
+   "descripcion": "Aparatos de mando con memoria programable",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85371095",
+   "descripcion": "Dispositivos táctiles de entrada de datos (pantallas táctiles) sin función de visualización para su incorporación en aparatos que disponen de una pantalla de visualización, que funcionan mediante la detección de un contacto con la superficie de la pantalla",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85371098",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85372091",
+   "descripcion": "Para una tensión superior a 1000 V pero inferior o igual a 72,5 kV",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85372099",
+   "descripcion": "Para una tensión superior a 72,5 kV",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85392210",
+   "descripcion": "Reflectores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85392290",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85392992",
+   "descripcion": "Superior a 100 V",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85392998",
+   "descripcion": "Inferior o igual a 100 V",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85393110",
+   "descripcion": "De dos casquillos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85393190",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85393220",
+   "descripcion": "De vapor de mercurio o sodio",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85393290",
+   "descripcion": "De halogenuro metálico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85393920",
+   "descripcion": "Lámparas fluorescentes de cátodo frío para la retroiluminación de dispositivos de visualización de pantalla plana",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85393980",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85394100",
+   "descripcion": "Lámparas de arco",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85394900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85395100",
+   "descripcion": "Módulos de diodos emisores de luz (LED)",
+   "raee": false,
+   "rohs": true
+  },
+  {
+   "prefijo": "85395200",
+   "descripcion": "Lámparas y tubos de diodos emisores de luz (LED)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85414100",
+   "descripcion": "Diodos emisores de luz (LED)",
+   "raee": false,
+   "rohs": true
+  },
+  {
+   "prefijo": "85414200",
+   "descripcion": "Células fotovoltaicas sin ensamblar en módulos ni paneles",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85414300",
+   "descripcion": "Células fotovoltaicas ensambladas en módulos o paneles",
+   "raee": true,
+   "rohs": false
+  },
+  {
+   "prefijo": "85414900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85431000",
+   "descripcion": "Aceleradores de partículas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85432000",
+   "descripcion": "Generadores de señales",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85433040",
+   "descripcion": "Máquinas de galvanoplastia o electrólisis del tipo utilizado, exclusiva o principalmente, para la fabricación de circuitos impresos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85433070",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85434000",
+   "descripcion": "Cigarrillos electrónicos y dispositivos personales de vaporización eléctricos similares",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85437001",
+   "descripcion": "Artículos específicamente concebidos para su conexión a telégrafos, teléfonos, instrumentos similares o redes de telégrafos o teléfonos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85437002",
+   "descripcion": "Amplificadores de microondas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85437003",
+   "descripcion": "Dispositivos inalámbricos de control remoto por infrarrojos para consolas de videojuegos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85437005",
+   "descripcion": "Lectores electrónicos portátiles alimentados con batería para la grabación y reproducción de archivos de texto, imagen fija o audio",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85437006",
+   "descripcion": "Aparatos de procesamiento de señales digitales aptos para ser conectados a redes con o sin cables y empleados para mezclar sonido",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85437007",
+   "descripcion": "Dispositivos de enseñanza portátiles, electrónicos e interactivos especialmente diseñados para los niños",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85437008",
+   "descripcion": "Máquinas de limpieza por plasma que eliminan contaminantes orgánicos de muestras y portamuestras de microscopia electrónica",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85437009",
+   "descripcion": "Dispositivos táctiles de entrada de datos (pantallas táctiles) sin función de visualización para su incorporación en aparatos que disponen de una pantalla de visualización, que funcionan mediante la detección de un contacto con la superficie de la pantalla",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85437010",
+   "descripcion": "Máquinas eléctricas con funciones de traducción o de diccionario",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85437030",
+   "descripcion": "Amplificadores de antena",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "85437050",
+   "descripcion": "Bancos y techos solares, y aparatos similares para el bronceado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85437060",
+   "descripcion": "Electrificadores de cercas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85437090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "8543900000",
+   "descripcion": "Partes (Partes de Máquinas y aparatos eléctricos con función propia)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "85444210",
+   "descripcion": "De los tipos utilizados en telecomunicación",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "87116010",
+   "descripcion": "Bicicletas, triciclos y cuatriciclos, con pedaleo asistido, con un motor eléctrico auxiliar de potencia nominal continua no superior a 250 vatios",
+   "raee": true,
+   "rohs": true,
+   "nota": "Exclusivamente no homologados"
+  },
+  {
+   "prefijo": "8711609010",
+   "descripcion": "Bicicletas con pedaleo asistido, dotadas de un motor eléctrico auxiliar",
+   "raee": true,
+   "rohs": true,
+   "nota": "Exclusivamente no homologados"
+  },
+  {
+   "prefijo": "87119000",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "87139000",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88021100",
+   "descripcion": "De peso en vacío inferior o igual a 2000 kg",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88061010",
+   "descripcion": "De peso en vacío inferior o igual a 2 000 kg",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88062110",
+   "descripcion": "Multirrotores, equipados con aparatos integrados permanentemente de la subpartida 8525 89 para la captura y grabación de imágenes fijas y de vídeo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88062190",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88062210",
+   "descripcion": "Multirrotores, equipados con aparatos integrados permanentemente de la subpartida 8525 89 para la captura y grabación de imágenes fijas y de vídeo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88062290",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88062300",
+   "descripcion": "Con un peso máximo de despegue superior a 7 kg pero inferior o igual a 25 kg",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88062400",
+   "descripcion": "Con un peso máximo de despegue superior a 25 kg pero inferior o igual a 150 kg",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88062910",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88069100",
+   "descripcion": "Con un peso máximo de despegue inferior o igual a 250 g",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88069200",
+   "descripcion": "Con un peso máximo de despegue superior a 250 g pero inferior o igual a 7 kg",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88069300",
+   "descripcion": "Con un peso máximo de despegue superior a 7 kg pero inferior o igual a 25 kg",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88069400",
+   "descripcion": "Con un peso máximo de despegue superior a 25 kg pero inferior o igual a 150 kg",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "88069910",
+   "descripcion": "De peso en vacío inferior o igual a 2 000 kg",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "89079000",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90063000",
+   "descripcion": "Cámaras especiales para fotografía submarina o aérea, examen médico de órganos internos o para laboratorios de medicina legal o identificación judicial",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90064000",
+   "descripcion": "Cámaras fotográficas con autorrevelado",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90065310",
+   "descripcion": "Cámaras fotográficas desechables",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90065380",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90065900",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90066100",
+   "descripcion": "Aparatos de tubo de descarga para producir destellos (flashes electrónicos)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90066900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90071000",
+   "descripcion": "Cámaras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90072000",
+   "descripcion": "Proyectores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90085000",
+   "descripcion": "Proyectores, ampliadoras o reductoras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90101000",
+   "descripcion": "Aparatos y material para revelado automático de película fotográfica, película cinematográfica (filme) o papel fotográfico en rollo o para impresión automática de películas reveladas en rollos de papel fotográfico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90105000",
+   "descripcion": "Los demás aparatos y material para laboratorios fotográfico o cinematográfico; negatoscopios",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90106000",
+   "descripcion": "Pantallas de proyección",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "9012100000",
+   "descripcion": "Microscopios, excepto los ópticos; difractógrafos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90132000",
+   "descripcion": "Láseres, excepto los diodos láser",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "9015100000",
+   "descripcion": "Telémetros",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "9015200000",
+   "descripcion": "Teodolitos y taquímetros",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90153010",
+   "descripcion": "Electrónicos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "9015400000",
+   "descripcion": "Instrumentos y aparatos de fotogrametría",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90158020",
+   "descripcion": "De meteorología, hidrología y geofísica",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90158040",
+   "descripcion": "De geodesia, topografía, agrimensura, nivelación e hidrografía",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90158080",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90160010",
+   "descripcion": "Balanzas",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90171010",
+   "descripcion": "Trazadores (plotters)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90171090",
+   "descripcion": "Las demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90181100",
+   "descripcion": "Electrocardiógrafos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90181200",
+   "descripcion": "Aparatos de diagnóstico por exploración ultrasónica",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90181300",
+   "descripcion": "Aparatos de diagnóstico de visualización por resonancia magnética",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90181400",
+   "descripcion": "Aparatos de centellografía",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90181910",
+   "descripcion": "Aparatos para vigilancia simultánea de dos o más parámetros fisiológicos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90181990",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90182000",
+   "descripcion": "Aparatos de rayos ultravioletas o infrarrojos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90184100",
+   "descripcion": "Tornos dentales, incluso combinados con otros equipos dentales sobre basamento común",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90189030",
+   "descripcion": "Riñones artificiales",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90191010",
+   "descripcion": "Aparatos eléctricos de vibromasaje",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90192000",
+   "descripcion": "Aparatos de ozonoterapia, oxigenoterapia o aerosolterapia, aparatos respiratorios de reanimación y demás aparatos de terapia respiratoria",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90214000",
+   "descripcion": "Audífonos, excepto sus partes y accesorios",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90221200",
+   "descripcion": "Aparatos de tomografía regidos por una máquina automática de tratamiento o procesamiento de datos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90221300",
+   "descripcion": "Los demás para uso odontológico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90221400",
+   "descripcion": "Los demás, para uso médico, quirúrgico o veterinario",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90221900",
+   "descripcion": "Para otros usos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90222100",
+   "descripcion": "Para uso médico, quirúrgico, odontológico o veterinario",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90222900",
+   "descripcion": "Para otros usos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90223000",
+   "descripcion": "Tubos de rayos X",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90241020",
+   "descripcion": "Universales y para ensayos de tracción",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90241040",
+   "descripcion": "Para ensayos de dureza",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90241080",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "9024800000",
+   "descripcion": "Las demás máquinas y aparatos para ensayos de dureza, tracción, compresión, elasticidad u otras propiedades mecánicas de materiales distintos de metal",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "9025190090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "90258040",
+   "descripcion": "Electrónicos",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "90261021",
+   "descripcion": "Caudalímetros",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90261029",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "90262020",
+   "descripcion": "Electrónicos",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "90268020",
+   "descripcion": "Electrónicos",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "90271010",
+   "descripcion": "Electrónicos",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "9027893000",
+   "descripcion": "Peachímetros, erreachímetros y demás aparatos para medir la conductividad",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "9027899000",
+   "descripcion": "Los demás instrumentos y aparatos distintios de exposímetros, distintos de peachímetros, erreachímetros y demás aparatos para medir la conductividad",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90283011",
+   "descripcion": "Monofásica",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90283019",
+   "descripcion": "Polifásica",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90283090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90301000",
+   "descripcion": "Instrumentos y aparatos para medida o detección de radiaciones ionizantes",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90302000",
+   "descripcion": "Osciloscopios y oscilógrafos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90303100",
+   "descripcion": "Multímetros, sin dispositivo registrador",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90303200",
+   "descripcion": "Multímetros, con dispositivo registrador",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90303320",
+   "descripcion": "Instrumentos para medidas de resistencia",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "9030337000",
+   "descripcion": "Los demás instrumentos y aparatos para medida o control de tensión, intensidad, resistencia o potencia (distintos de los utilizados para medida o control de obleas (\"wafers\") o dispositivos semiconductores, distintos de multímetros, distintos de instrumentos para medidas de resistencia",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90304000",
+   "descripcion": "Los demás instrumentos y aparatos, especialmente concebidos para técnicas de telecomunicación (por ejemplo: hipsómetros, kerdómetros, distorsiómetros, sofómetros)",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "9030890000",
+   "descripcion": "Los demás instrumentos y aparatos distintos de los de medida o control de obleas (\"wafers\") o dispositivos semiconductores (incluidos los circuitos integrados) sin dispositivo registrador",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90314100",
+   "descripcion": "Para control de discos (wafers) o dispositivos, semiconductores, o para control de máscaras o retículas utilizadas en la fabricación de dispositivos semiconductores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90314910",
+   "descripcion": "Proyectores de perfiles",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90314990",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "90318020",
+   "descripcion": "Para medida o control de magnitudes geométricas",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "90318080",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "90321020",
+   "descripcion": "Electrónicos",
+   "raee": true,
+   "rohs": true,
+   "nota": "Excepto todas las destinadas a formar parte de medios de transporte (incluida automoción) que no tendrán ROHS ni RAEE;"
+  },
+  {
+   "prefijo": "91011100",
+   "descripcion": "Con indicador mecánico solamente",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91011900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91019100",
+   "descripcion": "Eléctricos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91021100",
+   "descripcion": "Con indicador mecánico solamente",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91021200",
+   "descripcion": "Con indicador optoelectrónico solamente",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91021900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91029100",
+   "descripcion": "Eléctricos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91031000",
+   "descripcion": "Eléctricos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91051100",
+   "descripcion": "Eléctricos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91052100",
+   "descripcion": "Eléctricos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91059100",
+   "descripcion": "Eléctricos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91061000",
+   "descripcion": "Registradores de asistencia; registradores fechadores y registradores contadores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91070000",
+   "descripcion": "Interruptores horarios y demás aparatos que permitan accionar un dispositivo en un momento dado, con mecanismo de relojería o motor sincrónico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91081100",
+   "descripcion": "Con indicador mecánico solamente o con dispositivo que permita incorporarlo",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91081200",
+   "descripcion": "Con indicador optoelectrónico solamente",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91081900",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "91091000",
+   "descripcion": "Eléctricos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "92071010",
+   "descripcion": "Órganos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "92071030",
+   "descripcion": "Pianos digitales",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "92071050",
+   "descripcion": "Sintetizadores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "92071080",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "92079010",
+   "descripcion": "Guitarras",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "92079090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94021000",
+   "descripcion": "Sillones de dentista, de peluquería y sillones similares, y sus partes",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94041000",
+   "descripcion": "Somieres",
+   "raee": true,
+   "rohs": true,
+   "nota": "Exclusivamente si son AEE"
+  },
+  {
+   "prefijo": "9405114090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94051150",
+   "descripcion": "De vidrio",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94051190",
+   "descripcion": "De las demás materias",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "9405194090",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94051950",
+   "descripcion": "De vidrio",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94051990",
+   "descripcion": "De las demás materias",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94052140",
+   "descripcion": "De plástico o de cerámica",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94052150",
+   "descripcion": "De vidrio",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94052190",
+   "descripcion": "De las demás materias",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94052940",
+   "descripcion": "De plástico o de cerámica",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94052950",
+   "descripcion": "De vidrio",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94052990",
+   "descripcion": "De las demás materias",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94054110",
+   "descripcion": "Proyectores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94054131",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94054139",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94054210",
+   "descripcion": "Proyectores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94054231",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94054239",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94054910",
+   "descripcion": "Proyectores",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94054940",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94054990",
+   "descripcion": "De las demás materias",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94056120",
+   "descripcion": "De plástico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94056180",
+   "descripcion": "De las demás materias",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94056920",
+   "descripcion": "De plástico",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "94056980",
+   "descripcion": "De las demás materias",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "95043010",
+   "descripcion": "Juegos con pantalla",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "95043020",
+   "descripcion": "Los demás juegos",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "95045000",
+   "descripcion": "Videoconsolas y máquinas de videojuego, excepto las de la subpartida 950430",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "95049010",
+   "descripcion": "Circuitos eléctricos de coches con características de juegos de competición",
+   "raee": true,
+   "rohs": true
+  },
+  {
+   "prefijo": "95069990",
+   "descripcion": "Los demás",
+   "raee": true,
+   "rohs": true
+  }
+ ]
+}

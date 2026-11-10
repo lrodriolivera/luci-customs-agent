@@ -96,8 +96,34 @@ describe('ParaduaneroManager', () => {
       paraduaneroAPI.getByExpedition.mockResolvedValue({ data: { data: [] } })
     })
 
+    it('sin controles creados lanza el análisis al cargar, sin avisos, y muestra el motivo y la nota', async () => {
+      paraduaneroAPI.analyze.mockResolvedValue({
+        data: { data: { controlsRequired: 1, controls: [
+          { controlType: 'SOIVRE', subType: 'rohs_raee', reason: 'Procede control RoHS y RAEE', notes: 'Exclusivamente si son AEE' }
+        ] } }
+      })
+      render(<ParaduaneroManager expeditionId={mockExpeditionId} onControlsChange={mockOnControlsChange} />)
+
+      expect(await screen.findByText('- Procede control RoHS y RAEE')).toBeInTheDocument()
+      expect(screen.getByText('(Exclusivamente si son AEE)')).toBeInTheDocument()
+      expect(paraduaneroAPI.analyze).toHaveBeenCalledTimes(1)
+      expect(toast.success).not.toHaveBeenCalled()
+    })
+
+    it('si el análisis automático falla no muestra error: queda el botón', async () => {
+      paraduaneroAPI.analyze.mockRejectedValue(new Error('caído'))
+      render(<ParaduaneroManager expeditionId={mockExpeditionId} onControlsChange={mockOnControlsChange} />)
+
+      await screen.findByText('Analizar')
+      await waitFor(() => expect(paraduaneroAPI.analyze).toHaveBeenCalledTimes(1))
+      expect(toast.error).not.toHaveBeenCalled()
+    })
+
     it('shows analyzing state when analyze button is clicked', async () => {
-      paraduaneroAPI.analyze.mockReturnValue(new Promise(() => {}))
+      // El primer analisis es el automatico de la carga; el segundo, el del clic.
+      paraduaneroAPI.analyze
+        .mockResolvedValueOnce({ data: { data: { controlsRequired: 0, controls: [] } } })
+        .mockReturnValue(new Promise(() => {}))
       render(<ParaduaneroManager expeditionId={mockExpeditionId} onControlsChange={mockOnControlsChange} />)
 
       await screen.findByText('Analizar')

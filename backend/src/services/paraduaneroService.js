@@ -10,6 +10,7 @@
  */
 
 const logger = require('../config/logger');
+const { buscarRohsRaee, buscarSoivreSeguridad, VERSIONES } = require('./paraduanero/listasOficiales');
 const { Expedition, ParaduaneroControl, Document } = require('../models');
 
 /**
@@ -122,48 +123,14 @@ const TARIC_CONTROL_RULES = {
     { code: 'Y926', name: 'Certificado FLEGT/CITES', mandatory: false }
   ], inspection: true, notes: 'Madera - posible control CITES' },
 
-  // Capitulo 50-63: Textiles
-  '50': { controls: ['SOIVRE'], subType: 'textiles', documents: [
-    { code: 'Y923', name: 'Composicion fibras', mandatory: true }
-  ], inspection: false },
-  '51': { controls: ['SOIVRE'], subType: 'textiles', documents: [
-    { code: 'Y923', name: 'Composicion fibras', mandatory: true }
-  ], inspection: false },
-  '52': { controls: ['SOIVRE'], subType: 'textiles', documents: [
-    { code: 'Y923', name: 'Composicion fibras', mandatory: true }
-  ], inspection: false },
-  '61': { controls: ['SOIVRE'], subType: 'textiles', documents: [
-    { code: 'Y923', name: 'Composicion fibras', mandatory: true },
-    { code: 'C057', name: 'Etiquetado conforme', mandatory: true }
-  ], inspection: false },
-  '62': { controls: ['SOIVRE'], subType: 'textiles', documents: [
-    { code: 'Y923', name: 'Composicion fibras', mandatory: true }
-  ], inspection: false },
-
-  // Capitulo 64-67: Calzado, sombreros
-  '64': { controls: ['SOIVRE'], subType: 'industrial_products', documents: [
-    { code: 'C057', name: 'Etiquetado conforme', mandatory: true }
-  ], inspection: false },
-
-  // Capitulo 84-85: Maquinaria y electronica
-  '84': { controls: ['SOIVRE'], subType: 'machinery', documents: [
-    { code: 'C057', name: 'Declaracion CE conformidad', mandatory: true }
-  ], inspection: false },
-  '85': { controls: ['SOIVRE'], subType: 'electrical', documents: [
-    { code: 'C057', name: 'Declaracion CE conformidad', mandatory: true },
-    { code: 'Y924', name: 'Certificado seguridad electrica', mandatory: false }
-  ], inspection: false },
+  // Los controles del SOIVRE (seguridad de productos y RoHS/RAEE) NO se deciden
+  // por capitulo: salen de las listas oficiales por codigo TARIC, ver
+  // services/paraduanero/listasOficiales.js.
 
   // Capitulo 90: Instrumentos medicos
   '90': { controls: ['AEMPS'], subType: 'medical_devices', documents: [
     { code: 'C057', name: 'Marcado CE productos sanitarios', mandatory: true }
-  ], inspection: false },
-
-  // Capitulo 95: Juguetes
-  '95': { controls: ['SOIVRE'], subType: 'toys', documents: [
-    { code: 'C057', name: 'Declaracion CE conformidad', mandatory: true },
-    { code: 'Y925', name: 'Informe de ensayo EN 71', mandatory: true }
-  ], inspection: true, notes: 'Juguetes - control SOIVRE obligatorio' }
+  ], inspection: false }
 };
 
 // Codigos TARIC especificos que requieren CITES
@@ -175,6 +142,36 @@ const CITES_TARIC_PREFIXES = [
   '4103', '4104', // Pieles CITES
   '9601', '9602'  // Marfil, hueso
 ];
+
+// Grupo de producto de la lista SOIVRE -> subtipo del control y documentos.
+const SOIVRE_POR_GRUPO = {
+  TEXTIL: { subType: 'textiles', documents: [
+    { code: 'Y923', name: 'Composicion fibras', mandatory: true },
+    { code: 'C057', name: 'Etiquetado conforme', mandatory: true }
+  ] },
+  CALZADO: { subType: 'industrial_products', documents: [
+    { code: 'C057', name: 'Etiquetado conforme', mandatory: true }
+  ] },
+  JUGUETES: { subType: 'toys', inspection: true, documents: [
+    { code: 'C057', name: 'Declaracion CE conformidad', mandatory: true },
+    { code: 'Y925', name: 'Informe de ensayo EN 71', mandatory: true }
+  ] },
+  'PEQUEÑO ELECTRODOMESTICO': { subType: 'electrical', documents: [
+    { code: 'C057', name: 'Declaracion CE conformidad', mandatory: true }
+  ] },
+  PME: { subType: 'electrical', documents: [
+    { code: 'C057', name: 'Declaracion CE conformidad', mandatory: true }
+  ] }
+};
+const SOIVRE_EPI = { subType: 'ppe', documents: [
+  { code: 'C057', name: 'Declaracion UE de conformidad (EPI)', mandatory: true }
+] };
+const SOIVRE_OTROS = { subType: 'industrial_products', documents: [
+  { code: 'C057', name: 'Documentacion de conformidad del producto', mandatory: true }
+] };
+
+const DOCUMENTO_ROHS = { code: 'ROHS', name: 'Declaracion UE de conformidad RoHS (Directiva 2011/65/UE)', mandatory: true };
+const DOCUMENTO_RAEE = { code: 'RAEE', name: 'Numero de inscripcion en el Registro Integrado Industrial de AEE (RD 110/2015)', mandatory: true };
 
 // Paises con restricciones especiales
 const HIGH_RISK_COUNTRIES = {
@@ -246,6 +243,18 @@ class ParaduaneroService {
               });
             }
           }
+        }
+      }
+
+      // Controles del SOIVRE segun las listas oficiales por codigo TARIC
+      for (const control of this._controlesSoivre(good)) {
+        const key = `${control.controlType}-${control.subType}`;
+        if (!analyzedTypes.has(key)) {
+          analyzedTypes.add(key);
+          controls.push(control);
+        } else {
+          const existing = controls.find(c => c.controlType === control.controlType && c.subType === control.subType);
+          if (existing) existing.affectedGoods.push(...control.affectedGoods);
         }
       }
 
@@ -563,6 +572,56 @@ class ParaduaneroService {
   }
 
   // --- Metodos auxiliares ---
+
+  /**
+   * Controles del SOIVRE que proceden para una partida segun las listas
+   * oficiales: seguridad de productos (RD 330/2008) y RoHS/RAEE. Devuelve []
+   * si el TARIC no figura en ninguna: en ese caso no se afirma ningun control.
+   */
+  _controlesSoivre(good) {
+    const afectada = {
+      itemNumber: good.itemNumber,
+      description: good.description,
+      taricCode: good.taricCode,
+      quantity: good.quantity,
+      unit: good.unit,
+      weight: good.grossWeight
+    };
+    const controles = [];
+
+    const seguridad = buscarSoivreSeguridad(good.taricCode);
+    if (seguridad) {
+      const perfil = SOIVRE_POR_GRUPO[seguridad.grupo] ||
+        (seguridad.grupo.startsWith('EPI') ? SOIVRE_EPI : SOIVRE_OTROS);
+      controles.push({
+        controlType: 'SOIVRE',
+        subType: perfil.subType,
+        reason: `El TARIC ${seguridad.taric} figura en la lista de productos SOIVRE de seguridad (RD 330/2008), grupo ${seguridad.grupo}`,
+        documents: perfil.documents,
+        inspectionRequired: perfil.inspection || false,
+        priority: this._calculatePriority('SOIVRE', good.originCountry),
+        affectedGoods: [afectada],
+        notes: `Lista SOIVRE: ${VERSIONES.soivreSeguridad}`
+      });
+    }
+
+    const rohsRaee = buscarRohsRaee(good.taricCode);
+    if (rohsRaee && (rohsRaee.rohs || rohsRaee.raee)) {
+      const siglas = [rohsRaee.rohs && 'RoHS', rohsRaee.raee && 'RAEE'].filter(Boolean).join(' y ');
+      controles.push({
+        controlType: 'SOIVRE',
+        subType: 'rohs_raee',
+        reason: `El TARIC ${good.taricCode} figura en la lista TARIC RoHS/RAEE (prefijo ${rohsRaee.prefijo}): procede control ${siglas}`,
+        documents: [rohsRaee.rohs && DOCUMENTO_ROHS, rohsRaee.raee && DOCUMENTO_RAEE].filter(Boolean),
+        inspectionRequired: false,
+        priority: this._calculatePriority('SOIVRE', good.originCountry),
+        affectedGoods: [afectada],
+        notes: [rohsRaee.nota, `Lista RoHS/RAEE: version ${VERSIONES.rohsRaee}`].filter(Boolean).join(' | ')
+      });
+    }
+
+    return controles;
+  }
 
   _requiresCites(taricCode) {
     return CITES_TARIC_PREFIXES.some(prefix => taricCode.startsWith(prefix));
