@@ -8,6 +8,7 @@ const { BedrockRuntimeClient, ConverseCommand } = require('@aws-sdk/client-bedro
 const logger = require('../config/logger');
 const { eoriDe } = require('./forms/identificadorAduanero');
 const { getCache } = require('./cacheService');
+const { escapeRegex } = require('../utils/escapeRegex');
 
 const BEDROCK_REGION = process.env.BEDROCK_REGION || 'us-east-1';
 
@@ -758,7 +759,7 @@ CONTEXTO DEL EXPEDIENTE:
         let alternativas = [];
         for (const longitud of [8, 6]) {
           alternativas = await TaricCode.find({
-            code: new RegExp(`^${code.slice(0, longitud)}`),
+            code: new RegExp(`^${escapeRegex(code.slice(0, longitud))}`),
             isActive: true,
             isLeaf: true
           }).sort({ code: 1 }).limit(MAX_ALTERNATIVAS_CATALOGO).lean();
