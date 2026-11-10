@@ -3,6 +3,7 @@ const logger = require('../config/logger');
 const aiService = require('../services/aiService');
 const { fileUtils } = require('../middleware/upload');
 const { ensureSameTenant } = require('../utils/tenantGuard');
+const { proponerCambios, aplicarCambios } = require('../services/documentos/extraccionDocumento');
 
 /**
  * Subir documento a un expediente
@@ -406,7 +407,149 @@ const validateAll = async (req, res) => {
   }
 };
 
+// Con la declaracion presentada, los datos del expediente son los que constan
+// ante la AEAT: la lectura de un documento ya no puede cambiarlos.
+const ESTADOS_SIN_CAMBIOS = [
+  'declaration_submitted', 'green_channel', 'orange_channel', 'red_channel', 'levante', 'completed', 'cancelled'
+];
+
+/**
+ * Leer un documento con IA y proponer cambios al expediente
+ * POST /api/documents/:expeditionId/:docId/extract
+ *
+ * Guarda lo leido en el documento y devuelve la propuesta. No modifica ningun
+ * dato del expediente: eso solo ocurre en /apply, con lo que marque el agente.
+ */
+const extractDocument = async (req, res) => {
+  try {
+    const { expeditionId, docId } = req.params;
+    const expedition = await Expedition.findById(expeditionId);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+
+    const document = expedition.documents.id(docId);
+    if (!document) {
+      return res.status(404).json({ success: false, error: 'Documento no encontrado' });
+    }
+
+    const lectura = await aiService.extractDocumentData(document);
+    const { leido, modelo, ...datos } = lectura;
+
+    document.extractedData = { ...datos, leido, modelo: modelo || null, leidoEn: new Date() };
+    document.aiConfidence = datos.confianza;
+    expedition.markModified('documents');
+    expedition.timeline.push({
+      action: 'document_read',
+      description: `Documento ${document.originalName} ${leido && datos.legible ? 'leido' : 'no se pudo leer'}`,
+      userId: req.user._id,
+      performedBy: req.user.name,
+      metadata: { documentType: document.type, confidence: datos.confianza }
+    });
+    await expedition.save();
+
+    res.json({
+      success: true,
+      data: {
+        document,
+        extraction: document.extractedData,
+        proposal: proponerCambios(expedition, datos, document.type)
+      }
+    });
+  } catch (error) {
+    logger.error('Error leyendo documento:', error);
+    res.status(500).json({ success: false, error: 'Error al leer el documento' });
+  }
+};
+
+/**
+ * Propuesta de cambios de un documento ya leido (no vuelve a llamar a la IA)
+ * GET /api/documents/:expeditionId/:docId/proposal
+ */
+const getProposal = async (req, res) => {
+  try {
+    const { expeditionId, docId } = req.params;
+    const expedition = await Expedition.findById(expeditionId);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+
+    const document = expedition.documents.id(docId);
+    if (!document) {
+      return res.status(404).json({ success: false, error: 'Documento no encontrado' });
+    }
+
+    const extraction = document.extractedData || null;
+    res.json({
+      success: true,
+      data: {
+        extraction,
+        proposal: extraction ? proponerCambios(expedition, extraction, document.type) : []
+      }
+    });
+  } catch (error) {
+    logger.error('Error calculando la propuesta del documento:', error);
+    res.status(500).json({ success: false, error: 'Error al obtener la propuesta del documento' });
+  }
+};
+
+/**
+ * Aplicar al expediente los datos leidos que el agente ha marcado
+ * POST /api/documents/:expeditionId/:docId/apply   { fields: string[] }
+ */
+const applyExtraction = async (req, res) => {
+  try {
+    const { expeditionId, docId } = req.params;
+    const fields = Array.isArray(req.body?.fields) ? req.body.fields.filter(f => typeof f === 'string').slice(0, 500) : [];
+    if (fields.length === 0) {
+      return res.status(400).json({ success: false, error: 'No se ha indicado ningun dato para aplicar' });
+    }
+
+    const expedition = await Expedition.findById(expeditionId);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+
+    const document = expedition.documents.id(docId);
+    if (!document) {
+      return res.status(404).json({ success: false, error: 'Documento no encontrado' });
+    }
+    if (!document.extractedData || document.extractedData.legible === false) {
+      return res.status(400).json({ success: false, error: 'El documento no tiene datos leidos que aplicar' });
+    }
+    if (ESTADOS_SIN_CAMBIOS.includes(expedition.status)) {
+      return res.status(409).json({
+        success: false,
+        error: 'La declaracion ya esta presentada: los datos del expediente no se pueden cambiar desde un documento'
+      });
+    }
+
+    const aplicados = aplicarCambios(expedition, document.extractedData, document.type, fields);
+    if (aplicados.length === 0) {
+      return res.status(400).json({ success: false, error: 'Ninguno de los datos indicados se puede aplicar ya' });
+    }
+
+    expedition.timeline.push({
+      action: 'document_data_applied',
+      description: `Aplicados ${aplicados.length} dato(s) de ${document.originalName}`,
+      userId: req.user._id,
+      performedBy: req.user.name,
+      metadata: { documentType: document.type, fields: aplicados.map(c => c.clave) }
+    });
+    await expedition.save();
+
+    res.json({
+      success: true,
+      data: {
+        expedition,
+        applied: aplicados,
+        proposal: proponerCambios(expedition, document.extractedData, document.type)
+      }
+    });
+  } catch (error) {
+    logger.error('Error aplicando datos del documento:', error);
+    res.status(500).json({ success: false, error: 'Error al aplicar los datos del documento' });
+  }
+};
+
 module.exports = {
+  extractDocument,
+  getProposal,
+  applyExtraction,
   upload,
   getDocument,
   validateDocument,

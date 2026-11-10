@@ -24,7 +24,7 @@ vi.mock('../../services/api', () => ({
     aiDetectInconsistencies: vi.fn(),
     aiFullAnalysis: vi.fn()
   },
-  documentsAPI: { upload: vi.fn() },
+  documentsAPI: { upload: vi.fn(), read: vi.fn(), proposal: vi.fn(), apply: vi.fn(), download: vi.fn() },
   declarationsAPI: {
     generateH1: vi.fn(),
     exportXML: vi.fn(),
@@ -1011,6 +1011,38 @@ describe('<ExpeditionDetail /> — edición de mercancía y documentos por el ag
     fireEvent.click(screen.getByText('groupage.verify'))
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Error al consultar la declaracion sumaria'))
+  })
+
+  test('al subir un documento LUCI lo lee y, al aplicar lo leído, el expediente se actualiza', async () => {
+    const doc = { _id: 'doc9', type: 'packing_list', originalName: 'packing.pdf', status: 'pending' }
+    const conDoc = { ...mockExpedition, documents: [doc] }
+    documentsAPI.upload.mockImplementation(async () => {
+      expeditionsAPI.get.mockResolvedValue({ data: { data: conDoc } })
+      return { data: { success: true, data: { document: doc } } }
+    })
+    documentsAPI.read.mockResolvedValue({
+      data: { data: {
+        extraction: { legible: true, leido: true, confianza: 90, notas: [], leidoEn: '2026-11-10T20:00:00Z' },
+        proposal: [{ clave: 'goods.0.packages.quantity', campo: 'packagesQuantity', partida: 1, actual: null, nuevo: 12 }]
+      } }
+    })
+    const actualizado = { ...conDoc, goods: [{ ...mockExpedition.goods[0], packages: { quantity: 12, type: 'CT' } }, mockExpedition.goods[1]] }
+    documentsAPI.apply.mockImplementation(async () => {
+      expeditionsAPI.get.mockResolvedValue({ data: { data: actualizado } })
+      return { data: { data: { expedition: actualizado, applied: [{}], proposal: [] } } }
+    })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getByText('expeditions.uploadTitle')).toBeInTheDocument())
+
+    const file = new File(['%PDF'], 'packing.pdf', { type: 'application/pdf' })
+    fireEvent.change(screen.getByLabelText('expeditions.uploadFile'), { target: { files: [file] } })
+    fireEvent.click(screen.getByText('expeditions.uploadButton'))
+
+    await waitFor(() => expect(documentsAPI.read).toHaveBeenCalledWith('exp123', 'doc9'))
+    fireEvent.click(await screen.findByText('docReading.apply'))
+
+    await waitFor(() => expect(documentsAPI.apply).toHaveBeenCalledWith('exp123', 'doc9', ['goods.0.packages.quantity']))
+    await waitFor(() => expect(screen.getByText('12 CT')).toBeInTheDocument())
   })
 
   test('en aéreo no se pregunta por el tipo de carga', async () => {

@@ -17,6 +17,15 @@ router.post(
   documentController.upload
 );
 
+// Leer el documento con IA y proponer cambios al expediente (no modifica nada)
+router.post('/:expeditionId/:docId/extract', documentValidators.validate, documentController.extractDocument);
+
+// Propuesta de cambios de un documento ya leido (sin volver a llamar a la IA)
+router.get('/:expeditionId/:docId/proposal', documentController.getProposal);
+
+// Aplicar al expediente los datos leidos que marque el agente
+router.post('/:expeditionId/:docId/apply', documentValidators.validate, documentController.applyExtraction);
+
 // Obtener documento
 router.get('/:expeditionId/:docId', documentController.getDocument);
 
