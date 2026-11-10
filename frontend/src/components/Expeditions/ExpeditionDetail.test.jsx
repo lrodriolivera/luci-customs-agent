@@ -918,6 +918,38 @@ describe('<ExpeditionDetail /> — edición de mercancía y documentos por el ag
     expeditionsAPI.getChecklist.mockResolvedValue({ data: { data: mockChecklist } })
   })
 
+  test('con el H1 generado muestra la vista previa en pantalla, sin descargar nada', async () => {
+    expeditionsAPI.get.mockResolvedValue({
+      data: {
+        data: {
+          ...mockExpedition,
+          declaration: {
+            lrn: 'LRN26ES0001',
+            status: 'draft',
+            xmlContent: '<Declaration/>',
+            h1Data: {
+              lrn: 'LRN26ES0001',
+              declarationHeader: { declarant: { name: 'Test Company SL', representativeStatus: '2' } },
+              goodsItems: []
+            }
+          }
+        }
+      }
+    })
+    renderExpeditionDetail()
+
+    await waitFor(() => expect(screen.getByText('h1Preview.title')).toBeInTheDocument())
+    expect(screen.getByText('2 — h1Preview.representationDirect')).toBeInTheDocument()
+    expect(declarationsAPI.downloadPDF).not.toHaveBeenCalled()
+  })
+
+  test('sin H1 generado no hay vista previa', async () => {
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getByText('Café sin tostar')).toBeInTheDocument())
+
+    expect(screen.queryByText('h1Preview.title')).not.toBeInTheDocument()
+  })
+
   test('una partida sin bultos lo indica en vez de dejar el hueco', async () => {
     renderExpeditionDetail()
     await waitFor(() => expect(screen.getAllByText('expeditions.packagesMissing')).toHaveLength(2))
