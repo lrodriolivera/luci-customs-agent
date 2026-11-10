@@ -20,6 +20,7 @@ const { buildCC044UnloadingXML } = require('./cc044XmlBuilder');
 const { buildIE313AmendmentXML } = require('./ie313XmlBuilder');
 const { buildIE314CancelXML } = require('./ie314XmlBuilder');
 const { buildQueryImportXML } = require('./queryXmlBuilder');
+const { buildDSDTConsXML, parseDSDTConsResponse, ENDPOINT: ENDPOINT_DSDT_CONS } = require('./dsdtConsXmlBuilder');
 const {
   eoriDe, exigirEori, declarantePara, representanteDelTenant
 } = require('../forms/identificadorAduanero');
@@ -202,6 +203,28 @@ async function _sendToAEAT(soapXML, endpoint) {
 }
 
 // ==================== METODOS PUBLICOS ====================
+
+/**
+ * Consultar en la AEAT una partida de declaracion sumaria (DSDT).
+ *
+ * Solo lectura. El entorno es el de siempre: PRE salvo AEAT_ENVIRONMENT=production.
+ * En PRE no existen las sumarias reales de los operadores, asi que una sumaria
+ * de verdad saldra como no encontrada.
+ *
+ * @param {object} expedition  expediente (para resolver el declarante/remitente)
+ * @param {{ clave?: string, mrn?: string, partida: string|number, ubicacion?: string }} referencia
+ * @param {{ tenant?: object }} [ctx]
+ * @returns {Promise<object>} respuesta interpretada (ver parseDSDTConsResponse)
+ */
+async function consultarSumaria(expedition, referencia, ctx = {}) {
+  const tenant = await _tenantDe(expedition, ctx);
+  const declarante = declarantePara(expedition, tenant);
+  const soapXML = buildDSDTConsXML({ ...referencia, sender: declarante.eori });
+  logger.info(`[AEAT] Consulta DSDT: ${referencia.clave || referencia.mrn} partida ${referencia.partida}`);
+  const response = await aeatTransport.sendSoap(soapXML, ENDPOINT_DSDT_CONS);
+  return parseDSDTConsResponse(response.data);
+}
+
 
 /**
  * Enviar declaracion H1 de importacion
@@ -702,6 +725,7 @@ async function submitENSCancellation(data) {
 }
 
 module.exports = {
+  consultarSumaria,
   submitH1,
   submitH7,
   submitAES,

@@ -478,6 +478,29 @@ describe('<ExpeditionNew />', () => {
       expect(expeditionsAPI.create.mock.calls[0][0].goods[0].packages).toEqual({ quantity: 12, type: 'PX' })
     })
 
+    test('en marítimo se puede marcar grupaje (LCL) y viaja en transport.loadType', async () => {
+      expeditionsAPI.create.mockResolvedValue({ data: { data: { _id: 'exp-123' } } })
+      renderComponent()
+      fillMinimalForm()
+      fireEvent.change(screen.getByLabelText('groupage.loadType'), { target: { value: 'LCL' } })
+      fireEvent.submit(document.querySelector('form'))
+
+      await waitFor(() => expect(expeditionsAPI.create).toHaveBeenCalled())
+      const enviado = expeditionsAPI.create.mock.calls[0][0]
+      expect(enviado.transport).toEqual({ loadType: 'LCL' })
+      expect(enviado.loadType).toBeUndefined()
+    })
+
+    test('sin tipo de carga no se envía transport', async () => {
+      expeditionsAPI.create.mockResolvedValue({ data: { data: { _id: 'exp-123' } } })
+      renderComponent()
+      fillMinimalForm()
+      fireEvent.submit(document.querySelector('form'))
+
+      await waitFor(() => expect(expeditionsAPI.create).toHaveBeenCalled())
+      expect(expeditionsAPI.create.mock.calls[0][0].transport).toBeUndefined()
+    })
+
     test('unos bultos en blanco no se envían como 0', async () => {
       expeditionsAPI.create.mockResolvedValue({ data: { data: { _id: 'exp-123' } } })
       renderComponent()

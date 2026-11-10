@@ -773,6 +773,18 @@ describe('api.js — portalAPI', () => {
   })
 })
 
+describe('api.js — consulta de la sumaria en la AEAT', () => {
+  it('declarationsAPI.verifySummaryDeclaration llama al endpoint de verificación con margen de tiempo', async () => {
+    const api = await import('./api.js')
+
+    await api.declarationsAPI.verifySummaryDeclaration('exp123')
+
+    expect(mockApi.post).toHaveBeenCalledWith(
+      '/api/declarations/exp123/summary-declaration/verify', {}, { timeout: 60000 }
+    )
+  })
+})
+
 describe('api.js — chatAPI', () => {
   it('chatAPI.send incluye language de i18n', async () => {
     const api = await import('./api.js')

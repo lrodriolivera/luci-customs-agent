@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import ExpeditionDetail from './ExpeditionDetail'
 import { expeditionsAPI, documentsAPI, declarationsAPI } from '../../services/api'
@@ -30,7 +30,8 @@ vi.mock('../../services/api', () => ({
     exportXML: vi.fn(),
     submit: vi.fn(),
     downloadPDF: vi.fn(),
-    downloadSummaryPDF: vi.fn()
+    downloadSummaryPDF: vi.fn(),
+    verifySummaryDeclaration: vi.fn()
   }
 }))
 
@@ -950,6 +951,76 @@ describe('<ExpeditionDetail /> — edición de mercancía y documentos por el ag
     expect(screen.queryByText('h1Preview.title')).not.toBeInTheDocument()
   })
 
+  test('en marítimo se puede marcar grupaje y registrar la sumaria sin perder el resto del transporte', async () => {
+    const maritimo = { ...mockExpedition, transportMode: 'SEA', transport: { carrier: 'MSC', documentNumber: 'BL-1' } }
+    expeditionsAPI.get.mockResolvedValue({ data: { data: maritimo } })
+    expeditionsAPI.update.mockResolvedValue({ data: { data: maritimo } })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getByText('groupage.title')).toBeInTheDocument())
+
+    fireEvent.change(screen.getByLabelText('groupage.loadType'), { target: { value: 'LCL' } })
+    fireEvent.change(screen.getByLabelText('groupage.summaryNumber'), { target: { value: 'S-PARTIDA' } })
+    fireEvent.change(screen.getByLabelText('groupage.summaryPackages'), { target: { value: '12' } })
+    fireEvent.change(screen.getByLabelText('groupage.summaryGrossWeight'), { target: { value: '1050' } })
+    fireEvent.click(within(screen.getByText('groupage.title').closest('.card')).getByText('common.save'))
+
+    await waitFor(() => expect(expeditionsAPI.update).toHaveBeenCalled())
+    expect(expeditionsAPI.update.mock.calls[0]).toEqual(['exp123', {
+      transport: {
+        carrier: 'MSC',
+        documentNumber: 'BL-1',
+        loadType: 'LCL',
+        summaryDeclaration: { number: 'S-PARTIDA', item: undefined, packages: 12, grossWeight: 1050 }
+      }
+    }])
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('groupage.saved'))
+  })
+
+  test('consultar la sumaria en la AEAT muestra el motivo del bloqueo y recarga el expediente', async () => {
+    const lcl = {
+      ...mockExpedition,
+      transportMode: 'SEA',
+      transport: { loadType: 'LCL', summaryDeclaration: { number: '46116000123', item: '3', packages: 12, grossWeight: 1050 } }
+    }
+    expeditionsAPI.get.mockResolvedValue({ data: { data: lcl } })
+    declarationsAPI.verifySummaryDeclaration.mockResolvedValue({
+      data: { success: true, data: { blocked: true, reason: 'La partida 3 es una partida master', warning: null, aeat: { verified: true } } }
+    })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getByText('groupage.verify')).toBeInTheDocument())
+    const cargasAntes = expeditionsAPI.get.mock.calls.length
+
+    fireEvent.click(screen.getByText('groupage.verify'))
+
+    await waitFor(() => expect(declarationsAPI.verifySummaryDeclaration).toHaveBeenCalledWith('exp123'))
+    await waitFor(() => expect(screen.getByText('La partida 3 es una partida master')).toBeInTheDocument())
+    expect(expeditionsAPI.get.mock.calls.length).toBeGreaterThan(cargasAntes)
+  })
+
+  test('si la consulta a la AEAT falla muestra el error del backend', async () => {
+    const lcl = {
+      ...mockExpedition,
+      transportMode: 'SEA',
+      transport: { loadType: 'LCL', summaryDeclaration: { number: '46116000123', item: '3' } }
+    }
+    expeditionsAPI.get.mockResolvedValue({ data: { data: lcl } })
+    declarationsAPI.verifySummaryDeclaration.mockRejectedValue({ response: { data: { error: 'Error al consultar la declaracion sumaria' } } })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getByText('groupage.verify')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByText('groupage.verify'))
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Error al consultar la declaracion sumaria'))
+  })
+
+  test('en aéreo no se pregunta por el tipo de carga', async () => {
+    expeditionsAPI.get.mockResolvedValue({ data: { data: { ...mockExpedition, transportMode: 'AIR' } } })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getByText('Café sin tostar')).toBeInTheDocument())
+
+    expect(screen.queryByText('groupage.title')).not.toBeInTheDocument()
+  })
+
   test('una partida sin bultos lo indica en vez de dejar el hueco', async () => {
     renderExpeditionDetail()
     await waitFor(() => expect(screen.getAllByText('expeditions.packagesMissing')).toHaveLength(2))
@@ -971,7 +1042,7 @@ describe('<ExpeditionDetail /> — edición de mercancía y documentos por el ag
 
     fireEvent.click(screen.getAllByText('common.edit')[0])
     fireEvent.change(screen.getByLabelText('expeditions.packagesQuantity'), { target: { value: '12' } })
-    fireEvent.click(screen.getByText('common.save'))
+    fireEvent.click(within(screen.getByRole('form', { name: 'expeditions.editGoods' })).getByText('common.save'))
 
     await waitFor(() => expect(expeditionsAPI.update).toHaveBeenCalled())
     const [expId, body] = expeditionsAPI.update.mock.calls[0]
@@ -989,7 +1060,7 @@ describe('<ExpeditionDetail /> — edición de mercancía y documentos por el ag
     await waitFor(() => expect(screen.getAllByText('common.edit')).toHaveLength(2))
 
     fireEvent.click(screen.getAllByText('common.edit')[0])
-    fireEvent.click(screen.getByText('common.save'))
+    fireEvent.click(within(screen.getByRole('form', { name: 'expeditions.editGoods' })).getByText('common.save'))
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Error al actualizar expediente'))
     expect(screen.getByLabelText('expeditions.packagesQuantity')).toBeInTheDocument()

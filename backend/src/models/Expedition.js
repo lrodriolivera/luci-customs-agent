@@ -377,7 +377,38 @@ const ExpeditionSchema = new mongoose.Schema({
     entryCustomsOffice: String,
     loadingPlace: String,
     unloadingPlace: String,
-    containers: [ContenedorSchema]
+    containers: [ContenedorSchema],
+    // Maritimo: contenedor completo (FCL) o grupaje (LCL). Sin valor no se
+    // aplica la regla del grupaje.
+    loadType: { type: String, enum: ['FCL', 'LCL'] },
+    // Declaracion sumaria de deposito temporal en la que se apoya el H1. En un
+    // grupaje tiene que ser la de la desconsolidacion: sus bultos y kilos se
+    // contrastan con los del expediente (services/forms/grupajeLcl.js).
+    summaryDeclaration: {
+      number: String,
+      item: String,
+      packages: Number,
+      grossWeight: Number,
+      // Ultima consulta de esta partida en la AEAT (servicio DSDTCons).
+      aeat: {
+        consultedAt: Date,
+        verified: Boolean,
+        environment: String,
+        clave: String,
+        mrn: String,
+        activated: Boolean,
+        itemStatus: String,
+        itemStatusText: String,
+        isMaster: Boolean,
+        packages: Number,
+        grossWeight: Number,
+        packagesBalance: Number,
+        grossWeightBalance: Number,
+        billOfLading: String,
+        location: String,
+        error: String
+      }
+    }
   },
 
   // Trade terms

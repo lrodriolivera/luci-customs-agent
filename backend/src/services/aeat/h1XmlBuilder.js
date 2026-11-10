@@ -150,7 +150,12 @@ function buildH1ImportXML(data) {
         <C371RegimenPrecedente>${p.regimenPrecedente || '00'}</C371RegimenPrecedente>${(p.codigoAdicional && !['000','00','0',''].includes(String(p.codigoAdicional))) ? xml`
         <C372CodigoAdicional>${p.codigoAdicional}</C372CodigoAdicional>` : ''}
       </C37RegimenAduanero>
-      <C38MasaNetaEnKg>${Number(p.pesoneto || 0).toFixed(3)}</C38MasaNetaEnKg>
+      <C38MasaNetaEnKg>${Number(p.pesoneto || 0).toFixed(3)}</C38MasaNetaEnKg>${p.documentoCargo ? xml`
+      <C40DocumentoCargoPrecedente>
+        <C40TipoDocumento>${p.documentoCargo.tipo}</C40TipoDocumento>
+        <C40ClaseDocumento>${p.documentoCargo.clase}</C40ClaseDocumento>
+        <C40ReferenciaDocumento>${p.documentoCargo.referencia}</C40ReferenciaDocumento>
+      </C40DocumentoCargoPrecedente>` : ''}
       ${p.unidadesSuplementarias ? xml`<C41UnidadesSuplementarias>
         <C41UnidadesCodigo>${p.unidadesCodigo || 'NAR'}</C41UnidadesCodigo>
         <C41UnidadesNumero>${Number(p.unidadesSuplementarias).toFixed(3)}</C41UnidadesNumero>
@@ -260,6 +265,7 @@ function expeditionToH1Data(expedition, { declarante } = {}) {
   }
 
   const modeMap = { air: '4', sea: '1', road: '3', rail: '2', maritime: '1' };
+  const documentoCargo = documentoCargoDe(expedition);
   const totalValue = goods.reduce((s, g) => s + (g.invoiceValue || g.value || 0), 0);
 
   return {
@@ -323,9 +329,13 @@ function expeditionToH1Data(expedition, { declarante } = {}) {
       unidadesCodigo: g.supplementaryUnitType
         || g.supplementaryUnitCode
         || ((g.unit === 'PCS' || g.unit === 'NAR' || g.quantityUnit === 'PCS' || g.quantityUnit === 'NAR') ? 'NAR' : null),
-      bultos: g.numberOfPackages || 1,
-      tipoBulto: 'CT',
-      marcas: g.shippingMarks || 'S/M',
+      // El expediente guarda los bultos en `packages`; `numberOfPackages` no
+      // existe en su esquema y la partida salia siempre con 1 bulto, que es
+      // ademas lo que la AEAT descuenta de la declaracion sumaria (casilla 40).
+      bultos: g.packages?.quantity || g.numberOfPackages || 1,
+      tipoBulto: g.packages?.type || 'CT',
+      marcas: g.packages?.marks || g.shippingMarks || 'S/M',
+      documentoCargo,
       valorFactura: g.invoiceValue || g.value || 0,
       valorEstadistico: g.statisticalValue || g.invoiceValue || g.value || 0,
       preferencia: decl.preference || '100',
@@ -349,7 +359,39 @@ function expeditionToH1Data(expedition, { declarante } = {}) {
   };
 }
 
+// Casilla 40: clase de documento segun el modo de transporte (esquema
+// ImportaTiposDeDatos.xsd, Cas40Td): 'SUM' sumaria maritima, 'SUA' sumaria aerea.
+const CLASE_SUMARIA_POR_MODO = { sea: 'SUM', maritime: 'SUM', air: 'SUA' };
+const TIPO_DOCUMENTO_SUMARIA = 'X';
+const FORMATO_CLAVE_SUMARIA = /^\d{11}$/;
+
+/**
+ * Documento de cargo (casilla 40) a partir de la declaracion sumaria registrada
+ * en el expediente. La referencia es la de 16 caracteres de la AEAT:
+ * RRRRANNNNNN (clave) + PPPPP (partida).
+ *
+ * Devuelve null si no hay sumaria, si el modo de transporte no tiene clase de
+ * sumaria o si no se conoce la clave (por ejemplo, solo se registro el MRN y
+ * aun no se consulto en la AEAT): antes que inventar una referencia, la
+ * casilla no se declara.
+ */
+function documentoCargoDe(expedition) {
+  const sumaria = expedition?.transport?.summaryDeclaration;
+  if (!sumaria) return null;
+
+  const clase = CLASE_SUMARIA_POR_MODO[String(expedition.transportMode || '').toLowerCase()];
+  if (!clase) return null;
+
+  const numero = String(sumaria.number || '').replace(/[\s.\-/]/g, '');
+  const clave = FORMATO_CLAVE_SUMARIA.test(numero) ? numero : sumaria.aeat?.clave;
+  const partida = String(sumaria.item ?? '').trim();
+  if (!FORMATO_CLAVE_SUMARIA.test(String(clave || '')) || !/^\d{1,5}$/.test(partida)) return null;
+
+  return { tipo: TIPO_DOCUMENTO_SUMARIA, clase, referencia: `${clave}${partida.padStart(5, '0')}` };
+}
+
 module.exports = {
+  documentoCargoDe,
   buildH1ImportXML,
   expeditionToH1Data,
   NS_ENT,

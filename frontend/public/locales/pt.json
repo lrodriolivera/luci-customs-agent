@@ -3571,5 +3571,33 @@
     "modeFixed": "instalação fixa",
     "modeInlandWater": "navegação interior",
     "modeOwn": "propulsão própria"
+  },
+  "groupage": {
+    "title": "Carga marítima e declaração sumária",
+    "loadType": "Tipo de carga",
+    "loadTypeUnset": "Não indicado",
+    "loadTypeFCL": "Contentor completo (FCL)",
+    "loadTypeLCL": "Grupagem (LCL)",
+    "ruleTitle": "Grupagem: o H1 precisa da declaração sumária da desconsolidação",
+    "ruleText": "É preciso esperar que o contentor seja esvaziado no armazém de depósito temporário e receber a declaração sumária com os volumes e os quilos desta remessa. Com a declaração sumária do contentor completo não é possível gerar nem apresentar o H1.",
+    "summaryDeclaration": "Declaração sumária",
+    "summaryNumber": "Número da declaração sumária",
+    "summaryItem": "Adição",
+    "summaryPackages": "Volumes da declaração sumária",
+    "summaryGrossWeight": "Peso bruto da declaração sumária (kg)",
+    "expeditionTotals": "O processo declara {{packages}} volumes e {{weight}} kg",
+    "saved": "Dados da carga guardados",
+    "saveError": "Não foi possível guardar os dados da carga",
+    "summaryNumberHint": "Chave da declaração sumária (recinto, ano e número: 11 dígitos) ou o seu MRN. Serve para consultar a AEAT.",
+    "verify": "Consultar na AEAT",
+    "verifying": "A consultar...",
+    "verifyError": "Não foi possível consultar a declaração sumária",
+    "aeatVerified": "Consultada na AEAT",
+    "aeatNotVerified": "Não foi possível verificar na AEAT",
+    "aeatItem": "Adição {{status}}: {{packages}} volumes e {{weight}} kg declarados.",
+    "aeatBalance": "Saldo: {{packages}} volumes.",
+    "aeatMaster": "É uma adição master: corresponde à carga agrupada, não a esta mercadoria.",
+    "aeatBillOfLading": "Conhecimento: {{value}}",
+    "aeatLocation": "Localização: {{value}}"
   }
 }

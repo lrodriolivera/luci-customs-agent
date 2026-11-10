@@ -3571,5 +3571,33 @@
     "modeFixed": "installazione fissa",
     "modeInlandWater": "navigazione interna",
     "modeOwn": "propulsione propria"
+  },
+  "groupage": {
+    "title": "Carico marittimo e dichiarazione sommaria",
+    "loadType": "Tipo di carico",
+    "loadTypeUnset": "Non indicato",
+    "loadTypeFCL": "Container completo (FCL)",
+    "loadTypeLCL": "Groupage (LCL)",
+    "ruleTitle": "Groupage: l'H1 richiede la dichiarazione sommaria del deconsolidamento",
+    "ruleText": "Occorre attendere che il container venga svuotato nel magazzino di custodia temporanea e ricevere la dichiarazione sommaria con i colli e i chili di questa partita. Con la dichiarazione sommaria del container completo l'H1 non può essere generato né presentato.",
+    "summaryDeclaration": "Dichiarazione sommaria",
+    "summaryNumber": "Numero della dichiarazione sommaria",
+    "summaryItem": "Articolo",
+    "summaryPackages": "Colli della dichiarazione sommaria",
+    "summaryGrossWeight": "Peso lordo della dichiarazione sommaria (kg)",
+    "expeditionTotals": "La pratica dichiara {{packages}} colli e {{weight}} kg",
+    "saved": "Dati del carico salvati",
+    "saveError": "Impossibile salvare i dati del carico",
+    "summaryNumberHint": "Chiave della dichiarazione sommaria (recinto, anno e numero: 11 cifre) o il suo MRN. Serve per interrogare l'AEAT.",
+    "verify": "Verifica presso l'AEAT",
+    "verifying": "Verifica in corso...",
+    "verifyError": "Impossibile verificare la dichiarazione sommaria",
+    "aeatVerified": "Verificata presso l'AEAT",
+    "aeatNotVerified": "Impossibile verificare presso l'AEAT",
+    "aeatItem": "Articolo {{status}}: {{packages}} colli e {{weight}} kg dichiarati.",
+    "aeatBalance": "Saldo: {{packages}} colli.",
+    "aeatMaster": "È un articolo master: corrisponde al carico consolidato, non a questa merce.",
+    "aeatBillOfLading": "Polizza di carico: {{value}}",
+    "aeatLocation": "Ubicazione: {{value}}"
   }
 }

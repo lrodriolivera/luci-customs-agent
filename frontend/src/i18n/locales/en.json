@@ -3587,5 +3587,33 @@
     "modeFixed": "fixed installation",
     "modeInlandWater": "inland waterway",
     "modeOwn": "own propulsion"
+  },
+  "groupage": {
+    "title": "Sea cargo and summary declaration",
+    "loadType": "Load type",
+    "loadTypeUnset": "Not specified",
+    "loadTypeFCL": "Full container (FCL)",
+    "loadTypeLCL": "Groupage (LCL)",
+    "ruleTitle": "Groupage: the H1 needs the deconsolidation summary declaration",
+    "ruleText": "Wait until the container is unloaded at the temporary storage facility and you receive the summary declaration with the packages and kilos of this consignment. The H1 cannot be generated or lodged with the summary declaration of the full container.",
+    "summaryDeclaration": "Summary declaration",
+    "summaryNumber": "Summary declaration number",
+    "summaryItem": "Item",
+    "summaryPackages": "Packages on the summary declaration",
+    "summaryGrossWeight": "Gross weight on the summary declaration (kg)",
+    "expeditionTotals": "The file declares {{packages}} packages and {{weight}} kg",
+    "saved": "Cargo details saved",
+    "saveError": "The cargo details could not be saved",
+    "summaryNumberHint": "Summary declaration key (customs area, year and number: 11 digits) or its MRN. It is used to query the AEAT.",
+    "verify": "Check with the AEAT",
+    "verifying": "Checking...",
+    "verifyError": "The summary declaration could not be checked",
+    "aeatVerified": "Checked with the AEAT",
+    "aeatNotVerified": "It could not be checked with the AEAT",
+    "aeatItem": "Item {{status}}: {{packages}} packages and {{weight}} kg declared.",
+    "aeatBalance": "Balance: {{packages}} packages.",
+    "aeatMaster": "This is a master item: it covers the consolidated cargo, not these goods.",
+    "aeatBillOfLading": "Bill of lading: {{value}}",
+    "aeatLocation": "Location: {{value}}"
   }
 }
