@@ -115,7 +115,7 @@ export function prerrellenarAlta(formData, extraccion, { tipoDocumento, fijados 
 
   // Rellena `destino[propiedad]` si esta vacio (o en su valor por defecto); si
   // tiene otro dato, lo deja y avisa.
-  const proponer = (campo, destino, propiedad, nuevo, { partida, porDefecto } = {}) => {
+  const proponer = (campo, destino, propiedad, nuevo, { partida, porDefecto, sinAviso = false } = {}) => {
     if (vacio(nuevo)) return
     const actual = destino[propiedad]
     const clave = claveDe(campo, partida)
@@ -126,7 +126,7 @@ export function prerrellenarAlta(formData, extraccion, { tipoDocumento, fijados 
       rellenados.push({ campo, valor: nuevo, clave, ...(partida ? { partida } : {}) })
       return
     }
-    if (!iguales(actual, nuevo)) avisos.push({ campo, valor: nuevo, actual, ...(partida ? { partida } : {}) })
+    if (!sinAviso && !iguales(actual, nuevo)) avisos.push({ campo, valor: nuevo, actual, ...(partida ? { partida } : {}) })
   }
 
   // ---- Partes -----------------------------------------------------------------
@@ -173,7 +173,9 @@ export function prerrellenarAlta(formData, extraccion, { tipoDocumento, fijados 
       const pesoNeto = unaSola ? (totales.pesoNetoKg ?? p.pesoNetoKg) : p.pesoNetoKg
       const importe = p.importe ?? (unaSola ? factura.importeTotal : null)
 
-      proponer('description', good, 'description', p.descripcion, { partida: n })
+      // Cada documento redacta la mercancia a su manera: una descripcion
+      // distinta no es una contradiccion y no se avisa.
+      proponer('description', good, 'description', p.descripcion, { partida: n, sinAviso: true })
       if (/^\d{10}$/.test(p.codigoMercancia || '')) proponer('taricCode', good, 'taricCode', p.codigoMercancia, { partida: n })
       proponer('originCountry', good, 'originCountry', p.paisOrigen, { partida: n })
 
