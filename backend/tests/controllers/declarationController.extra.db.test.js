@@ -562,3 +562,71 @@ describe('cancelDeclaration', () => {
     expect(aeatSubmitService.cancelH1).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * Grupaje maritimo (LCL), UAT 10/Nov/2026: el H1 no puede apoyarse en la
+ * declaracion sumaria del contenedor completo. Ver services/forms/grupajeLcl.js.
+ */
+describe('grupaje maritimo (LCL)', () => {
+  const partida = [{
+    itemNumber: 1, description: 'Portatiles', quantity: 12, invoiceValue: 184800, taricCode: '8471300000',
+    grossWeight: 1050, netWeight: 980, packages: { quantity: 12, type: 'CT' }
+  }];
+  const borrador = { type: 'H1', status: 'draft', xmlContent: '<H1/>', lrn: 'LRN-1' };
+
+  test('generateH1Direct: sin la sumaria de la desconsolidacion responde 422 y no genera el H1', async () => {
+    const user = usuario();
+    const exp = await expedienteImportacion(user, { goods: partida, transport: { loadType: 'LCL' } });
+    const res = crearRes();
+
+    await ctrl.generateH1Direct({ body: { expeditionId: exp._id }, user }, res);
+
+    expect(res.statusCode).toBe(422);
+    expect(res.body.code).toBe('GRUPAJE_SUMARIA');
+    expect(res.body.error).toMatch(/falta la declaracion sumaria de la desconsolidacion/);
+    expect(h1Generator.generate).not.toHaveBeenCalled();
+  });
+
+  test('submitDeclaration: con la sumaria del contenedor completo responde 422 y no llama a la AEAT', async () => {
+    const user = usuario();
+    const exp = await expedienteImportacion(user, {
+      goods: partida,
+      declaration: borrador,
+      transport: { loadType: 'LCL', summaryDeclaration: { number: 'S-CONTENEDOR', packages: 820, grossWeight: 14200 } }
+    });
+    const res = crearRes();
+
+    await ctrl.submitDeclaration({ params: { expeditionId: exp._id }, user }, res);
+
+    expect(res.statusCode).toBe(422);
+    expect(res.body.code).toBe('GRUPAJE_SUMARIA');
+    expect(res.body.error).toMatch(/820 bultos y 14200 kg/);
+    expect(aeatSubmitService.submitH1).not.toHaveBeenCalled();
+    expect((await Expedition.findById(exp._id)).declaration.status).toBe('draft');
+  });
+
+  test('submitDeclaration: con la sumaria de nuestros bultos y kilos se presenta', async () => {
+    const user = usuario();
+    const exp = await expedienteImportacion(user, {
+      goods: partida,
+      declaration: borrador,
+      transport: { loadType: 'LCL', summaryDeclaration: { number: 'S-PARTIDA', item: '3', packages: 12, grossWeight: 1050 } }
+    });
+    const res = crearRes();
+
+    await ctrl.submitDeclaration({ params: { expeditionId: exp._id }, user }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(aeatSubmitService.submitH1).toHaveBeenCalled();
+  });
+
+  test('un contenedor completo (FCL) se presenta sin sumaria registrada', async () => {
+    const user = usuario();
+    const exp = await expedienteImportacion(user, { goods: partida, declaration: borrador, transport: { loadType: 'FCL' } });
+    const res = crearRes();
+
+    await ctrl.submitDeclaration({ params: { expeditionId: exp._id }, user }, res);
+
+    expect(res.statusCode).toBe(200);
+  });
+});

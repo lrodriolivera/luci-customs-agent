@@ -3571,5 +3571,22 @@
     "modeFixed": "instalação fixa",
     "modeInlandWater": "navegação interior",
     "modeOwn": "propulsão própria"
+  },
+  "groupage": {
+    "title": "Carga marítima e declaração sumária",
+    "loadType": "Tipo de carga",
+    "loadTypeUnset": "Não indicado",
+    "loadTypeFCL": "Contentor completo (FCL)",
+    "loadTypeLCL": "Grupagem (LCL)",
+    "ruleTitle": "Grupagem: o H1 precisa da declaração sumária da desconsolidação",
+    "ruleText": "É preciso esperar que o contentor seja esvaziado no armazém de depósito temporário e receber a declaração sumária com os volumes e os quilos desta remessa. Com a declaração sumária do contentor completo não é possível gerar nem apresentar o H1.",
+    "summaryDeclaration": "Declaração sumária",
+    "summaryNumber": "Número da declaração sumária",
+    "summaryItem": "Adição",
+    "summaryPackages": "Volumes da declaração sumária",
+    "summaryGrossWeight": "Peso bruto da declaração sumária (kg)",
+    "expeditionTotals": "O processo declara {{packages}} volumes e {{weight}} kg",
+    "saved": "Dados da carga guardados",
+    "saveError": "Não foi possível guardar os dados da carga"
   }
 }

@@ -3571,5 +3571,22 @@
     "modeFixed": "installation fixe",
     "modeInlandWater": "navigation intérieure",
     "modeOwn": "propulsion propre"
+  },
+  "groupage": {
+    "title": "Fret maritime et déclaration sommaire",
+    "loadType": "Type de chargement",
+    "loadTypeUnset": "Non indiqué",
+    "loadTypeFCL": "Conteneur complet (FCL)",
+    "loadTypeLCL": "Groupage (LCL)",
+    "ruleTitle": "Groupage : le H1 exige la déclaration sommaire du dégroupage",
+    "ruleText": "Il faut attendre que le conteneur soit dépoté dans l'installation de dépôt temporaire et recevoir la déclaration sommaire avec les colis et les kilos de cet envoi. Le H1 ne peut être ni généré ni déposé avec la déclaration sommaire du conteneur complet.",
+    "summaryDeclaration": "Déclaration sommaire",
+    "summaryNumber": "Numéro de la déclaration sommaire",
+    "summaryItem": "Article",
+    "summaryPackages": "Colis de la déclaration sommaire",
+    "summaryGrossWeight": "Poids brut de la déclaration sommaire (kg)",
+    "expeditionTotals": "Le dossier déclare {{packages}} colis et {{weight}} kg",
+    "saved": "Données du chargement enregistrées",
+    "saveError": "Impossible d'enregistrer les données du chargement"
   }
 }

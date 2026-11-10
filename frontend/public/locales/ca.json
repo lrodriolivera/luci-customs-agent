@@ -3571,5 +3571,22 @@
     "modeFixed": "instal·lació fixa",
     "modeInlandWater": "navegació interior",
     "modeOwn": "propulsió pròpia"
+  },
+  "groupage": {
+    "title": "Càrrega marítima i declaració sumària",
+    "loadType": "Tipus de càrrega",
+    "loadTypeUnset": "Sense indicar",
+    "loadTypeFCL": "Contenidor complet (FCL)",
+    "loadTypeLCL": "Grupatge (LCL)",
+    "ruleTitle": "Grupatge: l'H1 necessita la sumària de la desconsolidació",
+    "ruleText": "Cal esperar que el contenidor es buidi al magatzem de dipòsit temporal i rebre la declaració sumària amb els embalums i els quilos d'aquesta partida. Amb la sumària del contenidor complet no es pot generar ni presentar l'H1.",
+    "summaryDeclaration": "Declaració sumària",
+    "summaryNumber": "Número de la declaració sumària",
+    "summaryItem": "Partida",
+    "summaryPackages": "Embalums de la sumària",
+    "summaryGrossWeight": "Pes brut de la sumària (kg)",
+    "expeditionTotals": "L'expedient declara {{packages}} embalums i {{weight}} kg",
+    "saved": "Dades de la càrrega desades",
+    "saveError": "No s'han pogut desar les dades de la càrrega"
   }
 }

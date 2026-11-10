@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { expeditionsAPI, classificationAPI } from '../../services/api'
 import { formatearImporte } from '../../utils/importe'
+import { LOAD_TYPES } from './GroupageCard'
 import { PACKAGE_TYPES, DEFAULT_PACKAGE_TYPE, toNumberOrUndefined } from './packageTypes'
 import toast from 'react-hot-toast'
 import { ArrowLeftIcon, PlusIcon, TrashIcon, SparklesIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
@@ -88,6 +89,7 @@ export default function ExpeditionNew() {
       currency: 'EUR'
     }],
     transportMode: 'SEA',
+    loadType: '',
     incoterm: 'CIF',
     incotermPlace: ''
   })
@@ -119,6 +121,11 @@ export default function ExpeditionNew() {
   // Los bultos viajan como numero; un campo vacio no se envia como 0.
   const buildPayload = () => ({
     ...formData,
+    // El tipo de carga solo tiene sentido en maritimo; '' no se envia.
+    loadType: undefined,
+    transport: formData.transportMode === 'SEA' && formData.loadType
+      ? { loadType: formData.loadType }
+      : undefined,
     goods: formData.goods.map((item) => ({
       ...item,
       packages: { ...item.packages, quantity: toNumberOrUndefined(item.packages?.quantity) }
@@ -920,6 +927,25 @@ export default function ExpeditionNew() {
                   ))}
                 </select>
               </div>
+              {formData.transportMode === 'SEA' && (
+                <div>
+                  <label className="label" htmlFor="new-load-type">{t('groupage.loadType')}</label>
+                  <select
+                    id="new-load-type"
+                    value={formData.loadType}
+                    onChange={(e) => handleChange(null, 'loadType', e.target.value)}
+                    className="input"
+                  >
+                    <option value="">{t('groupage.loadTypeUnset')}</option>
+                    {LOAD_TYPES.map((type) => (
+                      <option key={type} value={type}>{t(`groupage.loadType${type}`)}</option>
+                    ))}
+                  </select>
+                  {formData.loadType === 'LCL' && (
+                    <p className="mt-1 text-xs text-amber-800">{t('groupage.ruleText')}</p>
+                  )}
+                </div>
+              )}
               <div className="md:col-span-2">
                 <label className="label">{t('expeditions.incotermPlace')}</label>
                 <input

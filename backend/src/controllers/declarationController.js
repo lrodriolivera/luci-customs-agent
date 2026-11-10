@@ -8,6 +8,7 @@ const aesGenerator = require('../services/forms/aesGenerator');
 const h7Generator = require('../services/forms/h7Generator');
 const Tenant = require('../models/Tenant');
 const { ErrorValidacion, exigirIdentificacion } = require('../services/forms/identificadorAduanero');
+const { bloqueoPorGrupaje, exigirSumariaDeGrupaje, CODIGO_ERROR: CODIGO_GRUPAJE } = require('../services/forms/grupajeLcl');
 const aeatSubmitService = require('../services/aeat/aeatSubmitService');
 const channelService = require('../services/channelService');
 
@@ -84,6 +85,9 @@ const generateH1 = async (req, res) => {
     // Sin EORI de declarante o de cliente no se gasta la IA ni se genera XML (422).
     const tenant = await tenantDelExpediente(expedition);
     exigirIdentificacion(expedition, tenant);
+
+    // Grupaje (LCL): sin la sumaria de la desconsolidacion no hay H1 (422).
+    exigirSumariaDeGrupaje(expedition);
 
     // Generar H1 con IA
     const h1Data = await aiService.generateH1Declaration(expedition, {
@@ -365,6 +369,15 @@ const submitDeclaration = async (req, res) => {
         success: false,
         error: `Declaracion ya enviada. MRN: ${expedition.declaration.mrn}`
       });
+    }
+
+    // Grupaje (LCL): la sumaria pudo cambiarse o quitarse despues de generar el
+    // H1. Se vuelve a comprobar justo antes de presentar; no admite excepcion.
+    if (expedition.declaration.type !== 'AES') {
+      const bloqueoGrupaje = bloqueoPorGrupaje(expedition);
+      if (bloqueoGrupaje) {
+        return res.status(422).json({ success: false, error: bloqueoGrupaje, code: CODIGO_GRUPAJE });
+      }
     }
 
     // Enviar a AEAT real via aeatSubmitService (or multi-country factory)
@@ -749,6 +762,9 @@ const generateH1Direct = async (req, res) => {
     const regime = body.items?.[0]?.procedure?.substring(0, 2) || expedition.declaration?.regime || '40';
     const additionalProcedure = body.items?.[0]?.procedure?.substring(2, 4) || expedition.declaration?.additionalProcedure || '00';
     const preference = body.items?.[0]?.preference || expedition.declaration?.preference || '100';
+
+    // Grupaje (LCL): sin la sumaria de la desconsolidacion no hay H1 (422).
+    exigirSumariaDeGrupaje(expedition);
 
     const totalesInvalidosDirecto = h1Generator.totalesNoDeclarables(expedition);
     if (totalesInvalidosDirecto) {

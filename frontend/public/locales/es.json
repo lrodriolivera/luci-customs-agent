@@ -3587,5 +3587,22 @@
     "modeFixed": "instalación fija",
     "modeInlandWater": "navegación interior",
     "modeOwn": "propulsión propia"
+  },
+  "groupage": {
+    "title": "Carga marítima y declaración sumaria",
+    "loadType": "Tipo de carga",
+    "loadTypeUnset": "Sin indicar",
+    "loadTypeFCL": "Contenedor completo (FCL)",
+    "loadTypeLCL": "Grupaje (LCL)",
+    "ruleTitle": "Grupaje: el H1 necesita la sumaria de la desconsolidación",
+    "ruleText": "Hay que esperar a que el contenedor se vacíe en el almacén de depósito temporal y a recibir la declaración sumaria con los bultos y los kilos de esta partida. Con la sumaria del contenedor completo no se puede generar ni presentar el H1.",
+    "summaryDeclaration": "Declaración sumaria",
+    "summaryNumber": "Número de la declaración sumaria",
+    "summaryItem": "Partida",
+    "summaryPackages": "Bultos de la sumaria",
+    "summaryGrossWeight": "Peso bruto de la sumaria (kg)",
+    "expeditionTotals": "El expediente declara {{packages}} bultos y {{weight}} kg",
+    "saved": "Datos de la carga guardados",
+    "saveError": "No se pudieron guardar los datos de la carga"
   }
 }

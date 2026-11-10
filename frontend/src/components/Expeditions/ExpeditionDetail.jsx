@@ -30,6 +30,7 @@ import { hrefSeguro } from '../../utils/url'
 import { formatearImporte } from '../../utils/importe'
 import GoodsEditor from './GoodsEditor'
 import H1Preview from './H1Preview'
+import GroupageCard, { isMaritime } from './GroupageCard'
 import DocumentUploader from './DocumentUploader'
 
 // Con la declaracion ya presentada, la mercancia del expediente es la que
@@ -575,6 +576,7 @@ export default function ExpeditionDetail() {
   const [showAIPanel, setShowAIPanel] = useState(false)
   const [editingGoodsIndex, setEditingGoodsIndex] = useState(null)
   const [savingGoods, setSavingGoods] = useState(false)
+  const [savingTransport, setSavingTransport] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -624,6 +626,22 @@ export default function ExpeditionDetail() {
       toast.error(error.response?.data?.error || t('expeditions.editGoodsError'))
     } finally {
       setSavingGoods(false)
+    }
+  }
+
+  const handleSaveGroupage = async (changes) => {
+    setSavingTransport(true)
+    try {
+      // El backend sustituye `transport` entero: se envia completo para no
+      // perder transportista, contenedores ni el resto de datos.
+      const transport = { ...expedition.transport, ...changes }
+      const response = await expeditionsAPI.update(id, { transport })
+      setExpedition(response.data?.data || response.data)
+      toast.success(t('groupage.saved'))
+    } catch (error) {
+      toast.error(error.response?.data?.error || t('groupage.saveError'))
+    } finally {
+      setSavingTransport(false)
     }
   }
 
@@ -853,6 +871,10 @@ export default function ExpeditionDetail() {
               </div>
             </div>
           </div>
+
+          {(isMaritime(expedition) || expedition.transport?.loadType) && canEditGoods && (
+            <GroupageCard expedition={expedition} isSaving={savingTransport} onSave={handleSaveGroupage} />
+          )}
 
           {/* Goods */}
           <div className="card">
