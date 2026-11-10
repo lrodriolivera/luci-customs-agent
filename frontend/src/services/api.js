@@ -336,9 +336,38 @@ export const portalAPI = {
 }
 
 // Chat/AI
+// La ruta real es POST /api/chat/ask-luci (backend, con login y fallback de
+// cuenta Bedrock). Apuntaban a /ai/chat y /ai/ask, que solo existen tras el
+// proxy de Vite en desarrollo: en produccion nginx solo enruta /api/ y el
+// asistente respondia 405 a cualquier pregunta. Ademas /ai/* iba al servicio
+// luci-ai, que no exige autenticacion y no debe exponerse.
+//
+// El backend responde { success, data: { answer, model, confidence, sources } }.
+// Se aplana a data.message / data.model / data.confidence, que es lo que leen
+// ChatAssistant y FloatingAssistant.
+const askLuci = async (question) => {
+  const response = await api.post(
+    '/api/chat/ask-luci',
+    { question, language: i18n.language },
+    // Opus razona antes de responder: supera con facilidad los 30 s por defecto.
+    { timeout: 90000 }
+  )
+  const payload = response?.data?.data || {}
+  return {
+    ...response,
+    data: {
+      ...response?.data,
+      message: payload.answer,
+      model: payload.model,
+      confidence: payload.confidence,
+      sources: payload.sources
+    }
+  }
+}
+
 export const chatAPI = {
-  send: (data) => api.post('/ai/chat', { ...data, language: i18n.language }),
-  ask: (question) => api.post('/ai/ask', { question, language: i18n.language })
+  send: (data) => askLuci(data?.message),
+  ask: (question) => askLuci(question)
 }
 
 // Knowledge
