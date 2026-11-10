@@ -117,7 +117,13 @@ export default function ParaduaneroManager({ expeditionId, onControlsChange }) {
     try {
       setLoading(true)
       const response = await paraduaneroAPI.getByExpedition(expeditionId)
-      setControls(response.data?.data || [])
+      const existentes = response.data?.data || []
+      setControls(existentes)
+      // Sin controles creados, el analisis se lanza solo: el agente no tenia
+      // forma de saber que debia pulsar «Analizar» para ver si procedia alguno.
+      if (existentes.length === 0) {
+        analizar({ silencioso: true })
+      }
     } catch (error) {
       console.error('Error loading controls:', error)
     } finally {
@@ -125,18 +131,22 @@ export default function ParaduaneroManager({ expeditionId, onControlsChange }) {
     }
   }
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = () => analizar({ silencioso: false })
+
+  const analizar = async ({ silencioso }) => {
     setAnalyzing(true)
     try {
       const response = await paraduaneroAPI.analyze(expeditionId)
       setAnalysis(response.data?.data)
+      if (silencioso) return
       if (response.data?.data?.controlsRequired === 0) {
         toast.success('No se requieren controles paraduaneros')
       } else {
         toast.success(`Se detectaron ${response.data?.data?.controlsRequired} controles necesarios`)
       }
     } catch (error) {
-      toast.error('Error al analizar expediente')
+      // En el analisis automatico no se molesta con un error: el boton sigue ahi.
+      if (!silencioso) toast.error('Error al analizar expediente')
     } finally {
       setAnalyzing(false)
     }
@@ -236,6 +246,7 @@ export default function ParaduaneroManager({ expeditionId, onControlsChange }) {
                     <span className={`w-2 h-2 rounded-full bg-${CONTROL_TYPES[ctrl.controlType]?.color || 'gray'}-500`} />
                     <span className="font-medium">{ctrl.controlType}</span>
                     <span>- {ctrl.reason}</span>
+                    {ctrl.notes && <span className="text-yellow-800 italic">({ctrl.notes})</span>}
                   </li>
                 ))}
               </ul>

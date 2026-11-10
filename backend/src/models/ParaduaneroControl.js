@@ -135,6 +135,7 @@ const ParaduaneroControlSchema = new mongoose.Schema({
       'ppe',                    // Equipos de proteccion personal
       'textiles',               // Textiles
       'machinery',              // Maquinaria
+      'rohs_raee',              // RoHS / RAEE (aparatos electricos y electronicos)
       // MAPA
       'veterinary',             // Control veterinario
       'phytosanitary',          // Control fitosanitario

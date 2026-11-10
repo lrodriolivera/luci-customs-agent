@@ -1,0 +1,4197 @@
+{
+ "fuente": "Listado de productos SOIVRE comparado con TARIC, pestana 5 (anexo RD 330/2008)",
+ "version": "publicada con los productos de la Orden PJC/161/2026",
+ "oficial": "https://comercio.serviciosmin.gob.es/estacice-pue-sede/",
+ "entradas": [
+  {
+   "taric": "3213900000",
+   "grupo": "JUGUETES",
+   "descripcion": "Los demás colores para la pintura artística, la enseñanza, la pintura de carteles, para matizar o para entretenimiento y colores similares, en pastillas, tubos, botes, frascos o en formas o envases similares: Pinturas de dedos."
+  },
+  {
+   "taric": "3922100000",
+   "grupo": "PUERICULTURA",
+   "descripcion": "Bañeras de bebé."
+  },
+  {
+   "taric": "3926906000",
+   "grupo": "EPI FACIAL",
+   "descripcion": "Las demás manufacturas de plástico y manufacturas de las demás materias de las partidas 3901 3914. Las demás. Pantallas y viseras de protección facial."
+  },
+  {
+   "taric": "3926909790",
+   "grupo": "EPI FACIAL",
+   "descripcion": "Pantallas y viseras de protección facial"
+  },
+  {
+   "taric": "4203291000",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes de protección para cualquier oficio. Guantes de motociclismo de cuero natural o cuero regenerado."
+  },
+  {
+   "taric": "4203299000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás. Guantes de motociclismo de cuero natural o cuero regenerado."
+  },
+  {
+   "taric": "4403110000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera en bruto, incluso descortezada, desalburada o escuadrada, tratada con pintura, creosota u otros agentes de conservación de conifera"
+  },
+  {
+   "taric": "4403120000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera en bruto, incluso descortezada, desalburada o escuadrada, tratada con pintura, creosota u otros agentes de conservación distinto de conifera"
+  },
+  {
+   "taric": "4407111000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de pino aserrada o debastada longitudinalm,cortada o desenrollada, de coniferas, de pino, unida por los extremos, incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407112000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de pino aserrada o debastada longitudinalm,cortada o desenrollada, de coniferas, de pino, cepillada"
+  },
+  {
+   "taric": "4407119010",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de pino aserrada o debastada longitudinalm,cortada o desenrollada, de coniferas, de pino, las demás, lijadas"
+  },
+  {
+   "taric": "4407119090",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de pino aserrada o debastada longitudinalm,cortada o desenrollada, de coniferas, de pino, las demás, de las demás"
+  },
+  {
+   "taric": "4407121000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada o debastada longitudinalm,cortada o desenrollada, de coniferas, de abeto, unida por lo extremos, incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407122000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada o debastada longitudinalm,cortada o desenrollada, de coniferas, de abeto, cepillada"
+  },
+  {
+   "taric": "4407129010",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada o debastada longitudinalm,cortada o desenrollada, de coniferas, de abeto, las demás, lijadas"
+  },
+  {
+   "taric": "4407129090",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada o debastada longitudinalm,cortada o desenrollada, de coniferas, de abeto, las demás, de las demás"
+  },
+  {
+   "taric": "4407130010",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de pino aserrada o debastada longitudinalm,cortada o desenrollada, de SPF, pino, abeto, unida por los extremos, incluso cepillada o lijada."
+  },
+  {
+   "taric": "4407130020",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de pino aserrada o debastada longitudinalm,cortada o desenrollada, de coniferas, de pino, cepillada."
+  },
+  {
+   "taric": "4407130091",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de pino aserrada o debastada longitudinalm,cortada o desenrollada, incl cepillada, lijada o unida por los extremos de espesor superior a 6mm"
+  },
+  {
+   "taric": "4407130099",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de pino aserrada o debastada longitudinalm,cortada o desenrollada,incl cepillada, lijada o unida por los extremos de espesor superior a 6mm."
+  },
+  {
+   "taric": "4407140010",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada/desbastada longitudinalm,cortada/desenrollada,cepillada,lijada o unida por extremos,espesor superior 6mm. Hem-fir y abeto."
+  },
+  {
+   "taric": "4407140020",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada/desbastada longitudinalm,cortada/desenrollada,cepillada,lijada o unida por extremos,espesor superior 6mm. Hem-fir y abeto.Cepillada."
+  },
+  {
+   "taric": "4407140091",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada/desbastada longitudinalm,cortada/desenrollada,cepillada,lijada o unida por extremos,espesor superior 6mm. Hem-fir y abeto.Lijada."
+  },
+  {
+   "taric": "4407140099",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada/desbastada longitudinalm,cortada/desenrollada,cepillada,lijada o unida por extremos,espesor superior 6mm. Hem-fir y abeto.Las demás."
+  },
+  {
+   "taric": "4407191000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada o debastada longitudinalm,cortada o desenrollada, de las demás coniferas, unida por lo extremos, incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407192000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada o debastada longitudinalm,cortada o desenrollada, de las demás coniferas, cepillada"
+  },
+  {
+   "taric": "4407199010",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada o debastada longitudinalm,cortada o desenrollada, de las demás coniferas, las demás, lijadas"
+  },
+  {
+   "taric": "4407199090",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada o debastada longitudinalm,cortada o desenrollada, de las demás coniferas, las demás, de las demás"
+  },
+  {
+   "taric": "4407211000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Mahogany (Swietenia spp, SYSDATETIME()) , aserrada o desvastada long.,cortada o desenroll, lijada , unida por los extremos, esp> 6mm"
+  },
+  {
+   "taric": "4407219100",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Mahogany (Swietenia ssp, SYSDATETIME()) , aserrada o desvastada long.,cortada o desenroll, no lijada, cepillada,"
+  },
+  {
+   "taric": "4407219900",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de mahogany (Swietenia spp, SYSDATETIME()) , aserrada o desvastada long.,cortada o desenroll, no lijada, no cepillada,"
+  },
+  {
+   "taric": "4407221000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Virola, Imbuya y Balsa , aserrada o desvastada long.,cortada o desenroll, lijada, unida por los extremos incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407229100",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Virola, Imbuya y Balsa , aserrada o desvastada long.,cortada o desenroll, cepillada"
+  },
+  {
+   "taric": "4407229900",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Virola, Imbuya y Balsa , aserrada o desvastada long.,cortada o desenroll, no lijada, no cepillada"
+  },
+  {
+   "taric": "4407231000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada/desbastada longitudinalmente,cortada/desenrollada,incluso cepillada,lijada/unida por los extremos,espesor superior a 6mm.Teca.Lijada"
+  },
+  {
+   "taric": "4407232000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada/desbastada longitudinalmente,cortada/desenrollada,incluso cepillada,lijada/unida por los extremos,espesor superior 6mm.Teca.Cepillad"
+  },
+  {
+   "taric": "4407239000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera aserrada/desbastada longitudinalmente,cortada/desenrollada,incluso cepillada,lijada/unida por los extremos,espesor superior a 6mm.Teca.Demás."
+  },
+  {
+   "taric": "4407251000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Dark Red Meranti, Light Red Mer. Meranti Bacau , aserrada o desvastada long.,cortada o desenroll, unida por ext. inc. cepillada o lijada"
+  },
+  {
+   "taric": "4407253000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Dark Red Meranti, Light Red Mer. Meranti Bacau , aserrada o desvastada long.,cortada o desenroll, no unida por los ext., cepillada"
+  },
+  {
+   "taric": "4407255000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Dark Red Meranti, Light Red Mer. Meranti Bacau , aserrada o desvastada long.,cortada o desenroll, no unida por los ext., lijada"
+  },
+  {
+   "taric": "4407259000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Dark Red Meranti, Light Red Mer. Meranti Bacau , aserrada o desvastada long.,cortada o desenroll, no unida por los ext., las demás"
+  },
+  {
+   "taric": "4407261000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de White Lauan, White Mer., White Seraya, Yellow Mer, Alan, aserrada o desvastada long.,cortada o desenr, unida por los ext., inc cep.y lij."
+  },
+  {
+   "taric": "4407263000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de White Lauan, White Mer., White Seraya, Yellow Mer, Alan, aserrada o desvastada long.,cortada o desenr, no unida por los ext., cepillada"
+  },
+  {
+   "taric": "4407265000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de White Lauan, White Mer., White Seraya, Yellow Mer, Alan, aserrada o desvastada long.,cortada o desenr, no unida por los ext., lijada"
+  },
+  {
+   "taric": "4407269000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de White Lauan, White Mer., White Seraya, Yellow Mer, Alan, aserr.o desvastada long.,cortada o desenr, no unida por los ext., no lij ni cep"
+  },
+  {
+   "taric": "4407271000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Sapelli, aserrada o desvastada longitudinalmente,cortada o desenrollada. Lijada, unida por los extremos, incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407279100",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Sapelli, aserrada o desvastada longitudinalmente,cortada o desenrollada. No lijada, no unida por los extremos. Cepillada"
+  },
+  {
+   "taric": "4407279900",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Sapelli, aserrada o desvastada longitudinalmente,cortada o desenrollada. No lijada, no unida por los extremos. No cepillada"
+  },
+  {
+   "taric": "4407281000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Iroko, aserrada o desvastada longitudinalmente,cortada o desenrollada. Lijada, unida por los extremos, incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407289100",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Iroko, aserrada o desvastada longitudinalmente,cortada o desenrollada. No lijada, no unida por los extremos. Cepillada"
+  },
+  {
+   "taric": "4407289900",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Iroko, aserrada o desvastada longitudinalmente,cortada o desenrollada. No lijada, no unida por los extremos. No cepillada"
+  },
+  {
+   "taric": "4407291500",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de las demás esp. tropic, aserrada o desvastada longitudinalmente,cortada o desenrollada. Unida por los extremos, incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407292000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de Palisandro de Para, P. de Rio, P. de Rose, aserrada o desvastada longitudinalmente,cortada o desenr.. No unida por los extremos.Lijada"
+  },
+  {
+   "taric": "4407298300",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de las demás, de las demás esp. tropicales, aserrada o desvastada longit.,cortada o desenr.. No unida por los extr.. Lijada"
+  },
+  {
+   "taric": "4407298500",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de las demás,de las demás esp.tropicales, aserrada o desvastada longitudinalmente,cortada o desenrollada.No unida por los extremos.Cepillada"
+  },
+  {
+   "taric": "4407299500",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de las demás, de las demás esp. tropica, aserrada o desvastada long.,cortada o desenroll, no unidas por los extremos, no cepill. ni lijadas"
+  },
+  {
+   "taric": "4407299600",
+   "grupo": "MADERAS",
+   "descripcion": "Madera,las demás,de las demás maderas tropicales, aserrada o debastada longit,cortada o desenrollada,unida por extremos incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407299700",
+   "grupo": "MADERAS",
+   "descripcion": "Madera,las demás,de las demás maderas tropicales, aserrada o debastada longit,cortada o desenrollada,no unida por extremos,cepillada"
+  },
+  {
+   "taric": "4407299800",
+   "grupo": "MADERAS",
+   "descripcion": "Madera,las demás,de las demás maderas tropicales, aserrada o debastada longit,cortada o desenrollada,no unida por extremos,no cepillada"
+  },
+  {
+   "taric": "4407911500",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de encina, roble, alcornoq y demas bellot,aserr. o desvast. long.,cortada o desenroll, lijada, unida por extr., incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407913100",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de encina, roble, alcornoq y demas belloteros, aserrada o desvastada long.,cortada o desenroll, tablas o frisos para parqués, sin ensamblar"
+  },
+  {
+   "taric": "4407913900",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de encina, roble, alcornoq y demas bellot,aserr. o desvast. long.,cortada o desenroll. No unidas po extremos, Cepillada, no tablas o frisos"
+  },
+  {
+   "taric": "4407919000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de encina, roble, alcornoque y demás belloteros, aserrada o desvast. long.,cortada o desenroll, no lijada, no cepillada"
+  },
+  {
+   "taric": "4407920010",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de haya, aserrada o desvastada longitudinalmente, cortada o desenrollada, inc cepillada, lijada o unida por los extremos,"
+  },
+  {
+   "taric": "4407920090",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de haya, aserrada o desvastada longitudinalmente, cortada o desenrollada,no (cepillada, lijada o unida por los extremos, SYSDATETIME())"
+  },
+  {
+   "taric": "4407931000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de arce, aserrada o desvastada longitudinalmente, cortada o desenrollada, Cepillada, unida por los extremos, incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407939100",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de arce, aserrada o desvastada longitudinalmente, cortada o desenrollada, Lijada."
+  },
+  {
+   "taric": "4407939900",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de arce, aserrada o desvastada longitudinalmente, cortada o desenrollada, No cepillada, ni unida por los ext., no lijada"
+  },
+  {
+   "taric": "4407941000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de cerezo aserrada o desvastada longitudinalmente, cortada o desenrollada, Cepillada, unida por los extremos, incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407949100",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de cerezo aserrada o desvastada longitudinalmente, cortada o desenrollada, Lijada"
+  },
+  {
+   "taric": "4407949900",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de cerezo aserrada o desvastada longitudinalmente, cortada o desenrollada. No cepillada, ni unida por los extr.,no lijada"
+  },
+  {
+   "taric": "4407951000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de fresno aserrada o desvastada longitudinalmente, cortada o desenrollada, Cepillada, unida por los extremos, incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407959100",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de fresno aserrada o desvastada longitudinalmente, cortada o desenrollada, Lijada"
+  },
+  {
+   "taric": "4407959900",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de fresno aserrada o desvastada longitudinalmente, cortada o desenrollada. No cepillada, ni unida por los extremos, no lijada"
+  },
+  {
+   "taric": "4407961000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de abedul aserrada o desvastada longitudinalmente, cortada o desenrollada, Cepillada, unida por los extremos, incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407969100",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de abedul aserrada o desvastada longitudinalmente, cortada o desenrollada, Lijada"
+  },
+  {
+   "taric": "4407969900",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de abedul aserrada o desvastada longitudinalmente, cortada o desenrollada. No cepillada, ni unida por los extremos, no lijada"
+  },
+  {
+   "taric": "4407971000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de álamo aserrada o desvastada longitudinalmente, cortada o desenrollada, Cepillada, unida por los extremos, incluso cepillada o lijada"
+  },
+  {
+   "taric": "4407979100",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de álamo aserrada o desvastada longitudinalmente, cortada o desenrollada, Lijada"
+  },
+  {
+   "taric": "4407979900",
+   "grupo": "MADERAS",
+   "descripcion": "Madera de álamo aserrada o desvastada longitudinalmente, cortada o desenrollada. No cepillada, ni unida por los extremos, no lijada"
+  },
+  {
+   "taric": "4407992700",
+   "grupo": "MADERAS",
+   "descripcion": "Madera no conífera ni tropical,demás,aserrada o desvastada longitudinalmente, cortada o desenrollada,unida por los extremos,incl cepillada o lijada"
+  },
+  {
+   "taric": "4407994000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera no conífera ni tropical,demás,aserrada o desvastada longitudinalmente, cortada o desenrollada, lijada"
+  },
+  {
+   "taric": "4407999000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera no conífera ni tropical,demás,aserrada o desvastada longitudinalmente, cort. o desenroll.,no (unida por los extremos,incl cepillada o lijad, SYSDATETIME())"
+  },
+  {
+   "taric": "4409101800",
+   "grupo": "MADERAS",
+   "descripcion": "Exclusivamente suelos, frisos y entablados de madera de coníferas."
+  },
+  {
+   "taric": "4409220000",
+   "grupo": "MADERAS",
+   "descripcion": "Suelos, frisos y entablados de maderas tropicales."
+  },
+  {
+   "taric": "4409299100",
+   "grupo": "MADERAS",
+   "descripcion": "Tablillas y frisos para parquet, sin ensamblar (excepto las de coníferas, bambú y maderas tropicales, SYSDATETIME())."
+  },
+  {
+   "taric": "4409299900",
+   "grupo": "MADERAS",
+   "descripcion": "Exclusivamente suelos, frisos y entablados de madera distinta de coníferas, bambú y maderas tropicales."
+  },
+  {
+   "taric": "4410111000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de partículas de madera, en bruto o simplemente lijados"
+  },
+  {
+   "taric": "4410113000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de partículas de madera, recubiertos en la superficie con papel impregnado de melamina"
+  },
+  {
+   "taric": "4410115000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de partículas de madera, recubiertos en la superficie con placas u hojas decorativas estratificadas de plastico"
+  },
+  {
+   "taric": "4410119000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de partículas de madera, no en bruto, sin melamina ni hojas o placas decorativas estratificadas de plástico en superficie"
+  },
+  {
+   "taric": "4410121000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros llamados \"oriented strand board \" (OSB, SYSDATETIME()), de madera, en bruto o simplemente lijados"
+  },
+  {
+   "taric": "4410129000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros llamados \"oriented strand board \" (OSB, SYSDATETIME()), de madera, distintos de los presentados en bruto o simplemente lijados"
+  },
+  {
+   "taric": "4410900000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de partículas, OSB y similares, de otras materias leñosas incluso aglomeradas con resinas o demás aglutinantes orgánicos. Los demás"
+  },
+  {
+   "taric": "4411121000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera de densidad media (llamados MDF, SYSDATETIME()), de espesor igual o inferior a 5 mm, sin trabajo mecánico ni recubrimiento de superfici"
+  },
+  {
+   "taric": "4411129210",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de densidad superior a 0,8 g/cm 3 (HDF): con un grosor igual o superior a 2,20 mm pero no superior a 2,80 mm, con una densidad igual o superior a 0,95 g/cm³, lacados o recubiertos con una hoja de melamina en ambas caras, y con unas dimensiones de 1 300 mm x 1 100 mm o inferiores, utilizados para la fabricación de placas de circuito impreso."
+  },
+  {
+   "taric": "4411129290",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera de densidad media (llamado MDF, SYSDATETIME()). Los demás."
+  },
+  {
+   "taric": "4411129400",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera de densidad media (llamados MDF, SYSDATETIME()), de espesor igual o inferior a 5 mm, De densidad inferior o igual a 0,8 g/cm3"
+  },
+  {
+   "taric": "4411131000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera de densidad media (llamados MDF, SYSDATETIME()), de espesor entre 5 y 9 mm, sin trabajo mecánico ni recubrimiento de superficie"
+  },
+  {
+   "taric": "4411139100",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera de densidad media (MDF, ), Espesor superior a 5 mm pero inferior o igual a 9 mm, De densidad superior a 0,8 g/cm3 (HDF). Revestimiento suelos laminados"
+  },
+  {
+   "taric": "4411139300",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera de densidad media (MDF, ), Espesor superior a 5 mm pero inferior o igual a 9 mm, De densidad superior a 0,8 g/cm3 (HDF). Distintos de los suelos laminados"
+  },
+  {
+   "taric": "4411139400",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera de densidad media (MDF, SYSDATETIME()), De espesor superior a 5 mm pero inferior o igual a 9 mm,Densidad inferior o igual a 0,8 g/cm3."
+  },
+  {
+   "taric": "4411141000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera de densidad media (llamados MDF, SYSDATETIME()), de espesor mayor de 9 mm, sin trabajo mecánico ni recubrimiento de superficie"
+  },
+  {
+   "taric": "4411149100",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera/leñosas,incluso aglomeradas «MDF»De espesor superior a 9 mm.Los demás.De densidad superior a 0,8 g/cm3 (HDF).Revestimientos de suelo laminados"
+  },
+  {
+   "taric": "4411149300",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera/leñosas,incluso aglomeradas «MDF»De espesor superior a 9 mm.Los demás.De densidad superior a 0,8 g/cm3 (HDF). Distintos de suelos laminados"
+  },
+  {
+   "taric": "4411149500",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera/leñosas,incluso aglomeradas«MDF»Espesor superior 9mm.Demás. Densidad superior 0,5 g/cm3 pero inferior o igual 0,8g/cm3"
+  },
+  {
+   "taric": "4411149700",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera/leñosas,incluso aglomeradas «MDF» Espesor superior a 9mm.Demás. De densidad inferior o igual a 0,5 g/cm3."
+  },
+  {
+   "taric": "4411921000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera de densidad media (llamados MDF, SYSDATETIME()), de densidad superior a 0.8 gr/cm3, sin trabajo mecánico ni recubrimiento de superficie"
+  },
+  {
+   "taric": "4411929000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera de densidad media (llamados MDF, SYSDATETIME()), de densidad superior a 0.8 gr/cm3, con trabajo mecánico o recubrimiento de superficie"
+  },
+  {
+   "taric": "4411930000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera/leñosas, incl. aglomeradas(MDF, SYSDATETIME())Demás.Densidad superior a 0,5 g/cm3 pero inferior o igual a 0,8 g/cm3."
+  },
+  {
+   "taric": "4411941000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera de densidad media (llamados MDF, SYSDATETIME()), de densidad inf o igual 0.5 g/cm3,sin trabajo mecánico ni recubrimiento de superficie"
+  },
+  {
+   "taric": "4411949000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros de fibra de madera de densidad media (llamados MDF, SYSDATETIME()), de densidad inf o igual 0.5 g/cm3, los demás"
+  },
+  {
+   "taric": "4412311010",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachap, chapada, y estratificada similar, excepto de bambú, al menos con una hoja externa de, okoumé, sin revest de film permanente"
+  },
+  {
+   "taric": "4412311080",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachap, chapada, y estratif. similar, excepto de bambú, al menos con una hoja ext. de la made. trop, excep okoumé, incluso recubierta o revestida en la superficie"
+  },
+  {
+   "taric": "4412311085",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachap, chapada, y estratif. similar, excepto de bambú, al menos con una hoja ext. de la made. trop, excep okoumé, las demás"
+  },
+  {
+   "taric": "4412319000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachap, chapada, y estratif. similar, excepto de bambú, al menos con una hoja ext. de la madera. trop citada en subpart. taric, las demás"
+  },
+  {
+   "taric": "4412331012",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, incluso recubierta, con hojas externas de madera de abedul. De Turquía, excepto de ocume, incluso recubierta o revestida en la superficie"
+  },
+  {
+   "taric": "4412331014",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, incluso recubierta, con hojas externas de madera de abedul. De Turquía, las demás"
+  },
+  {
+   "taric": "4412331022",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, madera chapada y madera estratificada similar. Las demás con al menos una hoja externa de abedul (Betula spp.), procedentes de Kazajstán, de madera excep okoumé, incluso recubierta o revestida en la superficie"
+  },
+  {
+   "taric": "4412331024",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, madera chapada y madera estratificada similar. Las demás con al menos una hoja externa de abedul (Betula spp.), procedentes de Kazajstán, las demás"
+  },
+  {
+   "taric": "4412331082",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachap, chapada, y estratif. similar, excepto bambú, al menos con una hoja ext. de aliso fresno, haya, abedul,cerezo, castaño,olmo. Demás. No okumé, incluso revestida o cubierta"
+  },
+  {
+   "taric": "4412331084",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachap, chapada, y estratif. similar, excepto bambú, al menos con una hoja ext. de aliso fresno, haya, abedul,cerezo, castaño,olmo. Demás. Demás"
+  },
+  {
+   "taric": "4412332010",
+   "grupo": "MADERAS",
+   "descripcion": "Sin hoja externa de abedul, pero con al menos una hoja externa de álamo o chopo (Populus spp., SYSDATETIME()) No okumé, incluso revestida o cubierta"
+  },
+  {
+   "taric": "4412332090",
+   "grupo": "MADERAS",
+   "descripcion": "Sin hoja externa de abedul, pero con al menos una hoja externa de álamo o chopo (Populus spp., SYSDATETIME()). Otras"
+  },
+  {
+   "taric": "4412333010",
+   "grupo": "MADERAS",
+   "descripcion": "Sin hoja externa de abedul, álamo o chopo (Populus spp.), pero con al menos una hoja externa de eucalipto (Eucalyptus spp.)De madera, exc de ocume"
+  },
+  {
+   "taric": "4412333090",
+   "grupo": "MADERAS",
+   "descripcion": "Sin hoja externa de abedul, álamo o chopo (Populus spp.), pero con al menos una hoja externa de eucalipto (Eucalyptus spp.) las demás"
+  },
+  {
+   "taric": "4412339010",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, madera chapada y madera estratificada similar. Las demás de madera, excepto de ocume, incluso recubierta o revestida en la superficie."
+  },
+  {
+   "taric": "4412339090",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, madera chapada y madera estratificada similar. Las demás. Las demás."
+  },
+  {
+   "taric": "4412340010",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachap, chapada, y estratif. similar, excepto de bambú, al menos con una hoja ext. de madera no conif., ni tropic. de 441233.De madera excep okoumé, incluso recubierta o revestida en la superficie"
+  },
+  {
+   "taric": "4412340090",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachap, chapada, y estratif. similar, excepto de bambú, al menos con una hoja ext. de madera no conif., ni tropic. de 441233. Las demás"
+  },
+  {
+   "taric": "4412390010",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachap, de coniferas, sin añadir otros materiales, caras en bruto o desenrollada esp sup 8.5 mm, o lijadas espesor sup a 18.5mm"
+  },
+  {
+   "taric": "4412390020",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada con las dos hojas exteriores de madera de coníferas y cuyo núcleo contenga hojas de las especies especificadas en las subpartidas 4412 31, 4412 33 y 4412 34, recubiertas o revestidas de superficie o no"
+  },
+  {
+   "taric": "4412390090",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachap, chapada o estratificada similar, excepto de bambú, no hoja ext. tropic de 441231, no con hoja ext dist. conif, las demás"
+  },
+  {
+   "taric": "4412419100",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, madera chapada y madera estratificada similar (“LVL”, SYSDATETIME()) Por lo menos con una hoja externa de madera distinta de coníferas"
+  },
+  {
+   "taric": "4412419910",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada coníferas,sin añadir otras materias,caras de bruto de desenrollado,espesor superior a 8,5mm o lijadas,espesor superior a|18,5|m"
+  },
+  {
+   "taric": "4412419990",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, madera chapada y madera estratificada similar. Que tenga, por lo menos, una hoja externa de maderas tropicales. Demás."
+  },
+  {
+   "taric": "4412420000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada,chapada y estratificada. Las demás, que tengan, por lo menos, una hoja externa de madera distinta de la de coníferas."
+  },
+  {
+   "taric": "4412490010",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada de coníferas,sin añadir otras materias,caras de bruto de desenrollado,espesor superior 8,5mm o lijadas,espesor superior 18,5mm"
+  },
+  {
+   "taric": "4412490090",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, chapada y estratificada. 2 hojas externas de madera de coníferas. Demás."
+  },
+  {
+   "taric": "4412511000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros denominados \"blockboard\", \"laminboard\" y \"battenboard\", que tengan, por lo menos,una hoja externa de madera distinta de la de coniferas."
+  },
+  {
+   "taric": "4412519000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros denominados \"blockboard\", \"laminboard\" y \"battenboard\" .Que tengan, por lo menos, una hoja externa de maderas tropicales. Los demás."
+  },
+  {
+   "taric": "4412520000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, chapada y estratificada similar. Los demás, que tengan, por lo menos, una hoja externa de madera distinta de la de coníferas."
+  },
+  {
+   "taric": "4412590000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, madera chapada y madera estratificada similar. Los demás, con las dos hojas externas de madera de coníferas"
+  },
+  {
+   "taric": "4412911000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada,madera chapada y madera estratificada.Por lo menos,una hoja externa maderas tropicales.Con tablero partículas."
+  },
+  {
+   "taric": "4412919100",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, chapada y estratificada.Con 1 hoja externa maderas tropicales.Por lo menos,1 hoja externa de madera distinta de coníferas"
+  },
+  {
+   "taric": "4412919910",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada coníferas,sin añadir otras materias,caras de bruto de desenrollado,espesor superior a 8,5mm o lijadas,espesor superior a 18.5mm"
+  },
+  {
+   "taric": "4412919990",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada,chapada y estratificada.Por lo menos con una hoja externa de maderas tropicales. Las demás."
+  },
+  {
+   "taric": "4412921000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, chapada y estratificada.Demás,por lo menos,1 hoja externa de madera distinta coníferas.Con 1 tablero de partículas, por lo men"
+  },
+  {
+   "taric": "4412929000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, chapada y estratificada.Las demás,por lo menos,una hoja externa de madera distinta de la de coníferas.Las demás."
+  },
+  {
+   "taric": "4412991000",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, chapada y estratificada. Las demás, con las 2 hojas externas de madera de coníferas. Con 1 tablero de partículas, por lo menos"
+  },
+  {
+   "taric": "4412999010",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, chapada y estratificada similar.2 hojas externas coníferas.Caras bruto desenrollado, espesor +8,5mm o lijadas,es espesor +18mm"
+  },
+  {
+   "taric": "4412999090",
+   "grupo": "MADERAS",
+   "descripcion": "Madera contrachapada, madera chapada y madera estratificada similar. Las demás, con las dos hojas externas de madera de coníferas. Demás."
+  },
+  {
+   "taric": "4418731000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros ensamblados para revestimiento de suelo, de bambú o que tengan, por lo menos, la capa superior de bambú, en mosaico."
+  },
+  {
+   "taric": "4418739000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros ensamblados para revestimiento de suelo, de bambú o que tengan, por lo menos, la capa superior de bambú,multicapas."
+  },
+  {
+   "taric": "4418740000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros ensamblados para revestimiento de suelo, de las demás maderas, para suelos en mosaico."
+  },
+  {
+   "taric": "4418750000",
+   "grupo": "MADERAS",
+   "descripcion": "Tableros ensamblados para revestimiento de suelo, de las demás maderas, para suelos multicapas."
+  },
+  {
+   "taric": "4418790000",
+   "grupo": "MADERAS",
+   "descripcion": "Los demás tableros ensamblados para revestimiento de suelo, de madera."
+  },
+  {
+   "taric": "4421910000",
+   "grupo": "OTROS",
+   "descripcion": "Las demás manufacturas de maderas: escaleras portátiles de bambú."
+  },
+  {
+   "taric": "4421991000",
+   "grupo": "OTROS",
+   "descripcion": "Las demás manufacturas de maderas: escaleras portátiles, de tableros de fibras"
+  },
+  {
+   "taric": "4421999999",
+   "grupo": "OTROS",
+   "descripcion": "Las demás manufacturas de maderas: escaleras portátiles, las demás"
+  },
+  {
+   "taric": "5607509090",
+   "grupo": "EPI CAIDA EN ALTURA",
+   "descripcion": "Cordeles de las demás fibras sintéticas: Cuerdas y absorbedores de energía para protección de caídas en altura."
+  },
+  {
+   "taric": "5607509098",
+   "grupo": "EPI CAIDA EN ALTURA",
+   "descripcion": "Cuerdas y cordajes, de las demás fibras sintéticas: Cuerdas y absorbedores de energía para protección de caídas en altura."
+  },
+  {
+   "taric": "5609000000",
+   "grupo": "EPI CAIDA EN ALTURA",
+   "descripcion": "Artículos de hilados, tiras o formas similares de las partidas 5404 o 5405, cordeles, cuerdas o cordajes, no expresados ni comprendidos en otra parte: Cuerdas y absorbedores de energía para protección de caídas en altura."
+  },
+  {
+   "taric": "5703100000",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y revestimientos textiles para suelo, con mechón insertado, de lana o pelo fino"
+  },
+  {
+   "taric": "5703210000",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y demás revestimientos para el suelo, de materia textil, mechón insertado, incluso confeccionados. De nailon o demás poliamidas Cesped"
+  },
+  {
+   "taric": "5703291000",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y revestimientos para el suelo,materia textil,mechón insertado,incluso confeccionados.Demás.Estampados.Superficie inferior o igual 1m2"
+  },
+  {
+   "taric": "5703291900",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y demás revestimientos para el suelo,de materia textil,con mechón insertado,incluso confeccionados.Demás.Estampados. Los demás"
+  },
+  {
+   "taric": "5703299100",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y revestimientos para el suelo,de materia textil,con mechón insertado,incluso confeccionados.Demás.De superficie inferior o igual a 1m2."
+  },
+  {
+   "taric": "5703299900",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y revestimientos para el suelo,de materia textil,con mechón insertado,incluso confeccionados. Los demás. Los demás."
+  },
+  {
+   "taric": "5703310000",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y demás revest. para suelo de materia textil, con mechón insertado, incluso confecc, Demás materias textiles sintéticas o artific(Césped, SYSDATETIME())"
+  },
+  {
+   "taric": "5703391000",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y demás revestimientos para el suelo (incluido el césped, SYSDATETIME()) - Sintéticos/Artificiales - polipropileno- superficie inferior o igual a 1 m2"
+  },
+  {
+   "taric": "5703391900",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y demás revestimientos para el suelo (incluido césped, SYSDATETIME()),materia textil,con mechón insertado,incluso confecc.Demás.Polipropileno.Demás."
+  },
+  {
+   "taric": "5703399100",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y demás revestimientos suelo(incluido césped, SYSDATETIME()),materia textil,con mechón insertado,incluso confecc.Demás.Superficie inferior igual a 1m2"
+  },
+  {
+   "taric": "5703399900",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y demás revestimientos para el suelo (incluido el césped, SYSDATETIME()), de materia textil, con mechón insertado, incluso confeccionados - Los demás,"
+  },
+  {
+   "taric": "5703902010",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y revestimientos textiles para suelo, con mechón insertado, de yute o liber de la partida 5303, = 1 m2"
+  },
+  {
+   "taric": "5703902090",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y revestimto textil para suelo, con mechón insertado, sintét.s o artific. (ni poliamida, ni polipropileno, ni yute , ni liber 5303 = 1 m2"
+  },
+  {
+   "taric": "5703908010",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y revestimiento textil para suelo, con mechón insertado, de yute o liber de la partida 5303 > 1 m2"
+  },
+  {
+   "taric": "5703908090",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y revestimto textil para suelo, con mechón insertado, sintét. O artific. (ni poliamida, ni polipropileno, ni yute ni liber 5303, SYSDATETIME()) > 1m2"
+  },
+  {
+   "taric": "5704100000",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y demás revestimientos para suelo,de fieltro(excepto con mechón insertado y flocados, SYSDATETIME()), incluso confeccionados,de sup inferior o = a 0,3 m2"
+  },
+  {
+   "taric": "5704200010",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y demás rev.para suelo,de fieltro(exc.con mechón insert. y floc., SYSDATETIME()),incl.confec,de sup. superior a 0,3 m2 pero inferior o = a 1m2.Hecho mano"
+  },
+  {
+   "taric": "5704200090",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y demás rev.para suelo,de fieltro(exc.con mechón insert. y floc., SYSDATETIME()),incl.confec,de sup. superior a 0,3 m2 pero inferior o = a 1m2.Las demás"
+  },
+  {
+   "taric": "5704900010",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y demás rev.para suelo,de fieltro(exc.con mechón insert. y floc., SYSDATETIME()),incl.confec,de superficie superior a 1m2.Hecho mano"
+  },
+  {
+   "taric": "5704900090",
+   "grupo": "TEXTIL",
+   "descripcion": "Alfombras y demás rev.para suelo,de fieltro(exc.con mechón insert. y floc., SYSDATETIME()),incl.confec,de superficie superior a 1m2.Las demás"
+  },
+  {
+   "taric": "5802100000",
+   "grupo": "TEXTIL",
+   "descripcion": "Tejidos con bucles del tipo toalla; superficies textiles con mechón insertado. Tejidos con bucles del tipo toalla, de algodón."
+  },
+  {
+   "taric": "5802200000",
+   "grupo": "TEXTIL",
+   "descripcion": "Tejidos con bucle del tipo toalla, no de algodón (excepto los de la partida 5806, SYSDATETIME())"
+  },
+  {
+   "taric": "5802300000",
+   "grupo": "TEXTIL",
+   "descripcion": "Superficies textiles con mechón insertado (excepto los de la partida 5703, SYSDATETIME())"
+  },
+  {
+   "taric": "5811000020",
+   "grupo": "TEXTIL",
+   "descripcion": "Textiles acolchados en pieza (excepto los bordados de la partida 5810, SYSDATETIME()), de punto."
+  },
+  {
+   "taric": "5811000093",
+   "grupo": "TEXTIL",
+   "descripcion": "Textiles acolchados en pieza (excepto los bordados de la aprtida 5810, SYSDATETIME()), no de punto, de algodón"
+  },
+  {
+   "taric": "5811000095",
+   "grupo": "TEXTIL",
+   "descripcion": "Textiles acolchados en pieza (excepto los bordados de la partida 5810, SYSDATETIME()), no de punto, de filamentos sintéticos"
+  },
+  {
+   "taric": "5811000096",
+   "grupo": "TEXTIL",
+   "descripcion": "Textiles acolchados en pieza (excepto los bordados de la partida 5810, SYSDATETIME()), no de punto, de filamentos artificiales"
+  },
+  {
+   "taric": "5811000099",
+   "grupo": "TEXTIL",
+   "descripcion": "Textiles acolchados en pieza (excepto los bordados de la partida 5810, SYSDATETIME()), no de punto, ni de algodón, ni de filamentos sintéticos o artificiales"
+  },
+  {
+   "taric": "6101201000",
+   "grupo": "TEXTIL",
+   "descripcion": "Abrigos, chaquetones, capas y artículos similares, de punto, para niños (incluidos los disfraces infantiles) de algodón."
+  },
+  {
+   "taric": "6101209000",
+   "grupo": "TEXTIL",
+   "descripcion": "Anoraks, cazadoras y artículos similares, de punto, para niños (incluidos los disfraces infantiles) de algodón."
+  },
+  {
+   "taric": "6101301000",
+   "grupo": "TEXTIL",
+   "descripcion": "Abrigos, chaquetones, capas y artículos similares, de punto, para niños (incluidos los disfraces infantiles) de fibras sintéticas o artificiales."
+  },
+  {
+   "taric": "6101309000",
+   "grupo": "TEXTIL",
+   "descripcion": "Anoraks, cazadoras y artículos similares, de punto, para niños (incluidos los disfraces infantiles) de fibras sintéticas o artificiales."
+  },
+  {
+   "taric": "6101902011",
+   "grupo": "TEXTIL",
+   "descripcion": "Abrigos, chaquetones, capas y artículos similares, de punto, para niños (incluidos los disfraces infantiles). Ponchos de pelo fino, hechos a mano."
+  },
+  {
+   "taric": "6101902019",
+   "grupo": "TEXTIL",
+   "descripcion": "Abrigos, chaquetones, capas y artículos similares, de punto, para niños (incluidos los disfraces infantiles). Los demás de lana o de pelo fino."
+  },
+  {
+   "taric": "6101902090",
+   "grupo": "TEXTIL",
+   "descripcion": "Abrigos, chaquetones, capas y artículos similares, de punto, para niños (incluidos los disfraces infantiles) de las demás materias textiles."
+  },
+  {
+   "taric": "6101908010",
+   "grupo": "TEXTIL",
+   "descripcion": "Anoraks, cazadoras y artículos similares, de punto, para niños (incluidos los disfraces infantiles) de lana o de pelo fino."
+  },
+  {
+   "taric": "6101908090",
+   "grupo": "TEXTIL",
+   "descripcion": "Anoraks, cazadoras y artículos similares, de punto, para niños (incluidos los disfraces infantiles) de las demás materias textiles."
+  },
+  {
+   "taric": "6102101010",
+   "grupo": "TEXTIL",
+   "descripcion": "Abrigos, chaquetones, capas y artículos similares, de punto, para niñas (incluidos los disfraces infantiles). Ponchos de pelo fino, hechos a mano."
+  },
+  {
+   "taric": "6102101090",
+   "grupo": "TEXTIL",
+   "descripcion": "Abrigos, chaquetones, capas y artículos similares, de punto, para niñas (incluidos los disfraces infantiles). Los demás de lana o de pelo fino."
+  },
+  {
+   "taric": "6102109000",
+   "grupo": "TEXTIL",
+   "descripcion": "Anoraks, cazadoras y artículos similares, de punto, para niñas (incluidos los disfraces infantiles) de lana o de pelo fino."
+  },
+  {
+   "taric": "6102201000",
+   "grupo": "TEXTIL",
+   "descripcion": "Abrigos, chaquetones, capas y artículos similares, de punto, para niñas (incluidos los disfraces infantiles) de algodón."
+  },
+  {
+   "taric": "6102209000",
+   "grupo": "TEXTIL",
+   "descripcion": "Anoraks, cazadoras y artículos similares, de punto, para niñas (incluidos los disfraces infantiles) de algodón."
+  },
+  {
+   "taric": "6102301000",
+   "grupo": "TEXTIL",
+   "descripcion": "Abrigos, chaquetones, capas y artículos similares, de punto, para niñas (incluidos los disfraces infantiles) de fibras sintéticas o artificiales."
+  },
+  {
+   "taric": "6102309000",
+   "grupo": "TEXTIL",
+   "descripcion": "Anoraks, cazadoras y artículos similares, de punto, para niñas (incluidos los disfraces infantiles) de fibras sintéticas o artificiales."
+  },
+  {
+   "taric": "6102901000",
+   "grupo": "TEXTIL",
+   "descripcion": "Abrigos, chaquetones, capas y artículos similares, de punto, para niñas (incluidos los disfraces infantiles) de las demás materias textiles."
+  },
+  {
+   "taric": "6102909000",
+   "grupo": "TEXTIL",
+   "descripcion": "Anoraks, cazadoras y artículos similares, de punto, para niñas (incluidos los disfraces infantiles) de las demás materias textiles."
+  },
+  {
+   "taric": "6103101000",
+   "grupo": "TEXTIL",
+   "descripcion": "Trajes (ambos o ternos) de punto, de lana o pelo fino: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103109000",
+   "grupo": "TEXTIL",
+   "descripcion": "Trajes (ambos o ternos) de punto, de las demás materias textiles: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103220000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de punto, de algodón: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103230000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de punto, de fibras sintéticas: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103290000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de punto, de las demás materias textiles: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103310000",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de punto, de lana o pelo fino: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103320000",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de punto, de algodón: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103330000",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de punto, de fibras sintéticas: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103390010",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de punto, de fibras artificiales: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103390090",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de punto, de las demás materias textiles: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103410000",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts (excepto de baño), de punto, de lana o pelo fino: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103420000",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts (excepto de baño), de punto, de algodoón: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103430000",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts (excepto de baño), de punto, de fibras sintéticas: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103490010",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones o calzones de punto, de las demás fibras textiles: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103490091",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts (excepto de baño), de punto, de fibras artificiales para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6103490099",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts (excepto de baño), de punto, de las demás fibras textiles: para niños (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104130000",
+   "grupo": "TEXTIL",
+   "descripcion": "Trajes sastre de punto, de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104192000",
+   "grupo": "TEXTIL",
+   "descripcion": "Trajes sastre de punto, de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104199010",
+   "grupo": "TEXTIL",
+   "descripcion": "Trajes sastre de punto, de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104199020",
+   "grupo": "TEXTIL",
+   "descripcion": "Trajes sastre de punto, de lana o de peloo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104199090",
+   "grupo": "TEXTIL",
+   "descripcion": "Trajes sastre de punto, de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104220000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de punto, de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104230000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de punto, de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104291000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de punto, de lana o pelo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104299010",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de punto, de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104299090",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de punto, de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104310000",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de punto, de lana o pelo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104320000",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de punto de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104330000",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de punto, de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104390010",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de punto, de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104390090",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de punto, de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104410000",
+   "grupo": "TEXTIL",
+   "descripcion": "Vestidos de punto, de lana o pelo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104420000",
+   "grupo": "TEXTIL",
+   "descripcion": "Vestidos de punto, de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104430000",
+   "grupo": "TEXTIL",
+   "descripcion": "Vestidos de punto, de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104440000",
+   "grupo": "TEXTIL",
+   "descripcion": "Vestidos de punto, de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104490000",
+   "grupo": "TEXTIL",
+   "descripcion": "Vestidos de punto, de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104510000",
+   "grupo": "TEXTIL",
+   "descripcion": "Faldas y faldas pantalón de punto, de lana o pelo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104520000",
+   "grupo": "TEXTIL",
+   "descripcion": "Faldas y faldas pantalón de punto de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104530000",
+   "grupo": "TEXTIL",
+   "descripcion": "Faldas y faldas pantalón de punto, de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104590000",
+   "grupo": "TEXTIL",
+   "descripcion": "Faldas y faldas pantalón de punto, de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104610000",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts (excepto de baño), de punto, de lana o pelo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104620000",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts (excepto de baño), de punto, de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104630000",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts (excepto de baño), de punto, de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104690010",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones y calzones de punto, de las demás fibras textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104690091",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts (excepto de baño), de punto, de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6104690099",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts (excepto de baño), de punto, de las demás fibras textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo y; los que son equipos de protección individual tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6105100000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas de punto para niños (incluidos los disfraces infantiles) de algodón."
+  },
+  {
+   "taric": "6105201000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas de punto para niños (incluidos los disfraces infantiles) de fibras sintéticas."
+  },
+  {
+   "taric": "6105209000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas de punto para niños (incluidos los disfraces infantiles) de fibras artificiales."
+  },
+  {
+   "taric": "6105901000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas de punto para niños (incluidos los disfraces infantiles) de lana o pelo fino."
+  },
+  {
+   "taric": "6105909000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas de punto para niños (incluidos los disfraces infantiles) de las demás materias textiles."
+  },
+  {
+   "taric": "6106100000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas, blusas y blusas camiseras, de punto, para niñas (incluidos los disfraces infantiles) de algodón."
+  },
+  {
+   "taric": "6106200000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas, blusas y blusas camiseras, de punto, para niñas (incluidos los disfraces infantiles) de fibras sintéticas o artificiales."
+  },
+  {
+   "taric": "6106901000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas, blusas y blusas camiseras, de punto, para niñas (incluidos los disfraces infantiles) de lana o pelo fino."
+  },
+  {
+   "taric": "6106903000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas, blusas y blusas camiseras, de punto, para niñas (incluidos los disfraces infantiles) de seda o desperdicios de seda."
+  },
+  {
+   "taric": "6106905000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas, blusas y blusas camiseras, de punto, para niñas (incluidos los disfraces infantiles) de lino o de ramio."
+  },
+  {
+   "taric": "6106909000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas, blusas y blusas camiseras, de punto, para niñas (incluidos los disfraces infantiles) de las demás materias textiles."
+  },
+  {
+   "taric": "6107110000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calzoncillos incluídos largos y slips, para hombres o niños, de algodón"
+  },
+  {
+   "taric": "6107120000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calzoncillos incluídos largos y slips, para hombres o niños, de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6107190000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calzoncillos incluídos largos y slips, para hombres o niños, ni de algodón, ni de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6107210000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisones y pijamas, para hombres o niños, de algodón"
+  },
+  {
+   "taric": "6107220000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisones y pijamas, para hombres o niños, de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6107290000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisones y pijamas, para hombres o niños, ni de algodón, ni de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6107910000",
+   "grupo": "TEXTIL",
+   "descripcion": "Albornoces, batas de casa y similares, para hombres o niños, de algodón"
+  },
+  {
+   "taric": "6107990010",
+   "grupo": "TEXTIL",
+   "descripcion": "Albornoces, batas de casa y similares, para hombres o niños, de lana o pelo fino"
+  },
+  {
+   "taric": "6107990020",
+   "grupo": "TEXTIL",
+   "descripcion": "Albornoces, batas de casa y similares, para hombres o niños, de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6107990090",
+   "grupo": "TEXTIL",
+   "descripcion": "Albornoces, batas de casa y similares, para hombres o niños, ni de algodón, ni de lana, ni de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6108110000",
+   "grupo": "TEXTIL",
+   "descripcion": "Combinaciones y enaguas, para mujeres y niñas, de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6108190000",
+   "grupo": "TEXTIL",
+   "descripcion": "Combinaciones y enaguas, para mujeres y niñas, no de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6108210000",
+   "grupo": "TEXTIL",
+   "descripcion": "Bragas, para mujeres y niñas, de algodón"
+  },
+  {
+   "taric": "6108220000",
+   "grupo": "TEXTIL",
+   "descripcion": "Bragas, para mujeres y niñas, de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6108290000",
+   "grupo": "TEXTIL",
+   "descripcion": "Bragas, para mujeres y niñas, ni de algodón, ni de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6108310000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisones y pijamas, para mujeres y niñas, de algodón"
+  },
+  {
+   "taric": "6108320000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisones y pijamas, para mujeres y niñas, de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6108390000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisones y pijamas, para mujeres y niñas, ni de algodón, ni de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6108910000",
+   "grupo": "TEXTIL",
+   "descripcion": "Saltos de cama, albornoces, batas de casa y similares, para mujeres y niñas, de algodón"
+  },
+  {
+   "taric": "6108920000",
+   "grupo": "TEXTIL",
+   "descripcion": "Saltos de cama, albornoces, batas de casa y similares, para mujeres y niñas, de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6108990010",
+   "grupo": "TEXTIL",
+   "descripcion": "Saltos de cama, albornoces, batas de casa y similares, para mujeres y niñas, de lana o pelo fino"
+  },
+  {
+   "taric": "6108990090",
+   "grupo": "TEXTIL",
+   "descripcion": "Saltos de cama, albornoces, batas de casa y similares, para mujeres y niñas, ni de algodón, ni fibras sintéticas o artificiales, ni lana o pelo fino"
+  },
+  {
+   "taric": "6109100010",
+   "grupo": "TEXTIL",
+   "descripcion": "T-shirts de punto, de algodón"
+  },
+  {
+   "taric": "6109100090",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisetas de punto, de algodón"
+  },
+  {
+   "taric": "6109902000",
+   "grupo": "TEXTIL",
+   "descripcion": "T-shirts y camisetas de punto, de lana o pelo fino, o fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6109909000",
+   "grupo": "TEXTIL",
+   "descripcion": "T-shirts y camisetas de punto, ni de algodón, ni de lana o pelo fino, ni fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6110111000",
+   "grupo": "TEXTIL",
+   "descripcion": "Suéteres (jerseys) y pulóveres con un contenido de lana superior o igual al 50 % en peso y con un peso superior o igual a 600 g para niños y niñas (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110113000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás suéteres (jerseys), pulóveres, cardigan, chalecos y artículos similares de lana para niños (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110119000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás suéteres (jerseys), pulóveres, cardigan, chalecos y artículos similares de lana para niñas (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110121010",
+   "grupo": "TEXTIL",
+   "descripcion": "Chandals y jerseys (con o sin mangas), hechos a mano, de cabra de cahemira para niños (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110121090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás suéteres (jerseys), pulóveres, cardigan, chalecos y artículos similares de cabra de cahemira para niños (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110129010",
+   "grupo": "TEXTIL",
+   "descripcion": "Chandals y jerseys (con o sin mangas), hechos a mano, de cabra de cahemira para niñas (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110129090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás suéteres (jerseys), pulóveres, cardigan, chalecos y artículos similares de cabra de cahemira para niñas (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110191010",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás chandals y jerseys (con o sin mangas), hechos a mano, de lana o pelo fino, para niños (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110191090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás suéteres (jerseys), pulóveres, cardigan, chalecos y artículos similares, de lana o pelo fino, para niños (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110199010",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás chandals y jerseys (con o sin mangas), hechos a mano, de lana o pelo fino, para niñas (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110199090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás suéteres (jerseys), pulóveres, cardigan, chalecos y artículos similares, de lana o pelo fino, para niñas (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110201000",
+   "grupo": "TEXTIL",
+   "descripcion": "Prendas de cuello de cisne de algodón para para niños y niñas (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110209100",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás suéteres (jerseys), pulóveres, cardigan, chalecos y artículos similares de algodón para niños (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110209900",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás suéteres (jerseys), pulóveres, cardigan, chalecos y artículos similares de algodón para niñas (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110301000",
+   "grupo": "TEXTIL",
+   "descripcion": "Prendas de cuello de cisne de fibras sintéticas o artificiales para para niños y niñas (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110309100",
+   "grupo": "TEXTIL",
+   "descripcion": "Chalecos de fibra sintéticas o artificiales de alta y media visibilidad. Los demás suéteres (jerseys), pulóveres, cardigan, chalecos y artículos similares de fibras sintéticas o artificiales para niños (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110309900",
+   "grupo": "TEXTIL",
+   "descripcion": "Chalecos de fibra sintéticas o artificiales de alta y media visibilidad. Los demás suéteres (jerseys), pulóveres, cardigan, chalecos y artículos similares de fibras sintéticas o artificiales para niñas (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110901000",
+   "grupo": "TEXTIL",
+   "descripcion": "Suéteres (jerseys), pulóveres, cardigan, chalecos y artículos similares de lino o de ramio para niños y niñas (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110909030",
+   "grupo": "TEXTIL",
+   "descripcion": "Pullovers de seda para niñas o de desperdicios de seda (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6110909090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás suéteres (jerseys), pulóveres, cardigan, chalecos y artículos similares de las demás materias textiles para niños y niñas (incluidos los disfraces infantiles)."
+  },
+  {
+   "taric": "6111201000",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes de punto para bebés, de algodón"
+  },
+  {
+   "taric": "6111209000",
+   "grupo": "TEXTIL",
+   "descripcion": "Prendas de vestir de punto para bebés distintas a guantes, de algodón"
+  },
+  {
+   "taric": "6111301000",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes de punto para bebés, de fibras sintéticas"
+  },
+  {
+   "taric": "6111309000",
+   "grupo": "TEXTIL",
+   "descripcion": "Prendas de vestir de punto para bebés distintas a guantes, de fibras sintéticas"
+  },
+  {
+   "taric": "6111901100",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes de punto para bebés, de lana o pelo fino"
+  },
+  {
+   "taric": "6111901900",
+   "grupo": "TEXTIL",
+   "descripcion": "Prendas de vestir de punto para bebés distintas a guantes, de lana o pelo fino"
+  },
+  {
+   "taric": "6111909011",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes de punto para bebés, de fibras artificiales"
+  },
+  {
+   "taric": "6111909019",
+   "grupo": "TEXTIL",
+   "descripcion": "Prendas de vestir de punto para bebés distintas a guantes, de fibras artificiales"
+  },
+  {
+   "taric": "6111909090",
+   "grupo": "TEXTIL",
+   "descripcion": "Prendas de vestir de punto para bebés, ni algodón, ni de fibras sintéticas o artificiales, ni de lana o pelo fino"
+  },
+  {
+   "taric": "6112110000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de abrigo para entrenamiento o deporte (chándales). De algodón para niños y niñas."
+  },
+  {
+   "taric": "6112120000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de abrigo para entrenamiento o deporte (chándales). De fibras sintéticas para niños y niñas."
+  },
+  {
+   "taric": "6112190000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de abrigo para entrenamiento o deporte (chándales). De las demás materias textiles para niños y niñas."
+  },
+  {
+   "taric": "6112200000",
+   "grupo": "TEXTIL",
+   "descripcion": "Monos (overoles) y conjuntos de esquí."
+  },
+  {
+   "taric": "6112311000",
+   "grupo": "TEXTIL",
+   "descripcion": "Bañadores para hombres o niños, de fibras sintéticas con contenido de hilos de caucho = al 5% en peso"
+  },
+  {
+   "taric": "6112319000",
+   "grupo": "TEXTIL",
+   "descripcion": "Bañadores para hombres o niños, de fibras sintéticas con contenido de hilos de caucho < al 5% en peso"
+  },
+  {
+   "taric": "6112391000",
+   "grupo": "TEXTIL",
+   "descripcion": "Bañadores para hombres o niños, no de fibras sintéticas con contenido de hilos de caucho = al 5% en peso"
+  },
+  {
+   "taric": "6112399000",
+   "grupo": "TEXTIL",
+   "descripcion": "Bañadores para hombres o niños, no de fibras sintéticas con contenido de hilos de caucho < al 5% en peso"
+  },
+  {
+   "taric": "6112411000",
+   "grupo": "TEXTIL",
+   "descripcion": "Bañadores para mujeres o niñas, de fibras sintéticas con contenido de hilos de caucho = al 5% en peso"
+  },
+  {
+   "taric": "6112419000",
+   "grupo": "TEXTIL",
+   "descripcion": "Bañadores para mujeres o niñas, de fibras sintéticas con contenido de hilos de caucho < al 5% en peso"
+  },
+  {
+   "taric": "6112491000",
+   "grupo": "TEXTIL",
+   "descripcion": "Bañadores para mujeres o niñas, no de fibras sintéticas con contenido de hilos de caucho = al 5% en peso"
+  },
+  {
+   "taric": "6112499000",
+   "grupo": "TEXTIL",
+   "descripcion": "Bañadores para mujeres o niñas, no de fibras sintéticas con contenido de hilos de caucho < al 5% en peso"
+  },
+  {
+   "taric": "6113001000",
+   "grupo": "TEXTIL",
+   "descripcion": "Prendas de vestir confeccionadas con tejidos de punto de la partida 5906. Las que son de trabajo; y las que son equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6113009000",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás prendas de vestir confeccionadas con tejidos de punto de las partidas 5903 o 5907. Las que son de trabajo; y las que son equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6114200000",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás prendas de vestir, de punto. Las que son de trabajo; y las que son equipos de protección individual, tanto para uso profesional, como particular, de algodón."
+  },
+  {
+   "taric": "6114300000",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás prendas de vestir, de punto. Las que son de trabajo; y las que son equipos de protección individual, tanto para uso profesional, como particular, de fibras sintéticas o artificiales."
+  },
+  {
+   "taric": "6114900010",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás prendas de vestir, de punto. Las que son de trabajo; y las que son equipos de protección individual, tanto para uso profesional, como particular, de lana o pelo fino."
+  },
+  {
+   "taric": "6114900090",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás prendas de vestir, de punto. Las que son de trabajo; y las que son equipos de protección individual, tanto para uso profesional, como particular, de las demás materias textiles."
+  },
+  {
+   "taric": "6115101000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calzas, pantys, medias de punto, de compresión progresiva, para varices de fibra sintética"
+  },
+  {
+   "taric": "6115109000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calzas, panty-medias, leotardos y medias de compresión progresiva (por ejemplo, medias para varices, SYSDATETIME()), las demás."
+  },
+  {
+   "taric": "6115210000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calzas, pantys y leotardos, de punto, no de compresión progresiva, de fibras sintéticas con título inferior a 67decitex/hilo sencillo"
+  },
+  {
+   "taric": "6115220000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calzas, pantys y leotardos, de punto, no de compresión progresiva, de fibras sintéticas con título = 67decitex/hilo sencillo"
+  },
+  {
+   "taric": "6115290000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calzas, pantys y leotardos, de punto, no de compresión progresiva, no de fibra sintética"
+  },
+  {
+   "taric": "6115301100",
+   "grupo": "TEXTIL",
+   "descripcion": "Medias de mujer, de punto, no calzas/pantys/leotar, de fibras sintéticas de título inferior a 67 dtex por hilo sencillo, que cubren hasta la rodilla"
+  },
+  {
+   "taric": "6115301900",
+   "grupo": "TEXTIL",
+   "descripcion": "Medias de mujer, de punto, no calzas/pantys/leotar, de fibras sintéticas de título inferior a 67dtex por hilo sencillo, que cubren más de la rodilla"
+  },
+  {
+   "taric": "6115309000",
+   "grupo": "TEXTIL",
+   "descripcion": "Medias de mujer, de punto, no calzas, pantys y leotardos, de título inferior a 67 decitex por hilo sencillo, no de fibras sintéticas"
+  },
+  {
+   "taric": "6115940000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calcetines y artículos de calcetería, de punto, de lana o pelo fino"
+  },
+  {
+   "taric": "6115950000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calcetines y artículos de calcetería, de punto, de algodón"
+  },
+  {
+   "taric": "6115961000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calcetines de punto, de fibras sintéticas"
+  },
+  {
+   "taric": "6115969100",
+   "grupo": "TEXTIL",
+   "descripcion": "Medias para mujer, de punto, de fibras sintéticas de título superior a 67 decitex por hilo sencillo"
+  },
+  {
+   "taric": "6115969900",
+   "grupo": "TEXTIL",
+   "descripcion": "Artículos de calcetería, de punto, no medias, ni calcetines, ni pantys, ni leotardos, de fibras sintéticas de título mayor a 67 dtex/hilo sencillo"
+  },
+  {
+   "taric": "6115990000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calcetines y artículos de calcetería, de punto, ni de lana, ni de algodón, ni de fibras sintéticas"
+  },
+  {
+   "taric": "6116102011",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes, de punto, impregnados, recubiertos o revestidos con caucho. Estratificadas. De fibras sintéticas."
+  },
+  {
+   "taric": "6116102019",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes, de punto, impregnados, recubiertos o revestidos con caucho. Estratificadas. Los demás."
+  },
+  {
+   "taric": "6116102091",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes, de punto, impregnados, recubiertos o revestidos con caucho. Los demás."
+  },
+  {
+   "taric": "6116108011",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes, mitones y manoplas, de punto. Impregnados,recubiertos,revestidos,estratificados,plástico o caucho. Demás. Estratificadas. Fibras sintéticas"
+  },
+  {
+   "taric": "6116108019",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes, mitones y manoplas, de punto. Impregnados, recubiertos, revestidos o estratificados, con plástico o caucho. Demás. Estratificadas. Demás."
+  },
+  {
+   "taric": "6116108091",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes, mitones y manoplas, de punto. Impregnados, recubiertos, revestidos o estratificados, con plástico o caucho. Los demás."
+  },
+  {
+   "taric": "6116910000",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes, mitones y manoplas de punto, no impregnados, recubiertos o revestidos de caucho, de lana o pelo fino"
+  },
+  {
+   "taric": "6116920000",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes, mitones y manoplas de punto, no impregnados, recubiertos o revestidos de caucho, de algodón"
+  },
+  {
+   "taric": "6116930000",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes, mitones y manoplas de punto, no impregnados, recubiertos o revestidos de caucho, de fibras sintéticas"
+  },
+  {
+   "taric": "6116990000",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes, mitones y manoplas de punto, no impregnados, recubiertos o revestidos de caucho, ni de lana, ni de algodón, ni de fibras sintéticas"
+  },
+  {
+   "taric": "6201200011",
+   "grupo": "TEXTIL",
+   "descripcion": "Ponchos, hechos a mano, de lana o pelo fino: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201200019",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, impermeables, chaquetones, capas y artículos similares de lana o pelo fino: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201200091",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares, de lana o pelo fino: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201301011",
+   "grupo": "TEXTIL",
+   "descripcion": "Parkas de peso por unidad, inferior o igual a 1 kg, de algodón: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201301019",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, impermeables, chaquetones, capas y artículos similares de peso por unidad, inferior o igual a 1 Kg, de algodón: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201301091",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares estampados a mano, según el procedimiento \"batik\", de peso por unidad, inferior o igual a 1 Kg, de algodón: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201301099",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares de peso por unidad, inferior o igual a 1 Kg: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201309011",
+   "grupo": "TEXTIL",
+   "descripcion": "Parkas de peso por unidad, superior a 1 kg, de algodón: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201309019",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, impermeables, chaquetones, capas y artículos similares de peso por unidad, superior a 1 Kg, de algodón: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201309091",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares estampados a mano, según el procedimiento \"batik\", de peso por unidad, superior a 1 Kg, de algodón: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201309099",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares de peso por unidad, superior a 1 Kg, de algodón: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201401011",
+   "grupo": "TEXTIL",
+   "descripcion": "Parkas de peso por unidad, inferior o igual a 1 kg, de fibras sintéticas o artificiales: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201401019",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, impermeables, chaquetones, capas y artículos similares de peso por unidad, inferior o igual a 1 Kg, de fibras sintéticas o artificiales: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201401090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares de peso por unidad, inferior o igual a 1 Kg, de fibras sintéticas o artificiales: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201409011",
+   "grupo": "TEXTIL",
+   "descripcion": "Parkas de peso por unidad, superior a 1 kg, de de fibras sintéticas o artificiales: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201409019",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, impermeables, chaquetones, capas y artículos similares de peso por unidad, superior a 1 Kg, de de fibras sintéticas o artificiales: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201409090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares de peso por unidad, superior a 1 Kg, de de fibras sintéticas o artificiales: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201900010",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares estampados a mano, según el procedimiento \"batik\", de las demás materias textiles: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6201900090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares de las demás materias textiles: para niños. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202200011",
+   "grupo": "TEXTIL",
+   "descripcion": "Ponchos, hechos a mano, de lana o pelo fino: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202200015",
+   "grupo": "TEXTIL",
+   "descripcion": "Capas de lana, hechas a mano: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202200019",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, impermeables, chaquetones, capas y artículos similares de lana o pelo fino: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202200091",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares, de lana o pelo fino: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202301011",
+   "grupo": "TEXTIL",
+   "descripcion": "Parkas de peso por unidad, inferior o igual a 1 kg, de algodón: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202301019",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, impermeables, chaquetones, capas y artículos similares de peso por unidad, inferior o igual a 1 Kg, de algodón: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202301091",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares estampados a mano, según el procedimiento \"batik\", de peso por unidad, inferior o igual a 1 Kg, de algodón: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202301099",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares de peso por unidad, inferior o igual a 1 Kg, de algodón: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202309011",
+   "grupo": "TEXTIL",
+   "descripcion": "Parkas de peso por unidad, superior a 1 kg, de algodón: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202309019",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, impermeables, chaquetones, capas y artículos similares de peso por unidad, superior a 1 Kg, de algodón: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202309091",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares estampados a mano, según el procedimiento \"batik\", de peso por unidad, superior a 1 Kg, de algodón: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202309099",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares de peso por unidad, superior a 1 Kg, de algodón: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202401011",
+   "grupo": "TEXTIL",
+   "descripcion": "Parkas de peso por unidad, inferior o igual a 1 kg, de fibras sintéticas o artificiales: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202401019",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, impermeables, chaquetones, capas y artículos similares de peso por unidad, inferior o igual a 1 Kg, de fibras sintéticas o artificiales: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202401091",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares de peso por unidad, inferior o igual a 1 Kg, de fibras sintéticas o artificiales: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202409011",
+   "grupo": "TEXTIL",
+   "descripcion": "Parkas de peso por unidad, superior a 1 kg, de de fibras sintéticas o artificiales: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202409019",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, impermeables, chaquetones, capas y artículos similares de peso por unidad, superior a 1 Kg, de de fibras sintéticas o artificiales: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202409091",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares de peso por unidad, superior a 1 Kg, de de fibras sintéticas o artificiales: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202900010",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares estampados a mano, según el procedimiento \"batik\", de las demás materias textiles: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6202900090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás abrigos, chaquetones, capas, anoraks, cazadoras y artículos similares de las demás materias textiles: para niñas. Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203110000",
+   "grupo": "TEXTIL",
+   "descripcion": "Trajes (ambos o ternos) de lana o pelo fino: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203120000",
+   "grupo": "TEXTIL",
+   "descripcion": "Trajes (ambos o ternos) de fibras sintéticas: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203191000",
+   "grupo": "TEXTIL",
+   "descripcion": "Trajes (ambos o ternos) de algodón: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203193000",
+   "grupo": "TEXTIL",
+   "descripcion": "Trajes (ambos o ternos) de fibras artificiales: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203199000",
+   "grupo": "TEXTIL",
+   "descripcion": "Trajes (ambos o ternos) de las demás materias textiles: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203221000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de algodón para hombres o niños: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203228000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de algodón: para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203231000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de fibras sintéticas para hombres o niños: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203238000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de fibras sintéticas: para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203291100",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de fibras artificiales para hombres o niños: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203291800",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de fibras artificiales: para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203293000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de lana o pelo fino: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203299000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de las demás materias textiles: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203310000",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de lana o pelo fino: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203321000",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de algodón para hombres o niños: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203329000",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás chaquetas (sacos) de algodón: para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203331000",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de fibras sintéticas para hombres o niños: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203339000",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás chaquetas (sacos) de fibras sintéticas: para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203391100",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de fibras artificiales para hombres o niños: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203391900",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás chaquetas (sacos) de fibras artificiales: para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203399000",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de las demás materias textiles: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203411000",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) de lana o pelo fino: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203413000",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones con peto de lana o pelo fino: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203419000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts de lana o pelo fino: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203421100",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) de algodón para hombres o niños: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203423100",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) de algodón, de tejidos llamados \"mezclilla (denim)\": para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203423300",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) de algodón, de terciopelo o felpa por trama, cortados o rayados: para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203423500",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos y pantalones cortos (calzones) de algodón: para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203425100",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones con peto de algodón para hombres o niños: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203425900",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones con peto de algodón: para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203429000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts de algodón: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203431100",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) de fibras sintéticas para hombres o niños: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203431900",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos y pantalones cortos (calzones) de fibras sintéticas: para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203433100",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones con peto de fibras sintéticas para hombres o niños: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203433900",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones con peto de fibras sintéticas: para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203439000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts de fibras sintéticas: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203491100",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) de fibras artificiales para hombres o niños: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203491900",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos y pantalones cortos (calzones) de fibras artificiales: para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203493100",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones con peto de fibras artificiales para hombres o niños: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203493900",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones con peto de fibras artificiales: para niños (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203495000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts de fibras artificiales: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6203499000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts de las demás materias textiles: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204110000",
+   "grupo": "TEXTIL",
+   "descripcion": "Tajes de sastre de lana o pelo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204120010",
+   "grupo": "TEXTIL",
+   "descripcion": "Tajes de sastre estampados a mano, según el procedimiento 'batik', de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204120090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás tajes de sastre de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204130000",
+   "grupo": "TEXTIL",
+   "descripcion": "Tajes de sastre de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204191000",
+   "grupo": "TEXTIL",
+   "descripcion": "Tajes de sastre de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204199000",
+   "grupo": "TEXTIL",
+   "descripcion": "Tajes de sastre de de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204210000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de lana o pelo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204221000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de algodón para mujeres o niñas: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204228010",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos estampados a mano, según el procedimiento 'batik', de algodón: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204228090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de algodón: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204231000",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de fibras sintéticas para mujeres o niñas: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204238000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204291100",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de fibras artificiales para mujeres o niñas: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204291800",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204299010",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos estampados a mano, según el procedimiento 'batik', de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204299090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204310000",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de lana o pelo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204321000",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de algodón para mujeres o niñas: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204329010",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) estampados a mano, según el procedimiento 'batik', de algodón: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204329090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás chaquetas (sacos) de algodón: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204331000",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de fibras sintéticas para mujeres o niñas: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204339000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás chaquetas (sacos) de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204391100",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) de fibras artificiales para mujeres o niñas: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204391900",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás chaquetas (sacos) de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204399010",
+   "grupo": "TEXTIL",
+   "descripcion": "Chaquetas (sacos) estampados a mano, según el procedimiento 'batik', de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204399090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás chaquetas (sacos) de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204410000",
+   "grupo": "TEXTIL",
+   "descripcion": "Vestidos de lana o pelo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204420010",
+   "grupo": "TEXTIL",
+   "descripcion": "Vestidos estampados a mano, según el procedimiento 'batik', de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204420090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás vestidos de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204430000",
+   "grupo": "TEXTIL",
+   "descripcion": "Vestidos de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204440010",
+   "grupo": "TEXTIL",
+   "descripcion": "Vestidos estampados a mano, según el procedimiento 'batik', de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204440090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás vestidos de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204491000",
+   "grupo": "TEXTIL",
+   "descripcion": "Vestidos de seda o desperdicios de seda: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204499010",
+   "grupo": "TEXTIL",
+   "descripcion": "Vestidos estampados a mano, según el procedimiento 'batik', de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204499090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás vestidos de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204510011",
+   "grupo": "TEXTIL",
+   "descripcion": "Faldas y faldas pantalón hechas a mano, de lana: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204510019",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás faldas y faldas pantalón de lana: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204510090",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás faldas y faldas pantalón de lana o pelo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204520010",
+   "grupo": "TEXTIL",
+   "descripcion": "Faldas y faldas pantalón estampados a mano, según el procedimiento 'batik', de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204520090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás faldas y faldas pantalón de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204530010",
+   "grupo": "TEXTIL",
+   "descripcion": "Faldas y faldas pantalón estampados a mano, según el procedimiento 'batik', de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204530090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás faldas y faldas pantalón de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204591010",
+   "grupo": "TEXTIL",
+   "descripcion": "Faldas y faldas pantalón estampados a mano, según el procedimiento 'batik', de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204591090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás faldas y faldas pantalón de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204599010",
+   "grupo": "TEXTIL",
+   "descripcion": "Faldas y faldas pantalón estampados a mano, según el procedimiento 'batik', de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204599090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás faldas y faldas pantalón de las demás fibras textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204611000",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) de lana o pelo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204618500",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts de lana o pelo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204621100",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) de algodón para mujeres o niñas: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204623110",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) estampados a mano, según el procedimiento 'batik', de tejidos llamados \"mezclilla (denim)\", de algodón: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204623190",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demas pantalones largos y pantalones cortos (calzones) de tejidos llamados \"mezclilla (denim)\", de algodón: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204623310",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) estampados a mano, según el procedimiento 'batik', de terciopelo o felpa por trama, cortados o rayados, de algodón: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204623390",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos y pantalones cortos (calzones) de terciopelo o felpa por trama, cortados o rayados, de algodón: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204623910",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos y pantalones cortos (calzones) estampados a mano, según el procedimiento 'batik', de algodón: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204623990",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos y pantalones cortos (calzones), de algodón: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204625100",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones con peto de algodón para mujeres o niñas: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204625910",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones con peto peto estampados a mano, según el procedimiento 'batik', de algodón: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204625990",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones con peto de algodón: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204629010",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts estampados a mano, según el procedimiento 'batik', de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204629090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204631100",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) de fibras sintéticas para mujeres o niñas: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204631810",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) estampados a mano, según el procedimiento 'batik', de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204631890",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos y pantalones cortos (calzones) de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204633100",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones con peto de fibras sintéticas para mujeres o niñas: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204633910",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones con peto estampados a mano, según el procedimiento 'batik', de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204633990",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones con peto de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204639010",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts estampados a mano, según el procedimiento 'batik', de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204639090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts de fibras sintéticas: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204691100",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) de fibras artificiales para mujeres o niñas: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204691810",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones largos y pantalones cortos (calzones) estampados a mano, según el procedimiento 'batik', de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204691890",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos y pantalones cortos (calzones) de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204693100",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones con peto de fibras artificiales para mujeres o niñas: los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204693910",
+   "grupo": "TEXTIL",
+   "descripcion": "Pantalones con peto estampados a mano, según el procedimiento 'batik', de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204693990",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones con peto de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204695010",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts estampados a mano, según el procedimiento 'batik', de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204695090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts de fibras artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204699010",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts estampados a mano, según el procedimiento 'batik', de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6204699090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás pantalones largos, pantalones con peto, pantalones cortos (calzones) y shorts de de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6205200010",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas estampadas a mano, según el procedimiento 'batik', de algodón: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6205200090",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás camisas de algodón: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6205300000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas de fibras sintéticas o artificiales: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6205901010",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas estampadas a mano, según el procedimiento 'batik', de lino o de ramio: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6205901090",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás camisas de lino o de ramio: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6205908010",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas de lana o de pelo fino: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6205908090",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás camisas de las demás materias textiles: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6206100000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas, blusas y blusas camiseras de seda o desperdicios de seda: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6206200000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas, blusas y blusas camiseras de lana o pelo fino: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6206300010",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas, blusas y blusas camiseras estampadas a mano, según el procedimiento 'batik' de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6206300090",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás camisas, blusas y blusas camiseras de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6206400000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas, blusas y blusas camiseras de fibras sintéticas o artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6206901010",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisas, blusas y blusas camiseras estampadas a mano, según el procedimiento 'batik' de lino o ramio: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6206901090",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás camisas, blusas y blusas camiseras de lino o ramio: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6206909000",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás camisas, blusas y blusas camiseras de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6207110000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calzoncillos hombre/niño, incluidos largos y slips, de algodón"
+  },
+  {
+   "taric": "6207190000",
+   "grupo": "TEXTIL",
+   "descripcion": "Calzoncillos hombre/niño, incluidos largos y slips, no de algodón"
+  },
+  {
+   "taric": "6207210000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisones y pijamas hombre/niño, de algodón"
+  },
+  {
+   "taric": "6207220000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisones y pijamas hombre/niño, de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6207290000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisones y pijamas hombre/niño, no de algodón, ni de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6207910011",
+   "grupo": "TEXTIL",
+   "descripcion": "Albornoces, batas de casa y similares para hombre/niño, de algodón de tejidos con bucles de toalla, hombre/niño"
+  },
+  {
+   "taric": "6207910091",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisetas hombre/niño de algodón, estampadas a mano según el procedimiento “batik”"
+  },
+  {
+   "taric": "6207910099",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisetas hombre/niño de algodón, no estampadas a mano según el procedimiento “batik”"
+  },
+  {
+   "taric": "6207991000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisetas, albornoces de baño, batas de casa y similares, para hombre/niño, de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6207999091",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisetas/albornoces de baño/batas para hombre/niño, no algodón,ni fibras sintéticas/artificiales, ni lana/pelo fino, estampado a mano según \"batik\""
+  },
+  {
+   "taric": "6207999099",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisetas/albornoces baño/batas para hombre/niño, no algodón,ni fibras sintéticas/artificiales, ni lana/pelo fino, ni estampado a mano según \"batik\""
+  },
+  {
+   "taric": "6208110000",
+   "grupo": "TEXTIL",
+   "descripcion": "Combinaciones y enaguas para mujeres/niñas, de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6208190000",
+   "grupo": "TEXTIL",
+   "descripcion": "Combinaciones y enaguas para mujeres/niñas, no de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6208210000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisones y pijamas para mujeres/niñas, de algodón"
+  },
+  {
+   "taric": "6208220000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisones y pijamas para mujeres/niñas, de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6208290000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisones y pijamas para mujeres/niñas, no de algodón, ni de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6208910011",
+   "grupo": "TEXTIL",
+   "descripcion": "Saltos de cama, albornoces, batas y similares para mujeres/niñas, de algodón, en tejido de toalla"
+  },
+  {
+   "taric": "6208910018",
+   "grupo": "TEXTIL",
+   "descripcion": "Saltos de cama, albornoces, batas y similares para mujeres/niñas, de algodón, no en tejido toalla, estampado a mano según procedimiento “batik”"
+  },
+  {
+   "taric": "6208910019",
+   "grupo": "TEXTIL",
+   "descripcion": "Saltos de cama, albornoces, batas y similares para mujeres/niñas, de algodón, no tejido toalla, ni estampado a mano según procedimiento “batik”"
+  },
+  {
+   "taric": "6208910090",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisetas y bragas (bombachas, calzones, SYSDATETIME()) para mujeres/niñas, de algodón"
+  },
+  {
+   "taric": "6208920000",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisetas y bragas (bombachas, calzones, SYSDATETIME()) para mujeres/niñas, de fibras sintéticas o artificiales"
+  },
+  {
+   "taric": "6208990091",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisetas y bragas para mujeres/niñas, no de algodón, ni de fibras sintéticas o artificiales, ni de lana o pelo fino, estampado a mano por “batik”"
+  },
+  {
+   "taric": "6208990099",
+   "grupo": "TEXTIL",
+   "descripcion": "Camisetas y bragas para mujeres/niñas, no de algodón, ni de fibras sintéticas/artificiales, ni de lana o pelo fino, ni estampado a mano por “batik”"
+  },
+  {
+   "taric": "6209200010",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes y similares para bebés, de algodón"
+  },
+  {
+   "taric": "6209200020",
+   "grupo": "TEXTIL",
+   "descripcion": "Medias y calcetines para bebés, de algodón"
+  },
+  {
+   "taric": "6209200090",
+   "grupo": "TEXTIL",
+   "descripcion": "Complementos de vestir para bebés, de algodón, no guantes, ni medias o calcetines"
+  },
+  {
+   "taric": "6209300010",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes y similares para bebés, de fibras sintéticas"
+  },
+  {
+   "taric": "6209300020",
+   "grupo": "TEXTIL",
+   "descripcion": "Medias y calcetines para bebés, de fibras sintéticas"
+  },
+  {
+   "taric": "6209300090",
+   "grupo": "TEXTIL",
+   "descripcion": "Complementos de vestir para bebés, de fibras sintéticas, no guantes, ni medias o calcetines"
+  },
+  {
+   "taric": "6209901010",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes y similares para bebés, de lana o pelo fino"
+  },
+  {
+   "taric": "6209901020",
+   "grupo": "TEXTIL",
+   "descripcion": "Medias y calcetines para bebés, de lana o pelo fino"
+  },
+  {
+   "taric": "6209901090",
+   "grupo": "TEXTIL",
+   "descripcion": "Complementos de vestir para bebés, de lana o pelo fino, no guantes, ni medias o calcetines"
+  },
+  {
+   "taric": "6209909010",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes y similares para bebés, no de algodón, ni de fibras sintéticas, ni de lana o pelo fino"
+  },
+  {
+   "taric": "6209909020",
+   "grupo": "TEXTIL",
+   "descripcion": "Medias y calcetines para bebés, no de algodón, ni de fibras sintéticas, ni de lana o pelo fino"
+  },
+  {
+   "taric": "6209909090",
+   "grupo": "TEXTIL",
+   "descripcion": "Complementos de vestir para bebés, no de algodón, ni de fibras sintéticas, ni de lana o pelo fino, no guantes, ni medias o calcetines"
+  },
+  {
+   "taric": "6210200010",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás prendas de vestir: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular. Anoraks, cazadoras y artículos similares."
+  },
+  {
+   "taric": "6210200090",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás prendas de vestir: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular. Los demás."
+  },
+  {
+   "taric": "6210300010",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás prendas de vestir: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular. Anoraks, cazadoras y artículos similares."
+  },
+  {
+   "taric": "6210300090",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás prendas de vestir: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular. Los demás."
+  },
+  {
+   "taric": "6211110000",
+   "grupo": "TEXTIL",
+   "descripcion": "Bañadores: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211120000",
+   "grupo": "TEXTIL",
+   "descripcion": "Bañadores: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211200010",
+   "grupo": "TEXTIL",
+   "descripcion": "Monos (overoles) y conjuntos de esquí de lana o de pelo fino, de algodón o de fibras sintéticas o artificiales: para niños y niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211200090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás monos (overoles) y conjuntos de esquí: para niños y niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211321000",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás prendas de vestir de algodón para hombres y niños: los que son prendas de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211323100",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de abrigo para entrenamiento o deporte (chándales), con forro cuyo exterior esté realizado con un único tejido, de algodón: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211324100",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de abrigo para entrenamiento o deporte (chándales), con forro, partes superiores, de algodón: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211324200",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de abrigo para entrenamiento o deporte (chándales), con forro, partes inferiores, de algodón: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211329000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás prendas de vestir de algodón: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211331000",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás prendas de vestir de fibras sintéticas o artificiales para hombres y niños: los que son prendas de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211333100",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de abrigo para entrenamiento o deporte (chándales), con forro cuyo exterior esté realizado con un único tejido, de fibras sintéticas o artificiales: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211334100",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de abrigo para entrenamiento o deporte (chándales), con forro, partes superiores, de fibras sintéticas o artificiales: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211334200",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de abrigo para entrenamiento o deporte (chándales), con forro, partes inferiores, de fibras sintéticas o artificiales: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211339000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás prendas de vestir de fibras sintéticas o artificiales: para niños (incluidos los disfraces infantiles).Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211390010",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás prendas de vestir de lana o de pelo fino: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211390090",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás prendas de vestir de las demás materias textiles: para niños (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211421000",
+   "grupo": "TEXTIL",
+   "descripcion": "Delantales, batas y las demás prendas de trabajo de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211423100",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de abrigo para entrenamiento o deporte (chándales), con forro cuyo exterior esté realizado con un único tejido, de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211424100",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de abrigo para entrenamiento o deporte (chándales), con forro, partes superiores, de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211424200",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de abrigo para entrenamiento o deporte (chándales), con forro, partes inferiores, de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211429000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás prendas de vestir de algodón: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211431000",
+   "grupo": "TEXTIL",
+   "descripcion": "Delantales, batas y las demás prendas de trabajo de fibras sintéticas o artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211433100",
+   "grupo": "TEXTIL",
+   "descripcion": "Conjuntos de abrigo para entrenamiento o deporte (chándales), con forro cuyo exterior esté realizado con un único tejido, de fibras sintéticas o artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211434100",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de abrigo para entrenamiento o deporte (chándales), con forro, partes superiores, de fibras sintéticas o artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211434200",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás conjuntos de abrigo para entrenamiento o deporte (chándales), con forro, partes inferiores, de fibras sintéticas o artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211439000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás prendas de vestir de fibras sintéticas o artificiales: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6211490000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás prendas de vestir de las demás materias textiles: para niñas (incluidos los disfraces infantiles). Los que son de trabajo; y los equipos de protección individual, tanto para uso profesional, como particular."
+  },
+  {
+   "taric": "6212101000",
+   "grupo": "TEXTIL",
+   "descripcion": "Sostenes presentados en conjuntos acodicionados para la venta al por menor"
+  },
+  {
+   "taric": "6212109000",
+   "grupo": "TEXTIL",
+   "descripcion": "Los demás sostenes"
+  },
+  {
+   "taric": "6212200000",
+   "grupo": "TEXTIL",
+   "descripcion": "Fajas y fajas braga"
+  },
+  {
+   "taric": "6212300000",
+   "grupo": "TEXTIL",
+   "descripcion": "Fajas sostén"
+  },
+  {
+   "taric": "6216000000",
+   "grupo": "TEXTIL",
+   "descripcion": "Guantes, mitones y manoplas, excepto los de punto"
+  },
+  {
+   "taric": "6301100000",
+   "grupo": "PEQUEÑO ELECTRODOMESTICO",
+   "descripcion": "Mantas eléctricas"
+  },
+  {
+   "taric": "6302100000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de cama, de punto"
+  },
+  {
+   "taric": "6302210021",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de cama estampada, no de punto, de algodón, tejidos en telares manuales, estampadas a mano según el procedimiento “batik”"
+  },
+  {
+   "taric": "6302210029",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de cama estampada, no de punto, de algodón, tejidos en telares manuales, no estampadas a mano según el procedimiento “batik”"
+  },
+  {
+   "taric": "6302210081",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de cama estampada, no de punto, de algodón, no tejidos en telares manuales, estampadas a mano según el procedimiento “batik”"
+  },
+  {
+   "taric": "6302210089",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de cama estampada, no de punto, de algodón, no tejidos en telares manuales, no estampadas a mano según el procedimiento “batik”"
+  },
+  {
+   "taric": "6302221000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de cama estampada, no de punto, de fibras sintéticas o artificiales, de telas sin tejer"
+  },
+  {
+   "taric": "6302229000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de cama, de mesa, de tocador o cocina, De fibras sintéticas o artificiales, Las demás"
+  },
+  {
+   "taric": "6302291000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de cama estampada, no de punto, de lino o de ramio"
+  },
+  {
+   "taric": "6302299000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropas de cama estampadas, no de punto, que no son de algodón ni de fibras sintéticas o artificiales, ni de lino o ramio"
+  },
+  {
+   "taric": "6302310000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de cama, de mesa, de tocador o cocina , Las demás ropas de cama, De algodón"
+  },
+  {
+   "taric": "6302321000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de cama no estampada, ni de punto, de fibras sintéticas o artificiales, de telas sin tejer"
+  },
+  {
+   "taric": "6302329000",
+   "grupo": "TEXTIL",
+   "descripcion": "Las demás ropas de cama, De fibras sintéticas o artificiales, Las demás"
+  },
+  {
+   "taric": "6302392000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de cama no estampada, ni de punto, de lino o ramio"
+  },
+  {
+   "taric": "6302399000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropas de cama no estampadas, no de punto, que no son de algodón ni de fibras sintéticas o artificiales, ni de lino o ramio"
+  },
+  {
+   "taric": "6302400000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de mesa de punto"
+  },
+  {
+   "taric": "6302510010",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de mesa, no de punto, de algodón, estampada a mano según el procedimiento “batik”"
+  },
+  {
+   "taric": "6302510090",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de mesa, no de punto, de algodón, no estampada a mano según el procedimiento “batik”"
+  },
+  {
+   "taric": "6302531000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de mesa, no de punto, de fibras sintéticas o artificiales, de telas sin tejer"
+  },
+  {
+   "taric": "6302539000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de mesa, no de punto, de fibras sintéticas o artificiales, de telas tejidas"
+  },
+  {
+   "taric": "6302591000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de mesa, no de punto, de lino"
+  },
+  {
+   "taric": "6302599010",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de mesa, no de punto, de ramio"
+  },
+  {
+   "taric": "6302599090",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de mesa, no de punto, ni de algodón, ni de fibras sintéticas o artificiales, ni de lino, ni de ramio, ni de lana o pelo fino"
+  },
+  {
+   "taric": "6302600010",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de tocador o cocina, de tejido con bucles, del tipo toalla, de algodón, de tejidos de punto"
+  },
+  {
+   "taric": "6302600090",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de tocador o cocina, de tejido con bucles, del tipo toalla, de algodón, no de tejidos de punto"
+  },
+  {
+   "taric": "6302910010",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de tocador o cocina, no tipo toalla, de algodón, estampada a mano, según el procedimiento \"batik\""
+  },
+  {
+   "taric": "6302910090",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de tocador o cocina, no tipo toalla, de algodón, no estampada a mano, según el procedimiento \"batik\""
+  },
+  {
+   "taric": "6302931000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de tocador o cocina, no tipo toalla, de fibras sintéticas o artificiales, de telas sin tejer"
+  },
+  {
+   "taric": "6302939000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de tocador o cocina, no tipo toalla, de fibras sintéticas o artificiales, de telas tejidas"
+  },
+  {
+   "taric": "6302991000",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de tocador o cocina, no tipo toalla, de lino"
+  },
+  {
+   "taric": "6302999010",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de tocador o cocina, no tipo toalla, de ramio"
+  },
+  {
+   "taric": "6302999090",
+   "grupo": "TEXTIL",
+   "descripcion": "Ropa de tocador o cocina, no tipo toalla, no de algodón, ni de fibras sintéticas o artificiales, ni de lino, ni ramio, ni de lana o pelo fino"
+  },
+  {
+   "taric": "6307200000",
+   "grupo": "EPI CAIDA EN ALTURA",
+   "descripcion": "Cinturones y chalecos salvavidas: Arneses, cinturones, equipos de amarre y dispositivos anticaídas."
+  },
+  {
+   "taric": "6307901000",
+   "grupo": "PUERICULTURA",
+   "descripcion": "Los demás artículos confeccionados: Mochilas portabebé de punto."
+  },
+  {
+   "taric": "6307909100",
+   "grupo": "PUERICULTURA",
+   "descripcion": "Los demás artículos confeccionados: Mochilas portabebé de punto."
+  },
+  {
+   "taric": "6307909311",
+   "grupo": "EPI RESPIRATORIO",
+   "descripcion": "Mascarillas de protección facial. Mascarillas autofiltrantes FFP2 y FFP3 conformes con la norma EN 149. De tela sin tejer."
+  },
+  {
+   "taric": "6307909319",
+   "grupo": "EPI RESPIRATORIO",
+   "descripcion": "Mascarillas de protección facial. Las demás mascarillas que se ajusten a una norma similar, como los dispositivos de protección respiratoria contra partículas. De tela sin tejer."
+  },
+  {
+   "taric": "6307909320",
+   "grupo": "EPI RESPIRATORIO",
+   "descripcion": "Mascarillas de protección facial. Las demás mascarillas autofiltrantes (FFP) conformes con la norma EN149; las demás mascarillas que se ajusten a una norma similar, como los dispositivos de protección respiratoria contra partículas. De tela sin tejer."
+  },
+  {
+   "taric": "6307909390",
+   "grupo": "EPI RESPIRATORIO",
+   "descripcion": "Mascarillas de protección facial. Las demás."
+  },
+  {
+   "taric": "6307909820",
+   "grupo": "PUERICULTURA",
+   "descripcion": "Los demás artículos confeccionados. Los demás: Mochilas portabebé de telas sin tejer."
+  },
+  {
+   "taric": "6307909891",
+   "grupo": "PUERICULTURA",
+   "descripcion": "Los demás artículos confeccionados. Los demás: Mochilas portabebé. Hechas a mano."
+  },
+  {
+   "taric": "6307909899",
+   "grupo": "PUERICULTURA",
+   "descripcion": "Los demás artículos confeccionados. Los demás: Mochilas portabebé. Los demás."
+  },
+  {
+   "taric": "6401100000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con puntera metálica de protección"
+  },
+  {
+   "taric": "6401921000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado impermeable, con suela de caucho o plástico, parte superior de caucho, pegados, que cubra tobillo y no rodilla"
+  },
+  {
+   "taric": "6401929000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado impermeable, con suela de caucho o plástico, parte superior de plástico, pegados, que cubra tobillo y no rodilla, sin puntera proteccion"
+  },
+  {
+   "taric": "6401990010",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado impermeable, con suela y parte superior de caucho o plástico, pegados, que cubra la rodilla, sin puntera de protección"
+  },
+  {
+   "taric": "6401990090",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado impermeable, con suela y parte superior de caucho o plástico, pegados, que no cubra el tobillo, sin puntera de protección"
+  },
+  {
+   "taric": "6402121000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado para esquí, con suela y parte superior de caucho o plástico, no pegados"
+  },
+  {
+   "taric": "6402129000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado para snowboard, con suela y parte superior de caucho o plástico, no pegados"
+  },
+  {
+   "taric": "6402190000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado de deporte, no para esquí, ni para snowboard, con suela y parte superior de caucho o plástico, no pegados"
+  },
+  {
+   "taric": "6402200000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con suela y parte superior de tiras o bridas de caucho o plástico fijas a la suela por tetones (espigas, SYSDATETIME())"
+  },
+  {
+   "taric": "6402911000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con suela y parte superior de caucho o plástico, no de tiras, no de deporte, que cubra el tobillo, con puntera metálica"
+  },
+  {
+   "taric": "6402919000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con suela y parte superior de caucho o plástico, no de tiras, no de deporte, que cubra el tobillo, sin puntera metálica"
+  },
+  {
+   "taric": "6402990500",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con suela y parte superior de caucho o plástico, no de tiras, no de deporte, que no cubra el tobillo, con puntera metálica"
+  },
+  {
+   "taric": "6402991000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con suela de caucho o plástico y parte superior de caucho, no de tiras, no de deporte, que no cubra el tobillo, sin puntera metálica"
+  },
+  {
+   "taric": "6402993100",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con suela de caucho/plástico y parte superior tiras de plástico, no de deporte, que cubra el tobillo, sin punt. Metálica, con tacón > 3 cm"
+  },
+  {
+   "taric": "6402993900",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con suela de caucho/plástico y parte sup. de tiras de plástico, no de deporte, que cubra el tobillo, sin puntera metálica, con tacón = 3cm"
+  },
+  {
+   "taric": "6402995000",
+   "grupo": "CALZADO",
+   "descripcion": "Pantuflas y demás calzado de casa"
+  },
+  {
+   "taric": "6402999100",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con suela y parte superior de caucho/plástico no tiras, no pegados, que no cubra el tobillo, sin puntera metálica, con plantilla long< 24cm"
+  },
+  {
+   "taric": "6402999300",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con suela y parte sup. Caucho/plástico no tiras, no pegados, no cubra el tobillo, sin puntera metál, con plantilla longitud =24cm, unisex"
+  },
+  {
+   "taric": "6402999600",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con suela y parte sup. De caucho/plástico no tiras, no pegados, no cubra el tobillo, sin puntera metál, con plantilla longitud=24cm, hombre"
+  },
+  {
+   "taric": "6402999800",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con suela y parte sup. De caucho/plástico no tiras, no pegados, no cubra el tobillo, sin puntera metál, con plantilla longitud=24cm, mujer"
+  },
+  {
+   "taric": "6403120000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado de esquí o snowboard, con suela de caucho, plástico, cuero natural o regenerado y con parte superior de cuero natural"
+  },
+  {
+   "taric": "6403190000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado de deporte (no esquí, ni snowboard, SYSDATETIME()) con suela de caucho, plástico, cuero natural o regenerado y con parte superior de cuero natural"
+  },
+  {
+   "taric": "6403200000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela de cuero natural y parte superior de tiras de cuero natural que pasan por el empeine y rodean el pulgar"
+  },
+  {
+   "taric": "6403400000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no deport, ni de suela de cuero, ni parte supuerior de tiras de cuero que rodean el pulgar, con puntera metálica de protección"
+  },
+  {
+   "taric": "6403510510",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela de cuero natur, no deport,con puntera de protec.no metál, que cubran el tobillo, con plataf. de madera,sin plantillas,hecho a mano"
+  },
+  {
+   "taric": "6403510590",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela de cuero natur,no deporte,sin punt protectora, que cubran el tobillo, con palmilla de madera, sin plantillas,no a mano"
+  },
+  {
+   "taric": "6403511100",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela de cuero natur,no deporte,sin puntera protec. metál,que cubra tobillo y no pantorrilla, sin palmilla madera,con plantilla < 24cm"
+  },
+  {
+   "taric": "6403511500",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela de cuero natur, no deporte,sin puntera de protec. metál, que cubra tobillo y no pantorrilla, plantilla de = >24 cm, para hombres"
+  },
+  {
+   "taric": "6403511900",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela de cuero natur, no deporte,sin puntera de protec. metál, que cubra tobillo y no pantorrilla, plantilla de = >24 cm, para mujeres"
+  },
+  {
+   "taric": "6403519100",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela de cuero natur, no deporte,con puntera de protec.no metál, que no cubre tobillo , sin palmilla madera, con plantilla long < 24 cm"
+  },
+  {
+   "taric": "6403519500",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela cuero natur, no deporte,sin puntera de protec metál, que no cubra tobillo, sin palmilla madera, con plantilla >=24 cm, hombres"
+  },
+  {
+   "taric": "6403519900",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela cuero natur, no deporte,sin puntera de protec metál, que no cubra tobillo, sin palmilla madera, con plantilla >=24 cm, mujer"
+  },
+  {
+   "taric": "6403590510",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela cuero,no deportivo,sin puntera de protecc,con palmilla de madera sin plantillas,que no cubran tobillo, hechos a mano"
+  },
+  {
+   "taric": "6403590590",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela cuero,no deportivo,sin puntera de protecc,con palmilla de madera sin plantillas,que no cubran tobillo, no hechos a mano"
+  },
+  {
+   "taric": "6403591100",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado de tiras, con suela de cuero,no deportivo,no cubren tobillo, sin plataforma de madera, de tiras o hendiduras, con tacón > 3 cm"
+  },
+  {
+   "taric": "6403593100",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado de tiras, con suela de cuero,no deportivo,no cubren tobillo, sin plataforma de madera, de tiras o hendiduras, sin tacón, con plant <24 cm"
+  },
+  {
+   "taric": "6403593500",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado de tiras, con suela de cuero,no deportivo,no cubren tobillo, sin plataforma de madera, de tiras o hendiduras, con tacón > 3 cm, para hombre"
+  },
+  {
+   "taric": "6403593900",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado de tiras, con suela de cuero,no deportivo,no cubren tobillo, sin plataforma de madera, de tiras o hendiduras, con tacón > 3 cm, para mujer"
+  },
+  {
+   "taric": "6403595000",
+   "grupo": "CALZADO",
+   "descripcion": "Pantuflas y demás calzado de casa, con suela de cuero natural, no deportivo,sin puntera de protección metálica,sin plataforma de madera"
+  },
+  {
+   "taric": "6403599100",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela de cuero, no deportivo, no de tiras, no pantunflas, con plantilla < 24cm, sin puntera de protección"
+  },
+  {
+   "taric": "6403599500",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela de cuero, no deportivo, no de tiras, no pantunflas, con plantilla >= 24cm, sin puntera de protección, para hombre"
+  },
+  {
+   "taric": "6403599900",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela de cuero, no deportivo, no de tiras, no pantunflas, con plantilla >= 24cm, sin puntera de protección, para mujer"
+  },
+  {
+   "taric": "6403910510",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no deporte,no con suela de cuero, no con puntera de protección metálica,que cubra tobillo, con palmilla de madera,sin plant, hechos a mano"
+  },
+  {
+   "taric": "6403910590",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado,no deporte, no suela de cuero,sin puntera protección metálica,que cubra tobillo, con palmilla de madera,no hechos a mano,"
+  },
+  {
+   "taric": "6403911110",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado,no suela cuero,sin puntera protec.metál.,que cubra tobillo, sin palmilla de madera, plantilla<24cm, de deporte, tenis, baloncesto, gimnasia."
+  },
+  {
+   "taric": "6403911190",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado,no suela cuero,sin puntera protec.metál.,que cubra tobillo, sin palmilla de madera, plantilla<24cm, no de deporte."
+  },
+  {
+   "taric": "6403911310",
+   "grupo": "CALZADO",
+   "descripcion": "Calzad,no suela cuero,sin puntera protec.metál.,que cubra hasta pantorrilla,sin palmilla de madera,plantilla=24cm, unisex, deporte"
+  },
+  {
+   "taric": "6403911390",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado,no suela cuero,sin puntera protec.metál.,que cubra tobillo, sin palmilla de madera,plantilla >=24cm, unisex, no deporte"
+  },
+  {
+   "taric": "6403911610",
+   "grupo": "CALZADO",
+   "descripcion": "Calzad,no suela cuero,sin puntera protec.metál.,que cubra hasta pantorrilla,sin palmilla de madera,plantilla=24cm, hombres, deporte"
+  },
+  {
+   "taric": "6403911690",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado,no suela cuero,sin puntera protec.metál.,que cubra tobillo, sin palmilla de madera,plantilla >=24cm, para hombre, no deporte"
+  },
+  {
+   "taric": "6403911810",
+   "grupo": "CALZADO",
+   "descripcion": "Calzad,no suela cuero,sin puntera protec.metál.,que cubra hasta pantorrilla,sin palmilla de madera,plantilla=24cm, deporte, mujeres"
+  },
+  {
+   "taric": "6403911890",
+   "grupo": "CALZADO",
+   "descripcion": "Calzad,no suela cuero,sin puntera protec.metál.,que cubra hasta pantorrilla,sin palmilla de madera,plantilla=24cm, no deporte, mujeres."
+  },
+  {
+   "taric": "6403919100",
+   "grupo": "CALZADO",
+   "descripcion": "Calz,no suela cuero,sin puntera protec.metál., no cubre el tobillo, no palmilla de madera, plantilla<24cm"
+  },
+  {
+   "taric": "6403919300",
+   "grupo": "CALZADO",
+   "descripcion": "Calz,no suela cuero,sin puntera protec.metál., no cubre el tobillo, no palmilla de madera, plantilla>=24cm , unisex"
+  },
+  {
+   "taric": "6403919600",
+   "grupo": "CALZADO",
+   "descripcion": "Calz,no suela cuero,sin puntera protec.metál., no cubre el tobillo, no palmilla de madera, plantilla>=24cm , para hombre"
+  },
+  {
+   "taric": "6403919800",
+   "grupo": "CALZADO",
+   "descripcion": "Calz,no suela cuero,sin puntera protec.metál., no cubre el tobillo, no palmilla de madera, plantilla>=24cm , para mujer"
+  },
+  {
+   "taric": "6403990510",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no deporte,no con suela de cuero,sin puntera de protección metálica,no cubre tobillo, con palmilla de madera, sin plant, hechos a mano"
+  },
+  {
+   "taric": "6403990590",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no deporte,no con suela de cuero,sin puntera de protección metálica,no cubre tobillo, con palmilla de madera, sin plant, no hechos a mano"
+  },
+  {
+   "taric": "6403991100",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no suela de cuero natural, no puntera de protección, no cubre el tobillo, no palmilla madera, de tiras, con tacón > de 3 cm,"
+  },
+  {
+   "taric": "6403993100",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no suela de cuero natural, no puntera de protección, no cubre el tobillo, no palmilla madera, de tiras, sin tacón, con plantilla< 24 cm"
+  },
+  {
+   "taric": "6403993300",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no suela de cuero natural, no puntera de protección, no cubre tobillo, no palmilla madera, de tiras, sin tacón, con plant>= 24 cm, unisex"
+  },
+  {
+   "taric": "6403993600",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no suela de cuero natural, no puntera de protección, no cubre tobillo, no palmilla madera, de tiras, sin tacón, con plant>= 24 cm, hombre"
+  },
+  {
+   "taric": "6403993800",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no suela de cuero natural, no puntera de protección, no cubre tobillo, no palmilla madera, de tiras, sin tacón, con plant>= 24 cm, mujer"
+  },
+  {
+   "taric": "6403995000",
+   "grupo": "CALZADO",
+   "descripcion": "Pantuflas y demás calzado de casa, no suela de cuero natural, no cubre tobillo, no palmilla de madera"
+  },
+  {
+   "taric": "6403999110",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no suela cuero natural, no cubre tobillo, no palmilla de madera, no de tiras, plantilla < de 24 cm, para deporte."
+  },
+  {
+   "taric": "6403999190",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no suela cuero natural, no cubre tobillo, no palmilla de madera, no de tiras, plantilla < de 24 cm, no de deporte"
+  },
+  {
+   "taric": "6403999310",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no suela cuero natural, no cubre tobillo, no palmilla de madera, calzado casa, plantilla >= de 24 cm, deporte, tenis, baloncesto, gimnasia"
+  },
+  {
+   "taric": "6403999390",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no suela cuero natural, no cubre tobillo, no palmilla de madera, calzado casa, plantilla >= de 24 cm, no deporte, unisex."
+  },
+  {
+   "taric": "6403999610",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no suela cuero natural, no cubre tobillo, no palmilla de madera, calzado casa, plantilla >= de 24 cm, deporte, hombres"
+  },
+  {
+   "taric": "6403999690",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no suela cuero natural, no cubre tobillo, no palmilla de madera, calzado casa, plantilla >= de 24 cm, no deporte, hombres."
+  },
+  {
+   "taric": "6403999810",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no suela cuero natural, no cubre tobillo, no palmilla de madera, calzado casa, plantilla >= de 24 cm, deporte, mujeres."
+  },
+  {
+   "taric": "6403999890",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, no suela cuero natural, no cubre tobillo, no palmilla de madera, calzado casa, plantilla >= de 24 cm, no deporte, mujeres"
+  },
+  {
+   "taric": "6404110000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela caucho o plástico y parte superior textil, de deporte tenis, baloncesto, gimnasia, entrenamiento y similares"
+  },
+  {
+   "taric": "6404191000",
+   "grupo": "CALZADO",
+   "descripcion": "Pantuflas y demás calzado de casa, con suela caucho o plástico y parte superior textil"
+  },
+  {
+   "taric": "6404199000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela caucho o plástico y parte superior textil, no de deporte o similares, no pantuflas o calzado de casa"
+  },
+  {
+   "taric": "6404201000",
+   "grupo": "CALZADO",
+   "descripcion": "Pantuflas y demás calzado de casa, con suela cuero natural o regenerado y parte superior textil"
+  },
+  {
+   "taric": "6404209000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con suela de cuero natural o regenerado y parte superior textil, no pantuflas o calzado de casa"
+  },
+  {
+   "taric": "6405100000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, los demás, con parte superior de cuero natural o regenerado"
+  },
+  {
+   "taric": "6405201000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado con parte superior de materia textil, con suela de madera o corcho"
+  },
+  {
+   "taric": "6405209100",
+   "grupo": "CALZADO",
+   "descripcion": "Pantuflas y calzado casa, con la parte superior de materia textil, con suela no de madera o corcho"
+  },
+  {
+   "taric": "6405209900",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con parte superior de materia textil, no calzado de casa, con suela no de madera o corcho"
+  },
+  {
+   "taric": "6405901000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con suela de caucho o plástico, cuero natural o regenerado, parte superior no de cuero o textil"
+  },
+  {
+   "taric": "6405909000",
+   "grupo": "CALZADO",
+   "descripcion": "Calzado, con suela no de caucho o plástico, ni de cuero natural o regenerado, con parte superior no de cuero o textil"
+  },
+  {
+   "taric": "6506101000",
+   "grupo": "EPI DE CABEZA",
+   "descripcion": "Cascos de seguridad (incluidos los accesorios que se insertan en el casco de protección para ofrecer protección auditiva). De plástico."
+  },
+  {
+   "taric": "6506108000",
+   "grupo": "EPI DE CABEZA",
+   "descripcion": "Cascos de seguridad (incluidos los accesorios que se insertan en el casco de protección para ofrecer protección auditiva). De las demás materias."
+  },
+  {
+   "taric": "7326903000",
+   "grupo": "OTROS",
+   "descripcion": "Escaleras y escabeles: escaleras portátiles."
+  },
+  {
+   "taric": "7326909890",
+   "grupo": "EPI CAIDA EN ALTURA",
+   "descripcion": "Las demás manufacturas de hierro o acero: Conectores de acero para trabajos en altura (EPIS)."
+  },
+  {
+   "taric": "7616999009",
+   "grupo": "EPI CAIDA EN ALTURA",
+   "descripcion": "Las demás manufacturas de aluminio: Mosquetones. Hechos a mano."
+  },
+  {
+   "taric": "7616999099",
+   "grupo": "EPI CAIDA EN ALTURA",
+   "descripcion": "Las demás manufacturas de aluminio: Mosquetones. Las demás."
+  },
+  {
+   "taric": "8516299100",
+   "grupo": "PEQUEÑO ELECTRODOMESTICO",
+   "descripcion": "Aparatos eléctricos para calefacción de espacios o suelos, Con ventilador incorporado (calefactores, soplador calefactor)"
+  },
+  {
+   "taric": "8516299900",
+   "grupo": "PEQUEÑO ELECTRODOMESTICO",
+   "descripcion": "Aparatos eléctricos para calefacción de espacios o suelos, los demás. Calefactor radiante compuesto por una resistencia eléctrica"
+  },
+  {
+   "taric": "8536201090",
+   "grupo": "PME",
+   "descripcion": "Interruptores automáticos magnetotérmicos e Interruptores diferenciales."
+  },
+  {
+   "taric": "8536508000",
+   "grupo": "PME",
+   "descripcion": "Los demás interruptores, seccionadores y conmutadores para uso domestico."
+  },
+  {
+   "taric": "8536611090",
+   "grupo": "PME",
+   "descripcion": "Portalámparas Edison, no destinadas a aeronaves, para tensión = a 1 000 V"
+  },
+  {
+   "taric": "8536699083",
+   "grupo": "PME",
+   "descripcion": "Toma de corriente alterna con un filtro antiparásitos (compuesta por toma corrte+ filtro antipar.+cable de CA a TV PDP"
+  },
+  {
+   "taric": "8536699099",
+   "grupo": "PME",
+   "descripcion": "Clavijas y tomas de corriente (enchufes, SYSDATETIME()), no para cable coaxial,ni circuitos impresos,no dest. a ciertos tipos aeronaves (ex destino consumidor fina"
+  },
+  {
+   "taric": "8536901000",
+   "grupo": "PME",
+   "descripcion": "Conexiones y elementos de contacto para hilos y cables, para una tensión = a 1 000 V (exclusivamente los destinados al consumidor final, SYSDATETIME())"
+  },
+  {
+   "taric": "8544429020",
+   "grupo": "PME",
+   "descripcion": "Los demás conductores eléctricos para una tensión = o < a 1000 V, provistos de una clavija, un cable (PET/PVC, SYSDATETIME()) y una base de toma de corriente"
+  },
+  {
+   "taric": "8544429090",
+   "grupo": "PME",
+   "descripcion": "Los demás conductores eléctricos para una tensión = o < a 1000 V, provistos de una clavija, un cable y una base de toma de corriente."
+  },
+  {
+   "taric": "8715001000",
+   "grupo": "PUERICULTURA",
+   "descripcion": "Coches, sillas y vehículos similares para transporte de niños."
+  },
+  {
+   "taric": "8806211000",
+   "grupo": "DRONES",
+   "descripcion": "Drones teledirigidos, no tripulados, multirrotores, con un peso máximo de despegue inferior o igual a 250 g, equipados con aparatos de captura imágenes fijas y grabación de vídeo."
+  },
+  {
+   "taric": "8806219010",
+   "grupo": "DRONES",
+   "descripcion": "Drones teledirigidos, no tripulados, multirrotores, con un peso máximo de despegue inferior o igual a 250 g, No equipadas con aparatos de captura imágenes fijas y grabación de vídeo. Civiles."
+  },
+  {
+   "taric": "8806221000",
+   "grupo": "DRONES",
+   "descripcion": "Drones teledirigidos, no tripulados, multirrotores, con un peso máximo de despegue superior a 250 g pero inferior o igual a 7 kg, equipados con aparatos de captura imágenes fijas y grabación de vídeo."
+  },
+  {
+   "taric": "8806229010",
+   "grupo": "DRONES",
+   "descripcion": "Drones teledirigidos, no tripulados, multirrotores, con un peso máximo de despegue superior a 250 g pero inferior o igual a 7 kg, No equipadas con aparatos de captura imágenes fijas y grabación de vídeo. Civiles."
+  },
+  {
+   "taric": "8806230010",
+   "grupo": "DRONES",
+   "descripcion": "Drones teledirigidos, no tripulados, multirrotores, con un peso máximo de despegue superior a 7 kg pero inferior o igual a 25 kg, Civiles."
+  },
+  {
+   "taric": "8806910010",
+   "grupo": "DRONES",
+   "descripcion": "Drones teledirigidos, no tripuladas, no multirotor, no equipado con aparatos de captura de imagen o video, con un peso máximo de despegue inferior o igual a 250 g. Civiles."
+  },
+  {
+   "taric": "8806920010",
+   "grupo": "DRONES",
+   "descripcion": "Drones teledirigidos, no tripulados, no multirotor, no equipado con aparatos de captura de imagen o video, con un peso máximo de despegue superior a 250 g pero inferior o igual a 7 kg. Civiles."
+  },
+  {
+   "taric": "8806930010",
+   "grupo": "DRONES",
+   "descripcion": "Drones teledirigidos, no tripulados, no multirotor, no equipado con aparatos de captura de imagen o video, con un peso máximo de despegue superior a 7 kg pero inferior o igual a 25 kg. Civiles."
+  },
+  {
+   "taric": "8807100010",
+   "grupo": "DRONES",
+   "descripcion": "Hélices y rotores, y sus partes. De drones con un peso máximo de despegue de hasta 25 kg."
+  },
+  {
+   "taric": "8807100020",
+   "grupo": "DRONES",
+   "descripcion": "Hélices y rotores, y sus partes. De drones con un peso máximo de despegue de hasta 25 kg. Que se destinen a ser montados en aeronaves beneficiarios de franquicia de derechos o construidos en la Comunidad."
+  },
+  {
+   "taric": "8807300010",
+   "grupo": "DRONES",
+   "descripcion": "Motores, de drones, y sus partes. con un peso máximo de despegue de hasta 25 kg."
+  },
+  {
+   "taric": "8807300020",
+   "grupo": "DRONES",
+   "descripcion": "Motores de drones, beneficiarios de franquicia o construidos en la comunidad, con un peso máximo de despegue de hasta 25 kg."
+  },
+  {
+   "taric": "9004109100",
+   "grupo": "EPI FACIAL",
+   "descripcion": "Gafas (anteojos) de sol con cristales de plástico"
+  },
+  {
+   "taric": "9004109900",
+   "grupo": "EPI FACIAL",
+   "descripcion": "Las demás gafas de sol"
+  },
+  {
+   "taric": "9004901000",
+   "grupo": "EPI FACIAL",
+   "descripcion": "Gafas de protección con cristales de plástico y visores de protección."
+  },
+  {
+   "taric": "9020001090",
+   "grupo": "EPI RESPIRATORIO",
+   "descripcion": "Máscaras antigás."
+  },
+  {
+   "taric": "9401310000",
+   "grupo": "MUEBLES",
+   "descripcion": "Asientos giratorios de altura ajustable de madera"
+  },
+  {
+   "taric": "9401390000",
+   "grupo": "MUEBLES",
+   "descripcion": "Asientos giratorios de altura ajustable los demás"
+  },
+  {
+   "taric": "9401410000",
+   "grupo": "MUEBLES",
+   "descripcion": "Asientos transformables en cama, excepto el material de acampar o de jardín de madera."
+  },
+  {
+   "taric": "9401490000",
+   "grupo": "MUEBLES",
+   "descripcion": "Asientos transformables en cama, excepto el material de acampar o de jardín - los demás"
+  },
+  {
+   "taric": "9401610000",
+   "grupo": "MUEBLES",
+   "descripcion": "Los demás asientos con armazón de madera, con relleno, incluidas las tronas y sillas altas para niños"
+  },
+  {
+   "taric": "9401690000",
+   "grupo": "MUEBLES",
+   "descripcion": "Los demás asientos con armazón de madera, sin relleno, incluidas las tronas y sillas altas para niños"
+  },
+  {
+   "taric": "9401710000",
+   "grupo": "MUEBLES",
+   "descripcion": "Los demás asientos con armazón de metal, con relleno, incluidas las tronas y sillas altas para niños"
+  },
+  {
+   "taric": "9401790000",
+   "grupo": "MUEBLES",
+   "descripcion": "Los demás asientos con armazón de metal, sin relleno, incluidas las tronas y sillas altas para niños"
+  },
+  {
+   "taric": "9401800000",
+   "grupo": "PUERICULTURA",
+   "descripcion": "Los demás asientos: incluidas tronas, sillas altas para niños y saltadores de bebé para puertas, y las sillas de retención infantil para vehículos."
+  },
+  {
+   "taric": "9403105100",
+   "grupo": "MUEBLES",
+   "descripcion": "Muebles de metal, de los tipos utilizados en oficinas, de altura menor o igual a 80 cm: únicamente mesas de trabajo."
+  },
+  {
+   "taric": "9403105800",
+   "grupo": "MUEBLES",
+   "descripcion": "Muebles de metal, de los tipos utilizados en oficinas, de altura < 80cm: únicamente armarios, clasificadores y ficheros de trabajo."
+  },
+  {
+   "taric": "9403109100",
+   "grupo": "MUEBLES",
+   "descripcion": "Armarios, clasific., ficheros de metal, de los utilizados en oficinas, de alt. sup a 80 cm: con puert. persianas o tramp, únicam. de trabajo"
+  },
+  {
+   "taric": "9403109300",
+   "grupo": "MUEBLES",
+   "descripcion": "Armarios de metal de los utilizados en oficinas, de alt. sup a 80 cm, con cajones, clasificadores y ficheros , únicamente de trabajo"
+  },
+  {
+   "taric": "9403109800",
+   "grupo": "MUEBLES",
+   "descripcion": "Muebles de metal de los utilizados en oficinas, de alt. sup a 80 cm, los demás, únicamente armarios, clasificadores, ficheros y mesas de trabajo"
+  },
+  {
+   "taric": "9403202000",
+   "grupo": "MUEBLES",
+   "descripcion": "Únicamente, camas abatibles y literas de metal"
+  },
+  {
+   "taric": "9403208080",
+   "grupo": "MUEBLES",
+   "descripcion": "Los demás muebles de metal: únicamente cunas, moisés, cunas balancín y cambiadores para niños"
+  },
+  {
+   "taric": "9403301100",
+   "grupo": "MUEBLES",
+   "descripcion": "Mesas de madera de los tipos utilizados en oficinas, de altura inf o igual a 80 cm: únicamente de trabajo."
+  },
+  {
+   "taric": "9403301900",
+   "grupo": "MUEBLES",
+   "descripcion": "Muebles de madera de los tipos utilizados en oficinas, de altura inf o igual a 80 cm: únicamente armarios clasificadores o ficheros de trabajo."
+  },
+  {
+   "taric": "9403309100",
+   "grupo": "MUEBLES",
+   "descripcion": "Armarios clasificadores o ficheros de madera ,de los tipos utilizados en oficinas, de altura superior a 80 cm: únicamente de trabajo."
+  },
+  {
+   "taric": "9403309900",
+   "grupo": "MUEBLES",
+   "descripcion": "Muebles de madera ,de los tipos utilizados en oficinas, de altura superior a 80 cm: únicamente mesas de trabajo."
+  },
+  {
+   "taric": "9403500000",
+   "grupo": "MUEBLES",
+   "descripcion": "Muebles de madera de los tipos utilizados en los dormitorios: únicamente cunas, moises, cunas balancín, cambiadores para niños y literas."
+  },
+  {
+   "taric": "9403609000",
+   "grupo": "PUERICULTURA",
+   "descripcion": "Torres de aprendizaje y parques infantiles."
+  },
+  {
+   "taric": "9403700000",
+   "grupo": "PUERICULTURA",
+   "descripcion": "Andador de bebé"
+  },
+  {
+   "taric": "9403820010",
+   "grupo": "MUEBLES",
+   "descripcion": "Muebles de bambú. Hechos a mano: únicamente cunas, moises, cunas balancín y cambiadores para niños."
+  },
+  {
+   "taric": "9403820090",
+   "grupo": "MUEBLES",
+   "descripcion": "Muebles de bambú . No hechos a mano: únicamente cunas, moises, cunas balancín y cambiadores para niños."
+  },
+  {
+   "taric": "9403830010",
+   "grupo": "MUEBLES",
+   "descripcion": "Muebles de roten (ratán, SYSDATETIME()). Hechos a mano: únicamente cunas, moises, cunas balancín y cambiadores para niños"
+  },
+  {
+   "taric": "9403830090",
+   "grupo": "MUEBLES",
+   "descripcion": "Muebles de roten (ratán, SYSDATETIME()). No hechos a mano: únicamente cunas, moises, cunas balancín y cambiadores para niños"
+  },
+  {
+   "taric": "9403890010",
+   "grupo": "MUEBLES",
+   "descripcion": "Muebles de otras materias excepto bambú o roten (ratan, hechos a mano, SYSDATETIME()): únicamente cunas, moises, cunas balancín y cambiadores para niños."
+  },
+  {
+   "taric": "9403890090",
+   "grupo": "MUEBLES",
+   "descripcion": "Muebles de otras materias excepto bambú o roten (ratan, SYSDATETIME()), no hechos a mano: únicamente cunas, moises, cunas balancín y cambiadores para niños."
+  },
+  {
+   "taric": "9404401000",
+   "grupo": "PUERICULTURA",
+   "descripcion": "Edredones de cuna, minicuna, capazo y maxicuna. Rellenos de plumas o plumón."
+  },
+  {
+   "taric": "9404409000",
+   "grupo": "PUERICULTURA",
+   "descripcion": "Edredones de cuna, minicuna, capazo y maxicuna. Los demás."
+  },
+  {
+   "taric": "9405310000",
+   "grupo": "PME",
+   "descripcion": "Guirnaldas eléctricas de los tipos utilizados en árboles de Navidad (LED, SYSDATETIME())."
+  },
+  {
+   "taric": "9405390000",
+   "grupo": "PME",
+   "descripcion": "Guirnaldas eléctricas de los tipos utilizados en árboles de Navidad (Las demás, SYSDATETIME())."
+  },
+  {
+   "taric": "9405413100",
+   "grupo": "PME",
+   "descripcion": "Las demás guirnaldas eléctricas fotovoltaicas de plástico."
+  },
+  {
+   "taric": "9405413910",
+   "grupo": "PME",
+   "descripcion": "Las demás guirnaldas eléctricas fotovoltaicas que no sean de plástico hechas a mano."
+  },
+  {
+   "taric": "9405413990",
+   "grupo": "PME",
+   "descripcion": "Las demás guirnaldas eléctricas fotovoltaicas que no sean de plástico. Las demás."
+  },
+  {
+   "taric": "9405423100",
+   "grupo": "PME",
+   "descripcion": "Las demás guirnaldas diseñadas para ser utilizadas únicamente con fuentes luminosas de diodos emisores de luz (LED), de plástico."
+  },
+  {
+   "taric": "9405423910",
+   "grupo": "PME",
+   "descripcion": "Las demás guirnaldas diseñadas para ser utilizadas únicamente con fuentes luminosas de diodos emisores de luz (LED), distintas de las de plástico hechas a mano."
+  },
+  {
+   "taric": "9405423990",
+   "grupo": "PME",
+   "descripcion": "Las demás guirnaldas diseñadas para ser utilizadas únicamente con fuentes luminosas de diodos emisores de luz (LED), distintas de las de plástico. Las demás."
+  },
+  {
+   "taric": "9405494000",
+   "grupo": "PME",
+   "descripcion": "Las demás guirnaldas eléctricas, distintas de las de LED y de las fotovoltaicas."
+  },
+  {
+   "taric": "9503001000",
+   "grupo": "JUGUETES",
+   "descripcion": "Triciclos, patinetes, coches de pedal y juguetes similares con ruedas; coches y sillas de ruedas para muñecas o muñecos"
+  },
+  {
+   "taric": "9503002190",
+   "grupo": "JUGUETES",
+   "descripcion": "Muñecas y muñecos, excepto folklóricos y decorativos y otros artículos similares para coleccionistas adultos"
+  },
+  {
+   "taric": "9503002900",
+   "grupo": "JUGUETES",
+   "descripcion": "Partes y accesorios para muñecas y muñecos que representen solamente seres humanos, no de colección o folklóricos"
+  },
+  {
+   "taric": "9503003000",
+   "grupo": "JUGUETES",
+   "descripcion": "Trenes eléctricos, cariles (rieles, SYSDATETIME()), y otros accesorios y modelos reducidos para ensamblar, excepto los construidos para coleccionistas adultos"
+  },
+  {
+   "taric": "9503003500",
+   "grupo": "JUGUETES",
+   "descripcion": "Los demás juegos o surtidos y juguetes de construcción, de plástico"
+  },
+  {
+   "taric": "9503003910",
+   "grupo": "JUGUETES",
+   "descripcion": "Los demás juegos o surtidos y juguetes de construcción, hechos a mano de madera"
+  },
+  {
+   "taric": "9503003990",
+   "grupo": "JUGUETES",
+   "descripcion": "Los demás juegos o surtidos y juguetes de construcción, no de plástico, ni hechos a mano de madera"
+  },
+  {
+   "taric": "9503004100",
+   "grupo": "JUGUETES",
+   "descripcion": "Juguetes que representen animales o seres no humanos, rellenos"
+  },
+  {
+   "taric": "9503004910",
+   "grupo": "JUGUETES",
+   "descripcion": "Juguetes que representen animales o seres no humanos, no rellenos, hechos a mano de madera"
+  },
+  {
+   "taric": "9503004990",
+   "grupo": "JUGUETES",
+   "descripcion": "Juguetes que representen animales o seres no humanos, no rellenos, ni hechos a mano de madera"
+  },
+  {
+   "taric": "9503005510",
+   "grupo": "JUGUETES",
+   "descripcion": "Instrumentos y aparatos musicales de juguete, hechos a mano de madera"
+  },
+  {
+   "taric": "9503005590",
+   "grupo": "JUGUETES",
+   "descripcion": "Instrumentos y aparatos musicales de juguete, no hechos a mano de madera"
+  },
+  {
+   "taric": "9503006110",
+   "grupo": "JUGUETES",
+   "descripcion": "Rompecabezas de madera, hechos a mano, excepto los que superen 500 piezas o sin modelo, destinados a los especialistas"
+  },
+  {
+   "taric": "9503006190",
+   "grupo": "JUGUETES",
+   "descripcion": "Rompecabezas de madera, no hechos a mano, excepto los que superen 500 piezas o sin modelo, destinados a los especialistas"
+  },
+  {
+   "taric": "9503006900",
+   "grupo": "JUGUETES",
+   "descripcion": "Rompecabezas, no de madera, excepto los que superen 500 piezas o sin modelo, destinados a los especialistas"
+  },
+  {
+   "taric": "9503007000",
+   "grupo": "JUGUETES",
+   "descripcion": "Los demás juguetes presentados en juegos o surtidos o en panoplias"
+  },
+  {
+   "taric": "9503007500",
+   "grupo": "JUGUETES",
+   "descripcion": "Los demás juguetes y modelos con motor, de plástico, excpto vehíc.con motor combust y máq. vapor de juguete, excpto coleccionista adulto"
+  },
+  {
+   "taric": "9503007900",
+   "grupo": "JUGUETES",
+   "descripcion": "Los demás juguetes y modelos con motor, no de plástico, excepto vehíc. motor combustión y las máq. vapor de juguete, excepto coleccionista adulto"
+  },
+  {
+   "taric": "9503008110",
+   "grupo": "JUGUETES",
+   "descripcion": "Armas de juguete, hechos a mano de madera, no modelos reducidos construidos a escala para colección de adultos, no hondas y tirachinas"
+  },
+  {
+   "taric": "9503008190",
+   "grupo": "JUGUETES",
+   "descripcion": "Armas de juguete, no hechas a mano de madera, no modelos reducidos construidos a escala para colección de adultos, no hondas y tirachinas"
+  },
+  {
+   "taric": "9503008500",
+   "grupo": "JUGUETES",
+   "descripcion": "Modelos en miniatura de metal, obtenidos por moldeo, excepto los construidos detalladamente a escala para coleccionistas adultos"
+  },
+  {
+   "taric": "9503009530",
+   "grupo": "JUGUETES",
+   "descripcion": "Los demás juguetes de plástico. Motor en miniatura que proporciona el movimiento de los árboles de transmisión mediante la tensión del muelle, excepto los construidos a escala para coleccionistas adultos."
+  },
+  {
+   "taric": "9503009540",
+   "grupo": "JUGUETES",
+   "descripcion": "Los demás juguetes de plástico. Motor en miniatura accionado por fricción mecánica, excepto los construidos a escala para coleccionistas adultos."
+  },
+  {
+   "taric": "9503009590",
+   "grupo": "JUGUETES",
+   "descripcion": "Juguetes de plástico, los demás (no muñecos,no trenes, no construcción,no instrumentos,no rompecabezas..., SYSDATETIME()) excepto los modelos a escala para adultos"
+  },
+  {
+   "taric": "9503009910",
+   "grupo": "JUGUETES",
+   "descripcion": "Juguetes de madera a mano, no ruedas,no muñecos,no trenes,no construcción, no instrumentos, no rompecabe, no con motor, no armas, no miniat metal"
+  },
+  {
+   "taric": "9503009990",
+   "grupo": "JUGUETES",
+   "descripcion": "Juguetes no de plást,no de madera a mano,no ruedas,no muñec,no trenes,no construc,no instrument,no rompecabe, no con motor,no armas,no miniat metal"
+  },
+  {
+   "taric": "9506703000",
+   "grupo": "JUGUETES",
+   "descripcion": "Patines de ruedas, incluido el calzado con patines fijos, destinados a ser utilizados como juguetes"
+  },
+  {
+   "taric": "9506709000",
+   "grupo": "JUGUETES",
+   "descripcion": "Partes y accesorios para patines para hielo y de ruedas, incluido el calzado con patines fijos, destinados a ser utilizados como juguetes"
+  },
+  {
+   "taric": "9506999000",
+   "grupo": "JUGUETES",
+   "descripcion": "Piscinas hinchables infantiles."
+  },
+  {
+   "taric": "9613100000",
+   "grupo": "OTROS",
+   "descripcion": "Encendedores de gas no recargables, de bolsillo."
+  },
+  {
+   "taric": "9613200000",
+   "grupo": "OTROS",
+   "descripcion": "Encendedores de gas recargables, de bolsillo."
+  },
+  {
+   "taric": "9613800000",
+   "grupo": "OTROS",
+   "descripcion": "Los demás encendedores y mecheros."
+  }
+ ]
+}
