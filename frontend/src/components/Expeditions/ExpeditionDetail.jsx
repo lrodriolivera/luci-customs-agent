@@ -31,6 +31,7 @@ import { formatearImporte } from '../../utils/importe'
 import GoodsEditor from './GoodsEditor'
 import H1Preview from './H1Preview'
 import GroupageCard, { isMaritime } from './GroupageCard'
+import RepresentationCard from './RepresentationCard'
 import DocumentUploader from './DocumentUploader'
 import DocumentReader from './DocumentReader'
 
@@ -899,6 +900,8 @@ export default function ExpeditionDetail() {
               </div>
             </div>
           </div>
+
+          {canEditGoods && <RepresentationCard expedition={expedition} onSaved={setExpedition} />}
 
           {(isMaritime(expedition) || expedition.transport?.loadType) && canEditGoods && (
             <GroupageCard

@@ -3703,5 +3703,17 @@
     },
     "summary": "{{documents}} document(s) read · {{count}} field(s) filled in by LUCI. Review them before creating the file.",
     "summaryWarnings": "{{count}} warning(s) in step 1."
+  },
+  "representation": {
+    "title": "Declarant and representation",
+    "intro": "How the agency lodges this declaration (box 14 of the SAD).",
+    "type": "Form of representation",
+    "indirect": "Indirect representation",
+    "direct": "Direct representation",
+    "indirectHint": "Code 3: the representative acts in its own name and on behalf of the importer.",
+    "directHint": "Code 2: the representative acts in the name and on behalf of the importer.",
+    "selfNote": "If the declarant is the importer itself (same tax ID/EORI), LUCI declares self-clearance (code 1) without you having to set it. If the H1 has already been generated, generate it again to pick up the change.",
+    "saved": "Form of representation saved",
+    "saveError": "The form of representation could not be saved"
   }
 }
