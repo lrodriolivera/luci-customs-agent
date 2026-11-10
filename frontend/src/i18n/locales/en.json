@@ -3662,5 +3662,45 @@
       "exporterCountry": "Exporter country",
       "exporterCity": "Exporter city"
     }
+  },
+  "draftDocs": {
+    "title": "Start from the documents",
+    "intro": "Upload the invoice, the packing list and the transport document. LUCI reads them and fills in the form; you review it before creating the file. The documents stay attached to the file.",
+    "selectFiles": "Select documents",
+    "reading": "Reading {{name}}...",
+    "notReadable": "LUCI could not read this document. It will be attached to the file, but nothing has been filled in.",
+    "filledCount": "{{count}} field(s) filled in",
+    "nothingFilled": "it added no new data to the form",
+    "showFilled": "Show the filled-in data",
+    "remove": "Remove",
+    "readError": "The document could not be read",
+    "removeError": "The document could not be removed",
+    "tooMany": "At most {{max}} documents per new file",
+    "review": "Review the three steps before creating the file: LUCI has only filled in fields that were empty.",
+    "warnTitle": "Check these points:",
+    "transportDetails": "Transport document details (optional)",
+    "containersHint": "Several containers, separated by commas.",
+    "warn": {
+      "differs": "{{field}}: the document says \"{{value}}\" and the form has \"{{current}}\". It has not been changed.",
+      "itemsMismatch": "The document has {{value}} item(s) and the form has {{current}}: they could not be matched and the items were left untouched.",
+      "currencyNotAvailable": "The invoice is in {{value}}, a currency this form does not offer: check the item currency.",
+      "fiscalIdNotRecognised": "The tax ID read (\"{{value}}\") is not in NIF format: it has not been filled in."
+    },
+    "field": {
+      "clientName": "Client",
+      "clientNif": "Client tax ID (NIF)",
+      "clientEori": "Client EORI",
+      "clientAddress": "Client address",
+      "clientCity": "Client city",
+      "counterpartName": "Exporter / consignee",
+      "counterpartCountry": "Exporter / consignee country",
+      "counterpartCity": "Exporter / consignee city",
+      "counterpartAddress": "Exporter / consignee address",
+      "description": "Description",
+      "quantity": "Quantity",
+      "transportMode": "Transport mode"
+    },
+    "summary": "{{documents}} document(s) read · {{count}} field(s) filled in by LUCI. Review them before creating the file.",
+    "summaryWarnings": "{{count}} warning(s) in step 1."
   }
 }

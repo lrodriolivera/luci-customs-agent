@@ -3646,5 +3646,45 @@
       "exporterCountry": "País de l'exportador",
       "exporterCity": "Ciutat de l'exportador"
     }
+  },
+  "draftDocs": {
+    "title": "Començar per la documentació",
+    "intro": "Puja la factura, el packing list i el document de transport. LUCI els llegeix i emplena l'alta; tu ho revises abans de crear l'expedient. Els documents queden adjunts a l'expedient.",
+    "selectFiles": "Seleccionar documents",
+    "reading": "Llegint {{name}}...",
+    "notReadable": "LUCI no ha pogut llegir aquest document. Quedarà adjunt a l'expedient, però no ha emplenat res.",
+    "filledCount": "{{count}} dada/es emplenades",
+    "nothingFilled": "no ha aportat dades noves al formulari",
+    "showFilled": "Veure les dades emplenades",
+    "remove": "Treure",
+    "readError": "No s'ha pogut llegir el document",
+    "removeError": "No s'ha pogut treure el document",
+    "tooMany": "Com a màxim {{max}} documents per alta",
+    "review": "Revisa els tres passos abans de crear l'expedient: LUCI només ha emplenat els camps que estaven buits.",
+    "warnTitle": "Revisa aquests punts:",
+    "transportDetails": "Dades del document de transport (opcional)",
+    "containersHint": "Diversos contenidors, separats per comes.",
+    "warn": {
+      "differs": "{{field}}: el document indica «{{value}}» i al formulari hi ha «{{current}}». No s'ha canviat.",
+      "itemsMismatch": "El document porta {{value}} partida/es i el formulari en té {{current}}: no s'han pogut casar i les partides no s'han tocat.",
+      "currencyNotAvailable": "La factura és en {{value}}, una moneda que l'alta no ofereix: revisa la moneda de la partida.",
+      "fiscalIdNotRecognised": "La identificació fiscal llegida («{{value}}») no té format de NIF: no s'ha emplenat."
+    },
+    "field": {
+      "clientName": "Client",
+      "clientNif": "NIF del client",
+      "clientEori": "EORI del client",
+      "clientAddress": "Adreça del client",
+      "clientCity": "Ciutat del client",
+      "counterpartName": "Exportador / destinatari",
+      "counterpartCountry": "País de l'exportador / destinatari",
+      "counterpartCity": "Ciutat de l'exportador / destinatari",
+      "counterpartAddress": "Adreça de l'exportador / destinatari",
+      "description": "Descripció",
+      "quantity": "Quantitat",
+      "transportMode": "Mode de transport"
+    },
+    "summary": "{{documents}} document(s) llegits · {{count}} dada/es emplenades per LUCI. Revisa-les abans de crear l'expedient.",
+    "summaryWarnings": "{{count}} avís/os al pas 1."
   }
 }

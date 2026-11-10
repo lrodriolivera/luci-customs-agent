@@ -3646,5 +3646,45 @@
       "exporterCountry": "País do exportador",
       "exporterCity": "Cidade do exportador"
     }
+  },
+  "draftDocs": {
+    "title": "Começar pela documentação",
+    "intro": "Carregue a fatura, a packing list e o documento de transporte. A LUCI lê-os e preenche o formulário; você revê antes de criar o processo. Os documentos ficam anexados ao processo.",
+    "selectFiles": "Selecionar documentos",
+    "reading": "A ler {{name}}...",
+    "notReadable": "A LUCI não conseguiu ler este documento. Ficará anexado ao processo, mas nada foi preenchido.",
+    "filledCount": "{{count}} dado(s) preenchido(s)",
+    "nothingFilled": "não acrescentou dados novos ao formulário",
+    "showFilled": "Ver os dados preenchidos",
+    "remove": "Remover",
+    "readError": "Não foi possível ler o documento",
+    "removeError": "Não foi possível remover o documento",
+    "tooMany": "No máximo {{max}} documentos por novo processo",
+    "review": "Reveja os três passos antes de criar o processo: a LUCI só preencheu os campos que estavam vazios.",
+    "warnTitle": "Reveja estes pontos:",
+    "transportDetails": "Dados do documento de transporte (opcional)",
+    "containersHint": "Vários contentores, separados por vírgulas.",
+    "warn": {
+      "differs": "{{field}}: o documento indica «{{value}}» e no formulário está «{{current}}». Não foi alterado.",
+      "itemsMismatch": "O documento traz {{value}} item(ns) e o formulário tem {{current}}: não foi possível fazê-los corresponder e os itens não foram alterados.",
+      "currencyNotAvailable": "A fatura está em {{value}}, uma moeda que o formulário não oferece: reveja a moeda do item.",
+      "fiscalIdNotRecognised": "A identificação fiscal lida («{{value}}») não tem formato de NIF: não foi preenchida."
+    },
+    "field": {
+      "clientName": "Cliente",
+      "clientNif": "NIF do cliente",
+      "clientEori": "EORI do cliente",
+      "clientAddress": "Morada do cliente",
+      "clientCity": "Cidade do cliente",
+      "counterpartName": "Exportador / destinatário",
+      "counterpartCountry": "País do exportador / destinatário",
+      "counterpartCity": "Cidade do exportador / destinatário",
+      "counterpartAddress": "Morada do exportador / destinatário",
+      "description": "Descrição",
+      "quantity": "Quantidade",
+      "transportMode": "Modo de transporte"
+    },
+    "summary": "{{documents}} documento(s) lido(s) · {{count}} dado(s) preenchido(s) pela LUCI. Reveja-os antes de criar o processo.",
+    "summaryWarnings": "{{count}} aviso(s) no passo 1."
   }
 }

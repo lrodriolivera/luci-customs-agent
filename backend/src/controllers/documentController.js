@@ -4,6 +4,7 @@ const aiService = require('../services/aiService');
 const { fileUtils } = require('../middleware/upload');
 const { ensureSameTenant } = require('../utils/tenantGuard');
 const { proponerCambios, aplicarCambios } = require('../services/documentos/extraccionDocumento');
+const borradores = require('../services/documentos/borradoresDocumento');
 
 /**
  * Subir documento a un expediente
@@ -414,6 +415,43 @@ const ESTADOS_SIN_CAMBIOS = [
 ];
 
 /**
+ * Subir y leer un documento en el alta, antes de que exista el expediente
+ * POST /api/documents/drafts   (multipart: documentType, file)
+ *
+ * Devuelve lo leido para que la pantalla de alta rellene el formulario. El
+ * documento queda como borrador del usuario y se adjunta al crear el expediente.
+ */
+const createDraft = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No se ha proporcionado archivo' });
+    }
+    const data = await borradores.crearBorrador({ user: req.user, file: req.file, tipo: req.body.documentType });
+    res.status(201).json({ success: true, data });
+  } catch (error) {
+    logger.error('Error leyendo documento del alta:', error);
+    res.status(500).json({ success: false, error: 'Error al leer el documento' });
+  }
+};
+
+/**
+ * Descartar un documento subido en el alta
+ * DELETE /api/documents/drafts/:draftId
+ */
+const deleteDraft = async (req, res) => {
+  try {
+    const eliminado = await borradores.eliminarBorrador(req.params.draftId, req.user);
+    if (!eliminado) {
+      return res.status(404).json({ success: false, error: 'Documento no encontrado' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Error descartando documento del alta:', error);
+    res.status(500).json({ success: false, error: 'Error al descartar el documento' });
+  }
+};
+
+/**
  * Leer un documento con IA y proponer cambios al expediente
  * POST /api/documents/:expeditionId/:docId/extract
  *
@@ -547,6 +585,8 @@ const applyExtraction = async (req, res) => {
 };
 
 module.exports = {
+  createDraft,
+  deleteDraft,
   extractDocument,
   getProposal,
   applyExtraction,

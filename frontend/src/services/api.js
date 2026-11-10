@@ -138,6 +138,19 @@ export const documentsAPI = {
       timeout: 120000
     })
   },
+  // Alta desde la documentacion: sube y lee un documento antes de que exista
+  // el expediente. Devuelve el borrador y lo leido; se adjunta al crear el
+  // expediente (draftDocuments en expeditionsAPI.create).
+  readDraft: (file, documentType) => {
+    const formData = new FormData()
+    formData.append('documentType', documentType)
+    formData.append('file', file)
+    return api.post('/api/documents/drafts', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 180000
+    })
+  },
+  removeDraft: (draftId) => api.delete(`/api/documents/drafts/${seg(draftId)}`),
   // Lee el documento con IA y devuelve lo leido y la propuesta de cambios. No
   // modifica el expediente. La lectura tarda unos 10 s por documento.
   read: (expeditionId, docId) =>

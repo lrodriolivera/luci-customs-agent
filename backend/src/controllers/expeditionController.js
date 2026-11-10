@@ -5,6 +5,8 @@ const emailService = require('../services/emailService');
 const aiService = require('../services/aiService');
 const { ensureSameTenant } = require('../utils/tenantGuard');
 const { eoriDe } = require('../services/forms/identificadorAduanero');
+const borradores = require('../services/documentos/borradoresDocumento');
+const { DOCUMENT_TYPES } = require('../middleware/validators');
 
 const { escapeRegex } = require('../utils/escapeRegex');
 /**
@@ -163,7 +165,14 @@ const create = async (req, res) => {
       performedBy: req.user.name
     });
 
+    // Documentos subidos y leidos durante el alta: pasan al expediente ya leidos.
+    const adjuntados = await borradores.adjuntarBorradores(
+      expedition, req.body.draftDocuments, req.user, DOCUMENT_TYPES
+    );
+
     await expedition.save();
+    await borradores.descartarAdjuntados(adjuntados)
+      .catch(err => logger.warn(`No se pudieron descartar los borradores adjuntados: ${err.message}`));
 
     logger.info(`Expediente creado: ${expedition.expeditionId} por ${req.user.email}`);
 

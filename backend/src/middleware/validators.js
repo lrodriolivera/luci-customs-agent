@@ -164,18 +164,35 @@ const expeditionValidators = {
 /**
  * Validadores para documentos
  */
+const DOCUMENT_TYPES = [
+  'commercial_invoice', 'proforma_invoice', 'packing_list',
+  'bill_of_lading', 'air_waybill', 'cmr', 'certificate_origin',
+  'eur1', 'eur_med', 'atr', 'form_a', 'sanitary_certificate',
+  'phytosanitary_certificate', 'veterinary_certificate',
+  'fumigation_certificate', 'insurance_certificate',
+  'dispatch_authorization', 'import_license', 'export_license',
+  'ce_certificate', 'quality_certificate', 'other'
+];
+
 const documentValidators = {
+  // Documento subido en el alta, sin expediente todavia.
+  draft: [
+    body('documentType')
+      .isIn(DOCUMENT_TYPES)
+      .withMessage('Tipo de documento invalido'),
+    handleValidationErrors
+  ],
+
+  draftId: [
+    param('draftId')
+      .isMongoId()
+      .withMessage('ID de documento invalido'),
+    handleValidationErrors
+  ],
+
   upload: [
     body('documentType')
-      .isIn([
-        'commercial_invoice', 'proforma_invoice', 'packing_list',
-        'bill_of_lading', 'air_waybill', 'cmr', 'certificate_origin',
-        'eur1', 'eur_med', 'atr', 'form_a', 'sanitary_certificate',
-        'phytosanitary_certificate', 'veterinary_certificate',
-        'fumigation_certificate', 'insurance_certificate',
-        'dispatch_authorization', 'import_license', 'export_license',
-        'ce_certificate', 'quality_certificate', 'other'
-      ])
+      .isIn(DOCUMENT_TYPES)
       .withMessage('Tipo de documento invalido'),
     body('expeditionId')
       .isMongoId()
@@ -310,6 +327,7 @@ const portalValidators = {
 
 module.exports = {
   handleValidationErrors,
+  DOCUMENT_TYPES,
   authValidators,
   expeditionValidators,
   documentValidators,

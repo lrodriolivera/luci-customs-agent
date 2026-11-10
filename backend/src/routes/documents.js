@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const documentController = require('../controllers/documentController');
-const { auth } = require('../middleware/auth');
+const { auth, requirePermission } = require('../middleware/auth');
 const { upload, handleUploadError } = require('../middleware/upload');
 const { documentValidators } = require('../middleware/validators');
 
@@ -16,6 +16,20 @@ router.post(
   documentValidators.upload,
   documentController.upload
 );
+
+// Alta desde la documentacion: subir y leer un documento antes de crear el
+// expediente. Van antes de las rutas /:expeditionId/:docId, que tambien
+// casarian con «drafts/<id>».
+router.post(
+  '/drafts',
+  // Solo quien puede crear expedientes; antes de multer, para no guardar el archivo.
+  requirePermission('canCreateExpeditions'),
+  upload.single('file'),
+  handleUploadError,
+  documentValidators.draft,
+  documentController.createDraft
+);
+router.delete('/drafts/:draftId', documentValidators.draftId, documentController.deleteDraft);
 
 // Leer el documento con IA y proponer cambios al expediente (no modifica nada)
 router.post('/:expeditionId/:docId/extract', documentValidators.validate, documentController.extractDocument);

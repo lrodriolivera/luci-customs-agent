@@ -3646,5 +3646,45 @@
       "exporterCountry": "Pays de l'exportateur",
       "exporterCity": "Ville de l'exportateur"
     }
+  },
+  "draftDocs": {
+    "title": "Commencer par les documents",
+    "intro": "Téléversez la facture, la liste de colisage et le document de transport. LUCI les lit et remplit le formulaire ; vous vérifiez avant de créer le dossier. Les documents restent joints au dossier.",
+    "selectFiles": "Sélectionner des documents",
+    "reading": "Lecture de {{name}}...",
+    "notReadable": "LUCI n'a pas pu lire ce document. Il sera joint au dossier, mais rien n'a été rempli.",
+    "filledCount": "{{count}} donnée(s) remplie(s)",
+    "nothingFilled": "il n'a apporté aucune nouvelle donnée au formulaire",
+    "showFilled": "Voir les données remplies",
+    "remove": "Retirer",
+    "readError": "Le document n'a pas pu être lu",
+    "removeError": "Le document n'a pas pu être retiré",
+    "tooMany": "Au maximum {{max}} documents par création",
+    "review": "Vérifiez les trois étapes avant de créer le dossier : LUCI n'a rempli que les champs qui étaient vides.",
+    "warnTitle": "Vérifiez ces points :",
+    "transportDetails": "Données du document de transport (facultatif)",
+    "containersHint": "Plusieurs conteneurs, séparés par des virgules.",
+    "warn": {
+      "differs": "{{field}} : le document indique « {{value}} » et le formulaire contient « {{current}} ». Il n'a pas été modifié.",
+      "itemsMismatch": "Le document contient {{value}} article(s) et le formulaire {{current}} : ils n'ont pas pu être rapprochés et les articles n'ont pas été modifiés.",
+      "currencyNotAvailable": "La facture est en {{value}}, une devise que ce formulaire ne propose pas : vérifiez la devise de l'article.",
+      "fiscalIdNotRecognised": "L'identifiant fiscal lu (« {{value}} ») n'a pas le format d'un NIF : il n'a pas été rempli."
+    },
+    "field": {
+      "clientName": "Client",
+      "clientNif": "NIF du client",
+      "clientEori": "EORI du client",
+      "clientAddress": "Adresse du client",
+      "clientCity": "Ville du client",
+      "counterpartName": "Exportateur / destinataire",
+      "counterpartCountry": "Pays de l'exportateur / destinataire",
+      "counterpartCity": "Ville de l'exportateur / destinataire",
+      "counterpartAddress": "Adresse de l'exportateur / destinataire",
+      "description": "Description",
+      "quantity": "Quantité",
+      "transportMode": "Mode de transport"
+    },
+    "summary": "{{documents}} document(s) lu(s) · {{count}} donnée(s) remplie(s) par LUCI. Vérifiez-les avant de créer le dossier.",
+    "summaryWarnings": "{{count}} avertissement(s) à l'étape 1."
   }
 }
