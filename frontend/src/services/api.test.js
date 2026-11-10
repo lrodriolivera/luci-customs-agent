@@ -779,7 +779,12 @@ describe('api.js — chatAPI', () => {
     const data = { message: 'Hola' }
     await api.chatAPI.send(data)
 
-    expect(mockApi.post).toHaveBeenCalledWith('/ai/chat', { message: 'Hola', language: 'es' })
+    // /ai/chat no existe en produccion (nginx solo enruta /api/): daba 405.
+    expect(mockApi.post).toHaveBeenCalledWith(
+      '/api/chat/ask-luci',
+      { question: 'Hola', language: 'es' },
+      { timeout: 90000 }
+    )
   })
 
   it('chatAPI.ask incluye language de i18n', async () => {
@@ -787,7 +792,34 @@ describe('api.js — chatAPI', () => {
 
     await api.chatAPI.ask('¿Qué es TARIC?')
 
-    expect(mockApi.post).toHaveBeenCalledWith('/ai/ask', { question: '¿Qué es TARIC?', language: 'es' })
+    expect(mockApi.post).toHaveBeenCalledWith(
+      '/api/chat/ask-luci',
+      { question: '¿Qué es TARIC?', language: 'es' },
+      { timeout: 90000 }
+    )
+  })
+
+  it('chatAPI.send aplana la respuesta del backend a data.message/model/confidence', async () => {
+    const api = await import('./api.js')
+    mockApi.post.mockResolvedValueOnce({
+      status: 200,
+      data: { success: true, data: { answer: 'Un DUA es…', model: 'sonnet-5', confidence: 70, sources: [] } }
+    })
+
+    const response = await api.chatAPI.send({ message: '¿Qué es un DUA?' })
+
+    expect(response.data.message).toBe('Un DUA es…')
+    expect(response.data.model).toBe('sonnet-5')
+    expect(response.data.confidence).toBe(70)
+  })
+
+  it('chatAPI.send no revienta si el backend responde sin cuerpo', async () => {
+    const api = await import('./api.js')
+    mockApi.post.mockResolvedValueOnce(undefined)
+
+    const response = await api.chatAPI.send({ message: 'Hola' })
+
+    expect(response.data.message).toBeUndefined()
   })
 })
 
