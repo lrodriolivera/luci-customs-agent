@@ -88,6 +88,56 @@ describe('prerrellenarAlta', () => {
     expect(avisos.filter((a) => a.campo === 'description')).toEqual([])
   })
 
+  describe('diferencias que no lo son', () => {
+    const trasFactura = () => prerrellenarAlta(formulario(), lectura({
+      exportador: { nombre: 'Shanghai Hongtai Import & Export Co., Ltd.', direccion: 'No. 1288 Pudong Ave, Bldg 3', ciudad: 'Shanghai', pais: 'CN' },
+      importador: { nombre: 'Distribuciones Ibérica del Levante S.L.', identificacionFiscal: null, direccion: 'Poligono Industrial Fuente del Jarro, Calle 4 nº 12', ciudad: 'Paterna (Valencia)', pais: 'ES' }
+    }), {}).formData
+    const avisosDe = (importador, exportador = {}) => prerrellenarAlta(trasFactura(), lectura({
+      importador: { nombre: null, identificacionFiscal: null, direccion: null, ciudad: null, pais: null, ...importador },
+      exportador: { nombre: null, direccion: null, ciudad: null, pais: null, ...exportador }
+    }), {}).avisos
+
+    test('una ciudad con el codigo postal en un documento y sin el en otro no es una diferencia', () => {
+      expect(avisosDe({ ciudad: 'Paterna (Valencia), 46988' }, { ciudad: 'Shanghai, 200120' })).toEqual([])
+      expect(avisosDe({ ciudad: '46988 Paterna (Valencia)' })).toEqual([])
+    })
+
+    test('tampoco al reves: el formulario tiene el codigo postal y el documento no', () => {
+      const conCp = { ...trasFactura(), client: { ...trasFactura().client, city: 'Paterna (Valencia) 46988' } }
+      const { avisos } = prerrellenarAlta(conCp, lectura({ importador: { nombre: null, identificacionFiscal: null, direccion: null, ciudad: 'Paterna (Valencia)', pais: null } }), {})
+      expect(avisos).toEqual([])
+    })
+
+    test('una direccion que solo cambia en signos, tildes o el simbolo de numero no es una diferencia', () => {
+      expect(avisosDe({ direccion: 'Polígono Industrial Fuente del Jarro, Calle 4 n° 12' })).toEqual([])
+      expect(avisosDe({ direccion: 'Poligono Industrial Fuente del Jarro - Calle 4 nº 12, 46988' })).toEqual([])
+    })
+
+    test('una razon social que solo cambia en puntos, comas o tildes no es una diferencia', () => {
+      expect(avisosDe({ nombre: 'DISTRIBUCIONES IBERICA DEL LEVANTE SL' }, { nombre: 'Shanghai Hongtai Import & Export Co Ltd' })).toEqual([])
+    })
+
+    test('una direccion con otro numero de portal si es una diferencia', () => {
+      expect(avisosDe({ direccion: 'Poligono Industrial Fuente del Jarro, Calle 4 nº 14' })).toHaveLength(1)
+    })
+
+    test('otra ciudad si es una diferencia, aunque comparta palabras', () => {
+      expect(avisosDe({ ciudad: 'Valencia' })).toHaveLength(1)
+      expect(avisosDe({}, { ciudad: 'Shenzhen, 200120' })).toHaveLength(1)
+    })
+
+    test('otra forma juridica en la razon social si es una diferencia', () => {
+      expect(avisosDe({ nombre: 'Distribuciones Iberica del Levante S.L.U.' })).toHaveLength(1)
+    })
+
+    test('un codigo postal distinto en los dos sitios si es una diferencia', () => {
+      const conCp = { ...trasFactura(), client: { ...trasFactura().client, city: 'Paterna 46980' } }
+      const { avisos } = prerrellenarAlta(conCp, lectura({ importador: { nombre: null, identificacionFiscal: null, direccion: null, ciudad: 'Paterna 46988', pais: null } }), {})
+      expect(avisos).toHaveLength(1)
+    })
+  })
+
   test('no avisa cuando el documento dice lo mismo que hay, aunque cambie la caja', () => {
     const escrito = formulario({ client: { ...formulario().client, companyName: 'IMPORTADORA SL' } })
     const { avisos } = prerrellenarAlta(escrito, FACTURA, {})
