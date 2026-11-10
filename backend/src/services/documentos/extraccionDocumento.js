@@ -117,6 +117,17 @@ const medioDeTransporte = (valor) => {
   return t && !MODOS_NO_SON_MEDIO.test(t) ? t : null;
 };
 
+// Matricula de contenedor ISO 6346: cuatro letras y siete cifras. Si el texto
+// la contiene, se devuelve sola («TGHU8842217 (40HC)» -> «TGHU8842217»); si
+// no, se devuelve el texto limpio, para que el agente vea lo que se leyo.
+const numeroContenedor = (valor) => {
+  const t = texto(valor);
+  if (!t) return null;
+  const limpio = t.toUpperCase().replace(/[\s-]/g, '');
+  const iso = /[A-Z]{4}\d{7}(?!\d)/.exec(limpio);
+  return iso ? iso[0] : limpio;
+};
+
 const objeto = (valor) => (valor && typeof valor === 'object' && !Array.isArray(valor) ? valor : {});
 const lista = (valor) => (Array.isArray(valor) ? valor : []);
 
@@ -155,8 +166,7 @@ function normalizarExtraccion(bruto) {
     transporte: {
       numeroDocumento: texto(tra.numeroDocumento), medio: medioDeTransporte(tra.medio),
       puertoCarga: texto(tra.puertoCarga), puertoDescarga: texto(tra.puertoDescarga),
-      contenedores: lista(tra.contenedores).map(texto).filter(Boolean)
-        .map(c => c.toUpperCase().replace(/[\s-]/g, '')).slice(0, MAX_CONTENEDORES),
+      contenedores: lista(tra.contenedores).map(numeroContenedor).filter(Boolean).slice(0, MAX_CONTENEDORES),
       tipoCarga: tipoCarga && ['FCL', 'LCL'].includes(tipoCarga.toUpperCase()) ? tipoCarga.toUpperCase() : null
     },
     partidas: lista(r.partidas).slice(0, MAX_PARTIDAS).map(objeto).map(p => ({

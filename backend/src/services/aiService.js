@@ -15,6 +15,8 @@ const BEDROCK_REGION = process.env.BEDROCK_REGION || 'us-east-1';
 // Un TARIC no cambia de un dia para otro: 7 dias es conservador y aun asi
 // evita reclasificar el mismo articulo durante toda una campana de importacion.
 const CLASSIFICATION_CACHE_TTL = 7 * 24 * 60 * 60;
+// Limite del modelo para documentos (PDF, Word, Excel) adjuntos.
+const MAX_BYTES_DOCUMENTO_MODELO = 4.5 * 1024 * 1024;
 // Candidatos del catalogo que se pasan al modelo y alternativas que se ofrecen
 // cuando el codigo devuelto no es declarable.
 const MAX_CANDIDATOS_CATALOGO = 15;
@@ -966,14 +968,38 @@ Responde en JSON con el formato especificado en el system prompt.`;
       return noLeido('No se pudo abrir el archivo en el servidor.');
     }
 
-    const contentBlock = this._contentBlockParaArchivo(document.mimeType, fileBytes, document.originalName);
+    // El modelo no admite documentos (PDF, Word, Excel) de mas de 4,5 MB.
+    const { prepararImagen, esImagen } = require('./documentos/imagenParaModelo');
+    if (!esImagen(document.mimeType) && fileBytes.length > MAX_BYTES_DOCUMENTO_MODELO) {
+      const mb = (fileBytes.length / 1024 / 1024).toFixed(1).replace('.', ',');
+      return noLeido(`El documento pesa ${mb} MB y la lectura automatica admite hasta 4,5 MB. Subelo dividido o con menos resolucion.`);
+    }
+
+    // Las fotos grandes se reducen (solo la copia que va al modelo).
+    let paraModelo;
+    try {
+      paraModelo = await prepararImagen(fileBytes, document.mimeType);
+    } catch (err) {
+      logger.warn(`extractDocumentData: imagen no preparable (${err.message})`);
+      return noLeido('No se pudo abrir la imagen para leerla. Comprueba que el archivo no este dañado.');
+    }
+
+    const contentBlock = this._contentBlockParaArchivo(paraModelo.mimeType, paraModelo.bytes, document.originalName);
     if (!contentBlock) {
       return noLeido(`El formato ${document.mimeType} no se puede leer automaticamente (se admiten PDF, imagen, Word, Excel, TXT y CSV).`);
     }
 
-    const result = await this.callClaudeWithDocument(
-      FAST_MODEL, SYSTEM_PROMPT, construirPrompt(document), contentBlock, { maxTokens: 8192 }
-    );
+    let result;
+    try {
+      result = await this.callClaudeWithDocument(
+        FAST_MODEL, SYSTEM_PROMPT, construirPrompt(document), contentBlock, { maxTokens: 8192 }
+      );
+    } catch (err) {
+      // Un fallo del servicio de IA no es un error de la aplicacion: el
+      // documento queda subido y el agente puede reintentar la lectura.
+      logger.warn(`extractDocumentData: el servicio de IA no pudo leer ${document.originalName} (${err.message})`);
+      return noLeido('El servicio de IA no ha podido leer el documento en este momento. Vuelve a intentarlo.');
+    }
 
     try {
       return { ...normalizarExtraccion(this._parseJsonRespuesta(result.content)), leido: true, modelo: labelFor(result.model) };
