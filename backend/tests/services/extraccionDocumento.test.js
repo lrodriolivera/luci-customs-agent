@@ -117,7 +117,7 @@ describe('extraccionDocumento', () => {
 
       expect(claves(cambios)).toEqual([
         'goods.0.originCountry', 'goods.0.currency', 'incoterm.code', 'incoterm.place',
-        'exporter.companyName', 'exporter.country', 'exporter.address.city'
+        'exporter.companyName', 'exporter.country', 'exporter.city'
       ]);
       expect(cambios.find(c => c.clave === 'incoterm.code')).toMatchObject({ actual: 'CIF', nuevo: 'FOB', grupo: 'condiciones' });
       expect(cambios.find(c => c.clave === 'goods.0.originCountry')).toMatchObject({ actual: null, nuevo: 'CN', partida: 1 });
@@ -183,7 +183,7 @@ describe('extraccionDocumento', () => {
       const exp = expediente({
         goods: [{ taricCode: '8471300000', originCountry: 'cn', currency: 'usd', invoiceValue: '184800', packages: {} }],
         incoterm: { code: 'fob', place: 'SHANGHAI' },
-        exporter: { companyName: 'shanghai hongtai import & export co., ltd.', country: 'CN', address: { city: 'Shanghai' } }
+        exporter: { companyName: 'shanghai hongtai import & export co., ltd.', country: 'CN', city: 'Shanghai' }
       });
 
       expect(proponerCambios(exp, normalizarExtraccion(LECTURA_FACTURA), 'commercial_invoice')).toEqual([]);

@@ -16,6 +16,8 @@
  * documento delante; al subirlo, LUCI lo dejaba en «Pendiente» y no leia nada.
  */
 
+const logger = require('../../config/logger');
+
 const SYSTEM_PROMPT = `Eres un lector de documentos de comercio exterior (facturas comerciales, packing lists, conocimientos de embarque, cartas de porte aereo, CMR, certificados).
 
 Tu unica tarea es TRANSCRIBIR los datos que figuran en el documento adjunto. Reglas:
@@ -264,7 +266,9 @@ function proponerCambios(expedition, datos, tipoDocumento) {
   const exporter = expedition.exporter || {};
   proponer('exporter.companyName', 'exportador', 'exporterName', exporter.companyName, datos.exportador.nombre);
   proponer('exporter.country', 'exportador', 'exporterCountry', exporter.country, datos.exportador.pais);
-  proponer('exporter.address.city', 'exportador', 'exporterCity', exporter.address?.city, datos.exportador.ciudad);
+  // En el expediente el exportador guarda la ciudad en `city` (su `address` es
+  // un texto, no un objeto como en el importador).
+  proponer('exporter.city', 'exportador', 'exporterCity', exporter.city, datos.exportador.ciudad);
 
   return cambios;
 }
@@ -294,7 +298,18 @@ function aplicarCambios(expedition, datos, tipoDocumento, claves) {
       expedition.set(cambio.clave, cambio.nuevo);
     }
   }
-  return aplicables;
+
+  // Mongoose descarta en silencio un `set` sobre una ruta que no existe en el
+  // esquema. Solo se da por aplicado lo que ha quedado escrito de verdad: asi
+  // un campo mal mapeado no se anuncia como aplicado (paso con la ciudad del
+  // exportador en la primera prueba en produccion).
+  if (typeof expedition.get !== 'function') return aplicables;
+  return aplicables.filter((cambio) => {
+    if (cambio.clave === 'transport.containers') return true;
+    const escrito = iguales(expedition.get(cambio.clave), cambio.nuevo);
+    if (!escrito) logger.warn(`Lectura de documentos: «${cambio.clave}» no existe en el expediente y no se ha aplicado`);
+    return escrito;
+  });
 }
 
 module.exports = {
