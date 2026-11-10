@@ -87,3 +87,36 @@ describe('h1Generator — totales de la declaracion', () => {
     expect(h1Generator.totalesNoDeclarables(expedicion)).toMatch(/EXP-TEST-0001/);
   });
 });
+
+/**
+ * Visto en el navegador el 10/Nov/2026: la tarjeta del H1 mostraba un LRN y la
+ * vista previa otro. `generate` creaba uno y `buildDeclarationHeader` otro.
+ */
+describe('h1Generator.generate — un unico LRN por declaracion', () => {
+  const h1Generator = require('../../src/services/forms/h1Generator');
+  const expediente = {
+    expeditionId: 'EXP-LRN', transportMode: 'maritime',
+    client: { companyName: 'Importadora SL', nif: 'B12345674', eori: 'ESB12345674', address: { street: 'Calle 1', city: 'Valencia', postalCode: '46001' } },
+    exporter: { companyName: 'Exportador Ltd', country: 'CN', address: { city: 'Shenzhen' } },
+    representative: { eori: 'ESB22477020', companyName: 'Representante SL' },
+    goods: [{ itemNumber: 1, description: 'Portatiles', taricCode: '8471300000', originCountry: 'CN', quantity: 10, grossWeight: 25, netWeight: 20, invoiceValue: 5000, packages: { quantity: 2, type: 'CT' } }],
+    goodsSummary: { totalItems: 1, totalPackages: 2, totalGrossWeight: 25, totalNetWeight: 20, totalValue: 5000 },
+    transport: {}
+  };
+
+  test('el LRN de la declaracion, el de los datos y el de la cabecera son el mismo', () => {
+    const r = h1Generator.generate(expediente, {});
+
+    expect(r.lrn).toBeTruthy();
+    expect(r.data.lrn).toBe(r.lrn);
+    expect(r.data.declarationHeader.lrn).toBe(r.lrn);
+    expect(r.xml).toContain(r.lrn);
+  });
+
+  test('si se le da un LRN lo respeta en los tres sitios', () => {
+    const r = h1Generator.generate(expediente, { lrn: 'LRN-DADO-0001' });
+
+    expect(r.lrn).toBe('LRN-DADO-0001');
+    expect(r.data.declarationHeader.lrn).toBe('LRN-DADO-0001');
+  });
+});

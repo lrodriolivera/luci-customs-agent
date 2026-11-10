@@ -805,6 +805,14 @@ export default function ExpeditionDetail() {
 
   const canEditGoods = !STATUSES_GOODS_LOCKED.includes(expedition?.status)
 
+  // Nombre del tipo de documento; si no hay traduccion se muestra el codigo.
+  const etiquetaTipoDocumento = (tipo) => {
+    if (!tipo) return ''
+    const clave = `expeditions.docType.${tipo}`
+    const texto = t(clave)
+    return texto === clave ? tipo : texto
+  }
+
   if (!expedition) {
     return null
   }
@@ -981,7 +989,7 @@ export default function ExpeditionDetail() {
                       <div>
                         <p className="font-medium text-sm">{doc.originalName}</p>
                         {/* El backend guarda el tipo en `type`; `documentType` no existe. */}
-                        <p className="text-xs text-gray-500">{doc.type || doc.documentType}</p>
+                        <p className="text-xs text-gray-500">{etiquetaTipoDocumento(doc.type || doc.documentType)}</p>
                       </div>
                     </div>
                     {/* El backend guarda el estado en `status`, en minusculas.
@@ -1004,6 +1012,10 @@ export default function ExpeditionDetail() {
 
             <DocumentUploader expeditionId={id} onUploaded={handleDocumentUploaded} />
           </div>
+
+          {/* La vista previa va en la columna ancha: en la lateral (unos 310 px)
+              los datos del H1 se partian en varias lineas y no se podian revisar. */}
+          <H1Preview h1Data={h1Result?.h1Data || expedition.declaration?.h1Data} />
         </div>
 
         {/* Sidebar */}
@@ -1116,7 +1128,8 @@ export default function ExpeditionDetail() {
                     </div>
                     <div>
                       <span className="text-gray-500">{t('expeditions.totalValue')}:</span>
-                      <span className="ml-1 font-medium">{h1Result.summary.totalValue?.toLocaleString('es-ES')} EUR</span>
+                      {/* El backend envia invoiceValue; totalValue no existe y el valor salia en blanco. */}
+                      <span className="ml-1 font-medium">{formatearImporte(h1Result.summary.invoiceValue ?? h1Result.summary.totalValue, 'EUR')}</span>
                     </div>
                   </div>
                 </div>
@@ -1132,8 +1145,6 @@ export default function ExpeditionDetail() {
               )}
 
               {/* XML Preview */}
-              <H1Preview h1Data={h1Result?.h1Data || expedition.declaration?.h1Data} />
-
               {(h1Result?.xml || expedition.declaration?.xmlContent) && (
                 <div className="mt-4">
                   <p className="text-gray-600 font-medium text-sm mb-2">{t('expeditions.xmlForAeat')}</p>

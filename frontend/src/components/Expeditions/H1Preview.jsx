@@ -77,14 +77,14 @@ export default function H1Preview({ h1Data }) {
   )
 
   return (
-    <div className="mt-4 rounded-lg border border-gray-200 bg-white">
+    <div className="card">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
-        className="w-full flex items-center justify-between px-4 py-3 text-left"
+        className="w-full flex items-center justify-between text-left"
       >
-        <span className="flex items-center gap-2 font-medium text-gray-800">
+        <span className="flex items-center gap-2 text-lg font-semibold text-gray-900">
           <EyeIcon className="w-5 h-5" />
           {t('h1Preview.title')}
         </span>
@@ -92,12 +92,12 @@ export default function H1Preview({ h1Data }) {
       </button>
 
       {isOpen && (
-        <div className="px-4 pb-4 space-y-4">
+        <div className="mt-4 space-y-4">
           <p className="text-xs text-gray-500">{t('h1Preview.hint')}</p>
 
           <Section title={t('h1Preview.sectionDeclaration')}>
             <dl className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {field('lrn', header.lrn || h1Data.lrn)}
+              {field('lrn', h1Data.lrn || header.lrn)}
               {field('declarationType', joinParts(header.declarationType, header.additionalDeclarationType))}
               {field('officeLodgement', header.customsOfficeLodgement)}
               {field('officePresentation', header.customsOfficePresentation)}

@@ -74,6 +74,12 @@ const h1Data = {
 const valorDe = (label) => screen.getByText(label).nextElementSibling
 
 describe('H1Preview', () => {
+  test('muestra el LRN de la declaración, no otro distinto de la cabecera', () => {
+    render(<H1Preview h1Data={{ ...h1Data, lrn: 'LRN-DECLARACION', declarationHeader: { ...h1Data.declarationHeader, lrn: 'LRN-CABECERA-ANTIGUA' } }} />)
+
+    expect(valorDe('h1Preview.lrn')).toHaveTextContent('LRN-DECLARACION')
+  })
+
   test('sin h1Data no pinta nada', () => {
     const { container } = render(<H1Preview h1Data={null} />)
     expect(container).toBeEmptyDOMElement()
