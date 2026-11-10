@@ -205,3 +205,34 @@ describe('getServices', () => {
     expect(res.statusCode).toBe(500);
   });
 });
+
+describe('consulta sin conexión real con la AEAT', () => {
+  const noConectada = () => Object.assign(new Error('«Consulta por MRN» todavía no está conectada con la AEAT'), { code: 'AEAT_QUERY_NOT_CONNECTED' });
+
+  test.each([
+    ['queryByBillOfLading', { reference: 'BL1' }],
+    ['queryByAWB', { awbNumber: 'AWB1' }],
+    ['queryByContainer', { containerNumber: 'MSKU1234567' }],
+    ['queryByMRN', { mrn: '26ES00280180000014' }],
+    ['queryByEORI', { eori: 'ES12345678A' }]
+  ])('%s responde 501 con el motivo, no un 500 genérico', async (handler, body) => {
+    svc[handler].mockRejectedValue(noConectada());
+    const res = mockRes();
+
+    await ctrl[handler](req({ body }), res);
+
+    expect(res.statusCode).toBe(501);
+    expect(res.body).toEqual({
+      success: false,
+      code: 'AEAT_QUERY_NOT_CONNECTED',
+      message: expect.stringMatching(/no está conectada con la AEAT/)
+    });
+  });
+
+  test('queryDocuments también', async () => {
+    svc.queryAssociatedDocuments.mockRejectedValue(noConectada());
+    const res = mockRes();
+    await ctrl.queryDocuments(req({ body: { reference: 'R1' } }), res);
+    expect(res.statusCode).toBe(501);
+  });
+});
