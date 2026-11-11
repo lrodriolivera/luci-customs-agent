@@ -80,8 +80,8 @@ const mockExpedition = {
   incoterm: { code: 'CIF', place: 'Barcelona' },
   transport: { documentNumber: 'BL123456', carrier: 'Maersk' },
   timeline: [
-    { action: 'Expedición creada', timestamp: '2026-08-01T10:00:00Z' },
-    { action: 'Documentos subidos', timestamp: '2026-08-02T12:00:00Z' }
+    { action: 'expedition_created', timestamp: '2026-08-01T10:00:00Z' },
+    { action: 'document_uploaded', timestamp: '2026-08-02T12:00:00Z' }
   ]
 }
 
@@ -160,8 +160,10 @@ describe('<ExpeditionDetail />', () => {
 
   test('renderiza timeline de eventos', async () => {
     renderExpeditionDetail()
-    await waitFor(() => expect(screen.getByText('Expedición creada')).toBeInTheDocument())
-    expect(screen.getByText('Documentos subidos')).toBeInTheDocument()
+    // El backend guarda claves internas: la pantalla las traduce, no las pinta.
+    await waitFor(() => expect(screen.getByText('expeditions.timelineAction.expedition_created')).toBeInTheDocument())
+    expect(screen.getByText('expeditions.timelineAction.document_uploaded')).toBeInTheDocument()
+    expect(screen.queryByText('document_uploaded')).not.toBeInTheDocument()
   })
 
   test('maneja error al cargar expedición', async () => {

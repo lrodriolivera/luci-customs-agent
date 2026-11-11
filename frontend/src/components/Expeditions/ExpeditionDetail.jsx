@@ -28,6 +28,7 @@ import ChannelStatus from '../Channels/ChannelStatus'
 import ParaduaneroManager from '../Paraduanero/ParaduaneroManager'
 import { hrefSeguro } from '../../utils/url'
 import { formatearImporte } from '../../utils/importe'
+import { textoEvento } from '../../utils/historialExpediente'
 import GoodsEditor from './GoodsEditor'
 import H1Preview from './H1Preview'
 import GroupageCard, { isMaritime } from './GroupageCard'
@@ -825,17 +826,19 @@ export default function ExpeditionDetail() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      {/* En pantallas estrechas los botones bajan a su propia fila y se
+          reparten en varias lineas: en una sola desbordaban la pantalla. */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-4 min-w-0">
           <button
             onClick={() => navigate('/expeditions')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
           >
             <ArrowLeftIcon className="w-5 h-5 text-gray-600" />
           </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{expedition.expeditionId}</h1>
-            <div className="flex items-center gap-2 mt-1">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-gray-900 break-words">{expedition.expeditionId}</h1>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${expedition.operationType === 'import' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
                 {expedition.operationType === 'import' ? t('common.import') : t('common.export')}
               </span>
@@ -844,7 +847,7 @@ export default function ExpeditionDetail() {
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setShowAIPanel(true)}
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-luci to-luci-dark text-white rounded-lg hover:opacity-90"
@@ -1427,7 +1430,7 @@ export default function ExpeditionDetail() {
                 <div key={index} className="flex gap-3 text-sm">
                   <div className="w-2 h-2 mt-1.5 rounded-full bg-luci" />
                   <div>
-                    <p className="font-medium">{event.action}</p>
+                    <p className="font-medium">{textoEvento(event, t)}</p>
                     <p className="text-gray-500 text-xs">
                       {new Date(event.timestamp).toLocaleString('es-ES')}
                     </p>
