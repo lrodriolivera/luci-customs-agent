@@ -32,6 +32,7 @@ import {
 import { ensAPI } from '../../services/api'
 import ENSDeclarationForm from './ENSDeclarationForm'
 import ENSBatchUpload from './ENSBatchUpload'
+import { MODULOS_VISIBLES } from '../../config/modulosVisibles'
 
 const ENSDeclarationList = () => {
   const { t } = useTranslation()
@@ -223,23 +224,25 @@ const ENSDeclarationList = () => {
         <Typography variant="h4" sx={{ fontWeight: 600 }}>
           {t('ens.title')}
         </Typography>
-        <Box>
-          <Button
-            variant="outlined"
-            startIcon={<UploadIcon />}
-            sx={{ mr: 1 }}
-            onClick={() => setBatchUploadOpen(true)}
-          >
-            {t('ens.importBatch')}
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setCreateDialogOpen(true)}
-          >
-            {t('ens.new')}
-          </Button>
-        </Box>
+        {MODULOS_VISIBLES.crearEns && (
+          <Box>
+            <Button
+              variant="outlined"
+              startIcon={<UploadIcon />}
+              sx={{ mr: 1 }}
+              onClick={() => setBatchUploadOpen(true)}
+            >
+              {t('ens.importBatch')}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setCreateDialogOpen(true)}
+            >
+              {t('ens.new')}
+            </Button>
+          </Box>
+        )}
       </Box>
 
       {/* Stats Cards */}
