@@ -81,7 +81,10 @@ async function getDutyInfo(taricCode, origin = null) {
 
   // 2. Buscar en BD local
   const localData = await TaricCode.findOne({ code: normalizedCode });
-  if (localData && localData.duties && localData.duties.thirdCountry !== undefined) {
+  // `null` es «sin arancel contrastado» (codigos dados de alta por la
+  // sincronizacion con el TARIC oficial): no es un 0 % y se resuelve como un
+  // codigo que no esta en el catalogo, por las fuentes siguientes.
+  if (localData && localData.duties && localData.duties.thirdCountry !== undefined && localData.duties.thirdCountry !== null) {
     const localVatInfo = getVATRateByChapter(normalizedCode);
     const sancion = resolverSancion(localData.duties.sancionRusiaBielorrusia, origin);
     const result = {
