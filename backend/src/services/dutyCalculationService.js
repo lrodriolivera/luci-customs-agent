@@ -77,6 +77,9 @@ function avisosDeProcedencia(origen) {
   if (origen?.fuente === 'no_calculable') {
     return [`${origen.evidencia || 'El derecho oficial de este codigo no es un tipo simple.'} El importe calculado es orientativo: verificalo en el TARIC antes de declarar.`];
   }
+  if (origen?.soloDestinoFinal) {
+    return ['Este tipo solo se aplica con autorizacion de destino final (EUS, certificado N990). Sin ella, la mercancia se declara por otro codigo.'];
+  }
   if (origen?.fuente === 'sin_derecho_oficial') {
     return ['El TARIC no asigna derecho de terceros paises a este codigo (codigo especial de los capitulos 98 o 99).'];
   }

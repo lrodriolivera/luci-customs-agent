@@ -104,7 +104,9 @@ describe('arancelDe', () => {
   const derechos = leerDerechosTercerosPaises(FILAS, { fecha: FECHA });
 
   test('arancel propio', () => {
-    expect(arancelDe('0810201000', derechos)).toEqual({ estado: 'ok', derecho: { tipo: 'ad_valorem', adValorem: 8.8 }, texto: '8.800 %', heredadoDe: '0810201000' });
+    expect(arancelDe('0810201000', derechos)).toEqual({
+      estado: 'ok', derecho: { tipo: 'ad_valorem', adValorem: 8.8 }, texto: '8.800 %', heredadoDe: '0810201000', rotulo: 'Third country duty'
+    });
   });
 
   test('heredado del codigo de 8 digitos del que cuelga', () => {
@@ -126,6 +128,39 @@ describe('arancelDe', () => {
 
   test('varios tipos por codigo adicional: no hay «el» arancel', () => {
     expect(arancelDe('2918220020', derechos)).toEqual({ estado: 'variantes', texto: '0.000 % | 6.500 %', heredadoDe: '2918220000' });
+  });
+
+  // Codigos de destino final: «para sacrificio», «destinados a aeronaves civiles»…
+  // Medido el 11/Nov/2026: 491 declarables solo tienen la medida 105.
+  describe('destino final (medida 105)', () => {
+    const destino = (codigo, derecho) => { const f = fila(codigo, derecho); f[7] = 'Non preferential duty under end-use'; f[11] = '105'; return f; };
+    const conDestino = leerDerechosTercerosPaises([
+      CAB,
+      fila('0101299000', '11.500 % '),            // caballos, los demas: derecho general
+      destino('0101291000', '0.000 % '),          // para sacrificio: solo destino final
+      fila('8411000000', '2.700 % '),             // partida con derecho general…
+      destino('8411810010', '0.000 % '),          // …y un codigo de destino final dentro
+      fila('2710191500', '4.700 % '), destino('2710191500', '0.000 % ')   // las dos: manda la general
+    ], { fecha: FECHA });
+
+    test('un codigo que solo tiene la medida de destino final toma ese tipo, marcado', () => {
+      expect(arancelDe('0101291000', conDestino)).toEqual({
+        estado: 'ok', derecho: { tipo: 'ad_valorem', adValorem: 0 }, texto: '0.000 %', heredadoDe: '0101291000',
+        soloDestinoFinal: true, rotulo: 'Non preferential duty under end-use'
+      });
+    });
+
+    test('su propia medida de destino final manda sobre el derecho general de la partida', () => {
+      expect(arancelDe('8411810010', conDestino)).toMatchObject({ derecho: { adValorem: 0 }, soloDestinoFinal: true, heredadoDe: '8411810010' });
+      expect(arancelDe('8411810090', conDestino)).toMatchObject({ derecho: { adValorem: 2.7 }, heredadoDe: '8411000000' });
+      expect(arancelDe('8411810090', conDestino).soloDestinoFinal).toBeUndefined();
+    });
+
+    test('si el codigo tiene las dos medidas, vale el derecho general', () => {
+      const r = arancelDe('2710191510', conDestino);
+      expect(r).toMatchObject({ derecho: { adValorem: 4.7 }, rotulo: 'Third country duty' });
+      expect(r.soloDestinoFinal).toBeUndefined();
+    });
   });
 
   test('sin medida en ningun nivel', () => {

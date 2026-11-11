@@ -129,8 +129,9 @@ function derechosDeAlta(alta, { ahora, fuente }) {
       ...(campos.maximo ? { maximo: campos.maximo } : {}),
       ...(campos.sancion ? { sancionRusiaBielorrusia: campos.sancion } : {}),
       origen: {
-        fuente: 'taric_oficial', consultadoEl: ahora, metodo: 'fichero_circabc', rotulo: 'Third country duty',
-        evidencia: `«${a.texto}»${herencia}. ${fuente}`
+        fuente: 'taric_oficial', consultadoEl: ahora, metodo: 'fichero_circabc', rotulo: a.rotulo || 'Third country duty',
+        evidencia: `«${a.texto}»${herencia}. ${fuente}`,
+        ...(a.soloDestinoFinal ? { soloDestinoFinal: true } : {})
       }
     };
   }
@@ -199,7 +200,11 @@ async function aplicarSincronizacion(plan, { TaricCode, ahora = new Date(), corr
       const herencia = dato.heredadoDe === dato.code ? '' : ` (heredado de ${dato.heredadoDe})`;
       const $set = {
         'duties.thirdCountry': dato.thirdCountry,
-        'duties.origen': { fuente: 'taric_oficial', consultadoEl: ahora, metodo: 'fichero_circabc', rotulo: 'Third country duty', evidencia: `«${dato.texto}»${herencia}. ${fuente}.${antes}`.slice(0, 500) },
+        'duties.origen': {
+          fuente: 'taric_oficial', consultadoEl: ahora, metodo: 'fichero_circabc', rotulo: dato.rotulo || 'Third country duty',
+          evidencia: `«${dato.texto}»${herencia}. ${fuente}.${antes}`.slice(0, 500),
+          ...(dato.soloDestinoFinal ? { soloDestinoFinal: true } : {})
+        },
         lastUpdated: ahora
       };
       const $unset = {};

@@ -75,7 +75,7 @@ describe('corregirAranceles', () => {
 
     expect(r.corregir).toEqual([{
       code: '8544429010', thirdCountry: 3.3, specific: null, combinacion: null, minimo: null, maximo: null, sancion: null,
-      texto: '3.300 %', heredadoDe: '8544429000',
+      texto: '3.300 %', heredadoDe: '8544429000', rotulo: 'Third country duty',
       antes: { thirdCountry: 5, specific: { amount: 7, unit: 'EUR/hl' }, combinacion: null, minimo: null, maximo: null, sancion: null }
     }]);
   });
