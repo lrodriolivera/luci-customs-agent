@@ -68,6 +68,17 @@ describe('PortalHome', () => {
 })
 
 describe('PortalStatus', () => {
+  test('cuenta los documentos y muestra la ultima actualizacion que envia el portal', () => {
+    montar(PortalStatus, {
+      ...expedition,
+      documents: [{ type: 'commercial_invoice' }, { type: 'packing_list' }, { type: 'bill_of_lading' }],
+      updatedAt: '2026-11-11T12:00:00Z'
+    })
+
+    expect(screen.getByText('3')).toBeInTheDocument()
+    expect(screen.getAllByText('11/11/2026')).toHaveLength(2)
+  })
+
   test('no se rompe con el incoterm como objeto y lo pinta como texto', () => {
     montar(PortalStatus)
 

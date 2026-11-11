@@ -35,6 +35,7 @@ const EVENTOS_VISIBLES_CLIENTE = [
   'cancelled'
 ];
 const aiService = require('../services/aiService');
+const { DOCUMENT_DEFINITIONS } = require('../utils/documentChecklists');
 const { autorizacionVigente, aplicarAutorizacionVigente } = require('../services/documentos/autorizacionDespacho');
 
 /**
@@ -64,7 +65,9 @@ const getByToken = async (req, res) => {
     const checklist = aplicarAutorizacionVigente(
       expedition.documentChecklist.map(item => ({
         documentType: item.documentType,
-        documentName: item.documentName,
+        // El nombre vigente del tipo manda sobre el que se guardo al crear el
+        // expediente (los antiguos lo guardaron sin tildes).
+        documentName: DOCUMENT_DEFINITIONS[item.documentType]?.name || item.documentName,
         required: item.required,
         received: item.received,
         validated: item.validated,
@@ -99,6 +102,9 @@ const getByToken = async (req, res) => {
         arrivalDate: expedition.transport?.arrivalDate
       },
       incoterm: expedition.incoterm,
+      // Solo lo que pinta la pestaña «Estado»: cuantos documentos hay y de que tipo.
+      documents: (expedition.documents || []).map(doc => ({ type: doc.type, uploadedAt: doc.uploadedAt })),
+      updatedAt: expedition.updatedAt,
       clientNotes: expedition.clientNotes,
       // Seguimiento para la pestaña "Estado", que se veia vacia porque
       // clientView no incluia el timeline.

@@ -47,6 +47,17 @@ describe('PortalDocuments', () => {
     expect(screen.queryByText('portal.uploadSubtitleExport')).not.toBeInTheDocument()
   })
 
+  // UAT 11/Nov/2026: el portal pedia la autorizacion de despacho pero no ofrecia
+  // ese tipo para subirla; y la poliza usaba un tipo que el modelo no admite.
+  it('ofrece subir la autorizacion de despacho y la poliza de seguro', () => {
+    outletContext = { expedition: { operationType: 'import' }, token: 'tok-abc' }
+
+    render(<PortalDocuments />)
+
+    expect(screen.getByRole('button', { name: 'portal.docDispatchAuthorization' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'portal.docInsurance' })).toBeInTheDocument()
+  })
+
   it('anuncia una exportacion como exportacion', () => {
     outletContext = { expedition: { operationType: 'export' }, token: 'tok-abc' }
 

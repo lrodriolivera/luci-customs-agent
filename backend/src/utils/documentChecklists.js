@@ -44,7 +44,7 @@ const DOCUMENT_DEFINITIONS = {
 
   // Autorizaciones
   dispatch_authorization: {
-    name: 'Autorizacion de Despacho',
+    name: 'Autorización de Despacho',
     description: 'Poder de representacion aduanera',
     requiredFor: ['import', 'export']
   },
@@ -101,7 +101,7 @@ const DOCUMENT_DEFINITIONS = {
     conditions: 'Productos animales o derivados'
   },
   fumigation_certificate: {
-    name: 'Certificado de Fumigacion',
+    name: 'Certificado de Fumigación',
     description: 'Tratamiento de embalajes de madera',
     requiredFor: [],
     conditions: 'Embalajes de madera (NIMF-15)'
@@ -115,13 +115,13 @@ const DOCUMENT_DEFINITIONS = {
     conditions: 'Incoterms CIF, CIP'
   },
   import_license: {
-    name: 'Licencia de Importacion',
+    name: 'Licencia de Importación',
     description: 'Autorizacion para productos controlados',
     requiredFor: [],
     conditions: 'Productos sujetos a licencia'
   },
   export_license: {
-    name: 'Licencia de Exportacion',
+    name: 'Licencia de Exportación',
     description: 'Autorizacion para exportar bienes controlados',
     requiredFor: [],
     conditions: 'Doble uso, armamento, etc.'

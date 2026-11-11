@@ -27,11 +27,13 @@ export default function PortalDocuments() {
     { value: 'bill_of_lading', label: t('portal.docBillOfLading') },
     { value: 'air_waybill', label: t('portal.docAirWaybill') },
     { value: 'cmr', label: t('portal.docCmr') },
+    { value: 'dispatch_authorization', label: t('portal.docDispatchAuthorization') },
     { value: 'certificate_origin', label: t('portal.docCertificateOrigin') },
     { value: 'eur1', label: t('portal.docEur1') },
     { value: 'sanitary_certificate', label: t('portal.docHealthCert') },
     { value: 'phytosanitary_certificate', label: t('portal.docPhytoCert') },
-    { value: 'insurance', label: t('portal.docInsurance') },
+    // 'insurance' no existe en el modelo: la subida de la poliza fallaba.
+    { value: 'insurance_certificate', label: t('portal.docInsurance') },
     { value: 'other', label: t('portal.docOther') }
   ]
 
