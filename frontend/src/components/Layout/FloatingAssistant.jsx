@@ -5,26 +5,18 @@ import { ChatBubbleLeftRightIcon, XMarkIcon, PaperAirplaneIcon, SparklesIcon } f
 import { chatAPI } from '../../services/api'
 
 export default function FloatingAssistant() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: t('floating.welcomeMessage') }
-  ])
+  // Solo la conversacion: la bienvenida se traduce al pintar. Guardada en el
+  // estado se quedaba con la clave en crudo si las traducciones (que llegan por
+  // red) aun no habian cargado al montar el componente.
+  const [conversation, setMessages] = useState([])
+  const messages = [{ role: 'assistant', content: t('floating.welcomeMessage') }, ...conversation]
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
   const location = useLocation()
-
-  // Update welcome message when language changes
-  useEffect(() => {
-    setMessages(prev => {
-      if (prev.length === 1 && prev[0].role === 'assistant') {
-        return [{ role: 'assistant', content: t('floating.welcomeMessage') }]
-      }
-      return [{ role: 'assistant', content: t('floating.welcomeMessage') }, ...prev.slice(1)]
-    })
-  }, [i18n.language])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -35,7 +27,7 @@ export default function FloatingAssistant() {
       scrollToBottom()
       setTimeout(() => inputRef.current?.focus(), 100)
     }
-  }, [isOpen, messages])
+  }, [isOpen, conversation])
 
   // Don't show on the assistant page itself or landing
   if (location.pathname === '/assistant' || location.pathname === '/landing') return null

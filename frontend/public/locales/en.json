@@ -3739,6 +3739,8 @@
       "clientAddress": "Client address",
       "clientCity": "Client city",
       "clientPostalCode": "Client postal code",
+      "clientPhone": "Client phone",
+      "clientEmail": "Client email",
       "counterpartName": "Exporter / consignee",
       "counterpartCountry": "Exporter / consignee country",
       "counterpartCity": "Exporter / consignee city",

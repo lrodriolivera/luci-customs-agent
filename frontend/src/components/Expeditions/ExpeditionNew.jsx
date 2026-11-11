@@ -531,13 +531,12 @@ export default function ExpeditionNew() {
                 />
               </div>
               <div>
-                <label className="label">{t('common.email')} *</label>
+                <label className="label">{t('common.email')}</label>
                 <input
                   type="email"
                   value={formData.client.email}
                   onChange={(e) => handleChange('client', 'email', e.target.value)}
                   className="input"
-                  required
                 />
               </div>
               <div>

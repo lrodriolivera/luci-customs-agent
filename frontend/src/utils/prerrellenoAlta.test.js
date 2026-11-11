@@ -68,6 +68,53 @@ describe('prerrellenarAlta', () => {
     expect(rellenados.map((r) => r.campo)).toContain('clientPostalCode')
   })
 
+  describe('cantidad, telefono y correo (UAT 11/Nov/2026)', () => {
+    const conPartida = (partida) => lectura({ partidas: [{ descripcion: 'Portatiles', ...partida }] })
+
+    test('«480 PCE» de la factura rellena la cantidad en piezas', () => {
+      const { formData, rellenados } = prerrellenarAlta(formulario(), conPartida({ cantidad: 480, unidad: 'PCE' }), {})
+
+      expect(formData.goods[0]).toMatchObject({ quantity: '480', quantityUnit: 'PCS' })
+      expect(rellenados.map((r) => r.campo)).toContain('quantity')
+    })
+
+    test('una columna «Qty» sin unidad (packing list) cuenta piezas', () => {
+      const { formData } = prerrellenarAlta(formulario(), conPartida({ cantidad: 480, unidad: null }), {})
+      expect(formData.goods[0]).toMatchObject({ quantity: '480', quantityUnit: 'PCS' })
+    })
+
+    test('una unidad que el alta no ofrece no rellena la cantidad', () => {
+      const { formData } = prerrellenarAlta(formulario(), conPartida({ cantidad: 10, unidad: 'rollos' }), {})
+      expect(formData.goods[0]).toMatchObject({ quantity: '', quantityUnit: 'KGM' })
+    })
+
+    test('no pisa una cantidad que ya esta en el formulario', () => {
+      const form = formulario({ goods: [{ ...partidaVacia(), quantity: '500', quantityUnit: 'KGM' }] })
+      const { formData } = prerrellenarAlta(form, conPartida({ cantidad: 480, unidad: null }), {})
+      expect(formData.goods[0]).toMatchObject({ quantity: '500', quantityUnit: 'KGM' })
+    })
+
+    test('el telefono y el correo del cliente se rellenan si el documento los trae', () => {
+      const doc = lectura({ importador: { ...FACTURA.importador, telefono: '+34 601501449', email: 'compras@importadora.es' } })
+
+      const { formData, rellenados } = prerrellenarAlta(formulario(), doc, {})
+
+      expect(formData.client).toMatchObject({ phone: '+34 601501449', email: 'compras@importadora.es' })
+      expect(rellenados.map((r) => r.campo)).toEqual(expect.arrayContaining(['clientPhone', 'clientEmail']))
+    })
+
+    test('un telefono escrito de otra forma en otro documento no avisa ni pisa el que hay', () => {
+      const form = formulario()
+      form.client.phone = '601 501 449'
+      const doc = lectura({ importador: { ...FACTURA.importador, telefono: '+34 601501449' } })
+
+      const { formData, avisos } = prerrellenarAlta(form, doc, {})
+
+      expect(formData.client.phone).toBe('601 501 449')
+      expect(avisos).toEqual([])
+    })
+  })
+
   test('una lectura antigua sin codigo postal no rompe nada', () => {
     const { formData } = prerrellenarAlta(formulario(), FACTURA, {})
     expect(formData.client.postalCode).toBe('')

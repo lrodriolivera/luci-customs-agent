@@ -3723,6 +3723,8 @@
       "clientAddress": "Morada do cliente",
       "clientCity": "Cidade do cliente",
       "clientPostalCode": "Código postal do cliente",
+      "clientPhone": "Telefone do cliente",
+      "clientEmail": "E-mail do cliente",
       "counterpartName": "Exportador / destinatário",
       "counterpartCountry": "País do exportador / destinatário",
       "counterpartCity": "Cidade do exportador / destinatário",
