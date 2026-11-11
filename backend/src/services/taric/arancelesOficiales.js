@@ -129,12 +129,14 @@ function leerDerechosTercerosPaises(filas, { fecha = new Date() } = {}) {
     });
   }
   // Codigos de destino final («para sacrificio», «destinados a aeronaves
-  // civiles»…): no tienen derecho de terceros paises propio; el suyo es la
-  // medida 105, que solo vale con la autorizacion de destino final. Si el
-  // codigo tiene las dos, manda la general.
-  for (const [codigo, medidas] of destinoFinal) {
-    if (!derechos.has(codigo)) derechos.set(codigo, medidas);
-  }
+  // civiles»…): no tienen derecho de terceros paises, ni propio ni heredado; el
+  // suyo es la medida 105, que solo vale con la autorizacion de destino final.
+  // Si al codigo le alcanza un derecho general —aunque sea heredado del codigo
+  // del que cuelga— manda el general: la 105 es entonces una rebaja opcional
+  // (2707 10 00 90: 3 % general, 0 % con destino final), no su arancel.
+  const conDerechoGeneral = (codigo) => CORTES_DE_HERENCIA.some((corte) => derechos.has(codigo.slice(0, corte).padEnd(10, '0')));
+  const soloDestinoFinal = [...destinoFinal].filter(([codigo]) => !conDerechoGeneral(codigo));
+  for (const [codigo, medidas] of soloDestinoFinal) derechos.set(codigo, medidas);
   if (derechos.size === 0) throw new Error('Derechos de importacion: el fichero oficial no trae ningun derecho de terceros paises vigente');
   return derechos;
 }

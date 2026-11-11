@@ -202,21 +202,21 @@ describe('sincronizacion del catalogo TARIC', () => {
     const destinoFinal = derecho103(codigoRelleno(9), '0.000 % ');
     destinoFinal[7] = 'Non preferential duty under end-use';
     destinoFinal[11] = '105';
-    const ficheros = { ...F, derechosImport: xlsxDePrueba([CAB_DER, derecho103('9900000000', '3.300 % '), destinoFinal]) };
+    // En este fichero el capitulo no tiene derecho general: al codigo solo le alcanza su medida de destino final.
+    const ficheros = { ...F, derechosImport: xlsxDePrueba([CAB_DER, derecho103('8544429000', '3.300 % '), destinoFinal]) };
 
     const plan = await prepararSincronizacion(await catalogo(), { ficheros, describir: async () => 'x' });
     await aplicarSincronizacion(plan, { TaricCode });
 
-    // El codigo tiene su propia medida de destino final (0 %), que manda sobre
-    // el 3,3 % general del capitulo.
+    // El codigo solo tiene su medida de destino final (0 %).
     const deDestinoFinal = await TaricCode.findOne({ code: codigoRelleno(9) }).lean();
     expect(deDestinoFinal.duties).toMatchObject({
       thirdCountry: 0,
       origen: { fuente: 'taric_oficial', soloDestinoFinal: true, rotulo: 'Non preferential duty under end-use' }
     });
     expect(deDestinoFinal.duties.origen.evidencia).toContain('Antes: 3.3 %');
-    // El relleno, con derecho general, no lleva la marca.
-    expect((await TaricCode.findOne({ code: codigoRelleno(3) }).lean()).duties.origen.soloDestinoFinal).toBeUndefined();
+    // Otro codigo del relleno, sin ninguna medida, no lleva la marca.
+    expect((await TaricCode.findOne({ code: codigoRelleno(3) }).lean()).duties.origen?.soloDestinoFinal).toBeUndefined();
   });
 
   test('sin el fichero de derechos del mes las altas entran sin arancel y no se compara nada', async () => {

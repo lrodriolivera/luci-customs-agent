@@ -138,8 +138,9 @@ describe('arancelDe', () => {
       CAB,
       fila('0101299000', '11.500 % '),            // caballos, los demas: derecho general
       destino('0101291000', '0.000 % '),          // para sacrificio: solo destino final
-      fila('8411000000', '2.700 % '),             // partida con derecho general…
-      destino('8411810010', '0.000 % '),          // …y un codigo de destino final dentro
+      fila('2707100000', '3.000 % '),             // derecho general a 8 digitos…
+      destino('2707100090', '0.000 % '),          // …y una rebaja de destino final en uno de sus codigos
+      destino('8411810010', '0.000 % '),          // partida sin derecho general: solo destino final
       fila('2710191500', '4.700 % '), destino('2710191500', '0.000 % ')   // las dos: manda la general
     ], { fecha: FECHA });
 
@@ -150,10 +151,16 @@ describe('arancelDe', () => {
       });
     });
 
-    test('su propia medida de destino final manda sobre el derecho general de la partida', () => {
+    test('si al codigo le alcanza un derecho general heredado, manda el general: la de destino final es una rebaja opcional', () => {
+      // Caso real: 2707 10 00 90 tiene el 3 % heredado de 2707 10 00 y un 0 % propio con destino final.
+      const r = arancelDe('2707100090', conDestino);
+      expect(r).toMatchObject({ derecho: { adValorem: 3 }, heredadoDe: '2707100000', rotulo: 'Third country duty' });
+      expect(r.soloDestinoFinal).toBeUndefined();
+    });
+
+    test('sin derecho general en ningun nivel, el codigo de destino final toma el suyo; sus hermanos quedan sin medida', () => {
       expect(arancelDe('8411810010', conDestino)).toMatchObject({ derecho: { adValorem: 0 }, soloDestinoFinal: true, heredadoDe: '8411810010' });
-      expect(arancelDe('8411810090', conDestino)).toMatchObject({ derecho: { adValorem: 2.7 }, heredadoDe: '8411000000' });
-      expect(arancelDe('8411810090', conDestino).soloDestinoFinal).toBeUndefined();
+      expect(arancelDe('8411810090', conDestino)).toEqual({ estado: 'sin_medida' });
     });
 
     test('si el codigo tiene las dos medidas, vale el derecho general', () => {
