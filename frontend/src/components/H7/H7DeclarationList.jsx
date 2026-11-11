@@ -5,6 +5,7 @@ import { h7API } from '../../services/api'
 import toast from 'react-hot-toast'
 import ManifestUploader from './ManifestUploader'
 import EU2026382Banner from './EU2026382Banner'
+import { MODULOS_VISIBLES } from '../../config/modulosVisibles'
 import {
   ShoppingCartIcon,
   TruckIcon,
@@ -212,13 +213,15 @@ export default function H7DeclarationList() {
               Batch DECO
             </button>
           )}
-          <Link
-            to="/h7/new"
-            className="btn-primary flex items-center gap-2"
-          >
-            <PlusIcon className="h-5 w-5" />
-            {isNL ? 'Nueva DECO' : t('h7.new')}
-          </Link>
+          {MODULOS_VISIBLES.nuevaH7 && (
+            <Link
+              to="/h7/new"
+              className="btn-primary flex items-center gap-2"
+            >
+              <PlusIcon className="h-5 w-5" />
+              {isNL ? 'Nueva DECO' : t('h7.new')}
+            </Link>
+          )}
         </div>
       </div>
 
@@ -339,9 +342,11 @@ export default function H7DeclarationList() {
           <div className="text-center py-12">
             <ShoppingCartIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500">{t('h7.noDeclarations')}</p>
-            <Link to="/h7/new" className="btn-primary mt-4 inline-block">
-              {t('h7.createFirst')}
-            </Link>
+            {MODULOS_VISIBLES.nuevaH7 && (
+              <Link to="/h7/new" className="btn-primary mt-4 inline-block">
+                {t('h7.createFirst')}
+              </Link>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">

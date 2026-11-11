@@ -32,6 +32,10 @@ vi.mock('../../services/api', () => ({
 }))
 
 // Mockear hijos (componentes complejos)
+// La creacion esta oculta en la interfaz (config/modulosVisibles); aqui se
+// activa para seguir probando el codigo que hay detras.
+vi.mock('../../config/modulosVisibles', () => ({ MODULOS_VISIBLES: { nuevaH1: true, nuevaH7: true, crearEns: true } }))
+
 vi.mock('./ENSDeclarationForm', () => ({
   default: () => <div data-testid="form-mock">form-mock</div>
 }))

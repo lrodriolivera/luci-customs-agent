@@ -32,6 +32,10 @@ vi.mock('../../services/api', () => ({
   }
 }))
 
+// La creacion esta oculta en la interfaz (config/modulosVisibles); aqui se
+// activa para seguir probando el codigo que hay detras.
+vi.mock('../../config/modulosVisibles', () => ({ MODULOS_VISIBLES: { nuevaH1: true, nuevaH7: true, crearEns: true } }))
+
 vi.mock('./ManifestUploader', () => ({
   default: ({ onClose, onCreated }) => (
     <div data-testid="manifest-uploader">

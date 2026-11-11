@@ -45,6 +45,8 @@ import {
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline'
 
+import { MODULOS_VISIBLES } from '../../config/modulosVisibles'
+
 // Grupos del sidebar (con claves i18n)
 export const navGroups = [
   {
@@ -65,9 +67,9 @@ export const navGroups = [
     items: [
       { path: '/classification', icon: TagIcon, labelKey: 'nav.taricClassification' },
       { path: '/declarations', icon: DocumentTextIcon, labelKey: 'nav.declarationsH1' },
-      { path: '/declarations/h1/new', icon: DocumentTextIcon, labelKey: 'nav.newH1' },
+      ...(MODULOS_VISIBLES.nuevaH1 ? [{ path: '/declarations/h1/new', icon: DocumentTextIcon, labelKey: 'nav.newH1' }] : []),
       { path: '/h7', icon: ShoppingCartIcon, labelKey: 'nav.h7Ecommerce' },
-      { path: '/h7/new', icon: ShoppingCartIcon, labelKey: 'nav.newH7' },
+      ...(MODULOS_VISIBLES.nuevaH7 ? [{ path: '/h7/new', icon: ShoppingCartIcon, labelKey: 'nav.newH7' }] : []),
       { path: '/ens', icon: DocumentTextIcon, labelKey: 'nav.ensIcs2' },
       { path: '/pue', icon: ClipboardDocumentCheckIcon, labelKey: 'nav.pueSoivre' },
     ]
