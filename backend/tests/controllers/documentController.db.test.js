@@ -109,6 +109,29 @@ describe('upload', () => {
     expect(res.statusCode).toBe(404);
   });
 
+  // 11/Nov/2026: la autorizacion de despacho vale cuatro años desde su fecha.
+  test('la autorizacion de despacho exige su fecha y la guarda en el documento', async () => {
+    const exp = await sembrarExp(TENANT_A);
+    const subir = async (body) => {
+      const res = mockRes();
+      await documentController.upload(mockReq({ user: adminA, file: fakeFile(),
+        body: { expeditionId: exp._id.toString(), documentType: 'dispatch_authorization', ...body } }), res);
+      return res;
+    };
+
+    const sinFecha = await subir({});
+    const futura = await subir({ documentDate: '2099-01-01' });
+    const buena = await subir({ documentDate: '2024-03-15' });
+
+    expect(sinFecha.statusCode).toBe(400);
+    expect(sinFecha.body).toMatchObject({ code: 'DOCUMENT_DATE', error: 'Indica la fecha de la autorizacion de despacho' });
+    expect(futura.statusCode).toBe(400);
+    expect(buena.body.success).toBe(true);
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.documents).toHaveLength(1);
+    expect(guardado.documents[0].documentDate.toISOString().slice(0, 10)).toBe('2024-03-15');
+  });
+
   test('adjunta el documento, marca el checklist y guarda', async () => {
     const exp = await sembrarExp(TENANT_A, {
       checklist: [{ documentType: 'commercial_invoice', required: true, received: false }]

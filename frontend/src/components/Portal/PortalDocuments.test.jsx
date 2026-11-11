@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 
 /**
  * PortalDocuments — la pantalla donde el cliente final sube sus documentos.
@@ -56,6 +56,19 @@ describe('PortalDocuments', () => {
 
     expect(screen.getByRole('button', { name: 'portal.docDispatchAuthorization' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'portal.docInsurance' })).toBeInTheDocument()
+  })
+
+  it('al elegir la autorizacion de despacho pide su fecha; con otro tipo no', () => {
+    outletContext = { expedition: { operationType: 'import' }, token: 'tok-abc' }
+    render(<PortalDocuments />)
+    expect(screen.queryByLabelText(/portal.authDate/)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'portal.docDispatchAuthorization' }))
+    expect(screen.getByLabelText(/portal.authDate/)).toBeInTheDocument()
+    expect(screen.getByText('portal.authDateHint')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'portal.docInsurance' }))
+    expect(screen.queryByLabelText(/portal.authDate/)).not.toBeInTheDocument()
   })
 
   it('anuncia una exportacion como exportacion', () => {

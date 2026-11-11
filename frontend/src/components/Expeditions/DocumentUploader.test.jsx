@@ -64,6 +64,46 @@ describe('DocumentUploader', () => {
     await waitFor(() => expect(onUploaded).toHaveBeenCalledWith(creado, false))
   })
 
+  // 11/Nov/2026: la autorizacion de despacho vale cuatro años desde su fecha.
+  describe('fecha de la autorizacion de despacho', () => {
+    const elegir = (tipo) => fireEvent.change(screen.getByLabelText('expeditions.uploadDocumentType'), { target: { value: tipo } })
+
+    test('el campo de fecha solo aparece con la autorizacion de despacho', () => {
+      render(<DocumentUploader expeditionId="exp123" onUploaded={vi.fn()} />)
+      expect(screen.queryByLabelText(/expeditions.uploadAuthorizationDate/)).not.toBeInTheDocument()
+
+      elegir('dispatch_authorization')
+      expect(screen.getByLabelText(/expeditions.uploadAuthorizationDate/)).toBeInTheDocument()
+
+      elegir('packing_list')
+      expect(screen.queryByLabelText(/expeditions.uploadAuthorizationDate/)).not.toBeInTheDocument()
+    })
+
+    test('sin fecha no sube y lo dice', () => {
+      render(<DocumentUploader expeditionId="exp123" onUploaded={vi.fn()} />)
+      elegir('dispatch_authorization')
+      selectFile(pdf())
+
+      fireEvent.click(screen.getByText('expeditions.uploadButton'))
+
+      expect(documentsAPI.upload).not.toHaveBeenCalled()
+      expect(toast.error).toHaveBeenCalledWith('expeditions.uploadAuthorizationDateRequired')
+    })
+
+    test('con fecha la envia junto al documento', async () => {
+      documentsAPI.upload.mockResolvedValueOnce({ data: { success: true } })
+      render(<DocumentUploader expeditionId="exp123" onUploaded={vi.fn()} />)
+      elegir('dispatch_authorization')
+      const file = pdf()
+      selectFile(file)
+      fireEvent.change(screen.getByLabelText(/expeditions.uploadAuthorizationDate/), { target: { value: '2024-03-15' } })
+
+      fireEvent.click(screen.getByText('expeditions.uploadButton'))
+
+      await waitFor(() => expect(documentsAPI.upload).toHaveBeenCalledWith('exp123', file, 'dispatch_authorization', { documentDate: '2024-03-15' }))
+    })
+  })
+
   test('sin fichero no llama a la API', () => {
     render(<DocumentUploader expeditionId="exp123" onUploaded={vi.fn()} />)
 

@@ -512,6 +512,18 @@ describe('api.js — expeditionsAPI', () => {
 })
 
 describe('api.js — documentsAPI', () => {
+  it('documentsAPI.upload envia la fecha del documento solo si se indica', async () => {
+    const api = await import('./api.js')
+    const file = new File(['%PDF'], 'autorizacion.pdf', { type: 'application/pdf' })
+
+    await api.documentsAPI.upload('exp123', file, 'dispatch_authorization', { documentDate: '2024-03-15' })
+    await api.documentsAPI.upload('exp123', file, 'commercial_invoice')
+
+    const cuerpos = mockApi.post.mock.calls.filter(c => c[0] === '/api/documents/upload').map(c => c[1])
+    expect(cuerpos.at(-2).get('documentDate')).toBe('2024-03-15')
+    expect(cuerpos.at(-1).has('documentDate')).toBe(false)
+  })
+
   it('documentsAPI.upload llama a POST con multipart/form-data', async () => {
     const api = await import('./api.js')
 

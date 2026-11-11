@@ -96,6 +96,8 @@ const DocumentSchema = new mongoose.Schema({
   fileSize: Number,
   mimeType: String,
   uploadedAt: { type: Date, default: Date.now },
+  // Fecha del propio documento (p. ej. la de la autorizacion de despacho), no la de subida.
+  documentDate: Date,
   uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   status: {
     type: String,

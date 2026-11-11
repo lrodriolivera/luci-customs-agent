@@ -36,6 +36,7 @@ const EVENTOS_VISIBLES_CLIENTE = [
 ];
 const aiService = require('../services/aiService');
 const { DOCUMENT_DEFINITIONS } = require('../utils/documentChecklists');
+const { fechaDeDocumento } = require('../services/documentos/fechaDocumento');
 const { autorizacionVigente, aplicarAutorizacionVigente } = require('../services/documentos/autorizacionDespacho');
 
 /**
@@ -298,6 +299,11 @@ const uploadDocument = async (req, res) => {
       });
     }
 
+    const { fecha: documentDate, error: errorFecha } = fechaDeDocumento(req.body.documentDate, documentType);
+    if (errorFecha) {
+      return res.status(400).json({ success: false, error: errorFecha, code: 'DOCUMENT_DATE' });
+    }
+
     const expedition = await Expedition.findByPortalToken(token);
 
     if (!expedition) {
@@ -310,6 +316,7 @@ const uploadDocument = async (req, res) => {
     // Crear documento
     const document = {
       type: documentType,
+      ...(documentDate ? { documentDate } : {}),
       fileName: req.file.filename,
       originalName: req.file.originalname,
       filePath: req.file.path,
