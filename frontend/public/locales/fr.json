@@ -3637,6 +3637,7 @@
     "aeatItem": "Article {{status}} : {{packages}} colis et {{weight}} kg déclarés.",
     "aeatBalance": "Solde : {{packages}} colis.",
     "aeatMaster": "C'est un article maître : il correspond au chargement groupé, pas à cette marchandise.",
+    "aeatDiffers": "Ne correspond pas au dossier ({{packages}} colis et {{weight}} kg). Cela n'empêche pas de générer ni de déposer le H1 : vérifiez-le et, si nécessaire, corrigez le dossier ou les documents.",
     "aeatBillOfLading": "Connaissement : {{value}}",
     "aeatLocation": "Emplacement : {{value}}"
   },
