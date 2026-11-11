@@ -30,7 +30,9 @@ Tu unica tarea es TRANSCRIBIR los datos que figuran en el documento adjunto. Reg
 - "medio" es el NOMBRE del medio de transporte: nombre del buque, numero de vuelo o matricula del camion. El modo (maritimo, aereo, carretera) NO es un medio: en ese caso, null.
 - "confianza" es un entero de 0 a 100: cuanto de completo y legible esta el documento.
 - "legible": false si el documento esta en blanco, es ilegible o no es un documento de comercio exterior. En ese caso explica el motivo en "notas".
-- "notas": incidencias que el agente de aduanas deba conocer (dato dudoso, totales que no cuadran dentro del propio documento, paginas que faltan). Frases cortas.
+- "cantidad" es el numero de unidades de la linea (columnas Qty, Quantity, Cantidad, Uds, Pcs). "unidad" es la unidad que figura junto a ella (PCE, PCS, KG...); si la columna no lleva unidad, null.
+- "telefono" y "email" de cada parte, tal como aparecen; si no figuran, null.
+- "notas": incidencias que el agente de aduanas deba conocer (dato dudoso, totales que no cuadran dentro del propio documento, paginas que faltan). Frases cortas. NO es una incidencia que falte un dato opcional: no anotes que el incoterm no lleva lugar, que no hay peso neto, peso o bultos por linea, ni que falta el telefono o el correo. Si no hay incidencias, [].
 
 Responde UNICAMENTE con un JSON con esta forma exacta:
 {
@@ -38,8 +40,8 @@ Responde UNICAMENTE con un JSON con esta forma exacta:
   "tipoDetectado": "commercial_invoice | proforma_invoice | packing_list | bill_of_lading | air_waybill | cmr | certificate_origin | other",
   "confianza": 0,
   "notas": [],
-  "exportador": { "nombre": null, "direccion": null, "ciudad": null, "codigoPostal": null, "pais": null },
-  "importador": { "nombre": null, "identificacionFiscal": null, "direccion": null, "ciudad": null, "codigoPostal": null, "pais": null },
+  "exportador": { "nombre": null, "direccion": null, "ciudad": null, "codigoPostal": null, "pais": null, "telefono": null, "email": null },
+  "importador": { "nombre": null, "identificacionFiscal": null, "direccion": null, "ciudad": null, "codigoPostal": null, "pais": null, "telefono": null, "email": null },
   "factura": { "numero": null, "fecha": null, "moneda": null, "importeTotal": null, "incoterm": null, "lugarIncoterm": null },
   "transporte": { "numeroDocumento": null, "medio": null, "puertoCarga": null, "puertoDescarga": null, "contenedores": [], "tipoCarga": null },
   "partidas": [ { "descripcion": null, "codigoMercancia": null, "paisOrigen": null, "cantidad": null, "unidad": null, "bultos": null, "tipoBulto": null, "pesoBrutoKg": null, "pesoNetoKg": null, "importe": null } ],
@@ -75,6 +77,19 @@ const texto = (valor) => {
   if (typeof valor === 'object') return null;
   const limpio = String(valor).trim().slice(0, MAX_TEXTO);
   return limpio === '' || /^(null|n\/a|none|-)$/i.test(limpio) ? null : limpio;
+};
+
+// Un telefono es una cadena corta de digitos con, como mucho, +, espacios,
+// parentesis, puntos y guiones; cualquier otra cosa no se da por telefono.
+const telefono = (valor) => {
+  const t = texto(valor);
+  if (!t || t.length > 30 || !/^[+\d\s().-]+$/.test(t)) return null;
+  return t.replace(/\D/g, '').length >= 6 ? t : null;
+};
+
+const correo = (valor) => {
+  const t = texto(valor);
+  return t && t.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? t.toLowerCase() : null;
 };
 
 const numero = (valor) => {
@@ -173,10 +188,14 @@ function normalizarExtraccion(bruto) {
     tipoDetectado: TIPOS_DOCUMENTO.includes(r.tipoDetectado) ? r.tipoDetectado : null,
     confianza: escalaConfianza(r.confianza),
     notas: lista(r.notas).map(texto).filter(Boolean).slice(0, MAX_NOTAS),
-    exportador: { nombre: texto(exp.nombre), direccion: texto(exp.direccion), ...localidad(exp.ciudad, exp.codigoPostal), pais: pais(exp.pais) },
+    exportador: {
+      nombre: texto(exp.nombre), direccion: texto(exp.direccion), ...localidad(exp.ciudad, exp.codigoPostal), pais: pais(exp.pais),
+      telefono: telefono(exp.telefono), email: correo(exp.email)
+    },
     importador: {
       nombre: texto(imp.nombre), identificacionFiscal: texto(imp.identificacionFiscal),
-      direccion: texto(imp.direccion), ...localidad(imp.ciudad, imp.codigoPostal), pais: pais(imp.pais)
+      direccion: texto(imp.direccion), ...localidad(imp.ciudad, imp.codigoPostal), pais: pais(imp.pais),
+      telefono: telefono(imp.telefono), email: correo(imp.email)
     },
     factura: {
       numero: texto(fac.numero), fecha: texto(fac.fecha), moneda: moneda(fac.moneda), importeTotal: numero(fac.importeTotal),

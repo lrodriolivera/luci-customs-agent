@@ -27,12 +27,16 @@ const TIPO_TRANSPORTE = { bill_of_lading: 'BL', air_waybill: 'AWB', cmr: 'CMR' }
 
 // Unidades del documento que corresponden a las cuatro que ofrece el alta.
 const UNIDADES = {
-  PCS: 'PCS', PC: 'PCS', PIECE: 'PCS', PIECES: 'PCS', UNIT: 'PCS', UNITS: 'PCS', UN: 'PCS', UD: 'PCS', UDS: 'PCS',
-  UNIDAD: 'PCS', UNIDADES: 'PCS', PIEZA: 'PCS', PIEZAS: 'PCS', SET: 'PCS', SETS: 'PCS', EA: 'PCS',
+  PCS: 'PCS', PC: 'PCS', PCE: 'PCS', PCES: 'PCS', PIECE: 'PCS', PIECES: 'PCS', UNIT: 'PCS', UNITS: 'PCS', UN: 'PCS',
+  U: 'PCS', UD: 'PCS', UDS: 'PCS', UNIDAD: 'PCS', UNIDADES: 'PCS', PIEZA: 'PCS', PIEZAS: 'PCS', PZA: 'PCS', PZAS: 'PCS',
+  PZ: 'PCS', SET: 'PCS', SETS: 'PCS', EA: 'PCS', EACH: 'PCS', NAR: 'PCS', NOS: 'PCS', NO: 'PCS', QTY: 'PCS',
   KG: 'KGM', KGS: 'KGM', KGM: 'KGM', KILO: 'KGM', KILOS: 'KGM',
   M: 'MTR', MTR: 'MTR', MTS: 'MTR', METRO: 'MTR', METROS: 'MTR', METER: 'MTR', METERS: 'MTR',
   L: 'LTR', LTR: 'LTR', LTS: 'LTR', LITRO: 'LTR', LITROS: 'LTR', LITER: 'LTR', LITERS: 'LTR'
 }
+
+// Unidad de una cantidad que el documento da sin unidad (columna «Qty»).
+const UNIDAD_SIN_INDICAR = 'PCS'
 
 /** Partida en blanco del formulario de alta. */
 export const partidaVacia = () => ({
@@ -160,6 +164,9 @@ export function prerrellenarAlta(formData, extraccion, { tipoDocumento, fijados 
   proponer('clientAddress', next.client, 'address', cliente.direccion)
   proponer('clientCity', next.client, 'city', cliente.ciudad)
   proponer('clientPostalCode', next.client, 'postalCode', cliente.codigoPostal)
+  // El telefono se escribe distinto en cada documento: no se avisa si difiere.
+  proponer('clientPhone', next.client, 'phone', cliente.telefono, { sinAviso: true })
+  proponer('clientEmail', next.client, 'email', cliente.email, { sinAviso: true })
   if (!vacio(cliente.identificacionFiscal)) {
     const { nif, eori } = identificacionFiscal(cliente.identificacionFiscal)
     if (!nif) avisos.push({ campo: 'fiscalIdNotRecognised', valor: cliente.identificacionFiscal })
@@ -199,7 +206,10 @@ export function prerrellenarAlta(formData, extraccion, { tipoDocumento, fijados 
       if (/^\d{10}$/.test(p.codigoMercancia || '')) proponer('taricCode', good, 'taricCode', p.codigoMercancia, { partida: n })
       proponer('originCountry', good, 'originCountry', p.paisOrigen, { partida: n })
 
-      const unidad = UNIDADES[String(p.unidad || '').toUpperCase().replace(/[^A-Z]/g, '')]
+      // Una columna «Qty» sin unidad cuenta unidades (piezas). Si trae una
+      // unidad que el alta no ofrece, la cantidad no se rellena: no se adivina.
+      const unidadLeida = String(p.unidad || '').toUpperCase().replace(/[^A-Z]/g, '')
+      const unidad = unidadLeida === '' ? UNIDAD_SIN_INDICAR : UNIDADES[unidadLeida]
       if (!vacio(p.cantidad) && unidad && vacio(good.quantity)) {
         proponer('quantity', good, 'quantity', String(p.cantidad), { partida: n })
         good.quantityUnit = unidad

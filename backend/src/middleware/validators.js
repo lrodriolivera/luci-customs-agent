@@ -111,8 +111,9 @@ const expeditionValidators = {
       .withMessage('NIF del cliente es obligatorio')
       .matches(/^[A-Z0-9]{8,9}[A-Z0-9]?$/)
       .withMessage('Formato de NIF invalido (debe ser 8-10 caracteres alfanumericos)'),
+    // Opcional de verdad: el agente no suele declararlo y el formulario lo envia vacio.
     body('client.email')
-      .optional()
+      .optional({ values: 'falsy' })
       .isEmail()
       .withMessage('Email del cliente invalido'),
     handleValidationErrors

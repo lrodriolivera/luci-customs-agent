@@ -43,7 +43,7 @@ describe('extraccionDocumento', () => {
     test('una respuesta vacia o con forma inesperada da el esquema completo con nulos', () => {
       for (const bruto of [undefined, null, 'texto', [], {}]) {
         const d = normalizarExtraccion(bruto);
-        expect(d.exportador).toEqual({ nombre: null, direccion: null, ciudad: null, codigoPostal: null, pais: null });
+        expect(d.exportador).toEqual({ nombre: null, direccion: null, ciudad: null, codigoPostal: null, pais: null, telefono: null, email: null });
         expect(d.partidas).toEqual([]);
         expect(d.totales).toEqual({ bultos: null, pesoBrutoKg: null, pesoNetoKg: null });
         expect(d.transporte.contenedores).toEqual([]);
@@ -153,6 +153,33 @@ describe('extraccionDocumento', () => {
 
       expect(d.legible).toBe(false);
       expect(d.notas).toEqual(['ilegible', '7']);
+    });
+  });
+
+  describe('telefono y correo de las partes (UAT 11/Nov/2026)', () => {
+    test('se conservan tal como aparecen; el correo, en minusculas', () => {
+      const r = normalizarExtraccion({
+        importador: { nombre: 'Distribuciones SL', telefono: '+34 601501449', email: 'Compras@Distribuciones.ES' },
+        exportador: { nombre: 'Shanghai Hongtai', telefono: '(+86) 606-001-840' }
+      });
+
+      expect(r.importador).toMatchObject({ telefono: '+34 601501449', email: 'compras@distribuciones.es' });
+      expect(r.exportador).toMatchObject({ telefono: '(+86) 606-001-840', email: null });
+    });
+
+    test('lo que no tiene forma de telefono o de correo se descarta', () => {
+      const r = normalizarExtraccion({
+        importador: { telefono: 'ver contrato', email: 'no figura' },
+        exportador: { telefono: '123', email: 'a@b' }
+      });
+
+      expect(r.importador).toMatchObject({ telefono: null, email: null });
+      expect(r.exportador).toMatchObject({ telefono: null, email: null });
+    });
+
+    test('una lectura sin esos campos los deja en null', () => {
+      expect(normalizarExtraccion(LECTURA_FACTURA).exportador).toMatchObject({ telefono: null, email: null });
+      expect(normalizarExtraccion({}).importador).toMatchObject({ telefono: null, email: null });
     });
   });
 
@@ -294,6 +321,11 @@ describe('extraccionDocumento', () => {
   describe('prompt', () => {
     test('prohibe deducir el tipo de carga y pide null para lo que no se lee', () => {
       expect(SYSTEM_PROMPT).toContain('PROHIBIDO deducirlo');
+      // UAT 11/Nov/2026: la falta de un dato opcional no es una incidencia.
+      expect(SYSTEM_PROMPT).toContain('NO es una incidencia que falte un dato opcional');
+      expect(SYSTEM_PROMPT).toContain('que el incoterm no lleva lugar');
+      expect(SYSTEM_PROMPT).toContain('"telefono": null, "email": null');
+      expect(SYSTEM_PROMPT).toContain('si la columna no lleva unidad, null');
       expect(SYSTEM_PROMPT).toContain('usa null');
       expect(SYSTEM_PROMPT).toContain('El modo (maritimo, aereo, carretera) NO es un medio');
     });
