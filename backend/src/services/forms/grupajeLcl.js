@@ -5,13 +5,14 @@
  * naviera da de alta una declaracion sumaria por el contenedor completo; solo
  * despues de vaciarlo en el almacen de deposito temporal (ADT) existe la
  * sumaria de la desconsolidacion, con los bultos y los kilos de cada partida.
- * El H1 tiene que apoyarse en esa, nunca en la del contenedor completo, y no
- * hay excepcion aunque lo valide el agente (criterio de la agente de aduanas
- * en la UAT del 10/Nov/2026).
+ * El H1 tiene que apoyarse en esa, nunca en la del contenedor completo
+ * (partida master): eso bloquea y no admite excepcion.
  *
- * LUCI no puede consultar la sumaria en la AEAT: lo que comprueba es que el
- * agente ha registrado una sumaria y que sus bultos y kilos son los del
- * expediente. Una sumaria con los totales del contenedor no cuadra y bloquea.
+ * Que los bultos o los kilos de la sumaria no coincidan con los del expediente
+ * NO bloquea: puede ser un envio parcial o una discrepancia de origen, y la
+ * documentacion se corrige despues. LUCI avisa de la diferencia y es el agente
+ * quien la valida (criterio de la agente de aduanas en la UAT del 11/Nov/2026;
+ * el 10/Nov se habia implantado como bloqueo).
  *
  * Solo aplica si el expediente esta marcado como LCL: sin marca no se afirma
  * ni se bloquea nada.
@@ -19,7 +20,7 @@
 const { ErrorValidacion } = require('./identificadorAduanero');
 
 const TIPO_CARGA_GRUPAJE = 'LCL';
-// La sumaria y el expediente pueden diferir en el redondeo del peso, no en mas.
+// Por debajo de esto la diferencia de peso es redondeo y no merece aviso.
 const TOLERANCIA_PESO_KG = 1;
 const TOLERANCIA_PESO_RELATIVA = 0.01;
 
@@ -56,23 +57,41 @@ const bloqueoPorGrupaje = (expedition) => {
       'la sumaria con los bultos y los kilos de esta partida. La sumaria del contenedor completo no sirve para el H1.';
   }
 
-  const bultosSumaria = numero(sumaria.packages);
-  const pesoSumaria = numero(sumaria.grossWeight);
-  if (!(bultosSumaria > 0) || !(pesoSumaria > 0)) {
-    return `${prefijo}: registra los bultos y el peso bruto que figuran en la declaracion sumaria ` +
-      `${sumaria.number} para comprobar que es la de esta partida y no la del contenedor completo.`;
-  }
-
-  const bultosExpediente = numero(expedition.goodsSummary?.totalPackages) || 0;
-  const pesoExpediente = numero(expedition.goodsSummary?.totalGrossWeight) || 0;
-
-  if (bultosSumaria !== bultosExpediente || !pesoCuadra(pesoSumaria, pesoExpediente)) {
-    return `${prefijo} y la declaracion sumaria ${sumaria.number} no corresponde a esta partida: ` +
-      `declara ${bultosSumaria} bultos y ${pesoSumaria} kg, y el expediente ${bultosExpediente} bultos y ${pesoExpediente} kg. ` +
-      'Si es la sumaria del contenedor completo no se puede usar: hace falta la de la desconsolidacion.';
-  }
-
   return null;
+};
+
+const VALIDA_EL_AGENTE = 'No impide generar ni presentar el H1: compruebalo y, si hace falta, corrige el expediente o la documentacion.';
+
+/** Texto del aviso si los bultos o los kilos difieren; null si coinciden. */
+const avisoSiDifieren = ({ origen, bultos, peso }, totales) => {
+  if (bultos === null || peso === null) return null;
+  if (bultos === totales.bultos && pesoCuadra(peso, totales.peso)) return null;
+  return `Los bultos o los kilos no coinciden: ${origen} figura con ${bultos} bultos y ${peso} kg, ` +
+    `y el expediente declara ${totales.bultos} bultos y ${totales.peso} kg. ${VALIDA_EL_AGENTE}`;
+};
+
+/**
+ * Aviso (no bloqueo) cuando los bultos o los kilos que el agente tecleo de la
+ * sumaria no coinciden con los del expediente. Solo en grupaje y solo si los
+ * dos datos estan registrados.
+ *
+ * @param {object} expedition
+ * @returns {string|null}
+ */
+const avisoPorDiferencia = (expedition) => {
+  if (!esGrupaje(expedition)) return null;
+  const sumaria = expedition.transport.summaryDeclaration || {};
+  if (!String(sumaria.number || '').trim()) return null;
+  const bultos = numero(sumaria.packages);
+  const peso = numero(sumaria.grossWeight);
+  if (!(bultos > 0) || !(peso > 0)) return null;
+  return avisoSiDifieren(
+    { origen: `la declaracion sumaria ${sumaria.number}`, bultos, peso },
+    {
+      bultos: numero(expedition.goodsSummary?.totalPackages) || 0,
+      peso: numero(expedition.goodsSummary?.totalGrossWeight) || 0
+    }
+  );
 };
 
 /** Lanza ErrorValidacion (422) si el grupaje impide seguir con el H1. */
@@ -121,10 +140,11 @@ const instantaneaDe = (respuesta, partida) => ({
 /**
  * Decide con la respuesta de la AEAT si la sumaria sirve para el H1 de un
  * grupaje. A diferencia del contraste manual, aqui mandan los datos de la
- * AEAT: estado de la partida (una partida master es la de la carga agrupada,
- * no la de la desconsolidacion), bultos, peso y saldo.
+ * AEAT: bloquean el estado de la partida (una partida master es la de la carga
+ * agrupada, no la de la desconsolidacion) y la falta de saldo. Que los bultos o
+ * los kilos no coincidan con el expediente solo avisa: lo valida el agente.
  *
- * @returns {{ bloqueo: string|null, consulta: object }}
+ * @returns {{ bloqueo: string|null, aviso: string|null, consulta: object }}
  */
 const evaluarConsultaAeat = (expedition, respuesta) => {
   const sumaria = expedition.transport.summaryDeclaration;
@@ -137,13 +157,14 @@ const evaluarConsultaAeat = (expedition, respuesta) => {
     return {
       bloqueo: `${prefijo} y la AEAT no encuentra la partida ${sumaria.item} de la declaracion sumaria ${sumaria.number}` +
         `${detalle ? ` (${detalle})` : ''}. Comprueba el numero y la partida.${avisoPreproduccion(respuesta)}`,
+      aviso: null,
       consulta: { ...instantaneaDe(respuesta, null), error: detalle || 'Partida de DSDT no encontrada' }
     };
   }
 
   const partida = respuesta.dsdt.partidas.find(p => p.partida === numeroPartida) || respuesta.dsdt.partidas[0];
   const consulta = instantaneaDe(respuesta, partida);
-  const bloquear = (motivo) => ({ bloqueo: `${prefijo} y ${motivo}`, consulta });
+  const bloquear = (motivo) => ({ bloqueo: `${prefijo} y ${motivo}`, aviso: null, consulta });
 
   if (!partida) return bloquear(`la AEAT no devuelve la partida ${sumaria.item} de la declaracion sumaria ${sumaria.number}.`);
 
@@ -162,18 +183,18 @@ const evaluarConsultaAeat = (expedition, respuesta) => {
   }
 
   const totales = totalesDe(expedition);
-  const bultosAeat = partida.bultosDeclarados;
-  const pesoAeat = partida.pesoBrutoDeclarado;
-  if (bultosAeat !== totales.bultos || pesoAeat === null || !pesoCuadra(pesoAeat, totales.peso)) {
-    return bloquear(`la partida ${sumaria.item} de la declaracion sumaria ${sumaria.number} no corresponde a esta mercancia: ` +
-      `en la AEAT figura con ${bultosAeat} bultos y ${pesoAeat} kg, y el expediente declara ${totales.bultos} bultos y ${totales.peso} kg.`);
-  }
   if (partida.bultosSaldo !== null && partida.bultosSaldo < totales.bultos) {
     return bloquear(`la partida ${sumaria.item} de la declaracion sumaria ${sumaria.number} solo tiene ` +
       `${partida.bultosSaldo} bultos de saldo en la AEAT y el expediente declara ${totales.bultos}.`);
   }
 
-  return { bloqueo: null, consulta };
+  const aviso = avisoSiDifieren({
+    origen: `en la AEAT la partida ${sumaria.item} de la declaracion sumaria ${sumaria.number}`,
+    bultos: partida.bultosDeclarados ?? null,
+    peso: partida.pesoBrutoDeclarado ?? null
+  }, totales);
+
+  return { bloqueo: null, aviso, consulta };
 };
 
 /**
@@ -181,10 +202,11 @@ const evaluarConsultaAeat = (expedition, respuesta) => {
  *
  * 1. Si no es grupaje y no hay sumaria registrada, no hay nada que comprobar.
  * 2. Si hay sumaria con una referencia valida, se consulta en la AEAT. En un
- *    grupaje el resultado bloquea; en el resto solo se guarda como informacion.
+ *    grupaje una partida master, no activada, retenida o sin saldo bloquea; una
+ *    diferencia de bultos o kilos solo avisa. En el resto se guarda como informacion.
  * 3. Si la AEAT no se puede consultar (servicio caido, no habilitado, error
- *    del remitente...), en un grupaje se aplica el contraste manual de bultos y
- *    kilos y la consulta queda marcada como no verificada, con el motivo.
+ *    del remitente...), en un grupaje se comparan los bultos y kilos tecleados
+ *    (aviso si difieren) y la consulta queda marcada como no verificada.
  *
  * @param {object} expedition
  * @param {{ consultar: (referencia: { clave?: string, mrn?: string, partida: string }) => Promise<object> }} deps
@@ -213,8 +235,9 @@ const verificarSumariaConAeat = async (expedition, { consultar }) => {
       throw new Error(detalle || 'respuesta de rechazo sin motivo');
     }
   } catch (error) {
-    const aviso = `No se pudo comprobar la declaracion sumaria ${numeroSumaria} en la AEAT (${error.message}). ` +
-      'Se han contrastado solo los bultos y el peso registrados a mano.';
+    const diferencia = avisoPorDiferencia(expedition);
+    const aviso = `No se pudo comprobar la declaracion sumaria ${numeroSumaria} en la AEAT (${error.message}).` +
+      `${diferencia ? ` ${diferencia}` : ''}`;
     return {
       bloqueo: bloqueoPorGrupaje(expedition),
       aviso,
@@ -230,11 +253,12 @@ const verificarSumariaConAeat = async (expedition, { consultar }) => {
       : { bloqueo: null, aviso: null, consulta };
   }
 
-  return { ...evaluarConsultaAeat(expedition, respuesta), aviso: null };
+  return evaluarConsultaAeat(expedition, respuesta);
 };
 
 module.exports = {
   bloqueoPorGrupaje,
+  avisoPorDiferencia,
   exigirSumariaDeGrupaje,
   verificarSumariaConAeat,
   evaluarConsultaAeat,

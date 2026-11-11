@@ -4,8 +4,12 @@
  * UAT 10/Nov/2026: «cuando la naviera de de alta la declaracion sumaria por el
  * contenedor completo siendo un LCL no debe bajo ningun concepto proceder con
  * el H1 con esa declaracion sumaria».
+ *
+ * UAT 11/Nov/2026: «no exijas que coincidan los bultos y los kilos, ya que
+ * puede venir parcial o haber una discrepancia en origen; es mejor que lo
+ * pueda modificar y validar el agente». La diferencia avisa, no bloquea.
  */
-const { bloqueoPorGrupaje, exigirSumariaDeGrupaje, esGrupaje, CODIGO_ERROR } = require('../../src/services/forms/grupajeLcl');
+const { bloqueoPorGrupaje, avisoPorDiferencia, exigirSumariaDeGrupaje, esGrupaje, CODIGO_ERROR } = require('../../src/services/forms/grupajeLcl');
 const { ErrorValidacion } = require('../../src/services/forms/identificadorAduanero');
 
 const expediente = (transport, resumen = { totalPackages: 12, totalGrossWeight: 1050.5 }) => ({
@@ -44,69 +48,74 @@ describe('grupajeLcl', () => {
         .toContain('falta la declaracion sumaria');
     });
 
-    test('con numero pero sin bultos o sin peso pide registrarlos', () => {
-      const sinBultos = bloqueoPorGrupaje(expediente({ loadType: 'LCL', summaryDeclaration: { number: 'S1', grossWeight: 1050.5 } }));
-      const sinPeso = bloqueoPorGrupaje(expediente({ loadType: 'LCL', summaryDeclaration: { number: 'S1', packages: 12 } }));
+    test('con numero pero sin bultos o sin peso no bloquea ni avisa: no hay nada que comparar', () => {
+      const sinBultos = expediente({ loadType: 'LCL', summaryDeclaration: { number: 'S1', grossWeight: 1050.5 } });
+      const sinPeso = expediente({ loadType: 'LCL', summaryDeclaration: { number: 'S1', packages: 12 } });
 
-      expect(sinBultos).toContain('registra los bultos y el peso bruto');
-      expect(sinPeso).toContain('registra los bultos y el peso bruto');
+      expect(bloqueoPorGrupaje(sinBultos)).toBeNull();
+      expect(bloqueoPorGrupaje(sinPeso)).toBeNull();
+      expect(avisoPorDiferencia(sinBultos)).toBeNull();
+      expect(avisoPorDiferencia(sinPeso)).toBeNull();
     });
   });
 
-  describe('grupaje con sumaria registrada', () => {
-    test('la sumaria del contenedor completo no cuadra y bloquea, con las dos cifras a la vista', () => {
-      const motivo = bloqueoPorGrupaje(expediente({
-        loadType: 'LCL',
-        summaryDeclaration: { number: 'S-CONTENEDOR', packages: 820, grossWeight: 14200 }
-      }));
+  describe('grupaje con sumaria registrada: la diferencia de bultos o kilos avisa, no bloquea', () => {
+    const con = (cambios, resumen) => expediente({ loadType: 'LCL', summaryDeclaration: { ...sumariaPropia, ...cambios } }, resumen);
 
-      expect(motivo).toContain('no corresponde a esta partida');
-      expect(motivo).toContain('820 bultos y 14200 kg');
-      expect(motivo).toContain('12 bultos y 1050.5 kg');
+    test('bultos y kilos distintos no bloquean; el aviso lleva las dos cifras y deja la decision al agente', () => {
+      const exp = con({ number: 'S-OTRA', packages: 820, grossWeight: 14200 });
+      const aviso = avisoPorDiferencia(exp);
+
+      expect(bloqueoPorGrupaje(exp)).toBeNull();
+      expect(aviso).toContain('la declaracion sumaria S-OTRA figura con 820 bultos y 14200 kg');
+      expect(aviso).toContain('el expediente declara 12 bultos y 1050.5 kg');
+      expect(aviso).toContain('No impide generar ni presentar el H1');
     });
 
-    test('mismos kilos pero distintos bultos tambien bloquea', () => {
-      expect(bloqueoPorGrupaje(expediente({
-        loadType: 'LCL', summaryDeclaration: { ...sumariaPropia, packages: 13 }
-      }))).toContain('no corresponde a esta partida');
+    test('mismos kilos pero distintos bultos (envio parcial) tambien avisa sin bloquear', () => {
+      const exp = con({ packages: 13 });
+
+      expect(bloqueoPorGrupaje(exp)).toBeNull();
+      expect(avisoPorDiferencia(exp)).toContain('13 bultos');
     });
 
-    test('la sumaria de la desconsolidacion, con nuestros bultos y kilos, deja seguir', () => {
-      expect(bloqueoPorGrupaje(expediente({ loadType: 'LCL', summaryDeclaration: sumariaPropia }))).toBeNull();
+    test('con los mismos bultos y kilos no hay aviso', () => {
+      expect(bloqueoPorGrupaje(con({}))).toBeNull();
+      expect(avisoPorDiferencia(con({}))).toBeNull();
     });
 
-    test('admite la diferencia de redondeo del peso (hasta 1 kg o el 1 %)', () => {
-      const con = (grossWeight) => bloqueoPorGrupaje(expediente({
-        loadType: 'LCL', summaryDeclaration: { ...sumariaPropia, grossWeight }
-      }));
-
-      expect(con(1051)).toBeNull();
-      expect(con(1060)).toBeNull();        // 9,5 kg sobre 1.050,5 kg: dentro del 1 %
-      expect(con(1062)).toContain('no corresponde');
-      expect(con(1039)).toContain('no corresponde');
+    test('la diferencia de redondeo del peso (hasta 1 kg o el 1 %) no merece aviso', () => {
+      expect(avisoPorDiferencia(con({ grossWeight: 1051 }))).toBeNull();
+      expect(avisoPorDiferencia(con({ grossWeight: 1060 }))).toBeNull();        // 9,5 kg sobre 1.050,5 kg: dentro del 1 %
+      expect(avisoPorDiferencia(con({ grossWeight: 1062 }))).toContain('1062 kg');
+      expect(avisoPorDiferencia(con({ grossWeight: 1039 }))).toContain('1039 kg');
     });
 
-    test('en partidas pequenas la tolerancia es de 1 kg, no del 1 %', () => {
-      const pequeno = (grossWeight) => bloqueoPorGrupaje(expediente(
+    test('en partidas pequenas el margen sin aviso es de 1 kg, no del 1 %', () => {
+      const pequeno = (grossWeight) => avisoPorDiferencia(expediente(
         { loadType: 'LCL', summaryDeclaration: { number: 'S1', packages: 2, grossWeight } },
         { totalPackages: 2, totalGrossWeight: 10 }
       ));
 
       expect(pequeno(10.9)).toBeNull();
-      expect(pequeno(11.5)).toContain('no corresponde');
+      expect(pequeno(11.5)).toContain('11.5 kg');
     });
 
     test('los valores llegan como texto desde un formulario y se comparan como numeros', () => {
-      expect(bloqueoPorGrupaje(expediente({
-        loadType: 'LCL', summaryDeclaration: { number: 'S1', packages: '12', grossWeight: '1050.5' }
-      }))).toBeNull();
+      expect(avisoPorDiferencia(con({ packages: '12', grossWeight: '1050.5' }))).toBeNull();
     });
 
-    test('un expediente sin totales calculados no cuadra con ninguna sumaria', () => {
-      expect(bloqueoPorGrupaje(expediente({ loadType: 'LCL', summaryDeclaration: sumariaPropia }, null)))
-        .not.toBeNull();
-      expect(bloqueoPorGrupaje({ transport: { loadType: 'LCL', summaryDeclaration: sumariaPropia } }))
-        .toContain('0 bultos y 0 kg');
+    test('un expediente sin totales calculados avisa contra 0 bultos y 0 kg, sin bloquear', () => {
+      const exp = con({}, null);
+
+      expect(bloqueoPorGrupaje(exp)).toBeNull();
+      expect(avisoPorDiferencia(exp)).toContain('0 bultos y 0 kg');
+    });
+
+    test('fuera del grupaje o sin sumaria no hay aviso', () => {
+      expect(avisoPorDiferencia(expediente({ loadType: 'FCL', summaryDeclaration: { ...sumariaPropia, packages: 99 } }))).toBeNull();
+      expect(avisoPorDiferencia(expediente({ loadType: 'LCL' }))).toBeNull();
+      expect(avisoPorDiferencia(null)).toBeNull();
     });
   });
 
@@ -164,6 +173,7 @@ describe('grupajeLcl — consulta de la sumaria en la AEAT', () => {
 
     expect(fn).toHaveBeenCalledWith({ clave: '46116000123', partida: '3' });
     expect(r.bloqueo).toBeNull();
+    expect(r.aviso).toBeNull();
     expect(r.consulta).toMatchObject({
       verified: true, environment: 'ES.AEAT', clave: '46116000123', itemStatus: 'AC', isMaster: false,
       packages: 12, grossWeight: 1050.5, packagesBalance: 12, billOfLading: 'BL-1', location: '4611ADT001'
@@ -180,12 +190,32 @@ describe('grupajeLcl — consulta de la sumaria en la AEAT', () => {
     expect(r.consulta.isMaster).toBe(true);
   });
 
-  test('los bultos y kilos que valen son los de la AEAT, no los tecleados', async () => {
+  test('bultos y kilos de la AEAT distintos de los del expediente: avisa con las dos cifras y deja seguir', async () => {
     const r = await verificarSumariaConAeat(lcl(sumaria), {
-      consultar: consultar(respuesta({ bultosDeclarados: 40, pesoBrutoDeclarado: 3500 }))
+      consultar: consultar(respuesta({ bultosDeclarados: 40, pesoBrutoDeclarado: 3500, bultosSaldo: 40 }))
     });
 
-    expect(r.bloqueo).toContain('en la AEAT figura con 40 bultos y 3500 kg, y el expediente declara 12 bultos y 1050.5 kg');
+    expect(r.bloqueo).toBeNull();
+    expect(r.aviso).toContain('en la AEAT la partida 3 de la declaracion sumaria 46116000123 figura con 40 bultos y 3500 kg');
+    expect(r.aviso).toContain('el expediente declara 12 bultos y 1050.5 kg');
+    expect(r.aviso).toContain('No impide generar ni presentar el H1');
+    expect(r.consulta).toMatchObject({ verified: true, packages: 40, grossWeight: 3500 });
+  });
+
+  test('los bultos y kilos que se comparan son los de la AEAT, no los tecleados', async () => {
+    const r = await verificarSumariaConAeat(lcl({ ...sumaria, packages: 99, grossWeight: 5 }), { consultar: consultar(respuesta()) });
+
+    expect(r.bloqueo).toBeNull();
+    expect(r.aviso).toBeNull();
+  });
+
+  test('una partida master sigue bloqueando aunque ademas difieran los bultos', async () => {
+    const r = await verificarSumariaConAeat(lcl(sumaria), {
+      consultar: consultar(respuesta({ estado: 'MD', estadoDescripcion: 'Máster datado', esMaster: true, bultosDeclarados: 156, pesoBrutoDeclarado: 1170, bultosSaldo: 155 }))
+    });
+
+    expect(r.bloqueo).toContain('es una partida master (Máster datado)');
+    expect(r.aviso).toBeNull();
   });
 
   test('sumaria no activada: el medio de transporte no ha llegado', async () => {
@@ -234,8 +264,11 @@ describe('grupajeLcl — consulta de la sumaria en la AEAT', () => {
 
     expect(cuadra.bloqueo).toBeNull();
     expect(cuadra.aviso).toContain('No se pudo comprobar la declaracion sumaria 46116000123 en la AEAT (ECONNRESET)');
+    expect(cuadra.aviso).not.toContain('no coinciden');
     expect(cuadra.consulta).toMatchObject({ verified: false, error: 'ECONNRESET' });
-    expect(noCuadra.bloqueo).toContain('no corresponde a esta partida');
+    expect(noCuadra.bloqueo).toBeNull();
+    expect(noCuadra.aviso).toContain('ECONNRESET');
+    expect(noCuadra.aviso).toContain('figura con 820 bultos y 14200 kg');
   });
 
   test('un rechazo que no es «no encontrada» (p. ej. el remitente) se trata como no verificable', async () => {

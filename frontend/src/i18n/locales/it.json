@@ -3637,6 +3637,7 @@
     "aeatItem": "Articolo {{status}}: {{packages}} colli e {{weight}} kg dichiarati.",
     "aeatBalance": "Saldo: {{packages}} colli.",
     "aeatMaster": "È un articolo master: corrisponde al carico consolidato, non a questa merce.",
+    "aeatDiffers": "Non coincide con la pratica ({{packages}} colli e {{weight}} kg). Non impedisce di generare né di presentare l'H1: verificalo e, se necessario, correggi la pratica o i documenti.",
     "aeatBillOfLading": "Polizza di carico: {{value}}",
     "aeatLocation": "Ubicazione: {{value}}"
   },

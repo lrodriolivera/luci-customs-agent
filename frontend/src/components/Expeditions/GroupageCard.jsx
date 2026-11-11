@@ -7,6 +7,23 @@ const MARITIME_MODES = ['SEA', 'sea', 'maritime', '1']
 
 const asInput = (value) => (value === undefined || value === null ? '' : String(value))
 
+// Mismo margen que el backend (services/forms/grupajeLcl.js): por debajo es redondeo.
+const WEIGHT_TOLERANCE_KG = 1
+const WEIGHT_TOLERANCE_RATIO = 0.01
+
+/**
+ * ¿Los bultos o los kilos que devolvio la AEAT difieren de los del expediente?
+ * No bloquea el H1: se muestra para que el agente lo compruebe y lo valide.
+ */
+export const differsFromExpedition = (aeat, totals) => {
+  if (!aeat || aeat.packages === null || aeat.packages === undefined) return false
+  if (aeat.grossWeight === null || aeat.grossWeight === undefined) return false
+  const packages = Number(totals?.totalPackages ?? 0)
+  const weight = Number(totals?.totalGrossWeight ?? 0)
+  const margin = Math.max(WEIGHT_TOLERANCE_KG, weight * WEIGHT_TOLERANCE_RATIO)
+  return Number(aeat.packages) !== packages || Math.abs(Number(aeat.grossWeight) - weight) > margin
+}
+
 /** ¿Tiene sentido preguntar por contenedor completo o grupaje? */
 export const isMaritime = (expedition) => MARITIME_MODES.includes(String(expedition?.transportMode || ''))
 
@@ -14,9 +31,10 @@ export const isMaritime = (expedition) => MARITIME_MODES.includes(String(expedit
  * Tipo de carga maritima y declaracion sumaria en la que se apoya el H1.
  *
  * En un grupaje (LCL) el backend no deja generar ni presentar el H1 hasta que
- * conste la sumaria de la desconsolidacion y sus bultos y kilos cuadren con los
- * del expediente. Aqui el agente la registra; la regla vive en el backend
- * (services/forms/grupajeLcl.js) y no se duplica en pantalla.
+ * conste la sumaria de la desconsolidacion (una partida master bloquea). Si
+ * los bultos o los kilos no coinciden con los del expediente solo se avisa: lo
+ * valida el agente. Aqui el agente la registra; lo que bloquea lo decide el
+ * backend (services/forms/grupajeLcl.js).
  *
  * @param {{
  *   expedition: object,
@@ -64,6 +82,8 @@ export default function GroupageCard({ expedition, isSaving, onSave, isVerifying
   const isGroupage = loadType === 'LCL'
   const savedSummary = transport.summaryDeclaration
   const aeat = savedSummary?.aeat
+  const differs = transport.loadType === 'LCL' && Boolean(aeat?.verified) && !aeat.error && !aeat.isMaster &&
+    differsFromExpedition(aeat, totals)
   const balance = aeat && aeat.packagesBalance !== null && aeat.packagesBalance !== undefined
     ? t('groupage.aeatBalance', { packages: aeat.packagesBalance })
     : ''
@@ -138,7 +158,7 @@ export default function GroupageCard({ expedition, isSaving, onSave, isVerifying
         <div
           role="status"
           className={`mt-4 p-3 rounded-lg border text-sm ${
-            aeat.verified && !aeat.error && !aeat.isMaster
+            aeat.verified && !aeat.error && !aeat.isMaster && !differs
               ? 'bg-green-50 border-green-200 text-green-900'
               : 'bg-amber-50 border-amber-200 text-amber-900'
           }`}
@@ -159,6 +179,14 @@ export default function GroupageCard({ expedition, isSaving, onSave, isVerifying
             </p>
           )}
           {aeat.isMaster && <p className="mt-1 font-medium">{t('groupage.aeatMaster')}</p>}
+          {differs && (
+            <p className="mt-1 font-medium">
+              {t('groupage.aeatDiffers', {
+                packages: totals.totalPackages ?? 0,
+                weight: Number(totals.totalGrossWeight ?? 0).toLocaleString('es-ES')
+              })}
+            </p>
+          )}
           {(aeat.billOfLading || aeat.location) && (
             <p className="mt-1">
               {[aeat.billOfLading && t('groupage.aeatBillOfLading', { value: aeat.billOfLading }),

@@ -1,6 +1,6 @@
 import { describe, test, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import GroupageCard, { isMaritime } from './GroupageCard'
+import GroupageCard, { isMaritime, differsFromExpedition } from './GroupageCard'
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key) })
@@ -127,6 +127,34 @@ describe('GroupageCard', () => {
       })
 
       expect(screen.getByRole('status')).toHaveTextContent('groupage.aeatMaster')
+      expect(screen.getByRole('status')).not.toHaveTextContent('groupage.aeatDiffers')
+    })
+
+    test('si los bultos o los kilos de la AEAT no coinciden con el expediente lo avisa, en ámbar', () => {
+      renderCard({
+        expedition: conSumaria({ verified: true, itemStatus: 'AC', itemStatusText: 'Activa', isMaster: false, packages: 90, grossWeight: 995 })
+      })
+
+      const estado = screen.getByRole('status')
+      expect(estado).toHaveTextContent('groupage.aeatDiffers:{"packages":12,"weight":"1050,5"}')
+      expect(estado.className).toContain('bg-amber-50')
+    })
+
+    test('si coinciden (o la diferencia de peso es de redondeo) no avisa y queda en verde', () => {
+      renderCard({
+        expedition: conSumaria({ verified: true, itemStatus: 'AC', itemStatusText: 'Activa', isMaster: false, packages: 12, grossWeight: 1058 })
+      })
+
+      const estado = screen.getByRole('status')
+      expect(estado).not.toHaveTextContent('groupage.aeatDiffers')
+      expect(estado.className).toContain('bg-green-50')
+    })
+
+    test('fuera del grupaje la diferencia no se señala', () => {
+      const fcl = conSumaria({ verified: true, itemStatus: 'AC', itemStatusText: 'Activa', isMaster: false, packages: 90, grossWeight: 995 })
+      renderCard({ expedition: { ...fcl, transport: { ...fcl.transport, loadType: 'FCL' } } })
+
+      expect(screen.getByRole('status')).not.toHaveTextContent('groupage.aeatDiffers')
     })
 
     test('si no se pudo consultar lo dice, con el motivo', () => {
@@ -156,6 +184,19 @@ describe('GroupageCard', () => {
   test('mientras guarda el botón queda deshabilitado', () => {
     renderCard({ isSaving: true })
     expect(screen.getByText('common.saving')).toBeDisabled()
+  })
+
+  test('differsFromExpedition: bultos exactos y peso con margen de 1 kg o el 1 %; sin datos de la AEAT no compara', () => {
+    const totals = { totalPackages: 12, totalGrossWeight: 924.5 }
+
+    expect(differsFromExpedition({ packages: 12, grossWeight: 924.5 }, totals)).toBe(false)
+    expect(differsFromExpedition({ packages: 12, grossWeight: 933 }, totals)).toBe(false)
+    expect(differsFromExpedition({ packages: 12, grossWeight: 940 }, totals)).toBe(true)
+    expect(differsFromExpedition({ packages: 90, grossWeight: 924.5 }, totals)).toBe(true)
+    expect(differsFromExpedition({ packages: null, grossWeight: 995 }, totals)).toBe(false)
+    expect(differsFromExpedition({ packages: 12, grossWeight: null }, totals)).toBe(false)
+    expect(differsFromExpedition(undefined, totals)).toBe(false)
+    expect(differsFromExpedition({ packages: 3, grossWeight: 10 }, undefined)).toBe(true)
   })
 
   test('isMaritime reconoce las formas en que se guarda el modo marítimo', () => {

@@ -624,8 +624,8 @@ describe('grupaje maritimo (LCL)', () => {
     });
   });
 
-  test('submitDeclaration: los bultos de la AEAT no son los del expediente -> 422 con las dos cifras', async () => {
-    aeatSubmitService.consultarSumaria.mockResolvedValue(respuestaAeat({ bultosDeclarados: 40, pesoBrutoDeclarado: 3500 }));
+  test('submitDeclaration: los bultos de la AEAT no son los del expediente -> no bloquea, se presenta', async () => {
+    aeatSubmitService.consultarSumaria.mockResolvedValue(respuestaAeat({ bultosDeclarados: 40, pesoBrutoDeclarado: 3500, bultosSaldo: 40 }));
     const user = usuario();
     const exp = await expedienteImportacion(user, {
       goods: partida, declaration: borrador, transport: { loadType: 'LCL', summaryDeclaration: sumaria }
@@ -634,9 +634,12 @@ describe('grupaje maritimo (LCL)', () => {
 
     await ctrl.submitDeclaration({ params: { expeditionId: exp._id }, user }, res);
 
-    expect(res.statusCode).toBe(422);
-    expect(res.body.error).toMatch(/en la AEAT figura con 40 bultos y 3500 kg, y el expediente declara 12 bultos y 1050 kg/);
-    expect(aeatSubmitService.submitH1).not.toHaveBeenCalled();
+    expect(res.statusCode).toBe(200);
+    expect(aeatSubmitService.submitH1).toHaveBeenCalled();
+    // La AEAT manda: lo que respondio queda en el expediente para que el agente vea la diferencia.
+    expect((await Expedition.findById(exp._id)).transport.summaryDeclaration.aeat).toMatchObject({
+      verified: true, isMaster: false, packages: 40, grossWeight: 3500
+    });
   });
 
   test('submitDeclaration: la AEAT confirma la partida desconsolidada con nuestros bultos y kilos -> se presenta', async () => {

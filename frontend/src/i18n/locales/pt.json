@@ -3637,6 +3637,7 @@
     "aeatItem": "Adição {{status}}: {{packages}} volumes e {{weight}} kg declarados.",
     "aeatBalance": "Saldo: {{packages}} volumes.",
     "aeatMaster": "É uma adição master: corresponde à carga agrupada, não a esta mercadoria.",
+    "aeatDiffers": "Não coincide com o processo ({{packages}} volumes e {{weight}} kg). Não impede gerar nem apresentar o H1: verifique e, se necessário, corrija o processo ou a documentação.",
     "aeatBillOfLading": "Conhecimento: {{value}}",
     "aeatLocation": "Localização: {{value}}"
   },
