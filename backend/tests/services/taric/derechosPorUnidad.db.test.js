@@ -107,6 +107,15 @@ describe('liquidacion con el arancel del catalogo', () => {
     expect(r.warnings.some((w) => /sin contrastar contra el TARIC/.test(w))).toBe(false);
   });
 
+  test('codigo de destino final: avisa de que el tipo exige la autorizacion', async () => {
+    await TaricCode.collection.insertOne(codigo('0101291000', { thirdCountry: 0, origen: { fuente: 'taric_oficial', soloDestinoFinal: true } }));
+
+    const r = await calcular('0101291000');
+
+    expect(r.duties.totalDuty).toBe(0);
+    expect(r.warnings.some((w) => /solo se aplica con autorizacion de destino final/.test(w))).toBe(true);
+  });
+
   test('codigo especial sin derecho oficial (capitulo 98): 0 EUR de derechos, con aviso y sin acudir a la IA', async () => {
     await TaricCode.collection.insertOne(codigo('9880010000', { thirdCountry: null, origen: { fuente: 'sin_derecho_oficial' } }));
 

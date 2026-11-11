@@ -142,7 +142,10 @@ function corregirAranceles(catalogo, derechos) {
 
     const nuevo = camposDeDerecho(oficial.derecho);
     const mio = camposDelCatalogo(actual.duties);
-    const dato = { code: actual.code, ...nuevo, texto: oficial.texto, heredadoDe: oficial.heredadoDe, antes: mio };
+    const dato = {
+      code: actual.code, ...nuevo, texto: oficial.texto, heredadoDe: oficial.heredadoDe, antes: mio,
+      rotulo: oficial.rotulo, ...(oficial.soloDestinoFinal ? { soloDestinoFinal: true } : {})
+    };
 
     if (coinciden(mio, nuevo)) {
       const unidades = unidadesAUnificar(mio, nuevo);

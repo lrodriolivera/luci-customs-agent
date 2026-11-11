@@ -17,6 +17,9 @@ const { fechaDe } = require('./nomenclaturaOficial');
 
 const CABECERA = ['Goods code', 'Add code', 'Order No.', 'Start date', 'End date', 'RED_IND', 'Origin', 'Measure type', 'Legal base', 'Duty', 'Origin code', 'Meas. type code'];
 const MEDIDA_TERCEROS_PAISES = '103';
+const MEDIDA_DESTINO_FINAL = '105';
+const ROTULO_TERCEROS_PAISES = 'Third country duty';
+const ROTULO_DESTINO_FINAL = 'Non preferential duty under end-use';
 const ORIGEN_ERGA_OMNES = '1011';
 const CORTES_DE_HERENCIA = [10, 8, 6, 4, 2];
 
@@ -109,15 +112,28 @@ function leerDerechosTercerosPaises(filas, { fecha = new Date() } = {}) {
   if (falta) throw new Error(`Derechos de importacion: el formato del fichero oficial ha cambiado (se esperaba la columna «${falta}»)`);
 
   const derechos = new Map();
+  const destinoFinal = new Map();
   for (const fila of filas.slice(1)) {
-    if (fila[11] !== MEDIDA_TERCEROS_PAISES || fila[10] !== ORIGEN_ERGA_OMNES) continue;
+    const medida = fila[11];
+    if ((medida !== MEDIDA_TERCEROS_PAISES && medida !== MEDIDA_DESTINO_FINAL) || fila[10] !== ORIGEN_ERGA_OMNES) continue;
     const codigo = String(fila[0] || '').trim();
     if (!/^\d{10}$/.test(codigo)) continue;
     const desde = fechaDe(fila[3]);
     const hasta = fechaDe(fila[4]);
     if ((desde && desde > fecha) || (hasta && hasta < fecha)) continue;
-    if (!derechos.has(codigo)) derechos.set(codigo, []);
-    derechos.get(codigo).push({ codigoAdicional: String(fila[1] || '').trim(), texto: String(fila[9] || '').trim().replace(/\s+/g, ' ') });
+    const destino = medida === MEDIDA_DESTINO_FINAL ? destinoFinal : derechos;
+    if (!destino.has(codigo)) destino.set(codigo, []);
+    destino.get(codigo).push({
+      codigoAdicional: String(fila[1] || '').trim(), texto: String(fila[9] || '').trim().replace(/\s+/g, ' '),
+      ...(medida === MEDIDA_DESTINO_FINAL ? { destinoFinal: true } : {})
+    });
+  }
+  // Codigos de destino final («para sacrificio», «destinados a aeronaves
+  // civiles»…): no tienen derecho de terceros paises propio; el suyo es la
+  // medida 105, que solo vale con la autorizacion de destino final. Si el
+  // codigo tiene las dos, manda la general.
+  for (const [codigo, medidas] of destinoFinal) {
+    if (!derechos.has(codigo)) derechos.set(codigo, medidas);
   }
   if (derechos.size === 0) throw new Error('Derechos de importacion: el fichero oficial no trae ningun derecho de terceros paises vigente');
   return derechos;
@@ -143,8 +159,10 @@ function arancelDe(codigo, derechos) {
       return { estado: 'variantes', texto: textos.join(' | ').slice(0, 300), heredadoDe: origen };
     }
     const derecho = interpretarDerecho(textos[0]);
+    const soloDestinoFinal = medidas.some((m) => m.destinoFinal);
+    const extra = soloDestinoFinal ? { soloDestinoFinal: true, rotulo: ROTULO_DESTINO_FINAL } : { rotulo: ROTULO_TERCEROS_PAISES };
     return derecho
-      ? { estado: 'ok', derecho, texto: textos[0], heredadoDe: origen }
+      ? { estado: 'ok', derecho, texto: textos[0], heredadoDe: origen, ...extra }
       : { estado: 'no_simple', texto: textos[0].slice(0, 300), heredadoDe: origen };
   }
   return { estado: 'sin_medida' };
