@@ -72,6 +72,9 @@ router.get('/preferences/:origin', auth, classificationController.getPreferences
 // tenants por igual.
 router.post('/seed', auth, requireRole('admin'), classificationController.seedTaricDatabase);
 
+// Estado de la sincronizacion del catalogo con el TARIC oficial (ultimas ejecuciones)
+router.get('/sync-status', auth, requireRole('admin'), classificationController.getTaricSyncStatus);
+
 // ==================== AI ENDPOINTS - LUCI Integration ====================
 
 /**

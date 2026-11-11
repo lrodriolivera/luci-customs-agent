@@ -4,7 +4,7 @@
  * extraccion de noviembre de 2026.
  */
 const { leerPrimeraHoja } = require('../../../src/services/taric/xlsxSimple');
-const { leerNomenclatura, leerDeclarables, fechaDe } = require('../../../src/services/taric/nomenclaturaOficial');
+const { leerNomenclatura, leerDeclarables, leerRutas, textoLegible, fechaDe } = require('../../../src/services/taric/nomenclaturaOficial');
 const { descripcionDeRespuesta, descripcionOficial } = require('../../../src/services/taric/descripcionOficial');
 const { xlsxDePrueba } = require('../../helpers/xlsxDePrueba');
 
@@ -53,6 +53,61 @@ describe('leerNomenclatura', () => {
 
   test('un fichero sin lineas declarables no se acepta', () => {
     expect(() => leerNomenclatura([CAB_NOM, ['0101210000 10', '01-01-2012', '', 'EN', '6', '- ', 'Horses', '']])).toThrow('ninguna linea declarable');
+  });
+});
+
+describe('textoLegible', () => {
+  test.each([
+    ['De cilindrada superior a 1|500|cm$3', 'De cilindrada superior a 1 500 cm³'],
+    ['expresado en Fe@2O@3, superior al 70|% en peso', 'expresado en Fe₂O₃, superior al 70 % en peso'],
+    ['inferior o igual a 5|!x!|10$-$6|por Kelvin', 'inferior o igual a 5 × 10⁻⁶ por Kelvin'],
+    ['superior a 20!o! brix', 'superior a 20° brix'],
+    ['pueda girar 360$o', 'pueda girar 360°'],
+    ['Vitamina B@1|y sus derivados', 'Vitamina B₁ y sus derivados'],
+    ['Copolímero con: \n-|una temperatura de 250|°C, \n \n-|un índice', 'Copolímero con:<br>- una temperatura de 250 °C,<br><br>- un índice'],
+    ['  Los   demás \n', 'Los demás'],
+    [undefined, '']
+  ])('quita las marcas de composicion: %s', (oficial, legible) => {
+    expect(textoLegible(oficial)).toBe(legible);
+  });
+});
+
+describe('leerRutas', () => {
+  // Fragmento real de la partida 8544 (extraccion de julio de 2026).
+  const ARBOL = [
+    CAB_NOM,
+    ['8500000000 80', '', '', 'ES', '2', '', 'MÁQUINAS, APARATOS Y MATERIAL ELÉCTRICO', ''],
+    ['8544000000 80', '', '', 'ES', '4', '', 'Hilos, cables y demás conductores aislados para electricidad', ''],
+    ['8544300000 80', '', '', 'ES', '6', '- ', 'Juegos de cables para bujías de encendido', ''],
+    ['8544300089 80', '', '', 'ES', '10', '- - - ', 'Los demás', ''],
+    ['8544420000 10', '', '', 'ES', '6', '- ', 'Los demás conductores eléctricos para una tensión inferior o igual a 1|000|V', ''],
+    ['8544420000 80', '', '', 'ES', '6', '- - ', 'Provistos de piezas de conexión', ''],
+    ['8544421000 80', '', '', 'ES', '8', '- - - ', 'De los tipos utilizados en telecomunicación', ''],
+    ['8544429000 80', '', '', 'ES', '8', '- - - ', 'Los demás', ''],
+    ['8544429010 80', '', '', 'ES', '10', '- - - - ', 'Cable de transmisión de datos', ''],
+    ['8600000000 80', '', '', 'ES', '2', '', 'VEHÍCULOS Y MATERIAL PARA VÍAS FÉRREAS', '']
+  ];
+
+  test('cada codigo lleva las descripciones de todo lo que tiene por encima, rotulos intermedios incluidos', () => {
+    const rutas = leerRutas(ARBOL);
+
+    expect(rutas.get('8544429010')).toEqual([
+      'MÁQUINAS, APARATOS Y MATERIAL ELÉCTRICO',
+      'Hilos, cables y demás conductores aislados para electricidad',
+      'Los demás conductores eléctricos para una tensión inferior o igual a 1 000 V',
+      'Provistos de piezas de conexión',
+      'Los demás',
+      'Cable de transmisión de datos'
+    ]);
+    expect(rutas.get('8544421000')).toHaveLength(5);
+    expect(rutas.get('8544300089')).toEqual(['MÁQUINAS, APARATOS Y MATERIAL ELÉCTRICO', 'Hilos, cables y demás conductores aislados para electricidad', 'Juegos de cables para bujías de encendido', 'Los demás']);
+  });
+
+  test('un capitulo nuevo no arrastra la ruta del anterior, y los rotulos intermedios no tienen ruta propia', () => {
+    const rutas = leerRutas(ARBOL);
+
+    expect(rutas.get('8600000000')).toEqual(['VEHÍCULOS Y MATERIAL PARA VÍAS FÉRREAS']);
+    expect(rutas.size).toBe(9);
   });
 });
 

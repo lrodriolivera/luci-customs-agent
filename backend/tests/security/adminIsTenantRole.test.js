@@ -40,7 +40,12 @@ const GLOBALES_ACEPTADAS = {
     'tenantId en su esquema: cachea el catalogo TARIC, que es comun a todos los ' +
     'clientes. Borrarla solo obliga a recalcular, no destruye informacion de negocio.',
   'classification.js POST /seed':
-    'Recarga el catalogo TARIC oficial de la UE, comun a todos los tenants.'
+    'Recarga el catalogo TARIC oficial de la UE, comun a todos los tenants.',
+  'classification.js GET /sync-status':
+    'Solo lectura: ultimas sincronizaciones del catalogo TARIC con la fuente oficial ' +
+    'de la Comision Europea y numero de codigos activos. El catalogo y su registro de ' +
+    'sincronizacion son comunes a todos los clientes y no tienen tenantId: no expone ' +
+    'datos de ningun tenant.'
 };
 
 /** Rutas con requireRole('admin') que no reciben identificador de recurso. */

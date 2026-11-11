@@ -422,6 +422,13 @@ try {
   logger.warn('classificationWorker not started', { error: err.message });
 }
 
+// Sincronizacion diaria del catalogo TARIC con la fuente oficial (solo en produccion)
+try {
+  require('./workers/taricSyncWorker').start();
+} catch (err) {
+  logger.warn('taricSyncWorker not started', { error: err.message });
+}
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   logger.error(`Error: ${err.message}`, { stack: err.stack, url: req.originalUrl, method: req.method, userId: req.user?._id });
