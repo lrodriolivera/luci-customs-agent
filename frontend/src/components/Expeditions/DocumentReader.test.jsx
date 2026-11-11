@@ -9,7 +9,7 @@ vi.mock('react-i18next', () => ({
 }))
 vi.mock('react-hot-toast', () => ({ default: { error: vi.fn(), success: vi.fn() } }))
 vi.mock('../../services/api', () => ({
-  documentsAPI: { read: vi.fn(), proposal: vi.fn(), apply: vi.fn(), download: vi.fn() }
+  documentsAPI: { read: vi.fn(), proposal: vi.fn(), apply: vi.fn(), download: vi.fn(), remove: vi.fn() }
 }))
 
 const documento = { _id: 'doc1', type: 'packing_list', originalName: 'packing.pdf', mimeType: 'application/pdf' }
@@ -151,5 +151,53 @@ describe('DocumentReader', () => {
     await waitFor(() => expect(documentsAPI.download).toHaveBeenCalledWith('exp1', 'doc1'))
     await waitFor(() => expect(abrir).toHaveBeenCalledWith('blob:x', '_blank', 'noopener'))
     abrir.mockRestore()
+  })
+})
+
+describe('DocumentReader — eliminar un documento', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  test('sin permiso no ofrece eliminar', () => {
+    renderReader()
+    expect(screen.queryByText('docReading.delete')).not.toBeInTheDocument()
+  })
+
+  test('pide confirmación antes de borrar y se puede cancelar', () => {
+    renderReader({ canDelete: true, onDeleted: vi.fn() })
+
+    fireEvent.click(screen.getByText('docReading.delete'))
+    expect(screen.getByText('docReading.deleteConfirm')).toBeInTheDocument()
+    expect(documentsAPI.remove).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByText('common.cancel'))
+    expect(screen.queryByText('docReading.deleteConfirm')).not.toBeInTheDocument()
+    expect(documentsAPI.remove).not.toHaveBeenCalled()
+  })
+
+  test('al confirmar borra el documento y entrega el expediente actualizado', async () => {
+    const actualizado = { _id: 'exp1', documents: [] }
+    documentsAPI.remove.mockResolvedValueOnce({ data: { data: { expedition: actualizado } } })
+    const onDeleted = vi.fn()
+    renderReader({ canDelete: true, onDeleted })
+
+    fireEvent.click(screen.getByText('docReading.delete'))
+    fireEvent.click(screen.getByText('docReading.deleteYes'))
+
+    await waitFor(() => expect(onDeleted).toHaveBeenCalledWith(actualizado))
+    expect(documentsAPI.remove).toHaveBeenCalledWith('exp1', 'doc1')
+    expect(toast.success).toHaveBeenCalledWith('docReading.deleted')
+  })
+
+  test('si el servidor lo rechaza, muestra el motivo y el documento sigue ahí', async () => {
+    documentsAPI.remove.mockRejectedValueOnce({ response: { data: { error: 'La declaracion ya esta presentada: sus documentos no se pueden eliminar' } } })
+    const onDeleted = vi.fn()
+    renderReader({ canDelete: true, onDeleted })
+
+    fireEvent.click(screen.getByText('docReading.delete'))
+    fireEvent.click(screen.getByText('docReading.deleteYes'))
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('La declaracion ya esta presentada: sus documentos no se pueden eliminar'))
+    expect(onDeleted).not.toHaveBeenCalled()
+    expect(screen.getByText('docReading.delete')).toBeInTheDocument()
   })
 })

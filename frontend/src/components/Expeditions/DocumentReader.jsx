@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
-import { SparklesIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
+import { SparklesIcon, ArrowTopRightOnSquareIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { documentsAPI } from '../../services/api'
 import { formatearImporte } from '../../utils/importe'
 
@@ -21,11 +21,13 @@ const CAMPOS_PESO = ['grossWeight', 'netWeight']
  *   document: object,
  *   autoRead?: boolean,
  *   canApply?: boolean,
+ *   canDelete?: boolean,
+ *   onDeleted?: (expedition: object|null) => void,
  *   onApplied: (expedition: object) => void,
  *   onRead?: () => void
  * }} props
  */
-export default function DocumentReader({ expeditionId, document, autoRead = false, canApply = true, onApplied, onRead }) {
+export default function DocumentReader({ expeditionId, document, autoRead = false, canApply = true, canDelete = false, onDeleted, onApplied, onRead }) {
   const { t } = useTranslation()
   const [extraction, setExtraction] = useState(document.extractedData?.leidoEn ? document.extractedData : null)
   const [proposal, setProposal] = useState(null)
@@ -33,6 +35,8 @@ export default function DocumentReader({ expeditionId, document, autoRead = fals
   const [isReading, setIsReading] = useState(false)
   const [isApplying, setIsApplying] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const cargarPropuesta = (lista) => {
     setProposal(lista)
@@ -86,6 +90,20 @@ export default function DocumentReader({ expeditionId, document, autoRead = fals
     }
   }
 
+  // Borrar pide confirmacion: no se puede deshacer.
+  const eliminar = async () => {
+    setIsDeleting(true)
+    try {
+      const response = await documentsAPI.remove(expeditionId, document._id)
+      toast.success(t('docReading.deleted'))
+      if (onDeleted) onDeleted(response.data?.data?.expedition || null)
+    } catch (error) {
+      toast.error(error.response?.data?.error || t('docReading.deleteError'))
+      setIsDeleting(false)
+      setIsConfirmingDelete(false)
+    }
+  }
+
   const aplicar = async () => {
     setIsApplying(true)
     try {
@@ -132,6 +150,23 @@ export default function DocumentReader({ expeditionId, document, autoRead = fals
           <button type="button" onClick={verPropuesta} aria-expanded={isOpen} className="text-gray-600 hover:text-gray-900 underline">
             {isOpen ? t('docReading.hide') : t('docReading.show')}
           </button>
+        )}
+        {canDelete && !isConfirmingDelete && (
+          <button type="button" onClick={() => setIsConfirmingDelete(true)} className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 ml-auto">
+            <TrashIcon className="w-4 h-4" />
+            {t('docReading.delete')}
+          </button>
+        )}
+        {canDelete && isConfirmingDelete && (
+          <span role="alert" className="inline-flex flex-wrap items-center gap-2 ml-auto text-red-700">
+            {t('docReading.deleteConfirm')}
+            <button type="button" onClick={eliminar} disabled={isDeleting} className="font-semibold underline disabled:opacity-50">
+              {isDeleting ? t('docReading.deleting') : t('docReading.deleteYes')}
+            </button>
+            <button type="button" onClick={() => setIsConfirmingDelete(false)} disabled={isDeleting} className="text-gray-600 underline">
+              {t('common.cancel')}
+            </button>
+          </span>
         )}
       </div>
 

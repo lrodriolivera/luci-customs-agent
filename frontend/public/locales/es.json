@@ -3661,7 +3661,13 @@
       "exporterName": "Exportador",
       "exporterCountry": "País del exportador",
       "exporterCity": "Ciudad del exportador"
-    }
+    },
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Eliminar este documento? No se puede deshacer.",
+    "deleteYes": "Sí, eliminar",
+    "deleting": "Eliminando...",
+    "deleted": "Documento eliminado",
+    "deleteError": "No se pudo eliminar el documento"
   },
   "draftDocs": {
     "title": "Empezar por la documentación",
