@@ -11,7 +11,7 @@
  */
 
 const { v4: uuidv4 } = require('uuid');
-const { eoriDe, exigirEori, declarantePara } = require('./identificadorAduanero');
+const { eoriDe, exigirEori, declarantePara, formaRepresentacionDe } = require('./identificadorAduanero');
 
 /**
  * Codigos de regimen aduanero
@@ -230,7 +230,7 @@ class H1Generator {
       declarant: {
         identificationNumber: declarante.eori,
         name: declarante.companyName,
-        representativeStatus: declarante.representationType === 'direct' ? '2' : '3',
+        representativeStatus: formaRepresentacionDe(declarante, expedition.client),
         contact: {
           name: declarante.contact.name,
           phone: declarante.contact.phone,

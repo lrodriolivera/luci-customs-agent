@@ -3703,5 +3703,17 @@
     },
     "summary": "{{documents}} documento(s) leídos · {{count}} dato(s) rellenados por LUCI. Revísalos antes de crear el expediente.",
     "summaryWarnings": "{{count}} aviso(s) en el paso 1."
+  },
+  "representation": {
+    "title": "Declarante y representación",
+    "intro": "Forma en la que la agencia presenta esta declaración (casilla 14 del DUA).",
+    "type": "Forma de representación",
+    "indirect": "Representación indirecta",
+    "direct": "Representación directa",
+    "indirectHint": "Código 3: el representante actúa en nombre propio y por cuenta del importador.",
+    "directHint": "Código 2: el representante actúa en nombre y por cuenta del importador.",
+    "selfNote": "Si el declarante es el propio importador (mismo NIF/EORI), LUCI declara autodespacho (código 1) sin que haya que indicarlo. Si el H1 ya está generado, vuelve a generarlo para que recoja el cambio.",
+    "saved": "Forma de representación guardada",
+    "saveError": "No se pudo guardar la forma de representación"
   }
 }

@@ -3687,5 +3687,17 @@
     },
     "summary": "{{documents}} document(s) llegits · {{count}} dada/es omplides per LUCI. Revisa-les abans de crear l'expedient.",
     "summaryWarnings": "{{count}} avís/os al pas 1."
+  },
+  "representation": {
+    "title": "Declarant i representació",
+    "intro": "Forma en què l'agència presenta esta declaració (casella 14 del DUA).",
+    "type": "Forma de representació",
+    "indirect": "Representació indirecta",
+    "direct": "Representació directa",
+    "indirectHint": "Codi 3: el representant actua en nom propi i per compte de l'importador.",
+    "directHint": "Codi 2: el representant actua en nom i per compte de l'importador.",
+    "selfNote": "Si el declarant és el mateix importador (mateix NIF/EORI), LUCI declara autodespatx (codi 1) sense que calga indicar-ho. Si l'H1 ja està generat, torna'l a generar perquè arreplegue el canvi.",
+    "saved": "Forma de representació guardada",
+    "saveError": "No s'ha pogut guardar la forma de representació"
   }
 }

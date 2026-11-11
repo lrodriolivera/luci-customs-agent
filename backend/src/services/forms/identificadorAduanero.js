@@ -105,8 +105,36 @@ function declarantePara(expedition, tenant, pais = 'ES') {
       phone: contacto.phone || null,
       email: contacto.email || null
     },
-    representationType: origen.representationType || delTenant.representationType
+    // El agente elige directa o indirecta en el expediente; vale aunque el
+    // EORI del declarante salga del tenant y no del expediente.
+    representationType: rep?.representationType || origen.representationType || delTenant.representationType
   };
+}
+
+const _soloNif = (valor) => String(valor || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^ES/, '');
+
+/**
+ * Forma de representacion del declarante (casilla 14 del DUA; dato 3/21).
+ *
+ * Resolucion del DUA (BOE-A-2014-7683), casilla 14, «Forma de representacion»:
+ *   1  autodespacho: el declarante es el propio destinatario de la casilla 8
+ *   2  representacion directa (en nombre y por cuenta del comitente)
+ *   3  representacion indirecta (en nombre propio y por cuenta del comitente)
+ *
+ * El autodespacho se reconoce por la identificacion, no por lo que se haya
+ * elegido: si el declarante y el importador son la misma persona no hay
+ * representacion. Sin tipo indicado se declara indirecta, que es el valor por
+ * defecto del tenant.
+ *
+ * @param {{ eori?: string, representationType?: string }} declarante
+ * @param {{ eori?: string, nif?: string, taxId?: string }} importador
+ * @returns {'1'|'2'|'3'}
+ */
+function formaRepresentacionDe(declarante, importador) {
+  const nifDeclarante = _soloNif(declarante?.eori);
+  const nifImportador = _soloNif(eoriDe(importador) || importador?.nif || importador?.taxId);
+  if (nifDeclarante && nifDeclarante === nifImportador) return '1';
+  return declarante?.representationType === 'direct' ? '2' : '3';
 }
 
 /**
@@ -119,5 +147,5 @@ function exigirIdentificacion(expedition, tenant, { cliente = true, pais = 'ES' 
 }
 
 module.exports = {
-  eoriDe, representanteDelTenant, exigirEori, declarantePara, exigirIdentificacion, ErrorValidacion
+  eoriDe, representanteDelTenant, exigirEori, declarantePara, exigirIdentificacion, formaRepresentacionDe, ErrorValidacion
 };

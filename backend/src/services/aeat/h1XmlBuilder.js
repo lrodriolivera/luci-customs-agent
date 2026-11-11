@@ -7,7 +7,7 @@
 
 const { xml, joinXml } = require('./xmlTemplate');
 const { codigoUnidadDua } = require('./unidadesSuplementarias');
-const { ErrorValidacion, exigirEori } = require('../forms/identificadorAduanero');
+const { ErrorValidacion, exigirEori, formaRepresentacionDe } = require('../forms/identificadorAduanero');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/adip/ws/ImportacionCompletaV1Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 
@@ -41,8 +41,10 @@ function buildH1ImportXML(data) {
     // Declarante (C14)
     declaranteNIF = '',
     declaranteNombre = '',
-    formaRepresentacion = '2',  // 2 = Representacion indirecta
-    tipoAutorizaDespacho = 'G', // G = Global
+    // Casilla 14: 1 autodespacho, 2 representacion directa, 3 indirecta.
+    formaRepresentacion = '3',
+    // 'O' = autorizacion para esta operacion; vacio = no se envia (autodespacho).
+    tipoAutorizaDespacho = 'O',
     // Emails
     emailDespacho = '',
     emailOtras = '',
@@ -202,8 +204,8 @@ function buildH1ImportXML(data) {
   <C14Declarante>
     <C14DeclaranteFormaRepresentacion>${formaRepresentacion}</C14DeclaranteFormaRepresentacion>
     <C14DeclaranteNID>${declaranteNIF}</C14DeclaranteNID>
-    <C14DeclaranteRazonSocial>${declaranteNombre}</C14DeclaranteRazonSocial>
-    <C14DeclaranteTipoAutorizaDespacho>${tipoAutorizaDespacho}</C14DeclaranteTipoAutorizaDespacho>
+    <C14DeclaranteRazonSocial>${declaranteNombre}</C14DeclaranteRazonSocial>${tipoAutorizaDespacho ? xml`
+    <C14DeclaranteTipoAutorizaDespacho>${tipoAutorizaDespacho}</C14DeclaranteTipoAutorizaDespacho>` : ''}
   </C14Declarante>
   <EmailNotificaDespacho>${emailDespacho}</EmailNotificaDespacho>
   <C15aPaisExpedicion>${paisExpedicion}</C15aPaisExpedicion>
@@ -265,6 +267,8 @@ function expeditionToH1Data(expedition, { declarante } = {}) {
       { code: 'NOMBRE_FALTANTE', quien: 'representante' });
   }
 
+  const formaRepresentacion = formaRepresentacionDe(declarante, client);
+
   const modeMap = { air: '4', sea: '1', road: '3', rail: '2', maritime: '1' };
   const documentoCargo = documentoCargoDe(expedition);
   const totalValue = goods.reduce((s, g) => s + (g.invoiceValue || g.value || 0), 0);
@@ -294,8 +298,11 @@ function expeditionToH1Data(expedition, { declarante } = {}) {
     // Declarante: representante del expediente o del tenant (nunca un literal)
     declaranteNIF,
     declaranteNombre: declarante.companyName,
-    formaRepresentacion: '1',
-    tipoAutorizaDespacho: 'O',
+    // Casilla 14: sale de quien declara y de lo elegido en el expediente. Iba
+    // fija a «1» (autodespacho) con cualquier declarante (UAT 10/Nov/2026).
+    formaRepresentacion,
+    // La autorizacion de despacho solo existe si hay representante.
+    tipoAutorizaDespacho: formaRepresentacion === '1' ? '' : 'O',
     // Emails
     emailDespacho: client.contact?.email || declarante.contact?.email || '',
     // Paises

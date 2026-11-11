@@ -3687,5 +3687,17 @@
     },
     "summary": "{{documents}} documento/i letti · {{count}} dato/i compilati da LUCI. Controllali prima di creare la pratica.",
     "summaryWarnings": "{{count}} avviso/i nel passaggio 1."
+  },
+  "representation": {
+    "title": "Dichiarante e rappresentanza",
+    "intro": "Modo in cui l'agenzia presenta questa dichiarazione (casella 14 del DAU).",
+    "type": "Forma di rappresentanza",
+    "indirect": "Rappresentanza indiretta",
+    "direct": "Rappresentanza diretta",
+    "indirectHint": "Codice 3: il rappresentante agisce in nome proprio e per conto dell'importatore.",
+    "directHint": "Codice 2: il rappresentante agisce in nome e per conto dell'importatore.",
+    "selfNote": "Se il dichiarante è l'importatore stesso (stesso NIF/EORI), LUCI dichiara lo sdoganamento in proprio (codice 1) senza doverlo indicare. Se l'H1 è già stato generato, generalo di nuovo per recepire la modifica.",
+    "saved": "Forma di rappresentanza salvata",
+    "saveError": "Impossibile salvare la forma di rappresentanza"
   }
 }

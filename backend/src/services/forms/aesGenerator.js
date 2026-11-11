@@ -5,7 +5,7 @@
  */
 
 const { v4: uuidv4 } = require('uuid');
-const { eoriDe, exigirEori, declarantePara } = require('./identificadorAduanero');
+const { eoriDe, exigirEori, declarantePara, formaRepresentacionDe } = require('./identificadorAduanero');
 
 /**
  * Tipos de exportacion
@@ -369,7 +369,7 @@ class AESGenerator {
       declarant: {
         identificationNumber: declarante.eori,
         name: declarante.companyName,
-        representativeStatus: declarante.representationType === 'direct' ? '2' : '3'
+        representativeStatus: formaRepresentacionDe(declarante, expedition.client)
       },
 
       // Consignatario/Destinatario
