@@ -1662,6 +1662,8 @@
     "viewStatusDesc": "Full timeline",
     "requiredDocs": "Required Documents",
     "loadingChecklist": "Loading checklist...",
+    "noPendingDocs": "No documents are pending on your side.",
+    "authValidFromPrevious": "In force from a previous operation (valid until {{date}}). No need to send it again.",
     "allDocs": "View all documents",
     "uploadTitle": "Upload Documents",
     "uploadSubtitleImport": "Upload the required documents for your import expedition",

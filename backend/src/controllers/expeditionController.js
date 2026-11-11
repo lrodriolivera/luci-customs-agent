@@ -6,6 +6,7 @@ const aiService = require('../services/aiService');
 const { ensureSameTenant } = require('../utils/tenantGuard');
 const { eoriDe } = require('../services/forms/identificadorAduanero');
 const borradores = require('../services/documentos/borradoresDocumento');
+const { autorizacionVigente, aplicarAutorizacionVigente } = require('../services/documentos/autorizacionDespacho');
 const { DOCUMENT_TYPES } = require('../middleware/validators');
 
 const { escapeRegex } = require('../utils/escapeRegex');
@@ -471,12 +472,19 @@ const getChecklist = async (req, res) => {
     };
 
     // Mapear a formato esperado por frontend
-    const checklistForFrontend = expedition.documentChecklist.map(item => ({
+    // Una autorizacion de despacho vigente de una operacion anterior del mismo
+    // cliente cuenta como entregada (vale cuatro años).
+    const conAutorizacion = aplicarAutorizacionVigente(
+      expedition.documentChecklist.map(item => item.toObject()),
+      await autorizacionVigente(expedition)
+    );
+    const checklistForFrontend = conAutorizacion.map(item => ({
       name: item.documentName || item.displayName || DOCUMENT_DEFINITIONS[item.documentType] || item.documentType,
       documentType: item.documentType,
       required: item.required,
       uploaded: item.received || false,
-      documentId: item.documentId || null
+      documentId: item.documentId || null,
+      ...(item.coveredByPrevious ? { coveredByPrevious: item.coveredByPrevious, notes: item.notes } : {})
     }));
 
     res.json({

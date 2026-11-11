@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useDropzone } from 'react-dropzone'
 import { portalAPI } from '../../services/api'
+import { documentosParaElCliente } from '../../utils/portalEstado'
 import toast from 'react-hot-toast'
 import {
   CloudArrowUpIcon,
@@ -185,7 +186,7 @@ export default function PortalDocuments() {
       <div className="card">
         <h2 className="text-lg font-semibold mb-4">{t('portal.docChecklist')}</h2>
         <div className="space-y-2">
-          {expedition?.documentChecklist?.map((doc, index) => (
+          {expedition?.documentChecklist && documentosParaElCliente(expedition).map((doc, index) => (
             <div
               key={index}
               className={`flex items-center gap-3 p-3 rounded-lg ${
@@ -199,6 +200,13 @@ export default function PortalDocuments() {
               )}
               <span className={doc.received ? 'text-green-700' : 'text-gray-700'}>
                 {doc.documentName}
+                {doc.coveredByPrevious && (
+                  <span className="block text-xs text-green-600">
+                    {t('portal.authValidFromPrevious', {
+                      date: doc.validUntil ? new Date(doc.validUntil).toLocaleDateString('es-ES') : '—'
+                    })}
+                  </span>
+                )}
               </span>
               {doc.required && (
                 <span className={`text-xs ml-auto ${doc.received ? 'text-green-600' : 'text-red-500'}`}>

@@ -35,6 +35,7 @@ const EVENTOS_VISIBLES_CLIENTE = [
   'cancelled'
 ];
 const aiService = require('../services/aiService');
+const { autorizacionVigente, aplicarAutorizacionVigente } = require('../services/documentos/autorizacionDespacho');
 
 /**
  * Obtener expediente por token del portal
@@ -58,6 +59,20 @@ const getByToken = async (req, res) => {
     expedition.clientPortal.lastViewedAt = new Date();
     await expedition.save();
 
+    // Una autorizacion de despacho vigente de una operacion anterior del mismo
+    // cliente no se vuelve a pedir: sale marcada en el checklist.
+    const checklist = aplicarAutorizacionVigente(
+      expedition.documentChecklist.map(item => ({
+        documentType: item.documentType,
+        documentName: item.documentName,
+        required: item.required,
+        received: item.received,
+        validated: item.validated,
+        notes: item.notes
+      })),
+      await autorizacionVigente(expedition)
+    );
+
     // Devolver solo informacion necesaria para el cliente
     const clientView = {
       expeditionId: expedition.expeditionId,
@@ -67,13 +82,11 @@ const getByToken = async (req, res) => {
       client: {
         companyName: expedition.client.companyName
       },
-      documentChecklist: expedition.documentChecklist.map(item => ({
-        documentType: item.documentType,
-        documentName: item.documentName,
-        required: item.required,
-        received: item.received,
-        validated: item.validated,
-        notes: item.notes
+      // El cliente no necesita saber en que expediente esta la autorizacion: solo
+      // que esta vigente (la nota) y hasta cuando.
+      documentChecklist: checklist.map(({ coveredByPrevious, ...item }) => ({
+        ...item,
+        ...(coveredByPrevious ? { coveredByPrevious: true, validUntil: coveredByPrevious.validUntil } : {})
       })),
       documentCompletion: expedition.documentCompletion,
       goods: expedition.goods.map(g => ({
