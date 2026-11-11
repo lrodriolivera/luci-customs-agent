@@ -70,6 +70,15 @@ const TaricCodeSchema = new mongoose.Schema({
       amount: Number,
       unit: String // EUR/100kg, EUR/hl, etc.
     },
+    /**
+     * Como se combinan `thirdCountry` y `specific` cuando estan los dos:
+     * 'suma' = se suman («10,2 % + 93,1 EUR/100 kg»). Sin valor, el dato viene
+     * de la carga antigua y no esta contrastado.
+     */
+    combinacion: { type: String, enum: ['suma'] },
+    // Importe minimo y maximo del derecho ad valorem («18,4 % MIN 22 EUR/100 kg MAX 24 EUR/100 kg»).
+    minimo: { amount: Number, unit: String },
+    maximo: { amount: Number, unit: String },
     mixed: {
       adValorem: Number,
       specific: {

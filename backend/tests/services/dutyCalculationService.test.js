@@ -452,8 +452,38 @@ describe('calculateDutiesWithAI', () => {
       const r = await calculateDutiesWithAI({ taricCode: '2005800000', customsValue: 1000, origin: 'BR', netWeight: 1000 });
 
       expect(r.duties.adValoremDuty).toBe(50);
-      expect(r.duties.specificDuty).toBe(80);
-      expect(r.duties.totalDuty).toBe(80);
+      // 80 EUR por cada 100 kg sobre 1.000 kg son 800 EUR. Antes se dividia entre
+      // 1.000 cualquier unidad con «kg» y salian 80: diez veces menos.
+      expect(r.duties.specificDuty).toBe(800);
+      expect(r.duties.totalDuty).toBe(800);
+    });
+
+    test('compound suma el ad valorem y el importe por unidad', async () => {
+      iaDevuelve({ dutyRateNumeric: 10.2, dutyType: 'compound', specificDuty: { amount: 93.1, unit: 'EUR/100 kg' } });
+
+      const r = await calculateDutiesWithAI({ taricCode: '2005800000', customsValue: 1000, origin: 'BR', netWeight: 200 });
+
+      expect(r.duties.adValoremDuty).toBe(102);
+      expect(r.duties.specificDuty).toBe(186.2);
+      expect(r.duties.totalDuty).toBe(288.2);
+    });
+
+    test('sin peso neto no puede calcular un derecho por 100 kg: no lo da por 0, avisa', async () => {
+      iaDevuelve({ dutyRateNumeric: 0, dutyType: 'specific', specificDuty: { amount: 38, unit: 'EUR/100 kg' } });
+
+      const r = await calculateDutiesWithAI({ taricCode: '2005800000', customsValue: 1000, origin: 'BR' });
+
+      expect(r.duties.specificDuty).toBe(0);
+      expect(r.warnings.some((w) => /No se ha podido calcular el derecho por unidad \(38 EUR\/100 kg\)/.test(w))).toBe(true);
+    });
+
+    test('una unidad que no se reconoce tampoco se calcula a ojo', async () => {
+      iaDevuelve({ dutyRateNumeric: 0, dutyType: 'specific', specificDuty: { amount: 38, unit: '100' } });
+
+      const r = await calculateDutiesWithAI({ taricCode: '2005800000', customsValue: 1000, origin: 'BR', netWeight: 500 });
+
+      expect(r.duties.specificDuty).toBe(0);
+      expect(r.warnings.some((w) => /la unidad no se reconoce/.test(w))).toBe(true);
     });
   });
 

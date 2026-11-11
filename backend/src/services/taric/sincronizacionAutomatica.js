@@ -20,7 +20,8 @@ const MAX_ARANCELES_AUTOMATICOS = 100;
 const PROYECCION = {
   _id: 0, code: 1, level: 1, isLeaf: 1, isActive: 1, legalDescription: 1,
   'description.es': 1, 'description.en': 1,
-  'duties.thirdCountry': 1, 'duties.specific': 1, 'duties.origen.fuente': 1
+  'duties.thirdCountry': 1, 'duties.specific': 1, 'duties.combinacion': 1, 'duties.minimo': 1, 'duties.maximo': 1,
+  'duties.sancionRusiaBielorrusia': 1, 'duties.origen.fuente': 1, 'duties.origen.evidencia': 1
 };
 
 const cargarCatalogo = (TaricCode) => TaricCode.find({}, PROYECCION).lean();

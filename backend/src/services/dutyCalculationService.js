@@ -4,6 +4,7 @@
  */
 
 const logger = require('../config/logger');
+const { importeEspecifico } = require('./taric/unidadesDerecho');
 const { SONNET, labelFor } = require('../config/bedrockModels');
 const TaricCode = require('../models/TaricCode');
 const TaricAICache = require('../models/TaricAICache');
@@ -64,6 +65,24 @@ function resolverSancion(sancion, origin) {
   return { aplica: false, info: { ...detalle, applied: false }, avisos: [] };
 }
 
+/** Forma en que se liquida el derecho guardado en el catalogo. */
+function tipoDeDerecho(duties) {
+  if (!duties?.specific?.amount) return 'ad_valorem';
+  if (duties.combinacion === 'suma') return 'compound';
+  return duties.thirdCountry ? 'mixed' : 'specific';
+}
+
+/** Avisos segun la procedencia del arancel del catalogo. */
+function avisosDeProcedencia(origen) {
+  if (origen?.fuente === 'no_calculable') {
+    return [`${origen.evidencia || 'El derecho oficial de este codigo no es un tipo simple.'} El importe calculado es orientativo: verificalo en el TARIC antes de declarar.`];
+  }
+  if (origen?.fuente === 'sin_derecho_oficial') {
+    return ['El TARIC no asigna derecho de terceros paises a este codigo (codigo especial de los capitulos 98 o 99).'];
+  }
+  return [];
+}
+
 /**
  * Obtener informacion completa de aranceles para un codigo TARIC
  * Usa multiples fuentes: BD local -> Cache IA -> IA en tiempo real
@@ -84,7 +103,10 @@ async function getDutyInfo(taricCode, origin = null) {
   // `null` es «sin arancel contrastado» (codigos dados de alta por la
   // sincronizacion con el TARIC oficial): no es un 0 % y se resuelve como un
   // codigo que no esta en el catalogo, por las fuentes siguientes.
-  if (localData && localData.duties && localData.duties.thirdCountry !== undefined && localData.duties.thirdCountry !== null) {
+  // «sin_derecho_oficial»: codigos especiales (capitulos 98 y 99) a los que el
+  // TARIC no asigna derecho. Tampoco se van a buscar a la IA: no hay nada que estimar.
+  const sinDerechoOficial = localData?.duties?.origen?.fuente === 'sin_derecho_oficial';
+  if (localData && localData.duties && ((localData.duties.thirdCountry !== undefined && localData.duties.thirdCountry !== null) || sinDerechoOficial)) {
     const localVatInfo = getVATRateByChapter(normalizedCode);
     const sancion = resolverSancion(localData.duties.sancionRusiaBielorrusia, origin);
     const result = {
@@ -93,7 +115,7 @@ async function getDutyInfo(taricCode, origin = null) {
       // Si el origen es Rusia o Bielorrusia manda el derecho punitivo del
       // Reg. (UE) 2024/1392, que sustituye al de terceros paises (en TARIC es la
       // otra rama de la MISMA medida, no un recargo que se sume).
-      dutyRate: sancion.aplica ? sancion.adValorem : localData.duties.thirdCountry,
+      dutyRate: sancion.aplica ? sancion.adValorem : (localData.duties.thirdCountry ?? 0),
       // Se mira el IMPORTE del derecho especifico, no el contenedor: `duties.specific`
       // es un objeto anidado en linea y Mongoose SIEMPRE lo materializa como {} aunque
       // en Mongo no exista. Como {} es truthy, este ternario marcaba 'mixed' a los
@@ -101,8 +123,13 @@ async function getDutyInfo(taricCode, origin = null) {
       // calculo pasa a Math.max(adValorem, especifico): un arancel ad valorem se
       // presentaba como mixto y bastaba un derecho especifico mal leido para que el
       // importe a pagar dejara de ser el ad valorem.
-      dutyType: localData.duties.specific?.amount ? 'mixed' : 'ad_valorem',
+      // 'compound': porcentaje MAS importe por unidad («10,2 % + 93,1 EUR/100 kg»).
+      // 'specific': solo importe por unidad. 'mixed' queda para los pares de la
+      // carga antigua sin contrastar, que se liquidan por el mayor de los dos.
+      dutyType: tipoDeDerecho(localData.duties),
       specificDuty: localData.duties.specific?.amount ? localData.duties.specific : null,
+      minimumDuty: localData.duties.minimo?.amount ? localData.duties.minimo : null,
+      maximumDuty: localData.duties.maximo?.amount ? localData.duties.maximo : null,
       vatRate: localVatInfo.rate,
       vatType: localVatInfo.type,
       supplementaryUnit: localData.supplementaryUnit,
@@ -114,7 +141,7 @@ async function getDutyInfo(taricCode, origin = null) {
       // oficial de uno heredado de una carga sin verificar.
       dutyOrigin: localData.duties.origen || null,
       sanction: sancion.info,
-      warnings: sancion.avisos,
+      warnings: [...sancion.avisos, ...avisosDeProcedencia(localData.duties.origen)],
       lastVerified: localData.lastUpdated
     };
 
@@ -364,28 +391,35 @@ async function calculateDutiesWithAI(params) {
   // Calcular arancel ad valorem
   const adValoremDuty = customsValue * (effectiveDutyRate / 100);
 
-  // Calcular arancel especifico si aplica
-  let specificDuty = 0;
-  if (dutyInfo.specificDuty && dutyInfo.specificDuty.amount) {
-    const spec = dutyInfo.specificDuty;
-    if (spec.unit?.includes('kg') && netWeight) {
-      specificDuty = (netWeight / 1000) * spec.amount;
-    } else if (spec.unit?.includes('hl') && quantity) {
-      specificDuty = (quantity / 100) * spec.amount;
-    } else if ((spec.unit?.includes('p/st') || spec.unit?.includes('unit')) && quantity) {
-      specificDuty = quantity * spec.amount;
+  // Derecho por unidad (EUR/100 kg, EUR/hl...). Si no se puede calcular (unidad
+  // no reconocida, o falta el peso o la cantidad) NO es un 0: se avisa.
+  const avisosDeCalculo = [];
+  const porUnidad = (importe, concepto) => {
+    if (!importe || !importe.amount) return null;
+    const euros = importeEspecifico(importe, { netWeight, quantity });
+    if (euros === null) {
+      avisosDeCalculo.push(`No se ha podido calcular ${concepto} (${importe.amount} ${importe.unit || 'sin unidad'}): falta el peso neto o la cantidad, o la unidad no se reconoce. Revisalo antes de declarar.`);
     }
-  }
+    return euros;
+  };
+  const specificDuty = porUnidad(dutyInfo.specificDuty, 'el derecho por unidad') ?? 0;
 
   // Total derechos de importacion
   let totalDuty;
-  if (dutyInfo.dutyType === 'mixed') {
+  if (dutyInfo.dutyType === 'compound') {
+    totalDuty = adValoremDuty + specificDuty;
+  } else if (dutyInfo.dutyType === 'mixed') {
     totalDuty = Math.max(adValoremDuty, specificDuty);
   } else if (dutyInfo.dutyType === 'specific') {
     totalDuty = specificDuty;
   } else {
     totalDuty = adValoremDuty;
   }
+  // Minimo y maximo del derecho («18,4 % MIN 22 EUR/100 kg MAX 24 EUR/100 kg»).
+  const minimo = porUnidad(dutyInfo.minimumDuty, 'el derecho minimo');
+  const maximo = porUnidad(dutyInfo.maximumDuty, 'el derecho maximo');
+  if (minimo !== null && totalDuty < minimo) totalDuty = minimo;
+  if (maximo !== null && totalDuty > maximo) totalDuty = maximo;
 
   // Añadir antidumping
   totalDuty += customsValue * (antidumpingDuty / 100);
@@ -423,7 +457,8 @@ async function calculateDutiesWithAI(params) {
   if (dutyInfo.warnings?.length) {
     warnings.push(...dutyInfo.warnings);
   }
-  if (dutyInfo.dutyOrigin && dutyInfo.dutyOrigin.fuente !== 'taric_oficial') {
+  warnings.push(...avisosDeCalculo);
+  if (dutyInfo.dutyOrigin && !['taric_oficial', 'sin_derecho_oficial', 'no_calculable'].includes(dutyInfo.dutyOrigin.fuente)) {
     warnings.push('Arancel sin contrastar contra el TARIC oficial - verificar antes de declarar');
   }
 

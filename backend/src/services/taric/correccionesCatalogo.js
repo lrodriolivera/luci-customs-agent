@@ -7,12 +7,23 @@
  * llevaban la descripcion de su partida en vez de la suya), y 167 aranceles no
  * coincidian con el derecho de terceros paises oficial.
  */
-const { arancelDe } = require('./arancelesOficiales');
+const { arancelDe, camposDeDerecho } = require('./arancelesOficiales');
+const { unidadCanonica } = require('./unidadesDerecho');
 const { palabrasClave } = require('./planSincronizacion');
 
 const SEPARADOR_RUTA = ' > ';
 const MAX_PALABRAS_CLAVE = 25;
 const TOLERANCIA = 0.005;
+const CAPITULOS_SIN_DERECHO = ['98', '99'];
+const sinDerechoOficial = (code) => CAPITULOS_SIN_DERECHO.includes(String(code).slice(0, 2));
+
+const MOTIVOS_NO_CALCULABLE = {
+  variantes: 'varios tipos segun codigo adicional',
+  no_simple: 'derecho con elemento agricola, grado alcoholico, precio de entrada o varios sumandos'
+};
+/** Texto que se guarda como evidencia cuando el derecho oficial no se sabe liquidar. */
+const evidenciaNoCalculable = (oficial) =>
+  `Derecho oficial «${oficial.texto}»: ${MOTIVOS_NO_CALCULABLE[oficial.estado] || oficial.estado}. LUCI no lo liquida automaticamente.`.slice(0, 500);
 
 /** Texto reducido a letras y cifras, para comparar sin ruido de formato. */
 const huella = (texto) => String(texto || '')
@@ -55,40 +66,88 @@ function corregirDescripciones(catalogo, { es, en, rutas }) {
   return cambios;
 }
 
-// «EUR/100 kg», «EUR/100kg» y «EUR / 100 KG» son la misma unidad.
-const unidad = (u) => String(u || '').toLowerCase().replace(/\s+/g, '');
-const mismoEspecifico = (a, b) => Boolean(a?.amount) === Boolean(b?.amount) &&
-  (!b?.amount || (Math.abs(Number(a.amount) - b.amount) < TOLERANCIA && unidad(a.unit) === unidad(b.unit)));
+const mismoImporte = (a, b) => {
+  if (!a?.amount && !b?.amount) return true;
+  if (!a?.amount || !b?.amount) return false;
+  return Math.abs(Number(a.amount) - Number(b.amount)) < TOLERANCIA && unidadCanonica(a.unit) === unidadCanonica(b.unit);
+};
+const importe = (x) => (x?.amount ? { amount: x.amount, unit: x.unit } : null);
+
+/** Lo que el catalogo guarda hoy de un codigo, en la misma forma que `camposDeDerecho`. */
+const camposDelCatalogo = (duties) => {
+  const sancion = duties?.sancionRusiaBielorrusia;
+  return {
+    thirdCountry: duties?.thirdCountry ?? null,
+    specific: importe(duties?.specific),
+    combinacion: duties?.combinacion || null,
+    minimo: importe(duties?.minimo),
+    maximo: importe(duties?.maximo),
+    sancion: typeof sancion?.adValorem === 'number' ? { adValorem: sancion.adValorem, certificado: sancion.certificado } : null
+  };
+};
+
+const coinciden = (mio, oficial) => typeof mio.thirdCountry === 'number' &&
+  Math.abs(mio.thirdCountry - oficial.thirdCountry) < TOLERANCIA &&
+  mismoImporte(mio.specific, oficial.specific) && mio.combinacion === oficial.combinacion &&
+  mismoImporte(mio.minimo, oficial.minimo) && mismoImporte(mio.maximo, oficial.maximo) &&
+  (!oficial.sancion || Math.abs((mio.sancion?.adValorem ?? -1) - oficial.sancion.adValorem) < TOLERANCIA);
+
+/** Unidades guardadas de forma no canonica (EUR/tonne en vez de EUR/1000 kg). */
+const unidadesAUnificar = (mio, oficial) => ['specific', 'minimo', 'maximo']
+  .filter((campo) => mio[campo] && oficial[campo] && mio[campo].unit !== oficial[campo].unit)
+  .map((campo) => ({ campo, unit: oficial[campo].unit }));
 
 /**
  * Aranceles del catalogo a corregir o a marcar como contrastados.
  *
- * Solo actua cuando el oficial es simple (un porcentaje o un importe por
- * unidad). Un arancel que ya se contrasto a mano contra el TARIC
- * (`origen.fuente === 'taric_oficial'`) no se pisa: si no coincide, se
- * devuelve en `conflictos` para revisarlo.
+ * Actua cuando el derecho oficial es uno que LUCI sabe liquidar (porcentaje,
+ * importe por unidad, suma de ambos, minimo y maximo, y la rama general de una
+ * medida condicionada al certificado Y155). Un arancel que ya se contrasto a
+ * mano contra el TARIC (`origen.fuente === 'taric_oficial'`) no se pisa: si no
+ * coincide va a `conflictos`; si coincide y solo cambia como esta escrita la
+ * unidad, a `unidades`.
  *
- * @returns {{ corregir: object[], contrastar: object[], conflictos: object[] }}
+ * Se revisan los codigos declarables y, ademas, los no declarables que tienen
+ * su propia medida en la fuente (su arancel se enseña en el arbol).
+ *
+ * Los codigos cuyo derecho oficial no se sabe liquidar van a `noCalculables`
+ * con el texto oficial, para que conste y se avise al calcular; los de los
+ * capitulos 98 y 99, a los que el TARIC no asigna derecho, a `sinDerecho`.
+ *
+ * @returns {{ corregir: object[], contrastar: object[], conflictos: object[], unidades: object[], noCalculables: object[], sinDerecho: object[] }}
  */
 function corregirAranceles(catalogo, derechos) {
-  const resultado = { corregir: [], contrastar: [], conflictos: [] };
+  const resultado = { corregir: [], contrastar: [], conflictos: [], unidades: [], noCalculables: [], sinDerecho: [] };
   for (const actual of catalogo) {
-    if (!actual.isLeaf || actual.isActive === false) continue;
+    if (actual.isActive === false) continue;
     const oficial = arancelDe(actual.code, derechos);
-    if (oficial.estado !== 'ok') continue;
+    if (!actual.isLeaf && oficial.heredadoDe !== actual.code) continue;
 
-    const adValorem = oficial.derecho.tipo === 'ad_valorem' ? oficial.derecho.adValorem : 0;
-    const especifico = oficial.derecho.tipo === 'especifico' ? oficial.derecho.specific : null;
-    const mio = actual.duties?.thirdCountry;
-    const coincide = typeof mio === 'number' && Math.abs(mio - adValorem) < TOLERANCIA && mismoEspecifico(actual.duties?.specific, especifico);
-    const yaContrastado = actual.duties?.origen?.fuente === 'taric_oficial';
-    const dato = {
-      code: actual.code, thirdCountry: adValorem, specific: especifico, texto: oficial.texto, heredadoDe: oficial.heredadoDe,
-      antes: { thirdCountry: mio ?? null, specific: actual.duties?.specific?.amount ? { amount: actual.duties.specific.amount, unit: actual.duties.specific.unit } : null }
-    };
+    const fuente = actual.duties?.origen?.fuente;
+    const yaContrastado = fuente === 'taric_oficial';
 
-    if (coincide) {
+    if (oficial.estado === 'sin_medida') {
+      if (actual.isLeaf && sinDerechoOficial(actual.code) && fuente !== 'sin_derecho_oficial') {
+        resultado.sinDerecho.push({ code: actual.code });
+      }
+      continue;
+    }
+    if (oficial.estado !== 'ok') {
+      const evidencia = evidenciaNoCalculable(oficial);
+      if (!yaContrastado && !(fuente === 'no_calculable' && actual.duties?.origen?.evidencia === evidencia)) {
+        resultado.noCalculables.push({ code: actual.code, texto: oficial.texto, motivo: oficial.estado, heredadoDe: oficial.heredadoDe, evidencia });
+      }
+      continue;
+    }
+
+    const nuevo = camposDeDerecho(oficial.derecho);
+    const mio = camposDelCatalogo(actual.duties);
+    const dato = { code: actual.code, ...nuevo, texto: oficial.texto, heredadoDe: oficial.heredadoDe, antes: mio };
+
+    if (coinciden(mio, nuevo)) {
+      const unidades = unidadesAUnificar(mio, nuevo);
       if (!yaContrastado) resultado.contrastar.push(dato);
+      else if (unidades.length > 0) resultado.unidades.push({ code: actual.code, unidades });
     } else if (yaContrastado) {
       resultado.conflictos.push(dato);
     } else {
@@ -98,4 +157,10 @@ function corregirAranceles(catalogo, derechos) {
   return resultado;
 }
 
-module.exports = { corregirDescripciones, corregirAranceles, huella, SEPARADOR_RUTA };
+/** Evidencia de un codigo al que el TARIC no asigna derecho de terceros paises. */
+const evidenciaSinDerecho = (code, fuente) => `El TARIC no asigna derecho de terceros paises a este codigo (capitulo ${code.slice(0, 2)}). ${fuente}.`;
+
+module.exports = {
+  corregirDescripciones, corregirAranceles, huella, evidenciaNoCalculable, evidenciaSinDerecho, sinDerechoOficial,
+  SEPARADOR_RUTA, CAPITULOS_SIN_DERECHO
+};

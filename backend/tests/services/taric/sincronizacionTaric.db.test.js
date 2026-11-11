@@ -119,8 +119,8 @@ describe('sincronizacion del catalogo TARIC', () => {
     // Derecho por unidad: sin componente ad valorem.
     const pato = await TaricCode.findOne({ code: '0207412010' }).lean();
     expect(pato.duties).toMatchObject({ thirdCountry: 0, specific: { amount: 38, unit: 'EUR/100 kg' }, origen: { fuente: 'taric_oficial' } });
-    // Un codigo que no se declara no lleva arancel.
-    expect((await TaricCode.findOne({ code: '0207412000' }).lean()).duties.thirdCountry).toBeNull();
+    // Un codigo que no se declara lleva arancel solo si la fuente se lo da a el (aqui, si).
+    expect((await TaricCode.findOne({ code: '0207412000' }).lean()).duties).toMatchObject({ thirdCountry: 0, specific: { amount: 38, unit: 'EUR/100 kg' } });
     expect(cable.validFrom.toISOString().slice(0, 10)).toBe('2026-07-01');
 
     const caducado = await TaricCode.findOne({ code: '2811220040' }).lean();
@@ -207,18 +207,27 @@ describe('sincronizacion del catalogo TARIC', () => {
     expect(plan.arancelesDistintos).toEqual([]);
   });
 
-  test('un derecho que no es simple entra sin dato y con el texto oficial como motivo', () => {
+  test('un derecho que LUCI no sabe liquidar entra sin dato y con el texto oficial como motivo', () => {
     const contexto = { ahora: new Date('2026-11-11T12:00:00Z'), fuente: 'Comision Europea - TARIC (CIRCABC), 2026-11' };
 
-    const mixto = derechosDeAlta({ code: '0811101100', arancel: { estado: 'no_simple', texto: '20.800 % + 8.400 EUR DTN', heredadoDe: '0811101100' } }, contexto);
+    const agricola = derechosDeAlta({ code: '1704905100', arancel: { estado: 'no_simple', texto: '9.000 % + EA MAX 18.700 % +ADSZ', heredadoDe: '1704905100' } }, contexto);
     const variantes = derechosDeAlta({ code: '2918220020', arancel: { estado: 'variantes', texto: '0.000 % | 6.500 %', heredadoDe: '2918220000' } }, contexto);
-    const sinMedida = derechosDeAlta({ code: '9880000000', arancel: { estado: 'sin_medida' } }, contexto);
+    const especial = derechosDeAlta({ code: '9880000000', arancel: { estado: 'sin_medida' } }, contexto);
+    const sinMedida = derechosDeAlta({ code: '3912398570', arancel: { estado: 'sin_medida' } }, contexto);
 
-    expect(mixto).toMatchObject({ thirdCountry: null, origen: { fuente: 'pendiente' } });
-    expect(mixto.origen.evidencia).toContain('derecho mixto, condicionado o con minimos («20.800 % + 8.400 EUR DTN»)');
-    expect(variantes.origen.evidencia).toContain('varios tipos segun codigo adicional («0.000 % | 6.500 %»)');
+    expect(agricola).toMatchObject({ thirdCountry: null, origen: { fuente: 'no_calculable' } });
+    expect(agricola.origen.evidencia).toBe('Derecho oficial «9.000 % + EA MAX 18.700 % +ADSZ»: derecho con elemento agricola, grado alcoholico, precio de entrada o varios sumandos. LUCI no lo liquida automaticamente.');
+    expect(variantes.origen.evidencia).toContain('«0.000 % | 6.500 %»: varios tipos segun codigo adicional');
+    // Capitulos 98 y 99: el TARIC no les asigna derecho.
+    expect(especial).toMatchObject({ thirdCountry: null, origen: { fuente: 'sin_derecho_oficial' } });
+    expect(especial.origen.evidencia).toContain('El TARIC no asigna derecho de terceros paises a este codigo (capitulo 98)');
+    // Cualquier otro codigo sin medida queda pendiente.
+    expect(sinMedida).toMatchObject({ thirdCountry: null, origen: { fuente: 'pendiente' } });
     expect(sinMedida.origen.evidencia).toContain('sin derecho de terceros paises en el fichero oficial');
-    expect(sinMedida.thirdCountry).toBeNull();
+
+    // Y un mixto entra ya con sus dos componentes.
+    const mixto = derechosDeAlta({ code: '0811101100', arancel: { estado: 'ok', derecho: { tipo: 'suma', adValorem: 20.8, specific: { amount: 8.4, unit: 'EUR/100 kg' } }, texto: '20.800 % + 8.400 EUR DTN', heredadoDe: '0811101100' } }, contexto);
+    expect(mixto).toMatchObject({ thirdCountry: 20.8, specific: { amount: 8.4, unit: 'EUR/100 kg' }, combinacion: 'suma', origen: { fuente: 'taric_oficial' } });
   });
 
   test('el alta sin español lleva una nota y nunca un arancel inventado', () => {

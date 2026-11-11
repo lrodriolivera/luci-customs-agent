@@ -17,6 +17,7 @@ const FILAS = [
   fila('0810201000', '8.800 % '),
   fila('0207412000', '38.000 EUR DTN '),
   fila('0811101100', '20.800 % + 8.400 EUR DTN '),
+  fila('1704905100', '9.000 % + EA MAX 18.700 % +ADSZ '),
   fila('0810100000', '11.200 % ', { desde: '01-08-2026', hasta: '31-12-2026' }),
   fila('0810100000', '12.800 % MIN 2.400 EUR DTN ', { desde: '01-05-2027', hasta: '31-07-2027' }),
   fila('2918220000', '0.000 % ', { add: '2500' }),
@@ -39,10 +40,41 @@ describe('interpretarDerecho', () => {
     expect(interpretarDerecho('102.000 EUR TNE')).toEqual({ tipo: 'especifico', specific: { amount: 102, unit: 'EUR/1000 kg' } });
   });
 
+  test('porcentaje mas importe por unidad: se suman', () => {
+    expect(interpretarDerecho('10.200 % + 93.100 EUR DTN')).toEqual({ tipo: 'suma', adValorem: 10.2, specific: { amount: 93.1, unit: 'EUR/100 kg' } });
+    // Un sumando a cero no es una suma.
+    expect(interpretarDerecho('6.500 % + 0.000 EUR TNE')).toEqual({ tipo: 'ad_valorem', adValorem: 6.5 });
+  });
+
+  test('porcentaje con minimo y maximo', () => {
+    expect(interpretarDerecho('18.400 % MIN 22.000 EUR DTN MAX 24.000 EUR DTN')).toEqual({
+      tipo: 'ad_valorem', adValorem: 18.4, minimo: { amount: 22, unit: 'EUR/100 kg' }, maximo: { amount: 24, unit: 'EUR/100 kg' }
+    });
+    expect(interpretarDerecho('12.800 % MIN 2.400 EUR DTN')).toEqual({ tipo: 'ad_valorem', adValorem: 12.8, minimo: { amount: 2.4, unit: 'EUR/100 kg' } });
+    expect(interpretarDerecho('4.500 % MIN 0.300 EUR NAR MAX 0.800 EUR NAR')).toMatchObject({ minimo: { amount: 0.3, unit: 'EUR/p/st' }, maximo: { amount: 0.8, unit: 'EUR/p/st' } });
+  });
+
+  test('importes con coma de millares y por millar de unidades', () => {
+    expect(interpretarDerecho('1,024.000 EUR TNE')).toEqual({ tipo: 'especifico', specific: { amount: 1024, unit: 'EUR/1000 kg' } });
+    expect(interpretarDerecho('52.000 EUR MIL')).toEqual({ tipo: 'especifico', specific: { amount: 52, unit: 'EUR/1000 p/st' } });
+  });
+
+  test('medida condicionada al certificado Y155: la rama sin certificado es el arancel general y la otra, la sancion', () => {
+    expect(interpretarDerecho('Cond:  B cert: Y-155 (01):50.000 % ; B (01):6.400 %'))
+      .toEqual({ tipo: 'ad_valorem', adValorem: 6.4, sancion: { adValorem: 50, certificado: 'Y155' } });
+    expect(interpretarDerecho('Cond: B cert: Y-155 (01):50.000 % ; B (01):23.000 EUR TNE'))
+      .toEqual({ tipo: 'especifico', specific: { amount: 23, unit: 'EUR/1000 kg' }, sancion: { adValorem: 50, certificado: 'Y155' } });
+    // Si la sancion no es un porcentaje simple, vale el arancel general y la sancion queda en el texto.
+    expect(interpretarDerecho('Cond: B cert: Y-155 (01):6.500 % + 60.000 EUR TNE ; B (01):6.500 % + 0.000 EUR TNE'))
+      .toEqual({ tipo: 'ad_valorem', adValorem: 6.5 });
+  });
+
   test.each([
-    ['20.800 % + 8.400 EUR DTN'], ['12.800 % MIN 2.400 EUR DTN'], ['9.000 % + EA MAX 24.200 % +ADSZ'],
-    ['Cond:  B cert: Y-155 (01):50.000 % ; B (01):6.400 %'], ['48.000 EUR ASV X'], ['0.500 EUR KGM P + 2.100 EUR DTN'], [''], [undefined]
-  ])('no simplifica a una cifra lo que no es simple: %s', (texto) => {
+    ['9.000 % + EA MAX 24.200 % +ADSZ'], ['48.000 EUR ASV X'], ['0.500 EUR KGM P + 2.100 EUR DTN'], ['0.400 EUR DTN Z'],
+    ['3.800 % MIN 0.600 EUR DTN G'], ['40.000 % + 121.000 EUR HLT + 20.600 EUR DTN'], ['6.200 % + 27.100 EUR DTN MAX 17.900 %'],
+    ['Cond: V 62.600 EUR/DTN(01):8.800 % ; V 61.300 EUR/DTN(01):8.800 % + 1.300 EUR DTN'], ['Cond: B cert: Y-155 (01):50.000 % ; B (01):9.000 % + EA'],
+    [''], [undefined]
+  ])('no simplifica a una cifra lo que no sabe liquidar: %s', (texto) => {
     expect(interpretarDerecho(texto)).toBeNull();
   });
 });
@@ -84,8 +116,12 @@ describe('arancelDe', () => {
     expect(arancelDe('2204210610', derechos)).toMatchObject({ estado: 'ok', heredadoDe: '2204210000' });
   });
 
-  test('mixto: sin resolver, con el texto literal', () => {
-    expect(arancelDe('0811101100', derechos)).toEqual({ estado: 'no_simple', texto: '20.800 % + 8.400 EUR DTN', heredadoDe: '0811101100' });
+  test('mixto: porcentaje mas importe por unidad', () => {
+    expect(arancelDe('0811101100', derechos)).toMatchObject({ estado: 'ok', derecho: { tipo: 'suma', adValorem: 20.8, specific: { amount: 8.4, unit: 'EUR/100 kg' } } });
+  });
+
+  test('con elemento agricola: sin resolver, con el texto literal', () => {
+    expect(arancelDe('1704905100', derechos)).toEqual({ estado: 'no_simple', texto: '9.000 % + EA MAX 18.700 % +ADSZ', heredadoDe: '1704905100' });
   });
 
   test('varios tipos por codigo adicional: no hay «el» arancel', () => {
@@ -110,12 +146,13 @@ describe('compararAranceles', () => {
       codigo('0207412010', 0),                                               // oficial especifico: no comparable
       codigo('2918220020', 6.5),                                             // variantes: no comparable
       codigo('9880000000', 0),                                               // sin medida: no comparable
+      codigo('1704905100', 9),                                               // oficial con elemento agricola: no comparable
       codigo('0811101100', null),                                            // sin arancel en el catalogo: no comparable
       { code: '8544420000', isLeaf: false, isActive: true, duties: { thirdCountry: 9 } },   // no declarable: fuera
       { code: '8544429099', isLeaf: true, isActive: false, duties: { thirdCountry: 9 } }    // de baja: fuera
     ], derechos);
 
-    expect(r).toMatchObject({ comparados: 4, coinciden: 1, noComparables: 4 });
+    expect(r).toMatchObject({ comparados: 4, coinciden: 1, noComparables: 5 });
     expect(r.distintos).toEqual([
       { code: '0810100000', catalogo: 0, oficial: 11.2, heredadoDe: '0810100000', especificoCatalogo: null, fuenteCatalogo: null },
       { code: '0810201000', catalogo: 12, oficial: 8.8, heredadoDe: '0810201000', especificoCatalogo: null, fuenteCatalogo: 'carga_inicial' },
