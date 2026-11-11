@@ -55,7 +55,7 @@ async function descargar(id, { cliente = axios } = {}) {
  * los codigos declarables y la nomenclatura en ingles; y la nomenclatura en
  * español mas reciente que exista (enero o julio).
  *
- * @returns {Promise<{ mes: object, mesEs: object|null, declarables: Buffer, nomenclaturaEn: Buffer, nomenclaturaEs: Buffer|null }>}
+ * @returns {Promise<{ mes: object, mesEs: object|null, declarables: Buffer, nomenclaturaEn: Buffer, nomenclaturaEs: Buffer|null, derechosImport: Buffer|null }>}
  */
 async function ficherosDeNomenclatura(opciones = {}) {
   const meses = await mesesPublicados(opciones);
@@ -67,7 +67,7 @@ async function ficherosDeNomenclatura(opciones = {}) {
     if (!reciente) {
       const declarables = buscar('declarable codes.xlsx');
       const en = buscar('nomenclature en.xlsx');
-      if (declarables && en) reciente = { mes, declarables, en };
+      if (declarables && en) reciente = { mes, declarables, en, derechos: buscar('duties import 01-99.xlsx') || null };
     }
     if (!es) {
       const fichero = buscar('nomenclature es.xlsx');
@@ -82,7 +82,9 @@ async function ficherosDeNomenclatura(opciones = {}) {
     mesEs: es ? es.mes : null,
     declarables: await descargar(reciente.declarables.id, opciones),
     nomenclaturaEn: await descargar(reciente.en.id, opciones),
-    nomenclaturaEs: es ? await descargar(es.fichero.id, opciones) : null
+    nomenclaturaEs: es ? await descargar(es.fichero.id, opciones) : null,
+    // Derechos de importacion del mismo mes; puede faltar si la Comision aun no lo ha subido.
+    derechosImport: reciente.derechos ? await descargar(reciente.derechos.id, opciones) : null
   };
 }
 
