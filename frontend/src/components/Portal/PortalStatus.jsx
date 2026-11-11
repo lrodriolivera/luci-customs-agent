@@ -9,6 +9,7 @@ import {
   BuildingOfficeIcon
 } from '@heroicons/react/24/outline'
 import { esImportacion, esCompletado } from '../../utils/expedition'
+import { pasoDelPortal } from '../../utils/portalEstado'
 
 export default function PortalStatus() {
   const { t } = useTranslation()
@@ -53,11 +54,13 @@ export default function PortalStatus() {
     }
   ]
 
-  const getCurrentStepIndex = () => {
-    return statusSteps.findIndex(s => s.id === expedition?.status) || 0
-  }
-
-  const currentIndex = getCurrentStepIndex()
+  // -1 si el estado no se reconoce (p. ej. cancelado): ningun paso queda marcado.
+  const currentIndex = statusSteps.findIndex(s => s.id === pasoDelPortal(expedition))
+  const lineHeight = currentIndex < 0 ? 0 : (currentIndex / (statusSteps.length - 1)) * 100
+  // El incoterm llega como objeto { code, place }: pintarlo tal cual rompia la pantalla.
+  const incoterm = typeof expedition?.incoterm === 'string'
+    ? expedition.incoterm
+    : [expedition?.incoterm?.code, expedition?.incoterm?.place].filter(Boolean).join(' ')
 
   return (
     <div className="space-y-6">
@@ -99,7 +102,7 @@ export default function PortalStatus() {
           <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" />
           <div
             className="absolute left-6 top-0 w-0.5 bg-luci transition-all duration-500"
-            style={{ height: `${(currentIndex / (statusSteps.length - 1)) * 100}%` }}
+            style={{ height: `${lineHeight}%` }}
           />
 
           {/* Steps */}
@@ -108,7 +111,7 @@ export default function PortalStatus() {
               const Icon = step.icon
               const isCompleted = index < currentIndex
               const isCurrent = index === currentIndex
-              const isPending = index > currentIndex
+              const isPending = currentIndex < 0 || index > currentIndex
 
               return (
                 <div key={step.id} className="relative flex gap-4">
@@ -136,14 +139,6 @@ export default function PortalStatus() {
                     </h3>
                     <p className="text-sm text-gray-600">{step.description}</p>
 
-                    {/* Timeline event if exists */}
-                    {expedition?.timeline?.find(t => t.action?.includes(step.label)) && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        {new Date(
-                          expedition.timeline.find(t => t.action?.includes(step.label))?.timestamp
-                        ).toLocaleString('es-ES')}
-                      </p>
-                    )}
                   </div>
                 </div>
               )
@@ -161,13 +156,12 @@ export default function PortalStatus() {
               <div key={index} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
                 <div className="w-2 h-2 mt-2 rounded-full bg-luci flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-gray-900">{event.action}</p>
+                  <p className="font-medium text-gray-900">
+                    {t(`expeditions.timelineAction.${event.action}`, { defaultValue: event.description || event.action })}
+                  </p>
                   <p className="text-sm text-gray-500">
                     {new Date(event.timestamp).toLocaleString('es-ES')}
                   </p>
-                  {event.user && (
-                    <p className="text-xs text-gray-400">{t('portal.byUser')} {event.user}</p>
-                  )}
                 </div>
               </div>
             ))}
@@ -195,7 +189,7 @@ export default function PortalStatus() {
           </div>
           <div>
             <p className="text-sm text-gray-500">{t('portal.incoterm')}</p>
-            <p className="font-medium">{expedition?.incoterm}</p>
+            <p className="font-medium">{incoterm || '—'}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">{t('portal.items')}</p>

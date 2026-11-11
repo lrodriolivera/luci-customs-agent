@@ -1661,6 +1661,8 @@
     "viewStatusDesc": "Timeline completo",
     "requiredDocs": "Documentos Necessarios",
     "loadingChecklist": "A carregar checklist...",
+    "noPendingDocs": "Não falta nenhum documento da sua parte.",
+    "authValidFromPrevious": "Em vigor de uma operação anterior (válida até {{date}}). Não é necessário enviá-la de novo.",
     "allDocs": "Ver todos os documentos",
     "uploadTitle": "Carregar Documentos",
     "uploadSubtitleImport": "Carregue os documentos necessarios para o seu processo de importacao",

@@ -1661,6 +1661,8 @@
     "viewStatusDesc": "Chronologie complete",
     "requiredDocs": "Documents Requis",
     "loadingChecklist": "Chargement de la checklist...",
+    "noPendingDocs": "Aucun document n'est en attente de votre part.",
+    "authValidFromPrevious": "En vigueur depuis une opération précédente (valable jusqu'au {{date}}). Inutile de la renvoyer.",
     "allDocs": "Voir tous les documents",
     "uploadTitle": "Telecharger des Documents",
     "uploadSubtitleImport": "Telechargez les documents requis pour votre dossier d'importation",

@@ -8,22 +8,15 @@ import {
   CheckCircleIcon
 } from '@heroicons/react/24/outline'
 import { esImportacion } from '../../utils/expedition'
+import { pasoDelPortal, progresoDelPortal, documentosPendientes } from '../../utils/portalEstado'
 
 export default function PortalHome() {
   const { t } = useTranslation()
   const { expedition, token } = useOutletContext()
 
-  const getProgressPercentage = () => {
-    const statusProgress = {
-      'PENDING_DOCS': 10,
-      'DOCS_RECEIVED': 30,
-      'VALIDATING': 50,
-      'PROCESSING': 70,
-      'SUBMITTED': 90,
-      'COMPLETED': 100
-    }
-    return statusProgress[expedition?.status] || 0
-  }
+  const paso = pasoDelPortal(expedition)
+  const pendientes = documentosPendientes(expedition)
+  const getProgressPercentage = () => progresoDelPortal(expedition)
 
   const getStatusMessage = () => {
     const messages = {
@@ -34,7 +27,7 @@ export default function PortalHome() {
       'SUBMITTED': t('portal.submittedToCustoms'),
       'COMPLETED': t('portal.customsCompleted')
     }
-    return messages[expedition?.status] || t('portal.unknownStatus')
+    return messages[paso] || t('portal.unknownStatus')
   }
 
   return (
@@ -135,28 +128,21 @@ export default function PortalHome() {
       <div className="card">
         <h2 className="text-lg font-semibold mb-4">{t('portal.requiredDocs')}</h2>
         <div className="space-y-2">
-          {expedition?.documentChecklist?.slice(0, 5).map((doc, index) => (
-            <div
-              key={index}
-              className={`flex items-center gap-3 p-3 rounded-lg ${
-                doc.uploaded ? 'bg-green-50' : 'bg-gray-50'
-              }`}
-            >
-              {doc.uploaded ? (
-                <CheckCircleIcon className="w-5 h-5 text-green-500" />
-              ) : (
-                <div className="w-5 h-5 border-2 border-gray-300 rounded-full" />
-              )}
-              <span className={doc.uploaded ? 'text-green-700' : 'text-gray-700'}>
-                {doc.name}
-              </span>
-              {doc.required && !doc.uploaded && (
-                <span className="text-xs text-red-500 ml-auto">{t('common.pending')}</span>
-              )}
-            </div>
-          )) || (
+          {/* Solo lo que falta: los documentos obligatorios que aun no estan entregados. */}
+          {!expedition?.documentChecklist ? (
             <p className="text-gray-500 text-sm">{t('portal.loadingChecklist')}</p>
-          )}
+          ) : pendientes.length === 0 ? (
+            <p className="flex items-center gap-2 p-3 rounded-lg bg-green-50 text-green-700 text-sm">
+              <CheckCircleIcon className="w-5 h-5 text-green-500" />
+              {t('portal.noPendingDocs')}
+            </p>
+          ) : pendientes.map((doc) => (
+            <div key={doc.documentType} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+              <div className="w-5 h-5 border-2 border-gray-300 rounded-full" />
+              <span className="text-gray-700">{doc.documentName || doc.documentType}</span>
+              <span className="text-xs text-red-500 ml-auto">{t('common.pending')}</span>
+            </div>
+          ))}
         </div>
         <Link
           to={`/portal/${token}/documents`}

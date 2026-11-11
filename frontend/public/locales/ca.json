@@ -1661,6 +1661,8 @@
     "viewStatusDesc": "Timeline complet",
     "requiredDocs": "Documents Requerits",
     "loadingChecklist": "Carregant checklist...",
+    "noPendingDocs": "No falta cap document per la teva part.",
+    "authValidFromPrevious": "Vigent d'una operació anterior (vàlida fins al {{date}}). No cal enviar-la de nou.",
     "allDocs": "Veure tots els documents",
     "uploadTitle": "Pujar Documents",
     "uploadSubtitleImport": "Pugeu els documents requerits per al seu expedient d'importació",
