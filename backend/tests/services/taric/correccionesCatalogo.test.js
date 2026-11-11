@@ -64,7 +64,9 @@ describe('corregirAranceles', () => {
   const fila = (codigo, derecho, add = '') => [codigo, add, '', '01-01-2012', '', '', 'ERGA OMNES', 'Third country duty', '', derecho, '1011', '103'];
   const derechos = leerDerechosTercerosPaises([
     CAB, fila('8544429000', '3.300 % '), fila('0104103000', '80.500 EUR DTN '), fila('2204210000', '32.000 EUR HLT '),
-    fila('0811101100', '20.800 % + 8.400 EUR DTN '), fila('2918220000', '0.000 % ', '2500'), fila('2918220000', '6.500 % ', '2501')
+    fila('0811101100', '20.800 % + 8.400 EUR DTN '), fila('2918220000', '0.000 % ', '2500'), fila('2918220000', '6.500 % ', '2501'),
+    fila('2401103500', '18.400 % MIN 22.000 EUR DTN MAX 24.000 EUR DTN '), fila('1704905100', '9.000 % + EA MAX 18.700 % +ADSZ '),
+    fila('2309903100', 'Cond: B cert: Y-155 (01):50.000 % ; B (01):23.000 EUR TNE '), fila('2303101100', '320.000 EUR TNE '), fila('0207412000', '38.000 EUR DTN ')
   ], { fecha: new Date('2026-11-11T12:00:00Z') });
   const codigo = (code, duties, extra = {}) => ({ code, isLeaf: true, isActive: true, duties, ...extra });
 
@@ -72,8 +74,9 @@ describe('corregirAranceles', () => {
     const r = corregirAranceles([codigo('8544429010', { thirdCountry: 5, specific: { amount: 7, unit: 'EUR/hl' } })], derechos);
 
     expect(r.corregir).toEqual([{
-      code: '8544429010', thirdCountry: 3.3, specific: null, texto: '3.300 %', heredadoDe: '8544429000',
-      antes: { thirdCountry: 5, specific: { amount: 7, unit: 'EUR/hl' } }
+      code: '8544429010', thirdCountry: 3.3, specific: null, combinacion: null, minimo: null, maximo: null, sancion: null,
+      texto: '3.300 %', heredadoDe: '8544429000',
+      antes: { thirdCountry: 5, specific: { amount: 7, unit: 'EUR/hl' }, combinacion: null, minimo: null, maximo: null, sancion: null }
     }]);
   });
 
@@ -114,15 +117,87 @@ describe('corregirAranceles', () => {
     expect(r.corregir.map((d) => [d.code, d.thirdCountry, d.antes.thirdCountry])).toEqual([['8544429010', 3.3, null], ['8544429020', 3.3, null]]);
   });
 
-  test('no actua si el oficial no es simple, si no hay medida, o si el codigo no se declara o esta de baja', () => {
+  test('mixto: guarda el porcentaje, el importe por unidad y que se suman, y arregla la unidad rota', () => {
+    const r = corregirAranceles([codigo('0811101100', { thirdCountry: 20.8, specific: { amount: 8.4, unit: '100' } })], derechos);
+
+    expect(r.corregir).toEqual([expect.objectContaining({
+      code: '0811101100', thirdCountry: 20.8, specific: { amount: 8.4, unit: 'EUR/100 kg' }, combinacion: 'suma'
+    })]);
+    // Ya corregido, no vuelve a salir.
+    const otra = corregirAranceles([codigo('0811101100', { thirdCountry: 20.8, specific: { amount: 8.4, unit: 'EUR/100 kg' }, combinacion: 'suma', origen: { fuente: 'taric_oficial' } })], derechos);
+    expect(otra).toMatchObject({ corregir: [], contrastar: [], conflictos: [], unidades: [] });
+  });
+
+  test('minimo y maximo: el importe que se guardaba como «especifico» pasa a ser el minimo', () => {
+    const r = corregirAranceles([codigo('2401103510', { thirdCountry: 18.4, specific: { amount: 22, unit: '100' } })], derechos);
+
+    expect(r.corregir).toEqual([expect.objectContaining({
+      code: '2401103510', thirdCountry: 18.4, specific: null,
+      minimo: { amount: 22, unit: 'EUR/100 kg' }, maximo: { amount: 24, unit: 'EUR/100 kg' }
+    })]);
+  });
+
+  test('medida condicionada al Y155: arancel general y sancion', () => {
+    const r = corregirAranceles([codigo('2309903112', { thirdCountry: 0, specific: { amount: 17.25, unit: 'tonne' } })], derechos);
+
+    expect(r.corregir).toEqual([expect.objectContaining({
+      code: '2309903112', thirdCountry: 0, specific: { amount: 23, unit: 'EUR/1000 kg' }, sancion: { adValorem: 50, certificado: 'Y155' }
+    })]);
+    // Con la sancion ya guardada coincide.
+    const otra = corregirAranceles([codigo('2309903112', {
+      thirdCountry: 0, specific: { amount: 23, unit: 'EUR/1000 kg' }, sancionRusiaBielorrusia: { adValorem: 50, certificado: 'Y155' }, origen: { fuente: 'taric_oficial' }
+    })], derechos);
+    expect(otra.conflictos).toEqual([]);
+  });
+
+  test('un arancel contrastado a mano con la misma cifra y la unidad escrita de otra forma: solo se unifica la unidad', () => {
+    const r = corregirAranceles([codigo('2303101110', { thirdCountry: 0, specific: { amount: 320, unit: 'EUR/tonne' }, origen: { fuente: 'taric_oficial' } })], derechos);
+
+    expect(r.conflictos).toEqual([]);
+    expect(r.corregir).toEqual([]);
+    expect(r.unidades).toEqual([{ code: '2303101110', unidades: [{ campo: 'specific', unit: 'EUR/1000 kg' }] }]);
+  });
+
+  test('un codigo que no se declara se revisa si la fuente le da su propia medida', () => {
     const r = corregirAranceles([
-      codigo('0811101100', { thirdCountry: 1 }),                       // mixto
-      codigo('2918220020', { thirdCountry: 1 }),                       // variantes
-      codigo('9880000000', { thirdCountry: 1 }),                       // sin medida
-      codigo('8544429000', { thirdCountry: 1 }, { isLeaf: false }),
-      codigo('8544429099', { thirdCountry: 1 }, { isActive: false })
+      codigo('0207412000', { thirdCountry: 0, specific: { amount: 38, unit: '100' } }, { isLeaf: false }),   // medida propia
+      codigo('8544420000', { thirdCountry: 1 }, { isLeaf: false })                                         // la hereda: no se toca
     ], derechos);
 
-    expect(r).toEqual({ corregir: [], contrastar: [], conflictos: [] });
+    expect(r.corregir.map((d) => d.code)).toEqual(['0207412000']);
+  });
+
+  test('derecho que LUCI no sabe liquidar: se deja el dato y se anota el texto oficial, una sola vez', () => {
+    const r = corregirAranceles([
+      codigo('1704905100', { thirdCountry: 9, specific: { amount: 35.15, unit: '100' } }),   // elemento agricola
+      codigo('2918220020', { thirdCountry: 1 })                                               // variantes por codigo adicional
+    ], derechos);
+
+    expect(r.corregir).toEqual([]);
+    expect(r.noCalculables).toEqual([
+      expect.objectContaining({ code: '1704905100', motivo: 'no_simple', evidencia: expect.stringContaining('«9.000 % + EA MAX 18.700 % +ADSZ»') }),
+      expect.objectContaining({ code: '2918220020', motivo: 'variantes', evidencia: expect.stringContaining('«0.000 % | 6.500 %»: varios tipos segun codigo adicional') })
+    ]);
+
+    const yaAnotado = corregirAranceles([codigo('1704905100', { thirdCountry: 9, origen: { fuente: 'no_calculable', evidencia: r.noCalculables[0].evidencia } })], derechos);
+    expect(yaAnotado.noCalculables).toEqual([]);
+    // Uno contrastado antes a mano no se toca.
+    expect(corregirAranceles([codigo('1704905100', { thirdCountry: 9, origen: { fuente: 'taric_oficial' } })], derechos).noCalculables).toEqual([]);
+  });
+
+  test('capitulos 98 y 99 sin medida: constan como codigos sin derecho oficial; el resto sin medida no se toca', () => {
+    const r = corregirAranceles([
+      codigo('9880010000', { thirdCountry: null, origen: { fuente: 'pendiente' } }),
+      codigo('9930240000', { thirdCountry: null, origen: { fuente: 'sin_derecho_oficial' } }),   // ya anotado
+      codigo('3912398570', { thirdCountry: null, origen: { fuente: 'pendiente' } })
+    ], derechos);
+
+    expect(r.sinDerecho).toEqual([{ code: '9880010000' }]);
+    expect(r).toMatchObject({ corregir: [], contrastar: [], conflictos: [], noCalculables: [] });
+  });
+
+  test('no actua sobre codigos de baja', () => {
+    const r = corregirAranceles([codigo('8544429099', { thirdCountry: 1 }, { isActive: false })], derechos);
+    expect(r).toEqual({ corregir: [], contrastar: [], conflictos: [], unidades: [], noCalculables: [], sinDerecho: [] });
   });
 });
