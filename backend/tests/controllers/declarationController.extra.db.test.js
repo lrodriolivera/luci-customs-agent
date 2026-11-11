@@ -11,8 +11,8 @@
  *      -> goods, tributos A00/B00, modo de transporte).
  *   3. submitDeclaration (path ES): guardas (sin XML, ya enviada), envio H1
  *      aceptado -> submitted + canal, y rechazo AEAT -> 400 sin marcar submitted.
- *   4. submitH7: guardas (sin H7, ya enviado) y envio simulado con/sin IOSS
- *      (canal verde con levante / canal amarillo).
+ *   4. submitH7: guardas (sin H7, ya enviado) y rechazo 501 sin MRN inventado
+ *      (el envio no esta conectado con la AEAT).
  *   5. getH7Stats: agrega SOLO las H7 del propio tenant (aislamiento).
  *   6. Endpoints IA (validate/detect/suggest/predict/full/get/apply-regime):
  *      guard de tenant, delegacion al aiService mockeado y persistencia de la
@@ -312,7 +312,9 @@ describe('submitDeclaration (path ES)', () => {
 });
 
 describe('submitH7', () => {
-  test('envia el H7 con IOSS: canal verde y levante automatico', async () => {
+  // Este envio fabricaba un MRN al azar, asignaba canal y concedia el levante
+  // sin presentar nada a la AEAT. Los tests anteriores fijaban ese invento.
+  test('no fabrica MRN, canal ni levante: responde 501 y no toca el expediente', async () => {
     const user = usuario();
     const exp = await expedienteImportacion(user, {
       declaration: {
@@ -320,35 +322,22 @@ describe('submitH7', () => {
         h7Data: { iossData: { number: 'IM123' }, shipment: { intrinsicValue: 100 } }
       }
     });
+    const antes = await Expedition.findById(exp._id);
     const res = crearRes();
 
     await ctrl.submitH7({ params: { expeditionId: exp._id }, user }, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body.data.channel).toBe('green');
-    expect(res.body.data.levanteNumber).toMatch(/^LEV/);
+    expect(res.statusCode).toBe(501);
+    expect(res.body.success).toBe(false);
+    expect(res.body.code).toBe('H7_SUBMIT_NOT_CONNECTED');
+    expect(res.body.data).toBeUndefined();
     const guardado = await Expedition.findById(exp._id);
-    expect(guardado.declaration.status).toBe('submitted');
-    expect(guardado.status).toBe('green_channel');
-  });
-
-  test('envia el H7 sin IOSS con IVA a pagar: canal amarillo', async () => {
-    const user = usuario();
-    const exp = await expedienteImportacion(user, {
-      declaration: {
-        type: 'H7', status: 'draft', lrn: 'LRN-H7-2',
-        h7Data: { shipment: { intrinsicValue: 100 } },
-        vatCalculation: { totalToPay: 21 }
-      }
-    });
-    const res = crearRes();
-
-    await ctrl.submitH7({ params: { expeditionId: exp._id }, user }, res);
-
-    expect(res.statusCode).toBe(200);
-    expect(res.body.data.channel).toBe('yellow');
-    const guardado = await Expedition.findById(exp._id);
-    expect(guardado.status).toBe('yellow_channel');
+    expect(guardado.declaration.status).toBe('draft');
+    expect(guardado.declaration.mrn).toBeUndefined();
+    expect(guardado.declaration.channel).toBeUndefined();
+    expect(guardado.declaration.levanteNumber).toBeUndefined();
+    expect(guardado.status).toBe(antes.status);
+    expect(guardado.timeline.length).toBe(antes.timeline.length);
   });
 
   test('sin declaracion H7 devuelve 400', async () => {

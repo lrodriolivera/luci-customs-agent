@@ -407,26 +407,7 @@ describe('generateH7: ramas faltantes', () => {
   });
 });
 
-describe('submitH7: catch block + timeline undefined', () => {
-  test('crea timeline si no existe antes de hacer push', async () => {
-    const user = usuario();
-    const exp = await expedienteImportacion(user, {
-      declaration: {
-        type: 'H7', status: 'draft', lrn: 'LRN-H7-1',
-        h7Data: { shipment: { intrinsicValue: 100 } }
-      },
-      timeline: undefined // forzar que no exista
-    });
-    const res = crearRes();
-
-    await ctrl.submitH7({ params: { expeditionId: exp._id }, user }, res);
-
-    expect(res.statusCode).toBe(200);
-    const guardado = await Expedition.findById(exp._id);
-    expect(guardado.timeline).toBeDefined();
-    expect(guardado.timeline.some(t => t.action === 'h7_submitted')).toBe(true);
-  });
-
+describe('submitH7: catch block', () => {
   test('catch block devuelve 500', async () => {
     const user = usuario();
     const exp = await expedienteImportacion(user, {
@@ -785,41 +766,6 @@ describe('generateH7: ramas de calculo goodsSummary', () => {
     const guardado = await Expedition.findById(exp._id);
     expect(guardado.goodsSummary.totalValue).toBe(50);
     expect(guardado.goodsSummary.totalGrossWeight).toBe(0);
-  });
-});
-
-describe('submitH7: email sin usuario (linea 1030-1036)', () => {
-  test('usuario sin email: no intenta enviar email', async () => {
-    const user = usuario({ email: undefined });
-    const exp = await expedienteImportacion(user, {
-      declaration: {
-        type: 'H7', status: 'draft', lrn: 'LRN-H7-1',
-        h7Data: { iossData: { number: 'IM123' }, shipment: { intrinsicValue: 100 } }
-      }
-    });
-    const res = crearRes();
-
-    await ctrl.submitH7({ params: { expeditionId: exp._id }, user }, res);
-
-    expect(res.statusCode).toBe(200);
-    expect(emailService.sendDeclarationAccepted).not.toHaveBeenCalled();
-  });
-
-  test('email H7 falla: flujo continua (linea 1036)', async () => {
-    emailService.sendDeclarationAccepted.mockRejectedValue(new Error('Email error'));
-    const user = usuario();
-    const exp = await expedienteImportacion(user, {
-      declaration: {
-        type: 'H7', status: 'draft', lrn: 'LRN-H7-1',
-        h7Data: { iossData: { number: 'IM123' }, shipment: { intrinsicValue: 100 } }
-      }
-    });
-    const res = crearRes();
-
-    await ctrl.submitH7({ params: { expeditionId: exp._id }, user }, res);
-
-    expect(res.statusCode).toBe(200);
-    expect(res.body.data.mrn).toBeDefined();
   });
 });
 
