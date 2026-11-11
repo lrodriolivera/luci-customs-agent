@@ -9,12 +9,15 @@
  *     porcentaje o un importe por unidad (si no, sin dato: no se estima);
  *   - marca como inactivos (no borra) los que ya no estan vigentes;
  *   - corrige la marca de «declarable» y el nivel de los que no coinciden.
- * No toca descripciones, aranceles ni medidas de los codigos que ya existen:
- * los aranceles que no coinciden con el oficial solo se listan.
+ *   - corrige las descripciones y el arancel de terceros paises de los
+ *     codigos que ya existen cuando no coinciden con los oficiales, y guarda
+ *     la ruta de cada codigo en el arbol (`--sin-correcciones` lo omite).
+ * Un arancel contrastado antes a mano contra el TARIC no se pisa: se lista.
  *
  * Ejecutar:  node src/scripts/sincronizarTaric.js                 (simulacion)
  *            node src/scripts/sincronizarTaric.js --informe=/ruta/plan.json
  *            node src/scripts/sincronizarTaric.js --aplicar
+ *            node src/scripts/sincronizarTaric.js --aplicar --sin-correcciones
  * Requiere MONGODB_URI en el entorno (o .env), como el resto de scripts.
  */
 const MUESTRA = 15;
@@ -44,18 +47,19 @@ async function main() {
   const mongoose = require('mongoose');
   const TaricCode = require('../models/TaricCode');
   const { prepararSincronizacion, aplicarSincronizacion } = require('../services/taric/sincronizacionTaric');
+  const { cargarCatalogo } = require('../services/taric/sincronizacionAutomatica');
+  const TaricSyncRun = require('../models/TaricSyncRun');
 
   const aplicar = argumento('aplicar') === true;
+  const corregir = argumento('sin-correcciones') !== true;
+  const inicio = new Date();
   const informe = argumento('informe');
   const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
   if (!uri) throw new Error('Falta MONGODB_URI en el entorno');
 
   await mongoose.connect(uri);
   try {
-    const catalogo = await TaricCode.find({}, {
-      _id: 0, code: 1, level: 1, isLeaf: 1, isActive: 1,
-      'duties.thirdCountry': 1, 'duties.specific.amount': 1, 'duties.origen.fuente': 1
-    }).lean();
+    const catalogo = await cargarCatalogo(TaricCode);
     console.log(`Catalogo de LUCI: ${catalogo.length} codigos`);
     const plan = await prepararSincronizacion(catalogo, { log: (linea) => console.log(linea) });
 
@@ -69,6 +73,15 @@ async function main() {
     muestra('NIVEL A CORREGIR', plan.nivel, (n) => `${n.code}: ${n.antes} -> ${n.level}`);
     muestra('ARANCELES DEL CATALOGO QUE NO COINCIDEN CON EL OFICIAL (solo se listan, no se corrigen)', plan.arancelesDistintos,
       (d) => `${d.code}: catalogo ${d.catalogo} % | oficial ${d.oficial} %${d.heredadoDe !== d.code ? ` (de ${d.heredadoDe})` : ''} | ${d.fuenteCatalogo || 'sin fuente'}`);
+    const c = plan.correcciones;
+    muestra('DESCRIPCIONES EN ESPAÑOL QUE NO SON LA OFICIAL', c.descripciones.filter((d) => d.es),
+      (d) => `${d.code}: «${String(d.antes).slice(0, 55)}» -> «${d.es.slice(0, 55)}»`);
+    console.log(`\nRUTA JERARQUICA Y PALABRAS DE BUSQUEDA A ACTUALIZAR: ${c.descripciones.filter((d) => d.legalDescription).length}`);
+    muestra('ARANCELES A CORREGIR', c.aranceles.corregir,
+      (d) => `${d.code}: ${d.antes.thirdCountry ?? 'sin dato'} %${d.antes.specific ? ` + ${d.antes.specific.amount} ${d.antes.specific.unit}` : ''} -> ${d.thirdCountry} %${d.specific ? ` + ${d.specific.amount} ${d.specific.unit}` : ''} | oficial «${d.texto}»`);
+    console.log(`\nARANCELES QUE COINCIDEN Y PASAN A CONSTAR COMO CONTRASTADOS: ${c.aranceles.contrastar.length}`);
+    muestra('ARANCELES CONTRASTADOS ANTES A MANO QUE NO COINCIDEN (no se tocan; revisar)', c.aranceles.conflictos,
+      (d) => `${d.code}: catalogo ${d.antes.thirdCountry} %${d.antes.specific ? ` + ${d.antes.specific.amount} ${d.antes.specific.unit}` : ''} | oficial «${d.texto}»`);
     console.log('\nResumen:', JSON.stringify(plan.resumen));
 
     if (typeof informe === 'string') {
@@ -80,7 +93,8 @@ async function main() {
       console.log('\nSIMULACION: no se ha escrito nada. Repite con --aplicar para hacer los cambios.');
       return;
     }
-    const hecho = await aplicarSincronizacion(plan, { TaricCode });
+    const hecho = await aplicarSincronizacion(plan, { TaricCode, corregir });
+    await TaricSyncRun.create({ trigger: 'manual', startedAt: inicio, finishedAt: new Date(), ok: true, fuente: plan.fuente, resumen: plan.resumen, aplicado: hecho });
     console.log('\nAPLICADO:', JSON.stringify(hecho));
     console.log(`Catalogo de LUCI ahora: ${await TaricCode.countDocuments()} codigos, ${await TaricCode.countDocuments({ isActive: true })} activos`);
   } finally {

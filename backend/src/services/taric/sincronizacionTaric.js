@@ -7,13 +7,15 @@
  * funcion que modifica la base de datos.
  */
 const { leerPrimeraHoja } = require('./xlsxSimple');
-const { leerNomenclatura, leerDeclarables } = require('./nomenclaturaOficial');
+const { leerNomenclatura, leerDeclarables, leerRutas } = require('./nomenclaturaOficial');
 const { planificar, desglose, palabrasClave } = require('./planSincronizacion');
 const circabc = require('./circabcTaric');
 const { descripcionOficial } = require('./descripcionOficial');
 const { leerDerechosTercerosPaises, arancelDe, compararAranceles } = require('./arancelesOficiales');
+const { corregirDescripciones, corregirAranceles, SEPARADOR_RUTA } = require('./correccionesCatalogo');
 
 const PAUSA_ENTRE_CONSULTAS_MS = 60;
+const TAMANO_LOTE = 2000;
 const pausa = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
 
 /**
@@ -25,7 +27,9 @@ async function prepararSincronizacion(catalogo, { ficheros, describir = descripc
   const f = ficheros || await circabc.ficherosDeNomenclatura();
   const oficial = leerNomenclatura(leerPrimeraHoja(f.nomenclaturaEn));
   const declarables = leerDeclarables(leerPrimeraHoja(f.declarables));
-  const enEspanol = f.nomenclaturaEs ? leerNomenclatura(leerPrimeraHoja(f.nomenclaturaEs)) : new Map();
+  const hojaEs = f.nomenclaturaEs ? leerPrimeraHoja(f.nomenclaturaEs) : null;
+  const enEspanol = hojaEs ? leerNomenclatura(hojaEs) : new Map();
+  const rutas = hojaEs ? leerRutas(hojaEs) : new Map();
   log(`Nomenclatura oficial de ${f.mes.name} ${f.mes.anio}: ${oficial.size} codigos, ${declarables.size} declarables` +
     (f.mesEs ? `; español de ${f.mesEs.name} ${f.mesEs.anio}` : '; sin fichero en español'));
 
@@ -62,7 +66,18 @@ async function prepararSincronizacion(catalogo, { ficheros, describir = descripc
     }
     if (!es) sinEspanol += 1;
     Object.assign(alta, { descripcionEs: es || en, descripcionEn: en, descripcionEsOrigen: origenEs || 'ingles_pendiente_de_traduccion' });
+    // Ruta en el arbol: la del fichero en español si el codigo ya estaba; si es
+    // posterior, la del codigo de 8 digitos del que cuelga mas su descripcion.
+    const ruta = rutas.get(alta.code) || [...(rutas.get(`${alta.code.slice(0, 8)}00`) || []), alta.descripcionEs];
+    alta.ruta = ruta;
   }
+
+  // Correcciones de lo que el catalogo ya tiene: descripciones y aranceles.
+  const descripciones = corregirDescripciones(catalogo, { es: enEspanol, en: oficial, rutas });
+  // Los aranceles se corrigen sobre el catalogo tal como va a quedar: un codigo
+  // que pasa a ser declarable en esta misma sincronizacion ya cuenta.
+  const comoQuedara = catalogo.map((c) => (oficial.has(c.code) ? { ...c, isLeaf: declarables.has(c.code), isActive: true } : { ...c, isActive: false }));
+  const correccionAranceles = derechos ? corregirAranceles(comoQuedara, derechos) : { corregir: [], contrastar: [], conflictos: [] };
 
   return {
     ...plan,
@@ -73,11 +88,17 @@ async function prepararSincronizacion(catalogo, { ficheros, describir = descripc
       bajas: plan.bajas.length, reactivar: plan.reactivar.length, declarable: plan.declarable.length, nivel: plan.nivel.length,
       sinCambios: plan.sinCambios,
       arancelesDeAltas: aranceles,
+      descripcionesACorregir: descripciones.length,
+      descripcionesEsACorregir: descripciones.filter((d) => d.es).length,
+      arancelesACorregir: correccionAranceles.corregir.length,
+      arancelesAContrastar: correccionAranceles.contrastar.length,
+      arancelesEnConflicto: correccionAranceles.conflictos.length,
       arancelesDelCatalogo: comparacion
         ? { comparados: comparacion.comparados, coinciden: comparacion.coinciden, distintos: comparacion.distintos.length, noComparables: comparacion.noComparables }
         : null
     },
-    arancelesDistintos: comparacion ? comparacion.distintos : []
+    arancelesDistintos: comparacion ? comparacion.distintos : [],
+    correcciones: { descripciones, aranceles: correccionAranceles }
   };
 }
 
@@ -118,7 +139,8 @@ function documentoDeAlta(alta, { ahora, fuente }) {
     isLeaf: alta.isLeaf,
     isActive: true,
     validFrom: alta.validFrom || undefined,
-    keywords: palabrasClave(alta.descripcionEs),
+    ...(alta.ruta ? { legalDescription: alta.ruta.join(SEPARADOR_RUTA) } : {}),
+    keywords: palabrasClave(alta.ruta ? [...alta.ruta].reverse().join(' ') : alta.descripcionEs, 25),
     duties: derechosDeAlta(alta, { ahora, fuente }),
     notes: alta.descripcionEsOrigen === 'ingles_pendiente_de_traduccion' ? ['Descripcion oficial todavia no disponible en español'] : [],
     lastUpdated: ahora
@@ -129,10 +151,11 @@ function documentoDeAlta(alta, { ahora, fuente }) {
  * Escribe el plan en el catalogo. Las bajas no se borran: quedan inactivas.
  *
  * @param {object} plan resultado de `prepararSincronizacion`
- * @param {{ TaricCode: object, ahora?: Date }} deps
- * @returns {Promise<{ altas: number, bajas: number, reactivados: number, declarable: number, nivel: number }>}
+ * @param {{ TaricCode: object, ahora?: Date, corregir?: boolean }} deps `corregir: false` deja como estan las
+ *   descripciones y los aranceles de los codigos que ya existen
+ * @returns {Promise<{ altas: number, bajas: number, reactivados: number, declarable: number, nivel: number, correcciones: object }>}
  */
-async function aplicarSincronizacion(plan, { TaricCode, ahora = new Date() }) {
+async function aplicarSincronizacion(plan, { TaricCode, ahora = new Date(), corregir = true }) {
   const fuente = `${plan.fuente.nombre}, ${plan.fuente.mes}`;
   const operaciones = [
     ...plan.bajas.map((b) => ({ updateOne: { filter: { code: b.code }, update: { $set: { isActive: false, validTo: ahora, lastUpdated: ahora } } } })),
@@ -141,10 +164,47 @@ async function aplicarSincronizacion(plan, { TaricCode, ahora = new Date() }) {
     ...plan.nivel.map((n) => ({ updateOne: { filter: { code: n.code }, update: { $set: { level: n.level, lastUpdated: ahora } } } }))
   ];
   if (operaciones.length > 0) await TaricCode.bulkWrite(operaciones, { ordered: false });
+
+  const correcciones = { descripciones: 0, aranceles: 0, arancelesContrastados: 0 };
+  if (corregir && plan.correcciones) {
+    const fijar = (cambio) => {
+      const set = { lastUpdated: ahora };
+      if (cambio.es) set['description.es'] = cambio.es;
+      if (cambio.en) set['description.en'] = cambio.en;
+      if (cambio.legalDescription) { set.legalDescription = cambio.legalDescription; set.keywords = cambio.keywords; }
+      return { updateOne: { filter: { code: cambio.code }, update: { $set: set } } };
+    };
+    // Rutas puntuales (`duties.thirdCountry`), nunca el objeto `duties` entero:
+    // asignarlo borraria la sancion a Rusia y lo demas que cuelga de el.
+    const arancel = (dato, corregido) => {
+      const antes = corregido ? ` Antes: ${dato.antes.thirdCountry ?? 'sin dato'} %${dato.antes.specific ? ` + ${dato.antes.specific.amount} ${dato.antes.specific.unit}` : ''}.` : '';
+      const herencia = dato.heredadoDe === dato.code ? '' : ` (heredado de ${dato.heredadoDe})`;
+      const update = {
+        $set: {
+          'duties.thirdCountry': dato.thirdCountry,
+          'duties.origen': { fuente: 'taric_oficial', consultadoEl: ahora, metodo: 'fichero_circabc', rotulo: 'Third country duty', evidencia: `«${dato.texto}»${herencia}. ${fuente}.${antes}`.slice(0, 500) },
+          lastUpdated: ahora
+        }
+      };
+      if (dato.specific) update.$set['duties.specific'] = dato.specific;
+      else update.$unset = { 'duties.specific': '' };
+      return { updateOne: { filter: { code: dato.code }, update } };
+    };
+    const lotes = [
+      ...plan.correcciones.descripciones.map(fijar),
+      ...plan.correcciones.aranceles.corregir.map((d) => arancel(d, true)),
+      ...plan.correcciones.aranceles.contrastar.map((d) => arancel(d, false))
+    ];
+    for (let i = 0; i < lotes.length; i += TAMANO_LOTE) await TaricCode.bulkWrite(lotes.slice(i, i + TAMANO_LOTE), { ordered: false });
+    correcciones.descripciones = plan.correcciones.descripciones.length;
+    correcciones.aranceles = plan.correcciones.aranceles.corregir.length;
+    correcciones.arancelesContrastados = plan.correcciones.aranceles.contrastar.length;
+  }
+
   if (plan.altas.length > 0) {
     await TaricCode.insertMany(plan.altas.map((a) => documentoDeAlta(a, { ahora, fuente })), { ordered: false });
   }
-  return { altas: plan.altas.length, bajas: plan.bajas.length, reactivados: plan.reactivar.length, declarable: plan.declarable.length, nivel: plan.nivel.length };
+  return { altas: plan.altas.length, bajas: plan.bajas.length, reactivados: plan.reactivar.length, declarable: plan.declarable.length, nivel: plan.nivel.length, correcciones };
 }
 
 module.exports = { prepararSincronizacion, aplicarSincronizacion, documentoDeAlta, derechosDeAlta };

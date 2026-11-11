@@ -1407,7 +1407,32 @@ const getTreeData = async (req, res) => {
   }
 };
 
+/**
+ * Estado de la sincronizacion del catalogo TARIC con la fuente oficial
+ * GET /api/classification/sync-status
+ */
+const getTaricSyncStatus = async (req, res) => {
+  try {
+    const TaricSyncRun = require('../models/TaricSyncRun');
+    const ejecuciones = await TaricSyncRun.find({}).sort({ startedAt: -1 }).limit(15).lean();
+    const ultimaBuena = ejecuciones.find((e) => e.ok) || await TaricSyncRun.findOne({ ok: true }).sort({ startedAt: -1 }).lean();
+    res.json({
+      success: true,
+      data: {
+        automatica: process.env.NODE_ENV === 'production' && process.env.TARIC_SYNC_AUTO !== 'false',
+        ultimaCorrecta: ultimaBuena ? { fecha: ultimaBuena.startedAt, fuente: ultimaBuena.fuente, aplicado: ultimaBuena.aplicado } : null,
+        codigosActivos: await TaricCode.countDocuments({ isActive: true }),
+        ejecuciones
+      }
+    });
+  } catch (error) {
+    logger.error('Error consultando el estado de la sincronizacion TARIC:', error);
+    res.status(500).json({ success: false, error: 'Error al consultar el estado de la sincronizacion' });
+  }
+};
+
 module.exports = {
+  getTaricSyncStatus,
   suggestTaricCode,
   getTaricInfo,
   searchTaric,

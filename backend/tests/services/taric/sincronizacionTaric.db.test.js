@@ -55,7 +55,8 @@ const sembrar = async (extras = []) => {
   for (let i = 0; i < MINIMO_CODIGOS_OFICIALES; i++) docs.push(existente(codigoRelleno(i)));
   await TaricCode.collection.insertMany([...docs, ...extras]);
 };
-const catalogo = () => TaricCode.find({}, { _id: 0, code: 1, level: 1, isLeaf: 1, isActive: 1, 'duties.thirdCountry': 1, 'duties.specific.amount': 1, 'duties.origen.fuente': 1 }).lean();
+const { cargarCatalogo } = require('../../../src/services/taric/sincronizacionAutomatica');
+const catalogo = () => cargarCatalogo(TaricCode);
 
 describe('sincronizacion del catalogo TARIC', () => {
   let F;
@@ -98,14 +99,19 @@ describe('sincronizacion del catalogo TARIC', () => {
 
     const hecho = await aplicarSincronizacion(plan, { TaricCode, ahora });
 
-    expect(hecho).toEqual({ altas: 3, bajas: 1, reactivados: 0, declarable: 1, nivel: 0 });
+    expect(hecho).toMatchObject({ altas: 3, bajas: 1, reactivados: 0, declarable: 1, nivel: 0 });
     const cable = await TaricCode.findOne({ code: '8544429010' }).lean();
     expect(cable).toMatchObject({
       level: 10, isLeaf: true, isActive: true,
       description: { es: 'Cable de transmisión de datos', en: 'Data cable' },
       breakdown: { chapter: '85', heading: '8544', subheading: '854442', cnCode: '85444290', taricCode: '8544429010' },
-      keywords: ['cable', 'transmisión', 'datos']
+      keywords: ['cable', 'transmisión', 'datos'],
+      legalDescription: 'Cable de transmisión de datos'
     });
+    // El codigo nuevo que cuelga de uno que ya estaba en el fichero en español lleva su ruta.
+    const patoNuevo = await TaricCode.findOne({ code: '0207412010' }).lean();
+    expect(patoNuevo.legalDescription).toBe('Sin trocear > De pato de Pekin');
+    expect(patoNuevo.keywords).toEqual(['pato', 'pekin', 'trocear']);
     // Arancel oficial heredado del codigo de 8 digitos, con su procedencia.
     expect(cable.duties.thirdCountry).toBe(3.3);
     expect(cable.duties.origen).toMatchObject({ fuente: 'taric_oficial', metodo: 'fichero_circabc' });
@@ -125,7 +131,10 @@ describe('sincronizacion del catalogo TARIC', () => {
 
     // Repetirla no cambia nada: es idempotente.
     const otra = await prepararSincronizacion(await catalogo(), { ficheros: F, describir: async () => null });
-    expect(otra.resumen).toMatchObject({ altas: 0, bajas: 0, reactivar: 0, declarable: 0, nivel: 0 });
+    expect(otra.resumen).toMatchObject({
+      altas: 0, bajas: 0, reactivar: 0, declarable: 0, nivel: 0,
+      descripcionesACorregir: 0, arancelesACorregir: 0, arancelesAContrastar: 0
+    });
   });
 
   test('un codigo de baja que vuelve a la oficial se reactiva', async () => {
@@ -140,17 +149,52 @@ describe('sincronizacion del catalogo TARIC', () => {
     expect(reactivado.validTo).toBeUndefined();
   });
 
-  test('compara los aranceles del catalogo con el oficial y solo los lista: no corrige ninguno', async () => {
+  test('con `corregir: false` los aranceles que no coinciden solo se listan', async () => {
     await sembrar();
     await TaricCode.collection.updateOne({ code: codigoRelleno(5) }, { $set: { 'duties.thirdCountry': 12 } });
 
     const plan = await prepararSincronizacion(await catalogo(), { ficheros: F, describir: async () => 'x' });
-    await aplicarSincronizacion(plan, { TaricCode });
+    await aplicarSincronizacion(plan, { TaricCode, corregir: false });
 
     expect(plan.resumen.arancelesDelCatalogo).toEqual({ comparados: MINIMO_CODIGOS_OFICIALES, coinciden: MINIMO_CODIGOS_OFICIALES - 1, distintos: 1, noComparables: 0 });
     expect(plan.arancelesDistintos).toEqual([expect.objectContaining({ code: codigoRelleno(5), catalogo: 12, oficial: 3.3, heredadoDe: '9900000000' })]);
     expect(plan.resumen.arancelesDeAltas).toMatchObject({ ok: 2, sin_medida: 0 });
     expect((await TaricCode.findOne({ code: codigoRelleno(5) }).lean()).duties.thirdCountry).toBe(12);
+  });
+
+  test('corrige lo que ya estaba: descripcion oficial, ruta, palabras de busqueda y arancel', async () => {
+    await sembrar([
+      // Descripcion traducida que no es la oficial, y arancel equivocado con una unidad mal guardada.
+      { ...existente('8544429010'), description: { es: 'Cable de datos de alta velocidad', en: 'High speed cable' }, duties: { thirdCountry: 5, specific: { amount: 7, unit: '100' }, sancionRusiaBielorrusia: { adValorem: 50, certificado: 'Y155' } } },
+      // Arancel ya contrastado a mano que no coincide: no se pisa.
+      { ...existente('0207412010'), description: { es: 'De pato de Pekin', en: 'Of Pekin Duck' }, duties: { thirdCountry: 9, origen: { fuente: 'taric_oficial' } } }
+    ]);
+    const ahora = new Date('2026-11-11T12:00:00Z');
+
+    const plan = await prepararSincronizacion(await catalogo(), { ficheros: F, describir: async () => 'x' });
+    const hecho = await aplicarSincronizacion(plan, { TaricCode, ahora });
+
+    expect(plan.resumen).toMatchObject({ arancelesACorregir: 1, arancelesEnConflicto: 1 });
+    expect(plan.correcciones.aranceles.conflictos).toEqual([expect.objectContaining({ code: '0207412010', thirdCountry: 0, specific: { amount: 38, unit: 'EUR/100 kg' } })]);
+    expect(hecho.correcciones).toMatchObject({ aranceles: 1 });
+
+    const cable = await TaricCode.findOne({ code: '8544429010' }).lean();
+    expect(cable.description).toEqual({ es: 'Cable de transmisión de datos', en: 'Data cable' });
+    expect(cable.legalDescription).toBe('Cable de transmisión de datos');
+    expect(cable.keywords).toEqual(['cable', 'transmisión', 'datos']);
+    expect(cable.duties.thirdCountry).toBe(3.3);
+    expect(cable.duties.specific).toBeUndefined();
+    expect(cable.duties.origen).toMatchObject({ fuente: 'taric_oficial', metodo: 'fichero_circabc' });
+    expect(cable.duties.origen.evidencia).toBe('«3.300 %» (heredado de 8544429000). Comision Europea - TARIC (CIRCABC), 2026-11. Antes: 5 % + 7 100.');
+    // Lo demas que cuelga de `duties` sigue ahi.
+    expect(cable.duties.sancionRusiaBielorrusia).toEqual({ adValorem: 50, certificado: 'Y155' });
+
+    const pato = await TaricCode.findOne({ code: '0207412010' }).lean();
+    expect(pato.duties.thirdCountry).toBe(9);
+
+    // Los que ya coincidian pasan a constar como contrastados, sin cambiar la cifra.
+    const relleno = await TaricCode.findOne({ code: codigoRelleno(7) }).lean();
+    expect(relleno.duties).toMatchObject({ thirdCountry: 3.3, origen: { fuente: 'taric_oficial' } });
   });
 
   test('sin el fichero de derechos del mes las altas entran sin arancel y no se compara nada', async () => {
