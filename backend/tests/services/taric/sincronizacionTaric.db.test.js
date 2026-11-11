@@ -6,7 +6,7 @@
 const { usarBaseDeDatosEnMemoria } = require('../../helpers/memoryDb');
 const { xlsxDePrueba } = require('../../helpers/xlsxDePrueba');
 const { MINIMO_CODIGOS_OFICIALES } = require('../../../src/services/taric/planSincronizacion');
-const { prepararSincronizacion, aplicarSincronizacion, documentoDeAlta } = require('../../../src/services/taric/sincronizacionTaric');
+const { prepararSincronizacion, aplicarSincronizacion, documentoDeAlta, derechosDeAlta } = require('../../../src/services/taric/sincronizacionTaric');
 const circabc = require('../../../src/services/taric/circabcTaric');
 const TaricCode = require('../../../src/models/TaricCode');
 const dutyCalculationService = require('../../../src/services/dutyCalculationService');
@@ -15,6 +15,8 @@ usarBaseDeDatosEnMemoria();
 
 const CAB_NOM = ['Goods code', 'Start date', 'End date', 'Language', 'Hier. Pos.', 'Indent', 'Description', 'Descr. start date'];
 const CAB_DEC = ['Goods code', 'Start date', 'Decl. start date', 'IS_LEAF', 'End date'];
+const CAB_DER = ['Goods code', 'Add code', 'Order No.', 'Start date', 'End date', 'RED_IND', 'Origin', 'Measure type', 'Legal base', 'Duty', 'Origin code', 'Meas. type code'];
+const derecho103 = (codigo, texto) => [codigo, '', '', '01-01-2012', '', '', 'ERGA OMNES', 'Third country duty', 'Regulation 2658/87', texto, '1011', '103'];
 const codigoRelleno = (i) => `99${String(i).padStart(8, '0')}`;
 
 // Nomenclatura oficial: relleno + tres codigos con nombre propio.
@@ -35,9 +37,13 @@ const ficheros = () => {
     dec.push([`${p.code} 80`, '01-07-2026', '01-07-2026', p.hoja, '']);
   }
   es.push([`${codigoRelleno(0)} 80`, '01-01-2020', '', 'ES', '10', '- ', 'Los demás', '01-01-2020']);
+  // Derechos: el cable hereda el 3,3 % de su codigo de 8 digitos, el pato un
+  // importe por 100 kg, y el relleno tiene un 3,3 % en el capitulo.
+  const der = [CAB_DER, derecho103('8544429000', '3.300 % '), derecho103('0207412000', '38.000 EUR DTN '), derecho103('9900000000', '3.300 % ')];
   return {
     mes: { anio: 2026, mes: 11, name: '11 - November' }, mesEs: { anio: 2026, mes: 7, name: '07 - July' },
-    nomenclaturaEn: xlsxDePrueba(en), nomenclaturaEs: xlsxDePrueba(es), declarables: xlsxDePrueba(dec)
+    nomenclaturaEn: xlsxDePrueba(en), nomenclaturaEs: xlsxDePrueba(es), declarables: xlsxDePrueba(dec),
+    derechosImport: xlsxDePrueba(der)
   };
 };
 const existente = (code, extra = {}) => ({
@@ -49,7 +55,7 @@ const sembrar = async (extras = []) => {
   for (let i = 0; i < MINIMO_CODIGOS_OFICIALES; i++) docs.push(existente(codigoRelleno(i)));
   await TaricCode.collection.insertMany([...docs, ...extras]);
 };
-const catalogo = () => TaricCode.find({}, { _id: 0, code: 1, level: 1, isLeaf: 1, isActive: 1 }).lean();
+const catalogo = () => TaricCode.find({}, { _id: 0, code: 1, level: 1, isLeaf: 1, isActive: 1, 'duties.thirdCountry': 1, 'duties.specific.amount': 1, 'duties.origen.fuente': 1 }).lean();
 
 describe('sincronizacion del catalogo TARIC', () => {
   let F;
@@ -100,8 +106,15 @@ describe('sincronizacion del catalogo TARIC', () => {
       breakdown: { chapter: '85', heading: '8544', subheading: '854442', cnCode: '85444290', taricCode: '8544429010' },
       keywords: ['cable', 'transmisión', 'datos']
     });
-    expect(cable.duties.thirdCountry).toBeNull();
-    expect(cable.duties.origen).toMatchObject({ fuente: 'pendiente' });
+    // Arancel oficial heredado del codigo de 8 digitos, con su procedencia.
+    expect(cable.duties.thirdCountry).toBe(3.3);
+    expect(cable.duties.origen).toMatchObject({ fuente: 'taric_oficial', metodo: 'fichero_circabc' });
+    expect(cable.duties.origen.evidencia).toBe('«3.300 %» (heredado de 8544429000). Comision Europea - TARIC (CIRCABC), 2026-11');
+    // Derecho por unidad: sin componente ad valorem.
+    const pato = await TaricCode.findOne({ code: '0207412010' }).lean();
+    expect(pato.duties).toMatchObject({ thirdCountry: 0, specific: { amount: 38, unit: 'EUR/100 kg' }, origen: { fuente: 'taric_oficial' } });
+    // Un codigo que no se declara no lleva arancel.
+    expect((await TaricCode.findOne({ code: '0207412000' }).lean()).duties.thirdCountry).toBeNull();
     expect(cable.validFrom.toISOString().slice(0, 10)).toBe('2026-07-01');
 
     const caducado = await TaricCode.findOne({ code: '2811220040' }).lean();
@@ -125,6 +138,43 @@ describe('sincronizacion del catalogo TARIC', () => {
     const reactivado = await TaricCode.findOne({ code: codigoRelleno(2) }).lean();
     expect(reactivado.isActive).toBe(true);
     expect(reactivado.validTo).toBeUndefined();
+  });
+
+  test('compara los aranceles del catalogo con el oficial y solo los lista: no corrige ninguno', async () => {
+    await sembrar();
+    await TaricCode.collection.updateOne({ code: codigoRelleno(5) }, { $set: { 'duties.thirdCountry': 12 } });
+
+    const plan = await prepararSincronizacion(await catalogo(), { ficheros: F, describir: async () => 'x' });
+    await aplicarSincronizacion(plan, { TaricCode });
+
+    expect(plan.resumen.arancelesDelCatalogo).toEqual({ comparados: MINIMO_CODIGOS_OFICIALES, coinciden: MINIMO_CODIGOS_OFICIALES - 1, distintos: 1, noComparables: 0 });
+    expect(plan.arancelesDistintos).toEqual([expect.objectContaining({ code: codigoRelleno(5), catalogo: 12, oficial: 3.3, heredadoDe: '9900000000' })]);
+    expect(plan.resumen.arancelesDeAltas).toMatchObject({ ok: 2, sin_medida: 0 });
+    expect((await TaricCode.findOne({ code: codigoRelleno(5) }).lean()).duties.thirdCountry).toBe(12);
+  });
+
+  test('sin el fichero de derechos del mes las altas entran sin arancel y no se compara nada', async () => {
+    await sembrar();
+
+    const plan = await prepararSincronizacion(await catalogo(), { ficheros: { ...F, derechosImport: null }, describir: async () => 'x' });
+
+    expect(plan.resumen.arancelesDeAltas).toMatchObject({ ok: 0, sin_fichero: 2 });
+    expect(plan.resumen.arancelesDelCatalogo).toBeNull();
+    expect(plan.arancelesDistintos).toEqual([]);
+  });
+
+  test('un derecho que no es simple entra sin dato y con el texto oficial como motivo', () => {
+    const contexto = { ahora: new Date('2026-11-11T12:00:00Z'), fuente: 'Comision Europea - TARIC (CIRCABC), 2026-11' };
+
+    const mixto = derechosDeAlta({ code: '0811101100', arancel: { estado: 'no_simple', texto: '20.800 % + 8.400 EUR DTN', heredadoDe: '0811101100' } }, contexto);
+    const variantes = derechosDeAlta({ code: '2918220020', arancel: { estado: 'variantes', texto: '0.000 % | 6.500 %', heredadoDe: '2918220000' } }, contexto);
+    const sinMedida = derechosDeAlta({ code: '9880000000', arancel: { estado: 'sin_medida' } }, contexto);
+
+    expect(mixto).toMatchObject({ thirdCountry: null, origen: { fuente: 'pendiente' } });
+    expect(mixto.origen.evidencia).toContain('derecho mixto, condicionado o con minimos («20.800 % + 8.400 EUR DTN»)');
+    expect(variantes.origen.evidencia).toContain('varios tipos segun codigo adicional («0.000 % | 6.500 %»)');
+    expect(sinMedida.origen.evidencia).toContain('sin derecho de terceros paises en el fichero oficial');
+    expect(sinMedida.thirdCountry).toBeNull();
   });
 
   test('el alta sin español lleva una nota y nunca un arancel inventado', () => {
@@ -157,7 +207,7 @@ describe('circabcTaric', () => {
     [circabc.CARPETA_TARIC]: [carpeta('a2026', '2026'), carpeta('a2025', '2025'), carpeta('x', 'Archivo')],
     a2026: [carpeta('m11', '11 - November'), carpeta('m07', '07 - July'), carpeta('m10', '10 - October')],
     a2025: [carpeta('m12', '12 - December')],
-    m11: [fichero('dec11', 'Declarable codes.xlsx'), fichero('en11', 'Nomenclature EN.xlsx'), fichero('fr11', 'Nomenclature FR.xlsx')],
+    m11: [fichero('dec11', 'Declarable codes.xlsx'), fichero('en11', 'Nomenclature EN.xlsx'), fichero('fr11', 'Nomenclature FR.xlsx'), fichero('der11', 'Duties Import 01-99.xlsx')],
     m10: [fichero('dec10', 'Declarable codes.xlsx'), fichero('en10', 'Nomenclature EN.xlsx')],
     m07: [fichero('dec07', 'Declarable codes.xlsx'), fichero('en07', 'Nomenclature EN.xlsx'), fichero('es07', 'Nomenclature ES.xlsx')],
     m12: []
@@ -185,6 +235,7 @@ describe('circabcTaric', () => {
     expect(f.declarables.toString()).toBe('contenido de dec11');
     expect(f.nomenclaturaEn.toString()).toBe('contenido de en11');
     expect(f.nomenclaturaEs.toString()).toBe('contenido de es07');
+    expect(f.derechosImport.toString()).toBe('contenido de der11');
     // Se entra como invitado.
     expect(c.get.mock.calls[0][1].params).toMatchObject({ guest: true });
   });

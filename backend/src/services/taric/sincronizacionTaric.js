@@ -11,6 +11,7 @@ const { leerNomenclatura, leerDeclarables } = require('./nomenclaturaOficial');
 const { planificar, desglose, palabrasClave } = require('./planSincronizacion');
 const circabc = require('./circabcTaric');
 const { descripcionOficial } = require('./descripcionOficial');
+const { leerDerechosTercerosPaises, arancelDe, compararAranceles } = require('./arancelesOficiales');
 
 const PAUSA_ENTRE_CONSULTAS_MS = 60;
 const pausa = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
@@ -29,6 +30,18 @@ async function prepararSincronizacion(catalogo, { ficheros, describir = descripc
     (f.mesEs ? `; español de ${f.mesEs.name} ${f.mesEs.anio}` : '; sin fichero en español'));
 
   const plan = planificar(oficial, declarables, catalogo);
+
+  // Arancel de terceros paises oficial (puede faltar el fichero del mes).
+  const derechos = f.derechosImport ? leerDerechosTercerosPaises(leerPrimeraHoja(f.derechosImport)) : null;
+  const aranceles = { ok: 0, variantes: 0, no_simple: 0, sin_medida: 0, sin_fichero: 0 };
+  for (const alta of plan.altas) {
+    if (!alta.isLeaf) continue;
+    alta.arancel = derechos ? arancelDe(alta.code, derechos) : { estado: 'sin_fichero' };
+    aranceles[alta.arancel.estado] += 1;
+  }
+  // Los que ya estan en el catalogo solo se comparan: aqui no se corrige ninguno.
+  const comparacion = derechos ? compararAranceles(catalogo, derechos) : null;
+  if (derechos) log(`Derechos de importacion oficiales: ${derechos.size} codigos con arancel de terceros paises vigente`);
 
   // Descripcion de cada alta: español del fichero de CIRCABC; si el codigo es
   // posterior a ese fichero, del servicio web; y si tampoco, queda en ingles y
@@ -58,12 +71,44 @@ async function prepararSincronizacion(catalogo, { ficheros, describir = descripc
       oficiales: oficial.size, declarablesOficiales: declarables.size, catalogo: catalogo.length,
       altas: plan.altas.length, altasDeclarables: plan.altas.filter((a) => a.isLeaf).length, altasSinEspanol: sinEspanol,
       bajas: plan.bajas.length, reactivar: plan.reactivar.length, declarable: plan.declarable.length, nivel: plan.nivel.length,
-      sinCambios: plan.sinCambios
-    }
+      sinCambios: plan.sinCambios,
+      arancelesDeAltas: aranceles,
+      arancelesDelCatalogo: comparacion
+        ? { comparados: comparacion.comparados, coinciden: comparacion.coinciden, distintos: comparacion.distintos.length, noComparables: comparacion.noComparables }
+        : null
+    },
+    arancelesDistintos: comparacion ? comparacion.distintos : []
   };
 }
 
-/** Documento del catalogo para un codigo nuevo. El arancel queda sin dato: no se estima. */
+/**
+ * Arancel con el que entra un codigo nuevo: el oficial si es un porcentaje o un
+ * importe por unidad; si no, sin dato (null) y con el motivo. Nunca se estima.
+ */
+function derechosDeAlta(alta, { ahora, fuente }) {
+  const a = alta.arancel;
+  if (a?.estado === 'ok') {
+    const herencia = a.heredadoDe === alta.code ? '' : ` (heredado de ${a.heredadoDe})`;
+    return {
+      // Un derecho solo especifico no lleva componente ad valorem.
+      thirdCountry: a.derecho.tipo === 'ad_valorem' ? a.derecho.adValorem : 0,
+      ...(a.derecho.tipo === 'especifico' ? { specific: a.derecho.specific } : {}),
+      origen: {
+        fuente: 'taric_oficial', consultadoEl: ahora, metodo: 'fichero_circabc', rotulo: 'Third country duty',
+        evidencia: `«${a.texto}»${herencia}. ${fuente}`
+      }
+    };
+  }
+  const motivos = {
+    variantes: 'varios tipos segun codigo adicional', no_simple: 'derecho mixto, condicionado o con minimos',
+    sin_medida: 'sin derecho de terceros paises en el fichero oficial', sin_fichero: 'fichero de derechos no disponible'
+  };
+  const detalle = a ? `: ${motivos[a.estado]}${a.texto ? ` («${a.texto}»)` : ''}` : '';
+  // Sin arancel contrastado: null, no 0. Un 0 % se leeria como «libre de derechos».
+  return { thirdCountry: null, origen: { fuente: 'pendiente', consultadoEl: ahora, evidencia: `Alta por sincronizacion con ${fuente}${detalle}`.slice(0, 500) } };
+}
+
+/** Documento del catalogo para un codigo nuevo. */
 function documentoDeAlta(alta, { ahora, fuente }) {
   return {
     code: alta.code,
@@ -74,8 +119,7 @@ function documentoDeAlta(alta, { ahora, fuente }) {
     isActive: true,
     validFrom: alta.validFrom || undefined,
     keywords: palabrasClave(alta.descripcionEs),
-    // Sin arancel contrastado: null, no 0. Un 0 % se leeria como «libre de derechos».
-    duties: { thirdCountry: null, origen: { fuente: 'pendiente', consultadoEl: ahora, evidencia: `Alta por sincronizacion con ${fuente}` } },
+    duties: derechosDeAlta(alta, { ahora, fuente }),
     notes: alta.descripcionEsOrigen === 'ingles_pendiente_de_traduccion' ? ['Descripcion oficial todavia no disponible en español'] : [],
     lastUpdated: ahora
   };
@@ -103,4 +147,4 @@ async function aplicarSincronizacion(plan, { TaricCode, ahora = new Date() }) {
   return { altas: plan.altas.length, bajas: plan.bajas.length, reactivados: plan.reactivar.length, declarable: plan.declarable.length, nivel: plan.nivel.length };
 }
 
-module.exports = { prepararSincronizacion, aplicarSincronizacion, documentoDeAlta };
+module.exports = { prepararSincronizacion, aplicarSincronizacion, documentoDeAlta, derechosDeAlta };
