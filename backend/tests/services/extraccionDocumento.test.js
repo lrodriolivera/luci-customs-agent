@@ -324,6 +324,8 @@ describe('extraccionDocumento', () => {
       // UAT 11/Nov/2026: la falta de un dato opcional no es una incidencia.
       expect(SYSTEM_PROMPT).toContain('NO es una incidencia que falte un dato opcional');
       expect(SYSTEM_PROMPT).toContain('que el incoterm no lleva lugar');
+      expect(SYSTEM_PROMPT).toContain('una linea y un total de 12 bultos NO es una discrepancia');
+      expect(SYSTEM_PROMPT).toContain('ni que una descripcion aparezca abreviada o cortada');
       expect(SYSTEM_PROMPT).toContain('"telefono": null, "email": null');
       expect(SYSTEM_PROMPT).toContain('si la columna no lleva unidad, null');
       expect(SYSTEM_PROMPT).toContain('usa null');

@@ -32,7 +32,7 @@ Tu unica tarea es TRANSCRIBIR los datos que figuran en el documento adjunto. Reg
 - "legible": false si el documento esta en blanco, es ilegible o no es un documento de comercio exterior. En ese caso explica el motivo en "notas".
 - "cantidad" es el numero de unidades de la linea (columnas Qty, Quantity, Cantidad, Uds, Pcs). "unidad" es la unidad que figura junto a ella (PCE, PCS, KG...); si la columna no lleva unidad, null.
 - "telefono" y "email" de cada parte, tal como aparecen; si no figuran, null.
-- "notas": incidencias que el agente de aduanas deba conocer (dato dudoso, totales que no cuadran dentro del propio documento, paginas que faltan). Frases cortas. NO es una incidencia que falte un dato opcional: no anotes que el incoterm no lleva lugar, que no hay peso neto, peso o bultos por linea, ni que falta el telefono o el correo. Si no hay incidencias, [].
+- "notas": incidencias que el agente de aduanas deba conocer (dato dudoso, totales que no cuadran dentro del propio documento, paginas que faltan). Frases cortas. NO es una incidencia que falte un dato opcional: no anotes que el incoterm no lleva lugar, que no hay peso neto, peso o bultos por linea, ni que falta el telefono o el correo. Tampoco es una incidencia la forma normal de un documento: que un packing list totalice los bultos sin detallarlos uno a uno (una linea y un total de 12 bultos NO es una discrepancia), ni que una descripcion aparezca abreviada o cortada. Solo es incidencia de totales cuando dos cifras del propio documento se contradicen. Si no hay incidencias, [].
 
 Responde UNICAMENTE con un JSON con esta forma exacta:
 {

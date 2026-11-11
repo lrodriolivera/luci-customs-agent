@@ -130,6 +130,8 @@ describe('portal del cliente', () => {
     const [factura, aut] = r.body.data.documentChecklist;
     expect(factura).toMatchObject({ documentType: 'commercial_invoice', received: false });
     expect(aut).toMatchObject({ documentType: 'dispatch_authorization', received: true, coveredByPrevious: true });
+    // El nombre vigente del tipo (con tilde) manda sobre el guardado en el expediente.
+    expect(aut.documentName).toBe('Autorización de Despacho');
     expect(aut.validUntil).toBeDefined();
     expect(JSON.stringify(r.body.data.documentChecklist[1].coveredByPrevious)).not.toContain(anterior.expeditionId);
     // No se guarda: el checklist del expediente sigue pidiendola.
@@ -144,5 +146,20 @@ describe('portal del cliente', () => {
 
     expect(r.body.data.documentChecklist[1]).toMatchObject({ received: false });
     expect(r.body.data.documentChecklist[1].coveredByPrevious).toBeUndefined();
+  });
+
+  test('la vista del cliente lleva cuantos documentos hay y la ultima actualizacion, sin rutas ni nombres de fichero', async () => {
+    const nuevo = await expediente({
+      documentChecklist: CHECKLIST,
+      documents: [{ type: 'commercial_invoice', fileName: 'interno-123.pdf', filePath: '/app/uploads/interno-123.pdf', originalName: 'factura.pdf' }]
+    });
+    const r = res();
+
+    await portalController.getByToken({ params: { token: nuevo.clientPortal.token } }, r);
+
+    expect(r.body.data.documents).toHaveLength(1);
+    expect(Object.keys(r.body.data.documents[0]).sort()).toEqual(['type', 'uploadedAt']);
+    expect(r.body.data.updatedAt).toBeDefined();
+    expect(JSON.stringify(r.body.data)).not.toContain('interno-123');
   });
 });

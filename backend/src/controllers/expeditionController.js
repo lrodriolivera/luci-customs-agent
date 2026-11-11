@@ -479,7 +479,8 @@ const getChecklist = async (req, res) => {
       await autorizacionVigente(expedition)
     );
     const checklistForFrontend = conAutorizacion.map(item => ({
-      name: item.documentName || item.displayName || DOCUMENT_DEFINITIONS[item.documentType] || item.documentType,
+      name: documentChecklists.DOCUMENT_DEFINITIONS?.[item.documentType]?.name || item.documentName || item.displayName ||
+        DOCUMENT_DEFINITIONS[item.documentType] || item.documentType,
       documentType: item.documentType,
       required: item.required,
       uploaded: item.received || false,
