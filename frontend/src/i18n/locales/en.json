@@ -3653,6 +3653,7 @@
     "aeatItem": "Item {{status}}: {{packages}} packages and {{weight}} kg declared.",
     "aeatBalance": "Balance: {{packages}} packages.",
     "aeatMaster": "This is a master item: it covers the consolidated cargo, not these goods.",
+    "aeatDiffers": "It does not match the file ({{packages}} packages and {{weight}} kg). This does not prevent generating or lodging the H1: check it and, if needed, correct the file or the documents.",
     "aeatBillOfLading": "Bill of lading: {{value}}",
     "aeatLocation": "Location: {{value}}"
   },

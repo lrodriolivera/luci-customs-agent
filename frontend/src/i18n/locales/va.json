@@ -3637,6 +3637,7 @@
     "aeatItem": "Partida {{status}}: {{packages}} embalums i {{weight}} kg declarats.",
     "aeatBalance": "Saldo: {{packages}} embalums.",
     "aeatMaster": "És una partida màster: correspon a la càrrega agrupada, no a aquesta mercaderia.",
+    "aeatDiffers": "No coincidix amb l'expedient ({{packages}} embalums i {{weight}} kg). No impedix generar ni presentar l'H1: comprova-ho i, si cal, corregix l'expedient o la documentació.",
     "aeatBillOfLading": "Coneixement: {{value}}",
     "aeatLocation": "Ubicació: {{value}}"
   },

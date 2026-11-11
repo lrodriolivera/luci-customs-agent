@@ -3653,6 +3653,7 @@
     "aeatItem": "Partida {{status}}: {{packages}} bultos y {{weight}} kg declarados.",
     "aeatBalance": "Saldo: {{packages}} bultos.",
     "aeatMaster": "Es una partida máster: corresponde a la carga agrupada, no a esta mercancía.",
+    "aeatDiffers": "No coincide con el expediente ({{packages}} bultos y {{weight}} kg). No impide generar ni presentar el H1: compruébalo y, si hace falta, corrige el expediente o la documentación.",
     "aeatBillOfLading": "Conocimiento: {{value}}",
     "aeatLocation": "Ubicación: {{value}}"
   },
