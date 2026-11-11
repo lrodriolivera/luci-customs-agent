@@ -1122,106 +1122,15 @@ const submitH7 = async (req, res) => {
       });
     }
 
-    // Para H7, simulamos respuesta rapida de AEAT
-    // En produccion esto iria al endpoint real de AEAT para H7
-    logger.info(`Enviando H7 a AEAT...`);
-
-    const hasIOSS = !!expedition.declaration.h7Data?.iossData;
-    const vatToPay = expedition.declaration.vatCalculation?.totalToPay || 0;
-
-    // Simular respuesta AEAT para H7
-    const aeatResponse = {
-      success: true,
-      mrn: `H7${new Date().getFullYear()}ES${Math.random().toString(36).substring(2, 12).toUpperCase()}`,
-      acceptanceDate: new Date(),
-      // H7 con IOSS generalmente obtiene canal verde
-      channel: hasIOSS ? 'green' : (vatToPay > 0 ? 'yellow' : 'green'),
-      simulated: true,
-      h7Specific: {
-        clearanceTime: hasIOSS ? '< 1 hora' : '1-4 horas',
-        vatStatus: hasIOSS ? 'Pagado via IOSS' : 'Pendiente de pago',
-        dutyStatus: 'Exento (valor <= 150 EUR)'
-      }
-    };
-
-    // Actualizar declaracion
-    expedition.declaration.status = 'submitted';
-    expedition.declaration.mrn = aeatResponse.mrn;
-    expedition.declaration.submittedAt = new Date();
-    expedition.declaration.acceptanceDate = aeatResponse.acceptanceDate;
-    expedition.declaration.channel = aeatResponse.channel;
-    expedition.declaration.aeatResponse = {
-      responseCode: '00',
-      responseDescription: 'H7 aceptado',
-      timestamp: new Date(),
-      simulated: true,
-      h7Data: aeatResponse.h7Specific
-    };
-
-    // Actualizar status del expediente
-    if (aeatResponse.channel === 'green') {
-      expedition.status = 'green_channel';
-      // Generar levante automatico para H7 verde
-      expedition.declaration.levanteDate = new Date();
-      expedition.declaration.levanteNumber = `LEV${aeatResponse.mrn}`;
-    } else {
-      expedition.status = 'yellow_channel';
-    }
-
-    // Timeline
-    expedition.timeline.push({
-      action: 'h7_submitted',
-      description: `H7 enviado a AEAT - Canal ${aeatResponse.channel.toUpperCase()}`,
-      userId: req.user?._id,
-      performedBy: req.user?.name || 'Sistema',
-      timestamp: new Date(),
-      metadata: {
-        mrn: aeatResponse.mrn,
-        channel: aeatResponse.channel,
-        hasIOSS,
-        vatToPay,
-        simulated: true
-      }
-    });
-
-    await expedition.save();
-
-    logger.info(`H7 enviado: ${expedition.expeditionId} - MRN: ${aeatResponse.mrn} - Canal: ${aeatResponse.channel}`);
-
-    // Non-blocking email notification for H7
-    try {
-      const emailService = require('../services/emailService');
-      if (req.user?.email) {
-        emailService.sendDeclarationAccepted(req.user.email, {
-          mrn: aeatResponse.mrn,
-          channel: aeatResponse.channel,
-          expeditionId: expedition.expeditionId,
-          declarationType: 'H7'
-        }).catch(e => logger.warn('Email H7 aceptado no enviado:', e.message));
-      }
-    } catch (e) { /* silent */ }
-
-    // Mensajes segun canal
-    const channelMessages = {
-      green: 'CANAL VERDE - Despacho inmediato. Paquete puede ser entregado.',
-      yellow: 'CANAL AMARILLO - Pendiente pago IVA. Mercancia retenida hasta liquidacion.'
-    };
-
-    res.json({
-      success: true,
-      data: {
-        mrn: aeatResponse.mrn,
-        lrn: expedition.declaration.lrn,
-        channel: aeatResponse.channel,
-        channelDescription: channelMessages[aeatResponse.channel],
-        status: expedition.status,
-        declaration: expedition.declaration,
-        h7Details: aeatResponse.h7Specific,
-        vatToPay,
-        levanteNumber: expedition.declaration.levanteNumber,
-        simulated: true,
-        message: `[MODO DEMO] ${channelMessages[aeatResponse.channel]}`
-      }
+    // Este envio NO esta conectado con la AEAT. Antes fabricaba un MRN al azar,
+    // asignaba canal y concedia el levante sin haber presentado nada: un
+    // despacho que no existe. Se rechaza sin tocar el expediente; el H7 se
+    // presenta por el servicio real (/api/aeat-real/declarations/h7/submit).
+    logger.warn(`Envio de H7 desde el expediente rechazado: no conectado con la AEAT (${expedition.expeditionId})`);
+    return res.status(501).json({
+      success: false,
+      code: 'H7_SUBMIT_NOT_CONNECTED',
+      error: 'El envío del H7 desde el expediente no está conectado con la AEAT. No se ha presentado nada. Presente el H7 desde la pantalla de declaraciones H7.'
     });
 
   } catch (error) {

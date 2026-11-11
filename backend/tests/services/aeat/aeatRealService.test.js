@@ -991,6 +991,22 @@ describe('AEAT Real Service', () => {
       process.env.AEAT_SIMULATE = originalEnv;
     });
 
+    test('en producción rechaza la simulación aunque AEAT_SIMULATE=true', async () => {
+      const simulate = process.env.AEAT_SIMULATE;
+      const nodeEnv = process.env.NODE_ENV;
+      process.env.AEAT_SIMULATE = 'true';
+      process.env.NODE_ENV = 'production';
+
+      try {
+        await expect(aeatRealService._sendSOAPRequest(aeatRealService.SERVICES.H1_SUBMIT, '<test>soap</test>'))
+          .rejects.toThrow(/simulación de la AEAT no está permitida en producción/);
+        expect(mockAxiosPost).not.toHaveBeenCalled();
+      } finally {
+        process.env.AEAT_SIMULATE = simulate;
+        process.env.NODE_ENV = nodeEnv;
+      }
+    });
+
     test('lanza error en vez de simular cuando no hay certificado cargado', async () => {
       // Sin certificado NO debe caer en simulacion silenciosa: una declaracion
       // real presentada durante pruebas de agente no puede recibir un MRN/canal

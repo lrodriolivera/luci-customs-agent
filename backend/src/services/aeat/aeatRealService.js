@@ -959,6 +959,12 @@ class AEATRealService {
 
     // En modo simulación, devolver respuesta simulada
     if (process.env.AEAT_SIMULATE === 'true' || process.env.AEAT_FORCE_SIMULATION === 'true') {
+      // La simulacion fabrica un MRN y sortea el canal: solo vale en desarrollo.
+      // En un despliegue de produccion se rechaza aunque la variable este puesta.
+      if (process.env.NODE_ENV === 'production') {
+        logger.error(`[AEAT] Simulacion pedida en produccion para ${service.code}: rechazada`);
+        throw new Error('La simulación de la AEAT no está permitida en producción. Quite AEAT_SIMULATE y AEAT_FORCE_SIMULATION.');
+      }
       logger.info(`[AEAT] Using SIMULATION mode for ${service.code}`);
       return this._simulateAEATResponse(service, soapEnvelope);
     }
