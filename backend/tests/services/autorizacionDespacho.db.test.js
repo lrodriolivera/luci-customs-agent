@@ -62,6 +62,33 @@ describe('autorizacionVigente', () => {
     expect(await autorizacionVigente(nuevo, { ahora: AHORA })).toBeNull();
   });
 
+  test('los cuatro años cuentan desde la fecha de la autorizacion, no desde la de subida', async () => {
+    // Firmada hace tres años y medio, subida a LUCI ayer: le quedan seis meses.
+    const anterior = await expediente({ documents: [autorizacion(hace(1), { documentDate: hace(1278) })] });
+    const nuevo = await expediente();
+
+    const vigente = await autorizacionVigente(nuevo, { ahora: AHORA });
+
+    expect(vigente.expeditionId).toBe(anterior.expeditionId);
+    expect(vigente.fecha).toEqual(hace(1278));
+    expect(vigente.validaHasta.getTime()).toBeLessThan(AHORA.getTime() + 200 * 24 * 3600 * 1000);
+  });
+
+  test('una autorizacion de hace mas de cuatro años no vale aunque se haya subido hoy', async () => {
+    await expediente({ documents: [autorizacion(hace(0), { documentDate: hace(4 * 365 + 30) })] });
+    const nuevo = await expediente();
+
+    expect(await autorizacionVigente(nuevo, { ahora: AHORA })).toBeNull();
+  });
+
+  test('con varias vigentes manda la de fecha de autorizacion mas reciente', async () => {
+    await expediente({ documents: [autorizacion(hace(2), { documentDate: hace(1000) })] });
+    const mejor = await expediente({ documents: [autorizacion(hace(300), { documentDate: hace(310) })] });
+    const nuevo = await expediente();
+
+    expect((await autorizacionVigente(nuevo, { ahora: AHORA })).expeditionId).toBe(mejor.expeditionId);
+  });
+
   test('no vale la de otro cliente, la de otro despacho ni una rechazada', async () => {
     await expediente({ client: { companyName: 'Otro SL', nif: 'B87654321' }, documents: [autorizacion(hace(10))] });
     await expediente({ tenantId: new mongoose.Types.ObjectId(), documents: [autorizacion(hace(10))] });
@@ -97,7 +124,7 @@ describe('aplicarAutorizacionVigente', () => {
     expect(r[1]).toMatchObject({
       received: true,
       coveredByPrevious: { expeditionId: 'EXP-2025-AAAA', validUntil: vigente.validaHasta },
-      notes: 'Vigente: entregada en el expediente EXP-2025-AAAA el 7/10/2025. Valida hasta el 7/10/2029.'
+      notes: 'Vigente: autorizacion del 7/10/2025, entregada en el expediente EXP-2025-AAAA. Valida hasta el 7/10/2029.'
     });
     expect(CHECKLIST[1].received).toBe(false);
   });

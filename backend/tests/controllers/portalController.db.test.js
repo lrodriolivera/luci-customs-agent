@@ -195,6 +195,26 @@ describe('uploadDocument', () => {
     expect(res.statusCode).toBe(400);
   });
 
+  // 11/Nov/2026: la autorizacion de despacho vale cuatro años desde su fecha.
+  test('la autorizacion de despacho exige su fecha tambien desde el portal', async () => {
+    const exp = await sembrarExp();
+    const subir = async (body) => {
+      const res = mockRes();
+      await portalController.uploadDocument(mockReq({ params: { token: exp.clientPortal.token }, file: fakeFile(),
+        body: { documentType: 'dispatch_authorization', ...body } }), res);
+      return res;
+    };
+
+    expect((await subir({})).statusCode).toBe(400);
+    expect((await subir({ documentDate: '15/03/2024' })).statusCode).toBe(400);
+    const buena = await subir({ documentDate: '2024-03-15' });
+
+    expect(buena.statusCode).toBe(200);
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.documents).toHaveLength(1);
+    expect(guardado.documents[0].documentDate.toISOString().slice(0, 10)).toBe('2024-03-15');
+  });
+
   test('404 token invalido', async () => {
     const res = mockRes();
     await portalController.uploadDocument(

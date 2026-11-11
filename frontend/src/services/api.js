@@ -126,10 +126,12 @@ export const documentsAPI = {
   // el cuerpo multipart. Apuntaba a /api/expeditions/:id/documents, que no
   // existe en el backend, y ninguna pantalla la usaba: el agente no tenia forma
   // de adjuntar documentacion al expediente.
-  upload: (expeditionId, file, documentType) => {
+  upload: (expeditionId, file, documentType, { documentDate } = {}) => {
     const formData = new FormData()
     formData.append('expeditionId', expeditionId)
     formData.append('documentType', documentType)
+    // Fecha del propio documento (AAAA-MM-DD); obligatoria en la autorizacion de despacho.
+    if (documentDate) formData.append('documentDate', documentDate)
     // El fichero va el ultimo: multer solo ve los campos de texto anteriores.
     formData.append('file', file)
     return api.post('/api/documents/upload', formData, {

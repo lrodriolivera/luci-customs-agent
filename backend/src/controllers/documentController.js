@@ -1,4 +1,5 @@
 const { Expedition } = require('../models');
+const { fechaDeDocumento } = require('../services/documentos/fechaDocumento');
 const logger = require('../config/logger');
 const aiService = require('../services/aiService');
 const { fileUtils } = require('../middleware/upload');
@@ -21,6 +22,11 @@ const upload = async (req, res) => {
       });
     }
 
+    const { fecha: documentDate, error: errorFecha } = fechaDeDocumento(req.body.documentDate, documentType);
+    if (errorFecha) {
+      return res.status(400).json({ success: false, error: errorFecha, code: 'DOCUMENT_DATE' });
+    }
+
     const expedition = await Expedition.findById(expeditionId);
 
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
@@ -28,6 +34,7 @@ const upload = async (req, res) => {
     // Crear documento
     const document = {
       type: documentType,
+      ...(documentDate ? { documentDate } : {}),
       fileName: req.file.filename,
       originalName: req.file.originalname,
       filePath: req.file.path,

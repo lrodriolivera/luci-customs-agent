@@ -6,8 +6,9 @@
  * despacho, no hay que volver a pedirsela: en el checklist debe salir marcada
  * (criterio de la agente de aduanas, UAT del 11/Nov/2026).
  *
- * LUCI no guarda la fecha de firma de la autorizacion: se toma la fecha en la
- * que se subio el documento al expediente anterior.
+ * Los cuatro años cuentan desde la fecha de la autorizacion, que indica quien
+ * la sube (`documentDate`). Las autorizaciones subidas antes de que existiera
+ * ese campo no la tienen: para ellas se toma la fecha de subida.
  */
 const { Expedition } = require('../../models');
 
@@ -41,14 +42,16 @@ async function autorizacionVigente(expedition, { ahora = new Date() } = {}) {
     _id: { $ne: expedition._id },
     tenantId: expedition.tenantId,
     'client.nif': nif,
-    documents: { $elemMatch: { type: TIPO_AUTORIZACION, status: { $ne: 'rejected' }, uploadedAt: { $gt: desde, $lte: ahora } } }
-  }).select('expeditionId documents.type documents.status documents.uploadedAt').limit(MAX_EXPEDIENTES).lean();
+    documents: { $elemMatch: { type: TIPO_AUTORIZACION, status: { $ne: 'rejected' } } }
+  }).select('expeditionId documents.type documents.status documents.uploadedAt documents.documentDate')
+    .sort({ createdAt: -1 }).limit(MAX_EXPEDIENTES).lean();
 
   let mejor = null;
   anteriores.forEach((anterior) => {
     (anterior.documents || []).forEach((doc) => {
-      if (doc.type !== TIPO_AUTORIZACION || doc.status === 'rejected' || !doc.uploadedAt) return;
-      const fecha = new Date(doc.uploadedAt);
+      const origen = doc.documentDate || doc.uploadedAt;
+      if (doc.type !== TIPO_AUTORIZACION || doc.status === 'rejected' || !origen) return;
+      const fecha = new Date(origen);
       if (fecha <= desde || fecha > ahora) return;
       if (!mejor || fecha > mejor.fecha) mejor = { expeditionId: anterior.expeditionId, fecha };
     });
@@ -80,7 +83,7 @@ function aplicarAutorizacionVigente(checklist, vigente) {
         date: vigente.fecha,
         validUntil: vigente.validaHasta
       },
-      notes: `Vigente: entregada en el expediente ${vigente.expeditionId} el ${fechaCorta(vigente.fecha)}. ` +
+      notes: `Vigente: autorizacion del ${fechaCorta(vigente.fecha)}, entregada en el expediente ${vigente.expeditionId}. ` +
         `Valida hasta el ${fechaCorta(vigente.validaHasta)}.`
     };
   });

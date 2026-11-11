@@ -15,6 +15,10 @@ export const DOCUMENT_TYPES = [
 
 // Mismo limite que el backend (middleware/upload.js): 50 MB.
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024
+// Documentos cuya fecha hay que indicar: la autorizacion de despacho vale
+// cuatro años desde su fecha, no desde el dia en que se sube.
+export const TYPES_WITH_DATE = ['dispatch_authorization']
+export const today = () => new Date().toISOString().slice(0, 10)
 const ACCEPTED_EXTENSIONS = '.pdf,.jpg,.jpeg,.png,.tif,.tiff,.webp,.doc,.docx,.xls,.xlsx,.txt,.csv,.xml'
 
 /**
@@ -33,6 +37,8 @@ export default function DocumentUploader({ expeditionId, onUploaded }) {
   const [file, setFile] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
   const [leerAlSubir, setLeerAlSubir] = useState(true)
+  const [documentDate, setDocumentDate] = useState('')
+  const needsDate = TYPES_WITH_DATE.includes(documentType)
 
   const handleFileChange = (e) => {
     const selected = e.target.files?.[0] || null
@@ -52,11 +58,19 @@ export default function DocumentUploader({ expeditionId, onUploaded }) {
       return
     }
 
+    if (needsDate && !documentDate) {
+      toast.error(t('expeditions.uploadAuthorizationDateRequired'))
+      return
+    }
+
     setIsUploading(true)
     try {
-      const response = await documentsAPI.upload(expeditionId, file, documentType)
+      const response = needsDate
+        ? await documentsAPI.upload(expeditionId, file, documentType, { documentDate })
+        : await documentsAPI.upload(expeditionId, file, documentType)
       toast.success(t('expeditions.uploadSuccess'))
       setFile(null)
+      setDocumentDate('')
       if (fileInputRef.current) fileInputRef.current.value = ''
       onUploaded(response?.data?.data?.document || null, leerAlSubir)
     } catch (error) {
@@ -95,6 +109,20 @@ export default function DocumentUploader({ expeditionId, onUploaded }) {
           />
         </div>
       </div>
+      {needsDate && (
+        <div className="md:w-1/2">
+          <label className="label" htmlFor="document-date">{t('expeditions.uploadAuthorizationDate')} *</label>
+          <input
+            id="document-date"
+            type="date"
+            max={today()}
+            value={documentDate}
+            onChange={(e) => setDocumentDate(e.target.value)}
+            className="input"
+          />
+          <p className="mt-1 text-xs text-gray-500">{t('expeditions.uploadAuthorizationDateHint')}</p>
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <label className="flex items-center gap-2 text-sm text-gray-700">
           <input

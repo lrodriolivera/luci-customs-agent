@@ -20,6 +20,9 @@ export default function PortalDocuments() {
   const [uploading, setUploading] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState([])
   const [selectedDocType, setSelectedDocType] = useState('')
+  // La autorizacion de despacho vale cuatro años desde su fecha: hay que indicarla.
+  const [documentDate, setDocumentDate] = useState('')
+  const needsDate = selectedDocType === 'dispatch_authorization'
 
   const documentTypes = [
     { value: 'commercial_invoice', label: t('portal.docCommercialInvoice') },
@@ -43,13 +46,19 @@ export default function PortalDocuments() {
       return
     }
 
+    if (needsDate && !documentDate) {
+      toast.error(t('portal.authDateRequired'))
+      return
+    }
+
     setUploading(true)
 
     for (const file of acceptedFiles) {
       try {
         const formData = new FormData()
-        formData.append('document', file)
         formData.append('documentType', selectedDocType)
+        if (needsDate) formData.append('documentDate', documentDate)
+        formData.append('document', file)
 
         await portalAPI.uploadDocument(token, formData)
 
@@ -72,7 +81,8 @@ export default function PortalDocuments() {
 
     setUploading(false)
     setSelectedDocType('')
-  }, [token, selectedDocType, t])
+    setDocumentDate('')
+  }, [token, selectedDocType, needsDate, documentDate, t])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -83,7 +93,7 @@ export default function PortalDocuments() {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
     },
     maxSize: 10 * 1024 * 1024, // 10MB
-    disabled: uploading || !selectedDocType
+    disabled: uploading || !selectedDocType || (needsDate && !documentDate)
   })
 
   return (
@@ -119,10 +129,25 @@ export default function PortalDocuments() {
       <div className="card">
         <h2 className="text-lg font-semibold mb-4">{t('portal.uploadFile')}</h2>
 
+        {needsDate && (
+          <div className="mb-4 md:w-1/2">
+            <label className="label" htmlFor="portal-document-date">{t('portal.authDate')} *</label>
+            <input
+              id="portal-document-date"
+              type="date"
+              max={new Date().toISOString().slice(0, 10)}
+              value={documentDate}
+              onChange={(e) => setDocumentDate(e.target.value)}
+              className="input"
+            />
+            <p className="mt-1 text-xs text-gray-500">{t('portal.authDateHint')}</p>
+          </div>
+        )}
+
         <div
           {...getRootProps()}
           className={`dropzone ${isDragActive ? 'dropzone-active' : ''} ${
-            !selectedDocType ? 'opacity-50 cursor-not-allowed' : ''
+            !selectedDocType || (needsDate && !documentDate) ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >
           <input {...getInputProps()} />
