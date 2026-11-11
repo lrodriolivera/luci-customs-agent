@@ -6,6 +6,19 @@ const summaryQueryService = require('../services/summaryQueryService');
 const logger = require('../config/logger');
 
 /**
+ * Una consulta sin conexion real con la AEAT responde 501 con su motivo, no un
+ * 500 generico: el cliente tiene que poder distinguir «no existe todavia» de
+ * «ha fallado».
+ *
+ * @returns {boolean} true si ya se ha respondido
+ */
+function responderSiNoConectada(res, error) {
+  if (error?.code !== 'AEAT_QUERY_NOT_CONNECTED') return false;
+  res.status(501).json({ success: false, code: error.code, message: error.message });
+  return true;
+}
+
+/**
  * Consulta por numero de conocimiento (B/L)
  * POST /api/queries/bill-of-lading
  */
@@ -37,6 +50,7 @@ exports.queryByBillOfLading = async (req, res) => {
     res.json(result);
 
   } catch (error) {
+    if (responderSiNoConectada(res, error)) return;
     logger.error('Error in queryByBillOfLading:', error);
     res.status(500).json({
       success: false,
@@ -77,6 +91,7 @@ exports.queryByAWB = async (req, res) => {
     res.json(result);
 
   } catch (error) {
+    if (responderSiNoConectada(res, error)) return;
     logger.error('Error in queryByAWB:', error);
     res.status(500).json({
       success: false,
@@ -122,6 +137,7 @@ exports.queryByContainer = async (req, res) => {
     res.json(result);
 
   } catch (error) {
+    if (responderSiNoConectada(res, error)) return;
     logger.error('Error in queryByContainer:', error);
     res.status(500).json({
       success: false,
@@ -163,6 +179,7 @@ exports.queryByLocation = async (req, res) => {
     res.json(result);
 
   } catch (error) {
+    if (responderSiNoConectada(res, error)) return;
     logger.error('Error in queryByLocation:', error);
     res.status(500).json({
       success: false,
@@ -201,6 +218,7 @@ exports.queryDocuments = async (req, res) => {
     res.json(result);
 
   } catch (error) {
+    if (responderSiNoConectada(res, error)) return;
     logger.error('Error in queryDocuments:', error);
     res.status(500).json({
       success: false,
@@ -240,6 +258,7 @@ exports.queryByMRN = async (req, res) => {
     res.json(result);
 
   } catch (error) {
+    if (responderSiNoConectada(res, error)) return;
     logger.error('Error in queryByMRN:', error);
     res.status(500).json({
       success: false,
@@ -285,6 +304,7 @@ exports.queryByEORI = async (req, res) => {
     res.json(result);
 
   } catch (error) {
+    if (responderSiNoConectada(res, error)) return;
     logger.error('Error in queryByEORI:', error);
     res.status(500).json({
       success: false,

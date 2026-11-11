@@ -13,6 +13,9 @@
 const { SummaryQuery } = require('../models');
 const logger = require('../config/logger');
 
+// Codigo de error de una consulta que aun no tiene conexion real con la AEAT.
+const CODIGO_NO_CONECTADA = 'AEAT_QUERY_NOT_CONNECTED';
+
 // Configuracion de servicios de consulta
 const QUERY_SERVICES = {
   QIntNuCono: {
@@ -93,8 +96,7 @@ class SummaryQueryService {
       query.queryStatus = 'processing';
       await query.save();
 
-      // [DEMO] Simular consulta a AEAT
-      const results = await this._simulateAEATQuery('QIntNuCono', {
+      const results = await this._consultarAEAT('QIntNuCono', {
         billOfLading: reference
       });
 
@@ -168,8 +170,7 @@ class SummaryQueryService {
       query.queryStatus = 'processing';
       await query.save();
 
-      // [DEMO] Simular consulta a AEAT
-      const results = await this._simulateAEATQuery('QIntCont', {
+      const results = await this._consultarAEAT('QIntCont', {
         containerNumber: containerNumber.toUpperCase()
       });
 
@@ -224,8 +225,7 @@ class SummaryQueryService {
       query.queryStatus = 'processing';
       await query.save();
 
-      // [DEMO] Simular consulta a AEAT
-      const results = await this._simulateAEATQuery('QIntUbic', {
+      const results = await this._consultarAEAT('QIntUbic', {
         locationCode
       });
 
@@ -277,8 +277,7 @@ class SummaryQueryService {
       query.queryStatus = 'processing';
       await query.save();
 
-      // [DEMO] Simular consulta a AEAT
-      const results = await this._simulateAEATQuery('QIntDocAsoc', {
+      const results = await this._consultarAEAT('QIntDocAsoc', {
         reference,
         mrn: options.mrn
       });
@@ -332,8 +331,7 @@ class SummaryQueryService {
       query.queryStatus = 'processing';
       await query.save();
 
-      // [DEMO] Simular consulta a AEAT
-      const results = await this._simulateAEATQuery('QIntMRN', { mrn });
+      const results = await this._consultarAEAT('QIntMRN', { mrn });
 
       const executionTime = Date.now() - startTime;
       query.complete(results, executionTime);
@@ -394,8 +392,7 @@ class SummaryQueryService {
       query.queryStatus = 'processing';
       await query.save();
 
-      // [DEMO] Simular consulta a AEAT
-      const results = await this._simulateAEATQuery('QIntEORI', { eori });
+      const results = await this._consultarAEAT('QIntEORI', { eori });
 
       const executionTime = Date.now() - startTime;
       query.complete(results, executionTime);
@@ -457,68 +454,30 @@ class SummaryQueryService {
     return Object.values(this.services).map(s => ({
       code: s.code,
       name: s.name,
-      description: s.description
+      description: s.description,
+      // Ninguna tiene todavia conexion real con la AEAT.
+      available: false
     }));
   }
 
   // ============== METODOS PRIVADOS ==============
 
   /**
-   * Simular consulta a AEAT (para desarrollo)
+   * Consulta a la AEAT. NO ESTA CONECTADA.
+   *
+   * Hasta el 10/Nov/2026 este metodo fabricaba entre 1 y 5 resultados al azar
+   * (MRN, estado, canal, levante, declarante «LUCI Demo Company SL») y los
+   * devolvia como respuesta de la AEAT. Una consulta que no se ha hecho no
+   * devuelve datos: falla diciendolo. La unica consulta de sumarias conectada
+   * de verdad es la de una partida de DSDT (services/aeat/dsdtConsXmlBuilder.js,
+   * aeatSubmitService.consultarSumaria), que usa el expediente.
    */
-  async _simulateAEATQuery(queryType, params) {
-    // Simular latencia de red
-    await this._delay(200 + Math.random() * 300);
-
-    // Generar resultados de ejemplo
-    const numResults = Math.floor(Math.random() * 5) + 1;
-    const results = [];
-
-    for (let i = 0; i < numResults; i++) {
-      const declarationType = ['ENS', 'H1', 'H7', 'AES', 'NCTS'][Math.floor(Math.random() * 5)];
-      const status = ['ACCEPTED', 'RELEASED', 'PENDING', 'CONTROL'][Math.floor(Math.random() * 4)];
-      const channel = ['GREEN', 'ORANGE', 'RED'][Math.floor(Math.random() * 3)];
-
-      results.push({
-        mrn: this._generateMRN(declarationType),
-        lrn: `LUCI${Date.now().toString(36).toUpperCase()}${i}`,
-        declarationType,
-        status,
-        channel: status === 'ACCEPTED' || status === 'RELEASED' ? channel : null,
-        customsOffice: {
-          code: 'ES002801',
-          name: 'Algeciras'
-        },
-        submissionDate: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
-        acceptanceDate: status !== 'PENDING' ? new Date(Date.now() - Math.random() * 5 * 24 * 60 * 60 * 1000) : null,
-        releaseDate: status === 'RELEASED' ? new Date(Date.now() - Math.random() * 3 * 24 * 60 * 60 * 1000) : null,
-        declarant: {
-          eori: 'ES12345678A',
-          name: 'LUCI Demo Company SL'
-        },
-        carrier: params.containerNumber ? {
-          eori: 'ES87654321B',
-          name: 'Transport Demo SA'
-        } : null,
-        containerNumber: params.containerNumber || (Math.random() > 0.5 ? `MSKU${Math.floor(Math.random() * 9000000) + 1000000}` : null),
-        transportReference: params.billOfLading || `BL${Date.now().toString().substring(5)}`,
-        grossMass: Math.floor(Math.random() * 20000) + 1000,
-        numberOfPackages: Math.floor(Math.random() * 500) + 1,
-        goodsDescription: 'Mercancias varias / Mixed goods',
-        documents: queryType === 'QIntDocAsoc' ? [
-          { type: 'ENS', documentNumber: `ENS-${Date.now()}`, status: 'VALID' },
-          { type: 'DUA', documentNumber: `DUA-${Date.now()}`, status: 'VALID' }
-        ] : [],
-        messages: status === 'CONTROL' ? [
-          { code: 'DOC_REQ', text: 'Se requiere documentacion adicional', timestamp: new Date() }
-        ] : [],
-        pendingActions: status === 'CONTROL' ? [
-          { type: 'SUBMIT_DOCS', description: 'Enviar documentacion', deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) }
-        ] : []
-      });
-    }
-
-    return results;
+  async _consultarAEAT(queryType) {
+    const servicio = this.services[queryType]?.name || queryType;
+    throw Object.assign(
+      new Error(`«${servicio}» todavía no está conectada con la AEAT: LUCI no devuelve resultados que no ha obtenido`),
+      { code: CODIGO_NO_CONECTADA, details: queryType }
+    );
   }
 
   /**
@@ -531,17 +490,6 @@ class SummaryQueryService {
   }
 
   /**
-   * Generar MRN de ejemplo
-   */
-  _generateMRN(type = 'ENS') {
-    const year = new Date().getFullYear().toString().substring(2);
-    const country = 'ES';
-    const random = Math.random().toString().substring(2, 16).padEnd(14, '0');
-    const suffix = type.substring(0, 2);
-    return `${year}${country}${random}${suffix}`;
-  }
-
-  /**
    * Obtener fecha hace N dias
    */
   _getDateDaysAgo(days) {
@@ -549,13 +497,7 @@ class SummaryQueryService {
     date.setDate(date.getDate() - days);
     return date.toISOString();
   }
-
-  /**
-   * Delay helper
-   */
-  _delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
 }
 
 module.exports = new SummaryQueryService();
+module.exports.CODIGO_NO_CONECTADA = CODIGO_NO_CONECTADA;
