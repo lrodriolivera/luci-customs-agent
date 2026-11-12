@@ -2,8 +2,9 @@
  * Publicaciones diarias del TARIC: se leen las que aun no se han visto, se
  * guarda lo que traen de interes para LUCI y se compara con el catalogo.
  *
- * Leer y registrar no modifica el catalogo. Aplicar es un paso aparte y
- * limitado al unico caso bien definido: el derecho de terceros paises (o de
+ * Leer y registrar no modifica el catalogo. Aplicar (automatico tras la
+ * sincronizacion diaria, salvo TARIC_DIARIO_APLICAR=false) esta limitado al
+ * unico caso bien definido: el derecho de terceros paises (o de
  * destino final) que cambia en un codigo declarable ya existente y que ya esta
  * en vigor. Las altas y bajas de codigos y los derechos fijados en un nivel
  * superior quedan anotados; los incorpora la sincronizacion con la extraccion

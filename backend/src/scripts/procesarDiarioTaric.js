@@ -2,7 +2,8 @@
  * Lee las publicaciones diarias del TARIC que LUCI aun no ha visto, guarda lo
  * que traen de interes y dice que de ello falta en el catalogo.
  *
- * Leer y registrar no modifica el catalogo. Con `--aplicar` se actualiza el
+ * Es lo mismo que hace LUCI cada madrugada, lanzado a mano. Leer y registrar
+ * no modifica el catalogo. Con `--aplicar` se actualiza el
  * derecho de terceros paises (o de destino final) de los codigos declarables
  * cuyo cambio ya esta en vigor; nada mas.
  *
