@@ -59,7 +59,13 @@ async function tiposDelMesOficial(mes, { modelo = modeloPorDefecto(), descargar 
   if (!calculado) throw new Error(`El BCE no publica tipos de cambio para ${mes}`);
 
   const tipos = { ...calculado, fuente: FUENTE };
-  await modelo.updateOne({ mes }, { $setOnInsert: tipos }, { upsert: true });
+  try {
+    await modelo.updateOne({ mes }, { $setOnInsert: tipos }, { upsert: true });
+  } catch (error) {
+    // Dos peticiones a la vez pueden intentar guardar el mismo mes: el tipo
+    // ya esta calculado y no debe perderse por no poder guardarlo.
+    logger.warn(`[Divisas] No se pudieron guardar los tipos de ${mes}: ${error.message}`);
+  }
   memoria.set(mes, tipos);
   logger.info(`[Divisas] Tipos oficiales de ${mes} guardados (BCE del ${tipos.fechaPublicacion}, ${Object.keys(tipos.tipos).length} divisas)`);
   return tipos;

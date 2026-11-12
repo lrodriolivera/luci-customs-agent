@@ -64,6 +64,13 @@ describe('tipos de cambio oficiales', () => {
       .rejects.toThrow('2026-11');
   });
 
+  test('si no se puede guardar el mes, devuelve el tipo igualmente', async () => {
+    const modelo = modeloFalso();
+    modelo.updateOne = jest.fn(async () => { throw new Error('E11000 duplicate key'); });
+    const tipo = await servicio.tipoOficial('USD', { fecha: FECHA, modelo, descargar: async () => SERIE });
+    expect(tipo.tipo).toBe(1.1234);
+  });
+
   test('lista las divisas del mes con el euro la primera', async () => {
     const lista = await servicio.divisasOficiales({ fecha: FECHA, modelo: modeloFalso(), descargar: async () => SERIE });
     expect(lista.mes).toBe('2026-11');
