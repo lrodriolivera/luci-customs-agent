@@ -549,6 +549,9 @@
     },
     "descriptionTooShort": "A descrição deve ter pelo menos {{min}} caracteres para ser classificada",
     "valueWillBeSaved": "Será guardado como {{amount}}",
+    "officialRate": "Em euros: {{eur}}. Taxa oficial da alfândega para {{month}}: 1 EUR = {{rate}} {{currency}} (BCE, {{date}})",
+    "officialRateMissing": "{{currency}} não tem taxa de câmbio oficial do BCE: declare o montante em euros",
+    "officialRateError": "Não foi possível consultar a taxa de câmbio oficial de {{currency}}",
     "taricNotVerified": "Não consta do catálogo TARIC",
     "valueNotValid": "Montante inválido. Use ponto para os milhares e vírgula para os decimais: 184.800,50",
     "timelineAction": {

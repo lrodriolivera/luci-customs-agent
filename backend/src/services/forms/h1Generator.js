@@ -12,6 +12,7 @@
 
 const { v4: uuidv4 } = require('uuid');
 const { eoriDe, exigirEori, declarantePara, formaRepresentacionDe } = require('./identificadorAduanero');
+const { CAMBIO_EUR, cambioObligatorio, aEuros } = require('../divisas/cambioDelExpediente');
 
 /**
  * Codigos de regimen aduanero
@@ -122,7 +123,9 @@ class H1Generator {
    * `tenant` aporta el representante cuando el expediente no lo trae; sin EORI
    * de declarante o de cliente lanza ErrorValidacion (422).
    */
-  generate(expedition, aiData = {}, { tenant } = {}) {
+  generate(expedition, datosRecibidos = {}, { tenant, cambio } = {}) {
+    // Divisa de la factura y tipo oficial: los constructores lo leen de aiData.
+    const aiData = { ...datosRecibidos, cambio: cambioObligatorio(expedition, cambio) };
     // Generar LRN unico
     const lrn = aiData.lrn || this.generateLRN();
 
@@ -388,8 +391,8 @@ class H1Generator {
 
       // Valores comerciales
       totalInvoicedAmount: expedition.goodsSummary?.totalValue || 0,
-      currency: expedition.invoice?.currency || 'EUR',
-      exchangeRate: expedition.invoice?.exchangeRate || 1,
+      currency: aiData.cambio?.divisa || 'EUR',
+      exchangeRate: aiData.cambio?.tipo || 1,
 
       // Gastos de transporte (7/14 - CRITICO)
       transportCharges: {
@@ -412,6 +415,9 @@ class H1Generator {
    */
   buildValuation(expedition, aiData) {
     const invoiceValue = expedition.goodsSummary?.totalValue || 0;
+    // La factura va en su divisa; el valor en aduana, siempre en euros.
+    const cambio = aiData.cambio || CAMBIO_EUR;
+    const invoiceValueEur = cambio.tipo === 1 ? invoiceValue : aEuros(invoiceValue, cambio.tipo);
     const freight = expedition.costs?.freight || expedition.customsValue?.freight || 0;
     const insurance = expedition.costs?.insurance || expedition.customsValue?.insurance || 0;
 
@@ -448,7 +454,7 @@ class H1Generator {
     const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + (val || 0), 0);
 
     // Valor en aduana (Art. 70 CAU)
-    const customsValue = invoiceValue + totalAdditions - totalDeductions;
+    const customsValue = invoiceValueEur + totalAdditions - totalDeductions;
 
     return {
       // Metodo de valoracion (4/11 - CRITICO)
@@ -467,8 +473,12 @@ class H1Generator {
 
       // Valor factura
       invoiceValue,
-      invoiceCurrency: expedition.invoice?.currency || 'EUR',
-      exchangeRate: expedition.invoice?.exchangeRate || 1,
+      invoiceValueEur,
+      invoiceCurrency: cambio.divisa,
+      exchangeRate: cambio.tipo,
+      exchangeRateMonth: cambio.mes,
+      exchangeRateDate: cambio.fechaPublicacion,
+      exchangeRateSource: cambio.tipo === 1 ? undefined : cambio.fuente,
 
       // Adiciones (4/9 - CRITICO)
       additions,

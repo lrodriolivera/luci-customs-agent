@@ -443,14 +443,18 @@ describe('buildGoodsShipment: transporte, ubicacion y contenedores', () => {
     expect(xml).toMatch(/<SealIdentity>X1<\/SealIdentity>/);
   });
 
-  test('incoterm vacio cae a CIF, y currency/exchangeRate de invoice se respetan', () => {
-    const exp = expedicionCompleta(createElectronicsExpedition(), {
-      incoterm: {}, invoice: { number: 'INV-9', currency: 'USD', exchangeRate: 1.1 }
-    });
-    const s = h1.buildGoodsShipment(exp, {});
+  test('incoterm vacio cae a CIF, y la divisa y el tipo salen del cambio oficial', () => {
+    // La divisa ya no se lee de `expedition.invoice` (el expediente no tiene
+    // ese campo): viene de las partidas, con el tipo oficial del mes.
+    const exp = expedicionCompleta(createElectronicsExpedition(), { incoterm: {}, invoice: { number: 'INV-9' } });
+    const s = h1.buildGoodsShipment(exp, { cambio: { divisa: 'USD', tipo: 1.1234 } });
     expect(s.deliveryTerms.code).toBe('CIF');
     expect(s.currency).toBe('USD');
-    expect(s.exchangeRate).toBe(1.1);
+    expect(s.exchangeRate).toBe(1.1234);
+
+    const enEuros = h1.buildGoodsShipment(exp, {});
+    expect(enEuros.currency).toBe('EUR');
+    expect(enEuros.exchangeRate).toBe(1);
   });
 
   test('flete/seguro caen a customsValue.* y luego a 0', () => {

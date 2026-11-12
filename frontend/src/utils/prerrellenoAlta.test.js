@@ -285,10 +285,18 @@ describe('prerrellenarAlta', () => {
   })
 
   test('una moneda que el alta no ofrece no se cambia y se avisa', () => {
+    // El peso argentino no lo cotiza el BCE: no tiene tipo oficial de la aduana.
+    const ars = lectura({ factura: { ...FACTURA.factura, moneda: 'ARS' }, partidas: FACTURA.partidas })
+    const { formData, avisos } = prerrellenarAlta(formulario(), ars, {})
+    expect(formData.goods[0].currency).toBe('EUR')
+    expect(avisos).toContainEqual({ campo: 'currencyNotAvailable', valor: 'ARS', partida: 1 })
+  })
+
+  test('una factura en yenes se propone en yenes: el BCE cotiza la divisa', () => {
     const jpy = lectura({ factura: { ...FACTURA.factura, moneda: 'JPY' }, partidas: FACTURA.partidas })
     const { formData, avisos } = prerrellenarAlta(formulario(), jpy, {})
-    expect(formData.goods[0].currency).toBe('EUR')
-    expect(avisos).toContainEqual({ campo: 'currencyNotAvailable', valor: 'JPY', partida: 1 })
+    expect(formData.goods[0].currency).toBe('JPY')
+    expect(avisos.some((a) => a.campo === 'currencyNotAvailable')).toBe(false)
   })
 
   test('una identificacion fiscal que no es un NIF valido no se rellena y se avisa', () => {

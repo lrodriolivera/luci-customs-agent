@@ -19,6 +19,15 @@ router.get('/exchange-rate', calculationController.getExchangeRate);
 
 /**
  * @openapi
+ * /api/calculation/currencies:
+ *   get:
+ *     tags: [calculation]
+ *     summary: Divisas con tipo de cambio oficial de la aduana este mes (BCE)
+ */
+router.get('/currencies', auth, calculationController.getOfficialCurrencies);
+
+/**
+ * @openapi
  * /api/calculation/duties:
  *   post:
  *     tags: [calculation]

@@ -1,6 +1,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatearImporte, interpretarImporte } from '../../utils/importe'
+import TipoCambioOficial from './TipoCambioOficial'
 
 /**
  * Campo de importe que entiende el formato español (punto de millares, coma
@@ -48,6 +49,7 @@ export default function ImporteInput({ id, value, currency = 'EUR', onChange, cl
           {t('expeditions.valueWillBeSaved', { amount: formatearImporte(numero, currency) })}
         </p>
       )}
+      {currency && currency !== 'EUR' && <TipoCambioOficial importe={numero} currency={currency} />}
     </>
   )
 }

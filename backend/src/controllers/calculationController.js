@@ -3,6 +3,7 @@ const logger = require('../config/logger');
 const axios = require('axios');
 const dutyCalculationService = require('../services/dutyCalculationService');
 const { ensureSameTenant } = require('../utils/tenantGuard');
+const { tipoOficial, divisasOficiales, aEuros } = require('../services/divisas/tiposCambioOficiales');
 
 // Cache para tipos de cambio (se actualiza cada hora)
 let exchangeRatesCache = {
@@ -35,11 +36,8 @@ const calculateDuties = async (req, res) => {
     }
 
     // Convertir a EUR si es necesario
-    let valueEur = value || 0;
-    if (currency && currency !== 'EUR' && value) {
-      const rate = await getExchangeRate(currency, 'EUR');
-      valueEur = value * rate;
-    }
+    const conversion = await convertirAEuros(value, currency);
+    const valueEur = conversion.valueEur;
 
     // Usar nuevo servicio con IA para obtener aranceles
     const calculation = await dutyCalculationService.calculateDutiesWithAI({
@@ -63,6 +61,7 @@ const calculateDuties = async (req, res) => {
         originalValue: value,
         currency: currency || 'EUR',
         valueEur,
+        exchangeRate: conversion.cambio,
         customsValue: calculation.customsValue,
 
         // Aranceles
@@ -196,7 +195,9 @@ const calculateTotal = async (req, res) => {
     const itemsToCalculate = items || (expedition?.goods.map(g => ({
       taricCode: g.taricCode,
       value: g.invoiceValue,
-      currency: 'EUR',
+      // La divisa de la partida: iba fija a EUR y una factura en dolares se
+      // liquidaba como si fueran euros.
+      currency: g.currency || 'EUR',
       origin: g.originCountry,
       weight: g.netWeight,
       quantity: g.quantity
@@ -215,14 +216,16 @@ const calculateTotal = async (req, res) => {
     let totalSpecialTaxes = 0;
     const itemCalculations = [];
     const allWarnings = [];
+    let totalEnDivisa = 0;
+    const cambiosUsados = new Map();
 
     for (const item of itemsToCalculate) {
       // Convertir a EUR
-      let valueEur = item.value || 0;
-      if (item.currency && item.currency !== 'EUR' && item.value) {
-        const rate = await getExchangeRate(item.currency, 'EUR');
-        valueEur = item.value * rate;
-      }
+      const conversion = await convertirAEuros(item.value, item.currency);
+      const valueEur = conversion.valueEur;
+      totalEnDivisa += item.value || 0;
+      if (conversion.cambio) cambiosUsados.set(conversion.cambio.divisa, conversion.cambio);
+      if (conversion.aviso && !allWarnings.includes(conversion.aviso)) allWarnings.push(conversion.aviso);
 
       // Usar servicio con IA para calcular aranceles
       try {
@@ -318,6 +321,7 @@ const calculateTotal = async (req, res) => {
       items: itemCalculations,
       preference: preference || '100',
       currency: 'EUR',
+      exchangeRates: [...cambiosUsados.values()],
       warnings: allWarnings,
       calculatedAt: new Date()
     };
@@ -325,9 +329,11 @@ const calculateTotal = async (req, res) => {
     // Si hay expediente, actualizar calculos
     if (expedition) {
       expedition.calculations = {
-        invoiceTotal: totalInvoiceValue,
-        invoiceCurrency: 'EUR',
-        exchangeRate: 1,
+        // Con una sola divisa se guarda el total en esa divisa y su tipo;
+        // si no, el total ya en euros.
+        invoiceTotal: cambiosUsados.size === 1 ? totalEnDivisa : totalInvoiceValue,
+        invoiceCurrency: cambiosUsados.size === 1 ? [...cambiosUsados.keys()][0] : 'EUR',
+        exchangeRate: cambiosUsados.size === 1 ? [...cambiosUsados.values()][0].tipo : 1,
         invoiceTotalEur: totalInvoiceValue,
         freightCost: freightCost || 0,
         insuranceCost: insuranceCost || 0,
@@ -376,12 +382,30 @@ const calculateTotal = async (req, res) => {
  */
 const getExchangeRateEndpoint = async (req, res) => {
   try {
-    const { from, to } = req.query;
+    const { from, to, currency } = req.query;
+
+    // ?currency=USD: tipo oficial de la aduana para esa divisa (BCE del
+    // penultimo miercoles del mes anterior, valido todo el mes).
+    if (currency && !from && !to) {
+      const divisa = String(currency).toUpperCase();
+      if (!/^[A-Z]{3}$/.test(divisa)) {
+        return res.status(400).json({ success: false, error: 'Divisa no válida' });
+      }
+      const cambio = await tipoOficial(divisa);
+      if (!cambio) {
+        return res.status(404).json({
+          success: false,
+          code: 'DIVISA_SIN_TIPO_OFICIAL',
+          error: `La divisa ${divisa} no tiene tipo de cambio oficial del BCE`
+        });
+      }
+      return res.json({ success: true, data: { ...cambio, official: true } });
+    }
 
     if (!from || !to) {
       return res.status(400).json({
         success: false,
-        error: 'Debe proporcionar moneda origen (from) y destino (to)'
+        error: 'Debe proporcionar la divisa (currency), o moneda origen (from) y destino (to)'
       });
     }
 
@@ -406,7 +430,45 @@ const getExchangeRateEndpoint = async (req, res) => {
   }
 };
 
+/**
+ * Divisas con tipo de cambio oficial este mes
+ * GET /api/calculation/currencies
+ */
+const getOfficialCurrencies = async (req, res) => {
+  try {
+    res.json({ success: true, data: await divisasOficiales() });
+  } catch (error) {
+    logger.error('Error obteniendo las divisas oficiales:', error);
+    res.status(503).json({ success: false, error: 'No se pudieron obtener los tipos de cambio oficiales' });
+  }
+};
+
 // ========== Funciones auxiliares ==========
+
+/**
+ * Pasa un importe a euros con el tipo oficial de la aduana. Si la divisa no
+ * lo tiene (el BCE no la cotiza) o la fuente no responde, cae al cambio de
+ * mercado y lo avisa: el resultado es solo orientativo.
+ */
+async function convertirAEuros(value, currency) {
+  const divisa = String(currency || 'EUR').toUpperCase();
+  const importe = value || 0;
+  if (divisa === 'EUR' || !importe) return { valueEur: importe, cambio: null, aviso: null };
+
+  try {
+    const cambio = await tipoOficial(divisa);
+    if (cambio) return { valueEur: aEuros(importe, cambio.tipo), cambio: { ...cambio, official: true }, aviso: null };
+  } catch (error) {
+    logger.warn(`[Divisas] No se pudo obtener el tipo oficial de ${divisa}: ${error.message}`);
+  }
+
+  const mercado = await getExchangeRate(divisa, 'EUR');
+  return {
+    valueEur: importe * mercado,
+    cambio: { divisa, tipo: mercado ? Math.round((1 / mercado) * 10000) / 10000 : null, official: false, fuente: 'mercado' },
+    aviso: `${divisa}: sin tipo de cambio oficial del BCE; se ha usado un cambio de mercado orientativo`
+  };
+}
 
 async function getExchangeRate(from, to) {
   // Si ambas son iguales
@@ -604,6 +666,7 @@ module.exports = {
   calculateVat,
   calculateTotal,
   getExchangeRate: getExchangeRateEndpoint,
+  getOfficialCurrencies,
   getDutyInfo,
   validateDutyRate,
   clearCache
