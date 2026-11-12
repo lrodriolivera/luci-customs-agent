@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- editado por AEAT (Agencia Estatal de Administración Tributaria) -->
+    <!--=================================================================================================================-->
+    <!--===== IE410: E_INV_DEC                                                                                           -->
+    <!--===== Invalidation Of Customs Declaration                                                                        -->
+    <!--===== CCI Phase 1                                                                                                -->
+    <!--===== XSD version 40.80                                                                                          -->
+    <!--=================================================================================================================-->
+
+<xs:schema 
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    elementFormDefault="unqualified" 
+    attributeFormDefault="unqualified" 
+    version="40.80"
+    xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CC410A.xsd"    
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CC410A.xsd"
+    xmlns:td1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes.xsd"
+    xmlns:td22="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_stypes_D.xsd" >
+
+	<xs:import schemaLocation="ES_ctypes.xsd" 
+     namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes.xsd" >
+    </xs:import>  
+	<xs:import schemaLocation="ES_stypes_D.xsd" 
+     namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_stypes_D.xsd" >
+    </xs:import>     
+    <!--=================================================================================================================-->
+    <!--===== Root element                                                                                               -->
+    <!--=================================================================================================================-->
+    <xs:element name="CC410A" type="CC410ATypeD"/>
+    <!--=================================================================================================================-->
+    <!--===== Root element Content                                                                                       -->
+    <!--=================================================================================================================-->
+    <xs:complexType name="CC410ATypeD"> 
+         <xs:sequence>
+            <xs:element name="ImportOperation" minOccurs="1" maxOccurs="1" type="td1:MCciOperationType23">
+            </xs:element>
+            
+            <xs:element name="CustomsOfficeOfImport" minOccurs="1" maxOccurs="1" type="td1:MScoType">
+            </xs:element>
+            <xs:element name="Declarant" minOccurs="1" maxOccurs="1" type="td1:MDeclarantType">
+            </xs:element>
+            <xs:element name="Representative" minOccurs="0" maxOccurs="1" type="td1:MRepresentativeType">
+            </xs:element>
+            <xs:element name="edeclarationCSVId" minOccurs="0" maxOccurs="1" type="td22:CSVContentTypeD">
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
+
