@@ -118,6 +118,15 @@ function interpretarConsultaH1Cau(cuerpo) {
       csvCertificacion: texto(gestion, 'importCertificationCSVId')
     },
     liquidacion: tributos ? { totalAPagar: numero(tributos, 'payableTaxAmount'), totalAGarantizar: numero(tributos, 'amountToGuarantee') } : null,
+    // Certificados de otros organismos que exige cada partida.
+    certificados: hijos(hijo(r, 'PCAdocuments'), 'GoodsItem').map((g) => ({
+      partida: numero(g, 'declarationGoodsItemNumber'),
+      organismos: hijos(g, 'PCA').map((p) => ({
+        organismo: texto(p, 'code'),
+        nombre: texto(p, 'name'),
+        documentos: hijos(p, 'TaricMeasure').flatMap((m) => hijos(m, 'DocumentRequired').map((d) => texto(d, 'type'))).filter(Boolean)
+      }))
+    })),
     documentosSolicitados: hijos(r, 'RequestedDocuments').map((d) => ({
       partida: numero(d, 'declarationGoodsItemNumber'), tipo: texto(d, 'type'), descripcion: texto(d, 'description')
     })),

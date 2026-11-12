@@ -64,6 +64,23 @@ describe('consulta H1 CAU: respuesta', () => {
     expect(r.resultadoControl).toEqual({ codigo: 'A1', fecha: '2026-11-13', observaciones: null });
   });
 
+  test('respuesta real de la AEAT (preproducción, recinto de pruebas 009999, 12/11/2026)', () => {
+    const real = fs.readFileSync(path.join(__dirname, '../../fixtures/aeat-cau/consulta-respuesta-real-009999.xml'), 'utf8');
+
+    const r = interpretarConsultaH1Cau(real);
+
+    expect(r).toMatchObject({ success: true, tipo: 'encontrada', mrn: '26ES009999I0026SR0' });
+    expect(r.estado).toMatchObject({
+      operacionRegistrada: '64', levante: 'P', pago: 'PL', circuito: 'A', channel: 'yellow', certificadosRequeridos: 'S',
+      fechaRegistro: '2026-11-12T11:40:38', fechaAdmision: '2026-11-12T11:40:38', fechaLevante: null
+    });
+    expect(r.liquidacion).toEqual({ totalAPagar: 355.2, totalAGarantizar: 355.2 });
+    expect(r.certificados).toEqual([{ partida: 1, organismos: [
+      { organismo: 'SIF01', nombre: 'SOIVRE Mº Comercio', documentos: ['1310', '1314'] },
+      { organismo: 'SIF11', nombre: 'SOIVRE PUE', documentos: ['1235'] }
+    ] }]);
+  });
+
   test('sin análisis de riesgos no hay circuito ni liquidación', () => {
     const r = interpretarConsultaH1Cau(sobre('<ConsultaCompletaR><DeclarationManagement><operationRegistered>63</operationRegistered><requiredPCADocuments>Z</requiredPCADocuments><declarationRegistrationDateAndTime>2026-11-12T10:00:00</declarationRegistrationDateAndTime></DeclarationManagement><ImportOperation><customsRegistrationNumber>26ES00280112345678</customsRegistrationNumber></ImportOperation></ConsultaCompletaR>'));
 
