@@ -58,7 +58,7 @@ describe('consulta H1 CAU: respuesta', () => {
       operacionRegistrada: '96', levante: 'L', circuito: 'N', channel: 'orange', documentacionPendiente: '1', pago: 'PA',
       certificadosRequeridos: 'S', fechaAdmision: '2026-11-12T10:57:04', fechaLevante: '2026-11-13T09:00:00', csvLevante: 'CSVLEVANTE'
     });
-    expect(r.liquidacion).toEqual({ totalAPagar: 3552, totalAGarantizar: 0 });
+    expect(r.liquidacion).toMatchObject({ totalAPagar: 3552, totalAGarantizar: 0 });
     expect(r.documentosSolicitados).toEqual([{ partida: 1, tipo: 'N380', descripcion: 'Factura comercial' }]);
     expect(r.notificaciones).toEqual([{ codigo: '1', texto: 'Aporte la factura' }]);
     expect(r.resultadoControl).toEqual({ codigo: 'A1', fecha: '2026-11-13', observaciones: null });
@@ -80,11 +80,18 @@ describe('consulta H1 CAU: respuesta', () => {
       operacionRegistrada: 'Declaración completa activada', levante: 'Pendiente de despacho', pago: 'Pendiente de contracción',
       pendencias: 'No tiene pendencias', bajoControl: null, documentacionPendiente: null
     });
-    expect(r.liquidacion).toEqual({ totalAPagar: 355.2, totalAGarantizar: 355.2 });
-    expect(r.certificados).toEqual([{ partida: 1, organismos: [
-      { organismo: 'SIF01', nombre: 'SOIVRE Mº Comercio', documentos: ['1310', '1314'] },
-      { organismo: 'SIF11', nombre: 'SOIVRE PUE', documentos: ['1235'] }
-    ] }]);
+    // La liquidación y los certificados con la misma forma que la respuesta al presentar.
+    expect(r.liquidacion).toEqual({
+      totalAPagar: 355.2, totalAGarantizar: 355.2,
+      partidas: [{ numero: 1, preferencia: '100', tributos: [
+        { tipo: 'A00', medioDePago: 'A', bases: [{ tipoImpositivo: 12, unidad: null, cantidad: null, importe: 1000, cuota: 120, aGarantizar: 120 }] },
+        { tipo: 'B00', medioDePago: 'A', bases: [{ tipoImpositivo: 21, unidad: null, cantidad: null, importe: 1120, cuota: 235.2, aGarantizar: 235.2 }] }
+      ] }]
+    });
+    expect(r.certificados).toEqual({ requeridos: 'S', partidas: [{ numero: 1, organismos: [
+      { organismo: 'SIF01', nombre: 'SOIVRE Mº Comercio', medidas: [{ medida: 'COM', documentos: ['1310', '1314'] }] },
+      { organismo: 'SIF11', nombre: 'SOIVRE PUE', medidas: [{ medida: 'COM', documentos: ['1235'] }] }
+    ] }] });
   });
 
   test('sin análisis de riesgos no hay circuito ni liquidación', () => {

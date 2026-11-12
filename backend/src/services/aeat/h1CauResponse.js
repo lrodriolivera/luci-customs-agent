@@ -52,6 +52,44 @@ const tributos = (calculo) => hijos(calculo, 'DutiesAndTaxes').map((t) => ({
   }))
 }));
 
+/**
+ * Liquidacion de la AEAT: totales y, por partida, cada tributo con sus bases.
+ * La misma estructura llega al presentar (CC428R) y en la consulta
+ * (DutiesTaxesAndGuarantee).
+ */
+function liquidacionDe(totales, contenedorDePartidas) {
+  return {
+    totalAPagar: numero(totales, 'payableTaxAmount'),
+    totalAGarantizar: numero(totales, 'amountToGuarantee'),
+    partidas: hijos(contenedorDePartidas, 'GoodsItem').map((g) => ({
+      numero: numero(g, 'declarationGoodsItemNumber'),
+      preferencia: texto(g, 'CalculationOfTaxes', 'preference'),
+      tributos: tributos(hijo(g, 'CalculationOfTaxes'))
+    }))
+  };
+}
+
+/**
+ * Certificados de otros organismos que exige cada partida.
+ * `requeridos`: S = exige, N = no, Z = pendiente de determinar.
+ */
+function certificadosDe(requeridos, contenedorDePartidas) {
+  return {
+    requeridos,
+    partidas: hijos(contenedorDePartidas, 'GoodsItem').map((g) => ({
+      numero: numero(g, 'declarationGoodsItemNumber'),
+      organismos: hijos(g, 'PCA').map((p) => ({
+        organismo: texto(p, 'code'),
+        nombre: texto(p, 'name'),
+        medidas: hijos(p, 'TaricMeasure').map((m) => ({
+          medida: texto(m, 'taricMeasureCode'),
+          documentos: hijos(m, 'DocumentRequired').map((d) => texto(d, 'type')).filter(Boolean)
+        }))
+      }))
+    })).filter((p) => p.organismos.length > 0)
+  };
+}
+
 function admitida(cc415r, base) {
   const ack = hijo(cc415r, 'ACK');
   const cc428 = hijo(cc415r, 'CC428R');
@@ -73,30 +111,8 @@ function admitida(cc415r, base) {
     // Sin analisis de riesgos (predeclaracion) no hay circuito: no se supone verde.
     circuito: codigoCircuito,
     channel: CIRCUITOS[codigoCircuito] || null,
-    liquidacion: cc428 ? {
-      totalAPagar: numero(totales, 'payableTaxAmount'),
-      totalAGarantizar: numero(totales, 'amountToGuarantee'),
-      partidas: hijos(cc428, 'GoodsItem').map((g) => ({
-        numero: numero(g, 'declarationGoodsItemNumber'),
-        preferencia: texto(g, 'CalculationOfTaxes', 'preference'),
-        tributos: tributos(hijo(g, 'CalculationOfTaxes'))
-      }))
-    } : null,
-    certificados: {
-      // S = exige certificados de otros organismos, N = no, Z = pendiente de determinar.
-      requeridos: texto(ack, 'requiredPCADocuments'),
-      partidas: hijos(ack, 'GoodsItem').map((g) => ({
-        numero: numero(g, 'declarationGoodsItemNumber'),
-        organismos: hijos(g, 'PCA').map((p) => ({
-          organismo: texto(p, 'code'),
-          nombre: texto(p, 'name'),
-          medidas: hijos(p, 'TaricMeasure').map((m) => ({
-            medida: texto(m, 'taricMeasureCode'),
-            documentos: hijos(m, 'DocumentRequired').map((d) => texto(d, 'type')).filter(Boolean)
-          }))
-        }))
-      })).filter((p) => p.organismos.length > 0)
-    },
+    liquidacion: cc428 ? liquidacionDe(totales, cc428) : null,
+    certificados: certificadosDe(texto(ack, 'requiredPCADocuments'), ack),
     levante: cc429 && hijos(cc429).length > 0 ? {
       fecha: texto(cc429, 'releaseDateAndTime'),
       csv: texto(cc429, 'releaseCSVId')
@@ -185,4 +201,4 @@ function interpretarRespuestaH1Cau(xml) {
   return { ...conMensaje, error: 'La respuesta no trae ni admisión ni errores' };
 }
 
-module.exports = { interpretarRespuestaH1Cau, CIRCUITOS };
+module.exports = { interpretarRespuestaH1Cau, liquidacionDe, certificadosDe, CIRCUITOS };

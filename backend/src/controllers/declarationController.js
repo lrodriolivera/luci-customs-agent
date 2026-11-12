@@ -12,6 +12,7 @@ const { cambioDelExpediente, divisaDelExpediente } = require('../services/divisa
 const { tipoOficial } = require('../services/divisas/tiposCambioOficiales');
 const { aplicarCauAVistaPrevia } = require('../services/aeat/h1CauVistaPrevia');
 const { anulablePorServicio } = require('../services/aeat/h1CauAnulacion');
+const { liquidacionDeclarada, compararLiquidacion } = require('../services/aeat/h1CauLiquidacion');
 const { gastosQueSeSuman, gastoDe, cambiosDeLosGastos } = require('../services/forms/gastosHastaLaFrontera');
 const { verificarSumariaConAeat, esGrupaje, CODIGO_ERROR: CODIGO_GRUPAJE } = require('../services/forms/grupajeLcl');
 
@@ -107,6 +108,29 @@ const estadoCau = (expedition) => {
   if (!expedition.declaration?.mrn || r?.servicio !== 'CC415AV1') return null;
   return r.consulta?.estado?.operacionRegistrada || r.responseCode || null;
 };
+/**
+ * Lo que liquida la AEAT frente a lo que declaro LUCI, y los certificados que
+ * exige. Manda la ultima consulta si trae la liquidacion por partida; si no,
+ * la respuesta al presentar. Null si no se presento por el servicio CAU.
+ */
+function liquidacionAeatDe(expedition) {
+  if (estadoCau(expedition) === null) return null;
+  const r = expedition.declaration.aeatResponse;
+  const consulta = r.consulta || {};
+  const deConsulta = consulta.liquidacion?.partidas?.length > 0;
+  const deLaPresentacion = r.liquidacion?.partidas?.length > 0;
+  const fuente = deConsulta ? 'consulta' : (deLaPresentacion ? 'presentacion' : null);
+  const liquidacion = deConsulta ? consulta.liquidacion : r.liquidacion;
+  // Las consultas guardadas antes de leer los certificados como al presentar los traen en una lista.
+  const certificados = (consulta.certificados && !Array.isArray(consulta.certificados) ? consulta.certificados : null) || r.certificados || null;
+  return {
+    fuente,
+    fecha: deConsulta ? consulta.consultadoEn || null : r.timestamp || null,
+    comparacion: fuente ? compararLiquidacion(liquidacionDeclarada(expedition.declaration.cauEnvio?.requestXML), liquidacion) : null,
+    certificados
+  };
+}
+
 const anulacionDe = (expedition) => {
   const estado = estadoCau(expedition);
   return { presentada: estado !== null, anulable: estado !== null && anulablePorServicio(estado) };
@@ -208,7 +232,10 @@ const getH1Requirements = async (req, res) => {
       faltan = error.faltan || [error.message];
     }
     const datos = datosH1De(expedition, await divisaDeLaFactura(expedition));
-    res.json({ success: true, data: { servicio, listo: faltan.length === 0, faltan, datos, anulacion: anulacionDe(expedition) } });
+    res.json({
+      success: true,
+      data: { servicio, listo: faltan.length === 0, faltan, datos, anulacion: anulacionDe(expedition), liquidacionAeat: liquidacionAeatDe(expedition) }
+    });
   } catch (error) {
     logger.error('Error comprobando los datos del H1:', error);
     res.status(500).json({ success: false, error: 'Error al comprobar los datos del H1' });
@@ -295,7 +322,7 @@ const getH1Status = async (req, res) => {
     if (consulta.estado.fechaLevante) expedition.declaration.levanteDate = new Date(consulta.estado.fechaLevante);
     await expedition.save();
 
-    res.json({ success: true, data: consulta });
+    res.json({ success: true, data: { ...consulta, liquidacionAeat: liquidacionAeatDe(expedition) } });
   } catch (error) {
     logger.error('Error consultando el estado del H1:', error);
     res.status(500).json({ success: false, error: 'Error al consultar el estado del H1 en la AEAT' });

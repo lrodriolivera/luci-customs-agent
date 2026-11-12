@@ -79,7 +79,8 @@ describe('requisitos del H1', () => {
         freightAmount: null, freightCurrency: 'EUR', insuranceAmount: null, insuranceCurrency: 'EUR',
         invoiceCurrency: 'EUR', invoiceCurrencyWithoutBce: false, appliedExchangeRate: null
       },
-      anulacion: { presentada: false, anulable: false }
+      anulacion: { presentada: false, anulable: false },
+      liquidacionAeat: null
     });
   });
 
@@ -251,6 +252,48 @@ describe('si la declaración presentada se puede anular por servicio', () => {
   });
 });
 
+describe('liquidación de la AEAT frente a la de LUCI', () => {
+  const XML = '<x:Env xmlns:x="s"><GoodsShipment><GoodsShipmentItem><sequenceNumber>1</sequenceNumber><Commodity><CalculationOfTaxes>'
+    + '<DutiesAndTaxes><taxType>A00</taxType><TaxBase><amount>9951.55</amount><taxAmount>1194.19</taxAmount></TaxBase></DutiesAndTaxes>'
+    + '<DutiesAndTaxes><taxType>B00</taxType><TaxBase><amount>11145.74</amount><taxAmount>2340.61</taxAmount></TaxBase></DutiesAndTaxes>'
+    + '</CalculationOfTaxes></Commodity></GoodsShipmentItem></GoodsShipment></x:Env>';
+  const LIQ = (a00) => ({ totalAPagar: a00 + 2340.61, partidas: [{ numero: 1, tributos: [
+    { tipo: 'A00', bases: [{ importe: 9951.55, cuota: a00 }] }, { tipo: 'B00', bases: [{ importe: 11145.74, cuota: 2340.61 }] }
+  ] }] });
+  const CERT = { requeridos: 'S', partidas: [{ numero: 1, organismos: [{ organismo: 'SIF01', nombre: 'SOIVRE Mº Comercio', medidas: [{ medida: 'COM', documentos: ['1310'] }] }] }] };
+  const presentada = (aeatResponse) => expediente({ declaration: { mrn: 'M1', cauEnvio: { requestXML: XML }, aeatResponse: { servicio: 'CC415AV1', responseCode: '64', ...aeatResponse } } });
+
+  test('compara lo declarado con lo que liquidó la AEAT al presentar y da sus certificados', async () => {
+    mockPreparar.mockResolvedValue({ requestXML: '<x/>' });
+    mockExpedition.findById.mockResolvedValue(presentada({ liquidacion: LIQ(1194.19), certificados: CERT }));
+
+    const res = await request(app()).get('/api/declarations/e1/h1/requisitos');
+
+    expect(res.body.data.liquidacionAeat).toMatchObject({
+      fuente: 'presentacion', certificados: CERT,
+      comparacion: { cuadra: true, totalLuci: 3534.8, totalAeat: 3534.8, diferencia: 0 }
+    });
+  });
+
+  test('si hay una consulta con liquidación por partida, manda la consulta', async () => {
+    mockPreparar.mockResolvedValue({ requestXML: '<x/>' });
+    mockExpedition.findById.mockResolvedValue(presentada({ liquidacion: LIQ(1194.19), certificados: CERT, consulta: { liquidacion: LIQ(1200), certificados: { requeridos: 'N', partidas: [] }, consultadoEn: '2026-11-13T09:00:00Z' } }));
+
+    const res = await request(app()).get('/api/declarations/e1/h1/requisitos');
+
+    expect(res.body.data.liquidacionAeat).toMatchObject({ fuente: 'consulta', comparacion: { cuadra: false, diferencia: 5.81 }, certificados: { requeridos: 'N' } });
+  });
+
+  test('sin presentar por el servicio CAU no hay liquidación de la AEAT', async () => {
+    mockPreparar.mockResolvedValue({ requestXML: '<x/>' });
+    mockExpedition.findById.mockResolvedValue(expediente());
+
+    const res = await request(app()).get('/api/declarations/e1/h1/requisitos');
+
+    expect(res.body.data.liquidacionAeat).toBeNull();
+  });
+});
+
 describe('estado del H1 en la AEAT', () => {
   const mockConsultar = jest.fn();
   const aeatSubmitService = require('../../src/services/aeat/aeatSubmitService');
@@ -286,6 +329,8 @@ describe('estado del H1 en la AEAT', () => {
     expect(exp.declaration.channel).toBe('green');
     expect(exp.declaration.levanteDate).toEqual(new Date('2026-11-13T09:00:00'));
     expect(exp.declaration.aeatResponse).toMatchObject({ servicio: 'CC415AV1', csv: 'C1', consulta: { estado: { circuito: 'V' } } });
+    // Sin XML enviado ni liquidación por partida no hay comparación, pero el campo está.
+    expect(res.body.data.liquidacionAeat).toMatchObject({ fuente: null, comparacion: null });
     expect(exp.save).toHaveBeenCalled();
   });
 
