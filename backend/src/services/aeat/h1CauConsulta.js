@@ -10,6 +10,7 @@ const { DOMParser } = require('@xmldom/xmldom');
 const { xml } = require('./xmlTemplate');
 const { fechaHora } = require('./h1CauXmlBuilder');
 const { CIRCUITOS } = require('./h1CauResponse');
+const { OPERACION_REGISTRADA, ESTADO_DESPACHO, ESTADO_CONTABLE, PENDENCIAS, ADUANA_RESPONSABLE, describir } = require('./h1CauCodigos');
 
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 const NS_CONSULTA = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ConsultaImportacionV3Ent.xsd';
@@ -107,6 +108,16 @@ function interpretarConsultaH1Cau(cuerpo) {
       bajoControl: texto(gestion, 'underControl'),
       documentacionPendiente: texto(gestion, 'documentationPending'),
       pago: texto(gestion, 'paymentStatus'),
+      pendencias: texto(gestion, 'pendingInformation'),
+      // El mismo dato en palabras, segun las guias de la AEAT (null si el codigo no esta en ellas).
+      textos: {
+        operacionRegistrada: describir(OPERACION_REGISTRADA, texto(gestion, 'operationRegistered')),
+        levante: describir(ESTADO_DESPACHO, texto(gestion, 'goodsReleaseStatus')),
+        pago: describir(ESTADO_CONTABLE, texto(gestion, 'paymentStatus')),
+        pendencias: describir(PENDENCIAS, texto(gestion, 'pendingInformation')),
+        bajoControl: describir(ADUANA_RESPONSABLE, texto(gestion, 'underControl')),
+        documentacionPendiente: describir(ADUANA_RESPONSABLE, texto(gestion, 'documentationPending'))
+      },
       circuito,
       channel: CIRCUITOS[circuito] || null,
       certificadosRequeridos: texto(gestion, 'requiredPCADocuments'),

@@ -77,7 +77,8 @@ describe('<H1DataCard />', () => {
   test('una declaración presentada por el servicio nuevo permite consultar su estado en la AEAT', async () => {
     getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [] }))
     getH1Status.mockResolvedValue({ data: { data: {
-      estado: { operacionRegistrada: '96', circuito: 'N', fechaAdmision: '2026-11-12T10:57:04', fechaLevante: null, certificadosRequeridos: 'S' },
+      estado: { operacionRegistrada: '64', levante: 'P', pago: 'PL', circuito: 'N', fechaAdmision: '2026-11-12T10:57:04', fechaLevante: null, certificadosRequeridos: 'S',
+        textos: { operacionRegistrada: 'Declaración completa activada', levante: 'Pendiente de despacho', pago: null, documentacionPendiente: 'Aduana de presentación' } },
       liquidacion: { totalAPagar: 3552 }, documentosSolicitados: [{ tipo: 'N380', descripcion: 'Factura comercial', partida: 1 }], notificaciones: [{ codigo: '1', texto: 'Aporte la factura' }]
     } } })
     render(<H1DataCard expedition={{ _id: 'e1', declaration: { mrn: '26ES002801I01BMDR0', aeatResponse: { servicio: 'CC415AV1' } } }} />)
@@ -87,6 +88,11 @@ describe('<H1DataCard />', () => {
     expect(await screen.findByText('Naranja (revisión documental)')).toBeInTheDocument()
     expect(getH1Status).toHaveBeenCalledWith('e1')
     expect(screen.getByText('12/11/2026 10:57')).toBeInTheDocument()
+    expect(screen.getByText('Declaración completa activada (64)')).toBeInTheDocument()
+    expect(screen.getByText('Pendiente de despacho (P)')).toBeInTheDocument()
+    // Un código que no está en la guía se muestra tal cual.
+    expect(screen.getByText('PL')).toBeInTheDocument()
+    expect(screen.getByText('Hay una solicitud de documentación pendiente (aduana de presentación).')).toBeInTheDocument()
     expect(screen.getByText('3.552,00 EUR')).toBeInTheDocument()
     expect(screen.getByText('La AEAT exige certificados de otros organismos.')).toBeInTheDocument()
     expect(screen.getByText('N380 — Factura comercial (partida 1)')).toBeInTheDocument()

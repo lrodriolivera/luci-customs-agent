@@ -4,6 +4,8 @@ import { declarationsAPI } from '../../services/api'
 import { formatearImporte } from '../../utils/importe'
 
 const CIRCUITOS = { V: 'Verde', A: 'Amarillo (pendiente de certificados)', N: 'Naranja (revisión documental)', R: 'Rojo (reconocimiento físico)' }
+/** Texto de la guía de la AEAT con su código; si el código no está en la guía, solo el código. */
+const conCodigo = (texto, codigo) => (texto ? `${texto} (${codigo})` : codigo || '—')
 /** «2026-11-12T10:57:04» -> «12/11/2026 10:57». */
 const fecha = (iso) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso || '')
@@ -142,12 +144,20 @@ export default function H1DataCard({ expedition }) {
           </div>
           {consulta?.estado && (
             <dl className="mt-3 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2" aria-label="Estado de la declaración en la AEAT">
-              <div><dt className="inline text-gray-500">Estado (código AEAT): </dt><dd className="inline font-medium">{consulta.estado.operacionRegistrada || '—'}</dd></div>
+              <div><dt className="inline text-gray-500">Estado: </dt><dd className="inline font-medium">{conCodigo(consulta.estado.textos?.operacionRegistrada, consulta.estado.operacionRegistrada)}</dd></div>
+              <div><dt className="inline text-gray-500">Despacho: </dt><dd className="inline font-medium">{conCodigo(consulta.estado.textos?.levante, consulta.estado.levante)}</dd></div>
+              <div><dt className="inline text-gray-500">Pago: </dt><dd className="inline font-medium">{conCodigo(consulta.estado.textos?.pago, consulta.estado.pago)}</dd></div>
               <div><dt className="inline text-gray-500">Circuito: </dt><dd className="inline font-medium">{CIRCUITOS[consulta.estado.circuito] || 'Sin asignar'}</dd></div>
               <div><dt className="inline text-gray-500">Admisión: </dt><dd className="inline font-medium">{fecha(consulta.estado.fechaAdmision)}</dd></div>
               <div><dt className="inline text-gray-500">Levante: </dt><dd className="inline font-medium">{fecha(consulta.estado.fechaLevante)}</dd></div>
               {consulta.liquidacion && (
                 <div><dt className="inline text-gray-500">Total a pagar: </dt><dd className="inline font-medium">{formatearImporte(consulta.liquidacion.totalAPagar, 'EUR')}</dd></div>
+              )}
+              {consulta.estado.textos?.bajoControl && (
+                <div className="sm:col-span-2 text-amber-800">En control: {consulta.estado.textos.bajoControl.toLowerCase()}.</div>
+              )}
+              {consulta.estado.textos?.documentacionPendiente && (
+                <div className="sm:col-span-2 text-amber-800">Hay una solicitud de documentación pendiente ({consulta.estado.textos.documentacionPendiente.toLowerCase()}).</div>
               )}
               {consulta.estado.certificadosRequeridos === 'S' && (
                 <div className="sm:col-span-2 text-amber-800">La AEAT exige certificados de otros organismos.</div>

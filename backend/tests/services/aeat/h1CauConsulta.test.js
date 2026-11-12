@@ -74,6 +74,12 @@ describe('consulta H1 CAU: respuesta', () => {
       operacionRegistrada: '64', levante: 'P', pago: 'PL', circuito: 'A', channel: 'yellow', certificadosRequeridos: 'S',
       fechaRegistro: '2026-11-12T11:40:38', fechaAdmision: '2026-11-12T11:40:38', fechaLevante: null
     });
+    // Lo mismo en palabras, con los textos de las guías de la AEAT.
+    expect(r.estado.pendencias).toBe('N');
+    expect(r.estado.textos).toEqual({
+      operacionRegistrada: 'Declaración completa activada', levante: 'Pendiente de despacho', pago: 'Pendiente de contracción',
+      pendencias: 'No tiene pendencias', bajoControl: null, documentacionPendiente: null
+    });
     expect(r.liquidacion).toEqual({ totalAPagar: 355.2, totalAGarantizar: 355.2 });
     expect(r.certificados).toEqual([{ partida: 1, organismos: [
       { organismo: 'SIF01', nombre: 'SOIVRE Mº Comercio', documentos: ['1310', '1314'] },
@@ -86,6 +92,7 @@ describe('consulta H1 CAU: respuesta', () => {
 
     expect(r).toMatchObject({ success: true, mrn: null, numeroRegistro: '26ES00280112345678', liquidacion: null });
     expect(r.estado).toMatchObject({ circuito: null, channel: null, fechaLevante: null });
+    expect(r.estado.textos.operacionRegistrada).toBe('Declaración completa pendiente de activar');
   });
 
   test('una declaración que no existe llega como error funcional con su motivo', () => {
