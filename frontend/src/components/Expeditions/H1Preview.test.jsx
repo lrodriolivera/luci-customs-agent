@@ -158,4 +158,42 @@ describe('H1Preview', () => {
     expect(boton).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByText('h1Preview.importer')).not.toBeInTheDocument()
   })
+
+  describe('con el servicio CAU', () => {
+    const cau = (extra = {}) => ({
+      ...h1Data, servicio: 'CC415AV1', lrn: null, guarantee: null,
+      declarationHeader: { ...h1Data.declarationHeader, lrn: null, representative: null, ...extra.header },
+      ...extra.raiz
+    })
+
+    test('el LRN aún no asignado y la garantía que no se declara no salen como «sin dato»', () => {
+      render(<H1Preview h1Data={cau()} />)
+
+      expect(valorDe('h1Preview.lrn')).toHaveTextContent('h1Preview.lrnOnSubmit')
+      expect(valorDe('h1Preview.guarantee')).toHaveTextContent('h1Preview.guaranteeNotDeclared')
+    })
+
+    test('una vez presentada muestra su LRN; con pago aplazado, la garantía declarada', () => {
+      render(<H1Preview h1Data={cau({ raiz: { lrn: 'LUCI261112100000000', guarantee: { guaranteeType: '1', grn: '26ESAGL2800000054' } } })} />)
+
+      expect(valorDe('h1Preview.lrn')).toHaveTextContent('LUCI261112100000000')
+      expect(valorDe('h1Preview.guarantee')).toHaveTextContent('1, 26ESAGL2800000054')
+    })
+
+    test('en representación directa muestra al importador como declarante y a la agencia como representante', () => {
+      render(<H1Preview h1Data={cau({ header: {
+        declarant: { name: 'Importadora SL', identificationNumber: 'ESB12345674', representativeStatus: '2' },
+        representative: { name: 'Agencia SL', identificationNumber: 'ESB22477020' }
+      } })} />)
+
+      expect(valorDe('h1Preview.declarant')).toHaveTextContent('Importadora SL, ESB12345674')
+      expect(valorDe('h1Preview.representative')).toHaveTextContent('Agencia SL, ESB22477020')
+    })
+
+    test('sin representante no aparece ese campo', () => {
+      render(<H1Preview h1Data={cau()} />)
+
+      expect(screen.queryByText('h1Preview.representative')).not.toBeInTheDocument()
+    })
+  })
 })

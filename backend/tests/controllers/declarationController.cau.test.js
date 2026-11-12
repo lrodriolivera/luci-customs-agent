@@ -103,6 +103,15 @@ describe('H1 por el servicio CAU: envío', () => {
     expect(res.body.data.channelDescription).toContain('AMARILLO');
   });
 
+  test('el LRN con el que se presentó pasa a la vista previa', async () => {
+    const exp = expediente({ h1Data: { servicio: 'CC415AV1', lrn: null, valuation: { customsValue: 1 } } });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    await enviar();
+
+    expect(exp.declaration.h1Data).toEqual({ servicio: 'CC415AV1', lrn: 'LUCI261112100000000', valuation: { customsValue: 1 } });
+  });
+
   test('el circuito amarillo del H1 no pasa por el tratamiento amarillo del H7', async () => {
     mockExpedition.findById.mockResolvedValue(expediente());
 

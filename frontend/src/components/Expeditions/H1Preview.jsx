@@ -57,6 +57,9 @@ export default function H1Preview({ h1Data }) {
   const transport = shipment.transportMeans || {}
   const currency = shipment.currency || valuation.invoiceCurrency || 'EUR'
   const missing = t('h1Preview.missing')
+  // Con el servicio CAU el LRN se asigna al presentar y la garantía solo se declara con pago aplazado:
+  // que falten no es un dato sin informar.
+  const esCau = h1Data.servicio === 'CC415AV1'
 
   const withCode = (code, keys) => {
     if (isEmpty(code)) return code
@@ -97,7 +100,7 @@ export default function H1Preview({ h1Data }) {
 
           <Section title={t('h1Preview.sectionDeclaration')}>
             <dl className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {field('lrn', h1Data.lrn || header.lrn)}
+              {field('lrn', h1Data.lrn || header.lrn || (esCau ? t('h1Preview.lrnOnSubmit') : undefined))}
               {field('declarationType', joinParts(header.declarationType, header.additionalDeclarationType))}
               {field('officeLodgement', header.customsOfficeLodgement)}
               {field('officePresentation', header.customsOfficePresentation)}
@@ -112,6 +115,7 @@ export default function H1Preview({ h1Data }) {
               {field('importer', party(header.importer))}
               {field('importerAddress', address(header.importer))}
               {field('declarant', party(header.declarant))}
+              {header.representative && field('representative', party(header.representative))}
               {field('representation', withCode(header.declarant?.representativeStatus, REPRESENTATION_KEYS))}
               {field('exporter', party(header.exporter))}
               {field('exporterAddress', address(header.exporter))}
@@ -178,7 +182,9 @@ export default function H1Preview({ h1Data }) {
               {field('vat', duty(duties.vat))}
               {field('totalDuty', formatearImporte(duties.totalDuty, duties.totalDutyCurrency || 'EUR'))}
               {field('paymentMethod', joinParts(duties.paymentMethod, duties.paymentMethodDescription))}
-              {field('guarantee', h1Data.guarantee?.guaranteeType)}
+              {field('guarantee', h1Data.guarantee
+                ? joinParts(h1Data.guarantee.guaranteeType, h1Data.guarantee.grn)
+                : (esCau ? t('h1Preview.guaranteeNotDeclared') : undefined))}
             </dl>
           </Section>
         </div>

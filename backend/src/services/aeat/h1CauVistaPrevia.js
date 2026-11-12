@@ -24,12 +24,32 @@ function aplicarCauAVistaPrevia(h1Data, datos) {
   const ubicacion = envio.expedicion?.ubicacion;
   const transporte = envio.expedicion?.documentosTransporte?.[0];
   const shipment = h1Data.goodsShipment || {};
+  const cabecera = h1Data.declarationHeader || {};
+  const garantia = datos.garantias?.[0];
+  const medioDePago = envio.partidas?.[0]?.tributos?.[0]?.medioDePago;
+
+  // En representacion directa el declarante es el importador y la agencia va
+  // como representante; en autodespacho e indirecta no hay representante.
+  const agencia = cabecera.declarant || {};
+  const declarante = datos.representante
+    ? { name: cabecera.importer?.name, identificationNumber: datos.declarante?.id, representativeStatus: agencia.representativeStatus }
+    : { ...agencia, identificationNumber: datos.declarante?.id || agencia.identificationNumber };
 
   return {
     ...h1Data,
     servicio: 'CC415AV1',
+    // El LRN lo asigna LUCI al presentar (uno nuevo por mensaje): hasta entonces no hay.
+    lrn: null,
+    // Solo se declara garantia con pago aplazado; con pago previo al levante, ninguna.
+    guarantee: garantia ? { guaranteeType: garantia.tipo, grn: garantia.referencias?.[0]?.grn || null } : null,
+    dutyTaxFee: h1Data.dutyTaxFee && medioDePago && medioDePago !== h1Data.dutyTaxFee.paymentMethod
+      ? { ...h1Data.dutyTaxFee, paymentMethod: medioDePago, paymentMethodDescription: undefined }
+      : h1Data.dutyTaxFee,
     declarationHeader: {
-      ...h1Data.declarationHeader,
+      ...cabecera,
+      lrn: null,
+      declarant: declarante,
+      representative: datos.representante ? { name: agencia.name, identificationNumber: datos.representante.id } : null,
       // La aduana de entrada (por donde entro la mercancia en la UE) no va en
       // el mensaje CAU: se deja la que calculo el generador.
       customsOfficeLodgement: datos.aduanaImportacion,
@@ -37,6 +57,8 @@ function aplicarCauAVistaPrevia(h1Data, datos) {
     },
     goodsShipment: {
       ...shipment,
+      // Region de destino: el codigo de provincia que se declara.
+      regionOfDestination: envio.destino?.region || shipment.regionOfDestination,
       goodsLocation: ubicacion
         ? { ...shipment.goodsLocation, typeOfLocation: ubicacion.tipo, qualifierOfIdentification: ubicacion.calificador }
         : shipment.goodsLocation,
