@@ -8,6 +8,7 @@
  * una admision.
  */
 const { DOMParser } = require('@xmldom/xmldom');
+const { OPERACION_REGISTRADA, describir } = require('./h1CauCodigos');
 
 const CIRCUITOS = { V: 'green', A: 'yellow', N: 'orange', R: 'red' };
 
@@ -67,6 +68,7 @@ function admitida(cc415r, base) {
     numeroRegistro: texto(ack, 'ImportOperation', 'customsRegistrationNumber'),
     csv: texto(ack, 'edeclarationCSVId'),
     operacionRegistrada: texto(ack, 'operationRegistered'),
+    operacionRegistradaTexto: describir(OPERACION_REGISTRADA, texto(ack, 'operationRegistered')),
     fechaAdmision: texto(cc428, 'declarationAcceptanceDateAndTime'),
     // Sin analisis de riesgos (predeclaracion) no hay circuito: no se supone verde.
     circuito: codigoCircuito,

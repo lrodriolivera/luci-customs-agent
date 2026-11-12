@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- editado por AEAT (Agencia Estatal de Administración Tributaria) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+           xmlns:ds="http://www.w3.org/2000/09/xmldsig#" 
+           xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ConsultaImportacionV3Sal.xsd" 
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+           targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ConsultaImportacionV3Sal.xsd" 
+           elementFormDefault="unqualified"
+           xmlns:td11="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes_D.xsd"          
+           xmlns:td3="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ConsultaImportacionR.xsd" 
+           xmlns:td4="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CC456A.xsd"          
+           xmlns:td5="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CD917A.xsd" >           
+	
+	<xs:import schemaLocation="ES_ConsultaImportacionR.xsd" 
+     namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ConsultaImportacionR.xsd" >
+    </xs:import>    
+    <xs:import schemaLocation="ES_CC456A.xsd" 
+     namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CC456A.xsd" >
+    </xs:import>    
+    <xs:import schemaLocation="ES_CD917A.xsd" 
+     namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CD917A.xsd" >
+    </xs:import>    
+	<xs:import schemaLocation="ES_ctypes_D.xsd" 
+     namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes_D.xsd" >
+    </xs:import>             
+           
+	<xs:annotation>
+		<xs:documentation>
+    	Esquema de Salida del Servicio que define el mensaje Consulta Importacion:  
+    	</xs:documentation>
+	</xs:annotation>
+	<xs:element name="ConsultaImportacionV3Sal" type="ConsultaImportacionV3Sal"/>
+	<xs:complexType name="ConsultaImportacionV3Sal">
+		<xs:sequence>
+			<!-- Datos transmisión -->
+			<xs:element name="Message" type="td11:MessageTypeD"/>
+		    <xs:choice>
+			  <!-- Respuesta Correcta --> 
+			  <xs:element name="ConsultaCompletaR" type="td3:ConsultaImportacionRType_V3" minOccurs="0"/>
+			  <!-- Error Funcional -->
+			  <xs:element name="CC456A" type="td4:CC456ATypeD"  minOccurs="0"/>
+			  <!-- Error XML -->
+			  <xs:element name="CD917A" type="td5:CD917AType"  minOccurs="0"/>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

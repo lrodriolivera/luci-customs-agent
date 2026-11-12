@@ -32,7 +32,7 @@ describe('respuesta del H1 CAU: admisión', () => {
   test('reconoce la admisión y saca MRN, LRN, CSV y fecha de admisión', () => {
     expect(r).toMatchObject({
       success: true, tipo: 'admitida', mrn: '23ES002801I02777R1', lrn: '415MMI202306090003', csv: '6BJFKFVW6DQSK55G',
-      operacionRegistrada: '0', fechaAdmision: '2023-06-09T13:05:48', mensajeId: 'LUCI-1'
+      operacionRegistrada: '0', operacionRegistradaTexto: 'Admisión de declaración completa', fechaAdmision: '2023-06-09T13:05:48', mensajeId: 'LUCI-1'
     });
   });
 

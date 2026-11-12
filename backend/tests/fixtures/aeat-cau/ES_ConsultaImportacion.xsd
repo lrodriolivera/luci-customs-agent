@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema 
+
+     xmlns:xs="http://www.w3.org/2001/XMLSchema"
+     elementFormDefault="unqualified" 
+     attributeFormDefault="unqualified" version="40.80" 
+     xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ConsultaImportacion.xsd" 
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+     targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ConsultaImportacion.xsd" 
+     xmlns:td2="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_stypes.xsd">
+                   	
+    <xs:import schemaLocation="ES_stypes.xsd" 
+     namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_stypes.xsd" >
+    </xs:import>     
+ 	      
+    <!--=================================================================================================================-->
+    <!--===== Root element                                                                                               -->
+    <!--=================================================================================================================-->
+    <xs:element name="ConsultaImportacion" type="ConsultaImportacionType"/>
+    <!--=================================================================================================================-->
+    <!--===== Root element Content                                                                                       -->
+    <!--=================================================================================================================-->
+    <xs:complexType name="ConsultaImportacionType">
+        <xs:sequence>
+ 			<xs:element name="MRN" type="td2:MRNContentType" >
+                            </xs:element>                                                      
+            <xs:element name="customsRegistrationNumber" type="td2:MRNContentType" minOccurs="0" >
+                            </xs:element>                            
+            <xs:element name="ATC" type="td2:OperationContentType" minOccurs="0" >
+                            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
+

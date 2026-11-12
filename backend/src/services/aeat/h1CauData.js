@@ -234,9 +234,11 @@ function expeditionToH1CauData(expedition, { declarante, cambio, tenant, mensaje
   const garantias = garantiasDe({ medio: medioDePago, grn: decl.guaranteeGRN || config.garantiaGRN, tipoGarantia: config.tipoGarantia }, faltan);
 
   const personas = partes(expedition, declarante, faltan);
-  const aduanaDespacho = aduana(decl.customsOffice || config.customsOffice);
-  if (!aduanaDespacho) faltan.push('aduana de despacho');
   const ubicacion = ubicacionDe(expedition);
+  // Sin aduana indicada, la del recinto donde estan las mercancias: son los
+  // ocho primeros caracteres de la ubicacion (regla ESR0001).
+  const aduanaDespacho = aduana(decl.customsOffice || config.customsOffice) || (ubicacion ? aduana(`ES${ubicacion.slice(2, 8)}`) : null);
+  if (!aduanaDespacho) faltan.push('aduana de despacho');
   if (!texto(decl.lrn) && !texto(lrn)) faltan.push('referencia local de la declaración (LRN)');
   if (goods.length === 0) faltan.push('al menos una partida');
 

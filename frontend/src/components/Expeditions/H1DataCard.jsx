@@ -1,6 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { declarationsAPI } from '../../services/api'
+import { formatearImporte } from '../../utils/importe'
+
+const CIRCUITOS = { V: 'Verde', A: 'Amarillo (pendiente de certificados)', N: 'Naranja (revisión documental)', R: 'Rojo (reconocimiento físico)' }
+/** Texto de la guía de la AEAT con su código; si el código no está en la guía, solo el código. */
+const conCodigo = (texto, codigo) => (texto ? `${texto} (${codigo})` : codigo || '—')
+/** «2026-11-12T10:57:04» -> «12/11/2026 10:57». */
+const fecha = (iso) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso || '')
+  return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : '—'
+}
 
 const AMBITOS = [
   { valor: 'OSRE', texto: 'Por operación, sin registro electrónico en la AEAT' },
@@ -48,6 +58,21 @@ export default function H1DataCard({ expedition }) {
       toast.error(err.response?.data?.error || 'No se pudieron guardar los datos del H1')
     } finally {
       setGuardando(false)
+    }
+  }
+
+  const presentadoPorCau = expedition.declaration?.mrn && expedition.declaration?.aeatResponse?.servicio === 'CC415AV1'
+  const [consulta, setConsulta] = useState(expedition.declaration?.aeatResponse?.consulta || null)
+  const [consultando, setConsultando] = useState(false)
+
+  const consultarEstado = async () => {
+    setConsultando(true)
+    try {
+      setConsulta((await declarationsAPI.getH1Status(expedition._id)).data?.data)
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'No se pudo consultar el estado en la AEAT')
+    } finally {
+      setConsultando(false)
     }
   }
 
@@ -105,6 +130,54 @@ export default function H1DataCard({ expedition }) {
             <p className="mt-2 text-xs text-gray-600">
               El H1 se presenta todavía por el servicio anterior, que no exige estos datos. Se activa en Ajustes &gt; Aduanas.
             </p>
+          )}
+        </div>
+      )}
+
+      {presentadoPorCau && (
+        <div className="mt-4 border-t pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-medium">Estado en la AEAT · MRN {expedition.declaration.mrn}</p>
+            <button type="button" className="btn-secondary" onClick={consultarEstado} disabled={consultando}>
+              {consultando ? 'Consultando...' : 'Consultar estado en la AEAT'}
+            </button>
+          </div>
+          {consulta?.estado && (
+            <dl className="mt-3 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2" aria-label="Estado de la declaración en la AEAT">
+              <div><dt className="inline text-gray-500">Estado: </dt><dd className="inline font-medium">{conCodigo(consulta.estado.textos?.operacionRegistrada, consulta.estado.operacionRegistrada)}</dd></div>
+              <div><dt className="inline text-gray-500">Despacho: </dt><dd className="inline font-medium">{conCodigo(consulta.estado.textos?.levante, consulta.estado.levante)}</dd></div>
+              <div><dt className="inline text-gray-500">Pago: </dt><dd className="inline font-medium">{conCodigo(consulta.estado.textos?.pago, consulta.estado.pago)}</dd></div>
+              <div><dt className="inline text-gray-500">Circuito: </dt><dd className="inline font-medium">{CIRCUITOS[consulta.estado.circuito] || 'Sin asignar'}</dd></div>
+              <div><dt className="inline text-gray-500">Admisión: </dt><dd className="inline font-medium">{fecha(consulta.estado.fechaAdmision)}</dd></div>
+              <div><dt className="inline text-gray-500">Levante: </dt><dd className="inline font-medium">{fecha(consulta.estado.fechaLevante)}</dd></div>
+              {consulta.liquidacion && (
+                <div><dt className="inline text-gray-500">Total a pagar: </dt><dd className="inline font-medium">{formatearImporte(consulta.liquidacion.totalAPagar, 'EUR')}</dd></div>
+              )}
+              {consulta.estado.textos?.bajoControl && (
+                <div className="sm:col-span-2 text-amber-800">En control: {consulta.estado.textos.bajoControl.toLowerCase()}.</div>
+              )}
+              {consulta.estado.textos?.documentacionPendiente && (
+                <div className="sm:col-span-2 text-amber-800">Hay una solicitud de documentación pendiente ({consulta.estado.textos.documentacionPendiente.toLowerCase()}).</div>
+              )}
+              {consulta.estado.certificadosRequeridos === 'S' && (
+                <div className="sm:col-span-2 text-amber-800">La AEAT exige certificados de otros organismos.</div>
+              )}
+            </dl>
+          )}
+          {consulta?.documentosSolicitados?.length > 0 && (
+            <div className="mt-3 text-sm">
+              <p className="font-medium">Documentos que pide la aduana:</p>
+              <ul className="mt-1 list-disc pl-5">
+                {consulta.documentosSolicitados.map((d, i) => (
+                  <li key={`${d.tipo}-${i}`}>{d.tipo}{d.descripcion ? ` — ${d.descripcion}` : ''}{d.partida ? ` (partida ${d.partida})` : ''}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {consulta?.notificaciones?.length > 0 && (
+            <ul className="mt-3 list-disc pl-5 text-sm text-gray-700">
+              {consulta.notificaciones.map((n, i) => <li key={`${n.codigo}-${i}`}>{n.texto}</li>)}
+            </ul>
           )}
         </div>
       )}

@@ -141,6 +141,41 @@ const updateH1Data = async (req, res) => {
   }
 };
 
+/**
+ * Estado en la AEAT de un H1 presentado por el servicio CAU.
+ * GET /api/declarations/:expeditionId/h1/estado
+ *
+ * Solo lectura en la AEAT. En el expediente se guarda lo que responde y se
+ * actualizan el circuito y la fecha de levante cuando la AEAT ya los da.
+ */
+const getH1Status = async (req, res) => {
+  try {
+    const expedition = await Expedition.findById(req.params.expeditionId);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+    const mrn = expedition.declaration?.mrn;
+    if (!mrn) return res.status(400).json({ success: false, error: 'La declaración todavía no tiene MRN: no se ha presentado' });
+    if (expedition.declaration?.aeatResponse?.servicio !== 'CC415AV1') {
+      return res.status(400).json({ success: false, error: 'Esta declaración no se presentó por el servicio CAU: su estado no se puede consultar aquí' });
+    }
+
+    const { rawResponse, ...consulta } = await aeatSubmitService.consultarH1Cau(mrn);
+    if (!consulta.success) {
+      return res.status(consulta.tipo === 'fault' ? 502 : 404).json({ success: false, error: consulta.error, tipo: consulta.tipo });
+    }
+
+    expedition.declaration.aeatResponse = { ...expedition.declaration.aeatResponse, consulta: { ...consulta, consultadoEn: new Date() } };
+    expedition.markModified('declaration.aeatResponse');
+    if (consulta.estado.channel) expedition.declaration.channel = consulta.estado.channel;
+    if (consulta.estado.fechaLevante) expedition.declaration.levanteDate = new Date(consulta.estado.fechaLevante);
+    await expedition.save();
+
+    res.json({ success: true, data: consulta });
+  } catch (error) {
+    logger.error('Error consultando el estado del H1:', error);
+    res.status(500).json({ success: false, error: 'Error al consultar el estado del H1 en la AEAT' });
+  }
+};
+
 // Un mensaje preparado y sin respuesta se reenvia tal cual durante este plazo;
 // pasado, se prepara uno nuevo (la AEAT conserva el historico unos 15 dias).
 const VIGENCIA_ENVIO_CAU_MS = 24 * 60 * 60 * 1000;
@@ -1759,6 +1794,7 @@ module.exports = {
   generateH1Direct,
   getH1Requirements,
   updateH1Data,
+  getH1Status,
   validateH1DirectBody,
   generateAES,
   getXML,
