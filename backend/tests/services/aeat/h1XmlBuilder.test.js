@@ -359,3 +359,15 @@ describe('expeditionToH1Data: factura en divisa', () => {
     expect(xml).toContain('<C47TributoBaseImponible>10000.000</C47TributoBaseImponible>');
   });
 });
+
+describe('expeditionToH1Data: total de tributos sin cálculo guardado', () => {
+  test('en euros suma arancel e IVA de las partidas (la AEAT rechaza si no cuadra)', () => {
+    const data = expeditionToH1Data({
+      expeditionId: 'EXP-EUR',
+      client: { taxId: 'B12345678', companyName: 'Importadora SL' },
+      goods: [{ description: 'Sábanas', taricCode: '6302100000', invoiceValue: 10000, currency: 'EUR', dutyRate: 12, vatRate: 21, dutyAmount: 1200, vatAmount: 2352 }]
+    });
+
+    expect(data.importeTotalTributos).toBe(3552);
+  });
+});

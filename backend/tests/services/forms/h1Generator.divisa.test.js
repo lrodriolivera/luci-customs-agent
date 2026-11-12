@@ -55,3 +55,44 @@ describe('h1Generator: factura en divisa', () => {
     expect(data.valuation.exchangeRateSource).toBeUndefined();
   });
 });
+
+describe('h1Generator: liquidación a partir de las partidas', () => {
+  test('el arancel sale del tipo de cada partida, no de un 0 % fijo', () => {
+    const exp = expediente('USD');
+    exp.goods[0].dutyRate = 12;
+    exp.goods[0].vatRate = 21;
+    exp.costs = {};
+    const { data } = h1Generator.generate(exp, {}, { tenant: TENANT, cambio: USD });
+
+    // 8.901,55 EUR × 12 % = 1.068,19; IVA 21 % × 9.969,74 = 2.093,65 (lo mismo que liquida la AEAT)
+    expect(data.dutyTaxFee.importDuty.rate).toBe(12);
+    expect(data.dutyTaxFee.importDuty.payableAmount).toBe(1068.19);
+    expect(data.dutyTaxFee.vat.baseAmount).toBeCloseTo(9969.74, 2);
+    expect(data.dutyTaxFee.vat.payableAmount).toBe(2093.65);
+  });
+
+  test('con varias partidas suma el arancel de cada una y da el tipo efectivo', () => {
+    const exp = expediente('EUR');
+    exp.costs = {};
+    exp.goodsSummary.totalValue = 10000;
+    exp.goods = [
+      { ...exp.goods[0], invoiceValue: 6000, dutyRate: 12, vatRate: 21 },
+      { ...exp.goods[0], invoiceValue: 4000, dutyRate: 0, vatRate: 21 }
+    ];
+    const { data } = h1Generator.generate(exp, {}, { tenant: TENANT });
+
+    expect(data.dutyTaxFee.importDuty.payableAmount).toBe(720);
+    expect(data.dutyTaxFee.importDuty.rate).toBe(7.2);
+    expect(data.dutyTaxFee.vat.payableAmount).toBe(2251.2);
+  });
+
+  test('un tipo global indicado expresamente sigue mandando', () => {
+    const exp = expediente('EUR');
+    exp.goods[0].dutyRate = 12;
+    exp.costs = {};
+    const { data } = h1Generator.generate(exp, { tariffRate: 5 }, { tenant: TENANT });
+
+    expect(data.dutyTaxFee.importDuty.rate).toBe(5);
+    expect(data.dutyTaxFee.importDuty.payableAmount).toBe(500);
+  });
+});
