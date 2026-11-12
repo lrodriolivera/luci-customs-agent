@@ -1051,8 +1051,9 @@ const generateH1Direct = async (req, res) => {
         id: expedition._id,
         expeditionId: expedition.expeditionId,
         declaration: expedition.declaration,
-        h1Data: h1Declaration.data,
-        xml: h1Declaration.xml,
+        // Lo guardado en el expediente: con el servicio CAU ya es lo que se envia a la AEAT.
+        h1Data: expedition.declaration.h1Data,
+        xml: expedition.declaration.xmlContent,
         summary: h1Declaration.summary,
         warnings: []
       }
