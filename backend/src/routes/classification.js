@@ -72,6 +72,18 @@ router.get('/preferences/:origin', auth, classificationController.getPreferences
 // tenants por igual.
 router.post('/seed', auth, requireRole('admin'), classificationController.seedTaricDatabase);
 
+/**
+ * @openapi
+ * /api/classification/controls:
+ *   get:
+ *     tags: [classification]
+ *     summary: Medidas de control de importación del TARIC para un código y un origen, con sus certificados
+ *     parameters:
+ *       - { in: query, name: code, required: true, schema: { type: string, example: '0201100000' } }
+ *       - { in: query, name: origin, required: true, schema: { type: string, example: BR } }
+ */
+router.get('/controls', auth, classificationController.getOfficialControls);
+
 // Estado de la sincronizacion del catalogo con el TARIC oficial (ultimas ejecuciones)
 router.get('/sync-status', auth, requireRole('admin'), classificationController.getTaricSyncStatus);
 

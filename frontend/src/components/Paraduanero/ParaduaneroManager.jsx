@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { paraduaneroAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import MedidasOficialesTaric from './MedidasOficialesTaric'
 import {
   ShieldCheckIcon,
   DocumentCheckIcon,
@@ -268,6 +269,9 @@ export default function ParaduaneroManager({ expeditionId, onControlsChange }) {
           </button>
         </div>
       )}
+
+      {/* Medidas de control de la UE por partida, con sus certificados (TARIC oficial) */}
+      {analysis && <MedidasOficialesTaric partidas={analysis.officialMeasures || []} />}
 
       {/* Lista de controles existentes */}
       {controls.length === 0 ? (

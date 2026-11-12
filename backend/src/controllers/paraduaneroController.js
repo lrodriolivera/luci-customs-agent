@@ -7,6 +7,33 @@ const { ParaduaneroControl, Expedition } = require('../models');
 const logger = require('../config/logger');
 const paraduaneroService = require('../services/paraduaneroService');
 const { ensureSameTenant, filtroTenantOPlataforma } = require('../utils/tenantGuard');
+const { controlesPara } = require('../services/taric/controles/controlesOficiales');
+
+/**
+ * Medidas de control del TARIC que alcanzan a cada partida con codigo y pais
+ * de origen. Si la consulta falla, el analisis sigue sin ellas.
+ */
+async function medidasOficialesDe(expedition) {
+  const partidas = [];
+  // Sin conexion a Mongo la consulta se quedaria esperando: se omite.
+  if (require('mongoose').connection.readyState !== 1) return partidas;
+  for (const good of expedition.goods || []) {
+    if (!good.taricCode || !good.originCountry) continue;
+    try {
+      const consulta = await controlesPara(good.taricCode, good.originCountry);
+      partidas.push({
+        itemNumber: good.itemNumber,
+        taricCode: consulta.codigo,
+        originCountry: consulta.origen,
+        source: consulta.fuente,
+        measures: consulta.medidas
+      });
+    } catch (error) {
+      logger.warn(`[TARIC] Sin medidas de control para ${good.taricCode}: ${error.message}`);
+    }
+  }
+  return partidas;
+}
 
 /**
  * Analizar expediente para determinar controles necesarios
@@ -20,6 +47,7 @@ exports.analyzeExpedition = async (req, res) => {
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
     const requiredControls = await paraduaneroService.analyzeExpedition(expedition);
+    const officialMeasures = await medidasOficialesDe(expedition);
 
     res.json({
       success: true,
@@ -27,7 +55,9 @@ exports.analyzeExpedition = async (req, res) => {
         expeditionId: expedition.expeditionId,
         totalGoods: expedition.goods?.length || 0,
         controlsRequired: requiredControls.length,
-        controls: requiredControls
+        controls: requiredControls,
+        // Medidas de control de la UE por partida (TARIC oficial), con sus certificados.
+        officialMeasures
       }
     });
   } catch (error) {
