@@ -35,6 +35,28 @@ async function cargarControles() {
   }
 }
 
+/**
+ * Publicaciones diarias del TARIC: se leen y se registran las nuevas, y se
+ * actualizan en el catalogo los derechos de terceros paises (o de destino
+ * final) de codigos declarables cuyo cambio ya esta en vigor. Solo eso: altas,
+ * bajas y derechos de niveles superiores los incorpora la carga mensual.
+ * TARIC_DIARIO_APLICAR=false deja solo la lectura. Un fallo aqui no afecta a
+ * la sincronizacion del catalogo.
+ */
+async function leerPublicacionesDiarias(ahora = new Date()) {
+  try {
+    const diario = require('../services/taric/diario/sincronizacionDiaria');
+    const modelos = { TaricCode: require('../models/TaricCode'), TaricDailyPublication: require('../models/TaricDailyPublication') };
+    const leidas = await diario.registrarPublicacionesNuevas({ ...modelos, ahora });
+    const aplicado = process.env.TARIC_DIARIO_APLICAR === 'false' ? null : await diario.aplicarPendientes({ ...modelos, ahora });
+    if (aplicado?.retenido) logger.warn(`[TARIC] Cambios diarios de derecho sin aplicar: ${aplicado.retenido}`);
+    return { leidas: leidas.nuevas.length, aplicado };
+  } catch (error) {
+    logger.error(`[TARIC] No se pudieron leer las publicaciones diarias: ${error.message}`);
+    return null;
+  }
+}
+
 async function comprobar({ ahora = new Date() } = {}) {
   if (enMarcha) return null;
   const mongoose = require('mongoose');
@@ -49,6 +71,7 @@ async function comprobar({ ahora = new Date() } = {}) {
     if (!tocaSincronizar(ahora, ultimo?.startedAt)) return null;
     const resultado = await sincronizarYRegistrar({ TaricCode, TaricSyncRun, trigger: 'automatica', ahora });
     await cargarControles();
+    await leerPublicacionesDiarias(ahora);
     return resultado;
   } catch (error) {
     logger.error(`[TARIC] El comprobador de sincronizacion fallo: ${error.message}`);
@@ -75,4 +98,4 @@ function stop() {
   temporizador = null;
 }
 
-module.exports = { start, stop, comprobar, cargarControles, INTERVALO_MS };
+module.exports = { start, stop, comprobar, cargarControles, leerPublicacionesDiarias, INTERVALO_MS };
