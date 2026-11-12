@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- editado por AEAT (Agencia Estatal de Administración Tributaria) -->
+<xs:schema 
+    xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+    elementFormDefault="unqualified" 
+    version="40.80"
+    xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CC415R.xsd"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CC415R.xsd"
+    xmlns:td11="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes_D.xsd" >
+
+	<xs:import schemaLocation="ES_ctypes_D.xsd" 
+     namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes_D.xsd" >
+    </xs:import>        
+     
+    <!--=================================================================================================================-->
+    <!--===== Root element                                                                                               -->
+    <!--=================================================================================================================-->
+    <xs:element name="CC415R" type="CC415RTypeD"/>
+    <!--=================================================================================================================-->
+    <!--===== Root element Content                                                                                       -->
+    <!--=================================================================================================================-->
+    <xs:complexType name="CC415RTypeD">
+        <xs:sequence>
+            <xs:element name="ACK" 					 type="td11:ACK415TypeD">
+                            </xs:element>
+            <xs:element name="CC426R" minOccurs="0"  type="td11:CC426RTypeD">
+                            </xs:element>
+            <xs:element name="CC404R" minOccurs="0"  type="td11:CC404RTypeD">
+                            </xs:element>                            
+            <xs:element name="CC428R" minOccurs="0"  type="td11:CC428RTypeD">
+                            </xs:element>
+			<xs:element name="CC429R" minOccurs="0"  type="td11:CC429RTypeD">
+                            </xs:element>            
+			<xs:element name="CC429R_CD" minOccurs="0"  type="td11:CC429R_CD_TypeD">
+                            </xs:element>
+       </xs:sequence>
+     </xs:complexType>
+                
+</xs:schema>
+

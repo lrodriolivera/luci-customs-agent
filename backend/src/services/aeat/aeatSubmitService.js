@@ -9,6 +9,9 @@ const aeatRealService = require('./aeatRealService');
 const aeatTransport = require('./aeatTransport');
 const { buildH1ImportXML, expeditionToH1Data } = require('./h1XmlBuilder');
 const { cambioDelExpediente } = require('../divisas/cambioDelExpediente');
+const { expeditionToH1CauData } = require('./h1CauData');
+const { buildH1CauXML, ENDPOINT_CC415A } = require('./h1CauXmlBuilder');
+const { interpretarRespuestaH1Cau } = require('./h1CauResponse');
 const { buildH7ImportXML, buildAltaH7V1XML } = require('./h7XmlBuilder');
 const { aplicaDerechoFijo2026 } = require('../../config/reg2026382');
 const { buildAESExportXML } = require('./aesXmlBuilder');
@@ -238,6 +241,53 @@ async function submitH1(expedition, ctx = {}) {
   data.test = process.env.AEAT_ENVIRONMENT !== 'production';
   const soapXML = buildH1ImportXML(data);
   return _sendToAEAT(soapXML, '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.ImportacionCompletaV1SOAP');
+}
+
+/**
+ * Servicio con el que se presenta el H1 de un tenant: el que tenga configurado
+ * o, si no, el de la variable AEAT_H1_SERVICE. Mientras el expediente no
+ * recoja todos los datos que exige el CAU, por defecto sigue el anterior.
+ */
+function servicioH1(tenant) {
+  const elegido = tenant?.customsConfig?.h1Service || process.env.AEAT_H1_SERVICE;
+  return elegido === 'cau' ? 'cau' : 'precau';
+}
+
+/** Identificador unico de hasta 19 caracteres, sin blancos: sirve de LRN y de base del mensaje. */
+function _referenciaCau(ahora = new Date()) {
+  return `LUCI${ahora.toISOString().replace(/\D/g, '').slice(2, 17)}`;
+}
+
+/**
+ * Prepara el H1 CAU (mensaje CC415A) sin enviarlo: quien llama debe GUARDAR lo
+ * devuelto antes de enviar, para poder reenviar el mismo mensaje si la
+ * respuesta no llega.
+ *
+ * @returns {Promise<{ messageId: string, lrn: string, requestXML: string, preparedAt: Date }>}
+ * @throws ErrorValidacion (422) si faltan datos obligatorios
+ */
+async function prepararH1Cau(expedition, ctx = {}) {
+  const tenant = await _tenantDe(expedition, ctx);
+  const ahora = ctx.ahora || new Date();
+  const referencia = _referenciaCau(ahora);
+  const datos = expeditionToH1CauData(expedition, {
+    declarante: declarantePara(expedition, tenant),
+    // Rige el tipo de cambio del mes en que se presenta; la AEAT aplica el de la admision.
+    cambio: await cambioDelExpediente(expedition),
+    tenant,
+    mensajeId: `${referencia}${Math.floor(Math.random() * 9000 + 1000)}`,
+    // Un LRN nuevo en cada mensaje: la AEAT rechaza un LRN ya usado por el declarante.
+    lrn: referencia,
+    fecha: ahora,
+    test: process.env.AEAT_ENVIRONMENT !== 'production'
+  });
+  return { messageId: datos.mensaje.id, lrn: datos.declaracion.lrn, requestXML: buildH1CauXML(datos), preparedAt: ahora };
+}
+
+/** Envia un H1 CAU ya preparado y devuelve la respuesta interpretada. */
+async function enviarH1Cau(requestXML) {
+  const response = await aeatTransport.sendSoap(requestXML, ENDPOINT_CC415A);
+  return { ...interpretarRespuestaH1Cau(response.data), requestXML };
 }
 
 /**
@@ -728,6 +778,9 @@ async function submitENSCancellation(data) {
 }
 
 module.exports = {
+  servicioH1,
+  prepararH1Cau,
+  enviarH1Cau,
   consultarSumaria,
   submitH1,
   submitH7,

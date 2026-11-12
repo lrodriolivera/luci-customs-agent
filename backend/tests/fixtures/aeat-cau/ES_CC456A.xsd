@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema 
+       xmlns:xs="http://www.w3.org/2001/XMLSchema"
+       elementFormDefault="unqualified" 
+       attributeFormDefault="unqualified" 
+       version="40.80"
+
+    xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CC456A.xsd"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CC456A.xsd"
+    xmlns:td11="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes_D.xsd" 
+    xmlns:td1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes.xsd" >
+
+	<xs:import schemaLocation="ES_ctypes.xsd" 
+     namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes.xsd" >
+    </xs:import> 
+	<xs:import schemaLocation="ES_ctypes_D.xsd" 
+     namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes_D.xsd" >
+    </xs:import>        
+
+    <!--=================================================================================================================-->
+    <!--===== IE456: E_CCI_REJ                                                                                           -->
+    <!--===== CCI Rejection from SCO                                                                                     -->
+    <!--===== CCI Phase 1                                                                                                -->
+    <!--===== XSD version 40.80                                                                                          -->
+    <!--=================================================================================================================-->
+
+    <!--=================================================================================================================-->
+    <!--===== Root element                                                                                               -->
+    <!--=================================================================================================================-->
+    <xs:element name="CC456A" type="CC456ATypeD"/>
+    <!--=================================================================================================================-->
+    <!--===== Root element Content                                                                                       -->
+    <!--=================================================================================================================-->
+    <xs:complexType name="CC456ATypeD">
+        <xs:sequence>
+            <xs:element name="ImportOperation" minOccurs="1" maxOccurs="1" type="td1:MCciOperationType18">
+            </xs:element>
+            <xs:element name="CustomsOfficeOfImport" minOccurs="1" maxOccurs="1" type="td1:MScoType">
+            </xs:element>
+            <xs:element name="Declarant" minOccurs="1" maxOccurs="1" type="td11:DeclarantTypeD_01">
+            </xs:element>
+            <xs:element name="Representative" minOccurs="0" maxOccurs="1" type="td11:RepresentativeTypeD_01">
+            </xs:element>
+            <xs:element name="FunctionalError" minOccurs="1" maxOccurs="999" type="td1:MFunctionalErrorType01">
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
+
