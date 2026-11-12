@@ -34,6 +34,7 @@ import H1Preview from './H1Preview'
 import GroupageCard, { isMaritime } from './GroupageCard'
 import RepresentationCard from './RepresentationCard'
 import H1DataCard from './H1DataCard'
+import { infoCanal } from '../../utils/canalAeat'
 import DocumentUploader from './DocumentUploader'
 import DocumentReader from './DocumentReader'
 
@@ -767,8 +768,13 @@ export default function ExpeditionDetail() {
         toast.success(t('expeditions.greenChannelToast', { mrn: resultData.mrn }))
       } else if (resultData.channel === 'orange') {
         toast(t('expeditions.orangeChannelToast'), { icon: '🟠' })
-      } else {
+      } else if (resultData.channel === 'red') {
         toast(t('expeditions.redChannelToast'), { icon: '🔴' })
+      } else if (resultData.channel === 'yellow') {
+        toast(t('expeditions.yellowChannelToast'), { icon: '🟡' })
+      } else {
+        // Sin circuito asignado no se supone ninguno.
+        toast(t('expeditions.noChannelToast'))
       }
     } catch (error) {
       console.error('AEAT submission error:', error)
@@ -908,7 +914,10 @@ export default function ExpeditionDetail() {
           {canEditGoods && <RepresentationCard expedition={expedition} onSaved={setExpedition} />}
 
           {/* Datos que exige el H1 adaptado al CAU y lo que falta para presentarlo */}
-          {canEditGoods && expedition.operationType !== 'export' && <H1DataCard expedition={expedition} />}
+          {/* Tras presentar ya no se editan los datos, pero sigue haciendo falta consultar el estado en la AEAT. */}
+          {(canEditGoods || expedition.declaration?.mrn) && expedition.operationType !== 'export' && (
+            <H1DataCard expedition={expedition} soloEstado={!canEditGoods} />
+          )}
 
           {(isMaritime(expedition) || expedition.transport?.loadType) && canEditGoods && (
             <GroupageCard
@@ -1262,25 +1271,22 @@ export default function ExpeditionDetail() {
 
                 <div>
                   <p className="text-gray-500">{t('expeditions.inspectionChannel')}</p>
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${
-                    expedition.declaration?.channel === 'green' ? 'bg-green-200 text-green-800' :
-                    expedition.declaration?.channel === 'orange' ? 'bg-orange-200 text-orange-800' :
-                    'bg-red-200 text-red-800'
-                  }`}>
-                    {expedition.declaration?.channel === 'green' ? t('expeditions.greenChannelFull') :
-                     expedition.declaration?.channel === 'orange' ? t('expeditions.orangeChannelFull') :
-                     t('expeditions.redChannelFull')}
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${infoCanal(expedition.declaration?.channel).clase}`}>
+                    {t(infoCanal(expedition.declaration?.channel).etiqueta)}
                   </span>
                 </div>
 
                 <div>
                   <p className="text-gray-500">{t('common.status')}</p>
-                  <p className="font-medium">
-                    {expedition.declaration?.channel === 'green' ? t('expeditions.releaseAuthorized') :
-                     expedition.declaration?.channel === 'orange' ? t('expeditions.pendingDocReview') :
-                     t('expeditions.pendingPhysicalInspection')}
-                  </p>
+                  <p className="font-medium">{t(infoCanal(expedition.declaration?.channel).estado)}</p>
                 </div>
+
+                {expedition.declaration?.aeatResponse?.liquidacion?.totalAPagar != null && (
+                  <div>
+                    <p className="text-gray-500">{t('expeditions.aeatTotalAssessed')}</p>
+                    <p className="font-medium">{formatearImporte(expedition.declaration.aeatResponse.liquidacion.totalAPagar, 'EUR')}</p>
+                  </div>
+                )}
 
                 {expedition.declaration?.levanteDate && (
                   <div>

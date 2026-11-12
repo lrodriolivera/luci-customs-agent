@@ -107,4 +107,13 @@ describe('<H1DataCard />', () => {
 
     expect(screen.queryByRole('button', { name: 'Consultar estado en la AEAT' })).not.toBeInTheDocument()
   })
+
+  test('con la declaración ya presentada solo ofrece la consulta de estado', async () => {
+    getH1Requirements.mockResolvedValue(respuesta())
+    render(<H1DataCard soloEstado expedition={{ _id: 'e1', declaration: { mrn: '26ES002801I01BMNR0', aeatResponse: { servicio: 'CC415AV1' } } }} />)
+
+    expect(await screen.findByRole('button', { name: 'Consultar estado en la AEAT' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Faltan datos para presentar el H1:')).not.toBeInTheDocument()
+  })
 })
