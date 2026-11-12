@@ -10,6 +10,7 @@ const { ensureSameTenant, filtroTenantOPlataforma } = require('../utils/tenantGu
 const { escapeRegex } = require('../utils/escapeRegex');
 const { tipoOficial, aEuros } = require('../services/divisas/tiposCambioOficiales');
 const { controlesPara } = require('../services/taric/controles/controlesOficiales');
+const { estadoDiario } = require('../services/taric/diario/sincronizacionDiaria');
 /**
  * Sugerir codigo TARIC basado en descripcion
  * POST /api/classification/suggest
@@ -1464,6 +1465,8 @@ const getTaricSyncStatus = async (req, res) => {
         automatica: process.env.NODE_ENV === 'production' && process.env.TARIC_SYNC_AUTO !== 'false',
         ultimaCorrecta: ultimaBuena ? { fecha: ultimaBuena.startedAt, fuente: ultimaBuena.fuente, aplicado: ultimaBuena.aplicado } : null,
         codigosActivos: await TaricCode.countDocuments({ isActive: true }),
+        // Publicaciones diarias del TARIC: ultima leida y cambios que aun no estan en el catalogo.
+        diario: await estadoDiario({ TaricDailyPublication: require('../models/TaricDailyPublication') }),
         ejecuciones
       }
     });

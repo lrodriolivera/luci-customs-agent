@@ -33,6 +33,25 @@ async function cargarControles() {
   }
 }
 
+/**
+ * Publicaciones diarias del TARIC: se leen y se registran las nuevas (no toca
+ * el catalogo). Solo con TARIC_DIARIO_APLICAR=true se actualizan ademas los
+ * derechos de terceros paises que ya estan en vigor. Un fallo aqui no afecta a
+ * la sincronizacion del catalogo.
+ */
+async function leerPublicacionesDiarias(ahora = new Date()) {
+  try {
+    const diario = require('../services/taric/diario/sincronizacionDiaria');
+    const modelos = { TaricCode: require('../models/TaricCode'), TaricDailyPublication: require('../models/TaricDailyPublication') };
+    const leidas = await diario.registrarPublicacionesNuevas({ ...modelos, ahora });
+    const aplicado = process.env.TARIC_DIARIO_APLICAR === 'true' ? await diario.aplicarPendientes({ ...modelos, ahora }) : null;
+    return { leidas: leidas.nuevas.length, aplicado };
+  } catch (error) {
+    logger.error(`[TARIC] No se pudieron leer las publicaciones diarias: ${error.message}`);
+    return null;
+  }
+}
+
 async function comprobar({ ahora = new Date() } = {}) {
   if (enMarcha) return null;
   const mongoose = require('mongoose');
@@ -47,6 +66,7 @@ async function comprobar({ ahora = new Date() } = {}) {
     if (!tocaSincronizar(ahora, ultimo?.startedAt)) return null;
     const resultado = await sincronizarYRegistrar({ TaricCode, TaricSyncRun, trigger: 'automatica', ahora });
     await cargarControles();
+    await leerPublicacionesDiarias(ahora);
     return resultado;
   } catch (error) {
     logger.error(`[TARIC] El comprobador de sincronizacion fallo: ${error.message}`);
@@ -73,4 +93,4 @@ function stop() {
   temporizador = null;
 }
 
-module.exports = { start, stop, comprobar, cargarControles, INTERVALO_MS };
+module.exports = { start, stop, comprobar, cargarControles, leerPublicacionesDiarias, INTERVALO_MS };
