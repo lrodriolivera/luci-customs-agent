@@ -3,6 +3,7 @@ import toast from 'react-hot-toast'
 import { declarationsAPI } from '../../services/api'
 import { formatearImporte } from '../../utils/importe'
 import { MONEDAS_ALTA } from '../../utils/prerrellenoAlta'
+import LiquidacionAeat from './LiquidacionAeat'
 
 const CIRCUITOS = { V: 'Verde', A: 'Amarillo (pendiente de certificados)', N: 'Naranja (revisión documental)', R: 'Rojo (reconocimiento físico)' }
 /** Texto de la guía de la AEAT con su código; si el código no está en la guía, solo el código. */
@@ -289,6 +290,8 @@ export default function H1DataCard({ expedition, soloEstado = false }) {
               )}
             </dl>
           )}
+          {/* La última consulta manda; si no se ha consultado, lo que respondió la AEAT al presentar. */}
+          <LiquidacionAeat datos={consulta?.liquidacionAeat || estado?.liquidacionAeat || null} />
           {consulta?.documentosSolicitados?.length > 0 && (
             <div className="mt-3 text-sm">
               <p className="font-medium">Documentos que pide la aduana:</p>

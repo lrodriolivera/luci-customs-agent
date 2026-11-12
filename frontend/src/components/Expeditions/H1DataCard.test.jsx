@@ -220,6 +220,63 @@ describe('<H1DataCard />', () => {
     expect(cancelH1).not.toHaveBeenCalled()
   })
 
+  const comparacion = (cuadra, a00Aeat) => ({
+    cuadra, totalLuci: 3534.8, totalAeat: 3534.8 + (a00Aeat - 1194.19), diferencia: Math.round((a00Aeat - 1194.19) * 100) / 100,
+    partidas: [{ numero: 1, tributos: [
+      { tipo: 'A00', luci: { base: 9951.55, cuota: 1194.19 }, aeat: { base: 9951.55, cuota: a00Aeat }, diferencia: Math.round((a00Aeat - 1194.19) * 100) / 100 },
+      { tipo: 'B00', luci: { base: 11145.74, cuota: 2340.61 }, aeat: { base: 11145.74, cuota: 2340.61 }, diferencia: 0 }
+    ] }]
+  })
+  const CERT = { requeridos: 'S', partidas: [{ numero: 1, organismos: [
+    { organismo: 'SIF01', nombre: 'SOIVRE Mº Comercio', medidas: [{ medida: 'COM', documentos: ['1310', '1314'] }] },
+    { organismo: 'SIF11', nombre: 'SOIVRE PUE', medidas: [{ medida: 'COM', documentos: ['1235'] }] }
+  ] }] }
+
+  test('muestra la liquidación de la AEAT junto a la de LUCI y dice que cuadra', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [], anulacion: { presentada: true, anulable: false },
+      liquidacionAeat: { fuente: 'presentacion', comparacion: comparacion(true, 1194.19), certificados: CERT } }))
+    render(<H1DataCard expedition={presentada} soloEstado />)
+
+    const tabla = await screen.findByRole('table', { name: 'Liquidación de LUCI frente a la de la AEAT' })
+    expect(tabla).toHaveTextContent('Arancel')
+    expect(tabla).toHaveTextContent('IVA')
+    expect(tabla).toHaveTextContent('1.194,19')
+    expect(screen.getByText('La liquidación de la AEAT coincide al céntimo con la de LUCI.')).toBeInTheDocument()
+  })
+
+  test('señala la diferencia cuando no cuadra', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [], anulacion: { presentada: true, anulable: false },
+      liquidacionAeat: { fuente: 'consulta', comparacion: comparacion(false, 1200), certificados: null } }))
+    render(<H1DataCard expedition={presentada} soloEstado />)
+
+    expect(await screen.findByText(/La AEAT liquida 5,81 EUR más que LUCI/)).toBeInTheDocument()
+    // En la fila del arancel y en el total.
+    expect(screen.getAllByText('+5,81')).toHaveLength(2)
+  })
+
+  test('lista los certificados que exige la AEAT por partida y organismo', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [], anulacion: { presentada: true, anulable: false },
+      liquidacionAeat: { fuente: 'presentacion', comparacion: null, certificados: CERT } }))
+    render(<H1DataCard expedition={presentada} soloEstado />)
+
+    expect(await screen.findByText('Certificados que exige la AEAT')).toBeInTheDocument()
+    expect(screen.getByText(/Partida 1 · SOIVRE Mº Comercio \(SIF01\): 1310, 1314/)).toBeInTheDocument()
+    expect(screen.getByText(/Partida 1 · SOIVRE PUE \(SIF11\): 1235/)).toBeInTheDocument()
+  })
+
+  test('la consulta de estado actualiza la comparación', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [], anulacion: { presentada: true, anulable: false },
+      liquidacionAeat: { fuente: 'presentacion', comparacion: comparacion(true, 1194.19), certificados: null } }))
+    getH1Status.mockResolvedValue({ data: { data: { estado: { operacionRegistrada: '64', textos: {} },
+      liquidacionAeat: { fuente: 'consulta', comparacion: comparacion(false, 1200), certificados: null } } } })
+    render(<H1DataCard expedition={presentada} soloEstado />)
+    await screen.findByText('La liquidación de la AEAT coincide al céntimo con la de LUCI.')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Consultar estado en la AEAT' }))
+
+    expect(await screen.findByText(/La AEAT liquida 5,81 EUR más que LUCI/)).toBeInTheDocument()
+  })
+
   test('sin MRN, o presentada por el DUA anterior, no ofrece la consulta', async () => {
     getH1Requirements.mockResolvedValue(respuesta())
     render(<H1DataCard expedition={{ _id: 'e1', declaration: { mrn: 'X', aeatResponse: {} } }} />)
