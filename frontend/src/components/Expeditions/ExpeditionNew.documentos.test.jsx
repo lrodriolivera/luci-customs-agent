@@ -15,7 +15,9 @@ vi.mock('react-router-dom', async (importOriginal) => ({ ...(await importOrigina
 vi.mock('../../services/api', () => ({
   expeditionsAPI: { create: vi.fn() },
   classificationAPI: { classify: vi.fn() },
-  documentsAPI: { readDraft: vi.fn(), removeDraft: vi.fn() }
+  documentsAPI: { readDraft: vi.fn(), removeDraft: vi.fn() },
+  // La factura de prueba va en dólares: el alta consulta el tipo oficial.
+  calculationsAPI: { getExchangeRate: vi.fn(() => Promise.resolve({ data: { data: { divisa: 'USD', tipo: 1.1234, mes: '2026-11', fechaPublicacion: '2026-10-21' } } })) }
 }))
 
 const vacia = {

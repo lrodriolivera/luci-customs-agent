@@ -8,6 +8,7 @@ const { hasSeasonalTariff, getSeasonalTariff } = require('../data/seasonalTariff
 const { ensureSameTenant, filtroTenantOPlataforma } = require('../utils/tenantGuard');
 
 const { escapeRegex } = require('../utils/escapeRegex');
+const { tipoOficial, aEuros } = require('../services/divisas/tiposCambioOficiales');
 /**
  * Sugerir codigo TARIC basado en descripcion
  * POST /api/classification/suggest
@@ -557,6 +558,23 @@ const validateClassification = async (req, res) => {
  * Aplicar clasificacion a item del expediente
  * POST /api/classification/apply
  */
+/**
+ * Valor de factura de una partida en euros. Si la divisa no tiene tipo oficial
+ * o el BCE no responde, devuelve 0: es preferible no dar importe a darlo mal.
+ */
+async function valorEnEurosDe(good) {
+  const valor = good.invoiceValue || 0;
+  const divisa = String(good.currency || 'EUR').toUpperCase();
+  if (divisa === 'EUR' || !valor) return valor;
+  try {
+    const cambio = await tipoOficial(divisa);
+    return cambio ? aEuros(valor, cambio.tipo) : 0;
+  } catch (error) {
+    logger.warn(`[Divisas] Sin tipo oficial para ${divisa}: ${error.message}`);
+    return 0;
+  }
+}
+
 const applyClassification = async (req, res) => {
   try {
     const { expeditionId, itemIndex, taricCode, hsCode } = req.body;
@@ -584,7 +602,9 @@ const applyClassification = async (req, res) => {
       expedition.goods[itemIndex].vatRate = taricInfo.vat?.applicable || 21;
 
       // Calcular montos si hay valor
-      const value = expedition.goods[itemIndex].invoiceValue || 0;
+      // Los tributos se liquidan en euros: la factura en otra divisa se
+      // convierte con el tipo oficial del mes (antes se trataba como euros).
+      const value = await valorEnEurosDe(expedition.goods[itemIndex]);
       expedition.goods[itemIndex].dutyAmount = value * (expedition.goods[itemIndex].dutyRate / 100);
       expedition.goods[itemIndex].vatAmount = (value + expedition.goods[itemIndex].dutyAmount) *
         (expedition.goods[itemIndex].vatRate / 100);

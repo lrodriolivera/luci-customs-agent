@@ -8,6 +8,7 @@
 const { xml, joinXml } = require('./xmlTemplate');
 const { codigoUnidadDua } = require('./unidadesSuplementarias');
 const { ErrorValidacion, exigirEori, formaRepresentacionDe } = require('../forms/identificadorAduanero');
+const { cambioObligatorio, aEuros } = require('../divisas/cambioDelExpediente');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/adip/ws/ImportacionCompletaV1Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 
@@ -106,12 +107,15 @@ function buildH1ImportXML(data) {
   // Construir XML de partidas
   const partidasXML = partidas.map((p, i) => {
     const tributos = [];
+    // Los tributos se liquidan en euros: la base es el valor ya convertido,
+    // aunque la factura (casilla 42) vaya en su divisa.
+    const baseEuros = p.valorEuros ?? p.valorFactura ?? 0;
     // A00 - Derechos arancelarios
     if (p.arancelTipo != null) {
       tributos.push(xml`
         <C47TributoDeclarado>
           <C47TributoClase>A00</C47TributoClase>
-          <C47TributoBaseImponible>${Number(p.valorFactura || 0).toFixed(3)}</C47TributoBaseImponible>
+          <C47TributoBaseImponible>${Number(baseEuros).toFixed(3)}</C47TributoBaseImponible>
           <C47TributoTipoImpositivo>${Number(p.arancelTipo || 0).toFixed(6)}</C47TributoTipoImpositivo>
           <C47TributoIndicadorMaxMinNor>NO</C47TributoIndicadorMaxMinNor>
           <C47TributoUnidadFiscal>%</C47TributoUnidadFiscal>
@@ -120,7 +124,7 @@ function buildH1ImportXML(data) {
     }
     // B00 - IVA
     if (p.ivaTipo != null) {
-      const baseIVA = (p.valorFactura || 0) + (p.arancelImporte || 0);
+      const baseIVA = baseEuros + (p.arancelImporte || 0);
       tributos.push(xml`
         <C47TributoDeclarado>
           <C47TributoClase>B00</C47TributoClase>
@@ -168,7 +172,7 @@ function buildH1ImportXML(data) {
         <C44Tipo>${d.tipo}</C44Tipo>
         <C44Referencia>${d.referencia}</C44Referencia>
       </C44DocumentosYCertificados>`), '\n      ')}
-      <C46ValorEstadistico>${Number(p.valorEstadistico || p.valorFactura || 0).toFixed(2)}</C46ValorEstadistico>${joinXml(tributos)}
+      <C46ValorEstadistico>${Number(p.valorEstadistico || baseEuros).toFixed(2)}</C46ValorEstadistico>${joinXml(tributos)}
       <C47ImporteTotal>${Number(importeTotal).toFixed(2)}</C47ImporteTotal>
     </Partida>`;
   });
@@ -241,7 +245,7 @@ function buildH1ImportXML(data) {
 /**
  * Convertir datos de expedicion LUCI al formato AEAT
  */
-function expeditionToH1Data(expedition, { declarante } = {}) {
+function expeditionToH1Data(expedition, { declarante, cambio } = {}) {
   const decl = expedition.declaration || {};
   const client = expedition.client || {};
   const transport = expedition.transport || {};
@@ -272,6 +276,34 @@ function expeditionToH1Data(expedition, { declarante } = {}) {
   const modeMap = { air: '4', sea: '1', road: '3', rail: '2', maritime: '1' };
   const documentoCargo = documentoCargoDe(expedition);
   const totalValue = goods.reduce((s, g) => s + (g.invoiceValue || g.value || 0), 0);
+
+  // Divisa de la factura (casilla 22) y tipo oficial para pasarla a euros.
+  // Antes la divisa salia siempre «EUR» y los importes sin convertir: una
+  // factura en dolares se declaraba y se liquidaba como si fueran euros.
+  const tipoCambio = cambioObligatorio(expedition, cambio);
+  const enDivisa = tipoCambio.tipo !== 1;
+  const partidasValoradas = goods.map((g) => {
+    const valor = g.invoiceValue || g.value || 0;
+    if (!enDivisa) {
+      return {
+        valorEuros: valor,
+        valorEstadistico: g.statisticalValue || valor,
+        arancelImporte: g.dutyAmount || 0,
+        ivaImporte: g.vatAmount || (valor * (g.vatRate || 21) / 100)
+      };
+    }
+    const valorEuros = aEuros(valor, tipoCambio.tipo);
+    // Un valor estadistico igual al de factura es el de factura sin convertir.
+    const estadisticoPropio = g.statisticalValue && g.statisticalValue !== valor;
+    const arancelImporte = Math.round(valorEuros * (g.dutyRate || 0)) / 100;
+    const ivaImporte = Math.round((valorEuros + arancelImporte) * (g.vatRate || 21)) / 100;
+    return {
+      valorEuros,
+      valorEstadistico: estadisticoPropio ? g.statisticalValue : valorEuros,
+      arancelImporte,
+      ivaImporte
+    };
+  });
 
   return {
     tipoOperacion: decl.mrn ? 'MODI' : 'DECL',
@@ -315,15 +347,19 @@ function expeditionToH1Data(expedition, { declarante } = {}) {
     // Transporte frontera
     identidadTransporteFrontera: expedition.transport?.vehicleId || 'ABC1234',
     paisTransporteFrontera: 'ES',
-    // Divisa
+    // Divisa de la factura e importe en esa divisa (casilla 22)
+    divisa: tipoCambio.divisa,
+    tipoCambio,
     importeFactura: totalValue,
     // Transporte
     modoTransporteFrontera: modeMap[expedition.transportMode] || '1',
     contenedores: transport.containerNumber ? '1' : '0',
     // Tributos
-    importeTotalTributos: calc.totalTaxes || goods.reduce((s, g) => s + ((g.invoiceValue || g.value || 0) * (g.vatRate || 21) / 100), 0),
+    importeTotalTributos: enDivisa
+      ? Math.round(partidasValoradas.reduce((s, p) => s + p.arancelImporte + p.ivaImporte, 0) * 100) / 100
+      : (calc.totalTaxes || goods.reduce((s, g) => s + ((g.invoiceValue || g.value || 0) * (g.vatRate || 21) / 100), 0)),
     // Partidas
-    partidas: goods.map(g => ({
+    partidas: goods.map((g, indice) => ({
       descripcion: g.description || '',
       taricCode: g.taricCode || g.tariffCode || g.hsCode || '',
       paisOrigen: g.countryOfOrigin || g.originCountry || g.origin || '',
@@ -345,7 +381,8 @@ function expeditionToH1Data(expedition, { declarante } = {}) {
       marcas: g.packages?.marks || g.shippingMarks || 'S/M',
       documentoCargo,
       valorFactura: g.invoiceValue || g.value || 0,
-      valorEstadistico: g.statisticalValue || g.invoiceValue || g.value || 0,
+      valorEuros: partidasValoradas[indice].valorEuros,
+      valorEstadistico: partidasValoradas[indice].valorEstadistico,
       preferencia: decl.preference || '100',
       regimen: decl.regime || '40',
       regimenPrecedente: '00',
@@ -360,9 +397,9 @@ function expeditionToH1Data(expedition, { declarante } = {}) {
         { tipo: 'N730', referencia: 'CMR-' + (expedition.expeditionId || '001') },
       ],
       arancelTipo: g.dutyRate || 0,
-      arancelImporte: g.dutyAmount || 0,
+      arancelImporte: partidasValoradas[indice].arancelImporte,
       ivaTipo: g.vatRate || 21,
-      ivaImporte: g.vatAmount || ((g.invoiceValue || g.value || 0) * (g.vatRate || 21) / 100)
+      ivaImporte: partidasValoradas[indice].ivaImporte
     }))
   };
 }

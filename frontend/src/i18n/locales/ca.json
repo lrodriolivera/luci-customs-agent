@@ -549,6 +549,9 @@
     },
     "descriptionTooShort": "La descripció ha de tenir almenys {{min}} caràcters per classificar-la",
     "valueWillBeSaved": "Es desarà com a {{amount}}",
+    "officialRate": "En euros: {{eur}}. Tipus oficial de la duana per a {{month}}: 1 EUR = {{rate}} {{currency}} (BCE, {{date}})",
+    "officialRateMissing": "{{currency}} no té tipus de canvi oficial del BCE: declara l'import en euros",
+    "officialRateError": "No s'ha pogut consultar el tipus de canvi oficial de {{currency}}",
     "taricNotVerified": "No és al catàleg TARIC",
     "valueNotValid": "Import no vàlid. Fes servir punt per als milers i coma per als decimals: 184.800,50",
     "timelineAction": {

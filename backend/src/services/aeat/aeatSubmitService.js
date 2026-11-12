@@ -8,6 +8,7 @@ const logger = require('../../config/logger');
 const aeatRealService = require('./aeatRealService');
 const aeatTransport = require('./aeatTransport');
 const { buildH1ImportXML, expeditionToH1Data } = require('./h1XmlBuilder');
+const { cambioDelExpediente } = require('../divisas/cambioDelExpediente');
 const { buildH7ImportXML, buildAltaH7V1XML } = require('./h7XmlBuilder');
 const { aplicaDerechoFijo2026 } = require('../../config/reg2026382');
 const { buildAESExportXML } = require('./aesXmlBuilder');
@@ -231,7 +232,9 @@ async function consultarSumaria(expedition, referencia, ctx = {}) {
  */
 async function submitH1(expedition, ctx = {}) {
   const tenant = await _tenantDe(expedition, ctx);
-  const data = expeditionToH1Data(expedition, { declarante: declarantePara(expedition, tenant) });
+  // El tipo de cambio que rige es el del mes en que se presenta la declaracion.
+  const cambio = await cambioDelExpediente(expedition);
+  const data = expeditionToH1Data(expedition, { declarante: declarantePara(expedition, tenant), cambio });
   data.test = process.env.AEAT_ENVIRONMENT !== 'production';
   const soapXML = buildH1ImportXML(data);
   return _sendToAEAT(soapXML, '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.ImportacionCompletaV1SOAP');

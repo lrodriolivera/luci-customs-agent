@@ -8,6 +8,7 @@ const aesGenerator = require('../services/forms/aesGenerator');
 const h7Generator = require('../services/forms/h7Generator');
 const Tenant = require('../models/Tenant');
 const { ErrorValidacion, exigirIdentificacion } = require('../services/forms/identificadorAduanero');
+const { cambioDelExpediente } = require('../services/divisas/cambioDelExpediente');
 const { verificarSumariaConAeat, esGrupaje, CODIGO_ERROR: CODIGO_GRUPAJE } = require('../services/forms/grupajeLcl');
 
 /** Sin grupaje y sin sumaria registrada no hay nada que comprobar ni que consultar. */
@@ -140,7 +141,9 @@ const generateH1 = async (req, res) => {
     }
 
     // Generar estructura H1 completa
-    const h1Declaration = h1Generator.generate(expedition, h1Data, { tenant });
+    // Divisa de la factura y tipo oficial del mes (422 si la divisa no lo tiene).
+    const cambio = await cambioDelExpediente(expedition);
+    const h1Declaration = h1Generator.generate(expedition, h1Data, { tenant, cambio });
 
     // Actualizar expediente
     expedition.declaration = {
@@ -340,7 +343,7 @@ const updateDeclaration = async (req, res) => {
         const h1Declaration = h1Generator.generate(expedition, {
           ...expedition.declaration,
           ...updates
-        }, { tenant });
+        }, { tenant, cambio: await cambioDelExpediente(expedition) });
         expedition.declaration.xmlContent = h1Declaration.xml;
       } else if (expedition.declaration.type === 'AES') {
         const aesDeclaration = aesGenerator.generate(expedition, {
@@ -814,7 +817,7 @@ const generateH1Direct = async (req, res) => {
       regime,
       additionalProcedure,
       preference
-    }, { tenant });
+    }, { tenant, cambio: await cambioDelExpediente(expedition) });
 
     // Actualizar expediente
     expedition.declaration = {

@@ -299,3 +299,63 @@ describe('expeditionToH1Data: sin identificadores inventados (422)', () => {
     expect(JSON.stringify(d)).not.toMatch(/B22477020|STRIX AI|Calle Ejemplo|Zaragoza|strixai\.ai/);
   });
 });
+
+describe('expeditionToH1Data: factura en divisa', () => {
+  const USD = { divisa: 'USD', tipo: 1.1234, mes: '2026-11', fechaPublicacion: '2026-10-21', fuente: 'BCE' };
+  const enDolares = {
+    expeditionId: 'EXP-USD',
+    client: { taxId: 'B12345678', companyName: 'Importadora SL' },
+    goods: [
+      { description: 'Auriculares', taricCode: '8518300090', invoiceValue: 10000, currency: 'USD', dutyRate: 2, vatRate: 21, dutyAmount: 200, vatAmount: 2142 },
+      { description: 'Fundas', taricCode: '4202920000', invoiceValue: 2000, currency: 'USD', dutyRate: 0, vatRate: 21, statisticalValue: 2000 }
+    ]
+  };
+
+  test('declara la divisa de la factura y liquida los tributos en euros', () => {
+    const data = expeditionToH1Data(enDolares, { declarante: DECLARANTE, cambio: USD });
+
+    expect(data.divisa).toBe('USD');
+    expect(data.importeFactura).toBe(12000);
+    const [p1, p2] = data.partidas;
+    // 10.000 USD / 1,1234 = 8.901,55 EUR
+    expect(p1.valorFactura).toBe(10000);
+    expect(p1.valorEuros).toBe(8901.55);
+    expect(p1.valorEstadistico).toBe(8901.55);
+    expect(p1.arancelImporte).toBe(178.03);
+    expect(p1.ivaImporte).toBe(1906.71);
+    // Un valor estadístico igual al de factura es el de factura sin convertir.
+    expect(p2.valorEuros).toBe(1780.31);
+    expect(p2.valorEstadistico).toBe(1780.31);
+    expect(data.importeTotalTributos).toBe(178.03 + 1906.71 + 373.87);
+  });
+
+  test('el XML lleva la divisa en la casilla 22 y las bases en euros', () => {
+    const xml = buildH1ImportXML(expeditionToH1Data(enDolares, { declarante: DECLARANTE, cambio: USD }));
+
+    expect(xml).toContain('<C221CodigoDivisa>USD</C221CodigoDivisa>');
+    expect(xml).toContain('<C222ImporteFactura>12000.000</C222ImporteFactura>');
+    expect(xml).toContain('<C42ValorFactura>10000.000</C42ValorFactura>');
+    expect(xml).toContain('<C46ValorEstadistico>8901.55</C46ValorEstadistico>');
+    expect(xml).toContain('<C47TributoBaseImponible>8901.550</C47TributoBaseImponible>');
+    expect(xml).toContain('<C47TributoBaseImponible>9079.580</C47TributoBaseImponible>');
+    expect(xml).not.toContain('<C47TributoBaseImponible>10000.000</C47TributoBaseImponible>');
+  });
+
+  test('sin tipo de cambio no construye un H1 en dólares (422)', () => {
+    expect(() => expeditionToH1Data(enDolares)).toThrow('USD');
+    expect(() => expeditionToH1Data(enDolares, { declarante: DECLARANTE, cambio: { divisa: 'EUR', tipo: 1 } })).toThrow('USD');
+  });
+
+  test('un expediente en euros sale igual que antes', () => {
+    const enEuros = { ...enDolares, goods: enDolares.goods.map((g) => ({ ...g, currency: 'EUR' })) };
+    const data = expeditionToH1Data(enEuros);
+
+    expect(data.divisa).toBe('EUR');
+    expect(data.partidas[0].valorEuros).toBe(10000);
+    expect(data.partidas[0].arancelImporte).toBe(200);
+    expect(data.partidas[0].ivaImporte).toBe(2142);
+    const xml = buildH1ImportXML(data);
+    expect(xml).toContain('<C221CodigoDivisa>EUR</C221CodigoDivisa>');
+    expect(xml).toContain('<C47TributoBaseImponible>10000.000</C47TributoBaseImponible>');
+  });
+});

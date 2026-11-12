@@ -549,6 +549,9 @@
     },
     "descriptionTooShort": "La description doit comporter au moins {{min}} caractères pour être classée",
     "valueWillBeSaved": "Sera enregistré comme {{amount}}",
+    "officialRate": "En euros : {{eur}}. Taux officiel de la douane pour {{month}} : 1 EUR = {{rate}} {{currency}} (BCE, {{date}})",
+    "officialRateMissing": "{{currency}} n'a pas de taux de change officiel de la BCE : déclarez le montant en euros",
+    "officialRateError": "Le taux de change officiel de {{currency}} n'a pas pu être consulté",
     "taricNotVerified": "Absent du catalogue TARIC",
     "valueNotValid": "Montant non valide. Utilisez le point pour les milliers et la virgule pour les décimales : 184.800,50",
     "timelineAction": {

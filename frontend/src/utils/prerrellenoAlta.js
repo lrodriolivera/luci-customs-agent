@@ -15,8 +15,10 @@
  */
 
 import { DEFAULT_PACKAGE_TYPE } from '../components/Expeditions/packageTypes'
+import { DIVISAS_OFICIALES } from './divisas'
 
-export const MONEDAS_ALTA = ['EUR', 'USD', 'GBP', 'CNY']
+// Las divisas con tipo de cambio oficial de la aduana (antes solo cuatro).
+export const MONEDAS_ALTA = DIVISAS_OFICIALES
 export const INCOTERMS = ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP']
 export const MODO_POR_DEFECTO = 'SEA'
 export const INCOTERM_POR_DEFECTO = 'CIF'

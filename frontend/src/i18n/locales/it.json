@@ -549,6 +549,9 @@
     },
     "descriptionTooShort": "La descrizione deve avere almeno {{min}} caratteri per essere classificata",
     "valueWillBeSaved": "Verrà salvato come {{amount}}",
+    "officialRate": "In euro: {{eur}}. Tasso ufficiale della dogana per {{month}}: 1 EUR = {{rate}} {{currency}} (BCE, {{date}})",
+    "officialRateMissing": "{{currency}} non ha un tasso di cambio ufficiale della BCE: dichiara l'importo in euro",
+    "officialRateError": "Non è stato possibile consultare il tasso di cambio ufficiale di {{currency}}",
     "taricNotVerified": "Non presente nel catalogo TARIC",
     "valueNotValid": "Importo non valido. Usa il punto per le migliaia e la virgola per i decimali: 184.800,50",
     "timelineAction": {

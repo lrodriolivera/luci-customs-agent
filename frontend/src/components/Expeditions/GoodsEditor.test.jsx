@@ -5,6 +5,10 @@ import GoodsEditor from './GoodsEditor'
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key) => key })
 }))
+// El campo de importe consulta el tipo oficial cuando la divisa no es el euro.
+vi.mock('../../services/api', () => ({
+  calculationsAPI: { getExchangeRate: vi.fn(() => new Promise(() => {})) }
+}))
 
 const item = {
   _id: 'g1',

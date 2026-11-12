@@ -549,6 +549,9 @@
     },
     "descriptionTooShort": "The description needs at least {{min}} characters to be classified",
     "valueWillBeSaved": "It will be saved as {{amount}}",
+    "officialRate": "In euros: {{eur}}. Official customs rate for {{month}}: 1 EUR = {{rate}} {{currency}} (ECB, {{date}})",
+    "officialRateMissing": "{{currency}} has no official ECB exchange rate: declare the amount in euros",
+    "officialRateError": "The official exchange rate for {{currency}} could not be retrieved",
     "taricNotVerified": "Not in the TARIC catalogue",
     "valueNotValid": "Invalid amount. Use a dot for thousands and a comma for decimals: 184.800,50",
     "timelineAction": {
