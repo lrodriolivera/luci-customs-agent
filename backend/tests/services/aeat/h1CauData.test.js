@@ -145,6 +145,67 @@ describe('H1 CAU: importes, divisa y documentos', () => {
   });
 });
 
+describe('H1 CAU: flete y seguro hasta la entrada en la UE (valor CIF)', () => {
+  const FOB = { incoterm: { code: 'FOB', place: 'Shanghai' }, transport: { ...expediente().transport, departurePort: 'Shanghai' } };
+  const gastos = { freight: { amount: 1123.4, currency: 'USD' }, insurance: { amount: 50, currency: 'EUR' } };
+
+  test('FOB: el flete y el seguro, en euros, van como ajuste AK y entran en el valor estadístico y en las bases', () => {
+    const d = datos(expediente({ ...FOB, costs: gastos }));
+    const [p] = d.envio.partidas;
+
+    // 10.000 USD / 1,1234 = 8.901,55 EUR; flete 1.123,40 USD = 1.000 EUR; seguro 50 EUR.
+    expect(p.valoracion).toEqual({ metodo: '1', ajustes: [{ codigo: 'AK', importe: 1050 }] });
+    expect(p.valorEstadistico).toBe(9951.55);
+    expect(p.tributos[0].bases[0]).toEqual({ tipoImpositivo: 12, importe: 9951.55, cuota: 1194.19 });
+    expect(p.tributos[1].bases[0]).toEqual({ tipoImpositivo: 21, importe: 11145.74, cuota: 2340.61 });
+    // El importe de factura sigue en su divisa y sin gastos.
+    expect(p.importeFactura).toBe(10000);
+  });
+
+  test('con varias partidas el ajuste se reparte por valor y suma exactamente el total', () => {
+    const goods = [
+      { ...expediente().goods[0], invoiceValue: 6000 },
+      { ...expediente().goods[0], invoiceValue: 4000 }
+    ];
+    const d = datos(expediente({ ...FOB, costs: gastos, goods }));
+    const ajustes = d.envio.partidas.map((p) => p.valoracion.ajustes[0].importe);
+
+    expect(ajustes).toEqual([630, 420]);
+  });
+
+  test('CIF: nada que sumar, sin ajustes', () => {
+    const [p] = datos(expediente({ costs: gastos })).envio.partidas;
+    expect(p.valoracion).toEqual({ metodo: '1', ajustes: [] });
+    expect(p.valorEstadistico).toBe(8901.55);
+  });
+
+  test('FOB sin flete ni seguro: no se presenta y dice qué falta', () => {
+    expect.assertions(2);
+    try { datos(expediente(FOB)); } catch (e) {
+      expect(e.faltan).toContain('flete hasta la entrada en la UE (el incoterm FOB no lo incluye; 0 si no hay)');
+      expect(e.faltan).toContain('seguro hasta la entrada en la UE (el incoterm FOB no lo incluye; 0 si no hay)');
+    }
+  });
+
+  test('flete en una divisa sin tipo recibido: lo pide en vez de tomarlo como euros', () => {
+    expect.assertions(1);
+    const costs = { freight: { amount: 500, currency: 'GBP' }, insurance: { amount: 0, currency: 'EUR' } };
+    try { datos(expediente({ ...FOB, costs })); } catch (e) {
+      expect(e.faltan).toContain('tipo de cambio oficial de GBP para el flete');
+    }
+  });
+
+  test('flete en otra divisa con su tipo oficial', () => {
+    const costs = { freight: { amount: 838.25, currency: 'GBP' }, insurance: { amount: 0, currency: 'EUR' } };
+    const [p] = datos(expediente({ ...FOB, costs }), { cambiosGastos: { GBP: { divisa: 'GBP', tipo: 0.83825 } } }).envio.partidas;
+    expect(p.valoracion.ajustes).toEqual([{ codigo: 'AK', importe: 1000 }]);
+  });
+
+  siHayXmllint('el XML con el ajuste valida contra el XSD oficial', () => {
+    expect(validar(datos(expediente({ ...FOB, costs: gastos })))).toBeNull();
+  });
+});
+
 describe('H1 CAU: datos que faltan', () => {
   test('dice de una vez todo lo que hay que completar, sin inventar nada', () => {
     expect.assertions(4);

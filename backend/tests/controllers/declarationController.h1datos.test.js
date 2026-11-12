@@ -66,7 +66,11 @@ describe('requisitos del H1', () => {
     expect(res.status).toBe(200);
     expect(res.body.data).toEqual({
       servicio: 'cau', listo: false, faltan: error.faltan,
-      datos: { invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE' }
+      datos: {
+        invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE',
+        incoterm: '', gastosASumar: null,
+        freightAmount: null, freightCurrency: 'EUR', insuranceAmount: null, insuranceCurrency: 'EUR'
+      }
     });
   });
 
@@ -98,7 +102,7 @@ describe('datos del H1 en el expediente', () => {
       .send({ invoiceNumber: ' FAC-2026-118 ', exporterPostalCode: ' 200000 ', vehicleNationality: 'pa', dispatchAuthorizationScope: 'global' });
 
     expect(res.status).toBe(200);
-    expect(res.body.data).toEqual({ invoiceNumber: 'FAC-2026-118', exporterPostalCode: '200000', vehicleNationality: 'PA', dispatchAuthorizationScope: 'global' });
+    expect(res.body.data).toMatchObject({ invoiceNumber: 'FAC-2026-118', exporterPostalCode: '200000', vehicleNationality: 'PA', dispatchAuthorizationScope: 'global' });
     expect(exp.exporter).toEqual({ postalCode: '200000' });
     expect(exp.transport).toEqual({ vehicleId: 'MSC AURORA', summaryDeclaration: { number: '28016000001' }, vehicleNationality: 'PA' });
     expect(exp.representative).toEqual({ representationType: 'indirect', dispatchAuthorizationScope: 'global' });
@@ -115,6 +119,48 @@ describe('datos del H1 en el expediente', () => {
     expect(res.status).toBe(400);
     expect(res.body.error).toContain('dos letras');
     expect(res.body.error).toContain('autorización de despacho');
+    expect(exp.save).not.toHaveBeenCalled();
+  });
+});
+
+describe('flete y seguro hasta la entrada en la UE', () => {
+  test('guarda importe y divisa de cada uno y dice qué hay que sumar según el incoterm', async () => {
+    const exp = expediente({ incoterm: { code: 'FOB', place: 'Shanghai' } });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).put('/api/declarations/e1/h1/datos')
+      .send({ freightAmount: '1123.40', freightCurrency: 'usd', insuranceAmount: 0, insuranceCurrency: 'EUR' });
+
+    expect(res.status).toBe(200);
+    expect(exp.costs).toEqual({ freight: { amount: 1123.4, currency: 'USD' }, insurance: { amount: 0, currency: 'EUR' } });
+    expect(res.body.data).toMatchObject({
+      incoterm: 'FOB', gastosASumar: { flete: true, seguro: true },
+      freightAmount: 1123.4, freightCurrency: 'USD', insuranceAmount: 0, insuranceCurrency: 'EUR'
+    });
+  });
+
+  test('vaciar el importe lo borra (no es lo mismo que 0)', async () => {
+    const exp = expediente({ costs: { freight: { amount: 500, currency: 'EUR' } } });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).put('/api/declarations/e1/h1/datos').send({ freightAmount: '' });
+
+    expect(res.status).toBe(200);
+    expect(exp.costs.freight).toEqual({ amount: null, currency: 'EUR' });
+    expect(res.body.data.freightAmount).toBeNull();
+  });
+
+  test('rechaza importes negativos o no numéricos y divisas mal escritas', async () => {
+    const exp = expediente();
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).put('/api/declarations/e1/h1/datos')
+      .send({ freightAmount: -5, insuranceAmount: 'mucho', freightCurrency: 'DOLAR' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('flete');
+    expect(res.body.error).toContain('seguro');
+    expect(res.body.error).toContain('divisa');
     expect(exp.save).not.toHaveBeenCalled();
   });
 });

@@ -96,3 +96,38 @@ describe('h1Generator: liquidación a partir de las partidas', () => {
     expect(data.dutyTaxFee.importDuty.payableAmount).toBe(500);
   });
 });
+
+describe('h1Generator: flete y seguro hasta la UE según el incoterm', () => {
+  const GBP = { divisa: 'GBP', tipo: 0.83825, mes: '2026-11', fuente: 'BCE' };
+  const conGastos = (incoterm) => ({
+    ...expediente('USD'),
+    incoterm: { code: incoterm, place: 'Shanghai' },
+    costs: { freight: { amount: 1123.4, currency: 'USD' }, insurance: { amount: 83.83, currency: 'GBP' } }
+  });
+
+  test('FOB: suma flete y seguro en euros, cada uno con su tipo, y muestra los importes en su divisa', () => {
+    const { data } = h1Generator.generate(conGastos('FOB'), {}, { tenant: TENANT, cambio: USD, cambiosGastos: { GBP } });
+
+    expect(data.valuation.additions.freightToEU).toBe(1000);
+    expect(data.valuation.additions.insuranceToEU).toBe(100.01);
+    expect(data.valuation.customsValue).toBeCloseTo(10001.56, 2);
+    expect(data.valuation.statisticalValue).toBeCloseTo(10001.56, 2);
+    expect(data.goodsShipment.transportCharges).toMatchObject({ freightAmount: 1123.4, freightCurrency: 'USD' });
+    expect(data.goodsShipment.insuranceCharges).toEqual({ insuranceAmount: 83.83, insuranceCurrency: 'GBP' });
+  });
+
+  test('CFR: solo el seguro; CIF: nada', () => {
+    const cfr = h1Generator.generate(conGastos('CFR'), {}, { tenant: TENANT, cambio: USD, cambiosGastos: { GBP } }).data;
+    expect(cfr.valuation.additions.freightToEU).toBe(0);
+    expect(cfr.valuation.customsValue).toBeCloseTo(9001.56, 2);
+
+    const cif = h1Generator.generate(conGastos('CIF'), {}, { tenant: TENANT, cambio: USD, cambiosGastos: { GBP } }).data;
+    expect(cif.valuation.customsValue).toBe(8901.55);
+  });
+
+  test('sin el tipo de la divisa del seguro la vista previa no lo toma como euros', () => {
+    const { data } = h1Generator.generate(conGastos('FOB'), {}, { tenant: TENANT, cambio: USD });
+    expect(data.valuation.additions.insuranceToEU).toBe(0);
+    expect(data.valuation.additions.freightToEU).toBe(1000);
+  });
+});

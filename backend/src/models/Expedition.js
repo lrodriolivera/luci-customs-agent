@@ -433,6 +433,15 @@ const ExpeditionSchema = new mongoose.Schema({
     place: String
   },
 
+  // Flete y seguro hasta la entrada en la UE, cada uno en su divisa. Se suman
+  // al valor en aduana cuando el incoterm no los incluye (EXW/FCA/FAS/FOB el
+  // flete y el seguro; CFR/CPT el seguro). `amount` vacio = no informado; 0 es
+  // un dato («no hubo»).
+  costs: {
+    freight: { amount: { type: Number, min: 0 }, currency: { type: String, uppercase: true, trim: true } },
+    insurance: { amount: { type: Number, min: 0 }, currency: { type: String, uppercase: true, trim: true } }
+  },
+
   // Documents
   documents: [DocumentSchema],
 

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { declarationsAPI } from '../../services/api'
 import { formatearImporte } from '../../utils/importe'
+import { MONEDAS_ALTA } from '../../utils/prerrellenoAlta'
 
 const CIRCUITOS = { V: 'Verde', A: 'Amarillo (pendiente de certificados)', N: 'Naranja (revisión documental)', R: 'Rojo (reconocimiento físico)' }
 /** Texto de la guía de la AEAT con su código; si el código no está en la guía, solo el código. */
@@ -10,6 +11,35 @@ const conCodigo = (texto, codigo) => (texto ? `${texto} (${codigo})` : codigo ||
 const fecha = (iso) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso || '')
   return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]}` : '—'
+}
+
+const CAMPOS = [
+  'invoiceNumber', 'exporterPostalCode', 'vehicleNationality', 'dispatchAuthorizationScope',
+  'freightAmount', 'freightCurrency', 'insuranceAmount', 'insuranceCurrency'
+]
+const comoTexto = (v) => (v === null || v === undefined ? '' : String(v))
+
+/** Qué dice el incoterm sobre el flete y el seguro hasta la entrada en la UE. */
+function explicacionGastos(incoterm, sumar) {
+  if (!sumar) return 'Sin un incoterm reconocido en el expediente: el flete y el seguro que escribas se suman al valor en aduana.'
+  if (sumar.flete && sumar.seguro) return `Con ${incoterm} el precio no incluye el flete ni el seguro hasta la entrada en la UE: se suman al valor en aduana. Escribe 0 si no hubo.`
+  if (sumar.seguro) return `Con ${incoterm} el precio incluye el flete, no el seguro: el seguro hasta la entrada en la UE se suma al valor en aduana. Escribe 0 si no hubo.`
+  return `Con ${incoterm} el precio ya incluye el flete y el seguro hasta la entrada en la UE: no se suma nada.`
+}
+
+/** Importe y divisa de un gasto (flete o seguro). */
+function CampoGasto({ id, etiqueta, nombreDivisa, importe, divisa, onImporte, onDivisa }) {
+  return (
+    <div>
+      <label className="label" htmlFor={id}>{etiqueta}</label>
+      <div className="flex gap-2">
+        <input id={id} className="input" type="number" min="0" step="0.01" inputMode="decimal" value={comoTexto(importe)} onChange={onImporte} />
+        <select aria-label={nombreDivisa} className="input w-28" value={divisa || 'EUR'} onChange={onDivisa}>
+          {MONEDAS_ALTA.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+      </div>
+    </div>
+  )
 }
 
 const AMBITOS = [
@@ -31,6 +61,9 @@ const AMBITOS = [
 export default function H1DataCard({ expedition, soloEstado = false }) {
   const [estado, setEstado] = useState(null)
   const [form, setForm] = useState({ invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE' })
+  const sumar = estado?.datos?.gastosASumar
+  const pideFlete = !sumar || sumar.flete
+  const pideSeguro = !sumar || sumar.seguro
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
 
@@ -53,7 +86,10 @@ export default function H1DataCard({ expedition, soloEstado = false }) {
     e.preventDefault()
     setGuardando(true)
     try {
-      await declarationsAPI.updateH1Data(expedition._id, form)
+      // Solo los campos editables; los gastos que el incoterm no pide no se tocan.
+      const omitir = new Set([...(pideFlete ? [] : ['freightAmount', 'freightCurrency']), ...(pideSeguro ? [] : ['insuranceAmount', 'insuranceCurrency'])])
+      const datos = Object.fromEntries(CAMPOS.filter((c) => form[c] !== undefined && !omitir.has(c)).map((c) => [c, form[c] === null ? '' : form[c]]))
+      await declarationsAPI.updateH1Data(expedition._id, datos)
       toast.success('Datos del H1 guardados')
       await cargar()
     } catch (err) {
@@ -78,8 +114,7 @@ export default function H1DataCard({ expedition, soloEstado = false }) {
     }
   }
 
-  const sinCambios = estado && ['invoiceNumber', 'exporterPostalCode', 'vehicleNationality', 'dispatchAuthorizationScope']
-    .every((campo) => (form[campo] || '') === (estado.datos[campo] || ''))
+  const sinCambios = estado && CAMPOS.every((campo) => comoTexto(form[campo]) === comoTexto(estado.datos[campo]))
 
   return (
     <div className="card">
@@ -113,6 +148,24 @@ export default function H1DataCard({ expedition, soloEstado = false }) {
           </select>
           <p className="mt-1 text-xs text-gray-500">No se usa en autodespacho. Con autorización global no se declara ningún documento.</p>
         </div>
+        <fieldset className="sm:col-span-2 grid gap-3 sm:grid-cols-2 rounded-lg border border-gray-200 p-3">
+          <legend className="px-1 text-sm font-medium">Flete y seguro hasta la entrada en la UE</legend>
+          <p className="sm:col-span-2 text-xs text-gray-600">{explicacionGastos(estado?.datos?.incoterm, sumar)}</p>
+          {pideFlete && (
+            <CampoGasto
+              id="h1-freight" etiqueta="Flete hasta la entrada en la UE" nombreDivisa="Divisa del flete"
+              importe={form.freightAmount} divisa={form.freightCurrency}
+              onImporte={cambiar('freightAmount')} onDivisa={cambiar('freightCurrency')}
+            />
+          )}
+          {pideSeguro && (
+            <CampoGasto
+              id="h1-insurance" etiqueta="Seguro hasta la entrada en la UE" nombreDivisa="Divisa del seguro"
+              importe={form.insuranceAmount} divisa={form.insuranceCurrency}
+              onImporte={cambiar('insuranceAmount')} onDivisa={cambiar('insuranceCurrency')}
+            />
+          )}
+        </fieldset>
         <div className="sm:col-span-2 flex justify-end">
           <button type="submit" className="btn-primary" disabled={guardando || !estado || sinCambios}>
             {guardando ? 'Guardando...' : 'Guardar'}

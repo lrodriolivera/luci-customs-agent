@@ -53,6 +53,49 @@ describe('<H1DataCard />', () => {
     expect(await screen.findByText('El expediente tiene todos los datos que exige el H1.')).toBeInTheDocument()
   })
 
+  const conIncoterm = (incoterm, gastosASumar, extra = {}) => respuesta({ datos: {
+    invoiceNumber: 'FAC-1', exporterPostalCode: '200000', vehicleNationality: 'PA', dispatchAuthorizationScope: 'OSRE',
+    incoterm, gastosASumar, freightAmount: null, freightCurrency: 'EUR', insuranceAmount: null, insuranceCurrency: 'EUR', ...extra
+  } })
+
+  test('FOB: pide flete y seguro con su divisa y los guarda', async () => {
+    getH1Requirements.mockResolvedValue(conIncoterm('FOB', { flete: true, seguro: true }))
+    updateH1Data.mockResolvedValue({ data: { success: true } })
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+
+    expect(screen.getByText(/Con FOB el precio no incluye el flete ni el seguro/)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Flete hasta la entrada en la UE'), { target: { value: '1123.40' } })
+    fireEvent.change(screen.getByLabelText('Divisa del flete'), { target: { value: 'USD' } })
+    fireEvent.change(screen.getByLabelText('Seguro hasta la entrada en la UE'), { target: { value: '0' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(updateH1Data).toHaveBeenCalledWith('e1', {
+      invoiceNumber: 'FAC-1', exporterPostalCode: '200000', vehicleNationality: 'PA', dispatchAuthorizationScope: 'OSRE',
+      freightAmount: '1123.40', freightCurrency: 'USD', insuranceAmount: '0', insuranceCurrency: 'EUR'
+    }))
+  })
+
+  test('CFR: solo pide el seguro', async () => {
+    getH1Requirements.mockResolvedValue(conIncoterm('CFR', { flete: false, seguro: true }))
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+
+    expect(screen.queryByLabelText('Flete hasta la entrada en la UE')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Seguro hasta la entrada en la UE')).toBeInTheDocument()
+    expect(screen.getByText(/Con CFR el precio incluye el flete, no el seguro/)).toBeInTheDocument()
+  })
+
+  test('CIF: no pide nada porque el precio ya los incluye', async () => {
+    getH1Requirements.mockResolvedValue(conIncoterm('CIF', { flete: false, seguro: false }))
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+
+    expect(screen.queryByLabelText('Flete hasta la entrada en la UE')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Seguro hasta la entrada en la UE')).not.toBeInTheDocument()
+    expect(screen.getByText(/Con CIF el precio ya incluye el flete y el seguro/)).toBeInTheDocument()
+  })
+
   test('sin cambios no deja guardar', async () => {
     getH1Requirements.mockResolvedValue(respuesta())
     render(<H1DataCard expedition={{ _id: 'e1' }} />)

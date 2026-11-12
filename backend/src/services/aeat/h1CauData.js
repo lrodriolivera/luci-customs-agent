@@ -11,6 +11,7 @@
  */
 const { ErrorValidacion, eoriDe, formaRepresentacionDe } = require('../forms/identificadorAduanero');
 const { cambioObligatorio, aEuros } = require('../divisas/cambioDelExpediente');
+const { CODIGO_AJUSTE, gastosHastaLaFrontera, repartirPorValor } = require('../forms/gastosHastaLaFrontera');
 
 // Medios de pago que obligan a declarar garantia con regimen 40 (regla C0616).
 const PAGOS_CON_GARANTIA = new Set(['O', 'R', 'S', 'T', 'U', 'V', 'G']);
@@ -175,15 +176,28 @@ function documentoPrevio(expedition, good, faltan) {
   }];
 }
 
+const valorEnEuros = (good, cambio) => (cambio.tipo === 1 ? good.invoiceValue || 0 : aEuros(good.invoiceValue || 0, cambio.tipo));
+
+/** Flete y seguro hasta la UE repartidos entre las partidas por su valor en euros. */
+function ajustesDeGastos(expedition, cambio, cambiosGastos, faltan) {
+  const gastos = gastosHastaLaFrontera(expedition, { cambios: { ...cambiosGastos, [cambio.divisa]: cambio } });
+  faltan.push(...gastos.faltan);
+  const goods = expedition.goods || [];
+  return repartirPorValor(gastos.total, goods.map((g) => valorEnEuros(g, cambio)));
+}
+
 function partidaDe(expedition, good, indice, contexto, faltan) {
   const n = indice + 1;
   const codigo = String(good.taricCode || '').replace(/\D/g, '');
   if (codigo.length !== 10) faltan.push(`código TARIC de 10 dígitos de la partida ${n}`);
   const valor = good.invoiceValue || 0;
-  const valorEuros = contexto.cambio.tipo === 1 ? valor : aEuros(valor, contexto.cambio.tipo);
+  const valorEuros = valorEnEuros(good, contexto.cambio);
+  // Flete y seguro hasta la entrada en la UE que no van en el precio (ajuste AK, en euros).
+  const ajusteGastos = contexto.ajustesGastos[indice] || 0;
+  const valorAduana = redondear(valorEuros + ajusteGastos);
   const tipoArancel = good.dutyRate || 0;
   const tipoIva = good.vatRate ?? 21;
-  const arancel = redondear(valorEuros * tipoArancel / 100);
+  const arancel = redondear(valorAduana * tipoArancel / 100);
   const tipoBulto = String(good.packages?.type || '').toUpperCase();
   if (!/^[A-Z0-9]{2}$/.test(tipoBulto)) faltan.push(`tipo de bulto (código de dos letras) de la partida ${n}`);
   if (!(good.packages?.quantity > 0)) faltan.push(`número de bultos de la partida ${n}`);
@@ -193,8 +207,8 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
 
   return {
     numero: n,
-    // El valor estadistico va siempre en euros.
-    valorEstadistico: good.statisticalValue && good.statisticalValue !== valor ? good.statisticalValue : valorEuros,
+    // El valor estadistico va siempre en euros y es el valor en la frontera de la UE (CIF).
+    valorEstadistico: good.statisticalValue && good.statisticalValue !== valor ? good.statisticalValue : valorAduana,
     regimen: {
       solicitado: String(expedition.declaration?.regime || '40'), precedente: '00',
       adicionales: /^[A-Z0-9]{3}$/i.test(adicional) && adicional !== '000' ? [adicional.toUpperCase()] : []
@@ -208,24 +222,28 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     importeFactura: valor,
     preferencia: String(expedition.declaration?.preference || '100'),
     tributos: [
-      { tipo: 'A00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoArancel, importe: valorEuros, cuota: arancel }] },
-      { tipo: 'B00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoIva, importe: redondear(valorEuros + arancel), cuota: redondear((valorEuros + arancel) * tipoIva / 100) }] }
+      { tipo: 'A00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoArancel, importe: valorAduana, cuota: arancel }] },
+      { tipo: 'B00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoIva, importe: redondear(valorAduana + arancel), cuota: redondear((valorAduana + arancel) * tipoIva / 100) }] }
     ],
     bultos: [{ tipo: tipoBulto, numero: good.packages?.quantity, marcas: texto(good.packages?.marks) || 'S/M' }],
     documentosPrevios: documentoPrevio(expedition, good, faltan),
     documentosJustificativos: contexto.factura ? [{ tipo: 'N380', referencia: contexto.factura }] : [],
-    valoracion: { metodo: String(expedition.valuation?.method || '1') },
+    valoracion: {
+      metodo: String(expedition.valuation?.method || '1'),
+      ajustes: ajusteGastos > 0 ? [{ codigo: CODIGO_AJUSTE, importe: ajusteGastos }] : []
+    },
     indicadoresValoracion: '0000'
   };
 }
 
 /**
  * @param {object} expedition
- * @param {{ declarante: object, cambio?: object, tenant?: object, mensajeId: string, lrn?: string, fecha?: Date, test?: boolean }} opciones
+ * @param {{ declarante: object, cambio?: object, cambiosGastos?: object, tenant?: object, mensajeId: string, lrn?: string, fecha?: Date, test?: boolean }} opciones
+ *   `cambiosGastos`: tipos oficiales de las divisas del flete y del seguro (`cambiosDeLosGastos`)
  * @returns {object} datos para `buildH1CauXML`
  * @throws {ErrorValidacion} 422 con `faltan`: lo que hay que completar
  */
-function expeditionToH1CauData(expedition, { declarante, cambio, tenant, mensajeId, lrn, fecha = new Date(), test = true } = {}) {
+function expeditionToH1CauData(expedition, { declarante, cambio, cambiosGastos = {}, tenant, mensajeId, lrn, fecha = new Date(), test = true } = {}) {
   const faltan = [];
   const decl = expedition.declaration || {};
   const goods = expedition.goods || [];
@@ -261,7 +279,7 @@ function expeditionToH1CauData(expedition, { declarante, cambio, tenant, mensaje
   if (personas.forma !== '1' && !(ambito in AMBITOS_AUTORIZACION)) faltan.push('tipo de autorización de despacho (global, OCRE u OSRE)');
 
   const numeros = goods.map((_, i) => i + 1);
-  const contexto = { cambio: tipoCambio, medioDePago, factura };
+  const contexto = { cambio: tipoCambio, medioDePago, factura, ajustesGastos: ajustesDeGastos(expedition, tipoCambio, cambiosGastos, faltan) };
   const datos = {
     mensaje: { id: mensajeId, fecha, test },
     operacion: 'A',

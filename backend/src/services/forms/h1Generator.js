@@ -13,6 +13,7 @@
 const { v4: uuidv4 } = require('uuid');
 const { eoriDe, exigirEori, declarantePara, formaRepresentacionDe } = require('./identificadorAduanero');
 const { CAMBIO_EUR, cambioObligatorio, aEuros } = require('../divisas/cambioDelExpediente');
+const { gastoDe, gastosHastaLaFrontera } = require('./gastosHastaLaFrontera');
 
 /**
  * Codigos de regimen aduanero
@@ -123,9 +124,10 @@ class H1Generator {
    * `tenant` aporta el representante cuando el expediente no lo trae; sin EORI
    * de declarante o de cliente lanza ErrorValidacion (422).
    */
-  generate(expedition, datosRecibidos = {}, { tenant, cambio } = {}) {
+  generate(expedition, datosRecibidos = {}, { tenant, cambio, cambiosGastos = {} } = {}) {
     // Divisa de la factura y tipo oficial: los constructores lo leen de aiData.
-    const aiData = { ...datosRecibidos, cambio: cambioObligatorio(expedition, cambio) };
+    // `cambiosGastos`: tipos oficiales de las divisas del flete y del seguro.
+    const aiData = { ...datosRecibidos, cambio: cambioObligatorio(expedition, cambio), cambiosGastos };
     // Generar LRN unico
     const lrn = aiData.lrn || this.generateLRN();
 
@@ -395,17 +397,19 @@ class H1Generator {
       exchangeRate: aiData.cambio?.tipo || 1,
 
       // Gastos de transporte (7/14 - CRITICO)
+      // Importes tal como se pagaron, en su divisa; lo que se suma al valor en
+      // aduana (en euros y segun el incoterm) esta en la valoracion.
       transportCharges: {
-        freightAmount: expedition.costs?.freight || expedition.customsValue?.freight || 0,
-        freightCurrency: expedition.costs?.freightCurrency || 'EUR',
-        freightPaymentMethod: expedition.costs?.freightPaymentMethod || 'A', // A=prepaid, B=collect
-        freightToDestination: expedition.costs?.freightToDestination || true
+        freightAmount: gastoDe(expedition, 'freight')?.importe || 0,
+        freightCurrency: gastoDe(expedition, 'freight')?.divisa || 'EUR',
+        freightPaymentMethod: 'A', // A=prepaid, B=collect
+        freightToDestination: true
       },
 
       // Gastos de seguro (7/15 - CRITICO)
       insuranceCharges: {
-        insuranceAmount: expedition.costs?.insurance || expedition.customsValue?.insurance || 0,
-        insuranceCurrency: expedition.costs?.insuranceCurrency || 'EUR'
+        insuranceAmount: gastoDe(expedition, 'insurance')?.importe || 0,
+        insuranceCurrency: gastoDe(expedition, 'insurance')?.divisa || 'EUR'
       }
     };
   }
@@ -418,8 +422,11 @@ class H1Generator {
     // La factura va en su divisa; el valor en aduana, siempre en euros.
     const cambio = aiData.cambio || CAMBIO_EUR;
     const invoiceValueEur = cambio.tipo === 1 ? invoiceValue : aEuros(invoiceValue, cambio.tipo);
-    const freight = expedition.costs?.freight || expedition.customsValue?.freight || 0;
-    const insurance = expedition.costs?.insurance || expedition.customsValue?.insurance || 0;
+    // Flete y seguro hasta la UE que el incoterm no incluye, ya en euros. Lo que
+    // no se puede convertir (o falta) no se suma: lo avisa la tarjeta de datos del H1.
+    const gastos = gastosHastaLaFrontera(expedition, { cambios: { ...aiData.cambiosGastos, [cambio.divisa]: cambio } });
+    const freight = gastos.flete;
+    const insurance = gastos.seguro;
 
     // Calcular adiciones al precio (4/9)
     const additions = {
