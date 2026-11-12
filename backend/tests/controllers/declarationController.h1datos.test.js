@@ -78,7 +78,8 @@ describe('requisitos del H1', () => {
         incoterm: '', gastosASumar: null,
         freightAmount: null, freightCurrency: 'EUR', insuranceAmount: null, insuranceCurrency: 'EUR',
         invoiceCurrency: 'EUR', invoiceCurrencyWithoutBce: false, appliedExchangeRate: null
-      }
+      },
+      anulacion: { presentada: false, anulable: false }
     });
   });
 
@@ -216,6 +217,37 @@ describe('cambio aplicado de una divisa que el BCE no cotiza', () => {
       expect(res.status).toBe(400);
       expect(res.body.error).toContain('cambio aplicado');
     }
+  });
+});
+
+describe('si la declaración presentada se puede anular por servicio', () => {
+  const presentada = (aeatResponse) => expediente({ declaration: { mrn: '26ES002801I01BMVR2', aeatResponse } });
+
+  test('una declaración activada (64) no: la anula la aduana', async () => {
+    mockPreparar.mockResolvedValue({ requestXML: '<x/>' });
+    mockExpedition.findById.mockResolvedValue(presentada({ servicio: 'CC415AV1', responseCode: '64' }));
+
+    const res = await request(app()).get('/api/declarations/e1/h1/requisitos');
+
+    expect(res.body.data.anulacion).toEqual({ presentada: true, anulable: false });
+  });
+
+  test('una predeclaración (60) sí; manda el estado de la última consulta', async () => {
+    mockPreparar.mockResolvedValue({ requestXML: '<x/>' });
+    mockExpedition.findById.mockResolvedValue(presentada({ servicio: 'CC415AV1', responseCode: '64', consulta: { estado: { operacionRegistrada: '60' } } }));
+
+    const res = await request(app()).get('/api/declarations/e1/h1/requisitos');
+
+    expect(res.body.data.anulacion).toEqual({ presentada: true, anulable: true });
+  });
+
+  test('sin presentar por el servicio CAU no hay nada que anular', async () => {
+    mockPreparar.mockResolvedValue({ requestXML: '<x/>' });
+    mockExpedition.findById.mockResolvedValue(expediente());
+
+    const res = await request(app()).get('/api/declarations/e1/h1/requisitos');
+
+    expect(res.body.data.anulacion).toEqual({ presentada: false, anulable: false });
   });
 });
 

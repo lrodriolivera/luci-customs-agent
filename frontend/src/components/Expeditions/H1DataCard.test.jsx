@@ -5,8 +5,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 const getH1Requirements = vi.fn()
 const updateH1Data = vi.fn()
 const getH1Status = vi.fn()
+const cancelH1 = vi.fn()
 vi.mock('../../services/api', () => ({
-  declarationsAPI: { getH1Requirements: (...a) => getH1Requirements(...a), updateH1Data: (...a) => updateH1Data(...a), getH1Status: (...a) => getH1Status(...a) }
+  declarationsAPI: {
+    getH1Requirements: (...a) => getH1Requirements(...a), updateH1Data: (...a) => updateH1Data(...a),
+    getH1Status: (...a) => getH1Status(...a), cancelH1: (...a) => cancelH1(...a)
+  }
 }))
 vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }))
 
@@ -24,6 +28,7 @@ describe('<H1DataCard />', () => {
     getH1Requirements.mockReset()
     updateH1Data.mockReset()
     getH1Status.mockReset()
+    cancelH1.mockReset()
   })
 
   test('muestra lo que falta para presentar el H1', async () => {
@@ -162,6 +167,57 @@ describe('<H1DataCard />', () => {
     expect(screen.getByText('La AEAT exige certificados de otros organismos.')).toBeInTheDocument()
     expect(screen.getByText('N380 — Factura comercial (partida 1)')).toBeInTheDocument()
     expect(screen.getByText('Aporte la factura')).toBeInTheDocument()
+  })
+
+  const presentada = { _id: 'e1', declaration: { mrn: '26ES002801I01BMVR2', aeatResponse: { servicio: 'CC415AV1', responseCode: '64' } } }
+
+  test('una declaración activada no se anula desde aquí: dice que hay que pedírselo a la aduana', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [], anulacion: { presentada: true, anulable: false } }))
+    render(<H1DataCard expedition={presentada} soloEstado />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Anular declaración' }))
+
+    expect(await screen.findByText(/hay que solicitar la anulación a la aduana/)).toBeInTheDocument()
+    expect(screen.queryByLabelText('Motivo de la anulación')).not.toBeInTheDocument()
+    expect(cancelH1).not.toHaveBeenCalled()
+  })
+
+  test('una predeclaración se anula tras confirmar y con motivo', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [], anulacion: { presentada: true, anulable: true } }))
+    cancelH1.mockResolvedValue({ data: { success: true, data: { tipo: 'anulada' } } })
+    render(<H1DataCard expedition={presentada} soloEstado />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Anular declaración' }))
+    const confirmar = screen.getByRole('button', { name: 'Confirmar anulación' })
+    expect(confirmar).toBeDisabled()
+    fireEvent.change(screen.getByLabelText('Motivo de la anulación'), { target: { value: 'Error en el número de bultos' } })
+    fireEvent.click(confirmar)
+
+    await waitFor(() => expect(cancelH1).toHaveBeenCalledWith('e1', 'Error en el número de bultos'))
+    expect(await screen.findByText('La AEAT ha aceptado la anulación.')).toBeInTheDocument()
+  })
+
+  test('si la AEAT rechaza la anulación muestra su motivo', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [], anulacion: { presentada: true, anulable: true } }))
+    cancelH1.mockRejectedValue({ response: { status: 400, data: { success: false, error: '20001 La declaración tiene intención de control' } } })
+    render(<H1DataCard expedition={presentada} soloEstado />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Anular declaración' }))
+    fireEvent.change(screen.getByLabelText('Motivo de la anulación'), { target: { value: 'Duplicada por error' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar anulación' }))
+
+    expect(await screen.findByText(/20001 La declaración tiene intención de control/)).toBeInTheDocument()
+  })
+
+  test('cancelar el cuadro no envía nada', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [], anulacion: { presentada: true, anulable: true } }))
+    render(<H1DataCard expedition={presentada} soloEstado />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Anular declaración' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(screen.queryByLabelText('Motivo de la anulación')).not.toBeInTheDocument()
+    expect(cancelH1).not.toHaveBeenCalled()
   })
 
   test('sin MRN, o presentada por el DUA anterior, no ofrece la consulta', async () => {

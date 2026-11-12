@@ -250,6 +250,8 @@ export const declarationsAPI = {
   updateH1Data: (expeditionId, datos) => api.put(`/api/declarations/${seg(expeditionId)}/h1/datos`, datos),
   // H1 CAU: estado de la declaración en la AEAT (solo lectura)
   getH1Status: (expeditionId) => api.get(`/api/declarations/${seg(expeditionId)}/h1/estado`, { timeout: 60000 }),
+  // Anulación ante la AEAT: solo predeclaraciones (lo activado responde 409 ANULACION_POR_LA_ADUANA).
+  cancelH1: (expeditionId, reason) => api.post(`/api/declarations/${seg(expeditionId)}/cancel`, { reason }, { timeout: 60000 }),
   // H1 - Importacion estandar
   generateH1: (data) => api.post('/api/declarations/h1/generate-direct', data),
   // AES - Exportacion

@@ -97,6 +97,21 @@ async function ajustarVistaPreviaAlServicio(expedition, tenant) {
 
 const AMBITOS_AUTORIZACION = ['global', 'OCRE', 'OSRE'];
 
+/**
+ * Estado de la declaracion presentada por el servicio CAU (el de la ultima
+ * consulta o, si no hay, el de la respuesta al presentar) y si se puede anular
+ * por servicio web: solo lo que aun no esta activado.
+ */
+const estadoCau = (expedition) => {
+  const r = expedition.declaration?.aeatResponse;
+  if (!expedition.declaration?.mrn || r?.servicio !== 'CC415AV1') return null;
+  return r.consulta?.estado?.operacionRegistrada || r.responseCode || null;
+};
+const anulacionDe = (expedition) => {
+  const estado = estadoCau(expedition);
+  return { presentada: estado !== null, anulable: estado !== null && anulablePorServicio(estado) };
+};
+
 const DIVISA = /^[A-Z]{3}$/;
 const IMPORTE_MAXIMO = 1e12;
 
@@ -193,7 +208,7 @@ const getH1Requirements = async (req, res) => {
       faltan = error.faltan || [error.message];
     }
     const datos = datosH1De(expedition, await divisaDeLaFactura(expedition));
-    res.json({ success: true, data: { servicio, listo: faltan.length === 0, faltan, datos } });
+    res.json({ success: true, data: { servicio, listo: faltan.length === 0, faltan, datos, anulacion: anulacionDe(expedition) } });
   } catch (error) {
     logger.error('Error comprobando los datos del H1:', error);
     res.status(500).json({ success: false, error: 'Error al comprobar los datos del H1' });
@@ -1831,8 +1846,7 @@ const cancelDeclaration = async (req, res) => {
     // declaracion activada la anula la aduana a peticion del operador.
     const respuestaAeat = expedition.declaration.aeatResponse || {};
     if (respuestaAeat.servicio === 'CC415AV1') {
-      const estado = respuestaAeat.consulta?.estado?.operacionRegistrada || respuestaAeat.responseCode;
-      if (!anulablePorServicio(estado)) {
+      if (!anulacionDe(expedition).anulable) {
         return res.status(409).json({
           success: false,
           code: 'ANULACION_POR_LA_ADUANA',
