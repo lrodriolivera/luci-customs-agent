@@ -243,6 +243,25 @@ describe('H1 CAU: factura en una divisa que el BCE no cotiza', () => {
   });
 });
 
+describe('H1 CAU: código postal del exportador', () => {
+  const sinCp = (pais) => expediente({ exporter: { ...expediente().exporter, country: pais, postalCode: '' } });
+  const faltanDe = (exp) => { try { datos(exp); return []; } catch (e) { return e.faltan; } };
+
+  test('fuera de la CL505 lo pide sin más', () => {
+    expect(faltanDe(sinCp('CN'))).toContain('código postal del exportador');
+  });
+
+  test('en un país de la CL505 lo sigue pidiendo (la AEAT da 50908 sin él) y explica por qué', () => {
+    const faltan = faltanDe(sinCp('HK'));
+    expect(faltan).toContain('código postal del exportador: la AEAT lo exige aunque HK no use códigos postales; si el exportador tiene EORI, basta con el EORI');
+  });
+
+  test('con EORI del exportador no hace falta dirección', () => {
+    const exp = expediente({ exporter: { ...expediente().exporter, country: 'HK', postalCode: '', eori: 'HK123456789' } });
+    expect(faltanDe(exp)).toEqual([]);
+  });
+});
+
 describe('H1 CAU: datos que faltan', () => {
   test('dice de una vez todo lo que hay que completar, sin inventar nada', () => {
     expect.assertions(4);
