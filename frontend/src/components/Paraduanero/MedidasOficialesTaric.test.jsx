@@ -58,4 +58,29 @@ describe('<MedidasOficialesTaric />', () => {
 
     expect(screen.getByText('El TARIC no aplica medidas de control a estas partidas.')).toBeInTheDocument()
   })
+
+  test('una medida de sanciones se marca y hay un aviso general', () => {
+    const sancion = {
+      tipo: '762', nombre: 'Control de importación', baseLegal: 'Regulation 0833/14', prohibicion: false, condiciones: [],
+      sancion: { pais: 'Rusia', norma: 'Reglamento (UE) n.º 833/2014' }
+    }
+    render(<MedidasOficialesTaric partidas={[partida([sancion], { originCountry: 'RU' })]} />)
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Hay partidas afectadas por sanciones de la UE')
+    expect(screen.getByText('Sanciones de la UE · Rusia · Reglamento (UE) n.º 833/2014')).toBeInTheDocument()
+  })
+
+  test('sin sanciones no hay aviso', () => {
+    render(<MedidasOficialesTaric partidas={[partida([veterinario])]} />)
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  test('avisa del posible doble uso aunque la partida no tenga medidas de control', () => {
+    render(<MedidasOficialesTaric partidas={[partida([], { taricCode: '8471300000', originCountry: 'CN', dualUse: [{ categoria: '4A001', nota: 'DU216' }, { categoria: '5A002', nota: 'DU229' }] })]} />)
+
+    expect(screen.getByText('Posible producto de doble uso (Reglamento (UE) 2021/821)')).toBeInTheDocument()
+    expect(screen.getByText('4A001, 5A002')).toBeInTheDocument()
+    expect(screen.queryByText('El TARIC no aplica medidas de control a estas partidas.')).not.toBeInTheDocument()
+  })
 })

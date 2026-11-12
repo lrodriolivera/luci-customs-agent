@@ -9,6 +9,7 @@ const circabc = require('../circabcTaric');
 const {
   leerMedidasControl, leerExclusiones, leerAreas, leerDescripciones, claveDeMedida
 } = require('./medidasControl');
+const { leerDobleUso } = require('./dobleUso');
 
 const FICHEROS = {
   medidas: 'duties import 01-99.xlsx',
@@ -92,4 +93,53 @@ async function sincronizarControles({
   return { mes, medidas: medidas.length, areas: datos.areas, certificados: datos.certificados };
 }
 
-module.exports = { sincronizarControles, prepararControles, ficherosDeControles, FICHEROS, MINIMO_DE_MEDIDAS };
+// Carpeta «Dual use codes» de las tablas de correlacion del TARIC en CIRCABC.
+const CARPETA_DOBLE_USO = 'c3d06bd7-6ef0-4771-bbd7-f92b976ae9a0';
+// Menos codigos que estos indica una tabla incompleta: no se sustituye nada.
+const MINIMO_DE_CODIGOS_DOBLE_USO = 1000;
+
+/** Tabla de doble uso mas reciente publicada; si `yaCargado(id)` no la descarga. */
+async function ficheroDobleUso({ yaCargado = () => false, ...opciones } = {}) {
+  const tablas = (await circabc.hijos(CARPETA_DOBLE_USO, opciones))
+    .filter((f) => !f.carpeta && /dual use/i.test(f.name) && /\.xlsx$/i.test(f.name))
+    .sort((a, b) => String(b.modificado || '').localeCompare(String(a.modificado || '')) || b.name.localeCompare(a.name));
+  const reciente = tablas[0];
+  if (!reciente) throw new Error('CIRCABC: no hay ninguna tabla de doble uso publicada');
+  if (yaCargado(reciente.id)) return { id: reciente.id, nombre: reciente.name, omitido: true };
+  return { id: reciente.id, nombre: reciente.name, contenido: await circabc.descargar(reciente.id, opciones) };
+}
+
+/**
+ * Carga la tabla de correlacion de doble uso. Si la publicada ya esta cargada
+ * no hace nada (salvo `forzar`).
+ */
+async function sincronizarDobleUso({ TaricReference, descargar = ficheroDobleUso, leer = (contenido) => leerDobleUso(leerPrimeraHoja(contenido)), ahora = new Date(), forzar = false } = {}) {
+  const meta = await TaricReference.findOne({ clase: 'meta', codigo: 'dobleUso' }).lean();
+  const fichero = await descargar({ yaCargado: (id) => !forzar && meta?.datos?.id === id });
+  if (fichero.omitido) return { omitido: true, tabla: fichero.nombre };
+
+  const tabla = leer(fichero.contenido);
+  const codigos = Object.keys(tabla);
+  if (codigos.length < MINIMO_DE_CODIGOS_DOBLE_USO) {
+    throw new Error(`Solo ${codigos.length} códigos en la tabla de doble uso «${fichero.nombre}»: no se sustituye lo cargado`);
+  }
+  await TaricReference.deleteMany({ clase: 'dobleUso' });
+  for (let i = 0; i < codigos.length; i += TAMANO_DE_LOTE) {
+    await TaricReference.insertMany(
+      codigos.slice(i, i + TAMANO_DE_LOTE).map((codigo) => ({ clase: 'dobleUso', codigo, datos: { entradas: tabla[codigo] } })),
+      { ordered: false }
+    );
+  }
+  await TaricReference.updateOne(
+    { clase: 'meta', codigo: 'dobleUso' },
+    { $set: { datos: { id: fichero.id, tabla: fichero.nombre, codigos: codigos.length, actualizado: ahora } } },
+    { upsert: true }
+  );
+  logger.info(`[TARIC] Tabla de doble uso cargada: «${fichero.nombre}», ${codigos.length} códigos`);
+  return { tabla: fichero.nombre, codigos: codigos.length };
+}
+
+module.exports = {
+  sincronizarControles, prepararControles, ficherosDeControles, FICHEROS, MINIMO_DE_MEDIDAS,
+  sincronizarDobleUso, ficheroDobleUso, MINIMO_DE_CODIGOS_DOBLE_USO
+};
