@@ -24,9 +24,11 @@ const AMBITOS = [
  * lista de lo que aún falta para poder presentarlo por el servicio de la AEAT
  * adaptado al CAU (CC415A).
  *
- * @param {{ expedition: object }} props
+ * Con `soloEstado` (declaración ya presentada) solo muestra la consulta de estado.
+ *
+ * @param {{ expedition: object, soloEstado?: boolean }} props
  */
-export default function H1DataCard({ expedition }) {
+export default function H1DataCard({ expedition, soloEstado = false }) {
   const [estado, setEstado] = useState(null)
   const [form, setForm] = useState({ invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE' })
   const [guardando, setGuardando] = useState(false)
@@ -88,7 +90,7 @@ export default function H1DataCard({ expedition }) {
 
       {error && <p role="alert" className="mb-3 text-sm text-red-600">{error}</p>}
 
-      <form onSubmit={guardar} className="grid gap-3 sm:grid-cols-2">
+      {!soloEstado && <form onSubmit={guardar} className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="label" htmlFor="h1-invoice-number">Número de la factura comercial</label>
           <input id="h1-invoice-number" className="input" maxLength={70} value={form.invoiceNumber} onChange={cambiar('invoiceNumber')} />
@@ -116,9 +118,9 @@ export default function H1DataCard({ expedition }) {
             {guardando ? 'Guardando...' : 'Guardar'}
           </button>
         </div>
-      </form>
+      </form>}
 
-      {estado && (
+      {estado && !soloEstado && (
         <div className={`mt-4 rounded-lg border p-3 text-sm ${estado.listo ? 'border-green-200 bg-green-50 text-green-800' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
           {estado.listo ? (
             <p>El expediente tiene todos los datos que exige el H1.</p>
