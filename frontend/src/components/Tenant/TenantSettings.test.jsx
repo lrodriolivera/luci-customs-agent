@@ -7,6 +7,8 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key) => key })
 }))
 
+// La sección «Presentación del H1» tiene sus propias pruebas (H1PresentationSettings.test.jsx).
+vi.mock('./H1PresentationSettings', () => ({ default: () => null }))
 vi.mock('../../services/api', () => ({
   default: {
     get: vi.fn(),

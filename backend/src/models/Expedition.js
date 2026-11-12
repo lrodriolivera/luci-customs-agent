@@ -347,11 +347,17 @@ const ExpeditionSchema = new mongoose.Schema({
   },
 
   // Representative (customs agent)
+  // Numero de la factura comercial: se declara en el H1 (documento N380).
+  invoiceNumber: String,
   representative: {
     companyName: String,
     nif: String,
     eori: String,
     representationType: { type: String, enum: ['direct', 'indirect'] },
+    // Autorizacion de despacho con la que actua el representante (H1 CAU):
+    // global registrada en la AEAT, o por operacion con registro electronico
+    // (OCRE) o sin el (OSRE). Sin valor se declara OSRE.
+    dispatchAuthorizationScope: { type: String, enum: ['global', 'OCRE', 'OSRE'] },
     authorizationNumber: String
   },
 
