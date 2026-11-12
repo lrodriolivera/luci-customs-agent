@@ -9,6 +9,7 @@ const { ensureSameTenant, filtroTenantOPlataforma } = require('../utils/tenantGu
 
 const { escapeRegex } = require('../utils/escapeRegex');
 const { tipoOficial, aEuros } = require('../services/divisas/tiposCambioOficiales');
+const { controlesPara } = require('../services/taric/controles/controlesOficiales');
 /**
  * Sugerir codigo TARIC basado en descripcion
  * POST /api/classification/suggest
@@ -574,6 +575,27 @@ async function valorEnEurosDe(good) {
     return 0;
   }
 }
+
+/**
+ * Medidas de control de importacion del TARIC para un codigo y un origen
+ * GET /api/classification/controls?code=0201100000&origin=BR
+ */
+const getOfficialControls = async (req, res) => {
+  try {
+    const code = String(req.query.code || '').replace(/[\s.]/g, '');
+    const origin = String(req.query.origin || '').trim().toUpperCase();
+    if (!/^\d{4,10}$/.test(code)) {
+      return res.status(400).json({ success: false, error: 'Código TARIC no válido (de 4 a 10 dígitos)' });
+    }
+    if (!/^[A-Z]{2}$/.test(origin)) {
+      return res.status(400).json({ success: false, error: 'País de origen no válido (código ISO de dos letras)' });
+    }
+    res.json({ success: true, data: await controlesPara(code, origin) });
+  } catch (error) {
+    logger.error('Error consultando las medidas de control:', error);
+    res.status(500).json({ success: false, error: 'Error al consultar las medidas de control' });
+  }
+};
 
 const applyClassification = async (req, res) => {
   try {
@@ -1453,6 +1475,7 @@ const getTaricSyncStatus = async (req, res) => {
 
 module.exports = {
   getTaricSyncStatus,
+  getOfficialControls,
   suggestTaricCode,
   getTaricInfo,
   searchTaric,

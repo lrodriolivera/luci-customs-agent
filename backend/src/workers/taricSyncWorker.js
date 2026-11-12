@@ -13,6 +13,26 @@ const INTERVALO_MS = 30 * 60 * 1000;
 let temporizador = null;
 let enMarcha = false;
 
+/**
+ * Medidas de control de importacion (certificados exigidos por codigo y
+ * origen). Solo descarga cuando la Comision publica un mes nuevo. Un fallo
+ * aqui no afecta a la sincronizacion del catalogo.
+ */
+async function cargarControles() {
+  try {
+    const { sincronizarControles } = require('../services/taric/controles/sincronizacionControles');
+    const resultado = await sincronizarControles({
+      TaricControlMeasure: require('../models/TaricControlMeasure'),
+      TaricReference: require('../models/TaricReference')
+    });
+    if (!resultado.omitido) logger.info(`[TARIC] Medidas de control actualizadas (${resultado.mes})`);
+    return resultado;
+  } catch (error) {
+    logger.error(`[TARIC] No se pudieron cargar las medidas de control: ${error.message}`);
+    return null;
+  }
+}
+
 async function comprobar({ ahora = new Date() } = {}) {
   if (enMarcha) return null;
   const mongoose = require('mongoose');
@@ -25,7 +45,9 @@ async function comprobar({ ahora = new Date() } = {}) {
   try {
     const ultimo = await TaricSyncRun.findOne({}, { startedAt: 1 }).sort({ startedAt: -1 }).lean();
     if (!tocaSincronizar(ahora, ultimo?.startedAt)) return null;
-    return await sincronizarYRegistrar({ TaricCode, TaricSyncRun, trigger: 'automatica', ahora });
+    const resultado = await sincronizarYRegistrar({ TaricCode, TaricSyncRun, trigger: 'automatica', ahora });
+    await cargarControles();
+    return resultado;
   } catch (error) {
     logger.error(`[TARIC] El comprobador de sincronizacion fallo: ${error.message}`);
     return null;
@@ -51,4 +73,4 @@ function stop() {
   temporizador = null;
 }
 
-module.exports = { start, stop, comprobar, INTERVALO_MS };
+module.exports = { start, stop, comprobar, cargarControles, INTERVALO_MS };
