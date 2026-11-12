@@ -180,6 +180,11 @@ describe('H1 CAU: ayudantes', () => {
     expect(conPais('')).toBeNull();
   });
 
+  test('sin aduana de despacho indicada toma la del recinto de la ubicación', () => {
+    const exp = expediente({ declaration: { invoiceNumber: 'FAC-1', lrn: 'L1' } });
+    expect(datos(exp).aduanaImportacion).toBe('ES002801');
+  });
+
   test('aduana, ubicación y provincia', () => {
     expect(aduana('002801')).toBe('ES002801');
     expect(aduana('ES002801')).toBe('ES002801');

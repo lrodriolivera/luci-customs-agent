@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ConsultaImportacionR.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:td1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes.xsd" xmlns:td11="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes_D.xsd" xmlns:td3="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CustomsDeclaration.xsd" targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ConsultaImportacionR.xsd" elementFormDefault="unqualified" attributeFormDefault="unqualified" version="40.80">
+	<xs:import namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes.xsd" schemaLocation="ES_ctypes.xsd"/>
+	<xs:import namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes_D.xsd" schemaLocation="ES_ctypes_D.xsd"/>
+	<xs:import namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CustomsDeclaration.xsd" schemaLocation="ES_CustomsDeclaration.xsd"/>
+	<!--=================================================================================================================-->
+	<!--===== Root element                                                                                               -->
+	<!--=================================================================================================================-->
+	<xs:element name="ConsultaImportacionR" type="ConsultaImportacionRType"/>
+	<!--=================================================================================================================-->
+	<!--===== Root element Content                                                                                       -->
+	<!--=================================================================================================================-->
+	<xs:complexType name="ConsultaImportacionRType">
+		<xs:sequence>
+			<xs:element name="DeclarationManagement" type="td11:DeclarationManagementTypeDC" minOccurs="0"/>
+			<xs:element name="ImportOperation" type="td11:MCciOperationTypeDC_01" minOccurs="0"/>
+			<xs:element name="RequestedDocuments" type="td11:MRequestedDocumentsTypeD_01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="PCAdocuments" type="td11:PCAdocumentsTypeDC" minOccurs="0"/>
+			<xs:element name="Notification" type="td11:NotificationTypeD" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="CC429R_CD" type="td11:CC429R_CD_TypeD" minOccurs="0"/>
+			<xs:element name="DutiesTaxesAndGuarantee" type="td11:DutiesTaxesAndGuaranteeTypeDC" minOccurs="0"/>
+			<xs:element name="CustomsDeclaration" type="td3:CustomsDeclarationType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ConsultaImportacionRType_V2">
+		<xs:sequence>
+			<xs:element name="DeclarationManagement" type="td11:DeclarationManagementTypeDC" minOccurs="0"/>
+			<xs:element name="ImportOperation" type="td11:MCciOperationTypeDCV2_01" minOccurs="0"/>
+			<xs:element name="RequestedDocuments" type="td11:MRequestedDocumentsTypeD_01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="PCAdocuments" type="td11:PCAdocumentsTypeDC" minOccurs="0"/>
+			<xs:element name="Notification" type="td11:NotificationTypeD" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="CC429R_CD" type="td11:CC429R_CD_TypeD" minOccurs="0"/>
+			<xs:element name="DutiesTaxesAndGuarantee" type="td11:DutiesTaxesAndGuaranteeTypeDC" minOccurs="0"/>
+			<xs:element name="CustomsDeclaration" type="td3:CustomsDeclarationType_V2" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+		<xs:complexType name="ConsultaImportacionRType_V3">
+		<xs:sequence>
+			<xs:element name="DeclarationManagement" type="td11:DeclarationManagementTypeDCV3" minOccurs="0"/>
+			<xs:element name="ImportOperation" type="td11:MCciOperationTypeDCV2_01" minOccurs="0"/>
+			<xs:element name="RequestedDocuments" type="td11:MRequestedDocumentsTypeD_01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="PCAdocuments" type="td11:PCAdocumentsTypeDC" minOccurs="0"/>
+			<xs:element name="Notification" type="td11:NotificationTypeD" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="CC429R_CD" type="td11:CC429R_CD_TypeD" minOccurs="0"/>
+			<xs:element name="DutiesTaxesAndGuarantee" type="td11:DutiesTaxesAndGuaranteeTypeDCV3" minOccurs="0"/>
+			<xs:element name="CustomsDeclaration" type="td3:CustomsDeclarationType_V2" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

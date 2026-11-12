@@ -248,6 +248,8 @@ export const declarationsAPI = {
   // H1: qué falta para presentarlo y datos que solo se usan en la presentación
   getH1Requirements: (expeditionId) => api.get(`/api/declarations/${seg(expeditionId)}/h1/requisitos`),
   updateH1Data: (expeditionId, datos) => api.put(`/api/declarations/${seg(expeditionId)}/h1/datos`, datos),
+  // H1 CAU: estado de la declaración en la AEAT (solo lectura)
+  getH1Status: (expeditionId) => api.get(`/api/declarations/${seg(expeditionId)}/h1/estado`, { timeout: 60000 }),
   // H1 - Importacion estandar
   generateH1: (data) => api.post('/api/declarations/h1/generate-direct', data),
   // AES - Exportacion

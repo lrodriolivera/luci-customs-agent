@@ -12,6 +12,7 @@ const { cambioDelExpediente } = require('../divisas/cambioDelExpediente');
 const { expeditionToH1CauData } = require('./h1CauData');
 const { buildH1CauXML, ENDPOINT_CC415A } = require('./h1CauXmlBuilder');
 const { interpretarRespuestaH1Cau } = require('./h1CauResponse');
+const { buildConsultaH1CauXML, interpretarConsultaH1Cau, ENDPOINT_CONSULTA } = require('./h1CauConsulta');
 const { buildH7ImportXML, buildAltaH7V1XML } = require('./h7XmlBuilder');
 const { aplicaDerechoFijo2026 } = require('../../config/reg2026382');
 const { buildAESExportXML } = require('./aesXmlBuilder');
@@ -270,8 +271,17 @@ async function prepararH1Cau(expedition, ctx = {}) {
   const tenant = await _tenantDe(expedition, ctx);
   const ahora = ctx.ahora || new Date();
   const referencia = _referenciaCau(ahora);
+  // La persona de contacto es la de la agencia (Ajustes > Aduanas) cuando el
+  // representante del expediente no trae la suya.
+  const declarante = declarantePara(expedition, tenant);
+  const deLaAgencia = representanteDelTenant(tenant).contact;
+  const contacto = {
+    name: declarante.contact?.name || deLaAgencia.name,
+    phone: declarante.contact?.phone || deLaAgencia.phone,
+    email: declarante.contact?.email || deLaAgencia.email
+  };
   const datos = expeditionToH1CauData(expedition, {
-    declarante: declarantePara(expedition, tenant),
+    declarante: { ...declarante, contact: contacto },
     // Rige el tipo de cambio del mes en que se presenta; la AEAT aplica el de la admision.
     cambio: await cambioDelExpediente(expedition),
     tenant,
@@ -288,6 +298,16 @@ async function prepararH1Cau(expedition, ctx = {}) {
 async function enviarH1Cau(requestXML) {
   const response = await aeatTransport.sendSoap(requestXML, ENDPOINT_CC415A);
   return { ...interpretarRespuestaH1Cau(response.data), requestXML };
+}
+
+/**
+ * Consulta en la AEAT el estado de una declaracion de importacion CAU por su
+ * MRN (servicio ConsultaImportacionV3). Solo lectura.
+ */
+async function consultarH1Cau(mrn) {
+  const xmlConsulta = buildConsultaH1CauXML({ mensajeId: `${_referenciaCau()}Q${Math.floor(Math.random() * 900 + 100)}`, mrn });
+  const response = await aeatTransport.sendSoap(xmlConsulta, ENDPOINT_CONSULTA);
+  return interpretarConsultaH1Cau(response.data);
 }
 
 /**
@@ -781,6 +801,7 @@ module.exports = {
   servicioH1,
   prepararH1Cau,
   enviarH1Cau,
+  consultarH1Cau,
   consultarSumaria,
   submitH1,
   submitH7,

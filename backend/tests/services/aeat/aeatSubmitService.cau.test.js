@@ -78,11 +78,31 @@ describe('preparar el H1 CAU', () => {
     expect(requestXML).toContain('<phoneNumber>+34 910000000</phoneNumber>');
   });
 
+  test('si el representante del expediente no trae contacto, usa el de la agencia', async () => {
+    const exp = { ...expediente(), representative: { companyName: 'Agencia SL', eori: 'ESB22477020', representationType: 'direct' } };
+
+    const { requestXML } = await servicio.prepararH1Cau(exp, { tenant: TENANT });
+
+    expect(requestXML).toContain('<Representative><identificationNumber>ESB22477020</identificationNumber><status>2</status><ContactPerson><name>Ana Ruiz</name><phoneNumber>+34 910000000</phoneNumber><eMailAddress>aduanas@agencia.es</eMailAddress></ContactPerson></Representative>');
+  });
+
   test('si faltan datos no prepara nada (422 con la lista)', async () => {
     const sinTelefono = { ...TENANT, primaryContact: { name: 'Ana Ruiz', email: 'aduanas@agencia.es' } };
     await expect(servicio.prepararH1Cau(expediente(), { tenant: sinTelefono })).rejects.toMatchObject({
       status: 422, code: 'DATOS_H1_FALTANTES', faltan: ['teléfono de la persona de contacto del declarante']
     });
+  });
+});
+
+describe('consultar el H1 CAU', () => {
+  test('pregunta al servicio de consulta por el MRN y devuelve el estado interpretado', async () => {
+    mockSendSoap.mockResolvedValue({ data: '<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/"><env:Body><es:ConsultaImportacionV3Sal xmlns:es="x"><ConsultaCompletaR><DeclarationManagement><operationRegistered>96</operationRegistered><riskAnalysisResultCodeAEAT>V</riskAnalysisResultCodeAEAT></DeclarationManagement><ImportOperation><MRN>26ES002801I01BMDR0</MRN></ImportOperation></ConsultaCompletaR></es:ConsultaImportacionV3Sal></env:Body></env:Envelope>' });
+
+    const r = await servicio.consultarH1Cau('26ES002801I01BMDR0');
+
+    expect(mockSendSoap.mock.calls[0][0]).toContain('<MRN>26ES002801I01BMDR0</MRN>');
+    expect(mockSendSoap.mock.calls[0][1]).toBe('/wlpl/ADIP-JDIT/ws/cci/ConsultaImportacionV3SOAP');
+    expect(r).toMatchObject({ success: true, mrn: '26ES002801I01BMDR0', estado: { operacionRegistrada: '96', channel: 'green' } });
   });
 });
 

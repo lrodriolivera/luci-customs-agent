@@ -117,3 +117,62 @@ describe('datos del H1 en el expediente', () => {
     expect(exp.save).not.toHaveBeenCalled();
   });
 });
+
+describe('estado del H1 en la AEAT', () => {
+  const mockConsultar = jest.fn();
+  const aeatSubmitService = require('../../src/services/aeat/aeatSubmitService');
+  const conEstado = () => {
+    const a = express();
+    a.get('/api/declarations/:expeditionId/h1/estado', (req, _res, next) => { req.user = USER; req.tenantId = USER.tenantId; next(); }, declarationController.getH1Status);
+    return a;
+  };
+  const presentado = (extra = {}) => ({
+    ...expediente(), markModified: jest.fn(),
+    declaration: { mrn: '26ES002801I01BMDR0', channel: 'yellow', aeatResponse: { servicio: 'CC415AV1', csv: 'C1' }, ...extra }
+  });
+
+  beforeEach(() => {
+    mockConsultar.mockReset();
+    aeatSubmitService.consultarH1Cau = (...a) => mockConsultar(...a);
+  });
+
+  test('guarda lo que responde la AEAT y actualiza circuito y levante', async () => {
+    const exp = presentado();
+    mockExpedition.findById.mockResolvedValue(exp);
+    mockConsultar.mockResolvedValue({
+      success: true, tipo: 'encontrada', mrn: exp.declaration.mrn, rawResponse: '<xml/>',
+      estado: { operacionRegistrada: '96', channel: 'green', circuito: 'V', fechaLevante: '2026-11-13T09:00:00' }
+    });
+
+    const res = await request(conEstado()).get('/api/declarations/e1/h1/estado');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.estado.operacionRegistrada).toBe('96');
+    expect(res.body.data.rawResponse).toBeUndefined();
+    expect(mockConsultar).toHaveBeenCalledWith('26ES002801I01BMDR0');
+    expect(exp.declaration.channel).toBe('green');
+    expect(exp.declaration.levanteDate).toEqual(new Date('2026-11-13T09:00:00'));
+    expect(exp.declaration.aeatResponse).toMatchObject({ servicio: 'CC415AV1', csv: 'C1', consulta: { estado: { circuito: 'V' } } });
+    expect(exp.save).toHaveBeenCalled();
+  });
+
+  test('si la AEAT no encuentra la declaración responde 404 con su motivo y no toca el expediente', async () => {
+    const exp = presentado();
+    mockExpedition.findById.mockResolvedValue(exp);
+    mockConsultar.mockResolvedValue({ success: false, tipo: 'error_funcional', error: '99999 No existe declaración de importación con MRN 26ES002801I01BMDR0' });
+
+    const res = await request(conEstado()).get('/api/declarations/e1/h1/estado');
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toContain('No existe declaración');
+    expect(exp.save).not.toHaveBeenCalled();
+  });
+
+  test('sin MRN, o presentada por el DUA anterior, no consulta', async () => {
+    mockExpedition.findById.mockResolvedValue(presentado({ mrn: undefined }));
+    expect((await request(conEstado()).get('/api/declarations/e1/h1/estado')).status).toBe(400);
+    mockExpedition.findById.mockResolvedValue(presentado({ aeatResponse: { responseCode: '0' } }));
+    expect((await request(conEstado()).get('/api/declarations/e1/h1/estado')).status).toBe(400);
+    expect(mockConsultar).not.toHaveBeenCalled();
+  });
+});

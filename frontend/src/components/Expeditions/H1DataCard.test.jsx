@@ -4,8 +4,9 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
 const getH1Requirements = vi.fn()
 const updateH1Data = vi.fn()
+const getH1Status = vi.fn()
 vi.mock('../../services/api', () => ({
-  declarationsAPI: { getH1Requirements: (...a) => getH1Requirements(...a), updateH1Data: (...a) => updateH1Data(...a) }
+  declarationsAPI: { getH1Requirements: (...a) => getH1Requirements(...a), updateH1Data: (...a) => updateH1Data(...a), getH1Status: (...a) => getH1Status(...a) }
 }))
 vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }))
 
@@ -22,6 +23,7 @@ describe('<H1DataCard />', () => {
   beforeEach(() => {
     getH1Requirements.mockReset()
     updateH1Data.mockReset()
+    getH1Status.mockReset()
   })
 
   test('muestra lo que falta para presentar el H1', async () => {
@@ -70,5 +72,32 @@ describe('<H1DataCard />', () => {
     render(<H1DataCard expedition={{ _id: 'e1' }} />)
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Error al comprobar los datos del H1')
+  })
+
+  test('una declaración presentada por el servicio nuevo permite consultar su estado en la AEAT', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [] }))
+    getH1Status.mockResolvedValue({ data: { data: {
+      estado: { operacionRegistrada: '96', circuito: 'N', fechaAdmision: '2026-11-12T10:57:04', fechaLevante: null, certificadosRequeridos: 'S' },
+      liquidacion: { totalAPagar: 3552 }, documentosSolicitados: [{ tipo: 'N380', descripcion: 'Factura comercial', partida: 1 }], notificaciones: [{ codigo: '1', texto: 'Aporte la factura' }]
+    } } })
+    render(<H1DataCard expedition={{ _id: 'e1', declaration: { mrn: '26ES002801I01BMDR0', aeatResponse: { servicio: 'CC415AV1' } } }} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Consultar estado en la AEAT' }))
+
+    expect(await screen.findByText('Naranja (revisión documental)')).toBeInTheDocument()
+    expect(getH1Status).toHaveBeenCalledWith('e1')
+    expect(screen.getByText('12/11/2026 10:57')).toBeInTheDocument()
+    expect(screen.getByText('3.552,00 EUR')).toBeInTheDocument()
+    expect(screen.getByText('La AEAT exige certificados de otros organismos.')).toBeInTheDocument()
+    expect(screen.getByText('N380 — Factura comercial (partida 1)')).toBeInTheDocument()
+    expect(screen.getByText('Aporte la factura')).toBeInTheDocument()
+  })
+
+  test('sin MRN, o presentada por el DUA anterior, no ofrece la consulta', async () => {
+    getH1Requirements.mockResolvedValue(respuesta())
+    render(<H1DataCard expedition={{ _id: 'e1', declaration: { mrn: 'X', aeatResponse: {} } }} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+
+    expect(screen.queryByRole('button', { name: 'Consultar estado en la AEAT' })).not.toBeInTheDocument()
   })
 })
