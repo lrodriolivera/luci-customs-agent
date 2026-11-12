@@ -551,11 +551,14 @@ describe('buildDutyTaxFee: antidumping, especiales, pago aplazado', () => {
     expect(r.xml).toMatch(/<AuthorisationNumber>AUTH-1<\/AuthorisationNumber>/);
   });
 
-  test('BUG documentado: good.dutyRate/vatRate se ignoran (solo se leen de aiData/duties)', () => {
-    // La fixture textil trae dutyRate: 8, pero buildDutyTaxFee no lo mira.
+  test('el arancel y el IVA salen del tipo de cada partida', () => {
+    // La fixture textil trae dutyRate: 8. Antes buildDutyTaxFee no lo miraba y
+    // la liquidación mostraba 0 % de arancel (fallo documentado aquí hasta el
+    // 12/Nov/2026).
     const d = h1.buildDutyTaxFee(expedicionCompleta(createTextileExpedition()), {});
-    expect(d.importDuty.rate).toBe(0); // no 8
-    expect(d.vat.rate).toBe(21);       // por defecto, no del good
+    expect(d.importDuty.rate).toBe(8);
+    expect(d.importDuty.payableAmount).toBeGreaterThan(0);
+    expect(d.vat.rate).toBe(21);
   });
 });
 

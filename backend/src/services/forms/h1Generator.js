@@ -499,18 +499,44 @@ class H1Generator {
   /**
    * Construir liquidacion (Grupo 8 - CRITICO)
    */
+  /**
+   * Arancel de la declaracion como suma del de cada partida: valor en aduana
+   * de la partida (reparto proporcional al valor de factura) por su tipo.
+   * Devuelve tambien el tipo efectivo y el tipo de IVA comun (21 si difieren).
+   */
+  liquidacionPorPartida(expedition, customsValue) {
+    const goods = expedition.goods || [];
+    const total = goods.reduce((s, g) => s + (g.invoiceValue || 0), 0);
+    const tariffAmount = goods.reduce((suma, g) => {
+      const parte = total > 0 ? (g.invoiceValue || 0) / total : 1 / (goods.length || 1);
+      return suma + Math.round(customsValue * parte * (g.dutyRate || 0)) / 100;
+    }, 0);
+    const tiposIva = [...new Set(goods.map((g) => g.vatRate ?? 21))];
+    return {
+      tariffAmount: Math.round(tariffAmount * 100) / 100,
+      tariffRate: customsValue > 0 ? Math.round((tariffAmount / customsValue) * 10000) / 100 : 0,
+      vatRate: tiposIva.length === 1 ? tiposIva[0] : 21
+    };
+  }
+
   buildDutyTaxFee(expedition, aiData) {
     const valuation = this.buildValuation(expedition, aiData);
     const customsValue = valuation.customsValue;
 
     // Obtener tasas arancelarias (simplificado - en produccion vendria de TARIC)
-    const tariffRate = aiData.tariffRate ?? expedition.duties?.tariffRate ?? 0;
-    const vatRate = aiData.vatRate ?? 21; // IVA general Espana
+    const tipoGlobal = aiData.tariffRate ?? expedition.duties?.tariffRate;
     const exciseRate = aiData.exciseRate ?? 0;
     const antidumpingRate = aiData.antidumpingRate ?? 0;
 
+    // Sin un tipo global, el arancel y el IVA salen de cada partida (el tipo
+    // que dejo la clasificacion), igual que en el XML que se presenta a la
+    // AEAT. Antes la liquidacion mostraba siempre 0 % de arancel.
+    const porPartida = tipoGlobal == null ? this.liquidacionPorPartida(expedition, customsValue) : null;
+    const tariffRate = porPartida ? porPartida.tariffRate : tipoGlobal;
+    const vatRate = aiData.vatRate ?? porPartida?.vatRate ?? 21; // IVA general Espana
+
     // Calculos
-    const tariffAmount = Math.round(customsValue * tariffRate / 100 * 100) / 100;
+    const tariffAmount = porPartida ? porPartida.tariffAmount : Math.round(customsValue * tariffRate / 100 * 100) / 100;
     const antidumpingAmount = Math.round(customsValue * antidumpingRate / 100 * 100) / 100;
     const exciseAmount = Math.round(customsValue * exciseRate / 100 * 100) / 100;
 

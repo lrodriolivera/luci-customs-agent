@@ -357,7 +357,10 @@ function expeditionToH1Data(expedition, { declarante, cambio } = {}) {
     // Tributos
     importeTotalTributos: enDivisa
       ? Math.round(partidasValoradas.reduce((s, p) => s + p.arancelImporte + p.ivaImporte, 0) * 100) / 100
-      : (calc.totalTaxes || goods.reduce((s, g) => s + ((g.invoiceValue || g.value || 0) * (g.vatRate || 21) / 100), 0)),
+      // Sin total calculado en el expediente, la suma de las cuotas de las
+      // partidas (arancel e IVA): sumar solo el IVA hacia que la AEAT rechazase
+      // la declaracion por no cuadrar la casilla B (error 3020).
+      : (calc.totalTaxes || Math.round(partidasValoradas.reduce((s, p) => s + p.arancelImporte + p.ivaImporte, 0) * 100) / 100),
     // Partidas
     partidas: goods.map((g, indice) => ({
       descripcion: g.description || '',
