@@ -26,7 +26,8 @@ async function medidasOficialesDe(expedition) {
         taricCode: consulta.codigo,
         originCountry: consulta.origen,
         source: consulta.fuente,
-        measures: consulta.medidas
+        measures: consulta.medidas,
+        dualUse: consulta.dobleUso
       });
     } catch (error) {
       logger.warn(`[TARIC] Sin medidas de control para ${good.taricCode}: ${error.message}`);

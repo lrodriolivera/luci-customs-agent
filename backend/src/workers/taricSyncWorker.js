@@ -20,12 +20,14 @@ let enMarcha = false;
  */
 async function cargarControles() {
   try {
-    const { sincronizarControles } = require('../services/taric/controles/sincronizacionControles');
+    const { sincronizarControles, sincronizarDobleUso } = require('../services/taric/controles/sincronizacionControles');
     const resultado = await sincronizarControles({
       TaricControlMeasure: require('../models/TaricControlMeasure'),
       TaricReference: require('../models/TaricReference')
     });
     if (!resultado.omitido) logger.info(`[TARIC] Medidas de control actualizadas (${resultado.mes})`);
+    // La tabla de doble uso se publica aparte, un par de veces al año.
+    await sincronizarDobleUso({ TaricReference: require('../models/TaricReference') });
     return resultado;
   } catch (error) {
     logger.error(`[TARIC] No se pudieron cargar las medidas de control: ${error.message}`);
