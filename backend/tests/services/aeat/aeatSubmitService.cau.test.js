@@ -94,6 +94,29 @@ describe('preparar el H1 CAU', () => {
   });
 });
 
+describe('anular el H1 CAU', () => {
+  const predeclaracion = () => ({ ...expediente(), declaration: { lrn: 'LUCI261112100000000', mrn: '26ES00280112345678' } });
+
+  test('envía la anulación al servicio CC414AV1 con el declarante y el contacto de la agencia', async () => {
+    mockSendSoap.mockResolvedValue({ data: '<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/"><env:Body><es:CC410AV1Sal xmlns:es="x"><CC410A><ImportOperation><LRN>LUCI261112100000000</LRN></ImportOperation><edeclarationCSVId>CSV1</edeclarationCSVId></CC410A></es:CC410AV1Sal></env:Body></env:Envelope>' });
+
+    const r = await servicio.anularH1Cau(predeclaracion(), { motivo: 'Pedido cancelado' }, { tenant: TENANT, ahora: AHORA });
+
+    const [xml, ruta] = mockSendSoap.mock.calls[0];
+    expect(ruta).toBe('/wlpl/ADIP-JDIT/ws/cci/CC414AV1SOAP');
+    expect(xml).toContain('<LRN>LUCI261112100000000</LRN><customsRegistrationNumber>26ES00280112345678</customsRegistrationNumber>');
+    expect(xml).toContain('<invalidationReason>Pedido cancelado</invalidationReason>');
+    expect(xml).toContain('<Declarant><identificationNumber>ESB22477020</identificationNumber><ContactPerson><name>Ana Ruiz</name>');
+    expect(r).toMatchObject({ success: true, tipo: 'anulada', csv: 'CSV1' });
+  });
+
+  test('sin contacto de la agencia no envía nada (422)', async () => {
+    const sinContacto = { ...TENANT, primaryContact: undefined };
+    await expect(servicio.anularH1Cau(predeclaracion(), { motivo: 'Pedido cancelado' }, { tenant: sinContacto })).rejects.toMatchObject({ status: 422, code: 'DATOS_H1_FALTANTES' });
+    expect(mockSendSoap).not.toHaveBeenCalled();
+  });
+});
+
 describe('consultar el H1 CAU', () => {
   test('pregunta al servicio de consulta por el MRN y devuelve el estado interpretado', async () => {
     mockSendSoap.mockResolvedValue({ data: '<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/"><env:Body><es:ConsultaImportacionV3Sal xmlns:es="x"><ConsultaCompletaR><DeclarationManagement><operationRegistered>96</operationRegistered><riskAnalysisResultCodeAEAT>V</riskAnalysisResultCodeAEAT></DeclarationManagement><ImportOperation><MRN>26ES002801I01BMDR0</MRN></ImportOperation></ConsultaCompletaR></es:ConsultaImportacionV3Sal></env:Body></env:Envelope>' });

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- editado por AEAT (Agencia Estatal de Administración Tributaria) -->
+
+    <!--=================================================================================================================-->
+    <!--===== IE414: E_INV_REQ                                                                                           -->
+    <!--===== Invalidation request                                                                                       -->
+    <!--===== CCI Phase 1                                                                                                -->
+    <!--===== XSD version 40.80                                                                                          -->
+    <!--=================================================================================================================-->
+
+<xs:schema 
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    elementFormDefault="unqualified" 
+    attributeFormDefault="unqualified" 
+    version="40.80"
+    xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CC414A.xsd"    
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CC414A.xsd"
+    xmlns:td1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes.xsd" >
+
+	<xs:import schemaLocation="ES_ctypes.xsd" 
+     namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes.xsd" >
+    </xs:import>
+
+    <!--=================================================================================================================-->
+    <!--===== Root element                                                                                               -->
+    <!--=================================================================================================================-->
+    <xs:element name="CC414A" type="CC414AType"/>
+    <!--=================================================================================================================-->
+    <!--===== Root element Content                                                                                       -->
+    <!--=================================================================================================================-->
+    <xs:complexType name="CC414AType">
+        <xs:sequence>
+            <xs:element name="ImportOperation" minOccurs="1" maxOccurs="1" type="td1:MCciOperationType17">
+            </xs:element>
+            <xs:element name="Declarant" minOccurs="0" maxOccurs="1" type="td1:MDeclarantType">
+            </xs:element>
+            <xs:element name="Representative" minOccurs="0" maxOccurs="1" type="td1:MRepresentativeType">
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
+

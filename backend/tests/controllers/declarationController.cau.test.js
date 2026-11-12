@@ -13,6 +13,8 @@ const mockPreparar = jest.fn();
 const mockEnviar = jest.fn();
 const mockSubmitH1 = jest.fn();
 const mockProcesarCanal = jest.fn();
+const mockAnularCau = jest.fn();
+const mockCancelH1 = jest.fn();
 
 jest.mock('../../src/models', () => ({ Expedition: mockExpedition, ChatMessage: { find: jest.fn() } }));
 jest.mock('../../src/models/Tenant', () => mockTenant);
@@ -20,7 +22,9 @@ jest.mock('../../src/services/aeat/aeatSubmitService', () => ({
   servicioH1: (tenant) => (tenant?.customsConfig?.h1Service === 'cau' ? 'cau' : 'precau'),
   prepararH1Cau: (...a) => mockPreparar(...a),
   enviarH1Cau: (...a) => mockEnviar(...a),
-  submitH1: (...a) => mockSubmitH1(...a)
+  submitH1: (...a) => mockSubmitH1(...a),
+  anularH1Cau: (...a) => mockAnularCau(...a),
+  cancelH1: (...a) => mockCancelH1(...a)
 }));
 jest.mock('../../src/services/aiService', () => ({}));
 jest.mock('../../src/services/channelService', () => ({ processChannelAssignment: (...a) => mockProcesarCanal(...a) }));
@@ -53,7 +57,9 @@ function expediente(declaration = {}) {
 function app() {
   const a = express();
   a.use(express.json());
-  a.post('/api/declarations/:expeditionId/submit', (req, _res, next) => { req.user = USER; req.tenantId = USER.tenantId; next(); }, declarationController.submitDeclaration);
+  const usuario = (req, _res, next) => { req.user = USER; req.tenantId = USER.tenantId; next(); };
+  a.post('/api/declarations/:expeditionId/submit', usuario, declarationController.submitDeclaration);
+  a.post('/api/declarations/:expeditionId/cancel', usuario, declarationController.cancelDeclaration);
   return a;
 }
 const enviar = () => request(app()).post('/api/declarations/e1/submit');
@@ -208,5 +214,71 @@ describe('H1 por el servicio CAU: reenvío y rechazos', () => {
     expect(mockSubmitH1).toHaveBeenCalled();
     expect(mockPreparar).not.toHaveBeenCalled();
     expect(exp.declaration.channel).toBe('green');
+  });
+});
+
+describe('H1 por el servicio CAU: anulación', () => {
+  const anular = (cuerpo) => request(app()).post('/api/declarations/e1/cancel').send(cuerpo);
+  const presentada = (aeatResponse) => expediente({ status: 'submitted', mrn: '26ES002801I01BMDR0', lrn: 'LUCI261112100000000', aeatResponse });
+
+  test('una declaración ya activada no se anula por servicio web: 409 y no se envía nada', async () => {
+    const exp = presentada({ servicio: 'CC415AV1', responseCode: '64' });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await anular({ reason: 'Pedido cancelado por el cliente' });
+
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe('ANULACION_POR_LA_ADUANA');
+    expect(res.body.error).toContain('solicitar la anulación a la aduana');
+    expect(mockAnularCau).not.toHaveBeenCalled();
+    // Y nunca la anulación del DUA anterior, que no sirve para un MRN del servicio CAU.
+    expect(mockCancelH1).not.toHaveBeenCalled();
+    expect(exp.save).not.toHaveBeenCalled();
+  });
+
+  test('una predeclaración pendiente de activar sí: se anula y queda registrado', async () => {
+    const exp = presentada({ servicio: 'CC415AV1', responseCode: '63' });
+    mockExpedition.findById.mockResolvedValue(exp);
+    mockAnularCau.mockResolvedValue({ success: true, tipo: 'anulada', fechaDecision: '2026-11-12T10:31:00', csv: 'CSV1', rawResponse: '<xml/>', requestXML: '<soap/>' });
+
+    const res = await anular({ reason: 'Pedido cancelado por el cliente' });
+
+    expect(res.status).toBe(200);
+    expect(mockAnularCau).toHaveBeenCalledWith(exp, { motivo: 'Pedido cancelado por el cliente' });
+    expect(exp.status).toBe('cancelled');
+    expect(exp.declaration.cancelledAt).toEqual(new Date('2026-11-12T10:31:00'));
+    expect(exp.timeline[0]).toMatchObject({ action: 'declaration_cancelled', metadata: { aeatResponse: { tipo: 'anulada', csv: 'CSV1' } } });
+    expect(res.body.data.rawResponse).toBeUndefined();
+  });
+
+  test('manda el estado más reciente: si la consulta dice que ya se activó, no se anula', async () => {
+    mockExpedition.findById.mockResolvedValue(presentada({ servicio: 'CC415AV1', responseCode: '63', consulta: { estado: { operacionRegistrada: '64' } } }));
+
+    expect((await anular({ reason: 'Pedido cancelado por el cliente' })).status).toBe(409);
+  });
+
+  test('sin motivo no se envía; un rechazo de la AEAT responde 400 con su motivo', async () => {
+    const exp = presentada({ servicio: 'CC415AV1', responseCode: '63' });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    expect((await anular({ reason: '1' })).status).toBe(400);
+    expect(mockAnularCau).not.toHaveBeenCalled();
+
+    mockAnularCau.mockResolvedValue({ success: false, tipo: 'error_funcional', error: '21200 Notificada la intención de control' });
+    const res = await anular({ reason: 'Pedido cancelado por el cliente' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('intención de control');
+    expect(exp.status).not.toBe('cancelled');
+  });
+
+  test('una declaración del DUA anterior sigue por su anulación de siempre', async () => {
+    mockExpedition.findById.mockResolvedValue(presentada({ responseCode: '0' }));
+    mockCancelH1.mockResolvedValue({ success: true, code: '0' });
+
+    const res = await anular({ reason: '1' });
+
+    expect(res.status).toBe(200);
+    expect(mockCancelH1).toHaveBeenCalled();
+    expect(mockAnularCau).not.toHaveBeenCalled();
   });
 });

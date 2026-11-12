@@ -10,6 +10,7 @@ const Tenant = require('../models/Tenant');
 const { ErrorValidacion, exigirIdentificacion } = require('../services/forms/identificadorAduanero');
 const { cambioDelExpediente } = require('../services/divisas/cambioDelExpediente');
 const { aplicarCauAVistaPrevia } = require('../services/aeat/h1CauVistaPrevia');
+const { anulablePorServicio } = require('../services/aeat/h1CauAnulacion');
 const { verificarSumariaConAeat, esGrupaje, CODIGO_ERROR: CODIGO_GRUPAJE } = require('../services/forms/grupajeLcl');
 
 /** Sin grupaje y sin sumaria registrada no hay nada que comprobar ni que consultar. */
@@ -1737,6 +1738,41 @@ const cancelDeclaration = async (req, res) => {
       return res.status(400).json({ success: false, error: 'La declaracion no tiene MRN asignado' });
     }
 
+    // Declaracion presentada por el servicio CAU: la anulacion del DUA anterior
+    // no le sirve. El servicio CAU solo anula lo que aun no esta activado; una
+    // declaracion activada la anula la aduana a peticion del operador.
+    const respuestaAeat = expedition.declaration.aeatResponse || {};
+    if (respuestaAeat.servicio === 'CC415AV1') {
+      const estado = respuestaAeat.consulta?.estado?.operacionRegistrada || respuestaAeat.responseCode;
+      if (!anulablePorServicio(estado)) {
+        return res.status(409).json({
+          success: false,
+          code: 'ANULACION_POR_LA_ADUANA',
+          error: 'Una declaración ya activada no se puede anular por servicio web: hay que solicitar la anulación a la aduana. La resolución llega por la Bandeja de Entrada de la AEAT.'
+        });
+      }
+      const motivo = typeof req.body.reason === 'string' ? req.body.reason.trim() : '';
+      if (motivo.length < 5) {
+        return res.status(400).json({ success: false, error: 'Indica el motivo de la anulación' });
+      }
+      const anulacion = await aeatSubmitService.anularH1Cau(expedition, { motivo });
+      const { rawResponse, requestXML, ...resumen } = anulacion;
+      if (!expedition.timeline) expedition.timeline = [];
+      expedition.timeline.push({
+        action: 'declaration_cancelled',
+        description: `Anulacion enviada a AEAT. ${anulacion.success ? 'Aceptada' : 'Rechazada: ' + anulacion.error}`,
+        performedBy: req.user?.name,
+        userId: req.user?._id,
+        metadata: { aeatResponse: resumen }
+      });
+      if (anulacion.success) {
+        expedition.status = 'cancelled';
+        expedition.declaration.cancelledAt = anulacion.fechaDecision ? new Date(anulacion.fechaDecision) : new Date();
+      }
+      await expedition.save();
+      return res.status(anulacion.success ? 200 : 400).json({ success: anulacion.success, data: resumen, error: anulacion.error || undefined });
+    }
+
     const result = await aeatSubmitService.cancelH1({
       mrn: expedition.declaration.mrn,
       reason: req.body.reason || '0',
@@ -1766,6 +1802,7 @@ const cancelDeclaration = async (req, res) => {
   } catch (error) {
     // El detalle va al log, no al cliente: error.message puede llevar rutas,
     // cadenas de conexion o respuestas crudas de AEAT.
+    if (responderSiFaltaIdentificacion(res, error)) return;
     logger.error('Error cancelling declaration:', error);
     res.status(500).json({ success: false, error: 'Error al anular la declaracion' });
   }

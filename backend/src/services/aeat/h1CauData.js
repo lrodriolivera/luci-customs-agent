@@ -297,4 +297,4 @@ function expeditionToH1CauData(expedition, { declarante, cambio, tenant, mensaje
   return datos;
 }
 
-module.exports = { expeditionToH1CauData, conPais, aduana, ubicacionDe, provinciaDe, PAGOS_CON_GARANTIA };
+module.exports = { expeditionToH1CauData, partes, conPais, aduana, ubicacionDe, provinciaDe, PAGOS_CON_GARANTIA };

@@ -9,7 +9,8 @@ const aeatRealService = require('./aeatRealService');
 const aeatTransport = require('./aeatTransport');
 const { buildH1ImportXML, expeditionToH1Data } = require('./h1XmlBuilder');
 const { cambioDelExpediente } = require('../divisas/cambioDelExpediente');
-const { expeditionToH1CauData } = require('./h1CauData');
+const { expeditionToH1CauData, partes: partesH1Cau } = require('./h1CauData');
+const { buildAnulacionH1CauXML, interpretarAnulacionH1Cau, ENDPOINT_CC414A } = require('./h1CauAnulacion');
 const { buildH1CauXML, ENDPOINT_CC415A } = require('./h1CauXmlBuilder');
 const { interpretarRespuestaH1Cau } = require('./h1CauResponse');
 const { buildConsultaH1CauXML, interpretarConsultaH1Cau, ENDPOINT_CONSULTA } = require('./h1CauConsulta');
@@ -27,7 +28,7 @@ const { buildIE314CancelXML } = require('./ie314XmlBuilder');
 const { buildQueryImportXML } = require('./queryXmlBuilder');
 const { buildDSDTConsXML, parseDSDTConsResponse, ENDPOINT: ENDPOINT_DSDT_CONS } = require('./dsdtConsXmlBuilder');
 const {
-  eoriDe, exigirEori, declarantePara, representanteDelTenant
+  eoriDe, exigirEori, declarantePara, representanteDelTenant, ErrorValidacion
 } = require('../forms/identificadorAduanero');
 
 /**
@@ -298,6 +299,47 @@ async function prepararH1Cau(expedition, ctx = {}) {
 async function enviarH1Cau(requestXML) {
   const response = await aeatTransport.sendSoap(requestXML, ENDPOINT_CC415A);
   return { ...interpretarRespuestaH1Cau(response.data), requestXML };
+}
+
+/**
+ * Anula en la AEAT una predeclaracion de importacion CAU (servicio CC414AV1).
+ * Solo sirve para lo que aun no esta activado; quien llama lo comprueba antes.
+ *
+ * @param {object} expedition
+ * @param {{ motivo: string }} datos
+ * @throws ErrorValidacion (422) si faltan el declarante o su contacto
+ */
+async function anularH1Cau(expedition, { motivo }, ctx = {}) {
+  const tenant = await _tenantDe(expedition, ctx);
+  const declarante = declarantePara(expedition, tenant);
+  const deLaAgencia = representanteDelTenant(tenant).contact;
+  const faltan = [];
+  const personas = partesH1Cau(expedition, {
+    ...declarante,
+    contact: {
+      name: declarante.contact?.name || deLaAgencia.name,
+      phone: declarante.contact?.phone || deLaAgencia.phone,
+      email: declarante.contact?.email || deLaAgencia.email
+    }
+  }, faltan);
+  if (faltan.length > 0) {
+    const error = new ErrorValidacion(`Faltan datos para anular la declaración: ${faltan.join('; ')}`, { code: 'DATOS_H1_FALTANTES' });
+    error.faltan = faltan;
+    throw error;
+  }
+  const ahora = ctx.ahora || new Date();
+  const requestXML = buildAnulacionH1CauXML({
+    mensajeId: `${_referenciaCau(ahora)}A${Math.floor(Math.random() * 900 + 100)}`,
+    lrn: expedition.declaration?.lrn,
+    numeroRegistro: expedition.declaration?.mrn,
+    motivo,
+    declarante: personas.declarante,
+    representante: personas.representante,
+    fecha: ahora,
+    test: process.env.AEAT_ENVIRONMENT !== 'production'
+  });
+  const response = await aeatTransport.sendSoap(requestXML, ENDPOINT_CC414A);
+  return { ...interpretarAnulacionH1Cau(response.data), requestXML };
 }
 
 /**
@@ -802,6 +844,7 @@ module.exports = {
   prepararH1Cau,
   enviarH1Cau,
   consultarH1Cau,
+  anularH1Cau,
   consultarSumaria,
   submitH1,
   submitH7,
