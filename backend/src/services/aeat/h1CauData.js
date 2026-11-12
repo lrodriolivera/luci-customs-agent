@@ -12,6 +12,7 @@
 const { ErrorValidacion, eoriDe, formaRepresentacionDe } = require('../forms/identificadorAduanero');
 const { cambioObligatorio, aEuros } = require('../divisas/cambioDelExpediente');
 const { CODIGO_AJUSTE, gastosHastaLaFrontera, repartirPorValor } = require('../forms/gastosHastaLaFrontera');
+const { sinCodigoPostal } = require('./paisesSinCodigoPostal');
 
 // Medios de pago que obligan a declarar garantia con regimen 40 (regla C0616).
 const PAGOS_CON_GARANTIA = new Set(['O', 'R', 'S', 'T', 'U', 'V', 'G']);
@@ -77,8 +78,13 @@ function exportadorDe(exporter, faltan) {
   if (!datos.direccion.calle) faltan.push('dirección del exportador');
   if (!datos.direccion.ciudad) faltan.push('ciudad del exportador');
   if (!datos.direccion.pais) faltan.push('país del exportador');
-  // La AEAT lo exige salvo en los paises sin codigo postal (error 50325 si falta).
-  if (!datos.direccion.cp) faltan.push('código postal del exportador');
+  // Fuera de la CL505 lo exige la regla C0505 (error 50325); dentro, la AEAT
+  // lo pide igualmente como parte de la «direccion completa» (error 50908).
+  if (!datos.direccion.cp) {
+    faltan.push(sinCodigoPostal(datos.direccion.pais)
+      ? `código postal del exportador: la AEAT lo exige aunque ${datos.direccion.pais.toUpperCase()} no use códigos postales; si el exportador tiene EORI, basta con el EORI`
+      : 'código postal del exportador');
+  }
   return datos;
 }
 
