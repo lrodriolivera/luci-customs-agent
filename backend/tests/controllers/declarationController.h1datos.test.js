@@ -66,7 +66,7 @@ describe('requisitos del H1', () => {
     expect(res.status).toBe(200);
     expect(res.body.data).toEqual({
       servicio: 'cau', listo: false, faltan: error.faltan,
-      datos: { invoiceNumber: '', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE' }
+      datos: { invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE' }
     });
   });
 
@@ -95,10 +95,11 @@ describe('datos del H1 en el expediente', () => {
     mockExpedition.findById.mockResolvedValue(exp);
 
     const res = await request(app()).put('/api/declarations/e1/h1/datos')
-      .send({ invoiceNumber: ' FAC-2026-118 ', vehicleNationality: 'pa', dispatchAuthorizationScope: 'global' });
+      .send({ invoiceNumber: ' FAC-2026-118 ', exporterPostalCode: ' 200000 ', vehicleNationality: 'pa', dispatchAuthorizationScope: 'global' });
 
     expect(res.status).toBe(200);
-    expect(res.body.data).toEqual({ invoiceNumber: 'FAC-2026-118', vehicleNationality: 'PA', dispatchAuthorizationScope: 'global' });
+    expect(res.body.data).toEqual({ invoiceNumber: 'FAC-2026-118', exporterPostalCode: '200000', vehicleNationality: 'PA', dispatchAuthorizationScope: 'global' });
+    expect(exp.exporter).toEqual({ postalCode: '200000' });
     expect(exp.transport).toEqual({ vehicleId: 'MSC AURORA', summaryDeclaration: { number: '28016000001' }, vehicleNationality: 'PA' });
     expect(exp.representative).toEqual({ representationType: 'indirect', dispatchAuthorizationScope: 'global' });
     expect(exp.save).toHaveBeenCalled();

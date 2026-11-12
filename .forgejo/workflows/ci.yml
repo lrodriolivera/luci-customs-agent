@@ -18,6 +18,11 @@ jobs:
     timeout-minutes: 40
     env:
       MONGOMS_DISTRO: ubuntu-22.04
+      # Dos procesos de jest en vez de cuatro: este job corre a la vez que el del
+      # frontend en un servidor con poca memoria libre, y con cuatro el sistema
+      # mataba procesos de pruebas (SIGKILL) y las suites con base de datos
+      # agotaban el tiempo. Se ejecutan las mismas pruebas.
+      JEST_MAX_WORKERS: 2
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v4
 

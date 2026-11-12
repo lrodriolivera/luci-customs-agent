@@ -75,6 +75,8 @@ function exportadorDe(exporter, faltan) {
   if (!datos.direccion.calle) faltan.push('dirección del exportador');
   if (!datos.direccion.ciudad) faltan.push('ciudad del exportador');
   if (!datos.direccion.pais) faltan.push('país del exportador');
+  // La AEAT lo exige salvo en los paises sin codigo postal (error 50325 si falta).
+  if (!datos.direccion.cp) faltan.push('código postal del exportador');
   return datos;
 }
 
