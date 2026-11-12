@@ -83,6 +83,50 @@ describe('medidas de control: carga y consulta', () => {
 
   test('sin datos cargados la consulta responde vacía y sin fuente', async () => {
     const vacio = await controlesPara('0201100000', 'BR', modelos);
-    expect(vacio).toEqual({ codigo: '0201100000', origen: 'BR', fuente: null, medidas: [] });
+    expect(vacio).toEqual({ codigo: '0201100000', origen: 'BR', fuente: null, medidas: [], dobleUso: [] });
+  });
+});
+
+describe('sanciones y doble uso', () => {
+  const { sincronizarDobleUso, MINIMO_DE_CODIGOS_DOBLE_USO } = require('../../../../src/services/taric/controles/sincronizacionControles');
+  const tablaGrande = (extra) => ({
+    ...Object.fromEntries(Array.from({ length: MINIMO_DE_CODIGOS_DOBLE_USO }, (_, i) => [`97${String(i).padStart(6, '0')}`, [{ categoria: '9Z999', nota: 'DU999' }]])),
+    ...extra
+  });
+  const origenTabla = (id, tabla) => ({
+    descargar: jest.fn(async ({ yaCargado }) => (yaCargado(id) ? { id, nombre: `tabla ${id}`, omitido: true } : { id, nombre: `tabla ${id}`, contenido: 'x' })),
+    leer: jest.fn(() => tabla)
+  });
+
+  test('una medida de un reglamento de sanciones se marca y va delante', async () => {
+    await sincronizarControles({ ...modelos, ...fuente('2026-11', [
+      medida('8471000000', 'RU', '762', ['L142'], { tipoNombre: 'Import control', baseLegal: 'Regulation 0833/14' }),
+      medida('8471300000', 'RU', '482', [], { tipoNombre: 'Declaration of subheading', baseLegal: 'Regulation 0927/12' })
+    ]), ahora: AHORA });
+
+    const r = await controlesPara('8471300000', 'RU', modelos);
+
+    expect(r.medidas.map((m) => [m.tipo, m.sancion?.pais || null])).toEqual([['762', 'Rusia'], ['482', null]]);
+    expect(r.medidas[0].sancion.norma).toBe('Reglamento (UE) n.º 833/2014');
+  });
+
+  test('carga la tabla de doble uso y la consulta devuelve las categorías del código y de sus niveles superiores', async () => {
+    const tabla = tablaGrande({ 840110: [{ categoria: '0A001a', nota: 'DU583' }], 84011000: [{ categoria: '0B001', nota: 'DU001' }] });
+    const cargado = await sincronizarDobleUso({ TaricReference, ...origenTabla('t1', tabla), ahora: AHORA });
+    expect(cargado.codigos).toBe(MINIMO_DE_CODIGOS_DOBLE_USO + 2);
+
+    expect((await controlesPara('8401100010', 'CN', modelos)).dobleUso).toEqual([{ categoria: '0A001a', nota: 'DU583' }, { categoria: '0B001', nota: 'DU001' }]);
+    expect((await controlesPara('6302100000', 'CN', modelos)).dobleUso).toEqual([]);
+  });
+
+  test('la misma tabla no se vuelve a cargar; una tabla incompleta no sustituye la cargada', async () => {
+    const origen = origenTabla('t1', tablaGrande({ 840110: [{ categoria: '0A001a', nota: 'DU583' }] }));
+    await sincronizarDobleUso({ TaricReference, ...origen, ahora: AHORA });
+    expect(await sincronizarDobleUso({ TaricReference, ...origen, ahora: AHORA })).toEqual({ omitido: true, tabla: 'tabla t1' });
+    expect(origen.leer).toHaveBeenCalledTimes(1);
+
+    await expect(sincronizarDobleUso({ TaricReference, ...origenTabla('t2', { 840110: [{ categoria: '0A001a', nota: 'DU583' }] }), ahora: AHORA }))
+      .rejects.toThrow('no se sustituye');
+    expect((await controlesPara('8401100000', 'CN', modelos)).dobleUso).toHaveLength(1);
   });
 });

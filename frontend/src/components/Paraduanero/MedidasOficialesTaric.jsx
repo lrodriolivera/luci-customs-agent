@@ -3,13 +3,16 @@ import React from 'react'
 /**
  * Medidas de control de importación que el TARIC de la UE aplica a cada
  * partida según su código y su país de origen, con los certificados de la
- * casilla 44 que admite cada una. Los datos vienen de los ficheros oficiales
- * de la Comisión Europea; los controles nacionales (SOIVRE, etc.) no están ahí.
+ * casilla 44 que admite cada una; marca las que son sanciones de la UE y avisa
+ * de la posible correspondencia con productos de doble uso. Los datos vienen de
+ * los ficheros oficiales de la Comisión Europea; los controles nacionales
+ * (SOIVRE, etc.) no están ahí.
  *
  * @param {{ partidas?: Array<{ itemNumber?: number, taricCode: string, originCountry: string, source?: { mes?: string }, measures: object[] }> }} props
  */
 export default function MedidasOficialesTaric({ partidas = [] }) {
-  const conMedidas = partidas.filter((p) => p.measures?.length > 0)
+  const conMedidas = partidas.filter((p) => p.measures?.length > 0 || p.dualUse?.length > 0)
+  const conSanciones = partidas.some((p) => p.measures?.some((m) => m.sancion))
   if (partidas.length === 0) return null
   const mes = partidas.find((p) => p.source?.mes)?.source.mes
 
@@ -20,6 +23,12 @@ export default function MedidasOficialesTaric({ partidas = [] }) {
         Según el código y el país de origen de cada partida{mes ? `. Datos de la Comisión Europea, ${mes}` : ''}.
         No incluye los controles nacionales.
       </p>
+
+      {conSanciones && (
+        <p role="alert" className="mt-3 rounded border border-red-300 bg-red-50 p-2 text-sm font-medium text-red-800">
+          Hay partidas afectadas por sanciones de la UE. Revísalas antes de presentar.
+        </p>
+      )}
 
       {conMedidas.length === 0 && (
         <p className="mt-3 text-sm text-blue-900">El TARIC no aplica medidas de control a estas partidas.</p>
@@ -34,6 +43,11 @@ export default function MedidasOficialesTaric({ partidas = [] }) {
             {partida.measures.map((medida, j) => (
               <li key={`${medida.tipo}-${j}`} className="rounded bg-white/70 p-2">
                 <p className={`font-medium ${medida.prohibicion ? 'text-red-700' : ''}`}>{medida.nombre}</p>
+                {medida.sancion && (
+                  <p className="mt-1 inline-block rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800">
+                    Sanciones de la UE · {medida.sancion.pais} · {medida.sancion.norma}
+                  </p>
+                )}
                 <p className="text-xs text-gray-600">
                   {medida.baseLegal}
                   {medida.ambito?.origenNombre ? ` · ${medida.ambito.origenNombre}` : ''}
@@ -64,6 +78,15 @@ export default function MedidasOficialesTaric({ partidas = [] }) {
               </li>
             ))}
           </ul>
+          {partida.dualUse?.length > 0 && (
+            <div className="mt-2 rounded bg-white/70 p-2 text-xs text-gray-700">
+              <p className="font-medium text-gray-800">Posible producto de doble uso (Reglamento (UE) 2021/821)</p>
+              <p className="mt-1">
+                Categorías con las que se corresponde este código: <span className="font-mono">{partida.dualUse.map((d) => d.categoria).join(', ')}</span>.
+              </p>
+              <p className="mt-1">Es orientativo: depende de las características técnicas. Si se exporta, puede necesitar licencia.</p>
+            </div>
+          )}
         </div>
       ))}
     </section>

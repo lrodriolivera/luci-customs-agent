@@ -23,7 +23,7 @@ async function main() {
   const mongoose = require('mongoose');
   const TaricControlMeasure = require('../models/TaricControlMeasure');
   const TaricReference = require('../models/TaricReference');
-  const { sincronizarControles, prepararControles, ficherosDeControles } = require('../services/taric/controles/sincronizacionControles');
+  const { sincronizarControles, prepararControles, ficherosDeControles, sincronizarDobleUso, ficheroDobleUso } = require('../services/taric/controles/sincronizacionControles');
   const { controlesPara } = require('../services/taric/controles/controlesOficiales');
 
   await mongoose.connect(process.env.MONGODB_URI);
@@ -44,6 +44,9 @@ async function main() {
       console.log(`Grupos de países: ${Object.keys(plan.areas).length} | Certificados con descripción: ${Object.keys(plan.certificados).length}`);
       console.log(`Certificados sin descripción en español: ${plan.certificadosSinDescripcion.join(', ') || 'ninguno'}`);
       Object.entries(porTipo).sort((a, b) => b[1] - a[1]).forEach(([t, n]) => console.log(`  ${String(n).padStart(5)}  ${t}`));
+      const dobleUso = await ficheroDobleUso();
+      const tabla = require('../services/taric/controles/dobleUso').leerDobleUso(require('../services/taric/xlsxSimple').leerPrimeraHoja(dobleUso.contenido));
+      console.log(`Doble uso: tabla «${dobleUso.nombre}», ${Object.keys(tabla).length} códigos con correlación`);
       console.log('Nada se ha escrito. Repite con --aplicar para cargarlo.');
       return;
     }
@@ -51,6 +54,10 @@ async function main() {
     console.log(resultado.omitido
       ? `El mes ${resultado.mes} ya estaba cargado: nada que hacer (usa --forzar para recargarlo).`
       : `Cargado ${resultado.mes}: ${resultado.medidas} medidas, ${resultado.areas} grupos de países, ${resultado.certificados} certificados.`);
+    const dobleUso = await sincronizarDobleUso({ TaricReference, forzar: !!opcion('forzar') });
+    console.log(dobleUso.omitido
+      ? `La tabla de doble uso «${dobleUso.tabla}» ya estaba cargada.`
+      : `Doble uso: cargada «${dobleUso.tabla}», ${dobleUso.codigos} códigos.`);
   } finally {
     await mongoose.disconnect();
   }

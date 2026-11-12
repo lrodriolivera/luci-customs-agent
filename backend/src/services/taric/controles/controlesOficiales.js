@@ -4,6 +4,7 @@
  */
 const { prefijosDe } = require('./medidasControl');
 const { nombreDeTipo, esProhibicion } = require('./tiposDeMedida');
+const { regimenDeSanciones } = require('./sanciones');
 
 const FUENTE = 'Comisión Europea - TARIC (CIRCABC)';
 
@@ -24,10 +25,19 @@ async function controlesPara(codigo, pais, modelos = modelosPorDefecto()) {
   const limpio = String(codigo || '').replace(/\D/g, '').padEnd(10, '0').slice(0, 10);
   const origen = String(pais || '').trim().toUpperCase();
 
-  const [meta, grupos] = await Promise.all([
+  const [meta, grupos, correlaciones] = await Promise.all([
     TaricReference.findOne({ clase: 'meta', codigo: 'controles' }).lean(),
-    TaricReference.find({ clase: 'area', miembros: origen }, { codigo: 1 }).lean()
+    TaricReference.find({ clase: 'area', miembros: origen }, { codigo: 1 }).lean(),
+    TaricReference.find({ clase: 'dobleUso', codigo: { $in: prefijosDe(limpio) } }).lean()
   ]);
+  // Categorias de doble uso del codigo y de sus niveles superiores, sin repetir.
+  const dobleUso = [];
+  for (const c of correlaciones) {
+    for (const e of c.datos?.entradas || []) {
+      if (!dobleUso.some((d) => d.categoria === e.categoria)) dobleUso.push({ categoria: e.categoria, nota: e.nota });
+    }
+  }
+  dobleUso.sort((a, b) => a.categoria.localeCompare(b.categoria));
   const filas = await TaricControlMeasure.find({
     prefijo: { $in: prefijosDe(limpio) },
     origen: { $in: [origen, ...grupos.map((g) => g.codigo)] },
@@ -51,6 +61,8 @@ async function controlesPara(codigo, pais, modelos = modelosPorDefecto()) {
       nombreOficial: m.tipoNombre,
       baseLegal: m.baseLegal,
       prohibicion: esProhibicion(m.tipo),
+      // Regimen de sanciones de la UE al que pertenece la medida, si lo es.
+      sancion: regimenDeSanciones(m.baseLegal),
       ambito: { codigo: m.codigo, origen: m.origen, origenNombre: m.origenNombre },
       condiciones: (m.condiciones || []).map((g) => ({
         grupo: g.grupo,
@@ -60,14 +72,16 @@ async function controlesPara(codigo, pais, modelos = modelosPorDefecto()) {
       }))
     });
   }
-  // Primero las prohibiciones; despues, por tipo de medida.
-  medidas.sort((a, b) => (Number(b.prohibicion) - Number(a.prohibicion)) || a.tipo.localeCompare(b.tipo));
+  // Primero las prohibiciones, luego las sanciones; despues, por tipo de medida.
+  medidas.sort((a, b) => (Number(b.prohibicion) - Number(a.prohibicion)) || (Number(!!b.sancion) - Number(!!a.sancion)) || a.tipo.localeCompare(b.tipo));
 
   return {
     codigo: limpio,
     origen,
     fuente: meta?.datos ? { nombre: FUENTE, mes: meta.datos.mes, actualizado: meta.datos.actualizado } : null,
-    medidas
+    medidas,
+    // Posible doble uso (Reglamento (UE) 2021/821): orientativo, sobre todo para exportar.
+    dobleUso
   };
 }
 
