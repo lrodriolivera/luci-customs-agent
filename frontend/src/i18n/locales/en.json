@@ -438,6 +438,7 @@
     "totalGrossWeight": "Gross Weight",
     "totalValue": "Value",
     "xmlForAeat": "XML for AEAT (CC515C):",
+    "xmlForAeatCau": "XML for the customs authority (CC415A message):",
     "xmlTruncated": "... (XML truncated for display)",
     "downloadXml": "Download XML",
     "downloadJson": "Download JSON",

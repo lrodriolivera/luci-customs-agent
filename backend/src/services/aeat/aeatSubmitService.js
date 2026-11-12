@@ -291,7 +291,7 @@ async function prepararH1Cau(expedition, ctx = {}) {
     fecha: ahora,
     test: process.env.AEAT_ENVIRONMENT !== 'production'
   });
-  return { messageId: datos.mensaje.id, lrn: datos.declaracion.lrn, requestXML: buildH1CauXML(datos), preparedAt: ahora };
+  return { messageId: datos.mensaje.id, lrn: datos.declaracion.lrn, requestXML: buildH1CauXML(datos), preparedAt: ahora, datos };
 }
 
 /** Envia un H1 CAU ya preparado y devuelve la respuesta interpretada. */

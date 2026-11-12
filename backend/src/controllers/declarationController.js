@@ -9,6 +9,7 @@ const h7Generator = require('../services/forms/h7Generator');
 const Tenant = require('../models/Tenant');
 const { ErrorValidacion, exigirIdentificacion } = require('../services/forms/identificadorAduanero');
 const { cambioDelExpediente } = require('../services/divisas/cambioDelExpediente');
+const { aplicarCauAVistaPrevia } = require('../services/aeat/h1CauVistaPrevia');
 const { verificarSumariaConAeat, esGrupaje, CODIGO_ERROR: CODIGO_GRUPAJE } = require('../services/forms/grupajeLcl');
 
 /** Sin grupaje y sin sumaria registrada no hay nada que comprobar ni que consultar. */
@@ -71,6 +72,25 @@ const responderSiFaltaIdentificacion = (res, error) => {
   });
   return true;
 };
+
+/**
+ * Con el servicio CAU activado, la declaracion generada muestra lo que de
+ * verdad se enviara a la AEAT (aduanas, ubicacion, documentos y el XML del
+ * mensaje CC415A). Si aun faltan datos para presentar, se deja la vista previa
+ * del generador: la tarjeta de datos del H1 ya dice que falta.
+ */
+async function ajustarVistaPreviaAlServicio(expedition, tenant) {
+  if (aeatSubmitService.servicioH1(tenant) !== 'cau' || !expedition.declaration?.h1Data) return;
+  try {
+    const preparado = await aeatSubmitService.prepararH1Cau(expedition, { tenant });
+    expedition.declaration.h1Data = aplicarCauAVistaPrevia(expedition.declaration.h1Data, preparado.datos);
+    expedition.declaration.customsOffice = preparado.datos.aduanaImportacion;
+    // El XML es el del mensaje CAU; al presentar se prepara de nuevo con su propio identificador.
+    expedition.declaration.xmlContent = preparado.requestXML;
+  } catch (error) {
+    if (!(error instanceof ErrorValidacion)) throw error;
+  }
+}
 
 const AMBITOS_AUTORIZACION = ['global', 'OCRE', 'OSRE'];
 
@@ -1005,6 +1025,7 @@ const generateH1Direct = async (req, res) => {
       xmlContent: h1Declaration.xml,
       h1Data: h1Declaration.data
     };
+    await ajustarVistaPreviaAlServicio(expedition, tenant);
 
     expedition.status = 'ready_for_declaration';
 

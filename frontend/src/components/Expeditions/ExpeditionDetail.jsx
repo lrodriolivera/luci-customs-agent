@@ -1184,7 +1184,7 @@ export default function ExpeditionDetail() {
               {/* XML Preview */}
               {(h1Result?.xml || expedition.declaration?.xmlContent) && (
                 <div className="mt-4">
-                  <p className="text-gray-600 font-medium text-sm mb-2">{t('expeditions.xmlForAeat')}</p>
+                  <p className="text-gray-600 font-medium text-sm mb-2">{t(expedition.declaration?.h1Data?.servicio === 'CC415AV1' ? 'expeditions.xmlForAeatCau' : 'expeditions.xmlForAeat')}</p>
                   <pre className="text-xs bg-gray-900 text-green-400 p-3 rounded-lg overflow-auto max-h-64 font-mono">
                     {(h1Result?.xml || expedition.declaration?.xmlContent)?.substring(0, 2000)}
                     {(h1Result?.xml || expedition.declaration?.xmlContent)?.length > 2000 && `\n\n${t('expeditions.xmlTruncated')}`}
