@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema 
+     xmlns:xs="http://www.w3.org/2001/XMLSchema"
+     elementFormDefault="unqualified" 
+     attributeFormDefault="unqualified" 
+     version="40.80"
+     
+    xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CD917A.xsd"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_CD917A.xsd"
+    xmlns:td1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes.xsd" 
+    xmlns:td11="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes_D.xsd">
+
+	<xs:import schemaLocation="ES_ctypes.xsd" 
+     namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes.xsd" >
+    </xs:import> 
+    
+	<xs:import schemaLocation="ES_ctypes_D.xsd" 
+     namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_ctypes_D.xsd" >
+    </xs:import> 
+        
+    <!--=================================================================================================================-->
+    <!--===== IE917: C_XML_NCK                                                                                           -->
+    <!--===== XML error                                                                                                  -->
+    <!--===== CCI Phase 1                                                                                                -->
+    <!--===== XSD version 40.80                                                                                          -->
+    <!--=================================================================================================================-->
+
+    <!--=================================================================================================================-->
+    <!--===== Root element                                                                                               -->
+    <!--=================================================================================================================-->
+    <xs:element name="CD917A" type="CD917AType"/>
+    <!--=================================================================================================================-->
+    <!--===== Root element Content                                                                                       -->
+    <!--=================================================================================================================-->
+    <xs:complexType name="CD917AType">
+        <xs:sequence>
+            <xs:element name="ImportOperation" minOccurs="0" maxOccurs="1" type="td11:MCciOperationType26D">
+            </xs:element>
+            <xs:element name="XmlError" minOccurs="1" maxOccurs="999" type="td1:MXmlErrorType">
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
+

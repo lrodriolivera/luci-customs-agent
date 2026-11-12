@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- editado por AEAT (Agencia Estatal de Administración Tributaria) -->
+<xs:schema 
+    xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+    elementFormDefault="unqualified" version="40.80"
+    xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_stypes_D.xsd"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ES_stypes_D.xsd">
+
+<!-- =============================== --> 
+<!-- Tipos de Datos Simples del DIT  -->
+<!-- =============================== -->  
+
+	<xs:simpleType name="MessageidTypeD">
+		<xs:restriction base="xs:token">
+			<xs:minLength value="5"/>
+			<xs:maxLength value="40"/>
+			<xs:pattern value=".{1,40}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="TestTypeD">
+		<xs:restriction base="xs:token">
+			<xs:length value="1"/>
+			<xs:pattern value="[0-1]{1}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="SNTypeD">
+		<xs:restriction base="xs:token">
+			<xs:length value="1"/>
+			<xs:pattern value="[S,N]{1}"/>
+		</xs:restriction>
+	</xs:simpleType>	
+	
+	<xs:simpleType name="ActivacionTypeD">
+		<xs:restriction base="xs:token">
+			<xs:pattern value=".{1,8}"/>
+			<xs:maxLength value="8"/>
+			<xs:pattern value="[Aduanas,Operador]"/>
+		</xs:restriction>
+	</xs:simpleType>	
+	    
+    <xs:simpleType name= "CSVContentTypeD">
+        <xs:restriction base="xs:token">
+            <xs:pattern value="[a-zA-Z0-9]{1,16}"/>
+            <xs:length value="16" />
+        </xs:restriction>	
+    </xs:simpleType>
+    
+    <xs:simpleType name= "ProofPaymentContentTypeD">
+        <xs:restriction base="xs:token">
+            <xs:pattern value="[a-zA-Z0-9]{1,16}"/>
+            <xs:length value="13" />
+        </xs:restriction>	
+    </xs:simpleType> 
+    
+    <xs:simpleType name="DatePeriodTypeD">
+                <xs:restriction base="xs:token">
+            <xs:pattern value="\d{4}-\d{2}"/>
+            <xs:length value="7"/>
+        </xs:restriction>
+    </xs:simpleType>  
+    
+         	<xs:simpleType name="PedidoNumTypeD">
+		<xs:restriction base="xs:token">
+			<xs:pattern value=".{1,128}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	
+		<xs:simpleType name="codigoFuncionalTypeD">
+		<xs:restriction base="xs:token">
+			<xs:length value="1"/>
+			<xs:pattern value="[0-9]{1}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	
+<!-- ==================================================== --> 
+<!--  Tipos Datos para VUA    -->
+<!-- ==================================================== --> 	
+	
+	<xs:simpleType name="ControlRequiredType">
+		<xs:restriction base="xs:token">
+			<xs:length value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	
+		<xs:simpleType name="IssuingAuthorityCodeType">
+		<xs:restriction base="xs:token">
+			<xs:length value="3"/>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:simpleType name="ControlTypeType">
+		<xs:restriction base="xs:token">
+			<xs:length value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	
+		<xs:simpleType name="VUAReferenceType">
+		<xs:restriction base="xs:token">
+			<xs:maxLength value="35"/>
+		</xs:restriction>
+	</xs:simpleType>
+		
+	<xs:simpleType name="NumberContentType">
+		<xs:restriction base="xs:token">
+			<xs:maxLength value="2"/>
+			<xs:pattern value="[1-9][0-9]"/>
+		</xs:restriction>
+	</xs:simpleType>		
+
+    </xs:schema>
