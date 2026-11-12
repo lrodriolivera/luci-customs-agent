@@ -440,6 +440,7 @@
     "totalGrossWeight": "Peso Bruto",
     "totalValue": "Valor",
     "xmlForAeat": "XML para AEAT (CC515C):",
+    "xmlForAeatCau": "XML para la AEAT (mensaje CC415A):",
     "xmlTruncated": "... (XML truncado para visualización)",
     "downloadXml": "Descargar XML",
     "downloadJson": "Descargar JSON",
