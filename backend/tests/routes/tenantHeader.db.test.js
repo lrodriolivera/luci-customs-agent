@@ -160,3 +160,48 @@ describe('rutas de tenantController con contexto de tenant', () => {
     expect(res.status).toBe(200);
   });
 });
+
+describe('GET/PUT /api/tenant/h1 (cómo se presenta el H1)', () => {
+  const CONTACTO = { name: 'Ana Ruiz', phone: '+34 910000000', email: 'aduanas@agencia.es' };
+  const put = (cuerpo, usuario = 'adminA') => request(crearApp()).put('/api/tenant/h1').set('x-test-user', usuario).send(cuerpo);
+
+  test('sin configurar devuelve el servicio anterior, pago previo y sin garantía', async () => {
+    const res = await request(crearApp()).get('/api/tenant/h1').set('x-test-user', 'adminA');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toEqual({ h1Service: 'precau', medioDePago: 'A', garantiaGRN: '', contacto: { name: '', phone: '', email: '' } });
+  });
+
+  test('guarda servicio, pago, garantía y contacto en el propio tenant, no en el de la cabecera', async () => {
+    const res = await put({ h1Service: 'cau', medioDePago: 'R', garantiaGRN: '26esagl2800000054', contacto: CONTACTO })
+      .set('x-tenant-id', String(tenantB._id));
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toEqual({ h1Service: 'cau', medioDePago: 'R', garantiaGRN: '26ESAGL2800000054', contacto: CONTACTO });
+    const [a, b] = await Promise.all([Tenant.findById(tenantA._id).lean(), Tenant.findById(tenantB._id).lean()]);
+    expect(a.customsConfig).toMatchObject({ h1Service: 'cau', medioDePago: 'R', garantiaGRN: '26ESAGL2800000054', eoriNumbers: { ES: 'ESA0000000A' } });
+    expect(a.primaryContact).toMatchObject(CONTACTO);
+    expect(b.customsConfig.h1Service).toBeUndefined();
+  });
+
+  test('el pago aplazado sin garantía no se guarda', async () => {
+    const res = await put({ medioDePago: 'R' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('GRN');
+    expect((await Tenant.findById(tenantA._id).lean()).customsConfig.medioDePago).toBeUndefined();
+  });
+
+  test('rechaza valores no válidos sin guardar nada', async () => {
+    const res = await put({ h1Service: 'otro', medioDePago: 'Z', garantiaGRN: '123', contacto: { name: 'Ana', phone: '', email: 'sin-arroba' } });
+
+    expect(res.status).toBe(400);
+    expect(res.body.errors).toHaveLength(5);
+    expect((await Tenant.findById(tenantA._id).lean()).primaryContact).toBeUndefined();
+  });
+
+  test('exige sesión', async () => {
+    expect((await request(crearApp()).get('/api/tenant/h1')).status).toBe(401);
+    expect((await request(crearApp()).put('/api/tenant/h1').send({ h1Service: 'cau' })).status).toBe(401);
+  });
+});

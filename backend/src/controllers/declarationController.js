@@ -72,6 +72,75 @@ const responderSiFaltaIdentificacion = (res, error) => {
   return true;
 };
 
+const AMBITOS_AUTORIZACION = ['global', 'OCRE', 'OSRE'];
+
+/** Datos del expediente que solo existen para presentar el H1. */
+const datosH1De = (expedition) => ({
+  invoiceNumber: expedition.invoiceNumber || '',
+  vehicleNationality: expedition.transport?.vehicleNationality || '',
+  dispatchAuthorizationScope: expedition.representative?.dispatchAuthorizationScope || 'OSRE'
+});
+
+/**
+ * Que falta para presentar el H1 de un expediente, sin enviar nada.
+ * GET /api/declarations/:expeditionId/h1/requisitos
+ */
+const getH1Requirements = async (req, res) => {
+  try {
+    const expedition = await Expedition.findById(req.params.expeditionId);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+    const tenant = await tenantDelExpediente(expedition);
+    const servicio = aeatSubmitService.servicioH1(tenant);
+
+    let faltan = [];
+    try {
+      await aeatSubmitService.prepararH1Cau(expedition, { tenant });
+    } catch (error) {
+      if (!(error instanceof ErrorValidacion)) throw error;
+      faltan = error.faltan || [error.message];
+    }
+    res.json({ success: true, data: { servicio, listo: faltan.length === 0, faltan, datos: datosH1De(expedition) } });
+  } catch (error) {
+    logger.error('Error comprobando los datos del H1:', error);
+    res.status(500).json({ success: false, error: 'Error al comprobar los datos del H1' });
+  }
+};
+
+/**
+ * Guarda los datos del expediente que solo se usan al presentar el H1.
+ * PUT /api/declarations/:expeditionId/h1/datos
+ */
+const updateH1Data = async (req, res) => {
+  try {
+    const expedition = await Expedition.findById(req.params.expeditionId);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+
+    const { invoiceNumber, vehicleNationality, dispatchAuthorizationScope } = req.body || {};
+    const errores = [];
+    if (invoiceNumber !== undefined && (typeof invoiceNumber !== 'string' || invoiceNumber.trim().length > 70)) {
+      errores.push('El número de factura admite hasta 70 caracteres');
+    }
+    if (vehicleNationality !== undefined && vehicleNationality !== '' && !/^[A-Za-z]{2}$/.test(String(vehicleNationality))) {
+      errores.push('La nacionalidad del medio de transporte es un código de país de dos letras');
+    }
+    if (dispatchAuthorizationScope !== undefined && !AMBITOS_AUTORIZACION.includes(dispatchAuthorizationScope)) {
+      errores.push('Tipo de autorización de despacho no válido');
+    }
+    if (errores.length > 0) return res.status(400).json({ success: false, error: errores.join('. ') });
+
+    // Solo se tocan estos campos: el resto del transporte y del representante queda como esta.
+    if (invoiceNumber !== undefined) expedition.set('invoiceNumber', invoiceNumber.trim());
+    if (vehicleNationality !== undefined) expedition.set('transport.vehicleNationality', String(vehicleNationality).toUpperCase());
+    if (dispatchAuthorizationScope !== undefined) expedition.set('representative.dispatchAuthorizationScope', dispatchAuthorizationScope);
+    await expedition.save();
+
+    res.json({ success: true, data: datosH1De(expedition) });
+  } catch (error) {
+    logger.error('Error guardando los datos del H1:', error);
+    res.status(500).json({ success: false, error: 'Error al guardar los datos del H1' });
+  }
+};
+
 // Un mensaje preparado y sin respuesta se reenvia tal cual durante este plazo;
 // pasado, se prepara uno nuevo (la AEAT conserva el historico unos 15 dias).
 const VIGENCIA_ENVIO_CAU_MS = 24 * 60 * 60 * 1000;
@@ -1688,6 +1757,8 @@ module.exports = {
   verifySummaryDeclaration,
   generateH1,
   generateH1Direct,
+  getH1Requirements,
+  updateH1Data,
   validateH1DirectBody,
   generateAES,
   getXML,

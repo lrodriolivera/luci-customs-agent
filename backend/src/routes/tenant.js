@@ -365,6 +365,89 @@ router.get('/tenant/eori', auth, extractTenant({ required: false }), requireTena
   }
 });
 
+const MEDIOS_DE_PAGO_H1 = ['A', 'R', 'J'];
+const FORMATO_GRN = /^\d{2}[A-Z]{2}[A-Z0-9]{12}\d([A-Z]\d{6})?$/;
+
+const presentacionH1De = (tenant) => ({
+  h1Service: tenant.customsConfig?.h1Service || 'precau',
+  medioDePago: tenant.customsConfig?.medioDePago || 'A',
+  garantiaGRN: tenant.customsConfig?.garantiaGRN || '',
+  contacto: {
+    name: tenant.primaryContact?.name || '',
+    phone: tenant.primaryContact?.phone || '',
+    email: tenant.primaryContact?.email || ''
+  }
+});
+
+/**
+ * GET /api/tenant/h1
+ * Como presenta el tenant el H1: servicio, medio de pago, garantia y persona de contacto.
+ */
+router.get('/tenant/h1', auth, extractTenant({ required: false }), requireTenant, async (req, res) => {
+  try {
+    const tenant = await Tenant.findById(req.tenantId).lean();
+    if (!tenant) return res.status(404).json({ success: false, error: 'Tenant no encontrado' });
+    res.json({ success: true, data: presentacionH1De(tenant) });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /api/tenant/h1
+ * Body: { h1Service, medioDePago, garantiaGRN, contacto: { name, phone, email } }
+ */
+router.put('/tenant/h1', auth, extractTenant({ required: false }), requireTenant, adminOnly, async (req, res) => {
+  try {
+    const { h1Service, medioDePago, garantiaGRN, contacto } = req.body || {};
+    const errores = [];
+    const cambios = {};
+
+    if (h1Service !== undefined) {
+      if (!['precau', 'cau'].includes(h1Service)) errores.push('Servicio del H1 no válido');
+      else cambios['customsConfig.h1Service'] = h1Service;
+    }
+    const grn = garantiaGRN === undefined ? undefined : String(garantiaGRN).trim().toUpperCase();
+    if (grn !== undefined) {
+      if (grn && !FORMATO_GRN.test(grn)) errores.push('El número de garantía (GRN) no tiene el formato esperado (17 o 24 caracteres)');
+      else cambios['customsConfig.garantiaGRN'] = grn;
+    }
+    if (medioDePago !== undefined) {
+      if (!MEDIOS_DE_PAGO_H1.includes(medioDePago)) errores.push('Medio de pago no válido (A, R o J)');
+      else cambios['customsConfig.medioDePago'] = medioDePago;
+    }
+    if (contacto !== undefined) {
+      const nombre = String(contacto?.name || '').trim();
+      const telefono = String(contacto?.phone || '').trim();
+      const email = String(contacto?.email || '').trim();
+      if (!nombre || nombre.length > 70) errores.push('El nombre de la persona de contacto es obligatorio (hasta 70 caracteres)');
+      if (!telefono || telefono.length > 35) errores.push('El teléfono de contacto es obligatorio (hasta 35 caracteres)');
+      if (!/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(email)) errores.push('El correo de contacto no es válido');
+      cambios['primaryContact.name'] = nombre;
+      cambios['primaryContact.phone'] = telefono;
+      cambios['primaryContact.email'] = email;
+    }
+    if (errores.length > 0) return res.status(400).json({ success: false, error: errores.join('. '), errors: errores });
+
+    const tenant = await Tenant.findById(req.tenantId).lean();
+    if (!tenant) return res.status(404).json({ success: false, error: 'Tenant no encontrado' });
+    // El pago aplazado exige garantia: no se guarda una combinacion que la AEAT rechazaria.
+    const medioFinal = cambios['customsConfig.medioDePago'] ?? tenant.customsConfig?.medioDePago ?? 'A';
+    const grnFinal = cambios['customsConfig.garantiaGRN'] ?? tenant.customsConfig?.garantiaGRN ?? '';
+    if (medioFinal === 'R' && !grnFinal) {
+      return res.status(400).json({ success: false, error: 'El pago aplazado (R) exige un número de garantía (GRN)' });
+    }
+
+    // Update directo (sin .save()) para no revalidar campos antiguos del tenant.
+    if (Object.keys(cambios).length > 0) {
+      await Tenant.updateOne({ _id: req.tenantId }, { $set: cambios }, { runValidators: false });
+    }
+    res.json({ success: true, data: presentacionH1De(await Tenant.findById(req.tenantId).lean()) });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 /**
  * PUT /api/tenant/eori
  * Update EORI numbers per country

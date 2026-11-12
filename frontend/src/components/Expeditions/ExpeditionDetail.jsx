@@ -33,6 +33,7 @@ import GoodsEditor from './GoodsEditor'
 import H1Preview from './H1Preview'
 import GroupageCard, { isMaritime } from './GroupageCard'
 import RepresentationCard from './RepresentationCard'
+import H1DataCard from './H1DataCard'
 import DocumentUploader from './DocumentUploader'
 import DocumentReader from './DocumentReader'
 
@@ -905,6 +906,9 @@ export default function ExpeditionDetail() {
           </div>
 
           {canEditGoods && <RepresentationCard expedition={expedition} onSaved={setExpedition} />}
+
+          {/* Datos que exige el H1 adaptado al CAU y lo que falta para presentarlo */}
+          {canEditGoods && expedition.operationType !== 'export' && <H1DataCard expedition={expedition} />}
 
           {(isMaritime(expedition) || expedition.transport?.loadType) && canEditGoods && (
             <GroupageCard

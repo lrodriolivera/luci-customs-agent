@@ -17,6 +17,7 @@ import {
   SignalIcon
 } from '@heroicons/react/24/outline';
 import api, { tenantEoriAPI } from '../../services/api';
+import H1PresentationSettings from './H1PresentationSettings';
 import { PAISES_ADUANEROS, codigosHabilitados, eoriPorPais } from '../../constants/paisesAduaneros';
 
 const TenantSettings = () => {
@@ -1001,6 +1002,9 @@ function CustomsTab({ tenant, setTenant, eoriNumbers, setEoriNumbers, eoriSaving
           Guardar configuracion de paises
         </button>
       </div>
+
+      {/* Como se presenta el H1: servicio, pago, garantia y contacto */}
+      <H1PresentationSettings />
 
       {/* Connection Status per country */}
       <div className="p-4 rounded-lg bg-gray-50">

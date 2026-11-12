@@ -245,6 +245,9 @@ export const classificationAPI = {
 
 // Declarations
 export const declarationsAPI = {
+  // H1: qué falta para presentarlo y datos que solo se usan en la presentación
+  getH1Requirements: (expeditionId) => api.get(`/api/declarations/${seg(expeditionId)}/h1/requisitos`),
+  updateH1Data: (expeditionId, datos) => api.put(`/api/declarations/${seg(expeditionId)}/h1/datos`, datos),
   // H1 - Importacion estandar
   generateH1: (data) => api.post('/api/declarations/h1/generate-direct', data),
   // AES - Exportacion
@@ -1243,6 +1246,12 @@ export const manifestAPI = {
 export const tenantEoriAPI = {
   get: () => api.get('/api/tenant/eori'),
   update: (eoriNumbers) => api.put('/api/tenant/eori', { eoriNumbers })
+}
+
+// Cómo presenta el tenant el H1: servicio, medio de pago, garantía y contacto
+export const tenantH1API = {
+  get: () => api.get('/api/tenant/h1'),
+  update: (datos) => api.put('/api/tenant/h1', datos)
 }
 
 export const exciseAPI = {
