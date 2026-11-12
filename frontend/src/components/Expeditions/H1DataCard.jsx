@@ -17,6 +17,8 @@ const CAMPOS = [
   'invoiceNumber', 'exporterPostalCode', 'vehicleNationality', 'dispatchAuthorizationScope',
   'freightAmount', 'freightCurrency', 'insuranceAmount', 'insuranceCurrency', 'appliedExchangeRate'
 ]
+// El backend exige un motivo de al menos cinco caracteres.
+const MOTIVO_MINIMO = 5
 const comoTexto = (v) => (v === null || v === undefined ? '' : String(v))
 
 /** Qué dice el incoterm sobre el flete y el seguro hasta la entrada en la UE. */
@@ -107,6 +109,28 @@ export default function H1DataCard({ expedition, soloEstado = false }) {
   const presentadoPorCau = expedition.declaration?.mrn && expedition.declaration?.aeatResponse?.servicio === 'CC415AV1'
   const [consulta, setConsulta] = useState(expedition.declaration?.aeatResponse?.consulta || null)
   const [consultando, setConsultando] = useState(false)
+
+  const [anulacion, setAnulacion] = useState({ abierta: false, motivo: '', enviando: false, mensaje: null, error: null })
+  const pulsarAnular = () => {
+    // Lo activado no se anula por servicio web: se le pide a la aduana (no se envía nada).
+    if (estado?.anulacion && !estado.anulacion.anulable) {
+      setAnulacion((a) => ({ ...a, abierta: false, error: null, mensaje: 'Esta declaración ya está activada: no se puede anular por servicio web, hay que solicitar la anulación a la aduana. La resolución llega por la Bandeja de Entrada de la AEAT.' }))
+      return
+    }
+    setAnulacion({ abierta: true, motivo: '', enviando: false, mensaje: null, error: null })
+  }
+  const confirmarAnulacion = async (e) => {
+    e.preventDefault()
+    setAnulacion((a) => ({ ...a, enviando: true, error: null }))
+    try {
+      await declarationsAPI.cancelH1(expedition._id, anulacion.motivo.trim())
+      setAnulacion({ abierta: false, motivo: '', enviando: false, mensaje: 'La AEAT ha aceptado la anulación.', error: null })
+      toast.success('Anulación aceptada por la AEAT')
+      await cargar()
+    } catch (err) {
+      setAnulacion((a) => ({ ...a, enviando: false, error: err.response?.data?.error || 'No se pudo enviar la anulación a la AEAT' }))
+    }
+  }
 
   const consultarEstado = async () => {
     setConsultando(true)
@@ -214,10 +238,35 @@ export default function H1DataCard({ expedition, soloEstado = false }) {
         <div className="mt-4 border-t pt-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-medium">Estado en la AEAT · MRN {expedition.declaration.mrn}</p>
-            <button type="button" className="btn-secondary" onClick={consultarEstado} disabled={consultando}>
-              {consultando ? 'Consultando...' : 'Consultar estado en la AEAT'}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="btn-secondary" onClick={consultarEstado} disabled={consultando}>
+                {consultando ? 'Consultando...' : 'Consultar estado en la AEAT'}
+              </button>
+              <button type="button" className="btn-secondary text-red-700" onClick={pulsarAnular} disabled={anulacion.abierta}>
+                Anular declaración
+              </button>
+            </div>
           </div>
+          {anulacion.mensaje && <p role="status" className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{anulacion.mensaje}</p>}
+          {anulacion.abierta && (
+            <form role="dialog" aria-label="Anular la declaración en la AEAT" onSubmit={confirmarAnulacion} className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm">
+              <p className="font-medium text-red-900">Se pedirá a la AEAT que anule la declaración {expedition.declaration.mrn}. No se puede deshacer.</p>
+              <label className="label mt-2" htmlFor="h1-motivo-anulacion">Motivo de la anulación</label>
+              <textarea
+                id="h1-motivo-anulacion" className="input" rows={2} maxLength={512}
+                value={anulacion.motivo} onChange={(e) => setAnulacion((a) => ({ ...a, motivo: e.target.value }))}
+              />
+              {anulacion.error && <p role="alert" className="mt-2 text-red-700">{anulacion.error}</p>}
+              <div className="mt-2 flex justify-end gap-2">
+                <button type="button" className="btn-secondary" onClick={() => setAnulacion((a) => ({ ...a, abierta: false, error: null }))} disabled={anulacion.enviando}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary bg-red-600 hover:bg-red-700" disabled={anulacion.enviando || anulacion.motivo.trim().length < MOTIVO_MINIMO}>
+                  {anulacion.enviando ? 'Enviando...' : 'Confirmar anulación'}
+                </button>
+              </div>
+            </form>
+          )}
           {consulta?.estado && (
             <dl className="mt-3 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2" aria-label="Estado de la declaración en la AEAT">
               <div><dt className="inline text-gray-500">Estado: </dt><dd className="inline font-medium">{conCodigo(consulta.estado.textos?.operacionRegistrada, consulta.estado.operacionRegistrada)}</dd></div>
