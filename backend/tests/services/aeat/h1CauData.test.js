@@ -192,6 +192,14 @@ describe('H1 CAU: ayudantes', () => {
     expect(datos(exp).aduanaImportacion).toBe('ES002801');
   });
 
+  test('la aduana de despacho es la del recinto de la ubicación aunque el expediente diga otra', () => {
+    // Con otra aduana la AEAT lo trata como despacho centralizado y lo rechaza (error 10940).
+    const exp = expediente({ declaration: { customsOffice: 'ES003001', invoiceNumber: 'FAC-1', lrn: 'L1' } });
+    const d = datos(exp);
+    expect(d.aduanaImportacion).toBe('ES002801');
+    expect(d.aduanaPresentacion).toBe('ES002801');
+  });
+
   test('aduana, ubicación y provincia', () => {
     expect(aduana('002801')).toBe('ES002801');
     expect(aduana('ES002801')).toBe('ES002801');

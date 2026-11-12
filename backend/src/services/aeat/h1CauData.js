@@ -237,9 +237,12 @@ function expeditionToH1CauData(expedition, { declarante, cambio, tenant, mensaje
 
   const personas = partes(expedition, declarante, faltan);
   const ubicacion = ubicacionDe(expedition);
-  // Sin aduana indicada, la del recinto donde estan las mercancias: son los
-  // ocho primeros caracteres de la ubicacion (regla ESR0001).
-  const aduanaDespacho = aduana(decl.customsOffice || config.customsOffice) || (ubicacion ? aduana(`ES${ubicacion.slice(2, 8)}`) : null);
+  // La aduana de despacho es la del recinto donde estan las mercancias (los
+  // ocho primeros caracteres de la ubicacion, regla ESR0001). Declarar otra es
+  // un despacho centralizado nacional, que exige una autorizacion (C513) que
+  // LUCI no gestiona: la AEAT lo rechaza con el error 10940. La aduana del
+  // expediente solo se usa si no se conoce la ubicacion.
+  const aduanaDespacho = (ubicacion ? aduana(`ES${ubicacion.slice(2, 8)}`) : null) || aduana(decl.customsOffice || config.customsOffice);
   if (!aduanaDespacho) faltan.push('aduana de despacho');
   if (!texto(decl.lrn) && !texto(lrn)) faltan.push('referencia local de la declaración (LRN)');
   if (goods.length === 0) faltan.push('al menos una partida');
