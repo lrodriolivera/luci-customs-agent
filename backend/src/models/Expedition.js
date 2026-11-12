@@ -325,6 +325,9 @@ const ExpeditionSchema = new mongoose.Schema({
     companyName: String,
     address: String,
     city: String,
+    // La AEAT exige el codigo postal del exportador en el H1 cuando va con
+    // nombre y direccion (salvo paises sin codigo postal).
+    postalCode: String,
     country: String,
     vatNumber: String
   },

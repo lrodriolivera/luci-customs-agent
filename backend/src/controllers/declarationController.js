@@ -77,6 +77,7 @@ const AMBITOS_AUTORIZACION = ['global', 'OCRE', 'OSRE'];
 /** Datos del expediente que solo existen para presentar el H1. */
 const datosH1De = (expedition) => ({
   invoiceNumber: expedition.invoiceNumber || '',
+  exporterPostalCode: expedition.exporter?.postalCode || '',
   vehicleNationality: expedition.transport?.vehicleNationality || '',
   dispatchAuthorizationScope: expedition.representative?.dispatchAuthorizationScope || 'OSRE'
 });
@@ -115,13 +116,16 @@ const updateH1Data = async (req, res) => {
     const expedition = await Expedition.findById(req.params.expeditionId);
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
-    const { invoiceNumber, vehicleNationality, dispatchAuthorizationScope } = req.body || {};
+    const { invoiceNumber, vehicleNationality, dispatchAuthorizationScope, exporterPostalCode } = req.body || {};
     const errores = [];
     if (invoiceNumber !== undefined && (typeof invoiceNumber !== 'string' || invoiceNumber.trim().length > 70)) {
       errores.push('El número de factura admite hasta 70 caracteres');
     }
     if (vehicleNationality !== undefined && vehicleNationality !== '' && !/^[A-Za-z]{2}$/.test(String(vehicleNationality))) {
       errores.push('La nacionalidad del medio de transporte es un código de país de dos letras');
+    }
+    if (exporterPostalCode !== undefined && (typeof exporterPostalCode !== 'string' || exporterPostalCode.trim().length > 17)) {
+      errores.push('El código postal del exportador admite hasta 17 caracteres');
     }
     if (dispatchAuthorizationScope !== undefined && !AMBITOS_AUTORIZACION.includes(dispatchAuthorizationScope)) {
       errores.push('Tipo de autorización de despacho no válido');
@@ -130,6 +134,7 @@ const updateH1Data = async (req, res) => {
 
     // Solo se tocan estos campos: el resto del transporte y del representante queda como esta.
     if (invoiceNumber !== undefined) expedition.set('invoiceNumber', invoiceNumber.trim());
+    if (exporterPostalCode !== undefined) expedition.set('exporter.postalCode', exporterPostalCode.trim());
     if (vehicleNationality !== undefined) expedition.set('transport.vehicleNationality', String(vehicleNationality).toUpperCase());
     if (dispatchAuthorizationScope !== undefined) expedition.set('representative.dispatchAuthorizationScope', dispatchAuthorizationScope);
     await expedition.save();

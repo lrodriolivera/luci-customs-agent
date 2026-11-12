@@ -28,7 +28,7 @@ const AMBITOS = [
  */
 export default function H1DataCard({ expedition }) {
   const [estado, setEstado] = useState(null)
-  const [form, setForm] = useState({ invoiceNumber: '', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE' })
+  const [form, setForm] = useState({ invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE' })
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
 
@@ -76,7 +76,7 @@ export default function H1DataCard({ expedition }) {
     }
   }
 
-  const sinCambios = estado && ['invoiceNumber', 'vehicleNationality', 'dispatchAuthorizationScope']
+  const sinCambios = estado && ['invoiceNumber', 'exporterPostalCode', 'vehicleNationality', 'dispatchAuthorizationScope']
     .every((campo) => (form[campo] || '') === (estado.datos[campo] || ''))
 
   return (
@@ -99,6 +99,10 @@ export default function H1DataCard({ expedition }) {
             id="h1-vehicle-nationality" className="input uppercase" maxLength={2} placeholder="Código de país, p. ej. PA"
             value={form.vehicleNationality} onChange={cambiar('vehicleNationality')}
           />
+        </div>
+        <div>
+          <label className="label" htmlFor="h1-exporter-postcode">Código postal del exportador</label>
+          <input id="h1-exporter-postcode" className="input" maxLength={17} value={form.exporterPostalCode || ''} onChange={cambiar('exporterPostalCode')} />
         </div>
         <div className="sm:col-span-2">
           <label className="label" htmlFor="h1-authorization-scope">Autorización de despacho del representante</label>

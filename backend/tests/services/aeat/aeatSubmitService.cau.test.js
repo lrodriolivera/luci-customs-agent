@@ -19,7 +19,7 @@ const TENANT = {
 const expediente = () => ({
   expeditionId: 'EXP-2026-AAAA0001', transportMode: 'maritime',
   client: { nif: 'B12345674', eori: 'ESB12345674', address: { postalCode: '46001', country: 'ES' } },
-  exporter: { companyName: 'Shenzhen Textiles Ltd', address: '1 Test Road', city: 'Shanghai', country: 'CN' },
+  exporter: { companyName: 'Shenzhen Textiles Ltd', address: '1 Test Road', city: 'Shanghai', postalCode: '200000', country: 'CN' },
   incoterm: { code: 'CIF', place: 'Valencia' },
   transport: { vehicleNationality: 'PA', documentType: 'BL', documentNumber: 'MSCU20268198800',
     summaryDeclaration: { item: '1', aeat: { mrn: '26ES00280180000014', location: '2801AAAAAA' } } },

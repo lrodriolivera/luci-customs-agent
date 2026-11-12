@@ -20,7 +20,7 @@ function expediente(cambios = {}) {
     expeditionId: 'EXP-2026-AAAA0001',
     transportMode: 'maritime',
     client: { companyName: 'Importadora SL', nif: 'B12345674', eori: 'ESB12345674', address: { street: 'Calle 1', city: 'Valencia', postalCode: '46001', country: 'ES' } },
-    exporter: { companyName: 'Shenzhen Textiles Ltd', address: '1 Test Road', city: 'Shanghai', country: 'CN' },
+    exporter: { companyName: 'Shenzhen Textiles Ltd', address: '1 Test Road', city: 'Shanghai', postalCode: '200000', country: 'CN' },
     representative: { representationType: 'indirect' },
     incoterm: { code: 'CIF', place: 'Valencia' },
     transport: {
@@ -135,7 +135,7 @@ describe('H1 CAU: importes, divisa y documentos', () => {
   });
 
   test('el exportador sin identificador va con nombre y dirección', () => {
-    expect(d.envio.exportador).toEqual({ nombre: 'Shenzhen Textiles Ltd', direccion: { calle: '1 Test Road', cp: null, ciudad: 'Shanghai', pais: 'CN' } });
+    expect(d.envio.exportador).toEqual({ nombre: 'Shenzhen Textiles Ltd', direccion: { calle: '1 Test Road', cp: '200000', ciudad: 'Shanghai', pais: 'CN' } });
   });
 
   siHayXmllint('el XML que sale de un expediente completo valida contra el XSD oficial', () => {
@@ -165,6 +165,13 @@ describe('H1 CAU: datos que faltan', () => {
       ]));
       expect(error.message).toContain('Faltan datos para presentar el H1');
     }
+  });
+
+  test('un exportador sin identificador necesita código postal (la AEAT lo rechaza sin él)', () => {
+    const exp = expediente({ exporter: { companyName: 'Shenzhen Textiles Ltd', address: '1 Test Road', city: 'Shanghai', country: 'CN' } });
+    expect(() => datos(exp)).toThrow('código postal del exportador');
+    // Con identificador no hace falta dirección.
+    expect(datos(expediente({ exporter: { vatNumber: 'ESB22477020' } })).envio.exportador).toEqual({ id: 'ESB22477020' });
   });
 
   test('una factura en dólares sin tipo de cambio no se convierte a 1', () => {
