@@ -67,3 +67,34 @@ describe('cambio obligatorio al construir el H1', () => {
     expect(() => cambioObligatorio(expediente, { divisa: 'USD', tipo: 0 })).toThrow('USD');
   });
 });
+
+describe('divisa que el BCE no cotiza: cambio aplicado (código 1017)', () => {
+  beforeEach(() => tipoOficial.mockReset());
+  const marroqui = (aplicado) => ({ goods: [{ currency: 'MAD', invoiceValue: 100000 }], appliedExchangeRate: aplicado });
+
+  test('usa el cambio aplicado que indicó el usuario y lo marca como sin tipo del BCE', async () => {
+    tipoOficial.mockResolvedValue(null);
+    await expect(cambioDelExpediente(marroqui({ currency: 'mad', rate: 10.8 }))).resolves.toEqual({
+      divisa: 'MAD', tipo: 10.8, sinTipoBce: true, fuente: 'cambio aplicado'
+    });
+  });
+
+  test('sin cambio aplicado lo pide (422) diciendo dónde indicarlo', async () => {
+    tipoOficial.mockResolvedValue(null);
+    await expect(cambioDelExpediente(marroqui(undefined))).rejects.toMatchObject({
+      status: 422, code: 'DIVISA_SIN_TIPO_OFICIAL', message: expect.stringContaining('cambio aplicado')
+    });
+  });
+
+  test('un cambio aplicado de otra divisa o no positivo no vale', async () => {
+    tipoOficial.mockResolvedValue(null);
+    await expect(cambioDelExpediente(marroqui({ currency: 'AED', rate: 4 }))).rejects.toMatchObject({ code: 'DIVISA_SIN_TIPO_OFICIAL' });
+    await expect(cambioDelExpediente(marroqui({ currency: 'MAD', rate: 0 }))).rejects.toMatchObject({ code: 'DIVISA_SIN_TIPO_OFICIAL' });
+  });
+
+  test('si el BCE sí la cotiza manda el tipo oficial aunque haya un cambio aplicado', async () => {
+    tipoOficial.mockResolvedValue(USD);
+    const exp = { goods: [{ currency: 'USD' }], appliedExchangeRate: { currency: 'USD', rate: 1.2 } };
+    await expect(cambioDelExpediente(exp)).resolves.toEqual(USD);
+  });
+});

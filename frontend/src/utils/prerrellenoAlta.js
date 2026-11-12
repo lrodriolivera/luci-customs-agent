@@ -15,10 +15,10 @@
  */
 
 import { DEFAULT_PACKAGE_TYPE } from '../components/Expeditions/packageTypes'
-import { DIVISAS_OFICIALES } from './divisas'
+import { DIVISAS_FACTURA, tieneTipoBce } from './divisas'
 
 // Las divisas con tipo de cambio oficial de la aduana (antes solo cuatro).
-export const MONEDAS_ALTA = DIVISAS_OFICIALES
+export const MONEDAS_ALTA = DIVISAS_FACTURA
 export const INCOTERMS = ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP']
 export const MODO_POR_DEFECTO = 'SEA'
 export const INCOTERM_POR_DEFECTO = 'CIF'
@@ -228,6 +228,8 @@ export function prerrellenarAlta(formData, extraccion, { tipoDocumento, fijados 
         proponer('invoiceValue', good, 'invoiceValue', importeParaFormulario(importe), { partida: n })
         if (MONEDAS_ALTA.includes(factura.moneda)) {
           proponer('currency', good, 'currency', factura.moneda, { partida: n, porDefecto: MONEDA_POR_DEFECTO })
+          // Sin tipo del BCE el H1 va en euros con el cambio aplicado (código 1017).
+          if (!tieneTipoBce(factura.moneda)) avisos.push({ campo: 'currencyWithoutBce', valor: factura.moneda, partida: n })
         } else if (!vacio(factura.moneda)) {
           avisos.push({ campo: 'currencyNotAvailable', valor: factura.moneda, partida: n })
         }

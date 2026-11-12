@@ -4,6 +4,7 @@ const axios = require('axios');
 const dutyCalculationService = require('../services/dutyCalculationService');
 const { ensureSameTenant } = require('../utils/tenantGuard');
 const { tipoOficial, divisasOficiales, aEuros } = require('../services/divisas/tiposCambioOficiales');
+const { cambioAplicado } = require('../services/divisas/cambioDelExpediente');
 
 // Cache para tipos de cambio (se actualiza cada hora)
 let exchangeRatesCache = {
@@ -221,7 +222,7 @@ const calculateTotal = async (req, res) => {
 
     for (const item of itemsToCalculate) {
       // Convertir a EUR
-      const conversion = await convertirAEuros(item.value, item.currency);
+      const conversion = await convertirAEuros(item.value, item.currency, expedition);
       const valueEur = conversion.valueEur;
       totalEnDivisa += item.value || 0;
       if (conversion.cambio) cambiosUsados.set(conversion.cambio.divisa, conversion.cambio);
@@ -450,7 +451,7 @@ const getOfficialCurrencies = async (req, res) => {
  * lo tiene (el BCE no la cotiza) o la fuente no responde, cae al cambio de
  * mercado y lo avisa: el resultado es solo orientativo.
  */
-async function convertirAEuros(value, currency) {
+async function convertirAEuros(value, currency, expedition = null) {
   const divisa = String(currency || 'EUR').toUpperCase();
   const importe = value || 0;
   if (divisa === 'EUR' || !importe) return { valueEur: importe, cambio: null, aviso: null };
@@ -461,6 +462,10 @@ async function convertirAEuros(value, currency) {
   } catch (error) {
     logger.warn(`[Divisas] No se pudo obtener el tipo oficial de ${divisa}: ${error.message}`);
   }
+
+  // Divisa que el BCE no cotiza: el cambio que indico el usuario para el H1 (codigo 1017).
+  const aplicado = cambioAplicado(expedition, divisa);
+  if (aplicado) return { valueEur: aEuros(importe, aplicado.tipo), cambio: { ...aplicado, official: false }, aviso: null };
 
   const mercado = await getExchangeRate(divisa, 'EUR');
   return {

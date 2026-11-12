@@ -19,8 +19,26 @@ const documentosDe = (partida, envio) => [
  * @param {object} datos   datos del mensaje CAU (`expeditionToH1CauData`)
  * @returns {object} copia de `h1Data` con lo que se envia a la AEAT
  */
-function aplicarCauAVistaPrevia(h1Data, datos) {
+/**
+ * Con una divisa que el BCE no cotiza se declara en euros el contravalor: la
+ * vista previa muestra esos importes (la divisa y el cambio, en el 1017).
+ */
+function enEurosSiSeDeclaraEnEuros(h1Data, envio) {
+  const shipment = h1Data.goodsShipment || {};
+  if (!envio.divisa || !shipment.currency || envio.divisa === shipment.currency) return h1Data;
+  const importes = (envio.partidas || []).map((p) => p.importeFactura || 0);
+  const total = Math.round(importes.reduce((s, v) => s + v, 0) * 100) / 100;
+  return {
+    ...h1Data,
+    goodsShipment: { ...shipment, currency: envio.divisa, totalInvoicedAmount: total, exchangeRate: null },
+    valuation: h1Data.valuation ? { ...h1Data.valuation, invoiceCurrency: envio.divisa, invoiceValue: total } : h1Data.valuation,
+    goodsItems: (h1Data.goodsItems || []).map((item, i) => (importes[i] !== undefined ? { ...item, invoiceValue: importes[i] } : item))
+  };
+}
+
+function aplicarCauAVistaPrevia(vistaGenerada, datos) {
   const envio = datos.envio || {};
+  const h1Data = enEurosSiSeDeclaraEnEuros(vistaGenerada, envio);
   const ubicacion = envio.expedicion?.ubicacion;
   const transporte = envio.expedicion?.documentosTransporte?.[0];
   const shipment = h1Data.goodsShipment || {};

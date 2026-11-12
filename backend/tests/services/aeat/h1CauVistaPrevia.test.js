@@ -102,3 +102,34 @@ describe('vista previa del H1 por el servicio CAU', () => {
     expect(vista.declarationHeader.lrn).toBeNull();
   });
 });
+
+describe('vista previa con una divisa que el BCE no cotiza', () => {
+  const enDirhams = {
+    ...VISTA,
+    goodsShipment: { ...VISTA.goodsShipment, currency: 'MAD', totalInvoicedAmount: 100000, exchangeRate: 10.8 },
+    valuation: { invoiceCurrency: 'MAD', invoiceValue: 100000 },
+    goodsItems: [{ ...VISTA.goodsItems[0], invoiceValue: 100000 }]
+  };
+  const cau = {
+    ...CAU,
+    envio: {
+      ...CAU.envio, divisa: 'EUR',
+      documentosJustificativos: [{ tipo: '1017', referencia: 'MAD 10.8' }],
+      partidas: [{ ...CAU.envio.partidas[0], importeFactura: 9259.26 }]
+    }
+  };
+
+  test('muestra la factura en euros (el contravalor que se declara) y el 1017', () => {
+    const vista = aplicarCauAVistaPrevia(enDirhams, cau);
+    expect(vista.goodsShipment).toMatchObject({ currency: 'EUR', totalInvoicedAmount: 9259.26, exchangeRate: null });
+    expect(vista.valuation).toMatchObject({ invoiceCurrency: 'EUR', invoiceValue: 9259.26 });
+    expect(vista.goodsItems[0].invoiceValue).toBe(9259.26);
+    expect(vista.goodsItems[0].supportingDocuments).toContainEqual({ type: '1017', reference: 'MAD 10.8' });
+  });
+
+  test('con la misma divisa no toca los importes', () => {
+    const vista = aplicarCauAVistaPrevia(VISTA, { ...CAU, envio: { ...CAU.envio, divisa: 'USD' } });
+    expect(vista.goodsShipment.currency).toBe('USD');
+    expect(vista.goodsItems[0].customsValue).toBe(8901.55);
+  });
+});

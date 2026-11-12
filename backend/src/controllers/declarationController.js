@@ -8,7 +8,8 @@ const aesGenerator = require('../services/forms/aesGenerator');
 const h7Generator = require('../services/forms/h7Generator');
 const Tenant = require('../models/Tenant');
 const { ErrorValidacion, exigirIdentificacion } = require('../services/forms/identificadorAduanero');
-const { cambioDelExpediente } = require('../services/divisas/cambioDelExpediente');
+const { cambioDelExpediente, divisaDelExpediente } = require('../services/divisas/cambioDelExpediente');
+const { tipoOficial } = require('../services/divisas/tiposCambioOficiales');
 const { aplicarCauAVistaPrevia } = require('../services/aeat/h1CauVistaPrevia');
 const { anulablePorServicio } = require('../services/aeat/h1CauAnulacion');
 const { gastosQueSeSuman, gastoDe, cambiosDeLosGastos } = require('../services/forms/gastosHastaLaFrontera');
@@ -99,8 +100,24 @@ const AMBITOS_AUTORIZACION = ['global', 'OCRE', 'OSRE'];
 const DIVISA = /^[A-Z]{3}$/;
 const IMPORTE_MAXIMO = 1e12;
 
+/**
+ * Divisa de la factura y si el BCE no la cotiza (entonces hay que indicar el
+ * cambio aplicado). Con divisas mezcladas o sin poder consultar, no se sabe.
+ */
+async function divisaDeLaFactura(expedition) {
+  let divisa;
+  try { divisa = divisaDelExpediente(expedition); } catch { return { divisa: null, sinTipoBce: false }; }
+  if (divisa === 'EUR') return { divisa, sinTipoBce: false };
+  try {
+    return { divisa, sinTipoBce: !(await tipoOficial(divisa)) };
+  } catch (error) {
+    logger.warn(`[Divisas] No se pudo saber si el BCE cotiza ${divisa}: ${error.message}`);
+    return { divisa, sinTipoBce: false };
+  }
+}
+
 /** Datos del expediente que solo existen para presentar el H1. */
-const datosH1De = (expedition) => {
+const datosH1De = (expedition, factura = { divisa: 'EUR', sinTipoBce: false }) => {
   const incoterm = String(expedition.incoterm?.code || '').toUpperCase();
   const flete = gastoDe(expedition, 'freight');
   const seguro = gastoDe(expedition, 'insurance');
@@ -115,20 +132,25 @@ const datosH1De = (expedition) => {
     freightAmount: flete ? flete.importe : null,
     freightCurrency: flete?.divisa || expedition.costs?.freight?.currency || 'EUR',
     insuranceAmount: seguro ? seguro.importe : null,
-    insuranceCurrency: seguro?.divisa || expedition.costs?.insurance?.currency || 'EUR'
+    insuranceCurrency: seguro?.divisa || expedition.costs?.insurance?.currency || 'EUR',
+    // Divisa que el BCE no cotiza: se declara en euros con el cambio que indique el usuario (1017).
+    invoiceCurrency: factura.divisa,
+    invoiceCurrencyWithoutBce: factura.sinTipoBce,
+    appliedExchangeRate: factura.divisa && expedition.appliedExchangeRate?.currency === factura.divisa
+      ? Number(expedition.appliedExchangeRate.rate) || null : null
   };
 };
 
 /**
- * Importe de un gasto recibido: '' o null lo borra; si no, numero >= 0.
+ * Importe recibido: '' o null lo borra; si no, numero >= 0 con `decimales`.
  * @returns {{ ok: boolean, valor?: number|null }}
  */
-function importeRecibido(v) {
+function importeRecibido(v, decimales = 2) {
   if (v === undefined) return { ok: true };
   if (v === null || v === '') return { ok: true, valor: null };
   const n = typeof v === 'number' ? v : Number(String(v).replace(',', '.'));
   if (!Number.isFinite(n) || n < 0 || n > IMPORTE_MAXIMO) return { ok: false };
-  return { ok: true, valor: Math.round(n * 100) / 100 };
+  return { ok: true, valor: Number(n.toFixed(decimales)) };
 }
 
 /** Errores de los gastos recibidos y cambios a aplicar en `costs`. */
@@ -170,7 +192,8 @@ const getH1Requirements = async (req, res) => {
       if (!(error instanceof ErrorValidacion)) throw error;
       faltan = error.faltan || [error.message];
     }
-    res.json({ success: true, data: { servicio, listo: faltan.length === 0, faltan, datos: datosH1De(expedition) } });
+    const datos = datosH1De(expedition, await divisaDeLaFactura(expedition));
+    res.json({ success: true, data: { servicio, listo: faltan.length === 0, faltan, datos } });
   } catch (error) {
     logger.error('Error comprobando los datos del H1:', error);
     res.status(500).json({ success: false, error: 'Error al comprobar los datos del H1' });
@@ -202,6 +225,9 @@ const updateH1Data = async (req, res) => {
     }
     const gastos = gastosRecibidos(req.body || {});
     errores.push(...gastos.errores);
+    // Hasta cinco decimales, como el tipo de cambio del mensaje (n..12,5).
+    const cambio = importeRecibido(req.body?.appliedExchangeRate, 5);
+    if (!cambio.ok || cambio.valor === 0) errores.push('El cambio aplicado es un número mayor que 0 (unidades de la divisa por 1 EUR)');
     if (errores.length > 0) return res.status(400).json({ success: false, error: errores.join('. ') });
 
     // Solo se tocan estos campos: el resto del transporte y del representante queda como esta.
@@ -210,13 +236,16 @@ const updateH1Data = async (req, res) => {
     if (vehicleNationality !== undefined) expedition.set('transport.vehicleNationality', String(vehicleNationality).toUpperCase());
     if (dispatchAuthorizationScope !== undefined) expedition.set('representative.dispatchAuthorizationScope', dispatchAuthorizationScope);
     for (const [ruta, valor] of Object.entries(gastos.cambios)) expedition.set(ruta, valor);
+    const factura = await divisaDeLaFactura(expedition);
+    if (cambio.valor === null) expedition.set('appliedExchangeRate', null);
+    else if (cambio.valor !== undefined) expedition.set('appliedExchangeRate', { currency: factura.divisa, rate: cambio.valor });
     // Un importe sin divisa se entiende en euros.
     for (const campo of ['freight', 'insurance']) {
       if (expedition.costs?.[campo] && !expedition.costs[campo].currency) expedition.set(`costs.${campo}.currency`, 'EUR');
     }
     await expedition.save();
 
-    res.json({ success: true, data: datosH1De(expedition) });
+    res.json({ success: true, data: datosH1De(expedition, factura) });
   } catch (error) {
     logger.error('Error guardando los datos del H1:', error);
     res.status(500).json({ success: false, error: 'Error al guardar los datos del H1' });

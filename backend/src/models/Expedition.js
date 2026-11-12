@@ -433,6 +433,14 @@ const ExpeditionSchema = new mongoose.Schema({
     place: String
   },
 
+  // Cambio aplicado (unidades de la divisa por 1 EUR) cuando la factura va en
+  // una divisa que el BCE no cotiza: el H1 se declara en euros con el
+  // contravalor y el documento 1017 (Resolucion del DUA, casilla 22).
+  appliedExchangeRate: {
+    currency: { type: String, uppercase: true, trim: true },
+    rate: { type: Number, min: 0 }
+  },
+
   // Flete y seguro hasta la entrada en la UE, cada uno en su divisa. Se suman
   // al valor en aduana cuando el incoterm no los incluye (EXW/FCA/FAS/FOB el
   // flete y el seguro; CFR/CPT el seguro). `amount` vacio = no informado; 0 es

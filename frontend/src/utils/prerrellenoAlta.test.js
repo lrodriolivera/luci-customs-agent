@@ -284,12 +284,20 @@ describe('prerrellenarAlta', () => {
     expect(avisos).toContainEqual({ campo: 'itemsMismatch', valor: 1, actual: 2 })
   })
 
-  test('una moneda que el alta no ofrece no se cambia y se avisa', () => {
-    // El peso argentino no lo cotiza el BCE: no tiene tipo oficial de la aduana.
+  test('una divisa que el BCE no cotiza se propone tal cual y avisa de que hará falta el cambio aplicado', () => {
+    // El peso argentino no lo cotiza el BCE: el H1 irá en euros con el código 1017.
     const ars = lectura({ factura: { ...FACTURA.factura, moneda: 'ARS' }, partidas: FACTURA.partidas })
     const { formData, avisos } = prerrellenarAlta(formulario(), ars, {})
+    expect(formData.goods[0].currency).toBe('ARS')
+    expect(avisos).toContainEqual({ campo: 'currencyWithoutBce', valor: 'ARS', partida: 1 })
+    expect(avisos.some((a) => a.campo === 'currencyNotAvailable')).toBe(false)
+  })
+
+  test('un código de moneda que no existe no se cambia y se avisa', () => {
+    const rara = lectura({ factura: { ...FACTURA.factura, moneda: 'DOLARES' }, partidas: FACTURA.partidas })
+    const { formData, avisos } = prerrellenarAlta(formulario(), rara, {})
     expect(formData.goods[0].currency).toBe('EUR')
-    expect(avisos).toContainEqual({ campo: 'currencyNotAvailable', valor: 'ARS', partida: 1 })
+    expect(avisos).toContainEqual({ campo: 'currencyNotAvailable', valor: 'DOLARES', partida: 1 })
   })
 
   test('una factura en yenes se propone en yenes: el BCE cotiza la divisa', () => {

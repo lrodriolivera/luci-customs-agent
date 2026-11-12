@@ -96,6 +96,27 @@ describe('<H1DataCard />', () => {
     expect(screen.getByText(/Con CIF el precio ya incluye el flete y el seguro/)).toBeInTheDocument()
   })
 
+  test('factura en una divisa sin tipo del BCE: pide el cambio aplicado y lo guarda', async () => {
+    getH1Requirements.mockResolvedValue(conIncoterm('CIF', { flete: false, seguro: false }, { invoiceCurrency: 'MAD', invoiceCurrencyWithoutBce: true, appliedExchangeRate: null }))
+    updateH1Data.mockResolvedValue({ data: { success: true } })
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+
+    expect(screen.getByText(/El BCE no cotiza MAD/)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Cambio aplicado: 1 EUR = … MAD'), { target: { value: '10.8' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(updateH1Data).toHaveBeenCalledWith('e1', expect.objectContaining({ appliedExchangeRate: '10.8' })))
+  })
+
+  test('con una divisa del BCE no pide cambio aplicado', async () => {
+    getH1Requirements.mockResolvedValue(conIncoterm('CIF', { flete: false, seguro: false }, { invoiceCurrency: 'USD', invoiceCurrencyWithoutBce: false, appliedExchangeRate: null }))
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+
+    expect(screen.queryByLabelText(/Cambio aplicado/)).not.toBeInTheDocument()
+  })
+
   test('sin cambios no deja guardar', async () => {
     getH1Requirements.mockResolvedValue(respuesta())
     render(<H1DataCard expedition={{ _id: 'e1' }} />)

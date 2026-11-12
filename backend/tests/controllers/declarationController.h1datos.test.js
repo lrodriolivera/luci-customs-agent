@@ -16,6 +16,12 @@ jest.mock('../../src/services/aeat/aeatSubmitService', () => ({
   prepararH1Cau: (...a) => mockPreparar(...a)
 }));
 jest.mock('../../src/services/aiService', () => ({}));
+const mockTipoOficial = jest.fn();
+const tipoSoloUsd = async (d) => (d === 'USD' ? { divisa: 'USD', tipo: 1.1234 } : null);
+jest.mock('../../src/services/divisas/tiposCambioOficiales', () => ({
+  tipoOficial: (...a) => mockTipoOficial(...a),
+  aEuros: jest.requireActual('../../src/services/divisas/tipoCambioAduanero').aEuros
+}));
 jest.mock('../../src/services/channelService', () => ({}));
 jest.mock('../../src/services/emailService', () => ({}));
 jest.mock('../../src/services/customs', () => ({ CustomsServiceFactory: {} }));
@@ -51,6 +57,7 @@ function app() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockTipoOficial.mockImplementation(tipoSoloUsd);
   mockTenant.findById.mockReturnValue({ lean: async () => ({ customsConfig: { h1Service: 'cau' } }) });
 });
 
@@ -69,7 +76,8 @@ describe('requisitos del H1', () => {
       datos: {
         invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE',
         incoterm: '', gastosASumar: null,
-        freightAmount: null, freightCurrency: 'EUR', insuranceAmount: null, insuranceCurrency: 'EUR'
+        freightAmount: null, freightCurrency: 'EUR', insuranceAmount: null, insuranceCurrency: 'EUR',
+        invoiceCurrency: 'EUR', invoiceCurrencyWithoutBce: false, appliedExchangeRate: null
       }
     });
   });
@@ -162,6 +170,52 @@ describe('flete y seguro hasta la entrada en la UE', () => {
     expect(res.body.error).toContain('seguro');
     expect(res.body.error).toContain('divisa');
     expect(exp.save).not.toHaveBeenCalled();
+  });
+});
+
+describe('cambio aplicado de una divisa que el BCE no cotiza', () => {
+  const enDirhams = (extra = {}) => expediente({ goods: [{ currency: 'MAD', invoiceValue: 100000 }], ...extra });
+
+  test('los requisitos dicen que la divisa no tiene tipo del BCE y el cambio guardado', async () => {
+    mockPreparar.mockResolvedValue({ requestXML: '<x/>' });
+    mockExpedition.findById.mockResolvedValue(enDirhams({ appliedExchangeRate: { currency: 'MAD', rate: 10.8 } }));
+
+    const res = await request(app()).get('/api/declarations/e1/h1/requisitos');
+
+    expect(res.body.data.datos).toMatchObject({ invoiceCurrency: 'MAD', invoiceCurrencyWithoutBce: true, appliedExchangeRate: 10.8 });
+  });
+
+  test('con una divisa del BCE no se pide cambio aplicado', async () => {
+    mockPreparar.mockResolvedValue({ requestXML: '<x/>' });
+    mockExpedition.findById.mockResolvedValue(expediente({ goods: [{ currency: 'USD' }] }));
+
+    const res = await request(app()).get('/api/declarations/e1/h1/requisitos');
+
+    expect(res.body.data.datos).toMatchObject({ invoiceCurrency: 'USD', invoiceCurrencyWithoutBce: false, appliedExchangeRate: null });
+  });
+
+  test('guarda el cambio aplicado con la divisa de la factura', async () => {
+    const exp = enDirhams();
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).put('/api/declarations/e1/h1/datos').send({ appliedExchangeRate: '10,8' });
+
+    expect(res.status).toBe(200);
+    expect(exp.appliedExchangeRate).toEqual({ currency: 'MAD', rate: 10.8 });
+    expect(res.body.data).toMatchObject({ invoiceCurrencyWithoutBce: true, appliedExchangeRate: 10.8 });
+  });
+
+  test('vaciarlo lo borra; cero, negativo o texto se rechaza', async () => {
+    const exp = enDirhams({ appliedExchangeRate: { currency: 'MAD', rate: 10.8 } });
+    mockExpedition.findById.mockResolvedValue(exp);
+    expect((await request(app()).put('/api/declarations/e1/h1/datos').send({ appliedExchangeRate: '' })).status).toBe(200);
+    expect(exp.appliedExchangeRate).toBeNull();
+
+    for (const malo of [0, -3, 'mucho']) {
+      const res = await request(app()).put('/api/declarations/e1/h1/datos').send({ appliedExchangeRate: malo });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('cambio aplicado');
+    }
   });
 });
 

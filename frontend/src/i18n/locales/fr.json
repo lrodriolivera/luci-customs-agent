@@ -558,7 +558,9 @@
     "descriptionTooShort": "La description doit comporter au moins {{min}} caractères pour être classée",
     "valueWillBeSaved": "Sera enregistré comme {{amount}}",
     "officialRate": "En euros : {{eur}}. Taux officiel de la douane pour {{month}} : 1 EUR = {{rate}} {{currency}} (BCE, {{date}})",
-    "officialRateMissing": "{{currency}} n'a pas de taux de change officiel de la BCE : déclarez le montant en euros",
+    "officialRateMissing": "{{currency}} n'a pas de taux de change officiel de la BCE : le H1 sera déclaré en euros avec le taux appliqué que vous indiquerez dans « Données pour déposer le H1 »",
+    "currencyGroupBce": "Avec taux officiel de la BCE",
+    "currencyGroupWithoutBce": "Sans taux de la BCE (le H1 sera en euros)",
     "officialRateError": "Le taux de change officiel de {{currency}} n'a pas pu être consulté",
     "taricNotVerified": "Absent du catalogue TARIC",
     "valueNotValid": "Montant non valide. Utilisez le point pour les milliers et la virgule pour les décimales : 184.800,50",
@@ -3737,6 +3739,7 @@
       "differs": "{{field}} : le document indique « {{value}} » et le formulaire contient « {{current}} ». Il n'a pas été modifié.",
       "itemsMismatch": "Le document contient {{value}} article(s) et le formulaire {{current}} : ils n'ont pas pu être rapprochés et les articles n'ont pas été modifiés.",
       "currencyNotAvailable": "La facture est en {{value}}, une devise que ce formulaire ne propose pas : vérifiez la devise de l'article.",
+      "currencyWithoutBce": "La facture est en {{value}}, devise que la BCE ne cote pas : le H1 sera déclaré en euros et il faudra indiquer le taux appliqué dans « Données pour déposer le H1 ».",
       "fiscalIdNotRecognised": "L'identifiant fiscal lu (« {{value}} ») n'a pas le format d'un NIF : il n'a pas été rempli."
     },
     "field": {

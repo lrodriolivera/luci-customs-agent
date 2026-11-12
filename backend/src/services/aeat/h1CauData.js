@@ -24,6 +24,7 @@ const DOCUMENTO_TRANSPORTE = { BL: 'N705', AWB: 'N740', CMR: 'N730', CIM: 'N720'
 // Incoterms en los que el lugar convenido esta en destino.
 const INCOTERMS_EN_DESTINO = new Set(['CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP']);
 const AMBITOS_AUTORIZACION = { global: null, OCRE: 'OCRE', OSRE: 'OSRE' };
+const DOCUMENTO_DIVISA_SIN_BCE = '1017';
 
 const texto = (v) => (typeof v === 'string' && v.trim() !== '' ? v.trim() : null);
 const redondear = (n) => Math.round(n * 100) / 100;
@@ -219,7 +220,8 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     masaBruta: good.grossWeight, masaNeta: good.netWeight,
     unidadesSuplementarias: good.supplementaryUnits || null,
     // El importe de factura va en la divisa de la factura; las bases, en euros.
-    importeFactura: valor,
+    // Una divisa sin tipo del BCE se declara en euros (el contravalor).
+    importeFactura: contexto.cambio.sinTipoBce ? valorEuros : valor,
     preferencia: String(expedition.declaration?.preference || '100'),
     tributos: [
       { tipo: 'A00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoArancel, importe: valorAduana, cuota: arancel }] },
@@ -295,12 +297,17 @@ function expeditionToH1CauData(expedition, { declarante, cambio, cambiosGastos =
     tipoCambio,
     envio: {
       naturalezaTransaccion: String(decl.natureOfTransaction || '11'),
-      divisa: tipoCambio.divisa,
+      // La AEAT solo admite divisas con tipo del BCE (error 25001 con MAD, AED…).
+      divisa: tipoCambio.sinTipoBce ? 'EUR' : tipoCambio.divisa,
       exportador: exportadorDe(expedition.exporter, faltan),
       entrega: entregaDe(expedition, paisExpedicion, faltan),
       paisExpedicion,
       destino: { pais: 'ES', region },
-      documentosJustificativos: referenciaAutorizacion ? [{ tipo: '1005', referencia: referenciaAutorizacion }] : [],
+      documentosJustificativos: [
+        ...(referenciaAutorizacion ? [{ tipo: '1005', referencia: referenciaAutorizacion }] : []),
+        // 1017: «Codigo de divisa sin tipo de cambio de referencia en el BCE y cambio aplicado».
+        ...(tipoCambio.sinTipoBce ? [{ tipo: DOCUMENTO_DIVISA_SIN_BCE, referencia: `${tipoCambio.divisa} ${tipoCambio.tipo}` }] : [])
+      ],
       expedicion: expedicionDe(expedition, numeros, faltan),
       partidas: goods.map((g, i) => partidaDe(expedition, g, i, contexto, faltan))
     }

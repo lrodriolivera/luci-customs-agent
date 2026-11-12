@@ -10,7 +10,7 @@ const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024
 export const MAX_DRAFTS = 10
 const ACCEPTED_EXTENSIONS = '.pdf,.jpg,.jpeg,.png,.tif,.tiff,.webp,.doc,.docx,.xls,.xlsx,.txt,.csv,.xml'
 
-const AVISOS_PROPIOS = ['itemsMismatch', 'currencyNotAvailable', 'fiscalIdNotRecognised']
+const AVISOS_PROPIOS = ['itemsMismatch', 'currencyNotAvailable', 'currencyWithoutBce', 'fiscalIdNotRecognised']
 
 /**
  * Alta desde la documentacion: el agente sube los documentos antes de rellenar
