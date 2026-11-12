@@ -65,10 +65,45 @@ const responderSiFaltaIdentificacion = (res, error) => {
     success: false,
     error: error.message,
     code: error.code,
-    quien: error.quien || null
+    quien: error.quien || null,
+    // Lista de datos por completar (H1 CAU).
+    faltan: error.faltan || undefined
   });
   return true;
 };
+
+// Un mensaje preparado y sin respuesta se reenvia tal cual durante este plazo;
+// pasado, se prepara uno nuevo (la AEAT conserva el historico unos 15 dias).
+const VIGENCIA_ENVIO_CAU_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Presenta el H1 por el servicio CAU (CC415AV1) con reenvio seguro: el mensaje
+ * se guarda ANTES de enviarlo. Si la respuesta no llega (corte de red, fallo
+ * del servidor), el siguiente intento reenvia el mismo mensaje y la AEAT, que
+ * lo reconoce por su identificador, no registra la declaracion dos veces.
+ */
+async function presentarH1Cau(expedition) {
+  let envio = expedition.declaration.cauEnvio;
+  const pendiente = envio && !envio.respondido && envio.requestXML
+    && (Date.now() - new Date(envio.preparedAt).getTime()) < VIGENCIA_ENVIO_CAU_MS;
+  if (!pendiente) {
+    envio = { ...(await aeatSubmitService.prepararH1Cau(expedition)), respondido: false };
+    expedition.declaration.cauEnvio = envio;
+    expedition.markModified('declaration.cauEnvio');
+    await expedition.save();
+  }
+
+  const resultado = await aeatSubmitService.enviarH1Cau(envio.requestXML);
+
+  // Con respuesta de la AEAT (admision o rechazo) el mensaje queda cerrado; un
+  // fallo del servidor lo deja pendiente para reenviarlo igual.
+  if (!(resultado.tipo === 'fault' && resultado.reintentable)) {
+    expedition.declaration.cauEnvio = { ...envio, respondido: true, respondidoAt: new Date(), resultado: resultado.tipo };
+    expedition.markModified('declaration.cauEnvio');
+    if (!resultado.success) await expedition.save();
+  }
+  return { ...resultado, lrn: resultado.lrn || envio.lrn };
+}
 
 /**
  * Generar declaracion H1 (Importacion)
@@ -428,11 +463,16 @@ const submitDeclaration = async (req, res) => {
     const country = tenant?.customsConfig?.country || 'ES';
     const type = expedition.declaration.type;
 
+    // H1 por el mensaje CAU (CC415AV1) o por el DUA anterior, segun el tenant.
+    const usaCau = country === 'ES' && type !== 'AES' && aeatSubmitService.servicioH1(tenant) === 'cau';
+
     let aeatResult;
     if (country === 'ES') {
       // Existing AEAT code (backward compatible)
       if (type === 'AES') {
         aeatResult = await aeatSubmitService.submitAES(expedition);
+      } else if (usaCau) {
+        aeatResult = await presentarH1Cau(expedition);
       } else {
         aeatResult = await aeatSubmitService.submitH1(expedition);
       }
@@ -464,28 +504,41 @@ const submitDeclaration = async (req, res) => {
     }
 
     // Normalizar respuesta para compatibilidad
+    // En el CAU la fecha de admision y el circuito los da la AEAT. Sin analisis
+    // de riesgos no hay circuito: no se supone verde.
+    const fechaAdmision = usaCau && aeatResult.fechaAdmision ? new Date(aeatResult.fechaAdmision) : new Date();
     const aeatResponse = {
       success: true,
-      mrn: aeatResult.mrn,
-      channel: aeatResult.channel,
-      acceptanceDate: new Date(),
-      simulated: false
+      mrn: aeatResult.mrn || aeatResult.numeroRegistro,
+      channel: usaCau ? (aeatResult.channel || null) : aeatResult.channel,
+      acceptanceDate: fechaAdmision,
+      simulated: false,
+      liquidacion: aeatResult.liquidacion,
+      certificados: aeatResult.certificados
     };
 
     // Actualizar declaracion con respuesta AEAT
     expedition.declaration.status = 'submitted';
-    expedition.declaration.mrn = aeatResult.mrn;
+    expedition.declaration.mrn = aeatResponse.mrn;
     expedition.declaration.submittedAt = new Date();
-    expedition.declaration.acceptanceDate = new Date();
-    expedition.declaration.channel = aeatResult.channel || 'green';
+    expedition.declaration.acceptanceDate = fechaAdmision;
+    if (usaCau) {
+      expedition.declaration.channel = aeatResponse.channel || undefined;
+      // El LRN con el que la AEAT registro la declaracion.
+      expedition.declaration.lrn = aeatResult.lrn || expedition.declaration.lrn;
+    } else {
+      expedition.declaration.channel = aeatResult.channel || 'green';
+    }
 
     // Guardar respuesta completa de AEAT
     expedition.declaration.aeatResponse = {
-      responseCode: aeatResult.code,
+      responseCode: usaCau ? aeatResult.operacionRegistrada : aeatResult.code,
       responseDescription: aeatResult.estado || 'Aceptada',
       timestamp: new Date(),
       csv: aeatResult.csv,
-      simulated: false
+      simulated: false,
+      // Lo que liquida la AEAT y los certificados que exige cada organismo (H1 CAU).
+      ...(usaCau ? { servicio: 'CC415AV1', circuito: aeatResult.circuito, liquidacion: aeatResult.liquidacion, certificados: aeatResult.certificados } : {})
     };
 
     // Actualizar status del expediente segun canal
@@ -514,8 +567,12 @@ const submitDeclaration = async (req, res) => {
     await expedition.save();
 
     // Procesar canal asignado (crear requerimientos automaticos, generar levante, etc.)
+    // En el H1 el circuito amarillo significa «pendiente de certificados de otros
+    // organismos»; el tratamiento amarillo de channelService es el del H7 (IVA
+    // pendiente) y no se aplica. Sin circuito tampoco hay nada que procesar.
+    const procesarCanal = aeatResponse.channel && !(usaCau && aeatResponse.channel === 'yellow');
     let channelResult = null;
-    try {
+    if (procesarCanal) try {
       channelResult = await channelService.processChannelAssignment(
         expedition._id,
         aeatResponse.channel,
@@ -556,6 +613,8 @@ const submitDeclaration = async (req, res) => {
 
     // Mensaje segun canal
     const channelMessages = {
+      null: 'Declaración registrada. La AEAT todavía no ha asignado circuito.',
+      yellow: 'CIRCUITO AMARILLO - Pendiente de certificados de otros organismos.',
       green: 'CANAL VERDE - Levante autorizado. Mercancia puede retirarse.',
       orange: 'CANAL NARANJA - Revision documental requerida. Pendiente de validacion.',
       red: 'CANAL ROJO - Inspeccion fisica requerida. Mercancia retenida.'
@@ -574,6 +633,8 @@ const submitDeclaration = async (req, res) => {
         status: updatedExpedition.status,
         declaration: updatedExpedition.declaration,
         duties: aeatResponse.duties,
+        liquidacion: aeatResponse.liquidacion,
+        certificados: aeatResponse.certificados,
         estimatedRelease: aeatResponse.estimatedRelease,
         simulated: aeatResponse.simulated,
         message: aeatResponse.simulated
@@ -592,6 +653,8 @@ const submitDeclaration = async (req, res) => {
     });
 
   } catch (error) {
+    // Datos que faltan (EORI, datos del H1): 422 con lo que hay que completar.
+    if (responderSiFaltaIdentificacion(res, error)) return;
     logger.error('Error enviando declaracion a AEAT:', error);
     res.status(500).json({
       success: false,

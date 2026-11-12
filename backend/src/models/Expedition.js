@@ -180,6 +180,11 @@ const DeclarationSchema = new mongoose.Schema({
   h7Data: mongoose.Schema.Types.Mixed,
   vatCalculation: mongoose.Schema.Types.Mixed,
   h1Data: mongoose.Schema.Types.Mixed,
+  // Envio del H1 por el servicio CAU (CC415AV1): identificador del mensaje, LRN
+  // y XML tal como salieron, guardados ANTES de enviar. Si la respuesta no
+  // llega, se reenvia el mismo mensaje: la AEAT lo reconoce por su identificador
+  // y no registra la declaracion dos veces.
+  cauEnvio: mongoose.Schema.Types.Mixed,
   aeatResponse: mongoose.Schema.Types.Mixed,
   levanteNumber: String,
   cancelledAt: Date

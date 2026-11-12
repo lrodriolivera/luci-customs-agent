@@ -22,6 +22,7 @@ jest.mock('../../src/models', () => ({
 }));
 jest.mock('../../src/models/Tenant', () => mockTenant);
 jest.mock('../../src/services/aeat/aeatSubmitService', () => ({
+  servicioH1: () => 'precau',
   submitH1: (...a) => mockSubmitH1(...a),
   submitAES: (...a) => mockSubmitAES(...a),
   cancelH1: (...a) => mockCancelH1(...a)

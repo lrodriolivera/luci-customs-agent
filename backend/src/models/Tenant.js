@@ -258,6 +258,14 @@ const TenantSchema = new mongoose.Schema({
     certificatePassword: { type: String },
     digipoortEndpoint: { type: String },
     customsOffice: { type: String },
+    // Servicio con el que se presenta el H1: `precau` (ImportacionCompletaV1,
+    // cerrado para altas reales desde el 14/10/2025) o `cau` (CC415AV1).
+    h1Service: { type: String, enum: ['precau', 'cau'] },
+    // Medio de pago por defecto del H1 (A = pago previo al levante, R = aplazado
+    // con garantia) y garantia de levante (obligatoria con pago aplazado).
+    medioDePago: { type: String },
+    garantiaGRN: { type: String },
+    tipoGarantia: { type: String },
     eoriNumbers: {
       ES: { type: String },
       NL: { type: String },
