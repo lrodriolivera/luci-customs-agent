@@ -654,8 +654,11 @@ const submitDeclaration = async (req, res) => {
     expedition.declaration.acceptanceDate = fechaAdmision;
     if (usaCau) {
       expedition.declaration.channel = aeatResponse.channel || undefined;
-      // El LRN con el que la AEAT registro la declaracion.
+      // El LRN con el que la AEAT registro la declaracion, tambien en la vista previa.
       expedition.declaration.lrn = aeatResult.lrn || expedition.declaration.lrn;
+      if (expedition.declaration.h1Data && aeatResult.lrn) {
+        expedition.declaration.h1Data = { ...expedition.declaration.h1Data, lrn: aeatResult.lrn };
+      }
     } else {
       expedition.declaration.channel = aeatResult.channel || 'green';
     }
