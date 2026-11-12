@@ -558,7 +558,9 @@
     "descriptionTooShort": "The description needs at least {{min}} characters to be classified",
     "valueWillBeSaved": "It will be saved as {{amount}}",
     "officialRate": "In euros: {{eur}}. Official customs rate for {{month}}: 1 EUR = {{rate}} {{currency}} (ECB, {{date}})",
-    "officialRateMissing": "{{currency}} has no official ECB exchange rate: declare the amount in euros",
+    "officialRateMissing": "{{currency}} has no official ECB exchange rate: the H1 will be declared in euros with the applied rate you enter in “Data to file the H1”",
+    "currencyGroupBce": "With official ECB rate",
+    "currencyGroupWithoutBce": "No ECB rate (the H1 will be in euros)",
     "officialRateError": "The official exchange rate for {{currency}} could not be retrieved",
     "taricNotVerified": "Not in the TARIC catalogue",
     "valueNotValid": "Invalid amount. Use a dot for thousands and a comma for decimals: 184.800,50",
@@ -3753,6 +3755,7 @@
       "differs": "{{field}}: the document says \"{{value}}\" and the form has \"{{current}}\". It has not been changed.",
       "itemsMismatch": "The document has {{value}} item(s) and the form has {{current}}: they could not be matched and the items were left untouched.",
       "currencyNotAvailable": "The invoice is in {{value}}, a currency this form does not offer: check the item currency.",
+      "currencyWithoutBce": "The invoice is in {{value}}, which the ECB does not quote: the H1 will be declared in euros and you will need to enter the applied rate in “Data to file the H1”.",
       "fiscalIdNotRecognised": "The tax ID read (\"{{value}}\") is not in NIF format: it has not been filled in."
     },
     "field": {

@@ -558,7 +558,9 @@
     "descriptionTooShort": "La descrizione deve avere almeno {{min}} caratteri per essere classificata",
     "valueWillBeSaved": "Verrà salvato come {{amount}}",
     "officialRate": "In euro: {{eur}}. Tasso ufficiale della dogana per {{month}}: 1 EUR = {{rate}} {{currency}} (BCE, {{date}})",
-    "officialRateMissing": "{{currency}} non ha un tasso di cambio ufficiale della BCE: dichiara l'importo in euro",
+    "officialRateMissing": "{{currency}} non ha un tasso di cambio ufficiale della BCE: l'H1 sarà dichiarato in euro con il cambio applicato che indicherai in «Dati per presentare l'H1»",
+    "currencyGroupBce": "Con tasso ufficiale della BCE",
+    "currencyGroupWithoutBce": "Senza tasso della BCE (l'H1 sarà in euro)",
     "officialRateError": "Non è stato possibile consultare il tasso di cambio ufficiale di {{currency}}",
     "taricNotVerified": "Non presente nel catalogo TARIC",
     "valueNotValid": "Importo non valido. Usa il punto per le migliaia e la virgola per i decimali: 184.800,50",
@@ -3737,6 +3739,7 @@
       "differs": "{{field}}: il documento indica «{{value}}» e nel modulo c'è «{{current}}». Non è stato modificato.",
       "itemsMismatch": "Il documento contiene {{value}} articolo/i e il modulo ne ha {{current}}: non è stato possibile abbinarli e gli articoli non sono stati modificati.",
       "currencyNotAvailable": "La fattura è in {{value}}, una valuta che il modulo non offre: controlla la valuta dell'articolo.",
+      "currencyWithoutBce": "La fattura è in {{value}}, valuta non quotata dalla BCE: l'H1 sarà dichiarato in euro e occorrerà indicare il cambio applicato in «Dati per presentare l'H1».",
       "fiscalIdNotRecognised": "L'identificativo fiscale letto («{{value}}») non ha il formato di un NIF: non è stato compilato."
     },
     "field": {

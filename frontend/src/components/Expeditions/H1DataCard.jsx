@@ -15,7 +15,7 @@ const fecha = (iso) => {
 
 const CAMPOS = [
   'invoiceNumber', 'exporterPostalCode', 'vehicleNationality', 'dispatchAuthorizationScope',
-  'freightAmount', 'freightCurrency', 'insuranceAmount', 'insuranceCurrency'
+  'freightAmount', 'freightCurrency', 'insuranceAmount', 'insuranceCurrency', 'appliedExchangeRate'
 ]
 const comoTexto = (v) => (v === null || v === undefined ? '' : String(v))
 
@@ -64,6 +64,7 @@ export default function H1DataCard({ expedition, soloEstado = false }) {
   const sumar = estado?.datos?.gastosASumar
   const pideFlete = !sumar || sumar.flete
   const pideSeguro = !sumar || sumar.seguro
+  const divisaSinBce = estado?.datos?.invoiceCurrencyWithoutBce ? estado.datos.invoiceCurrency : null
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
 
@@ -87,7 +88,11 @@ export default function H1DataCard({ expedition, soloEstado = false }) {
     setGuardando(true)
     try {
       // Solo los campos editables; los gastos que el incoterm no pide no se tocan.
-      const omitir = new Set([...(pideFlete ? [] : ['freightAmount', 'freightCurrency']), ...(pideSeguro ? [] : ['insuranceAmount', 'insuranceCurrency'])])
+      const omitir = new Set([
+        ...(pideFlete ? [] : ['freightAmount', 'freightCurrency']),
+        ...(pideSeguro ? [] : ['insuranceAmount', 'insuranceCurrency']),
+        ...(divisaSinBce ? [] : ['appliedExchangeRate'])
+      ])
       const datos = Object.fromEntries(CAMPOS.filter((c) => form[c] !== undefined && !omitir.has(c)).map((c) => [c, form[c] === null ? '' : form[c]]))
       await declarationsAPI.updateH1Data(expedition._id, datos)
       toast.success('Datos del H1 guardados')
@@ -148,6 +153,18 @@ export default function H1DataCard({ expedition, soloEstado = false }) {
           </select>
           <p className="mt-1 text-xs text-gray-500">No se usa en autodespacho. Con autorización global no se declara ningún documento.</p>
         </div>
+        {divisaSinBce && (
+          <div className="sm:col-span-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <label className="label" htmlFor="h1-applied-rate">{`Cambio aplicado: 1 EUR = … ${divisaSinBce}`}</label>
+            <input
+              id="h1-applied-rate" className="input sm:w-60" type="number" min="0" step="0.00001" inputMode="decimal"
+              value={comoTexto(form.appliedExchangeRate)} onChange={cambiar('appliedExchangeRate')}
+            />
+            <p className="mt-1 text-xs text-amber-900">
+              {`El BCE no cotiza ${divisaSinBce} y la AEAT no la admite: el H1 se declara en euros con el contravalor y el documento 1017, que lleva la divisa y este cambio.`}
+            </p>
+          </div>
+        )}
         <fieldset className="sm:col-span-2 grid gap-3 sm:grid-cols-2 rounded-lg border border-gray-200 p-3">
           <legend className="px-1 text-sm font-medium">Flete y seguro hasta la entrada en la UE</legend>
           <p className="sm:col-span-2 text-xs text-gray-600">{explicacionGastos(estado?.datos?.incoterm, sumar)}</p>

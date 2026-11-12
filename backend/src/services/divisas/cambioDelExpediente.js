@@ -37,13 +37,25 @@ async function cambioDelExpediente(expedition, opciones = {}) {
   const divisa = divisaDelExpediente(expedition);
   if (divisa === 'EUR') return { ...CAMBIO_EUR };
   const cambio = await tipoOficial(divisa, opciones);
-  if (!cambio) {
-    throw new ErrorValidacion(
-      `La divisa ${divisa} no tiene tipo de cambio oficial del BCE: declara los importes en euros`,
-      { code: 'DIVISA_SIN_TIPO_OFICIAL' }
-    );
-  }
-  return cambio;
+  if (cambio) return cambio;
+  const aplicado = cambioAplicado(expedition, divisa);
+  if (aplicado) return aplicado;
+  throw new ErrorValidacion(
+    `La divisa ${divisa} no tiene tipo de cambio oficial del BCE: indica el cambio aplicado (1 EUR = … ${divisa}) en «Datos para presentar el H1»; el H1 se declarará en euros`,
+    { code: 'DIVISA_SIN_TIPO_OFICIAL' }
+  );
+}
+
+/**
+ * Cambio que indico el usuario para una divisa que el BCE no cotiza. La
+ * Resolucion del DUA (casilla 22) manda declarar entonces en euros el
+ * contravalor y, con el codigo 1017, «el codigo de la divisa de facturacion y
+ * el cambio aplicado». La AEAT rechaza esas divisas en el H1 CAU (error 25001).
+ */
+function cambioAplicado(expedition, divisa) {
+  const a = expedition?.appliedExchangeRate;
+  if (!a || codigo(a.currency) !== divisa || !(Number(a.rate) > 0)) return null;
+  return { divisa, tipo: Number(a.rate), sinTipoBce: true, fuente: 'cambio aplicado' };
 }
 
 /**
@@ -64,5 +76,5 @@ function cambioObligatorio(expedition, cambio) {
 }
 
 module.exports = {
-  CAMBIO_EUR, divisasDelExpediente, divisaDelExpediente, cambioDelExpediente, cambioObligatorio, aEuros
+  CAMBIO_EUR, divisasDelExpediente, divisaDelExpediente, cambioDelExpediente, cambioAplicado, cambioObligatorio, aEuros
 };

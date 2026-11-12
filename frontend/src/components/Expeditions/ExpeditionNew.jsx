@@ -8,7 +8,8 @@ import { LOAD_TYPES } from './GroupageCard'
 import { PACKAGE_TYPES, DEFAULT_PACKAGE_TYPE, toNumberOrUndefined } from './packageTypes'
 import DraftDocuments from './DraftDocuments'
 import TransportDetailsFields from './TransportDetailsFields'
-import { prerrellenarAlta, transporteParaAlta, partidaVacia, transporteVacio, INCOTERMS, MONEDAS_ALTA } from '../../utils/prerrellenoAlta'
+import { prerrellenarAlta, transporteParaAlta, partidaVacia, transporteVacio, INCOTERMS } from '../../utils/prerrellenoAlta'
+import { DIVISAS_OFICIALES, DIVISAS_SIN_BCE } from '../../utils/divisas'
 import toast from 'react-hot-toast'
 import { ArrowLeftIcon, PlusIcon, TrashIcon, SparklesIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
 
@@ -878,9 +879,12 @@ export default function ExpeditionNew() {
                         className="input w-24"
                         aria-label={t('docReading.field.currency')}
                       >
-                        {MONEDAS_ALTA.map((moneda) => (
-                          <option key={moneda} value={moneda}>{moneda}</option>
-                        ))}
+                        <optgroup label={t('expeditions.currencyGroupBce')}>
+                          {DIVISAS_OFICIALES.map((moneda) => <option key={moneda} value={moneda}>{moneda}</option>)}
+                        </optgroup>
+                        <optgroup label={t('expeditions.currencyGroupWithoutBce')}>
+                          {DIVISAS_SIN_BCE.map((moneda) => <option key={moneda} value={moneda}>{moneda}</option>)}
+                        </optgroup>
                       </select>
                     </div>
                   </div>

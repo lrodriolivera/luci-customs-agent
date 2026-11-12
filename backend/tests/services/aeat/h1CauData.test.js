@@ -206,6 +206,43 @@ describe('H1 CAU: flete y seguro hasta la entrada en la UE (valor CIF)', () => {
   });
 });
 
+describe('H1 CAU: factura en una divisa que el BCE no cotiza', () => {
+  // La AEAT rechaza MAD en invoiceCurrency (error 25001, comprobado en PRE el
+  // 12/11/2026): se declara en euros con el contravalor y el documento 1017.
+  const MAD = { divisa: 'MAD', tipo: 10.8, sinTipoBce: true, fuente: 'cambio aplicado' };
+  const enDirhams = (extra = {}) => expediente({ goods: [{ ...expediente().goods[0], invoiceValue: 100000, currency: 'MAD' }], ...extra });
+
+  test('declara EUR con el contravalor y el 1017 con la divisa y el cambio aplicado', () => {
+    const d = datos(enDirhams(), { cambio: MAD });
+    const [p] = d.envio.partidas;
+
+    expect(d.envio.divisa).toBe('EUR');
+    expect(p.importeFactura).toBe(9259.26);
+    expect(p.tributos[0].bases[0].importe).toBe(9259.26);
+    expect(d.envio.documentosJustificativos).toContainEqual({ tipo: '1017', referencia: 'MAD 10.8' });
+  });
+
+  test('el flete en la misma divisa se convierte con el mismo cambio aplicado', () => {
+    const exp = enDirhams({
+      incoterm: { code: 'FOB', place: 'Casablanca' },
+      transport: { ...expediente().transport, departurePort: 'Casablanca' },
+      costs: { freight: { amount: 5400, currency: 'MAD' }, insurance: { amount: 0, currency: 'EUR' } }
+    });
+    const [p] = datos(exp, { cambio: MAD }).envio.partidas;
+    expect(p.valoracion.ajustes).toEqual([{ codigo: 'AK', importe: 500 }]);
+  });
+
+  test('con una divisa del BCE no se añade el 1017 y la factura va en su divisa', () => {
+    const d = datos();
+    expect(d.envio.divisa).toBe('USD');
+    expect(d.envio.documentosJustificativos.map((x) => x.tipo)).not.toContain('1017');
+  });
+
+  siHayXmllint('el XML en euros con el 1017 valida contra el XSD oficial', () => {
+    expect(validar(datos(enDirhams(), { cambio: MAD }))).toBeNull();
+  });
+});
+
 describe('H1 CAU: datos que faltan', () => {
   test('dice de una vez todo lo que hay que completar, sin inventar nada', () => {
     expect.assertions(4);

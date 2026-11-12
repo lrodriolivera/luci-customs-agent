@@ -558,7 +558,9 @@
     "descriptionTooShort": "La descripción debe tener al menos {{min}} caracteres para clasificarla",
     "valueWillBeSaved": "Se guardará como {{amount}}",
     "officialRate": "En euros: {{eur}}. Tipo oficial de la aduana para {{month}}: 1 EUR = {{rate}} {{currency}} (BCE, {{date}})",
-    "officialRateMissing": "{{currency}} no tiene tipo de cambio oficial del BCE: declara el importe en euros",
+    "officialRateMissing": "{{currency}} no tiene tipo de cambio oficial del BCE: el H1 se declarará en euros con el cambio aplicado que indiques en «Datos para presentar el H1»",
+    "currencyGroupBce": "Con tipo oficial del BCE",
+    "currencyGroupWithoutBce": "Sin tipo del BCE (el H1 irá en euros)",
     "officialRateError": "No se pudo consultar el tipo de cambio oficial de {{currency}}",
     "taricNotVerified": "No está en el catálogo TARIC",
     "valueNotValid": "Importe no válido. Usa punto para los millares y coma para los decimales: 184.800,50",
@@ -3753,6 +3755,7 @@
       "differs": "{{field}}: el documento indica «{{value}}» y en el formulario hay «{{current}}». No se ha cambiado.",
       "itemsMismatch": "El documento trae {{value}} partida(s) y el formulario tiene {{current}}: no se han podido casar y las partidas no se han tocado.",
       "currencyNotAvailable": "La factura está en {{value}}, una moneda que el alta no ofrece: revisa la moneda de la partida.",
+      "currencyWithoutBce": "La factura está en {{value}}, que el BCE no cotiza: el H1 se declarará en euros y habrá que indicar el cambio aplicado en «Datos para presentar el H1».",
       "fiscalIdNotRecognised": "La identificación fiscal leída («{{value}}») no tiene formato de NIF: no se ha rellenado."
     },
     "field": {

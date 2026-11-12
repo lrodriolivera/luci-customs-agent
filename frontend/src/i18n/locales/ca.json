@@ -558,7 +558,9 @@
     "descriptionTooShort": "La descripció ha de tenir almenys {{min}} caràcters per classificar-la",
     "valueWillBeSaved": "Es desarà com a {{amount}}",
     "officialRate": "En euros: {{eur}}. Tipus oficial de la duana per a {{month}}: 1 EUR = {{rate}} {{currency}} (BCE, {{date}})",
-    "officialRateMissing": "{{currency}} no té tipus de canvi oficial del BCE: declara l'import en euros",
+    "officialRateMissing": "{{currency}} no té tipus de canvi oficial del BCE: l'H1 es declararà en euros amb el canvi aplicat que indiquis a «Dades per presentar l'H1»",
+    "currencyGroupBce": "Amb tipus oficial del BCE",
+    "currencyGroupWithoutBce": "Sense tipus del BCE (l'H1 anirà en euros)",
     "officialRateError": "No s'ha pogut consultar el tipus de canvi oficial de {{currency}}",
     "taricNotVerified": "No és al catàleg TARIC",
     "valueNotValid": "Import no vàlid. Fes servir punt per als milers i coma per als decimals: 184.800,50",
@@ -3737,6 +3739,7 @@
       "differs": "{{field}}: el document indica «{{value}}» i al formulari hi ha «{{current}}». No s'ha canviat.",
       "itemsMismatch": "El document porta {{value}} partida/es i el formulari en té {{current}}: no s'han pogut casar i les partides no s'han tocat.",
       "currencyNotAvailable": "La factura és en {{value}}, una moneda que l'alta no ofereix: revisa la moneda de la partida.",
+      "currencyWithoutBce": "La factura és en {{value}}, que el BCE no cotitza: l'H1 es declararà en euros i caldrà indicar el canvi aplicat a «Dades per presentar l'H1».",
       "fiscalIdNotRecognised": "La identificació fiscal llegida («{{value}}») no té format de NIF: no s'ha emplenat."
     },
     "field": {

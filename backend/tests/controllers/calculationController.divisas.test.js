@@ -98,6 +98,24 @@ describe('calculateTotal con factura en divisa', () => {
     expect(res.body.data.warnings[0]).toContain('sin tipo de cambio oficial');
   });
 
+  test('sin tipo oficial y con cambio aplicado en el expediente usa ese cambio, no el de mercado', async () => {
+    mockTipoOficial.mockResolvedValue(null);
+    const expedition = {
+      goods: [{ taricCode: 'x', invoiceValue: 100000, currency: 'MAD' }],
+      appliedExchangeRate: { currency: 'MAD', rate: 10.8 },
+      save: jest.fn()
+    };
+    mockFindById.mockResolvedValue(expedition);
+    const res = crearRes();
+
+    await ctrl.calculateTotal({ body: { expeditionId: 'e1' } }, res);
+
+    expect(mockCalcDuties.mock.calls[0][0].customsValue).toBe(9259.26);
+    expect(res.body.data.exchangeRates[0]).toMatchObject({ divisa: 'MAD', tipo: 10.8, official: false, fuente: 'cambio aplicado' });
+    expect(res.body.data.warnings).toEqual([]);
+    expect(mockAxiosGet).not.toHaveBeenCalled();
+  });
+
   test('si la fuente oficial falla también cae al mercado con aviso', async () => {
     mockTipoOficial.mockRejectedValue(new Error('BCE caído'));
     mockAxiosGet.mockResolvedValue({ data: { rates: { USD: 1.1 } } });
