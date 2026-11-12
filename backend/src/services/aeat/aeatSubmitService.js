@@ -9,6 +9,7 @@ const aeatRealService = require('./aeatRealService');
 const aeatTransport = require('./aeatTransport');
 const { buildH1ImportXML, expeditionToH1Data } = require('./h1XmlBuilder');
 const { cambioDelExpediente } = require('../divisas/cambioDelExpediente');
+const { cambiosDeLosGastos } = require('../forms/gastosHastaLaFrontera');
 const { expeditionToH1CauData, partes: partesH1Cau } = require('./h1CauData');
 const { buildAnulacionH1CauXML, interpretarAnulacionH1Cau, ENDPOINT_CC414A } = require('./h1CauAnulacion');
 const { buildH1CauXML, ENDPOINT_CC415A } = require('./h1CauXmlBuilder');
@@ -285,6 +286,8 @@ async function prepararH1Cau(expedition, ctx = {}) {
     declarante: { ...declarante, contact: contacto },
     // Rige el tipo de cambio del mes en que se presenta; la AEAT aplica el de la admision.
     cambio: await cambioDelExpediente(expedition),
+    // Tipos oficiales de las divisas del flete y del seguro que se suman al valor en aduana.
+    cambiosGastos: await cambiosDeLosGastos(expedition),
     tenant,
     mensajeId: `${referencia}${Math.floor(Math.random() * 9000 + 1000)}`,
     // Un LRN nuevo en cada mensaje: la AEAT rechaza un LRN ya usado por el declarante.

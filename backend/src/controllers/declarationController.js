@@ -11,6 +11,7 @@ const { ErrorValidacion, exigirIdentificacion } = require('../services/forms/ide
 const { cambioDelExpediente } = require('../services/divisas/cambioDelExpediente');
 const { aplicarCauAVistaPrevia } = require('../services/aeat/h1CauVistaPrevia');
 const { anulablePorServicio } = require('../services/aeat/h1CauAnulacion');
+const { gastosQueSeSuman, gastoDe, cambiosDeLosGastos } = require('../services/forms/gastosHastaLaFrontera');
 const { verificarSumariaConAeat, esGrupaje, CODIGO_ERROR: CODIGO_GRUPAJE } = require('../services/forms/grupajeLcl');
 
 /** Sin grupaje y sin sumaria registrada no hay nada que comprobar ni que consultar. */
@@ -95,13 +96,61 @@ async function ajustarVistaPreviaAlServicio(expedition, tenant) {
 
 const AMBITOS_AUTORIZACION = ['global', 'OCRE', 'OSRE'];
 
+const DIVISA = /^[A-Z]{3}$/;
+const IMPORTE_MAXIMO = 1e12;
+
 /** Datos del expediente que solo existen para presentar el H1. */
-const datosH1De = (expedition) => ({
-  invoiceNumber: expedition.invoiceNumber || '',
-  exporterPostalCode: expedition.exporter?.postalCode || '',
-  vehicleNationality: expedition.transport?.vehicleNationality || '',
-  dispatchAuthorizationScope: expedition.representative?.dispatchAuthorizationScope || 'OSRE'
-});
+const datosH1De = (expedition) => {
+  const incoterm = String(expedition.incoterm?.code || '').toUpperCase();
+  const flete = gastoDe(expedition, 'freight');
+  const seguro = gastoDe(expedition, 'insurance');
+  return {
+    invoiceNumber: expedition.invoiceNumber || '',
+    exporterPostalCode: expedition.exporter?.postalCode || '',
+    vehicleNationality: expedition.transport?.vehicleNationality || '',
+    dispatchAuthorizationScope: expedition.representative?.dispatchAuthorizationScope || 'OSRE',
+    // Que gastos hasta la UE hay que sumar al valor en aduana segun el incoterm.
+    incoterm,
+    gastosASumar: gastosQueSeSuman(incoterm),
+    freightAmount: flete ? flete.importe : null,
+    freightCurrency: flete?.divisa || expedition.costs?.freight?.currency || 'EUR',
+    insuranceAmount: seguro ? seguro.importe : null,
+    insuranceCurrency: seguro?.divisa || expedition.costs?.insurance?.currency || 'EUR'
+  };
+};
+
+/**
+ * Importe de un gasto recibido: '' o null lo borra; si no, numero >= 0.
+ * @returns {{ ok: boolean, valor?: number|null }}
+ */
+function importeRecibido(v) {
+  if (v === undefined) return { ok: true };
+  if (v === null || v === '') return { ok: true, valor: null };
+  const n = typeof v === 'number' ? v : Number(String(v).replace(',', '.'));
+  if (!Number.isFinite(n) || n < 0 || n > IMPORTE_MAXIMO) return { ok: false };
+  return { ok: true, valor: Math.round(n * 100) / 100 };
+}
+
+/** Errores de los gastos recibidos y cambios a aplicar en `costs`. */
+function gastosRecibidos(body) {
+  const errores = [];
+  const cambios = {};
+  const pares = [
+    ['freight', 'flete', body.freightAmount, body.freightCurrency],
+    ['insurance', 'seguro', body.insuranceAmount, body.insuranceCurrency]
+  ];
+  for (const [campo, nombre, importe, divisa] of pares) {
+    const leido = importeRecibido(importe);
+    if (!leido.ok) errores.push(`El importe del ${nombre} debe ser un número igual o mayor que 0`);
+    else if (leido.valor !== undefined) cambios[`costs.${campo}.amount`] = leido.valor;
+    if (divisa !== undefined) {
+      const codigo = String(divisa || '').trim().toUpperCase();
+      if (!DIVISA.test(codigo)) errores.push(`La divisa del ${nombre} es un código de tres letras (EUR, USD…)`);
+      else cambios[`costs.${campo}.currency`] = codigo;
+    }
+  }
+  return { errores, cambios };
+}
 
 /**
  * Que falta para presentar el H1 de un expediente, sin enviar nada.
@@ -151,6 +200,8 @@ const updateH1Data = async (req, res) => {
     if (dispatchAuthorizationScope !== undefined && !AMBITOS_AUTORIZACION.includes(dispatchAuthorizationScope)) {
       errores.push('Tipo de autorización de despacho no válido');
     }
+    const gastos = gastosRecibidos(req.body || {});
+    errores.push(...gastos.errores);
     if (errores.length > 0) return res.status(400).json({ success: false, error: errores.join('. ') });
 
     // Solo se tocan estos campos: el resto del transporte y del representante queda como esta.
@@ -158,6 +209,11 @@ const updateH1Data = async (req, res) => {
     if (exporterPostalCode !== undefined) expedition.set('exporter.postalCode', exporterPostalCode.trim());
     if (vehicleNationality !== undefined) expedition.set('transport.vehicleNationality', String(vehicleNationality).toUpperCase());
     if (dispatchAuthorizationScope !== undefined) expedition.set('representative.dispatchAuthorizationScope', dispatchAuthorizationScope);
+    for (const [ruta, valor] of Object.entries(gastos.cambios)) expedition.set(ruta, valor);
+    // Un importe sin divisa se entiende en euros.
+    for (const campo of ['freight', 'insurance']) {
+      if (expedition.costs?.[campo] && !expedition.costs[campo].currency) expedition.set(`costs.${campo}.currency`, 'EUR');
+    }
     await expedition.save();
 
     res.json({ success: true, data: datosH1De(expedition) });
@@ -308,7 +364,7 @@ const generateH1 = async (req, res) => {
     // Generar estructura H1 completa
     // Divisa de la factura y tipo oficial del mes (422 si la divisa no lo tiene).
     const cambio = await cambioDelExpediente(expedition);
-    const h1Declaration = h1Generator.generate(expedition, h1Data, { tenant, cambio });
+    const h1Declaration = h1Generator.generate(expedition, h1Data, { tenant, cambio, cambiosGastos: await cambiosDeLosGastos(expedition) });
 
     // Actualizar expediente
     expedition.declaration = {
@@ -508,7 +564,7 @@ const updateDeclaration = async (req, res) => {
         const h1Declaration = h1Generator.generate(expedition, {
           ...expedition.declaration,
           ...updates
-        }, { tenant, cambio: await cambioDelExpediente(expedition) });
+        }, { tenant, cambio: await cambioDelExpediente(expedition), cambiosGastos: await cambiosDeLosGastos(expedition) });
         expedition.declaration.xmlContent = h1Declaration.xml;
       } else if (expedition.declaration.type === 'AES') {
         const aesDeclaration = aesGenerator.generate(expedition, {
@@ -1013,7 +1069,7 @@ const generateH1Direct = async (req, res) => {
       regime,
       additionalProcedure,
       preference
-    }, { tenant, cambio: await cambioDelExpediente(expedition) });
+    }, { tenant, cambio: await cambioDelExpediente(expedition), cambiosGastos: await cambiosDeLosGastos(expedition) });
 
     // Actualizar expediente
     expedition.declaration = {

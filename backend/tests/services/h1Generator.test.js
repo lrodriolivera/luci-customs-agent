@@ -20,10 +20,15 @@ const {
   createTextileExpedition
 } = require('../fixtures/h1TestData');
 
-/** Expedicion completa: la fixture no trae goodsSummary ni costes. */
+/**
+ * Expedicion completa: la fixture no trae goodsSummary ni costes. Va en FOB
+ * para que el flete y el seguro se sumen (con el CIF de la fixture ya estan
+ * en el precio y sumarlos los contaria dos veces).
+ */
 function expedicionCompleta(base = createElectronicsExpedition(), extra = {}) {
   return {
     ...base,
+    incoterm: { code: 'FOB', place: 'Shanghai' },
     goodsSummary: { totalItems: 3, totalPackages: 120, totalGrossWeight: 1450, totalNetWeight: 1300, totalValue: 45000 },
     costs: { freight: 1200, insurance: 300 },
     ...extra
@@ -94,6 +99,14 @@ describe('valor en aduana: la base de toda la liquidacion', () => {
 
     expect(s.vatAmount).toBe(Math.round(46500 * 0.21));
     expect(s.vatAmount).not.toBe(Math.round(45000 * 0.21));
+  });
+
+  test('en CIF el flete y el seguro ya van en el precio y no se suman', () => {
+    const cif = expedicionCompleta(createElectronicsExpedition(), { incoterm: { code: 'CIF', place: 'Barcelona' } });
+    const s = h1.generate(cif, {}).summary;
+
+    expect(s.totalAdditions).toBe(0);
+    expect(s.customsValue).toBe(45000);
   });
 
   test('sin costes declarados el valor en aduana es el de factura', () => {
@@ -457,11 +470,11 @@ describe('buildGoodsShipment: transporte, ubicacion y contenedores', () => {
     expect(enEuros.exchangeRate).toBe(1);
   });
 
-  test('flete/seguro caen a customsValue.* y luego a 0', () => {
+  test('flete y seguro se muestran en su divisa y, sin dato, a 0', () => {
     const base = createElectronicsExpedition();
-    const s1 = h1.buildGoodsShipment({ ...base, costs: {}, customsValue: { freight: 500, insurance: 50 } }, {});
-    expect(s1.transportCharges.freightAmount).toBe(500);
-    expect(s1.insuranceCharges.insuranceAmount).toBe(50);
+    const s1 = h1.buildGoodsShipment({ ...base, costs: { freight: { amount: 500, currency: 'USD' }, insurance: { amount: 50, currency: 'EUR' } } }, {});
+    expect(s1.transportCharges).toMatchObject({ freightAmount: 500, freightCurrency: 'USD' });
+    expect(s1.insuranceCharges).toEqual({ insuranceAmount: 50, insuranceCurrency: 'EUR' });
 
     const s2 = h1.buildGoodsShipment({ ...base, costs: {}, customsValue: undefined }, {});
     expect(s2.transportCharges.freightAmount).toBe(0);
