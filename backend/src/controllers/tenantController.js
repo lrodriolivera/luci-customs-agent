@@ -13,6 +13,8 @@ const logger = require('../config/logger');
 const tenantService = require('../services/tenant/tenantService');
 const rbacService = require('../services/tenant/rbacService');
 const billingService = require('../services/tenant/billingService');
+const Tenant = require('../models/Tenant');
+const { decrypt } = require('../utils/piiCrypto');
 
 // =====================================================
 // TENANT MANAGEMENT
@@ -204,11 +206,44 @@ exports.cancelTenant = async (req, res) => {
  */
 exports.getCurrentTenant = async (req, res) => {
   try {
-    if (!req.tenant) {
+    if (req.tenant) {
+      return res.json({ success: true, tenant: req.tenant });
+    }
+
+    if (!req.tenantId) {
       return res.status(400).json({ success: false, error: 'No tenant context' });
     }
 
-    res.json({ success: true, tenant: req.tenant });
+    // req.tenant solo existe si el tenant esta en el Map de demostracion de
+    // tenantService. Los tenants reales viven en MongoDB, asi que para
+    // practicamente cualquier usuario real hay que caer a Tenant.findById
+    // usando el tenantId que ya resolvio extractTenant (nunca el de la
+    // cabecera, salvo super_admin, y eso ya queda auditado alli).
+    const tenant = await Tenant.findById(req.tenantId).lean();
+    if (!tenant) {
+      return res.status(404).json({ success: false, error: 'Tenant no encontrado' });
+    }
+
+    // nif/eori pueden venir cifrados (formato v1: de piiCrypto); el hook del
+    // modelo ya los descifra en lecturas normales, pero se descifra aqui de
+    // forma explicita para no depender solo de ese efecto implicito.
+    const businessInfo = { ...(tenant.businessInfo || {}) };
+    if (businessInfo.nif) businessInfo.nif = decrypt(businessInfo.nif);
+    if (businessInfo.eori) businessInfo.eori = decrypt(businessInfo.eori);
+
+    res.json({
+      success: true,
+      tenant: {
+        id: String(tenant._id),
+        name: tenant.name,
+        slug: tenant.slug,
+        status: tenant.status,
+        businessInfo,
+        subscription: tenant.subscription || {},
+        customsConfig: tenant.customsConfig || {},
+        settings: tenant.settings || {}
+      }
+    });
   } catch (error) {
     logger.error(`[Tenant] Error getting current tenant: ${error.message}`);
     res.status(500).json({ success: false, error: error.message });

@@ -45,7 +45,10 @@ const TenantSettings = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const tenantRes = await api.get('/api/tenant');
+      // /api/tenant/me lee de MongoDB el tenant del usuario autenticado; el
+      // /api/tenant antiguo leia de un Map de demostracion y devolvia 400
+      // "No tenant context" para cualquier tenant real.
+      const tenantRes = await api.get('/api/tenant/me');
       if (tenantRes.data.success || tenantRes.data.data || tenantRes.data._id) {
         setTenant(tenantRes.data.data || tenantRes.data);
       }

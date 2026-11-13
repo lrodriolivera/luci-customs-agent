@@ -329,6 +329,16 @@ router.get('/tenant/me', auth, extractTenant({ required: false }), requireTenant
   try {
     const tenant = await Tenant.findById(req.tenantId).lean();
     if (!tenant) return res.status(404).json({ success: false, error: 'Tenant no encontrado' });
+
+    // nif/eori pueden venir cifrados (formato v1: de piiCrypto). El hook del
+    // modelo ya los descifra en lecturas normales, pero se descifra aqui de
+    // forma explicita para no depender solo de ese efecto implicito: en
+    // pantalla nunca debe verse un valor cifrado.
+    const { decrypt } = require('../utils/piiCrypto');
+    const businessInfo = { ...(tenant.businessInfo || {}) };
+    if (businessInfo.nif) businessInfo.nif = decrypt(businessInfo.nif);
+    if (businessInfo.eori) businessInfo.eori = decrypt(businessInfo.eori);
+
     res.json({
       success: true,
       data: {
@@ -336,7 +346,7 @@ router.get('/tenant/me', auth, extractTenant({ required: false }), requireTenant
         name: tenant.name,
         slug: tenant.slug,
         status: tenant.status,
-        businessInfo: tenant.businessInfo || {},
+        businessInfo,
         subscription: tenant.subscription || {},
         customsConfig: tenant.customsConfig || {},
         settings: tenant.settings || {}

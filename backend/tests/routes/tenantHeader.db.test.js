@@ -155,9 +155,80 @@ describe('rutas de tenantController con contexto de tenant', () => {
     expect(res.body.tenant.id).toBe(demoA.id);
   });
 
+  test('GET /api/tenant cae a Mongo cuando el tenant del usuario no esta en el Map de demo (caso real de produccion)', async () => {
+    // adminA tiene tenantId = tenantA._id (documento real de Mongo), que no
+    // existe en el Map de tenantService. Antes del arreglo, req.tenant salia
+    // null y la ruta respondia 400 "No tenant context": la pestana General de
+    // Ajustes se quedaba vacia para cualquier tenant real.
+    const res = await request(crearApp())
+      .get('/api/tenant')
+      .set('x-test-user', 'adminA');
+
+    expect(res.status).toBe(200);
+    expect(res.body.tenant.id).toBe(String(tenantA._id));
+    expect(res.body.tenant.name).toBe('Tenant A');
+    expect(res.body.tenant.businessInfo.eori).toBe('ESA0000000A');
+  });
+
+  test('GET /api/tenant con tenant real no existente en Mongo responde 404', async () => {
+    const idInexistente = new mongoose.Types.ObjectId();
+    mockUsuarios.adminFantasma = { _id: new mongoose.Types.ObjectId(), id: 'adminFantasma', role: 'admin', tenantId: idInexistente };
+
+    const res = await request(crearApp())
+      .get('/api/tenant')
+      .set('x-test-user', 'adminFantasma');
+
+    expect(res.status).toBe(404);
+  });
+
   test('los catalogos publicos siguen abiertos sin autenticar', async () => {
     const res = await request(crearApp()).get('/api/tenant/plans');
     expect(res.status).toBe(200);
+  });
+});
+
+describe('GET /api/tenant y /api/tenant/me nunca devuelven el EORI/NIF cifrado', () => {
+  const PII_KEY_PREVIO = process.env.PII_ENCRYPTION_KEY;
+  const ENCRYPT_PREVIO = process.env.ENCRYPT_PII;
+
+  beforeEach(() => {
+    process.env.PII_ENCRYPTION_KEY = 'x'.repeat(32);
+    process.env.ENCRYPT_PII = 'true';
+  });
+
+  afterEach(() => {
+    if (PII_KEY_PREVIO === undefined) delete process.env.PII_ENCRYPTION_KEY;
+    else process.env.PII_ENCRYPTION_KEY = PII_KEY_PREVIO;
+    if (ENCRYPT_PREVIO === undefined) delete process.env.ENCRYPT_PII;
+    else process.env.ENCRYPT_PII = ENCRYPT_PREVIO;
+  });
+
+  test('GET /api/tenant/me y GET /api/tenant descifran nif/eori antes de responder', async () => {
+    const tenantCifrado = await Tenant.create({
+      name: 'Tenant Cifrado',
+      slug: `tenant-cifrado-${Date.now()}`,
+      businessInfo: { nif: 'B99999999', eori: 'ESB99999999' }
+    });
+    mockUsuarios.adminCifrado = {
+      _id: new mongoose.Types.ObjectId(), id: 'adminCifrado', role: 'admin', tenantId: tenantCifrado._id
+    };
+
+    // El valor guardado en Mongo esta cifrado (prefijo v1:)
+    const crudo = await mongoose.connection.collection('tenants').findOne({ _id: tenantCifrado._id });
+    expect(crudo.businessInfo.eori.startsWith('v1:')).toBe(true);
+    expect(crudo.businessInfo.nif.startsWith('v1:')).toBe(true);
+
+    const resMe = await request(crearApp()).get('/api/tenant/me').set('x-test-user', 'adminCifrado');
+    expect(resMe.status).toBe(200);
+    expect(resMe.body.data.businessInfo.eori).toBe('ESB99999999');
+    expect(resMe.body.data.businessInfo.nif).toBe('B99999999');
+    expect(resMe.body.data.businessInfo.eori.startsWith('v1:')).toBe(false);
+
+    const resLegacy = await request(crearApp()).get('/api/tenant').set('x-test-user', 'adminCifrado');
+    expect(resLegacy.status).toBe(200);
+    expect(resLegacy.body.tenant.businessInfo.eori).toBe('ESB99999999');
+    expect(resLegacy.body.tenant.businessInfo.nif).toBe('B99999999');
+    expect(resLegacy.body.tenant.businessInfo.eori.startsWith('v1:')).toBe(false);
   });
 });
 
