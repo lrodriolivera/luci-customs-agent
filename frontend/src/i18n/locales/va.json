@@ -205,6 +205,7 @@
     "savePassword": "Guardar contrasenya",
     "temporaryPasswordLabel": "Contrasenya temporal",
     "changePasswordError": "No s'ha pogut canviar la contrasenya",
+    "passwordPolicyError": "La contrasenya ha de tindre almenys 10 caràcters, amb lletres i números.",
     "saving": "Guardant..."
   },
   "dashboard": {

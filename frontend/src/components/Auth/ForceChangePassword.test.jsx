@@ -65,6 +65,42 @@ describe('ForceChangePassword', () => {
     })
   })
 
+  // BAJO-E de la 2a revision de seguridad del 4.2: el minimo del cliente
+  // tiene que ser el mismo que el del servidor (10, con letra y numero), no
+  // los 8 sin mas requisitos de antes.
+  it('rechaza una nueva de menos de 10 caracteres sin llamar al backend', async () => {
+    render(<ForceChangePassword />)
+    llenarFormulario({ nueva: 'Corta1!', confirmar: 'Corta1!' })
+    fireEvent.click(screen.getByText('auth.savePassword'))
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('auth.passwordPolicyError')
+    })
+    expect(completeMandatoryPasswordChange).not.toHaveBeenCalled()
+  })
+
+  it('rechaza una nueva sin ningun numero sin llamar al backend', async () => {
+    render(<ForceChangePassword />)
+    llenarFormulario({ nueva: 'SoloLetrasSinNumeros', confirmar: 'SoloLetrasSinNumeros' })
+    fireEvent.click(screen.getByText('auth.savePassword'))
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('auth.passwordPolicyError')
+    })
+    expect(completeMandatoryPasswordChange).not.toHaveBeenCalled()
+  })
+
+  it('rechaza una nueva sin ninguna letra sin llamar al backend', async () => {
+    render(<ForceChangePassword />)
+    llenarFormulario({ nueva: '1234567890123', confirmar: '1234567890123' })
+    fireEvent.click(screen.getByText('auth.savePassword'))
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('auth.passwordPolicyError')
+    })
+    expect(completeMandatoryPasswordChange).not.toHaveBeenCalled()
+  })
+
   it('permite cerrar sesion desde esta pantalla', () => {
     render(<ForceChangePassword />)
     fireEvent.click(screen.getByText('nav.logout'))

@@ -170,7 +170,11 @@ export const AuthProvider = ({ children }) => {
       }
       return { success: false, error: response.data.error || 'Error al cambiar la contrasena' }
     } catch (error) {
-      return { success: false, error: error.response?.data?.error || 'Error al cambiar la contrasena' }
+      // Un 400 de validacion del servidor (express-validator) trae el
+      // mensaje util en `details[0].message`; `error` solo dice "Datos de
+      // entrada invalidos", que no le dice nada al usuario.
+      const detalle = error.response?.data?.details?.[0]?.message
+      return { success: false, error: detalle || error.response?.data?.error || 'Error al cambiar la contrasena' }
     }
   }
 

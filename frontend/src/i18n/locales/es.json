@@ -205,6 +205,7 @@
     "savePassword": "Guardar contraseña",
     "temporaryPasswordLabel": "Contraseña temporal",
     "changePasswordError": "No se pudo cambiar la contraseña",
+    "passwordPolicyError": "La contraseña debe tener al menos 10 caracteres, con letras y números.",
     "saving": "Guardando..."
   },
   "dashboard": {

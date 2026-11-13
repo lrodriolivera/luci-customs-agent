@@ -3,6 +3,20 @@ import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 
+// Misma politica que el servidor (backend/src/utils/passwordPolicy.js):
+// 10-128 caracteres, con al menos una letra y un numero. Validar aqui
+// tambien evita un viaje al servidor solo para que lo rechace igual.
+const MIN_LENGTH = 10
+const REGEX_LETRA = /[A-Za-z]/
+const REGEX_NUMERO = /\d/
+
+function cumplePoliticaDePassword(password) {
+  return typeof password === 'string' &&
+    password.length >= MIN_LENGTH &&
+    REGEX_LETRA.test(password) &&
+    REGEX_NUMERO.test(password)
+}
+
 /**
  * Pantalla de primer acceso: se muestra en lugar de la app cuando el usuario
  * entro con la contrasena temporal de una invitacion (admin/invite) y aun no
@@ -24,8 +38,8 @@ export default function ForceChangePassword() {
       toast.error(t('auth.passwordMismatch'))
       return
     }
-    if (newPassword.length < 8) {
-      toast.error(t('auth.passwordMinLength'))
+    if (!cumplePoliticaDePassword(newPassword)) {
+      toast.error(t('auth.passwordPolicyError'))
       return
     }
     setLoading(true)
@@ -71,9 +85,9 @@ export default function ForceChangePassword() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="input"
-              placeholder="Min. 8 caracteres"
+              placeholder="Min. 10 caracteres, con letra y numero"
               required
-              minLength={8}
+              minLength={10}
             />
           </div>
 
@@ -88,7 +102,7 @@ export default function ForceChangePassword() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="input"
               required
-              minLength={8}
+              minLength={10}
             />
           </div>
 

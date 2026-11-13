@@ -1019,6 +1019,30 @@ describe('AuthContext', () => {
       expect(cambioResult.success).toBe(false)
       expect(cambioResult.error).toBe('Token invalido o expirado.')
     })
+
+    // BAJO-E de la 2a revision de seguridad del 4.2: un 400 de validacion
+    // (express-validator) trae el mensaje util en `details`, no en `error`
+    // ('Datos de entrada invalidos' no dice nada al usuario).
+    it('si el 400 trae details (validacion del servidor), usa el mensaje especifico', async () => {
+      const result = await loginConUsuarioInvitado()
+      api.put.mockRejectedValue({
+        response: {
+          data: {
+            success: false,
+            error: 'Datos de entrada invalidos',
+            details: [{ field: 'newPassword', message: 'La contrasena debe ser texto, de 10 a 128 caracteres, con al menos una letra y un numero.' }]
+          }
+        }
+      })
+
+      let cambioResult
+      await act(async () => {
+        cambioResult = await result.current.completeMandatoryPasswordChange('temporal123', 'corta1')
+      })
+
+      expect(cambioResult.success).toBe(false)
+      expect(cambioResult.error).toBe('La contrasena debe ser texto, de 10 a 128 caracteres, con al menos una letra y un numero.')
+    })
   })
 
   describe('context value properties', () => {

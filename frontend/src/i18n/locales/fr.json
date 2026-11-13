@@ -205,6 +205,7 @@
     "savePassword": "Enregistrer le mot de passe",
     "temporaryPasswordLabel": "Mot de passe temporaire",
     "changePasswordError": "Impossible de changer le mot de passe",
+    "passwordPolicyError": "Le mot de passe doit comporter au moins 10 caractères, avec des lettres et des chiffres.",
     "saving": "Enregistrement..."
   },
   "dashboard": {
