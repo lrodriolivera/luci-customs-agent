@@ -901,7 +901,7 @@
   },
   "chat": {
     "title": "LUCI Assistant",
-    "subtitle": "Technical queries on customs regulations",
+    "subtitle": "Customs regulations and how to use LUCI",
     "poweredBy": "Powered by LUCI",
     "welcomeTitle": "Hello! I'm LUCI",
     "welcomeMessage": "Your expert assistant in customs and international trade. I can help you with regulations, tariff classification, import/export requirements and more.",
@@ -911,7 +911,7 @@
     "q3": "What documents do I need to import food products?",
     "q4": "How is customs value calculated with Incoterm FOB?",
     "q5": "What is inward processing?",
-    "q6": "When is the EUR.1 certificate mandatory?",
+    "q6": "How do I send the client a link to upload the commercial invoice?",
     "knowledgeBase": "Knowledge Base",
     "moreQuestions": "More Questions",
     "tip": "Tip:",

@@ -9,6 +9,7 @@ const logger = require('../config/logger');
 const { eoriDe } = require('./forms/identificadorAduanero');
 const { getCache } = require('./cacheService');
 const { escapeRegex } = require('../utils/escapeRegex');
+const { GUIA_LUCI } = require('./ayuda/guiaLuci');
 
 const BEDROCK_REGION = process.env.BEDROCK_REGION || 'us-east-1';
 
@@ -85,6 +86,28 @@ CONTEXTO:
 - Puedes usar terminologia tecnica
 - Prioriza precision sobre simplificacion
 - ${getLanguageInstruction(lang)}`,
+
+  // Asistente de los agentes (chat flotante, /assistant y chat del expediente).
+  // Antes usaba chatAgent, que solo hablaba de normativa: a "como paso un enlace
+  // al cliente para que suba la factura" respondia que no tenia informacion de
+  // la plataforma y mandaba a soporte. Lleva la guia de uso de LUCI entera
+  // (cabe de sobra en el contexto) y no un extracto por palabras clave: una
+  // seleccion fallida volveria a dejar al modelo sin la respuesta.
+  asistenteAgente: (lang) => `${SYSTEM_PROMPTS.chatAgent(lang)}
+
+DOS TIPOS DE PREGUNTA:
+1. Normativa aduanera y técnica (CAU, TARIC, regímenes, valor en aduana, IVA, H1/H7/AES): responde como experto.
+2. Uso de LUCI (dónde está un botón, cómo se hace algo en la aplicación, qué ofrece la plataforma): responde con la GUÍA DE USO DE LUCI de abajo, indicando la pantalla, la pestaña y los botones con los nombres que aparecen en ella, en pasos numerados.
+Muchas preguntas mezclan las dos cosas: responde a ambas partes.
+
+REGLAS PARA LAS PREGUNTAS DE USO:
+- Si la respuesta está en la guía, dala tú: no le remitas a soporte ni al manual.
+- Si la guía dice que una función no existe o está oculta, dilo con claridad y, si la guía la menciona, ofrece la alternativa que sí existe.
+- Si algo no aparece en la guía, di que no consta que LUCI lo haga; no inventes pantallas, botones ni funciones. Solo en ese caso sugiere consultarlo con el equipo de STRIX AI.
+- Puedes decir "LUCI" o "la aplicación"; habla de tú al agente.
+
+GUÍA DE USO DE LUCI:
+${GUIA_LUCI}`,
 
   classification: `Eres un experto clasificador arancelario con profundo conocimiento del Sistema Armonizado (SA) y TARIC.
 
@@ -612,7 +635,7 @@ class AIService {
    * Generar respuesta de chat
    */
   async generateChatResponse(message, expedition, conversationHistory, context = 'client', language = 'es') {
-    const systemPrompt = context === 'agent' ? SYSTEM_PROMPTS.chatAgent(language) : SYSTEM_PROMPTS.chatClient(language);
+    const systemPrompt = context === 'agent' ? SYSTEM_PROMPTS.asistenteAgente(language) : SYSTEM_PROMPTS.chatClient(language);
 
     // Construir contexto del expediente
     let expeditionContext = '';
@@ -657,7 +680,7 @@ CONTEXTO DEL EXPEDIENTE:
     const selectedModel = this._selectModel(question, 'chat');
     const result = await this.callClaude(
       selectedModel,
-      SYSTEM_PROMPTS.chatAgent(language),
+      SYSTEM_PROMPTS.asistenteAgente(language),
       question
     );
 

@@ -901,7 +901,7 @@
   },
   "chat": {
     "title": "Asistente LUCI",
-    "subtitle": "Consultas técnicas sobre normativa aduanera",
+    "subtitle": "Normativa aduanera y uso de LUCI",
     "poweredBy": "Powered by LUCI",
     "welcomeTitle": "¡Hola! Soy LUCI",
     "welcomeMessage": "Su asistente experto en aduanas y comercio exterior. Puedo ayudarle con normativa, clasificación arancelaria, requisitos de importación/exportación y más.",
@@ -911,7 +911,7 @@
     "q3": "¿Qué documentos necesito para importar productos alimenticios?",
     "q4": "¿Cómo se calcula el valor en aduana con Incoterm FOB?",
     "q5": "¿Qué es el perfeccionamiento activo?",
-    "q6": "¿Cuándo es obligatorio el certificado EUR.1?",
+    "q6": "¿Cómo envío al cliente un enlace para que suba la factura comercial?",
     "knowledgeBase": "Base de Conocimiento",
     "moreQuestions": "Más Preguntas",
     "tip": "Tip:",
