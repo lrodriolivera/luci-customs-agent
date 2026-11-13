@@ -4,6 +4,24 @@ const { User } = require('../models');
 
 const AUTH_MODE = process.env.AUTH_MODE || 'dual';
 
+/**
+ * Rutas accesibles con una contrasena temporal pendiente de cambio
+ * (user.mustChangePassword === true, ver authController.adminInvite). Fuera
+ * de esta lista, `auth` responde 403 MUST_CHANGE_PASSWORD: un usuario
+ * invitado no puede usar el resto de la aplicacion hasta cambiarla.
+ */
+const RUTAS_PERMITIDAS_CON_PASSWORD_TEMPORAL = [
+  '/api/auth/password',
+  '/api/auth/me',
+  '/api/auth/logout'
+];
+
+function bloqueadoPorPasswordTemporal(req) {
+  if (!req.user?.mustChangePassword) return false;
+  const ruta = (req.originalUrl || '').split('?')[0];
+  return !RUTAS_PERMITIDAS_CON_PASSWORD_TEMPORAL.includes(ruta);
+}
+
 async function verifyCognito(token) {
   const decoded = await cognitoService.verifyAccessToken(token);
   const user = await User.findOne({ cognitoSub: decoded.sub, isActive: true });
@@ -15,6 +33,31 @@ async function verifyLegacy(token) {
   const decoded = jwtService.verify(token);
   const user = await User.findById(decoded.id);
   if (!user || !user.isActive) return null;
+
+  // Un token firmado ANTES del ultimo cambio de contrasena ya no vale: sin
+  // esto, cambiar la contrasena (o que un admin la restablezca) no cerraba
+  // las sesiones abiertas con la vieja, que seguian funcionando hasta que el
+  // JWT caducara por su cuenta (hasta 7 dias). decoded.iat esta en segundos
+  // (estandar JWT); passwordChangedAt en milisegundos. Si hay
+  // passwordChangedAt pero el token no trae iat (no deberia faltar nunca en
+  // un JWT normal, pero uno manipulado si podria omitirlo), se rechaza: sin
+  // iat no hay forma de comprobar esto.
+  if (user.passwordChangedAt) {
+    if (typeof decoded.iat !== 'number') return null;
+    const cambioEnSegundos = Math.floor(user.passwordChangedAt.getTime() / 1000);
+    if (decoded.iat < cambioEnSegundos) return null;
+  }
+
+  // Complementa a passwordChangedAt: iat tiene resolucion de 1s, asi que un
+  // token emitido en el MISMO segundo justo antes del cambio no se
+  // distinguia por tiempo. tokenVersion se compara por valor exacto. Un
+  // documento o un token sin este campo (de antes de que existiera) cuenta
+  // como 0 en ambos lados, asi que las sesiones de antes de este cambio no
+  // se rompen.
+  const tokenVersionUsuario = user.tokenVersion || 0;
+  const tokenVersionToken = decoded.tokenVersion || 0;
+  if (tokenVersionUsuario !== tokenVersionToken) return null;
+
   return { user, decoded };
 }
 
@@ -61,6 +104,15 @@ const auth = async (req, res, next) => {
 
     req.user = result.user;
     req.token = token;
+
+    if (bloqueadoPorPasswordTemporal(req)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Debes cambiar tu contrasena temporal antes de continuar.',
+        code: 'MUST_CHANGE_PASSWORD'
+      });
+    }
+
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {

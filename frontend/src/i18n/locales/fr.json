@@ -203,6 +203,9 @@
     "newPasswordTitle": "Définissez un nouveau mot de passe",
     "newPasswordSubtitle": "Votre compte doit changer de mot de passe avant de continuer",
     "savePassword": "Enregistrer le mot de passe",
+    "temporaryPasswordLabel": "Mot de passe temporaire",
+    "changePasswordError": "Impossible de changer le mot de passe",
+    "passwordPolicyError": "Le mot de passe doit comporter au moins 10 caractères, avec des lettres et des chiffres.",
     "saving": "Enregistrement..."
   },
   "dashboard": {
@@ -1643,6 +1646,12 @@
     "viewPermissions": "Voir les Permissions",
     "predefined": "Predefini",
     "custom": "Personnalise",
+    "inviteUser": "Inviter un utilisateur",
+    "inviteUserTitle": "Inviter un nouvel utilisateur",
+    "inviteNameLabel": "Nom complet",
+    "inviteSubmit": "Envoyer l'invitation",
+    "inviteErrorEmailInUse": "Cet e-mail est déjà utilisé.",
+    "inviteErrorGeneric": "Impossible d'inviter l'utilisateur. Veuillez réessayer.",
     "aeatCertificate": "Certificat AEAT",
     "aeatCertificateDesc": "Certificat numerique pour la communication avec AEAT",
     "configured": "Configure",

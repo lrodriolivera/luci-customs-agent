@@ -203,6 +203,9 @@
     "newPasswordTitle": "Set a new password",
     "newPasswordSubtitle": "Your account must change its password before continuing",
     "savePassword": "Save password",
+    "temporaryPasswordLabel": "Temporary password",
+    "changePasswordError": "Could not change the password",
+    "passwordPolicyError": "The password must be at least 10 characters long, with letters and numbers.",
     "saving": "Saving..."
   },
   "dashboard": {
@@ -1644,6 +1647,12 @@
     "viewPermissions": "View Permissions",
     "predefined": "Predefined",
     "custom": "Custom",
+    "inviteUser": "Invite user",
+    "inviteUserTitle": "Invite new user",
+    "inviteNameLabel": "Full name",
+    "inviteSubmit": "Send invitation",
+    "inviteErrorEmailInUse": "That email is already in use.",
+    "inviteErrorGeneric": "Could not invite the user. Please try again.",
     "aeatCertificate": "AEAT Certificate",
     "aeatCertificateDesc": "Digital certificate for communication with AEAT",
     "configured": "Configured",

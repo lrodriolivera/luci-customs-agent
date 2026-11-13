@@ -23,6 +23,7 @@ const { usarBaseDeDatosEnMemoria } = require('../helpers/memoryDb');
 
 const User = require('../../src/models/User');
 const ctrl = require('../../src/controllers/adminController');
+const authCtrl = require('../../src/controllers/authController');
 
 usarBaseDeDatosEnMemoria();
 
@@ -127,7 +128,48 @@ describe('createUser', () => {
     }, res);
 
     expect(res.statusCode).toBe(201);
-    expect(res.body.temporaryPassword).toMatch(/^[0-9a-f]{12}$/);
+    expect(res.body.temporaryPassword).toBeTruthy();
+  });
+
+  // Arreglo 7 de la revision de seguridad del 4.2: este flujo paralelo
+  // (POST /api/admin/users) generaba la temporal a su manera
+  // (crypto.randomBytes(6).toString('hex'), sin mustChangePassword ni
+  // caducidad) y la repetia en el campo `message`, visible en cualquier log
+  // o captura de pantalla que incluyera la respuesta completa.
+  describe('contrasena temporal generada: misma fortaleza y ciclo que una invitacion', () => {
+    test('mustChangePassword activo y caducidad de 72h; la temporal no aparece en message', async () => {
+      const t = new mongoose.Types.ObjectId();
+      const res = crearRes();
+      await ctrl.createUser({
+        user: adminDe(t),
+        body: { email: 'gen2@x.es', name: 'Gen Dos', role: 'agent' }
+      }, res);
+
+      expect(res.statusCode).toBe(201);
+      expect(res.body.message).not.toContain(res.body.temporaryPassword);
+
+      const creado = await User.findOne({ email: 'gen2@x.es' }).select('+password');
+      expect(creado.mustChangePassword).toBe(true);
+      expect(creado.tempPasswordExpires.getTime()).toBeGreaterThan(Date.now());
+      expect(creado.tempPasswordExpires.getTime()).toBeLessThanOrEqual(Date.now() + 73 * 60 * 60 * 1000);
+      expect(await creado.comparePassword(res.body.temporaryPassword)).toBe(true);
+    });
+
+    test('con una contrasena elegida por el admin, mustChangePassword sigue en false', async () => {
+      const t = new mongoose.Types.ObjectId();
+      const res = crearRes();
+      await ctrl.createUser({
+        user: adminDe(t),
+        body: { email: 'elegida@x.es', name: 'Elegida', role: 'agent', password: 'PasswordDelAdmin1!' }
+      }, res);
+
+      expect(res.statusCode).toBe(201);
+      expect(res.body.temporaryPassword).toBeUndefined();
+      expect(res.body.message).not.toContain('PasswordDelAdmin1!');
+
+      const creado = await User.findOne({ email: 'elegida@x.es' });
+      expect(creado.mustChangePassword).toBe(false);
+    });
   });
 
   // El usuario creado debe heredar el tenant del admin que lo crea. Si se crea
@@ -146,6 +188,32 @@ describe('createUser', () => {
     expect(res.statusCode).toBe(201);
     const creado = await User.findOne({ email: 'hereda@x.es' });
     expect(creado.tenantId?.toString()).toBe(t.toString());
+  });
+
+  // BAJO-C de la 2a revision de seguridad del 4.2: la politica unica (10-128,
+  // letra+numero, .isString()) tambien cuando el admin elige la contrasena
+  // aqui, no solo cuando se genera. Antes solo se exigia longitud >= 6.
+  test('rechaza una contrasena elegida por el admin que no cumple la politica (400, sin crear nada)', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const res = crearRes();
+    await ctrl.createUser({
+      user: adminDe(t),
+      body: { email: 'debil@x.es', name: 'Debil', role: 'agent', password: 'solo-letras' }
+    }, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(await User.findOne({ email: 'debil@x.es' })).toBeNull();
+  });
+
+  test('400 si la contrasena elegida por el admin llega como array', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const res = crearRes();
+    await ctrl.createUser({
+      user: adminDe(t),
+      body: { email: 'arreglo@x.es', name: 'Arreglo', role: 'agent', password: ['a', 'b'] }
+    }, res);
+
+    expect(res.statusCode).toBe(400);
   });
 });
 
@@ -190,6 +258,62 @@ describe('getUser/updateUser/deleteUser/resetUserPassword: 404 ante usuario ajen
     expect(guardado.permissions.canApproveDeclarations).toBe(true);
   });
 
+  // BAJO-B de la 2a revision de seguridad del 4.2: al fijar password, updateUser
+  // dejaba la invitacion a medias -- no tocaba mustChangePassword ni
+  // tempPasswordExpires, asi que un pendiente CADUCADO con contrasena nueva
+  // puesta por el admin seguia sin poder entrar (login seguia rechazando por
+  // TEMP_PASSWORD_EXPIRED con una contrasena que ya no era ninguna temporal).
+  test('updateUser con password nueva completa la invitacion: limpia mustChangePassword y la caducidad', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const u = await usuario({ tenant: t, role: 'agent' });
+    await User.updateOne(
+      { _id: u._id },
+      { $set: { mustChangePassword: true, tempPasswordExpires: new Date(Date.now() - 1000) } } // ya caducada
+    );
+    const res = crearRes();
+
+    await ctrl.updateUser({
+      user: adminDe(t),
+      params: { id: u._id },
+      body: { password: 'DefinitivaDelAdmin1' }
+    }, res);
+
+    expect(res.statusCode).toBe(200);
+    const actualizado = await User.findById(u._id).select('+password');
+    expect(actualizado.mustChangePassword).toBe(false);
+    expect(actualizado.tempPasswordExpires).toBeUndefined();
+
+    // Login real (authController.login, con su comprobacion de
+    // TEMP_PASSWORD_EXPIRED): antes del arreglo seguia dando 401 aqui aunque
+    // la contrasena ya fuera la que puso el admin.
+    const resLogin = crearRes();
+    await authCtrl.login({ body: { email: u.email, password: 'DefinitivaDelAdmin1' }, audit: jest.fn() }, resLogin);
+    expect(resLogin.statusCode).toBe(200);
+  });
+
+  // BAJO-C: misma politica en updateUser. Antes una contrasena de menos de
+  // 6 caracteres se ignoraba EN SILENCIO (ni error ni cambio); ahora se
+  // rechaza con 400 explicito, y un array nunca llega a .length.
+  test('rechaza una contrasena que no cumple la politica (400, sin cambios)', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const u = await usuario({ tenant: t, role: 'agent' });
+    const res = crearRes();
+
+    await ctrl.updateUser({ user: adminDe(t), params: { id: u._id }, body: { password: 'debil' } }, res);
+
+    expect(res.statusCode).toBe(400);
+  });
+
+  test('400 si la contrasena llega como array', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const u = await usuario({ tenant: t, role: 'agent' });
+    const res = crearRes();
+
+    await ctrl.updateUser({ user: adminDe(t), params: { id: u._id }, body: { password: ['a', 'b'] } }, res);
+
+    expect(res.statusCode).toBe(400);
+  });
+
   test('resetUserPassword de otro tenant devuelve 404', async () => {
     const ajeno = await usuario({ tenant: new mongoose.Types.ObjectId() });
     const res = crearRes();
@@ -203,7 +327,39 @@ describe('getUser/updateUser/deleteUser/resetUserPassword: 404 ante usuario ajen
     const res = crearRes();
     await ctrl.resetUserPassword({ user: adminDe(t), params: { id: u._id } }, res);
     expect(res.statusCode).toBe(200);
-    expect(res.body.temporaryPassword).toMatch(/^[0-9a-f]{12}$/);
+    expect(res.body.temporaryPassword).toBeTruthy();
+  });
+
+  // Arreglo 3 de la revision de seguridad del 4.2: el reset que hace el admin
+  // es, por definicion, una temporal -- sin mustChangePassword, un usuario
+  // podia quedarse para siempre con la contrasena que el admin le puso, sin
+  // que se le exigiera cambiarla en el primer acceso.
+  test('resetUserPassword deja al usuario con mustChangePassword activo y una caducidad nueva de 72h', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const u = await usuario({ tenant: t });
+    const res = crearRes();
+
+    await ctrl.resetUserPassword({ user: adminDe(t), params: { id: u._id } }, res);
+
+    expect(res.statusCode).toBe(200);
+    const actualizado = await User.findById(u._id).select('+password');
+    expect(actualizado.mustChangePassword).toBe(true);
+    expect(actualizado.tempPasswordExpires.getTime()).toBeGreaterThan(Date.now());
+    expect(actualizado.tempPasswordExpires.getTime()).toBeLessThanOrEqual(Date.now() + 73 * 60 * 60 * 1000);
+    expect(await actualizado.comparePassword(res.body.temporaryPassword)).toBe(true);
+  });
+
+  // Arreglo 7: la temporal se devuelve SOLO en su campo propio, no repetida
+  // en `message` (donde podia acabar en un log o una captura de pantalla).
+  test('resetUserPassword no repite la temporal en el mensaje', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const u = await usuario({ tenant: t });
+    const res = crearRes();
+
+    await ctrl.resetUserPassword({ user: adminDe(t), params: { id: u._id } }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.message).not.toContain(res.body.temporaryPassword);
   });
 });
 

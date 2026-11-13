@@ -20,6 +20,7 @@ if (process.env.SENTRY_DSN) {
 
 const connectDB = require('./config/database');
 const logger = require('./config/logger');
+const { auth, requireRole } = require('./middleware/auth');
 
 // Import routes
 let authRoutes, expeditionRoutes, documentRoutes, declarationRoutes;
@@ -145,23 +146,9 @@ app.use(cors({
 // Rate limiting - distributed via Redis when available, per-worker otherwise.
 // Each limiter gets its own Store instance with a distinct prefix; sharing a
 // single Store across limiters triggers ERR_ERL_DOUBLE_COUNT in v7.
-let makeRateLimitStore = () => undefined;
-if (process.env.CACHE_BACKEND === 'redis' || process.env.RATELIMIT_BACKEND === 'redis') {
-  try {
-    const { default: RedisStore } = require('rate-limit-redis');
-    const { getRedisClient } = require('./services/cacheService');
-    const client = getRedisClient();
-    if (client) {
-      makeRateLimitStore = (prefix) => new RedisStore({
-        sendCommand: (...args) => client.call(...args),
-        prefix
-      });
-      logger.info('Rate limit: distributed (Redis)');
-    }
-  } catch (err) {
-    logger.warn('rate-limit-redis not available, using in-memory store', { error: err.message });
-  }
-}
+// La fabrica vive en utils/rateLimitStore.js: routes/auth.js la reutiliza
+// para el limitador propio de /admin/invite (por usuario, no por IP).
+const { makeRateLimitStore } = require('./utils/rateLimitStore');
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -173,7 +160,10 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Strict rate limiting for auth endpoints (brute force protection)
+// Strict rate limiting for auth endpoints (brute force protection).
+// /admin/invite NO esta aqui: tiene su propio limitador por usuario en
+// routes/auth.js (ver arreglo 6 de la revision de seguridad del 4.2), que ya
+// no comparte este contador por IP con login/registro/recuperacion.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -258,18 +248,12 @@ if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_API_DOCS === 'tr
   }
 }
 
-// Metrics snapshot (admin only) — prefixed /api so Nginx proxies it
-app.get('/api/internal/metrics', async (req, res) => {
-  try {
-    const jwtService = require('./utils/jwtService');
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'Token requerido' });
-    const decoded = jwtService.verify(authHeader.split(' ')[1]);
-    if (decoded.role !== 'admin') return res.status(403).json({ error: 'Solo admin' });
-    res.json(metricsSnapshot());
-  } catch (e) {
-    res.status(401).json({ error: 'Token invalido' });
-  }
+// Metrics snapshot (admin only) — prefixed /api so Nginx proxies it.
+// auth + requireRole('admin'): antes verificaba el JWT a mano (decoded.role
+// del propio token, sin tocar BD), asi que un admin desactivado o con
+// mustChangePassword pendiente seguia pudiendo usarla.
+app.get('/api/internal/metrics', auth, requireRole('admin'), (req, res) => {
+  res.json(metricsSnapshot());
 });
 
 // Health check. Nginx proxies /api/* to this backend, so /api/health is
@@ -385,22 +369,14 @@ if (auditRoutes) app.use('/api/audit', auditRoutes);
 if (gdprRoutes) app.use('/api/gdpr', gdprRoutes);
 if (emailRoutes) app.use('/api/email', emailRoutes);
 
-// Email test endpoint (admin only, non-production only)
+// Email test endpoint (admin only, non-production only).
+// auth + requireRole('admin'): mismo motivo que /api/internal/metrics arriba.
 if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_EMAIL_TEST === 'true') {
-  app.post('/api/email/test', async (req, res) => {
+  app.post('/api/email/test', auth, requireRole('admin'), async (req, res) => {
     try {
-      const jwtService = require('./utils/jwtService');
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, error: 'Token requerido' });
-      }
-      const decoded = jwtService.verify(authHeader.split(' ')[1]);
-      if (decoded.role !== 'admin') {
-        return res.status(403).json({ success: false, error: 'Solo administradores' });
-      }
       const emailService = require('./services/emailService');
       const { to } = req.body;
-      const result = await emailService.sendTestEmail(to || decoded.email);
+      const result = await emailService.sendTestEmail(to || req.user.email);
       res.json({ success: true, data: result });
     } catch (error) {
       logger.error('Email test error:', error.message);

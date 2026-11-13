@@ -259,7 +259,12 @@ describe('authController', () => {
     });
 
     test('actualiza la contrasena cuando la actual es correcta', async () => {
-      const user = mockUser();
+      // comparePassword real distingue la actual de la nueva: el mock fijo
+      // en true para cualquier valor disparaba el rechazo de "igual a la
+      // actual" (arreglo 2) para cualquier cambio, no solo cuando coinciden.
+      const user = mockUser({
+        comparePassword: jest.fn((candidata) => Promise.resolve(candidata === 'dummy-test-pass'))
+      });
       User.findById.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
 
       const res = await request(app).post('/api/auth/change-password')

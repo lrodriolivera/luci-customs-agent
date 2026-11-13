@@ -1,9 +1,11 @@
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const { User, Tenant } = require('../models');
 const logger = require('../config/logger');
 const cognitoService = require('../utils/cognitoService');
-const { puedeAsignarRol, puedeGestionarUsuario } = require('../constants/roles');
-const { filtroTenantOPlataforma } = require('../utils/tenantGuard');
+const { puedeAsignarRol, puedeGestionarUsuario, AGENT } = require('../constants/roles');
+const { filtroTenantOPlataforma, isSuperAdmin } = require('../utils/tenantGuard');
+const { generarContrasenaTemporal, calcularExpiracionTemporal } = require('../utils/tempPassword');
 
 /**
  * Registro de nuevo usuario
@@ -118,6 +120,26 @@ const login = async (req, res) => {
       });
     }
 
+    // Contrasena temporal de una invitacion (admin/invite) caducada: la
+    // credencial sigue siendo correcta (el hash no cambia por caducar), pero
+    // es de un solo uso con fecha limite. Sin esto, una invitacion olvidada
+    // quedaba valida para siempre.
+    if (user.mustChangePassword && user.tempPasswordExpires && user.tempPasswordExpires.getTime() < Date.now()) {
+      req.audit?.({
+        action: 'login_failed',
+        resource: 'User',
+        resourceId: user._id,
+        success: false,
+        errorMessage: 'Contrasena temporal caducada',
+        metadata: { email }
+      });
+      return res.status(401).json({
+        success: false,
+        error: 'La contrasena temporal ha caducado. Solicite una nueva invitacion al administrador.',
+        code: 'TEMP_PASSWORD_EXPIRED'
+      });
+    }
+
     // Actualizar ultimo login
     user.lastLogin = new Date();
     await user.save();
@@ -225,6 +247,17 @@ const changePassword = async (req, res) => {
     // Obtener usuario con password
     const user = await User.findById(req.user._id).select('+password');
 
+    // La caducidad de la temporal (72h) se comprueba aqui tambien, no solo en
+    // el login: un token de vida corta (15 min) emitido justo antes de que la
+    // temporal caducara podia seguir usandose para "cambiarla" ya caducada.
+    if (user.mustChangePassword && user.tempPasswordExpires && user.tempPasswordExpires.getTime() < Date.now()) {
+      return res.status(401).json({
+        success: false,
+        error: 'La contrasena temporal ha caducado. Solicite una nueva invitacion al administrador.',
+        code: 'TEMP_PASSWORD_EXPIRED'
+      });
+    }
+
     // Verificar password actual
     const isMatch = await user.comparePassword(currentPassword);
     if (!isMatch) {
@@ -234,15 +267,35 @@ const changePassword = async (req, res) => {
       });
     }
 
-    // Actualizar password
+    // La temporal no puede quedarse como definitiva "cambiandola" por si misma.
+    if (await user.comparePassword(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        error: 'La contrasena nueva no puede ser igual a la actual'
+      });
+    }
+
+    // Actualizar password. Si venia de una invitacion con contrasena temporal
+    // (mustChangePassword), este es el momento en que deja de serlo: la
+    // temporal queda sustituida (de un solo uso) y el resto de rutas, que
+    // middleware/auth.js bloqueaba, vuelven a estar disponibles.
     user.password = newPassword;
+    user.mustChangePassword = false;
+    user.tempPasswordExpires = undefined;
     await user.save();
 
+    // El guardado actualiza passwordChangedAt (ver pre-save de User), asi que
+    // cualquier token firmado antes de este momento -incluido el que llego en
+    // esta misma peticion- deja de valer. El cliente necesita uno nuevo.
+    const token = user.generateAuthToken();
+
     logger.info(`Usuario cambio contrasena: ${user.email}`);
+    req.audit?.({ action: 'password_changed', resource: 'User', resourceId: user._id });
 
     res.json({
       success: true,
-      message: 'Contrasena actualizada correctamente'
+      message: 'Contrasena actualizada correctamente',
+      data: { token }
     });
 
   } catch (error) {
@@ -463,6 +516,12 @@ const resetPassword = async (req, res) => {
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
+    // Si el usuario llego aqui con una invitacion pendiente (mustChangePassword,
+    // quiza ya caducada), restablecer por este camino tambien la completa: sin
+    // esto, el login seguia rechazando por TEMP_PASSWORD_EXPIRED con la
+    // contrasena YA cambiada, dejando la cuenta bloqueada para siempre.
+    user.mustChangePassword = false;
+    user.tempPasswordExpires = undefined;
     await user.save();
 
     logger.info(`Password reseteado: ${user.email}`);
@@ -627,41 +686,135 @@ const registerSync = async (req, res) => {
 };
 
 /**
- * Admin invite - create user in Cognito with temporary password
+ * Admin invite - crea un usuario LOCAL (sin Cognito, retirado) en el tenant
+ * de quien invita, con una contrasena temporal de un solo uso.
  * POST /api/auth/admin/invite
+ *
+ * requireRole('admin', 'super_admin') en la ruta decide QUIEN puede llamar.
+ * Este controller decide DOS cosas mas, por separado (ver middleware/auth.js):
+ *
+ *   1. Que rol se concede    -> puedeAsignarRol (un admin de tenant no puede
+ *      conceder super_admin; whitelist de campos del body, nada de asignacion
+ *      masiva).
+ *   2. En que tenant se crea -> SIEMPRE req.user.tenantId para un admin
+ *      normal. Un admin NO puede elegir otro tenant ni con tenantId en el
+ *      body ni con X-Tenant-ID en la cabecera: ninguno de los dos se lee aqui
+ *      salvo que quien invita sea super_admin, y en ese caso solo el tenantId
+ *      explicito del body (nunca la cabecera, que ya tiene su propio canal de
+ *      override auditado en tenantMiddleware) y queda auditado aparte.
  */
 const adminInvite = async (req, res) => {
   try {
-    const { email, givenName, familyName, apellido2, role = 'agent' } = req.body;
+    // Lista blanca estricta: solo estos tres campos del body. Cualquier otra
+    // cosa (isActive, tenantId para un admin normal, password, hash...) se
+    // ignora, no se lee.
+    const { email: rawEmail, name, role = AGENT } = req.body;
+    const email = String(rawEmail || '').trim().toLowerCase();
+    const nombre = String(name || '').trim();
 
-    if (!email || !givenName || !familyName) {
-      return res.status(400).json({ success: false, error: 'email, givenName y familyName son obligatorios' });
+    if (!email || !nombre) {
+      return res.status(400).json({ success: false, error: 'email y name son obligatorios' });
     }
 
-    // Antes de tocar Cognito: un admin de tenant no puede invitar a un super_admin.
+    // Un admin de tenant no puede invitar a un rol superior al suyo (nada de
+    // super_admin); un super_admin si puede.
     if (!puedeAsignarRol(req.user, role)) {
       return res.status(403).json({ success: false, error: 'No tienes permisos para asignar ese rol.' });
     }
 
-    const tempPassword = crypto.randomBytes(12).toString('base64').slice(0, 12) + 'A1!';
+    // El tenant del usuario nuevo es SIEMPRE el del admin autenticado. Solo un
+    // super_admin puede elegirlo explicitamente, y queda auditado. Ese
+    // tenantId explicito se valida: un ObjectId con forma invalida, uno que
+    // no corresponde a ningun tenant, o uno de un tenant suspendido/cancelado
+    // (no activo) se rechazan con 400 en vez de crear el usuario en un
+    // tenant inexistente o inoperativo.
+    let tenantId = req.user.tenantId;
+    let tenantOverride = false;
+    if (isSuperAdmin(req.user) && req.body.tenantId) {
+      if (!mongoose.isValidObjectId(req.body.tenantId)) {
+        return res.status(400).json({ success: false, error: 'tenantId invalido.' });
+      }
+      const tenantElegido = await Tenant.findById(req.body.tenantId);
+      if (!tenantElegido || !tenantElegido.isActive()) {
+        return res.status(400).json({ success: false, error: 'El tenant indicado no existe o no esta activo.' });
+      }
+      tenantId = tenantElegido._id;
+      tenantOverride = String(tenantId) !== String(req.user.tenantId || '');
+    }
+    if (!tenantId) {
+      return res.status(400).json({ success: false, error: 'No se pudo determinar el tenant para el usuario nuevo.' });
+    }
 
-    const cognitoResult = await cognitoService.adminCreateUser(
-      email, givenName, familyName, apellido2, tempPassword
-    );
+    // El email es unico en toda la plataforma (indice unico de User), no por
+    // tenant: si ya existe en CUALQUIER tenant se rechaza, sin decir en cual
+    // esta para no filtrar esa informacion a quien invita.
+    const yaExiste = await User.findOne({ email });
+    if (yaExiste) {
+      // Excepcion: una invitacion GENUINA, pendiente (mustChangePassword
+      // activo, quiza caducada) y nunca usada, del MISMO tenant, se puede
+      // reinvitar -- regenera la temporal y su caducidad en vez de dejar la
+      // cuenta bloqueada para siempre solo por BD. Cuatro condiciones, las
+      // cuatro necesarias:
+      //   - mismo tenant (nunca entre tenants)
+      //   - mustChangePassword activo (sigue pendiente)
+      //   - invitedAt presente: la cuenta se creo POR ESTE camino (admin/invite),
+      //     no por adminController.createUser ni por otro sitio que tambien
+      //     deje mustChangePassword activo
+      //   - nunca inicio sesion (sin lastLogin): si ya entro una vez con la
+      //     temporal, regenerarla por detras le quita el acceso sin avisar
+      // Si no se cumplen todas, o si quien reinvita no puede gestionar al
+      // objetivo (puedeGestionarUsuario -- un admin de tenant no toca a un
+      // super_admin ni para esto), es el mismo 409 generico: no se distingue
+      // el motivo para no filtrar informacion a quien invita.
+      const mismoTenant = String(yaExiste.tenantId || '') === String(tenantId);
+      const invitacionPendienteGenuina = mismoTenant &&
+        yaExiste.mustChangePassword &&
+        !!yaExiste.invitedAt &&
+        !yaExiste.lastLogin &&
+        yaExiste.isActive;
+      if (invitacionPendienteGenuina && puedeGestionarUsuario(req.user, yaExiste)) {
+        const tempPasswordReinvite = generarContrasenaTemporal();
+        yaExiste.password = tempPasswordReinvite;
+        yaExiste.mustChangePassword = true;
+        yaExiste.tempPasswordExpires = calcularExpiracionTemporal();
+        await yaExiste.save();
 
-    const cognitoSub = cognitoResult.User.Attributes.find(a => a.Name === 'sub')?.Value;
-    const fullName = [givenName, familyName, apellido2].filter(Boolean).join(' ');
+        logger.info(`Admin reinvito usuario pendiente: ${email} por ${req.user.email}`);
+        req.audit?.({
+          action: 'admin_invite',
+          resource: 'User',
+          resourceId: yaExiste._id,
+          metadata: { email, role: yaExiste.role, tenantId: String(tenantId), reinvite: true }
+        });
+
+        return res.status(200).json({
+          success: true,
+          data: { user: yaExiste.toPublicJSON(), temporaryPassword: tempPasswordReinvite },
+          message: 'La invitacion seguia pendiente: se genero una contrasena temporal nueva.'
+        });
+      }
+      return res.status(409).json({ success: false, error: 'No se puede invitar: el correo ya esta en uso.' });
+    }
+
+    // Temporal fuerte y aleatoria (crypto, no Math.random). Nunca se guarda en
+    // claro: el pre-save de User la hashea como cualquier otra contrasena.
+    // Misma generacion que adminController.createUser/resetUserPassword
+    // (utils/tempPassword) para que "temporal" signifique lo mismo en
+    // cualquier punto que la emita.
+    const tempPassword = generarContrasenaTemporal();
 
     const user = new User({
       email,
-      name: fullName,
-      givenName,
-      familyName,
-      apellido2,
-      cognitoSub,
+      name: nombre,
       role,
-      tenantId: req.user.tenantId,
-      organizationId: req.user.tenantId,
+      tenantId,
+      organizationId: tenantId,
+      password: tempPassword,
+      isActive: true,
+      mustChangePassword: true,
+      tempPasswordExpires: calcularExpiracionTemporal(),
+      invitedAt: new Date(),
+      invitedBy: req.user._id,
       permissions: {
         canCreateExpeditions: true,
         canUploadDocuments: true,
@@ -676,21 +829,38 @@ const adminInvite = async (req, res) => {
     });
     await user.save();
 
-    await cognitoService.adminUpdateAttributes(cognitoSub, {
-      'custom:tenantId': String(req.user.tenantId),
-      'custom:role': role,
+    logger.info(`Admin invito usuario: ${email} (rol: ${role}) por ${req.user.email}`);
+    // Nunca la contrasena temporal en el log ni en la auditoria: metadata solo
+    // lleva email/rol/tenant. auditService.log tambien redacta por si acaso
+    // cualquier clave que contenga "password" llegara aqui.
+    req.audit?.({
+      action: 'admin_invite',
+      resource: 'User',
+      resourceId: user._id,
+      metadata: { email, role, tenantId: String(tenantId), tenantOverride }
     });
 
-    logger.info(`Admin invited user: ${email} (role: ${role}) by ${req.user.email}`);
-    req.audit?.({ action: 'admin_invite', resource: 'User', resourceId: user._id, metadata: { email, role } });
-
-    res.status(201).json({ success: true, data: user.toPublicJSON() });
+    res.status(201).json({
+      success: true,
+      data: {
+        user: user.toPublicJSON(),
+        // Se devuelve UNA sola vez, en esta respuesta. No se envia por email
+        // (no hay garantia de entrega: emailService.sendX ya falla en
+        // silencio hoy si SMTP/SES no esta configurado) ni se vuelve a
+        // mostrar en ningun otro sitio; el admin debe copiarla y entregarla
+        // por un canal seguro.
+        temporaryPassword: tempPassword
+      },
+      message: 'Usuario invitado. Esta contrasena temporal solo se muestra esta vez.'
+    });
   } catch (error) {
     logger.error('Error en admin invite:', error);
-    const msg = error.name === 'UsernameExistsException'
-      ? 'El usuario ya existe en el sistema'
-      : 'Error al invitar usuario';
-    res.status(error.name === 'UsernameExistsException' ? 409 : 500).json({ success: false, error: msg });
+    // E11000: alguien creo el mismo email entre el findOne y el save (TOCTOU).
+    // Mismo 409 generico que la comprobacion de arriba, sin revelar tenant.
+    if (error.code === 11000) {
+      return res.status(409).json({ success: false, error: 'No se puede invitar: el correo ya esta en uso.' });
+    }
+    res.status(500).json({ success: false, error: 'Error al invitar usuario' });
   }
 };
 

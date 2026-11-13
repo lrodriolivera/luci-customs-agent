@@ -78,7 +78,7 @@ describe('puedeGestionarUsuario', () => {
 
 describe('PUT /api/admin/users/:id (adminController.updateUser)', () => {
   test.each([
-    ['la contraseña', { password: 'Nueva123!' }],
+    ['la contraseña', { password: 'Nueva1234!' }],
     ['el email', { email: 'atacante@x.es' }],
     ['el rol', { role: 'viewer' }]
   ])('un admin de tenant no puede cambiar %s de un super_admin', async (_q, body) => {
@@ -100,7 +100,7 @@ describe('PUT /api/admin/users/:id (adminController.updateUser)', () => {
     User.findById.mockResolvedValue(objetivo);
     const res = crearRes();
 
-    await adminController.updateUser(req(SUPER, { id: 'sx' }, { password: 'Nueva123!' }), res);
+    await adminController.updateUser(req(SUPER, { id: 'sx' }, { password: 'Nueva1234!' }), res);
 
     expect(res.statusCode).toBe(200);
     expect(objetivo.save).toHaveBeenCalled();
@@ -111,7 +111,7 @@ describe('PUT /api/admin/users/:id (adminController.updateUser)', () => {
     User.findById.mockResolvedValue(objetivo);
     const res = crearRes();
 
-    await adminController.updateUser(req(ADMIN_T1, { id: 'u2' }, { password: 'Nueva123!', role: 'supervisor' }), res);
+    await adminController.updateUser(req(ADMIN_T1, { id: 'u2' }, { password: 'Nueva1234!', role: 'supervisor' }), res);
 
     expect(res.statusCode).toBe(200);
     expect(objetivo.save).toHaveBeenCalled();

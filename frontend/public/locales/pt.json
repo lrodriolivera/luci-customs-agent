@@ -203,6 +203,9 @@
     "newPasswordTitle": "Defina uma nova palavra-passe",
     "newPasswordSubtitle": "A sua conta tem de alterar a palavra-passe antes de continuar",
     "savePassword": "Guardar palavra-passe",
+    "temporaryPasswordLabel": "Senha temporária",
+    "changePasswordError": "Não foi possível alterar a senha",
+    "passwordPolicyError": "A senha deve ter pelo menos 10 caracteres, com letras e números.",
     "saving": "A guardar..."
   },
   "dashboard": {
@@ -1643,6 +1646,12 @@
     "viewPermissions": "Ver Permissoes",
     "predefined": "Predefinido",
     "custom": "Personalizado",
+    "inviteUser": "Convidar utilizador",
+    "inviteUserTitle": "Convidar novo utilizador",
+    "inviteNameLabel": "Nome completo",
+    "inviteSubmit": "Enviar convite",
+    "inviteErrorEmailInUse": "Esse e-mail já está em uso.",
+    "inviteErrorGeneric": "Não foi possível convidar o utilizador. Tente novamente.",
     "aeatCertificate": "Certificado AEAT",
     "aeatCertificateDesc": "Certificado digital para comunicacao com a AEAT",
     "configured": "Configurado",

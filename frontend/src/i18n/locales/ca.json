@@ -203,6 +203,9 @@
     "newPasswordTitle": "Establiu una contrasenya nova",
     "newPasswordSubtitle": "El vostre compte ha de canviar la contrasenya abans de continuar",
     "savePassword": "Desar contrasenya",
+    "temporaryPasswordLabel": "Contrasenya temporal",
+    "changePasswordError": "No s'ha pogut canviar la contrasenya",
+    "passwordPolicyError": "La contrasenya ha de tenir almenys 10 caràcters, amb lletres i números.",
     "saving": "Guardant..."
   },
   "dashboard": {
@@ -1643,6 +1646,12 @@
     "viewPermissions": "Veure Permisos",
     "predefined": "Predefinit",
     "custom": "Personalitzat",
+    "inviteUser": "Convidar usuari",
+    "inviteUserTitle": "Convidar nou usuari",
+    "inviteNameLabel": "Nom complet",
+    "inviteSubmit": "Enviar invitació",
+    "inviteErrorEmailInUse": "Aquest correu ja està en ús.",
+    "inviteErrorGeneric": "No s'ha pogut convidar l'usuari. Torna-ho a provar.",
     "aeatCertificate": "Certificat AEAT",
     "aeatCertificateDesc": "Certificat digital per a comunicació amb l'AEAT",
     "configured": "Configurat",

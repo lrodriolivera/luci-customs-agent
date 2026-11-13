@@ -203,6 +203,9 @@
     "newPasswordTitle": "Establezca una contraseña nueva",
     "newPasswordSubtitle": "Su cuenta requiere cambiar la contraseña antes de continuar",
     "savePassword": "Guardar contraseña",
+    "temporaryPasswordLabel": "Contraseña temporal",
+    "changePasswordError": "No se pudo cambiar la contraseña",
+    "passwordPolicyError": "La contraseña debe tener al menos 10 caracteres, con letras y números.",
     "saving": "Guardando..."
   },
   "dashboard": {
@@ -1644,6 +1647,12 @@
     "viewPermissions": "Ver Permisos",
     "predefined": "Predefinido",
     "custom": "Personalizado",
+    "inviteUser": "Invitar usuario",
+    "inviteUserTitle": "Invitar nuevo usuario",
+    "inviteNameLabel": "Nombre completo",
+    "inviteSubmit": "Enviar invitación",
+    "inviteErrorEmailInUse": "Ese correo ya está en uso.",
+    "inviteErrorGeneric": "No se pudo invitar al usuario. Inténtalo de nuevo.",
     "aeatCertificate": "Certificado AEAT",
     "aeatCertificateDesc": "Certificado digital para comunicación con la AEAT",
     "configured": "Configurado",

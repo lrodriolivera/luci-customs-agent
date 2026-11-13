@@ -9,6 +9,8 @@ const User = require('../models/User');
 const logger = require('../config/logger');
 const crypto = require('crypto');
 const { puedeAsignarRol, puedeGestionarUsuario } = require('../constants/roles');
+const { generarContrasenaTemporal, calcularExpiracionTemporal } = require('../utils/tempPassword');
+const { esPasswordValida, MENSAJE_POLITICA } = require('../utils/passwordPolicy');
 
 const { escapeRegex } = require('../utils/escapeRegex');
 const { scrub } = require('../services/auditService');
@@ -181,18 +183,22 @@ const createUser = async (req, res) => {
       return res.status(400).json({ success: false, error: 'El email ya está registrado' });
     }
 
-    // Generar contraseña si no se proporciona
+    // Generar contraseña si no se proporciona. Misma generacion (crypto,
+    // fuerte) que authController.adminInvite: es temporal por definicion,
+    // asi que el usuario tiene que cambiarla en el primer acceso
+    // (mustChangePassword), con la misma caducidad de 72h que una invitacion.
+    // Si el admin eligio la contraseña el mismo, no se fuerza el cambio: es
+    // una decision suya, no una temporal generada al azar.
     let userPassword = password;
     let generatedPassword = null;
 
     if (!password || generatePassword) {
-      // Generar contraseña temporal de 12 caracteres
-      generatedPassword = crypto.randomBytes(6).toString('hex');
+      generatedPassword = generarContrasenaTemporal();
       userPassword = generatedPassword;
-    }
-
-    if (userPassword.length < 6) {
-      return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres' });
+    } else if (!esPasswordValida(password)) {
+      // Solo se valida la que elige el admin: la generada ya cumple la
+      // politica por construccion (ver utils/tempPassword).
+      return res.status(400).json({ success: false, error: MENSAJE_POLITICA });
     }
 
     // El usuario nuevo hereda el tenant del admin que lo crea. Sin esto quedaba
@@ -215,6 +221,8 @@ const createUser = async (req, res) => {
       tenantId,
       organizationId: tenantId,
       isActive: true,
+      mustChangePassword: !!generatedPassword,
+      tempPasswordExpires: generatedPassword ? calcularExpiracionTemporal() : undefined,
       permissions: {
         canCreateExpeditions: ['admin', 'supervisor', 'agent'].includes(role),
         canDeleteExpeditions: ['admin', 'supervisor'].includes(role),
@@ -249,10 +257,12 @@ const createUser = async (req, res) => {
       message: 'Usuario creado exitosamente'
     };
 
-    // Si se generó una contraseña temporal, incluirla en la respuesta
+    // Si se generó una contraseña temporal, incluirla en la respuesta -- en
+    // su propio campo, UNA sola vez, nunca repetida en `message` (donde
+    // podia acabar en un log o una captura de pantalla).
     if (generatedPassword) {
       response.temporaryPassword = generatedPassword;
-      response.message = `Usuario creado. Contraseña temporal: ${generatedPassword}`;
+      response.message = 'Usuario creado. Se genero una contrasena temporal.';
     }
 
     res.status(201).json(response);
@@ -285,11 +295,26 @@ const updateUser = async (req, res) => {
       return res.status(403).json({ success: false, error: 'No tienes permisos para asignar ese rol.' });
     }
 
+    // Antes una contrasena que no llegaba a 6 caracteres se ignoraba EN
+    // SILENCIO (ni error ni cambio, el admin creia haberla puesto). Ahora se
+    // valida con la misma politica que el resto de puntos que dejan poner
+    // una contrasena nueva (BAJO-C): 400 explicito si no la cumple.
+    if (password !== undefined && !esPasswordValida(password)) {
+      return res.status(400).json({ success: false, error: MENSAJE_POLITICA });
+    }
+
     if (name) user.name = name;
     if (role) user.role = role;
     if (status !== undefined) user.isActive = status === 'active';
-    if (password && password.length >= 6) {
+    if (password) {
+      // Igual que createUser con una contrasena elegida por el admin: ya no es
+      // una temporal, asi que deja de exigirse el cambio en el primer acceso.
+      // Sin esto, un pendiente CADUCADO con la contrasena ya puesta por el
+      // admin seguia sin poder entrar (login seguia rechazando por
+      // TEMP_PASSWORD_EXPIRED con una contrasena que ya no era temporal).
       user.password = password;
+      user.mustChangePassword = false;
+      user.tempPasswordExpires = undefined;
     }
 
     // Actualizar permisos basados en rol
@@ -379,19 +404,25 @@ const resetUserPassword = async (req, res) => {
       return res.status(403).json({ success: false, error: 'No puedes modificar a un super administrador.' });
     }
 
-    // Generar nueva contraseña temporal
-    const newPassword = crypto.randomBytes(6).toString('hex');
+    // Generar nueva contraseña temporal. Misma generacion (crypto, fuerte)
+    // que authController.adminInvite: es temporal por definicion, asi que el
+    // usuario tiene que cambiarla en el primer acceso (mustChangePassword),
+    // con la misma caducidad de 72h que una invitacion.
+    const newPassword = generarContrasenaTemporal();
     user.password = newPassword;
+    user.mustChangePassword = true;
+    user.tempPasswordExpires = calcularExpiracionTemporal();
     await user.save();
 
     // Log de auditoría
     addAuditLog(req, 'PASSWORD_RESET', 'users',
       `Restableció contraseña de: ${user.email}`, { userId: req.params.id });
 
+    // La temporal solo en su propio campo, nunca repetida en `message`.
     res.json({
       success: true,
       temporaryPassword: newPassword,
-      message: `Nueva contraseña temporal: ${newPassword}`
+      message: 'Nueva contrasena temporal generada.'
     });
   } catch (error) {
     logger.error('Error resetting password:', error);

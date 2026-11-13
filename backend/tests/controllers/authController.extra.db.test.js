@@ -525,20 +525,26 @@ describe('registerSync', () => {
 });
 
 describe('adminInvite', () => {
+  // Desde que Cognito se retiro, adminInvite crea el usuario LOCAL (hash +
+  // mustChangePassword): ya no llama a cognitoService. El contrato del body
+  // tambien cambio de {givenName, familyName} a {name}, ver authValidators.adminInvite.
   test('rechaza peticion sin email (400)', async () => {
-    const admin = await crearUsuario({ role: 'admin' });
-    const req = crearReq({ user: admin, body: { givenName: 'X', familyName: 'Y' } });
+    const tenant = await crearTenant();
+    const admin = await crearUsuario({ tenant: tenant._id, role: 'admin' });
+    const req = crearReq({ user: admin, body: { name: 'X Y' } });
     const res = crearRes();
 
     await ctrl.adminInvite(req, res);
 
     expect(res.statusCode).toBe(400);
-    expect(res.body.error).toMatch(/email, givenName y familyName son obligatorios/);
+    expect(res.body.error).toMatch(/email y name son obligatorios/);
+    expect(cognitoService.adminCreateUser).not.toHaveBeenCalled();
   });
 
-  test('rechaza peticion sin givenName (400)', async () => {
-    const admin = await crearUsuario({ role: 'admin' });
-    const req = crearReq({ user: admin, body: { email: 'x@x.es', familyName: 'Y' } });
+  test('rechaza peticion sin name (400)', async () => {
+    const tenant = await crearTenant();
+    const admin = await crearUsuario({ tenant: tenant._id, role: 'admin' });
+    const req = crearReq({ user: admin, body: { email: 'x@x.es' } });
     const res = crearRes();
 
     await ctrl.adminInvite(req, res);
@@ -546,12 +552,13 @@ describe('adminInvite', () => {
     expect(res.statusCode).toBe(400);
   });
 
-  test('responde 409 si el usuario ya existe en Cognito', async () => {
-    const admin = await crearUsuario({ role: 'admin' });
-    cognitoService.adminCreateUser.mockRejectedValue({ name: 'UsernameExistsException' });
+  test('responde 409 si el email ya existe (en cualquier tenant), sin tocar Cognito', async () => {
+    const tenant = await crearTenant();
+    const admin = await crearUsuario({ tenant: tenant._id, role: 'admin' });
+    const existente = await crearUsuario({ role: 'agent' }); // tenant distinto al del admin
     const req = crearReq({
       user: admin,
-      body: { email: 'existing@x.es', givenName: 'X', familyName: 'Y' },
+      body: { email: existente.email, name: 'Repetido' },
       audit: jest.fn()
     });
     const res = crearRes();
@@ -559,18 +566,16 @@ describe('adminInvite', () => {
     await ctrl.adminInvite(req, res);
 
     expect(res.statusCode).toBe(409);
-    expect(res.body.error).toMatch(/ya existe/);
+    expect(res.body.error).toMatch(/ya esta en uso/);
+    expect(cognitoService.adminCreateUser).not.toHaveBeenCalled();
   });
 
-  test('crea el usuario con permisos de agent por defecto', async () => {
+  test('crea el usuario con permisos de agent por defecto, con contrasena temporal de un solo uso', async () => {
     const tenant = await crearTenant();
     const admin = await crearUsuario({ tenant: tenant._id, role: 'admin' });
-    cognitoService.adminCreateUser.mockResolvedValue({
-      User: { Attributes: [{ Name: 'sub', Value: 'cognito-sub-456' }] }
-    });
     const req = crearReq({
       user: admin,
-      body: { email: 'agent@x.es', givenName: 'Agent', familyName: 'Test' },
+      body: { email: 'agent@x.es', name: 'Agent Test' },
       audit: jest.fn()
     });
     const res = crearRes();
@@ -579,22 +584,25 @@ describe('adminInvite', () => {
 
     expect(res.statusCode).toBe(201);
     expect(res.body.data).toBeDefined();
+    expect(res.body.data.temporaryPassword).toBeTruthy();
+    expect(cognitoService.adminCreateUser).not.toHaveBeenCalled();
 
-    const user = await User.findOne({ email: 'agent@x.es' });
+    const user = await User.findOne({ email: 'agent@x.es' }).select('+password');
     expect(user.role).toBe('agent');
+    expect(String(user.tenantId)).toBe(String(tenant._id));
     expect(user.permissions.canCreateExpeditions).toBe(true);
     expect(user.permissions.canManageUsers).toBe(false);
+    expect(user.mustChangePassword).toBe(true);
+    expect(user.tempPasswordExpires.getTime()).toBeGreaterThan(Date.now());
+    expect(await user.comparePassword(res.body.data.temporaryPassword)).toBe(true);
   });
 
   test('crea el usuario con permisos de admin si role=admin', async () => {
     const tenant = await crearTenant();
     const admin = await crearUsuario({ tenant: tenant._id, role: 'admin' });
-    cognitoService.adminCreateUser.mockResolvedValue({
-      User: { Attributes: [{ Name: 'sub', Value: 'cognito-sub-789' }] }
-    });
     const req = crearReq({
       user: admin,
-      body: { email: 'admin2@x.es', givenName: 'Admin', familyName: 'Two', role: 'admin' },
+      body: { email: 'admin2@x.es', name: 'Admin Two', role: 'admin' },
       audit: jest.fn()
     });
     const res = crearRes();
@@ -610,14 +618,12 @@ describe('adminInvite', () => {
   });
 
   test('responde 500 si el save de User falla', async () => {
-    const admin = await crearUsuario({ role: 'admin' });
-    cognitoService.adminCreateUser.mockResolvedValue({
-      User: { Attributes: [{ Name: 'sub', Value: 'sub-fail' }] }
-    });
+    const tenant = await crearTenant();
+    const admin = await crearUsuario({ tenant: tenant._id, role: 'admin' });
     jest.spyOn(User.prototype, 'save').mockRejectedValue(new Error('DB error'));
     const req = crearReq({
       user: admin,
-      body: { email: 'fail@x.es', givenName: 'Fail', familyName: 'Test' },
+      body: { email: 'fail@x.es', name: 'Fail Test' },
       audit: jest.fn()
     });
     const res = crearRes();

@@ -147,6 +147,37 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Primer acceso con la contrasena temporal de una invitacion (admin/invite,
+  // flujo local sin Cognito). El backend (middleware/auth.js) bloquea el
+  // resto de rutas con 403 MUST_CHANGE_PASSWORD mientras mustChangePassword
+  // sea true, asi que esto es la UNICA accion posible hasta completarla.
+  const completeMandatoryPasswordChange = async (currentPassword, newPassword) => {
+    try {
+      const response = await api.put('/api/auth/password', { currentPassword, newPassword })
+      if (response.data.success) {
+        // El backend invalida el token viejo al cambiar la contrasena
+        // (passwordChangedAt); sin guardar el nuevo que devuelve, la siguiente
+        // peticion del cliente fallaria con 401 aunque el cambio fue correcto.
+        const tokenNuevo = response.data.data?.token
+        if (tokenNuevo) {
+          localStorage.setItem('token', tokenNuevo)
+          api.defaults.headers.common['Authorization'] = `Bearer ${tokenNuevo}`
+        }
+        const updatedUser = { ...user, mustChangePassword: false }
+        setUser(updatedUser)
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+        return { success: true }
+      }
+      return { success: false, error: response.data.error || 'Error al cambiar la contrasena' }
+    } catch (error) {
+      // Un 400 de validacion del servidor (express-validator) trae el
+      // mensaje util en `details[0].message`; `error` solo dice "Datos de
+      // entrada invalidos", que no le dice nada al usuario.
+      const detalle = error.response?.data?.details?.[0]?.message
+      return { success: false, error: detalle || error.response?.data?.error || 'Error al cambiar la contrasena' }
+    }
+  }
+
   const logout = async () => {
     try {
       // Revoca los tokens en Cognito; el estado local se limpia igualmente si falla.
@@ -173,6 +204,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     confirmSignUp,
     completeNewPassword,
+    completeMandatoryPasswordChange,
   }
 
   return (

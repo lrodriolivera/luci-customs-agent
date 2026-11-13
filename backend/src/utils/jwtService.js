@@ -38,9 +38,9 @@ function getPreviousSecret() {
   return secret;
 }
 
-function sign(payload) {
+function sign(payload, options = {}) {
   return jwt.sign(payload, getPrimarySecret(), {
-    expiresIn: EXPIRES_IN,
+    expiresIn: options.expiresIn || EXPIRES_IN,
     issuer: ISSUER,
     audience: AUDIENCE
   });

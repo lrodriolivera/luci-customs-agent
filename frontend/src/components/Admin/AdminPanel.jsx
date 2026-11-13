@@ -27,6 +27,28 @@ import {
 } from '@heroicons/react/24/outline'
 import api from '../../services/api'
 
+// Misma politica que el servidor (backend/src/utils/passwordPolicy.js):
+// 10-128 caracteres, con al menos una letra y un numero.
+const PASSWORD_MIN_LENGTH = 10
+const REGEX_LETRA = /[A-Za-z]/
+const REGEX_NUMERO = /\d/
+
+function cumplePoliticaDePassword(password) {
+  return typeof password === 'string' &&
+    password.length >= PASSWORD_MIN_LENGTH &&
+    REGEX_LETRA.test(password) &&
+    REGEX_NUMERO.test(password)
+}
+
+// Mensaje del servidor ante un error: prefiere el motivo especifico de
+// validacion (details[0].message, de express-validator) sobre el generico
+// `error` ("Datos de entrada invalidos" no dice nada util), y sobre eso el
+// mensaje de respaldo pasado por el llamante.
+function mensajeDeError(error, mensajePorDefecto) {
+  const detalle = error?.response?.data?.details?.[0]?.message
+  return detalle || error?.response?.data?.error || mensajePorDefecto
+}
+
 const roleColors = {
   admin: 'bg-red-100 text-red-800',
   supervisor: 'bg-purple-100 text-purple-800',
@@ -161,7 +183,7 @@ export default function AdminPanel() {
         toast.success(t('admin.userCreated'))
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || t('admin.errorCreatingUser'))
+      toast.error(mensajeDeError(error, t('admin.errorCreatingUser')))
     }
   }
 
@@ -185,7 +207,7 @@ export default function AdminPanel() {
       setEditingUser(null)
       toast.success(t('admin.userUpdated'))
     } catch (error) {
-      toast.error(t('admin.errorUpdatingUser'))
+      toast.error(mensajeDeError(error, t('admin.errorUpdatingUser')))
     }
   }
 
@@ -948,9 +970,14 @@ function UserModal({ user, roles, onClose, onSave }) {
     e.preventDefault()
     const dataToSend = { ...formData }
 
-    // Si es nuevo usuario y no genera password, validar que tenga contraseña
-    if (!user && !formData.generatePassword && formData.password.length < 6) {
-      toast.error(t('admin.passwordMinError'))
+    // Si es nuevo usuario y no genera password, o si se esta editando y se
+    // escribio una contrasena nueva, exige la misma politica que el
+    // servidor (10-128 caracteres, letra y numero). Editar sin tocar el
+    // campo de contrasena (formData.password vacio) no la valida: no se
+    // esta cambiando.
+    const ponePasswordManual = (!user && !formData.generatePassword) || (user && formData.password)
+    if (ponePasswordManual && !cumplePoliticaDePassword(formData.password)) {
+      toast.error(t('auth.passwordPolicyError'))
       return
     }
 
@@ -1111,7 +1138,9 @@ function UserModal({ user, roles, onClose, onSave }) {
 }
 
 // Password Modal Component - Shows temporary password
-function PasswordModal({ email, password, onClose }) {
+// Exportado para reutilizarse en TenantSettings (invitar usuario a un tenant
+// existente): misma UI de «solo se muestra una vez», sin duplicarla.
+export function PasswordModal({ email, password, onClose }) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 

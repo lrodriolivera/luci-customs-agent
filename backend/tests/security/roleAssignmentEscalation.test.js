@@ -24,13 +24,17 @@ jest.mock('../../src/models/User', () => {
   MockUser.findOneAndUpdate = jest.fn();
   return MockUser;
 });
-jest.mock('../../src/models', () => ({ User: require('../../src/models/User'), Tenant: {} }));
+jest.mock('../../src/models', () => ({
+  User: require('../../src/models/User'),
+  Tenant: { findById: jest.fn() }
+}));
 jest.mock('../../src/utils/cognitoService', () => ({
   adminCreateUser: jest.fn(),
   adminUpdateAttributes: jest.fn()
 }));
 
 const User = require('../../src/models/User');
+const { Tenant } = require('../../src/models');
 const cognitoService = require('../../src/utils/cognitoService');
 const adminController = require('../../src/controllers/adminController');
 const authController = require('../../src/controllers/authController');
@@ -98,7 +102,7 @@ describe('adminController.updateUser (PUT /api/admin/users/:id)', () => {
     const res = crearRes();
 
     await adminController.updateUser(
-      { user: ADMIN_T1, params: { id: 'u2' }, body: { role: 'super_admin', password: 'Known123!' } },
+      { user: ADMIN_T1, params: { id: 'u2' }, body: { role: 'super_admin', password: 'Known1234!' } },
       res
     );
 
@@ -151,7 +155,7 @@ describe('adminController.createUser (POST /api/admin/users)', () => {
     const res = crearRes();
 
     await adminController.createUser(
-      { user: ADMIN_T1, body: { email: 'nuevo@t1.es', name: 'Nuevo', role: 'super_admin', password: 'Known123!' } },
+      { user: ADMIN_T1, body: { email: 'nuevo@t1.es', name: 'Nuevo', role: 'super_admin', password: 'Known1234!' } },
       res
     );
 
@@ -165,7 +169,7 @@ describe('adminController.createUser (POST /api/admin/users)', () => {
     const res = crearRes();
 
     await adminController.createUser(
-      { user: SUPER, body: { email: 'nuevo@plataforma.es', name: 'Nuevo', role: 'super_admin', password: 'Known123!' } },
+      { user: SUPER, body: { email: 'nuevo@plataforma.es', name: 'Nuevo', role: 'super_admin', password: 'Known1234!' } },
       res
     );
 
@@ -199,30 +203,68 @@ describe('authController.updateUser (PUT /api/auth/users/:id)', () => {
 });
 
 describe('authController.adminInvite (POST /api/auth/admin/invite)', () => {
-  const cuerpo = { email: 'invitado@t1.es', givenName: 'In', familyName: 'Vitado', role: 'super_admin' };
+  // Desde que Cognito se retiro, adminInvite crea el usuario en local (hash +
+  // mustChangePassword), ya no llama a cognitoService.
+  const cuerpo = { email: 'invitado@t1.es', name: 'Invitado Uno', role: 'super_admin' };
 
-  test('403 y no se toca Cognito ni la BD si un admin de tenant invita a un super_admin', async () => {
+  test('403 y no se toca la BD si un admin de tenant invita a un super_admin', async () => {
     const res = crearRes();
 
     await authController.adminInvite({ user: ADMIN_T1, body: { ...cuerpo } }, res);
 
     expect(res.statusCode).toBe(403);
     expect(cognitoService.adminCreateUser).not.toHaveBeenCalled();
-    expect(cognitoService.adminUpdateAttributes).not.toHaveBeenCalled();
     expect(User).not.toHaveBeenCalled();
     expect(guardar).not.toHaveBeenCalled();
   });
 
   test('un super_admin puede invitar a un super_admin', async () => {
-    cognitoService.adminCreateUser.mockResolvedValue({ User: { Attributes: [{ Name: 'sub', Value: 'sub-1' }] } });
-    cognitoService.adminUpdateAttributes.mockResolvedValue(true);
+    User.findOne.mockResolvedValue(null);
+    // tenantId explicito: desde el arreglo 5 de la revision de seguridad del
+    // 4.2 se valida como ObjectId y que el tenant exista y este activo.
+    const tenantIdValido = '507f1f77bcf86cd799439011';
+    Tenant.findById.mockResolvedValue({ _id: tenantIdValido, isActive: () => true });
     const res = crearRes();
 
-    await authController.adminInvite({ user: SUPER, body: { ...cuerpo } }, res);
+    await authController.adminInvite({ user: SUPER, body: { ...cuerpo, tenantId: tenantIdValido } }, res);
 
     expect(res.statusCode).toBe(201);
     expect(User.mock.calls[0][0].role).toBe('super_admin');
+    expect(User.mock.calls[0][0].mustChangePassword).toBe(true);
     expect(guardar).toHaveBeenCalled();
-    expect(cognitoService.adminUpdateAttributes).toHaveBeenCalledWith('sub-1', expect.objectContaining({ 'custom:role': 'super_admin' }));
+    expect(cognitoService.adminCreateUser).not.toHaveBeenCalled();
+    // La temporal se devuelve una sola vez en la respuesta, nunca en texto plano en otro sitio.
+    expect(res.body.data.temporaryPassword).toBeTruthy();
+    expect(res.body.data.user).toEqual({ email: 'invitado@t1.es', role: 'super_admin' });
+  });
+
+  // ALTO-1 de la 2a revision de seguridad del 4.2: la rama de reinvitacion
+  // (mismoTenant && mustChangePassword) no comprobaba puedeGestionarUsuario.
+  // Un admin de tenant podia pedir role:'agent' (que SI puede asignar, asi que
+  // el 403 de mas arriba no saltaba) apuntando al email de un super_admin
+  // pendiente de su tenant, y la rama de reinvitacion le generaba una
+  // contrasena nueva sin mirar el rol del objetivo.
+  test('403 arriba no aplica con role permitido, pero la reinvitacion exige puedeGestionarUsuario: 409 y sin guardar', async () => {
+    const pendienteSuperAdmin = {
+      _id: 'p1',
+      email: 'pendiente@t1.es',
+      role: 'super_admin',
+      tenantId: 't1',
+      mustChangePassword: true,
+      lastLogin: undefined,
+      invitedAt: new Date(),
+      isActive: true,
+      save: jest.fn().mockResolvedValue(true)
+    };
+    User.findOne.mockResolvedValue(pendienteSuperAdmin);
+    const res = crearRes();
+
+    await authController.adminInvite(
+      { user: ADMIN_T1, body: { email: 'pendiente@t1.es', name: 'Pendiente', role: 'agent' } },
+      res
+    );
+
+    expect(res.statusCode).toBe(409);
+    expect(pendienteSuperAdmin.save).not.toHaveBeenCalled();
   });
 });

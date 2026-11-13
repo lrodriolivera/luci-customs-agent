@@ -100,7 +100,48 @@ const UserSchema = new mongoose.Schema({
 
   // Reset password
   resetPasswordToken: String,
-  resetPasswordExpires: Date
+  resetPasswordExpires: Date,
+
+  // Invitacion de admin con contrasena temporal de un solo uso (ver
+  // authController.adminInvite). mustChangePassword fuerza el cambio en el
+  // primer acceso: middleware/auth.js bloquea el resto de rutas mientras este
+  // en true. tempPasswordExpires caduca la temporal (72h) para que una
+  // invitacion olvidada no quede abierta indefinidamente.
+  mustChangePassword: {
+    type: Boolean,
+    default: false
+  },
+  tempPasswordExpires: Date,
+
+  // Marca que esta cuenta se creo por una invitacion de admin (POST
+  // /api/auth/admin/invite), no por adminController.createUser ni por
+  // registro: la reinvitacion (reinviteMismoTenant en authController) solo
+  // regenera la temporal de una cuenta que paso por AQUI, nunca de una creada
+  // por otro camino aunque tambien tenga mustChangePassword activo.
+  invitedAt: Date,
+  invitedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
+  // Momento del ultimo cambio de contrasena. Un JWT firmado ANTES de esta
+  // fecha (decoded.iat < passwordChangedAt) se rechaza en verifyLegacy
+  // (middleware/auth.js): sin esto, cambiar la contrasena (o que un admin la
+  // restablezca) no cerraba las sesiones ya abiertas con la contrasena vieja,
+  // que seguian valiendo hasta que el JWT caducara por su cuenta (hasta 7 dias).
+  passwordChangedAt: Date,
+
+  // Complementa a passwordChangedAt: iat tiene resolucion de 1 segundo, asi
+  // que un token emitido en el MISMO segundo justo antes de cambiar la
+  // contrasena no se distinguia por tiempo. tokenVersion se compara por
+  // valor exacto en verifyLegacy. Un documento sin este campo (de antes de
+  // que existiera) cuenta como 0, y un token sin esta reclamacion (de antes
+  // de que existiera) tambien cuenta como 0 -- asi que ambos siguen
+  // encajando entre si sin romper sesiones de antes de este cambio.
+  tokenVersion: {
+    type: Number,
+    default: 0
+  }
 
 }, {
   timestamps: true
@@ -116,6 +157,8 @@ UserSchema.pre('save', async function(next) {
 
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
+  this.passwordChangedAt = new Date();
+  this.tokenVersion = (this.tokenVersion || 0) + 1;
   next();
 });
 
@@ -124,15 +167,25 @@ UserSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Generate JWT
+// Generate JWT. Mientras haya una contrasena temporal pendiente de cambio
+// (mustChangePassword), el token vive solo 15 min: ademas de la puerta de
+// MUST_CHANGE_PASSWORD en middleware/auth.js, limita la ventana en la que una
+// sesion abierta con la temporal (si se filtrase) sigue siendo utilizable.
+const EXPIRACION_TOKEN_CON_PASSWORD_TEMPORAL = '15m';
+
 UserSchema.methods.generateAuthToken = function() {
   const jwtService = require('../utils/jwtService');
-  return jwtService.sign({
+  const payload = {
     id: this._id,
     email: this.email,
     role: this.role,
-    tenantId: this.tenantId ? String(this.tenantId) : undefined
-  });
+    tenantId: this.tenantId ? String(this.tenantId) : undefined,
+    tokenVersion: this.tokenVersion || 0
+  };
+  if (this.mustChangePassword) {
+    return jwtService.sign(payload, { expiresIn: EXPIRACION_TOKEN_CON_PASSWORD_TEMPORAL });
+  }
+  return jwtService.sign(payload);
 };
 
 // Get public profile
@@ -149,7 +202,8 @@ UserSchema.methods.toPublicJSON = function() {
     permissions: this.permissions,
     isActive: this.isActive,
     lastLogin: this.lastLogin,
-    createdAt: this.createdAt
+    createdAt: this.createdAt,
+    mustChangePassword: this.mustChangePassword
   };
 };
 

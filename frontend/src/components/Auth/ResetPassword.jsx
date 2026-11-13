@@ -5,6 +5,19 @@ import { authAPI } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
+// Misma politica que el servidor (backend/src/utils/passwordPolicy.js):
+// 10-128 caracteres, con al menos una letra y un numero.
+const MIN_LENGTH = 10
+const REGEX_LETRA = /[A-Za-z]/
+const REGEX_NUMERO = /\d/
+
+function cumplePoliticaDePassword(password) {
+  return typeof password === 'string' &&
+    password.length >= MIN_LENGTH &&
+    REGEX_LETRA.test(password) &&
+    REGEX_NUMERO.test(password)
+}
+
 export default function ResetPassword() {
   const { t } = useTranslation()
   const { token } = useParams()
@@ -30,8 +43,8 @@ export default function ResetPassword() {
       return
     }
 
-    if (formData.password.length < 6) {
-      toast.error(t('auth.resetError'))
+    if (!cumplePoliticaDePassword(formData.password)) {
+      toast.error(t('auth.passwordPolicyError'))
       return
     }
 
@@ -47,9 +60,11 @@ export default function ResetPassword() {
         toast.error(response.data.error || t('auth.resetError'))
       }
     } catch (error) {
-      toast.error(
-        error.response?.data?.error || t('auth.resetError')
-      )
+      // Un 400 de validacion del servidor (express-validator) trae el
+      // mensaje util en details[0].message; `error` solo dice "Datos de
+      // entrada invalidos", que no le dice nada al usuario.
+      const detalle = error.response?.data?.details?.[0]?.message
+      toast.error(detalle || error.response?.data?.error || t('auth.resetError'))
     }
 
     setLoading(false)
@@ -86,9 +101,9 @@ export default function ResetPassword() {
                 value={formData.password}
                 onChange={handleChange}
                 className="input"
-                placeholder="Minimo 6 caracteres"
+                placeholder="Minimo 10 caracteres, con letra y numero"
                 required
-                minLength={6}
+                minLength={10}
               />
             </div>
 
@@ -103,7 +118,7 @@ export default function ResetPassword() {
                 className="input"
                 placeholder="Repite tu contrasena"
                 required
-                minLength={6}
+                minLength={10}
               />
             </div>
 
