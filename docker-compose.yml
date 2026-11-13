@@ -48,21 +48,6 @@ services:
       start_period: 10s
     networks: [homelab]
 
-  luci-ai:
-    build: { context: ./ai-service }
-    image: homelab/luci-ai:latest
-    container_name: luci-ai
-    restart: unless-stopped
-    logging: *logging
-    env_file: [./ai-service/.env]
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8003/health',timeout=5).status==200 else 1)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    networks: [homelab]
-
   luci-backend:
     build: { context: ./backend }
     image: homelab/luci-backend:latest
@@ -70,12 +55,12 @@ services:
     restart: unless-stopped
     logging: *logging
     # service_healthy en mongo/redis: sin esto el backend puede arrancar antes de
-    # que la BD acepte conexiones. Con luci-ai basta service_started, porque el
-    # backend solo lo llama bajo demanda y no lo necesita para levantar.
+    # que la BD acepte conexiones. luci-ai (FastAPI de ai-service/) se retiro el
+    # 13/11/2026: ningun codigo lo llamaba y no exigia autenticacion; la IA va por
+    # el backend (Bedrock). El codigo de ai-service/ sigue en el repo.
     depends_on:
       luci-mongo: { condition: service_healthy }
       luci-redis: { condition: service_healthy }
-      luci-ai:    { condition: service_started }
     env_file: [./backend/.env]
     volumes:
       - ./certs/strixai_fnmt.p12:/app/certs/strixai_fnmt.p12:ro
