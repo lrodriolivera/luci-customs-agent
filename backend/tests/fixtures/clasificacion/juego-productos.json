@@ -1,0 +1,627 @@
+{
+  "descripcion": "Juego fijo para medir la clasificacion TARIC. Sin codigos de 10 digitos validados: esperado10 se rellena cuando la agente aduanera los fije (para-validar-patricia.csv).",
+  "generadoCon": "backend/tests/fixtures/clasificacion/generarJuego.js",
+  "totales": {
+    "productos": 60,
+    "proveedor_sin_validar": 48,
+    "proveedor_distintos_disponibles": 52,
+    "caso_borde": 12
+  },
+  "productos": [
+    {
+      "id": "P01",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Filetes de pescado congelado (merluza austral), sin piel, IQF, caja de 10kg",
+      "esperado4": "0304",
+      "esperado6": "030462",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-51 (trello/pruebas-documentales/H1/51-alimentos-triple-control-simultaneo-pesquero-indnr-veterinar/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P02",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Camarones y langostinos congelados, sin cabeza, calibre 21/25",
+      "esperado4": "0306",
+      "esperado6": "030617",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-35 (trello/pruebas-documentales/H1/35-reduccion-de-garantia-global-3050-depende-de-la-modalidad-de/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P03",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Queso de leche cruda de oveja, curado 6 meses, en piezas de 1kg",
+      "esperado4": "0406",
+      "esperado6": "040690",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-50 (trello/pruebas-documentales/H1/50-alimentos-producto-de-origen-animal-numero-de-establecimient/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P04",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Miel natural de flores silvestres, sin procesar, a granel en bidones de 300kg",
+      "esperado4": "0409",
+      "esperado6": "040900",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-52 (trello/pruebas-documentales/H1/52-alimentos-vigilancia-intensiva-100-por-historial-de-alertas-/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P05",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Rosas cortadas frescas, variedad Freedom, tallo largo (60cm), para floristeria",
+      "esperado4": "0603",
+      "esperado6": "060311",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-63 (trello/pruebas-documentales/H1/63-perecederos-vegetales-flor-cortada-de-alta-perecibilidad-por/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P06",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Tomates frescos, variedad Cherry en racimo (tipo vine), calibre 20-30mm",
+      "esperado4": "0702",
+      "esperado6": "070200",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-47 (trello/pruebas-documentales/H1/47-perecederos-vegetales-sistema-de-precio-de-entrada-para-toma/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P07",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Judias verdes frescas, variedad Boby, para consumo directo en fresco",
+      "esperado4": "0708",
+      "esperado6": "070820",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-44 (trello/pruebas-documentales/H1/44-perecederos-vegetales-ched-pp-sin-pre-notificar-en-traces-an/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P08",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Pinas tropicales frescas, variedad MD-2 (Golden Sweet), enteras",
+      "esperado4": "0804",
+      "esperado6": "080430",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-45 (trello/pruebas-documentales/H1/45-perecederos-vegetales-discrepancia-entre-temperatura-de-cons/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P09",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Aguacates (paltas) frescos, variedad Hass, calibre 16-18",
+      "esperado4": "0804",
+      "esperado6": "080440",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-36 (trello/pruebas-documentales/H1/36-notificacion-de-la-deuda-plazo-general-3-anos-especial-5-10-/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P10",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Cafe sin tostar, sin descafeinar, en grano, variedad Arabica",
+      "esperado4": "0901",
+      "esperado6": "090111",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-10 (trello/pruebas-documentales/H1/10-ubicacion-de-la-mercancia-condiciona-si-se-puede-importar/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P11",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Pimienta negra en grano, entera, variedad Malabar, a granel en sacos de 25kg",
+      "esperado4": "0904",
+      "esperado6": "090411",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-48 (trello/pruebas-documentales/H1/48-alimentos-control-oficial-reforzado-en-frontera-reg-20191793/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P12",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Arroz semiblanqueado o blanqueado, de grano largo, variedad Jasmine",
+      "esperado4": "1006",
+      "esperado6": "100630",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-38 (trello/pruebas-documentales/H1/38-documento-9018-grn-no-puede-declararse-en-el-mismo-lugar-seg/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P13",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Aceite de oliva virgen extra, envasado en botellas de vidrio de 750 ml",
+      "esperado4": "1509",
+      "esperado6": "150910",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-17 (trello/pruebas-documentales/H1/17-regimen-de-zona-franca-no-exento-de-iva-desde-2023/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P14",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Atun en conserva al natural en aceite de oliva, lata de 160g, caja de 48 uds.",
+      "esperado4": "1604",
+      "esperado6": "160414",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-49 (trello/pruebas-documentales/H1/49-alimentos-doble-control-sobre-producto-de-la-pesca-certifica/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P15",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Cacao en grano, entero o partido, crudo o tostado",
+      "esperado4": "1801",
+      "esperado6": "180100",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-15 (trello/pruebas-documentales/H1/15-declaracion-simplificada-por-falta-de-datos-casilla-12-tipo-/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P16",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Vino tinto de mesa, en botellas de vidrio de 750 ml, grado alcoholico 13% vol.",
+      "esperado4": "2204",
+      "esperado6": "220421",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "AES-02 (trello/pruebas-documentales/AES/02-exportacion-directa-vs-indirecta-segun-oficinas/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P17",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Whisky escoces \"single malt\", envasado en botella de vidrio de 700 ml",
+      "esperado4": "2208",
+      "esperado6": "220830",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-04 (trello/pruebas-documentales/H1/04-unidades-suplementarias-obligatorias-segun-taric/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P18",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Acido sulfurico tecnico, concentracion 98%, a granel en cisterna ISO",
+      "esperado4": "2807",
+      "esperado6": "280700",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-53 (trello/pruebas-documentales/H1/53-quimicos-ficha-de-datos-de-seguridad-fds-obligatoria-en-espa/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P19",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Acetona tecnica, grado industrial, a granel en cisterna ISO de 20.000L",
+      "esperado4": "2914",
+      "esperado6": "291411",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-56 (trello/pruebas-documentales/H1/56-quimicos-transporte-por-carretera-de-mercancia-peligrosa-adr/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P20",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Vacunas veterinarias inactivadas, viales de 50 dosis, uso ganadero, en nevera activa",
+      "esperado4": "3002",
+      "esperado6": "300220",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-61 (trello/pruebas-documentales/H1/61-cadena-de-frio-farmaceutica-producto-veterinario-biologico-e/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P21",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Insulina humana biosintetica, cartuchos de 3ml para pluma precargada, caja de 5 uds.",
+      "esperado4": "3004",
+      "esperado6": "300431",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-60 (trello/pruebas-documentales/H1/60-cadena-de-frio-farmaceutica-medicamento-biologico-licencia-a/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P22",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Fertilizante a base de nitrato de amonio, granulado, 34,5% de nitrogeno",
+      "esperado4": "3102",
+      "esperado6": "310230",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-55 (trello/pruebas-documentales/H1/55-quimicos-triple-capa-regulatoria-reachclp-imdg-clase-51-prec/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P23",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Perfumes y aguas de tocador, en frasco pulverizador de 100 ml",
+      "esperado4": "3303",
+      "esperado6": "330300",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-32 (trello/pruebas-documentales/H1/32-vinculacion-automatica-a-zona-franca-al-introducir-mercancia/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P24",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Aerosoles cosmeticos (desodorante corporal), propelente inflamable, envase de 150ml",
+      "esperado4": "3307",
+      "esperado6": "330720",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-58 (trello/pruebas-documentales/H1/58-mercancias-peligrosas-aerosoles-bajo-exencion-de-cantidades-/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P25",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Articulos de pirotecnia para espectaculos, categoria F4 (uso exclusivo profesional)",
+      "esperado4": "3604",
+      "esperado6": "360410",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-59 (trello/pruebas-documentales/H1/59-mercancias-peligrosas-explosivos-de-clase-1-autorizacion-pre/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P26",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Resina epoxi liquida, sin curar, para uso industrial, en bidones de 25kg",
+      "esperado4": "3907",
+      "esperado6": "390730",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-54 (trello/pruebas-documentales/H1/54-quimicos-contraste-sustancia-quimica-no-clasificada-como-mer/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P27",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Bolsos de mano de cuero natural bovino, con cierre de cremallera",
+      "esperado4": "4202",
+      "esperado6": "420221",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-09 (trello/pruebas-documentales/H1/09-desaparicion-del-regimen-49-union-aduanera-vs-territorios-fi/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P28",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Hilados de lana peinada, sin acondicionar para la venta al por menor",
+      "esperado4": "5106",
+      "esperado6": "510610",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-16 (trello/pruebas-documentales/H1/16-declaracion-simplificada-por-falta-de-documentos-codigos-9ar/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P29",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Tejidos de algodon crudo, ligamento tafetan, en rollos",
+      "esperado4": "5209",
+      "esperado6": "520911",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-03 (trello/pruebas-documentales/H1/03-codigo-adicional-vacio-no-se-envia-como-000/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P30",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Camisetas de punto, 100% algodon, manga corta, para caballero",
+      "esperado4": "6109",
+      "esperado6": "610910",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-02 (trello/pruebas-documentales/H1/02-representacion-indirecta-sin-representante-registrado/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P31",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Pantalones vaqueros de mezclilla (denim), 98% algodon / 2% elastano",
+      "esperado4": "6203",
+      "esperado6": "620342",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-21 (trello/pruebas-documentales/H1/21-multi-factura-dentro-de-un-mismo-dua-con-un-solo-conocimient/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P32",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Baldosas y losas de ceramica esmaltada para pavimento, 60x60 cm",
+      "esperado4": "6907",
+      "esperado6": "690723",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-13 (trello/pruebas-documentales/H1/13-garantia-obligatoria-antes-del-levante-si-no-se-paga-la-deud/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P33",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Aparatos sanitarios ceramicos, lavabos, sin instalar",
+      "esperado4": "6910",
+      "esperado6": "691010",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-26 (trello/pruebas-documentales/H1/26-importador-particular-vs-empresa/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P34",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Alambre de cobre refinado, diametro de la maxima secc. transversal > 6 mm",
+      "esperado4": "7408",
+      "esperado6": "740811",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-08 (trello/pruebas-documentales/H1/08-regimen-95-exige-que-no-se-haya-pagado-iva-ni-iiee/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P35",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Perfiles de aleaciones de aluminio, anodizados, para construccion",
+      "esperado4": "7604",
+      "esperado6": "760420",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-31 (trello/pruebas-documentales/H1/31-dispensa-de-garantia-para-operador-oeaaeoc/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P36",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Herramientas de mano, llaves de tuerca de acero al cromo-vanadio, en juego",
+      "esperado4": "8204",
+      "esperado6": "820411",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-05 (trello/pruebas-documentales/H1/05-multiples-partidas-con-regimen-y-origen-distintos/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P37",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Partes y piezas para maquinas herramienta de mecanizado por arranque",
+      "esperado4": "8459",
+      "esperado6": "845959",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-05 (trello/pruebas-documentales/H1/05-multiples-partidas-con-regimen-y-origen-distintos/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P38",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Ordenadores portatiles, pantalla 14\", 16GB RAM / 512GB SSD, modelo comercial \"ProBook X14\"",
+      "esperado4": "8471",
+      "esperado6": "847130",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-01 (trello/pruebas-documentales/H1/01-declarante-importador-representacion-directa/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P39",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Baterias de litio-ion recargables para dispositivos electronicos portatiles, embaladas solas (no instaladas en equipo)",
+      "esperado4": "8507",
+      "esperado6": "850760",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-57 (trello/pruebas-documentales/H1/57-mercancias-peligrosas-baterias-de-litio-ion-solas-por-via-ae/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P40",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Telefonos moviles inteligentes, pantalla 6.5\", doble SIM, modelo \"GalaxyLine S24\"",
+      "esperado4": "8517",
+      "esperado6": "851712",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-20 (trello/pruebas-documentales/H1/20-canal-verde-levante-concedido-no-impide-un-requerimiento-pos/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P41",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Frenos de disco y sus partes, para vehiculos automoviles de turismo",
+      "esperado4": "8708",
+      "esperado6": "870830",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-05 (trello/pruebas-documentales/H1/05-multiples-partidas-con-regimen-y-origen-distintos/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P42",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Bicicletas de paseo, sin motor auxiliar, rueda de 28 pulgadas",
+      "esperado4": "8712",
+      "esperado6": "871200",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-21 (trello/pruebas-documentales/H1/21-multi-factura-dentro-de-un-mismo-dua-con-un-solo-conocimient/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P43",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Instrumentos y aparatos de medicina, tensiometros digitales de brazo",
+      "esperado4": "9018",
+      "esperado6": "901819",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-22 (trello/pruebas-documentales/H1/22-valor-en-aduana-declarado-en-divisa-distinta-a-eur-usd-con-t/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P44",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Instrumentos y aparatos de cirugia, pinzas y tijeras de acero inoxidable",
+      "esperado4": "9018",
+      "esperado6": "901839",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "AES-08 (trello/pruebas-documentales/AES/08-representacion-indirecta-se-deduce-no-se-declara/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P45",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Relojes de pulsera mecanicos, caja de acero inoxidable",
+      "esperado4": "9102",
+      "esperado6": "910219",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-06 (trello/pruebas-documentales/H1/06-modificar-una-declaracion-con-mrn-ya-asignado/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P46",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Muebles de madera de haya para dormitorio, sin tapizar, en kit desmontado",
+      "esperado4": "9403",
+      "esperado6": "940350",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-14 (trello/pruebas-documentales/H1/14-valor-en-aduana-canones-y-comisiones-de-venta-se-suman-comis/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P47",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Aparatos electricos de alumbrado con fuente de luz LED integrada",
+      "esperado4": "9405",
+      "esperado6": "940540",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-23 (trello/pruebas-documentales/H1/23-servicio-web-aeat-especifico-para-presentar-documentos-justi/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P48",
+      "grupo": "proveedor_sin_validar",
+      "descripcion": "Juguetes de plastico, figuras de accion articuladas, con marcado CE",
+      "esperado4": "9503",
+      "esperado6": "950300",
+      "esperado10": null,
+      "validado": false,
+      "fuente": "H1-25 (trello/pruebas-documentales/H1/25-mercancia-sin-valor-comercial-valor-factura-0/00_resumen_caso.txt): HS de la factura del proveedor, codigo del proveedor, sin validar"
+    },
+    {
+      "id": "P49",
+      "grupo": "caso_borde",
+      "descripcion": "Equipo de oficina que combina en una sola unidad: impresora laser color, escaner de documentos, fax analogico y fotocopiadora, con bandeja de alimentacion automatica y conectividad de red, comercializado como \"impresora multifuncion\"",
+      "esperado4": "8443",
+      "esperado6": "844332",
+      "esperado10": null,
+      "validado": false,
+      "codigoFactura": "844332",
+      "fuente": "BORDE-01 (trello/pruebas-documentales/CASOS-BORDE-TARIC/01-impresora-multifuncion-una-sola-partida-o-varias-funciones-combinadas-/00_resumen_caso.txt): «la practica real consolidada en la UE clasifica estos equipos en 8443.32»"
+    },
+    {
+      "id": "P50",
+      "grupo": "caso_borde",
+      "descripcion": "Dispositivo giratorio de bolsillo fabricado en aleacion de zinc con rodamiento de bolas de precision, comercializado por el fabricante como \"herramienta de alivio del estres y mejora de la concentracion para adultos con TDAH\", sin ninguna certificacion medica ni marcado sanitario, vendido en tiendas de juguetes y de regalo por igual",
+      "esperado4": "9503",
+      "esperado6": null,
+      "esperado10": null,
+      "validado": false,
+      "codigoFactura": "900190",
+      "fuente": "BORDE-02 (trello/pruebas-documentales/CASOS-BORDE-TARIC/02-dispositivo-antiestres-instrumento-de-precisionmedico-o-juguete-gri-1-/00_resumen_caso.txt): «las autoridades aduaneras consolidaron su clasificacion como juguete (9503)»"
+    },
+    {
+      "id": "P51",
+      "grupo": "caso_borde",
+      "descripcion": "Traje completo de disfraz de \"pirata\" para adulto: chaqueta, pantalon, sombrero tricornio y pañuelo, en tejido sintetico ligero de baja calidad de confeccion (costuras simples sin acabado, no lavable, un solo uso previsto), vendido en set unico para fiestas tematicas",
+      "esperado4": "9505",
+      "esperado6": null,
+      "esperado10": null,
+      "validado": false,
+      "codigoFactura": "950500",
+      "fuente": "BORDE-03 (trello/pruebas-documentales/CASOS-BORDE-TARIC/03-disfraz-de-carnaval-calidad-de-confeccion-como-criterio-de-partida-not/00_resumen_caso.txt): «El Capitulo 95 (9505) cubre expresamente 'articulos para fiestas' incluidos los disfraces de carnaval, PERO solo si la calidad de confeccion es claramente inferior a la de una prenda de vestir normal»"
+    },
+    {
+      "id": "P52",
+      "grupo": "caso_borde",
+      "descripcion": "Vino tinto sometido a un proceso de destilacion al vacio que elimina el alcohol tras la fermentacion completa de la uva, graduacion alcoholica final inferior a 0,5% vol., envasado en botella de vidrio de 750ml, comercializado como \"vino sin alcohol\"",
+      "esperado4": "2202",
+      "esperado6": null,
+      "esperado10": null,
+      "validado": false,
+      "codigoFactura": "220600",
+      "fuente": "BORDE-04 (trello/pruebas-documentales/CASOS-BORDE-TARIC/04-vino-desalcoholizado-sigue-siendo-vino-tras-eliminar-el-alcohol-nota-5/00_resumen_caso.txt): «el Sistema Armonizado dirige especificamente las bebidas a las que se ha extraido el alcohol tras la fermentacion hacia la partida 2202»"
+    },
+    {
+      "id": "P53",
+      "grupo": "caso_borde",
+      "descripcion": "Peptidos de colageno hidrolizado de origen marino (piel de pescado), en polvo soluble, envasado en botes de 300g con cuchara dosificadora, etiquetado como \"complemento alimenticio para la salud articular\", sin indicaciones terapeuticas especificas ni principio activo farmaceutico",
+      "esperado4": "2106",
+      "esperado6": null,
+      "esperado10": null,
+      "validado": false,
+      "codigoFactura": "300190",
+      "fuente": "BORDE-05 (trello/pruebas-documentales/CASOS-BORDE-TARIC/05-colageno-marino-en-polvo-complemento-alimenticio-vs-producto-opoterapi/00_resumen_caso.txt): «presentado y etiquetado como complemento alimenticio (sin indicacion de dosis terapeutica ni enfermedad concreta a tratar), corresponde a 2106»"
+    },
+    {
+      "id": "P54",
+      "grupo": "caso_borde",
+      "descripcion": "Armario de madera de nogal maciza fabricado en 2024 replicando el diseño y las tecnicas de ebanisteria de un armario frances estilo Luis XV, con herrajes de latón envejecido artificialmente para simular desgaste, sin ningun componente ni pieza original de epoca",
+      "esperado4": "9403",
+      "esperado6": null,
+      "esperado10": null,
+      "validado": false,
+      "codigoFactura": "970600",
+      "fuente": "BORDE-06 (trello/pruebas-documentales/CASOS-BORDE-TARIC/06-mueble-estilo-luis-xv-fabricado-en-2024-antiguedad-falsa-vs-mueble-nue/00_resumen_caso.txt): «un mueble fabricado en 2024 en estilo Luis XV va en 9403 (muebles)»"
+    },
+    {
+      "id": "P55",
+      "grupo": "caso_borde",
+      "descripcion": "Escultura de bronce fundido a la cera perdida, pieza numerada 3/8 de una edicion limitada autorizada y firmada por el escultor vivo, con certificado de autenticidad de la fundicion y del propio artista",
+      "esperado4": "9703",
+      "esperado6": null,
+      "esperado10": null,
+      "validado": false,
+      "codigoFactura": "691310",
+      "fuente": "BORDE-07 (trello/pruebas-documentales/CASOS-BORDE-TARIC/07-escultura-de-edicion-limitada-firmada-obra-de-arte-original-vs-reprodu/00_resumen_caso.txt): «se clasifican en la partida 9703»"
+    },
+    {
+      "id": "P56",
+      "grupo": "caso_borde",
+      "descripcion": "Fardo de 500kg de prendas de vestir de segunda mano sin clasificar por tipo ni talla, recogidas mediante contenedores de donacion benefica, con signos visibles de uso previo (desgaste, decoloracion), destinadas a reventa en mercados de ropa usada",
+      "esperado4": "6309",
+      "esperado6": null,
+      "esperado10": null,
+      "validado": false,
+      "codigoFactura": "630900",
+      "fuente": "BORDE-08 (trello/pruebas-documentales/CASOS-BORDE-TARIC/08-fardo-de-ropa-usada-a-granel-prenderia-real-vs-stock-nuevo-mal-declara/00_resumen_caso.txt): «La partida 6309 (prenderia) es una de las pocas partidas del Sistema Armonizado definida por el ESTADO del producto (usado)»"
+    },
+    {
+      "id": "P57",
+      "grupo": "caso_borde",
+      "descripcion": "Semillas de canamo (Cannabis sativa) peladas, tostadas, para uso alimentario directo o como topping de ensaladas y batidos, contenido de THC inferior al 0,2% certificado por analisis de laboratorio, sin capacidad de germinacion",
+      "esperado4": "1207",
+      "esperado6": "120799",
+      "esperado10": null,
+      "validado": false,
+      "codigoFactura": "120729",
+      "fuente": "BORDE-09 (trello/pruebas-documentales/CASOS-BORDE-TARIC/09-semillas-de-canamo-alimentario-con-thc-certificado-02-control-document/00_resumen_caso.txt): «se clasifican como semilla oleaginosa alimentaria ordinaria (1207.99)»"
+    },
+    {
+      "id": "P58",
+      "grupo": "caso_borde",
+      "descripcion": "Controlador de teclado musical con 61 teclas sensibles a la velocidad, sin generador de sonido propio ni altavoces internos, se conecta por USB a un ordenador que ejecuta el software que realmente sintetiza el sonido; el propio controlador es electricamente incapaz de producir ninguna nota por si mismo",
+      "esperado4": "8471",
+      "esperado6": null,
+      "alternativas4": [
+        "8543"
+      ],
+      "esperado10": null,
+      "validado": false,
+      "codigoFactura": "920600",
+      "fuente": "BORDE-10 (trello/pruebas-documentales/CASOS-BORDE-TARIC/10-controlador-midi-sin-generador-de-sonido-instrumento-musical-o-perifer/00_resumen_caso.txt): «mas propio de la partida 8471 (o 8543 segun el analisis)»"
+    },
+    {
+      "id": "P59",
+      "grupo": "caso_borde",
+      "descripcion": "Correa de transmision de caucho reforzado con fibra, seccion trapezoidal estandar tipo A42, compatible indistintamente con motores de compresores de aire, generadores electricos, bombas de riego y maquinaria agricola de multiples fabricantes, vendida como recambio generico sin destino a una maquina especifica",
+      "esperado4": "4010",
+      "esperado6": null,
+      "esperado10": null,
+      "validado": false,
+      "codigoFactura": "840999",
+      "fuente": "BORDE-11 (trello/pruebas-documentales/CASOS-BORDE-TARIC/11-correa-de-transmision-universal-pieza-de-uso-general-no-parte-de-una-m/00_resumen_caso.txt): «corresponde a su propia partida de articulo de caucho para uso tecnico general (4010)»"
+    },
+    {
+      "id": "P60",
+      "grupo": "caso_borde",
+      "descripcion": "Visor de realidad virtual con pantallas OLED estereoscopicas integradas, auriculares circumaurales con cancelacion de ruido incorporados de forma no desmontable, y controlador de mano con sensores de movimiento, vendido como conjunto unico \"todo incluido\"",
+      "esperado4": "8528",
+      "esperado6": null,
+      "esperado10": null,
+      "validado": false,
+      "codigoFactura": "852872",
+      "fuente": "BORDE-14 (trello/pruebas-documentales/CASOS-BORDE-TARIC/14-visor-de-realidad-virtual-con-auriculares-integrados-funcion-principal/00_resumen_caso.txt): «clasificar por funcion principal: la visualizacion»"
+    }
+  ]
+}

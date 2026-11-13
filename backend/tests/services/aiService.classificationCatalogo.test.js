@@ -155,6 +155,6 @@ describe('aiService.classifyProduct — anclaje al catalogo TARIC', () => {
   });
 
   it('la clave de cache esta versionada para descartar las respuestas sin ancla', () => {
-    expect(aiService._classificationCacheKey('Cable', {})).toMatch(/^taric_class_v2_[0-9a-f]{32}$/);
+    expect(aiService._classificationCacheKey('Cable', {})).toMatch(/^taric_class_v3_[0-9a-f]{32}$/);
   });
 });
