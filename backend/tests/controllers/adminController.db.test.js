@@ -23,6 +23,7 @@ const { usarBaseDeDatosEnMemoria } = require('../helpers/memoryDb');
 
 const User = require('../../src/models/User');
 const ctrl = require('../../src/controllers/adminController');
+const authCtrl = require('../../src/controllers/authController');
 
 usarBaseDeDatosEnMemoria();
 
@@ -229,6 +230,39 @@ describe('getUser/updateUser/deleteUser/resetUserPassword: 404 ante usuario ajen
     const guardado = await User.findById(u._id);
     expect(guardado.role).toBe('supervisor');
     expect(guardado.permissions.canApproveDeclarations).toBe(true);
+  });
+
+  // BAJO-B de la 2a revision de seguridad del 4.2: al fijar password, updateUser
+  // dejaba la invitacion a medias -- no tocaba mustChangePassword ni
+  // tempPasswordExpires, asi que un pendiente CADUCADO con contrasena nueva
+  // puesta por el admin seguia sin poder entrar (login seguia rechazando por
+  // TEMP_PASSWORD_EXPIRED con una contrasena que ya no era ninguna temporal).
+  test('updateUser con password nueva completa la invitacion: limpia mustChangePassword y la caducidad', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const u = await usuario({ tenant: t, role: 'agent' });
+    await User.updateOne(
+      { _id: u._id },
+      { $set: { mustChangePassword: true, tempPasswordExpires: new Date(Date.now() - 1000) } } // ya caducada
+    );
+    const res = crearRes();
+
+    await ctrl.updateUser({
+      user: adminDe(t),
+      params: { id: u._id },
+      body: { password: 'DefinitivaDelAdmin1' }
+    }, res);
+
+    expect(res.statusCode).toBe(200);
+    const actualizado = await User.findById(u._id).select('+password');
+    expect(actualizado.mustChangePassword).toBe(false);
+    expect(actualizado.tempPasswordExpires).toBeUndefined();
+
+    // Login real (authController.login, con su comprobacion de
+    // TEMP_PASSWORD_EXPIRED): antes del arreglo seguia dando 401 aqui aunque
+    // la contrasena ya fuera la que puso el admin.
+    const resLogin = crearRes();
+    await authCtrl.login({ body: { email: u.email, password: 'DefinitivaDelAdmin1' }, audit: jest.fn() }, resLogin);
+    expect(resLogin.statusCode).toBe(200);
   });
 
   test('resetUserPassword de otro tenant devuelve 404', async () => {

@@ -298,7 +298,14 @@ const updateUser = async (req, res) => {
     if (role) user.role = role;
     if (status !== undefined) user.isActive = status === 'active';
     if (password && password.length >= 6) {
+      // Igual que createUser con una contrasena elegida por el admin: ya no es
+      // una temporal, asi que deja de exigirse el cambio en el primer acceso.
+      // Sin esto, un pendiente CADUCADO con la contrasena ya puesta por el
+      // admin seguia sin poder entrar (login seguia rechazando por
+      // TEMP_PASSWORD_EXPIRED con una contrasena que ya no era temporal).
       user.password = password;
+      user.mustChangePassword = false;
+      user.tempPasswordExpires = undefined;
     }
 
     // Actualizar permisos basados en rol
