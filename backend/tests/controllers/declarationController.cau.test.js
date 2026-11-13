@@ -15,6 +15,7 @@ const mockSubmitH1 = jest.fn();
 const mockProcesarCanal = jest.fn();
 const mockAnularCau = jest.fn();
 const mockCancelH1 = jest.fn();
+const mockActivarCau = jest.fn();
 
 jest.mock('../../src/models', () => ({ Expedition: mockExpedition, ChatMessage: { find: jest.fn() } }));
 jest.mock('../../src/models/Tenant', () => mockTenant);
@@ -24,6 +25,7 @@ jest.mock('../../src/services/aeat/aeatSubmitService', () => ({
   enviarH1Cau: (...a) => mockEnviar(...a),
   submitH1: (...a) => mockSubmitH1(...a),
   anularH1Cau: (...a) => mockAnularCau(...a),
+  activarH1Cau: (...a) => mockActivarCau(...a),
   cancelH1: (...a) => mockCancelH1(...a)
 }));
 jest.mock('../../src/services/aiService', () => ({}));
@@ -60,6 +62,7 @@ function app() {
   const usuario = (req, _res, next) => { req.user = USER; req.tenantId = USER.tenantId; next(); };
   a.post('/api/declarations/:expeditionId/submit', usuario, declarationController.submitDeclaration);
   a.post('/api/declarations/:expeditionId/cancel', usuario, declarationController.cancelDeclaration);
+  a.post('/api/declarations/:expeditionId/h1/activar', usuario, declarationController.activateH1);
   return a;
 }
 const enviar = () => request(app()).post('/api/declarations/e1/submit');
@@ -289,5 +292,99 @@ describe('H1 por el servicio CAU: anulación', () => {
     expect(res.status).toBe(200);
     expect(mockCancelH1).toHaveBeenCalled();
     expect(mockAnularCau).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('predeclaraciones (tipo D)', () => {
+  const PENDIENTE = {
+    ...ADMITIDA, mrn: null, numeroRegistro: '26ES009999I00270R1', operacionRegistrada: '63', channel: null, circuito: null,
+    fechaAdmision: null, liquidacion: null, certificados: { requeridos: 'Z', partidas: [] }
+  };
+  const ACTIVADA = { ...ADMITIDA, mrn: '26ES009999I00270R1', operacionRegistrada: '90', channel: 'yellow', circuito: 'A', fechaAdmision: '2026-11-13T07:57:09' };
+  const presentarComo = (cuerpo) => request(app()).post('/api/declarations/e1/submit').send(cuerpo);
+  const activar = () => request(app()).post('/api/declarations/e1/h1/activar');
+  const pendiente = () => expediente({
+    status: 'submitted', mrn: '26ES009999I00270R1', lrn: 'LUCI261113000000001',
+    predeclaracion: { modo: 'Operador', numeroRegistro: '26ES009999I00270R1', registradaEn: new Date('2026-11-13T07:56:10') },
+    cauEnvio: { requestXML: '<soap>mensaje</soap>', respondido: true },
+    aeatResponse: { servicio: 'CC415AV1', responseCode: '63', liquidacion: null, certificados: null }
+  });
+
+  test('presenta en el modo pedido y guarda el número de registro, sin circuito', async () => {
+    const exp = expediente();
+    mockEnviar.mockResolvedValue({ ...PENDIENTE });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await presentarComo({ predeclaracion: 'Operador' });
+
+    expect(res.status).toBe(200);
+    expect(mockPreparar).toHaveBeenCalledWith(exp, { predeclaracion: 'Operador' });
+    expect(exp.declaration).toMatchObject({ status: 'submitted', mrn: '26ES009999I00270R1' });
+    expect(exp.declaration.channel).toBeUndefined();
+    expect(exp.declaration.predeclaracion).toMatchObject({ modo: 'Operador', numeroRegistro: '26ES009999I00270R1' });
+    expect(exp.declaration.aeatResponse.responseCode).toBe('63');
+    expect(res.body.data.message).toContain('pendiente de activar');
+    expect(mockProcesarCanal).not.toHaveBeenCalled();
+  });
+
+  test('un modo que no existe, o predeclarar sin el servicio CAU, no envía nada', async () => {
+    mockExpedition.findById.mockResolvedValue(expediente());
+    expect((await presentarComo({ predeclaracion: 'Mañana' })).status).toBe(400);
+
+    mockTenant.findById.mockResolvedValue({ customsConfig: { country: 'ES' } });
+    const res = await presentarComo({ predeclaracion: 'Aduanas' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('servicio');
+    expect(mockEnviar).not.toHaveBeenCalled();
+    expect(mockSubmitH1).not.toHaveBeenCalled();
+  });
+
+  test('un mensaje pendiente de reenviar con otro modo no se reutiliza', async () => {
+    const exp = expediente({ cauEnvio: { ...PREPARADO, respondido: false, predeclaracion: null } });
+    mockEnviar.mockResolvedValue({ ...PENDIENTE });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    await presentarComo({ predeclaracion: 'Operador' });
+
+    expect(mockPreparar).toHaveBeenCalledWith(exp, { predeclaracion: 'Operador' });
+    expect(exp.declaration.cauEnvio.predeclaracion).toBe('Operador');
+  });
+
+  test('activar: guarda el MRN, el circuito, la liquidación y la fecha de admisión que da la AEAT', async () => {
+    const exp = pendiente();
+    mockActivarCau.mockResolvedValue({ ...ACTIVADA });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await activar();
+
+    expect(res.status).toBe(200);
+    expect(mockActivarCau).toHaveBeenCalledWith(exp);
+    expect(exp.declaration).toMatchObject({ mrn: '26ES009999I00270R1', channel: 'yellow' });
+    expect(exp.declaration.acceptanceDate).toEqual(new Date('2026-11-13T07:57:09'));
+    expect(exp.declaration.aeatResponse).toMatchObject({ servicio: 'CC415AV1', responseCode: '90', circuito: 'A', liquidacion: { totalAPagar: 3552 } });
+    expect(exp.declaration.predeclaracion.activadaEn).toBeInstanceOf(Date);
+    expect(exp.timeline.at(-1).action).toBe('declaration_activated');
+    expect(res.body.data).toMatchObject({ mrn: '26ES009999I00270R1', channel: 'yellow' });
+  });
+
+  test('si la AEAT rechaza la activación lo dice y la predeclaración queda como estaba', async () => {
+    const exp = pendiente();
+    mockActivarCau.mockResolvedValue({ success: false, tipo: 'error_funcional', error: '80118 No se permite declarar ContactPerson' });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await activar();
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('80118');
+    expect(exp.declaration.aeatResponse.responseCode).toBe('63');
+    expect(exp.declaration.predeclaracion.activadaEn).toBeUndefined();
+  });
+
+  test('solo se activa una predeclaración pendiente de activar', async () => {
+    mockExpedition.findById.mockResolvedValue(expediente({ status: 'submitted', mrn: 'M1', aeatResponse: { servicio: 'CC415AV1', responseCode: '64' } }));
+    const res = await activar();
+    expect(res.status).toBe(409);
+    expect(mockActivarCau).not.toHaveBeenCalled();
   });
 });

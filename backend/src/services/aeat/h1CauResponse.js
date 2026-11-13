@@ -188,8 +188,9 @@ function interpretarRespuestaH1Cau(xml) {
     };
   }
 
-  const salida = buscar(documento, 'CC415AV1Sal');
-  if (!salida) return { ...base, error: 'La respuesta no es del servicio CC415AV1' };
+  // La activacion de una predeclaracion (CC432AV1) responde con lo mismo en otro envoltorio.
+  const salida = buscar(documento, 'CC415AV1Sal') || buscar(documento, 'CC432AV1Sal');
+  if (!salida) return { ...base, error: 'La respuesta no es del servicio CC415AV1 ni de la activación CC432AV1' };
   const conMensaje = { ...base, mensajeId: texto(salida, 'Message', 'messageIdentification') };
 
   const cc415r = hijo(salida, 'CC415R');

@@ -293,8 +293,24 @@ describe('<ExpeditionDetail />', () => {
     await waitFor(() => expect(screen.getByText('expeditions.h1Generated')).toBeInTheDocument())
     const submitButton = await screen.findByText('expeditions.submitToAeat')
     fireEvent.click(submitButton)
-    await waitFor(() => expect(declarationsAPI.submit).toHaveBeenCalledWith('exp123'), { timeout: 3000 })
+    // Sin elegir otra cosa se presenta como declaración (modo vacío).
+    await waitFor(() => expect(declarationsAPI.submit).toHaveBeenCalledWith('exp123', ''), { timeout: 3000 })
     expect(toast.success).toHaveBeenCalled()
+  })
+
+  test('se puede presentar como predeclaración que activa el usuario', async () => {
+    const expWithDeclaration = { ...mockExpedition, declaration: { lrn: 'ES1', status: 'draft', xmlContent: '<H1>...</H1>', customsOffice: 'ES001200', regime: '40' } }
+    expeditionsAPI.get.mockResolvedValue({ data: { data: expWithDeclaration } })
+    expeditionsAPI.getChecklist.mockResolvedValue({ data: { data: mockChecklist } })
+    declarationsAPI.submit.mockResolvedValue({ data: { data: { mrn: '26ES009999I00270R1', channel: null } } })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getByText('expeditions.h1Generated')).toBeInTheDocument())
+
+    fireEvent.change(screen.getByLabelText('expeditions.presentationMode'), { target: { value: 'Operador' } })
+    fireEvent.click(await screen.findByText('expeditions.submitToAeat'))
+
+    await waitFor(() => expect(declarationsAPI.submit).toHaveBeenCalledWith('exp123', 'Operador'), { timeout: 3000 })
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('expeditions.predeclarationToast'))
   })
 
   test.each([

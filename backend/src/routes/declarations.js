@@ -177,6 +177,8 @@ router.post('/:expeditionId/submit', requirePermission('canApproveDeclarations')
 
 // Anular declaracion
 router.post('/:expeditionId/cancel', requirePermission('canApproveDeclarations'), declarationController.cancelDeclaration);
+// Activa ante la AEAT una predeclaracion pendiente (CC432AV1): mismo permiso que presentar.
+router.post('/:expeditionId/h1/activar', requirePermission('canApproveDeclarations'), declarationController.activateH1);
 
 // ===========================================
 // PDF GENERATION

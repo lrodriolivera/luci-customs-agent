@@ -80,7 +80,8 @@ describe('requisitos del H1', () => {
         invoiceCurrency: 'EUR', invoiceCurrencyWithoutBce: false, appliedExchangeRate: null
       },
       anulacion: { presentada: false, anulable: false },
-      liquidacionAeat: null
+      liquidacionAeat: null,
+      predeclaracion: null
     });
   });
 
@@ -218,6 +219,22 @@ describe('cambio aplicado de una divisa que el BCE no cotiza', () => {
       expect(res.status).toBe(400);
       expect(res.body.error).toContain('cambio aplicado');
     }
+  });
+});
+
+describe('predeclaración en los requisitos', () => {
+  test('dice el modo, el número de registro y que está pendiente de activar', async () => {
+    mockPreparar.mockResolvedValue({ requestXML: '<x/>' });
+    mockExpedition.findById.mockResolvedValue(expediente({ declaration: {
+      mrn: '26ES009999I00270R1', predeclaracion: { modo: 'Operador', numeroRegistro: '26ES009999I00270R1' },
+      aeatResponse: { servicio: 'CC415AV1', responseCode: '63' }
+    } }));
+
+    const res = await request(app()).get('/api/declarations/e1/h1/requisitos');
+
+    expect(res.body.data.predeclaracion).toEqual({ modo: 'Operador', numeroRegistro: '26ES009999I00270R1', pendiente: true, activadaEn: null });
+    // Pendiente de activar también se puede anular por servicio.
+    expect(res.body.data.anulacion).toEqual({ presentada: true, anulable: true });
   });
 });
 

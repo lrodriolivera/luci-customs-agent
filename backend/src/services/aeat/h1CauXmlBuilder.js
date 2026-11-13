@@ -191,6 +191,8 @@ function buildH1CauXML(d) {
     el('MRN', d.mrn),
     el('operation', d.operacion || 'A'),
     grupo('CustomsOfficeOfImport', [el('referenceNumber', d.aduanaImportacion)]),
+    // Solo en predeclaraciones (tipo D, E o F): obligatorio ahi y prohibido en el resto (error 80015).
+    el('ModoActivacionDeclaracion', d.modoActivacion),
     grupo('CC415A', [
       grupo('ImportOperation', [
         el('LRN', d.declaracion?.lrn),
