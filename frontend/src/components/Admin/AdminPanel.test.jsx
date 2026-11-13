@@ -467,7 +467,7 @@ describe('<AdminPanel />', () => {
     expect(screen.getByText('Temp1234!')).toBeInTheDocument()
   })
 
-  test('crear usuario con password manual requiere minimo 6 caracteres', async () => {
+  test('crear usuario con password manual exige la politica unica (10 caracteres, letra y numero)', async () => {
     api.get
       .mockResolvedValueOnce({ data: mockDashboardStats })
       .mockResolvedValueOnce({ data: { users: mockUsers } })
@@ -494,13 +494,46 @@ describe('<AdminPanel />', () => {
 
     await waitFor(() => expect(screen.queryByPlaceholderText('admin.minChars')).toBeInTheDocument())
     const passwordInput = screen.getByPlaceholderText('admin.minChars')
+    // 12345 ya era invalida con la regla vieja (< 6); con la politica unica
+    // (BAJO-C de la 2a revision del 4.2) tambien lo es por longitud y por no
+    // tener ninguna letra -- el motivo cambia, no solo el numero.
     fireEvent.change(passwordInput, { target: { value: '12345' } })
 
     const form = document.querySelector('form')
     fireEvent.submit(form)
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('admin.passwordMinError'))
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('auth.passwordPolicyError'))
     expect(api.post).not.toHaveBeenCalled()
+  })
+
+  test('editar usuario con una password nueva que no cumple la politica no llama al backend', async () => {
+    api.get
+      .mockResolvedValueOnce({ data: mockDashboardStats })
+      .mockResolvedValueOnce({ data: { users: mockUsers } })
+      .mockResolvedValueOnce({ data: { roles: mockRoles } })
+
+    render(
+      <MemoryRouter>
+        <AdminPanel />
+      </MemoryRouter>
+    )
+    fireEvent.click(screen.getByText('admin.users'))
+    await waitFor(() => expect(screen.getByText('Alice Admin')).toBeInTheDocument())
+
+    const editButtons = screen.getAllByTitle('Editar')
+    fireEvent.click(editButtons[0])
+
+    // Al editar, el campo de contrasena es el opcional ("deja vacio para no
+    // cambiarla"), distinto del de crear usuario (admin.minChars).
+    await waitFor(() => expect(screen.queryByPlaceholderText('admin.leaveEmptyNoChange')).toBeInTheDocument())
+    const passwordInput = screen.getByPlaceholderText('admin.leaveEmptyNoChange')
+    fireEvent.change(passwordInput, { target: { value: 'sololetras' } }) // sin numero
+
+    const form = document.querySelector('form')
+    fireEvent.submit(form)
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('auth.passwordPolicyError'))
+    expect(api.put).not.toHaveBeenCalled()
   })
 
   test('crear usuario sin password temporal muestra toast success', async () => {
@@ -565,6 +598,47 @@ describe('<AdminPanel />', () => {
     fireEvent.submit(form)
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Email already exists'))
+  })
+
+  // Arreglo final del 4.2: si el 400 trae `details` (validacion del
+  // servidor), ese es el mensaje util, no el generico `error`.
+  test('crear usuario con error de validacion del servidor muestra details[0].message', async () => {
+    api.get
+      .mockResolvedValueOnce({ data: mockDashboardStats })
+      .mockResolvedValueOnce({ data: { users: mockUsers } })
+      .mockResolvedValueOnce({ data: { roles: mockRoles } })
+    api.post.mockRejectedValueOnce({
+      response: {
+        data: {
+          error: 'Datos de entrada invalidos',
+          details: [{ field: 'password', message: 'La contrasena debe ser texto, de 10 a 128 caracteres, con al menos una letra y un numero.' }]
+        }
+      }
+    })
+
+    render(
+      <MemoryRouter>
+        <AdminPanel />
+      </MemoryRouter>
+    )
+    fireEvent.click(screen.getByText('admin.users'))
+    await waitFor(() => expect(screen.getByText('Alice Admin')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByText('admin.newUser'))
+
+    const inputs = document.querySelectorAll('input')
+    const emailInput = Array.from(inputs).find(inp => inp.type === 'email')
+    const nameInput = Array.from(inputs).find(inp => inp.type === 'text' && inp.required && !inp.type.includes('checkbox'))
+
+    fireEvent.change(emailInput, { target: { value: 'eve@test.com' } })
+    fireEvent.change(nameInput, { target: { value: 'Eve' } })
+
+    const form = document.querySelector('form')
+    fireEvent.submit(form)
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(
+      'La contrasena debe ser texto, de 10 a 128 caracteres, con al menos una letra y un numero.'
+    ))
   })
 
   test('editar usuario abre modal con datos', async () => {
@@ -821,7 +895,7 @@ describe('<AdminPanel />', () => {
     expect(screen.getByPlaceholderText('admin.leaveEmptyNoChange')).toBeInTheDocument()
   })
 
-  test('crear usuario con password manual de 6 caracteres exactos pasa validacion', async () => {
+  test('crear usuario con password manual que cumple la politica unica pasa validacion', async () => {
     api.get
       .mockResolvedValueOnce({ data: mockDashboardStats })
       .mockResolvedValueOnce({ data: { users: mockUsers } })
@@ -853,7 +927,7 @@ describe('<AdminPanel />', () => {
 
     await waitFor(() => expect(screen.queryByPlaceholderText('admin.minChars')).toBeInTheDocument())
     const passwordInput = screen.getByPlaceholderText('admin.minChars')
-    fireEvent.change(passwordInput, { target: { value: '123456' } })
+    fireEvent.change(passwordInput, { target: { value: 'Password12' } })
 
     const form = document.querySelector('form')
     fireEvent.submit(form)
@@ -862,7 +936,7 @@ describe('<AdminPanel />', () => {
       expect(api.post).toHaveBeenCalledWith('/api/admin/users', expect.objectContaining({
         email: 'dave@test.com',
         name: 'Dave',
-        password: '123456'
+        password: 'Password12'
       }))
     )
   })
@@ -1412,6 +1486,70 @@ describe('<AdminPanel />', () => {
     fireEvent.submit(form)
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('admin.errorUpdatingUser'))
+  })
+
+  // Arreglo final del 4.2: igual que crear, actualizar debe mostrar el
+  // motivo del servidor (details[0].message, o en su defecto `error`) en
+  // vez de admin.errorUpdatingUser a secas.
+  test('actualizar usuario con error de validacion del servidor muestra details[0].message', async () => {
+    api.get
+      .mockResolvedValueOnce({ data: mockDashboardStats })
+      .mockResolvedValueOnce({ data: { users: mockUsers } })
+      .mockResolvedValueOnce({ data: { roles: mockRoles } })
+    api.put.mockRejectedValueOnce({
+      response: {
+        data: {
+          error: 'Datos de entrada invalidos',
+          details: [{ field: 'password', message: 'La contrasena debe ser texto, de 10 a 128 caracteres, con al menos una letra y un numero.' }]
+        }
+      }
+    })
+
+    render(
+      <MemoryRouter>
+        <AdminPanel />
+      </MemoryRouter>
+    )
+    fireEvent.click(screen.getByText('admin.users'))
+    await waitFor(() => expect(screen.getByText('Alice Admin')).toBeInTheDocument())
+
+    const editButtons = screen.getAllByTitle('Editar')
+    fireEvent.click(editButtons[0])
+
+    fireEvent.change(screen.getByDisplayValue('Alice Admin'), { target: { value: 'Alice Updated' } })
+
+    const form = document.querySelector('form')
+    fireEvent.submit(form)
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(
+      'La contrasena debe ser texto, de 10 a 128 caracteres, con al menos una letra y un numero.'
+    ))
+  })
+
+  test('actualizar usuario con error generico del servidor (sin details) muestra el error', async () => {
+    api.get
+      .mockResolvedValueOnce({ data: mockDashboardStats })
+      .mockResolvedValueOnce({ data: { users: mockUsers } })
+      .mockResolvedValueOnce({ data: { roles: mockRoles } })
+    api.put.mockRejectedValueOnce({ response: { data: { error: 'No puedes modificar a un super administrador.' } } })
+
+    render(
+      <MemoryRouter>
+        <AdminPanel />
+      </MemoryRouter>
+    )
+    fireEvent.click(screen.getByText('admin.users'))
+    await waitFor(() => expect(screen.getByText('Alice Admin')).toBeInTheDocument())
+
+    const editButtons = screen.getAllByTitle('Editar')
+    fireEvent.click(editButtons[0])
+
+    fireEvent.change(screen.getByDisplayValue('Alice Admin'), { target: { value: 'Alice Updated' } })
+
+    const form = document.querySelector('form')
+    fireEvent.submit(form)
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('No puedes modificar a un super administrador.'))
   })
 
   test('resetear password con error muestra toast', async () => {
