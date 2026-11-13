@@ -185,6 +185,11 @@ const DeclarationSchema = new mongoose.Schema({
   // llega, se reenvia el mismo mensaje: la AEAT lo reconoce por su identificador
   // y no registra la declaracion dos veces.
   cauEnvio: mongoose.Schema.Types.Mixed,
+  // Predeclaracion del H1 CAU (tipo D): modo de activacion («Aduanas» u
+  // «Operador»), numero de registro y fechas de alta y activacion. Sin
+  // declararlo, el subdocumento estricto lo descartaba y la tarjeta no ofrecia
+  // «Activar» (13/11/2026).
+  predeclaracion: mongoose.Schema.Types.Mixed,
   aeatResponse: mongoose.Schema.Types.Mixed,
   levanteNumber: String,
   cancelledAt: Date
