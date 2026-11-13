@@ -5,6 +5,17 @@ import { expeditionsAPI, declarationsAPI } from '../../services/api'
 
 export const REPRESENTATION_TYPES = ['indirect', 'direct']
 
+// Casilla 14 del DUA (forma de representacion) -> clave i18n de la nota sobre
+// quien firma con el certificado digital asociado en LUCI. En forma directa
+// ('2') el declarante es el importador, pero quien presenta con el
+// certificado de LUCI es la agencia representante, no el importador: la nota
+// no puede ser la misma en los tres casos (correccion UAT 13/Nov/2026).
+const NOTA_DECLARANTE_POR_FORMA = {
+  1: 'representation.declarantNoteSelf',
+  2: 'representation.declarantNoteDirect',
+  3: 'representation.declarantNoteIndirect'
+}
+
 /**
  * Forma de representacion con la que se presenta la declaracion (casilla 14
  * del DUA). El agente elige directa o indirecta; el autodespacho no se elige:
@@ -34,6 +45,7 @@ export default function RepresentationCard({ expedition, onSaved }) {
   const [declarante, setDeclarante] = useState(null)
   const [representante, setRepresentante] = useState(null)
   const [declaranteError, setDeclaranteError] = useState(null)
+  const [forma, setForma] = useState(null)
 
   useEffect(() => {
     let vivo = true
@@ -44,6 +56,7 @@ export default function RepresentationCard({ expedition, onSaved }) {
         setDeclarante(datos.declarante || null)
         setRepresentante(datos.representante || null)
         setDeclaranteError(null)
+        setForma(datos.forma || null)
       })
       .catch((error) => {
         if (!vivo) return
@@ -52,9 +65,14 @@ export default function RepresentationCard({ expedition, onSaved }) {
         // Con un 422 (falta el EORI), el backend ya dice donde completarlo;
         // ese mensaje es mas util que el generico declarantUnknown.
         setDeclaranteError(error.response?.data?.error || null)
+        // Sin forma fiable del backend no se puede decir quien firma con el
+        // certificado de LUCI: mejor no mostrar nota que mostrar una falsa.
+        setForma(null)
       })
     return () => { vivo = false }
   }, [expedition._id, expedition.representative?.representationType])
+
+  const notaDeclaranteKey = NOTA_DECLARANTE_POR_FORMA[forma] || null
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -113,7 +131,7 @@ export default function RepresentationCard({ expedition, onSaved }) {
             {representante.eori && <p className="text-xs text-gray-500">{representante.eori}</p>}
           </>
         )}
-        <p className="mt-1 text-xs text-gray-500">{t('representation.declarantNote')}</p>
+        {notaDeclaranteKey && <p className="mt-1 text-xs text-gray-500">{t(notaDeclaranteKey)}</p>}
       </div>
 
       <p className="mt-3 text-xs text-gray-500">{t('representation.selfNote')}</p>

@@ -79,7 +79,9 @@ describe('RepresentationCard', () => {
     expect(declarationsAPI.getDeclarante).toHaveBeenCalledWith('exp1')
     expect(await screen.findByText('Agencia SL')).toBeInTheDocument()
     expect(screen.getByText('ESB22477020')).toBeInTheDocument()
-    expect(screen.getByText('representation.declarantNote')).toBeInTheDocument()
+    // Forma '3' (indirecta): quien firma con el certificado de LUCI es la
+    // agencia, que aqui es el propio declarante.
+    expect(screen.getByText('representation.declarantNoteIndirect')).toBeInTheDocument()
     expect(screen.queryByText('representation.representative')).not.toBeInTheDocument()
   })
 
@@ -94,6 +96,9 @@ describe('RepresentationCard', () => {
     expect(await screen.findByText('Importador SA')).toBeInTheDocument()
     expect(screen.getByText('representation.representative')).toBeInTheDocument()
     expect(screen.getByText('Agencia SL')).toBeInTheDocument()
+    // Forma '2' (directa): el declarante es el importador, pero quien firma
+    // con el certificado de LUCI es la agencia representante, no el importador.
+    expect(screen.getByText('representation.declarantNoteDirect')).toBeInTheDocument()
   })
 
   test('en autodespacho el declarante es el importador y no hay representante', async () => {
@@ -104,6 +109,21 @@ describe('RepresentationCard', () => {
 
     expect(await screen.findByText('Importador SA')).toBeInTheDocument()
     expect(screen.queryByText('representation.representative')).not.toBeInTheDocument()
+    // Forma '1' (autodespacho): el importador firma con su propio certificado
+    // de LUCI, no hay representante que lo haga por el.
+    expect(screen.getByText('representation.declarantNoteSelf')).toBeInTheDocument()
+  })
+
+  test('si no se conoce la forma todavia, no muestra ninguna nota del declarante', async () => {
+    declarationsAPI.getDeclarante.mockRejectedValue({
+      response: { data: { error: 'Falta el EORI del representante: configúralo en Ajustes > Aduanas' } }
+    })
+    render(<RepresentationCard expedition={expediente(undefined)} onSaved={vi.fn()} />)
+
+    expect(await screen.findByText('Falta el EORI del representante: configúralo en Ajustes > Aduanas')).toBeInTheDocument()
+    expect(screen.queryByText('representation.declarantNoteIndirect')).not.toBeInTheDocument()
+    expect(screen.queryByText('representation.declarantNoteDirect')).not.toBeInTheDocument()
+    expect(screen.queryByText('representation.declarantNoteSelf')).not.toBeInTheDocument()
   })
 
   test('si falta el EORI (422), muestra el motivo que da el backend en vez de dejar la casilla en blanco', async () => {
