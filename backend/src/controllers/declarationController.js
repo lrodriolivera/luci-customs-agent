@@ -12,6 +12,7 @@ const { cambioDelExpediente, divisaDelExpediente } = require('../services/divisa
 const { tipoOficial } = require('../services/divisas/tiposCambioOficiales');
 const { aplicarCauAVistaPrevia } = require('../services/aeat/h1CauVistaPrevia');
 const { anulablePorServicio } = require('../services/aeat/h1CauAnulacion');
+const { avisoAduanaDistinta } = require('../services/aeat/h1CauData');
 const { liquidacionDeclarada, compararLiquidacion } = require('../services/aeat/h1CauLiquidacion');
 const { MODOS_ACTIVACION } = require('../services/aeat/h1CauActivacion');
 const { gastosQueSeSuman, gastoDe, cambiosDeLosGastos } = require('../services/forms/gastosHastaLaFrontera');
@@ -243,11 +244,12 @@ const getH1Requirements = async (req, res) => {
       faltan = error.faltan || [error.message];
     }
     const datos = datosH1De(expedition, await divisaDeLaFactura(expedition));
+    const avisos = [avisoAduanaDistinta(expedition)].filter(Boolean);
     res.json({
       success: true,
       data: {
         servicio, listo: faltan.length === 0, faltan, datos, anulacion: anulacionDe(expedition), liquidacionAeat: liquidacionAeatDe(expedition),
-        predeclaracion: predeclaracionDe(expedition)
+        predeclaracion: predeclaracionDe(expedition), avisos
       }
     });
   } catch (error) {

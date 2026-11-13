@@ -252,6 +252,13 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
         </div>
       )}
 
+      {/* Avisos que no impiden presentar (p. ej. aduana distinta de la del recinto) */}
+      {estado?.avisos?.length > 0 && !soloEstado && (
+        <div role="status" className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          {estado.avisos.map((a) => <p key={a.codigo}>{a.texto}</p>)}
+        </div>
+      )}
+
       {presentadoPorCau && (
         <div className="mt-4 border-t pt-4">
           <div className="flex flex-wrap items-center justify-between gap-2">

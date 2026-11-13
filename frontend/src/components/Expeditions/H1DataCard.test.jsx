@@ -333,4 +333,39 @@ describe('<H1DataCard />', () => {
     expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument()
     expect(screen.queryByText('Faltan datos para presentar el H1:')).not.toBeInTheDocument()
   })
+  const AVISO = 'La aduana elegida (ES003001) no es la del recinto donde están las mercancías (ES002801): el H1 se presentará en ES002801. Presentarlo en otra aduana es despacho centralizado y exige la autorización C513 de la AEAT, que LUCI no gestiona.'
+  const conAviso = (extra = {}) => respuesta({ avisos: [{ codigo: 'ADUANA_DISTINTA_DEL_RECINTO', elegida: 'ES003001', recinto: 'ES002801', texto: AVISO }], ...extra })
+
+  test('avisa si la aduana elegida no es la del recinto, junto a lo que falta', async () => {
+    getH1Requirements.mockResolvedValue(conAviso())
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+
+    expect(await screen.findByText('Faltan datos para presentar el H1:')).toBeInTheDocument()
+    const aviso = screen.getByText(AVISO)
+    expect(aviso.closest('[role="status"]')).not.toBeNull()
+  })
+
+  test('el aviso también sale con el expediente listo y no impide presentar', async () => {
+    getH1Requirements.mockResolvedValue(conAviso({ listo: true, faltan: [] }))
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+
+    expect(await screen.findByText('El expediente tiene todos los datos que exige el H1.')).toBeInTheDocument()
+    expect(screen.getByText(AVISO)).toBeInTheDocument()
+  })
+
+  test('sin avisos no muestra la caja', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ avisos: [] }))
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+
+    await screen.findByText('Faltan datos para presentar el H1:')
+    expect(screen.queryByText(/no es la del recinto/)).not.toBeInTheDocument()
+  })
+
+  test('con soloEstado no muestra el aviso', async () => {
+    getH1Requirements.mockResolvedValue(conAviso({ listo: true, faltan: [], anulacion: { presentada: true, anulable: false } }))
+    render(<H1DataCard expedition={presentada} soloEstado />)
+
+    expect(await screen.findByRole('button', { name: 'Consultar estado en la AEAT' })).toBeInTheDocument()
+    expect(screen.queryByText(AVISO)).not.toBeInTheDocument()
+  })
 })

@@ -81,8 +81,25 @@ describe('requisitos del H1', () => {
       },
       anulacion: { presentada: false, anulable: false },
       liquidacionAeat: null,
-      predeclaracion: null
+      predeclaracion: null,
+      avisos: []
     });
+  });
+
+  test('avisa si la aduana elegida no es la del recinto aunque falten datos', async () => {
+    const error = new ErrorValidacion('Faltan datos', { code: 'DATOS_H1_FALTANTES' });
+    error.faltan = ['número de la factura comercial'];
+    mockPreparar.mockRejectedValue(error);
+    mockExpedition.findById.mockResolvedValue(expediente({ declaration: { goodsLocation: 'ES00280123AAAA', customsOffice: 'ES003001' } }));
+
+    const res = await request(app()).get('/api/declarations/e1/h1/requisitos');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.listo).toBe(false);
+    expect(res.body.data.avisos).toEqual([expect.objectContaining({
+      codigo: 'ADUANA_DISTINTA_DEL_RECINTO', elegida: 'ES003001', recinto: 'ES002801',
+      texto: expect.stringContaining('el H1 se presentará en ES002801')
+    })]);
   });
 
   test('con todo completo está listo', async () => {

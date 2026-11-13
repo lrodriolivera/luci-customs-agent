@@ -53,6 +53,27 @@ function ubicacionDe(expedition) {
   return deSumaria && /^[A-Z0-9]{10}$/i.test(deSumaria) ? `ES00${deSumaria.toUpperCase()}` : null;
 }
 
+/**
+ * Aviso (no bloquea) cuando la aduana del expediente no es la del recinto de la
+ * ubicacion: el H1 se presenta en la del recinto (ESR0001). Presentarlo en otra
+ * aduana es despacho centralizado (autorizacion C513), que LUCI no soporta.
+ */
+function avisoAduanaDistinta(expedition) {
+  const elegida = aduana(expedition?.declaration?.customsOffice);
+  const ubicacion = expedition ? ubicacionDe(expedition) : null;
+  if (!elegida || !ubicacion) return null;
+  const recinto = `ES${ubicacion.slice(2, 8)}`;
+  if (elegida === recinto) return null;
+  return {
+    codigo: 'ADUANA_DISTINTA_DEL_RECINTO',
+    elegida,
+    recinto,
+    texto: `La aduana elegida (${elegida}) no es la del recinto donde están las mercancías (${recinto}): `
+      + `el H1 se presentará en ${recinto}. Presentarlo en otra aduana es despacho centralizado y exige `
+      + 'la autorización C513 de la AEAT, que LUCI no gestiona.'
+  };
+}
+
 /** Codigo de provincia (dos cifras) a partir del codigo postal español. */
 function provinciaDe(direccion) {
   const cp = String(direccion?.postalCode || '').trim();
@@ -334,4 +355,4 @@ function expeditionToH1CauData(expedition, { declarante, cambio, cambiosGastos =
   return datos;
 }
 
-module.exports = { expeditionToH1CauData, partes, conPais, aduana, ubicacionDe, provinciaDe, PAGOS_CON_GARANTIA };
+module.exports = { expeditionToH1CauData, partes, conPais, aduana, ubicacionDe, provinciaDe, avisoAduanaDistinta, PAGOS_CON_GARANTIA };
