@@ -58,7 +58,11 @@ export default function PortalDocuments() {
         const formData = new FormData()
         formData.append('documentType', selectedDocType)
         if (needsDate) formData.append('documentDate', documentDate)
-        formData.append('document', file)
+        // El backend monta upload.single('file') en POST /api/portal/:token/documents
+        // (src/routes/portal.js): el campo debe llamarse 'file', igual que el
+        // resto de subidas de LUCI (documentsAPI.upload/readDraft en api.js).
+        // Con 'document', multer rechazaba el campo y la subida fallaba siempre.
+        formData.append('file', file)
 
         await portalAPI.uploadDocument(token, formData)
 
