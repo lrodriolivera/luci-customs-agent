@@ -206,8 +206,9 @@ describe('calculo con el derecho oficial', () => {
     const aviso = r.warnings.join(' ');
     expect(aviso).toContain('«1.750 EUR ASV X»');
     expect(aviso).toMatch(/hace falta el grado alcoholico/);
-    expect(aviso).toMatch(/orientativo/);
-    expect(r.dutyNotCalculable).toMatchObject({ text: '1.750 EUR ASV X', form: 'grado_alcoholico', missing: [expect.stringContaining('grado alcoholico')] });
+    expect(aviso).toMatch(/Arancel no calculado/);
+    expect(r.dutyNotCalculable).toMatchObject({ text: '1.750 EUR ASV X', form: 'grado_alcoholico', missing: [expect.stringContaining('grado alcoholico')], calculated: 'none' });
+    expect(r.duties.totalDuty).toBe(0);
   });
 
   test('cereales: el derecho punitivo en EUR/t de Rusia o Bielorrusia no se liquida, pero se avisa', async () => {
@@ -221,5 +222,97 @@ describe('calculo con el derecho oficial', () => {
     expect(ucrania.duties.totalDuty).toBe(0);
     expect(ucrania.warnings.join(' ')).not.toMatch(/punitivo/);
     expect(rusia.warnings.join(' ')).toMatch(/Origen RU: el derecho oficial lleva un derecho punitivo/);
+  });
+
+});
+
+// Decision de Luis (13/Nov/2026): con un derecho no calculable no se usa el
+// dato antiguo sin contrastar. Se liquida solo la parte exacta del texto
+// oficial (sus porcentajes) como minimo, o nada si no la tiene.
+describe('no calculables: solo la parte exacta del derecho oficial', () => {
+  const OFICIALES = {
+    '0402109100': '1.190 EUR KGM P + 27.500 EUR DTN',        // leche en polvo
+    '0403204900': '7.600 % + EA',                             // yogur con elemento agricola
+    '1702201000': '0.400 EUR DTN Z',                          // azucar de arce
+    '0710400000': '5.100 % + 9.400 EUR DTN E',                // maiz dulce congelado
+    '1704905100': '9.000 % + EA MAX 18.700 % +ADSZ',          // confiteria
+    '3706109900': '6.500 % MAX 5.000 EUR HMT',                // pelicula: el tope no se puede calcular
+    '0702000000': 'Cond: V 62.600 EUR/DTN(01):8.800 % ; V 61.300 EUR/DTN(01):8.800 % + 1.300 EUR DTN'  // tomates
+  };
+  // Datos antiguos del volcado de produccion: no deben usarse.
+  const ANTIGUOS = {
+    '0402109100': { thirdCountry: 0, specific: { amount: 1.19, unit: 'kg/lactic' } },
+    '0403204900': { thirdCountry: 8.3, specific: { amount: 95, unit: 'EUR/100 kg' } },
+    '1702201000': { thirdCountry: 0, specific: { amount: 0.4, unit: 'EUR/100 kg' } },
+    '0710400000': { thirdCountry: 5.1, specific: { amount: 9.4, unit: 'EUR/100 kg' } },
+    '1704905100': { thirdCountry: 9, specific: { amount: 35.15, unit: '100' } },
+    '3706109900': { thirdCountry: 6.5 },
+    '0702000000': { thirdCountry: 8.8 }
+  };
+  beforeEach(async () => {
+    const { leerDerechosTercerosPaises: leer } = require('../../../src/services/taric/arancelesOficiales');
+    const derechos = leer([CAB, ...Object.entries(OFICIALES).map(([c, t]) => fila(c, `${t} `))], { fecha: AHORA });
+    await TaricCode.collection.insertMany(Object.entries(ANTIGUOS).map(([code, duties]) => noCalculable(code, duties)));
+    const catalogo = await TaricCode.find({ 'duties.origen.fuente': 'no_calculable' }, PROYECCION).lean();
+    await aplicarResolucion(planResolucion(catalogo, derechos), { TaricCode, ahora: AHORA, fuente: FUENTE, limite: 100 });
+  });
+  const calcular = (taricCode) => servicio.calculateDutiesWithAI({ taricCode, customsValue: 1000, origin: 'CN', netWeight: 1000, quantity: 1000 });
+
+  test('leche en polvo («EUR KGM P + EUR DTN»): sin importe de arancel y con el dato que falta', async () => {
+    const r = await calcular('0402109100');
+    expect(r.duties.totalDuty).toBe(0);
+    expect(r.duties.specificDuty).toBe(0);
+    expect(r.dutyNotCalculable).toMatchObject({ calculated: 'none', exactPart: null, missing: [expect.stringContaining('materia lactea')] });
+    expect(r.warnings.join(' ')).toMatch(/Arancel no calculado: 0 € no es el derecho real/);
+    // El IVA, sobre el valor sin derechos.
+    expect(r.vat.base).toBe(1000);
+  });
+
+  test('«N % + EA»: solo el porcentaje, como minimo', async () => {
+    const r = await calcular('0403204900');
+    expect(r.duties.totalDuty).toBe(76);
+    expect(r.duties.effectiveDutyRate).toBe(7.6);
+    expect(r.dutyNotCalculable).toMatchObject({ calculated: 'partial', exactPart: '7,6 %' });
+    expect(r.warnings.join(' ')).toMatch(/solo la parte exacta del derecho oficial \(7,6 %\): el importe es un minimo/);
+    expect(r.vat.base).toBe(1076);
+  });
+
+  test('«0.400 EUR DTN Z»: sin importe', async () => {
+    const r = await calcular('1702201000');
+    expect(r.duties.totalDuty).toBe(0);
+    expect(r.dutyNotCalculable.calculated).toBe('none');
+  });
+
+  test('«N % + N EUR DTN E»: solo el porcentaje', async () => {
+    expect((await calcular('0710400000')).duties.totalDuty).toBe(51);
+  });
+
+  test('con maximo: la parte exacta del maximo limita el minimo; si el maximo no se puede calcular, sin importe', async () => {
+    expect((await calcular('1704905100')).duties.totalDuty).toBe(90);
+    const pelicula = await calcular('3706109900');
+    expect(pelicula.duties.totalDuty).toBe(0);
+    expect(pelicula.dutyNotCalculable.calculated).toBe('none');
+  });
+
+  test('precio de entrada: sin importe', async () => {
+    const r = await calcular('0702000000');
+    expect(r.duties.totalDuty).toBe(0);
+    expect(r.dutyNotCalculable).toMatchObject({ calculated: 'none', form: 'precio_entrada' });
+  });
+
+  test('getDutyInfo tampoco enseña el dato antiguo', async () => {
+    const info = await servicio.getDutyInfo('0402109100', 'CN');
+    expect(info).toMatchObject({ dutyRate: 0, specificDuty: null, dutyType: 'ad_valorem' });
+    const yogur = await servicio.getDutyInfo('0403204900', 'CN');
+    expect(yogur).toMatchObject({ dutyRate: 7.6, specificDuty: null });
+  });
+
+  test('un codigo aun sin el texto oficial aparte lo toma de la evidencia', async () => {
+    await TaricCode.collection.insertOne({
+      code: '0403204933', breakdown: { chapter: '04' }, description: { es: 'x' }, level: 10, isLeaf: true, isActive: true,
+      duties: { thirdCountry: 8.3, origen: { fuente: 'no_calculable', evidencia: 'Derecho oficial «7.600 % + EA»: derecho con elemento agricola, grado alcoholico, precio de entrada o varios sumandos. LUCI no lo liquida automaticamente.' } }
+    });
+    const r = await calcular('0403204933');
+    expect(r.duties.totalDuty).toBe(76);
   });
 });

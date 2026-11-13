@@ -5,6 +5,7 @@
 
 const logger = require('../config/logger');
 const { importeDeDerecho, liquidarFormula, elegirVariante, codigoAdicionalDe } = require('./taric/liquidacionDerecho');
+const { parteExacta } = require('./taric/formasDerecho');
 const { SONNET, labelFor } = require('../config/bedrockModels');
 const TaricCode = require('../models/TaricCode');
 const TaricAICache = require('../models/TaricAICache');
@@ -73,9 +74,13 @@ function tipoDeDerecho(duties) {
 }
 
 /** Avisos segun la procedencia del arancel del catalogo. */
-function avisosDeProcedencia(origen) {
+function avisosDeProcedencia(origen, noCalculable) {
   if (origen?.fuente === 'no_calculable') {
-    return [`${origen.evidencia || 'El derecho oficial de este codigo no es un tipo simple.'} El importe de derechos calculado es orientativo (dato anterior sin contrastar): verificalo en el TARIC antes de declarar.`];
+    const base = origen.evidencia || 'El derecho oficial de este codigo no es un tipo simple.';
+    const detalle = noCalculable?.calculated === 'partial'
+      ? `Se ha liquidado solo la parte exacta del derecho oficial (${noCalculable.exactPart}): el importe es un minimo; falta el resto del derecho.`
+      : 'Arancel no calculado: 0 € no es el derecho real.';
+    return [`${base} ${detalle} Verificalo en el TARIC antes de declarar.`];
   }
   if (origen?.soloDestinoFinal) {
     return ['Este tipo solo se aplica con autorizacion de destino final (EUS, certificado N990). Sin ella, la mercancia se declara por otro codigo.'];
@@ -84,6 +89,47 @@ function avisosDeProcedencia(origen) {
     return ['El TARIC no asigna derecho de terceros paises a este codigo (codigo especial de los capitulos 98 o 99).'];
   }
   return [];
+}
+
+/** Texto oficial de un derecho no calculable: el guardado aparte o el de la evidencia («…»). */
+function textoOficialDe(origen) {
+  if (origen?.textoOficial) return origen.textoOficial;
+  const m = /«([^»]*)»/.exec(String(origen?.evidencia || ''));
+  return m && !m[1].endsWith('…') ? m[1] : null;
+}
+
+const porcentajeLegible = (n) => `${String(n).replace('.', ',')} %`;
+
+/**
+ * Derecho que se liquida para un codigo «no calculable» (decision de Luis del
+ * 13/Nov/2026): nunca el dato antiguo sin contrastar del catalogo; solo la
+ * parte exacta del texto oficial (sus porcentajes), como minimo, o nada.
+ */
+function derechoNoCalculable(origen) {
+  const texto = textoOficialDe(origen);
+  const parte = texto ? parteExacta(texto) : null;
+  // Con un maximo que no se puede calcular («MAX 5.000 EUR HMT») el minimo seguro es 0.
+  const conImporte = Boolean(parte) && parte.maximo !== 0;
+  const notCalculable = {
+    text: texto,
+    form: origen.forma || null,
+    missing: origen.faltan || [],
+    evidence: origen.evidencia || null,
+    calculated: conImporte ? 'partial' : 'none',
+    exactPart: conImporte ? porcentajeLegible(parte.adValorem) : null
+  };
+  return {
+    dutyRate: conImporte ? parte.adValorem : 0,
+    dutyType: 'ad_valorem',
+    specificDuty: null,
+    minimumDuty: null,
+    maximumDuty: null,
+    variants: null,
+    formula: conImporte && parte.maximo !== null
+      ? { texto: null, sumandos: [{ adValorem: parte.adValorem }], minimo: [], maximo: [{ adValorem: parte.maximo }] }
+      : null,
+    notCalculable
+  };
 }
 
 /** Objeto plano (sin metodos de Mongoose), para la cache y el calculo. */
@@ -131,7 +177,9 @@ async function getDutyInfo(taricCode, origin = null) {
   const variantes = planas(localData?.duties?.variantes);
   const formula = localData?.duties?.formula?.texto ? plana(localData.duties.formula) : null;
   const tieneArancel = localData?.duties?.thirdCountry !== undefined && localData?.duties?.thirdCountry !== null;
-  if (localData && localData.duties && (tieneArancel || sinDerechoOficial || variantes.length > 0)) {
+  // Un derecho oficial no calculable tampoco se va a buscar a otra fuente.
+  const esNoCalculable = localData?.duties?.origen?.fuente === 'no_calculable';
+  if (localData && localData.duties && (tieneArancel || sinDerechoOficial || esNoCalculable || variantes.length > 0)) {
     const localVatInfo = getVATRateByChapter(normalizedCode);
     const sancion = resolverSancion(localData.duties.sancionRusiaBielorrusia, origin);
     const result = {
@@ -170,9 +218,14 @@ async function getDutyInfo(taricCode, origin = null) {
       // oficial de uno heredado de una carga sin verificar.
       dutyOrigin: localData.duties.origen || null,
       sanction: sancion.info,
-      warnings: [...sancion.avisos, ...avisosDeSancionNoPorcentual(localData.duties, origin), ...avisosDeProcedencia(localData.duties.origen)],
+      warnings: [...sancion.avisos, ...avisosDeSancionNoPorcentual(localData.duties, origin)],
       lastVerified: localData.lastUpdated
     };
+    // No calculable: fuera el dato antiguo; solo la parte exacta del texto
+    // oficial. Si aplica el derecho punitivo (contrastado) manda el.
+    const noCalculable = esNoCalculable && !sancion.aplica ? derechoNoCalculable(plana(localData.duties.origen)) : null;
+    if (noCalculable) Object.assign(result, noCalculable);
+    result.warnings.push(...avisosDeProcedencia(localData.duties.origen, noCalculable?.notCalculable));
 
     // Guardar en cache compartido
     await dutyCache.set(cacheKey, result, CACHE_TTL_SECONDS);
@@ -383,7 +436,9 @@ async function calculateDutiesWithAI(params) {
 
   // Verificar aranceles estacionales
   const normalizedCode = normalizeCode(taricCode);
-  const seasonalInfo = getSeasonalTariff(normalizedCode, calcDate);
+  // La tabla local de temporadas no es fuente oficial: no se aplica a un derecho
+  // oficial no calculable (decision de Luis: solo su parte exacta).
+  const seasonalInfo = dutyInfo.notCalculable ? null : getSeasonalTariff(normalizedCode, calcDate);
 
   // Determinar tasa base (estacional si aplica, sino la normal)
   let effectiveDutyRate = dutyInfo.dutyRate || 0;
@@ -548,7 +603,7 @@ async function calculateDutiesWithAI(params) {
     // Codigo adicional con el que se ha liquidado, si el derecho depende de el.
     additionalCode: codigoAdicionalInfo,
     // Derecho oficial que LUCI no liquida: texto y dato que falta.
-    dutyNotCalculable: noCalculable(dutyInfo.dutyOrigin),
+    dutyNotCalculable: dutyInfo.notCalculable || noCalculable(dutyInfo.dutyOrigin),
 
     // Totales
     totalTaxes: Math.round((totalDuty + vatAmount) * 100) / 100,

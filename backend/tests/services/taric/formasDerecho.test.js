@@ -4,7 +4,7 @@
  * son literales de la celda «Duty» de «Duties Import 01-99.xlsx» de noviembre
  * de 2026 (CIRCABC).
  */
-const { interpretarFormula, clasificarDerecho } = require('../../../src/services/taric/formasDerecho');
+const { interpretarFormula, clasificarDerecho, parteExacta } = require('../../../src/services/taric/formasDerecho');
 const { liquidarFormula, importeDeDerecho, elegirVariante, codigoAdicionalDe } = require('../../../src/services/taric/liquidacionDerecho');
 
 describe('interpretarFormula: sumandos con minimo y maximo', () => {
@@ -180,5 +180,22 @@ describe('codigo adicional', () => {
     expect(r.variante.codigoAdicional).toBe('2501');
     expect(r.faltaCodigoAdicional).toBe(true);
     expect(r.avisos.join(' ')).toMatch(/2550 no es uno de los codigos adicionales/);
+  });
+});
+
+describe('parteExacta: lo que si se sabe liquidar de un derecho no calculable (sus porcentajes)', () => {
+  test.each([
+    ['7.600 % + EA', { adValorem: 7.6, maximo: null }],
+    ['5.100 % + 9.400 EUR DTN E', { adValorem: 5.1, maximo: null }],
+    ['9.000 % + EA MAX 18.700 % +ADSZ', { adValorem: 9, maximo: 18.7 }],
+    ['17.300 % MIN 1.000 EUR ASV X', { adValorem: 17.3, maximo: null }],
+    ['6.500 % MAX 5.000 EUR HMT', { adValorem: 6.5, maximo: 0 }],
+    ['1.190 EUR KGM P + 27.500 EUR DTN', null],
+    ['0.400 EUR DTN Z', null],
+    ['1.750 EUR ASV X', null],
+    ['Cond: V 62.600 EUR/DTN(01):8.800 % ; V 0.000 EUR/DTN(01):8.800 % + 29.800 EUR DTN', null],
+    ['', null]
+  ])('«%s»', (texto, esperado) => {
+    expect(parteExacta(texto)).toEqual(esperado);
   });
 });

@@ -103,7 +103,9 @@ describe('liquidacion con el arancel del catalogo', () => {
 
     const r = await calcular('1704905500', { netWeight: 1000 });
 
-    expect(r.warnings.some((w) => w.includes('«9.000 % + EA MAX 18.700 % +ADSZ»') && w.includes('orientativo'))).toBe(true);
+    // Decision de Luis (13/Nov/2026): solo la parte exacta (el 9 %), como minimo.
+    expect(r.warnings.some((w) => w.includes('«9.000 % + EA MAX 18.700 % +ADSZ»') && w.includes('solo la parte exacta'))).toBe(true);
+    expect(r.dutyNotCalculable).toMatchObject({ calculated: 'partial', exactPart: '9 %' });
     expect(r.warnings.some((w) => /sin contrastar contra el TARIC/.test(w))).toBe(false);
   });
 

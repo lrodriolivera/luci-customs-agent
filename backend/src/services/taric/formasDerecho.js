@@ -95,4 +95,34 @@ function clasificarDerecho(texto) {
   return { forma: 'otro', calculable: false, faltan: ['interpretar el texto oficial, que LUCI no reconoce'] };
 }
 
-module.exports = { interpretarFormula, clasificarDerecho, FORMAS_NO_CALCULABLES };
+const sumaDePorcentajes = (texto) => texto.split(/\s*\+\s*/).map((p) => RE_PORCENTAJE.exec(p.trim()))
+  .filter(Boolean).reduce((total, m) => total + numero(m[1]), 0);
+
+/**
+ * Parte exacta de un derecho que LUCI no sabe liquidar entero: la suma de sus
+ * porcentajes, que se liquidan con el valor en aduana sin ningun otro dato
+ * («7,6 %» de «7.600 % + EA»). El derecho real es mayor o igual (los demas
+ * sumandos solo suman), asi que es un minimo. Decision de Luis del 13/Nov/2026:
+ * solo cuentan los porcentajes.
+ *
+ * Si hay maximo, cuenta solo su parte en porcentaje: con un maximo del que no
+ * se sabe nada («MAX 5.000 EUR HMT») el minimo seguro es 0 (`maximo: 0`). El
+ * minimo («MIN …») se ignora: quitarlo solo puede bajar el importe.
+ *
+ * Los derechos condicionados («Cond: …», precio de entrada o certificado) no
+ * tienen parte exacta: el porcentaje depende de la condicion.
+ *
+ * @param {string} texto celda «Duty» oficial
+ * @returns {{ adValorem: number, maximo: number|null } | null} null si no hay ningun porcentaje
+ */
+function parteExacta(texto) {
+  const limpio = limpiar(texto);
+  if (!limpio || limpio.startsWith('Cond:')) return null;
+  const m = /^(.+?)(?: MIN (.+?))?(?: MAX (.+))?$/.exec(limpio);
+  const adValorem = Math.round(sumaDePorcentajes(m[1]) * 1000) / 1000;
+  if (!(adValorem > 0)) return null;
+  const maximo = m[3] ? Math.round(sumaDePorcentajes(m[3]) * 1000) / 1000 : null;
+  return { adValorem, maximo };
+}
+
+module.exports = { interpretarFormula, clasificarDerecho, parteExacta, FORMAS_NO_CALCULABLES };
