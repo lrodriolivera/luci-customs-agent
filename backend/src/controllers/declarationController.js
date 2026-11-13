@@ -7,7 +7,7 @@ const h1Generator = require('../services/forms/h1Generator');
 const aesGenerator = require('../services/forms/aesGenerator');
 const h7Generator = require('../services/forms/h7Generator');
 const Tenant = require('../models/Tenant');
-const { ErrorValidacion, exigirIdentificacion } = require('../services/forms/identificadorAduanero');
+const { ErrorValidacion, exigirIdentificacion, declarantePara, formaRepresentacionDe, eoriDe } = require('../services/forms/identificadorAduanero');
 const { cambioDelExpediente, divisaDelExpediente } = require('../services/divisas/cambioDelExpediente');
 const { tipoOficial } = require('../services/divisas/tiposCambioOficiales');
 const { aplicarCauAVistaPrevia } = require('../services/aeat/h1CauVistaPrevia');
@@ -255,6 +255,51 @@ const getH1Requirements = async (req, res) => {
   } catch (error) {
     logger.error('Error comprobando los datos del H1:', error);
     res.status(500).json({ success: false, error: 'Error al comprobar los datos del H1' });
+  }
+};
+
+/** Nunca se devuelve un EORI que siga cifrado (prefijo del formato de piiCrypto). */
+const sinCifrar = (valor) => (typeof valor === 'string' && valor.startsWith('v1:') ? null : (valor || null));
+
+/**
+ * Declarante y representante de la declaracion (casilla 14 del DUA), antes de
+ * generar el H1: calculado con las mismas funciones puras que usa el
+ * generador (declarantePara, formaRepresentacionDe -> services/aeat/h1CauData.js
+ * `partes`), para que la pantalla de representacion nunca diverja de lo que de
+ * verdad se presenta a la AEAT.
+ *
+ *   forma '1' (autodespacho): declarante = importador, sin representante.
+ *   forma '2' (directa): declarante = importador; representante = agencia.
+ *   forma '3' (indirecta): declarante = agencia, sin representante.
+ *
+ * GET /api/declarations/:expeditionId/declarante
+ */
+const getDeclarante = async (req, res) => {
+  try {
+    const expedition = await Expedition.findById(req.params.expeditionId);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+    const tenant = await tenantDelExpediente(expedition);
+
+    let agente;
+    try {
+      agente = declarantePara(expedition, tenant);
+    } catch (error) {
+      if (responderSiFaltaIdentificacion(res, error)) return;
+      throw error;
+    }
+
+    const importador = { companyName: expedition.client?.companyName || null, eori: sinCifrar(eoriDe(expedition.client)) };
+    const agenteMostrado = { companyName: agente.companyName || null, eori: sinCifrar(agente.eori) };
+    const forma = formaRepresentacionDe(agente, expedition.client);
+
+    const data = forma === '2'
+      ? { declarante: importador, representante: agenteMostrado, forma }
+      : { declarante: forma === '1' ? importador : agenteMostrado, representante: null, forma };
+
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error('Error calculando el declarante:', error);
+    res.status(500).json({ success: false, error: 'Error al calcular el declarante' });
   }
 };
 
@@ -2077,6 +2122,7 @@ module.exports = {
   generateH1,
   generateH1Direct,
   getH1Requirements,
+  getDeclarante,
   updateH1Data,
   getH1Status,
   validateH1DirectBody,

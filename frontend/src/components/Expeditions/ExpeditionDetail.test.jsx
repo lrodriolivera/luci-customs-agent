@@ -31,7 +31,9 @@ vi.mock('../../services/api', () => ({
     submit: vi.fn(),
     downloadPDF: vi.fn(),
     downloadSummaryPDF: vi.fn(),
-    verifySummaryDeclaration: vi.fn()
+    verifySummaryDeclaration: vi.fn(),
+    // RepresentationCard pide el declarante calculado por el backend.
+    getDeclarante: vi.fn().mockRejectedValue({ response: { data: { error: 'Falta el EORI del representante' } } })
   }
 }))
 

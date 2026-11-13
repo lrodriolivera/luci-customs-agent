@@ -248,6 +248,9 @@ export const declarationsAPI = {
   // H1: qué falta para presentarlo y datos que solo se usan en la presentación
   getH1Requirements: (expeditionId) => api.get(`/api/declarations/${seg(expeditionId)}/h1/requisitos`),
   updateH1Data: (expeditionId, datos) => api.put(`/api/declarations/${seg(expeditionId)}/h1/datos`, datos),
+  // Declarante y representante (casilla 14 del DUA), calculado con la misma
+  // regla que el H1 (RepresentationCard).
+  getDeclarante: (expeditionId) => api.get(`/api/declarations/${seg(expeditionId)}/declarante`),
   // H1 CAU: estado de la declaración en la AEAT (solo lectura)
   getH1Status: (expeditionId) => api.get(`/api/declarations/${seg(expeditionId)}/h1/estado`, { timeout: 60000 }),
   // Anulación ante la AEAT: solo predeclaraciones (lo activado responde 409 ANULACION_POR_LA_ADUANA).
