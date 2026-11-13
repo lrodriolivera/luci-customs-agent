@@ -406,7 +406,9 @@ describe('Paraduanero Service', () => {
 
       expect(controls).toHaveLength(1);
       expect(controls[0]).toMatchObject({ controlType: 'SOIVRE', subType: 'rohs_raee', inspectionRequired: false });
-      expect(controls[0].documents.map(d => d.code)).toEqual(['ROHS', 'RAEE']);
+      // La agente de aduanas (UAT 13/Nov/2026): en SOIVRE siempre se adjunta
+      // factura comercial y documento de transporte, sea cual sea el grupo.
+      expect(controls[0].documents.map(d => d.code)).toEqual(['ROHS', 'RAEE', 'N380', 'N785']);
       expect(controls[0].reason).toContain('RoHS y RAEE');
       expect(controls[0].notes).toContain('2023-02-09');
     });
@@ -444,8 +446,57 @@ describe('Paraduanero Service', () => {
       const juguetes = controls.find(c => c.subType === 'toys');
 
       expect(juguetes).toMatchObject({ controlType: 'SOIVRE', inspectionRequired: true });
-      expect(juguetes.documents.map(d => d.code)).toEqual(['C057', 'Y925']);
+      expect(juguetes.documents.map(d => d.code)).toEqual(['C057', 'Y925', 'N380', 'N785']);
       expect(juguetes.reason).toContain('grupo JUGUETES');
+    });
+
+    test('todo control SOIVRE exige siempre factura comercial y documento de transporte', async () => {
+      // La agente de aduanas en UAT dijo literal: "En SOIVRE siempre se tiene
+      // que adjuntar documentacion de factura y conocimiento de transporte".
+      const textiles = (await analizar('6109100010')).find(c => c.subType === 'textiles');
+      const rohsRaee = (await analizar('8471300000')).find(c => c.subType === 'rohs_raee');
+
+      for (const control of [textiles, rohsRaee]) {
+        const factura = control.documents.find(d => d.code === 'N380');
+        const transporte = control.documents.find(d => d.code === 'N785');
+        expect(factura).toMatchObject({ name: 'Factura Comercial', mandatory: true });
+        expect(transporte).toMatchObject({ mandatory: true });
+        expect(transporte.name).toContain('BL/AWB/CMR');
+      }
+    });
+
+    test('no duplica factura ni transporte si el control ya los traia', () => {
+      const conFacturaYTransporte = paraduaneroService._documentosSoivreConFacturaYTransporte(
+        [
+          { code: 'N380', name: 'Factura Comercial', mandatory: true },
+          { code: 'C057', name: 'Declaracion CE conformidad', mandatory: true }
+        ],
+        undefined
+      );
+
+      expect(conFacturaYTransporte.map(d => d.code)).toEqual(['N380', 'C057', 'N785']);
+    });
+
+    test('el documento de transporte exigido depende del modo de transporte del expediente', async () => {
+      const casos = [
+        ['maritime', 'N705'],
+        ['air', 'N740'],
+        ['road', 'N730'],
+        ['rail', 'N720'],
+        [undefined, 'N785']
+      ];
+
+      for (const [transportMode, codigoEsperado] of casos) {
+        const controls = await paraduaneroService.analyzeExpedition({
+          expeditionId: 'EXP-TRANSPORTE',
+          transportMode,
+          goods: [{ itemNumber: 1, description: 'Juguetes', taricCode: '9503001000', originCountry: 'CN' }]
+        });
+
+        const juguetes = controls.find(c => c.subType === 'toys');
+        const transporte = juguetes.documents.find(d => ['N705', 'N740', 'N730', 'N720', 'N785'].includes(d.code));
+        expect(transporte.code).toBe(codigoEsperado);
+      }
     });
 
     test('una subdivision de 10 digitos se reconoce por el prefijo de 8 de la lista', async () => {
