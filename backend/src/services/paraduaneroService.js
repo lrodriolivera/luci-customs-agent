@@ -179,6 +179,24 @@ const ORIGENES_EXCLUIDOS_ROHS_RAEE = ['TR', 'NO', 'IS', 'LI'];
 const DOCUMENTO_ROHS = { code: 'ROHS', name: 'Declaracion UE de conformidad RoHS (Directiva 2011/65/UE)', mandatory: true };
 const DOCUMENTO_RAEE = { code: 'RAEE', name: 'Numero de inscripcion en el Registro Integrado Industrial de AEE (RD 110/2015)', mandatory: true };
 
+// La agente de aduanas en la UAT (13/Nov/2026) senalo literal: "En SOIVRE
+// siempre se tiene que adjuntar documentacion de factura y conocimiento de
+// transporte". Se añaden a cualquier control SOIVRE (seguridad o RoHS/RAEE)
+// que no los traiga ya, sin duplicar ni afectar a otros controles.
+const DOCUMENTO_FACTURA_COMERCIAL_SOIVRE = { code: 'N380', name: 'Factura Comercial', mandatory: true };
+
+// Documento de transporte segun el modo de la expedicion. Mismos codigos
+// oficiales que usan h1Generator/aesGenerator (N705 BL, N740 AWB, N730 CMR,
+// N720 CIM). Si no se conoce el modo se exige el generico N785.
+const DOCUMENTO_TRANSPORTE_SOIVRE_POR_MODO = {
+  maritime: { code: 'N705', name: 'Conocimiento de embarque (Bill of Lading)' },
+  sea: { code: 'N705', name: 'Conocimiento de embarque (Bill of Lading)' },
+  air: { code: 'N740', name: 'Carta de porte aéreo (Air Waybill)' },
+  road: { code: 'N730', name: 'Carta de porte por carretera (CMR)' },
+  rail: { code: 'N720', name: 'Carta de porte ferroviario (CIM)' }
+};
+const DOCUMENTO_TRANSPORTE_SOIVRE_GENERICO = { code: 'N785', name: 'Documento de transporte (BL/AWB/CMR)' };
+
 // Paises con restricciones especiales
 const HIGH_RISK_COUNTRIES = {
   veterinary: ['CN', 'BR', 'AR', 'IN', 'TH', 'VN'],
@@ -253,7 +271,7 @@ class ParaduaneroService {
       }
 
       // Controles del SOIVRE segun las listas oficiales por codigo TARIC
-      for (const control of this._controlesSoivre(good)) {
+      for (const control of this._controlesSoivre(good, expedition.transportMode)) {
         const key = `${control.controlType}-${control.subType}`;
         if (!analyzedTypes.has(key)) {
           analyzedTypes.add(key);
@@ -584,7 +602,7 @@ class ParaduaneroService {
    * oficiales: seguridad de productos (RD 330/2008) y RoHS/RAEE. Devuelve []
    * si el TARIC no figura en ninguna: en ese caso no se afirma ningun control.
    */
-  _controlesSoivre(good) {
+  _controlesSoivre(good, transportMode) {
     const afectada = {
       itemNumber: good.itemNumber,
       description: good.description,
@@ -603,7 +621,7 @@ class ParaduaneroService {
         controlType: 'SOIVRE',
         subType: perfil.subType,
         reason: `El TARIC ${seguridad.taric} figura en la lista de productos SOIVRE de seguridad (RD 330/2008), grupo ${seguridad.grupo}`,
-        documents: perfil.documents,
+        documents: this._documentosSoivreConFacturaYTransporte(perfil.documents, transportMode),
         inspectionRequired: perfil.inspection || false,
         priority: this._calculatePriority('SOIVRE', good.originCountry),
         affectedGoods: [afectada],
@@ -619,7 +637,10 @@ class ParaduaneroService {
         controlType: 'SOIVRE',
         subType: 'rohs_raee',
         reason: `El TARIC ${good.taricCode} figura en la lista TARIC RoHS/RAEE (prefijo ${rohsRaee.prefijo}): procede control ${siglas}`,
-        documents: [rohsRaee.rohs && DOCUMENTO_ROHS, rohsRaee.raee && DOCUMENTO_RAEE].filter(Boolean),
+        documents: this._documentosSoivreConFacturaYTransporte(
+          [rohsRaee.rohs && DOCUMENTO_ROHS, rohsRaee.raee && DOCUMENTO_RAEE].filter(Boolean),
+          transportMode
+        ),
         inspectionRequired: false,
         priority: this._calculatePriority('SOIVRE', good.originCountry),
         affectedGoods: [afectada],
@@ -628,6 +649,29 @@ class ParaduaneroService {
     }
 
     return controles;
+  }
+
+  /**
+   * Añade factura comercial y documento de transporte a los documentos de un
+   * control SOIVRE si no estan ya incluidos (sin duplicar, sin tocar el resto
+   * de documentos del control). El documento de transporte depende del modo
+   * de la expedicion; si no se conoce se exige el generico BL/AWB/CMR.
+   */
+  _documentosSoivreConFacturaYTransporte(documents, transportMode) {
+    const documentos = [...documents];
+    const transporte = {
+      mandatory: true,
+      ...(DOCUMENTO_TRANSPORTE_SOIVRE_POR_MODO[transportMode] || DOCUMENTO_TRANSPORTE_SOIVRE_GENERICO)
+    };
+
+    if (!documentos.some(d => d.code === DOCUMENTO_FACTURA_COMERCIAL_SOIVRE.code)) {
+      documentos.push(DOCUMENTO_FACTURA_COMERCIAL_SOIVRE);
+    }
+    if (!documentos.some(d => d.code === transporte.code)) {
+      documentos.push(transporte);
+    }
+
+    return documentos;
   }
 
   _requiresCites(taricCode) {
