@@ -4,11 +4,11 @@
  *
  * Leer y registrar no modifica el catalogo. Aplicar (automatico tras la
  * sincronizacion diaria, salvo TARIC_DIARIO_APLICAR=false) esta limitado al
- * unico caso bien definido: el derecho de terceros paises (o de
- * destino final) que cambia en un codigo declarable ya existente y que ya esta
- * en vigor. Las altas y bajas de codigos y los derechos fijados en un nivel
- * superior quedan anotados; los incorpora la sincronizacion con la extraccion
- * mensual, que es la que conoce el arbol completo.
+ * caso bien definido del derecho de terceros paises (o de destino final) que
+ * cambia en un codigo declarable ya existente y que ya esta en vigor. Las altas
+ * de codigos en vigor las da `altasDiarias.js`. Las bajas, los cambios de
+ * descripcion y los derechos fijados en un nivel superior quedan anotados; los
+ * incorpora la sincronizacion con la extraccion mensual.
  */
 const logger = require('../../../config/logger');
 const { leerPrimeraHoja } = require('../xlsxSimple');
@@ -41,7 +41,7 @@ function clasificar(cambio, doc) {
     return { estado: 'informativo', motivo: 'Las medidas de control se cargan enteras con la extracción mensual' };
   }
   if (cambio.clase === 'codigo') {
-    if (cambio.accion === 'alta') return doc?.isActive ? { estado: 'en_catalogo' } : { estado: 'pendiente', motivo: 'Código nuevo: lo da de alta la sincronización mensual' };
+    if (cambio.accion === 'alta') return doc?.isActive ? { estado: 'en_catalogo' } : { estado: 'pendiente', motivo: 'Código nuevo: se da de alta cuando entra en vigor' };
     if (cambio.accion === 'baja') return doc?.isActive ? { estado: 'pendiente', motivo: 'Código que deja de estar vigente: lo da de baja la sincronización mensual' } : { estado: 'en_catalogo' };
     if (!doc) return { estado: 'informativo', motivo: 'El código no está en el catálogo' };
     return normalizar(doc.description?.es) === normalizar(cambio.detalle)
@@ -104,11 +104,14 @@ async function registrarPublicacionesNuevas({
 /**
  * Cambios de derecho pendientes que ya estan en vigor y se pueden aplicar.
  * Vuelve a compararlos con el catalogo: puede haberlos recogido ya la carga
- * mensual.
+ * mensual. No escribe nada.
  */
-async function prepararAplicacion({ TaricCode, TaricDailyPublication, ahora = new Date() }) {
+async function prepararAplicacion({ TaricCode, TaricDailyPublication, ahora = new Date(), publicaciones: enMemoria = null }) {
   const hoy = hoyOrdenable(ahora);
-  const publicacionesConPendientes = await TaricDailyPublication.find({ 'cambios.estado': 'pendiente' }).sort({ nombre: 1 }).lean();
+  // `publicaciones`: las ya cargadas (simulacion sin escribir); si no, se leen de la base de datos.
+  const publicacionesConPendientes = enMemoria
+    ? enMemoria.filter((p) => p.cambios.some((c) => c.estado === 'pendiente')).sort((a, b) => a.nombre.localeCompare(b.nombre))
+    : await TaricDailyPublication.find({ 'cambios.estado': 'pendiente' }).sort({ nombre: 1 }).lean();
   // Si un codigo cambia en varias publicaciones, manda la mas reciente.
   const ultimo = new Map();
   for (const p of publicacionesConPendientes) {
@@ -180,5 +183,5 @@ async function estadoDiario({ TaricDailyPublication, limite = 50 }) {
 
 module.exports = {
   registrarPublicacionesNuevas, prepararAplicacion, aplicarPendientes, estadoDiario, clasificar, cambiosDe, mismoDerecho,
-  MAXIMO_A_APLICAR, MAXIMO_POR_PASADA, FUENTE
+  hoyOrdenable, MAXIMO_A_APLICAR, MAXIMO_POR_PASADA, FUENTE
 };

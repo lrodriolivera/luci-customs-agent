@@ -21,26 +21,34 @@ const MAXIMO_BAJAS_RELATIVO = 0.05;
 /**
  * @param {Map<string, { nivel: number, validoDesde?: Date|null }>} oficial lineas declarables oficiales
  * @param {Set<string>} declarables codigos oficiales que son hoja
- * @param {Array<{ code: string, level: number, isLeaf: boolean, isActive: boolean }>} catalogo
- * @returns {{ altas: object[], bajas: object[], reactivar: object[], declarable: object[], nivel: object[], sinCambios: number }}
+ * @param {Array<{ code: string, level: number, isLeaf: boolean, isActive: boolean, altaDiaria?: object }>} catalogo
+ * @param {{ fechaFichero?: Date }} [opciones] fecha a la que esta proyectado el fichero oficial (dia 1 del mes).
+ *   Con ella, un codigo dado de alta desde la publicacion diaria que entro en vigor despues no se da de
+ *   baja (el fichero aun no puede traerlo) y el codigo del que cuelga no vuelve a marcarse declarable.
+ * @returns {{ altas: object[], bajas: object[], reactivar: object[], declarable: object[], nivel: object[], sinCambios: number, posterioresAlFichero: number }}
  */
-function planificar(oficial, declarables, catalogo) {
+function planificar(oficial, declarables, catalogo, { fechaFichero = null } = {}) {
   if (!(oficial instanceof Map) || oficial.size < MINIMO_CODIGOS_OFICIALES) {
     throw new Error(`La nomenclatura oficial trae ${oficial?.size ?? 0} codigos: parece incompleta y no se sincroniza`);
   }
 
-  const plan = { altas: [], bajas: [], reactivar: [], declarable: [], nivel: [], sinCambios: 0 };
+  const plan = { altas: [], bajas: [], reactivar: [], declarable: [], nivel: [], sinCambios: 0, posterioresAlFichero: 0 };
   const enCatalogo = new Set();
+  const posterior = (c) => Boolean(fechaFichero && c.isActive !== false && c.altaDiaria?.enVigorDesde && new Date(c.altaDiaria.enVigorDesde) > fechaFichero);
+  const posteriores = catalogo.filter((c) => posterior(c) && !oficial.has(c.code)).map((c) => c.code);
+  const tieneHijoPosterior = (c) => Number(c.level) < 10 && posteriores.some((p) => p !== c.code && p.slice(0, c.level) === c.code.slice(0, c.level));
 
   for (const actual of catalogo) {
     enCatalogo.add(actual.code);
     const linea = oficial.get(actual.code);
     const activo = actual.isActive !== false;
     if (!linea) {
-      if (activo) plan.bajas.push({ code: actual.code, level: actual.level });
+      if (posterior(actual)) plan.posterioresAlFichero += 1;
+      else if (activo) plan.bajas.push({ code: actual.code, level: actual.level });
       continue;
     }
-    const esHoja = declarables.has(actual.code);
+    // Un codigo que el fichero da por declarable pero del que ya cuelga un alta diaria posterior, ya no lo es.
+    const esHoja = declarables.has(actual.code) && !tieneHijoPosterior(actual);
     let cambia = false;
     if (!activo) { plan.reactivar.push({ code: actual.code }); cambia = true; }
     if (Boolean(actual.isLeaf) !== esHoja) { plan.declarable.push({ code: actual.code, isLeaf: esHoja }); cambia = true; }

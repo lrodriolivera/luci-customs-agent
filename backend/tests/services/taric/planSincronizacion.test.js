@@ -75,6 +75,26 @@ describe('planificar', () => {
     expect(plan.nivel).toEqual([{ code: catalogo[2].code, level: 10, antes: 8 }]);
   });
 
+  test('un código dado de alta desde la publicación diaria después del fichero no se da de baja, ni su padre vuelve a ser declarable', () => {
+    const { oficial, declarables, catalogo } = escenario();
+    const fechaFichero = new Date('2026-11-01T12:00:00Z');
+    // 3908100000 era declarable en el fichero de noviembre; el 06/11 se dividio.
+    oficial.set('3908100000', { nivel: 6, validoDesde: null });
+    declarables.add('3908100000');
+    catalogo.push({ code: '3908100000', level: 6, isLeaf: false, isActive: true });
+    catalogo.push({ code: '3908100090', level: 10, isLeaf: true, isActive: true, altaDiaria: { enVigorDesde: new Date('2026-11-06T12:00:00Z') } });
+    // Uno de alta diaria anterior al fichero que ya no esta en el si se da de baja.
+    catalogo.push({ code: '3912398570', level: 10, isLeaf: true, isActive: true, altaDiaria: { enVigorDesde: new Date('2026-10-31T12:00:00Z') } });
+
+    const plan = planificar(oficial, declarables, catalogo, { fechaFichero });
+
+    expect(plan.bajas).toEqual([{ code: '3912398570', level: 10 }]);
+    expect(plan.declarable).toEqual([]);
+    expect(plan.posterioresAlFichero).toBe(1);
+    // Sin la fecha del fichero se comporta como siempre.
+    expect(planificar(oficial, declarables, catalogo).bajas.map((b) => b.code)).toEqual(['3908100090', '3912398570']);
+  });
+
   test('una nomenclatura oficial incompleta no se sincroniza', () => {
     const corta = new Map([['0100000000', { nivel: 2 }]]);
     expect(() => planificar(corta, new Set(), [])).toThrow('parece incompleta');

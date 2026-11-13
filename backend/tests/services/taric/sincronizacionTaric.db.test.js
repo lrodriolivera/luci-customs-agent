@@ -80,6 +80,15 @@ describe('sincronizacion del catalogo TARIC', () => {
     expect(await TaricCode.countDocuments()).toBe(MINIMO_CODIGOS_OFICIALES + 2);
   });
 
+  test('no da de baja un código que entró por la publicación diaria después del fichero del mes', async () => {
+    await sembrar([existente('3908100090', { altaDiaria: { publicacion: 'TARIC_20261106_1917', enVigorDesde: new Date('2026-11-06T12:00:00Z') } })]);
+
+    const plan = await prepararSincronizacion(await catalogo(), { ficheros: F, describir: jest.fn().mockResolvedValue('De pato') });
+
+    expect(plan.bajas.map((b) => b.code)).not.toContain('3908100090');
+    expect(plan.resumen.posterioresAlFichero).toBe(1);
+  });
+
   test('si el servicio web no da español, el alta queda en ingles y marcada', async () => {
     await sembrar();
     const describir = jest.fn().mockRejectedValueOnce(new Error('timeout'));
@@ -313,6 +322,14 @@ describe('circabcTaric', () => {
     expect(f.derechosImport.toString()).toBe('contenido de der11');
     // Se entra como invitado.
     expect(c.get.mock.calls[0][1].params).toMatchObject({ guest: true });
+  });
+
+  test('el fichero de derechos solo, del mes mas reciente que lo trae', async () => {
+    const f = await circabc.ficheroDeDerechos({ cliente: cliente() });
+    expect(f.mes).toMatchObject({ anio: 2026, mes: 11 });
+    expect(f.contenido.toString()).toBe('contenido de der11');
+    const vacio = { get: jest.fn(async (url) => ({ data: { data: url.includes(circabc.CARPETA_TARIC) ? [carpeta('a2026', '2026')] : [] } })) };
+    await expect(circabc.ficheroDeDerechos({ cliente: vacio })).rejects.toThrow('Duties Import');
   });
 
   test('sin ningun mes con los ficheros necesarios, error claro; una respuesta rara tambien', async () => {

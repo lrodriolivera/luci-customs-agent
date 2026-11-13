@@ -88,4 +88,18 @@ async function ficherosDeNomenclatura(opciones = {}) {
   };
 }
 
-module.exports = { ficherosDeNomenclatura, mesesPublicados, hijos, descargar, FUENTE, CARPETA_TARIC };
+/**
+ * Solo el fichero de derechos de importacion del mes mas reciente que lo trae.
+ * Lo usan las altas de la publicacion diaria, que no necesitan el resto.
+ *
+ * @returns {Promise<{ mes: object, contenido: Buffer }>}
+ */
+async function ficheroDeDerechos(opciones = {}) {
+  for (const mes of await mesesPublicados(opciones)) {
+    const fichero = (await hijos(mes.id, opciones)).find((f) => !f.carpeta && f.name.toLowerCase() === 'duties import 01-99.xlsx');
+    if (fichero) return { mes, contenido: await descargar(fichero.id, opciones) };
+  }
+  throw new Error('CIRCABC: no se encontro ningun mes con «Duties Import 01-99.xlsx»');
+}
+
+module.exports = { ficheroDeDerechos, ficherosDeNomenclatura, mesesPublicados, hijos, descargar, FUENTE, CARPETA_TARIC };
