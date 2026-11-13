@@ -3672,6 +3672,17 @@
     "aeatBillOfLading": "Polizza di carico: {{value}}",
     "aeatLocation": "Ubicazione: {{value}}"
   },
+  "aeatSumariaLinks": {
+    "title": "Cerca la dichiarazione sommaria nella Sede dell'AEAT",
+    "certificateWarning": "Questi link richiedono il tuo certificato digitale: LUCI non può consultarli per te.",
+    "highlighted": "Consigliato per questa spedizione",
+    "g4Title": "G4: dichiarazioni sommarie aeree e terrestri",
+    "g4Description": "Per le dichiarazioni sommarie G4, sia per trasporto aereo che terrestre.",
+    "maritimeTitle": "Marittimo: groupage e container",
+    "maritimeDescription": "Per le dichiarazioni sommarie marittime, sia groupage che container completi.",
+    "exportTitle": "Esportazione: container al terminal",
+    "exportDescription": "Se un'esportazione non si avvia perché il container non risulta al terminal, verifica qui la sua situazione."
+  },
   "docReading": {
     "readOnUpload": "Leggi il documento con l'IA al caricamento",
     "open": "Apri",

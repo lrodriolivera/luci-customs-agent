@@ -32,6 +32,7 @@ import { textoEvento } from '../../utils/historialExpediente'
 import GoodsEditor from './GoodsEditor'
 import H1Preview from './H1Preview'
 import GroupageCard, { isMaritime } from './GroupageCard'
+import AeatSumariaLinks from './AeatSumariaLinks'
 import RepresentationCard from './RepresentationCard'
 import H1DataCard from './H1DataCard'
 import ModoPresentacionH1 from './ModoPresentacionH1'
@@ -933,6 +934,11 @@ export default function ExpeditionDetail() {
               verification={summaryVerification}
             />
           )}
+
+          {/* LUCI no puede consultar la Sede de la AEAT por el agente (pide su
+              certificado digital): se le deja el enlace que necesita, visible
+              en cualquier modo de transporte para no ocultar los otros dos. */}
+          <AeatSumariaLinks expedition={expedition} />
 
           {/* Goods */}
           <div className="card">

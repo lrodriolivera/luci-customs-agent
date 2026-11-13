@@ -3672,6 +3672,17 @@
     "aeatBillOfLading": "Conhecimento: {{value}}",
     "aeatLocation": "Localização: {{value}}"
   },
+  "aeatSumariaLinks": {
+    "title": "Pesquisar a declaração sumária na Sede da AEAT",
+    "certificateWarning": "Estes links exigem o seu certificado digital: a LUCI não pode consultá-los por si.",
+    "highlighted": "Recomendado para esta expedição",
+    "g4Title": "G4: sumárias aéreas e terrestres",
+    "g4Description": "Para declarações sumárias G4, tanto de transporte aéreo como terrestre.",
+    "maritimeTitle": "Marítimo: grupagem e contentores",
+    "maritimeDescription": "Para declarações sumárias marítimas, tanto de grupagem como de contentores completos.",
+    "exportTitle": "Exportação: contentor no terminal",
+    "exportDescription": "Se uma exportação não avança porque o contentor não aparece no terminal, consulte aqui a sua situação."
+  },
   "docReading": {
     "readOnUpload": "Ler o documento com IA ao carregar",
     "open": "Abrir",

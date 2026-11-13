@@ -3672,6 +3672,17 @@
     "aeatBillOfLading": "Connaissement : {{value}}",
     "aeatLocation": "Emplacement : {{value}}"
   },
+  "aeatSumariaLinks": {
+    "title": "Rechercher la déclaration sommaire sur le portail de l'AEAT",
+    "certificateWarning": "Ces liens nécessitent votre certificat numérique : LUCI ne peut pas les consulter à votre place.",
+    "highlighted": "Recommandé pour cette expédition",
+    "g4Title": "G4 : déclarations sommaires aériennes et terrestres",
+    "g4Description": "Pour les déclarations sommaires G4, transport aérien et terrestre.",
+    "maritimeTitle": "Maritime : groupage et conteneurs",
+    "maritimeDescription": "Pour les déclarations sommaires maritimes, groupage ou conteneurs complets.",
+    "exportTitle": "Exportation : conteneur au terminal",
+    "exportDescription": "Si une exportation ne peut pas être lancée parce que le conteneur n'apparaît pas au terminal, consultez son statut ici."
+  },
   "docReading": {
     "readOnUpload": "Lire le document avec l'IA lors du téléversement",
     "open": "Ouvrir",

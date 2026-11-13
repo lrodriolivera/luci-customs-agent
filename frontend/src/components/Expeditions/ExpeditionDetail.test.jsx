@@ -1071,6 +1071,23 @@ describe('<ExpeditionDetail /> — edición de mercancía y documentos por el ag
     expect(screen.queryByText('groupage.title')).not.toBeInTheDocument()
   })
 
+  test('los enlaces a la sumaria de la Sede de la AEAT se ven en cualquier modo de transporte, con el que toca destacado', async () => {
+    expeditionsAPI.get.mockResolvedValue({ data: { data: { ...mockExpedition, transportMode: 'AIR' } } })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getByText('aeatSumariaLinks.title')).toBeInTheDocument())
+
+    const g4Link = screen.getByRole('link', { name: 'aeatSumariaLinks.g4Title' })
+    const maritimeLink = screen.getByRole('link', { name: 'aeatSumariaLinks.maritimeTitle' })
+    const exportLink = screen.getByRole('link', { name: 'aeatSumariaLinks.exportTitle' })
+
+    expect(g4Link).toHaveAttribute('href', 'https://sede.agenciatributaria.gob.es/Sede/procedimientoini/DA15.shtml')
+    expect(g4Link.closest('li')).toHaveTextContent('aeatSumariaLinks.highlighted')
+    // Maritimo y exportacion siguen visibles, solo sin destacar en un expediente aereo.
+    expect(maritimeLink).toBeInTheDocument()
+    expect(maritimeLink.closest('li')).not.toHaveTextContent('aeatSumariaLinks.highlighted')
+    expect(exportLink).toBeInTheDocument()
+  })
+
   test('una partida sin bultos lo indica en vez de dejar el hueco', async () => {
     renderExpeditionDetail()
     await waitFor(() => expect(screen.getAllByText('expeditions.packagesMissing')).toHaveLength(2))

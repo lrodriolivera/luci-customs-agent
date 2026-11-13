@@ -3672,6 +3672,17 @@
     "aeatBillOfLading": "Coneixement: {{value}}",
     "aeatLocation": "Ubicació: {{value}}"
   },
+  "aeatSumariaLinks": {
+    "title": "Buscar la sumaria en la Seu de l'AEAT",
+    "certificateWarning": "Estos enllaços necessiten el teu certificat digital: LUCI no els pot consultar per tu.",
+    "highlighted": "Recomanat per a este expedient",
+    "g4Title": "G4: sumaries aeries i terrestres",
+    "g4Description": "Per a declaracions sumaries G4, tant de transport aeri com terrestre.",
+    "maritimeTitle": "Maritim: grupatges i contenidors",
+    "maritimeDescription": "Per a declaracions sumaries maritimes, tant de grupatges com de contenidors complets.",
+    "exportTitle": "Exportacio: contenidor en terminal",
+    "exportDescription": "Si en llançar una exportacio no deixa continuar perque el contenidor no apareix en terminal, consulta aci la seua situacio."
+  },
   "docReading": {
     "readOnUpload": "Llegir el document amb IA en pujar-lo",
     "open": "Obrir",
