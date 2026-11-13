@@ -3793,6 +3793,9 @@
     "indirectHint": "Code 3: the representative acts in its own name and on behalf of the importer.",
     "directHint": "Code 2: the representative acts in the name and on behalf of the importer.",
     "selfNote": "If the declarant is the importer itself (same tax ID/EORI), LUCI declares self-clearance (code 1) without you having to set it. If the H1 has already been generated, generate it again to pick up the change.",
+    "declarant": "Declarant",
+    "declarantNote": "The declarant is whoever has the digital certificate linked in LUCI that is used to lodge the declaration.",
+    "declarantUnknown": "Not yet determined",
     "saved": "Form of representation saved",
     "saveError": "The form of representation could not be saved"
   }

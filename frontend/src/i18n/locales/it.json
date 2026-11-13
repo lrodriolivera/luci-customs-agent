@@ -3777,6 +3777,9 @@
     "indirectHint": "Codice 3: il rappresentante agisce in nome proprio e per conto dell'importatore.",
     "directHint": "Codice 2: il rappresentante agisce in nome e per conto dell'importatore.",
     "selfNote": "Se il dichiarante è l'importatore stesso (stesso NIF/EORI), LUCI dichiara lo sdoganamento in proprio (codice 1) senza doverlo indicare. Se l'H1 è già stato generato, generalo di nuovo per recepire la modifica.",
+    "declarant": "Dichiarante",
+    "declarantNote": "Il dichiarante è chi ha associato in LUCI il certificato digitale con cui si presenta la dichiarazione.",
+    "declarantUnknown": "Non ancora determinato",
     "saved": "Forma di rappresentanza salvata",
     "saveError": "Impossibile salvare la forma di rappresentanza"
   }

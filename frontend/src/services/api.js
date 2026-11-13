@@ -913,6 +913,9 @@ export const aeatRealAPI = {
 export const tenantAPI = {
   // Current tenant
   getCurrent: () => api.get('/api/tenant'),
+  // Nombre, EORI y resto de datos de empresa del tenant, leidos de Mongo
+  // (usado para saber quien es el declarante por defecto - RepresentationCard).
+  getMe: () => api.get('/api/tenant/me'),
   getSettings: () => api.get('/api/tenant/settings'),
   updateSettings: (data) => api.put('/api/tenant/settings', data),
   getUsage: () => api.get('/api/tenant/usage'),
