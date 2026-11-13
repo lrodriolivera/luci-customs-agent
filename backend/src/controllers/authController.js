@@ -5,10 +5,7 @@ const logger = require('../config/logger');
 const cognitoService = require('../utils/cognitoService');
 const { puedeAsignarRol, puedeGestionarUsuario, AGENT } = require('../constants/roles');
 const { filtroTenantOPlataforma, isSuperAdmin } = require('../utils/tenantGuard');
-
-// Vida de la contrasena temporal de una invitacion (admin/invite): pasado este
-// plazo sin usarla, el login la rechaza y hay que invitar de nuevo.
-const INVITACION_HORAS_VALIDEZ = 72;
+const { generarContrasenaTemporal, calcularExpiracionTemporal } = require('../utils/tempPassword');
 
 /**
  * Registro de nuevo usuario
@@ -760,10 +757,10 @@ const adminInvite = async (req, res) => {
       // (mustChangePassword false), sigue siendo el 409 generico.
       const mismoTenant = String(yaExiste.tenantId || '') === String(tenantId);
       if (mismoTenant && yaExiste.mustChangePassword) {
-        const tempPasswordReinvite = crypto.randomBytes(18).toString('base64').replace(/[+/=]/g, '').slice(0, 18) + 'aA1!';
+        const tempPasswordReinvite = generarContrasenaTemporal();
         yaExiste.password = tempPasswordReinvite;
         yaExiste.mustChangePassword = true;
-        yaExiste.tempPasswordExpires = new Date(Date.now() + INVITACION_HORAS_VALIDEZ * 60 * 60 * 1000);
+        yaExiste.tempPasswordExpires = calcularExpiracionTemporal();
         yaExiste.isActive = true;
         await yaExiste.save();
 
@@ -786,7 +783,10 @@ const adminInvite = async (req, res) => {
 
     // Temporal fuerte y aleatoria (crypto, no Math.random). Nunca se guarda en
     // claro: el pre-save de User la hashea como cualquier otra contrasena.
-    const tempPassword = crypto.randomBytes(18).toString('base64').replace(/[+/=]/g, '').slice(0, 18) + 'aA1!';
+    // Misma generacion que adminController.createUser/resetUserPassword
+    // (utils/tempPassword) para que "temporal" signifique lo mismo en
+    // cualquier punto que la emita.
+    const tempPassword = generarContrasenaTemporal();
 
     const user = new User({
       email,
@@ -797,7 +797,7 @@ const adminInvite = async (req, res) => {
       password: tempPassword,
       isActive: true,
       mustChangePassword: true,
-      tempPasswordExpires: new Date(Date.now() + INVITACION_HORAS_VALIDEZ * 60 * 60 * 1000),
+      tempPasswordExpires: calcularExpiracionTemporal(),
       permissions: {
         canCreateExpeditions: true,
         canUploadDocuments: true,

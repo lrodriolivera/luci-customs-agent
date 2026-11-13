@@ -127,7 +127,48 @@ describe('createUser', () => {
     }, res);
 
     expect(res.statusCode).toBe(201);
-    expect(res.body.temporaryPassword).toMatch(/^[0-9a-f]{12}$/);
+    expect(res.body.temporaryPassword).toBeTruthy();
+  });
+
+  // Arreglo 7 de la revision de seguridad del 4.2: este flujo paralelo
+  // (POST /api/admin/users) generaba la temporal a su manera
+  // (crypto.randomBytes(6).toString('hex'), sin mustChangePassword ni
+  // caducidad) y la repetia en el campo `message`, visible en cualquier log
+  // o captura de pantalla que incluyera la respuesta completa.
+  describe('contrasena temporal generada: misma fortaleza y ciclo que una invitacion', () => {
+    test('mustChangePassword activo y caducidad de 72h; la temporal no aparece en message', async () => {
+      const t = new mongoose.Types.ObjectId();
+      const res = crearRes();
+      await ctrl.createUser({
+        user: adminDe(t),
+        body: { email: 'gen2@x.es', name: 'Gen Dos', role: 'agent' }
+      }, res);
+
+      expect(res.statusCode).toBe(201);
+      expect(res.body.message).not.toContain(res.body.temporaryPassword);
+
+      const creado = await User.findOne({ email: 'gen2@x.es' }).select('+password');
+      expect(creado.mustChangePassword).toBe(true);
+      expect(creado.tempPasswordExpires.getTime()).toBeGreaterThan(Date.now());
+      expect(creado.tempPasswordExpires.getTime()).toBeLessThanOrEqual(Date.now() + 73 * 60 * 60 * 1000);
+      expect(await creado.comparePassword(res.body.temporaryPassword)).toBe(true);
+    });
+
+    test('con una contrasena elegida por el admin, mustChangePassword sigue en false', async () => {
+      const t = new mongoose.Types.ObjectId();
+      const res = crearRes();
+      await ctrl.createUser({
+        user: adminDe(t),
+        body: { email: 'elegida@x.es', name: 'Elegida', role: 'agent', password: 'PasswordDelAdmin1!' }
+      }, res);
+
+      expect(res.statusCode).toBe(201);
+      expect(res.body.temporaryPassword).toBeUndefined();
+      expect(res.body.message).not.toContain('PasswordDelAdmin1!');
+
+      const creado = await User.findOne({ email: 'elegida@x.es' });
+      expect(creado.mustChangePassword).toBe(false);
+    });
   });
 
   // El usuario creado debe heredar el tenant del admin que lo crea. Si se crea
@@ -223,6 +264,19 @@ describe('getUser/updateUser/deleteUser/resetUserPassword: 404 ante usuario ajen
     expect(actualizado.tempPasswordExpires.getTime()).toBeGreaterThan(Date.now());
     expect(actualizado.tempPasswordExpires.getTime()).toBeLessThanOrEqual(Date.now() + 73 * 60 * 60 * 1000);
     expect(await actualizado.comparePassword(res.body.temporaryPassword)).toBe(true);
+  });
+
+  // Arreglo 7: la temporal se devuelve SOLO en su campo propio, no repetida
+  // en `message` (donde podia acabar en un log o una captura de pantalla).
+  test('resetUserPassword no repite la temporal en el mensaje', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const u = await usuario({ tenant: t });
+    const res = crearRes();
+
+    await ctrl.resetUserPassword({ user: adminDe(t), params: { id: u._id } }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.message).not.toContain(res.body.temporaryPassword);
   });
 });
 
