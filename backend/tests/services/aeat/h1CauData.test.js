@@ -7,7 +7,7 @@ const { execFileSync, spawnSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { expeditionToH1CauData, conPais, aduana, ubicacionDe, provinciaDe } = require('../../../src/services/aeat/h1CauData');
+const { expeditionToH1CauData, conPais, aduana, ubicacionDe, provinciaDe, avisoAduanaDistinta } = require('../../../src/services/aeat/h1CauData');
 const { buildH1CauXML } = require('../../../src/services/aeat/h1CauXmlBuilder');
 
 const ESQUEMA = path.join(__dirname, '../../fixtures/aeat-cau/CC415AV1Ent.xsd');
@@ -326,5 +326,41 @@ describe('H1 CAU: ayudantes', () => {
     expect(ubicacionDe({})).toBeNull();
     expect(provinciaDe({ postalCode: '46001', country: 'ES' })).toBe('46');
     expect(provinciaDe({ postalCode: '1012', country: 'NL' })).toBeNull();
+  });
+});
+
+describe('H1 CAU: aviso cuando la aduana elegida no es la del recinto', () => {
+  const conUbicacion = (customsOffice) => ({ declaration: { goodsLocation: 'ES00280123AAAA', customsOffice } });
+
+  test('aduana distinta: avisa y dice en cuál se presentará', () => {
+    expect(avisoAduanaDistinta(conUbicacion('ES003001'))).toEqual({
+      codigo: 'ADUANA_DISTINTA_DEL_RECINTO',
+      elegida: 'ES003001',
+      recinto: 'ES002801',
+      texto: 'La aduana elegida (ES003001) no es la del recinto donde están las mercancías (ES002801): '
+        + 'el H1 se presentará en ES002801. Presentarlo en otra aduana es despacho centralizado y exige '
+        + 'la autorización C513 de la AEAT, que LUCI no gestiona.'
+    });
+  });
+
+  test('la ubicación también puede venir de la sumaria', () => {
+    const exp = { declaration: { customsOffice: '003001' }, transport: { summaryDeclaration: { aeat: { location: '280123AAAA' } } } };
+    expect(avisoAduanaDistinta(exp)).toMatchObject({ elegida: 'ES003001', recinto: 'ES002801' });
+  });
+
+  test('misma aduana (con o sin «ES»): sin aviso', () => {
+    expect(avisoAduanaDistinta(conUbicacion('ES002801'))).toBeNull();
+    expect(avisoAduanaDistinta(conUbicacion('002801'))).toBeNull();
+    expect(avisoAduanaDistinta(conUbicacion(' es002801 '))).toBeNull();
+  });
+
+  test('sin aduana en el expediente: sin aviso', () => {
+    expect(avisoAduanaDistinta(conUbicacion(undefined))).toBeNull();
+    expect(avisoAduanaDistinta(conUbicacion(''))).toBeNull();
+  });
+
+  test('sin ubicación de las mercancías: sin aviso', () => {
+    expect(avisoAduanaDistinta({ declaration: { customsOffice: 'ES003001' } })).toBeNull();
+    expect(avisoAduanaDistinta({})).toBeNull();
   });
 });
