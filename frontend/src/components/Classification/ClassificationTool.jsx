@@ -177,7 +177,11 @@ export default function ClassificationTool() {
       // devuelve la forma plana.
       setResults(response.data?.data || response.data)
     } catch (error) {
-      toast.error(t('classification.classifyError'))
+      // El backend devuelve el motivo exacto (ej. "La descripcion debe tener
+      // entre 10 y 2000 caracteres") en response.data.details; mostrar siempre
+      // el mensaje generico escondia por que la peticion fallaba de verdad.
+      const detalle = error.response?.data?.details?.[0]?.message
+      toast.error(detalle || t('classification.classifyError'))
     } finally {
       setLoading(false)
     }

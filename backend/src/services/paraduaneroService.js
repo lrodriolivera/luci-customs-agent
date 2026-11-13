@@ -38,7 +38,7 @@ const TARIC_CONTROL_RULES = {
     subType: 'veterinary',
     documents: [
       { code: 'C620', name: 'Certificado Veterinario', mandatory: true },
-      { code: 'N851', name: 'DVCE (Documento Veterinario Comun de Entrada)', mandatory: true }
+      { code: 'N851', name: 'DVCE (Documento Veterinario Común de Entrada)', mandatory: true }
     ],
     inspection: true,
     notes: 'Control veterinario obligatorio'
@@ -97,19 +97,19 @@ const TARIC_CONTROL_RULES = {
 
   // Capitulo 28-38: Productos quimicos
   '28': { controls: ['MITERD'], subType: 'chemicals_reach', documents: [
-    { code: 'Y923', name: 'Declaracion REACH', mandatory: false }
+    { code: 'Y923', name: 'Declaración REACH', mandatory: false }
   ], inspection: false },
   '29': { controls: ['MITERD'], subType: 'chemicals_reach', documents: [
-    { code: 'Y923', name: 'Declaracion REACH', mandatory: true }
+    { code: 'Y923', name: 'Declaración REACH', mandatory: true }
   ], inspection: false },
   '30': { controls: ['AEMPS', 'SANIDAD'], subType: 'pharmaceuticals', documents: [
-    { code: 'C057', name: 'Autorizacion de importacion AEMPS', mandatory: true }
+    { code: 'C057', name: 'Autorización de importación AEMPS', mandatory: true }
   ], inspection: true, notes: 'Medicamentos - requiere autorizacion AEMPS' },
   '33': { controls: ['SANIDAD'], subType: 'cosmetics', documents: [
-    { code: 'C057', name: 'Notificacion CPNP', mandatory: true }
+    { code: 'C057', name: 'Notificación CPNP', mandatory: true }
   ], inspection: false },
   '38': { controls: ['MITERD'], subType: 'chemicals_reach', documents: [
-    { code: 'Y923', name: 'Declaracion REACH', mandatory: true },
+    { code: 'Y923', name: 'Declaración REACH', mandatory: true },
     { code: 'Y922', name: 'Ficha de seguridad SDS', mandatory: true }
   ], inspection: false },
 
@@ -146,28 +146,28 @@ const CITES_TARIC_PREFIXES = [
 // Grupo de producto de la lista SOIVRE -> subtipo del control y documentos.
 const SOIVRE_POR_GRUPO = {
   TEXTIL: { subType: 'textiles', documents: [
-    { code: 'Y923', name: 'Composicion fibras', mandatory: true },
+    { code: 'Y923', name: 'Composición fibras', mandatory: true },
     { code: 'C057', name: 'Etiquetado conforme', mandatory: true }
   ] },
   CALZADO: { subType: 'industrial_products', documents: [
     { code: 'C057', name: 'Etiquetado conforme', mandatory: true }
   ] },
   JUGUETES: { subType: 'toys', inspection: true, documents: [
-    { code: 'C057', name: 'Declaracion CE conformidad', mandatory: true },
+    { code: 'C057', name: 'Declaración CE conformidad', mandatory: true },
     { code: 'Y925', name: 'Informe de ensayo EN 71', mandatory: true }
   ] },
   'PEQUEÑO ELECTRODOMESTICO': { subType: 'electrical', documents: [
-    { code: 'C057', name: 'Declaracion CE conformidad', mandatory: true }
+    { code: 'C057', name: 'Declaración CE conformidad', mandatory: true }
   ] },
   PME: { subType: 'electrical', documents: [
-    { code: 'C057', name: 'Declaracion CE conformidad', mandatory: true }
+    { code: 'C057', name: 'Declaración CE conformidad', mandatory: true }
   ] }
 };
 const SOIVRE_EPI = { subType: 'ppe', documents: [
-  { code: 'C057', name: 'Declaracion UE de conformidad (EPI)', mandatory: true }
+  { code: 'C057', name: 'Declaración UE de conformidad (EPI)', mandatory: true }
 ] };
 const SOIVRE_OTROS = { subType: 'industrial_products', documents: [
-  { code: 'C057', name: 'Documentacion de conformidad del producto', mandatory: true }
+  { code: 'C057', name: 'Documentación de conformidad del producto', mandatory: true }
 ] };
 
 // La medida TARIC de RoHS/RAEE (ROS, «todos erga omnes») excluye estos
@@ -176,8 +176,8 @@ const SOIVRE_OTROS = { subType: 'industrial_products', documents: [
 // (10/Nov/2026); se aplica a toda la lista RoHS/RAEE.
 const ORIGENES_EXCLUIDOS_ROHS_RAEE = ['TR', 'NO', 'IS', 'LI'];
 
-const DOCUMENTO_ROHS = { code: 'ROHS', name: 'Declaracion UE de conformidad RoHS (Directiva 2011/65/UE)', mandatory: true };
-const DOCUMENTO_RAEE = { code: 'RAEE', name: 'Numero de inscripcion en el Registro Integrado Industrial de AEE (RD 110/2015)', mandatory: true };
+const DOCUMENTO_ROHS = { code: 'ROHS', name: 'Declaración UE de conformidad RoHS (Directiva 2011/65/UE)', mandatory: true };
+const DOCUMENTO_RAEE = { code: 'RAEE', name: 'Número de inscripción en el Registro Integrado Industrial de AEE (RD 110/2015)', mandatory: true };
 
 // La agente de aduanas en la UAT (13/Nov/2026) senalo literal: "En SOIVRE
 // siempre se tiene que adjuntar documentacion de factura y conocimiento de
@@ -293,7 +293,7 @@ class ParaduaneroService {
             reason: 'Producto potencialmente CITES',
             documents: [
               { code: 'Y926', name: 'Permiso CITES', mandatory: true },
-              { code: 'C400', name: 'Certificado CITES exportacion', mandatory: true }
+              { code: 'C400', name: 'Certificado CITES exportación', mandatory: true }
             ],
             inspectionRequired: true,
             priority: 'critical',

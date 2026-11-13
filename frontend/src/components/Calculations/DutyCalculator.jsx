@@ -16,6 +16,22 @@ import {
   SunIcon
 } from '@heroicons/react/24/outline'
 
+// dutyType llega del backend en ingles: 'ad_valorem', 'compound', 'specific'
+// o 'mixed' (tipoDeDerecho/tipoDeFormula en dutyCalculationService.js). Antes
+// se pintaba tal cual con .replace('_', ' '): "ad valorem" se lee bien
+// capitalizado, pero "compound" y "specific" salian sin traducir.
+const ETIQUETAS_TIPO_DERECHO = {
+  ad_valorem: 'calculator.dutyTypeAdValorem',
+  compound: 'calculator.dutyTypeCompound',
+  specific: 'calculator.dutyTypeSpecific',
+  mixed: 'calculator.dutyTypeMixed'
+}
+
+function dutyTypeLabel(dutyType, t) {
+  const clave = ETIQUETAS_TIPO_DERECHO[dutyType]
+  return clave ? t(clave) : dutyType.replace('_', ' ')
+}
+
 export default function DutyCalculator() {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
@@ -459,7 +475,7 @@ export default function DutyCalculator() {
                   {result.data.dutyType && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">{t('calculator.tariffType')}</span>
-                      <span className="capitalize">{result.data.dutyType.replace('_', ' ')}</span>
+                      <span className="capitalize">{dutyTypeLabel(result.data.dutyType, t)}</span>
                     </div>
                   )}
                   {result.data.preferenceApplied && (

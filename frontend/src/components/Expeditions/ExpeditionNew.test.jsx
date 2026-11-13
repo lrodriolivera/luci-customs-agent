@@ -35,6 +35,10 @@ vi.mock('../../services/api', () => ({
   },
   classificationAPI: {
     classify: vi.fn()
+  },
+  // Usado por TipoCambioOficial (vía ImporteInput) cuando la moneda no es EUR.
+  calculationsAPI: {
+    getExchangeRate: vi.fn(() => Promise.resolve({ data: { data: null } }))
   }
 }))
 
@@ -530,6 +534,21 @@ describe('<ExpeditionNew />', () => {
 
       await waitFor(() => expect(expeditionsAPI.create).toHaveBeenCalled())
       expect(expeditionsAPI.create.mock.calls[0][0].goods[0].packages.quantity).toBeUndefined()
+    })
+
+    // Con una divisa distinta de EUR, ImporteInput pinta debajo del importe el
+    // texto "se guardara como X" y el tipo de cambio oficial (TipoCambioOficial):
+    // la fila importe+moneda crece en alto. Sin alinear arriba (items-start), el
+    // flex por defecto (stretch) estira tambien el <select> de moneda a esa
+    // misma altura.
+    test('la fila importe+moneda se alinea arriba, no se estira con el tipo de cambio', async () => {
+      renderComponent()
+      fillMinimalForm()
+      fireEvent.click(screen.getByText('common.previous')) // la mercancia esta en el paso 2
+      fireEvent.change(screen.getByLabelText('docReading.field.currency'), { target: { value: 'USD' } })
+
+      const fila = screen.getByLabelText('docReading.field.currency').closest('.flex')
+      expect(fila.className).toContain('items-start')
     })
 
     test('submit exitoso navega al detalle (formato data._id)', async () => {

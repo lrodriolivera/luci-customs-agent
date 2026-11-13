@@ -192,7 +192,7 @@ const NOMBRE_HIJO = { air_waybill: 'AWB hija (HAWB)', bill_of_lading: 'BL hijo (
 // o no tiene sitio en el expediente, para que el agente lo vea.
 const notasDeTransporte = ({ precintos, digitoIncorrecto, documentoHijo, otrosVuelos, tipo }) => [
   ...(precintos.length > 0 ? [`Precintos (no son contenedores): ${precintos.join(', ')}.`] : []),
-  ...digitoIncorrecto.map(c => `Comprueba el contenedor ${c}: su digito de control no cuadra (ISO 6346).`),
+  ...digitoIncorrecto.map(c => `Comprueba el contenedor ${c}: su dígito de control no cuadra (ISO 6346).`),
   ...(documentoHijo ? [`${NOMBRE_HIJO[tipo] || 'Documento hijo'}: ${documentoHijo}.`] : []),
   ...(otrosVuelos.length > 0 ? [`Otros vuelos: ${otrosVuelos.join(', ')}.`] : [])
 ];

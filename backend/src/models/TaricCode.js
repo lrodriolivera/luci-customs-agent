@@ -274,7 +274,12 @@ TaricCodeSchema.methods.getFullPath = async function() {
 
 TaricCodeSchema.methods.getChildren = function() {
   const nextLevel = this.level + 2;
-  const prefix = this.code;
+  // `code` guarda el codigo YA relleno con ceros a 10 digitos (el capitulo 84
+  // se guarda como "8400000000"), asi que usarlo entero como prefijo no
+  // coincidia nunca con los hijos reales. El prefijo significativo es solo
+  // la parte que de verdad identifica este nivel: los primeros `level`
+  // caracteres, sin el relleno.
+  const prefix = this.code.slice(0, this.level);
   return this.model('TaricCode').find({
     code: new RegExp(`^${escapeRegex(prefix)}`),
     level: nextLevel,

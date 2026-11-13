@@ -218,6 +218,27 @@ describe('<DutyCalculator />', () => {
     })
   })
 
+  // dutyType llega del backend en ingles ('ad_valorem', 'compound', 'specific',
+  // 'mixed'); el componente lo pintaba tal cual con .replace('_', ' '), asi que
+  // "compound" y "specific" salian en ingles sin pasar por t(). Deben traducirse.
+  test.each([
+    ['compound', 'calculator.dutyTypeCompound'],
+    ['specific', 'calculator.dutyTypeSpecific']
+  ])('dutyType=%s se traduce via t(), no se muestra en ingles sin traducir', async (dutyType, claveEsperada) => {
+    calculationsAPI.calculateDuties.mockResolvedValue({
+      data: { data: { dutyAmount: 10, vatAmount: 5, totalToPay: 15, customsValue: 100, dutyType } }
+    })
+    render(<DutyCalculator />)
+    fireEvent.change(screen.getByTestId('calc-taric'), { target: { value: '2204210000' } })
+    fireEvent.change(screen.getByTestId('calc-value'), { target: { value: '100' } })
+    fireEvent.change(screen.getByTestId('calc-origin'), { target: { value: 'FR' } })
+    fireEvent.submit(document.querySelector('form'))
+
+    await waitFor(() => expect(screen.getByText('calculator.result')).toBeInTheDocument())
+    expect(screen.getByText(claveEsperada)).toBeInTheDocument()
+    expect(screen.queryByText(dutyType)).not.toBeInTheDocument()
+  })
+
   test('cálculo con error de API muestra toast de error', async () => {
     calculationsAPI.calculateDuties.mockRejectedValue(new Error('API down'))
     render(<DutyCalculator />)

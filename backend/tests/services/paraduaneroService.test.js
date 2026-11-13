@@ -562,4 +562,41 @@ describe('Paraduanero Service', () => {
       expect(soivre.entradas.every(e => /^\d{10}$/.test(e.taric) && e.grupo)).toBe(true);
     });
   });
+
+  // Nombres de documento que ve el agente en pantalla: deben llevar las tildes
+  // correctas sin cambiar los codigos oficiales (Y923, C057, ROHS, RAEE...).
+  describe('tildes en los nombres de documento (texto de pantalla)', () => {
+    test('quimicos (REACH, capitulo 28/29): "Declaracion" -> "Declaración"', async () => {
+      const controls = await paraduaneroService.analyzeExpedition({
+        expeditionId: 'EXP-TILDE-REACH',
+        goods: [{ itemNumber: 1, description: 'Reactivo', taricCode: '2901100000', originCountry: 'DE', quantity: 1, unit: 'KGM', grossWeight: 1 }]
+      });
+      expect(controls[0].documents).toContainEqual(expect.objectContaining({ code: 'Y923', name: 'Declaración REACH' }));
+    });
+
+    test('medicamentos (capitulo 30): "Autorizacion de importacion" -> "Autorización de importación"', async () => {
+      const controls = await paraduaneroService.analyzeExpedition({
+        expeditionId: 'EXP-TILDE-AEMPS',
+        goods: [{ itemNumber: 1, description: 'Medicamento', taricCode: '3004900000', originCountry: 'CH', quantity: 1, unit: 'KGM', grossWeight: 1 }]
+      });
+      expect(controls[0].documents).toContainEqual(expect.objectContaining({ code: 'C057', name: 'Autorización de importación AEMPS' }));
+    });
+
+    test('cosmeticos (capitulo 33): "Notificacion CPNP" -> "Notificación CPNP"', async () => {
+      const controls = await paraduaneroService.analyzeExpedition({
+        expeditionId: 'EXP-TILDE-CPNP',
+        goods: [{ itemNumber: 1, description: 'Crema', taricCode: '3304990000', originCountry: 'FR', quantity: 1, unit: 'KGM', grossWeight: 1 }]
+      });
+      expect(controls[0].documents).toContainEqual(expect.objectContaining({ code: 'C057', name: 'Notificación CPNP' }));
+    });
+
+    // Guantes de proteccion (4203291000): grupo TEXTIL de la lista oficial SOIVRE.
+    test('SOIVRE textil: "Composicion fibras" -> "Composición fibras"', async () => {
+      const controls = await paraduaneroService.analyzeExpedition({
+        expeditionId: 'EXP-TILDE-TEXTIL',
+        goods: [{ itemNumber: 1, description: 'Guantes', taricCode: '4203291000', originCountry: 'CN', quantity: 1, unit: 'NAR', grossWeight: 1 }]
+      });
+      expect(controls[0].documents).toContainEqual(expect.objectContaining({ code: 'Y923', name: 'Composición fibras' }));
+    });
+  });
 });

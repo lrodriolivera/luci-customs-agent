@@ -69,7 +69,7 @@ describe('lectura de un BL real (T.S. Lines)', () => {
     expect(r.transporte.contenedores).toEqual(['MAGU5810422', 'MAGU5599236', 'TXGU7359270']);
     expect(r.transporte.precintos).toEqual(['TSB2716891', 'TSB2716818', 'TSB2716718']);
     expect(r.notas.some(n => n.includes('TSB2716891') && /precinto/i.test(n))).toBe(true);
-    expect(r.notas.some(n => n.includes('MAGU5810422') && /digito de control/i.test(n))).toBe(true);
+    expect(r.notas.some(n => n.includes('MAGU5810422') && /d[ií]gito de control/i.test(n))).toBe(true);
   });
 
   test('los bultos no se toman por cantidad de mercancia', async () => {

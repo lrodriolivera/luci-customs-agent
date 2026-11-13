@@ -863,7 +863,11 @@ export default function ExpeditionNew() {
                   </div>
                   <div>
                     <label className="label">{t('expeditions.invoiceValue')} *</label>
-                    <div className="flex gap-2">
+                    {/* items-start: ImporteInput pinta debajo del importe el texto
+                        "se guardara como X" y, si la moneda no es EUR, el tipo de
+                        cambio oficial. Sin alinear arriba, el flex (stretch por
+                        defecto) estiraba tambien el select de moneda a esa altura. */}
+                    <div className="flex items-start gap-2">
                       <div className="flex-1">
                         <ImporteInput
                           value={item.invoiceValue}

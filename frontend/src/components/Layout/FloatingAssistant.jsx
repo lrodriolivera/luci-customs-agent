@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router-dom'
 import { ChatBubbleLeftRightIcon, XMarkIcon, PaperAirplaneIcon, SparklesIcon } from '@heroicons/react/24/outline'
 import { chatAPI } from '../../services/api'
+import ChatMessageText from '../common/ChatMessageText'
 
 export default function FloatingAssistant() {
   const { t } = useTranslation()
@@ -87,7 +88,7 @@ export default function FloatingAssistant() {
                     ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-br-md'
                     : 'bg-white text-gray-700 border border-gray-200 rounded-bl-md shadow-sm'
                 }`}>
-                  {msg.content}
+                  <ChatMessageText content={msg.content} />
                 </div>
               </div>
             ))}

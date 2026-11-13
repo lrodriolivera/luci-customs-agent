@@ -199,6 +199,21 @@ describe('<H1DataCard />', () => {
     expect(await screen.findByText('La AEAT ha aceptado la anulación.')).toBeInTheDocument()
   })
 
+  // btn-primary (styles/index.css) pinta un gradiente (bg-gradient-to-r ...) que
+  // es una background-image: tapa el bg-red-600 (background-color) aunque la
+  // clase este en el elemento, y el boton sale azul en vez de rojo. btn-danger
+  // ya existe para esto (bg-red-600 solido, sin gradiente).
+  test('el botón de confirmar anulación usa btn-danger, no btn-primary con bg-red-600 (el gradiente lo tapa)', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [], anulacion: { presentada: true, anulable: true } }))
+    render(<H1DataCard expedition={presentada} soloEstado />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Anular declaración' }))
+    const confirmar = screen.getByRole('button', { name: 'Confirmar anulación' })
+
+    expect(confirmar.className).not.toContain('btn-primary')
+    expect(confirmar.className).toContain('btn-danger')
+  })
+
   test('si la AEAT rechaza la anulación muestra su motivo', async () => {
     getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [], anulacion: { presentada: true, anulable: true } }))
     cancelH1.mockRejectedValue({ response: { status: 400, data: { success: false, error: '20001 La declaración tiene intención de control' } } })
