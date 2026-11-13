@@ -169,7 +169,7 @@ const limiter = rateLimit({
   store: makeRateLimitStore('rl:general:'),
   message: { success: false, error: 'Demasiadas solicitudes, por favor intente mas tarde' },
   skip: (req) => req.path === '/api/health' ||
-    /^\/api\/auth\/(login|register|forgot-password)$/.test(req.path)
+    /^\/api\/auth\/(login|register|forgot-password|admin\/invite)$/.test(req.path)
 });
 app.use('/api/', limiter);
 
@@ -185,6 +185,7 @@ const authLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
+app.use('/api/auth/admin/invite', authLimiter);
 
 // Stripe webhook (MUST come before express.json to preserve raw body for signature verification)
 app.post('/api/payments/webhook',

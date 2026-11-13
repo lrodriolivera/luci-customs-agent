@@ -100,7 +100,18 @@ const UserSchema = new mongoose.Schema({
 
   // Reset password
   resetPasswordToken: String,
-  resetPasswordExpires: Date
+  resetPasswordExpires: Date,
+
+  // Invitacion de admin con contrasena temporal de un solo uso (ver
+  // authController.adminInvite). mustChangePassword fuerza el cambio en el
+  // primer acceso: middleware/auth.js bloquea el resto de rutas mientras este
+  // en true. tempPasswordExpires caduca la temporal (72h) para que una
+  // invitacion olvidada no quede abierta indefinidamente.
+  mustChangePassword: {
+    type: Boolean,
+    default: false
+  },
+  tempPasswordExpires: Date
 
 }, {
   timestamps: true
@@ -149,7 +160,8 @@ UserSchema.methods.toPublicJSON = function() {
     permissions: this.permissions,
     isActive: this.isActive,
     lastLogin: this.lastLogin,
-    createdAt: this.createdAt
+    createdAt: this.createdAt,
+    mustChangePassword: this.mustChangePassword
   };
 };
 

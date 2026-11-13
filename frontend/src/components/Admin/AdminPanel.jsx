@@ -1111,7 +1111,9 @@ function UserModal({ user, roles, onClose, onSave }) {
 }
 
 // Password Modal Component - Shows temporary password
-function PasswordModal({ email, password, onClose }) {
+// Exportado para reutilizarse en TenantSettings (invitar usuario a un tenant
+// existente): misma UI de «solo se muestra una vez», sin duplicarla.
+export function PasswordModal({ email, password, onClose }) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 

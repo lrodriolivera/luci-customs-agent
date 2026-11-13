@@ -199,30 +199,34 @@ describe('authController.updateUser (PUT /api/auth/users/:id)', () => {
 });
 
 describe('authController.adminInvite (POST /api/auth/admin/invite)', () => {
-  const cuerpo = { email: 'invitado@t1.es', givenName: 'In', familyName: 'Vitado', role: 'super_admin' };
+  // Desde que Cognito se retiro, adminInvite crea el usuario en local (hash +
+  // mustChangePassword), ya no llama a cognitoService.
+  const cuerpo = { email: 'invitado@t1.es', name: 'Invitado Uno', role: 'super_admin' };
 
-  test('403 y no se toca Cognito ni la BD si un admin de tenant invita a un super_admin', async () => {
+  test('403 y no se toca la BD si un admin de tenant invita a un super_admin', async () => {
     const res = crearRes();
 
     await authController.adminInvite({ user: ADMIN_T1, body: { ...cuerpo } }, res);
 
     expect(res.statusCode).toBe(403);
     expect(cognitoService.adminCreateUser).not.toHaveBeenCalled();
-    expect(cognitoService.adminUpdateAttributes).not.toHaveBeenCalled();
     expect(User).not.toHaveBeenCalled();
     expect(guardar).not.toHaveBeenCalled();
   });
 
   test('un super_admin puede invitar a un super_admin', async () => {
-    cognitoService.adminCreateUser.mockResolvedValue({ User: { Attributes: [{ Name: 'sub', Value: 'sub-1' }] } });
-    cognitoService.adminUpdateAttributes.mockResolvedValue(true);
+    User.findOne.mockResolvedValue(null);
     const res = crearRes();
 
-    await authController.adminInvite({ user: SUPER, body: { ...cuerpo } }, res);
+    await authController.adminInvite({ user: SUPER, body: { ...cuerpo, tenantId: 't0' } }, res);
 
     expect(res.statusCode).toBe(201);
     expect(User.mock.calls[0][0].role).toBe('super_admin');
+    expect(User.mock.calls[0][0].mustChangePassword).toBe(true);
     expect(guardar).toHaveBeenCalled();
-    expect(cognitoService.adminUpdateAttributes).toHaveBeenCalledWith('sub-1', expect.objectContaining({ 'custom:role': 'super_admin' }));
+    expect(cognitoService.adminCreateUser).not.toHaveBeenCalled();
+    // La temporal se devuelve una sola vez en la respuesta, nunca en texto plano en otro sitio.
+    expect(res.body.data.temporaryPassword).toBeTruthy();
+    expect(res.body.data.user).toEqual({ email: 'invitado@t1.es', role: 'super_admin' });
   });
 });

@@ -203,6 +203,8 @@
     "newPasswordTitle": "Imposta una nuova password",
     "newPasswordSubtitle": "Il tuo account deve cambiare la password prima di continuare",
     "savePassword": "Salva password",
+    "temporaryPasswordLabel": "Password temporanea",
+    "changePasswordError": "Impossibile cambiare la password",
     "saving": "Salvataggio..."
   },
   "dashboard": {
@@ -1643,6 +1645,12 @@
     "viewPermissions": "Vedi Permessi",
     "predefined": "Predefinito",
     "custom": "Personalizzato",
+    "inviteUser": "Invita utente",
+    "inviteUserTitle": "Invita nuovo utente",
+    "inviteNameLabel": "Nome completo",
+    "inviteSubmit": "Invia invito",
+    "inviteErrorEmailInUse": "Questa email è già in uso.",
+    "inviteErrorGeneric": "Impossibile invitare l'utente. Riprova.",
     "aeatCertificate": "Certificato AEAT",
     "aeatCertificateDesc": "Certificato digitale per la comunicazione con AEAT",
     "configured": "Configurato",

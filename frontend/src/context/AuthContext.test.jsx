@@ -9,6 +9,7 @@ vi.mock('../services/cognitoService')
 vi.mock('../services/api', () => ({
   default: {
     post: vi.fn(),
+    put: vi.fn(),
     defaults: {
       headers: {
         common: {}
@@ -939,6 +940,72 @@ describe('AuthContext', () => {
 
       expect(result.current.user).toBeNull()
       expect(localStorage.removeItem).toHaveBeenCalled()
+    })
+  })
+
+  describe('completeMandatoryPasswordChange (primer acceso con contrasena temporal)', () => {
+    beforeEach(() => {
+      cognitoService.isConfigured = vi.fn(() => false)
+    })
+
+    async function loginConUsuarioInvitado() {
+      const mockUser = { id: '1', email: 'invitado@t-a.es', name: 'Invitado', mustChangePassword: true }
+      api.post.mockResolvedValue({
+        data: { success: true, data: { token: 'jwt-temporal', user: mockUser } }
+      })
+      const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      await act(async () => {
+        await result.current.login('invitado@t-a.es', 'temporal123')
+      })
+      return result
+    }
+
+    it('al completarse, limpia mustChangePassword del usuario y lo persiste', async () => {
+      const result = await loginConUsuarioInvitado()
+      expect(result.current.user.mustChangePassword).toBe(true)
+
+      api.put.mockResolvedValue({ data: { success: true } })
+
+      let cambioResult
+      await act(async () => {
+        cambioResult = await result.current.completeMandatoryPasswordChange('temporal123', 'NuevaSegura1!')
+      })
+
+      expect(api.put).toHaveBeenCalledWith('/api/auth/password', {
+        currentPassword: 'temporal123',
+        newPassword: 'NuevaSegura1!'
+      })
+      expect(cambioResult.success).toBe(true)
+      expect(result.current.user.mustChangePassword).toBe(false)
+      expect(JSON.parse(localStorage.setItem.mock.calls.at(-1)[1]).mustChangePassword).toBe(false)
+    })
+
+    it('si el backend rechaza la contrasena actual, no limpia el estado', async () => {
+      const result = await loginConUsuarioInvitado()
+      api.put.mockResolvedValue({ data: { success: false, error: 'Contrasena actual incorrecta' } })
+
+      let cambioResult
+      await act(async () => {
+        cambioResult = await result.current.completeMandatoryPasswordChange('mala', 'NuevaSegura1!')
+      })
+
+      expect(cambioResult.success).toBe(false)
+      expect(cambioResult.error).toBe('Contrasena actual incorrecta')
+      expect(result.current.user.mustChangePassword).toBe(true)
+    })
+
+    it('si la peticion falla con error de red, devuelve el mensaje del backend', async () => {
+      const result = await loginConUsuarioInvitado()
+      api.put.mockRejectedValue({ response: { data: { error: 'Token invalido o expirado.' } } })
+
+      let cambioResult
+      await act(async () => {
+        cambioResult = await result.current.completeMandatoryPasswordChange('temporal123', 'NuevaSegura1!')
+      })
+
+      expect(cambioResult.success).toBe(false)
+      expect(cambioResult.error).toBe('Token invalido o expirado.')
     })
   })
 

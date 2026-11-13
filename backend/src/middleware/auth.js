@@ -4,6 +4,24 @@ const { User } = require('../models');
 
 const AUTH_MODE = process.env.AUTH_MODE || 'dual';
 
+/**
+ * Rutas accesibles con una contrasena temporal pendiente de cambio
+ * (user.mustChangePassword === true, ver authController.adminInvite). Fuera
+ * de esta lista, `auth` responde 403 MUST_CHANGE_PASSWORD: un usuario
+ * invitado no puede usar el resto de la aplicacion hasta cambiarla.
+ */
+const RUTAS_PERMITIDAS_CON_PASSWORD_TEMPORAL = [
+  '/api/auth/password',
+  '/api/auth/me',
+  '/api/auth/logout'
+];
+
+function bloqueadoPorPasswordTemporal(req) {
+  if (!req.user?.mustChangePassword) return false;
+  const ruta = (req.originalUrl || '').split('?')[0];
+  return !RUTAS_PERMITIDAS_CON_PASSWORD_TEMPORAL.includes(ruta);
+}
+
 async function verifyCognito(token) {
   const decoded = await cognitoService.verifyAccessToken(token);
   const user = await User.findOne({ cognitoSub: decoded.sub, isActive: true });
@@ -61,6 +79,15 @@ const auth = async (req, res, next) => {
 
     req.user = result.user;
     req.token = token;
+
+    if (bloqueadoPorPasswordTemporal(req)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Debes cambiar tu contrasena temporal antes de continuar.',
+        code: 'MUST_CHANGE_PASSWORD'
+      });
+    }
+
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {

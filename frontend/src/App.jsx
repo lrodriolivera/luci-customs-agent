@@ -7,6 +7,7 @@ import MainLayout from './components/Layout/MainLayout'
 import PortalLayout from './components/Layout/PortalLayout'
 import Dashboard from './components/Dashboard/Dashboard'
 import Login from './components/Auth/Login'
+import ForceChangePassword from './components/Auth/ForceChangePassword'
 import CookieBanner from './components/Legal/CookieBanner'
 import NotFound from './components/NotFound'
 
@@ -80,8 +81,8 @@ const RouteFallback = () => (
   </div>
 )
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth()
+export const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading, user } = useAuth()
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -90,6 +91,10 @@ const ProtectedRoute = ({ children }) => {
     )
   }
   if (!isAuthenticated) return <Navigate to="/login" replace />
+  // Invitacion con contrasena temporal (admin/invite) sin cambiar aun: el
+  // backend rechaza el resto de rutas con MUST_CHANGE_PASSWORD, asi que aqui
+  // no hay nada mas que mostrar hasta que se complete.
+  if (user?.mustChangePassword) return <ForceChangePassword />
   return children
 }
 

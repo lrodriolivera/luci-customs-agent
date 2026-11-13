@@ -2,8 +2,12 @@ const crypto = require('crypto');
 const { User, Tenant } = require('../models');
 const logger = require('../config/logger');
 const cognitoService = require('../utils/cognitoService');
-const { puedeAsignarRol, puedeGestionarUsuario } = require('../constants/roles');
-const { filtroTenantOPlataforma } = require('../utils/tenantGuard');
+const { puedeAsignarRol, puedeGestionarUsuario, AGENT } = require('../constants/roles');
+const { filtroTenantOPlataforma, isSuperAdmin } = require('../utils/tenantGuard');
+
+// Vida de la contrasena temporal de una invitacion (admin/invite): pasado este
+// plazo sin usarla, el login la rechaza y hay que invitar de nuevo.
+const INVITACION_HORAS_VALIDEZ = 72;
 
 /**
  * Registro de nuevo usuario
@@ -115,6 +119,26 @@ const login = async (req, res) => {
       return res.status(401).json({
         success: false,
         error: 'Credenciales invalidas'
+      });
+    }
+
+    // Contrasena temporal de una invitacion (admin/invite) caducada: la
+    // credencial sigue siendo correcta (el hash no cambia por caducar), pero
+    // es de un solo uso con fecha limite. Sin esto, una invitacion olvidada
+    // quedaba valida para siempre.
+    if (user.mustChangePassword && user.tempPasswordExpires && user.tempPasswordExpires.getTime() < Date.now()) {
+      req.audit?.({
+        action: 'login_failed',
+        resource: 'User',
+        resourceId: user._id,
+        success: false,
+        errorMessage: 'Contrasena temporal caducada',
+        metadata: { email }
+      });
+      return res.status(401).json({
+        success: false,
+        error: 'La contrasena temporal ha caducado. Solicite una nueva invitacion al administrador.',
+        code: 'TEMP_PASSWORD_EXPIRED'
       });
     }
 
@@ -234,8 +258,13 @@ const changePassword = async (req, res) => {
       });
     }
 
-    // Actualizar password
+    // Actualizar password. Si venia de una invitacion con contrasena temporal
+    // (mustChangePassword), este es el momento en que deja de serlo: la
+    // temporal queda sustituida (de un solo uso) y el resto de rutas, que
+    // middleware/auth.js bloqueaba, vuelven a estar disponibles.
     user.password = newPassword;
+    user.mustChangePassword = false;
+    user.tempPasswordExpires = undefined;
     await user.save();
 
     logger.info(`Usuario cambio contrasena: ${user.email}`);
@@ -627,41 +656,76 @@ const registerSync = async (req, res) => {
 };
 
 /**
- * Admin invite - create user in Cognito with temporary password
+ * Admin invite - crea un usuario LOCAL (sin Cognito, retirado) en el tenant
+ * de quien invita, con una contrasena temporal de un solo uso.
  * POST /api/auth/admin/invite
+ *
+ * requireRole('admin', 'super_admin') en la ruta decide QUIEN puede llamar.
+ * Este controller decide DOS cosas mas, por separado (ver middleware/auth.js):
+ *
+ *   1. Que rol se concede    -> puedeAsignarRol (un admin de tenant no puede
+ *      conceder super_admin; whitelist de campos del body, nada de asignacion
+ *      masiva).
+ *   2. En que tenant se crea -> SIEMPRE req.user.tenantId para un admin
+ *      normal. Un admin NO puede elegir otro tenant ni con tenantId en el
+ *      body ni con X-Tenant-ID en la cabecera: ninguno de los dos se lee aqui
+ *      salvo que quien invita sea super_admin, y en ese caso solo el tenantId
+ *      explicito del body (nunca la cabecera, que ya tiene su propio canal de
+ *      override auditado en tenantMiddleware) y queda auditado aparte.
  */
 const adminInvite = async (req, res) => {
   try {
-    const { email, givenName, familyName, apellido2, role = 'agent' } = req.body;
+    // Lista blanca estricta: solo estos tres campos del body. Cualquier otra
+    // cosa (isActive, tenantId para un admin normal, password, hash...) se
+    // ignora, no se lee.
+    const { email: rawEmail, name, role = AGENT } = req.body;
+    const email = String(rawEmail || '').trim().toLowerCase();
+    const nombre = String(name || '').trim();
 
-    if (!email || !givenName || !familyName) {
-      return res.status(400).json({ success: false, error: 'email, givenName y familyName son obligatorios' });
+    if (!email || !nombre) {
+      return res.status(400).json({ success: false, error: 'email y name son obligatorios' });
     }
 
-    // Antes de tocar Cognito: un admin de tenant no puede invitar a un super_admin.
+    // Un admin de tenant no puede invitar a un rol superior al suyo (nada de
+    // super_admin); un super_admin si puede.
     if (!puedeAsignarRol(req.user, role)) {
       return res.status(403).json({ success: false, error: 'No tienes permisos para asignar ese rol.' });
     }
 
-    const tempPassword = crypto.randomBytes(12).toString('base64').slice(0, 12) + 'A1!';
+    // El tenant del usuario nuevo es SIEMPRE el del admin autenticado. Solo un
+    // super_admin puede elegirlo explicitamente, y queda auditado.
+    let tenantId = req.user.tenantId;
+    let tenantOverride = false;
+    if (isSuperAdmin(req.user) && req.body.tenantId) {
+      tenantId = req.body.tenantId;
+      tenantOverride = String(tenantId) !== String(req.user.tenantId || '');
+    }
+    if (!tenantId) {
+      return res.status(400).json({ success: false, error: 'No se pudo determinar el tenant para el usuario nuevo.' });
+    }
 
-    const cognitoResult = await cognitoService.adminCreateUser(
-      email, givenName, familyName, apellido2, tempPassword
-    );
+    // El email es unico en toda la plataforma (indice unico de User), no por
+    // tenant: si ya existe en CUALQUIER tenant se rechaza, sin decir en cual
+    // esta para no filtrar esa informacion a quien invita.
+    const yaExiste = await User.findOne({ email });
+    if (yaExiste) {
+      return res.status(409).json({ success: false, error: 'No se puede invitar: el correo ya esta en uso.' });
+    }
 
-    const cognitoSub = cognitoResult.User.Attributes.find(a => a.Name === 'sub')?.Value;
-    const fullName = [givenName, familyName, apellido2].filter(Boolean).join(' ');
+    // Temporal fuerte y aleatoria (crypto, no Math.random). Nunca se guarda en
+    // claro: el pre-save de User la hashea como cualquier otra contrasena.
+    const tempPassword = crypto.randomBytes(18).toString('base64').replace(/[+/=]/g, '').slice(0, 18) + 'aA1!';
 
     const user = new User({
       email,
-      name: fullName,
-      givenName,
-      familyName,
-      apellido2,
-      cognitoSub,
+      name: nombre,
       role,
-      tenantId: req.user.tenantId,
-      organizationId: req.user.tenantId,
+      tenantId,
+      organizationId: tenantId,
+      password: tempPassword,
+      isActive: true,
+      mustChangePassword: true,
+      tempPasswordExpires: new Date(Date.now() + INVITACION_HORAS_VALIDEZ * 60 * 60 * 1000),
       permissions: {
         canCreateExpeditions: true,
         canUploadDocuments: true,
@@ -676,21 +740,38 @@ const adminInvite = async (req, res) => {
     });
     await user.save();
 
-    await cognitoService.adminUpdateAttributes(cognitoSub, {
-      'custom:tenantId': String(req.user.tenantId),
-      'custom:role': role,
+    logger.info(`Admin invito usuario: ${email} (rol: ${role}) por ${req.user.email}`);
+    // Nunca la contrasena temporal en el log ni en la auditoria: metadata solo
+    // lleva email/rol/tenant. auditService.log tambien redacta por si acaso
+    // cualquier clave que contenga "password" llegara aqui.
+    req.audit?.({
+      action: 'admin_invite',
+      resource: 'User',
+      resourceId: user._id,
+      metadata: { email, role, tenantId: String(tenantId), tenantOverride }
     });
 
-    logger.info(`Admin invited user: ${email} (role: ${role}) by ${req.user.email}`);
-    req.audit?.({ action: 'admin_invite', resource: 'User', resourceId: user._id, metadata: { email, role } });
-
-    res.status(201).json({ success: true, data: user.toPublicJSON() });
+    res.status(201).json({
+      success: true,
+      data: {
+        user: user.toPublicJSON(),
+        // Se devuelve UNA sola vez, en esta respuesta. No se envia por email
+        // (no hay garantia de entrega: emailService.sendX ya falla en
+        // silencio hoy si SMTP/SES no esta configurado) ni se vuelve a
+        // mostrar en ningun otro sitio; el admin debe copiarla y entregarla
+        // por un canal seguro.
+        temporaryPassword: tempPassword
+      },
+      message: 'Usuario invitado. Esta contrasena temporal solo se muestra esta vez.'
+    });
   } catch (error) {
     logger.error('Error en admin invite:', error);
-    const msg = error.name === 'UsernameExistsException'
-      ? 'El usuario ya existe en el sistema'
-      : 'Error al invitar usuario';
-    res.status(error.name === 'UsernameExistsException' ? 409 : 500).json({ success: false, error: msg });
+    // E11000: alguien creo el mismo email entre el findOne y el save (TOCTOU).
+    // Mismo 409 generico que la comprobacion de arriba, sin revelar tenant.
+    if (error.code === 11000) {
+      return res.status(409).json({ success: false, error: 'No se puede invitar: el correo ya esta en uso.' });
+    }
+    res.status(500).json({ success: false, error: 'Error al invitar usuario' });
   }
 };
 

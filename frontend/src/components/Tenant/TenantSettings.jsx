@@ -14,10 +14,13 @@ import {
   ArrowPathIcon,
   FlagIcon,
   ArrowUpTrayIcon,
-  SignalIcon
+  SignalIcon,
+  UserPlusIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import api, { tenantEoriAPI } from '../../services/api';
 import H1PresentationSettings from './H1PresentationSettings';
+import { PasswordModal } from '../Admin/AdminPanel';
 import { PAISES_ADUANEROS, codigosHabilitados, eoriPorPais } from '../../constants/paisesAduaneros';
 
 const TenantSettings = () => {
@@ -37,6 +40,13 @@ const TenantSettings = () => {
   // EORI per country state
   const [eoriNumbers, setEoriNumbers] = useState({ ES: '', NL: '' });
   const [eoriSaving, setEoriSaving] = useState(false);
+
+  // Invitar usuario al tenant (POST /api/auth/admin/invite). Reutiliza
+  // PasswordModal de AdminPanel para mostrar la contraseña temporal una sola vez.
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteSubmitting, setInviteSubmitting] = useState(false);
+  const [inviteError, setInviteError] = useState(null);
+  const [invitedTempPassword, setInvitedTempPassword] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -113,6 +123,25 @@ const TenantSettings = () => {
       setMessage({ type: 'error', text: t('settings.saveError') });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleInviteUser = async (datosInvitacion) => {
+    setInviteSubmitting(true);
+    setInviteError(null);
+    try {
+      const res = await api.post('/api/auth/admin/invite', datosInvitacion);
+      // La contrasena temporal solo viaja en esta respuesta: se muestra una
+      // vez en PasswordModal y no se vuelve a guardar en ningun estado.
+      setInvitedTempPassword({
+        email: res.data.data.user.email,
+        password: res.data.data.temporaryPassword
+      });
+      setShowInviteModal(false);
+    } catch (error) {
+      setInviteError(error.response?.data?.error || t('settings.inviteErrorGeneric'));
+    } finally {
+      setInviteSubmitting(false);
     }
   };
 
@@ -607,9 +636,18 @@ const TenantSettings = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-medium text-gray-900">{t('settings.rolesPermissions')}</h2>
-              <button className="px-4 py-2 bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200">
-                {t('settings.createCustomRole')}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { setInviteError(null); setShowInviteModal(true); }}
+                  className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
+                >
+                  <UserPlusIcon className="h-5 w-5" />
+                  {t('settings.inviteUser')}
+                </button>
+                <button className="px-4 py-2 bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200">
+                  {t('settings.createCustomRole')}
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -744,9 +782,109 @@ const TenantSettings = () => {
           </div>
         )}
       </div>
+
+      {showInviteModal && (
+        <InviteUserModal
+          submitting={inviteSubmitting}
+          error={inviteError}
+          onClose={() => setShowInviteModal(false)}
+          onSubmit={handleInviteUser}
+        />
+      )}
+
+      {invitedTempPassword && (
+        <PasswordModal
+          email={invitedTempPassword.email}
+          password={invitedTempPassword.password}
+          onClose={() => setInvitedTempPassword(null)}
+        />
+      )}
     </div>
   );
 };
+
+// Formulario minimo para invitar un usuario al tenant actual (POST
+// /api/auth/admin/invite): correo, nombre y rol. El rol solo ofrece roles DE
+// TENANT -- conceder super_admin no es algo que esta pantalla permita.
+function InviteUserModal({ onClose, onSubmit, submitting, error }) {
+  const { t } = useTranslation();
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('agent');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit({ email, name, role });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h3 className="text-lg font-semibold">{t('settings.inviteUserTitle')}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <XMarkIcon className="w-6 h-6" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">
+              {error}
+            </div>
+          )}
+          <div>
+            <label htmlFor="invite-email" className="block text-sm font-medium text-gray-700 mb-1">{t('common.email')}</label>
+            <input
+              id="invite-email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </div>
+          <div>
+            <label htmlFor="invite-name" className="block text-sm font-medium text-gray-700 mb-1">{t('settings.inviteNameLabel')}</label>
+            <input
+              id="invite-name"
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </div>
+          <div>
+            <label htmlFor="invite-role" className="block text-sm font-medium text-gray-700 mb-1">{t('settings.role')}</label>
+            <select
+              id="invite-role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            >
+              <option value="agent">{t('admin.roleAgent')}</option>
+              <option value="supervisor">{t('admin.roleSupervisor')}</option>
+              <option value="admin">{t('admin.roleAdmin')}</option>
+              <option value="viewer">{t('admin.roleConsultant')}</option>
+            </select>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-800">
+              {t('common.cancel')}
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50"
+            >
+              {t('settings.inviteSubmit')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 // Multi-country customs configuration sub-component
 function CustomsTab({ tenant, setTenant, eoriNumbers, setEoriNumbers, eoriSaving, setEoriSaving,

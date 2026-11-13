@@ -1,4 +1,5 @@
 const { body, param, query, validationResult } = require('express-validator');
+const { TODOS: ROLES_VALIDOS } = require('../constants/roles');
 
 /**
  * Middleware para manejar errores de validacion
@@ -73,6 +74,31 @@ const authValidators = {
     body('password')
       .isLength({ min: 6 })
       .withMessage('La contrasena debe tener al menos 6 caracteres'),
+    handleValidationErrors
+  ],
+
+  // POST /api/auth/admin/invite. Lista blanca estricta: solo email, name y
+  // role. El formato de role solo exige que sea uno de los 5 roles que existen
+  // en el sistema (TODOS); QUIEN puede concederlo lo decide puedeAsignarRol en
+  // el controller (un admin de tenant no puede conceder super_admin, un
+  // super_admin si). tenantId NO se valida aqui a proposito -- adminInvite lo
+  // ignora para un admin normal (siempre usa req.user.tenantId) y solo lo lee
+  // del body si quien invita es super_admin.
+  adminInvite: [
+    body('email')
+      .isEmail()
+      .withMessage('Email invalido')
+      .normalizeEmail(),
+    body('name')
+      .trim()
+      .notEmpty()
+      .withMessage('El nombre es obligatorio')
+      .isLength({ max: 100 })
+      .withMessage('El nombre no puede exceder 100 caracteres'),
+    body('role')
+      .optional()
+      .isIn(ROLES_VALIDOS)
+      .withMessage(`Rol no valido (admitidos: ${ROLES_VALIDOS.join(', ')})`),
     handleValidationErrors
   ]
 };

@@ -106,7 +106,7 @@ router.put('/users/:id', auth, requireRole('admin'), authController.updateUser);
 // Cognito endpoints
 router.post('/session', authController.cognitoSession);
 router.post('/register-sync', authController.registerSync);
-router.post('/admin/invite', auth, requireRole('admin'), authController.adminInvite);
+router.post('/admin/invite', auth, requireRole('admin', 'super_admin'), authValidators.adminInvite, authController.adminInvite);
 router.post('/admin/disable/:id', auth, requireRole('admin'), authController.adminDisableUser);
 router.put('/change-password', auth, authController.cognitoChangePassword);
 
