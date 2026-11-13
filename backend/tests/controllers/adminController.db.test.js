@@ -189,6 +189,32 @@ describe('createUser', () => {
     const creado = await User.findOne({ email: 'hereda@x.es' });
     expect(creado.tenantId?.toString()).toBe(t.toString());
   });
+
+  // BAJO-C de la 2a revision de seguridad del 4.2: la politica unica (10-128,
+  // letra+numero, .isString()) tambien cuando el admin elige la contrasena
+  // aqui, no solo cuando se genera. Antes solo se exigia longitud >= 6.
+  test('rechaza una contrasena elegida por el admin que no cumple la politica (400, sin crear nada)', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const res = crearRes();
+    await ctrl.createUser({
+      user: adminDe(t),
+      body: { email: 'debil@x.es', name: 'Debil', role: 'agent', password: 'solo-letras' }
+    }, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(await User.findOne({ email: 'debil@x.es' })).toBeNull();
+  });
+
+  test('400 si la contrasena elegida por el admin llega como array', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const res = crearRes();
+    await ctrl.createUser({
+      user: adminDe(t),
+      body: { email: 'arreglo@x.es', name: 'Arreglo', role: 'agent', password: ['a', 'b'] }
+    }, res);
+
+    expect(res.statusCode).toBe(400);
+  });
 });
 
 describe('getUser/updateUser/deleteUser/resetUserPassword: 404 ante usuario ajeno', () => {
@@ -263,6 +289,29 @@ describe('getUser/updateUser/deleteUser/resetUserPassword: 404 ante usuario ajen
     const resLogin = crearRes();
     await authCtrl.login({ body: { email: u.email, password: 'DefinitivaDelAdmin1' }, audit: jest.fn() }, resLogin);
     expect(resLogin.statusCode).toBe(200);
+  });
+
+  // BAJO-C: misma politica en updateUser. Antes una contrasena de menos de
+  // 6 caracteres se ignoraba EN SILENCIO (ni error ni cambio); ahora se
+  // rechaza con 400 explicito, y un array nunca llega a .length.
+  test('rechaza una contrasena que no cumple la politica (400, sin cambios)', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const u = await usuario({ tenant: t, role: 'agent' });
+    const res = crearRes();
+
+    await ctrl.updateUser({ user: adminDe(t), params: { id: u._id }, body: { password: 'debil' } }, res);
+
+    expect(res.statusCode).toBe(400);
+  });
+
+  test('400 si la contrasena llega como array', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const u = await usuario({ tenant: t, role: 'agent' });
+    const res = crearRes();
+
+    await ctrl.updateUser({ user: adminDe(t), params: { id: u._id }, body: { password: ['a', 'b'] } }, res);
+
+    expect(res.statusCode).toBe(400);
   });
 
   test('resetUserPassword de otro tenant devuelve 404', async () => {

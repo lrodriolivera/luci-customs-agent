@@ -99,6 +99,18 @@ describe('PUT /api/auth/password exige una contrasena nueva fuerte', () => {
 
     expect(res.status).toBe(200);
   });
+
+  // BAJO-C de la 2a revision de seguridad del 4.2: un valor no-string no debe
+  // llegar a .length ni a una regex (eso es un 500, no una validacion).
+  test('400 (no 500) si la nueva llega como array', async () => {
+    const { token } = await crearUsuarioYToken();
+    const res = await request(crearApp())
+      .put('/api/auth/password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: 'Password123!', newPassword: ['NuevaValida99', 'OtraMas1'] });
+
+    expect(res.status).toBe(400);
+  });
 });
 
 describe('la politica nueva no rompe a usuarios existentes con contrasena corta', () => {
@@ -111,6 +123,60 @@ describe('la politica nueva no rompe a usuarios existentes con contrasena corta'
     const res = await request(crearApp())
       .post('/api/auth/login')
       .send({ email: 'legacy@t-a.es', password: 'abc123' });
+
+    expect(res.status).toBe(200);
+  });
+});
+
+// BAJO-C: la misma politica (10-128, letra+numero, .isString()) tambien en
+// POST /api/auth/reset-password/:token, que antes solo exigia minlength 6.
+describe('POST /api/auth/reset-password/:token exige la misma politica', () => {
+  const crypto = require('crypto');
+
+  async function crearUsuarioConTokenDeReset() {
+    const user = await User.create({
+      email: `reset-${Date.now()}-${Math.round(performance.now() * 1000)}@t-a.es`,
+      password: 'Password123!', name: 'Usuario Reset', role: 'agent', tenantId: tenantA._id, isActive: true
+    });
+    const token = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
+    user.resetPasswordExpires = Date.now() + 3600000;
+    await user.save({ validateBeforeSave: false });
+    return { user, token };
+  }
+
+  test('400 (no 500) si la password llega como array', async () => {
+    const { token } = await crearUsuarioConTokenDeReset();
+    const res = await request(crearApp())
+      .post(`/api/auth/reset-password/${token}`)
+      .send({ password: ['NuevaValida99', 'OtraMas1'] });
+
+    expect(res.status).toBe(400);
+  });
+
+  test('400 si la nueva no tiene ningun numero', async () => {
+    const { token } = await crearUsuarioConTokenDeReset();
+    const res = await request(crearApp())
+      .post(`/api/auth/reset-password/${token}`)
+      .send({ password: 'SoloLetrasSinNumeros' });
+
+    expect(res.status).toBe(400);
+  });
+
+  test('400 si la nueva tiene menos de 10 caracteres', async () => {
+    const { token } = await crearUsuarioConTokenDeReset();
+    const res = await request(crearApp())
+      .post(`/api/auth/reset-password/${token}`)
+      .send({ password: 'Corta1' });
+
+    expect(res.status).toBe(400);
+  });
+
+  test('200 con una contrasena que cumple la politica', async () => {
+    const { token } = await crearUsuarioConTokenDeReset();
+    const res = await request(crearApp())
+      .post(`/api/auth/reset-password/${token}`)
+      .send({ password: 'NuevaValidaReset99' });
 
     expect(res.status).toBe(200);
   });

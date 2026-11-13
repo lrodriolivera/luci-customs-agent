@@ -1,5 +1,19 @@
 const { body, param, query, validationResult } = require('express-validator');
 const { TODOS: ROLES_VALIDOS } = require('../constants/roles');
+const { esPasswordValida, MENSAJE_POLITICA } = require('../utils/passwordPolicy');
+
+/**
+ * Chain reutilizable para "poner una contrasena nueva" (BAJO-C de la 2a
+ * revision de seguridad del 4.2): un solo punto, usado en changePassword y
+ * resetPassword, en vez de que cada ruta valide a su manera (o no valide).
+ * .custom() en vez de .isLength()/.matches() sueltos porque esos operan
+ * sobre texto y coaccionan valores no-string; esPasswordValida() comprueba
+ * el tipo primero y nunca llega a comparar longitud de un array.
+ */
+const passwordNuevaValidator = (campo) =>
+  body(campo)
+    .custom((value) => esPasswordValida(value))
+    .withMessage(MENSAJE_POLITICA);
 
 /**
  * Middleware para manejar errores de validacion
@@ -71,29 +85,21 @@ const authValidators = {
       .withMessage('Token invalido')
       .isLength({ min: 64, max: 64 })
       .withMessage('Token invalido'),
-    body('password')
-      .isLength({ min: 6 })
-      .withMessage('La contrasena debe tener al menos 6 caracteres'),
+    passwordNuevaValidator('password'),
     handleValidationErrors
   ],
 
-  // PUT /api/auth/password. La politica (10-128 caracteres, letras Y
-  // numeros) se aplica SOLO al poner una contrasena nueva aqui: no se toco el
-  // minlength del esquema de User (6), asi que un usuario con una contrasena
-  // corta de antes de este cambio sigue iniciando sesion sin problema. Que
-  // la nueva no sea igual a la actual se comprueba en el controller (hace
-  // falta el hash guardado, no algo que un validador de forma pueda ver).
+  // PUT /api/auth/password. La politica se aplica SOLO al poner una
+  // contrasena nueva aqui: no se toco el minlength del esquema de User (6),
+  // asi que un usuario con una contrasena corta de antes de este cambio
+  // sigue iniciando sesion sin problema. Que la nueva no sea igual a la
+  // actual se comprueba en el controller (hace falta el hash guardado, no
+  // algo que un validador de forma pueda ver).
   changePassword: [
     body('currentPassword')
       .notEmpty()
       .withMessage('La contrasena actual es obligatoria'),
-    body('newPassword')
-      .isLength({ min: 10, max: 128 })
-      .withMessage('La contrasena nueva debe tener entre 10 y 128 caracteres')
-      .matches(/[A-Za-z]/)
-      .withMessage('La contrasena nueva debe incluir al menos una letra')
-      .matches(/\d/)
-      .withMessage('La contrasena nueva debe incluir al menos un numero'),
+    passwordNuevaValidator('newPassword'),
     handleValidationErrors
   ],
 

@@ -102,7 +102,7 @@ describe('adminController.updateUser (PUT /api/admin/users/:id)', () => {
     const res = crearRes();
 
     await adminController.updateUser(
-      { user: ADMIN_T1, params: { id: 'u2' }, body: { role: 'super_admin', password: 'Known123!' } },
+      { user: ADMIN_T1, params: { id: 'u2' }, body: { role: 'super_admin', password: 'Known1234!' } },
       res
     );
 
@@ -155,7 +155,7 @@ describe('adminController.createUser (POST /api/admin/users)', () => {
     const res = crearRes();
 
     await adminController.createUser(
-      { user: ADMIN_T1, body: { email: 'nuevo@t1.es', name: 'Nuevo', role: 'super_admin', password: 'Known123!' } },
+      { user: ADMIN_T1, body: { email: 'nuevo@t1.es', name: 'Nuevo', role: 'super_admin', password: 'Known1234!' } },
       res
     );
 
@@ -169,7 +169,7 @@ describe('adminController.createUser (POST /api/admin/users)', () => {
     const res = crearRes();
 
     await adminController.createUser(
-      { user: SUPER, body: { email: 'nuevo@plataforma.es', name: 'Nuevo', role: 'super_admin', password: 'Known123!' } },
+      { user: SUPER, body: { email: 'nuevo@plataforma.es', name: 'Nuevo', role: 'super_admin', password: 'Known1234!' } },
       res
     );
 

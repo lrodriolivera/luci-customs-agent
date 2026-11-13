@@ -10,6 +10,7 @@ const logger = require('../config/logger');
 const crypto = require('crypto');
 const { puedeAsignarRol, puedeGestionarUsuario } = require('../constants/roles');
 const { generarContrasenaTemporal, calcularExpiracionTemporal } = require('../utils/tempPassword');
+const { esPasswordValida, MENSAJE_POLITICA } = require('../utils/passwordPolicy');
 
 const { escapeRegex } = require('../utils/escapeRegex');
 const { scrub } = require('../services/auditService');
@@ -194,10 +195,10 @@ const createUser = async (req, res) => {
     if (!password || generatePassword) {
       generatedPassword = generarContrasenaTemporal();
       userPassword = generatedPassword;
-    }
-
-    if (userPassword.length < 6) {
-      return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres' });
+    } else if (!esPasswordValida(password)) {
+      // Solo se valida la que elige el admin: la generada ya cumple la
+      // politica por construccion (ver utils/tempPassword).
+      return res.status(400).json({ success: false, error: MENSAJE_POLITICA });
     }
 
     // El usuario nuevo hereda el tenant del admin que lo crea. Sin esto quedaba
@@ -294,10 +295,18 @@ const updateUser = async (req, res) => {
       return res.status(403).json({ success: false, error: 'No tienes permisos para asignar ese rol.' });
     }
 
+    // Antes una contrasena que no llegaba a 6 caracteres se ignoraba EN
+    // SILENCIO (ni error ni cambio, el admin creia haberla puesto). Ahora se
+    // valida con la misma politica que el resto de puntos que dejan poner
+    // una contrasena nueva (BAJO-C): 400 explicito si no la cumple.
+    if (password !== undefined && !esPasswordValida(password)) {
+      return res.status(400).json({ success: false, error: MENSAJE_POLITICA });
+    }
+
     if (name) user.name = name;
     if (role) user.role = role;
     if (status !== undefined) user.isActive = status === 'active';
-    if (password && password.length >= 6) {
+    if (password) {
       // Igual que createUser con una contrasena elegida por el admin: ya no es
       // una temporal, asi que deja de exigirse el cambio en el primer acceso.
       // Sin esto, un pendiente CADUCADO con la contrasena ya puesta por el
