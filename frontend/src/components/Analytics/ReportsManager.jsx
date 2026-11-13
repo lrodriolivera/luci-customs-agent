@@ -6,7 +6,6 @@ import {
   TrashIcon,
   PlusIcon,
   CalendarIcon,
-  ClockIcon,
   FunnelIcon,
   MagnifyingGlassIcon,
   ArrowPathIcon,
@@ -72,7 +71,6 @@ export default function ReportsManager() {
   const [reports, setReports] = useState([])
   const [reportTypes, setReportTypes] = useState([])
   const [showGenerateModal, setShowGenerateModal] = useState(false)
-  const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('')
@@ -83,12 +81,6 @@ export default function ReportsManager() {
   const [selectedFormat, setSelectedFormat] = useState('pdf')
   const [reportTitle, setReportTitle] = useState('')
   const [includeLuciAnalysis, setIncludeLuciAnalysis] = useState(true)
-
-  // Schedule form state
-  const [scheduleFrequency, setScheduleFrequency] = useState('weekly')
-  const [scheduleDay, setScheduleDay] = useState(1)
-  const [scheduleTime, setScheduleTime] = useState('08:00')
-  const [scheduleRecipients, setScheduleRecipients] = useState('')
 
   useEffect(() => {
     loadReportTypes()
@@ -163,40 +155,6 @@ export default function ReportsManager() {
     }
   }
 
-  const handleScheduleReport = async () => {
-    if (!selectedType) {
-      toast.error('Selecciona un tipo de informe')
-      return
-    }
-
-    try {
-      setGenerating(true)
-      const response = await analyticsAPI.reports.schedule({
-        type: selectedType,
-        frequency: scheduleFrequency,
-        dayOfWeek: scheduleFrequency === 'weekly' ? scheduleDay : undefined,
-        dayOfMonth: scheduleFrequency === 'monthly' ? scheduleDay : undefined,
-        time: scheduleTime,
-        format: selectedFormat,
-        recipients: scheduleRecipients.split(',').map(e => e.trim()).filter(Boolean),
-        options: { includeLuciAnalysis }
-      })
-
-      if (response.data.success) {
-        toast.success('Informe programado correctamente')
-        setShowScheduleModal(false)
-        resetForm()
-      } else {
-        toast.error(response.data.error || 'Error programando informe')
-      }
-    } catch (error) {
-      toast.error('Error programando informe')
-      console.error(error)
-    } finally {
-      setGenerating(false)
-    }
-  }
-
   const handleDownloadReport = async (reportId, format) => {
     try {
       const response = await analyticsAPI.reports.download(reportId, format)
@@ -229,10 +187,6 @@ export default function ReportsManager() {
     setSelectedFormat('pdf')
     setReportTitle('')
     setIncludeLuciAnalysis(true)
-    setScheduleFrequency('weekly')
-    setScheduleDay(1)
-    setScheduleTime('08:00')
-    setScheduleRecipients('')
   }
 
   const filteredReports = reports.filter(report => {
@@ -276,13 +230,6 @@ export default function ReportsManager() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowScheduleModal(true)}
-            className="btn-secondary"
-          >
-            <ClockIcon className="w-5 h-5 mr-2" />
-            {t('analyticsPage.schedule')}
-          </button>
           <button
             onClick={() => setShowGenerateModal(true)}
             className="btn-primary"
@@ -592,182 +539,6 @@ export default function ReportsManager() {
         </div>
       )}
 
-      {/* Schedule Report Modal */}
-      {showScheduleModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">Programar Informe</h2>
-                <button
-                  onClick={() => { setShowScheduleModal(false); resetForm(); }}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                >
-                  <XMarkIcon className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {/* Report Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo de Informe
-                </label>
-                <select
-                  value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="input-field"
-                >
-                  <option value="">Seleccionar tipo...</option>
-                  {reportTypes.map((type) => (
-                    <option key={type.type} value={type.type}>{type.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Frequency */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Frecuencia
-                </label>
-                <select
-                  value={scheduleFrequency}
-                  onChange={(e) => setScheduleFrequency(e.target.value)}
-                  className="input-field"
-                >
-                  <option value="daily">Diario</option>
-                  <option value="weekly">Semanal</option>
-                  <option value="monthly">Mensual</option>
-                </select>
-              </div>
-
-              {/* Day Selection */}
-              {scheduleFrequency === 'weekly' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Día de la semana
-                  </label>
-                  <select
-                    value={scheduleDay}
-                    onChange={(e) => setScheduleDay(parseInt(e.target.value))}
-                    className="input-field"
-                  >
-                    <option value={1}>Lunes</option>
-                    <option value={2}>Martes</option>
-                    <option value={3}>Miércoles</option>
-                    <option value={4}>Jueves</option>
-                    <option value={5}>Viernes</option>
-                  </select>
-                </div>
-              )}
-
-              {scheduleFrequency === 'monthly' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Día del mes
-                  </label>
-                  <select
-                    value={scheduleDay}
-                    onChange={(e) => setScheduleDay(parseInt(e.target.value))}
-                    className="input-field"
-                  >
-                    {Array.from({ length: 28 }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>{i + 1}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Time */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Hora
-                </label>
-                <input
-                  type="time"
-                  value={scheduleTime}
-                  onChange={(e) => setScheduleTime(e.target.value)}
-                  className="input-field"
-                />
-              </div>
-
-              {/* Format */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Formato
-                </label>
-                <select
-                  value={selectedFormat}
-                  onChange={(e) => setSelectedFormat(e.target.value)}
-                  className="input-field"
-                >
-                  {FORMAT_OPTIONS.map((format) => (
-                    <option key={format.value} value={format.value}>
-                      {format.icon} {format.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Recipients */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Destinatarios (emails separados por coma)
-                </label>
-                <input
-                  type="text"
-                  value={scheduleRecipients}
-                  onChange={(e) => setScheduleRecipients(e.target.value)}
-                  placeholder="email1@example.com, email2@example.com"
-                  className="input-field"
-                />
-              </div>
-
-              {/* LUCI Analysis */}
-              <div className="flex items-center gap-3 p-4 bg-luci-light rounded-lg">
-                <input
-                  type="checkbox"
-                  id="includeScheduleLuci"
-                  checked={includeLuciAnalysis}
-                  onChange={(e) => setIncludeLuciAnalysis(e.target.checked)}
-                  className="w-4 h-4 text-luci border-gray-300 rounded focus:ring-luci"
-                />
-                <label htmlFor="includeScheduleLuci" className="flex items-center gap-2 text-sm">
-                  <SparklesIcon className="w-5 h-5 text-luci" />
-                  Incluir análisis de LUCI
-                </label>
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-              <button
-                onClick={() => { setShowScheduleModal(false); resetForm(); }}
-                className="btn-secondary"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleScheduleReport}
-                disabled={!selectedType || generating}
-                className="btn-primary"
-              >
-                {generating ? (
-                  <>
-                    <ArrowPathIcon className="w-5 h-5 mr-2 animate-spin" />
-                    Programando...
-                  </>
-                ) : (
-                  <>
-                    <ClockIcon className="w-5 h-5 mr-2" />
-                    Programar
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     <ConfirmDialog {...dialogProps} />
     </div>
   )
