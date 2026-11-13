@@ -77,17 +77,23 @@ const authValidators = {
     handleValidationErrors
   ],
 
-  // PUT /api/auth/password. Solo exige presencia aqui; la politica de
-  // fortaleza de newPassword (longitud, letras+numeros) vive en su propio
-  // arreglo de seguridad -- ver el comentario junto a la constante de abajo
-  // cuando se añada.
+  // PUT /api/auth/password. La politica (10-128 caracteres, letras Y
+  // numeros) se aplica SOLO al poner una contrasena nueva aqui: no se toco el
+  // minlength del esquema de User (6), asi que un usuario con una contrasena
+  // corta de antes de este cambio sigue iniciando sesion sin problema. Que
+  // la nueva no sea igual a la actual se comprueba en el controller (hace
+  // falta el hash guardado, no algo que un validador de forma pueda ver).
   changePassword: [
     body('currentPassword')
       .notEmpty()
       .withMessage('La contrasena actual es obligatoria'),
     body('newPassword')
-      .notEmpty()
-      .withMessage('La contrasena nueva es obligatoria'),
+      .isLength({ min: 10, max: 128 })
+      .withMessage('La contrasena nueva debe tener entre 10 y 128 caracteres')
+      .matches(/[A-Za-z]/)
+      .withMessage('La contrasena nueva debe incluir al menos una letra')
+      .matches(/\d/)
+      .withMessage('La contrasena nueva debe incluir al menos un numero'),
     handleValidationErrors
   ],
 

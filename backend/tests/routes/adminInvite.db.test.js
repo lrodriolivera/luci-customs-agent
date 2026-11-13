@@ -303,10 +303,18 @@ describe('primer acceso: cambio de contrasena obligatorio', () => {
     const cambio = await request(app)
       .put('/api/auth/password')
       .set('Authorization', `Bearer ${tokenInvitado}`)
-      .send({ currentPassword: temporal, newPassword: 'NuevaContrasenaDefinitiva1!' });
+      .send({ currentPassword: temporal, newPassword: 'NuevaContrasenaDefinitiva1' });
     expect(cambio.status).toBe(200);
 
-    const listadoTrasCambio = await request(app).get('/api/auth/users').set('Authorization', `Bearer ${tokenInvitado}`);
+    // El cambio de contrasena invalida el token viejo (passwordChangedAt);
+    // el cliente debe usar el nuevo que devuelve la respuesta.
+    const tokenTrasCambio = cambio.body.data.token;
+    expect(tokenTrasCambio).toBeTruthy();
+
+    const conTokenViejo = await request(app).get('/api/auth/users').set('Authorization', `Bearer ${tokenInvitado}`);
+    expect(conTokenViejo.status).toBe(401);
+
+    const listadoTrasCambio = await request(app).get('/api/auth/users').set('Authorization', `Bearer ${tokenTrasCambio}`);
     expect(listadoTrasCambio.status).toBe(200);
 
     const reLogin = await request(app)

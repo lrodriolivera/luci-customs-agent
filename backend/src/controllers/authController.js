@@ -269,6 +269,14 @@ const changePassword = async (req, res) => {
       });
     }
 
+    // La temporal no puede quedarse como definitiva "cambiandola" por si misma.
+    if (await user.comparePassword(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        error: 'La contrasena nueva no puede ser igual a la actual'
+      });
+    }
+
     // Actualizar password. Si venia de una invitacion con contrasena temporal
     // (mustChangePassword), este es el momento en que deja de serlo: la
     // temporal queda sustituida (de un solo uso) y el resto de rutas, que
