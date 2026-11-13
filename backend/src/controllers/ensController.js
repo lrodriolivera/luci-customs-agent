@@ -416,7 +416,9 @@ exports.submit = async (req, res) => {
     // ErrorValidacion (ej. falta el EORI del representante, identificadorAduanero.js)
     // lleva su propio status 422: un dato que falta completar, no un fallo del
     // servidor. Sin esto el cliente siempre recibia 500 y perdia el mensaje concreto.
-    const status = error.status || 500;
+    // Solo los errores de validacion propios: un status de otra libreria (p. ej. un
+    // 401 de la AEAT) no debe llegar tal cual al navegador, que cerraria la sesion.
+    const status = error.name === 'ErrorValidacion' ? error.status : 500;
     res.status(status).json({
       success: false,
       message: status === 500 ? 'Error al enviar declaracion ENS' : error.message,
