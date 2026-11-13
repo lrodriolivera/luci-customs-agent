@@ -126,18 +126,21 @@ describe('extraccionDocumento', () => {
       expect(d.exportador).toMatchObject({ ciudad: '12345', codigoPostal: null });
     });
 
-    test('una matricula que no cumple el formato ISO se guarda sola, sin el tipo ni el precinto', () => {
+    test('lo que no cumple el formato ISO no es un contenedor: pasa a los precintos y se anota (BL real, 13/Nov/2026)', () => {
       const d = normalizarExtraccion({ transporte: { contenedores: ['MSCU1150584400 (40HC, PRECINTO SL264686400)', 'TGHU 88422-170 / 20GP', 'sin numero'] } });
-      expect(d.transporte.contenedores).toEqual(['MSCU1150584400', 'TGHU88422170', 'SINNUMERO']);
+      expect(d.transporte.contenedores).toEqual([]);
+      expect(d.transporte.precintos).toEqual(['MSCU1150584400', 'TGHU88422170']);
+      expect(d.notas).toEqual(['Precintos (no son contenedores): MSCU1150584400, TGHU88422170.']);
     });
 
     test('del contenedor se guarda solo la matricula ISO, sin el tipo ni el precinto', () => {
       // Lectura real de un Excel: «TGHU8842217 (40HC, FCL/FCL)» llegaba como «TGHU8842217(40HC)».
       const cont = (lista) => normalizarExtraccion({ transporte: { contenedores: lista } }).transporte.contenedores;
 
-      expect(cont(['TGHU8842217 (40HC)', 'tghu 884221-7', 'Container MSCU1150584 / seal 99'])).toEqual(['TGHU8842217', 'TGHU8842217', 'MSCU1150584']);
-      // Si no hay una matricula valida se conserva lo leido, para que el agente lo vea.
-      expect(cont(['MSCU1150584400'])).toEqual(['MSCU1150584400']);
+      expect(cont(['TGHU8842217 (40HC)', 'tghu 884221-7', 'Container MSCU1150584 / seal 99'])).toEqual(['TGHU8842217', 'MSCU1150584']);
+      // El mismo contenedor leido dos veces es uno solo.
+      // Sin una matricula valida no es un contenedor (va a los precintos, y a las notas).
+      expect(cont(['MSCU1150584400'])).toEqual([]);
       expect(cont([null, '', 'N/A'])).toEqual([]);
     });
 

@@ -1002,7 +1002,8 @@ Responde en JSON con el formato especificado en el system prompt.`;
     }
 
     try {
-      return { ...normalizarExtraccion(this._parseJsonRespuesta(result.content)), leido: true, modelo: labelFor(result.model) };
+      const lectura = normalizarExtraccion(this._parseJsonRespuesta(result.content), { tipoDeclarado: document.type });
+      return { ...lectura, leido: true, modelo: labelFor(result.model) };
     } catch (e) {
       logger.warn(`extractDocumentData: respuesta no interpretable (${e.message})`);
       return noLeido('No se pudo interpretar la lectura del documento.');
