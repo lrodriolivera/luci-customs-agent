@@ -10,7 +10,7 @@
 
 const mongoose = require('mongoose');
 const { usarBaseDeDatosEnMemoria } = require('../helpers/memoryDb');
-const { InspectorCommunication, ChatMessage, Expedition } = require('../../src/models');
+const { InspectorCommunication, ChatMessage, Expedition, Report } = require('../../src/models');
 
 usarBaseDeDatosEnMemoria();
 
@@ -78,5 +78,42 @@ describe('InspectorCommunication', () => {
     const com = await InspectorCommunication.findById(insertedId);
     com.subject = 'Editada';
     await expect(com.save()).resolves.toBeDefined();
+  });
+});
+
+/**
+ * Report (PR 4.3: informes de analitica persistidos en Mongo). A diferencia de
+ * ChatMessage/InspectorCommunication no hay documentos "antiguos" sin tenant
+ * que respetar: es un modelo nuevo, asi que tenantId es obligatorio sin
+ * excepcion para legado.
+ */
+describe('Report', () => {
+  const datosInforme = (extra = {}) => ({
+    generatedBy: new mongoose.Types.ObjectId(),
+    type: 'executive_summary',
+    format: 'pdf',
+    period: 'last_30_days',
+    ...extra
+  });
+
+  test('un informe nuevo sin tenantId se rechaza', async () => {
+    await expect(Report.create(datosInforme())).rejects.toThrow(/tenantId/);
+  });
+
+  test('insertMany tambien exige tenantId', async () => {
+    await expect(Report.insertMany([datosInforme()])).rejects.toThrow(/tenantId/);
+  });
+
+  test('con tenantId se crea', async () => {
+    const tenant = new mongoose.Types.ObjectId();
+    const rep = await Report.create(datosInforme({ tenantId: tenant }));
+    expect(String(rep.tenantId)).toBe(String(tenant));
+  });
+
+  test('sin generatedBy se rechaza (siempre hay un autor autenticado)', async () => {
+    const tenant = new mongoose.Types.ObjectId();
+    const sinAutor = datosInforme({ tenantId: tenant });
+    delete sinAutor.generatedBy;
+    await expect(Report.create(sinAutor)).rejects.toThrow();
   });
 });

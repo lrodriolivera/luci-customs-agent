@@ -274,7 +274,9 @@ async function generateReport(req, res) {
 async function getReport(req, res) {
   try {
     const { id } = req.params;
-    const result = reportsService.getReport(id, req.user?.id);
+    // Acotado al tenant del usuario (filtroTenantOPlataforma dentro del
+    // servicio); un id de otro tenant responde 404, igual que si no existiera.
+    const result = await reportsService.getReport(id, req.user);
 
     if (!result.success) {
       return res.status(404).json(result);
@@ -295,13 +297,12 @@ async function listReports(req, res) {
   try {
     const { type, period, page, limit } = req.query;
 
-    const result = reportsService.listReports({
+    const result = await reportsService.listReports({
       type,
       period,
       page: parseInt(page) || 1,
-      limit: parseInt(limit) || 20,
-      userId: req.user?.id
-    });
+      limit: parseInt(limit) || 20
+    }, req.user);
 
     res.json(result);
   } catch (error) {
@@ -319,7 +320,7 @@ async function downloadReport(req, res) {
     const { id } = req.params;
     const { format } = req.query;
 
-    const result = await reportsService.exportReport(id, format || 'pdf', req.user?.id);
+    const result = await reportsService.exportReport(id, format || 'pdf', req.user);
 
     if (!result.success) {
       return res.status(404).json(result);
@@ -341,7 +342,7 @@ async function downloadReport(req, res) {
 async function deleteReport(req, res) {
   try {
     const { id } = req.params;
-    const result = reportsService.deleteReport(id, req.user?.id);
+    const result = await reportsService.deleteReport(id, req.user);
 
     if (!result.success) {
       return res.status(404).json(result);
@@ -394,24 +395,15 @@ async function previewReport(req, res) {
 /**
  * Schedule recurring report
  * POST /api/analytics/reports/schedule
+ *
+ * No hay planificador real en el backend (ni cron, ni agenda, ni BullMQ con
+ * jobs repetibles): la unica cola existente (queueService, BullMQ) se usa para
+ * trabajos puntuales y, sin Redis, cae a ejecucion inline en vez de repetir, lo
+ * que la haria fallar en silencio como programador. Mejor no fingir que esto
+ * funciona: 501, igual que el resto de metricas sin fuente real.
  */
 async function scheduleReport(req, res) {
-  try {
-    const config = req.body;
-
-    if (!config.type || !config.frequency) {
-      return res.status(400).json({
-        success: false,
-        error: 'Report type and frequency are required'
-      });
-    }
-
-    const result = reportsService.scheduleReport(config);
-    res.json(result);
-  } catch (error) {
-    logger.error(`[AnalyticsController] Schedule report error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
-  }
+  return noImplementado(res, 'No hay planificador de informes recurrentes en el backend');
 }
 
 // ==================== KPIs ====================

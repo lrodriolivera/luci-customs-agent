@@ -1,21 +1,23 @@
 /**
- * reportsService: generacion, listado, exportacion y programacion de informes.
+ * reportsService: generacion, listado, exportacion y borrado de informes.
  *
- * El servicio guarda los informes en un Map en memoria (no en Mongo) y se apoya
- * en analyticsService para los datos y en aiService para el resumen ejecutivo.
- * Lo que se prueba de verdad, sin salir a red ni BD:
- *   1. El catalogo de tipos y la previsualizacion (plantillas y paginas estimadas).
- *   2. El ciclo completo generate -> get -> list -> export -> delete y, sobre
- *      todo, el AISLAMIENTO POR PROPIETARIO: getReport/deleteReport con el id de
- *      un informe ajeno responden "not found", nunca los datos.
- *   3. La programacion recurrente: el calculo de la proxima ejecucion en las tres
- *      frecuencias (daily/weekly/monthly).
+ * El servicio guardaba los informes en un Map en memoria (se perdian en cada
+ * reinicio y no estaban aislados por tenant de forma persistente). Ahora
+ * persisten en Mongo (modelo Report, tenantId obligatorio) y listar/ver/
+ * exportar/borrar filtran SIEMPRE por el tenant del usuario. El aislamiento
+ * ENTRE TENANTS en profundidad vive en reportOwnership.db.test.js; aqui se
+ * prueba el ciclo de vida normal (generar -> ver -> listar -> exportar ->
+ * borrar) y la cobertura de secciones/formatos que ya existia.
  *
- * Que se mockea y por que: analyticsService (sale a Mongo agregando metricas) y
- * aiService (sale a Bedrock). Son deps externas legitimas. El propio
- * reportsService —incluida su logica de mapeo de secciones y el guard de
- * propiedad— se ejecuta de verdad; nada de eso se mockea.
+ * Que se mockea y por que: analyticsService/realMetricsService (saldrian a
+ * Mongo agregando metricas reales, cubierto en otras suites) y aiService
+ * (sale a Bedrock). El propio reportsService, incluida su logica de mapeo de
+ * secciones, se ejecuta de verdad; nada de eso se mockea. Mongo es real
+ * (mongodb-memory-server): la persistencia es precisamente lo que se prueba.
  */
+
+const mongoose = require('mongoose');
+const { usarBaseDeDatosEnMemoria } = require('../../helpers/memoryDb');
 
 jest.mock('../../../src/services/analytics/realMetricsService', () => ({
   NO_DISPONIBLE: {},
@@ -34,6 +36,17 @@ jest.mock('../../../src/services/aiService', () => ({
 const realMetrics = require('../../../src/services/analytics/realMetricsService');
 const aiService = require('../../../src/services/aiService');
 const reports = require('../../../src/services/analytics/reportsService');
+
+usarBaseDeDatosEnMemoria();
+
+/** Usuario autenticado de un tenant nuevo: id y tenantId reales (ObjectId). */
+function crearActor(role = 'agent') {
+  return { id: String(new mongoose.Types.ObjectId()), tenantId: String(new mongoose.Types.ObjectId()), role };
+}
+
+/** Genera un informe para `actor` y devuelve el resultado completo. */
+const generar = (type, actor, extra = {}) =>
+  reports.generateReport(type, { userId: actor.id, tenantId: actor.tenantId, includeLuciAnalysis: false, ...extra });
 
 beforeEach(() => {
   // resetMocks borra la implementacion de fabrica antes de cada test: hay que
@@ -82,107 +95,130 @@ describe('previewReport: previsualizacion ligera', () => {
   });
 });
 
-describe('ciclo de vida del informe con aislamiento por propietario', () => {
-  test('generate lo guarda; get lo recupera para su dueno; un ajeno recibe not found', async () => {
-    const gen = await reports.generateReport('executive_summary', { userId: 'user-1', includeLuciAnalysis: false });
-    expect(gen.success).toBe(true);
-    const id = gen.report.id;
-
-    const propio = reports.getReport(id, 'user-1');
-    expect(propio.success).toBe(true);
-    expect(propio.report.generatedBy).toBe('user-1');
-
-    const ajeno = reports.getReport(id, 'user-2');
-    expect(ajeno.success).toBe(false);
-    expect(ajeno.error).toBe('Report not found');
-    expect(ajeno.report).toBeUndefined();
+describe('generateReport: tenantId obligatorio para persistir', () => {
+  test('sin tenantId no genera (ni guarda) nada', async () => {
+    const actor = crearActor();
+    const r = await reports.generateReport('executive_summary', { userId: actor.id, includeLuciAnalysis: false });
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/tenant/);
   });
 
-  test('generate de un tipo desconocido falla y no guarda nada', async () => {
-    const r = await reports.generateReport('inexistente', { userId: 'user-1' });
+  test('con tenantId null (usuario sin tenant) tampoco genera', async () => {
+    const actor = crearActor();
+    const r = await reports.generateReport('executive_summary', { userId: actor.id, tenantId: null, includeLuciAnalysis: false });
     expect(r.success).toBe(false);
   });
 
-  test('listReports filtra por userId (no muestra informes de otros)', async () => {
-    await reports.generateReport('financial_report', { userId: 'owner-A', includeLuciAnalysis: false });
-    await reports.generateReport('financial_report', { userId: 'owner-B', includeLuciAnalysis: false });
-
-    const soloA = reports.listReports({ userId: 'owner-A' });
-    expect(soloA.reports.every(r => r.generatedBy === 'owner-A')).toBe(true);
-    expect(soloA.reports.length).toBeGreaterThanOrEqual(1);
+  test('sin userId (sin autor autenticado) tampoco genera', async () => {
+    const actor = crearActor();
+    const r = await reports.generateReport('executive_summary', { tenantId: actor.tenantId, includeLuciAnalysis: false });
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/usuario/);
   });
+});
 
-  test('exportReport a JSON y CSV funciona sobre un informe propio', async () => {
-    const gen = await reports.generateReport('customs_statistics', { userId: 'exp-user', includeLuciAnalysis: false });
+describe('ciclo de vida del informe', () => {
+  test('generate lo persiste; get lo recupera; exportReport y deleteReport operan sobre el mismo id', async () => {
+    const actor = crearActor();
+    const gen = await generar('executive_summary', actor);
+    expect(gen.success).toBe(true);
     const id = gen.report.id;
 
-    const json = await reports.exportReport(id, 'json', 'exp-user');
+    const leido = await reports.getReport(id, actor);
+    expect(leido.success).toBe(true);
+    expect(leido.report.generatedBy).toBe(actor.id);
+    expect(leido.report.tenantId).toBe(actor.tenantId);
+
+    const exportado = await reports.exportReport(id, 'json', actor);
+    expect(exportado.success).toBe(true);
+
+    const borrado = await reports.deleteReport(id, actor);
+    expect(borrado.success).toBe(true);
+    expect((await reports.getReport(id, actor)).success).toBe(false);
+  });
+
+  test('generate de un tipo desconocido falla y no guarda nada', async () => {
+    const actor = crearActor();
+    const r = await reports.generateReport('inexistente', { userId: actor.id, tenantId: actor.tenantId });
+    expect(r.success).toBe(false);
+    const listado = await reports.listReports({}, actor);
+    expect(listado.reports).toHaveLength(0);
+  });
+
+  test('listReports devuelve los informes del tenant del usuario', async () => {
+    const actor = crearActor();
+    await generar('financial_report', actor);
+    await generar('financial_report', actor);
+
+    const lista = await reports.listReports({}, actor);
+    expect(lista.success).toBe(true);
+    expect(lista.reports.length).toBeGreaterThanOrEqual(2);
+  });
+
+  test('exportReport a JSON y CSV funciona sobre un informe del tenant', async () => {
+    const actor = crearActor();
+    const gen = await generar('customs_statistics', actor);
+    const id = gen.report.id;
+
+    const json = await reports.exportReport(id, 'json', actor);
     expect(json.success).toBe(true);
 
-    const csv = await reports.exportReport(id, 'csv', 'exp-user');
+    const csv = await reports.exportReport(id, 'csv', actor);
     expect(csv.success).toBe(true);
   });
 
-  test('exportReport de un id ajeno devuelve not found (no exporta datos de otro)', async () => {
-    const gen = await reports.generateReport('customs_statistics', { userId: 'duenno', includeLuciAnalysis: false });
-    const r = await reports.exportReport(gen.report.id, 'json', 'intruso');
+  test('exportReport con id de otro tenant devuelve not found (no exporta datos de otro)', async () => {
+    const dueno = crearActor();
+    const intruso = crearActor();
+    const gen = await generar('customs_statistics', dueno);
+    const r = await reports.exportReport(gen.report.id, 'json', intruso);
     expect(r.success).toBe(false);
     expect(r.error).toBe('Report not found');
   });
 
   test('exportReport con formato no soportado devuelve error', async () => {
-    const gen = await reports.generateReport('audit_trail', { userId: 'u', includeLuciAnalysis: false });
-    const r = await reports.exportReport(gen.report.id, 'docx', 'u');
+    const actor = crearActor();
+    const gen = await generar('audit_trail', actor);
+    const r = await reports.exportReport(gen.report.id, 'docx', actor);
     expect(r.success).toBe(false);
     expect(r.error).toMatch(/Unsupported format/);
   });
 
-  test('deleteReport borra el propio; un ajeno no puede borrarlo', async () => {
-    const gen = await reports.generateReport('compliance_report', { userId: 'del-user', includeLuciAnalysis: false });
+  test('deleteReport borra el informe del propio tenant; un id inexistente responde not found', async () => {
+    const actor = crearActor();
+    const gen = await generar('compliance_report', actor);
     const id = gen.report.id;
 
-    const ajeno = reports.deleteReport(id, 'otro');
-    expect(ajeno.success).toBe(false);
+    const inexistente = await reports.deleteReport(String(new mongoose.Types.ObjectId()), actor);
+    expect(inexistente.success).toBe(false);
 
-    const propio = reports.deleteReport(id, 'del-user');
+    const propio = await reports.deleteReport(id, actor);
     expect(propio.success).toBe(true);
-
-    expect(reports.getReport(id, 'del-user').success).toBe(false);
-  });
-});
-
-describe('scheduleReport: proxima ejecucion por frecuencia', () => {
-  test('diaria devuelve una fecha de proxima ejecucion', () => {
-    const r = reports.scheduleReport({ type: 'executive_summary', frequency: 'daily', time: '08:00' });
-    expect(r.success).toBe(true);
-    expect(r.schedule.nextRun instanceof Date).toBe(true);
-    expect(r.schedule.frequency).toBe('daily');
+    expect((await reports.getReport(id, actor)).success).toBe(false);
   });
 
-  test('semanal cae en el dia de la semana configurado', () => {
-    const r = reports.scheduleReport({ type: 'executive_summary', frequency: 'weekly', dayOfWeek: 3, time: '09:30' });
-    expect(r.schedule.nextRun.getDay()).toBe(3);
-  });
-
-  test('mensual cae en el dia del mes configurado', () => {
-    const r = reports.scheduleReport({ type: 'financial_report', frequency: 'monthly', dayOfMonth: 15 });
-    expect(r.schedule.nextRun.getDate()).toBe(15);
+  test('un id con formato invalido no revienta: responde not found', async () => {
+    const actor = crearActor();
+    expect((await reports.getReport('no-es-un-objectid', actor)).success).toBe(false);
+    expect((await reports.deleteReport('no-es-un-objectid', actor)).success).toBe(false);
   });
 });
 
 describe('generateReport: tipos y formatos completos', () => {
   test('OPERATIONS_DETAIL procesa sus secciones especificas', async () => {
-    const r = await reports.generateReport('operations_detail', { userId: 'u1', includeLuciAnalysis: false });
+    const actor = crearActor();
+    const r = await generar('operations_detail', actor);
     expect(r.success).toBe(true);
-    const full = reports.getReport(r.report.id, 'u1');
+    const full = await reports.getReport(r.report.id, actor);
     expect(full.report.sections.declarations).toBeDefined();
     expect(full.report.sections.timeline).toBeDefined();
   });
 
   test('CLIENT_REPORT con clientId obtiene datos del cliente', async () => {
-    const r = await reports.generateReport('client_report', { userId: 'u2', clientId: 'CL-123', includeLuciAnalysis: false });
+    const actor = crearActor();
+    const r = await generar('client_report', actor, { clientId: 'CL-123' });
     expect(r.success).toBe(true);
-    const full = reports.getReport(r.report.id, 'u2');
+    const full = await reports.getReport(r.report.id, actor);
     // No hay fuente por cliente: ni nombre/NIF de ejemplo ni "active: true" inventado
     expect(full.report.sections.operations.totalDeclarations).toBe(12);
     expect(full.report.sections.status).toEqual({ estado: 'Sin datos' });
@@ -190,17 +226,19 @@ describe('generateReport: tipos y formatos completos', () => {
   });
 
   test('AUDIT_TRAIL obtiene logs de auditoria', async () => {
-    const r = await reports.generateReport('audit_trail', { userId: 'u3', includeLuciAnalysis: false });
+    const actor = crearActor();
+    const r = await generar('audit_trail', actor);
     expect(r.success).toBe(true);
-    const full = reports.getReport(r.report.id, 'u3');
+    const full = await reports.getReport(r.report.id, actor);
     expect(full.report.sections.actions).toBeDefined();
     expect(full.report.sections.users).toBeDefined();
   });
 
   test('DECLARATION_REPORT incluye secciones by_office y commodities', async () => {
-    const r = await reports.generateReport('declaration_report', { userId: 'u4', includeLuciAnalysis: false });
+    const actor = crearActor();
+    const r = await generar('declaration_report', actor);
     expect(r.success).toBe(true);
-    const full = reports.getReport(r.report.id, 'u4');
+    const full = await reports.getReport(r.report.id, actor);
     expect(full.report.sections.by_office).toBeDefined();
     expect(full.report.sections.commodities).toBeDefined();
     expect(full.report.sections.origins).toBeDefined();
@@ -216,9 +254,10 @@ describe('generateReport: includeLuciAnalysis con distintos shapes de IA', () =>
       strategicRecommendations: ['Estrategia 1', 'Estrategia 2']
     });
 
-    const r = await reports.generateReport('executive_summary', { userId: 'uAI', includeLuciAnalysis: true });
+    const actor = crearActor();
+    const r = await generar('executive_summary', actor, { includeLuciAnalysis: true });
     expect(r.success).toBe(true);
-    const full = reports.getReport(r.report.id, 'uAI');
+    const full = await reports.getReport(r.report.id, actor);
     expect(full.report.luciInsights).not.toBeNull();
     expect(full.report.luciInsights.summary).toBe('Resumen ejecutivo completo');
     expect(full.report.luciInsights.keyFindings).toEqual(['Recomendacion 1', 'Recomendacion 2']);
@@ -243,9 +282,10 @@ describe('generateReport: includeLuciAnalysis con distintos shapes de IA', () =>
       ]
     });
 
-    const r = await reports.generateReport('financial_report', { userId: 'uAI2', includeLuciAnalysis: true });
+    const actor = crearActor();
+    const r = await generar('financial_report', actor, { includeLuciAnalysis: true });
     expect(r.success).toBe(true);
-    const full = reports.getReport(r.report.id, 'uAI2');
+    const full = await reports.getReport(r.report.id, actor);
     expect(full.report.luciInsights.summary).toBe('Resumen alternativo');
     expect(full.report.luciInsights.keyFindings).toEqual(['Accion A', 'Accion B', 'String directo']);
     expect(full.report.luciInsights.risksIdentified).toEqual(['Riesgo X', 'Riesgo Y']);
@@ -255,9 +295,10 @@ describe('generateReport: includeLuciAnalysis con distintos shapes de IA', () =>
   test('IA lanza error: el informe se genera igual con luciInsights=null', async () => {
     aiService.generateExecutiveReport.mockRejectedValue(new Error('Bedrock timeout'));
 
-    const r = await reports.generateReport('compliance_report', { userId: 'uAI3', includeLuciAnalysis: true });
+    const actor = crearActor();
+    const r = await generar('compliance_report', actor, { includeLuciAnalysis: true });
     expect(r.success).toBe(true);
-    const full = reports.getReport(r.report.id, 'uAI3');
+    const full = await reports.getReport(r.report.id, actor);
     expect(full.report.luciInsights).toBeNull();
   });
 
@@ -265,7 +306,8 @@ describe('generateReport: includeLuciAnalysis con distintos shapes de IA', () =>
     const mockIA = jest.fn();
     aiService.generateExecutiveReport.mockImplementation(mockIA);
 
-    const r = await reports.generateReport('customs_statistics', { userId: 'uNoIA', includeLuciAnalysis: false });
+    const actor = crearActor();
+    const r = await generar('customs_statistics', actor);
     expect(r.success).toBe(true);
     expect(mockIA).not.toHaveBeenCalled();
   });
@@ -276,7 +318,8 @@ describe('generateReport: sin IA no dispara consultas de mas', () => {
     const mockIA = jest.fn();
     aiService.generateExecutiveReport.mockImplementation(mockIA);
 
-    const r = await reports.generateReport('executive_summary', { userId: 'uSinQueries', includeLuciAnalysis: false });
+    const actor = crearActor();
+    const r = await generar('executive_summary', actor);
 
     expect(r.success).toBe(true);
     expect(mockIA).not.toHaveBeenCalled();
@@ -290,8 +333,9 @@ describe('generateReport: sin IA no dispara consultas de mas', () => {
 
 describe('exportReport: los 4 formatos', () => {
   test('PDF construye metadata, title page, summary, sections y luci insights', async () => {
-    const gen = await reports.generateReport('executive_summary', { userId: 'pdf', includeLuciAnalysis: false });
-    const exp = await reports.exportReport(gen.report.id, 'pdf', 'pdf');
+    const actor = crearActor();
+    const gen = await generar('executive_summary', actor);
+    const exp = await reports.exportReport(gen.report.id, 'pdf', actor);
     expect(exp.success).toBe(true);
     expect(exp.contentType).toBe('application/pdf');
     expect(exp.filename).toMatch(/\.pdf$/);
@@ -305,8 +349,9 @@ describe('exportReport: los 4 formatos', () => {
   });
 
   test('EXCEL construye sheet Resumen + sheets por seccion', async () => {
-    const gen = await reports.generateReport('financial_report', { userId: 'xlsx', includeLuciAnalysis: false });
-    const exp = await reports.exportReport(gen.report.id, 'xlsx', 'xlsx');
+    const actor = crearActor();
+    const gen = await generar('financial_report', actor);
+    const exp = await reports.exportReport(gen.report.id, 'xlsx', actor);
     expect(exp.success).toBe(true);
     expect(exp.contentType).toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     expect(exp.filename).toMatch(/\.xlsx$/);
@@ -319,8 +364,9 @@ describe('exportReport: los 4 formatos', () => {
   });
 
   test('CSV aplana metadata + secciones en lineas de texto', async () => {
-    const gen = await reports.generateReport('operations_detail', { userId: 'csv2', includeLuciAnalysis: false });
-    const exp = await reports.exportReport(gen.report.id, 'csv', 'csv2');
+    const actor = crearActor();
+    const gen = await generar('operations_detail', actor);
+    const exp = await reports.exportReport(gen.report.id, 'csv', actor);
     expect(exp.success).toBe(true);
     expect(exp.contentType).toBe('text/csv');
     const csvText = exp.data.toString();
@@ -329,37 +375,41 @@ describe('exportReport: los 4 formatos', () => {
   });
 
   test('JSON devuelve el informe completo', async () => {
-    const gen = await reports.generateReport('compliance_report', { userId: 'json2', includeLuciAnalysis: false });
-    const exp = await reports.exportReport(gen.report.id, 'json', 'json2');
+    const actor = crearActor();
+    const gen = await generar('compliance_report', actor);
+    const exp = await reports.exportReport(gen.report.id, 'json', actor);
     expect(exp.success).toBe(true);
     expect(exp.contentType).toBe('application/json');
     expect(exp.data.id).toBe(gen.report.id);
   });
 });
 
-describe('listReports: filtros y paginacion', () => {
+describe('listReports: filtros y paginacion (dentro del tenant)', () => {
   test('filtrar por type muestra solo ese tipo', async () => {
-    await reports.generateReport('executive_summary', { userId: 'filter1', includeLuciAnalysis: false });
-    await reports.generateReport('financial_report', { userId: 'filter1', includeLuciAnalysis: false });
+    const actor = crearActor();
+    await generar('executive_summary', actor);
+    await generar('financial_report', actor);
 
-    const lista = reports.listReports({ userId: 'filter1', type: 'financial_report' });
+    const lista = await reports.listReports({ type: 'financial_report' }, actor);
     expect(lista.reports.every(r => r.type === 'financial_report')).toBe(true);
   });
 
   test('filtrar por period muestra solo ese periodo', async () => {
-    await reports.generateReport('customs_statistics', { userId: 'filter2', period: 'last_30_days', includeLuciAnalysis: false });
-    await reports.generateReport('customs_statistics', { userId: 'filter2', period: 'this_month', includeLuciAnalysis: false });
+    const actor = crearActor();
+    await generar('customs_statistics', actor, { period: 'last_30_days' });
+    await generar('customs_statistics', actor, { period: 'this_month' });
 
-    const lista = reports.listReports({ userId: 'filter2', period: 'this_month' });
+    const lista = await reports.listReports({ period: 'this_month' }, actor);
     expect(lista.reports.every(r => r.period === 'this_month')).toBe(true);
   });
 
   test('paginacion con limit devuelve maximo limit resultados', async () => {
+    const actor = crearActor();
     for (let i = 0; i < 5; i++) {
-      await reports.generateReport('audit_trail', { userId: 'pagination', includeLuciAnalysis: false });
+      await generar('audit_trail', actor);
     }
 
-    const lista = reports.listReports({ userId: 'pagination', limit: 2 });
+    const lista = await reports.listReports({ limit: 2 }, actor);
     expect(lista.reports.length).toBeLessThanOrEqual(2);
     expect(lista.pagination.limit).toBe(2);
     expect(lista.pagination.total).toBeGreaterThanOrEqual(5);
@@ -367,58 +417,24 @@ describe('listReports: filtros y paginacion', () => {
   });
 
   test('paginacion pagina 2 devuelve la segunda pagina', async () => {
+    const actor = crearActor();
     for (let i = 0; i < 4; i++) {
-      await reports.generateReport('client_report', { userId: 'pagination2', includeLuciAnalysis: false });
+      await generar('client_report', actor);
     }
 
-    const p1 = reports.listReports({ userId: 'pagination2', limit: 2, page: 1 });
-    const p2 = reports.listReports({ userId: 'pagination2', limit: 2, page: 2 });
+    const p1 = await reports.listReports({ limit: 2, page: 1 }, actor);
+    const p2 = await reports.listReports({ limit: 2, page: 2 }, actor);
     expect(p1.reports.length).toBe(2);
     expect(p2.reports.length).toBe(2);
     expect(p1.reports[0].id).not.toBe(p2.reports[0].id);
   });
 
-  test('sin filtros devuelve todos los informes', async () => {
-    const sinFiltro = reports.listReports({});
+  test('tenant sin informes ve una lista vacia, no un error', async () => {
+    const actor = crearActor();
+    const sinFiltro = await reports.listReports({}, actor);
     expect(sinFiltro.success).toBe(true);
-    expect(sinFiltro.pagination.total).toBeGreaterThanOrEqual(0);
-  });
-});
-
-describe('control de propiedad: userId ausente permite acceso', () => {
-  test('getReport sin userId devuelve informe de cualquier generatedBy', async () => {
-    const gen = await reports.generateReport('executive_summary', { userId: 'privado', includeLuciAnalysis: false });
-
-    // sin userId, _esSuyo devuelve true
-    const r = reports.getReport(gen.report.id);
-    expect(r.success).toBe(true);
-    expect(r.report.generatedBy).toBe('privado');
-  });
-
-  test('deleteReport sin userId puede borrar cualquier informe', async () => {
-    const gen = await reports.generateReport('financial_report', { userId: 'owner-X', includeLuciAnalysis: false });
-
-    const del = reports.deleteReport(gen.report.id);
-    expect(del.success).toBe(true);
-  });
-
-  test('exportReport sin userId puede exportar cualquier informe', async () => {
-    const gen = await reports.generateReport('compliance_report', { userId: 'owner-Y', includeLuciAnalysis: false });
-
-    const exp = await reports.exportReport(gen.report.id, 'json');
-    expect(exp.success).toBe(true);
-  });
-
-  test('informe generado con system como generatedBy es accesible por cualquier userId', async () => {
-    const gen = await reports.generateReport('customs_statistics', { includeLuciAnalysis: false });
-    expect(gen.report).toBeDefined();
-    const id = gen.report.id;
-
-    // generatedBy sera 'system' (default en generateReport)
-    const r1 = reports.getReport(id, 'user-random-1');
-    const r2 = reports.getReport(id, 'user-random-2');
-    expect(r1.success).toBe(true);
-    expect(r2.success).toBe(true);
+    expect(sinFiltro.reports).toHaveLength(0);
+    expect(sinFiltro.pagination.total).toBe(0);
   });
 });
 
@@ -438,8 +454,9 @@ describe('_generateSectionData: cobertura de secciones especificas', () => {
     cuadroCon({});
     realMetrics.valorMercancia.mockResolvedValue({ disponible: true, total: 500000 });
 
-    const r = await reports.generateReport('executive_summary', { userId: 'sec1', includeLuciAnalysis: false });
-    const full = reports.getReport(r.report.id, 'sec1');
+    const actor = crearActor();
+    const r = await generar('executive_summary', actor);
+    const full = await reports.getReport(r.report.id, actor);
     expect(full.report.sections.overview.totalDeclarations).toBe(123);
     expect(full.report.sections.overview.totalValue).toBe(500000);
     expect(full.report.sections.overview.complianceScore).toBe('Sin datos');
@@ -448,8 +465,9 @@ describe('_generateSectionData: cobertura de secciones especificas', () => {
   test('genera kpis con declarationsPerDay y averageProcessingTime', async () => {
     cuadroCon({ declaraciones: { total: 90, porTipo: {}, porEstado: {} } });
 
-    const r = await reports.generateReport('executive_summary', { userId: 'sec2', period: 'last_30_days', includeLuciAnalysis: false });
-    const full = reports.getReport(r.report.id, 'sec2');
+    const actor = crearActor();
+    const r = await generar('executive_summary', actor, { period: 'last_30_days' });
+    const full = await reports.getReport(r.report.id, actor);
     expect(full.report.sections.kpis.declarationsPerDay).toBeCloseTo(3, 0);
     expect(full.report.sections.kpis.averageProcessingTime).toBe(1200);
   });
@@ -457,27 +475,30 @@ describe('_generateSectionData: cobertura de secciones especificas', () => {
   test('genera vat con el IVA liquidado real', async () => {
     realMetrics.derechosLiquidados.mockResolvedValue({ total: 25100, arancel: 100, iva: 25000 });
 
-    const r = await reports.generateReport('financial_report', { userId: 'sec3', includeLuciAnalysis: false });
-    const full = reports.getReport(r.report.id, 'sec3');
+    const actor = crearActor();
+    const r = await generar('financial_report', actor);
+    const full = await reports.getReport(r.report.id, actor);
     expect(full.report.sections.vat.total).toBe(25000);
   });
 
   test('genera volumes con total', async () => {
     cuadroCon({ declaraciones: { total: 456, porTipo: {}, porEstado: {} } });
 
-    const r = await reports.generateReport('customs_statistics', { userId: 'sec4', includeLuciAnalysis: false });
-    const full = reports.getReport(r.report.id, 'sec4');
+    const actor = crearActor();
+    const r = await generar('customs_statistics', actor);
+    const full = await reports.getReport(r.report.id, actor);
     expect(full.report.sections.volumes.total).toBe(456);
   });
 
   test('genera values con total real, o "Sin datos" si los expedientes no informan valor', async () => {
+    const actor = crearActor();
     realMetrics.valorMercancia.mockResolvedValue({ disponible: true, total: 999999 });
-    let r = await reports.generateReport('customs_statistics', { userId: 'sec5', includeLuciAnalysis: false });
-    expect(reports.getReport(r.report.id, 'sec5').report.sections.values.total).toBe(999999);
+    let r = await generar('customs_statistics', actor);
+    expect((await reports.getReport(r.report.id, actor)).report.sections.values.total).toBe(999999);
 
     realMetrics.valorMercancia.mockResolvedValue({ disponible: false });
-    r = await reports.generateReport('customs_statistics', { userId: 'sec5', includeLuciAnalysis: false });
-    expect(reports.getReport(r.report.id, 'sec5').report.sections.values.total).toBe('Sin datos');
+    r = await generar('customs_statistics', actor);
+    expect((await reports.getReport(r.report.id, actor)).report.sections.values.total).toBe('Sin datos');
   });
 });
 
@@ -490,22 +511,25 @@ describe('formateadores: _formatPeriodName y _formatSectionName', () => {
   });
 
   test('generateReport con periodo yesterday formatea correctamente', async () => {
-    const r = await reports.generateReport('financial_report', { userId: 'fmt1', period: 'yesterday', includeLuciAnalysis: false });
-    const full = reports.getReport(r.report.id, 'fmt1');
+    const actor = crearActor();
+    const r = await generar('financial_report', actor, { period: 'yesterday' });
+    const full = await reports.getReport(r.report.id, actor);
     // _formatPeriodName('yesterday') -> 'Ayer'
     // se usa en subtitle y en summary.period
     expect(full.report.metadata.subtitle).toContain('Ayer');
   });
 
   test('generateReport con periodo this_quarter formatea correctamente', async () => {
-    const r = await reports.generateReport('customs_statistics', { userId: 'fmt2', period: 'this_quarter', includeLuciAnalysis: false });
-    const full = reports.getReport(r.report.id, 'fmt2');
+    const actor = crearActor();
+    const r = await generar('customs_statistics', actor, { period: 'this_quarter' });
+    const full = await reports.getReport(r.report.id, actor);
     expect(full.report.metadata.subtitle).toContain('Este trimestre');
   });
 
   test('_formatSectionName en exportToPDF convierte nombres internos a español', async () => {
-    const r = await reports.generateReport('executive_summary', { userId: 'fmt3', includeLuciAnalysis: false });
-    const exp = await reports.exportReport(r.report.id, 'pdf', 'fmt3');
+    const actor = crearActor();
+    const r = await generar('executive_summary', actor);
+    const exp = await reports.exportReport(r.report.id, 'pdf', actor);
     const pdf = JSON.parse(exp.data.toString());
     const sectionPages = pdf.pages.filter(p => p.type === 'section');
     // overview -> Visión General, kpis -> KPIs, trends -> Tendencias
@@ -519,8 +543,9 @@ describe('exportToExcel: secciones', () => {
   test('seccion objeto genera pares clave-valor', async () => {
     realMetrics.derechosLiquidados.mockResolvedValue({ total: 100, arancel: 40, iva: 60 });
 
-    const r = await reports.generateReport('financial_report', { userId: 'excel2', includeLuciAnalysis: false });
-    const exp = await reports.exportReport(r.report.id, 'xlsx', 'excel2');
+    const actor = crearActor();
+    const r = await generar('financial_report', actor);
+    const exp = await reports.exportReport(r.report.id, 'xlsx', actor);
     const wb = JSON.parse(exp.data.toString());
 
     const duties = wb.sheets.find(s => s.name === 'Derechos');
@@ -529,8 +554,9 @@ describe('exportToExcel: secciones', () => {
   });
 
   test('una seccion sin fuente se exporta como "Sin datos", no como 0', async () => {
-    const r = await reports.generateReport('financial_report', { userId: 'excel3', includeLuciAnalysis: false });
-    const exp = await reports.exportReport(r.report.id, 'xlsx', 'excel3');
+    const actor = crearActor();
+    const r = await generar('financial_report', actor);
+    const exp = await reports.exportReport(r.report.id, 'xlsx', actor);
     const wb = JSON.parse(exp.data.toString());
 
     const ahorros = wb.sheets.find(s => s.name === 'Ahorros');
@@ -554,8 +580,9 @@ describe('_generateExecutiveSummary: highlights y keyMetrics', () => {
     realMetrics.repartoPorCanal.mockResolvedValue({ conCanalAsignado: 4, canales: {}, porcentajes: { green: 75 } });
     realMetrics.valorMercancia.mockResolvedValue({ disponible: true, total: 1234567 });
 
-    const r = await reports.generateReport('executive_summary', { userId: 'summ1', includeLuciAnalysis: false });
-    const full = reports.getReport(r.report.id, 'summ1');
+    const actor = crearActor();
+    const r = await generar('executive_summary', actor);
+    const full = await reports.getReport(r.report.id, actor);
     expect(full.report.summary.highlights).toHaveLength(4);
     expect(full.report.summary.highlights[0]).toContain('200 declaraciones procesadas');
     expect(full.report.summary.highlights[1]).toContain('75% canal verde');
@@ -568,8 +595,9 @@ describe('_generateExecutiveSummary: highlights y keyMetrics', () => {
     realMetrics.derechosLiquidados.mockResolvedValue({ total: 25000 });
     realMetrics.valorMercancia.mockResolvedValue({ disponible: true, total: 500000 });
 
-    const r = await reports.generateReport('financial_report', { userId: 'summ2', includeLuciAnalysis: false });
-    const full = reports.getReport(r.report.id, 'summ2');
+    const actor = crearActor();
+    const r = await generar('financial_report', actor);
+    const full = await reports.getReport(r.report.id, actor);
     expect(full.report.summary.keyMetrics.operations).toBe(300);
     expect(full.report.summary.keyMetrics.value).toBe(500000);
     expect(full.report.summary.keyMetrics.duties).toBe(25000);
@@ -594,8 +622,9 @@ describe('normalización de insights: valores null/undefined/numeros en arrays',
       strategicRecommendations: []
     });
 
-    const r = await reports.generateReport('executive_summary', { userId: 'norm1', includeLuciAnalysis: true });
-    const full = reports.getReport(r.report.id, 'norm1');
+    const actor = crearActor();
+    const r = await generar('executive_summary', actor, { includeLuciAnalysis: true });
+    const full = await reports.getReport(r.report.id, actor);
     // norm devuelve '' para null/undefined/numeros y objetos sin campos reconocidos
     // filter(Boolean) los descarta
     expect(full.report.luciInsights.keyFindings).toEqual(['Valida', 'Otra valida']);
@@ -612,8 +641,9 @@ describe('normalización de insights: valores null/undefined/numeros en arrays',
       strategicRecommendations: []
     });
 
-    const r = await reports.generateReport('financial_report', { userId: 'norm2', includeLuciAnalysis: true });
-    const full = reports.getReport(r.report.id, 'norm2');
+    const actor = crearActor();
+    const r = await generar('financial_report', actor, { includeLuciAnalysis: true });
+    const full = await reports.getReport(r.report.id, actor);
     // norm recursivo: si es array, map(norm).filter(Boolean) preserva el array anidado
     // NO aplana. Esto puede ser un bug si la IA devuelve arrays anidados.
     expect(full.report.luciInsights.keyFindings).toEqual([['Sub1', 'Sub2'], 'Directa']);
@@ -629,8 +659,9 @@ describe('exportToPDF: pagina de insights cuando existe', () => {
       strategicRecommendations: ['Estrategia1']
     });
 
-    const r = await reports.generateReport('executive_summary', { userId: 'pdfIA', includeLuciAnalysis: true });
-    const exp = await reports.exportReport(r.report.id, 'pdf', 'pdfIA');
+    const actor = crearActor();
+    const r = await generar('executive_summary', actor, { includeLuciAnalysis: true });
+    const exp = await reports.exportReport(r.report.id, 'pdf', actor);
     const pdf = JSON.parse(exp.data.toString());
 
     const insightsPage = pdf.pages.find(p => p.type === 'insights');
@@ -643,8 +674,9 @@ describe('exportToCSV: secciones', () => {
   test('una seccion objeto genera lineas clave,valor', async () => {
     realMetrics.derechosLiquidados.mockResolvedValue({ total: 100, arancel: 40, iva: 60 });
 
-    const r = await reports.generateReport('financial_report', { userId: 'csvObj', includeLuciAnalysis: false });
-    const exp = await reports.exportReport(r.report.id, 'csv', 'csvObj');
+    const actor = crearActor();
+    const r = await generar('financial_report', actor);
+    const exp = await reports.exportReport(r.report.id, 'csv', actor);
     const csvText = exp.data.toString();
 
     expect(csvText).toContain('[Derechos]');
@@ -653,24 +685,8 @@ describe('exportToCSV: secciones', () => {
   });
 });
 
-describe('_calculateNextRun: branch monthly con nextRun <= now', () => {
-  test('schedule mensual en dia pasado avanza al mes siguiente', () => {
-    const hoy = new Date();
-    const diaAnterior = hoy.getDate() - 5;
-    if (diaAnterior <= 0) {
-      // si estamos muy al principio del mes, usar dia 1 y forzar hora pasada
-      const r = reports.scheduleReport({ type: 'executive_summary', frequency: 'monthly', dayOfMonth: 1, time: '00:01' });
-      expect(r.schedule.nextRun.getDate()).toBe(1);
-      // si hoy es despues del dia 1, nextRun deberia estar en el proximo mes
-      if (hoy.getDate() > 1) {
-        expect(r.schedule.nextRun.getMonth()).toBe((hoy.getMonth() + 1) % 12);
-      }
-    } else {
-      // dia anterior seguro ya paso, debe avanzar al siguiente mes
-      const r = reports.scheduleReport({ type: 'executive_summary', frequency: 'monthly', dayOfMonth: diaAnterior, time: '00:00' });
-      expect(r.schedule.nextRun.getDate()).toBe(diaAnterior);
-      // el mes debe ser el siguiente (o el actual si justo estamos en ese dia pero hora futura)
-      expect(r.schedule.nextRun >= hoy).toBe(true);
-    }
+describe('scheduleReport: funcionalidad retirada', () => {
+  test('el servicio ya no expone scheduleReport (no hay planificador real en el backend)', () => {
+    expect(reports.scheduleReport).toBeUndefined();
   });
 });
