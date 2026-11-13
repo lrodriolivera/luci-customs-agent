@@ -3688,6 +3688,17 @@
     "aeatBillOfLading": "Bill of lading: {{value}}",
     "aeatLocation": "Location: {{value}}"
   },
+  "aeatSumariaLinks": {
+    "title": "Search for the summary declaration in the AEAT e-office",
+    "certificateWarning": "These links require your digital certificate: LUCI cannot query them on your behalf.",
+    "highlighted": "Recommended for this shipment",
+    "g4Title": "G4: air and land summary declarations",
+    "g4Description": "For G4 summary declarations, for both air and land transport.",
+    "maritimeTitle": "Maritime: groupage and containers",
+    "maritimeDescription": "For maritime summary declarations, for both groupage and full containers.",
+    "exportTitle": "Export: container at terminal",
+    "exportDescription": "If an export cannot be launched because the container does not show as being at the terminal, check its status here."
+  },
   "docReading": {
     "readOnUpload": "Read the document with AI when uploading",
     "open": "Open",
