@@ -115,13 +115,18 @@ function documentoDeAltaDiaria(c, { arancel, porDiario, mes, porCodigo, ahora })
  *
  * @returns {Promise<{ aplicar: Array<{ cambio, documento }>, padres: string[], yaEnCatalogo: object[], esperando: object[], retenido: string|null }>}
  */
-async function prepararAltas({ TaricCode, TaricDailyPublication, ahora = new Date(), derechos = derechosDeCircabc }) {
+async function prepararAltas({ TaricCode, TaricDailyPublication, ahora = new Date(), derechos = derechosDeCircabc, publicaciones: enMemoria = null }) {
   const hoy = hoyOrdenable(ahora);
-  const conAltas = await TaricDailyPublication.find({ cambios: { $elemMatch: { clase: 'codigo', accion: 'alta', estado: 'pendiente' } } }).sort({ nombre: 1 }).lean();
+  // `publicaciones`: las ya cargadas (simulacion sin escribir); si no, se leen de la base de datos.
+  const ordenadas = enMemoria ? [...enMemoria].sort((a, b) => a.nombre.localeCompare(b.nombre)) : null;
+  const esAltaPendiente = (c) => c.clase === 'codigo' && c.accion === 'alta' && c.estado === 'pendiente';
+  const conAltas = ordenadas
+    ? ordenadas.filter((p) => p.cambios.some(esAltaPendiente))
+    : await TaricDailyPublication.find({ cambios: { $elemMatch: { clase: 'codigo', accion: 'alta', estado: 'pendiente' } } }).sort({ nombre: 1 }).lean();
   // Si un codigo aparece en varias publicaciones, manda la mas reciente.
   const ultimo = new Map();
   for (const p of conAltas) {
-    for (const c of p.cambios) if (c.clase === 'codigo' && c.accion === 'alta' && c.estado === 'pendiente') ultimo.set(c.code, { ...c, publicacion: p.nombre });
+    for (const c of p.cambios) if (esAltaPendiente(c)) ultimo.set(c.code, { ...c, publicacion: p.nombre });
   }
   const candidatos = [...ultimo.values()];
   const codigos = [...new Set(candidatos.flatMap((c) => [c.code, ...ancestros(c.code)]))];
@@ -148,7 +153,9 @@ async function prepararAltas({ TaricCode, TaricDailyPublication, ahora = new Dat
   try {
     const mensual = await derechos({ ahora });
     mes = mensual.mes;
-    const conDerechos = await TaricDailyPublication.find({ 'cambios.clase': 'derecho' }, { nombre: 1, cambios: 1 }).sort({ nombre: 1 }).lean();
+    const conDerechos = ordenadas
+      ? ordenadas.filter((p) => p.cambios.some((c) => c.clase === 'derecho'))
+      : await TaricDailyPublication.find({ 'cambios.clase': 'derecho' }, { nombre: 1, cambios: 1 }).sort({ nombre: 1 }).lean();
     vigentes = derechosVigentes(mensual, conDerechos, hoy);
   } catch (error) {
     return { ...plan, retenido: `No se pudo leer el fichero de derechos de CIRCABC (${error.message}): las ${listas.length} altas esperan a la próxima pasada` };
@@ -216,6 +223,18 @@ function conservarAplicados(antes, nuevos) {
   });
 }
 
+/** ¿Tiene la publicacion altas pendientes registradas antes de que se guardara su nivel? */
+const estaIncompleta = (p) => p.cambios.some((c) => c.clase === 'codigo' && c.accion === 'alta' && c.estado === 'pendiente' && c.nivel == null);
+
+/**
+ * Vuelve a descargar y leer una publicacion registrada, conservando lo ya
+ * aplicado. No escribe nada: devuelve la publicacion como quedaria.
+ */
+async function releerEnMemoria(p, { TaricCode, descargar = publicaciones.descargarPublicacion, leerCambios = cambiosDe }) {
+  const { cambios, resumen } = await leerCambios(await descargar({ nombre: p.nombre, fecha: p.fecha }), { TaricCode });
+  return { ...p, cambios: conservarAplicados(p.cambios, cambios), resumen };
+}
+
 /**
  * Publicaciones registradas antes de que se guardara el nivel de las altas: se
  * vuelven a descargar y leer. Solo cambia el registro diario, no el catalogo.
@@ -231,8 +250,8 @@ async function releerPublicacionesIncompletas({
   const fallidas = [];
   for (const p of incompletas) {
     try {
-      const { cambios, resumen } = await leerCambios(await descargar({ nombre: p.nombre, fecha: p.fecha }), { TaricCode });
-      await TaricDailyPublication.updateOne({ _id: p._id }, { $set: { cambios: conservarAplicados(p.cambios, cambios), resumen } });
+      const releida = await releerEnMemoria(p, { TaricCode, descargar, leerCambios });
+      await TaricDailyPublication.updateOne({ _id: p._id }, { $set: { cambios: releida.cambios, resumen: releida.resumen } });
       releidas.push(p.nombre);
     } catch (error) {
       fallidas.push({ nombre: p.nombre, error: error.message });
@@ -242,4 +261,6 @@ async function releerPublicacionesIncompletas({
   return { releidas, fallidas };
 }
 
-module.exports = { prepararAltas, aplicarAltas, releerPublicacionesIncompletas, derechosVigentes, motivoParaEsperar, NIVEL_DECLARABLE };
+module.exports = {
+  prepararAltas, aplicarAltas, releerPublicacionesIncompletas, releerEnMemoria, estaIncompleta, derechosDeCircabc, derechosVigentes, motivoParaEsperar, NIVEL_DECLARABLE
+};

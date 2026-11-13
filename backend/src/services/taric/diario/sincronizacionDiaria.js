@@ -104,11 +104,14 @@ async function registrarPublicacionesNuevas({
 /**
  * Cambios de derecho pendientes que ya estan en vigor y se pueden aplicar.
  * Vuelve a compararlos con el catalogo: puede haberlos recogido ya la carga
- * mensual.
+ * mensual. No escribe nada.
  */
-async function prepararAplicacion({ TaricCode, TaricDailyPublication, ahora = new Date() }) {
+async function prepararAplicacion({ TaricCode, TaricDailyPublication, ahora = new Date(), publicaciones: enMemoria = null }) {
   const hoy = hoyOrdenable(ahora);
-  const publicacionesConPendientes = await TaricDailyPublication.find({ 'cambios.estado': 'pendiente' }).sort({ nombre: 1 }).lean();
+  // `publicaciones`: las ya cargadas (simulacion sin escribir); si no, se leen de la base de datos.
+  const publicacionesConPendientes = enMemoria
+    ? enMemoria.filter((p) => p.cambios.some((c) => c.estado === 'pendiente')).sort((a, b) => a.nombre.localeCompare(b.nombre))
+    : await TaricDailyPublication.find({ 'cambios.estado': 'pendiente' }).sort({ nombre: 1 }).lean();
   // Si un codigo cambia en varias publicaciones, manda la mas reciente.
   const ultimo = new Map();
   for (const p of publicacionesConPendientes) {
