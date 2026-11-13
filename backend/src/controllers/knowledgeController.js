@@ -11,6 +11,8 @@
  * no requieren IA ni BD.
  */
 
+const { categoriasAyuda } = require('../services/ayuda/guiaLuci');
+
 // Regimenes aduaneros de la UE mas habituales (código de régimen solicitado).
 const REGIMES = {
   '40': {
@@ -142,4 +144,26 @@ const listRegimes = (_req, res) => res.json({ regimes: Object.values(REGIMES) })
 /** GET /api/knowledge/incoterms — listado completo */
 const listIncoterms = (_req, res) => res.json({ incoterms: Object.values(INCOTERMS) });
 
-module.exports = { getRegime, getIncoterm, listRegimes, listIncoterms, REGIMES, INCOTERMS };
+/**
+ * GET /api/knowledge/categories
+ *
+ * Temas de la barra lateral del asistente (/assistant): los dos catalogos
+ * aduaneros de este fichero y las secciones de la guia de uso de LUCI. El
+ * componente espera { clave: { name, description } }. La ruta no existia y la
+ * pantalla registraba un 404 al cargar.
+ */
+const listCategories = (_req, res) => {
+  res.json({
+    regimenes: {
+      name: 'Regímenes aduaneros',
+      description: `Códigos de régimen más habituales (${Object.keys(REGIMES).join(', ')}) y cuándo se usa cada uno.`
+    },
+    incoterms: {
+      name: 'Incoterms 2020',
+      description: 'Qué incluye cada Incoterm y cómo afecta al valor en aduana.'
+    },
+    ...categoriasAyuda()
+  });
+};
+
+module.exports = { getRegime, getIncoterm, listRegimes, listIncoterms, listCategories, REGIMES, INCOTERMS };

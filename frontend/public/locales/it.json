@@ -900,7 +900,7 @@
   },
   "chat": {
     "title": "Assistente LUCI",
-    "subtitle": "Consultazioni tecniche sulla normativa doganale",
+    "subtitle": "Normativa doganale e uso di LUCI",
     "poweredBy": "Powered by LUCI",
     "welcomeTitle": "Ciao! Sono LUCI",
     "welcomeMessage": "Il suo assistente esperto in dogane e commercio estero. Posso aiutarla con normativa, classificazione tariffaria, requisiti di importazione/esportazione e altro.",
@@ -910,7 +910,7 @@
     "q3": "Quali documenti servono per importare prodotti alimentari?",
     "q4": "Come si calcola il valore in dogana con Incoterm FOB?",
     "q5": "Cos'e il perfezionamento attivo?",
-    "q6": "Quando e obbligatorio il certificato EUR.1?",
+    "q6": "Come invio al cliente un link per caricare la fattura commerciale?",
     "knowledgeBase": "Base di Conoscenza",
     "moreQuestions": "Altre Domande",
     "tip": "Suggerimento:",

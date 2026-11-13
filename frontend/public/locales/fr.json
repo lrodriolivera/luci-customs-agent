@@ -900,7 +900,7 @@
   },
   "chat": {
     "title": "Assistant LUCI",
-    "subtitle": "Consultations techniques sur la reglementation douaniere",
+    "subtitle": "Réglementation douanière et utilisation de LUCI",
     "poweredBy": "Powered by LUCI",
     "welcomeTitle": "Bonjour ! Je suis LUCI",
     "welcomeMessage": "Votre assistant expert en douanes et commerce exterieur. Je peux vous aider avec la reglementation, la classification tarifaire, les exigences d'importation/exportation et bien plus.",
@@ -910,7 +910,7 @@
     "q3": "Quels documents sont necessaires pour importer des produits alimentaires ?",
     "q4": "Comment calcule-t-on la valeur en douane avec l'Incoterm FOB ?",
     "q5": "Qu'est-ce que le perfectionnement actif ?",
-    "q6": "Quand le certificat EUR.1 est-il obligatoire ?",
+    "q6": "Comment envoyer au client un lien pour qu'il dépose la facture commerciale ?",
     "knowledgeBase": "Base de Connaissances",
     "moreQuestions": "Plus de Questions",
     "tip": "Conseil :",

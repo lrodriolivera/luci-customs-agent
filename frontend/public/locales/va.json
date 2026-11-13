@@ -900,7 +900,7 @@
   },
   "chat": {
     "title": "Assistent LUCI",
-    "subtitle": "Consultes tecniques sobre normativa duanera",
+    "subtitle": "Normativa duanera i ús de LUCI",
     "poweredBy": "Powered by LUCI",
     "welcomeTitle": "Hola! Soc LUCI",
     "welcomeMessage": "El seu assistent expert en duanes i comerc exterior. Puc ajudar-li amb normativa, classificacio aranzelaria, requisits d'importacio/exportacio i mes.",
@@ -910,7 +910,7 @@
     "q3": "Quins documents necessite per a importar productes alimentaris?",
     "q4": "Com es calcula el valor en duana amb Incoterm FOB?",
     "q5": "Que es el perfeccionament actiu?",
-    "q6": "Quan es obligatori el certificat EUR.1?",
+    "q6": "Com envie al client un enllaç perquè puge la factura comercial?",
     "knowledgeBase": "Base de Coneixement",
     "moreQuestions": "Mes Preguntes",
     "tip": "Consell:",
