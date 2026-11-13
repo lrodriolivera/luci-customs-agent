@@ -7,7 +7,8 @@
  * llevaban la descripcion de su partida en vez de la suya), y 167 aranceles no
  * coincidian con el derecho de terceros paises oficial.
  */
-const { arancelDe, camposDeDerecho } = require('./arancelesOficiales');
+const { arancelDe, camposDeDerecho, interpretarDerecho } = require('./arancelesOficiales');
+const { interpretarFormula, clasificarDerecho } = require('./formasDerecho');
 const { unidadCanonica } = require('./unidadesDerecho');
 const { palabrasClave } = require('./planSincronizacion');
 
@@ -21,9 +22,61 @@ const MOTIVOS_NO_CALCULABLE = {
   variantes: 'varios tipos segun codigo adicional',
   no_simple: 'derecho con elemento agricola, grado alcoholico, precio de entrada o varios sumandos'
 };
-/** Texto que se guarda como evidencia cuando el derecho oficial no se sabe liquidar. */
-const evidenciaNoCalculable = (oficial) =>
-  `Derecho oficial «${oficial.texto}»: ${MOTIVOS_NO_CALCULABLE[oficial.estado] || oficial.estado}. LUCI no lo liquida automaticamente.`.slice(0, 500);
+const MAX_TEXTO_EN_EVIDENCIA = 160;
+const MAX_EVIDENCIA = 500;
+/**
+ * Texto que se guarda como evidencia cuando el derecho oficial no se sabe
+ * liquidar: el texto oficial y, si se sabe, el dato que hace falta.
+ */
+const evidenciaNoCalculable = (oficial, faltan = []) => {
+  const texto = oficial.texto.length > MAX_TEXTO_EN_EVIDENCIA ? `${oficial.texto.slice(0, MAX_TEXTO_EN_EVIDENCIA)}…` : oficial.texto;
+  // Con el dato que falta, el motivo generico sobra (el texto completo va en `textoOficial`).
+  const motivo = faltan.length > 0 ? ` Para liquidarlo hace falta ${faltan.join(' y ')}, dato que LUCI no tiene.` : `: ${MOTIVOS_NO_CALCULABLE[oficial.estado] || oficial.estado}.`;
+  return `Derecho oficial «${texto}»${faltan.length > 0 ? '.' : ''}${motivo} LUCI no lo liquida automaticamente.`.slice(0, MAX_EVIDENCIA);
+};
+
+const sinNulos = (objeto) => Object.fromEntries(Object.entries(objeto).filter(([, v]) => v !== null && v !== undefined));
+
+/**
+ * Que hacer con un derecho oficial que no es simple (`arancelDe` con estado
+ * 'variantes' o 'no_simple'):
+ *   - variantes por codigo adicional que LUCI sabe liquidar una a una -> 'variantes'
+ *   - suma de porcentajes e importes con minimo o maximo -> 'compuesto'
+ *   - lo demas -> 'no_calculable', con la forma y el dato que falta
+ *
+ * @param {object} oficial resultado de `arancelDe`
+ * @param {{ codigosAdicionales?: Map<string, string> }} [opciones]
+ */
+function resolverDerechoNoSimple(oficial, { codigosAdicionales } = {}) {
+  if (oficial.estado === 'variantes') {
+    const variantes = (oficial.variantes || []).map((v) => {
+      const derecho = interpretarDerecho(v.texto);
+      if (!derecho || derecho.sancion || !v.codigoAdicional) return null;
+      const { sancion, ...campos } = camposDeDerecho(derecho);
+      return { codigoAdicional: v.codigoAdicional, descripcion: codigosAdicionales?.get(v.codigoAdicional) || null, texto: v.texto, ...sinNulos(campos) };
+    });
+    if (variantes.length > 0 && variantes.every(Boolean)) return { tipo: 'variantes', variantes };
+    // Alguna variante no la sabe liquidar LUCI: no es un dato de la partida que falte.
+    return { tipo: 'no_calculable', forma: 'variantes_no_interpretables', faltan: [], evidencia: evidenciaNoCalculable(oficial) };
+  }
+  const formula = interpretarFormula(oficial.texto);
+  if (formula) {
+    const porcentaje = formula.sumandos.filter((t) => typeof t.adValorem === 'number').reduce((a, t) => a + t.adValorem, 0);
+    const especificos = formula.sumandos.filter((t) => t.unit);
+    // Campos de siempre, para quien solo lee el porcentaje; el calculo usa la formula.
+    const specific = especificos.length === 1 ? especificos[0] : null;
+    return {
+      tipo: 'compuesto', formula,
+      campos: { thirdCountry: Math.round(porcentaje * 1000) / 1000, specific, combinacion: specific && porcentaje ? 'suma' : null }
+    };
+  }
+  const { forma, faltan } = clasificarDerecho(oficial.texto);
+  return { tipo: 'no_calculable', forma, faltan, evidencia: evidenciaNoCalculable(oficial, faltan) };
+}
+
+const claveVariantes = (lista) => JSON.stringify((lista || []).map((v) => [v.codigoAdicional, v.descripcion || null, v.texto]));
+/** Variantes o formula de una carga anterior que un derecho simple debe borrar. */
+const tieneVariantesOFormula = (duties) => Boolean(duties?.variantes?.length || duties?.formula?.texto);
 
 /** Texto reducido a letras y cifras, para comparar sin ruido de formato. */
 const huella = (texto) => String(texto || '')
@@ -110,14 +163,21 @@ const unidadesAUnificar = (mio, oficial) => ['specific', 'minimo', 'maximo']
  * Se revisan los codigos declarables y, ademas, los no declarables que tienen
  * su propia medida en la fuente (su arancel se enseña en el arbol).
  *
- * Los codigos cuyo derecho oficial no se sabe liquidar van a `noCalculables`
- * con el texto oficial, para que conste y se avise al calcular; los de los
- * capitulos 98 y 99, a los que el TARIC no asigna derecho, a `sinDerecho`.
+ * Un derecho con variantes por codigo adicional que LUCI sabe liquidar va a
+ * `variantes` (cada una con su codigo adicional y su descripcion oficial); una
+ * suma con minimo o maximo que no cabe en los campos de siempre, a
+ * `compuestos` con su formula. Los codigos cuyo derecho oficial no se sabe
+ * liquidar van a `noCalculables` con el texto oficial y el dato que falta,
+ * para que conste y se avise al calcular; los de los capitulos 98 y 99, a los
+ * que el TARIC no asigna derecho, a `sinDerecho`.
  *
- * @returns {{ corregir: object[], contrastar: object[], conflictos: object[], unidades: object[], noCalculables: object[], sinDerecho: object[] }}
+ * @param {object[]} catalogo
+ * @param {Map} derechos `leerDerechosTercerosPaises`
+ * @param {{ codigosAdicionales?: Map<string, string> }} [opciones] descripciones oficiales de los codigos adicionales
+ * @returns {{ corregir, contrastar, conflictos, unidades, noCalculables, sinDerecho, variantes, compuestos }}
  */
-function corregirAranceles(catalogo, derechos) {
-  const resultado = { corregir: [], contrastar: [], conflictos: [], unidades: [], noCalculables: [], sinDerecho: [] };
+function corregirAranceles(catalogo, derechos, opciones = {}) {
+  const resultado = { corregir: [], contrastar: [], conflictos: [], unidades: [], noCalculables: [], sinDerecho: [], variantes: [], compuestos: [] };
   for (const actual of catalogo) {
     if (actual.isActive === false) continue;
     const oficial = arancelDe(actual.code, derechos);
@@ -133,9 +193,18 @@ function corregirAranceles(catalogo, derechos) {
       continue;
     }
     if (oficial.estado !== 'ok') {
-      const evidencia = evidenciaNoCalculable(oficial);
-      if (!yaContrastado && !(fuente === 'no_calculable' && actual.duties?.origen?.evidencia === evidencia)) {
-        resultado.noCalculables.push({ code: actual.code, texto: oficial.texto, motivo: oficial.estado, heredadoDe: oficial.heredadoDe, evidencia });
+      const resuelto = resolverDerechoNoSimple(oficial, opciones);
+      const base = { code: actual.code, texto: oficial.texto, heredadoDe: oficial.heredadoDe };
+      if (resuelto.tipo === 'variantes') {
+        const dato = { ...base, variantes: resuelto.variantes, antes: camposDelCatalogo(actual.duties) };
+        const igual = claveVariantes(actual.duties?.variantes) === claveVariantes(resuelto.variantes);
+        if (!(igual && yaContrastado)) (yaContrastado ? resultado.conflictos : resultado.variantes).push(dato);
+      } else if (resuelto.tipo === 'compuesto') {
+        const dato = { ...base, ...resuelto.campos, formula: resuelto.formula, antes: camposDelCatalogo(actual.duties) };
+        const igual = actual.duties?.formula?.texto === resuelto.formula.texto;
+        if (!(igual && yaContrastado)) (yaContrastado ? resultado.conflictos : resultado.compuestos).push(dato);
+      } else if (!yaContrastado && !(fuente === 'no_calculable' && actual.duties?.origen?.evidencia === resuelto.evidencia)) {
+        resultado.noCalculables.push({ ...base, motivo: oficial.estado, forma: resuelto.forma, faltan: resuelto.faltan, evidencia: resuelto.evidencia });
       }
       continue;
     }
@@ -147,7 +216,7 @@ function corregirAranceles(catalogo, derechos) {
       rotulo: oficial.rotulo, ...(oficial.soloDestinoFinal ? { soloDestinoFinal: true } : {})
     };
 
-    if (coinciden(mio, nuevo)) {
+    if (coinciden(mio, nuevo) && !tieneVariantesOFormula(actual.duties)) {
       const unidades = unidadesAUnificar(mio, nuevo);
       if (!yaContrastado) resultado.contrastar.push(dato);
       else if (unidades.length > 0) resultado.unidades.push({ code: actual.code, unidades });
@@ -164,6 +233,6 @@ function corregirAranceles(catalogo, derechos) {
 const evidenciaSinDerecho = (code, fuente) => `El TARIC no asigna derecho de terceros paises a este codigo (capitulo ${code.slice(0, 2)}). ${fuente}.`;
 
 module.exports = {
-  corregirDescripciones, corregirAranceles, huella, evidenciaNoCalculable, evidenciaSinDerecho, sinDerechoOficial,
+  corregirDescripciones, corregirAranceles, resolverDerechoNoSimple, huella, evidenciaNoCalculable, evidenciaSinDerecho, sinDerechoOficial,
   SEPARADOR_RUTA, CAPITULOS_SIN_DERECHO
 };

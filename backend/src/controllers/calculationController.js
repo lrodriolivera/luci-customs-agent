@@ -28,6 +28,11 @@ const calculateDuties = async (req, res) => {
     const preference = req.body.preference;
     const quantity = req.body.quantity;
     const importDate = req.body.importDate;
+    // Peso bruto (derechos «por 100 kg brutos») y codigo adicional TARIC (derechos
+    // que dependen de el); el codigo adicional tambien puede ir en las cifras
+    // 11 a 14 de `taricCode`.
+    const grossWeight = req.body.grossWeight;
+    const additionalCode = req.body.additionalCode;
 
     if (!taricCode) {
       return res.status(400).json({
@@ -48,6 +53,8 @@ const calculateDuties = async (req, res) => {
       preference: preference || '100',
       quantity: quantity || null,
       netWeight: weight || null,
+      grossWeight: grossWeight || null,
+      additionalCode: additionalCode || null,
       importDate: importDate || null
     });
 
@@ -83,6 +90,10 @@ const calculateDuties = async (req, res) => {
 
         // Preferencia aplicada
         preferenceApplied: calculation.preferenceApplied,
+        // Codigo adicional con el que se liquida (si el derecho depende de el)
+        // y derecho oficial que LUCI no liquida, con el dato que falta.
+        additionalCode: calculation.additionalCode || null,
+        dutyNotCalculable: calculation.dutyNotCalculable || null,
 
         // Medidas especiales
         measures: calculation.measures,
@@ -201,6 +212,7 @@ const calculateTotal = async (req, res) => {
       currency: g.currency || 'EUR',
       origin: g.originCountry,
       weight: g.netWeight,
+      grossWeight: g.grossWeight,
       quantity: g.quantity
     }))) || [];
 
@@ -236,7 +248,9 @@ const calculateTotal = async (req, res) => {
           origin: item.origin || null,
           preference: preference || '100',
           quantity: item.quantity || null,
-          netWeight: item.weight || null
+          netWeight: item.weight || null,
+          grossWeight: item.grossWeight || null,
+          additionalCode: item.additionalCode || null
         });
 
         totalInvoiceValue += valueEur;
@@ -263,7 +277,9 @@ const calculateTotal = async (req, res) => {
           source: calculation.source,
           confidence: calculation.confidence,
           measures: calculation.measures,
-          antidumping: calculation.antidumping
+          antidumping: calculation.antidumping,
+          additionalCode: calculation.additionalCode || null,
+          dutyNotCalculable: calculation.dutyNotCalculable || null
         });
 
       } catch (itemError) {

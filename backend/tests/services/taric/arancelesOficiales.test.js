@@ -25,7 +25,11 @@ const FILAS = [
   fila('8544429000', '3.300 % '),
   fila('8544429000', '50.000 % ', { origen: 'RU' }),                 // sancion: no es el arancel general
   fila('8544429000', '0.000 % ', { tipo: '142', origen: 'GB' }),     // preferencia: tampoco
-  fila('2204210000', '13.100 EUR HLT ')
+  fila('2204210000', '13.100 EUR HLT '),
+  // Cereales: el mismo derecho en los tres codigos adicionales de via de entrada
+  fila('1002000000', 'Cond:  B cert: Y-155 (01):93.000 EUR TNE ; B (01):0.000 EUR TNE ', { add: '2550' }),
+  fila('1002000000', 'Cond:  B cert: Y-155 (01):93.000 EUR TNE ; B (01):0.000 EUR TNE ', { add: '2551' }),
+  fila('1002000000', 'Cond:  B cert: Y-155 (01):93.000 EUR TNE ; B (01):0.000 EUR TNE ', { add: '2552' })
 ];
 
 describe('interpretarDerecho', () => {
@@ -127,7 +131,18 @@ describe('arancelDe', () => {
   });
 
   test('varios tipos por codigo adicional: no hay «el» arancel', () => {
-    expect(arancelDe('2918220020', derechos)).toEqual({ estado: 'variantes', texto: '0.000 % | 6.500 %', heredadoDe: '2918220000' });
+    expect(arancelDe('2918220020', derechos)).toEqual({
+      estado: 'variantes', texto: '0.000 % | 6.500 %', heredadoDe: '2918220000',
+      variantes: [{ codigoAdicional: '2500', texto: '0.000 %' }, { codigoAdicional: '2501', texto: '6.500 %' }]
+    });
+  });
+
+  test('el mismo derecho en todos sus codigos adicionales es un unico derecho (cereales, 1002000000)', () => {
+    expect(arancelDe('1002000000', derechos)).toEqual({
+      estado: 'ok', derecho: { tipo: 'especifico', specific: { amount: 0, unit: 'EUR/1000 kg' } },
+      texto: 'Cond: B cert: Y-155 (01):93.000 EUR TNE ; B (01):0.000 EUR TNE', heredadoDe: '1002000000', rotulo: 'Third country duty',
+      codigosAdicionales: ['2550', '2551', '2552']
+    });
   });
 
   // Codigos de destino final: «para sacrificio», «destinados a aeronaves civiles»…

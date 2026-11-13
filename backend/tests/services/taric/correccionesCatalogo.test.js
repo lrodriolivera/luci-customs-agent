@@ -66,8 +66,13 @@ describe('corregirAranceles', () => {
     CAB, fila('8544429000', '3.300 % '), fila('0104103000', '80.500 EUR DTN '), fila('2204210000', '32.000 EUR HLT '),
     fila('0811101100', '20.800 % + 8.400 EUR DTN '), fila('2918220000', '0.000 % ', '2500'), fila('2918220000', '6.500 % ', '2501'),
     fila('2401103500', '18.400 % MIN 22.000 EUR DTN MAX 24.000 EUR DTN '), fila('1704905100', '9.000 % + EA MAX 18.700 % +ADSZ '),
-    fila('2309903100', 'Cond: B cert: Y-155 (01):50.000 % ; B (01):23.000 EUR TNE '), fila('2303101100', '320.000 EUR TNE '), fila('0207412000', '38.000 EUR DTN ')
+    fila('2309903100', 'Cond: B cert: Y-155 (01):50.000 % ; B (01):23.000 EUR TNE '), fila('2303101100', '320.000 EUR TNE '), fila('0207412000', '38.000 EUR DTN '),
+    fila('1704101000', '6.200 % + 27.100 EUR DTN MAX 17.900 % '), fila('2204219551', '1.750 EUR ASV X '),
+    fila('1002000000', 'Cond:  B cert: Y-155 (01):93.000 EUR TNE ; B (01):0.000 EUR TNE ', '2550'),
+    fila('1002000000', 'Cond:  B cert: Y-155 (01):93.000 EUR TNE ; B (01):0.000 EUR TNE ', '2551'),
+    fila('1002000000', 'Cond:  B cert: Y-155 (01):93.000 EUR TNE ; B (01):0.000 EUR TNE ', '2552')
   ], { fecha: new Date('2026-11-11T12:00:00Z') });
+  const codigosAdicionales = new Map([['2500', 'Anexo I "Nomenclatura Combinada", Tercera Parte, Sección II (sustancias farmaceúticas)'], ['2501', 'Las demás']]);
   const codigo = (code, duties, extra = {}) => ({ code, isLeaf: true, isActive: true, duties, ...extra });
 
   test('corrige el porcentaje equivocado y quita un especifico que el oficial no tiene', () => {
@@ -167,22 +172,76 @@ describe('corregirAranceles', () => {
     expect(r.corregir.map((d) => d.code)).toEqual(['0207412000']);
   });
 
-  test('derecho que LUCI no sabe liquidar: se deja el dato y se anota el texto oficial, una sola vez', () => {
+  test('derecho que LUCI no sabe liquidar: se deja el dato y se anota el texto oficial y el dato que falta, una sola vez', () => {
     const r = corregirAranceles([
       codigo('1704905100', { thirdCountry: 9, specific: { amount: 35.15, unit: '100' } }),   // elemento agricola
-      codigo('2918220020', { thirdCountry: 1 })                                               // variantes por codigo adicional
+      codigo('2204219551', { thirdCountry: 0 })                                               // grado alcoholico
     ], derechos);
 
     expect(r.corregir).toEqual([]);
     expect(r.noCalculables).toEqual([
-      expect.objectContaining({ code: '1704905100', motivo: 'no_simple', evidencia: expect.stringContaining('«9.000 % + EA MAX 18.700 % +ADSZ»') }),
-      expect.objectContaining({ code: '2918220020', motivo: 'variantes', evidencia: expect.stringContaining('«0.000 % | 6.500 %»: varios tipos segun codigo adicional') })
+      expect.objectContaining({ code: '1704905100', motivo: 'no_simple', forma: 'elemento_agricola', evidencia: expect.stringContaining('«9.000 % + EA MAX 18.700 % +ADSZ»') }),
+      expect.objectContaining({ code: '2204219551', motivo: 'no_simple', forma: 'grado_alcoholico', faltan: [expect.stringMatching(/grado alcoholico/)] })
     ]);
+    expect(r.noCalculables[1].evidencia).toMatch(/Para liquidarlo hace falta el grado alcoholico/);
 
     const yaAnotado = corregirAranceles([codigo('1704905100', { thirdCountry: 9, origen: { fuente: 'no_calculable', evidencia: r.noCalculables[0].evidencia } })], derechos);
     expect(yaAnotado.noCalculables).toEqual([]);
     // Uno contrastado antes a mano no se toca.
     expect(corregirAranceles([codigo('1704905100', { thirdCountry: 9, origen: { fuente: 'taric_oficial' } })], derechos).noCalculables).toEqual([]);
+  });
+
+  test('varios tipos por codigo adicional: se guardan las variantes con su descripcion oficial, una sola vez', () => {
+    const r = corregirAranceles([codigo('2918220020', { thirdCountry: 1, origen: { fuente: 'no_calculable' } })], derechos, { codigosAdicionales });
+
+    expect(r.noCalculables).toEqual([]);
+    expect(r.variantes).toEqual([{
+      code: '2918220020', texto: '0.000 % | 6.500 %', heredadoDe: '2918220000',
+      variantes: [
+        { codigoAdicional: '2500', descripcion: 'Anexo I "Nomenclatura Combinada", Tercera Parte, Sección II (sustancias farmaceúticas)', texto: '0.000 %', thirdCountry: 0 },
+        { codigoAdicional: '2501', descripcion: 'Las demás', texto: '6.500 %', thirdCountry: 6.5 }
+      ],
+      antes: expect.objectContaining({ thirdCountry: 1 })
+    }]);
+
+    const guardado = { thirdCountry: null, variantes: r.variantes[0].variantes, origen: { fuente: 'taric_oficial' } };
+    expect(corregirAranceles([codigo('2918220020', guardado)], derechos, { codigosAdicionales })).toMatchObject({ variantes: [], conflictos: [], noCalculables: [] });
+    // Contrastado a mano con un solo tipo: no se pisa, se lista.
+    const aMano = corregirAranceles([codigo('2918220020', { thirdCountry: 6.5, origen: { fuente: 'taric_oficial' } })], derechos, { codigosAdicionales });
+    expect(aMano.variantes).toEqual([]);
+    expect(aMano.conflictos).toEqual([expect.objectContaining({ code: '2918220020', variantes: expect.any(Array) })]);
+  });
+
+  test('sin el fichero de codigos adicionales las variantes se guardan sin descripcion', () => {
+    const r = corregirAranceles([codigo('2918220020', { thirdCountry: 1 })], derechos);
+    expect(r.variantes[0].variantes.map((v) => v.descripcion)).toEqual([null, null]);
+  });
+
+  test('suma con maximo en porcentaje: se guarda la formula oficial, una sola vez', () => {
+    const r = corregirAranceles([codigo('1704101000', { thirdCountry: 6.2, specific: { amount: 27.1, unit: '100' }, origen: { fuente: 'no_calculable' } })], derechos);
+
+    expect(r.noCalculables).toEqual([]);
+    expect(r.compuestos).toEqual([{
+      code: '1704101000', texto: '6.200 % + 27.100 EUR DTN MAX 17.900 %', heredadoDe: '1704101000',
+      thirdCountry: 6.2, specific: { amount: 27.1, unit: 'EUR/100 kg' }, combinacion: 'suma',
+      formula: { texto: '6.200 % + 27.100 EUR DTN MAX 17.900 %', sumandos: [{ adValorem: 6.2 }, { amount: 27.1, unit: 'EUR/100 kg' }], minimo: [], maximo: [{ adValorem: 17.9 }] },
+      antes: expect.objectContaining({ thirdCountry: 6.2 })
+    }]);
+
+    const guardado = { thirdCountry: 6.2, formula: r.compuestos[0].formula, origen: { fuente: 'taric_oficial' } };
+    expect(corregirAranceles([codigo('1704101000', guardado)], derechos)).toMatchObject({ compuestos: [], conflictos: [], noCalculables: [] });
+  });
+
+  test('el mismo derecho en todos los codigos adicionales se corrige como un derecho simple (cereales)', () => {
+    const r = corregirAranceles([codigo('1002000000', { thirdCountry: 0, origen: { fuente: 'no_calculable' } })], derechos);
+    // 0 EUR/t es el 0 % que ya tenia: pasa a constar como contrastado contra el TARIC.
+    expect(r.contrastar).toEqual([expect.objectContaining({ code: '1002000000', thirdCountry: 0, specific: { amount: 0, unit: 'EUR/1000 kg' } })]);
+    expect(r.noCalculables).toEqual([]);
+  });
+
+  test('un derecho simple con variantes o formula de una carga anterior se corrige para borrarlas', () => {
+    const r = corregirAranceles([codigo('8544429010', { thirdCountry: 3.3, variantes: [{ codigoAdicional: '2500', texto: '0.000 %', thirdCountry: 0 }] })], derechos);
+    expect(r.corregir.map((d) => d.code)).toEqual(['8544429010']);
   });
 
   test('capitulos 98 y 99 sin medida: constan como codigos sin derecho oficial; el resto sin medida no se toca', () => {
@@ -198,6 +257,6 @@ describe('corregirAranceles', () => {
 
   test('no actua sobre codigos de baja', () => {
     const r = corregirAranceles([codigo('8544429099', { thirdCountry: 1 }, { isActive: false })], derechos);
-    expect(r).toEqual({ corregir: [], contrastar: [], conflictos: [], unidades: [], noCalculables: [], sinDerecho: [] });
+    expect(r).toEqual({ corregir: [], contrastar: [], conflictos: [], unidades: [], noCalculables: [], sinDerecho: [], variantes: [], compuestos: [] });
   });
 });

@@ -238,7 +238,8 @@ describe('sincronizacion del catalogo TARIC', () => {
     const sinMedida = derechosDeAlta({ code: '3912398570', arancel: { estado: 'sin_medida' } }, contexto);
 
     expect(agricola).toMatchObject({ thirdCountry: null, origen: { fuente: 'no_calculable' } });
-    expect(agricola.origen.evidencia).toBe('Derecho oficial «9.000 % + EA MAX 18.700 % +ADSZ»: derecho con elemento agricola, grado alcoholico, precio de entrada o varios sumandos. LUCI no lo liquida automaticamente.');
+    expect(agricola.origen).toMatchObject({ forma: 'elemento_agricola', faltan: [expect.stringContaining('elemento agricola')] });
+    expect(agricola.origen.evidencia).toMatch(/^Derecho oficial «9\.000 % \+ EA MAX 18\.700 % \+ADSZ»\. Para liquidarlo hace falta el elemento agricola .+ LUCI no lo liquida automaticamente\.$/);
     expect(variantes.origen.evidencia).toContain('«0.000 % | 6.500 %»: varios tipos segun codigo adicional');
     // Capitulos 98 y 99: el TARIC no les asigna derecho.
     expect(especial).toMatchObject({ thirdCountry: null, origen: { fuente: 'sin_derecho_oficial' } });

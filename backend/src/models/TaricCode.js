@@ -79,6 +79,36 @@ const TaricCodeSchema = new mongoose.Schema({
     // Importe minimo y maximo del derecho ad valorem («18,4 % MIN 22 EUR/100 kg MAX 24 EUR/100 kg»).
     minimo: { amount: Number, unit: String },
     maximo: { amount: Number, unit: String },
+    /**
+     * Derecho que depende del codigo adicional TARIC (2500 «sustancias
+     * farmaceuticas» 0 % / 2501 «Las demas» 5,5 %). Con variantes no hay un
+     * tipo unico: `thirdCountry` va a null y el calculo elige la variante por
+     * el codigo adicional de la partida.
+     */
+    variantes: {
+      type: [new mongoose.Schema({
+        codigoAdicional: String,
+        descripcion: String,  // descripcion oficial del codigo adicional
+        texto: String,        // celda «Duty» oficial
+        thirdCountry: Number,
+        specific: { amount: Number, unit: String },
+        combinacion: { type: String, enum: ['suma'] },
+        minimo: { amount: Number, unit: String },
+        maximo: { amount: Number, unit: String }
+      }, { _id: false })],
+      default: undefined
+    },
+    /**
+     * Derecho oficial como suma de sumandos con minimo y maximo, cuando no cabe
+     * en los campos de arriba («6,2 % + 27,1 EUR/100 kg MAX 17,9 %»). Cada
+     * sumando es un porcentaje (`adValorem`) o un importe por unidad.
+     */
+    formula: {
+      texto: String,
+      sumandos: { type: [{ _id: false, adValorem: Number, amount: Number, unit: String }], default: undefined },
+      minimo: { type: [{ _id: false, adValorem: Number, amount: Number, unit: String }], default: undefined },
+      maximo: { type: [{ _id: false, adValorem: Number, amount: Number, unit: String }], default: undefined }
+    },
     mixed: {
       adValorem: Number,
       specific: {
@@ -113,7 +143,13 @@ const TaricCodeSchema = new mongoose.Schema({
        * el arancel de cualquier importacion, que es la misma confusion que puso
        * el 50% de la sancion a Rusia en `thirdCountry`.
        */
-      soloDestinoFinal: Boolean
+      soloDestinoFinal: Boolean,
+      // Forma del derecho oficial ('variantes_codigo_adicional', 'compuesto',
+      // 'elemento_agricola', 'grado_alcoholico'…) y, si no se puede liquidar,
+      // el texto oficial y el dato que falta (formasDerecho.js).
+      forma: String,
+      textoOficial: String,
+      faltan: { type: [String], default: undefined }
     },
 
     /**
