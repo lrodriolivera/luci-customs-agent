@@ -1,24 +1,26 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import RepresentationCard from './RepresentationCard'
-import { expeditionsAPI, tenantAPI } from '../../services/api'
+import { expeditionsAPI, declarationsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }))
 vi.mock('react-hot-toast', () => ({ default: { error: vi.fn(), success: vi.fn() } }))
 vi.mock('../../services/api', () => ({
   expeditionsAPI: { update: vi.fn() },
-  tenantAPI: { getMe: vi.fn() }
+  declarationsAPI: { getDeclarante: vi.fn() }
 }))
 
 const expediente = (representative, client) => ({ _id: 'exp1', representative, client })
 const selector = () => screen.getByLabelText('representation.type')
-const tenantVacio = { data: { success: true, data: { name: '', businessInfo: {} } } }
+const declaranteRespuesta = (data) => ({ data: { success: true, data } })
 
 describe('RepresentationCard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    tenantAPI.getMe.mockResolvedValue(tenantVacio)
+    // Sin EORI el backend responde 422: por defecto se simula ese caso, que
+    // es justo lo que pasa con un expediente recien creado sin representante.
+    declarationsAPI.getDeclarante.mockRejectedValue({ response: { data: { error: 'representation.declarantUnknown' } } })
   })
 
   test('sin nada guardado muestra representación indirecta, que es la que aplica por defecto', () => {
@@ -68,35 +70,72 @@ describe('RepresentationCard', () => {
     expect(screen.getByText('representation.selfNote')).toBeInTheDocument()
   })
 
-  test('en representación indirecta o directa, la casilla declarante muestra la agencia', async () => {
-    const representative = { companyName: 'Agencia SL', eori: 'ESB22477020', representationType: 'indirect' }
-    const client = { companyName: 'Importador SA', eori: 'ESX99999999' }
-    render(<RepresentationCard expedition={expediente(representative, client)} onSaved={vi.fn()} />)
+  test('pide el declarante al backend (misma regla que el H1) y lo muestra', async () => {
+    declarationsAPI.getDeclarante.mockResolvedValue(declaranteRespuesta({
+      declarante: { companyName: 'Agencia SL', eori: 'ESB22477020' }, representante: null, forma: '3'
+    }))
+    render(<RepresentationCard expedition={expediente({ representationType: 'indirect' })} onSaved={vi.fn()} />)
 
+    expect(declarationsAPI.getDeclarante).toHaveBeenCalledWith('exp1')
     expect(await screen.findByText('Agencia SL')).toBeInTheDocument()
     expect(screen.getByText('ESB22477020')).toBeInTheDocument()
     expect(screen.getByText('representation.declarantNote')).toBeInTheDocument()
+    expect(screen.queryByText('representation.representative')).not.toBeInTheDocument()
   })
 
-  test('en autodespacho (mismo EORI que el cliente) la casilla declarante muestra al importador', async () => {
-    const client = { companyName: 'Importador SA', eori: 'ESB22477020' }
-    tenantAPI.getMe.mockResolvedValue({
-      data: { success: true, data: { name: 'Importador SA', businessInfo: { eori: 'ESB22477020' } } }
-    })
-    render(<RepresentationCard expedition={expediente(undefined, client)} onSaved={vi.fn()} />)
+  test('en representación directa muestra tambien a la agencia como representante', async () => {
+    declarationsAPI.getDeclarante.mockResolvedValue(declaranteRespuesta({
+      declarante: { companyName: 'Importador SA', eori: 'ESX99999999' },
+      representante: { companyName: 'Agencia SL', eori: 'ESB22477020' },
+      forma: '2'
+    }))
+    render(<RepresentationCard expedition={expediente({ representationType: 'direct' })} onSaved={vi.fn()} />)
 
     expect(await screen.findByText('Importador SA')).toBeInTheDocument()
-    expect(screen.getByText('ESB22477020')).toBeInTheDocument()
+    expect(screen.getByText('representation.representative')).toBeInTheDocument()
+    expect(screen.getByText('Agencia SL')).toBeInTheDocument()
   })
 
-  test('si no hay datos de declarante todavia, lo dice en vez de dejar la casilla en blanco', async () => {
-    render(<RepresentationCard expedition={expediente(undefined, undefined)} onSaved={vi.fn()} />)
-    expect(await screen.findByText('representation.declarantUnknown')).toBeInTheDocument()
+  test('en autodespacho el declarante es el importador y no hay representante', async () => {
+    declarationsAPI.getDeclarante.mockResolvedValue(declaranteRespuesta({
+      declarante: { companyName: 'Importador SA', eori: 'ESB22477020' }, representante: null, forma: '1'
+    }))
+    render(<RepresentationCard expedition={expediente(undefined, { companyName: 'Importador SA', eori: 'ESB22477020' })} onSaved={vi.fn()} />)
+
+    expect(await screen.findByText('Importador SA')).toBeInTheDocument()
+    expect(screen.queryByText('representation.representative')).not.toBeInTheDocument()
   })
 
-  test('si falla la carga del tenant no rompe la tarjeta', async () => {
-    tenantAPI.getMe.mockRejectedValue(new Error('network'))
+  test('si falta el EORI (422), muestra el motivo que da el backend en vez de dejar la casilla en blanco', async () => {
+    declarationsAPI.getDeclarante.mockRejectedValue({
+      response: { data: { error: 'Falta el EORI del representante: configúralo en Ajustes > Aduanas' } }
+    })
+    render(<RepresentationCard expedition={expediente(undefined)} onSaved={vi.fn()} />)
+
+    expect(await screen.findByText('Falta el EORI del representante: configúralo en Ajustes > Aduanas')).toBeInTheDocument()
+  })
+
+  test('si falla la consulta sin mensaje del backend, no rompe la tarjeta', async () => {
+    declarationsAPI.getDeclarante.mockRejectedValue(new Error('network'))
     render(<RepresentationCard expedition={expediente(undefined)} onSaved={vi.fn()} />)
     expect(await screen.findByText('representation.declarantUnknown')).toBeInTheDocument()
+  })
+
+  test('vuelve a pedir el declarante cuando cambia el expediente guardado', async () => {
+    declarationsAPI.getDeclarante.mockResolvedValueOnce(declaranteRespuesta({
+      declarante: { companyName: 'Agencia SL', eori: 'ESB22477020' }, representante: null, forma: '3'
+    }))
+    const { rerender } = render(<RepresentationCard expedition={expediente({ representationType: 'indirect' })} onSaved={vi.fn()} />)
+    expect(await screen.findByText('Agencia SL')).toBeInTheDocument()
+
+    declarationsAPI.getDeclarante.mockResolvedValueOnce(declaranteRespuesta({
+      declarante: { companyName: 'Importador SA', eori: 'ESX99999999' },
+      representante: { companyName: 'Agencia SL', eori: 'ESB22477020' },
+      forma: '2'
+    }))
+    rerender(<RepresentationCard expedition={expediente({ representationType: 'direct' })} onSaved={vi.fn()} />)
+
+    expect(await screen.findByText('Importador SA')).toBeInTheDocument()
+    expect(declarationsAPI.getDeclarante).toHaveBeenCalledTimes(2)
   })
 })

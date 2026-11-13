@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
-import { expeditionsAPI, tenantAPI } from '../../services/api'
-import { declaranteDe } from '../../utils/declarante'
+import { expeditionsAPI, declarationsAPI } from '../../services/api'
 
 export const REPRESENTATION_TYPES = ['indirect', 'direct']
 
@@ -16,9 +15,14 @@ export const REPRESENTATION_TYPES = ['indirect', 'direct']
  * siempre con el mismo codigo.
  *
  * UAT 13/Nov/2026 (Patricia): pedia ademas ver QUIEN es el declarante (dato
- * obligatorio del DUA). Se muestra en la casilla "Declarante" de abajo,
- * calculada con la misma regla que usa el backend al generar el H1
- * (utils/declarante.js, espejo de identificadorAduanero.js).
+ * obligatorio del DUA). Se pide a GET /api/declarations/:id/declarante
+ * (declarationController.getDeclarante), que usa las mismas funciones puras
+ * que el generador del H1 (declarantePara, formaRepresentacionDe). Antes
+ * esto se recalculaba en el frontend con el EORI del tenant leido
+ * directamente de la API, y ese campo puede llegar cifrado si el hook de
+ * descifrado no se aplica (correccion del coordinador, 13/Nov/2026): una
+ * sola fuente de la verdad, en el backend, evita que la pantalla y el H1
+ * puedan divergir.
  *
  * @param {{ expedition: object, onSaved: (expedition: object) => void }} props
  */
@@ -27,23 +31,30 @@ export default function RepresentationCard({ expedition, onSaved }) {
   const saved = expedition.representative?.representationType || 'indirect'
   const [type, setType] = useState(saved)
   const [isSaving, setIsSaving] = useState(false)
-  const [tenant, setTenant] = useState(null)
+  const [declarante, setDeclarante] = useState(null)
+  const [representante, setRepresentante] = useState(null)
+  const [declaranteError, setDeclaranteError] = useState(null)
 
   useEffect(() => {
     let vivo = true
-    tenantAPI.getMe()
+    declarationsAPI.getDeclarante(expedition._id)
       .then((response) => {
-        if (vivo) setTenant(response.data?.data || null)
+        if (!vivo) return
+        const datos = response.data?.data || {}
+        setDeclarante(datos.declarante || null)
+        setRepresentante(datos.representante || null)
+        setDeclaranteError(null)
       })
-      .catch(() => {
-        // Sin datos del tenant la casilla cae al representative del
-        // expediente (si lo hay); si tampoco lo hay, se avisa en vez de
-        // dejarla en blanco (declaranteDe devuelve companyName vacio).
+      .catch((error) => {
+        if (!vivo) return
+        setDeclarante(null)
+        setRepresentante(null)
+        // Con un 422 (falta el EORI), el backend ya dice donde completarlo;
+        // ese mensaje es mas util que el generico declarantUnknown.
+        setDeclaranteError(error.response?.data?.error || null)
       })
     return () => { vivo = false }
-  }, [])
-
-  const declarante = declaranteDe({ representative: expedition.representative, client: expedition.client, tenant })
+  }, [expedition._id, expedition.representative?.representationType])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -87,14 +98,21 @@ export default function RepresentationCard({ expedition, onSaved }) {
 
       <div className="mt-4 rounded border border-gray-200 bg-gray-50 p-3">
         <p className="text-xs font-semibold uppercase text-gray-600">{t('representation.declarant')}</p>
-        {declarante.companyName
+        {declarante?.companyName
           ? (
             <>
               <p className="text-sm font-medium text-gray-900">{declarante.companyName}</p>
               {declarante.eori && <p className="text-xs text-gray-500">{declarante.eori}</p>}
             </>
           )
-          : <p className="text-sm text-gray-500">{t('representation.declarantUnknown')}</p>}
+          : <p className="text-sm text-gray-500">{declaranteError || t('representation.declarantUnknown')}</p>}
+        {representante?.companyName && (
+          <>
+            <p className="mt-2 text-xs font-semibold uppercase text-gray-600">{t('representation.representative')}</p>
+            <p className="text-sm font-medium text-gray-900">{representante.companyName}</p>
+            {representante.eori && <p className="text-xs text-gray-500">{representante.eori}</p>}
+          </>
+        )}
         <p className="mt-1 text-xs text-gray-500">{t('representation.declarantNote')}</p>
       </div>
 

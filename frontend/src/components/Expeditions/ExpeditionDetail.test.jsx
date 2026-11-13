@@ -25,15 +25,15 @@ vi.mock('../../services/api', () => ({
     aiFullAnalysis: vi.fn()
   },
   documentsAPI: { upload: vi.fn(), read: vi.fn(), proposal: vi.fn(), apply: vi.fn(), download: vi.fn() },
-  // RepresentationCard pide los datos del tenant para la casilla "Declarante".
-  tenantAPI: { getMe: vi.fn().mockResolvedValue({ data: { success: true, data: { name: '', businessInfo: {} } } }) },
   declarationsAPI: {
     generateH1: vi.fn(),
     exportXML: vi.fn(),
     submit: vi.fn(),
     downloadPDF: vi.fn(),
     downloadSummaryPDF: vi.fn(),
-    verifySummaryDeclaration: vi.fn()
+    verifySummaryDeclaration: vi.fn(),
+    // RepresentationCard pide el declarante calculado por el backend.
+    getDeclarante: vi.fn().mockRejectedValue({ response: { data: { error: 'Falta el EORI del representante' } } })
   }
 }))
 

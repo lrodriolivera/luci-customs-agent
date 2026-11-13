@@ -165,6 +165,8 @@ router.get('/:expeditionId/summary', declarationController.getDeclarationSummary
 // H1: que falta para presentarlo y datos que solo se usan en la presentacion
 router.get('/:expeditionId/h1/requisitos', declarationController.getH1Requirements);
 router.put('/:expeditionId/h1/datos', declarationController.updateH1Data);
+// Declarante y representante (casilla 14 del DUA) con la misma regla del H1, sin generarlo (RepresentationCard)
+router.get('/:expeditionId/declarante', declarationController.getDeclarante);
 // H1 CAU: estado en la AEAT (circuito, levante, pago, documentos que pide la aduana)
 router.get('/:expeditionId/h1/estado', declarationController.getH1Status);
 // Consulta en la AEAT (DSDTCons) de la declaracion sumaria registrada en el expediente

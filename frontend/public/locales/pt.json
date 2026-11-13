@@ -3779,6 +3779,7 @@
     "selfNote": "Se o declarante for o próprio importador (mesmo NIF/EORI), a LUCI declara autodespacho (código 1) sem ser preciso indicá-lo. Se o H1 já estiver gerado, gere-o de novo para refletir a alteração.",
     "declarant": "Declarante",
     "declarantNote": "O declarante é quem tem associado na LUCI o certificado digital com que se apresenta a declaração.",
+    "representative": "Representante",
     "declarantUnknown": "Ainda por determinar",
     "saved": "Forma de representação guardada",
     "saveError": "Não foi possível guardar a forma de representação"
