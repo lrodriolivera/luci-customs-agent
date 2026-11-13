@@ -750,18 +750,33 @@ const adminInvite = async (req, res) => {
     // esta para no filtrar esa informacion a quien invita.
     const yaExiste = await User.findOne({ email });
     if (yaExiste) {
-      // Excepcion: una invitacion pendiente (mustChangePassword activo, quiza
-      // caducada) del MISMO tenant se puede reinvitar -- regenera la temporal
-      // y su caducidad en vez de dejar la cuenta bloqueada para siempre solo
-      // por BD. Si esta en otro tenant, o ya completo el primer acceso
-      // (mustChangePassword false), sigue siendo el 409 generico.
+      // Excepcion: una invitacion GENUINA, pendiente (mustChangePassword
+      // activo, quiza caducada) y nunca usada, del MISMO tenant, se puede
+      // reinvitar -- regenera la temporal y su caducidad en vez de dejar la
+      // cuenta bloqueada para siempre solo por BD. Cuatro condiciones, las
+      // cuatro necesarias:
+      //   - mismo tenant (nunca entre tenants)
+      //   - mustChangePassword activo (sigue pendiente)
+      //   - invitedAt presente: la cuenta se creo POR ESTE camino (admin/invite),
+      //     no por adminController.createUser ni por otro sitio que tambien
+      //     deje mustChangePassword activo
+      //   - nunca inicio sesion (sin lastLogin): si ya entro una vez con la
+      //     temporal, regenerarla por detras le quita el acceso sin avisar
+      // Si no se cumplen todas, o si quien reinvita no puede gestionar al
+      // objetivo (puedeGestionarUsuario -- un admin de tenant no toca a un
+      // super_admin ni para esto), es el mismo 409 generico: no se distingue
+      // el motivo para no filtrar informacion a quien invita.
       const mismoTenant = String(yaExiste.tenantId || '') === String(tenantId);
-      if (mismoTenant && yaExiste.mustChangePassword) {
+      const invitacionPendienteGenuina = mismoTenant &&
+        yaExiste.mustChangePassword &&
+        !!yaExiste.invitedAt &&
+        !yaExiste.lastLogin &&
+        yaExiste.isActive;
+      if (invitacionPendienteGenuina && puedeGestionarUsuario(req.user, yaExiste)) {
         const tempPasswordReinvite = generarContrasenaTemporal();
         yaExiste.password = tempPasswordReinvite;
         yaExiste.mustChangePassword = true;
         yaExiste.tempPasswordExpires = calcularExpiracionTemporal();
-        yaExiste.isActive = true;
         await yaExiste.save();
 
         logger.info(`Admin reinvito usuario pendiente: ${email} por ${req.user.email}`);
@@ -798,6 +813,8 @@ const adminInvite = async (req, res) => {
       isActive: true,
       mustChangePassword: true,
       tempPasswordExpires: calcularExpiracionTemporal(),
+      invitedAt: new Date(),
+      invitedBy: req.user._id,
       permissions: {
         canCreateExpeditions: true,
         canUploadDocuments: true,

@@ -315,6 +315,108 @@ describe('reinvitar a un usuario pendiente regenera la temporal', () => {
   });
 });
 
+// ALTO-1 de la 2a revision de seguridad del 4.2: la reinvitacion se saltaba
+// los permisos (puedeGestionarUsuario) y podia "reinvitar" cuentas que no
+// venian de una invitacion, o que ya habian iniciado sesion al menos una vez.
+describe('la reinvitacion respeta permisos y solo aplica a invitaciones genuinas sin usar', () => {
+  test('un admin de A no puede reinvitar a un super_admin pendiente de A: 409 y la contrasena no cambia', async () => {
+    const super_ = await crearUsuario({ role: 'super_admin', tenantId: undefined, email: `super-alto1-${Date.now()}@plataforma.es` });
+    const adminA = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'adminAlto1@t-a.es' });
+    const app = crearApp();
+
+    const invite = await request(app)
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${super_.generateAuthToken()}`)
+      .send({ email: 'superpendiente@t-a.es', name: 'Super Pendiente', role: 'super_admin', tenantId: String(tenantA._id) });
+    expect(invite.status).toBe(201);
+    const hashAntes = (await User.findOne({ email: 'superpendiente@t-a.es' }).select('+password')).password;
+
+    // role: 'agent' a proposito -- es un rol que adminA SI puede asignar, para
+    // que la peticion pase el filtro de puedeAsignarRol de mas arriba y
+    // ejercite el de puedeGestionarUsuario de la rama de reinvitacion. Con
+    // role: 'super_admin' el 403 llegaria antes y no probaria nada nuevo.
+    const reinvite = await request(app)
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${adminA.generateAuthToken()}`)
+      .send({ email: 'superpendiente@t-a.es', name: 'Super Pendiente', role: 'agent' });
+
+    expect(reinvite.status).toBe(409);
+    const hashDespues = (await User.findOne({ email: 'superpendiente@t-a.es' }).select('+password')).password;
+    expect(hashDespues).toBe(hashAntes);
+  });
+
+  test('no se puede reinvitar a un pendiente que ya inicio sesion al menos una vez', async () => {
+    const admin = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'adminAlto1b@t-a.es' });
+    const app = crearApp();
+
+    const invite = await request(app)
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${admin.generateAuthToken()}`)
+      .send({ email: 'yainicio@t-a.es', name: 'Ya Inicio', role: 'agent' });
+    expect(invite.status).toBe(201);
+
+    // Entra una vez con la temporal (mustChangePassword sigue activo: no
+    // llego a cambiarla), lo que ya la saca de "nunca ha iniciado sesion".
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'yainicio@t-a.es', password: invite.body.data.temporaryPassword });
+    expect(login.status).toBe(200);
+
+    const reinvite = await request(app)
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${admin.generateAuthToken()}`)
+      .send({ email: 'yainicio@t-a.es', name: 'Ya Inicio', role: 'agent' });
+
+    expect(reinvite.status).toBe(409);
+  });
+
+  test('no se reinvita una cuenta con mustChangePassword activo creada por otro camino (sin invitedAt)', async () => {
+    const admin = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'adminAlto1c@t-a.es' });
+    // Simula un usuario creado por adminController.createUser con password
+    // generada (mustChangePassword true), no por POST /admin/invite.
+    await User.create({
+      email: 'creadoporotrocamino@t-a.es', password: 'TemporalGenerada1', name: 'Otro Camino',
+      role: 'agent', tenantId: tenantA._id, isActive: true,
+      mustChangePassword: true, tempPasswordExpires: new Date(Date.now() + 72 * 60 * 60 * 1000)
+    });
+
+    const reinvite = await request(crearApp())
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${admin.generateAuthToken()}`)
+      .send({ email: 'creadoporotrocamino@t-a.es', name: 'Otro Camino', role: 'agent' });
+
+    expect(reinvite.status).toBe(409);
+  });
+});
+
+// BAJO-A de la 2a revision de seguridad del 4.2: la reinvitacion no debe
+// reactivar una cuenta desactivada.
+describe('la reinvitacion no reactiva cuentas desactivadas', () => {
+  test('409 si la cuenta pendiente fue desactivada, y sigue desactivada', async () => {
+    const admin = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'adminBajoA@t-a.es' });
+    const app = crearApp();
+
+    const invite = await request(app)
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${admin.generateAuthToken()}`)
+      .send({ email: 'desactivado@t-a.es', name: 'Desactivado', role: 'agent' });
+    expect(invite.status).toBe(201);
+    const hashAntes = (await User.findOne({ email: 'desactivado@t-a.es' }).select('+password')).password;
+
+    await User.updateOne({ email: 'desactivado@t-a.es' }, { $set: { isActive: false } });
+
+    const reinvite = await request(app)
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${admin.generateAuthToken()}`)
+      .send({ email: 'desactivado@t-a.es', name: 'Desactivado', role: 'agent' });
+
+    expect(reinvite.status).toBe(409);
+    const actualizado = await User.findOne({ email: 'desactivado@t-a.es' }).select('+password');
+    expect(actualizado.isActive).toBe(false);
+    expect(actualizado.password).toBe(hashAntes);
+  });
+});
+
 describe('validacion de entrada', () => {
   test('400 con email con formato invalido', async () => {
     const admin = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'admin4@t-a.es' });

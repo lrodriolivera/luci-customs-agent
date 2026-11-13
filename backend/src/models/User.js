@@ -113,6 +113,17 @@ const UserSchema = new mongoose.Schema({
   },
   tempPasswordExpires: Date,
 
+  // Marca que esta cuenta se creo por una invitacion de admin (POST
+  // /api/auth/admin/invite), no por adminController.createUser ni por
+  // registro: la reinvitacion (reinviteMismoTenant en authController) solo
+  // regenera la temporal de una cuenta que paso por AQUI, nunca de una creada
+  // por otro camino aunque tambien tenga mustChangePassword activo.
+  invitedAt: Date,
+  invitedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
   // Momento del ultimo cambio de contrasena. Un JWT firmado ANTES de esta
   // fecha (decoded.iat < passwordChangedAt) se rechaza en verifyLegacy
   // (middleware/auth.js): sin esto, cambiar la contrasena (o que un admin la

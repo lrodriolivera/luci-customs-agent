@@ -237,4 +237,34 @@ describe('authController.adminInvite (POST /api/auth/admin/invite)', () => {
     expect(res.body.data.temporaryPassword).toBeTruthy();
     expect(res.body.data.user).toEqual({ email: 'invitado@t1.es', role: 'super_admin' });
   });
+
+  // ALTO-1 de la 2a revision de seguridad del 4.2: la rama de reinvitacion
+  // (mismoTenant && mustChangePassword) no comprobaba puedeGestionarUsuario.
+  // Un admin de tenant podia pedir role:'agent' (que SI puede asignar, asi que
+  // el 403 de mas arriba no saltaba) apuntando al email de un super_admin
+  // pendiente de su tenant, y la rama de reinvitacion le generaba una
+  // contrasena nueva sin mirar el rol del objetivo.
+  test('403 arriba no aplica con role permitido, pero la reinvitacion exige puedeGestionarUsuario: 409 y sin guardar', async () => {
+    const pendienteSuperAdmin = {
+      _id: 'p1',
+      email: 'pendiente@t1.es',
+      role: 'super_admin',
+      tenantId: 't1',
+      mustChangePassword: true,
+      lastLogin: undefined,
+      invitedAt: new Date(),
+      isActive: true,
+      save: jest.fn().mockResolvedValue(true)
+    };
+    User.findOne.mockResolvedValue(pendienteSuperAdmin);
+    const res = crearRes();
+
+    await authController.adminInvite(
+      { user: ADMIN_T1, body: { email: 'pendiente@t1.es', name: 'Pendiente', role: 'agent' } },
+      res
+    );
+
+    expect(res.statusCode).toBe(409);
+    expect(pendienteSuperAdmin.save).not.toHaveBeenCalled();
+  });
 });
