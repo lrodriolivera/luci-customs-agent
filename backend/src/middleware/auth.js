@@ -38,11 +38,25 @@ async function verifyLegacy(token) {
   // esto, cambiar la contrasena (o que un admin la restablezca) no cerraba
   // las sesiones abiertas con la vieja, que seguian funcionando hasta que el
   // JWT caducara por su cuenta (hasta 7 dias). decoded.iat esta en segundos
-  // (estandar JWT); passwordChangedAt en milisegundos.
-  if (user.passwordChangedAt && typeof decoded.iat === 'number') {
+  // (estandar JWT); passwordChangedAt en milisegundos. Si hay
+  // passwordChangedAt pero el token no trae iat (no deberia faltar nunca en
+  // un JWT normal, pero uno manipulado si podria omitirlo), se rechaza: sin
+  // iat no hay forma de comprobar esto.
+  if (user.passwordChangedAt) {
+    if (typeof decoded.iat !== 'number') return null;
     const cambioEnSegundos = Math.floor(user.passwordChangedAt.getTime() / 1000);
     if (decoded.iat < cambioEnSegundos) return null;
   }
+
+  // Complementa a passwordChangedAt: iat tiene resolucion de 1s, asi que un
+  // token emitido en el MISMO segundo justo antes del cambio no se
+  // distinguia por tiempo. tokenVersion se compara por valor exacto. Un
+  // documento o un token sin este campo (de antes de que existiera) cuenta
+  // como 0 en ambos lados, asi que las sesiones de antes de este cambio no
+  // se rompen.
+  const tokenVersionUsuario = user.tokenVersion || 0;
+  const tokenVersionToken = decoded.tokenVersion || 0;
+  if (tokenVersionUsuario !== tokenVersionToken) return null;
 
   return { user, decoded };
 }

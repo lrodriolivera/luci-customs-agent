@@ -160,3 +160,66 @@ describe('la caducidad de 72h tambien se comprueba en PUT /api/auth/password', (
     expect(cambio.body.code).toBe('TEMP_PASSWORD_EXPIRED');
   });
 });
+
+// BAJO-D de la 2a revision de seguridad del 4.2: passwordChangedAt por si
+// solo no distingue un token emitido en el MISMO segundo (iat tiene
+// resolucion de 1s) justo antes de cambiar la contrasena; tokenVersion si,
+// porque se compara por valor exacto, no por tiempo.
+describe('tokenVersion: rotacion de sesiones precisa, no solo por tiempo', () => {
+  test('un token del mismo segundo ANTERIOR al cambio de contrasena queda rechazado', async () => {
+    const app = crearApp();
+    const user = await User.create({
+      email: 'tokenversion1@t-a.es', password: 'Password123!', name: 'Token Version',
+      role: 'agent', tenantId: tenantA._id, isActive: true
+    });
+    const tokenAntes = user.generateAuthToken();
+
+    // Cambia la contrasena en el mismo instante (mismo segundo de reloj con
+    // total seguridad: no hay nada entre medias que tarde ni un milisegundo
+    // completo). passwordChangedAt por si solo, con resolucion de 1s, no
+    // bastaria para distinguir esto; tokenVersion si.
+    user.password = 'OtraDefinitiva1';
+    await user.save();
+
+    const res = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${tokenAntes}`);
+    expect(res.status).toBe(401);
+  });
+
+  test('un usuario antiguo (sin tokenVersion) sigue entrando con un token sin esa reclamacion', async () => {
+    const app = crearApp();
+    const user = await User.create({
+      email: 'legacy-tokenversion@t-a.es', password: 'Password123!', name: 'Legacy',
+      role: 'agent', tenantId: tenantA._id, isActive: true
+    });
+    // Simula un documento de antes de que existiera tokenVersion.
+    await User.updateOne({ _id: user._id }, { $unset: { tokenVersion: '' } });
+
+    // Simula un token emitido antes de que existiera esa reclamacion (nunca
+    // la incluye, en vez de incluirla con valor 0 explicito).
+    const jwtService = require('../../src/utils/jwtService');
+    const tokenAntiguo = jwtService.sign({ id: String(user._id), email: user.email, role: user.role });
+
+    const res = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${tokenAntiguo}`);
+    expect(res.status).toBe(200);
+  });
+
+  test('si hay passwordChangedAt y el token no trae iat, se rechaza', async () => {
+    const app = crearApp();
+    const user = await User.create({
+      email: 'siniat@t-a.es', password: 'Password123!', name: 'Sin Iat',
+      role: 'agent', tenantId: tenantA._id, isActive: true
+    });
+    expect(user.passwordChangedAt).toBeTruthy(); // se pone ya en la creacion
+
+    const jwt = require('jsonwebtoken');
+    const jwtService = require('../../src/utils/jwtService');
+    const tokenSinIat = jwt.sign(
+      { id: String(user._id), email: user.email, role: user.role, tokenVersion: user.tokenVersion || 0 },
+      process.env.JWT_SECRET,
+      { issuer: jwtService.ISSUER, audience: jwtService.AUDIENCE, noTimestamp: true }
+    );
+
+    const res = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${tokenSinIat}`);
+    expect(res.status).toBe(401);
+  });
+});

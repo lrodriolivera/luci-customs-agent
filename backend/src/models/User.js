@@ -129,7 +129,19 @@ const UserSchema = new mongoose.Schema({
   // (middleware/auth.js): sin esto, cambiar la contrasena (o que un admin la
   // restablezca) no cerraba las sesiones ya abiertas con la contrasena vieja,
   // que seguian valiendo hasta que el JWT caducara por su cuenta (hasta 7 dias).
-  passwordChangedAt: Date
+  passwordChangedAt: Date,
+
+  // Complementa a passwordChangedAt: iat tiene resolucion de 1 segundo, asi
+  // que un token emitido en el MISMO segundo justo antes de cambiar la
+  // contrasena no se distinguia por tiempo. tokenVersion se compara por
+  // valor exacto en verifyLegacy. Un documento sin este campo (de antes de
+  // que existiera) cuenta como 0, y un token sin esta reclamacion (de antes
+  // de que existiera) tambien cuenta como 0 -- asi que ambos siguen
+  // encajando entre si sin romper sesiones de antes de este cambio.
+  tokenVersion: {
+    type: Number,
+    default: 0
+  }
 
 }, {
   timestamps: true
@@ -146,6 +158,7 @@ UserSchema.pre('save', async function(next) {
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
   this.passwordChangedAt = new Date();
+  this.tokenVersion = (this.tokenVersion || 0) + 1;
   next();
 });
 
@@ -166,7 +179,8 @@ UserSchema.methods.generateAuthToken = function() {
     id: this._id,
     email: this.email,
     role: this.role,
-    tenantId: this.tenantId ? String(this.tenantId) : undefined
+    tenantId: this.tenantId ? String(this.tenantId) : undefined,
+    tokenVersion: this.tokenVersion || 0
   };
   if (this.mustChangePassword) {
     return jwtService.sign(payload, { expiresIn: EXPIRACION_TOKEN_CON_PASSWORD_TEMPORAL });
