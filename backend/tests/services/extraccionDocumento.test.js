@@ -133,6 +133,13 @@ describe('extraccionDocumento', () => {
       expect(d.notas).toEqual(['Precintos (no son contenedores): MSCU1150584400, TGHU88422170.']);
     });
 
+    // Texto que ve el agente: debe llevar tilde ("dígito"), no "digito".
+    test('un contenedor con el digito de control incorrecto se avisa con tilde en la nota', () => {
+      const d = normalizarExtraccion({ transporte: { contenedores: ['MSCU1150580'] } });
+      expect(d.transporte.contenedores).toEqual(['MSCU1150580']);
+      expect(d.notas).toEqual(['Comprueba el contenedor MSCU1150580: su dígito de control no cuadra (ISO 6346).']);
+    });
+
     test('del contenedor se guarda solo la matricula ISO, sin el tipo ni el precinto', () => {
       // Lectura real de un Excel: «TGHU8842217 (40HC, FCL/FCL)» llegaba como «TGHU8842217(40HC)».
       const cont = (lista) => normalizarExtraccion({ transporte: { contenedores: lista } }).transporte.contenedores;
