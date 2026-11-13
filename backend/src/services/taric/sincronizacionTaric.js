@@ -35,7 +35,9 @@ async function prepararSincronizacion(catalogo, { ficheros, describir = descripc
   log(`Nomenclatura oficial de ${f.mes.name} ${f.mes.anio}: ${oficial.size} codigos, ${declarables.size} declarables` +
     (f.mesEs ? `; español de ${f.mesEs.name} ${f.mesEs.anio}` : '; sin fichero en español'));
 
-  const plan = planificar(oficial, declarables, catalogo);
+  // La extraccion mensual esta proyectada al dia 1 del mes.
+  const fechaFichero = new Date(Date.UTC(f.mes.anio, f.mes.mes - 1, 1, 12));
+  const plan = planificar(oficial, declarables, catalogo, { fechaFichero });
 
   // Arancel de terceros paises oficial (puede faltar el fichero del mes).
   const derechos = f.derechosImport ? leerDerechosTercerosPaises(leerPrimeraHoja(f.derechosImport)) : null;
@@ -93,6 +95,7 @@ async function prepararSincronizacion(catalogo, { ficheros, describir = descripc
       altas: plan.altas.length, altasDeclarables: plan.altas.filter((a) => a.isLeaf).length, altasSinEspanol: sinEspanol,
       bajas: plan.bajas.length, reactivar: plan.reactivar.length, declarable: plan.declarable.length, nivel: plan.nivel.length,
       sinCambios: plan.sinCambios,
+      posterioresAlFichero: plan.posterioresAlFichero,
       arancelesDeAltas: aranceles,
       descripcionesACorregir: descripciones.length,
       descripcionesEsACorregir: descripciones.filter((d) => d.es).length,

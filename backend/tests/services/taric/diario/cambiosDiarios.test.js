@@ -26,7 +26,7 @@ describe('fichero diario: nomenclatura', () => {
   });
 
   test('distingue alta, baja y cambio de descripción, con sus fechas', () => {
-    expect(cambios[0]).toEqual({ clase: 'codigo', code: '3924100040', accion: 'alta', desde: '20261118', hasta: '', detalle: 'De poli(tereftalato de etileno), con contenido reciclado' });
+    expect(cambios[0]).toEqual({ clase: 'codigo', code: '3924100040', accion: 'alta', desde: '20261118', hasta: '', detalle: 'De poli(tereftalato de etileno), con contenido reciclado', detalleEn: 'Of poly(ethylene terephthalate)', nivel: 10 });
     expect(cambios[1]).toMatchObject({ accion: 'baja', hasta: '20261117' });
     expect(cambios[2]).toMatchObject({ accion: 'cambio', detalle: 'Los demás acumuladores' });
   });
@@ -35,6 +35,46 @@ describe('fichero diario: nomenclatura', () => {
     expect(leerNomenclaturaDiaria([NOMENCLATURA[0]])).toEqual([]);
     expect(leerNomenclaturaDiaria([])).toEqual([]);
     expect(() => leerNomenclaturaDiaria([['a', 'b'], ['1', '2']])).toThrow('columnas');
+  });
+});
+
+// Lineas reales de TARIC_20261106_1917 y TARIC_20261110_1914: el alta en español
+// llega vacia y el texto viene despues en una linea UPDATE sin fechas; y un
+// alta puede traer fecha de fin (vigencia limitada) sin ser una baja.
+const NOMENCLATURA_REAL = [
+  NOMENCLATURA[0],
+  ['390810001080', '06/11/2026 00:00', '', 'EN', '10', '--', 'Polyamide-6 (PA 6), with a PA 6 polymer content of 95% or more by weight', 'INSERT', '06/11/2026 00:00', '10068'],
+  ['390810001080', '06/11/2026 00:00', '', 'ES', '10', '--', '', 'INSERT', '06/11/2026 00:00', '10069'],
+  ['390810009080', '06/11/2026 00:00', '', 'EN', '10', '--', 'Other', 'INSERT', '06/11/2026 00:00', '10094'],
+  ['390810009080', '06/11/2026 00:00', '', 'ES', '10', '--', 'Las demás', 'INSERT', '06/11/2026 00:00', '10095'],
+  ['390810001080', '', '', 'EN', '10', '', 'Polyamide-6 (PA 6), with a PA 6 polymer content of 95% or more by weight', 'UPDATE', '', '10117'],
+  ['390810001080', '', '', 'ES', '10', '', 'polímero poliamida-6 (PA6) con un contenido en peso igual o superior al 95 % del propio polímero PA6', 'UPDATE', '', '10118'],
+  ['390761006080', '18/11/2026 00:00', '31/12/2026 00:00', 'EN', '10', '---', 'Recovered from waste, suitable or intended for food contact use', 'INSERT', '18/11/2026 00:00', '17095'],
+  ['390761006080', '18/11/2026 00:00', '31/12/2026 00:00', 'ES', '10', '---', 'Recuperado de residuos, apto para el contacto con alimentos o destinado al contacto con alimentos', 'INSERT', '18/11/2026 00:00', '17096'],
+  ['390761100080', '01/01/2027 00:00', '', 'ES', '8', '---', 'In the form of flakes', 'UPDATE', '01/01/2027 00:00', '5502']
+];
+
+describe('fichero diario: altas de código', () => {
+  const cambios = leerNomenclaturaDiaria(NOMENCLATURA_REAL);
+  const de = (code) => cambios.filter((c) => c.code === code);
+
+  test('el alta guarda su nivel y su texto inglés', () => {
+    expect(de('3908100090')).toEqual([{ clase: 'codigo', code: '3908100090', accion: 'alta', desde: '20261106', hasta: '', detalle: 'Las demás', detalleEn: 'Other', nivel: 10 }]);
+  });
+
+  test('el español que llega después en la misma publicación completa el alta, sin un cambio aparte', () => {
+    expect(de('3908100010')).toEqual([expect.objectContaining({
+      accion: 'alta', nivel: 10, detalle: 'polímero poliamida-6 (PA6) con un contenido en peso igual o superior al 95 % del propio polímero PA6',
+      detalleEn: 'Polyamide-6 (PA 6), with a PA 6 polymer content of 95% or more by weight'
+    })]);
+  });
+
+  test('un alta con fecha de fin es un alta de vigencia limitada, no una baja', () => {
+    expect(de('3907610060')).toEqual([expect.objectContaining({ accion: 'alta', desde: '20261118', hasta: '20261231' })]);
+  });
+
+  test('un cambio de descripción de un código existente sigue siendo un cambio', () => {
+    expect(de('3907611000')).toEqual([expect.objectContaining({ accion: 'cambio', nivel: 8, detalle: 'In the form of flakes' })]);
   });
 });
 

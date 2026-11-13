@@ -14,6 +14,9 @@ const CambioSchema = new mongoose.Schema({
   hasta: String,
   norma: String,
   detalle: String,
+  // Codigos: texto ingles y nivel (HIER_POS) de la linea, para darlos de alta.
+  detalleEn: String,
+  nivel: Number,
   // pendiente: aun no esta en el catalogo · en_catalogo: ya coincide ·
   // aplicado: lo aplico LUCI desde este fichero · informativo: no se aplica
   // desde aqui (lo recoge la carga mensual) · no_calculable: derecho que LUCI

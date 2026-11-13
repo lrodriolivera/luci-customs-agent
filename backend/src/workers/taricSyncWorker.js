@@ -36,24 +36,41 @@ async function cargarControles() {
 }
 
 /**
- * Publicaciones diarias del TARIC: se leen y se registran las nuevas, y se
+ * Publicaciones diarias del TARIC: se leen y se registran las nuevas; se
  * actualizan en el catalogo los derechos de terceros paises (o de destino
- * final) de codigos declarables cuyo cambio ya esta en vigor. Solo eso: altas,
- * bajas y derechos de niveles superiores los incorpora la carga mensual.
- * TARIC_DIARIO_APLICAR=false deja solo la lectura. Un fallo aqui no afecta a
- * la sincronizacion del catalogo.
+ * final) de codigos declarables cuyo cambio ya esta en vigor, y despues se dan
+ * de alta los codigos nuevos que ya estan en vigor (heredan el derecho de su
+ * padre, por eso van detras). Bajas y derechos de niveles superiores los
+ * incorpora la carga mensual. TARIC_DIARIO_APLICAR=false deja solo la lectura.
+ * Un fallo aqui no afecta a la sincronizacion del catalogo, y un fallo en las
+ * altas no deshace lo leido ni los derechos aplicados.
  */
+const modelosDiarios = () => ({ TaricCode: require('../models/TaricCode'), TaricDailyPublication: require('../models/TaricDailyPublication') });
+
 async function leerPublicacionesDiarias(ahora = new Date()) {
+  let resultado;
+  let modelos;
   try {
     const diario = require('../services/taric/diario/sincronizacionDiaria');
-    const modelos = { TaricCode: require('../models/TaricCode'), TaricDailyPublication: require('../models/TaricDailyPublication') };
+    modelos = modelosDiarios();
     const leidas = await diario.registrarPublicacionesNuevas({ ...modelos, ahora });
     const aplicado = process.env.TARIC_DIARIO_APLICAR === 'false' ? null : await diario.aplicarPendientes({ ...modelos, ahora });
     if (aplicado?.retenido) logger.warn(`[TARIC] Cambios diarios de derecho sin aplicar: ${aplicado.retenido}`);
-    return { leidas: leidas.nuevas.length, aplicado };
+    resultado = { leidas: leidas.nuevas.length, aplicado, altas: null };
   } catch (error) {
     logger.error(`[TARIC] No se pudieron leer las publicaciones diarias: ${error.message}`);
     return null;
+  }
+  try {
+    const altasDiarias = require('../services/taric/diario/altasDiarias');
+    await altasDiarias.releerPublicacionesIncompletas(modelos);
+    if (process.env.TARIC_DIARIO_APLICAR === 'false') return resultado;
+    const altas = await altasDiarias.aplicarAltas({ ...modelos, ahora });
+    if (altas?.retenido) logger.warn(`[TARIC] Altas diarias de código sin aplicar: ${altas.retenido}`);
+    return { ...resultado, altas };
+  } catch (error) {
+    logger.error(`[TARIC] No se pudieron dar de alta los códigos nuevos de las publicaciones diarias: ${error.message}`);
+    return resultado;
   }
 }
 

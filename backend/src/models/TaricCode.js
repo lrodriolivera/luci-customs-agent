@@ -201,6 +201,16 @@ const TaricCodeSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   validFrom: Date,
   validTo: Date,
+  /**
+   * Codigo dado de alta desde una publicacion diaria del TARIC, antes de que
+   * lo traiga la extraccion mensual. La sincronizacion mensual no lo da de
+   * baja mientras su fichero sea anterior a `enVigorDesde`.
+   */
+  altaDiaria: {
+    publicacion: String,
+    enVigorDesde: Date,
+    aplicadaEl: Date
+  },
   lastUpdated: { type: Date, default: Date.now }
 
 }, {
