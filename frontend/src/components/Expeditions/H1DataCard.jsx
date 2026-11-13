@@ -313,7 +313,10 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
                 <button type="button" className="btn-secondary" onClick={() => setAnulacion((a) => ({ ...a, abierta: false, error: null }))} disabled={anulacion.enviando}>
                   Cancelar
                 </button>
-                <button type="submit" className="btn-primary bg-red-600 hover:bg-red-700" disabled={anulacion.enviando || anulacion.motivo.trim().length < MOTIVO_MINIMO}>
+                {/* btn-primary pinta un gradiente (background-image) que tapa bg-red-600
+                    (background-color): salia azul aunque llevara la clase roja.
+                    btn-danger ya es bg-red-600 solido, sin gradiente. */}
+                <button type="submit" className="btn-danger" disabled={anulacion.enviando || anulacion.motivo.trim().length < MOTIVO_MINIMO}>
                   {anulacion.enviando ? 'Enviando...' : 'Confirmar anulación'}
                 </button>
               </div>
