@@ -23,6 +23,9 @@ const MAX_BYTES_DOCUMENTO_MODELO = 4.5 * 1024 * 1024;
 const MAX_CANDIDATOS_CATALOGO = 15;
 const MAX_ALTERNATIVAS_CATALOGO = 20;
 const MAX_DESCRIPCION_BUSQUEDA = 500;
+// La ruta mas larga del catalogo ronda los 400 caracteres; 600 la deja entera
+// sin que un dato anomalo dispare el tamano del prompt.
+const MAX_RUTA_CANDIDATO = 600;
 // Los IDs viven en config/bedrockModels para que exista una unica fuente de
 // verdad: cuando estaban repartidos por el codigo, una migracion de modelo
 // dejo tres llamadas apuntando a un modelo inexistente.
@@ -38,6 +41,17 @@ const LANGUAGE_INSTRUCTIONS = {
   it: 'Rispondi sempre in italiano.',
   pt: 'Responde sempre em portugues europeu.'
 };
+
+// Como debe razonar el modelo al clasificar: de lo general a lo particular,
+// descartando en cada nivel. Elegir directamente por parecido de texto lleva
+// a codigos de otra partida que comparten palabras con el producto.
+const INSTRUCCIONES_NIVELES = 'RAZONA POR NIVELES antes de dar un codigo:\n' +
+  '1. Capitulo (2 digitos): por la materia y la funcion, aplicando las notas de seccion y capitulo.\n' +
+  '2. Partida (4 digitos): la que describe el producto con mas precision (RGI 1 y 3).\n' +
+  '3. Subpartida (6 digitos) del SA y luego subpartida NC (8 digitos).\n' +
+  '4. Subdivision TARIC (10 digitos): entre los candidatos cuya ruta coincide con los niveles anteriores.\n' +
+  'Devuelve solo codigos declarables del catalogo TARIC vigente (10 digitos, ultimo nivel de la ruta), ' +
+  'preferentemente de la lista de candidatos. En "reasoning" indica el capitulo, la partida y la subpartida elegidos.';
 
 // Regla comun de los prompts de analitica: el modelo solo puede citar cifras que
 // vengan en los datos que se le pasan.
@@ -725,7 +739,9 @@ CONTEXTO DEL EXPEDIENTE:
 
     // v2: las respuestas anteriores se generaron sin candidatos del catalogo y
     // pueden llevar los digitos 9-10 inventados; cambiar el prefijo las descarta.
-    return `taric_class_v2_${huella}`;
+    // v3: el prompt lleva la ruta jerarquica de los candidatos y pide razonar
+    // por niveles; las respuestas del prompt anterior no deben servirse.
+    return `taric_class_v3_${huella}`;
   }
 
   /**
@@ -734,22 +750,33 @@ CONTEXTO DEL EXPEDIENTE:
    * de memoria los digitos 9-10 y acertaba la subpartida SA (6 digitos) pero
    * no la subdivision TARIC (caso UAT: 8544 42 10 00 en vez de 8544 42 90 10).
    *
+   * Cada candidato lleva su ruta en la nomenclatura (`legalDescription`, desde
+   * el PR #54): «Los demás» no dice nada por si solo y con la ruta el modelo
+   * sabe de que capitulo, partida y subpartida cuelga. El material y el uso,
+   * si vienen, entran en la busqueda: el indice de texto cubre las palabras
+   * clave de toda la ruta.
+   *
    * Nunca lanza: sin base de datos o sin indice de texto se clasifica igual,
    * solo que sin ancla.
    */
-  async _candidatosCatalogo(description) {
+  async _candidatosCatalogo(description, additionalInfo = {}) {
     try {
       const mongoose = require('mongoose');
       if (mongoose.connection.readyState !== 1) return [];
 
       const TaricCode = require('../models/TaricCode');
-      const consulta = String(description || '').slice(0, MAX_DESCRIPCION_BUSQUEDA);
-      if (!consulta.trim()) return [];
+      const descripcion = String(description || '').trim();
+      if (!descripcion) return [];
+      const consulta = [descripcion, additionalInfo?.material, additionalInfo?.use]
+        .filter(Boolean)
+        .join(' ')
+        .slice(0, MAX_DESCRIPCION_BUSQUEDA);
 
       const encontrados = await TaricCode.search(consulta, MAX_CANDIDATOS_CATALOGO);
       return encontrados.map(c => ({
         code: c.code,
-        description: String(c.description?.es || c.description?.en || '').slice(0, 300)
+        description: String(c.description?.es || c.description?.en || '').slice(0, 300),
+        ...(c.legalDescription ? { ruta: String(c.legalDescription).slice(0, MAX_RUTA_CANDIDATO) } : {})
       }));
     } catch (error) {
       logger.warn(`Clasificacion: no se pudieron obtener candidatos del catalogo TARIC: ${error.message}`);
@@ -808,6 +835,31 @@ CONTEXTO DEL EXPEDIENTE:
   }
 
   /**
+   * Marca en cada sugerencia si su codigo estaba entre los candidatos del
+   * catalogo que recibio el modelo. Sin candidatos no se marca nada.
+   */
+  _marcarCandidatos(sugerencias, candidatos) {
+    if (!candidatos || candidatos.length === 0) return sugerencias;
+    const codigos = new Set(candidatos.map(c => c.code));
+    return sugerencias.map(s => ({
+      ...s,
+      enCandidatos: codigos.has(String(s.code || '').replace(/[\s.]/g, ''))
+    }));
+  }
+
+  /**
+   * Las sugerencias declarables del catalogo van delante; las marcadas como no
+   * declarables (o inexistentes) se conservan, con sus alternativas, detras.
+   * Entre las de un mismo grupo se respeta el orden del modelo.
+   */
+  _ordenarDeclarablesPrimero(sugerencias) {
+    return [
+      ...sugerencias.filter(s => s.verified === true),
+      ...sugerencias.filter(s => s.verified !== true)
+    ];
+  }
+
+  /**
    * Clasificar producto - Sugerir codigo TARIC
    */
   async classifyProduct({ description, additionalInfo, expeditionContext }) {
@@ -832,15 +884,17 @@ CONTEXTO DEL EXPEDIENTE:
       prompt += `\n\nContexto: ${expeditionContext.operationType === 'import' ? 'Importacion' : 'Exportacion'} via ${expeditionContext.transportMode}`;
     }
 
-    const candidatos = await this._candidatosCatalogo(description);
+    const candidatos = await this._candidatosCatalogo(description, additionalInfo);
     if (candidatos.length > 0) {
       prompt += '\n\nCODIGOS DEL CATALOGO TARIC VIGENTE cuya descripcion oficial coincide por texto ' +
-        '(ordenados por coincidencia; la lista es orientativa y puede no incluir el correcto):\n' +
-        candidatos.map(c => `- ${c.code}: ${c.description}`).join('\n') +
+        '(ordenados por coincidencia; la lista es orientativa y puede no incluir el correcto). ' +
+        'Todos son declarables. "Ruta" es su camino en la nomenclatura, de capitulo a subdivision:\n' +
+        candidatos.map(c => `- ${c.code}: ${c.description}${c.ruta ? `\n  Ruta: ${c.ruta}` : ''}`).join('\n') +
         '\n\nSi alguno de estos codigos corresponde al producto, usa exactamente ese codigo de 10 digitos. ' +
         'No deduzcas los digitos 9 y 10 de memoria: si ninguno encaja y no conoces con certeza la ' +
         'subdivision TARIC, dilo en "warnings".';
     }
+    prompt += `\n\n${INSTRUCCIONES_NIVELES}`;
 
     const result = await this.callClaude(OPUS_MODEL, SYSTEM_PROMPTS.classification, prompt);
 
@@ -850,7 +904,8 @@ CONTEXTO DEL EXPEDIENTE:
       jsonContent = this._extraerJsonString(jsonContent);
 
       const parsed = JSON.parse(jsonContent);
-      const suggestions = await this._verificarContraCatalogo(parsed.suggestions || []);
+      const verificadas = await this._verificarContraCatalogo(parsed.suggestions || []);
+      const suggestions = this._ordenarDeclarablesPrimero(this._marcarCandidatos(verificadas, candidatos));
 
       // Solo se guarda lo aprovechable. Cachear una respuesta vacia o el
       // 0000000000 del catch dejaria servida una clasificacion invalida
