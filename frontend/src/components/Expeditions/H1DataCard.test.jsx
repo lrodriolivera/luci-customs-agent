@@ -6,10 +6,11 @@ const getH1Requirements = vi.fn()
 const updateH1Data = vi.fn()
 const getH1Status = vi.fn()
 const cancelH1 = vi.fn()
+const activateH1 = vi.fn()
 vi.mock('../../services/api', () => ({
   declarationsAPI: {
     getH1Requirements: (...a) => getH1Requirements(...a), updateH1Data: (...a) => updateH1Data(...a),
-    getH1Status: (...a) => getH1Status(...a), cancelH1: (...a) => cancelH1(...a)
+    getH1Status: (...a) => getH1Status(...a), cancelH1: (...a) => cancelH1(...a), activateH1: (...a) => activateH1(...a)
   }
 }))
 vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }))
@@ -29,6 +30,7 @@ describe('<H1DataCard />', () => {
     updateH1Data.mockReset()
     getH1Status.mockReset()
     cancelH1.mockReset()
+    activateH1.mockReset()
   })
 
   test('muestra lo que falta para presentar el H1', async () => {
@@ -275,6 +277,44 @@ describe('<H1DataCard />', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Consultar estado en la AEAT' }))
 
     expect(await screen.findByText(/La AEAT liquida 5,81 EUR más que LUCI/)).toBeInTheDocument()
+  })
+
+  const PENDIENTE = { modo: 'Operador', numeroRegistro: '26ES009999I00270R1', pendiente: true, activadaEn: null }
+
+  test('una predeclaración pendiente se activa tras confirmar y avisa al expediente', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [], anulacion: { presentada: true, anulable: true }, predeclaracion: PENDIENTE }))
+    activateH1.mockResolvedValue({ data: { success: true, data: { mrn: '26ES009999I00270R1', channel: 'yellow' } } })
+    const onCambio = vi.fn()
+    render(<H1DataCard expedition={presentada} soloEstado onCambio={onCambio} />)
+
+    expect(await screen.findByText(/Predeclaración pendiente de activar · nº de registro 26ES009999I00270R1/)).toBeInTheDocument()
+    expect(screen.getByText(/tipo de cambio del día de la activación/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Activar declaración' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar activación' }))
+
+    await waitFor(() => expect(activateH1).toHaveBeenCalledWith('e1'))
+    expect(await screen.findByText('La AEAT ha activado la declaración.')).toBeInTheDocument()
+    expect(onCambio).toHaveBeenCalled()
+  })
+
+  test('si la AEAT rechaza la activación muestra su motivo', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [], anulacion: { presentada: true, anulable: true }, predeclaracion: PENDIENTE }))
+    activateH1.mockRejectedValue({ response: { data: { error: '80008 No existe el documento declarado' } } })
+    render(<H1DataCard expedition={presentada} soloEstado />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Activar declaración' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar activación' }))
+
+    expect(await screen.findByText(/80008 No existe el documento declarado/)).toBeInTheDocument()
+  })
+
+  test('una predeclaración que activa la aduana, o ya activada, no ofrece activar', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ listo: true, faltan: [], anulacion: { presentada: true, anulable: false },
+      predeclaracion: { ...PENDIENTE, pendiente: false, activadaEn: '2026-11-13T07:57:09Z' } }))
+    render(<H1DataCard expedition={presentada} soloEstado />)
+    await screen.findByRole('button', { name: 'Anular declaración' })
+
+    expect(screen.queryByRole('button', { name: 'Activar declaración' })).not.toBeInTheDocument()
   })
 
   test('sin MRN, o presentada por el DUA anterior, no ofrece la consulta', async () => {

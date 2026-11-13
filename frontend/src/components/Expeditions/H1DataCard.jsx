@@ -59,9 +59,10 @@ const AMBITOS = [
  *
  * Con `soloEstado` (declaración ya presentada) solo muestra la consulta de estado.
  *
- * @param {{ expedition: object, soloEstado?: boolean }} props
+ * @param {{ expedition: object, soloEstado?: boolean, onCambio?: () => void }} props
+ *   `onCambio`: se llama cuando cambia la declaración en la AEAT (p. ej. al activar una predeclaración)
  */
-export default function H1DataCard({ expedition, soloEstado = false }) {
+export default function H1DataCard({ expedition, soloEstado = false, onCambio }) {
   const [estado, setEstado] = useState(null)
   const [form, setForm] = useState({ invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE' })
   const sumar = estado?.datos?.gastosASumar
@@ -130,6 +131,22 @@ export default function H1DataCard({ expedition, soloEstado = false }) {
       await cargar()
     } catch (err) {
       setAnulacion((a) => ({ ...a, enviando: false, error: err.response?.data?.error || 'No se pudo enviar la anulación a la AEAT' }))
+    }
+  }
+
+  // Predeclaración «la activo yo» pendiente de activar (estado 63).
+  const [activacion, setActivacion] = useState({ abierta: false, enviando: false, mensaje: null, error: null })
+  const predeclaracion = estado?.predeclaracion
+  const confirmarActivacion = async () => {
+    setActivacion((a) => ({ ...a, enviando: true, error: null }))
+    try {
+      await declarationsAPI.activateH1(expedition._id)
+      setActivacion({ abierta: false, enviando: false, mensaje: 'La AEAT ha activado la declaración.', error: null })
+      toast.success('Declaración activada en la AEAT')
+      await cargar()
+      onCambio?.()
+    } catch (err) {
+      setActivacion((a) => ({ ...a, enviando: false, error: err.response?.data?.error || 'No se pudo activar la declaración en la AEAT' }))
     }
   }
 
@@ -248,6 +265,33 @@ export default function H1DataCard({ expedition, soloEstado = false }) {
               </button>
             </div>
           </div>
+          {predeclaracion?.pendiente && (
+            <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm">
+              <p className="font-medium text-blue-900">{`Predeclaración pendiente de activar · nº de registro ${predeclaracion.numeroRegistro}`}</p>
+              <p className="mt-1 text-xs text-blue-900">
+                Al activarla, la AEAT hace el análisis de riesgos y liquida con el tipo de cambio del día de la activación: si cambia de mes, la liquidación puede diferir de la de LUCI.
+              </p>
+              {!activacion.abierta ? (
+                <button type="button" className="btn-primary mt-2" onClick={() => setActivacion({ abierta: true, enviando: false, mensaje: null, error: null })}>
+                  Activar declaración
+                </button>
+              ) : (
+                <div role="dialog" aria-label="Activar la declaración en la AEAT" className="mt-2">
+                  <p>Se pedirá a la AEAT que active la predeclaración. Las mercancías deben estar ya presentadas en la ubicación declarada.</p>
+                  {activacion.error && <p role="alert" className="mt-2 text-red-700">{activacion.error}</p>}
+                  <div className="mt-2 flex justify-end gap-2">
+                    <button type="button" className="btn-secondary" disabled={activacion.enviando} onClick={() => setActivacion((a) => ({ ...a, abierta: false, error: null }))}>
+                      Cancelar
+                    </button>
+                    <button type="button" className="btn-primary" disabled={activacion.enviando} onClick={confirmarActivacion}>
+                      {activacion.enviando ? 'Activando...' : 'Confirmar activación'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {activacion.mensaje && <p role="status" className="mt-3 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">{activacion.mensaje}</p>}
           {anulacion.mensaje && <p role="status" className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{anulacion.mensaje}</p>}
           {anulacion.abierta && (
             <form role="dialog" aria-label="Anular la declaración en la AEAT" onSubmit={confirmarAnulacion} className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm">

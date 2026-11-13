@@ -12,6 +12,7 @@ const { cambioDelExpediente } = require('../divisas/cambioDelExpediente');
 const { cambiosDeLosGastos } = require('../forms/gastosHastaLaFrontera');
 const { expeditionToH1CauData, partes: partesH1Cau } = require('./h1CauData');
 const { buildAnulacionH1CauXML, interpretarAnulacionH1Cau, ENDPOINT_CC414A } = require('./h1CauAnulacion');
+const { buildActivacionH1CauXML, datosDeActivacion, ENDPOINT_CC432A } = require('./h1CauActivacion');
 const { buildH1CauXML, ENDPOINT_CC415A } = require('./h1CauXmlBuilder');
 const { interpretarRespuestaH1Cau } = require('./h1CauResponse');
 const { buildConsultaH1CauXML, interpretarConsultaH1Cau, ENDPOINT_CONSULTA } = require('./h1CauConsulta');
@@ -293,7 +294,9 @@ async function prepararH1Cau(expedition, ctx = {}) {
     // Un LRN nuevo en cada mensaje: la AEAT rechaza un LRN ya usado por el declarante.
     lrn: referencia,
     fecha: ahora,
-    test: process.env.AEAT_ENVIRONMENT !== 'production'
+    test: process.env.AEAT_ENVIRONMENT !== 'production',
+    // Predeclaracion (tipo D): modo de activacion «Aduanas» u «Operador».
+    predeclaracion: ctx.predeclaracion || null
   });
   return { messageId: datos.mensaje.id, lrn: datos.declaracion.lrn, requestXML: buildH1CauXML(datos), preparedAt: ahora, datos };
 }
@@ -343,6 +346,41 @@ async function anularH1Cau(expedition, { motivo }, ctx = {}) {
   });
   const response = await aeatTransport.sendSoap(requestXML, ENDPOINT_CC414A);
   return { ...interpretarAnulacionH1Cau(response.data), requestXML };
+}
+
+/**
+ * Activa en la AEAT una predeclaracion pendiente de activar (servicio
+ * CC432AV1). La activacion repite lo que se registro en la predeclaracion
+ * (LRN, aduana de presentacion, ubicacion), sacado del mensaje enviado; el
+ * numero de registro es el que se guardo en `declaration.mrn` al presentar.
+ *
+ * @throws ErrorValidacion (422) si falta el declarante o el mensaje enviado
+ */
+async function activarH1Cau(expedition, ctx = {}) {
+  const tenant = await _tenantDe(expedition, ctx);
+  const enviado = datosDeActivacion(expedition.declaration?.cauEnvio?.requestXML);
+  if (!enviado) throw new ErrorValidacion('No se encuentra el mensaje con el que se presentó la predeclaración', { code: 'PREDECLARACION_SIN_MENSAJE' });
+  const faltan = [];
+  const personas = partesH1Cau(expedition, declarantePara(expedition, tenant), faltan);
+  // El contacto no se usa en la activacion (la AEAT lo rechaza): solo los identificadores.
+  const sinContacto = faltan.filter((f) => !/persona de contacto/.test(f));
+  if (sinContacto.length > 0) {
+    const error = new ErrorValidacion(`Faltan datos para activar la declaración: ${sinContacto.join('; ')}`, { code: 'DATOS_H1_FALTANTES' });
+    error.faltan = sinContacto;
+    throw error;
+  }
+  const ahora = ctx.ahora || new Date();
+  const requestXML = buildActivacionH1CauXML({
+    mensajeId: `${_referenciaCau(ahora)}V${Math.floor(Math.random() * 900 + 100)}`,
+    numeroRegistro: expedition.declaration?.predeclaracion?.numeroRegistro || expedition.declaration?.mrn,
+    ...enviado,
+    declarante: { id: personas.declarante.id },
+    representante: personas.representante ? { id: personas.representante.id, estado: personas.representante.estado } : null,
+    fecha: ahora,
+    test: process.env.AEAT_ENVIRONMENT !== 'production'
+  });
+  const response = await aeatTransport.sendSoap(requestXML, ENDPOINT_CC432A);
+  return { ...interpretarRespuestaH1Cau(response.data), requestXML };
 }
 
 /**
@@ -848,6 +886,7 @@ module.exports = {
   enviarH1Cau,
   consultarH1Cau,
   anularH1Cau,
+  activarH1Cau,
   consultarSumaria,
   submitH1,
   submitH7,

@@ -251,6 +251,8 @@ export const declarationsAPI = {
   // H1 CAU: estado de la declaración en la AEAT (solo lectura)
   getH1Status: (expeditionId) => api.get(`/api/declarations/${seg(expeditionId)}/h1/estado`, { timeout: 60000 }),
   // Anulación ante la AEAT: solo predeclaraciones (lo activado responde 409 ANULACION_POR_LA_ADUANA).
+  // Activa ante la AEAT una predeclaración pendiente de activar (CC432AV1).
+  activateH1: (expeditionId) => api.post(`/api/declarations/${seg(expeditionId)}/h1/activar`, {}, { timeout: 60000 }),
   cancelH1: (expeditionId, reason) => api.post(`/api/declarations/${seg(expeditionId)}/cancel`, { reason }, { timeout: 60000 }),
   // H1 - Importacion estandar
   generateH1: (data) => api.post('/api/declarations/h1/generate-direct', data),
@@ -268,7 +270,8 @@ export const declarationsAPI = {
       params: { type },
       responseType: 'blob'
     }),
-  submit: (expeditionId) => api.post(`/api/declarations/${seg(expeditionId)}/submit`),
+  // `predeclaracion`: 'Aduanas' u 'Operador' para presentar una predeclaración (tipo D); vacío, declaración.
+  submit: (expeditionId, predeclaracion = '') => api.post(`/api/declarations/${seg(expeditionId)}/submit`, predeclaracion ? { predeclaracion } : {}),
   getSummary: (expeditionId) => api.get(`/api/declarations/${seg(expeditionId)}/summary`),
   // Consulta en la AEAT (DSDTCons) la declaracion sumaria registrada en el expediente.
   verifySummaryDeclaration: (expeditionId) =>

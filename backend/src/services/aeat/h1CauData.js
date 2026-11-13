@@ -13,6 +13,7 @@ const { ErrorValidacion, eoriDe, formaRepresentacionDe } = require('../forms/ide
 const { cambioObligatorio, aEuros } = require('../divisas/cambioDelExpediente');
 const { CODIGO_AJUSTE, gastosHastaLaFrontera, repartirPorValor } = require('../forms/gastosHastaLaFrontera');
 const { sinCodigoPostal } = require('./paisesSinCodigoPostal');
+const { MODOS_ACTIVACION } = require('./h1CauActivacion');
 
 // Medios de pago que obligan a declarar garantia con regimen 40 (regla C0616).
 const PAGOS_CON_GARANTIA = new Set(['O', 'R', 'S', 'T', 'U', 'V', 'G']);
@@ -251,7 +252,11 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
  * @returns {object} datos para `buildH1CauXML`
  * @throws {ErrorValidacion} 422 con `faltan`: lo que hay que completar
  */
-function expeditionToH1CauData(expedition, { declarante, cambio, cambiosGastos = {}, tenant, mensajeId, lrn, fecha = new Date(), test = true } = {}) {
+function expeditionToH1CauData(expedition, { declarante, cambio, cambiosGastos = {}, tenant, mensajeId, lrn, fecha = new Date(), test = true, predeclaracion = null } = {}) {
+  // Predeclaracion (tipo D): la activa la aduana cuando la sumaria este activa, o el operador con CC432A.
+  if (predeclaracion && !MODOS_ACTIVACION.includes(predeclaracion)) {
+    throw new ErrorValidacion(`El modo de activación de la predeclaración debe ser ${MODOS_ACTIVACION.join(' u ')}`, { code: 'MODO_ACTIVACION_NO_VALIDO' });
+  }
   const faltan = [];
   const decl = expedition.declaration || {};
   const goods = expedition.goods || [];
@@ -292,7 +297,8 @@ function expeditionToH1CauData(expedition, { declarante, cambio, cambiosGastos =
     mensaje: { id: mensajeId, fecha, test },
     operacion: 'A',
     aduanaImportacion: aduanaDespacho,
-    declaracion: { lrn: texto(lrn) || texto(decl.lrn), tipo: 'IM', tipoAdicional: 'A', idioma: 'ES' },
+    declaracion: { lrn: texto(lrn) || texto(decl.lrn), tipo: 'IM', tipoAdicional: predeclaracion ? 'D' : 'A', idioma: 'ES' },
+    modoActivacion: predeclaracion || null,
     // La aduana de presentacion son los ocho primeros caracteres de la ubicacion (ESR0001).
     aduanaPresentacion: ubicacion ? `ES${ubicacion.slice(2, 8)}` : aduanaDespacho,
     importador: personas.importador,

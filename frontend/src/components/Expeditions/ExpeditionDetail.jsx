@@ -34,6 +34,7 @@ import H1Preview from './H1Preview'
 import GroupageCard, { isMaritime } from './GroupageCard'
 import RepresentationCard from './RepresentationCard'
 import H1DataCard from './H1DataCard'
+import ModoPresentacionH1 from './ModoPresentacionH1'
 import { infoCanal } from '../../utils/canalAeat'
 import DocumentUploader from './DocumentUploader'
 import DocumentReader from './DocumentReader'
@@ -576,6 +577,7 @@ export default function ExpeditionDetail() {
   const [h1Result, setH1Result] = useState(null)
   const [submittingToAEAT, setSubmittingToAEAT] = useState(false)
   const [aeatResult, setAeatResult] = useState(null)
+  const [modoPresentacion, setModoPresentacion] = useState('')
   const [portalLink, setPortalLink] = useState(null)
   const [showPortalModal, setShowPortalModal] = useState(false)
   const [showAIPanel, setShowAIPanel] = useState(false)
@@ -754,7 +756,7 @@ export default function ExpeditionDetail() {
     setSubmittingToAEAT(true)
     setAeatResult(null)
     try {
-      const response = await declarationsAPI.submit(id)
+      const response = await declarationsAPI.submit(id, expedition.declaration?.type === 'AES' ? '' : modoPresentacion)
       const resultData = response.data?.data || response.data
       setAeatResult(resultData)
 
@@ -764,7 +766,9 @@ export default function ExpeditionDetail() {
       setExpedition(expeditionData)
 
       // Show toast based on channel
-      if (resultData.channel === 'green') {
+      if (modoPresentacion && !resultData.channel) {
+        toast.success(t('expeditions.predeclarationToast', { number: resultData.mrn }))
+      } else if (resultData.channel === 'green') {
         toast.success(t('expeditions.greenChannelToast', { mrn: resultData.mrn }))
       } else if (resultData.channel === 'orange') {
         toast(t('expeditions.orangeChannelToast'), { icon: '🟠' })
@@ -916,7 +920,7 @@ export default function ExpeditionDetail() {
           {/* Datos que exige el H1 adaptado al CAU y lo que falta para presentarlo */}
           {/* Tras presentar ya no se editan los datos, pero sigue haciendo falta consultar el estado en la AEAT. */}
           {(canEditGoods || expedition.declaration?.mrn) && expedition.operationType !== 'export' && (
-            <H1DataCard expedition={expedition} soloEstado={!canEditGoods} />
+            <H1DataCard expedition={expedition} soloEstado={!canEditGoods} onCambio={reloadExpedition} />
           )}
 
           {(isMaritime(expedition) || expedition.transport?.loadType) && canEditGoods && (
@@ -1230,6 +1234,9 @@ export default function ExpeditionDetail() {
               {/* Boton Enviar a AEAT */}
               {expedition.declaration?.status === 'draft' && (
                 <div className="mt-4 pt-4 border-t border-green-200">
+                  {expedition.declaration?.type !== 'AES' && (
+                    <ModoPresentacionH1 valor={modoPresentacion} onCambio={setModoPresentacion} disabled={submittingToAEAT} />
+                  )}
                   <button
                     onClick={handleSubmitToAEAT}
                     disabled={submittingToAEAT}

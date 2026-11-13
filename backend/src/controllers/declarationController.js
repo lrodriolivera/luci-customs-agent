@@ -13,6 +13,7 @@ const { tipoOficial } = require('../services/divisas/tiposCambioOficiales');
 const { aplicarCauAVistaPrevia } = require('../services/aeat/h1CauVistaPrevia');
 const { anulablePorServicio } = require('../services/aeat/h1CauAnulacion');
 const { liquidacionDeclarada, compararLiquidacion } = require('../services/aeat/h1CauLiquidacion');
+const { MODOS_ACTIVACION } = require('../services/aeat/h1CauActivacion');
 const { gastosQueSeSuman, gastoDe, cambiosDeLosGastos } = require('../services/forms/gastosHastaLaFrontera');
 const { verificarSumariaConAeat, esGrupaje, CODIGO_ERROR: CODIGO_GRUPAJE } = require('../services/forms/grupajeLcl');
 
@@ -131,6 +132,16 @@ function liquidacionAeatDe(expedition) {
   };
 }
 
+// Estado 63: «Declaracion completa pendiente de activar» (Separata 30).
+const PREDECLARACION_PENDIENTE = '63';
+
+/** Predeclaracion presentada: modo, numero de registro y si espera a que el usuario la active. */
+const predeclaracionDe = (expedition) => {
+  const p = expedition.declaration?.predeclaracion;
+  if (!p) return null;
+  return { modo: p.modo, numeroRegistro: p.numeroRegistro, pendiente: estadoCau(expedition) === PREDECLARACION_PENDIENTE, activadaEn: p.activadaEn || null };
+};
+
 const anulacionDe = (expedition) => {
   const estado = estadoCau(expedition);
   return { presentada: estado !== null, anulable: estado !== null && anulablePorServicio(estado) };
@@ -234,7 +245,10 @@ const getH1Requirements = async (req, res) => {
     const datos = datosH1De(expedition, await divisaDeLaFactura(expedition));
     res.json({
       success: true,
-      data: { servicio, listo: faltan.length === 0, faltan, datos, anulacion: anulacionDe(expedition), liquidacionAeat: liquidacionAeatDe(expedition) }
+      data: {
+        servicio, listo: faltan.length === 0, faltan, datos, anulacion: anulacionDe(expedition), liquidacionAeat: liquidacionAeatDe(expedition),
+        predeclaracion: predeclaracionDe(expedition)
+      }
     });
   } catch (error) {
     logger.error('Error comprobando los datos del H1:', error);
@@ -339,12 +353,14 @@ const VIGENCIA_ENVIO_CAU_MS = 24 * 60 * 60 * 1000;
  * del servidor), el siguiente intento reenvia el mismo mensaje y la AEAT, que
  * lo reconoce por su identificador, no registra la declaracion dos veces.
  */
-async function presentarH1Cau(expedition) {
+async function presentarH1Cau(expedition, { predeclaracion = null } = {}) {
   let envio = expedition.declaration.cauEnvio;
+  // Un mensaje sin respuesta se reenvia igual, pero solo si es la misma presentacion (mismo modo).
   const pendiente = envio && !envio.respondido && envio.requestXML
-    && (Date.now() - new Date(envio.preparedAt).getTime()) < VIGENCIA_ENVIO_CAU_MS;
+    && (Date.now() - new Date(envio.preparedAt).getTime()) < VIGENCIA_ENVIO_CAU_MS
+    && (envio.predeclaracion || null) === (predeclaracion || null);
   if (!pendiente) {
-    envio = { ...(await aeatSubmitService.prepararH1Cau(expedition)), respondido: false };
+    envio = { ...(await aeatSubmitService.prepararH1Cau(expedition, { predeclaracion })), respondido: false, predeclaracion };
     expedition.declaration.cauEnvio = envio;
     expedition.markModified('declaration.cauEnvio');
     await expedition.save();
@@ -361,6 +377,64 @@ async function presentarH1Cau(expedition) {
   }
   return { ...resultado, lrn: resultado.lrn || envio.lrn };
 }
+
+/** Lo que se dice al presentar: una predeclaracion pendiente no tiene circuito. */
+function mensajeDePresentacion(aeatResult, usaCau, porCanal, simulada) {
+  if (usaCau && aeatResult.operacionRegistrada === PREDECLARACION_PENDIENTE) {
+    return `Predeclaración registrada con el número ${aeatResult.numeroRegistro || aeatResult.mrn}: pendiente de activar.`;
+  }
+  return simulada ? `[MODO DEMO] ${porCanal}` : porCanal;
+}
+
+/**
+ * Activa una predeclaracion pendiente de activar (servicio CC432AV1).
+ * POST /api/declarations/:expeditionId/h1/activar
+ *
+ * La AEAT hace entonces el analisis de riesgos y liquida con el tipo de cambio
+ * del dia de la activacion. Se guarda lo que responde como al presentar.
+ */
+const activateH1 = async (req, res) => {
+  try {
+    const expedition = await Expedition.findById(req.params.expeditionId);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+    if (!expedition.declaration?.predeclaracion || estadoCau(expedition) !== PREDECLARACION_PENDIENTE) {
+      return res.status(409).json({ success: false, error: 'Solo se puede activar una predeclaración pendiente de activar' });
+    }
+
+    const { rawResponse, requestXML, ...r } = await aeatSubmitService.activarH1Cau(expedition);
+    if (!r.success) {
+      logger.warn(`[H1 CAU] Activación rechazada ${expedition.expeditionId}: ${r.error}`);
+      return res.status(400).json({ success: false, error: r.error || 'La AEAT no activó la declaración', tipo: r.tipo });
+    }
+
+    const d = expedition.declaration;
+    d.mrn = r.mrn || d.mrn;
+    d.channel = r.channel || undefined;
+    if (r.fechaAdmision) d.acceptanceDate = new Date(r.fechaAdmision);
+    d.predeclaracion = { ...d.predeclaracion, activadaEn: new Date() };
+    d.aeatResponse = {
+      ...d.aeatResponse, responseCode: r.operacionRegistrada, responseDescription: r.operacionRegistradaTexto || 'Activada',
+      timestamp: new Date(), csv: r.csv || d.aeatResponse?.csv, circuito: r.circuito, liquidacion: r.liquidacion, certificados: r.certificados,
+      consulta: undefined
+    };
+    expedition.markModified('declaration');
+    const porCanal = { green: 'green_channel', orange: 'orange_channel', red: 'red_channel' };
+    expedition.status = porCanal[r.channel] || 'declaration_submitted';
+    if (!expedition.timeline) expedition.timeline = [];
+    expedition.timeline.push({
+      action: 'declaration_activated', description: `Predeclaración activada en la AEAT. MRN ${d.mrn}`,
+      userId: req.user?._id, performedBy: req.user?.name || 'Sistema', timestamp: new Date(),
+      metadata: { mrn: d.mrn, channel: r.channel, operacionRegistrada: r.operacionRegistrada }
+    });
+    await expedition.save();
+
+    res.json({ success: true, data: { mrn: d.mrn, channel: r.channel || null, circuito: r.circuito, liquidacion: r.liquidacion, certificados: r.certificados, operacionRegistrada: r.operacionRegistrada } });
+  } catch (error) {
+    if (responderSiFaltaIdentificacion(res, error)) return;
+    logger.error('Error activando la predeclaración:', error);
+    res.status(500).json({ success: false, error: 'Error al activar la declaración' });
+  }
+};
 
 /**
  * Generar declaracion H1 (Importacion)
@@ -701,6 +775,13 @@ const submitDeclaration = async (req, res) => {
       });
     }
 
+    // Predeclaracion (tipo D): «Aduanas» la activa la aduana cuando la sumaria
+    // este activa; «Operador», el usuario con «Activar» (CC432AV1).
+    const predeclaracion = req.body?.predeclaracion || null;
+    if (predeclaracion && !MODOS_ACTIVACION.includes(predeclaracion)) {
+      return res.status(400).json({ success: false, error: `Modo de activación no válido: debe ser ${MODOS_ACTIVACION.join(' u ')}` });
+    }
+
     // Grupaje (LCL): la sumaria pudo cambiarse o quitarse despues de generar el
     // H1. Se vuelve a comprobar justo antes de presentar; no admite excepcion.
     if (expedition.declaration.type !== 'AES' && hayQueComprobarSumaria(expedition)) {
@@ -723,13 +804,17 @@ const submitDeclaration = async (req, res) => {
     // H1 por el mensaje CAU (CC415AV1) o por el DUA anterior, segun el tenant.
     const usaCau = country === 'ES' && type !== 'AES' && aeatSubmitService.servicioH1(tenant) === 'cau';
 
+    if (predeclaracion && !usaCau) {
+      return res.status(400).json({ success: false, error: 'Las predeclaraciones solo se presentan por el servicio de la AEAT adaptado al CAU (Ajustes > Aduanas)' });
+    }
+
     let aeatResult;
     if (country === 'ES') {
       // Existing AEAT code (backward compatible)
       if (type === 'AES') {
         aeatResult = await aeatSubmitService.submitAES(expedition);
       } else if (usaCau) {
-        aeatResult = await presentarH1Cau(expedition);
+        aeatResult = await presentarH1Cau(expedition, { predeclaracion });
       } else {
         aeatResult = await aeatSubmitService.submitH1(expedition);
       }
@@ -785,6 +870,11 @@ const submitDeclaration = async (req, res) => {
       expedition.declaration.lrn = aeatResult.lrn || expedition.declaration.lrn;
       if (expedition.declaration.h1Data && aeatResult.lrn) {
         expedition.declaration.h1Data = { ...expedition.declaration.h1Data, lrn: aeatResult.lrn };
+      }
+      if (predeclaracion) {
+        expedition.declaration.predeclaracion = {
+          modo: predeclaracion, numeroRegistro: aeatResult.numeroRegistro || aeatResult.mrn, registradaEn: new Date()
+        };
       }
     } else {
       expedition.declaration.channel = aeatResult.channel || 'green';
@@ -897,9 +987,7 @@ const submitDeclaration = async (req, res) => {
         certificados: aeatResponse.certificados,
         estimatedRelease: aeatResponse.estimatedRelease,
         simulated: aeatResponse.simulated,
-        message: aeatResponse.simulated
-          ? `[MODO DEMO] ${channelMessages[aeatResponse.channel]}`
-          : channelMessages[aeatResponse.channel],
+        message: mensajeDePresentacion(aeatResult, usaCau, channelMessages[aeatResponse.channel], aeatResponse.simulated),
         // Datos adicionales del procesamiento de canal
         channelProcessing: channelResult ? {
           actions: channelResult.actions,
@@ -1982,6 +2070,7 @@ const verifySummaryDeclaration = async (req, res) => {
 };
 
 module.exports = {
+  activateH1,
   verifySummaryDeclaration,
   generateH1,
   generateH1Direct,
