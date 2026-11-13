@@ -981,6 +981,18 @@ describe('AuthContext', () => {
       expect(JSON.parse(localStorage.setItem.mock.calls.at(-1)[1]).mustChangePassword).toBe(false)
     })
 
+    it('guarda el token nuevo que devuelve el backend: el viejo deja de valer tras el cambio', async () => {
+      const result = await loginConUsuarioInvitado()
+      api.put.mockResolvedValue({ data: { success: true, data: { token: 'jwt-nuevo-tras-cambio' } } })
+
+      await act(async () => {
+        await result.current.completeMandatoryPasswordChange('temporal123', 'NuevaSegura1!')
+      })
+
+      expect(localStorage.setItem).toHaveBeenCalledWith('token', 'jwt-nuevo-tras-cambio')
+      expect(api.defaults.headers.common['Authorization']).toBe('Bearer jwt-nuevo-tras-cambio')
+    })
+
     it('si el backend rechaza la contrasena actual, no limpia el estado', async () => {
       const result = await loginConUsuarioInvitado()
       api.put.mockResolvedValue({ data: { success: false, error: 'Contrasena actual incorrecta' } })

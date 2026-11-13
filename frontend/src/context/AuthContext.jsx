@@ -155,6 +155,14 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.put('/api/auth/password', { currentPassword, newPassword })
       if (response.data.success) {
+        // El backend invalida el token viejo al cambiar la contrasena
+        // (passwordChangedAt); sin guardar el nuevo que devuelve, la siguiente
+        // peticion del cliente fallaria con 401 aunque el cambio fue correcto.
+        const tokenNuevo = response.data.data?.token
+        if (tokenNuevo) {
+          localStorage.setItem('token', tokenNuevo)
+          api.defaults.headers.common['Authorization'] = `Bearer ${tokenNuevo}`
+        }
         const updatedUser = { ...user, mustChangePassword: false }
         setUser(updatedUser)
         localStorage.setItem('user', JSON.stringify(updatedUser))
