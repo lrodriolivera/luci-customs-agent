@@ -232,6 +232,7 @@ describe('calculo con el derecho oficial', () => {
 describe('no calculables: solo la parte exacta del derecho oficial', () => {
   const OFICIALES = {
     '0402109100': '1.190 EUR KGM P + 27.500 EUR DTN',        // leche en polvo
+    '2205109000': '0.900 EUR ASV X + 6.400 EUR HLT',          // vermut
     '0403204900': '7.600 % + EA',                             // yogur con elemento agricola
     '1702201000': '0.400 EUR DTN Z',                          // azucar de arce
     '0710400000': '5.100 % + 9.400 EUR DTN E',                // maiz dulce congelado
@@ -242,6 +243,7 @@ describe('no calculables: solo la parte exacta del derecho oficial', () => {
   // Datos antiguos del volcado de produccion: no deben usarse.
   const ANTIGUOS = {
     '0402109100': { thirdCountry: 0, specific: { amount: 1.19, unit: 'kg/lactic' } },
+    '2205109000': { thirdCountry: 0, specific: { amount: 0.9, unit: '%' } },
     '0403204900': { thirdCountry: 8.3, specific: { amount: 95, unit: 'EUR/100 kg' } },
     '1702201000': { thirdCountry: 0, specific: { amount: 0.4, unit: 'EUR/100 kg' } },
     '0710400000': { thirdCountry: 5.1, specific: { amount: 9.4, unit: 'EUR/100 kg' } },
@@ -258,14 +260,30 @@ describe('no calculables: solo la parte exacta del derecho oficial', () => {
   });
   const calcular = (taricCode) => servicio.calculateDutiesWithAI({ taricCode, customsValue: 1000, origin: 'CN', netWeight: 1000, quantity: 1000 });
 
-  test('leche en polvo («EUR KGM P + EUR DTN»): sin importe de arancel y con el dato que falta', async () => {
+  test('leche en polvo («EUR KGM P + EUR DTN»): solo los 27,50 EUR por 100 kg netos, como minimo', async () => {
     const r = await calcular('0402109100');
+    expect(r.duties.totalDuty).toBe(275);
+    expect(r.duties.specificDuty).toBe(275);
+    expect(r.dutyNotCalculable).toMatchObject({ calculated: 'partial', exactPart: '27,5 EUR/100 kg', missing: [expect.stringContaining('materia lactea')] });
+    expect(r.warnings.join(' ')).toMatch(/solo la parte exacta del derecho oficial \(27,5 EUR\/100 kg\): el importe es un minimo/);
+    // El IVA, sobre el valor mas el arancel liquidado.
+    expect(r.vat.base).toBe(1275);
+  });
+
+  test('leche en polvo sin peso neto: sin importe y se dice que falta', async () => {
+    const r = await servicio.calculateDutiesWithAI({ taricCode: '0402109100', customsValue: 1000, origin: 'CN' });
     expect(r.duties.totalDuty).toBe(0);
-    expect(r.duties.specificDuty).toBe(0);
-    expect(r.dutyNotCalculable).toMatchObject({ calculated: 'none', exactPart: null, missing: [expect.stringContaining('materia lactea')] });
+    expect(r.dutyNotCalculable.calculated).toBe('none');
     expect(r.warnings.join(' ')).toMatch(/Arancel no calculado: 0 € no es el derecho real/);
-    // El IVA, sobre el valor sin derechos.
+    expect(r.warnings.join(' ')).toMatch(/27,5 EUR\/100 kg.*falta el peso neto/);
     expect(r.vat.base).toBe(1000);
+  });
+
+  test('«EUR ASV X + EUR HLT»: la parte por hl si hay volumen; si no, sin importe', async () => {
+    expect((await calcular('2205109000')).duties.totalDuty).toBe(64);
+    const sinVolumen = await servicio.calculateDutiesWithAI({ taricCode: '2205109000', customsValue: 1000, origin: 'CN', netWeight: 1000 });
+    expect(sinVolumen.duties.totalDuty).toBe(0);
+    expect(sinVolumen.dutyNotCalculable.calculated).toBe('none');
   });
 
   test('«N % + EA»: solo el porcentaje, como minimo', async () => {
@@ -301,8 +319,8 @@ describe('no calculables: solo la parte exacta del derecho oficial', () => {
   });
 
   test('getDutyInfo tampoco enseña el dato antiguo', async () => {
-    const info = await servicio.getDutyInfo('0402109100', 'CN');
-    expect(info).toMatchObject({ dutyRate: 0, specificDuty: null, dutyType: 'ad_valorem' });
+    const info = await servicio.getDutyInfo('1702201000', 'CN');
+    expect(info).toMatchObject({ dutyRate: 0, specificDuty: null, minimumDuty: null, dutyType: 'ad_valorem' });
     const yogur = await servicio.getDutyInfo('0403204900', 'CN');
     expect(yogur).toMatchObject({ dutyRate: 7.6, specificDuty: null });
   });

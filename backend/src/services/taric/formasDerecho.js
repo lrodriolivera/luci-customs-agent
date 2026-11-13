@@ -95,34 +95,32 @@ function clasificarDerecho(texto) {
   return { forma: 'otro', calculable: false, faltan: ['interpretar el texto oficial, que LUCI no reconoce'] };
 }
 
-const sumaDePorcentajes = (texto) => texto.split(/\s*\+\s*/).map((p) => RE_PORCENTAJE.exec(p.trim()))
-  .filter(Boolean).reduce((total, m) => total + numero(m[1]), 0);
+/** Sumandos de «a + b + c» que LUCI sabe liquidar; los demas («EA», «+ADSZ», «EUR KGM P»…) se descartan. */
+const sumandosExactos = (texto) => texto.split(/\s*\+\s*/).map((p) => termino(p.trim())).filter(Boolean);
 
 /**
- * Parte exacta de un derecho que LUCI no sabe liquidar entero: la suma de sus
- * porcentajes, que se liquidan con el valor en aduana sin ningun otro dato
- * («7,6 %» de «7.600 % + EA»). El derecho real es mayor o igual (los demas
- * sumandos solo suman), asi que es un minimo. Decision de Luis del 13/Nov/2026:
- * solo cuentan los porcentajes.
+ * Parte exacta de un derecho que LUCI no sabe liquidar entero: los sumandos
+ * que se liquidan con los datos de la partida (porcentajes, EUR/100 kg netos,
+ * EUR/hl, EUR/100 kg brutos…). Los demas solo suman, asi que el derecho real es
+ * mayor o igual: es un minimo (decision de Luis del 13/Nov/2026).
  *
- * Si hay maximo, cuenta solo su parte en porcentaje: con un maximo del que no
- * se sabe nada («MAX 5.000 EUR HMT») el minimo seguro es 0 (`maximo: 0`). El
- * minimo («MIN …») se ignora: quitarlo solo puede bajar el importe.
+ * Si hay maximo, cuenta solo su parte exacta: con un maximo del que no se sabe
+ * nada («MAX 5.000 EUR HMT») el minimo seguro es 0 (`maximo: []`). El minimo
+ * («MIN …») se ignora: quitarlo solo puede bajar el importe.
  *
- * Los derechos condicionados («Cond: …», precio de entrada o certificado) no
- * tienen parte exacta: el porcentaje depende de la condicion.
+ * Los condicionados («Cond: …», precio de entrada o certificado) no tienen
+ * parte exacta: el tramo depende de la condicion.
  *
  * @param {string} texto celda «Duty» oficial
- * @returns {{ adValorem: number, maximo: number|null } | null} null si no hay ningun porcentaje
+ * @returns {{ sumandos: object[], maximo: object[]|null } | null} null si ningun sumando se sabe liquidar
  */
 function parteExacta(texto) {
   const limpio = limpiar(texto);
   if (!limpio || limpio.startsWith('Cond:')) return null;
   const m = /^(.+?)(?: MIN (.+?))?(?: MAX (.+))?$/.exec(limpio);
-  const adValorem = Math.round(sumaDePorcentajes(m[1]) * 1000) / 1000;
-  if (!(adValorem > 0)) return null;
-  const maximo = m[3] ? Math.round(sumaDePorcentajes(m[3]) * 1000) / 1000 : null;
-  return { adValorem, maximo };
+  const sumandos = sumandosExactos(m[1]).filter((t) => (typeof t.adValorem === 'number' ? t.adValorem > 0 : t.amount > 0));
+  if (sumandos.length === 0) return null;
+  return { sumandos, maximo: m[3] ? sumandosExactos(m[3]) : null };
 }
 
 module.exports = { interpretarFormula, clasificarDerecho, parteExacta, FORMAS_NO_CALCULABLES };

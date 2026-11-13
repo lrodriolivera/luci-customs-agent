@@ -96,6 +96,22 @@ function liquidarFormula(formula, mercancia) {
 }
 
 /**
+ * Parte exacta de un derecho no calculable (`parteExacta`): lo que se puede
+ * liquidar con los datos de la partida. Un sumando al que le falta un dato
+ * (volumen, peso) no cuenta y se avisa; en el maximo tampoco, lo que solo puede
+ * bajarlo: el resultado sigue siendo un minimo del derecho real.
+ *
+ * @returns {{ adValoremDuty: number, specificDuty: number, totalDuty: number, avisos: string[] }}
+ */
+function liquidarParteExacta(parte, mercancia) {
+  const avisos = [];
+  const base = sumar(parte.sumandos, mercancia, 'parte del derecho', avisos);
+  let totalDuty = base.total;
+  if (parte.maximo) totalDuty = Math.min(totalDuty, sumar(parte.maximo, mercancia, 'el derecho maximo', avisos).total);
+  return { adValoremDuty: Math.min(base.adValorem, totalDuty), specificDuty: Math.min(base.especifico, totalDuty), totalDuty, avisos };
+}
+
+/**
  * Codigo adicional TARIC de la partida: el declarado aparte o las cifras 11 a
  * 14 de un codigo de 14 cifras. Cuatro caracteres alfanumericos, o null.
  */
@@ -157,4 +173,4 @@ function elegirVariante(variantes, codigoAdicional, mercancia) {
   };
 }
 
-module.exports = { importeDeDerecho, liquidarFormula, codigoAdicionalDe, elegirVariante, derechoDeVariante, legibleTermino };
+module.exports = { importeDeDerecho, liquidarFormula, liquidarParteExacta, codigoAdicionalDe, elegirVariante, derechoDeVariante, legibleTermino };

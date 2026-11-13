@@ -5,7 +5,7 @@
  * de 2026 (CIRCABC).
  */
 const { interpretarFormula, clasificarDerecho, parteExacta } = require('../../../src/services/taric/formasDerecho');
-const { liquidarFormula, importeDeDerecho, elegirVariante, codigoAdicionalDe } = require('../../../src/services/taric/liquidacionDerecho');
+const { liquidarFormula, liquidarParteExacta, importeDeDerecho, elegirVariante, codigoAdicionalDe } = require('../../../src/services/taric/liquidacionDerecho');
 
 describe('interpretarFormula: sumandos con minimo y maximo', () => {
   test('porcentaje mas importe por 100 kg con maximo en porcentaje (1704101000, chicle)', () => {
@@ -183,19 +183,40 @@ describe('codigo adicional', () => {
   });
 });
 
-describe('parteExacta: lo que si se sabe liquidar de un derecho no calculable (sus porcentajes)', () => {
+describe('parteExacta: lo que si se sabe liquidar de un derecho no calculable', () => {
+  const dtn = (amount) => ({ amount, unit: 'EUR/100 kg' });
   test.each([
-    ['7.600 % + EA', { adValorem: 7.6, maximo: null }],
-    ['5.100 % + 9.400 EUR DTN E', { adValorem: 5.1, maximo: null }],
-    ['9.000 % + EA MAX 18.700 % +ADSZ', { adValorem: 9, maximo: 18.7 }],
-    ['17.300 % MIN 1.000 EUR ASV X', { adValorem: 17.3, maximo: null }],
-    ['6.500 % MAX 5.000 EUR HMT', { adValorem: 6.5, maximo: 0 }],
-    ['1.190 EUR KGM P + 27.500 EUR DTN', null],
+    ['7.600 % + EA', { sumandos: [{ adValorem: 7.6 }], maximo: null }],
+    ['5.100 % + 9.400 EUR DTN E', { sumandos: [{ adValorem: 5.1 }], maximo: null }],
+    ['9.000 % + EA MAX 18.700 % +ADSZ', { sumandos: [{ adValorem: 9 }], maximo: [{ adValorem: 18.7 }] }],
+    ['17.300 % MIN 1.000 EUR ASV X', { sumandos: [{ adValorem: 17.3 }], maximo: null }],
+    // Un maximo del que no se sabe nada: el minimo seguro es 0.
+    ['6.500 % MAX 5.000 EUR HMT', { sumandos: [{ adValorem: 6.5 }], maximo: [] }],
+    // Leche en polvo: los 27,5 EUR por 100 kg netos si se saben; la parte por materia lactea no.
+    ['1.190 EUR KGM P + 27.500 EUR DTN', { sumandos: [dtn(27.5)], maximo: null }],
+    ['0.900 EUR ASV X + 6.400 EUR HLT', { sumandos: [{ amount: 6.4, unit: 'EUR/hl' }], maximo: null }],
+    ['0.950 EUR KGM T + 22.000 EUR DTN', { sumandos: [dtn(22)], maximo: null }],
+    // DTN Z es por 1 % de sacarosa, no por peso neto.
     ['0.400 EUR DTN Z', null],
     ['1.750 EUR ASV X', null],
     ['Cond: V 62.600 EUR/DTN(01):8.800 % ; V 0.000 EUR/DTN(01):8.800 % + 29.800 EUR DTN', null],
     ['', null]
   ])('«%s»', (texto, esperado) => {
     expect(parteExacta(texto)).toEqual(esperado);
+  });
+});
+
+describe('liquidarParteExacta', () => {
+  test('lo que falta de la partida no cuenta y se dice', () => {
+    const vino = parteExacta('0.900 EUR ASV X + 6.400 EUR HLT');
+    expect(liquidarParteExacta(vino, { customsValue: 1000, quantity: 1000 }).totalDuty).toBeCloseTo(64);
+    const sinVolumen = liquidarParteExacta(vino, { customsValue: 1000 });
+    expect(sinVolumen.totalDuty).toBe(0);
+    expect(sinVolumen.avisos.join(' ')).toMatch(/6,4 EUR\/hl/);
+  });
+
+  test('el maximo limita con su parte exacta; sin ella, 0', () => {
+    expect(liquidarParteExacta(parteExacta('9.000 % + EA MAX 18.700 % +ADSZ'), { customsValue: 1000 }).totalDuty).toBeCloseTo(90);
+    expect(liquidarParteExacta(parteExacta('6.500 % MAX 5.000 EUR HMT'), { customsValue: 1000 }).totalDuty).toBe(0);
   });
 });
