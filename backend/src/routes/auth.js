@@ -24,6 +24,24 @@ const adminInviteLimiter = rateLimit({
 });
 
 /**
+ * Cupo por TENANT, ademas del cupo por admin de arriba: sin esto, el cupo
+ * por admin se esquivaba creando varios admins, cada uno por debajo de su
+ * propio limite de 20/hora, pero sumando muchas invitaciones en el mismo
+ * tenant. Clave por tenantId (no por usuario): comparten el mismo contador
+ * todos los admins de un tenant.
+ */
+const ADMIN_INVITE_TENANT_DAILY_LIMIT = parseInt(process.env.ADMIN_INVITE_TENANT_DAILY_LIMIT || '50', 10);
+const adminInviteTenantLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: ADMIN_INVITE_TENANT_DAILY_LIMIT,
+  store: makeRateLimitStore('rl:admin-invite-tenant:'),
+  keyGenerator: (req) => String(req.user?.tenantId || req.ip),
+  message: { success: false, error: 'Este tenant ha alcanzado el limite diario de invitaciones.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+/**
  * @openapi
  * /api/auth/register:
  *   post:
@@ -125,7 +143,7 @@ router.put('/users/:id', auth, requireRole('admin'), authController.updateUser);
 // Cognito endpoints
 router.post('/session', authController.cognitoSession);
 router.post('/register-sync', authController.registerSync);
-router.post('/admin/invite', auth, requireRole('admin', 'super_admin'), adminInviteLimiter, authValidators.adminInvite, authController.adminInvite);
+router.post('/admin/invite', auth, requireRole('admin', 'super_admin'), adminInviteLimiter, adminInviteTenantLimiter, authValidators.adminInvite, authController.adminInvite);
 router.post('/admin/disable/:id', auth, requireRole('admin'), authController.adminDisableUser);
 router.put('/change-password', auth, authController.cognitoChangePassword);
 
