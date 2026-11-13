@@ -70,7 +70,7 @@ describe('<TenantSettings />', () => {
 
   test('carga datos del tenant y renderiza el título con el nombre de la org', async () => {
     render(<TenantSettings />)
-    await waitFor(() => expect(api.get).toHaveBeenCalledWith('/api/tenant'))
+    await waitFor(() => expect(api.get).toHaveBeenCalledWith('/api/tenant/me'))
     expect(screen.getByText('settings.title')).toBeInTheDocument()
     // El subtítulo es "settings.subtitle {tenant?.name}" → texto con el nombre embebido
     const matches = screen.getAllByText((content, node) => {
