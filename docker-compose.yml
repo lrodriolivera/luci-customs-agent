@@ -9,11 +9,22 @@
 # el backend arranque contra un Mongo que aún no acepta conexiones. Las imágenes de
 # backend y ai-service no traen curl ni wget, así que la sonda usa su propio
 # intérprete (node / python), que siempre está.
+#
+# Rotación de registros (13/Nov/2026): el driver json-file de Docker no tiene
+# tope por defecto — "docker logs" podía crecer sin límite. Con esta ancla cada
+# servicio se queda con 5 ficheros de 10 MB (50 MB como mucho) de su stdout/stderr.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   luci-mongo:
     image: mongo:7
     container_name: luci-mongo
     restart: unless-stopped
+    logging: *logging
     volumes:
       - ./data/mongo:/data/db
     healthcheck:
@@ -28,6 +39,7 @@ services:
     image: redis:7-alpine
     container_name: luci-redis
     restart: unless-stopped
+    logging: *logging
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -41,6 +53,7 @@ services:
     image: homelab/luci-ai:latest
     container_name: luci-ai
     restart: unless-stopped
+    logging: *logging
     env_file: [./ai-service/.env]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8003/health',timeout=5).status==200 else 1)"]
@@ -55,6 +68,7 @@ services:
     image: homelab/luci-backend:latest
     container_name: luci-backend
     restart: unless-stopped
+    logging: *logging
     # service_healthy en mongo/redis: sin esto el backend puede arrancar antes de
     # que la BD acepte conexiones. Con luci-ai basta service_started, porque el
     # backend solo lo llama bajo demanda y no lo necesita para levantar.
@@ -66,6 +80,7 @@ services:
     volumes:
       - ./certs/strixai_fnmt.p12:/app/certs/strixai_fnmt.p12:ro
       - ./data/uploads:/app/uploads
+      - ./data/logs:/app/logs
     # /api/health comprueba de verdad mongo y redis, no solo que Express responda.
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:5001/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
@@ -80,6 +95,7 @@ services:
     image: homelab/luci-frontend:latest
     container_name: luci-frontend
     restart: unless-stopped
+    logging: *logging
     depends_on:
       luci-backend: { condition: service_healthy }
     healthcheck:

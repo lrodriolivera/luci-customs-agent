@@ -2,9 +2,48 @@ const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
 
-const logDir = path.join(__dirname, '../../logs');
+// Ruta configurable: en docker-compose se monta ./data/logs:/app/logs en
+// LOG_DIR para que combined.log y error.log sobrevivan a cada reconstruccion
+// del contenedor. Sin LOG_DIR (desarrollo local) se mantiene la ruta de
+// siempre, backend/logs.
+const logDir = process.env.LOG_DIR || path.join(__dirname, '../../logs');
 if (!fs.existsSync(logDir)) {
-  try { fs.mkdirSync(logDir, { recursive: true }); } catch (_) { /* ignore */ }
+  // El volumen ya puede existir montado (p.ej. creado por el host antes de
+  // levantar el contenedor): existsSync lo cubre, pero si otro proceso lo crea
+  // justo entre el check y el mkdir, EEXIST no debe tirar el arranque.
+  try { fs.mkdirSync(logDir, { recursive: true }); } catch (err) { if (err.code !== 'EEXIST') throw err; }
+}
+
+// winston-daily-rotate-file no esta entre las dependencias del backend
+// (ver package.json): en vez de sumar una dependencia nueva solo para rotar,
+// usamos las opciones nativas de winston.transports.File. `tailable: true`
+// mantiene el nombre del fichero activo estable (error.log / combined.log)
+// y desplaza los antiguos a .1, .2... en vez de renombrar el que se esta
+// escribiendo, que es como se espera leer los registros en caliente.
+const LOG_MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB por fichero
+const LOG_MAX_FILES_COMBINED = 10; // hasta 100 MB de historia combinada
+const LOG_MAX_FILES_ERROR = 5; // los errores son menos frecuentes: 50 MB basta
+
+/**
+ * @param {string} dir
+ * @returns {winston.transport[]}
+ */
+function crearTransportesFichero(dir) {
+  return [
+    new winston.transports.File({
+      filename: path.join(dir, 'error.log'),
+      level: 'error',
+      maxsize: LOG_MAX_SIZE_BYTES,
+      maxFiles: LOG_MAX_FILES_ERROR,
+      tailable: true
+    }),
+    new winston.transports.File({
+      filename: path.join(dir, 'combined.log'),
+      maxsize: LOG_MAX_SIZE_BYTES,
+      maxFiles: LOG_MAX_FILES_COMBINED,
+      tailable: true
+    })
+  ];
 }
 
 const REDACT_KEYS = new Set([
@@ -79,24 +118,12 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   defaultMeta: { service: 'luci-customs' },
-  transports: esTest ? [] : [
-    new winston.transports.File({
-      filename: path.join(logDir, 'error.log'),
-      level: 'error',
-      maxsize: 5 * 1024 * 1024,
-      maxFiles: 5
-    }),
-    new winston.transports.File({
-      filename: path.join(logDir, 'combined.log'),
-      maxsize: 5 * 1024 * 1024,
-      maxFiles: 5
-    })
-  ]
+  transports: esTest ? [] : crearTransportesFichero(logDir)
 });
 
 if (esProduccion) {
   // `docker logs luci-backend` enseña avisos y errores; el detalle completo
-  // (peticiones incluidas) queda en logs/combined.log, que rota a 5 x 5 MB.
+  // (peticiones incluidas) queda en logs/combined.log, que rota a 10 x 10 MB.
   logger.add(new winston.transports.Console({ level: 'warn' }));
 } else if (!esTest) {
   logger.add(new winston.transports.Console({
@@ -132,5 +159,7 @@ logger.forRequest = (req) => logger.child({
 
 logger.sanitizarUrl = sanitizarUrl;
 logger.redactDeep = redactDeep;
+logger.logDir = logDir;
+logger.crearTransportesFichero = crearTransportesFichero;
 
 module.exports = logger;

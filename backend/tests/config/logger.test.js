@@ -112,6 +112,33 @@ describe('logger', () => {
   });
 });
 
+describe('rotacion de los ficheros de registro', () => {
+  // docker-compose monta ./data/logs:/app/logs y usa el driver json-file con
+  // tope (max-size/max-file): sin rotacion propia del fichero, combined.log y
+  // error.log crecen sin limite dentro del volumen aunque los contenedores de
+  // docker ya roten su salida de consola.
+  const path = require('path');
+
+  test('construye los transportes de fichero con maxsize, maxFiles y tailable', () => {
+    const transportes = logger.crearTransportesFichero('/tmp/registros-prueba');
+    const porNombre = Object.fromEntries(transportes.map(t => [path.basename(t.filename), t]));
+
+    expect(porNombre['error.log']).toMatchObject({ level: 'error', maxsize: 10 * 1024 * 1024, maxFiles: 5, tailable: true });
+    expect(porNombre['combined.log']).toMatchObject({ maxsize: 10 * 1024 * 1024, maxFiles: 10, tailable: true });
+  });
+
+  test('los ficheros se crean dentro del directorio recibido (LOG_DIR)', () => {
+    const transportes = logger.crearTransportesFichero('/tmp/registros-prueba');
+    for (const t of transportes) {
+      expect(t.dirname).toBe('/tmp/registros-prueba');
+    }
+  });
+
+  test('usa LOG_DIR si esta definida; si no, la ruta historica backend/logs', () => {
+    expect(logger.logDir).toBe(process.env.LOG_DIR || path.join(__dirname, '../../logs'));
+  });
+});
+
 describe('sanitizarUrl', () => {
   test('oculta el token del portal del cliente, que va en la ruta', () => {
     expect(logger.sanitizarUrl('/api/portal/9f8e7d6c5b4a39281706f5e4d3c2b1a0/documents'))
