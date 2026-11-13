@@ -49,4 +49,23 @@ describe('FloatingAssistant', () => {
     expect(screen.getByText('¿Qué es el H1?')).toBeInTheDocument()
     expect(chatAPI.send).toHaveBeenCalledWith({ message: '¿Qué es el H1?', context: 'agent' })
   })
+
+  // El backend devuelve Markdown (**negrita**, listas con "-"); antes se
+  // pintaba el texto tal cual, con los asteriscos literales sin formato.
+  test('la negrita y las listas del asistente se renderizan con formato, no con asteriscos literales', async () => {
+    traducciones = { 'floating.welcomeMessage': BIENVENIDA, 'floating.placeholder': 'Escribe tu consulta...' }
+    chatAPI.send.mockResolvedValue({
+      data: { data: { message: 'Falta el **EORI** del declarante:\n- Revisa Ajustes\n- Guarda de nuevo' } }
+    })
+    montar()
+    abrir()
+
+    fireEvent.change(screen.getByPlaceholderText('Escribe tu consulta...'), { target: { value: '¿Qué me falta?' } })
+    fireEvent.submit(screen.getByPlaceholderText('Escribe tu consulta...').closest('form'))
+
+    const negrita = await screen.findByText('EORI')
+    expect(negrita.tagName).toBe('STRONG')
+    expect(screen.getByText('Revisa Ajustes').closest('li')).toBeInTheDocument()
+    expect(screen.queryByText(/\*\*EORI\*\*/)).not.toBeInTheDocument()
+  })
 })

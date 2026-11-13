@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { chatAPI, knowledgeAPI } from '../../services/api'
 import { PaperAirplaneIcon, SparklesIcon } from '@heroicons/react/24/solid'
 import { BookOpenIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
+import ChatMessageText from '../common/ChatMessageText'
 
 export default function ChatAssistant() {
   const { t } = useTranslation()
@@ -159,7 +160,7 @@ export default function ChatAssistant() {
                           ? 'bg-red-50 text-red-800 rounded-tl-none'
                           : 'bg-gray-100 rounded-tl-none'
                       }`}>
-                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                        <ChatMessageText content={msg.content} />
                       </div>
                       <div className={`flex items-center gap-2 mt-1 text-xs text-gray-400 ${
                         msg.role === 'user' ? 'justify-end' : ''
