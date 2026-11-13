@@ -42,9 +42,7 @@ const authValidators = {
       .isEmail()
       .withMessage('Email invalido')
       .normalizeEmail(),
-    body('password')
-      .isLength({ min: 6 })
-      .withMessage('La contrasena debe tener al menos 6 caracteres'),
+    passwordNuevaValidator('password'),
     body('name')
       .trim()
       .notEmpty()
