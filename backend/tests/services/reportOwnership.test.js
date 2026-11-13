@@ -35,6 +35,7 @@ jest.mock('../../src/services/analytics/realMetricsService', () => {
     NO_DISPONIBLE: {},
     cuadroDeMando: () => Promise.resolve(vacio),
     expedientesActivos: () => Promise.resolve(0),
+    volumenDeclaraciones: () => Promise.resolve({ total: 0, porTipo: {}, porEstado: {} }),
     repartoPorCanal: () => Promise.resolve({ conCanalAsignado: 0, porcentajes: {} }),
     derechosLiquidados: () => Promise.resolve({ total: 0 }),
     valorMercancia: () => Promise.resolve({ disponible: false })

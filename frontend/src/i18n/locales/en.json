@@ -3557,6 +3557,7 @@
     "noReportsHint": "Create your first one with the Generate Report button",
     "reportGenerated": "Report generated",
     "errorGeneratingReport": "Could not generate the report",
+    "reportGenerationTimeout": "The report may still be generating: refreshing the list",
     "errorLoadingReports": "Could not load the reports",
     "kpiSinDatos": "No data",
     "kpiHealthBase": "Calculated from {{calculados}} of {{total}} KPIs",

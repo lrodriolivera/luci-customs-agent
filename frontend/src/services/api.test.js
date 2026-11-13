@@ -1166,6 +1166,15 @@ describe('api.js — analyticsAPI', () => {
     })
   })
 
+  it('analyticsAPI.reports.generate llama a POST con timeout 120s', async () => {
+    const api = await import('./api.js')
+
+    const data = { type: 'executive_summary', period: 'last_30_days', includeLuciAnalysis: false }
+    await api.analyticsAPI.reports.generate(data)
+
+    expect(mockApi.post).toHaveBeenCalledWith('/api/analytics/reports/generate', data, { timeout: 120000 })
+  })
+
   it('analyticsAPI.reports.download llama a GET con format y responseType blob', async () => {
     const api = await import('./api.js')
 

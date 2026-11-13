@@ -93,19 +93,48 @@ describe('panelDelAmbito', () => {
     expect(r.desde.toISOString()).toBe('2026-09-11T00:00:00.000Z');
   });
 
-  it('pide el periodo y el anterior al ambito y los expedientes activos', async () => {
+  it('pide el periodo actual completo y los expedientes activos', async () => {
     const cm = jest.spyOn(realMetrics, 'cuadroDeMando').mockResolvedValue(cuadro());
+    jest.spyOn(realMetrics, 'volumenDeclaraciones').mockResolvedValue({ total: 5 });
+    jest.spyOn(realMetrics, 'derechosLiquidados').mockResolvedValue({ total: 50 });
     jest.spyOn(realMetrics, 'expedientesActivos').mockResolvedValue(9);
     const r = await panelDelAmbito('t1', { desde: '2026-10-11T00:00:00Z', hasta: '2026-11-10T00:00:00Z' });
-    expect(cm).toHaveBeenCalledTimes(2);
+    // El cuadro completo (7 agregaciones) solo se pide una vez, para el periodo
+    // actual. El anterior ya no lo pide: ver el test de abajo.
+    expect(cm).toHaveBeenCalledTimes(1);
     expect(cm.mock.calls[0][0]).toBe('t1');
-    expect(cm.mock.calls[1][1].hasta.toISOString()).toBe('2026-10-11T00:00:00.000Z');
+    expect(cm.mock.calls[0][1].hasta.toISOString()).toBe('2026-11-10T00:00:00.000Z');
     expect(r.operations.activeExpeditions).toBe(9);
     expect(r.simulated).toBe(false);
   });
 
+  it('el periodo anterior solo pide los dos totales que usa la tendencia, no el cuadro completo', async () => {
+    jest.spyOn(realMetrics, 'cuadroDeMando').mockResolvedValue(cuadro());
+    const vd = jest.spyOn(realMetrics, 'volumenDeclaraciones').mockResolvedValue({ total: 5 });
+    const dl = jest.spyOn(realMetrics, 'derechosLiquidados').mockResolvedValue({ total: 50 });
+    const repCanal = jest.spyOn(realMetrics, 'repartoPorCanal');
+    const tiempos = jest.spyOn(realMetrics, 'tiemposDeDespacho');
+    const valorMerc = jest.spyOn(realMetrics, 'valorMercancia');
+    jest.spyOn(realMetrics, 'expedientesActivos').mockResolvedValue(0);
+
+    const r = await panelDelAmbito('t1', { desde: '2026-10-11T00:00:00Z', hasta: '2026-11-10T00:00:00Z' });
+
+    expect(vd).toHaveBeenCalledTimes(1);
+    expect(dl).toHaveBeenCalledTimes(1);
+    expect(vd.mock.calls[0][1].hasta.toISOString()).toBe('2026-10-11T00:00:00.000Z');
+    expect(dl.mock.calls[0][1].hasta.toISOString()).toBe('2026-10-11T00:00:00.000Z');
+    // Lo que el cuadro completo del periodo anterior calculaba de mas y que
+    // adaptarCuadro nunca usaba: ya no se pide.
+    expect(repCanal).not.toHaveBeenCalled();
+    expect(tiempos).not.toHaveBeenCalled();
+    expect(valorMerc).not.toHaveBeenCalled();
+    expect(r.trends).toBeDefined();
+  });
+
   it('sin fechas usa los ultimos 30 dias', async () => {
     const cm = jest.spyOn(realMetrics, 'cuadroDeMando').mockResolvedValue(cuadro());
+    jest.spyOn(realMetrics, 'volumenDeclaraciones').mockResolvedValue({ total: 0 });
+    jest.spyOn(realMetrics, 'derechosLiquidados').mockResolvedValue({ total: 0 });
     jest.spyOn(realMetrics, 'expedientesActivos').mockResolvedValue(0);
     await panelDelAmbito(undefined, {});
     const { desde, hasta } = cm.mock.calls[0][1];

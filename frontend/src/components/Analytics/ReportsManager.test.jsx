@@ -148,7 +148,7 @@ describe('ReportsManager', () => {
     it('renders report period label', async () => {
       render(<ReportsManager />)
       await screen.findByText('Reporte Q1')
-      expect(screen.getByText('Ultimos 30 dias')).toBeInTheDocument()
+      expect(screen.getByText('Últimos 30 días')).toBeInTheDocument()
     })
 
     it('renders formatted date', async () => {
@@ -364,7 +364,7 @@ describe('ReportsManager', () => {
       await screen.findByText('analyticsPage.reportsManager')
       await user.click(screen.getByText('analyticsPage.generateReport'))
       await screen.findByText('Generar Informe')
-      const titleInput = screen.getByPlaceholderText('Titulo personalizado...')
+      const titleInput = screen.getByPlaceholderText('Título personalizado...')
       fireEvent.change(titleInput, { target: { value: 'Mi Reporte Custom' } })
       expect(titleInput.value).toBe('Mi Reporte Custom')
     })
@@ -375,7 +375,7 @@ describe('ReportsManager', () => {
       await screen.findByText('analyticsPage.reportsManager')
       await user.click(screen.getByText('analyticsPage.generateReport'))
       await screen.findByText('Generar Informe')
-      const periodSelect = screen.getByDisplayValue('Ultimos 30 dias')
+      const periodSelect = screen.getByDisplayValue('Últimos 30 días')
       fireEvent.change(periodSelect, { target: { value: 'this_month' } })
       expect(periodSelect.value).toBe('this_month')
     })
@@ -386,7 +386,7 @@ describe('ReportsManager', () => {
       await screen.findByText('analyticsPage.reportsManager')
       await user.click(screen.getByText('analyticsPage.generateReport'))
       await screen.findByText('Generar Informe')
-      const periodSelect = screen.getByDisplayValue('Ultimos 30 dias')
+      const periodSelect = screen.getByDisplayValue('Últimos 30 días')
       const options = Array.from(periodSelect.querySelectorAll('option'))
       expect(options).toHaveLength(8)
     })
@@ -420,7 +420,7 @@ describe('ReportsManager', () => {
       await screen.findByText('analyticsPage.reportsManager')
       await user.click(screen.getByText('analyticsPage.generateReport'))
       await screen.findByText('Generar Informe')
-      const checkbox = screen.getByLabelText(/Incluir analisis de LUCI/)
+      const checkbox = screen.getByLabelText(/Incluir análisis de LUCI/)
       expect(checkbox).toBeChecked()
     })
 
@@ -430,7 +430,7 @@ describe('ReportsManager', () => {
       await screen.findByText('analyticsPage.reportsManager')
       await user.click(screen.getByText('analyticsPage.generateReport'))
       await screen.findByText('Generar Informe')
-      const checkbox = screen.getByLabelText(/Incluir analisis de LUCI/)
+      const checkbox = screen.getByLabelText(/Incluir análisis de LUCI/)
       await user.click(checkbox)
       expect(checkbox).not.toBeChecked()
     })
@@ -467,10 +467,10 @@ describe('ReportsManager', () => {
       const modalButton = typeButtons.find(el => el.closest('.fixed'))
       await user.click(modalButton)
 
-      const titleInput = screen.getByPlaceholderText('Titulo personalizado...')
+      const titleInput = screen.getByPlaceholderText('Título personalizado...')
       fireEvent.change(titleInput, { target: { value: 'Test Report' } })
 
-      const periodSelect = screen.getByDisplayValue('Ultimos 30 dias')
+      const periodSelect = screen.getByDisplayValue('Últimos 30 días')
       fireEvent.change(periodSelect, { target: { value: 'this_month' } })
 
       const xlsxButton = screen.getByText('Excel').closest('button')
@@ -545,7 +545,7 @@ describe('ReportsManager', () => {
       const modalButton = typeButtons.find(el => el.closest('.fixed'))
       await user.click(modalButton)
 
-      const checkbox = screen.getByLabelText(/Incluir analisis de LUCI/)
+      const checkbox = screen.getByLabelText(/Incluir análisis de LUCI/)
       await user.click(checkbox)
 
       const generateButton = screen.getByText('Generar').closest('button')
@@ -662,6 +662,36 @@ describe('ReportsManager', () => {
       })
     })
 
+    it('no se queda en "Generando..." si la llamada se corta por timeout: avisa y refresca la lista', async () => {
+      const user = userEvent.setup()
+      const timeoutError = new Error('timeout of 120000ms exceeded')
+      timeoutError.code = 'ECONNABORTED'
+      analyticsAPI.reports.generate.mockRejectedValue(timeoutError)
+      render(<ReportsManager />)
+      await screen.findByText('analyticsPage.reportsManager')
+
+      vi.clearAllMocks()
+      analyticsAPI.reports.list.mockResolvedValue({ data: { success: true, reports: [] } })
+
+      await user.click(screen.getByText('analyticsPage.generateReport'))
+      await screen.findByText('Generar Informe')
+
+      const typeButtons = screen.getAllByText('Resumen Ejecutivo')
+      const modalButton = typeButtons.find(el => el.closest('.fixed'))
+      await user.click(modalButton)
+
+      const generateButton = screen.getByText('Generar').closest('button')
+      await user.click(generateButton)
+
+      await waitFor(() => {
+        // No deja el dialogo colgado en "Generando...": muestra un aviso claro
+        // y, como el informe puede haberse creado igual en el servidor, refresca.
+        expect(toast.error).toHaveBeenCalledWith('analyticsPage.reportGenerationTimeout')
+        expect(screen.queryByText('Generando...')).not.toBeInTheDocument()
+        expect(analyticsAPI.reports.list).toHaveBeenCalled()
+      })
+    })
+
     it('shows loading state during generation', async () => {
       const user = userEvent.setup()
       analyticsAPI.reports.generate.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({ data: { success: true } }), 100)))
@@ -691,7 +721,7 @@ describe('ReportsManager', () => {
       const modalButton = typeButtons.find(el => el.closest('.fixed'))
       await user.click(modalButton)
 
-      const titleInput = screen.getByPlaceholderText('Titulo personalizado...')
+      const titleInput = screen.getByPlaceholderText('Título personalizado...')
       fireEvent.change(titleInput, { target: { value: 'Test' } })
 
       await user.click(screen.getByText('Cancelar'))
@@ -702,7 +732,7 @@ describe('ReportsManager', () => {
       await user.click(screen.getByText('analyticsPage.generateReport'))
       await screen.findByText('Generar Informe')
 
-      const freshTitleInput = screen.getByPlaceholderText('Titulo personalizado...')
+      const freshTitleInput = screen.getByPlaceholderText('Título personalizado...')
       expect(freshTitleInput.value).toBe('')
     })
   })

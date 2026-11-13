@@ -3563,6 +3563,7 @@
     "noReportsHint": "Genere el primero con el botón Generar Informe",
     "reportGenerated": "Informe generado",
     "errorGeneratingReport": "No se pudo generar el informe",
+    "reportGenerationTimeout": "El informe puede estar generándose: actualizando la lista",
     "errorLoadingReports": "No se pudieron cargar los informes",
     "kpiSinDatos": "Sin datos",
     "kpiHealthBase": "Calculado sobre {{calculados}} de {{total}} KPIs",

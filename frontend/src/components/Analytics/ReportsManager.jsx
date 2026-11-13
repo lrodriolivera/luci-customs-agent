@@ -46,13 +46,24 @@ const FORMAT_OPTIONS = [
 const PERIOD_OPTIONS = [
   { value: 'today', label: 'Hoy' },
   { value: 'yesterday', label: 'Ayer' },
-  { value: 'last_7_days', label: 'Ultimos 7 dias' },
-  { value: 'last_30_days', label: 'Ultimos 30 dias' },
+  { value: 'last_7_days', label: 'Últimos 7 días' },
+  { value: 'last_30_days', label: 'Últimos 30 días' },
   { value: 'this_month', label: 'Este mes' },
   { value: 'last_month', label: 'Mes anterior' },
   { value: 'this_quarter', label: 'Este trimestre' },
-  { value: 'this_year', label: 'Este ano' }
+  { value: 'this_year', label: 'Este año' }
 ]
+
+// Axios marca el corte por timeout con code 'ECONNABORTED' (o 'ETIMEDOUT' en
+// algunos entornos); el mensaje tambien lo dice ("timeout of Xms exceeded").
+// Sin esta distincion, un informe que tarda mas de lo que espera el navegador
+// se veia igual que un fallo real, y el dialogo se quedaba en "Generando..."
+// porque el error llegaba despues de que el usuario ya hubiera asumido que
+// algo se habia roto.
+const esErrorDeTimeout = (error) =>
+  error?.code === 'ECONNABORTED' ||
+  error?.code === 'ETIMEDOUT' ||
+  /timeout/i.test(error?.message || '')
 
 export default function ReportsManager() {
   const { t } = useTranslation()
@@ -135,7 +146,17 @@ export default function ReportsManager() {
         toast.error(response.data.error || 'Error generando informe')
       }
     } catch (error) {
-      toast.error(t('analyticsPage.errorGeneratingReport'))
+      if (esErrorDeTimeout(error)) {
+        // El servidor puede seguir generando el informe aunque el navegador
+        // haya cortado la espera: no dejar el dialogo colgado en "Generando...",
+        // avisar y refrescar la lista para que aparezca cuando termine.
+        toast.error(t('analyticsPage.reportGenerationTimeout'))
+        setShowGenerateModal(false)
+        loadReports()
+        resetForm()
+      } else {
+        toast.error(t('analyticsPage.errorGeneratingReport'))
+      }
       console.error(error)
     } finally {
       setGenerating(false)
@@ -347,7 +368,7 @@ export default function ReportsManager() {
                   Tipo
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Periodo
+                  Período
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Formato
@@ -476,13 +497,13 @@ export default function ReportsManager() {
               {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Titulo (opcional)
+                  Título (opcional)
                 </label>
                 <input
                   type="text"
                   value={reportTitle}
                   onChange={(e) => setReportTitle(e.target.value)}
-                  placeholder="Titulo personalizado..."
+                  placeholder="Título personalizado..."
                   className="input-field"
                 />
               </div>
@@ -490,7 +511,7 @@ export default function ReportsManager() {
               {/* Period */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Periodo
+                  Período
                 </label>
                 <select
                   value={selectedPeriod}
@@ -537,7 +558,7 @@ export default function ReportsManager() {
                 />
                 <label htmlFor="includeLuci" className="flex items-center gap-2 text-sm">
                   <SparklesIcon className="w-5 h-5 text-luci" />
-                  Incluir analisis de LUCI
+                  Incluir análisis de LUCI
                 </label>
               </div>
             </div>
@@ -625,7 +646,7 @@ export default function ReportsManager() {
               {scheduleFrequency === 'weekly' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Dia de la semana
+                    Día de la semana
                   </label>
                   <select
                     value={scheduleDay}
@@ -634,7 +655,7 @@ export default function ReportsManager() {
                   >
                     <option value={1}>Lunes</option>
                     <option value={2}>Martes</option>
-                    <option value={3}>Miercoles</option>
+                    <option value={3}>Miércoles</option>
                     <option value={4}>Jueves</option>
                     <option value={5}>Viernes</option>
                   </select>
@@ -644,7 +665,7 @@ export default function ReportsManager() {
               {scheduleFrequency === 'monthly' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Dia del mes
+                    Día del mes
                   </label>
                   <select
                     value={scheduleDay}
@@ -714,7 +735,7 @@ export default function ReportsManager() {
                 />
                 <label htmlFor="includeScheduleLuci" className="flex items-center gap-2 text-sm">
                   <SparklesIcon className="w-5 h-5 text-luci" />
-                  Incluir analisis de LUCI
+                  Incluir análisis de LUCI
                 </label>
               </div>
             </div>

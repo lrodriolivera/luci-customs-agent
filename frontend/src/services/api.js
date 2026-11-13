@@ -1009,7 +1009,9 @@ export const analyticsAPI = {
   // Reports
   reports: {
     getTypes: () => api.get('/api/analytics/reports/types'),
-    generate: (data) => api.post('/api/analytics/reports/generate', data),
+    // El informe real tarda mucho mas que el resto de la UI (agregaciones +
+    // analisis de LUCI si se pide): timeout propio, aparte de los 30s por defecto.
+    generate: (data) => api.post('/api/analytics/reports/generate', data, { timeout: 120000 }),
     preview: (data) => api.post('/api/analytics/reports/preview', data),
     schedule: (data) => api.post('/api/analytics/reports/schedule', data),
     list: (params) => api.get('/api/analytics/reports', { params }),

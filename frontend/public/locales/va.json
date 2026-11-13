@@ -3556,6 +3556,7 @@
     "noReportsHint": "Genereu el primer amb el botó Generar Informe",
     "reportGenerated": "Informe generat",
     "errorGeneratingReport": "No s'ha pogut generar l'informe",
+    "reportGenerationTimeout": "L'informe pot estar generant-se: actualitzant la llista",
     "errorLoadingReports": "No s'han pogut carregar els informes"
   },
   "errorBoundary": {
