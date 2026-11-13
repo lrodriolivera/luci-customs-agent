@@ -518,6 +518,12 @@ const resetPassword = async (req, res) => {
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
+    // Si el usuario llego aqui con una invitacion pendiente (mustChangePassword,
+    // quiza ya caducada), restablecer por este camino tambien la completa: sin
+    // esto, el login seguia rechazando por TEMP_PASSWORD_EXPIRED con la
+    // contrasena YA cambiada, dejando la cuenta bloqueada para siempre.
+    user.mustChangePassword = false;
+    user.tempPasswordExpires = undefined;
     await user.save();
 
     logger.info(`Password reseteado: ${user.email}`);
@@ -735,6 +741,34 @@ const adminInvite = async (req, res) => {
     // esta para no filtrar esa informacion a quien invita.
     const yaExiste = await User.findOne({ email });
     if (yaExiste) {
+      // Excepcion: una invitacion pendiente (mustChangePassword activo, quiza
+      // caducada) del MISMO tenant se puede reinvitar -- regenera la temporal
+      // y su caducidad en vez de dejar la cuenta bloqueada para siempre solo
+      // por BD. Si esta en otro tenant, o ya completo el primer acceso
+      // (mustChangePassword false), sigue siendo el 409 generico.
+      const mismoTenant = String(yaExiste.tenantId || '') === String(tenantId);
+      if (mismoTenant && yaExiste.mustChangePassword) {
+        const tempPasswordReinvite = crypto.randomBytes(18).toString('base64').replace(/[+/=]/g, '').slice(0, 18) + 'aA1!';
+        yaExiste.password = tempPasswordReinvite;
+        yaExiste.mustChangePassword = true;
+        yaExiste.tempPasswordExpires = new Date(Date.now() + INVITACION_HORAS_VALIDEZ * 60 * 60 * 1000);
+        yaExiste.isActive = true;
+        await yaExiste.save();
+
+        logger.info(`Admin reinvito usuario pendiente: ${email} por ${req.user.email}`);
+        req.audit?.({
+          action: 'admin_invite',
+          resource: 'User',
+          resourceId: yaExiste._id,
+          metadata: { email, role: yaExiste.role, tenantId: String(tenantId), reinvite: true }
+        });
+
+        return res.status(200).json({
+          success: true,
+          data: { user: yaExiste.toPublicJSON(), temporaryPassword: tempPasswordReinvite },
+          message: 'La invitacion seguia pendiente: se genero una contrasena temporal nueva.'
+        });
+      }
       return res.status(409).json({ success: false, error: 'No se puede invitar: el correo ya esta en uso.' });
     }
 

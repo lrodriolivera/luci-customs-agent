@@ -232,6 +232,87 @@ describe('email unico en toda la plataforma, sin revelar el tenant', () => {
   });
 });
 
+// Arreglo 3 de la revision de seguridad del 4.2: una invitacion caducada no
+// debe bloquear la cuenta para siempre. Reinvitar al MISMO correo en el MISMO
+// tenant, mientras siga pendiente (mustChangePassword activo), regenera la
+// temporal en vez de dejar al admin sin forma de arreglarlo salvo por BD.
+describe('reinvitar a un usuario pendiente regenera la temporal', () => {
+  test('200 y temporal nueva si el correo sigue pendiente en el MISMO tenant', async () => {
+    const admin = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'adminReinvita@t-a.es' });
+    const token = admin.generateAuthToken();
+    const app = crearApp();
+
+    const primera = await request(app)
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ email: 'pendiente@t-a.es', name: 'Pendiente', role: 'agent' });
+    expect(primera.status).toBe(201);
+    const temporalVieja = primera.body.data.temporaryPassword;
+
+    // Simula que la primera invitacion caduco sin usarse.
+    await User.updateOne({ email: 'pendiente@t-a.es' }, { $set: { tempPasswordExpires: new Date(Date.now() - 1000) } });
+
+    const segunda = await request(app)
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ email: 'pendiente@t-a.es', name: 'Pendiente', role: 'agent' });
+
+    expect(segunda.status).toBe(200);
+    expect(segunda.body.data.temporaryPassword).toBeTruthy();
+    expect(segunda.body.data.temporaryPassword).not.toBe(temporalVieja);
+
+    const actualizado = await User.findOne({ email: 'pendiente@t-a.es' }).select('+password');
+    expect(actualizado.mustChangePassword).toBe(true);
+    expect(actualizado.tempPasswordExpires.getTime()).toBeGreaterThan(Date.now());
+    expect(await actualizado.comparePassword(temporalVieja)).toBe(false); // la vieja ya no vale
+    expect(await actualizado.comparePassword(segunda.body.data.temporaryPassword)).toBe(true);
+
+    // La vieja temporal, ya sustituida, no deja entrar.
+    const loginConVieja = await request(app).post('/api/auth/login').send({ email: 'pendiente@t-a.es', password: temporalVieja });
+    expect(loginConVieja.status).toBe(401);
+  });
+
+  test('409 si el correo pendiente esta en OTRO tenant (no se reinvita entre tenants)', async () => {
+    const adminA = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'adminReinvitaB@t-a.es' });
+    const adminB = await crearUsuario({ role: 'admin', tenantId: tenantB._id, email: 'adminReinvitaB@t-b.es' });
+
+    const invite = await request(crearApp())
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${adminB.generateAuthToken()}`)
+      .send({ email: 'pendienteOtro@correo.es', name: 'Pendiente', role: 'agent' });
+    expect(invite.status).toBe(201);
+
+    const reintento = await request(crearApp())
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${adminA.generateAuthToken()}`)
+      .send({ email: 'pendienteOtro@correo.es', name: 'Pendiente', role: 'agent' });
+
+    expect(reintento.status).toBe(409);
+  });
+
+  test('409 si el usuario del mismo tenant ya completo el primer acceso (no esta pendiente)', async () => {
+    const admin = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'adminReinvitaActivo@t-a.es' });
+    const token = admin.generateAuthToken();
+    const app = crearApp();
+
+    const invite = await request(app)
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ email: 'yaActivo@t-a.es', name: 'Ya Activo', role: 'agent' });
+    expect(invite.status).toBe(201);
+
+    // Completa el cambio de contrasena obligatorio: deja de estar pendiente.
+    await User.updateOne({ email: 'yaActivo@t-a.es' }, { $set: { mustChangePassword: false, tempPasswordExpires: undefined } });
+
+    const reinvite = await request(app)
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ email: 'yaActivo@t-a.es', name: 'Ya Activo', role: 'agent' });
+
+    expect(reinvite.status).toBe(409);
+  });
+});
+
 describe('validacion de entrada', () => {
   test('400 con email con formato invalido', async () => {
     const admin = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'admin4@t-a.es' });

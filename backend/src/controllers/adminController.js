@@ -379,9 +379,13 @@ const resetUserPassword = async (req, res) => {
       return res.status(403).json({ success: false, error: 'No puedes modificar a un super administrador.' });
     }
 
-    // Generar nueva contraseña temporal
+    // Generar nueva contraseña temporal. Es temporal por definicion: el
+    // usuario tiene que cambiarla en el primer acceso (mustChangePassword),
+    // con la misma caducidad de 72h que una invitacion (ver authController.adminInvite).
     const newPassword = crypto.randomBytes(6).toString('hex');
     user.password = newPassword;
+    user.mustChangePassword = true;
+    user.tempPasswordExpires = new Date(Date.now() + 72 * 60 * 60 * 1000);
     await user.save();
 
     // Log de auditoría

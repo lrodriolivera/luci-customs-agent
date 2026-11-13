@@ -203,7 +203,26 @@ describe('getUser/updateUser/deleteUser/resetUserPassword: 404 ante usuario ajen
     const res = crearRes();
     await ctrl.resetUserPassword({ user: adminDe(t), params: { id: u._id } }, res);
     expect(res.statusCode).toBe(200);
-    expect(res.body.temporaryPassword).toMatch(/^[0-9a-f]{12}$/);
+    expect(res.body.temporaryPassword).toBeTruthy();
+  });
+
+  // Arreglo 3 de la revision de seguridad del 4.2: el reset que hace el admin
+  // es, por definicion, una temporal -- sin mustChangePassword, un usuario
+  // podia quedarse para siempre con la contrasena que el admin le puso, sin
+  // que se le exigiera cambiarla en el primer acceso.
+  test('resetUserPassword deja al usuario con mustChangePassword activo y una caducidad nueva de 72h', async () => {
+    const t = new mongoose.Types.ObjectId();
+    const u = await usuario({ tenant: t });
+    const res = crearRes();
+
+    await ctrl.resetUserPassword({ user: adminDe(t), params: { id: u._id } }, res);
+
+    expect(res.statusCode).toBe(200);
+    const actualizado = await User.findById(u._id).select('+password');
+    expect(actualizado.mustChangePassword).toBe(true);
+    expect(actualizado.tempPasswordExpires.getTime()).toBeGreaterThan(Date.now());
+    expect(actualizado.tempPasswordExpires.getTime()).toBeLessThanOrEqual(Date.now() + 73 * 60 * 60 * 1000);
+    expect(await actualizado.comparePassword(res.body.temporaryPassword)).toBe(true);
   });
 });
 
