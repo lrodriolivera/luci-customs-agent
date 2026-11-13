@@ -199,7 +199,10 @@ export default function GroupageCard({ expedition, isSaving, onSave, isVerifying
       {verification?.reason && (
         <p role="alert" className="mt-3 p-3 rounded-lg border border-red-200 bg-red-50 text-sm text-red-800">{verification.reason}</p>
       )}
-      {verification?.warning && (
+      {/* Cuando `differs` ya es true, el aviso de arriba (groupage.aeatDiffers,
+          traducido) dice exactamente lo mismo que verification.warning (texto
+          crudo del backend, avisoSiDifieren en grupajeLcl.js): no se repite. */}
+      {verification?.warning && !differs && (
         <p className="mt-3 p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-900">{verification.warning}</p>
       )}
     </div>

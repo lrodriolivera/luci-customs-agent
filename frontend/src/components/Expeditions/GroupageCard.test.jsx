@@ -140,6 +140,25 @@ describe('GroupageCard', () => {
       expect(estado.className).toContain('bg-amber-50')
     })
 
+    // Backend/forms/grupajeLcl.js (avisoSiDifieren) manda el MISMO aviso de
+    // diferencia en verification.warning, sin tildes ("declaracion"). La
+    // ficha ya lo dice arriba, traducido y con tildes (groupage.aeatDiffers):
+    // no debe repetirse por debajo.
+    test('el aviso de diferencia no se duplica con el texto crudo del backend', () => {
+      renderCard({
+        expedition: conSumaria({ verified: true, itemStatus: 'AC', itemStatusText: 'Activa', isMaster: false, packages: 90, grossWeight: 995 }),
+        verification: {
+          blocked: false,
+          reason: null,
+          warning: 'Los bultos o los kilos no coinciden: la declaracion sumaria 46116000123 figura con 90 bultos y 995 kg, y el expediente declara 12 bultos y 1050.5 kg.'
+        }
+      })
+
+      const estado = screen.getByRole('status')
+      expect(estado).toHaveTextContent('groupage.aeatDiffers:{"packages":12,"weight":"1050,5"}')
+      expect(screen.queryByText(/Los bultos o los kilos no coinciden/)).not.toBeInTheDocument()
+    })
+
     test('si coinciden (o la diferencia de peso es de redondeo) no avisa y queda en verde', () => {
       renderCard({
         expedition: conSumaria({ verified: true, itemStatus: 'AC', itemStatusText: 'Activa', isMaster: false, packages: 12, grossWeight: 1058 })
