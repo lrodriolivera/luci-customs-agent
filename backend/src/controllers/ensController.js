@@ -12,6 +12,28 @@ const { parseENSRiskMessage } = require('../services/aeat/ensRiskParser');
 const { ROLES, esSuperAdmin } = require('../constants/roles');
 
 const { escapeRegex } = require('../utils/escapeRegex');
+
+/**
+ * Nombre del filtro de consulta si NO es texto plano, o null si lo es.
+ *
+ * `GET /api/ens?status[$ne]=x` llega como `req.query.status = { $ne: 'x' }`.
+ * sanitizeOperators (middleware) quita la clave '$ne' pero deja `status` como
+ * objeto vacio, no como texto: pasado tal cual a Mongo, comparar un String del
+ * esquema con un objeto revienta con CastError y el catch generico lo convierte
+ * en 500. Aqui se valida ANTES de tocar la base de datos para devolver un 400
+ * claro, y de paso se cierra la puerta a que un operador Mongo que sobreviva al
+ * middleware (p. ej. en una llamada directa al controller) se cuele en la query.
+ *
+ * @param {Record<string, unknown>} filtros
+ * @returns {string|null}
+ */
+function filtroNoTextoPlano(filtros) {
+  for (const [nombre, valor] of Object.entries(filtros)) {
+    if (valor !== undefined && typeof valor !== 'string') return nombre;
+  }
+  return null;
+}
+
 /**
  * Comprobar que los cambios pedidos han quedado REALMENTE aplicados al documento.
  *
@@ -80,6 +102,14 @@ exports.list = async (req, res) => {
       endDate,
       search
     } = req.query;
+
+    const filtroInvalido = filtroNoTextoPlano({ status, transportMode, entryOffice, startDate, endDate, search });
+    if (filtroInvalido) {
+      return res.status(400).json({
+        success: false,
+        message: `El filtro "${filtroInvalido}" debe ser texto`
+      });
+    }
 
     // Scope by tenant + role
     // filtroTenantOPlataforma: un admin sin tenant (legacy) no debe ver las ENS de todos.
@@ -383,9 +413,13 @@ exports.submit = async (req, res) => {
 
   } catch (error) {
     logger.error('Error submitting ENS:', error);
-    res.status(500).json({
+    // ErrorValidacion (ej. falta el EORI del representante, identificadorAduanero.js)
+    // lleva su propio status 422: un dato que falta completar, no un fallo del
+    // servidor. Sin esto el cliente siempre recibia 500 y perdia el mensaje concreto.
+    const status = error.status || 500;
+    res.status(status).json({
       success: false,
-      message: 'Error al enviar declaracion ENS',
+      message: status === 500 ? 'Error al enviar declaracion ENS' : error.message,
       error: error.message
     });
   }

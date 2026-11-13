@@ -196,6 +196,24 @@ describe('list', () => {
     expect(res.statusCode).toBe(500);
     spy.mockRestore();
   });
+
+  // GET /api/ens?status[$ne]=x: sanitizeOperators (middleware/sanitizeOperators)
+  // quita la clave '$ne' pero deja status como objeto vacio '{}', no como texto.
+  // Antes el controller lo pasaba tal cual a Mongo: el CastError de comparar un
+  // String con un objeto se colaba al catch generico y devolvia 500 en vez de
+  // un 400 que explique que el filtro no es valido.
+  test('un filtro de consulta que no es texto da 400, no 500', async () => {
+    const res = mockRes();
+    await ensController.list(mockReq({ user: operadorUser, query: { status: {} } }), res);
+    expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+  });
+
+  test('transportMode u otro filtro como objeto tambien da 400', async () => {
+    const res = mockRes();
+    await ensController.list(mockReq({ user: operadorUser, query: { transportMode: { $ne: 'x' } } }), res);
+    expect(res.statusCode).toBe(400);
+  });
 });
 
 // ==================== getStats ====================
@@ -343,6 +361,24 @@ describe('submit', () => {
     expect(res.statusCode).toBe(400);
     const tras = await ENSDeclaration.findById(d._id);
     expect(tras.status).toBe('draft');
+  });
+
+  // aeatSubmitService.submitENS puede lanzar ErrorValidacion (status 422), p.ej.
+  // si al tenant le falta el EORI del representante (identificadorAduanero.exigirEori).
+  // El catch generico del controller lo convertia siempre en 500, perdiendo el
+  // mensaje concreto de que falta completar un dato, no un fallo del servidor.
+  test('ErrorValidacion (422) del servicio llega al cliente como 422, no 500', async () => {
+    const d = await sembrarRAIL();
+    const error = new Error('Falta el EORI del representante: configuralo en Ajustes > Aduanas');
+    error.name = 'ErrorValidacion';
+    error.status = 422;
+    aeatSubmitService.submitENS.mockRejectedValue(error);
+    const res = mockRes();
+    await ensController.submit(mockReq({
+      user: operadorUser, params: { id: d._id.toString() }, body: {}
+    }), res);
+    expect(res.statusCode).toBe(422);
+    expect(res.body.message).toMatch(/EORI/);
   });
 
   // El envio es REAL contra AEAT (PRE o produccion segun AEAT_ENVIRONMENT) y devuelve
