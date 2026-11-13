@@ -191,7 +191,7 @@ const DOCUMENTO_FACTURA_COMERCIAL_SOIVRE = { code: 'N380', name: 'Factura Comerc
 const DOCUMENTO_TRANSPORTE_SOIVRE_POR_MODO = {
   maritime: { code: 'N705', name: 'Conocimiento de embarque (Bill of Lading)' },
   sea: { code: 'N705', name: 'Conocimiento de embarque (Bill of Lading)' },
-  air: { code: 'N740', name: 'Carta de porte aereo (Air Waybill)' },
+  air: { code: 'N740', name: 'Carta de porte aéreo (Air Waybill)' },
   road: { code: 'N730', name: 'Carta de porte por carretera (CMR)' },
   rail: { code: 'N720', name: 'Carta de porte ferroviario (CIM)' }
 };
