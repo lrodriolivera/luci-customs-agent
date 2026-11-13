@@ -3796,5 +3796,8 @@
     "declarantUnknown": "Pas encore déterminé",
     "saved": "Forme de représentation enregistrée",
     "saveError": "La forme de représentation n'a pas pu être enregistrée"
+  },
+  "taricControls": {
+    "dualUseSource": "Intitulés de l'annexe I, version consolidée en espagnol :"
   }
 }

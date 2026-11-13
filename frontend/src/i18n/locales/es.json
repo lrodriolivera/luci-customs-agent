@@ -3812,5 +3812,8 @@
     "declarantUnknown": "Aún sin determinar",
     "saved": "Forma de representación guardada",
     "saveError": "No se pudo guardar la forma de representación"
+  },
+  "taricControls": {
+    "dualUseSource": "Encabezados del anexo I, versión consolidada en español:"
   }
 }

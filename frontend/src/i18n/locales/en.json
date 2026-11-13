@@ -3812,5 +3812,8 @@
     "declarantUnknown": "Not yet determined",
     "saved": "Form of representation saved",
     "saveError": "The form of representation could not be saved"
+  },
+  "taricControls": {
+    "dualUseSource": "Annex I headings, consolidated version in Spanish:"
   }
 }

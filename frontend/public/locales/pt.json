@@ -3796,5 +3796,8 @@
     "declarantUnknown": "Ainda por determinar",
     "saved": "Forma de representação guardada",
     "saveError": "Não foi possível guardar a forma de representação"
+  },
+  "taricControls": {
+    "dualUseSource": "Epígrafes do anexo I, versão consolidada em espanhol:"
   }
 }

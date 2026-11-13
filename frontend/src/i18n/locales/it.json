@@ -3796,5 +3796,8 @@
     "declarantUnknown": "Non ancora determinato",
     "saved": "Forma di rappresentanza salvata",
     "saveError": "Impossibile salvare la forma di rappresentanza"
+  },
+  "taricControls": {
+    "dualUseSource": "Intestazioni dell'allegato I, versione consolidata in spagnolo:"
   }
 }

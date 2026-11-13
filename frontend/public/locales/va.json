@@ -3796,5 +3796,8 @@
     "declarantUnknown": "Encara per determinar",
     "saved": "Forma de representació guardada",
     "saveError": "No s'ha pogut guardar la forma de representació"
+  },
+  "taricControls": {
+    "dualUseSource": "Encapçalaments de l'annex I, versió consolidada en castellà:"
   }
 }
