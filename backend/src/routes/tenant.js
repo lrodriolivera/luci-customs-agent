@@ -480,14 +480,12 @@ router.put('/tenant/eori', auth, extractTenant({ required: false }), requireTena
     const tenant = await Tenant.findById(req.tenantId);
     if (!tenant) return res.status(404).json({ success: false, error: 'Tenant no encontrado' });
 
-    if (!tenant.customsConfig) tenant.customsConfig = {};
-    if (!tenant.customsConfig.eoriNumbers) tenant.customsConfig.eoriNumbers = {};
-
-    // Merge con los EORI existentes
-    const merged = { ...(tenant.customsConfig.eoriNumbers || {}) };
-    for (const [country, eori] of Object.entries(eoriNumbers)) {
-      merged[country] = eori;
-    }
+    // El frontend (TenantSettings.jsx CustomsTab) manda siempre el mapa COMPLETO
+    // de paises que quedan activos tras el toggle: si aqui se fusionaba con lo
+    // que ya habia guardado, el EORI de un pais recien desactivado nunca se
+    // borraba porque el merge solo sobreescribe las claves que llegan, nunca
+    // quita las que faltan. Se sustituye el mapa entero por el recibido.
+    const merged = { ...eoriNumbers };
 
     // Update directo en MongoDB (sin .save() para no revalidar campos legacy
     // como slug que pueden faltar en tenants creados antes del schema actual).
