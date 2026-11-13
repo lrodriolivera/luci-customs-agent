@@ -33,6 +33,17 @@ async function verifyLegacy(token) {
   const decoded = jwtService.verify(token);
   const user = await User.findById(decoded.id);
   if (!user || !user.isActive) return null;
+
+  // Un token firmado ANTES del ultimo cambio de contrasena ya no vale: sin
+  // esto, cambiar la contrasena (o que un admin la restablezca) no cerraba
+  // las sesiones abiertas con la vieja, que seguian funcionando hasta que el
+  // JWT caducara por su cuenta (hasta 7 dias). decoded.iat esta en segundos
+  // (estandar JWT); passwordChangedAt en milisegundos.
+  if (user.passwordChangedAt && typeof decoded.iat === 'number') {
+    const cambioEnSegundos = Math.floor(user.passwordChangedAt.getTime() / 1000);
+    if (decoded.iat < cambioEnSegundos) return null;
+  }
+
   return { user, decoded };
 }
 

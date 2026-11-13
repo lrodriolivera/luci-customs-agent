@@ -97,7 +97,7 @@ router.post('/refresh-token', auth, authController.refreshToken);
 router.get('/me', auth, authController.getMe);
 
 router.put('/profile', auth, authController.updateProfile);
-router.put('/password', auth, authController.changePassword);
+router.put('/password', auth, authValidators.changePassword, authController.changePassword);
 router.post('/logout', auth, authController.logout);
 
 router.get('/users', auth, requireRole('admin'), authController.listUsers);

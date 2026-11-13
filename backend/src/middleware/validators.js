@@ -77,6 +77,20 @@ const authValidators = {
     handleValidationErrors
   ],
 
+  // PUT /api/auth/password. Solo exige presencia aqui; la politica de
+  // fortaleza de newPassword (longitud, letras+numeros) vive en su propio
+  // arreglo de seguridad -- ver el comentario junto a la constante de abajo
+  // cuando se añada.
+  changePassword: [
+    body('currentPassword')
+      .notEmpty()
+      .withMessage('La contrasena actual es obligatoria'),
+    body('newPassword')
+      .notEmpty()
+      .withMessage('La contrasena nueva es obligatoria'),
+    handleValidationErrors
+  ],
+
   // POST /api/auth/admin/invite. Lista blanca estricta: solo email, name y
   // role. El formato de role solo exige que sea uno de los 5 roles que existen
   // en el sistema (TODOS); QUIEN puede concederlo lo decide puedeAsignarRol en

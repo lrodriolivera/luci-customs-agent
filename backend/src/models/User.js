@@ -111,7 +111,14 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  tempPasswordExpires: Date
+  tempPasswordExpires: Date,
+
+  // Momento del ultimo cambio de contrasena. Un JWT firmado ANTES de esta
+  // fecha (decoded.iat < passwordChangedAt) se rechaza en verifyLegacy
+  // (middleware/auth.js): sin esto, cambiar la contrasena (o que un admin la
+  // restablezca) no cerraba las sesiones ya abiertas con la contrasena vieja,
+  // que seguian valiendo hasta que el JWT caducara por su cuenta (hasta 7 dias).
+  passwordChangedAt: Date
 
 }, {
   timestamps: true
@@ -127,6 +134,7 @@ UserSchema.pre('save', async function(next) {
 
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
+  this.passwordChangedAt = new Date();
   next();
 });
 
@@ -135,15 +143,24 @@ UserSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Generate JWT
+// Generate JWT. Mientras haya una contrasena temporal pendiente de cambio
+// (mustChangePassword), el token vive solo 15 min: ademas de la puerta de
+// MUST_CHANGE_PASSWORD en middleware/auth.js, limita la ventana en la que una
+// sesion abierta con la temporal (si se filtrase) sigue siendo utilizable.
+const EXPIRACION_TOKEN_CON_PASSWORD_TEMPORAL = '15m';
+
 UserSchema.methods.generateAuthToken = function() {
   const jwtService = require('../utils/jwtService');
-  return jwtService.sign({
+  const payload = {
     id: this._id,
     email: this.email,
     role: this.role,
     tenantId: this.tenantId ? String(this.tenantId) : undefined
-  });
+  };
+  if (this.mustChangePassword) {
+    return jwtService.sign(payload, { expiresIn: EXPIRACION_TOKEN_CON_PASSWORD_TEMPORAL });
+  }
+  return jwtService.sign(payload);
 };
 
 // Get public profile

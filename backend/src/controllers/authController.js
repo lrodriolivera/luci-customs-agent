@@ -249,6 +249,17 @@ const changePassword = async (req, res) => {
     // Obtener usuario con password
     const user = await User.findById(req.user._id).select('+password');
 
+    // La caducidad de la temporal (72h) se comprueba aqui tambien, no solo en
+    // el login: un token de vida corta (15 min) emitido justo antes de que la
+    // temporal caducara podia seguir usandose para "cambiarla" ya caducada.
+    if (user.mustChangePassword && user.tempPasswordExpires && user.tempPasswordExpires.getTime() < Date.now()) {
+      return res.status(401).json({
+        success: false,
+        error: 'La contrasena temporal ha caducado. Solicite una nueva invitacion al administrador.',
+        code: 'TEMP_PASSWORD_EXPIRED'
+      });
+    }
+
     // Verificar password actual
     const isMatch = await user.comparePassword(currentPassword);
     if (!isMatch) {
@@ -267,11 +278,18 @@ const changePassword = async (req, res) => {
     user.tempPasswordExpires = undefined;
     await user.save();
 
+    // El guardado actualiza passwordChangedAt (ver pre-save de User), asi que
+    // cualquier token firmado antes de este momento -incluido el que llego en
+    // esta misma peticion- deja de valer. El cliente necesita uno nuevo.
+    const token = user.generateAuthToken();
+
     logger.info(`Usuario cambio contrasena: ${user.email}`);
+    req.audit?.({ action: 'password_changed', resource: 'User', resourceId: user._id });
 
     res.json({
       success: true,
-      message: 'Contrasena actualizada correctamente'
+      message: 'Contrasena actualizada correctamente',
+      data: { token }
     });
 
   } catch (error) {
