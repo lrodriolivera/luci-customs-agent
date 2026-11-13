@@ -74,7 +74,7 @@ function periodoAnterior(desde, hasta) {
 }
 
 const CUADRO_VACIO = Object.freeze({
-  declaraciones: { total: 0, porTipo: { H7: 0, NCTS: 0 }, porEstado: {} },
+  declaraciones: { total: 0, porTipo: { H7: 0, NCTS: 0, H1: 0, AES: 0 }, porEstado: {} },
   derechos: { total: 0 },
   tiempos: { muestra: 0, mediaHoras: null },
   cumplimiento: { inspecciones: 0 },

@@ -242,15 +242,19 @@ describe('volumenDeclaraciones', () => {
     expect(r.pendientes).toBe(14);  // pending + draft (validating = 0)
   });
 
-  test('solo declara los tipos que tienen coleccion propia', async () => {
-    // H1 y AES se generan desde el expediente y no se persisten aparte. Un 0
-    // se leeria como "ninguna presentada", que es distinto de "no aplica".
+  test('tambien declara H1 y AES: se generan desde el expediente, no en coleccion propia', async () => {
+    // _resumenH1AES agrega H1/AES desde Expedition.aggregate; con el mock
+    // vacio por defecto (sin filas de tipo H1/AES) no suman nada, pero la
+    // clave aparece siempre: un 0 explicito, no "no aplica". El detalle real
+    // (presentados, aislados por tenant, sin anuladas ni predeclaraciones
+    // pendientes) se cubre en h1AesPresentados.db.test.js contra Mongo real.
     mockContar.mockResolvedValue(35);
 
     const r = await metricas.volumenDeclaraciones(TENANT);
 
-    expect(Object.keys(r.porTipo)).toEqual(['H7', 'NCTS']);
-    expect(r.porTipo).not.toHaveProperty('H1');
+    expect(Object.keys(r.porTipo)).toEqual(['H7', 'NCTS', 'H1', 'AES']);
+    expect(r.porTipo.H1).toBe(0);
+    expect(r.porTipo.AES).toBe(0);
   });
 });
 

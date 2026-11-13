@@ -70,39 +70,138 @@ function _comoObjectId(valor) {
   return mongoose.Types.ObjectId.isValid(s) ? new mongoose.Types.ObjectId(s) : valor;
 }
 
-/** Filtro por rango de fechas sobre createdAt, si se indica. */
-function _conRango(filtro, desde, hasta) {
+/** Filtro por rango de fechas sobre `campo` (createdAt por defecto), si se indica. */
+function _conRango(filtro, desde, hasta, campo = 'createdAt') {
   if (!desde && !hasta) return filtro;
   const r = {};
   if (desde) r.$gte = new Date(desde);
   if (hasta) r.$lte = new Date(hasta);
-  return { ...filtro, createdAt: r };
+  return { ...filtro, [campo]: r };
+}
+
+// Estado 63 de la AEAT: "Declaracion completa pendiente de activar" (Separata
+// 30). Mismo valor que PREDECLARACION_PENDIENTE en declarationController: no se
+// importa de ahi para no acoplar este servicio a un controlador, solo se repite
+// la constante.
+const ESTADO_PENDIENTE_DE_ACTIVAR = '63';
+
+/**
+ * Resumen de H1 y AES presentados en el rango.
+ *
+ * H1 y AES no tienen coleccion propia (a diferencia de H7Declaration o
+ * Transit): viven en expedition.declaration, y se cuentan por la fecha de
+ * presentacion (declaration.submittedAt), no por expedition.createdAt (que es
+ * cuando se abrio el expediente, no cuando se presento la declaracion).
+ *
+ * No cuentan como presentadas:
+ *  - las anuladas (declaration.cancelledAt)
+ *  - las predeclaraciones pendientes de activar: estado 63 sin
+ *    declaration.predeclaracion.activadaEn (el usuario aun no las ha activado
+ *    ante la AEAT, asi que no hay declaracion en firme).
+ *
+ * El total liquidado prefiere lo que liquido la AEAT
+ * (declaration.aeatResponse.liquidacion.totalAPagar) y, si no esta, cae a lo
+ * calculado por LUCI (calculations.totalDuties + calculations.totalVat). El
+ * arancel y el IVA por separado siempre son lo CALCULADO: la AEAT no desglosa
+ * su total por tributo, asi que arancel+iva puede no coincidir con el total
+ * liquidado, igual que para H7 lo liquidado y lo calculado pueden diferir.
+ */
+async function _resumenH1AES(tenantId, { desde, hasta } = {}) {
+  const filtro = _conRango(
+    _filtro(tenantId, {
+      deletedAt: null,
+      'declaration.type': { $in: ['H1', 'AES'] },
+      'declaration.submittedAt': { $ne: null },
+      'declaration.cancelledAt': null
+    }),
+    desde, hasta, 'declaration.submittedAt'
+  );
+
+  const filas = await Expedition.aggregate([
+    { $match: filtro },
+    {
+      // Excluye la predeclaracion pendiente de activar: estado 63 y sin
+      // activadaEn. $expr porque la condicion combina varios campos opcionales.
+      $match: {
+        $expr: {
+          $not: {
+            $and: [
+              { $ne: ['$declaration.predeclaracion', null] },
+              { $eq: [{ $ifNull: ['$declaration.predeclaracion.activadaEn', null] }, null] },
+              {
+                $in: [
+                  ESTADO_PENDIENTE_DE_ACTIVAR,
+                  [
+                    { $ifNull: ['$declaration.aeatResponse.consulta.estado.operacionRegistrada', null] },
+                    { $ifNull: ['$declaration.aeatResponse.responseCode', null] }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      $group: {
+        _id: '$declaration.type',
+        n: { $sum: 1 },
+        customsValue: { $sum: { $ifNull: ['$calculations.customsValue', 0] } },
+        totalDuties: { $sum: { $ifNull: ['$calculations.totalDuties', 0] } },
+        totalVat: { $sum: { $ifNull: ['$calculations.totalVat', 0] } },
+        totalLiquidado: {
+          $sum: {
+            $ifNull: [
+              '$declaration.aeatResponse.liquidacion.totalAPagar',
+              { $add: [{ $ifNull: ['$calculations.totalDuties', 0] }, { $ifNull: ['$calculations.totalVat', 0] }] }
+            ]
+          }
+        }
+      }
+    }
+  ]);
+
+  const porTipo = { H1: 0, AES: 0 };
+  let total = 0, customsValue = 0, totalDuties = 0, totalVat = 0, totalLiquidado = 0;
+  for (const fila of filas) {
+    // Defensivo: con el $match de arriba, _id solo puede ser 'H1' o 'AES'.
+    if (fila._id !== 'H1' && fila._id !== 'AES') continue;
+    porTipo[fila._id] = fila.n;
+    total += fila.n;
+    customsValue += fila.customsValue || 0;
+    totalDuties += fila.totalDuties || 0;
+    totalVat += fila.totalVat || 0;
+    totalLiquidado += fila.totalLiquidado || 0;
+  }
+
+  return { total, porTipo, customsValue, totalDuties, totalVat, totalLiquidado };
 }
 
 /**
  * Volumen de declaraciones por tipo y estado.
  *
- * Solo cuenta los tipos que tienen coleccion propia. H1 y AES se generan desde
- * el expediente y no se persisten como declaracion aparte, asi que no aparecen:
- * mejor omitirlos que devolver un cero que se lea como "ninguna".
+ * H7 y NCTS (transitos) tienen coleccion propia. H1 y AES se generan desde el
+ * expediente (ver _resumenH1AES): se cuentan los presentados por su fecha de
+ * presentacion, no los que aun no se han enviado a la AEAT.
  */
 async function volumenDeclaraciones(tenantId, { desde, hasta } = {}) {
   const filtro = _conRango(_filtro(tenantId, { deletedAt: null }), desde, hasta);
 
-  const [h7, porEstado, transitos] = await Promise.all([
+  const [h7, porEstado, transitos, h1aes] = await Promise.all([
     H7Declaration.countDocuments(filtro),
     H7Declaration.aggregate([
       { $match: filtro },
       { $group: { _id: '$status', n: { $sum: 1 } } }
     ]),
-    Transit.countDocuments(_conRango(_filtro(tenantId), desde, hasta))
+    Transit.countDocuments(_conRango(_filtro(tenantId), desde, hasta)),
+    _resumenH1AES(tenantId, { desde, hasta })
   ]);
 
   const estados = Object.fromEntries(porEstado.map(e => [e._id || 'sin_estado', e.n]));
 
   return {
-    total: h7 + transitos,
-    porTipo: { H7: h7, NCTS: transitos },
+    total: h7 + transitos + h1aes.total,
+    porTipo: { H7: h7, NCTS: transitos, H1: h1aes.porTipo.H1, AES: h1aes.porTipo.AES },
     porEstado: estados,
     // Lo que se presenta como "aceptadas" en la UI: los estados terminales
     // favorables del ciclo AEAT.
@@ -146,10 +245,13 @@ async function repartoPorCanal(tenantId, { desde, hasta } = {}) {
 }
 
 /**
- * Aranceles e IVA liquidados, sumados de las declaraciones H7.
+ * Aranceles e IVA liquidados, sumados de las declaraciones H7 y de los H1/AES
+ * presentados (ver _resumenH1AES: estos ultimos prefieren lo liquidado por la
+ * AEAT para el total, y lo calculado para el desglose de arancel e IVA).
  *
- * Es lo LIQUIDADO (calculado en la declaracion), no lo COBRADO: para saber lo
- * cobrado harian falta pagos, y no hay ninguno. Ver recaudacionCobrada().
+ * Es lo LIQUIDADO (calculado en la declaracion o liquidado por la AEAT), no lo
+ * COBRADO: para saber lo cobrado harian falta pagos, y no hay ninguno. Ver
+ * recaudacionCobrada().
  */
 async function derechosLiquidados(tenantId, { desde, hasta } = {}) {
   const [r] = await H7Declaration.aggregate([
@@ -165,20 +267,27 @@ async function derechosLiquidados(tenantId, { desde, hasta } = {}) {
       }
     }
   ]);
+  const h1aes = await _resumenH1AES(tenantId, { desde, hasta });
 
-  if (!r || r.n === 0) {
+  const h7 = (!r || r.n === 0)
+    ? { n: 0, arancel: 0, iva: 0, total: 0, valorEnAduana: 0 }
+    : { n: r.n, arancel: r.arancel || 0, iva: r.iva || 0, total: r.total || 0, valorEnAduana: r.valorEnAduana || 0 };
+
+  const declaraciones = h7.n + h1aes.total;
+  if (declaraciones === 0) {
     return { declaraciones: 0, arancel: 0, iva: 0, total: 0, valorEnAduana: 0, medioPorDeclaracion: 0 };
   }
 
   const redondear = (x) => Math.round((x || 0) * 100) / 100;
+  const total = h7.total + h1aes.totalLiquidado;
 
   return {
-    declaraciones: r.n,
-    arancel: redondear(r.arancel),
-    iva: redondear(r.iva),
-    total: redondear(r.total),
-    valorEnAduana: redondear(r.valorEnAduana),
-    medioPorDeclaracion: redondear(r.total / r.n)
+    declaraciones,
+    arancel: redondear(h7.arancel + h1aes.totalDuties),
+    iva: redondear(h7.iva + h1aes.totalVat),
+    total: redondear(total),
+    valorEnAduana: redondear(h7.valorEnAduana + h1aes.customsValue),
+    medioPorDeclaracion: redondear(total / declaraciones)
   };
 }
 
