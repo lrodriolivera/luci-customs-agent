@@ -271,6 +271,23 @@ describe('generateReport: includeLuciAnalysis con distintos shapes de IA', () =>
   });
 });
 
+describe('generateReport: sin IA no dispara consultas de mas', () => {
+  test('el cuadro completo (cuadroDeMando) solo se pide una vez: el periodo anterior usa los totales ligeros', async () => {
+    const mockIA = jest.fn();
+    aiService.generateExecutiveReport.mockImplementation(mockIA);
+
+    const r = await reports.generateReport('executive_summary', { userId: 'uSinQueries', includeLuciAnalysis: false });
+
+    expect(r.success).toBe(true);
+    expect(mockIA).not.toHaveBeenCalled();
+    // cuadroDeMando trae 7 agregaciones; pedirlo dos veces (periodo actual y
+    // anterior) duplicaba de mas el trabajo que el informe necesita. El
+    // periodo anterior solo aporta dos totales a la tendencia: ver
+    // cuadroParaPanel.panelDelAmbito.
+    expect(realMetrics.cuadroDeMando).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('exportReport: los 4 formatos', () => {
   test('PDF construye metadata, title page, summary, sections y luci insights', async () => {
     const gen = await reports.generateReport('executive_summary', { userId: 'pdf', includeLuciAnalysis: false });

@@ -3556,6 +3556,7 @@
     "noReportsHint": "Genera il primo con il pulsante Genera Report",
     "reportGenerated": "Report generato",
     "errorGeneratingReport": "Impossibile generare il report",
+    "reportGenerationTimeout": "Il report potrebbe essere ancora in fase di generazione: aggiornamento della lista",
     "errorLoadingReports": "Impossibile caricare i report"
   },
   "errorBoundary": {

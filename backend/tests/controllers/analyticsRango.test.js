@@ -68,12 +68,20 @@ describe('GET /dashboard: period -> rango y tendencia del periodo anterior', () 
     await ctrl.getDashboardMetrics(req({ period }), r);
     expect(r.statusCode).toBe(200);
 
-    const [actual, anterior] = realMetrics.cuadroDeMando.mock.calls.map((c) => c[1]);
+    // cuadroDeMando (7 agregaciones) solo se pide para el periodo actual: el
+    // anterior solo necesita los dos totales de la tendencia (volumenDeclaraciones
+    // + derechosLiquidados), no el cuadro completo. Ver cuadroParaPanel.panelDelAmbito.
+    const [actual] = realMetrics.cuadroDeMando.mock.calls.map((c) => c[1]);
+    expect(realMetrics.cuadroDeMando).toHaveBeenCalledTimes(1);
     expect(actual.desde).toEqual(desde());
     expect(actual.hasta).toEqual(hasta());
+
+    const anterior = realMetrics.volumenDeclaraciones.mock.calls[0][1];
     // periodo anterior: inmediatamente antes y de la misma longitud
     expect(anterior.hasta).toEqual(actual.desde);
     expect(anterior.hasta - anterior.desde).toBe(actual.hasta - actual.desde);
+    // derechosLiquidados se pide para el mismo rango anterior
+    expect(realMetrics.derechosLiquidados.mock.calls[0][1]).toEqual(anterior);
   });
 
   test('startDate + endDate validos mandan sobre period', async () => {

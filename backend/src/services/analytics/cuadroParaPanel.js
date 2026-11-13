@@ -93,12 +93,21 @@ async function panelDelAmbito(tenantId, { desde, hasta } = {}) {
   const fin = hasta ? new Date(hasta) : new Date();
   const ini = desde ? new Date(desde) : new Date(fin.getTime() - DIAS_POR_DEFECTO * MS_POR_DIA);
   const rango = { desde: ini, hasta: fin };
+  const rangoAnterior = periodoAnterior(ini, fin);
 
-  const [cuadro, anterior, activos] = await Promise.all([
+  // El periodo anterior solo alimenta la tendencia (declaraciones.total y
+  // derechos.total, ver adaptarCuadro): pedirle el cuadroDeMando completo
+  // repetia las otras 5 agregaciones (canales, tiempos, cumplimiento,
+  // recaudacion, valorMercancia) que adaptarCuadro descartaba sin usarlas.
+  // Eso duplicaba de mas la carga de /dashboard y de reports/generate, que ya
+  // piden esas mismas agregaciones para el periodo actual.
+  const [cuadro, declaracionesAnterior, derechosAnterior, activos] = await Promise.all([
     realMetrics.cuadroDeMando(tenantId, rango),
-    realMetrics.cuadroDeMando(tenantId, periodoAnterior(ini, fin)),
+    realMetrics.volumenDeclaraciones(tenantId, rangoAnterior),
+    realMetrics.derechosLiquidados(tenantId, rangoAnterior),
     realMetrics.expedientesActivos(tenantId)
   ]);
+  const anterior = { declaraciones: declaracionesAnterior, derechos: derechosAnterior };
   return adaptarCuadro(cuadro, anterior, { activeExpeditions: activos });
 }
 

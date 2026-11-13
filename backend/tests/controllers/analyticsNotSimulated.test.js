@@ -26,6 +26,7 @@ jest.mock('../../src/services/analytics/realMetricsService', () => ({
   },
   cuadroDeMando: jest.fn(),
   expedientesActivos: jest.fn(),
+  volumenDeclaraciones: jest.fn(),
   derechosLiquidados: jest.fn(),
   recaudacionCobrada: jest.fn(),
   valorMercancia: jest.fn()
