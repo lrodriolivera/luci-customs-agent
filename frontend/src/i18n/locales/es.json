@@ -3792,7 +3792,7 @@
     "direct": "Representación directa",
     "indirectHint": "Código 3: el representante actúa en nombre propio y por cuenta del importador.",
     "directHint": "Código 2: el representante actúa en nombre y por cuenta del importador.",
-    "selfNote": "Si el declarante es el propio importador (mismo NIF/EORI), LUCI declara autodespacho (código 1) sin que haya que indicarlo. Si el H1 ya está generado, vuelve a generarlo para que recoja el cambio.",
+    "selfNote": "Si el importador es el titular del certificado digital con el que LUCI presenta (mismo NIF/EORI), LUCI declara autodespacho: no hay que elegirlo. Si el H1 ya está generado, vuelve a generarlo para que recoja el cambio.",
     "declarant": "Declarante",
     "declarantNote": "El declarante es quien tiene asociado en LUCI el certificado digital con el que se presenta la declaración.",
     "representative": "Representante",

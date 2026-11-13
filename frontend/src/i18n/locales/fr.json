@@ -3776,7 +3776,7 @@
     "direct": "Représentation directe",
     "indirectHint": "Code 3 : le représentant agit en son nom propre et pour le compte de l'importateur.",
     "directHint": "Code 2 : le représentant agit au nom et pour le compte de l'importateur.",
-    "selfNote": "Si le déclarant est l'importateur lui-même (même NIF/EORI), LUCI déclare un dédouanement en nom propre (code 1) sans qu'il faille l'indiquer. Si le H1 est déjà généré, générez-le à nouveau pour prendre en compte le changement.",
+    "selfNote": "Si l'importateur est le titulaire du certificat numérique avec lequel LUCI dépose la déclaration (même NIF/EORI), LUCI déclare un dédouanement en nom propre : il n'y a rien à choisir. Si le H1 est déjà généré, générez-le à nouveau pour prendre en compte le changement.",
     "declarant": "Déclarant",
     "declarantNote": "Le déclarant est celui qui a associé dans LUCI le certificat numérique utilisé pour déposer la déclaration.",
     "representative": "Représentant",

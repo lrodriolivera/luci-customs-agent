@@ -3776,7 +3776,7 @@
     "direct": "Representació directa",
     "indirectHint": "Codi 3: el representant actua en nom propi i per compte de l'importador.",
     "directHint": "Codi 2: el representant actua en nom i per compte de l'importador.",
-    "selfNote": "Si el declarant és el mateix importador (mateix NIF/EORI), LUCI declara autodespatx (codi 1) sense que calga indicar-ho. Si l'H1 ja està generat, torna'l a generar perquè arreplegue el canvi.",
+    "selfNote": "Si l'importador és el titular del certificat digital amb què LUCI presenta (mateix NIF/EORI), LUCI declara autodespatx: no cal triar-ho. Si l'H1 ja està generat, torna'l a generar perquè arreplegue el canvi.",
     "declarant": "Declarant",
     "declarantNote": "El declarant és qui té associat a LUCI el certificat digital amb què es presenta la declaració.",
     "representative": "Representant",
