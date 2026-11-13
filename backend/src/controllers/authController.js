@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const { User, Tenant } = require('../models');
 const logger = require('../config/logger');
 const cognitoService = require('../utils/cognitoService');
@@ -725,11 +726,22 @@ const adminInvite = async (req, res) => {
     }
 
     // El tenant del usuario nuevo es SIEMPRE el del admin autenticado. Solo un
-    // super_admin puede elegirlo explicitamente, y queda auditado.
+    // super_admin puede elegirlo explicitamente, y queda auditado. Ese
+    // tenantId explicito se valida: un ObjectId con forma invalida, uno que
+    // no corresponde a ningun tenant, o uno de un tenant suspendido/cancelado
+    // (no activo) se rechazan con 400 en vez de crear el usuario en un
+    // tenant inexistente o inoperativo.
     let tenantId = req.user.tenantId;
     let tenantOverride = false;
     if (isSuperAdmin(req.user) && req.body.tenantId) {
-      tenantId = req.body.tenantId;
+      if (!mongoose.isValidObjectId(req.body.tenantId)) {
+        return res.status(400).json({ success: false, error: 'tenantId invalido.' });
+      }
+      const tenantElegido = await Tenant.findById(req.body.tenantId);
+      if (!tenantElegido || !tenantElegido.isActive()) {
+        return res.status(400).json({ success: false, error: 'El tenant indicado no existe o no esta activo.' });
+      }
+      tenantId = tenantElegido._id;
       tenantOverride = String(tenantId) !== String(req.user.tenantId || '');
     }
     if (!tenantId) {

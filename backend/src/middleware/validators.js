@@ -104,12 +104,21 @@ const authValidators = {
   // super_admin si). tenantId NO se valida aqui a proposito -- adminInvite lo
   // ignora para un admin normal (siempre usa req.user.tenantId) y solo lo lee
   // del body si quien invita es super_admin.
+  // .isString() va primero y con .bail(): email/name/role como array u
+  // objeto (en vez de texto) podian colar valores inesperados a traves de
+  // isEmail()/isIn(), que coaccionan el valor en vez de rechazarlo de plano.
   adminInvite: [
     body('email')
+      .isString()
+      .withMessage('Email invalido')
+      .bail()
       .isEmail()
       .withMessage('Email invalido')
       .normalizeEmail(),
     body('name')
+      .isString()
+      .withMessage('El nombre debe ser texto')
+      .bail()
       .trim()
       .notEmpty()
       .withMessage('El nombre es obligatorio')
@@ -117,6 +126,9 @@ const authValidators = {
       .withMessage('El nombre no puede exceder 100 caracteres'),
     body('role')
       .optional()
+      .isString()
+      .withMessage('Rol no valido')
+      .bail()
       .isIn(ROLES_VALIDOS)
       .withMessage(`Rol no valido (admitidos: ${ROLES_VALIDOS.join(', ')})`),
     handleValidationErrors

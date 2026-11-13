@@ -24,13 +24,17 @@ jest.mock('../../src/models/User', () => {
   MockUser.findOneAndUpdate = jest.fn();
   return MockUser;
 });
-jest.mock('../../src/models', () => ({ User: require('../../src/models/User'), Tenant: {} }));
+jest.mock('../../src/models', () => ({
+  User: require('../../src/models/User'),
+  Tenant: { findById: jest.fn() }
+}));
 jest.mock('../../src/utils/cognitoService', () => ({
   adminCreateUser: jest.fn(),
   adminUpdateAttributes: jest.fn()
 }));
 
 const User = require('../../src/models/User');
+const { Tenant } = require('../../src/models');
 const cognitoService = require('../../src/utils/cognitoService');
 const adminController = require('../../src/controllers/adminController');
 const authController = require('../../src/controllers/authController');
@@ -216,9 +220,13 @@ describe('authController.adminInvite (POST /api/auth/admin/invite)', () => {
 
   test('un super_admin puede invitar a un super_admin', async () => {
     User.findOne.mockResolvedValue(null);
+    // tenantId explicito: desde el arreglo 5 de la revision de seguridad del
+    // 4.2 se valida como ObjectId y que el tenant exista y este activo.
+    const tenantIdValido = '507f1f77bcf86cd799439011';
+    Tenant.findById.mockResolvedValue({ _id: tenantIdValido, isActive: () => true });
     const res = crearRes();
 
-    await authController.adminInvite({ user: SUPER, body: { ...cuerpo, tenantId: 't0' } }, res);
+    await authController.adminInvite({ user: SUPER, body: { ...cuerpo, tenantId: tenantIdValido } }, res);
 
     expect(res.statusCode).toBe(201);
     expect(User.mock.calls[0][0].role).toBe('super_admin');

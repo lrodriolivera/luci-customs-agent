@@ -50,12 +50,14 @@ async function crearUsuario({ role, tenantId, email, password = 'Password123!' }
 
 beforeEach(async () => {
   const sufijo = `${Date.now()}-${Math.round(performance.now() * 1000)}`;
+  // status: 'active' explicito -- el default del esquema es 'pending', y un
+  // super_admin eligiendo tenant (arreglo 5) solo puede invitar a uno activo.
   tenantA = await Tenant.create({
-    name: 'Tenant A', slug: `tenant-a-${sufijo}`,
+    name: 'Tenant A', slug: `tenant-a-${sufijo}`, status: 'active',
     businessInfo: { eori: 'ESA0000000A' }, customsConfig: { eoriNumbers: { ES: 'ESA0000000A' } }
   });
   tenantB = await Tenant.create({
-    name: 'Tenant B', slug: `tenant-b-${sufijo}`,
+    name: 'Tenant B', slug: `tenant-b-${sufijo}`, status: 'active',
     businessInfo: { eori: 'ESB0000000B' }, customsConfig: { eoriNumbers: { ES: 'ESB0000000B' } }
   });
 });
@@ -348,6 +350,95 @@ describe('validacion de entrada', () => {
       .send({ email: 'rolraro@t-a.es', name: 'X', role: 'superusuario' });
 
     expect(res.status).toBe(400);
+  });
+
+  // Arreglo 5 de la revision de seguridad del 4.2: email/name/role como
+  // array u objeto (en vez de texto) podian colarse por las validaciones de
+  // forma (.isEmail()/.isIn() de express-validator aceptan algunos no-string
+  // via coercion) y llegar al controller con una forma inesperada.
+  test('400 si email llega como array', async () => {
+    const admin = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'admin9@t-a.es' });
+    const res = await request(crearApp())
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${admin.generateAuthToken()}`)
+      .send({ email: ['a@a.es', 'b@b.es'], name: 'X', role: 'agent' });
+
+    expect(res.status).toBe(400);
+  });
+
+  test('400 si name llega como objeto', async () => {
+    const admin = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'admin10@t-a.es' });
+    const res = await request(crearApp())
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${admin.generateAuthToken()}`)
+      .send({ email: 'tipos@t-a.es', name: { toString: () => 'inyectado' }, role: 'agent' });
+
+    expect(res.status).toBe(400);
+  });
+
+  test('400 si role llega como array', async () => {
+    const admin = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'admin11@t-a.es' });
+    const res = await request(crearApp())
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${admin.generateAuthToken()}`)
+      .send({ email: 'tipos2@t-a.es', name: 'X', role: ['agent', 'admin'] });
+
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('super_admin eligiendo tenant explicitamente: validacion del tenantId', () => {
+  function superAdmin() {
+    return crearUsuario({ role: 'super_admin', tenantId: undefined, email: `super-${Date.now()}@plataforma.es` });
+  }
+
+  test('400 si el tenantId no es un ObjectId valido', async () => {
+    const super_ = await superAdmin();
+    const res = await request(crearApp())
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${super_.generateAuthToken()}`)
+      .send({ email: 'tenantinvalido@t-a.es', name: 'X', role: 'agent', tenantId: 'no-es-un-objectid' });
+
+    expect(res.status).toBe(400);
+  });
+
+  test('400 si el tenantId es un ObjectId valido pero no existe ningun tenant con el', async () => {
+    const super_ = await superAdmin();
+    const res = await request(crearApp())
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${super_.generateAuthToken()}`)
+      .send({ email: 'tenantfantasma@t-a.es', name: 'X', role: 'agent', tenantId: '507f1f77bcf86cd799439011' });
+
+    expect(res.status).toBe(400);
+    expect(await User.findOne({ email: 'tenantfantasma@t-a.es' })).toBeNull();
+  });
+
+  test('400 si el tenant existe pero esta suspendido/cancelado (no activo)', async () => {
+    const tenantSuspendido = await Tenant.create({
+      name: 'Tenant Suspendido',
+      slug: `tenant-susp-${Date.now()}`,
+      status: 'suspended',
+      businessInfo: { eori: 'ESSUSPEND01' }
+    });
+    const super_ = await superAdmin();
+
+    const res = await request(crearApp())
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${super_.generateAuthToken()}`)
+      .send({ email: 'tenantsuspendido@t-a.es', name: 'X', role: 'agent', tenantId: String(tenantSuspendido._id) });
+
+    expect(res.status).toBe(400);
+    expect(await User.findOne({ email: 'tenantsuspendido@t-a.es' })).toBeNull();
+  });
+
+  test('201 si el tenantId es valido, existe y esta activo', async () => {
+    const super_ = await superAdmin();
+    const res = await request(crearApp())
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${super_.generateAuthToken()}`)
+      .send({ email: 'tenantok@t-a.es', name: 'X', role: 'agent', tenantId: String(tenantA._id) });
+
+    expect(res.status).toBe(201);
   });
 });
 
