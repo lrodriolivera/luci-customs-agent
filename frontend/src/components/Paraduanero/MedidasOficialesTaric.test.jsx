@@ -80,7 +80,30 @@ describe('<MedidasOficialesTaric />', () => {
     render(<MedidasOficialesTaric partidas={[partida([], { taricCode: '8471300000', originCountry: 'CN', dualUse: [{ categoria: '4A001', nota: 'DU216' }, { categoria: '5A002', nota: 'DU229' }] })]} />)
 
     expect(screen.getByText('Posible producto de doble uso (Reglamento (UE) 2021/821)')).toBeInTheDocument()
-    expect(screen.getByText('4A001, 5A002')).toBeInTheDocument()
+    expect(screen.getByText('4A001')).toBeInTheDocument()
+    expect(screen.getByText('5A002')).toBeInTheDocument()
     expect(screen.queryByText('El TARIC no aplica medidas de control a estas partidas.')).not.toBeInTheDocument()
+  })
+
+  test('cada categoría de doble uso lleva el encabezado oficial del anexo I y la fuente enlazada', () => {
+    const dualUse = [
+      { categoria: '5A002', nota: 'DU229', articulo: '5A002', descripcion: 'Sistemas, equipos y componentes destinados a la "seguridad de la información", según se indica:' },
+      { categoria: '0A001a', nota: 'DU583', articulo: '0A001', descripcion: null }
+    ]
+    const dualUseSource = { fecha: '2026-09-21', enlace: 'https://publications.europa.eu/resource/celex/02021R0821-20260921' }
+    render(<MedidasOficialesTaric partidas={[partida([], { taricCode: '8471300000', originCountry: 'CN', dualUse, dualUseSource })]} />)
+
+    expect(screen.getByText(/Sistemas, equipos y componentes destinados a la "seguridad de la información"/)).toBeInTheDocument()
+    expect(screen.getByText('0A001a')).toBeInTheDocument()
+    const enlace = screen.getByRole('link', { name: /21\/09\/2026/ })
+    expect(enlace).toHaveAttribute('href', dualUseSource.enlace)
+    expect(enlace).toHaveAttribute('rel', expect.stringContaining('noopener'))
+  })
+
+  test('el origen de la medida se muestra con el nombre que llega (ya en español)', () => {
+    const medida = { ...veterinario, ambito: { ...veterinario.ambito, origenNombre: 'Todos los terceros países' } }
+    render(<MedidasOficialesTaric partidas={[partida([medida])]} />)
+
+    expect(screen.getByText(/Regulation 0632\/21 · Todos los terceros países/)).toBeInTheDocument()
   })
 })

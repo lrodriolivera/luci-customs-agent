@@ -1,4 +1,8 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
+
+/** «2026-09-21» -> «21/09/2026». */
+const fechaLegible = (iso) => String(iso || '').split('-').reverse().join('/')
 
 /**
  * Medidas de control de importación que el TARIC de la UE aplica a cada
@@ -11,6 +15,7 @@ import React from 'react'
  * @param {{ partidas?: Array<{ itemNumber?: number, taricCode: string, originCountry: string, source?: { mes?: string }, measures: object[] }> }} props
  */
 export default function MedidasOficialesTaric({ partidas = [] }) {
+  const { t } = useTranslation()
   const conMedidas = partidas.filter((p) => p.measures?.length > 0 || p.dualUse?.length > 0)
   const conSanciones = partidas.some((p) => p.measures?.some((m) => m.sancion))
   if (partidas.length === 0) return null
@@ -81,9 +86,23 @@ export default function MedidasOficialesTaric({ partidas = [] }) {
           {partida.dualUse?.length > 0 && (
             <div className="mt-2 rounded bg-white/70 p-2 text-xs text-gray-700">
               <p className="font-medium text-gray-800">Posible producto de doble uso (Reglamento (UE) 2021/821)</p>
-              <p className="mt-1">
-                Categorías con las que se corresponde este código: <span className="font-mono">{partida.dualUse.map((d) => d.categoria).join(', ')}</span>.
-              </p>
+              <p className="mt-1">Categorías con las que se corresponde este código:</p>
+              <ul className="mt-1 space-y-1">
+                {partida.dualUse.map((d) => (
+                  <li key={d.categoria}>
+                    <span className="font-mono font-semibold">{d.categoria}</span>
+                    {d.descripcion ? ` — ${d.descripcion}` : ''}
+                  </li>
+                ))}
+              </ul>
+              {partida.dualUseSource?.enlace && (
+                <p className="mt-1 text-gray-500">
+                  {t('taricControls.dualUseSource', 'Encabezados del anexo I, versión consolidada en español:')}{' '}
+                  <a href={partida.dualUseSource.enlace} target="_blank" rel="noopener noreferrer" className="underline">
+                    {fechaLegible(partida.dualUseSource.fecha)}
+                  </a>
+                </p>
+              )}
               <p className="mt-1">Es orientativo: depende de las características técnicas. Si se exporta, puede necesitar licencia.</p>
             </div>
           )}

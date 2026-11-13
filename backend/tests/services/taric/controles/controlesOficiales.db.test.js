@@ -50,6 +50,9 @@ describe('medidas de control: carga y consulta', () => {
     // La prohibición va la primera.
     expect(brasil.medidas.map((m) => [m.tipo, m.prohibicion])).toEqual([['277', true], ['410', false], ['750', false]]);
     expect(brasil.medidas[1]).toMatchObject({ nombre: 'Control veterinario', baseLegal: 'Regulation 0632/21' });
+    // El origen de la medida sale con su nombre oficial en español.
+    expect(brasil.medidas[1].ambito).toEqual({ codigo: '0201000000', origen: '1008', origenNombre: 'Todos los terceros países' });
+    expect(brasil.medidas[0].ambito.origenNombre).toBe('Brasil');
     expect(brasil.medidas[1].condiciones[0].certificados).toEqual([{ codigo: 'N853', descripcion: 'Documento Sanitario Común de Entrada (DSCE-P)' }]);
 
     // Suiza está excluida del control de ecológicos; China no tiene la prohibición.
@@ -83,7 +86,7 @@ describe('medidas de control: carga y consulta', () => {
 
   test('sin datos cargados la consulta responde vacía y sin fuente', async () => {
     const vacio = await controlesPara('0201100000', 'BR', modelos);
-    expect(vacio).toEqual({ codigo: '0201100000', origen: 'BR', fuente: null, medidas: [], dobleUso: [] });
+    expect(vacio).toEqual({ codigo: '0201100000', origen: 'BR', fuente: null, medidas: [], dobleUso: [], fuenteDobleUso: null });
   });
 });
 
@@ -115,8 +118,15 @@ describe('sanciones y doble uso', () => {
     const cargado = await sincronizarDobleUso({ TaricReference, ...origenTabla('t1', tabla), ahora: AHORA });
     expect(cargado.codigos).toBe(MINIMO_DE_CODIGOS_DOBLE_USO + 2);
 
-    expect((await controlesPara('8401100010', 'CN', modelos)).dobleUso).toEqual([{ categoria: '0A001a', nota: 'DU583' }, { categoria: '0B001', nota: 'DU001' }]);
-    expect((await controlesPara('6302100000', 'CN', modelos)).dobleUso).toEqual([]);
+    const reactor = await controlesPara('8401100010', 'CN', modelos);
+    expect(reactor.dobleUso.map((d) => [d.categoria, d.nota, d.articulo])).toEqual([['0A001a', 'DU583', '0A001'], ['0B001', 'DU001', '0B001']]);
+    // Encabezado oficial en español del artículo del anexo I, con su fuente.
+    expect(reactor.dobleUso[0].descripcion).toMatch(/^"Reactores nucleares" y equipos y componentes/);
+    expect(reactor.dobleUso[1].descripcion).toMatch(/^Plantas para la separación de isótopos/);
+    expect(reactor.fuenteDobleUso).toMatchObject({ fecha: '2026-09-21', enlace: 'https://publications.europa.eu/resource/celex/02021R0821-20260921' });
+    const sinDobleUso = await controlesPara('6302100000', 'CN', modelos);
+    expect(sinDobleUso.dobleUso).toEqual([]);
+    expect(sinDobleUso.fuenteDobleUso).toBeNull();
   });
 
   test('la misma tabla no se vuelve a cargar; una tabla incompleta no sustituye la cargada', async () => {

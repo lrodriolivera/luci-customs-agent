@@ -92,6 +92,22 @@ describe('paraduaneroController (BD real en memoria)', () => {
       expect(res.body.data.totalGoods).toBe(1);
     });
 
+    test('las partidas con posible doble uso llevan el encabezado oficial en español y su fuente', async () => {
+      const TaricReference = require('../../src/models/TaricReference');
+      await TaricReference.create({ clase: 'dobleUso', codigo: '847130', datos: { entradas: [{ categoria: '5A002', nota: 'DU229' }] } });
+      const exp = await sembrarExpedition(ORG_A);
+      exp.goods[0].taricCode = '8471300000';
+      exp.goods[0].originCountry = 'CN';
+      await exp.save();
+      paraduaneroService.analyzeExpedition.mockResolvedValue([]);
+      const res = mockRes();
+      await ctrl.analyzeExpedition(reqA({ params: { expeditionId: exp._id.toString() } }), res);
+      const [partida] = res.body.data.officialMeasures;
+      expect(partida.dualUse[0]).toMatchObject({ categoria: '5A002', articulo: '5A002' });
+      expect(partida.dualUse[0].descripcion).toMatch(/"seguridad de la información"/);
+      expect(partida.dualUseSource).toMatchObject({ fecha: '2026-09-21' });
+    });
+
     test('404 si el expediente es de otro tenant (guard)', async () => {
       const exp = await sembrarExpedition(ORG_B);
       const res = mockRes();

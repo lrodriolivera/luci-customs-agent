@@ -5,6 +5,7 @@
 const { prefijosDe } = require('./medidasControl');
 const { nombreDeTipo, esProhibicion } = require('./tiposDeMedida');
 const { regimenDeSanciones } = require('./sanciones');
+const { descripcionDeCategoria, articuloDeCategoria, nombreDeOrigen, textosDobleUso } = require('./textosOficialesEs');
 
 const FUENTE = 'Comisión Europea - TARIC (CIRCABC)';
 
@@ -13,6 +14,12 @@ function modelosPorDefecto() {
     TaricControlMeasure: require('../../../models/TaricControlMeasure'),
     TaricReference: require('../../../models/TaricReference')
   };
+}
+
+/** Cita de la version consolidada de la que salen los encabezados del anexo I. */
+function fuenteDelAnexoI() {
+  const { nombre, fecha, version, enlace } = textosDobleUso().fuente;
+  return { nombre, fecha, version, enlace };
 }
 
 /**
@@ -34,7 +41,9 @@ async function controlesPara(codigo, pais, modelos = modelosPorDefecto()) {
   const dobleUso = [];
   for (const c of correlaciones) {
     for (const e of c.datos?.entradas || []) {
-      if (!dobleUso.some((d) => d.categoria === e.categoria)) dobleUso.push({ categoria: e.categoria, nota: e.nota });
+      if (dobleUso.some((d) => d.categoria === e.categoria)) continue;
+      // Encabezado oficial en espanol del articulo del anexo I del Reglamento (UE) 2021/821.
+      dobleUso.push({ categoria: e.categoria, nota: e.nota, articulo: articuloDeCategoria(e.categoria), descripcion: descripcionDeCategoria(e.categoria) });
     }
   }
   dobleUso.sort((a, b) => a.categoria.localeCompare(b.categoria));
@@ -63,7 +72,8 @@ async function controlesPara(codigo, pais, modelos = modelosPorDefecto()) {
       prohibicion: esProhibicion(m.tipo),
       // Regimen de sanciones de la UE al que pertenece la medida, si lo es.
       sancion: regimenDeSanciones(m.baseLegal),
-      ambito: { codigo: m.codigo, origen: m.origen, origenNombre: m.origenNombre },
+      // Nombre oficial en espanol del pais o grupo (TARIC); si no lo hay, el del fichero.
+      ambito: { codigo: m.codigo, origen: m.origen, origenNombre: nombreDeOrigen(m.origen, m.origenNombre) },
       condiciones: (m.condiciones || []).map((g) => ({
         grupo: g.grupo,
         certificados: (g.certificados || []).map((c) => ({ codigo: c, descripcion: descripciones[c] || null })),
@@ -81,7 +91,8 @@ async function controlesPara(codigo, pais, modelos = modelosPorDefecto()) {
     fuente: meta?.datos ? { nombre: FUENTE, mes: meta.datos.mes, actualizado: meta.datos.actualizado } : null,
     medidas,
     // Posible doble uso (Reglamento (UE) 2021/821): orientativo, sobre todo para exportar.
-    dobleUso
+    dobleUso,
+    fuenteDobleUso: dobleUso.length ? fuenteDelAnexoI() : null
   };
 }
 
