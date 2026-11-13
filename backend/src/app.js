@@ -146,23 +146,9 @@ app.use(cors({
 // Rate limiting - distributed via Redis when available, per-worker otherwise.
 // Each limiter gets its own Store instance with a distinct prefix; sharing a
 // single Store across limiters triggers ERR_ERL_DOUBLE_COUNT in v7.
-let makeRateLimitStore = () => undefined;
-if (process.env.CACHE_BACKEND === 'redis' || process.env.RATELIMIT_BACKEND === 'redis') {
-  try {
-    const { default: RedisStore } = require('rate-limit-redis');
-    const { getRedisClient } = require('./services/cacheService');
-    const client = getRedisClient();
-    if (client) {
-      makeRateLimitStore = (prefix) => new RedisStore({
-        sendCommand: (...args) => client.call(...args),
-        prefix
-      });
-      logger.info('Rate limit: distributed (Redis)');
-    }
-  } catch (err) {
-    logger.warn('rate-limit-redis not available, using in-memory store', { error: err.message });
-  }
-}
+// La fabrica vive en utils/rateLimitStore.js: routes/auth.js la reutiliza
+// para el limitador propio de /admin/invite (por usuario, no por IP).
+const { makeRateLimitStore } = require('./utils/rateLimitStore');
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -170,11 +156,14 @@ const limiter = rateLimit({
   store: makeRateLimitStore('rl:general:'),
   message: { success: false, error: 'Demasiadas solicitudes, por favor intente mas tarde' },
   skip: (req) => req.path === '/api/health' ||
-    /^\/api\/auth\/(login|register|forgot-password|admin\/invite)$/.test(req.path)
+    /^\/api\/auth\/(login|register|forgot-password)$/.test(req.path)
 });
 app.use('/api/', limiter);
 
-// Strict rate limiting for auth endpoints (brute force protection)
+// Strict rate limiting for auth endpoints (brute force protection).
+// /admin/invite NO esta aqui: tiene su propio limitador por usuario en
+// routes/auth.js (ver arreglo 6 de la revision de seguridad del 4.2), que ya
+// no comparte este contador por IP con login/registro/recuperacion.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -186,7 +175,6 @@ const authLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
-app.use('/api/auth/admin/invite', authLimiter);
 
 // Stripe webhook (MUST come before express.json to preserve raw body for signature verification)
 app.post('/api/payments/webhook',

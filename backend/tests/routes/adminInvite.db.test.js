@@ -520,9 +520,40 @@ describe('primer acceso: cambio de contrasena obligatorio', () => {
   });
 });
 
-describe('limitador de peticiones', () => {
-  test('app.js aplica el limitador estricto de auth a /api/auth/admin/invite', () => {
+// Arreglo 6 de la revision de seguridad del 4.2: un limitador propio para la
+// invitacion, despues de auth, con clave por usuario -- ya no comparte el
+// contador de authLimiter (login/registro/recuperacion), que es por IP y en
+// app.js se monta ANTES de auth, asi que no podia acotar por admin.
+describe('limitador de peticiones propio de la invitacion', () => {
+  test('un admin que supera el limite recibe 429; no afecta a otro admin', async () => {
+    const admin1 = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'limiteadmin1@t-a.es' });
+    const admin2 = await crearUsuario({ role: 'admin', tenantId: tenantA._id, email: 'limiteadmin2@t-a.es' });
+    const app = crearApp();
+    const token1 = admin1.generateAuthToken();
+
+    let ultima;
+    for (let i = 0; i < 21; i++) {
+      ultima = await request(app)
+        .post('/api/auth/admin/invite')
+        .set('Authorization', `Bearer ${token1}`)
+        .send({ email: `limite-invitado-${i}@t-a.es`, name: 'Invitado', role: 'agent' });
+    }
+    expect(ultima.status).toBe(429);
+
+    const otroAdmin = await request(app)
+      .post('/api/auth/admin/invite')
+      .set('Authorization', `Bearer ${admin2.generateAuthToken()}`)
+      .send({ email: 'limite-otro-admin@t-a.es', name: 'Invitado', role: 'agent' });
+    expect(otroAdmin.status).toBe(201);
+  });
+
+  test('ya no comparte el contador de authLimiter (login/registro/recuperacion)', () => {
     const appJs = fs.readFileSync(path.join(__dirname, '../../src/app.js'), 'utf8');
-    expect(appJs).toMatch(/app\.use\(\s*['"]\/api\/auth\/admin\/invite['"]\s*,\s*authLimiter\s*\)/);
+    expect(appJs).not.toMatch(/app\.use\(\s*['"]\/api\/auth\/admin\/invite['"]\s*,\s*authLimiter\s*\)/);
+  });
+
+  test('el limitador reutiliza la fabrica de stores del proyecto (Redis cuando aplica)', () => {
+    const authRoutesJs = fs.readFileSync(path.join(__dirname, '../../src/routes/auth.js'), 'utf8');
+    expect(authRoutesJs).toMatch(/makeRateLimitStore/);
   });
 });

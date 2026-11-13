@@ -1,8 +1,27 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const { auth, requireRole } = require('../middleware/auth');
 const { authValidators } = require('../middleware/validators');
+const { makeRateLimitStore } = require('../utils/rateLimitStore');
+
+/**
+ * Limitador propio de la invitacion de usuarios, DESPUES de auth (necesita
+ * req.user) y con clave por usuario, no por IP: antes compartia el
+ * authLimiter de app.js (10 req/15min por IP), pensado para login/registro,
+ * que ni acotaba por admin ni dejaba margen razonable para invitar a varias
+ * personas desde la misma IP (una oficina, una VPN).
+ */
+const adminInviteLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  store: makeRateLimitStore('rl:admin-invite:'),
+  keyGenerator: (req) => String(req.user?._id || req.ip),
+  message: { success: false, error: 'Demasiadas invitaciones. Espera antes de invitar a mas usuarios.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
 
 /**
  * @openapi
@@ -106,7 +125,7 @@ router.put('/users/:id', auth, requireRole('admin'), authController.updateUser);
 // Cognito endpoints
 router.post('/session', authController.cognitoSession);
 router.post('/register-sync', authController.registerSync);
-router.post('/admin/invite', auth, requireRole('admin', 'super_admin'), authValidators.adminInvite, authController.adminInvite);
+router.post('/admin/invite', auth, requireRole('admin', 'super_admin'), adminInviteLimiter, authValidators.adminInvite, authController.adminInvite);
 router.post('/admin/disable/:id', auth, requireRole('admin'), authController.adminDisableUser);
 router.put('/change-password', auth, authController.cognitoChangePassword);
 
