@@ -95,7 +95,7 @@ describe('sincronizarYRegistrar', () => {
 
     expect(registro.ok).toBe(true);
     expect(registro.correccionesRetenidas).toContain('600 descripciones en español por corregir');
-    expect(registro.aplicado.correcciones).toEqual({ descripciones: 0, aranceles: 0, arancelesContrastados: 0, unidades: 0, noCalculables: 0, sinDerecho: 0 });
+    expect(registro.aplicado.correcciones).toEqual({ descripciones: 0, aranceles: 0, arancelesContrastados: 0, unidades: 0, noCalculables: 0, sinDerecho: 0, variantes: 0, compuestos: 0 });
     expect((await TaricCode.findOne({ code: '8544429090' }).lean()).description.es).toBe('Los demás');
   });
 

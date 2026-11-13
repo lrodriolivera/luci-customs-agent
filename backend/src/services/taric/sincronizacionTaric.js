@@ -13,8 +13,11 @@ const circabc = require('./circabcTaric');
 const { descripcionOficial } = require('./descripcionOficial');
 const { leerDerechosTercerosPaises, arancelDe, compararAranceles, camposDeDerecho } = require('./arancelesOficiales');
 const {
-  corregirDescripciones, corregirAranceles, evidenciaNoCalculable, evidenciaSinDerecho, sinDerechoOficial, SEPARADOR_RUTA
+  corregirDescripciones, corregirAranceles, resolverDerechoNoSimple, evidenciaSinDerecho, sinDerechoOficial, SEPARADOR_RUTA
 } = require('./correccionesCatalogo');
+const { leerDescripcionesCodigosAdicionales } = require('./codigosAdicionales');
+
+const sinNulos = (objeto) => Object.fromEntries(Object.entries(objeto).filter(([, v]) => v !== null && v !== undefined));
 
 const PAUSA_ENTRE_CONSULTAS_MS = 60;
 const TAMANO_LOTE = 2000;
@@ -41,12 +44,15 @@ async function prepararSincronizacion(catalogo, { ficheros, describir = descripc
 
   // Arancel de terceros paises oficial (puede faltar el fichero del mes).
   const derechos = f.derechosImport ? leerDerechosTercerosPaises(leerPrimeraHoja(f.derechosImport)) : null;
+  // Descripcion oficial de los codigos adicionales (para las variantes del derecho); puede faltar.
+  const codigosAdicionales = f.codigosAdicionales ? leerDescripcionesCodigosAdicionales(leerPrimeraHoja(f.codigosAdicionales)) : new Map();
   const aranceles = { ok: 0, variantes: 0, no_simple: 0, sin_medida: 0, sin_fichero: 0 };
   for (const alta of plan.altas) {
     const arancel = derechos ? arancelDe(alta.code, derechos) : { estado: 'sin_fichero' };
     // Un codigo que no se declara solo lleva arancel si la fuente se lo da a el.
     if (!alta.isLeaf && arancel.heredadoDe !== alta.code) continue;
     alta.arancel = arancel;
+    if (arancel.estado === 'variantes' || arancel.estado === 'no_simple') alta.arancelResuelto = resolverDerechoNoSimple(arancel, { codigosAdicionales });
     if (alta.isLeaf) aranceles[arancel.estado] += 1;
   }
   // Los que ya estan en el catalogo solo se comparan: aqui no se corrige ninguno.
@@ -84,8 +90,8 @@ async function prepararSincronizacion(catalogo, { ficheros, describir = descripc
   // que pasa a ser declarable en esta misma sincronizacion ya cuenta.
   const comoQuedara = catalogo.map((c) => (oficial.has(c.code) ? { ...c, isLeaf: declarables.has(c.code), isActive: true } : { ...c, isActive: false }));
   const correccionAranceles = derechos
-    ? corregirAranceles(comoQuedara, derechos)
-    : { corregir: [], contrastar: [], conflictos: [], unidades: [], noCalculables: [], sinDerecho: [] };
+    ? corregirAranceles(comoQuedara, derechos, { codigosAdicionales })
+    : { corregir: [], contrastar: [], conflictos: [], unidades: [], noCalculables: [], sinDerecho: [], variantes: [], compuestos: [] };
 
   return {
     ...plan,
@@ -104,6 +110,8 @@ async function prepararSincronizacion(catalogo, { ficheros, describir = descripc
       arancelesEnConflicto: correccionAranceles.conflictos.length,
       arancelesUnidadAUnificar: correccionAranceles.unidades.length,
       arancelesNoCalculables: correccionAranceles.noCalculables.length,
+      arancelesConVariantes: correccionAranceles.variantes.length,
+      arancelesCompuestos: correccionAranceles.compuestos.length,
       codigosSinDerechoOficial: correccionAranceles.sinDerecho.length,
       arancelesDelCatalogo: comparacion
         ? { comparados: comparacion.comparados, coinciden: comparacion.coinciden, distintos: comparacion.distintos.length, noComparables: comparacion.noComparables }
@@ -118,7 +126,7 @@ async function prepararSincronizacion(catalogo, { ficheros, describir = descripc
  * Arancel con el que entra un codigo nuevo: el oficial si es un porcentaje o un
  * importe por unidad; si no, sin dato (null) y con el motivo. Nunca se estima.
  */
-function derechosDeAlta(alta, { ahora, fuente }) {
+function derechosDeAlta(alta, { ahora, fuente, codigosAdicionales }) {
   const a = alta.arancel;
   if (a?.estado === 'ok') {
     const herencia = a.heredadoDe === alta.code ? '' : ` (heredado de ${a.heredadoDe})`;
@@ -138,10 +146,19 @@ function derechosDeAlta(alta, { ahora, fuente }) {
       }
     };
   }
-  // Sin arancel que LUCI sepa liquidar: null, no 0 (un 0 % se leeria como «libre
-  // de derechos»), y con el motivo.
+  // Variantes por codigo adicional o suma con minimo o maximo: se guardan para
+  // liquidarlas. Lo demas, sin dato: null, no 0 (un 0 % se leeria como «libre
+  // de derechos»), con el texto oficial y el dato que falta.
   if (a?.estado === 'variantes' || a?.estado === 'no_simple') {
-    return { thirdCountry: null, origen: { fuente: 'no_calculable', consultadoEl: ahora, metodo: 'fichero_circabc', rotulo: 'Third country duty', evidencia: evidenciaNoCalculable(a) } };
+    const r = alta.arancelResuelto || resolverDerechoNoSimple(a, { codigosAdicionales });
+    const dato = { ...a, code: alta.code };
+    if (r.tipo === 'variantes') {
+      return { thirdCountry: null, variantes: r.variantes, origen: origenOficial(dato, { ahora, fuente, forma: 'variantes_codigo_adicional', extra: variantesLegibles(r.variantes) }) };
+    }
+    if (r.tipo === 'compuesto') {
+      return { ...sinNulos(r.campos), formula: r.formula, origen: origenOficial(dato, { ahora, fuente, forma: 'compuesto' }) };
+    }
+    return { thirdCountry: null, origen: origenNoCalculable({ ...r, texto: a.texto }, ahora) };
   }
   if (a?.estado === 'sin_medida' && sinDerechoOficial(alta.code)) {
     return { thirdCountry: null, origen: { fuente: 'sin_derecho_oficial', consultadoEl: ahora, metodo: 'fichero_circabc', evidencia: evidenciaSinDerecho(alta.code, fuente) } };
@@ -168,6 +185,77 @@ function documentoDeAlta(alta, { ahora, fuente }) {
   };
 }
 
+const ROTULO = 'Third country duty';
+const CAMPOS_DEL_DERECHO = ['specific', 'combinacion', 'minimo', 'maximo', 'variantes', 'formula'];
+const legible = (c) => `${c.thirdCountry ?? 'sin dato'} %${c.specific ? ` + ${c.specific.amount} ${c.specific.unit}` : ''}`;
+const herenciaDe = (dato) => (dato.heredadoDe === dato.code ? '' : ` (heredado de ${dato.heredadoDe})`);
+
+/**
+ * Operacion que fija un derecho: rutas puntuales (`duties.thirdCountry`…),
+ * nunca el objeto `duties` entero, que borraria la sancion a Rusia y lo demas
+ * que cuelga de el. Cada campo del derecho se fija o se borra: no puede quedar
+ * un importe por unidad, un minimo, unas variantes o una formula de una carga
+ * anterior.
+ */
+function fijarDerecho(code, campos, origen, { ahora, sancion } = {}) {
+  const $set = { 'duties.thirdCountry': campos.thirdCountry ?? null, 'duties.origen': origen, lastUpdated: ahora };
+  const $unset = {};
+  for (const campo of CAMPOS_DEL_DERECHO) {
+    if (campos[campo]) $set[`duties.${campo}`] = campos[campo];
+    else $unset[`duties.${campo}`] = '';
+  }
+  // La sancion solo se escribe si la fuente la da: no se borra una contrastada a mano.
+  if (sancion) $set['duties.sancionRusiaBielorrusia'] = sancion;
+  return { updateOne: { filter: { code }, update: { $set, ...(Object.keys($unset).length > 0 ? { $unset } : {}) } } };
+}
+
+const origenOficial = (dato, { ahora, fuente, forma, extra = '' }) => ({
+  fuente: 'taric_oficial', consultadoEl: ahora, metodo: 'fichero_circabc', rotulo: dato.rotulo || ROTULO,
+  ...(forma ? { forma } : {}),
+  evidencia: `«${dato.texto}»${herenciaDe(dato)}. ${fuente}.${extra}`.slice(0, 500),
+  ...(dato.soloDestinoFinal ? { soloDestinoFinal: true } : {})
+});
+
+const variantesLegibles = (variantes) => ` Segun codigo adicional: ${variantes.map((v) => `${v.codigoAdicional} ${v.descripcion || 'sin descripcion oficial'}: ${v.texto}`).join('; ')}.`;
+
+/**
+ * Operaciones de escritura de las correcciones de aranceles (`corregirAranceles`).
+ *
+ * @param {object} a resultado de `corregirAranceles`
+ * @param {{ ahora: Date, fuente: string }} contexto
+ * @returns {object[]} operaciones de `bulkWrite`
+ */
+function operacionesDeAranceles(a, { ahora, fuente }) {
+  const arancel = (dato, corregido) => fijarDerecho(dato.code, dato,
+    origenOficial(dato, { ahora, fuente, extra: corregido ? ` Antes: ${legible(dato.antes)}.` : '' }), { ahora, sancion: dato.sancion });
+  return [
+    ...(a.corregir || []).map((d) => arancel(d, true)),
+    ...(a.contrastar || []).map((d) => arancel(d, false)),
+    // Misma cifra, unidad escrita de otra forma (EUR/tonne -> EUR/1000 kg): solo la unidad.
+    ...(a.unidades || []).map((d) => ({ updateOne: { filter: { code: d.code }, update: { $set: Object.fromEntries(d.unidades.map((u) => [`duties.${u.campo}.unit`, u.unit])) } } })),
+    // Varios tipos segun codigo adicional: sin tipo unico (null), con las variantes y su descripcion oficial.
+    ...(a.variantes || []).map((d) => fijarDerecho(d.code, { thirdCountry: null, variantes: d.variantes },
+      origenOficial(d, { ahora, fuente, forma: 'variantes_codigo_adicional', extra: variantesLegibles(d.variantes) }), { ahora })),
+    // Suma con minimo o maximo: la formula oficial, y el porcentaje para quien solo lee ese campo.
+    ...(a.compuestos || []).map((d) => fijarDerecho(d.code, { thirdCountry: d.thirdCountry, specific: d.specific, combinacion: d.combinacion, formula: d.formula },
+      origenOficial(d, { ahora, fuente, forma: 'compuesto' }), { ahora })),
+    // Derecho oficial que LUCI no sabe liquidar: el dato antiguo se queda, marcado y con el texto oficial y lo que falta.
+    ...(a.noCalculables || []).map((d) => ({
+      updateOne: {
+        filter: { code: d.code },
+        update: { $set: { 'duties.origen': origenNoCalculable(d, ahora), lastUpdated: ahora } }
+      }
+    })),
+    // Capitulos 98 y 99: el TARIC no les asigna derecho de terceros paises.
+    ...(a.sinDerecho || []).map((d) => ({ updateOne: { filter: { code: d.code }, update: { $set: { 'duties.thirdCountry': null, 'duties.origen': { fuente: 'sin_derecho_oficial', consultadoEl: ahora, metodo: 'fichero_circabc', evidencia: evidenciaSinDerecho(d.code, fuente) }, lastUpdated: ahora } } } }))
+  ];
+}
+
+const origenNoCalculable = (d, ahora) => ({
+  fuente: 'no_calculable', consultadoEl: ahora, metodo: 'fichero_circabc', rotulo: ROTULO, evidencia: d.evidencia,
+  ...(d.texto ? { textoOficial: d.texto } : {}), ...(d.forma ? { forma: d.forma } : {}), ...(d.faltan ? { faltan: d.faltan } : {})
+});
+
 /**
  * Escribe el plan en el catalogo. Las bajas no se borran: quedan inactivas.
  *
@@ -186,7 +274,7 @@ async function aplicarSincronizacion(plan, { TaricCode, ahora = new Date(), corr
   ];
   if (operaciones.length > 0) await TaricCode.bulkWrite(operaciones, { ordered: false });
 
-  const correcciones = { descripciones: 0, aranceles: 0, arancelesContrastados: 0, unidades: 0, noCalculables: 0, sinDerecho: 0 };
+  const correcciones = { descripciones: 0, aranceles: 0, arancelesContrastados: 0, unidades: 0, noCalculables: 0, sinDerecho: 0, variantes: 0, compuestos: 0 };
   if (corregir && plan.correcciones) {
     const fijar = (cambio) => {
       const set = { lastUpdated: ahora };
@@ -195,51 +283,17 @@ async function aplicarSincronizacion(plan, { TaricCode, ahora = new Date(), corr
       if (cambio.legalDescription) { set.legalDescription = cambio.legalDescription; set.keywords = cambio.keywords; }
       return { updateOne: { filter: { code: cambio.code }, update: { $set: set } } };
     };
-    // Rutas puntuales (`duties.thirdCountry`), nunca el objeto `duties` entero:
-    // asignarlo borraria la sancion a Rusia y lo demas que cuelga de el.
-    const legible = (c) => `${c.thirdCountry ?? 'sin dato'} %${c.specific ? ` + ${c.specific.amount} ${c.specific.unit}` : ''}`;
-    const arancel = (dato, corregido) => {
-      const antes = corregido ? ` Antes: ${legible(dato.antes)}.` : '';
-      const herencia = dato.heredadoDe === dato.code ? '' : ` (heredado de ${dato.heredadoDe})`;
-      const $set = {
-        'duties.thirdCountry': dato.thirdCountry,
-        'duties.origen': {
-          fuente: 'taric_oficial', consultadoEl: ahora, metodo: 'fichero_circabc', rotulo: dato.rotulo || 'Third country duty',
-          evidencia: `«${dato.texto}»${herencia}. ${fuente}.${antes}`.slice(0, 500),
-          ...(dato.soloDestinoFinal ? { soloDestinoFinal: true } : {})
-        },
-        lastUpdated: ahora
-      };
-      const $unset = {};
-      // Cada campo del derecho se fija o se borra: no puede quedar un importe
-      // por unidad, un minimo o una combinacion de una carga anterior.
-      for (const campo of ['specific', 'combinacion', 'minimo', 'maximo']) {
-        if (dato[campo]) $set[`duties.${campo}`] = dato[campo];
-        else $unset[`duties.${campo}`] = '';
-      }
-      // La sancion solo se escribe si la fuente la da: no se borra una contrastada a mano.
-      if (dato.sancion) $set['duties.sancionRusiaBielorrusia'] = dato.sancion;
-      return { updateOne: { filter: { code: dato.code }, update: { $set, ...(Object.keys($unset).length > 0 ? { $unset } : {}) } } };
-    };
     const a = plan.correcciones.aranceles;
-    const lotes = [
-      ...plan.correcciones.descripciones.map(fijar),
-      ...a.corregir.map((d) => arancel(d, true)),
-      ...a.contrastar.map((d) => arancel(d, false)),
-      // Misma cifra, unidad escrita de otra forma (EUR/tonne -> EUR/1000 kg): solo la unidad.
-      ...(a.unidades || []).map((d) => ({ updateOne: { filter: { code: d.code }, update: { $set: Object.fromEntries(d.unidades.map((u) => [`duties.${u.campo}.unit`, u.unit])) } } })),
-      // Derecho oficial que LUCI no sabe liquidar: el dato antiguo se queda, marcado y con el texto oficial.
-      ...(a.noCalculables || []).map((d) => ({ updateOne: { filter: { code: d.code }, update: { $set: { 'duties.origen': { fuente: 'no_calculable', consultadoEl: ahora, metodo: 'fichero_circabc', rotulo: 'Third country duty', evidencia: d.evidencia }, lastUpdated: ahora } } } })),
-      // Capitulos 98 y 99: el TARIC no les asigna derecho de terceros paises.
-      ...(a.sinDerecho || []).map((d) => ({ updateOne: { filter: { code: d.code }, update: { $set: { 'duties.thirdCountry': null, 'duties.origen': { fuente: 'sin_derecho_oficial', consultadoEl: ahora, metodo: 'fichero_circabc', evidencia: evidenciaSinDerecho(d.code, fuente) }, lastUpdated: ahora } } } }))
-    ];
+    const lotes = [...plan.correcciones.descripciones.map(fijar), ...operacionesDeAranceles(a, { ahora, fuente })];
     for (let i = 0; i < lotes.length; i += TAMANO_LOTE) await TaricCode.bulkWrite(lotes.slice(i, i + TAMANO_LOTE), { ordered: false });
     correcciones.descripciones = plan.correcciones.descripciones.length;
-    correcciones.aranceles = plan.correcciones.aranceles.corregir.length;
-    correcciones.arancelesContrastados = plan.correcciones.aranceles.contrastar.length;
+    correcciones.aranceles = a.corregir.length;
+    correcciones.arancelesContrastados = a.contrastar.length;
     correcciones.unidades = (a.unidades || []).length;
     correcciones.noCalculables = (a.noCalculables || []).length;
     correcciones.sinDerecho = (a.sinDerecho || []).length;
+    correcciones.variantes = (a.variantes || []).length;
+    correcciones.compuestos = (a.compuestos || []).length;
   }
 
   if (plan.altas.length > 0) {
@@ -248,4 +302,4 @@ async function aplicarSincronizacion(plan, { TaricCode, ahora = new Date(), corr
   return { altas: plan.altas.length, bajas: plan.bajas.length, reactivados: plan.reactivar.length, declarable: plan.declarable.length, nivel: plan.nivel.length, correcciones };
 }
 
-module.exports = { prepararSincronizacion, aplicarSincronizacion, documentoDeAlta, derechosDeAlta };
+module.exports = { prepararSincronizacion, aplicarSincronizacion, documentoDeAlta, derechosDeAlta, operacionesDeAranceles };

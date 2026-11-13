@@ -13,6 +13,8 @@ const UNIDADES = {
   'EUR/100 kg': { magnitud: 'peso', por: 100 },
   'EUR/1000 kg': { magnitud: 'peso', por: 1000 },
   'EUR/kg': { magnitud: 'peso', por: 1 },
+  // «EUR DTN G»: por 100 kg de peso BRUTO (lechugas, vidrio colado)
+  'EUR/100 kg brutos': { magnitud: 'pesoBruto', por: 100 },
   'EUR/hl': { magnitud: 'volumen', por: 100 },      // la cantidad se declara en litros
   'EUR/1000 p/st': { magnitud: 'unidades', por: 1000 },
   'EUR/p/st': { magnitud: 'unidades', por: 1 }
@@ -20,7 +22,9 @@ const UNIDADES = {
 
 /** Codigo de unidad del TARIC (fichero oficial) -> unidad canonica. */
 const UNIDAD_POR_CODIGO_TARIC = {
-  DTN: 'EUR/100 kg', TNE: 'EUR/1000 kg', KGM: 'EUR/kg', HLT: 'EUR/hl', MIL: 'EUR/1000 p/st', NAR: 'EUR/p/st'
+  DTN: 'EUR/100 kg', TNE: 'EUR/1000 kg', KGM: 'EUR/kg', HLT: 'EUR/hl', MIL: 'EUR/1000 p/st', NAR: 'EUR/p/st',
+  // Con calificador: solo lo lee `interpretarFormula` (formasDerecho.js)
+  'DTN G': 'EUR/100 kg brutos'
 };
 
 // Otras formas de escribir la misma unidad. No incluye las rotas ambiguas
@@ -29,6 +33,7 @@ const SINONIMOS = {
   'eur/100kg': 'EUR/100 kg', 'eur/dtn': 'EUR/100 kg',
   'eur/1000kg': 'EUR/1000 kg', 'eur/tonne': 'EUR/1000 kg', 'eur/t': 'EUR/1000 kg', 'eur/tne': 'EUR/1000 kg',
   'eur/kg': 'EUR/kg', 'eur/hl': 'EUR/hl', 'eur/hlt': 'EUR/hl',
+  'eur/100kgbrutos': 'EUR/100 kg brutos',
   'eur/1000p/st': 'EUR/1000 p/st', 'eur/p/st': 'EUR/p/st', 'eur/unit': 'EUR/p/st'
 };
 
@@ -42,14 +47,15 @@ function unidadCanonica(unidad) {
  * Importe de un derecho por unidad.
  *
  * @param {{ amount: number, unit: string }} especifico
- * @param {{ netWeight?: number, quantity?: number }} mercancia peso neto en kg; cantidad en litros o en unidades
+ * @param {{ netWeight?: number, grossWeight?: number, quantity?: number }} mercancia pesos en kg; cantidad en litros o en unidades
  * @returns {number|null} null si la unidad no se reconoce o falta el dato de la mercancia: NO es un 0
  */
-function importeEspecifico(especifico, { netWeight, quantity } = {}) {
+function importeEspecifico(especifico, { netWeight, grossWeight, quantity } = {}) {
   const definicion = UNIDADES[unidadCanonica(especifico?.unit)];
   const importe = Number(especifico?.amount);
   if (!definicion || !Number.isFinite(importe)) return null;
-  const base = definicion.magnitud === 'peso' ? Number(netWeight) : Number(quantity);
+  const bases = { peso: netWeight, pesoBruto: grossWeight };
+  const base = Number(definicion.magnitud in bases ? bases[definicion.magnitud] : quantity);
   if (!Number.isFinite(base) || base <= 0) return null;
   return (base / definicion.por) * importe;
 }

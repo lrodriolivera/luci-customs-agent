@@ -146,7 +146,8 @@ function leerDerechosTercerosPaises(filas, { fecha = new Date() } = {}) {
  * cuelga (por prefijo: 10, 8, 6, 4 y 2 digitos).
  *
  * @returns {{ estado: 'ok', derecho: object, texto: string, heredadoDe: string }
- *   | { estado: 'variantes' | 'no_simple', texto: string, heredadoDe: string }
+ *   | { estado: 'variantes', texto: string, heredadoDe: string, variantes: Array<{ codigoAdicional, texto }> }
+ *   | { estado: 'no_simple', texto: string, heredadoDe: string }
  *   | { estado: 'sin_medida' }}
  */
 function arancelDe(codigo, derechos) {
@@ -155,17 +156,25 @@ function arancelDe(codigo, derechos) {
     const medidas = derechos.get(origen);
     if (!medidas) continue;
     const textos = [...new Set(medidas.map((m) => m.texto))];
-    // Varios tipos (por codigo adicional) o un tipo ligado a un codigo adicional:
-    // no existe «el» arancel del codigo.
-    if (textos.length > 1 || medidas.some((m) => m.codigoAdicional)) {
-      return { estado: 'variantes', texto: textos.join(' | ').slice(0, 300), heredadoDe: origen };
+    const codigosAdicionales = medidas.map((m) => m.codigoAdicional).filter(Boolean);
+    // El mismo derecho en todos sus codigos adicionales (cereales: 2550, 2551 y
+    // 2552, segun la via de entrada) es un unico derecho. Varios tipos, o un
+    // tipo ligado a un solo codigo adicional: no existe «el» arancel del codigo.
+    const mismoEnTodos = textos.length === 1 && medidas.length > 1 && codigosAdicionales.length === medidas.length;
+    if (!mismoEnTodos && (textos.length > 1 || codigosAdicionales.length > 0)) {
+      const variantes = medidas.map((m) => ({ codigoAdicional: m.codigoAdicional, texto: m.texto }))
+        .sort((a, b) => a.codigoAdicional.localeCompare(b.codigoAdicional));
+      return { estado: 'variantes', texto: textos.join(' | ').slice(0, 300), heredadoDe: origen, variantes };
     }
     const derecho = interpretarDerecho(textos[0]);
     const soloDestinoFinal = medidas.some((m) => m.destinoFinal);
-    const extra = soloDestinoFinal ? { soloDestinoFinal: true, rotulo: ROTULO_DESTINO_FINAL } : { rotulo: ROTULO_TERCEROS_PAISES };
+    const extra = {
+      ...(soloDestinoFinal ? { soloDestinoFinal: true, rotulo: ROTULO_DESTINO_FINAL } : { rotulo: ROTULO_TERCEROS_PAISES }),
+      ...(mismoEnTodos ? { codigosAdicionales: [...codigosAdicionales].sort() } : {})
+    };
     return derecho
       ? { estado: 'ok', derecho, texto: textos[0], heredadoDe: origen, ...extra }
-      : { estado: 'no_simple', texto: textos[0].slice(0, 300), heredadoDe: origen };
+      : { estado: 'no_simple', texto: textos[0].slice(0, 300), heredadoDe: origen, ...(mismoEnTodos ? { codigosAdicionales: extra.codigosAdicionales } : {}) };
   }
   return { estado: 'sin_medida' };
 }

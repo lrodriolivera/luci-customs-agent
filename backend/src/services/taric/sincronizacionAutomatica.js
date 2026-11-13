@@ -21,7 +21,8 @@ const PROYECCION = {
   _id: 0, code: 1, level: 1, isLeaf: 1, isActive: 1, legalDescription: 1, 'altaDiaria.enVigorDesde': 1,
   'description.es': 1, 'description.en': 1,
   'duties.thirdCountry': 1, 'duties.specific': 1, 'duties.combinacion': 1, 'duties.minimo': 1, 'duties.maximo': 1,
-  'duties.sancionRusiaBielorrusia': 1, 'duties.origen.fuente': 1, 'duties.origen.evidencia': 1
+  'duties.sancionRusiaBielorrusia': 1, 'duties.variantes': 1, 'duties.formula': 1,
+  'duties.origen.fuente': 1, 'duties.origen.evidencia': 1
 };
 
 const cargarCatalogo = (TaricCode) => TaricCode.find({}, PROYECCION).lean();
@@ -47,7 +48,9 @@ function tocaSincronizar(ahora, ultimoIntento) {
 /** Motivo para no aplicar solas las correcciones de lo existente, o null. */
 function motivoParaRetenerCorrecciones(plan) {
   const descripciones = plan.correcciones?.descripciones.filter((d) => d.es).length || 0;
-  const aranceles = plan.correcciones?.aranceles.corregir.length || 0;
+  // Variantes y formulas cambian como se liquida el codigo: cuentan como aranceles corregidos.
+  const a = plan.correcciones?.aranceles;
+  const aranceles = (a?.corregir.length || 0) + (a?.variantes?.length || 0) + (a?.compuestos?.length || 0);
   if (descripciones > MAX_DESCRIPCIONES_AUTOMATICAS) {
     return `${descripciones} descripciones en español por corregir (mas de ${MAX_DESCRIPCIONES_AUTOMATICAS}): hay que revisarlo y lanzarlo a mano`;
   }
