@@ -28,8 +28,7 @@ jest.mock('../../src/services/analytics', () => ({
     exportReport: jest.fn(),
     deleteReport: jest.fn(),
     getAvailableReportTypes: jest.fn(),
-    previewReport: jest.fn(),
-    scheduleReport: jest.fn()
+    previewReport: jest.fn()
   },
   kpiService: {
     getKPIDashboard: jest.fn(),
@@ -231,24 +230,27 @@ describe('Reports', () => {
   });
 
   test('getReport devuelve 404 cuando el servicio no lo encuentra', async () => {
-    reportsService.getReport.mockReturnValue({ success: false });
+    reportsService.getReport.mockResolvedValue({ success: false });
     const res = crearRes();
     await ctrl.getReport(req({}, {}, { id: 'nope' }), res);
     expect(res.statusCode).toBe(404);
   });
 
-  test('getReport devuelve 200 cuando existe', async () => {
-    reportsService.getReport.mockReturnValue({ success: true, data: {} });
+  test('getReport devuelve 200 cuando existe y pasa el usuario (acotado por tenant en el servicio)', async () => {
+    reportsService.getReport.mockResolvedValue({ success: true, data: {} });
     const res = crearRes();
-    await ctrl.getReport(req({}, {}, { id: 'r1' }), res);
+    const peticion = req({}, {}, { id: 'r1' });
+    await ctrl.getReport(peticion, res);
     expect(res.statusCode).toBe(200);
+    expect(reportsService.getReport).toHaveBeenCalledWith('r1', peticion.user);
   });
 
-  test('listReports delega con paginacion parseada', async () => {
-    reportsService.listReports.mockReturnValue({ success: true });
+  test('listReports delega con paginacion parseada y el usuario (tenant)', async () => {
+    reportsService.listReports.mockResolvedValue({ success: true });
     const res = crearRes();
-    await ctrl.listReports(req({}, { page: '2', limit: '5' }), res);
-    expect(reportsService.listReports).toHaveBeenCalledWith(expect.objectContaining({ page: 2, limit: 5 }));
+    const peticion = req({}, { page: '2', limit: '5' });
+    await ctrl.listReports(peticion, res);
+    expect(reportsService.listReports).toHaveBeenCalledWith(expect.objectContaining({ page: 2, limit: 5 }), peticion.user);
   });
 
   test('downloadReport fija cabeceras y envia el buffer', async () => {
@@ -256,9 +258,11 @@ describe('Reports', () => {
       success: true, contentType: 'application/pdf', filename: 'r.pdf', data: Buffer.from('x')
     });
     const res = crearRes();
-    await ctrl.downloadReport(req({}, {}, { id: 'r1' }), res);
+    const peticion = req({}, {}, { id: 'r1' });
+    await ctrl.downloadReport(peticion, res);
     expect(res.headers['Content-Type']).toBe('application/pdf');
     expect(res.headers['Content-Disposition']).toMatch(/r\.pdf/);
+    expect(reportsService.exportReport).toHaveBeenCalledWith('r1', 'pdf', peticion.user);
   });
 
   test('downloadReport devuelve 404 si no existe', async () => {
@@ -269,10 +273,18 @@ describe('Reports', () => {
   });
 
   test('deleteReport devuelve 404 si no existe', async () => {
-    reportsService.deleteReport.mockReturnValue({ success: false });
+    reportsService.deleteReport.mockResolvedValue({ success: false });
     const res = crearRes();
     await ctrl.deleteReport(req({}, {}, { id: 'nope' }), res);
     expect(res.statusCode).toBe(404);
+  });
+
+  test('deleteReport pasa el usuario al servicio (acotado por tenant)', async () => {
+    reportsService.deleteReport.mockResolvedValue({ success: true });
+    const res = crearRes();
+    const peticion = req({}, {}, { id: 'r1' });
+    await ctrl.deleteReport(peticion, res);
+    expect(reportsService.deleteReport).toHaveBeenCalledWith('r1', peticion.user);
   });
 
   test('getReportTypes delega', async () => {
@@ -288,17 +300,11 @@ describe('Reports', () => {
     expect(res.statusCode).toBe(400);
   });
 
-  test('scheduleReport exige type y frequency (400)', async () => {
-    const res = crearRes();
-    await ctrl.scheduleReport(req({ type: 'financial' }), res);
-    expect(res.statusCode).toBe(400);
-  });
-
-  test('scheduleReport con type+frequency delega', async () => {
-    reportsService.scheduleReport.mockReturnValue({ success: true });
+  test('scheduleReport: no hay planificador real en el backend, responde 501', async () => {
     const res = crearRes();
     await ctrl.scheduleReport(req({ type: 'financial', frequency: 'weekly' }), res);
-    expect(res.statusCode).toBe(200);
+    expect(res.statusCode).toBe(501);
+    expect(res.body.code).toBe('NOT_IMPLEMENTED');
   });
 });
 

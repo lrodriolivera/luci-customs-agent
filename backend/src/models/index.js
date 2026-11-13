@@ -29,11 +29,13 @@ const Tenant = require('./Tenant');
 const AuditLog = require('./AuditLog');
 const EmailSuppression = require('./EmailSuppression');
 const DocumentDraft = require('./DocumentDraft');
+const Report = require('./Report');
 
 module.exports = {
   AuditLog,
   DocumentDraft,
   EmailSuppression,
+  Report,
   User,
   Expedition,
   ChatMessage,

@@ -1013,7 +1013,8 @@ export const analyticsAPI = {
     // analisis de LUCI si se pide): timeout propio, aparte de los 30s por defecto.
     generate: (data) => api.post('/api/analytics/reports/generate', data, { timeout: 120000 }),
     preview: (data) => api.post('/api/analytics/reports/preview', data),
-    schedule: (data) => api.post('/api/analytics/reports/schedule', data),
+    // No hay programacion real en el backend (ver scheduleReport en
+    // analyticsController): el boton "Programar" se retiro de la UI.
     list: (params) => api.get('/api/analytics/reports', { params }),
     get: (id) => api.get(`/api/analytics/reports/${seg(id)}`),
     download: (id, format) => api.get(`/api/analytics/reports/${seg(id)}/download`, {

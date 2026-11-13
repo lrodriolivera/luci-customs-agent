@@ -2,6 +2,9 @@
  * Los informes salen de las metricas reales del ambito, no de un simulador.
  * Lo que no tiene fuente se emite como "Sin datos", nunca como 0.
  */
+const mongoose = require('mongoose');
+const { usarBaseDeDatosEnMemoria } = require('../../helpers/memoryDb');
+
 jest.mock('../../../src/services/analytics/realMetricsService', () => ({
   NO_DISPONIBLE: {},
   cuadroDeMando: jest.fn(),
@@ -16,6 +19,8 @@ jest.mock('../../../src/services/aiService', () => ({ generateExecutiveReport: j
 
 const realMetrics = require('../../../src/services/analytics/realMetricsService');
 const reports = require('../../../src/services/analytics/reportsService');
+
+usarBaseDeDatosEnMemoria();
 
 const CUADRO = {
   simulated: false,
@@ -39,17 +44,25 @@ beforeEach(() => {
   require('../../../src/services/aiService').generateExecutiveReport.mockResolvedValue({ summary: 'ok' });
 });
 
+const T1 = () => new mongoose.Types.ObjectId().toString();
+const U1 = () => new mongoose.Types.ObjectId().toString();
+const actorDe = (tenantId, userId) => ({ id: userId, tenantId });
+
 const generar = async (tipo, opts = {}) => {
-  const r = await reports.generateReport(tipo, { userId: 'u1', includeLuciAnalysis: false, tenantId: 't1', ...opts });
+  const userId = opts.userId || U1();
+  const tenantId = 'tenantId' in opts ? opts.tenantId : T1();
+  const r = await reports.generateReport(tipo, { includeLuciAnalysis: false, ...opts, userId, tenantId });
   expect(r.success).toBe(true);
-  return reports.getReport(r.report.id, 'u1').report;
+  const leido = await reports.getReport(r.report.id, actorDe(tenantId, userId));
+  return leido.report;
 };
 
 describe('informes con datos reales', () => {
   test('consultan las metricas del ambito recibido', async () => {
-    await generar('executive_summary');
-    expect(realMetrics.cuadroDeMando.mock.calls[0][0]).toBe('t1');
-    expect(realMetrics.expedientesActivos).toHaveBeenCalledWith('t1');
+    const tenantId = T1();
+    await generar('executive_summary', { tenantId });
+    expect(realMetrics.cuadroDeMando.mock.calls[0][0]).toBe(tenantId);
+    expect(realMetrics.expedientesActivos).toHaveBeenCalledWith(tenantId);
   });
 
   test('resumen ejecutivo: secciones y cifras reales', async () => {
@@ -110,10 +123,16 @@ describe('informes con datos reales', () => {
     expect(rep.summary.highlights).toContain('Sin datos canal verde');
   });
 
-  test('ambito null (sin tenant): no consulta metricas y nada se inventa', async () => {
-    const rep = await generar('executive_summary', { tenantId: null });
+  // Antes "ambito null" generaba un informe vacio en memoria. Ahora el
+  // informe se persiste con tenantId obligatorio: sin tenant concreto no hay
+  // donde guardarlo, asi que generateReport rechaza en vez de guardar un
+  // informe huerfano que luego nadie podria listar ni leer de forma acotada.
+  test('sin tenant concreto (null): no genera, no consulta metricas', async () => {
+    const r = await reports.generateReport('executive_summary', {
+      userId: U1(), tenantId: null, includeLuciAnalysis: false
+    });
+    expect(r.success).toBe(false);
     expect(realMetrics.cuadroDeMando).not.toHaveBeenCalled();
-    expect(rep.sections.overview.totalDeclarations).toBe(0);
   });
 
   test('el informe no usa funciones simuladas ni Math.random para cifras', () => {
@@ -125,7 +144,7 @@ describe('informes con datos reales', () => {
 
 describe('previewReport', () => {
   test('la muestra sale de datos reales, no de cifras fijas', async () => {
-    const r = await reports.previewReport('executive_summary', { tenantId: 't1' });
+    const r = await reports.previewReport('executive_summary', { tenantId: T1() });
     expect(r.preview.sampleData).toEqual({ declarations: 40, dutiesCalculated: 300, rejectionRate: 10 });
   });
 

@@ -5,12 +5,16 @@
  * Generates PDF and Excel reports for customs operations
  */
 
+const mongoose = require('mongoose');
 const logger = require('../../config/logger');
 const analyticsService = require('./analyticsService');
 const realMetrics = require('./realMetricsService');
 const kpiService = require('./kpiService');
 const { panelDelAmbito } = require('./cuadroParaPanel');
 const aiService = require('../aiService');
+const auditService = require('../auditService');
+const Report = require('../../models/Report');
+const { filtroTenantOPlataforma } = require('../../utils/tenantGuard');
 
 /**
  * Report types
@@ -90,10 +94,31 @@ const REPORT_TEMPLATES = {
   }
 };
 
+/** Un informe nuevo exige un tenant real (ObjectId) y un autor autenticado. */
+const SIN_TENANT = 'No se puede generar el informe sin un tenant asociado';
+const SIN_AUTOR = 'No se puede generar el informe sin un usuario autenticado';
+
 /**
- * In-memory storage for generated reports
+ * Convierte el documento de Mongo a la forma que ya esperaban los
+ * consumidores internos (export*, controller): `id` en vez de `_id`, ids como
+ * string.
  */
-let generatedReports = new Map();
+function _presentar(doc) {
+  return {
+    id: String(doc._id),
+    type: doc.type,
+    template: doc.template,
+    format: doc.format,
+    period: doc.period,
+    generatedAt: doc.generatedAt,
+    generatedBy: doc.generatedBy ? String(doc.generatedBy) : null,
+    tenantId: doc.tenantId ? String(doc.tenantId) : null,
+    metadata: doc.metadata,
+    sections: doc.sections,
+    summary: doc.summary,
+    luciInsights: doc.luciInsights
+  };
+}
 
 /**
  * Generate a report
@@ -105,23 +130,32 @@ async function generateReport(type, options = {}) {
       throw new Error(`Unknown report type: ${type}`);
     }
 
-    const reportId = `RPT-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+    // El informe se guarda SIEMPRE con tenant: sin eso no hay forma de acotar
+    // despues quien puede leerlo, descargarlo o borrarlo. undefined (plataforma,
+    // super_admin sin tenant) y null (usuario heredado sin tenant) no son un
+    // tenant concreto: se rechazan aqui en vez de guardar un informe huerfano.
+    const { tenantId } = options;
+    if (tenantId === null || tenantId === undefined || !mongoose.Types.ObjectId.isValid(tenantId)) {
+      throw new Error(SIN_TENANT);
+    }
+    if (!options.userId || !mongoose.Types.ObjectId.isValid(options.userId)) {
+      throw new Error(SIN_AUTOR);
+    }
+
     const period = options.period || template.defaultPeriod;
 
-    logger.info(`[Reports] Generating report: ${type} (${reportId})`);
+    logger.info(`[Reports] Generating report: ${type}`);
 
     // Get analytics data based on report type
     const reportData = await _gatherReportData(type, period, options);
 
     // Build report structure
     const report = {
-      id: reportId,
       type,
       template: template.name,
       format: options.format || EXPORT_FORMATS.PDF,
       period,
       generatedAt: new Date(),
-      generatedBy: options.userId || 'system',
 
       metadata: {
         title: options.title || template.name,
@@ -150,20 +184,32 @@ async function generateReport(type, options = {}) {
       report.luciInsights = await _getLuciReportInsights(type, reportData);
     }
 
-    // Store report
-    generatedReports.set(reportId, report);
+    // Store report en Mongo, acotado al tenant que lo genero.
+    const doc = await Report.create({
+      tenantId,
+      generatedBy: options.userId,
+      type: report.type,
+      template: report.template,
+      format: report.format,
+      period: report.period,
+      metadata: report.metadata,
+      sections: report.sections,
+      summary: report.summary,
+      luciInsights: report.luciInsights,
+      generatedAt: report.generatedAt
+    });
 
-    logger.info(`[Reports] Report generated successfully: ${reportId}`);
+    logger.info(`[Reports] Report generated successfully: ${doc._id}`);
 
     return {
       success: true,
       report: {
-        id: reportId,
+        id: String(doc._id),
         type,
         title: report.metadata.title,
         format: report.format,
         generatedAt: report.generatedAt,
-        downloadUrl: `/api/analytics/reports/${reportId}/download`
+        downloadUrl: `/api/analytics/reports/${doc._id}/download`
       }
     };
 
@@ -174,89 +220,72 @@ async function generateReport(type, options = {}) {
 }
 
 /**
- * ¿Puede este usuario acceder a este informe?
- *
- * generatedReports es un Map global compartido por todos los tenants del
- * proceso. listReports ya filtraba por generatedBy, pero los accesos por id no
- * comprobaban nada: conociendo el id -- secuencial con marca de tiempo, no un
- * secreto -- se leia o borraba el informe de cualquier otro cliente.
- *
- * Un userId ausente no restringe: los informes programados se generan con
- * generatedBy 'system' y los procesos internos los consultan sin usuario.
+ * Get report by ID. `user` es el usuario autenticado (req.user): se usa para
+ * acotar la consulta a su tenant, salvo super_admin de plataforma sin tenant
+ * (filtroTenantOPlataforma). Mismo mensaje para "no existe" y "no es tuyo":
+ * distinguirlos permitiria confirmar por sondeo que un id ajeno existe.
  */
-function _esSuyo(report, userId) {
-  if (!userId) return true;
-  return report.generatedBy === userId || report.generatedBy === 'system';
-}
-
-/**
- * Get report by ID
- */
-function getReport(reportId, userId) {
-  const report = generatedReports.get(reportId);
-  // Mismo error para "no existe" y "no es tuyo": distinguirlos permitiria
-  // confirmar por sondeo que un id ajeno existe.
-  if (!report || !_esSuyo(report, userId)) {
+async function getReport(reportId, user) {
+  if (!mongoose.Types.ObjectId.isValid(reportId)) {
     return { success: false, error: 'Report not found' };
   }
-  return { success: true, report };
+  const doc = await Report.findOne({ _id: reportId, ...filtroTenantOPlataforma(user || {}) }).lean();
+  if (!doc) {
+    return { success: false, error: 'Report not found' };
+  }
+  return { success: true, report: _presentar(doc) };
 }
 
 /**
- * List generated reports
+ * List generated reports, acotado al tenant de `user` (o sin acotar para
+ * super_admin de plataforma).
  */
-function listReports(filters = {}) {
-  let reports = Array.from(generatedReports.values());
+async function listReports(filters = {}, user) {
+  const query = { ...filtroTenantOPlataforma(user || {}) };
+  if (filters.type) query.type = filters.type;
+  if (filters.period) query.period = filters.period;
 
-  // Apply filters
-  if (filters.type) {
-    reports = reports.filter(r => r.type === filters.type);
-  }
-  if (filters.period) {
-    reports = reports.filter(r => r.period === filters.period);
-  }
-  if (filters.userId) {
-    reports = reports.filter(r => r.generatedBy === filters.userId);
-  }
-
-  // Sort by date (most recent first)
-  reports.sort((a, b) => new Date(b.generatedAt) - new Date(a.generatedAt));
-
-  // Pagination
   const page = filters.page || 1;
   const limit = filters.limit || 20;
-  const start = (page - 1) * limit;
-  const paginated = reports.slice(start, start + limit);
+  const skip = (page - 1) * limit;
+
+  const [total, docs] = await Promise.all([
+    Report.countDocuments(query),
+    Report.find(query).sort({ generatedAt: -1 }).skip(skip).limit(limit).lean()
+  ]);
 
   return {
     success: true,
-    reports: paginated.map(r => ({
-      id: r.id,
-      type: r.type,
-      title: r.metadata.title,
-      format: r.format,
-      period: r.period,
-      generatedAt: r.generatedAt,
-      generatedBy: r.generatedBy
+    reports: docs.map(d => ({
+      id: String(d._id),
+      type: d.type,
+      title: d.metadata?.title,
+      format: d.format,
+      period: d.period,
+      generatedAt: d.generatedAt,
+      generatedBy: d.generatedBy ? String(d.generatedBy) : null
     })),
     pagination: {
-      total: reports.length,
+      total,
       page,
       limit,
-      pages: Math.ceil(reports.length / limit)
+      pages: Math.ceil(total / limit)
     }
   };
 }
 
 /**
- * Delete a report
+ * Delete a report. Borrado atomico ya acotado por tenant en la propia
+ * consulta: no hay hueco entre "leer" y "borrar" para una carrera.
  */
-function deleteReport(reportId, userId) {
-  const report = generatedReports.get(reportId);
-  if (!report || !_esSuyo(report, userId)) {
+async function deleteReport(reportId, user) {
+  if (!mongoose.Types.ObjectId.isValid(reportId)) {
     return { success: false, error: 'Report not found' };
   }
-  generatedReports.delete(reportId);
+  const doc = await Report.findOneAndDelete({ _id: reportId, ...filtroTenantOPlataforma(user || {}) });
+  if (!doc) {
+    return { success: false, error: 'Report not found' };
+  }
   logger.info(`[Reports] Report deleted: ${reportId}`);
   return { success: true };
 }
@@ -264,8 +293,8 @@ function deleteReport(reportId, userId) {
 /**
  * Export report to specified format
  */
-async function exportReport(reportId, format, userId) {
-  const reportResult = getReport(reportId, userId);
+async function exportReport(reportId, format, user) {
+  const reportResult = await getReport(reportId, user);
   if (!reportResult.success) {
     return reportResult;
   }
@@ -289,41 +318,6 @@ async function exportReport(reportId, format, userId) {
     logger.error(`[Reports] Export error: ${error.message}`);
     return { success: false, error: error.message };
   }
-}
-
-/**
- * Schedule recurring report
- */
-function scheduleReport(config) {
-  const scheduleId = `SCH-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-
-  const schedule = {
-    id: scheduleId,
-    reportType: config.type,
-    frequency: config.frequency, // daily, weekly, monthly
-    dayOfWeek: config.dayOfWeek, // for weekly
-    dayOfMonth: config.dayOfMonth, // for monthly
-    time: config.time || '08:00',
-    recipients: config.recipients || [],
-    format: config.format || EXPORT_FORMATS.PDF,
-    options: config.options || {},
-    enabled: true,
-    createdAt: new Date(),
-    lastRun: null,
-    nextRun: _calculateNextRun(config)
-  };
-
-  logger.info(`[Reports] Report scheduled: ${scheduleId} (${config.type} - ${config.frequency})`);
-
-  return {
-    success: true,
-    schedule: {
-      id: scheduleId,
-      reportType: schedule.reportType,
-      frequency: schedule.frequency,
-      nextRun: schedule.nextRun
-    }
-  };
 }
 
 /**
@@ -406,7 +400,7 @@ async function _gatherReportData(type, period, options) {
       data.client = options.clientId ? await _getClientData(options.clientId) : null;
       break;
     case REPORT_TYPES.AUDIT_TRAIL:
-      data.auditLogs = await _getAuditLogs(period, options);
+      data.auditLogs = await _getAuditLogs(tenantId, rango);
       break;
   }
 
@@ -725,12 +719,50 @@ async function _getClientData(clientId) {
   return null;
 }
 
-async function _getAuditLogs(period, options) {
-  // In production, fetch from audit log storage
+// Nunca mas de esto por informe: el trail es para leer tendencias de uso, no
+// para volcar la auditoria entera en un PDF.
+const LIMITE_AUDITORIA = 500;
+
+/**
+ * Trazabilidad de auditoria real del tenant y periodo (auditService, que ya
+ * respalda AuditLog). Sin campos sensibles (ip, user-agent, cabeceras...): solo
+ * lo necesario para un informe de lectura. Sin tenant concreto (plataforma o
+ * usuario sin tenant) no hay ambito que consultar: se devuelve vacio, nunca
+ * inventado.
+ */
+async function _getAuditLogs(tenantId, rango) {
+  if (tenantId === null || tenantId === undefined) {
+    return { actions: [], users: [], changes: [] };
+  }
+
+  const entradas = await auditService.query({
+    tenantId,
+    from: rango?.desde,
+    to: rango?.hasta,
+    limit: LIMITE_AUDITORIA
+  });
+
+  const limpia = (e) => ({
+    fecha: e.timestamp,
+    accion: e.action,
+    recurso: e.resource,
+    recursoId: e.resourceId || null,
+    usuario: e.userEmail || null,
+    exito: e.success
+  });
+
+  const porUsuario = new Map();
+  for (const e of entradas) {
+    const clave = e.userEmail || 'desconocido';
+    porUsuario.set(clave, (porUsuario.get(clave) || 0) + 1);
+  }
+
   return {
-    actions: [],
-    users: [],
-    changes: []
+    actions: entradas.map(limpia),
+    users: Array.from(porUsuario, ([usuario, total]) => ({ usuario, total })),
+    changes: entradas
+      .filter(e => e.changes)
+      .map(e => ({ fecha: e.timestamp, recurso: e.resource, recursoId: e.resourceId || null, cambios: e.changes }))
   };
 }
 
@@ -787,37 +819,6 @@ function _formatSectionName(section) {
   return names[section] || section;
 }
 
-function _calculateNextRun(config) {
-  const now = new Date();
-  const [hours, minutes] = (config.time || '08:00').split(':').map(Number);
-
-  let nextRun = new Date(now);
-  nextRun.setHours(hours, minutes, 0, 0);
-
-  switch (config.frequency) {
-    case 'daily':
-      if (nextRun <= now) {
-        nextRun.setDate(nextRun.getDate() + 1);
-      }
-      break;
-    case 'weekly':
-      const targetDay = config.dayOfWeek || 1; // Monday by default
-      while (nextRun.getDay() !== targetDay || nextRun <= now) {
-        nextRun.setDate(nextRun.getDate() + 1);
-      }
-      break;
-    case 'monthly':
-      const targetDate = config.dayOfMonth || 1;
-      nextRun.setDate(targetDate);
-      if (nextRun <= now) {
-        nextRun.setMonth(nextRun.getMonth() + 1);
-      }
-      break;
-  }
-
-  return nextRun;
-}
-
 function _estimatePages(sections) {
   // Estimate 1-2 pages per section plus title and summary
   return 2 + Math.ceil(sections.length * 1.5);
@@ -861,7 +862,6 @@ module.exports = {
   listReports,
   deleteReport,
   exportReport,
-  scheduleReport,
   getAvailableReportTypes,
   previewReport
 };
