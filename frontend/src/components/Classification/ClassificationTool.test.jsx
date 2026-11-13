@@ -336,6 +336,27 @@ describe('<ClassificationTool />', () => {
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('classification.classifyError'))
   })
 
+  test('error 400 del validador (descripcion fuera de rango) muestra el mensaje real, no uno generico', async () => {
+    classificationAPI.classify.mockRejectedValue({
+      response: {
+        status: 400,
+        data: {
+          success: false,
+          error: 'Datos de entrada invalidos',
+          details: [{ field: 'description', message: 'La descripcion debe tener entre 10 y 2000 caracteres' }]
+        }
+      }
+    })
+    renderComponent()
+
+    fireEvent.change(screen.getByPlaceholderText('classification.productPlaceholder'), {
+      target: { value: 'Test product' }
+    })
+    fireEvent.submit(document.querySelector('form'))
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('La descripcion debe tener entre 10 y 2000 caracteres'))
+  })
+
   test('muestra warnings en los resultados', async () => {
     classificationAPI.classify.mockResolvedValue({
       data: {
