@@ -136,6 +136,7 @@ const ParaduaneroControlSchema = new mongoose.Schema({
       'textiles',               // Textiles
       'machinery',              // Maquinaria
       'rohs_raee',              // RoHS / RAEE (aparatos electricos y electronicos)
+      'rohs_raee_com',          // RoHS / RAEE adicional al de seguridad, por PUE COM (solo si es AEE)
       // MAPA
       'veterinary',             // Control veterinario
       'phytosanitary',          // Control fitosanitario
