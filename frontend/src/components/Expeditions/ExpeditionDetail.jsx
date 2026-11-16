@@ -36,6 +36,8 @@ import AeatSumariaLinks from './AeatSumariaLinks'
 import RepresentationCard from './RepresentationCard'
 import H1DataCard from './H1DataCard'
 import ModoPresentacionH1 from './ModoPresentacionH1'
+import FaltanParaPresentar from './FaltanParaPresentar'
+import AesDatosSalida from './AesDatosSalida'
 import { infoCanal } from '../../utils/canalAeat'
 import DocumentUploader from './DocumentUploader'
 import DocumentReader from './DocumentReader'
@@ -579,6 +581,8 @@ export default function ExpeditionDetail() {
   const [submittingToAEAT, setSubmittingToAEAT] = useState(false)
   const [aeatResult, setAeatResult] = useState(null)
   const [modoPresentacion, setModoPresentacion] = useState('')
+  // Datos que faltan para presentar (422 con `faltan`): se listan en vez de un toast largo.
+  const [faltanPresentar, setFaltanPresentar] = useState(null)
   const [portalLink, setPortalLink] = useState(null)
   const [showPortalModal, setShowPortalModal] = useState(false)
   const [showAIPanel, setShowAIPanel] = useState(false)
@@ -756,6 +760,7 @@ export default function ExpeditionDetail() {
 
     setSubmittingToAEAT(true)
     setAeatResult(null)
+    setFaltanPresentar(null)
     try {
       const response = await declarationsAPI.submit(id, expedition.declaration?.type === 'AES' ? '' : modoPresentacion)
       const resultData = response.data?.data || response.data
@@ -782,8 +787,15 @@ export default function ExpeditionDetail() {
         toast(t('expeditions.noChannelToast'))
       }
     } catch (error) {
+      const datos = error.response?.data
+      if (error.response?.status === 422 && Array.isArray(datos?.faltan) && datos.faltan.length > 0) {
+        const tipo = expedition.declaration?.type || 'H1'
+        setFaltanPresentar({ tipo, faltan: datos.faltan })
+        toast.error(`Faltan datos para presentar el ${tipo}. Revisa la lista.`)
+        return
+      }
       console.error('AEAT submission error:', error)
-      toast.error(error.response?.data?.error || t('expeditions.aeatSubmitError'))
+      toast.error(datos?.error || t('expeditions.aeatSubmitError'))
     } finally {
       setSubmittingToAEAT(false)
     }
@@ -1243,6 +1255,16 @@ export default function ExpeditionDetail() {
                   {expedition.declaration?.type !== 'AES' && (
                     <ModoPresentacionH1 valor={modoPresentacion} onCambio={setModoPresentacion} disabled={submittingToAEAT} />
                   )}
+                  {expedition.declaration?.type === 'AES' && (
+                    <AesDatosSalida
+                      key={`${expedition.declaration?.officeOfExit || ''}|${expedition.declaration?.goodsLocation || ''}`}
+                      expedition={expedition}
+                      onGuardado={async () => {
+                        const recargado = await expeditionsAPI.get(id)
+                        setExpedition(recargado.data?.data || recargado.data)
+                      }}
+                    />
+                  )}
                   <button
                     onClick={handleSubmitToAEAT}
                     disabled={submittingToAEAT}
@@ -1254,6 +1276,9 @@ export default function ExpeditionDetail() {
                   <p className="text-xs text-gray-500 mt-2 text-center">
                     {t('expeditions.demoMode')}
                   </p>
+                  {faltanPresentar && (
+                    <FaltanParaPresentar tipo={faltanPresentar.tipo} faltan={faltanPresentar.faltan} onCerrar={() => setFaltanPresentar(null)} />
+                  )}
                 </div>
               )}
             </div>

@@ -29,6 +29,7 @@ vi.mock('../../services/api', () => ({
     generateH1: vi.fn(),
     exportXML: vi.fn(),
     submit: vi.fn(),
+    update: vi.fn(),
     downloadPDF: vi.fn(),
     downloadSummaryPDF: vi.fn(),
     verifySummaryDeclaration: vi.fn(),
@@ -367,6 +368,25 @@ describe('<ExpeditionDetail />', () => {
     await waitFor(() => screen.getByText('expeditions.submitToAeat'))
     fireEvent.click(screen.getByText('expeditions.submitToAeat'))
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('AEAT error'))
+  })
+
+  test('422 con datos que faltan: lista lo que falta y dónde, sin toast genérico', async () => {
+    expeditionsAPI.get.mockResolvedValue({
+      data: { data: { ...mockExpedition, operationType: 'export', declaration: { type: 'AES', lrn: 'L1', status: 'draft', xmlContent: '<AES/>', customsOffice: 'ES002801' } } }
+    })
+    declarationsAPI.submit.mockRejectedValue({ response: { status: 422, data: {
+      error: 'Faltan datos para presentar el AES: aduana de salida (expediente › declaración AES)',
+      code: 'DATOS_AES_FALTANTES',
+      faltan: ['aduana de salida (expediente › declaración AES)', 'número de la factura comercial (expediente › número de factura)']
+    } } })
+    renderExpeditionDetail()
+    fireEvent.click(await screen.findByText('expeditions.submitToAeat'))
+    const aviso = await screen.findByRole('alert')
+    expect(aviso).toHaveTextContent('Faltan datos para presentar el AES')
+    expect(within(aviso).getAllByRole('listitem')).toHaveLength(2)
+    expect(toast.error).toHaveBeenCalledWith('Faltan datos para presentar el AES. Revisa la lista.')
+    // El AES en borrador ofrece los datos de salida que no se piden en el alta.
+    expect(screen.getByLabelText('Aduana de salida')).toBeInTheDocument()
   })
 
   test('downloadPDF descarga blob correctamente', async () => {
