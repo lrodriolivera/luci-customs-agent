@@ -269,6 +269,23 @@ describe('<ExpeditionDetail />', () => {
     expect(screen.getByText('expeditions.h1Generated')).toBeInTheDocument()
   })
 
+  test('AES presentado con salida confirmada por la AEAT: muestra el bloque de salida de la UE', async () => {
+    const aes = {
+      ...mockExpedition,
+      declaration: {
+        type: 'AES', status: 'submitted', mrn: '26ES002801100319B6', officeOfExit: 'ES002801', channel: 'green',
+        exitConfirmedAt: '2026-11-16T00:00:00.000Z',
+        aesSalida: { estado: 'SA', final: true, salida: { confirmada: true, fecha: '2026-11-16' } }
+      }
+    }
+    expeditionsAPI.get.mockResolvedValue({ data: { data: aes } })
+    expeditionsAPI.getChecklist.mockResolvedValue({ data: { data: mockChecklist } })
+    renderExpeditionDetail()
+    const bloque = await screen.findByRole('region', { name: 'Salida de la UE' })
+    expect(bloque).toHaveTextContent('Salida confirmada')
+    expect(bloque).toHaveTextContent('16/11/2026')
+  })
+
   test('botón submitToAEAT llama a submit y muestra resultado con canal verde', async () => {
     const expWithDeclaration = {
       ...mockExpedition,

@@ -12,6 +12,7 @@
 const EventEmitter = require('events');
 const logger = require('../../config/logger');
 const aeatRealService = require('./aeatRealService');
+const { ESTADOS_AES, estadoMonitor, esFinal } = require('./aesNctsCodigos');
 
 /**
  * RedisBackedMap — API tipo Map (.get/.set/.delete/.values/.size) respaldada por Redis.
@@ -374,16 +375,21 @@ class AEATStatusMonitorService extends EventEmitter {
       // Persistir solo lo que trae la consulta sobre la versión actual: la
       // consulta tarda segundos y entretanto pueden haber dejado de seguirla o
       // confirmado una alerta.
-      const guardado = await this._guardarSobreActual(clave, (actual) => ({
+      const guardado = await this._guardarSobreActual(clave, (actual) => {
+        // Un aviso de la bandeja (salida efectiva o parada) pudo dejarlo final
+        // mientras se consultaba: una consulta no final no lo deshace.
+        const mantenerFinal = actual.aeat?.final === true && !(tracking.aeat?.final === true);
+        return {
         lastChecked: tracking.lastChecked,
         lastError: null,
-        currentStatus: tracking.currentStatus,
+        currentStatus: mantenerFinal ? actual.currentStatus : tracking.currentStatus,
         channel: tracking.channel,
-        ...(tracking.aeat ? { aeat: tracking.aeat } : {}),
+        ...(tracking.aeat && !mantenerFinal ? { aeat: tracking.aeat } : {}),
         statusHistory: [...(actual.statusHistory || []), tracking.statusHistory[tracking.statusHistory.length - 1]],
         alerts: [...(actual.alerts || []), ...alertasNuevas],
         luciPredictions: tracking.luciPredictions
-      }));
+        };
+      });
       if (!guardado) return this._noEncontrada();
 
       if (alertasNuevas.length > 0) {
@@ -424,6 +430,42 @@ class AEATStatusMonitorService extends EventEmitter {
     const nuevo = { ...actual, ...cambios(actual) };
     await this.trackedDeclarations.set(clave, nuevo);
     return nuevo;
+  }
+
+  /**
+   * Aplica al seguimiento de un AES el estado que trae un aviso de la bandeja
+   * de entrada (aesBandejaProceso.js). Con salida efectiva (SA) o parada (ST)
+   * el seguimiento queda final y la consulta automática deja de consultarlo.
+   * Un aviso no final nunca deshace un estado final ya recibido.
+   * @param {{ mrn: string, tenantId: string|null, tipo: string, estado: string|null, fecha?: string|null }} aviso
+   * @returns {Promise<boolean>} true si había seguimiento de ese tenant y MRN
+   */
+  async aplicarAvisoBandeja({ mrn, tenantId, tipo, texto = null, estado, fecha = null }) {
+    const clave = this._clave(mrn, tenantId ? String(tenantId) : null);
+    const at = new Date().toISOString();
+    const textoTipo = texto || tipo;
+    const guardado = await this._guardarSobreActual(clave, (actual) => {
+      const yaFinal = actual.aeat?.final === true;
+      const usar = estado && !(yaFinal && !esFinal(ESTADOS_AES, estado));
+      const estadoFinal = usar ? estado : (actual.aeat?.estado || null);
+      const status = usar ? estadoMonitor(ESTADOS_AES, estado, true) : actual.currentStatus;
+      return {
+        currentStatus: status,
+        aeat: {
+          ...(actual.aeat || {}),
+          estado: estadoFinal,
+          estadoTexto: ESTADOS_AES[estadoFinal]?.texto || actual.aeat?.estadoTexto || null,
+          final: yaFinal || esFinal(ESTADOS_AES, estadoFinal),
+          fuente: 'bandeja',
+          fechas: { ...(actual.aeat?.fechas || {}), ...(fecha ? { [tipo]: fecha } : {}) }
+        },
+        statusHistory: [...(actual.statusHistory || []), {
+          timestamp: at, status, channel: actual.channel || null,
+          messages: [`${textoTipo} (aviso de la AEAT)${estado ? `: ${estado}` : ''}`]
+        }]
+      };
+    });
+    return Boolean(guardado);
   }
 
   /**

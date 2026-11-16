@@ -38,6 +38,7 @@ import H1DataCard from './H1DataCard'
 import ModoPresentacionH1 from './ModoPresentacionH1'
 import FaltanParaPresentar from './FaltanParaPresentar'
 import AesDatosSalida from './AesDatosSalida'
+import AesResultadoSalida from './AesResultadoSalida'
 import { infoCanal } from '../../utils/canalAeat'
 import DocumentUploader from './DocumentUploader'
 import DocumentReader from './DocumentReader'
@@ -1361,6 +1362,9 @@ export default function ExpeditionDetail() {
               </div>
             </div>
           )}
+
+          {/* AES: salida de la UE según los avisos de la bandeja de la AEAT */}
+          <AesResultadoSalida expedition={expedition} />
 
           {/* Channel Status - Shown when declaration has channel */}
           {expedition.declaration?.channel && (
