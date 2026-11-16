@@ -5,7 +5,6 @@
 
 const { Transit, Guarantee, Expedition } = require('../models');
 const User = require('../models/User');
-const { generarMRN } = require('../utils/mrnFormat');
 
 /**
  * Carga una expedicion comprobando que es del tenant de quien la pide.
@@ -904,17 +903,9 @@ const transitService = {
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     return `LRN${timestamp}${random}`;
-  },
-
-  /**
-   * Generar MRN (simulado). Delega en el generador comun para que cumpla
-   * siempre el patron de AEAT: `Math.random().toString(36)` devuelve cadenas de
-   * longitud variable y de vez en cuando salia un MRN de 17 caracteres, que el
-   * organismo rechaza con un error que no nombra el campo.
-   */
-  generateMRN(countryCode = 'ES') {
-    return generarMRN({ pais: countryCode });
   }
+  // Aqui vivia generateMRN(): un MRN "simulado" sin ningun llamante. El MRN de
+  // un transito solo lo da NCTS (IE028); LUCI no lo fabrica.
 };
 
 module.exports = transitService;

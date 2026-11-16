@@ -162,9 +162,8 @@ describe('helpers de configuracion', () => {
     expect(ens.getSubmissionDeadlines()).toEqual({ ROAD: 1, RAIL: 2, AIR: 4, SEA: 24 });
   });
 
-  test('generateMRN produce un MRN con el formato AAES...XX', () => {
-    const mrn = ens.generateMRN('ENS');
-    expect(mrn).toMatch(/^\d{2}ES\d{14}EN$/);
+  test('no existe un generador de MRN: el MRN de la ENS solo lo da la AEAT', () => {
+    expect(ens.generateMRN).toBeUndefined();
   });
 });
 

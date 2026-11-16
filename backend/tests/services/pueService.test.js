@@ -261,13 +261,8 @@ describe('_simulateStatusQuery', () => {
   });
 });
 
-describe('_simulateAEATSubmission', () => {
-  test('devuelve siempre una referencia PUE y un codigo de admision valido', () => {
-    const r = pueService._simulateAEATSubmission({ pueType: 'ROHS' });
-
-    expect(r.success).toBe(true);
-    expect(r.pueReference).toMatch(/^PUE\d{4}ROHS/);
-    expect(['PUE_INSPECTION_REQUIRED', 'PUE_ACCEPTED']).toContain(r.code);
-    expect(typeof r.correlationId).toBe('string');
+describe('sin simulacion de la AEAT', () => {
+  test('no existe un generador de referencias PUE: la referencia solo la da la AEAT', () => {
+    expect(pueService._simulateAEATSubmission).toBeUndefined();
   });
 });

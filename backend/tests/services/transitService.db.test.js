@@ -35,7 +35,6 @@ const { Transit, Guarantee, Expedition } = require('../../src/models');
 const User = require('../../src/models/User');
 const aeatSubmitService = require('../../src/services/aeat/aeatSubmitService');
 const transitService = require('../../src/services/transitService');
-const { esMRNValido } = require('../../src/utils/mrnFormat');
 
 usarBaseDeDatosEnMemoria();
 
@@ -332,22 +331,12 @@ describe('helpers puros', () => {
     expect(transitService.validateForSubmission(ok)).toBe(true);
   });
 
-  test('generateLRN y generateMRN tienen la forma esperada', () => {
+  test('generateLRN tiene la forma esperada', () => {
     expect(transitService.generateLRN()).toMatch(/^LRN/);
-    const mrn = transitService.generateMRN('ES');
-    // Antes se comprobaba `length <= 18`, y por ahi pasaban los MRN cortos que
-    // AEAT rechaza. El patron exige exactamente 18 caracteres.
-    expect(mrn).toMatch(/^[0-9]{2}[A-Z]{2}[A-Z0-9]{14}$/);
-    expect(mrn.startsWith(new Date().getFullYear().toString().slice(-2) + 'ES')).toBe(true);
   });
 
-  test('generateMRN no produce nunca un MRN que AEAT rechace por formato', () => {
-    // `Math.random().toString(36)` devuelve cadenas de longitud variable: con el
-    // generador anterior, un MRN de 17 caracteres salia de vez en cuando y solo
-    // fallaba al enviarlo.
-    for (let i = 0; i < 300; i++) {
-      expect(esMRNValido(transitService.generateMRN())).toBe(true);
-    }
+  test('no existe un generador de MRN: el MRN del transito solo lo da NCTS', () => {
+    expect(transitService.generateMRN).toBeUndefined();
   });
 });
 

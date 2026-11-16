@@ -143,6 +143,19 @@ describe('submitToAEAT', () => {
     expect(recargada.generatedXML).toBe('<pue>xml</pue>');
   });
 
+  test('sin referencia de la AEAT no se inventa una (antes PUE-<timestamp>)', async () => {
+    const r = await crearPersistida();
+    r.requiredDocuments.forEach(d => { d.provided = true; });
+    await r.save();
+    aeatSubmitService.submitPUE.mockResolvedValue({ success: true, code: 'OK', estado: 'Admitida' });
+
+    const res = await pueService.submitToAEAT(r._id, OWNER);
+    expect(res.success).toBe(true);
+    expect(res.data.pueReference).toBeUndefined();
+    const recargada = await PUERequest.findById(r._id);
+    expect(recargada.pueReference).toBeUndefined();
+  });
+
   test('AEAT devuelve error: success:false sin cambiar el estado', async () => {
     const r = await crearPersistida();
     r.requiredDocuments.forEach(d => { d.provided = true; });
