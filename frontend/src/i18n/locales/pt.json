@@ -612,7 +612,14 @@
       "requirement_resolved": "Pedido resolvido",
       "note_added": "Nota adicionada",
       "payment_received": "Pagamento recebido"
-    }
+    },
+    "aeatRatesApplied": "Direito e IVA da adição atualizados com os da AEAT",
+    "aeatRatesError": "Não foi possível aplicar os dados da AEAT",
+    "aeatDifference": "Adição {{partida}}: {{campo}} {{expediente}} % no processo, {{aeat}} % segundo a AEAT",
+    "aeatField_arancel": "direito",
+    "aeatField_iva": "IVA",
+    "aeatDifferencesConfirm": "O direito ou o IVA de alguma adição não coincide com a Pauta Integrada da AEAT. Apresentar mesmo assim?",
+    "aeatDifferencesCancelled": "Apresentação cancelada: reveja as adições e use os dados da AEAT se for o caso"
   },
   "classification": {
     "title": "Classificacao TARIC",
@@ -791,7 +798,9 @@
       "dutyMismatch": "O direito do processo ({{expediente}} %) não coincide com o da AEAT para países terceiros ({{aeat}} %).",
       "vatMismatch": "O IVA do processo ({{expediente}} %) não coincide com o da AEAT ({{aeat}} %).",
       "dutyPreference": "O direito do processo ({{aeat}} %) é uma preferência desta origem; o geral é {{general}} %. Exige prova de origem.",
-      "ratesMatch": "O direito e o IVA do processo coincidem com os da AEAT."
+      "ratesMatch": "O direito e o IVA do processo coincidem com os da AEAT.",
+      "useAeat": "Usar os dados da AEAT (direito {{arancel}} %, IVA {{iva}} %)",
+      "usePreference": "Usar a preferência {{medida}} ({{arancel}} %): exige prova de origem"
     }
   },
   "declarations": {

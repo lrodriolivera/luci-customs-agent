@@ -612,7 +612,14 @@
       "requirement_resolved": "Request resolved",
       "note_added": "Note added",
       "payment_received": "Payment received"
-    }
+    },
+    "aeatRatesApplied": "Item duty and VAT updated from the AEAT",
+    "aeatRatesError": "Could not apply the AEAT data",
+    "aeatDifference": "Item {{partida}}: {{campo}} {{expediente}}% in the file, {{aeat}}% per the AEAT",
+    "aeatField_arancel": "duty",
+    "aeatField_iva": "VAT",
+    "aeatDifferencesConfirm": "The duty or VAT of some item does not match the AEAT Integrated Tariff. Submit anyway?",
+    "aeatDifferencesCancelled": "Submission cancelled: review the items and use the AEAT data if appropriate"
   },
   "classification": {
     "title": "TARIC Classification",
@@ -791,7 +798,9 @@
       "dutyMismatch": "The file's duty ({{expediente}}%) does not match the AEAT third-country duty ({{aeat}}%).",
       "vatMismatch": "The file's VAT ({{expediente}}%) does not match the AEAT VAT ({{aeat}}%).",
       "dutyPreference": "The file's duty ({{aeat}}%) is a preference for this origin; the general rate is {{general}}%. Proof of origin is required.",
-      "ratesMatch": "The file's duty and VAT match the AEAT."
+      "ratesMatch": "The file's duty and VAT match the AEAT.",
+      "useAeat": "Use the AEAT data (duty {{arancel}}%, VAT {{iva}}%)",
+      "usePreference": "Use preference {{medida}} ({{arancel}}%): proof of origin required"
     }
   },
   "declarations": {

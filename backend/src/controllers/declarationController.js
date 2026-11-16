@@ -870,6 +870,28 @@ const updateDeclaration = async (req, res) => {
  * No hay modo demo: una respuesta simulada (otro pais sin certificado) solo se
  * admite con AEAT_SIMULATE=true fuera de produccion, y se guarda como simulada.
  */
+/**
+ * Diferencias de arancel/IVA entre las partidas del expediente y el Arancel
+ * Integrado de la AEAT. Si la AEAT no responde para una partida, esa partida no
+ * se comprueba (no se bloquea la presentacion por un fallo de la sede).
+ * @returns {Promise<{partida: number, taricCode: string, campo: string, expediente: number, aeat: number}[]>}
+ */
+async function diferenciasConArancelAeat(expedition) {
+  const { consultarArancelIntegrado } = require('../services/aeat/arancelIntegrado');
+  const { diferencias } = require('../services/aeat/contrasteArancel');
+  const partidas = (expedition.goods || []).filter((g) => /^\d{10}$/.test(String(g.taricCode || '')));
+  const porPartida = await Promise.all(partidas.map(async (g) => {
+    try {
+      const resultado = await consultarArancelIntegrado({ codigo: g.taricCode, origen: g.originCountry });
+      return diferencias(g, resultado).map((d) => ({ partida: g.itemNumber, taricCode: g.taricCode, ...d }));
+    } catch (error) {
+      logger.warn(`Contraste con la AEAT omitido (${expedition.expeditionId}, ${g.taricCode}): ${error.message}`);
+      return [];
+    }
+  }));
+  return porPartida.flat();
+}
+
 const submitDeclaration = async (req, res) => {
   try {
     const { expeditionId } = req.params;
@@ -923,6 +945,21 @@ const submitDeclaration = async (req, res) => {
 
     if (predeclaracion && !usaCau) {
       return res.status(400).json({ success: false, error: 'Las predeclaraciones solo se presentan por el servicio de la AEAT adaptado al CAU (Ajustes > Aduanas)' });
+    }
+
+    // Antes de presentar un H1 se contrastan el arancel y el IVA de cada
+    // partida con el Arancel Integrado de la AEAT. Si no coinciden se pide
+    // confirmacion (409); la agente puede corregirlos o presentar igualmente.
+    if (country === 'ES' && type !== 'AES' && req.body?.confirmarDiferenciasAeat !== true) {
+      const diferenciasAeat = await diferenciasConArancelAeat(expedition);
+      if (diferenciasAeat.length > 0) {
+        return res.status(409).json({
+          success: false,
+          code: 'ARANCEL_AEAT_DISTINTO',
+          error: 'El arancel o el IVA de alguna partida no coincide con el Arancel Integrado de la AEAT',
+          diferencias: diferenciasAeat
+        });
+      }
     }
 
     let aeatResult;

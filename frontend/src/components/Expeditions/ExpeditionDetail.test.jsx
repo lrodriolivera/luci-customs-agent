@@ -22,7 +22,8 @@ vi.mock('../../services/api', () => ({
     aiSuggestDocuments: vi.fn(),
     aiAnalyzeRisk: vi.fn(),
     aiDetectInconsistencies: vi.fn(),
-    aiFullAnalysis: vi.fn()
+    aiFullAnalysis: vi.fn(),
+    applyAeatRates: vi.fn()
   },
   documentsAPI: { upload: vi.fn(), read: vi.fn(), proposal: vi.fn(), apply: vi.fn(), download: vi.fn() },
   classificationAPI: { aeatTariff: vi.fn() },
@@ -1249,5 +1250,71 @@ describe('<ExpeditionDetail /> · Arancel Integrado de la AEAT por partida', () 
     expect(await screen.findByText('ROSH / RAEE')).toBeInTheDocument()
     expect(classificationAPI.aeatTariff).toHaveBeenCalledWith('8471300000', 'CN')
     expect(screen.getByText('classification.aeat.ratesMatch')).toBeInTheDocument()
+  })
+})
+
+describe('<ExpeditionDetail /> · usar los datos de la AEAT y confirmar antes de presentar', () => {
+  const GOOD_ID = '6af5800367ef2239ebbc9a01'
+  const AEAT = {
+    existe: true, codigo: '8471300000', areaGeografica: 'CN', fechaConsulta: '16-11-2026', url: 'https://aeat',
+    medidas: [
+      { codigo: '103-APPL', tipo: 'ue', areaGeografica: 'TODOS ERGA OMNES', descripcion: 'Derecho terceros países', derecho: '0%', documentos: [] },
+      { codigo: 'IVA-IVA', tipo: 'iva', areaGeografica: 'TODOS ERGA OMNES', descripcion: 'Impuesto del Valor Añadido', derecho: '21,000%', documentos: [] }
+    ]
+  }
+  const partida = { ...mockExpedition.goods[1], _id: GOOD_ID, dutyRate: 4, vatRate: 21 }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    expeditionsAPI.getChecklist?.mockResolvedValue?.({ data: { data: [] } })
+  })
+
+  test('«Usar los datos de la AEAT» guarda en la partida lo que dice la AEAT', async () => {
+    expeditionsAPI.get.mockResolvedValue({ data: { data: { ...mockExpedition, goods: [partida] } } })
+    classificationAPI.aeatTariff.mockResolvedValue({ data: { success: true, data: AEAT } })
+    const actualizado = { ...mockExpedition, goods: [{ ...partida, dutyRate: 0 }] }
+    expeditionsAPI.applyAeatRates.mockImplementation(async () => {
+      // La pantalla vuelve a leer el expediente: el servidor ya lo tiene guardado.
+      expeditionsAPI.get.mockResolvedValue({ data: { data: actualizado } })
+      return { data: { data: actualizado } }
+    })
+    renderExpeditionDetail()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'classification.aeat.consult' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'classification.aeat.useAeat' }))
+
+    await waitFor(() => expect(expeditionsAPI.applyAeatRates).toHaveBeenCalledWith('exp123', GOOD_ID, undefined))
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('expeditions.aeatRatesApplied'))
+    expect(await screen.findByText('classification.aeat.ratesMatch')).toBeInTheDocument()
+  })
+
+  const conDeclaracion = { ...mockExpedition, goods: [partida], declaration: { lrn: 'ES1', status: 'draft', xmlContent: '<H1>...</H1>', customsOffice: 'ES001200', regime: '40' } }
+  const conflicto = { response: { status: 409, data: { code: 'ARANCEL_AEAT_DISTINTO', error: 'x', diferencias: [{ partida: 1, taricCode: '8471300000', campo: 'arancel', expediente: 4, aeat: 0 }] } } }
+
+  test('si la AEAT no coincide pregunta y, al confirmar, presenta con la confirmación', async () => {
+    expeditionsAPI.get.mockResolvedValue({ data: { data: conDeclaracion } })
+    declarationsAPI.submit.mockRejectedValueOnce(conflicto).mockResolvedValueOnce({ data: { data: { mrn: '26ES1', channel: 'green' } } })
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    renderExpeditionDetail()
+
+    fireEvent.click(await screen.findByText('expeditions.submitToAeat'))
+
+    await waitFor(() => expect(declarationsAPI.submit).toHaveBeenCalledTimes(2))
+    expect(confirmar.mock.calls[0][0]).toContain('expeditions.aeatDifference')
+    expect(declarationsAPI.submit).toHaveBeenLastCalledWith('exp123', '', { confirmarDiferenciasAeat: true })
+    confirmar.mockRestore()
+  })
+
+  test('si la agente no confirma no se presenta', async () => {
+    expeditionsAPI.get.mockResolvedValue({ data: { data: conDeclaracion } })
+    declarationsAPI.submit.mockRejectedValueOnce(conflicto)
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    renderExpeditionDetail()
+
+    fireEvent.click(await screen.findByText('expeditions.submitToAeat'))
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('expeditions.aeatDifferencesCancelled'))
+    expect(declarationsAPI.submit).toHaveBeenCalledTimes(1)
+    confirmar.mockRestore()
   })
 })

@@ -27,16 +27,24 @@ const porcentaje = (derecho) => {
  * no es un error, pero exige prueba de origen.
  * @returns {{ clave: string, valores: object, aviso: boolean }[]}
  */
+/** Arancel general (103), preferencias del origen e IVA segun la AEAT. */
+function tiposAeat(datos) {
+  const medidas = datos?.medidas || []
+  return {
+    general: porcentaje(medidas.find((m) => m.codigo.startsWith('103'))?.derecho),
+    preferencias: medidas
+      .filter((m) => /^1\d\d/.test(m.codigo) && !m.codigo.startsWith('103') && datos.areaGeografica && m.areaGeografica?.startsWith(datos.areaGeografica))
+      .map((m) => ({ codigo: m.codigo, tipo: porcentaje(m.derecho) }))
+      .filter((p) => p.tipo !== null),
+    iva: porcentaje(medidas.find((m) => m.tipo === 'iva')?.derecho)
+  }
+}
+
 function contrastar(datos, compare) {
   if (!compare || !datos?.existe) return []
-  const medidas = datos.medidas || []
   const resultado = []
-
-  const general = porcentaje(medidas.find((m) => m.codigo.startsWith('103'))?.derecho)
-  const preferencias = medidas
-    .filter((m) => /^1\d\d/.test(m.codigo) && !m.codigo.startsWith('103') && m.areaGeografica?.startsWith(datos.areaGeografica))
-    .map((m) => porcentaje(m.derecho))
-    .filter((p) => p !== null)
+  const { general, preferencias: prefs, iva: ivaAeat } = tiposAeat(datos)
+  const preferencias = prefs.map((p) => p.tipo)
   const arancel = typeof compare.dutyRate === 'number' ? compare.dutyRate : null
   if (arancel !== null && general !== null) {
     if (preferencias.includes(arancel) && arancel !== general) {
@@ -46,7 +54,6 @@ function contrastar(datos, compare) {
     }
   }
 
-  const ivaAeat = porcentaje(medidas.find((m) => m.tipo === 'iva')?.derecho)
   const iva = typeof compare.vatRate === 'number' ? compare.vatRate : null
   if (iva !== null && ivaAeat !== null && iva !== ivaAeat) {
     resultado.push({ clave: 'vatMismatch', valores: { expediente: iva, aeat: ivaAeat }, aviso: true })
@@ -100,9 +107,12 @@ function Medida({ medida, t }) {
  * Con `compare` ({ dutyRate, vatRate } del expediente) avisa si el arancel o
  * el IVA que usa LUCI no coinciden con los de la AEAT.
  *
- * @param {{ code: string, origin?: string, compare?: { dutyRate?: number, vatRate?: number }, className?: string }} props
+ * Con `onApply(medida?)` ofrece guardar en la partida el arancel y el IVA de
+ * la AEAT (sin medida, el general; con ella, esa preferencia del origen).
+ *
+ * @param {{ code: string, origin?: string, compare?: { dutyRate?: number, vatRate?: number }, onApply?: Function, applying?: boolean, className?: string }} props
  */
-export default function MedidasAeat({ code, origin, compare, className = 'mt-3 pl-9' }) {
+export default function MedidasAeat({ code, origin, compare, onApply, applying = false, className = 'mt-3 pl-9' }) {
   const { t } = useTranslation()
   const [estado, setEstado] = useState({ cargando: false, datos: null, error: null })
 
@@ -125,6 +135,19 @@ export default function MedidasAeat({ code, origin, compare, className = 'mt-3 p
 
   const { cargando, datos, error } = estado
   const contraste = contrastar(datos, compare)
+  // Botones para guardar en la partida lo que dice la AEAT (solo en el
+  // expediente, que pasa onApply). El general si hay diferencias; cada
+  // preferencia del origen aparte, porque exige prueba de origen.
+  const tipos = datos?.existe ? tiposAeat(datos) : null
+  const hayDiferencias = contraste.some((c) => c.aviso)
+  const opciones = onApply && tipos ? [
+    ...(hayDiferencias && tipos.general !== null
+      ? [{ medida: undefined, etiqueta: t('classification.aeat.useAeat', { arancel: tipos.general, iva: tipos.iva ?? compare?.vatRate }) }]
+      : []),
+    ...tipos.preferencias
+      .filter((p) => p.tipo !== compare?.dutyRate)
+      .map((p) => ({ medida: p.codigo, etiqueta: t('classification.aeat.usePreference', { medida: p.codigo, arancel: p.tipo }) }))
+  ] : []
   const origenTexto = !datos || datos.areaGeografica === AREA_ERGA_OMNES
     ? t('classification.aeat.ergaOmnes')
     : datos.areaGeografica
@@ -174,6 +197,22 @@ export default function MedidasAeat({ code, origin, compare, className = 'mt-3 p
           ))}
           {compare && datos.existe && contraste.length === 0 && (
             <p className="mt-2 text-sm text-green-700">{t('classification.aeat.ratesMatch')}</p>
+          )}
+
+          {opciones.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {opciones.map(({ medida, etiqueta }) => (
+                <button
+                  key={medida || 'general'}
+                  type="button"
+                  onClick={() => onApply(medida)}
+                  disabled={applying}
+                  className="btn-primary text-xs"
+                >
+                  {etiqueta}
+                </button>
+              ))}
+            </div>
           )}
 
           {!datos.existe && (

@@ -612,7 +612,14 @@
       "requirement_resolved": "Requeriment resolt",
       "note_added": "Nota afegida",
       "payment_received": "Pagament rebut"
-    }
+    },
+    "aeatRatesApplied": "Aranzel i IVA de la partida actualitzats amb els de l'AEAT",
+    "aeatRatesError": "No s'han pogut aplicar les dades de l'AEAT",
+    "aeatDifference": "Partida {{partida}}: {{campo}} {{expediente}} % en l'expedient, {{aeat}} % segons l'AEAT",
+    "aeatField_arancel": "aranzel",
+    "aeatField_iva": "IVA",
+    "aeatDifferencesConfirm": "L'aranzel o l'IVA d'alguna partida no coincidix amb l'Aranzel Integrat de l'AEAT. Vols presentar igualment?",
+    "aeatDifferencesCancelled": "Presentació cancel·lada: revisa les partides i utilitza les dades de l'AEAT si cal"
   },
   "classification": {
     "title": "Classificacio TARIC",
@@ -791,7 +798,9 @@
       "dutyMismatch": "L'aranzel de l'expedient ({{expediente}} %) no coincidix amb el de l'AEAT per a tercers països ({{aeat}} %).",
       "vatMismatch": "L'IVA de l'expedient ({{expediente}} %) no coincidix amb el de l'AEAT ({{aeat}} %).",
       "dutyPreference": "L'aranzel de l'expedient ({{aeat}} %) és una preferència d'este origen; el general és {{general}} %. Cal prova d'origen.",
-      "ratesMatch": "L'aranzel i l'IVA de l'expedient coincidixen amb els de l'AEAT."
+      "ratesMatch": "L'aranzel i l'IVA de l'expedient coincidixen amb els de l'AEAT.",
+      "useAeat": "Utilitzar les dades de l'AEAT (aranzel {{arancel}} %, IVA {{iva}} %)",
+      "usePreference": "Utilitzar la preferència {{medida}} ({{arancel}} %): cal prova d'origen"
     }
   },
   "declarations": {

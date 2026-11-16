@@ -612,7 +612,14 @@
       "requirement_resolved": "Demande résolue",
       "note_added": "Note ajoutée",
       "payment_received": "Paiement reçu"
-    }
+    },
+    "aeatRatesApplied": "Droit et TVA de l'article mis à jour avec ceux de l'AEAT",
+    "aeatRatesError": "Impossible d'appliquer les données de l'AEAT",
+    "aeatDifference": "Article {{partida}} : {{campo}} {{expediente}} % dans le dossier, {{aeat}} % selon l'AEAT",
+    "aeatField_arancel": "droit",
+    "aeatField_iva": "TVA",
+    "aeatDifferencesConfirm": "Le droit ou la TVA d'un article ne correspond pas au tarif intégré de l'AEAT. Déposer quand même ?",
+    "aeatDifferencesCancelled": "Dépôt annulé : vérifiez les articles et utilisez les données de l'AEAT si nécessaire"
   },
   "classification": {
     "title": "Classification TARIC",
@@ -791,7 +798,9 @@
       "dutyMismatch": "Le droit du dossier ({{expediente}} %) ne correspond pas au droit pays tiers de l'AEAT ({{aeat}} %).",
       "vatMismatch": "La TVA du dossier ({{expediente}} %) ne correspond pas à celle de l'AEAT ({{aeat}} %).",
       "dutyPreference": "Le droit du dossier ({{aeat}} %) est une préférence pour cette origine ; le taux général est de {{general}} %. Une preuve d'origine est requise.",
-      "ratesMatch": "Le droit et la TVA du dossier correspondent à ceux de l'AEAT."
+      "ratesMatch": "Le droit et la TVA du dossier correspondent à ceux de l'AEAT.",
+      "useAeat": "Utiliser les données de l'AEAT (droit {{arancel}} %, TVA {{iva}} %)",
+      "usePreference": "Utiliser la préférence {{medida}} ({{arancel}} %) : preuve d'origine requise"
     }
   },
   "declarations": {

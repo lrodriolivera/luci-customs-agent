@@ -612,7 +612,14 @@
       "requirement_resolved": "Requerimiento resuelto",
       "note_added": "Nota añadida",
       "payment_received": "Pago recibido"
-    }
+    },
+    "aeatRatesApplied": "Arancel e IVA de la partida actualizados con los de la AEAT",
+    "aeatRatesError": "No se pudieron aplicar los datos de la AEAT",
+    "aeatDifference": "Partida {{partida}}: {{campo}} {{expediente}} % en el expediente, {{aeat}} % según la AEAT",
+    "aeatField_arancel": "arancel",
+    "aeatField_iva": "IVA",
+    "aeatDifferencesConfirm": "El arancel o el IVA de alguna partida no coincide con el Arancel Integrado de la AEAT. ¿Presentar igualmente?",
+    "aeatDifferencesCancelled": "Presentación cancelada: revisa las partidas y usa los datos de la AEAT si corresponde"
   },
   "classification": {
     "title": "Clasificación TARIC",
@@ -791,7 +798,9 @@
       "dutyMismatch": "El arancel del expediente ({{expediente}} %) no coincide con el de la AEAT para terceros países ({{aeat}} %).",
       "vatMismatch": "El IVA del expediente ({{expediente}} %) no coincide con el de la AEAT ({{aeat}} %).",
       "dutyPreference": "El arancel del expediente ({{aeat}} %) es una preferencia de este origen; el general es {{general}} %. Exige prueba de origen.",
-      "ratesMatch": "El arancel y el IVA del expediente coinciden con los de la AEAT."
+      "ratesMatch": "El arancel y el IVA del expediente coinciden con los de la AEAT.",
+      "useAeat": "Usar los datos de la AEAT (arancel {{arancel}} %, IVA {{iva}} %)",
+      "usePreference": "Usar la preferencia {{medida}} ({{arancel}} %): exige prueba de origen"
     }
   },
   "declarations": {

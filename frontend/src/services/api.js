@@ -98,6 +98,8 @@ export const expeditionsAPI = {
   get: (id) => api.get(`/api/expeditions/${seg(id)}`),
   create: (data) => api.post('/api/expeditions', data),
   update: (id, data) => api.put(`/api/expeditions/${seg(id)}`, data),
+  // Arancel e IVA de una partida segun el Arancel Integrado de la AEAT.
+  applyAeatRates: (id, goodId, medida) => api.post(`/api/expeditions/${seg(id)}/goods/${seg(goodId)}/aeat-rates`, medida ? { medida } : {}),
   delete: (id) => api.delete(`/api/expeditions/${seg(id)}`),
   getChecklist: (id) => api.get(`/api/expeditions/${seg(id)}/checklist`),
   sendPortalLink: (id, email) => api.post(`/api/expeditions/${seg(id)}/send-portal-link`, { email }),
@@ -276,7 +278,10 @@ export const declarationsAPI = {
       responseType: 'blob'
     }),
   // `predeclaracion`: 'Aduanas' u 'Operador' para presentar una predeclaración (tipo D); vacío, declaración.
-  submit: (expeditionId, predeclaracion = '') => api.post(`/api/declarations/${seg(expeditionId)}/submit`, predeclaracion ? { predeclaracion } : {}),
+  submit: (expeditionId, predeclaracion = '', opciones = {}) => api.post(`/api/declarations/${seg(expeditionId)}/submit`, {
+    ...(predeclaracion ? { predeclaracion } : {}),
+    ...(opciones.confirmarDiferenciasAeat ? { confirmarDiferenciasAeat: true } : {})
+  }),
   getSummary: (expeditionId) => api.get(`/api/declarations/${seg(expeditionId)}/summary`),
   // Consulta en la AEAT (DSDTCons) la declaracion sumaria registrada en el expediente.
   verifySummaryDeclaration: (expeditionId) =>
