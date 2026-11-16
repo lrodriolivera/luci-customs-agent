@@ -489,18 +489,21 @@ const TenantSettings = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-medium text-gray-900">{t('settings.rolesPermissions')}</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => { setInviteError(null); setShowInviteModal(true); }}
-                  className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
-                >
-                  <UserPlusIcon className="h-5 w-5" />
-                  {t('settings.inviteUser')}
-                </button>
-                <button className="px-4 py-2 bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200">
-                  {t('settings.createCustomRole')}
-                </button>
-              </div>
+              {/* Invitar y crear roles: solo admin/super_admin (el servidor responde 403 a los demás). */}
+              {isAdmin && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setInviteError(null); setShowInviteModal(true); }}
+                    className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
+                  >
+                    <UserPlusIcon className="h-5 w-5" />
+                    {t('settings.inviteUser')}
+                  </button>
+                  <button className="px-4 py-2 bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200">
+                    {t('settings.createCustomRole')}
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="overflow-x-auto">
