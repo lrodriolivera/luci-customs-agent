@@ -1373,7 +1373,7 @@
     "viewAll": "Ver todos",
     "loadingError": "Error al cargar estado del canal",
     "levanteAuthorized": "Levante Autorizado",
-    "levanteNumber": "Número Levante",
+    "levanteNumber": "Referencia interna LUCI",
     "levanteDate": "Fecha Levante",
     "downloadLevante": "Descargar Levante",
     "levanteCanWithdraw": "La mercancía puede retirarse del recinto aduanero",

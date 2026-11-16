@@ -298,7 +298,11 @@ const getLevante = async (req, res) => {
       });
     }
 
+    // Resumen INTERNO de LUCI: el levante oficial lo acredita la AEAT (MRN y CSV).
     const levanteData = {
+      interno: true,
+      aviso: 'Resumen interno de LUCI: no es un documento de la AEAT. El levante oficial se acredita con el MRN y el CSV o justificante de la Sede de la AEAT.',
+      csvAeat: expedition.declaration.aeatResponse?.csv || expedition.declaration.csv || null,
       levanteNumber: expedition.declaration.levanteNumber,
       levanteDate: expedition.declaration.levanteDate,
       mrn: expedition.declaration.mrn,

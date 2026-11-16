@@ -1372,7 +1372,7 @@
     "viewAll": "Veure tots",
     "loadingError": "Error en carregar estat del canal",
     "levanteAuthorized": "Aixecament Autoritzat",
-    "levanteNumber": "Número d'Aixecament",
+    "levanteNumber": "Referència interna LUCI",
     "levanteDate": "Data Aixecament",
     "downloadLevante": "Descarregar Aixecament",
     "levanteCanWithdraw": "La mercaderia es pot retirar del recinte duaner",

@@ -113,12 +113,17 @@ export default function ChannelStatus({ expeditionId, channel: propChannel, onSt
       // Crear un "documento" simple con los datos del levante
       const levanteText = `
 ========================================
-DOCUMENTO DE LEVANTE
+RESUMEN INTERNO DE LEVANTE (LUCI)
+NO ES UN DOCUMENTO DE LA AEAT
 ========================================
 
-Numero de Levante: ${data.levanteNumber}
+El levante oficial se acredita con el MRN y el CSV
+o justificante de la Sede de la AEAT.
+
+Referencia interna LUCI: ${data.levanteNumber}
 Fecha: ${new Date(data.levanteDate).toLocaleDateString('es-ES')}
 MRN: ${data.mrn}
+CSV AEAT: ${data.csvAeat || 'no disponible'}
 Expediente: ${data.expeditionId}
 
 IMPORTADOR:
@@ -137,8 +142,7 @@ ${data.goods?.map(g =>
 ).join('\n\n') || 'Sin mercancias'}
 
 ========================================
-LEVANTE AUTORIZADO
-La mercancia puede retirarse del recinto aduanero
+Resumen generado por LUCI a partir de la respuesta de la AEAT.
 ========================================
       `.trim()
 
@@ -146,7 +150,7 @@ La mercancia puede retirarse del recinto aduanero
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `Levante_${data.levanteNumber}.txt`
+      a.download = `Resumen_levante_LUCI_${data.levanteNumber}.txt`
       a.click()
       window.URL.revokeObjectURL(url)
 

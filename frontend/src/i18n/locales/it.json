@@ -1372,7 +1372,7 @@
     "viewAll": "Vedi tutti",
     "loadingError": "Errore nel caricamento dello stato del canale",
     "levanteAuthorized": "Svincolo Autorizzato",
-    "levanteNumber": "Numero Svincolo",
+    "levanteNumber": "Riferimento interno LUCI",
     "levanteDate": "Data Svincolo",
     "downloadLevante": "Scarica Svincolo",
     "levanteCanWithdraw": "La merce puo essere ritirata dal recinto doganale",

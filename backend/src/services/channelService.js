@@ -558,22 +558,28 @@ class ChannelService {
   }
 
   /**
-   * Generar numero de levante
+   * Referencia INTERNA de LUCI para el levante. No es un numero de la AEAT: el
+   * levante oficial lo acredita la AEAT (MRN, CSV y justificante de su sede).
+   * El prefijo LUCI- evita que se confunda con un dato oficial.
    */
   _generateLevanteNumber(expedition) {
     const year = new Date().getFullYear();
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `LEV${year}${random}`;
+    return `LUCI-LEV${year}${random}`;
   }
 
   /**
    * Generar documento de levante
    */
   async _generateLevanteDocument(expedition) {
-    // En una implementacion real, esto generaria un PDF con el levante oficial
+    // Resumen INTERNO de LUCI. No es el levante oficial ni lleva firma de la AEAT:
+    // el levante oficial es el que acredita la AEAT (MRN, CSV, justificante).
     const levanteData = {
+      interno: true,
+      aviso: 'Resumen interno de LUCI: no es un documento de la AEAT. El levante oficial se acredita con el MRN y el CSV o justificante de la Sede de la AEAT.',
       levanteNumber: expedition.declaration.levanteNumber,
       mrn: expedition.declaration.mrn,
+      csvAeat: expedition.declaration.aeatResponse?.csv || expedition.declaration.csv || null,
       expeditionId: expedition.expeditionId,
       importer: expedition.client?.companyName,
       importerEori: expedition.client?.eori,
@@ -585,12 +591,7 @@ class ChannelService {
         taric: g.taricCode,
         packages: g.packages?.quantity,
         weight: g.grossWeight
-      })),
-      signature: {
-        authority: 'Agencia Estatal de Administracion Tributaria',
-        office: expedition.declaration.customsOffice,
-        date: new Date().toISOString()
-      }
+      }))
     };
 
     logger.info(`Levante document generated: ${levanteData.levanteNumber}`);
