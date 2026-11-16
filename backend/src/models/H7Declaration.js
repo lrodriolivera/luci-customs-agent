@@ -424,6 +424,10 @@ const H7DeclarationSchema = new mongoose.Schema({
     enum: ['green', 'yellow', 'orange', 'red']
   },
 
+  // true solo si la respuesta la genero una simulacion (AEAT_SIMULATE=true, nunca
+  // en produccion): ni el MRN ni el canal son de la aduana. La pantalla lo rotula.
+  simulado: { type: Boolean, default: false },
+
   // Respuesta de AEAT
   aeatResponse: {
     code: String,

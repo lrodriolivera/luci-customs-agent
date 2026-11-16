@@ -188,6 +188,33 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
       const r = await submitService.queryStatus('MRN');
       expect(r.success).toBe(false);
       expect(r.error).toBe('Importer.identificationNumber no es valido.');
+      expect(r.mrn).toBeNull();
+      expect(r.csv).toBeNull();
+      // Rechazada: no hay circuito. Antes salia 'green' porque no habia documentationRequired.
+      expect(r.channel).toBeNull();
+    });
+
+    test('AltaH7V1Sal rechazada con varios <Error> conserva cada codigo y motivo literales', async () => {
+      conRespuesta('<h7:AltaH7V1Sal xmlns:h7="x"><Response><responseCode>R</responseCode></Response>'
+        + '<Error><errorType>F</errorType><errorCode>1040</errorCode><errorReason>El NIF no esta identificado</errorReason><errorPointerTag>Importer.identificationNumber</errorPointerTag></Error>'
+        + '<Error><errorType>F</errorType><errorCode>301</errorCode><errorReason>Nif no valido</errorReason></Error>'
+        + '</h7:AltaH7V1Sal>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.success).toBe(false);
+      expect(r.code).toBe('R');
+      expect(r.channel).toBeNull();
+      expect(r.errores).toEqual([
+        { code: '1040', message: 'El NIF no esta identificado', field: 'Importer.identificationNumber' },
+        { code: '301', message: 'Nif no valido' }
+      ]);
+      expect(r.error).toBe('1040: El NIF no esta identificado (Importer.identificationNumber) | 301: Nif no valido');
+    });
+
+    test('AltaH7V1Sal aceptada sin documentationRequired no supone canal verde', async () => {
+      conRespuesta('<h7:AltaH7V1Sal xmlns:h7="x"><Response><responseCode>A</responseCode></Response><MRN>26ESH7A000067962R8</MRN></h7:AltaH7V1Sal>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.success).toBe(true);
+      expect(r.channel).toBeNull();
     });
 
     test('AltaH7V1Sal con documentationRequired S es canal naranja', async () => {

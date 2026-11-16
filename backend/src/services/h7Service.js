@@ -36,6 +36,11 @@ async function _loadOwnedExpedition(expeditionId, userId) {
 const aeatSubmitService = require('./aeat/aeatSubmitService');
 const { codigoAdicionalH7, validarPartidasH7ParaAeat, normalizarGtin } = require('./aeat/h7Identificadores');
 const logger = require('../config/logger');
+const { ErrorValidacion } = require('./forms/identificadorAduanero');
+const { simulacionPermitida, MENSAJE_SIMULACION_NO_PERMITIDA } = require('../utils/simulacionAduanas');
+
+// Estados desde los que se puede (re)presentar: un H7 rechazado se corrige y se vuelve a enviar.
+const ESTADOS_PRESENTABLES = ['draft', 'pending', 'rejected'];
 
 /**
  * Carga el documento comprobando que pertenece a quien lo pide.
@@ -52,6 +57,60 @@ async function _loadOwnedH7(id, userId) {
     throw new Error('Declaracion no encontrada');
   }
   return doc;
+}
+
+/**
+ * La AEAT ha rechazado el H7: estado `rejected` con el codigo y los motivos
+ * literales. No se toca MRN, CSV ni canal (no los hay). Se puede corregir y
+ * volver a presentar.
+ */
+async function _registrarRechazo(declaration, userId, aeatResult) {
+  const mensaje = aeatResult.error || 'Declaracion H7 rechazada por la AEAT (sin motivo en la respuesta)';
+  const errores = Array.isArray(aeatResult.errores) && aeatResult.errores.length > 0
+    ? aeatResult.errores.map(e => ({ code: e.code, message: e.message, ...(e.field ? { field: e.field } : {}) }))
+    : [{ code: aeatResult.code, message: mensaje }];
+
+  declaration.status = 'rejected';
+  declaration.aeatResponse = {
+    code: aeatResult.code,
+    message: mensaje,
+    timestamp: new Date(),
+    errors: errores
+  };
+  declaration.statusHistory.push({
+    status: 'rejected',
+    timestamp: new Date(),
+    user: userId,
+    reason: `Rechazada por la AEAT: ${mensaje}`.substring(0, 500)
+  });
+  await declaration.save();
+
+  logger.warn(`[H7-SUBMIT] ${declaration.reference} rechazada por la AEAT: code=${aeatResult.code} ${mensaje}`);
+  return {
+    success: false,
+    rejected: true,
+    error: mensaje,
+    aeatCode: aeatResult.code,
+    errors: errores,
+    rawResponse: aeatResult.rawResponse?.substring(0, 500)
+  };
+}
+
+/**
+ * No hay respuesta valida de la AEAT (red, certificado, respuesta sin MRN o
+ * simulada sin permiso). El estado no cambia —no se sabe si la AEAT lo registro
+ * o no se presento nada—, pero queda constancia del error en aeatResponse.
+ */
+async function _registrarSinRespuesta(declaration, userId, mensaje, code = 'SIN_RESPUESTA') {
+  declaration.aeatResponse = {
+    code,
+    message: mensaje,
+    timestamp: new Date(),
+    errors: [{ code, message: mensaje }]
+  };
+  await declaration.save();
+  logger.error(`[H7-SUBMIT] ${declaration.reference}: ${mensaje}`);
+  return { success: false, error: mensaje, aeatCode: code, errors: [{ code, message: mensaje }] };
 }
 
 
@@ -482,7 +541,7 @@ class H7Service {
   async submitToAEAT(declarationId, userId) {
     const declaration = await _loadOwnedH7(declarationId, userId);
 
-    if (declaration.status !== 'draft' && declaration.status !== 'pending') {
+    if (!ESTADOS_PRESENTABLES.includes(declaration.status)) {
       throw new Error(`No se puede enviar declaracion en estado ${declaration.status}`);
     }
 
@@ -507,52 +566,51 @@ class H7Service {
     const country = tenant?.customsConfig?.country || 'ES';
 
     let aeatResult;
-    if (country === 'ES') {
-      // Reglas de la AEAT para las partidas (codigo NC de 8 cifras; identificadores
-      // C127/C128 y C129 o Y081). Se comprueban antes de enviar para decir que
-      // partida y que dato falta, en vez de esperar el rechazo 2101/1353 de la AEAT.
-      const erroresAeat = validarPartidasH7ParaAeat(declaration.items, codigoAdicionalH7(declaration));
-      if (erroresAeat.length > 0) {
-        return {
-          success: false,
-          error: `El H7 no se puede presentar: ${erroresAeat.map(e => e.message).join(' ')}`,
-          errors: erroresAeat
-        };
+    try {
+      if (country === 'ES') {
+        // Reglas de la AEAT para las partidas (codigo NC de 8 cifras; identificadores
+        // C127/C128 y C129 o Y081). Se comprueban antes de enviar para decir que
+        // partida y que dato falta, en vez de esperar el rechazo 2101/1353 de la AEAT.
+        const erroresAeat = validarPartidasH7ParaAeat(declaration.items, codigoAdicionalH7(declaration));
+        if (erroresAeat.length > 0) {
+          return {
+            success: false,
+            error: `El H7 no se puede presentar: ${erroresAeat.map(e => e.message).join(' ')}`,
+            errors: erroresAeat
+          };
+        }
+        // Existing AEAT flow - pass tenant for declarant info
+        aeatResult = await aeatSubmitService.submitH7(declaration, tenant);
+      } else {
+        // Multi-country flow via factory
+        const customsService = CustomsServiceFactory.getServiceForTenant(tenant);
+        aeatResult = await customsService.submitDeclaration(declaration, 'H7');
       }
-      // Existing AEAT flow - pass tenant for declarant info
-      aeatResult = await aeatSubmitService.submitH7(declaration, tenant);
-    } else {
-      // Multi-country flow via factory
-      const customsService = CustomsServiceFactory.getServiceForTenant(tenant);
-      aeatResult = await customsService.submitDeclaration(declaration, 'H7');
+    } catch (error) {
+      // Datos que faltan antes de enviar: no ha salido nada hacia la aduana.
+      if (error instanceof ErrorValidacion) throw error;
+      // Sin respuesta (red, certificado, timeout): no sabemos si la AEAT lo
+      // registro, asi que el estado no cambia; se deja constancia del error.
+      return _registrarSinRespuesta(declaration, userId, `No se obtuvo respuesta de la AEAT: ${error.message}`);
     }
 
-    if (!aeatResult.success) {
-      // In test/PRE mode, if the only errors are NIF validation (1040, 301),
-      // fall back to simulation for demo purposes since PRE validates real NIFs
-      const isTestMode = process.env.AEAT_ENVIRONMENT !== 'production';
-      const isNifError = aeatResult.error && /1040|301|Nif|NIF|identificaci[oó]n.*incorrect/i.test(aeatResult.error);
+    // Respuesta simulada (otro pais sin certificado): solo con la simulacion
+    // activada a proposito, y marcada como tal. Si no, no se ha presentado nada.
+    const simulado = aeatResult?.simulated === true;
+    if (simulado && !simulacionPermitida()) {
+      return _registrarSinRespuesta(declaration, userId, MENSAJE_SIMULACION_NO_PERMITIDA, 'SIMULACION_NO_PERMITIDA');
+    }
 
-      if (isTestMode && isNifError) {
-        logger.info(`[H7-SUBMIT] AEAT PRE NIF validation error (expected with test data), using simulation fallback`);
-        const year = new Date().getFullYear().toString().substring(2);
-        const random = Math.random().toString().substring(2, 16);
-        aeatResult = {
-          success: true,
-          mrn: `${year}ES${random}H7`,
-          channel: 'green',
-          code: '0',
-          estado: 'Aceptada (simulación PRE - NIF test)',
-          csv: `CSV${Date.now().toString(36).toUpperCase()}`
-        };
-      } else {
-        return {
-          success: false,
-          error: aeatResult.error || 'Error en respuesta AEAT',
-          aeatCode: aeatResult.code,
-          rawResponse: aeatResult.rawResponse?.substring(0, 500)
-        };
-      }
+    if (!aeatResult?.success) {
+      // Rechazo de la AEAT: queda rechazada con el codigo y el motivo literales,
+      // sin MRN, CSV ni canal. Antes, en PRE, un rechazo por NIF (1040/301) se
+      // convertia aqui en "aceptada" con un MRN inventado y canal verde.
+      return _registrarRechazo(declaration, userId, aeatResult || {});
+    }
+
+    // Una aceptacion sin MRN no es una aceptacion que se pueda acreditar.
+    if (!aeatResult.mrn) {
+      return _registrarSinRespuesta(declaration, userId, 'La AEAT respondió sin MRN: la declaración no consta como aceptada. Compruébela en la sede de la AEAT antes de volver a presentarla.', aeatResult.code || 'SIN_MRN');
     }
 
     declaration.status = 'submitted';
@@ -564,14 +622,17 @@ class H7Service {
       user: userId
     });
 
+    const mensaje = aeatResult.estado || 'Declaracion H7 enviada';
     declaration.aeatResponse = {
       code: aeatResult.code,
-      message: aeatResult.estado || 'Declaracion H7 enviada',
+      message: simulado ? `SIMULADO - ${mensaje} (no presentada ante la aduana)` : mensaje,
       timestamp: new Date(),
-      csv: aeatResult.csv,
-      channel: aeatResult.channel
+      csv: aeatResult.csv || undefined,
+      channel: aeatResult.channel || undefined,
+      errors: []
     };
-    declaration.channel = aeatResult.channel;
+    declaration.channel = aeatResult.channel || undefined;
+    declaration.simulado = simulado;
 
     // Lo que liquida la AEAT (A00, F00 tasa UHF, B00...) sustituye a la estimacion
     // de LUCI en el total a pagar; la tasa de gestion del transportista se suma aparte.
@@ -603,20 +664,12 @@ class H7Service {
       data: {
         reference: declaration.reference,
         mrn: aeatResult.mrn,
-        channel: aeatResult.channel,
+        channel: aeatResult.channel || null,
         status: declaration.status,
-        dutiesPayable: declaration.duties.totalDue
+        dutiesPayable: declaration.duties.totalDue,
+        simulado
       }
     };
-  }
-
-  /**
-   * Generar MRN para H7
-   */
-  generateMRN() {
-    const year = new Date().getFullYear().toString().substring(2);
-    const random = Math.random().toString().substring(2, 16);
-    return `${year}ES${random}H7`;
   }
 
   /**

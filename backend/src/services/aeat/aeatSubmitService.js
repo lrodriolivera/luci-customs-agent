@@ -61,6 +61,29 @@ function _tenantEsLaParte(tenant) {
   return !!tenant && (tenant.businessInfo?.type || 'customs_agent') !== 'customs_agent';
 }
 
+/**
+ * Errores de una AltaH7V1Sal rechazada: [{ code, message, field? }] literales de la AEAT.
+ * Admite respuestas antiguas con solo <errorReason> (sin codigo).
+ */
+function _erroresAltaH7(body) {
+  const bloques = [...body.matchAll(/<Error>([\s\S]*?)<\/Error>/g)].map(m => m[1]);
+  return bloques.map((b) => {
+    const code = (b.match(/<errorCode>([^<]+)</) || [])[1];
+    const message = (b.match(/<errorReason>([^<]+)</) || [])[1];
+    const field = (b.match(/<errorPointerTag>([^<]+)</) || b.match(/<errorPointer>([^<]+)</) || [])[1];
+    if (!code && !message) return null;
+    return { ...(code ? { code } : {}), message: message || '', ...(field ? { field } : {}) };
+  }).filter(Boolean);
+}
+
+/** "1040: motivo (campo) | 301: motivo" con los textos tal cual. */
+function _textoErroresAltaH7(errores) {
+  return errores.map((e) => {
+    const cabeza = e.code ? `${e.code}: ${e.message}` : e.message;
+    return e.field ? `${cabeza} (${e.field})` : cabeza;
+  }).join(' | ') || null;
+}
+
 // Helper: parsear respuesta SOAP de la AEAT
 function _parseAEATResponse(responseData) {
   const body = typeof responseData === 'string' ? responseData : '';
@@ -156,19 +179,24 @@ function _parseAEATResponse(responseData) {
   // H7 esquema oficial AltaH7V1Sal: <Response><responseCode>A|R</responseCode> + <MRN> + <Error><errorReason>.
   // A = aceptada, R = rechazada. El canal/documentacion se indica en documentationRequired.
   const altaH7Response = (body.match(/<Response>[\s\S]*?<responseCode>([^<]+)<\/responseCode>/) || [])[1];
-  const altaH7Error = (body.match(/<errorReason>([^<]+)</) || [])[1];
   const isAltaH7 = /AltaH7V1Sal/.test(body);
   if (isAltaH7) {
     const aceptada = altaH7Response === 'A';
+    // Cada <Error> trae su codigo (1040, 301...), el motivo literal y el campo.
+    // Se conservan todos tal cual los da la AEAT: el usuario los necesita para corregir.
+    const errores = aceptada ? [] : _erroresAltaH7(body);
+    const documentacion = (body.match(/<documentationRequired>([^<]+)</) || [])[1];
     return {
       success: aceptada,
       code: altaH7Response,
-      mrn: mrn || null,
-      csv: (body.match(/<edeclarationCSVId>([^<]+)</) || [])[1] || null,
+      mrn: aceptada ? (mrn || null) : null,
+      csv: aceptada ? ((body.match(/<edeclarationCSVId>([^<]+)</) || [])[1] || null) : null,
       // documentationRequired 'S' -> canal que exige documentacion (naranja); 'N' -> verde.
-      channel: (body.match(/<documentationRequired>S</) ? 'orange' : 'green'),
+      // Sin el dato, o si la AEAT rechaza, no hay circuito: no se supone verde.
+      channel: aceptada ? ({ S: 'orange', N: 'green' }[documentacion] || null) : null,
       estado: aceptada ? 'Aceptada' : 'Rechazada',
-      error: aceptada ? null : (altaH7Error || 'Declaracion H7 rechazada por AEAT'),
+      error: aceptada ? null : (_textoErroresAltaH7(errores) || fault || 'Declaracion H7 rechazada por AEAT'),
+      errores,
       // Tributos que liquida la AEAT (A00, F00 tasa UHF, B00...). En la entrada no se declaran.
       liquidacion: aceptada ? interpretarLiquidacionH7(body) : null,
       rawResponse: body
