@@ -55,6 +55,7 @@ const exigirSumaria = async (expedition, tenant) => {
 };
 const aeatSubmitService = require('../services/aeat/aeatSubmitService');
 const channelService = require('../services/channelService');
+const { simulacionPermitida, MENSAJE_SIMULACION_NO_PERMITIDA } = require('../utils/simulacionAduanas');
 
 /**
  * Tenant del expediente: de el salen el declarante y su EORI. Se carga una vez
@@ -466,7 +467,8 @@ function mensajeDePresentacion(aeatResult, usaCau, porCanal, simulada) {
   if (usaCau && aeatResult.operacionRegistrada === PREDECLARACION_PENDIENTE) {
     return `Predeclaración registrada con el número ${aeatResult.numeroRegistro || aeatResult.mrn}: pendiente de activar.`;
   }
-  return simulada ? `[MODO DEMO] ${porCanal}` : porCanal;
+  const texto = porCanal || 'Declaración presentada. Circuito pendiente de asignar por la AEAT.';
+  return simulada ? `SIMULADO (no presentada ante la aduana): ${texto}` : texto;
 }
 
 /**
@@ -864,8 +866,9 @@ const updateDeclaration = async (req, res) => {
  * Enviar declaracion a AEAT
  * POST /api/declarations/:expeditionId/submit
  *
- * Este endpoint envia la declaracion H1/AES a AEAT via Web Services
- * En modo demo (sin certificado configurado), simula la respuesta
+ * Este endpoint envia la declaracion H1/AES a AEAT via Web Services.
+ * No hay modo demo: una respuesta simulada (otro pais sin certificado) solo se
+ * admite con AEAT_SIMULATE=true fuera de produccion, y se guarda como simulada.
  */
 const submitDeclaration = async (req, res) => {
   try {
@@ -938,6 +941,13 @@ const submitDeclaration = async (req, res) => {
       aeatResult = await customsService.submitDeclaration(expedition, type);
     }
 
+    // Respuesta simulada: no se ha presentado nada. Solo con la simulacion activada.
+    const simulada = aeatResult?.simulated === true;
+    if (simulada && !simulacionPermitida()) {
+      logger.warn(`Respuesta simulada descartada para ${expedition.expeditionId}: simulacion no activada`);
+      return res.status(400).json({ success: false, error: MENSAJE_SIMULACION_NO_PERMITIDA, code: 'SIMULACION_NO_PERMITIDA' });
+    }
+
     if (!aeatResult.success) {
       // Non-blocking rejection email
       try {
@@ -959,6 +969,16 @@ const submitDeclaration = async (req, res) => {
       });
     }
 
+    // Una "aceptacion" sin MRN (ni numero de registro) no se puede acreditar: no se guarda.
+    if (!aeatResult.mrn && !aeatResult.numeroRegistro) {
+      logger.error(`Respuesta de la AEAT sin MRN para ${expedition.expeditionId}: code=${aeatResult.code}`);
+      return res.status(502).json({
+        success: false,
+        error: 'La AEAT respondió sin MRN: la declaración no consta como presentada. Compruébela en la sede de la AEAT antes de volver a presentarla.',
+        aeatResponse: { code: aeatResult.code, estado: aeatResult.estado }
+      });
+    }
+
     // Normalizar respuesta para compatibilidad
     // En el CAU la fecha de admision y el circuito los da la AEAT. Sin analisis
     // de riesgos no hay circuito: no se supone verde.
@@ -966,9 +986,9 @@ const submitDeclaration = async (req, res) => {
     const aeatResponse = {
       success: true,
       mrn: aeatResult.mrn || aeatResult.numeroRegistro,
-      channel: usaCau ? (aeatResult.channel || null) : aeatResult.channel,
+      channel: aeatResult.channel || null,
       acceptanceDate: fechaAdmision,
-      simulated: false,
+      simulated: simulada,
       liquidacion: aeatResult.liquidacion,
       certificados: aeatResult.certificados
     };
@@ -997,7 +1017,8 @@ const submitDeclaration = async (req, res) => {
         };
       }
     } else {
-      expedition.declaration.channel = aeatResult.channel || 'green';
+      // Sin circuito en la respuesta no se supone verde: lo asigna la AEAT.
+      expedition.declaration.channel = aeatResult.channel || undefined;
     }
 
     // Guardar respuesta completa de AEAT
@@ -1006,7 +1027,7 @@ const submitDeclaration = async (req, res) => {
       responseDescription: aeatResult.estado || 'Aceptada',
       timestamp: new Date(),
       csv: aeatResult.csv,
-      simulated: false,
+      simulated: simulada,
       // Lo que liquida la AEAT y los certificados que exige cada organismo (H1 CAU).
       ...(usaCau ? { servicio: 'CC415AV1', circuito: aeatResult.circuito, liquidacion: aeatResult.liquidacion, certificados: aeatResult.certificados } : {})
     };

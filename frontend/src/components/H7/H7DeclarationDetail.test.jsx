@@ -105,6 +105,102 @@ describe('H7DeclarationDetail', () => {
     ]
   }
 
+  describe('rechazo de la AEAT', () => {
+    const rechazada = {
+      ...mockDeclaration,
+      status: 'rejected',
+      mrn: undefined,
+      channel: undefined,
+      aeatResponse: {
+        code: 'R',
+        message: '1040: El NIF no esta identificado (Importer.identificationNumber)',
+        errors: [
+          { code: '1040', message: 'El NIF no esta identificado', field: 'Importer.identificationNumber' },
+          { code: '301', message: 'Nif no valido' }
+        ]
+      }
+    }
+
+    test('muestra la declaracion rechazada con cada codigo y motivo de la AEAT, sin MRN ni circuito', async () => {
+      h7API.get.mockResolvedValue({ data: { data: rechazada } })
+      render(<H7DeclarationDetail />)
+
+      await screen.findByText('H7-2026-001')
+      expect(screen.getAllByText('Rechazada').length).toBeGreaterThan(0)
+      expect(screen.getByText('Rechazada por la AEAT')).toBeInTheDocument()
+      expect(screen.getByText('1040')).toBeInTheDocument()
+      expect(screen.getByText(/El NIF no esta identificado/)).toBeInTheDocument()
+      expect(screen.getByText(/Importer\.identificationNumber/)).toBeInTheDocument()
+      expect(screen.getByText('301')).toBeInTheDocument()
+      expect(screen.queryByText(/^MRN:/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Circuito:/)).not.toBeInTheDocument()
+    })
+
+    test('permite volver a presentar una declaracion rechazada', async () => {
+      h7API.get.mockResolvedValue({ data: { data: rechazada } })
+      render(<H7DeclarationDetail />)
+
+      await screen.findByText('H7-2026-001')
+      expect(screen.getByText('Volver a presentar')).toBeInTheDocument()
+    })
+
+    test('tras un rechazo al enviar se recarga la declaracion para ver el motivo', async () => {
+      h7API.get.mockResolvedValue({ data: { data: mockDeclaration } })
+      h7API.submit.mockRejectedValue({
+        response: { data: { success: false, rejected: true, message: '1040: El NIF no esta identificado' } }
+      })
+      const user = userEvent.setup()
+      render(<H7DeclarationDetail />)
+
+      await screen.findByText('H7-2026-001')
+      await user.click(screen.getByText('Enviar a AEAT'))
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('1040: El NIF no esta identificado')
+        expect(h7API.get).toHaveBeenCalledTimes(2)
+      })
+    })
+
+    test('un error sin respuesta de la AEAT se muestra aunque siga en borrador', async () => {
+      h7API.get.mockResolvedValue({ data: { data: {
+        ...mockDeclaration,
+        aeatResponse: { code: 'SIN_RESPUESTA', message: 'No se obtuvo respuesta de la AEAT: timeout', errors: [] }
+      } } })
+      render(<H7DeclarationDetail />)
+
+      await screen.findByText('H7-2026-001')
+      expect(screen.getByText('No se obtuvo respuesta de la AEAT: timeout')).toBeInTheDocument()
+    })
+
+    test('tras un envio sin respuesta, volver a presentar exige confirmar que no consta en la AEAT', async () => {
+      h7API.get.mockResolvedValue({ data: { data: {
+        ...mockDeclaration,
+        aeatResponse: { code: 'SIN_RESPUESTA', message: 'No se obtuvo respuesta de la AEAT: timeout', errors: [] }
+      } } })
+      h7API.submit.mockResolvedValue({ data: { success: true, data: { mrn: '26ESH7A000067962R8' } } })
+      const user = userEvent.setup()
+      render(<H7DeclarationDetail />)
+
+      await screen.findByText('H7-2026-001')
+      expect(screen.queryByText('Enviar a AEAT')).not.toBeInTheDocument()
+      await user.click(screen.getByText('He comprobado en la AEAT: presentar de nuevo'))
+
+      await waitFor(() => {
+        expect(h7API.submit).toHaveBeenCalledWith('test-id-123', { confirmarReenvio: true })
+      })
+    })
+
+    test('una presentacion simulada se rotula SIMULADO', async () => {
+      h7API.get.mockResolvedValue({ data: { data: {
+        ...mockDeclaration, status: 'submitted', simulado: true, mrn: '26ESH7A000000001R1', aeatResponse: { message: 'SIMULADO - Aceptada' }
+      } } })
+      render(<H7DeclarationDetail />)
+
+      await screen.findByText('H7-2026-001')
+      expect(screen.getByText(/SIMULADO — no presentada ante la aduana/)).toBeInTheDocument()
+    })
+  })
+
   test('muestra spinner mientras carga', () => {
     h7API.get.mockImplementation(() => new Promise(() => {}))
     render(<H7DeclarationDetail />)

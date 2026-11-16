@@ -1260,7 +1260,7 @@ TRACK002,30`;
       expect(mockDeclaration.save).not.toHaveBeenCalled();
     });
 
-    test('submitToAEAT - PRE NIF error fallback to simulation', async () => {
+    test('submitToAEAT - un rechazo por NIF (1040) en PRE queda rechazado, sin MRN inventado', async () => {
       const aeatSubmitService = require('../../src/services/aeat/aeatSubmitService');
       const Tenant = require('../../src/models/Tenant');
 
@@ -1293,14 +1293,16 @@ TRACK002,30`;
 
       const result = await h7Service.submitToAEAT('h7-123', 'user123');
 
-      expect(result.success).toBe(true); // Fallback simulation
-      expect(result.data.mrn).toMatch(/\d{2}ES\d+H7/);
-      expect(mockDeclaration.status).toBe('released');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('1040');
+      expect(mockDeclaration.mrn).toBeUndefined();
+      expect(mockDeclaration.channel).toBeUndefined();
+      expect(mockDeclaration.status).toBe('rejected');
 
       process.env.AEAT_ENVIRONMENT = originalEnv; // Restore
     });
 
-    test('submitToAEAT - PRE NIF error (301) fallback to simulation', async () => {
+    test('submitToAEAT - un rechazo por NIF (301) en PRE queda rechazado, sin MRN inventado', async () => {
       const aeatSubmitService = require('../../src/services/aeat/aeatSubmitService');
       const Tenant = require('../../src/models/Tenant');
 
@@ -1331,7 +1333,9 @@ TRACK002,30`;
 
       const result = await h7Service.submitToAEAT('h7-123', 'user123');
 
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
+      expect(mockDeclaration.mrn).toBeUndefined();
+      expect(mockDeclaration.status).toBe('rejected');
       expect(mockDeclaration.save).toHaveBeenCalled();
 
       process.env.AEAT_ENVIRONMENT = originalEnv;
@@ -1355,6 +1359,7 @@ TRACK002,30`;
         items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         calculateDuties: jest.fn(),
+        statusHistory: [],
         save: jest.fn()
       };
 
@@ -1365,7 +1370,10 @@ TRACK002,30`;
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('4404');
-      expect(mockDeclaration.save).not.toHaveBeenCalled();
+      // El rechazo se persiste (estado rechazada, motivo de la AEAT) para que se vea en pantalla.
+      expect(mockDeclaration.status).toBe('rejected');
+      expect(mockDeclaration.aeatResponse.message).toContain('4404');
+      expect(mockDeclaration.mrn).toBeUndefined();
 
       process.env.AEAT_ENVIRONMENT = originalEnv;
     });
@@ -1393,12 +1401,8 @@ TRACK002,30`;
       expect(h7Service.mapCarrier('unknown carrier')).toBe('OTHER');
     });
 
-    test('generateMRN - should generate valid H7 MRN format', () => {
-      const mrn = h7Service.generateMRN();
-
-      expect(mrn).toMatch(/^\d{2}ES\d{14}H7$/);
-      expect(mrn).toContain('ES');
-      expect(mrn).toContain('H7');
+    test('no existe un generador de MRN: el MRN solo lo da la AEAT', () => {
+      expect(h7Service.generateMRN).toBeUndefined();
     });
 
     test('getStats - should delegate to H7Declaration model', async () => {

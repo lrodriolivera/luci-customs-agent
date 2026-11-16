@@ -766,16 +766,6 @@ class ENSService {
   }
 
   /**
-   * Generar MRN
-   */
-  generateMRN(type = 'ENS') {
-    const year = new Date().getFullYear().toString().substring(2);
-    const country = 'ES';
-    const random = Math.random().toString().substring(2, 16).padEnd(14, '0');
-    return `${year}${country}${random}${type.substring(0, 2)}`;
-  }
-
-  /**
    * Obtener aduanas de entrada disponibles.
    *
    * Lee el catalogo unico de config/entryOffices.js. Antes tenia su propia

@@ -717,7 +717,7 @@ describe('NetherlandsCustomsService', () => {
       expect(res.mrn).toBe('26NL00039SUCCESS');
       expect(res.code).toBe('OK');
       expect(res.system).toBe('DECO');
-      expect(res.channel).toBe('green');
+      expect(res.channel).toBeNull(); // sin canal en la respuesta no se supone verde
     });
 
     test('extrae MRN con diferentes nombres de elemento', () => {
@@ -1280,11 +1280,11 @@ describe('NetherlandsCustomsService', () => {
       expect(res.mrn).toBeNull();
     });
 
-    test('_parseDigipoortResponse: sin channel code pero isSuccess=true (channel green por defecto)', () => {
+    test('_parseDigipoortResponse: sin channel code pero isSuccess=true (sin canal: no se supone verde)', () => {
       const body = '<MRN>26NL0003999</MRN><statuscode>UNKNOWN</statuscode>';
       const res = service._parseDigipoortResponse(body, 'H7');
-      // isSuccess = !!(mrn && !errorCode) = true → channel = 'green'
-      expect(res.channel).toBe('green');
+      // isSuccess = true, pero sin canal en la respuesta no se inventa verde
+      expect(res.channel).toBeNull();
     });
 
     test('_parseDigipoortResponse: sin channel code y isSuccess=false (channel null)', () => {

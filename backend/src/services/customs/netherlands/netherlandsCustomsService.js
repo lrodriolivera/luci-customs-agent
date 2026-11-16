@@ -777,7 +777,8 @@ class NetherlandsCustomsService extends BaseCustomsService {
       'H2': 'orange',
       'H3': 'red',
     };
-    const channel = channelMap[extracted.channel] || (isSuccess ? 'green' : null);
+    // Sin canal en la respuesta no se supone verde.
+    const channel = channelMap[extracted.channel] || null;
 
     // Check if correction is required (NL-specific: declarant must correct)
     const correctionRequired = extracted.correction === 'true' || extracted.correction === '1'
