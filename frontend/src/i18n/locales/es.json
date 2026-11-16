@@ -830,7 +830,8 @@
       "ratesMatch": "El arancel y el IVA del expediente coinciden con los de la AEAT.",
       "useAeat": "Usar los datos de la AEAT (arancel {{arancel}} %, IVA {{iva}} %)",
       "usePreference": "Usar la preferencia {{medida}} ({{arancel}} %): exige prueba de origen"
-    }
+    },
+    "thirdCountryDuty": "Arancel terceros países"
   },
   "declarations": {
     "title": "Generador de Declaraciones",

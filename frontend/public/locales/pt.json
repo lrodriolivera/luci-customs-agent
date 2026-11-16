@@ -830,7 +830,8 @@
       "ratesMatch": "O direito e o IVA do processo coincidem com os da AEAT.",
       "useAeat": "Usar os dados da AEAT (direito {{arancel}} %, IVA {{iva}} %)",
       "usePreference": "Usar a preferência {{medida}} ({{arancel}} %): exige prova de origem"
-    }
+    },
+    "thirdCountryDuty": "Direito países terceiros"
   },
   "declarations": {
     "title": "Gerador de Declaracoes",
