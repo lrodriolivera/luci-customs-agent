@@ -2030,7 +2030,21 @@
     "docsInfoVerify": "Para documenti con firma digital, verifique su autenticidad en la sede electronica de la AEAT",
     "errorLoadingSignedDocs": "Errore durante cargar documenti firmados",
     "errorDownloading": "Errore durante descargar el documento",
-    "loading": "Caricamento..."
+    "loading": "Caricamento...",
+    "taxPayment": {
+      "title": "Pagamento dei tributi doganali",
+      "choose": "Scegli come pagare dazio e IVA all'importazione:",
+      "optionR": "Pagamento differito con la garanzia del tuo spedizioniere doganale",
+      "optionRHelp": "Il tuo spedizioniere anticipa il pagamento con la sua garanzia e poi te lo fattura.",
+      "optionA": "Pagamento prima dello svincolo (modello 031)",
+      "optionAHelp": "Paghi tu i tributi all'AEAT con il modello 031 prima dello svincolo della merce.",
+      "byAgent": "Lo decide il tuo spedizioniere doganale.",
+      "amountDue": "Importo da pagare all'AEAT: {{importe}} €",
+      "howToPay": "Paga con il modello 031 sulla sede dell'AEAT e caricaci la ricevuta in Documenti.",
+      "payLink": "Come pagare sulla sede dell'AEAT",
+      "waiting": "Restiamo in attesa della ricevuta di pagamento per ottenere lo svincolo.",
+      "error": "Impossibile salvare la modalità di pagamento"
+    }
   },
   "landing": {
     "features": "Funzionalita",

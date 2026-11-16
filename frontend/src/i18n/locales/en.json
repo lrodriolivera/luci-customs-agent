@@ -2031,7 +2031,21 @@
     "docsInfoVerify": "For digitally signed documents, verify their authenticity on the AEAT electronic office",
     "errorLoadingSignedDocs": "Error loading signed documents",
     "errorDownloading": "Error downloading document",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "taxPayment": {
+      "title": "Payment of customs duties and taxes",
+      "choose": "Choose how you want to pay the import duty and VAT:",
+      "optionR": "Deferred payment with your customs agent's guarantee",
+      "optionRHelp": "Your agent pays with their guarantee and invoices you afterwards.",
+      "optionA": "Payment before release (form 031)",
+      "optionAHelp": "You pay the taxes to the AEAT with form 031 before the goods are released.",
+      "byAgent": "Your customs agent decides.",
+      "amountDue": "Amount payable to the AEAT: €{{importe}}",
+      "howToPay": "Pay with form 031 on the AEAT website and upload the receipt in Documents.",
+      "payLink": "How to pay on the AEAT website",
+      "waiting": "We are waiting for the payment receipt to obtain the release.",
+      "error": "Could not save the payment method"
+    }
   },
   "landing": {
     "features": "Features",

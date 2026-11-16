@@ -2030,7 +2030,21 @@
     "docsInfoVerify": "Per a documents amb signatura digital, verifiqueu la seva autenticitat a la seu electrònica de l'AEAT",
     "errorLoadingSignedDocs": "Error en carregar documents signats",
     "errorDownloading": "Error en descarregar el document",
-    "loading": "Carregant..."
+    "loading": "Carregant...",
+    "taxPayment": {
+      "title": "Pagament dels tributs de duana",
+      "choose": "Tria com vols pagar l'aranzel i l'IVA de la importació:",
+      "optionR": "Pagament ajornat amb la garantia del teu agent de duanes",
+      "optionRHelp": "El teu agent avança el pagament amb la seva garantia; després te'l factura.",
+      "optionA": "Pagament previ a l'aixecament (model 031)",
+      "optionAHelp": "Pagues tu els tributs a l'AEAT amb el model 031 abans que s'alliberi la mercaderia.",
+      "byAgent": "Ho decideix el teu agent de duanes.",
+      "amountDue": "Import a pagar a l'AEAT: {{importe}} €",
+      "howToPay": "Paga amb el model 031 a la Seu de l'AEAT i puja'ns el justificant a Documents.",
+      "payLink": "Com pagar a la Seu de l'AEAT",
+      "waiting": "Quedem a l'espera del justificant de pagament per obtenir l'aixecament.",
+      "error": "No s'ha pogut desar la forma de pagament"
+    }
   },
   "landing": {
     "features": "Funcions",

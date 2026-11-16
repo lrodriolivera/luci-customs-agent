@@ -2030,7 +2030,21 @@
     "docsInfoVerify": "Para documentos com assinatura digital, verifique a sua autenticidade na sede eletronica da AEAT",
     "errorLoadingSignedDocs": "Erro ao carregar documentos assinados",
     "errorDownloading": "Erro ao descarregar o documento",
-    "loading": "A carregar..."
+    "loading": "A carregar...",
+    "taxPayment": {
+      "title": "Pagamento dos tributos aduaneiros",
+      "choose": "Escolha como quer pagar o direito e o IVA da importação:",
+      "optionR": "Pagamento diferido com a garantia do seu despachante",
+      "optionRHelp": "O seu despachante adianta o pagamento com a garantia dele e depois fatura-lho.",
+      "optionA": "Pagamento prévio à autorização de saída (modelo 031)",
+      "optionAHelp": "Paga você os tributos à AEAT com o modelo 031 antes da saída da mercadoria.",
+      "byAgent": "Decide o seu despachante.",
+      "amountDue": "Montante a pagar à AEAT: {{importe}} €",
+      "howToPay": "Pague com o modelo 031 na Sede da AEAT e envie-nos o comprovativo em Documentos.",
+      "payLink": "Como pagar na Sede da AEAT",
+      "waiting": "Ficamos a aguardar o comprovativo de pagamento para obter a autorização de saída.",
+      "error": "Não foi possível guardar a forma de pagamento"
+    }
   },
   "landing": {
     "features": "Funcionalidades",

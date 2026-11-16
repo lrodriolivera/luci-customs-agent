@@ -2031,7 +2031,21 @@
     "docsInfoVerify": "Para documentos con firma digital, verifique su autenticidad en la sede electrónica de la AEAT",
     "errorLoadingSignedDocs": "Error al cargar documentos firmados",
     "errorDownloading": "Error al descargar el documento",
-    "loading": "Cargando..."
+    "loading": "Cargando...",
+    "taxPayment": {
+      "title": "Pago de los tributos de aduana",
+      "choose": "Elige cómo quieres pagar el arancel y el IVA de la importación:",
+      "optionR": "Pago aplazado con la garantía de tu agente de aduanas",
+      "optionRHelp": "Tu agente adelanta el pago con su garantía; después te lo factura.",
+      "optionA": "Pago previo al levante (modelo 031)",
+      "optionAHelp": "Pagas tú los tributos a la AEAT con el modelo 031 antes de que se libere la mercancía.",
+      "byAgent": "Lo decide tu agente de aduanas.",
+      "amountDue": "Importe a pagar a la AEAT: {{importe}} €",
+      "howToPay": "Paga con el modelo 031 en la Sede de la AEAT y súbenos el justificante en Documentos.",
+      "payLink": "Cómo pagar en la Sede de la AEAT",
+      "waiting": "Quedamos a la espera del justificante de pago para la obtención del levante.",
+      "error": "No se pudo guardar la forma de pago"
+    }
   },
   "landing": {
     "features": "Funciones",

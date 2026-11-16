@@ -2030,7 +2030,21 @@
     "docsInfoVerify": "Para documents con firma digital, verifique su autenticidad en la sede electronica de la AEAT",
     "errorLoadingSignedDocs": "Erreur lors de cargar documents firmados",
     "errorDownloading": "Erreur lors de descargar el documento",
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "taxPayment": {
+      "title": "Paiement des droits et taxes de douane",
+      "choose": "Choisissez comment payer les droits et la TVA à l'importation :",
+      "optionR": "Paiement différé avec la garantie de votre agent en douane",
+      "optionRHelp": "Votre agent avance le paiement avec sa garantie puis vous le facture.",
+      "optionA": "Paiement avant mainlevée (formulaire 031)",
+      "optionAHelp": "Vous payez les taxes à l'AEAT avec le formulaire 031 avant la mainlevée.",
+      "byAgent": "Votre agent en douane décide.",
+      "amountDue": "Montant à payer à l'AEAT : {{importe}} €",
+      "howToPay": "Payez avec le formulaire 031 sur le site de l'AEAT et déposez le justificatif dans Documents.",
+      "payLink": "Comment payer sur le site de l'AEAT",
+      "waiting": "Nous attendons le justificatif de paiement pour obtenir la mainlevée.",
+      "error": "Impossible d'enregistrer le mode de paiement"
+    }
   },
   "landing": {
     "features": "Fonctionnalites",
