@@ -413,6 +413,14 @@ try {
   logger.warn('aeatStatusPollingWorker not started', { error: err.message });
 }
 
+// Lectura de la bandeja de avisos de exportacion AES (levantes, salida efectiva)
+// (AEAT_BANDEJA_ENABLED, mismo intervalo que la consulta; nunca en tests)
+try {
+  require('./workers/aesBandejaWorker').start();
+} catch (err) {
+  logger.warn('aesBandejaWorker not started', { error: err.message });
+}
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   logger.error(`Error: ${err.message}`, { stack: err.stack, url: req.originalUrl, method: req.method, userId: req.user?._id });
