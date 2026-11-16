@@ -676,7 +676,21 @@
       "error": "Impossibile salvare i dati delle parti"
     },
     "plasticKg": "Plastica non riutilizzabile (kg)",
-    "plasticHelp": "Imposta sugli imballaggi di plastica non riutilizzabili: 0,45 €/kg (1PL nella liquidazione). Di solito è in fattura o nella dichiarazione dell'importatore. 0 se non c'è."
+    "plasticHelp": "Imposta sugli imballaggi di plastica non riutilizzabili: 0,45 €/kg (1PL nella liquidazione). Di solito è in fattura o nella dichiarazione dell'importatore. 0 se non c'è.",
+    "plasticExemption": "Esenzione dall'imposta sulla plastica",
+    "plasticExemptionNone": "Nessuna esenzione",
+    "plasticExemptions": {
+      "1P1": "Art. 75 a) per medicinali o dispositivi medici (provare la destinazione)",
+      "1P2": "Art. 75 b) imballaggi di medicinali o dispositivi medici",
+      "1P3": "Art. 75 c) rotoli per insilato",
+      "1P4": "Art. 75 f) fino a 5 kg nel mese",
+      "1P5": "Art. 75 g) non destinati a imballaggi (provare la destinazione)"
+    },
+    "plasticRecycledKg": "Plastica riciclata (kg)",
+    "plasticCertificate": "N. del certificato di plastica riciclata",
+    "plasticRecycledHelp": "La plastica riciclata non paga: si dichiara con il certificato 1135 dell'impianto di riciclo o di un ente accreditato.",
+    "plasticCertificateRequired": "Indica il numero del certificato di plastica riciclata",
+    "plasticExemptionNeedsKg": "L'esenzione si dichiara con i kg di plastica non riutilizzabile (imposta zero)"
   },
   "classification": {
     "title": "Classificazione TARIC",

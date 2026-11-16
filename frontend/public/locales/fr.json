@@ -676,7 +676,21 @@
       "error": "Impossible d'enregistrer les données des parties"
     },
     "plasticKg": "Plastique non réutilisable (kg)",
-    "plasticHelp": "Taxe sur les emballages plastiques non réutilisables : 0,45 €/kg (1PL dans la liquidation). Figure souvent sur la facture ou la déclaration de l'importateur. 0 s'il n'y en a pas."
+    "plasticHelp": "Taxe sur les emballages plastiques non réutilisables : 0,45 €/kg (1PL dans la liquidation). Figure souvent sur la facture ou la déclaration de l'importateur. 0 s'il n'y en a pas.",
+    "plasticExemption": "Exonération de la taxe plastique",
+    "plasticExemptionNone": "Sans exonération",
+    "plasticExemptions": {
+      "1P1": "Art. 75 a) pour médicaments ou dispositifs médicaux (justifier la destination)",
+      "1P2": "Art. 75 b) emballages de médicaments ou dispositifs médicaux",
+      "1P3": "Art. 75 c) films d'ensilage",
+      "1P4": "Art. 75 f) jusqu'à 5 kg dans le mois",
+      "1P5": "Art. 75 g) non destinés aux emballages (justifier la destination)"
+    },
+    "plasticRecycledKg": "Plastique recyclé (kg)",
+    "plasticCertificate": "N° du certificat de plastique recyclé",
+    "plasticRecycledHelp": "Le plastique recyclé n'est pas taxé : il se déclare avec le certificat 1135 de l'usine de recyclage ou d'un organisme accrédité.",
+    "plasticCertificateRequired": "Indiquez le numéro du certificat de plastique recyclé",
+    "plasticExemptionNeedsKg": "L'exonération se déclare avec les kg de plastique non réutilisable (taxe nulle)"
   },
   "classification": {
     "title": "Classification TARIC",

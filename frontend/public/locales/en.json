@@ -676,7 +676,21 @@
       "error": "Could not save the party details"
     },
     "plasticKg": "Non-reusable plastic (kg)",
-    "plasticHelp": "Tax on non-reusable plastic packaging: €0.45/kg (1PL in the liquidation). Usually on the invoice or the importer's declaration. 0 if none."
+    "plasticHelp": "Tax on non-reusable plastic packaging: €0.45/kg (1PL in the liquidation). Usually on the invoice or the importer's declaration. 0 if none.",
+    "plasticExemption": "Plastic tax exemption",
+    "plasticExemptionNone": "No exemption",
+    "plasticExemptions": {
+      "1P1": "Art. 75 a) for medicines or medical devices (destination to be proven)",
+      "1P2": "Art. 75 b) packaging of medicines or medical devices",
+      "1P3": "Art. 75 c) silage rolls",
+      "1P4": "Art. 75 f) up to 5 kg in the month",
+      "1P5": "Art. 75 g) not intended for packaging (destination to be proven)"
+    },
+    "plasticRecycledKg": "Recycled plastic (kg)",
+    "plasticCertificate": "Recycled plastic certificate no.",
+    "plasticRecycledHelp": "Recycled plastic is not taxed: it is declared with certificate 1135 from the recycling plant or an accredited body.",
+    "plasticCertificateRequired": "Enter the recycled plastic certificate number",
+    "plasticExemptionNeedsKg": "The exemption is declared with the kg of non-reusable plastic (with zero tax)"
   },
   "classification": {
     "title": "TARIC Classification",

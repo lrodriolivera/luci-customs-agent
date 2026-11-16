@@ -43,7 +43,7 @@ describe('GoodsEditor', () => {
       grossWeight: 120,
       invoiceValue: 184800,
       packages: { quantity: 12, type: 'CT' },
-      impuestoPlastico: { kg: 0 }
+      impuestoPlastico: { kg: 0, exencion: undefined, kgReciclado: 0, certificadoReciclado: undefined }
     })
   })
 
@@ -51,7 +51,25 @@ describe('GoodsEditor', () => {
     const { onSave } = renderEditor()
     change('expeditions.plasticKg', '12.5')
     fireEvent.click(screen.getByText('common.save'))
-    expect(onSave.mock.calls[0][0].impuestoPlastico).toEqual({ kg: 12.5 })
+    expect(onSave.mock.calls[0][0].impuestoPlastico).toMatchObject({ kg: 12.5 })
+  })
+
+  test('guarda la exención y el plástico reciclado con su certificado', () => {
+    const { onSave } = renderEditor()
+    change('expeditions.plasticKg', '3')
+    change('expeditions.plasticExemption', '1P4')
+    change('expeditions.plasticRecycledKg', '2')
+    change('expeditions.plasticCertificate', ' CERT-9 ')
+    fireEvent.click(screen.getByText('common.save'))
+    expect(onSave.mock.calls[0][0].impuestoPlastico).toEqual({ kg: 3, exencion: '1P4', kgReciclado: 2, certificadoReciclado: 'CERT-9' })
+  })
+
+  test('kg reciclados sin certificado: no guarda y lo pide', () => {
+    const { onSave } = renderEditor()
+    change('expeditions.plasticRecycledKg', '2')
+    fireEvent.click(screen.getByText('common.save'))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert')).toHaveTextContent('expeditions.plasticCertificateRequired')
   })
 
   test('conserva las marcas de bulto existentes al cambiar la cantidad', () => {

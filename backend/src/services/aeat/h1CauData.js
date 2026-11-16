@@ -18,9 +18,7 @@ const { sinCodigoPostal } = require('./paisesSinCodigoPostal');
 const { MODOS_ACTIVACION } = require('./h1CauActivacion');
 const { separarDocumentosC44 } = require('./documentosC44');
 const { impuestoEspecialEnH1 } = require('./impuestoEspecial');
-
-// Ley 7/2022, art. 82: 0,45 EUR por kilo de plastico no reutilizable.
-const TIPO_PLASTICO = 0.45;
+const { plasticoEnH1, comprobarLimite5kg } = require('./plasticoEnH1');
 
 // Medios de pago que obligan a declarar garantia con regimen 40 (regla C0616).
 const PAGOS_CON_GARANTIA = new Set(['O', 'R', 'S', 'T', 'U', 'V', 'G']);
@@ -249,13 +247,13 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
   // se devenga, su tributo; su cuota forma parte de la base del IVA (art. 83
   // LIVA). Comprobado en PRE el 16/11/2026 (MRN 26ES002801I01BQYR8).
   const ie = impuestoEspecialEnH1(good, contexto.medioDePago);
-  // Impuesto sobre envases de plastico no reutilizables: tributo 1PL a 0,45
-  // EUR/kg; entra en la base del IVA. Comprobado en PRE el 16/11/2026 (10 kg:
-  // 1PL 4,50 y B00 sobre 5.380,50; MRN 26ES002801I01BRAR7; con otro tipo,
-  // error 2878 «El tipo correcto es: 0.45»).
-  const kgPlastico = Number(good.impuestoPlastico?.kg) || 0;
-  const cuotaPlastico = kgPlastico > 0 ? redondear(kgPlastico * TIPO_PLASTICO) : 0;
-  const baseIva = redondear(valorAduana + arancel + ie.cuota + cuotaPlastico);
+  // Impuesto sobre envases de plastico no reutilizables (ver plasticoEnH1):
+  // tributo 1PL a 0,45 EUR/kg, exenciones 1P1-1P5 y certificado de reciclado
+  // 1135. La cuota entra en la base del IVA. Comprobado en PRE el 16/11/2026
+  // (10 kg: 1PL 4,50 y B00 sobre 5.380,50; MRN 26ES002801I01BRAR7; con otro
+  // tipo, error 2878 «El tipo correcto es: 0.45»).
+  const plastico = plasticoEnH1(good, contexto.medioDePago, n, faltan);
+  const baseIva = redondear(valorAduana + arancel + ie.cuota + plastico.cuota);
   const tipoBulto = String(good.packages?.type || '').toUpperCase();
   if (!/^[A-Z0-9]{2}$/.test(tipoBulto)) faltan.push(`tipo de bulto (código de dos letras) de la partida ${n}`);
   if (!(good.packages?.quantity > 0)) faltan.push(`número de bultos de la partida ${n}`);
@@ -269,7 +267,10 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     valorEstadistico: good.statisticalValue && good.statisticalValue !== valor ? good.statisticalValue : valorFrontera,
     regimen: {
       solicitado: String(expedition.declaration?.regime || '40'), precedente: '00',
-      adicionales: /^[A-Z0-9]{3}$/i.test(adicional) && adicional !== '000' ? [adicional.toUpperCase()] : []
+      adicionales: [
+        ...(/^[A-Z0-9]{3}$/i.test(adicional) && adicional !== '000' ? [adicional.toUpperCase()] : []),
+        ...plastico.adicionales
+      ]
     },
     origen: texto(good.originCountry)?.toUpperCase(),
     descripcion: texto(good.descriptionEs) || texto(good.description),
@@ -286,7 +287,7 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     tributos: [
       { tipo: 'A00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoArancel, importe: valorAduana, cuota: arancel }] },
       ...(ie.tributo ? [ie.tributo] : []),
-      ...(kgPlastico > 0 ? [{ tipo: '1PL', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: TIPO_PLASTICO, unidad: 'KGM', cantidad: kgPlastico, cuota: cuotaPlastico }] }] : []),
+      ...(plastico.tributo ? [plastico.tributo] : []),
       { tipo: 'B00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoIva, importe: baseIva, cuota: redondear(baseIva * tipoIva / 100) }] }
     ],
     bultos: [{ tipo: tipoBulto, numero: good.packages?.quantity, marcas: texto(good.packages?.marks) || 'S/M' }],
@@ -296,7 +297,8 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     documentosJustificativos: [
       ...(contexto.factura ? [{ tipo: 'N380', referencia: contexto.factura }] : []),
       ...separarDocumentosC44(good.documentosC44).justificativos
-        .filter((d) => !(d.tipo === 'N380' && d.referencia === contexto.factura))
+        .filter((d) => !(d.tipo === 'N380' && d.referencia === contexto.factura)),
+      ...plastico.documentos
     ],
     referenciasAdicionales: separarDocumentosC44(good.documentosC44).referencias,
     valoracion: {
@@ -389,6 +391,8 @@ function expeditionToH1CauData(expedition, { declarante, cambio, cambiosGastos =
       partidas: goods.map((g, i) => partidaDe(expedition, g, i, contexto, faltan))
     }
   };
+  comprobarLimite5kg(goods.filter((g) => g.impuestoPlastico?.exencion === '1P4')
+    .reduce((s, g) => s + (Number(g.impuestoPlastico?.kg) || 0), 0), faltan);
 
   if (faltan.length > 0) {
     const unicos = [...new Set(faltan)];
