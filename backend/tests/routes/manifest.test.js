@@ -281,6 +281,44 @@ describe('Router manifest.js', () => {
       expect(saved.createdBy).toBeTruthy();
     });
 
+    test('guarda los identificadores del producto y el TARIC completo de la partida', async () => {
+      const decl = {
+        trackingNumber: 'AWB-IDS-001',
+        carrier: { code: 'DHL', name: 'DHL' },
+        sender: { name: 'Sender', address: { country: 'CN' } },
+        recipient: { name: 'Dest', taxId: '', address: { street: '-', city: '-', postalCode: '00000', country: 'ES' } },
+        items: [{
+          description: 'Libro', taricCode: '4901990000', quantity: 1, unitValue: 12, totalValue: 12,
+          netWeight: 0.3, countryOfOrigin: 'CN',
+          commercialId: 'SKU-1', manufacturerRef: 'EDT-77', gtin: '9788420412146'
+        }],
+        totals: { intrinsicValue: 12, shippingCost: 0, grossWeight: 0.3, packages: 1 }
+      };
+      const res = await request(app).post('/api/manifest/create-h7-batch').send({ h7Declarations: [decl] }).expect(200);
+      expect(res.body.data.created).toBe(1);
+      const saved = await H7Declaration.findOne({ trackingNumber: 'AWB-IDS-001' });
+      expect(saved.items[0].taricCode).toBe('4901990000');
+      expect(saved.items[0].commercialId).toBe('SKU-1');
+      expect(saved.items[0].manufacturerRef).toBe('EDT-77');
+      expect(saved.items[0].gtin).toBe('9788420412146');
+    });
+
+    test('un EAN inválido no hace fallar la creación: se descarta (irá Y081)', async () => {
+      const decl = {
+        trackingNumber: 'AWB-IDS-002',
+        carrier: { code: 'DHL', name: 'DHL' },
+        sender: { name: 'Sender', address: { country: 'CN' } },
+        recipient: { name: 'Dest', taxId: '', address: { street: '-', city: '-', postalCode: '00000', country: 'ES' } },
+        items: [{ description: 'Libro', taricCode: '4901990000', quantity: 1, unitValue: 12, totalValue: 12,
+          netWeight: 0.3, countryOfOrigin: 'CN', commercialId: 'S', manufacturerRef: 'R', gtin: '6.9012E+12' }],
+        totals: { intrinsicValue: 12, shippingCost: 0, grossWeight: 0.3, packages: 1 }
+      };
+      const res = await request(app).post('/api/manifest/create-h7-batch').send({ h7Declarations: [decl] }).expect(200);
+      expect(res.body.data.created).toBe(1);
+      const saved = await H7Declaration.findOne({ trackingNumber: 'AWB-IDS-002' });
+      expect(saved.items[0].gtin).toBeUndefined();
+    });
+
     test('mapea carrier inválido a OTHER (enum fallback)', async () => {
       const decl = {
         trackingNumber: 'AWB-TEST-002',
