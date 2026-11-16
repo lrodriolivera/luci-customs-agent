@@ -40,6 +40,47 @@ const descripcionDe = (suggestion) => {
   return texto.replace(/<br\s*\/?>/gi, ' ')
 }
 
+// Un codigo que la IA propuso y no existe en el catalogo TARIC como
+// declarable no se ofrece para aplicar (UAT 16/Nov/2026: 6302219000). Se
+// muestra tachado, sin porcentaje, con los codigos reales de su subpartida.
+function CodigoInexistente({ suggestion, currentCode, onApply, t }) {
+  const alternativas = suggestion.alternatives || []
+  return (
+    <div className="p-2 rounded bg-amber-50 border border-amber-200">
+      <p className="text-sm">
+        <span className="font-mono line-through text-gray-500">{suggestion.code}</span>
+        <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+          {t('expeditions.taricNotVerified')}
+        </span>
+      </p>
+      {alternativas.length > 0 && (
+        <>
+          <p className="text-xs text-amber-900 mt-1">{t('expeditions.taricRealCodes')}</p>
+          <ul className="mt-1 space-y-1">
+            {alternativas.map((alt) => (
+              <li key={alt.code} className="flex items-center justify-between text-xs">
+                <span>
+                  <span className="font-mono font-semibold">{alt.code}</span>
+                  {alt.description && <span className="text-gray-600"> — {descripcionDe(alt)}</span>}
+                </span>
+                {currentCode !== alt.code && (
+                  <button
+                    type="button"
+                    onClick={() => onApply(alt)}
+                    className="text-blue-600 hover:text-blue-800 ml-2"
+                  >
+                    {t('expeditions.apply')}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function ExpeditionNew() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -224,9 +265,11 @@ export default function ExpeditionNew() {
           [index]: data
         })
 
-        // Auto-fill with the best suggestion
-        const bestSuggestion = data.suggestions[0]
-        if (bestSuggestion.code && bestSuggestion.code !== '0000000000') {
+        // Se rellena con la mejor sugerencia que existe en el catalogo: un
+        // codigo marcado como inexistente (verified === false) no se aplica
+        // solo (UAT 16/Nov/2026: la IA propuso 6302219000).
+        const bestSuggestion = data.suggestions.find(s => s.verified !== false)
+        if (bestSuggestion?.code && bestSuggestion.code !== '0000000000') {
           applyTaric(index, bestSuggestion)
           toast.success(`${t('expeditions.taricSuggested')} ${bestSuggestion.code} (${bestSuggestion.confidence}% ${t('expeditions.confidence')})`)
         } else {
@@ -739,6 +782,15 @@ export default function ExpeditionNew() {
                       </p>
                       <div className="space-y-2">
                         {classificationResults[index].suggestions?.slice(0, 3).map((suggestion, sIndex) => (
+                          suggestion.verified === false ? (
+                            <CodigoInexistente
+                              key={sIndex}
+                              suggestion={suggestion}
+                              currentCode={item.taricCode}
+                              onApply={(alt) => applySuggestion(index, { code: alt.code, verified: true, description: alt.description })}
+                              t={t}
+                            />
+                          ) : (
                           <div
                             key={sIndex}
                             className={`flex items-center justify-between p-2 rounded ${
@@ -761,11 +813,6 @@ export default function ExpeditionNew() {
                                   {t('expeditions.tariff')}: {arancelDe(suggestion)}%
                                 </span>
                               )}
-                              {suggestion.verified === false && (
-                                <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
-                                  {t('expeditions.taricNotVerified')}
-                                </span>
-                              )}
                               {descripcionDe(suggestion) && (
                                 <p className="text-xs text-gray-500 mt-1">{descripcionDe(suggestion)}</p>
                               )}
@@ -780,6 +827,7 @@ export default function ExpeditionNew() {
                               </button>
                             )}
                           </div>
+                          )
                         ))}
                       </div>
                       {classificationResults[index].warnings?.length > 0 && (

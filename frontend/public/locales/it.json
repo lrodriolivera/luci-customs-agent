@@ -571,7 +571,8 @@
     "currencyGroupBce": "Con tasso ufficiale della BCE",
     "currencyGroupWithoutBce": "Senza tasso della BCE (l'H1 sarà in euro)",
     "officialRateError": "Non è stato possibile consultare il tasso di cambio ufficiale di {{currency}}",
-    "taricNotVerified": "Non presente nel catalogo TARIC",
+    "taricNotVerified": "Non esiste nel TARIC",
+    "taricRealCodes": "Codici reali della sottovoce:",
     "valueNotValid": "Importo non valido. Usa il punto per le migliaia e la virgola per i decimali: 184.800,50",
     "timelineAction": {
       "expedition_created": "Pratica creata",
@@ -772,7 +773,7 @@
     "found": "trovato",
     "foundPlural": "trovati",
     "codeVerified": "Codice verificato nel catalogo TARIC: esiste ed è dichiarabile.",
-    "codeNotVerified": "Questo codice non è presente nel catalogo TARIC come codice dichiarabile. Non usarlo senza verificarlo.",
+    "codeNotVerified": "Questo codice non esiste nel TARIC come codice dichiarabile: non può essere dichiarato. Usa uno dei codici reali della sottovoce.",
     "codeAlternatives": "Codici dichiarabili della stessa sottovoce:"
   },
   "declarations": {

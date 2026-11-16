@@ -571,7 +571,8 @@
     "currencyGroupBce": "Com taxa oficial do BCE",
     "currencyGroupWithoutBce": "Sem taxa do BCE (o H1 irá em euros)",
     "officialRateError": "Não foi possível consultar a taxa de câmbio oficial de {{currency}}",
-    "taricNotVerified": "Não consta do catálogo TARIC",
+    "taricNotVerified": "Não existe na TARIC",
+    "taricRealCodes": "Códigos reais da subposição:",
     "valueNotValid": "Montante inválido. Use ponto para os milhares e vírgula para os decimais: 184.800,50",
     "timelineAction": {
       "expedition_created": "Processo criado",
@@ -772,7 +773,7 @@
     "found": "encontrado",
     "foundPlural": "encontrados",
     "codeVerified": "Código verificado no catálogo TARIC: existe e é declarável.",
-    "codeNotVerified": "Este código não consta do catálogo TARIC como código declarável. Não o utilize sem o verificar.",
+    "codeNotVerified": "Este código não existe na TARIC como código declarável: não pode ser declarado. Utilize um dos códigos reais da subposição.",
     "codeAlternatives": "Códigos declaráveis da mesma subposição:"
   },
   "declarations": {

@@ -571,7 +571,8 @@
     "currencyGroupBce": "Amb tipus oficial del BCE",
     "currencyGroupWithoutBce": "Sense tipus del BCE (l'H1 anirà en euros)",
     "officialRateError": "No s'ha pogut consultar el tipus de canvi oficial de {{currency}}",
-    "taricNotVerified": "No és al catàleg TARIC",
+    "taricNotVerified": "No existix en el TARIC",
+    "taricRealCodes": "Codis reals de la subpartida:",
     "valueNotValid": "Import no vàlid. Fes servir punt per als milers i coma per als decimals: 184.800,50",
     "timelineAction": {
       "expedition_created": "Expedient creat",
@@ -772,7 +773,7 @@
     "found": "trobat",
     "foundPlural": "trobats",
     "codeVerified": "Codi comprovat al catàleg TARIC: existeix i és declarable.",
-    "codeNotVerified": "Aquest codi no és al catàleg TARIC com a codi declarable. No l'utilitzis sense comprovar-lo.",
+    "codeNotVerified": "Este codi no existix en el TARIC com a codi declarable: no es pot declarar. Utilitza un dels codis reals de la subpartida.",
     "codeAlternatives": "Codis declarables de la mateixa subpartida:"
   },
   "declarations": {

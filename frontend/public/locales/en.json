@@ -571,7 +571,8 @@
     "currencyGroupBce": "With official ECB rate",
     "currencyGroupWithoutBce": "No ECB rate (the H1 will be in euros)",
     "officialRateError": "The official exchange rate for {{currency}} could not be retrieved",
-    "taricNotVerified": "Not in the TARIC catalogue",
+    "taricNotVerified": "Not a TARIC code",
+    "taricRealCodes": "Real codes under the subheading:",
     "valueNotValid": "Invalid amount. Use a dot for thousands and a comma for decimals: 184.800,50",
     "timelineAction": {
       "expedition_created": "File created",
@@ -772,7 +773,7 @@
     "found": "found",
     "foundPlural": "found",
     "codeVerified": "Code checked against the TARIC catalogue: it exists and can be declared.",
-    "codeNotVerified": "This code is not in the TARIC catalogue as a declarable code. Do not use it without checking.",
+    "codeNotVerified": "This code does not exist in TARIC as a declarable code and cannot be declared. Use one of the real codes under the subheading.",
     "codeAlternatives": "Declarable codes under the same subheading:"
   },
   "declarations": {

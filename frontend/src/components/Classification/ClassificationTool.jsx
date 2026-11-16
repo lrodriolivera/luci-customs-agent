@@ -964,15 +964,21 @@ export default function ClassificationTool() {
                       <div className="flex items-center gap-3">
                         <TagIcon className="w-6 h-6 text-gray-400" />
                         <div>
-                          <p className="font-mono text-lg font-bold text-gray-900">
+                          {/* Un codigo inexistente se ve tachado y sin
+                              porcentaje: no es una opcion (UAT 16/Nov/2026). */}
+                          <p className={suggestion.verified === false
+                            ? 'font-mono text-lg font-bold text-gray-400 line-through'
+                            : 'font-mono text-lg font-bold text-gray-900'}>
                             {suggestion.code}
                           </p>
                           <p className="text-gray-600">{suggestion.description}</p>
                         </div>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-sm font-medium ${getConfidenceColor(suggestion.confidence)}`}>
-                        {suggestion.confidence}%
-                      </span>
+                      {suggestion.verified !== false && (
+                        <span className={`px-2 py-1 rounded-full text-sm font-medium ${getConfidenceColor(suggestion.confidence)}`}>
+                          {suggestion.confidence}%
+                        </span>
+                      )}
                     </div>
 
                     {suggestion.reasoning && (
@@ -995,8 +1001,17 @@ export default function ClassificationTool() {
                             <p className="mt-1">{t('classification.codeAlternatives')}</p>
                             <ul className="mt-1 space-y-1">
                               {suggestion.alternatives.map((alt) => (
-                                <li key={alt.code}>
-                                  <span className="font-mono font-semibold">{alt.code}</span> — {alt.description}
+                                <li key={alt.code} className="flex items-center justify-between gap-2">
+                                  <span>
+                                    <span className="font-mono font-semibold">{alt.code}</span> — {alt.description}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => navigator.clipboard.writeText(alt.code)}
+                                    className="btn-secondary text-xs"
+                                  >
+                                    {t('classification.copy')}
+                                  </button>
                                 </li>
                               ))}
                             </ul>
@@ -1005,6 +1020,7 @@ export default function ClassificationTool() {
                       </div>
                     )}
 
+                    {suggestion.verified !== false && (
                     <div className="mt-3 pl-9 flex flex-wrap gap-2">
                       <button
                         onClick={() => handleValidate(suggestion.code)}
@@ -1020,6 +1036,7 @@ export default function ClassificationTool() {
                         {t('classification.copy')}
                       </button>
                     </div>
+                    )}
                   </div>
                 ))}
               </div>
