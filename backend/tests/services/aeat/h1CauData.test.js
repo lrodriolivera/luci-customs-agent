@@ -492,3 +492,25 @@ describe('H1 CAU: con pago previo al levante no se declara la garantía de la ag
   });
 });
 
+describe('H1 CAU: impuesto sobre envases de plástico no reutilizables (1PL)', () => {
+  test('tributo 1PL a 0,45 EUR/kg y su cuota en la base del IVA (como liquidó la AEAT en PRE)', () => {
+    const exp = expediente({ goods: [{ ...expediente().goods[0], currency: 'EUR', invoiceValue: 4800, impuestoPlastico: { kg: 10 } }] });
+    const p = datos(exp).envio.partidas[0];
+    const pl = p.tributos.find((t) => t.tipo === '1PL');
+    expect(pl.bases).toEqual([{ tipoImpositivo: 0.45, unidad: 'KGM', cantidad: 10, cuota: 4.5 }]);
+    const a00 = p.tributos.find((t) => t.tipo === 'A00').bases[0];
+    const b00 = p.tributos.find((t) => t.tipo === 'B00').bases[0];
+    expect(b00.importe).toBeCloseTo(a00.importe + a00.cuota + 4.5, 2);
+  });
+
+  test('0 kg o sin dato: sin tributo 1PL', () => {
+    const exp = expediente({ goods: [{ ...expediente().goods[0], impuestoPlastico: { kg: 0 } }] });
+    expect(datos(exp).envio.partidas[0].tributos.map((t) => t.tipo)).toEqual(['A00', 'B00']);
+  });
+
+  siHayXmllint('el mensaje con 1PL cumple el XSD', () => {
+    const exp = expediente({ goods: [{ ...expediente().goods[0], impuestoPlastico: { kg: 10 } }] });
+    expect(validar(datos(exp))).toBeNull();
+  });
+});
+

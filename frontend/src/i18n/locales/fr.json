@@ -674,7 +674,9 @@
       "regenerateHint": "Si vous avez déjà généré le H1, générez-le à nouveau pour qu'il reprenne ces données.",
       "saved": "Données des parties enregistrées",
       "error": "Impossible d'enregistrer les données des parties"
-    }
+    },
+    "plasticKg": "Plastique non réutilisable (kg)",
+    "plasticHelp": "Taxe sur les emballages plastiques non réutilisables : 0,45 €/kg (1PL dans la liquidation). Figure souvent sur la facture ou la déclaration de l'importateur. 0 s'il n'y en a pas."
   },
   "classification": {
     "title": "Classification TARIC",

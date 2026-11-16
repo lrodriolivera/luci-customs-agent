@@ -674,7 +674,9 @@
       "regenerateHint": "Si ja has generat l'H1, torna a generar-lo perquè porte estes dades.",
       "saved": "Dades de les parts guardades",
       "error": "No s'han pogut guardar les dades de les parts"
-    }
+    },
+    "plasticKg": "Plàstic no reutilitzable (kg)",
+    "plasticHelp": "Impost sobre envasos de plàstic no reutilitzables: 0,45 €/kg (1PL en la liquidació). Sol vindre en la factura o en la declaració de l'importador. 0 si no n'hi ha."
   },
   "classification": {
     "title": "Classificacio TARIC",

@@ -674,7 +674,9 @@
       "regenerateHint": "Se já gerou o H1, gere-o de novo para incluir estes dados.",
       "saved": "Dados das partes guardados",
       "error": "Não foi possível guardar os dados das partes"
-    }
+    },
+    "plasticKg": "Plástico não reutilizável (kg)",
+    "plasticHelp": "Imposto sobre embalagens de plástico não reutilizáveis: 0,45 €/kg (1PL na liquidação). Costuma vir na fatura ou na declaração do importador. 0 se não houver."
   },
   "classification": {
     "title": "Classificacao TARIC",

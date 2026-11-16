@@ -42,8 +42,16 @@ describe('GoodsEditor', () => {
       netWeight: 100,
       grossWeight: 120,
       invoiceValue: 184800,
-      packages: { quantity: 12, type: 'CT' }
+      packages: { quantity: 12, type: 'CT' },
+      impuestoPlastico: { kg: 0 }
     })
+  })
+
+  test('guarda los kilos de plástico no reutilizable (impuesto 1PL)', () => {
+    const { onSave } = renderEditor()
+    change('expeditions.plasticKg', '12.5')
+    fireEvent.click(screen.getByText('common.save'))
+    expect(onSave.mock.calls[0][0].impuestoPlastico).toEqual({ kg: 12.5 })
   })
 
   test('conserva las marcas de bulto existentes al cambiar la cantidad', () => {

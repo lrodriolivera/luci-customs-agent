@@ -674,7 +674,9 @@
       "regenerateHint": "If you already generated the H1, generate it again so it carries these details.",
       "saved": "Party details saved",
       "error": "Could not save the party details"
-    }
+    },
+    "plasticKg": "Non-reusable plastic (kg)",
+    "plasticHelp": "Tax on non-reusable plastic packaging: €0.45/kg (1PL in the liquidation). Usually on the invoice or the importer's declaration. 0 if none."
   },
   "classification": {
     "title": "TARIC Classification",
