@@ -1220,15 +1220,6 @@ describe('api.js — aeatRealAPI', () => {
     expect(mockApi.post).toHaveBeenCalledWith('/api/aeat-real/certificates/import', data)
   })
 
-  it('aeatRealAPI.declarations.submitH7 llama a POST', async () => {
-    const api = await import('./api.js')
-
-    const data = { expeditionId: 'exp123', certificateAlias: 'cert-fnmt' }
-    await api.aeatRealAPI.declarations.submitH7(data)
-
-    expect(mockApi.post).toHaveBeenCalledWith('/api/aeat-real/declarations/h7/submit', data)
-  })
-
   it('aeatRealAPI.declarations.getStatus llama a GET con params', async () => {
     const api = await import('./api.js')
 

@@ -555,19 +555,6 @@ describe('AEAT Real Service', () => {
       expect(certificateService.validateCertificateForOperation).toHaveBeenCalledWith('cert-id', 'H1');
     });
 
-    test('submitH7Declaration should use H7_SUBMIT service and validateNoThreshold option', async () => {
-      const result = await aeatRealService.submitH7Declaration(
-        '<test>xml</test>',
-        'cert-id',
-        'password',
-        {}
-      );
-
-      expect(result).toHaveProperty('success');
-      // H7 no está en el SERVICES del código actual, así que esto ejercitará el _submitDeclaration con undefined service
-      // Lo importante es que el método existe y delega correctamente
-    });
-
     test('submitAESDeclaration should use AES_SUBMIT service', async () => {
       const result = await aeatRealService.submitAESDeclaration(
         '<test>xml</test>',

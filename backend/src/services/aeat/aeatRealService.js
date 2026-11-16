@@ -234,16 +234,6 @@ class AEATRealService {
         description: 'Anulacion de declaracion sumaria de entrada'
       },
 
-      // === H7 (Bajo Valor - Obsoleto desde 2026, pero mantenido para referencia) ===
-      H7_SUBMIT: {
-        code: 'H7_SUBMIT',
-        name: 'Presentación DUA H7 (Bajo Valor)',
-        path: '/wlpl/inwinvoc/es.aeat.dit.adu.adh7.ws.H7SubmitV1SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adh7/ws/H7SubmitV1.wsdl',
-        operation: 'H7SubmitV1',
-        messageType: 'H7Submit',
-        description: 'Declaracion de bajo valor H7'
-      },
       H7_QUERY: {
         code: 'H7_QUERY',
         name: 'Consulta DUA H7',
@@ -495,23 +485,6 @@ class AEATRealService {
       certificateId,
       password,
       options
-    );
-  }
-
-  /**
-   * Enviar declaración H7 (bajo valor)
-   */
-  async submitH7Declaration(declarationXML, certificateId, password, options = {}) {
-    return this._submitDeclaration(
-      this.SERVICES.H7_SUBMIT,
-      declarationXML,
-      certificateId,
-      password,
-      {
-        ...options,
-        // En 2026: sin umbral mínimo para e-commerce
-        validateNoThreshold: true
-      }
     );
   }
 
@@ -1273,11 +1246,6 @@ class AEATRealService {
       }
     }
 
-    // Verificaciones específicas H7 (2026)
-    if (service.code === 'H7_SUBMIT' && options.validateNoThreshold) {
-      warnings.push('Recordatorio: Desde 2026, todos los envíos e-commerce requieren H7 sin umbral mínimo');
-    }
-
     return {
       canSubmit: issues.length === 0,
       issues,
@@ -1451,18 +1419,6 @@ class AEATRealService {
         { tag: 'Partida', name: 'Partida de mercancias', required: true },
         { tag: 'C42ValorFactura', name: 'Valor factura', required: true },
         { tag: 'C3312CodigoPosicionTaric', name: 'Codigo TARIC', required: true }
-      ],
-      // NOTA (sep/2026): existen dos builders H7 (buildH7ImportXML con tags
-      // AEAT-nativos tipo C08Importador/C14Declarante, y buildAltaH7V1XML,
-      // el esquema oficial más reciente, con Exporter/Importer/GoodsItem) y
-      // no está claro cuál es el vigente para H7_SUBMIT — el propio SERVICES
-      // lo marca "Obsoleto desde 2026". No se corrige aquí sin confirmar cuál
-      // builder es el real para no adivinar una decisión de producto.
-      'H7_SUBMIT': [
-        { tag: 'Sender', name: 'Remitente', required: true },
-        { tag: 'Recipient', name: 'Destinatario', required: true },
-        { tag: 'GoodsDescription', name: 'Descripción mercancía', required: true },
-        { tag: 'IntrinsicValue', name: 'Valor intrínseco', required: true }
       ],
       // Nombres verificados contra aesXmlBuilder.js (único builder AES, elementFormDefault="qualified").
       'AES_SUBMIT': [

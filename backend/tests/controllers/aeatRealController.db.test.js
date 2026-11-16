@@ -35,7 +35,6 @@ const mockXadesService = {
 
 const mockAeatRealService = {
   submitH1Declaration: jest.fn(),
-  submitH7Declaration: jest.fn(),
   submitAESDeclaration: jest.fn(),
   submitNCTSDeclaration: jest.fn(),
   submitENSDeclaration: jest.fn(),
@@ -338,80 +337,6 @@ describe('aeatRealController con Mongo real', () => {
 
       expect(res.status).toBe(500);
       expect(res.body.error).toMatch(/timeout/i);
-    });
-  });
-
-  // ============================================
-  // submitH7Declaration
-  // ============================================
-  describe('submitH7Declaration', () => {
-    test('400 si falta expeditionId', async () => {
-      const res = await request(await app(aeatRealController.submitH7Declaration))
-        .post('/r')
-        .send({ certificateAlias: 'FNMT-STRIX' });
-
-      expect(res.status).toBe(400);
-      expect(mockAeatRealService.submitH7Declaration).not.toHaveBeenCalled();
-    });
-
-    test('404 si el expediente es de otro tenant', async () => {
-      const expOtro = await crearExpedicion({ tenantId: TENANT_B });
-
-      const res = await request(await app(aeatRealController.submitH7Declaration))
-        .post('/r')
-        .send({
-          expeditionId: expOtro._id.toString(),
-          certificateAlias: 'FNMT-STRIX',
-          password: 'clave-real'
-        });
-
-      expect(res.status).toBe(404);
-    });
-
-    test('camino feliz: persiste status=submitted y timeline', async () => {
-      const exp = await crearExpedicion();
-
-      mockAeatRealService.submitH7Declaration.mockResolvedValue({
-        success: true,
-        mrn: '26ES987654321098765',
-        channel: 'yellow'
-      });
-
-      const res = await request(await app(aeatRealController.submitH7Declaration))
-        .post('/r')
-        .send({
-          expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX',
-          password: 'clave-real',
-          useSandbox: false
-        });
-
-      expect(res.status).toBe(200);
-      expect(res.body.data.mrn).toBe('26ES987654321098765');
-
-      const expActualizado = await Expedition.findById(exp._id);
-      expect(expActualizado.declaration.status).toBe('submitted');
-      expect(expActualizado.timeline[0].action).toBe('h7_submitted_aeat');
-      expect(expActualizado.timeline[0].description).toContain('26ES987654321098765');
-    });
-
-    test('500 si el servicio lanza', async () => {
-      const exp = await crearExpedicion();
-
-      mockAeatRealService.submitH7Declaration.mockRejectedValue(
-        new Error('Certificado expirado')
-      );
-
-      const res = await request(await app(aeatRealController.submitH7Declaration))
-        .post('/r')
-        .send({
-          expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX',
-          password: 'clave-real'
-        });
-
-      expect(res.status).toBe(500);
-      expect(res.body.error).toContain('Certificado expirado');
     });
   });
 
