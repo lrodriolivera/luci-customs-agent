@@ -2319,7 +2319,12 @@
     "tolerance": "Tolerance",
     "rvc": "Contenu en Valeur Regionale (CVR)",
     "accumulationPermitted": "Cumul Autorise",
-    "requiredDocumentation": "Documentation Requise"
+    "requiredDocumentation": "Documentation Requise",
+    "proofOfOrigin": "Preuve de l’origine",
+    "aeatUnavailable": "Le Tarif intégré de l’AEAT n’a pas pu être consulté : aucun taux ni économie n’est affiché. Réessayez plus tard.",
+    "noAeatPreference": "L’AEAT ne prévoit aucune préférence tarifaire pour ce code et cette origine : le droit des pays tiers s’applique.",
+    "ratesSource": "Taux du Tarif intégré de l’AEAT pour ce code et cette origine",
+    "noEur1": "Aucun EUR.1 n’est nécessaire : la preuve de l’origine est établie par l’exportateur (ou, si l’accord le permet, repose sur la connaissance de l’importateur)."
   },
   "excise": {
     "title": "Calculateur de Droits d'Accise (SILICIE)",

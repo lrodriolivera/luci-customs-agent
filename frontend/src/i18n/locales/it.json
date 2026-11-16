@@ -2319,7 +2319,12 @@
     "tolerance": "Tolleranza",
     "rvc": "Contenuto di Valore Regionale (RVC)",
     "accumulationPermitted": "Cumulo Consentito",
-    "requiredDocumentation": "Documentazione Necessaria"
+    "requiredDocumentation": "Documentazione Necessaria",
+    "proofOfOrigin": "Prova dell’origine",
+    "aeatUnavailable": "Non è stato possibile consultare la Tariffa integrata dell’AEAT: non si mostrano aliquote né risparmio. Riprovare più tardi.",
+    "noAeatPreference": "L’AEAT non prevede alcuna preferenza tariffaria per questo codice e questa origine: si applica il dazio dei paesi terzi.",
+    "ratesSource": "Aliquote della Tariffa integrata dell’AEAT per questo codice e questa origine",
+    "noEur1": "Non serve l’EUR.1: la prova dell’origine è compilata dall’esportatore (o, se l’accordo lo consente, si basa sulla conoscenza dell’importatore)."
   },
   "excise": {
     "title": "Calcolatore delle Accise (SILICIE)",

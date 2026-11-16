@@ -2319,7 +2319,12 @@
     "tolerance": "Tolerancia",
     "rvc": "Contingut de Valor Regional (RVC)",
     "accumulationPermitted": "Acumulacio Permesa",
-    "requiredDocumentation": "Documentacio Necessaria"
+    "requiredDocumentation": "Documentacio Necessaria",
+    "proofOfOrigin": "Prova d’origen",
+    "aeatUnavailable": "No s’ha pogut consultar l’Aranzel Integrat de l’AEAT: no es mostren tipus ni estalvi. Torneu-ho a provar més tard.",
+    "noAeatPreference": "L’AEAT no arreplega cap preferència aranzelària per a este codi i este origen: s’aplica el dret de tercers països.",
+    "ratesSource": "Tipus de l’Aranzel Integrat de l’AEAT per a este codi i este origen",
+    "noEur1": "No cal EUR.1: la prova d’origen l’estén l’exportador (o, si l’acord ho admet, es basa en el coneixement de l’importador)."
   },
   "excise": {
     "title": "Calculadora d'Impostos Especials (SILICIE)",

@@ -2320,7 +2320,12 @@
     "tolerance": "Tolerance",
     "rvc": "Regional Value Content (RVC)",
     "accumulationPermitted": "Accumulation Permitted",
-    "requiredDocumentation": "Required Documentation"
+    "requiredDocumentation": "Required Documentation",
+    "proofOfOrigin": "Proof of origin",
+    "aeatUnavailable": "The AEAT Integrated Tariff could not be consulted: no rates or savings are shown. Please try again later.",
+    "noAeatPreference": "The AEAT lists no tariff preference for this code and origin: the third-country duty applies.",
+    "ratesSource": "Rates from the AEAT Integrated Tariff for this code and origin",
+    "noEur1": "No EUR.1 is needed: the proof of origin is made out by the exporter (or, where the agreement allows it, based on the importer’s knowledge)."
   },
   "excise": {
     "title": "Excise Duties Calculator (SILICIE)",

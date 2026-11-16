@@ -6,6 +6,11 @@
  */
 
 const logger = require('../config/logger');
+const { consultarArancelIntegrado } = require('./aeat/arancelIntegrado');
+const { tiposAeat } = require('./aeat/contrasteArancel');
+
+/** Importe en euros redondeado a centimos. */
+const redondear = (n) => Math.round(n * 100) / 100;
 
 // Base de datos de acuerdos preferenciales (simplificada para demo)
 const PREFERENTIAL_AGREEMENTS = {
@@ -15,7 +20,7 @@ const PREFERENTIAL_AGREEMENTS = {
     type: 'FTA',
     countries: ['GB'],
     certificate: 'Statement on Origin',
-    preferentialRate: 0, // 0% duty
+    proofKind: 'exporter_declaration',
     originRules: {
       general: 'Product-specific rules',
       tolerance: 0.10, // 10% tolerance
@@ -30,8 +35,11 @@ const PREFERENTIAL_AGREEMENTS = {
     name: 'EU-Canada Comprehensive Economic and Trade Agreement',
     type: 'FTA',
     countries: ['CA'],
-    certificate: 'Statement on Origin / EUR.1',
-    preferentialRate: 0,
+    // AEAT, Acuerdos_UE.pdf (Canada): "texto de la declaracion de origen en
+    // Anexo 2 del Protocolo". El CETA no tiene EUR.1.
+    certificate: 'Declaración de origen del exportador (Anexo 2 del Protocolo de origen)',
+    proofKind: 'exporter_declaration',
+    legalBasis: 'Decisión (UE) 2017/37 (DOUE L 11 de 14-1-2017), Protocolo sobre normas de origen',
     originRules: {
       general: 'Product-specific rules (Annex 5)',
       tolerance: 0.10,
@@ -46,8 +54,12 @@ const PREFERENTIAL_AGREEMENTS = {
     name: 'EU-Japan Economic Partnership Agreement',
     type: 'FTA',
     countries: ['JP'],
-    certificate: 'Statement on Origin / EUR.1',
-    preferentialRate: 0,
+    // AEAT, Acuerdos_UE.pdf (Japon): "declaracion de origen REX (Anexo 3D)" y
+    // NI GA 05/2019 sobre el conocimiento del importador. El AAE UE-Japon no usa
+    // EUR.1 (UAT 16/Nov/2026).
+    certificate: 'Declaración de origen (statement on origin, Anexo 3-D) o conocimiento del importador',
+    proofKind: 'exporter_declaration',
+    legalBasis: 'Decisión (UE) 2018/1907 (DOUE L 330 de 27-12-2018), capítulo 3 y Anexo 3-D',
     originRules: {
       general: 'Product-specific rules (Annex 3-B)',
       tolerance: 0.10,
@@ -59,11 +71,12 @@ const PREFERENTIAL_AGREEMENTS = {
   },
 
   'EU-MEXICO': {
-    name: 'EU-Mexico Free Trade Agreement (Modernized)',
+    // El acuerdo modernizado no esta en vigor: la AEAT solo recoge la Decision 2/2000.
+    name: 'EU-Mexico Free Trade Agreement (Decision 2/2000)',
     type: 'FTA',
     countries: ['MX'],
     certificate: 'EUR.1 / Statement on Origin',
-    preferentialRate: 0,
+    proofKind: 'certificate',
     originRules: {
       general: 'Product-specific rules',
       tolerance: 0.10,
@@ -79,7 +92,7 @@ const PREFERENTIAL_AGREEMENTS = {
     type: 'FTA',
     countries: ['KR'],
     certificate: 'EUR.1 / Invoice Declaration',
-    preferentialRate: 0,
+    proofKind: 'certificate',
     originRules: {
       general: 'Product-specific rules (Annex II)',
       tolerance: 0.10,
@@ -95,7 +108,7 @@ const PREFERENTIAL_AGREEMENTS = {
     type: 'FTA',
     countries: ['VN'],
     certificate: 'EUR.1 / Statement on Origin',
-    preferentialRate: 0,
+    proofKind: 'certificate',
     originRules: {
       general: 'Product-specific rules',
       tolerance: 0.10,
@@ -107,18 +120,23 @@ const PREFERENTIAL_AGREEMENTS = {
   },
 
   'EU-CHILE': {
-    name: 'EU-Chile Association Agreement',
+    // AEAT, Acuerdos_UE.pdf (Chile): el Acuerdo Interino de Comercio UE-Chile
+    // (DOUE L 2024/2953) esta en vigor desde el 1-2-2025 y sustituye al Acuerdo de
+    // Asociacion de 2003. La prueba de origen es la declaracion de origen del
+    // exportador; el EUR.1 ya no es necesario (UAT 16/Nov/2026).
+    name: 'EU-Chile Interim Trade Agreement',
     type: 'FTA',
     countries: ['CL'],
-    certificate: 'EUR.1',
-    preferentialRate: 0,
+    certificate: 'Declaración de origen del exportador en factura u otro documento comercial, con su número de exportador registrado',
+    proofKind: 'exporter_declaration',
+    legalBasis: 'Acuerdo Interino de Comercio UE-Chile (DOUE L 2024/2953), en vigor el 1-2-2025 (DOUE L 2025/67)',
     originRules: {
       general: 'Product-specific rules',
       tolerance: 0.10,
       cumulation: ['EU', 'CL'],
       regionalValueContent: 0.40
     },
-    effectiveDate: '2003-02-01',
+    effectiveDate: '2025-02-01',
     documentRequired: true
   },
 
@@ -128,7 +146,7 @@ const PREFERENTIAL_AGREEMENTS = {
     type: 'GSP',
     countries: ['IN', 'PK', 'TH', 'ID', 'MA', 'TN', 'EG', 'NG', 'GH', 'KE'],
     certificate: 'Form A',
-    preferentialRate: 0.70, // 30% reduction
+    proofKind: 'certificate',
     originRules: {
       general: 'Value-added 50% minimum',
       tolerance: 0.15,
@@ -144,7 +162,7 @@ const PREFERENTIAL_AGREEMENTS = {
     type: 'GSP+',
     countries: ['PK', 'BD', 'LK', 'PH', 'KH', 'BO', 'KG', 'AM'],
     certificate: 'Form A',
-    preferentialRate: 0, // Full exemption
+    proofKind: 'certificate',
     originRules: {
       general: 'Value-added 50% minimum',
       tolerance: 0.15,
@@ -160,7 +178,7 @@ const PREFERENTIAL_AGREEMENTS = {
     type: 'EBA',
     countries: ['BD', 'KH', 'LA', 'MM', 'NP', 'AF', 'YE', 'SD', 'ET', 'UG'],
     certificate: 'Form A',
-    preferentialRate: 0, // Full exemption
+    proofKind: 'certificate',
     originRules: {
       general: 'Value-added 50% minimum',
       tolerance: 0.15,
@@ -175,9 +193,10 @@ const PREFERENTIAL_AGREEMENTS = {
   'PAN_EURO_MED': {
     name: 'Pan-Euro-Mediterranean',
     type: 'PEM',
-    countries: ['NO', 'CH', 'IS', 'TR', 'MK', 'RS', 'ME', 'AL', 'BA', 'XK', 'IL', 'PS', 'JO', 'EG', 'TN', 'MA', 'DZ'],
+    // Turquia no va aqui: es una union aduanera con A.TR (ver EU-TURKEY).
+    countries: ['NO', 'CH', 'IS', 'MK', 'RS', 'ME', 'AL', 'BA', 'XK', 'IL', 'PS', 'JO', 'EG', 'TN', 'MA', 'DZ'],
     certificate: 'EUR.1 / EUR-MED',
-    preferentialRate: 0,
+    proofKind: 'certificate',
     originRules: {
       general: 'Diagonal cumulation',
       tolerance: 0.10,
@@ -185,6 +204,25 @@ const PREFERENTIAL_AGREEMENTS = {
       regionalValueContent: 0.45
     },
     effectiveDate: '1997-01-01',
+    documentRequired: true
+  },
+
+  // AEAT, Acuerdos_UE.pdf (Turquia): union aduanera para industriales con A.TR
+  // (Decision 1/95); EUR.1 para productos CECA y agricolas (Decision 1/98).
+  'EU-TURKEY': {
+    name: 'EU-Turkey Customs Union',
+    type: 'CU',
+    countries: ['TR'],
+    certificate: 'A.TR (productos industriales, unión aduanera) / EUR.1 (productos agrícolas y CECA)',
+    proofKind: 'certificate',
+    legalBasis: 'Decisión 1/95 del Consejo de Asociación (DOUE L 35 de 13-2-1996); Decisión 1/98 (agrícolas)',
+    originRules: {
+      general: 'A.TR acredita la libre práctica, no el origen (industriales); EUR.1 con reglas de origen para agrícolas y CECA',
+      tolerance: 0.10,
+      cumulation: ['EU', 'TR'],
+      regionalValueContent: 0.45
+    },
+    effectiveDate: '1995-12-31',
     documentRequired: true
   }
 };
@@ -245,6 +283,13 @@ class PreferencesService {
       agreements: [],
       recommended: null,
       savings: 0,
+      // Tipos reales del Arancel Integrado de la AEAT para el codigo y el origen
+      // (primera mercancia; `rates` lleva el detalle de cada una). null = no se sabe.
+      standardRate: null,
+      preferentialRate: null,
+      preferenceMeasure: null,
+      aeatAvailable: false,
+      rates: [],
       requirements: [],
       warnings: []
     };
@@ -261,16 +306,30 @@ class PreferencesService {
         return result;
       }
 
+      // Tipo general y preferencial reales de la AEAT. Antes cada acuerdo llevaba
+      // `preferentialRate: 0` fijo, asi que la pantalla anunciaba 0 % y un ahorro
+      // del 100 % del arancel para cualquier codigo, tuviera o no preferencia.
+      const tarifa = await this.getAeatRates(operation);
+      result.standardRate = tarifa.standardRate;
+      result.preferentialRate = tarifa.preferentialRate;
+      result.preferenceMeasure = tarifa.preferenceMeasure;
+      result.aeatAvailable = tarifa.aeatAvailable;
+      result.rates = tarifa.rates;
+      result.warnings.push(...tarifa.warnings);
+
       // Evaluar cada acuerdo
       for (const agreement of applicableAgreements) {
-        const evaluation = await this.evaluateAgreement(operation, agreement);
+        const evaluation = this.evaluateAgreement(operation, agreement, tarifa);
 
         if (evaluation.qualifies) {
           result.eligible = true;
           result.agreements.push({
+            key: agreement.key,
             name: agreement.name,
             type: agreement.type,
             certificate: agreement.certificate,
+            proofKind: agreement.proofKind || 'certificate',
+            legalBasis: agreement.legalBasis || null,
             savings: evaluation.savings,
             qualifies: true,
             conditions: evaluation.conditions
@@ -278,10 +337,16 @@ class PreferencesService {
         }
       }
 
+      // Si la AEAT contesta que el codigo paga arancel desde ese origen y no hay
+      // ninguna preferencia, el acuerdo existe pero no cubre esta mercancia.
+      if (tarifa.noPreference) {
+        result.eligible = false;
+      }
+
       // Recomendar mejor acuerdo
       if (result.agreements.length > 0) {
         result.recommended = result.agreements.reduce((best, current) =>
-          current.savings > best.savings ? current : best
+          (current.savings || 0) > (best.savings || 0) ? current : best
         );
 
         result.savings = result.recommended.savings;
@@ -300,6 +365,93 @@ class PreferencesService {
   }
 
   /**
+   * Tipos general (medida 103) y preferencial (medidas 1xx del origen) de cada
+   * mercancia segun el Arancel Integrado de la AEAT, y el ahorro real.
+   * Si la AEAT no responde para alguna mercancia, el ahorro es null (desconocido):
+   * nunca se supone un 0 %.
+   * @returns {Promise<{standardRate: number|null, preferentialRate: number|null,
+   *   preferenceMeasure: string|null, aeatAvailable: boolean, noPreference: boolean,
+   *   savings: number|null, rates: object[], warnings: object[]}>}
+   */
+  async getAeatRates(operation) {
+    const origen = String(operation.originCountry || '').toUpperCase();
+    const goods = (operation.goods || []).filter(g => g && g.taricCode);
+    const rates = [];
+
+    for (const good of goods) {
+      rates.push(await this.getAeatRateForGood(good, origen));
+    }
+
+    const warnings = rates
+      .filter(r => r.error || r.noPreference)
+      .map(r => (r.error
+        ? {
+          code: 'AEAT_NO_DISPONIBLE',
+          message: `No se pudo consultar el Arancel Integrado de la AEAT para ${r.taricCode}: ${r.error}. No se calcula el ahorro.`
+        }
+        : {
+          code: 'SIN_PREFERENCIA_AEAT',
+          message: `La AEAT no recoge preferencia arancelaria para ${r.taricCode} con origen ${origen}: se aplica el derecho de terceros países (${r.standardRate} %).`
+        }));
+
+    const aeatAvailable = rates.length > 0 && rates.every(r => !r.error);
+    const savings = aeatAvailable ? redondear(rates.reduce((sum, r) => sum + r.savings, 0)) : null;
+    const first = rates[0] || {};
+
+    return {
+      standardRate: first.standardRate ?? null,
+      preferentialRate: first.preferentialRate ?? null,
+      preferenceMeasure: first.preferenceMeasure ?? null,
+      aeatAvailable,
+      noPreference: aeatAvailable && rates.every(r => r.noPreference),
+      savings,
+      rates,
+      warnings
+    };
+  }
+
+  /** Consulta la AEAT para una mercancia y calcula su ahorro. */
+  async getAeatRateForGood(good, origen) {
+    const base = {
+      taricCode: good.taricCode,
+      standardRate: null,
+      preferentialRate: null,
+      preferenceMeasure: null,
+      savings: null,
+      noPreference: false
+    };
+    let resultado;
+    try {
+      resultado = await consultarArancelIntegrado({ codigo: good.taricCode, origen });
+    } catch (error) {
+      logger.warn(`[PreferencesService] Arancel Integrado AEAT no disponible para ${good.taricCode}: ${error.message}`);
+      return { ...base, error: error.message };
+    }
+    if (!resultado?.existe) {
+      return { ...base, error: 'el código no existe en el Arancel Integrado' };
+    }
+
+    const { general, preferencias } = tiposAeat(resultado);
+    if (general === null) {
+      return { ...base, error: 'la AEAT no da un derecho de terceros países en porcentaje para este código' };
+    }
+    // Si hay varias preferencias para el origen, la mas favorable (la agente
+    // decide cual aplicar con su prueba de origen).
+    const mejor = preferencias.reduce((min, p) => (min === null || p.tipo < min.tipo ? p : min), null);
+    if (!mejor) {
+      return { ...base, standardRate: general, savings: 0, noPreference: general > 0 };
+    }
+    const value = Number(good.customsValue) || 0;
+    return {
+      ...base,
+      standardRate: general,
+      preferentialRate: mejor.tipo,
+      preferenceMeasure: mejor.codigo,
+      savings: redondear(Math.max(0, value * (general - mejor.tipo) / 100))
+    };
+  }
+
+  /**
    * Encontrar acuerdos aplicables para un país
    */
   findApplicableAgreements(countryCode) {
@@ -315,9 +467,10 @@ class PreferencesService {
   }
 
   /**
-   * Evaluar si operación califica bajo un acuerdo específico
+   * Evaluar si operación califica bajo un acuerdo específico.
+   * El ahorro es el de la AEAT (`tarifa`), no un tipo fijo del acuerdo.
    */
-  async evaluateAgreement(operation, agreement) {
+  evaluateAgreement(operation, agreement, tarifa = {}) {
     const evaluation = {
       qualifies: false,
       savings: 0,
@@ -335,17 +488,23 @@ class PreferencesService {
 
     evaluation.conditions.push(...originCheck.conditions);
 
-    // 2. Calcular ahorro arancelario
-    const standardDuty = await this.calculateStandardDuty(operation);
-    const preferentialDuty = standardDuty * agreement.preferentialRate;
-    evaluation.savings = standardDuty - preferentialDuty;
+    // 2. Ahorro arancelario real (null si la AEAT no ha respondido)
+    evaluation.savings = tarifa.savings === undefined ? null : tarifa.savings;
+    if (tarifa.preferentialRate !== null && tarifa.preferentialRate !== undefined) {
+      evaluation.conditions.push({
+        type: 'preferential',
+        rate: tarifa.preferentialRate,
+        measure: tarifa.preferenceMeasure,
+        source: 'AEAT · Arancel Integrado'
+      });
+    }
 
     // 3. Verificar cumplimiento documental
     if (agreement.documentRequired) {
       evaluation.conditions.push({
         type: 'document',
         required: agreement.certificate,
-        description: `Debe proporcionar ${agreement.certificate} válido`
+        description: `Prueba de origen: ${agreement.certificate}`
       });
     }
 
@@ -434,48 +593,6 @@ class PreferencesService {
   }
 
   /**
-   * Calcular arancel estándar (sin preferencias)
-   */
-  async calculateStandardDuty(operation) {
-    let totalDuty = 0;
-
-    for (const good of operation.goods || []) {
-      const rate = await this.getStandardRate(good.taricCode);
-      const dutyAmount = (good.customsValue || 0) * rate;
-      totalDuty += dutyAmount;
-    }
-
-    return totalDuty;
-  }
-
-  /**
-   * Obtener tasa arancelaria estándar
-   */
-  async getStandardRate(taricCode) {
-    if (!taricCode) return 0;
-
-    // El arancel real de la mercancia, de la misma fuente que usa la calculadora
-    // (catalogo TARIC -> cache -> IA). Antes esto era una tabla POR CAPITULO cableada
-    // ('84' -> 3%, y 5% para cualquier capitulo no listado) que no distingue entre
-    // partidas del mismo capitulo: con ella, el TARIC 8471300000 (portatiles, arancel
-    // REAL 0%) declaraba un ahorro de 1.500 EUR sobre 50.000 por un acuerdo que no
-    // ahorra nada, porque el arancel ya era cero sin preferencia.
-    try {
-      const { getDutyInfo } = require('./dutyCalculationService');
-      const info = await getDutyInfo(taricCode);
-      if (info && typeof info.dutyRate === 'number') {
-        return info.dutyRate / 100; // getDutyInfo lo da en porcentaje
-      }
-    } catch (error) {
-      logger.warn(`No se pudo obtener el arancel real de ${taricCode}: ${error.message}`);
-    }
-
-    // Sin arancel conocido no se inventa uno: se declara ahorro cero antes que
-    // anunciar un ahorro que no se ha podido calcular.
-    return 0;
-  }
-
-  /**
    * Obtener requisitos para aplicar preferencia
    */
   getRequirements(agreement) {
@@ -485,7 +602,7 @@ class PreferencesService {
     requirements.push({
       type: 'certificate',
       name: agreement.certificate,
-      description: `Certificado de origen válido: ${agreement.certificate}`,
+      description: `Prueba de origen: ${agreement.certificate}`,
       mandatory: true,
       validityPeriod: '10 meses desde emisión'
     });
@@ -619,9 +736,12 @@ class PreferencesService {
       }
     }
 
-    // 3. Umbral de certificación
+    // 3. Umbral de certificación. Solo tiene sentido donde la prueba de origen es un
+    // certificado (EUR.1): en CETA, Japon o Chile la prueba ya es una declaracion
+    // del exportador y sugerir "en lugar de EUR.1" seria otra vez el error de la UAT.
     const customsValue = operation.goods?.reduce((sum, g) => sum + (g.customsValue || 0), 0) || 0;
-    if (customsValue < 6000) {
+    const usaCertificado = eligibility.recommended?.proofKind !== 'exporter_declaration';
+    if (customsValue < 6000 && usaCertificado) {
       recommendations.push({
         type: 'documentation',
         priority: 'low',

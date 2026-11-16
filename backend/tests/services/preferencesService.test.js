@@ -4,20 +4,32 @@
  */
 
 /**
- * El arancel estandar sale de dutyCalculationService (catalogo TARIC real). Se mockea
- * porque es una frontera con Mongo/IA: antes habia aqui una tabla POR CAPITULO cableada
- * ('84' -> 3%, 5% por defecto) que anunciaba ahorro para mercancias con arancel 0%.
+ * Los tipos general y preferencial salen del Arancel Integrado de la AEAT. Se simula
+ * la consulta (frontera con la sede electronica): nunca se llama a la AEAT real.
+ * Antes el ahorro salia de `preferentialRate: 0` fijo en cada acuerdo, igual para
+ * cualquier codigo TARIC.
  */
-jest.mock('../../src/services/dutyCalculationService', () => ({
-  getDutyInfo: jest.fn()
+jest.mock('../../src/services/aeat/arancelIntegrado', () => ({
+  consultarArancelIntegrado: jest.fn()
 }));
 
-const { getDutyInfo } = require('../../src/services/dutyCalculationService');
+const { consultarArancelIntegrado } = require('../../src/services/aeat/arancelIntegrado');
 const preferencesService = require('../../src/services/preferencesService');
 
+/** Respuesta del Arancel Integrado: derecho general y, si se da, preferencia del origen. */
+function respuestaAeat({ origen, general = '16,000%', preferencia = '0,000%', codigoPref = '142-PREF' }) {
+  const medidas = [{ codigo: '103-APPL', tipo: 'arancel', areaGeografica: '1011 ERGA OMNES', derecho: general }];
+  if (preferencia !== null) {
+    medidas.push({ codigo: codigoPref, tipo: 'arancel', areaGeografica: `${origen} Pais`, derecho: preferencia });
+  }
+  medidas.push({ codigo: 'IVA', tipo: 'iva', areaGeografica: '1011 ERGA OMNES', derecho: '21,000%' });
+  return { existe: true, codigo: '0000000000', areaGeografica: origen, medidas };
+}
+
 beforeEach(() => {
-  // Por defecto, un arancel real distinto de cero para que el ahorro sea comprobable.
-  getDutyInfo.mockResolvedValue({ dutyRate: 16 });
+  consultarArancelIntegrado.mockReset();
+  // Por defecto: 16 % general y preferencia al 0 % para el origen consultado.
+  consultarArancelIntegrado.mockImplementation(async ({ origen }) => respuestaAeat({ origen }));
 });
 
 describe('Preferences Service', () => {
@@ -140,13 +152,12 @@ describe('Preferences Service', () => {
 
     /**
      * Verificado en produccion el 10/Ago/2026: el TARIC 8471300000 (portatiles) tiene
-     * arancel REAL 0% y la pantalla anunciaba 1.500 EUR de ahorro sobre 50.000 por el
-     * CETA. Venia de `getStandardRate`, una tabla por capitulo cableada ('84' -> 3%,
-     * 5% para lo no listado) que no distingue partidas dentro del mismo capitulo.
-     * Un acuerdo no puede ahorrar sobre un arancel que ya es cero.
+     * arancel REAL 0% y la pantalla anunciaba ahorro por el CETA. Un acuerdo no puede
+     * ahorrar sobre un arancel que ya es cero.
      */
-    test('sin arancel que ahorrar el ahorro es cero, no un porcentaje por capitulo', async () => {
-      getDutyInfo.mockResolvedValue({ dutyRate: 0 }); // portatiles: 0% real
+    test('sin arancel que ahorrar el ahorro es cero', async () => {
+      consultarArancelIntegrado.mockImplementation(async ({ origen }) =>
+        respuestaAeat({ origen, general: '0,000%', preferencia: null }));
 
       const result = await preferencesService.checkEligibility({
         originCountry: 'CA',
@@ -155,19 +166,139 @@ describe('Preferences Service', () => {
 
       expect(result.eligible).toBe(true);   // el acuerdo aplica...
       expect(result.savings).toBe(0);       // ...pero no ahorra nada
+      expect(result.standardRate).toBe(0);
     });
 
-    // Si no se puede saber el arancel no se inventa: mejor ahorro cero que anunciar
-    // uno que no se ha podido calcular.
-    test('si el arancel real no se puede obtener no se declara ahorro', async () => {
-      getDutyInfo.mockRejectedValue(new Error('catalogo no disponible'));
+    // UAT 16/Nov/2026: la calculadora decia 0 % preferencial para cualquier codigo.
+    test('el tipo general y el preferencial son los de la AEAT para el codigo y el origen', async () => {
+      consultarArancelIntegrado.mockImplementation(async ({ origen }) =>
+        respuestaAeat({ origen, general: '12,000%', preferencia: '4,500%' }));
+
+      const result = await preferencesService.checkEligibility({
+        originCountry: 'VN',
+        goods: [{ taricCode: '6403999300', customsValue: 10000, description: 'Calzado' }]
+      });
+
+      expect(consultarArancelIntegrado).toHaveBeenCalledWith({ codigo: '6403999300', origen: 'VN' });
+      expect(result.aeatAvailable).toBe(true);
+      expect(result.standardRate).toBe(12);
+      expect(result.preferentialRate).toBe(4.5);
+      expect(result.preferenceMeasure).toBe('142-PREF');
+      expect(result.savings).toBe(750); // 10.000 x (12 - 4,5) %
+      expect(result.recommended.conditions).toEqual(
+        expect.arrayContaining([expect.objectContaining({ type: 'preferential', rate: 4.5 })])
+      );
+    });
+
+    test('si la AEAT no recoge preferencia para el origen no es elegible ni hay ahorro', async () => {
+      consultarArancelIntegrado.mockImplementation(async ({ origen }) =>
+        respuestaAeat({ origen, general: '6,500%', preferencia: null }));
+
+      const result = await preferencesService.checkEligibility({
+        originCountry: 'JP',
+        goods: [{ taricCode: '8703239000', customsValue: 20000 }]
+      });
+
+      expect(result.eligible).toBe(false);
+      expect(result.standardRate).toBe(6.5);
+      expect(result.preferentialRate).toBeNull();
+      expect(result.savings).toBe(0);
+      expect(result.warnings.some(w => w.code === 'SIN_PREFERENCIA_AEAT')).toBe(true);
+    });
+
+    test('las preferencias de otros origenes no cuentan', async () => {
+      consultarArancelIntegrado.mockResolvedValue({
+        existe: true,
+        areaGeografica: 'JP',
+        medidas: [
+          { codigo: '103-APPL', areaGeografica: '1011 ERGA OMNES', derecho: '10,000%' },
+          { codigo: '142-PREF', areaGeografica: 'KR Corea del Sur', derecho: '0,000%' }
+        ]
+      });
+
+      const result = await preferencesService.checkEligibility({
+        originCountry: 'JP',
+        goods: [{ taricCode: '8703239000', customsValue: 1000 }]
+      });
+
+      expect(result.preferentialRate).toBeNull();
+      expect(result.eligible).toBe(false);
+    });
+
+    test('con varias preferencias del origen se toma la mas favorable', async () => {
+      consultarArancelIntegrado.mockResolvedValue({
+        existe: true,
+        areaGeografica: 'MA',
+        medidas: [
+          { codigo: '103-APPL', areaGeografica: '1011 ERGA OMNES', derecho: '8,000%' },
+          { codigo: '142-PREF', areaGeografica: 'MA Marruecos', derecho: '2,000%' },
+          { codigo: '143-PRFQ', areaGeografica: 'MA Marruecos', derecho: '0,000%' }
+        ]
+      });
+
+      const result = await preferencesService.checkEligibility({
+        originCountry: 'MA',
+        goods: [{ taricCode: '0702000007', customsValue: 1000 }]
+      });
+
+      expect(result.preferentialRate).toBe(0);
+      expect(result.preferenceMeasure).toBe('143-PRFQ');
+      expect(result.savings).toBe(80);
+    });
+
+    // Si la AEAT no responde no se inventa un 0 %: el ahorro queda desconocido (null).
+    test('si la AEAT no responde lo dice y no declara tipos ni ahorro', async () => {
+      consultarArancelIntegrado.mockRejectedValue(new Error('timeout de la sede'));
 
       const result = await preferencesService.checkEligibility({
         originCountry: 'CA',
         goods: [{ taricCode: '8701200000', customsValue: 100000, description: 'Tractores' }]
       });
 
-      expect(result.savings).toBe(0);
+      expect(result.eligible).toBe(true); // el acuerdo existe
+      expect(result.aeatAvailable).toBe(false);
+      expect(result.standardRate).toBeNull();
+      expect(result.preferentialRate).toBeNull();
+      expect(result.savings).toBeNull();
+      expect(result.warnings.some(w => w.code === 'AEAT_NO_DISPONIBLE')).toBe(true);
+    });
+
+    test('un codigo que la AEAT no conoce no da tipos', async () => {
+      consultarArancelIntegrado.mockResolvedValue({ existe: false, areaGeografica: 'CA', medidas: [] });
+
+      const result = await preferencesService.checkEligibility({
+        originCountry: 'CA',
+        goods: [{ taricCode: '9999999999', customsValue: 100 }]
+      });
+
+      expect(result.savings).toBeNull();
+      expect(result.warnings.some(w => w.code === 'AEAT_NO_DISPONIBLE')).toBe(true);
+    });
+
+    test('un derecho que no es porcentaje no se convierte en 0 %', async () => {
+      consultarArancelIntegrado.mockImplementation(async ({ origen }) =>
+        respuestaAeat({ origen, general: '24,00 EUR/100 kg', preferencia: null }));
+
+      const result = await preferencesService.checkEligibility({
+        originCountry: 'CA',
+        goods: [{ taricCode: '1006309800', customsValue: 100 }]
+      });
+
+      expect(result.standardRate).toBeNull();
+      expect(result.savings).toBeNull();
+    });
+
+    test('suma el ahorro de varias mercancias', async () => {
+      const result = await preferencesService.checkEligibility({
+        originCountry: 'CA',
+        goods: [
+          { taricCode: '8701200000', customsValue: 1000 },
+          { taricCode: '8701200000', customsValue: 500 }
+        ]
+      });
+
+      expect(result.rates).toHaveLength(2);
+      expect(result.savings).toBe(240); // 1.500 x 16 %
     });
 
     test('should include requirements for applying preference', async () => {
@@ -368,7 +499,7 @@ describe('Preferences Service', () => {
 
     test('should recommend invoice declaration for low value shipments', async () => {
       const operation = {
-        originCountry: 'CA',
+        originCountry: 'MX',
         goods: [
           { taricCode: '8517120000', customsValue: 5000 } // Below 6000 EUR
         ]
@@ -458,6 +589,67 @@ describe('Preferences Service', () => {
 
       // 15% exceeds 10% tolerance
       expect(result.issues.some(i => i.issue.includes('tolerance'))).toBe(true);
+    });
+  });
+  /**
+   * Prueba de origen segun la lista oficial de acuerdos de la AEAT (Acuerdos_UE.pdf)
+   * y la UAT del 16/Nov/2026: Chile y Japon no usan EUR.1.
+   */
+  describe('prueba de origen de cada acuerdo', () => {
+    const acuerdo = (pais) => preferencesService.findApplicableAgreements(pais);
+
+    test('Chile: Acuerdo Interino de Comercio, declaracion de origen y no EUR.1', () => {
+      const [chile] = acuerdo('CL');
+      expect(chile.name).toContain('Interim Trade Agreement');
+      expect(chile.effectiveDate).toBe('2025-02-01');
+      expect(chile.certificate).toMatch(/Declaración de origen/);
+      expect(chile.certificate).not.toMatch(/EUR\.1/);
+      expect(chile.proofKind).toBe('exporter_declaration');
+    });
+
+    test('Japon: declaracion de origen o conocimiento del importador, sin EUR.1', () => {
+      const [japon] = acuerdo('JP');
+      expect(japon.certificate).toMatch(/statement on origin/);
+      expect(japon.certificate).toMatch(/conocimiento del importador/);
+      expect(japon.certificate).not.toMatch(/EUR\.1/);
+      expect(japon.proofKind).toBe('exporter_declaration');
+    });
+
+    test('Canada (CETA): declaracion de origen, sin EUR.1', () => {
+      const [canada] = acuerdo('CA');
+      expect(canada.certificate).not.toMatch(/EUR\.1/);
+      expect(canada.proofKind).toBe('exporter_declaration');
+    });
+
+    test('Turquia: union aduanera con A.TR, no Pan-Euro-Med', () => {
+      const turquia = acuerdo('TR');
+      expect(turquia).toHaveLength(1);
+      expect(turquia[0].key).toBe('EU-TURKEY');
+      expect(turquia[0].certificate).toMatch(/A\.TR/);
+    });
+
+    test('ningun acuerdo fija un tipo preferencial: lo da la AEAT', () => {
+      for (const key of preferencesService.getAllAgreements().map(a => a.key)) {
+        expect(preferencesService.getAgreementInfo(key).preferentialRate).toBeUndefined();
+      }
+    });
+
+    test('el resultado lleva la prueba de origen y su clase', async () => {
+      const result = await preferencesService.checkEligibility({
+        originCountry: 'CL',
+        goods: [{ taricCode: '0806101090', customsValue: 1000 }]
+      });
+      expect(result.recommended.proofKind).toBe('exporter_declaration');
+      expect(result.recommended.certificate).not.toMatch(/EUR\.1/);
+      expect(result.requirements.find(r => r.type === 'certificate').description).toMatch(/^Prueba de origen/);
+    });
+
+    test('no sugiere "declaracion en lugar de EUR.1" donde no hay EUR.1', async () => {
+      const recommendations = await preferencesService.generateOptimizationRecommendations({
+        originCountry: 'JP',
+        goods: [{ taricCode: '8703239000', customsValue: 3000 }]
+      });
+      expect(recommendations.some(r => r.type === 'documentation')).toBe(false);
     });
   });
 });
