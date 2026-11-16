@@ -108,6 +108,8 @@ export const expeditionsAPI = {
   delete: (id) => api.delete(`/api/expeditions/${seg(id)}`),
   getChecklist: (id) => api.get(`/api/expeditions/${seg(id)}/checklist`),
   sendPortalLink: (id, email) => api.post(`/api/expeditions/${seg(id)}/send-portal-link`, { email }),
+  // H1 admitido con pago previo: la agente envia al cliente el importe del 031 y el enlace al portal.
+  sendPago031: (id) => api.post(`/api/expeditions/${seg(id)}/enviar-pago-031`, {}),
   getStats: () => api.get('/api/expeditions/stats'),
 
   // AI-Powered Endpoints - LUCI Integration

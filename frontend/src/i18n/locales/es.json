@@ -692,7 +692,18 @@
     "plasticCertificate": "Nº del certificado de plástico reciclado",
     "plasticRecycledHelp": "El plástico reciclado no paga: se declara con el certificado 1135 de la planta recicladora o de una entidad acreditada.",
     "plasticCertificateRequired": "Indica el número del certificado de plástico reciclado",
-    "plasticExemptionNeedsKg": "La exención se declara con los kg de plástico no reutilizable (con cuota cero)"
+    "plasticExemptionNeedsKg": "La exención se declara con los kg de plástico no reutilizable (con cuota cero)",
+    "pago031": {
+      "button": "Enviar al cliente el H1 y el 031",
+      "sending": "Enviando…",
+      "confirmTitle": "Enviar el H1 admitido y el modelo 031",
+      "confirmMessage": "Se enviará a {{email}} un correo con el MRN, el importe liquidado por la AEAT y el enlace al portal, donde podrá descargar el H1 definitivo y subir el justificante de pago.",
+      "noEmail": "El cliente no tiene correo de contacto: añádelo en «Partes del expediente» antes de enviarlo.",
+      "send": "Enviar",
+      "sent": "Enviado a {{email}}",
+      "error": "No se pudo enviar el correo",
+      "lastSent": "Último envío: {{date}}"
+    }
   },
   "classification": {
     "title": "Clasificación TARIC",

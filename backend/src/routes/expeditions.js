@@ -62,6 +62,8 @@ router.delete('/:id', requirePermission('canDeleteExpeditions'), expeditionValid
 router.get('/:id/checklist', expeditionValidators.getById, expeditionController.getChecklist);
 router.post('/:id/checklist', expeditionValidators.getById, expeditionController.regenerateChecklist);
 router.post('/:id/send-portal-link', expeditionValidators.getById, expeditionController.sendPortalLink);
+// La agente envia al cliente el H1 admitido con los datos del modelo 031.
+router.post('/:id/enviar-pago-031', expeditionValidators.getById, require('../controllers/pago031Controller').enviarPago031);
 
 // ===========================================
 // AI ENDPOINTS - LUCI Integration

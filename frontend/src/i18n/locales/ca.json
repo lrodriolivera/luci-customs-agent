@@ -692,7 +692,18 @@
     "plasticCertificate": "Núm. del certificat de plàstic reciclat",
     "plasticRecycledHelp": "El plàstic reciclat no paga: es declara amb el certificat 1135 de la planta recicladora o d'una entitat acreditada.",
     "plasticCertificateRequired": "Indica el número del certificat de plàstic reciclat",
-    "plasticExemptionNeedsKg": "L'exempció es declara amb els kg de plàstic no reutilitzable (amb quota zero)"
+    "plasticExemptionNeedsKg": "L'exempció es declara amb els kg de plàstic no reutilitzable (amb quota zero)",
+    "pago031": {
+      "button": "Enviar al client l'H1 i el 031",
+      "sending": "Enviant…",
+      "confirmTitle": "Enviar l'H1 admès i el model 031",
+      "confirmMessage": "S'enviarà a {{email}} un correu amb l'MRN, l'import liquidat per l'AEAT i l'enllaç al portal, on podrà descarregar l'H1 definitiu i pujar el justificant de pagament.",
+      "noEmail": "El client no té correu de contacte: afegeix-lo a «Parts de l'expedient» abans d'enviar-lo.",
+      "send": "Enviar",
+      "sent": "Enviat a {{email}}",
+      "error": "No s'ha pogut enviar el correu",
+      "lastSent": "Últim enviament: {{date}}"
+    }
   },
   "classification": {
     "title": "Classificació TARIC",

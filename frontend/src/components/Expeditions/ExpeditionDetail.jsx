@@ -31,6 +31,7 @@ import { formatearImporte } from '../../utils/importe'
 import { textoEvento } from '../../utils/historialExpediente'
 import GoodsEditor from './GoodsEditor'
 import PartiesCard from './PartiesCard'
+import EnviarPago031 from './EnviarPago031'
 import MedidasAeat from '../Classification/MedidasAeat'
 import DocumentosC44 from './DocumentosC44'
 import ImpuestoEspecial, { opcionesImpuestoEspecial } from './ImpuestoEspecial'
@@ -790,6 +791,16 @@ export default function ExpeditionDetail() {
     }
   }
 
+  // Recarga el expediente (p. ej. para ver el envio del 031 en el historial).
+  const refrescarExpediente = async () => {
+    try {
+      const response = await expeditionsAPI.get(id)
+      setExpedition(response.data?.data || response.data)
+    } catch (_) {
+      // El envio ya se hizo; si falla el refresco basta con recargar.
+    }
+  }
+
   const handleSendPortalLink = async () => {
     let clientEmail = expedition?.client?.contact?.email
     if (!clientEmail) {
@@ -1006,6 +1017,7 @@ export default function ExpeditionDetail() {
             <PaperAirplaneIcon className="w-5 h-5" />
             {t('expeditions.sendPortal')}
           </button>
+          <EnviarPago031 expedition={expedition} onSent={refrescarExpediente} />
           {expedition.operationType === 'import' && (
             <button
               onClick={handleGenerateH1}

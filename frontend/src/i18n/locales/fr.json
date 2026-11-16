@@ -692,7 +692,18 @@
     "plasticCertificate": "N° du certificat de plastique recyclé",
     "plasticRecycledHelp": "Le plastique recyclé n'est pas taxé : il se déclare avec le certificat 1135 de l'usine de recyclage ou d'un organisme accrédité.",
     "plasticCertificateRequired": "Indiquez le numéro du certificat de plastique recyclé",
-    "plasticExemptionNeedsKg": "L'exonération se déclare avec les kg de plastique non réutilisable (taxe nulle)"
+    "plasticExemptionNeedsKg": "L'exonération se déclare avec les kg de plastique non réutilisable (taxe nulle)",
+    "pago031": {
+      "button": "Envoyer au client le H1 et le 031",
+      "sending": "Envoi…",
+      "confirmTitle": "Envoyer le H1 accepté et le formulaire 031",
+      "confirmMessage": "Un e-mail sera envoyé à {{email}} avec le MRN, le montant liquidé par l'AEAT et le lien vers le portail, où il pourra télécharger le H1 définitif et déposer le justificatif de paiement.",
+      "noEmail": "Le client n'a pas d'e-mail de contact : ajoutez-le dans « Parties » avant l'envoi.",
+      "send": "Envoyer",
+      "sent": "Envoyé à {{email}}",
+      "error": "Impossible d'envoyer l'e-mail",
+      "lastSent": "Dernier envoi : {{date}}"
+    }
   },
   "classification": {
     "title": "Classification TARIC",
