@@ -255,11 +255,89 @@ function vueloPrincipal(medio) {
   return vuelos.length > 0 ? { vuelo: vuelos[0], otros: vuelos.slice(1) } : { vuelo: medio, otros: [] };
 }
 
+// ---- Nacionalidad del medio de transporte -----------------------------------------
+
+// Signos distintivos de los vehiculos en circulacion internacional que no
+// coinciden con el codigo ISO 3166-1 alfa-2 del pais (Convencion sobre la
+// circulacion vial, Viena, 8/Nov/1968, art. 37 y anexo 3; lista de signos
+// notificados al Secretario General de la ONU, publicada por la CEPE). Son los
+// que lleva la matricula de un camion en un CMR («E», «D», «PL»). Solo se
+// recogen los de paises europeos y ribereños del Mediterraneo; los signos de
+// dos letras que coinciden con el codigo ISO (PL, NL, TR, MA…) no necesitan
+// conversion.
+const SIGNO_DISTINTIVO_A_ISO = {
+  A: 'AT', B: 'BE', D: 'DE', E: 'ES', F: 'FR', H: 'HU', I: 'IT', L: 'LU', M: 'MT', N: 'NO', P: 'PT', S: 'SE',
+  UK: 'GB', FL: 'LI', EST: 'EE', FIN: 'FI', IRL: 'IE', SLO: 'SI', SRB: 'RS', BIH: 'BA', MNE: 'ME', NMK: 'MK',
+  RUS: 'RU', AND: 'AD'
+};
+
+/**
+ * Nacionalidad del medio de transporte en codigo ISO de dos letras, a partir
+ * de lo que transcribe la IA: un codigo ISO («PA», «tr») o el signo
+ * distintivo de la matricula («E», «UK», «SLO»). Nunca se deduce de otra
+ * cosa (nombre del buque, naviera, IMO): lo que no es ninguno de los dos da
+ * null.
+ *
+ * @param {*} valor
+ * @returns {{ pais: string|null, signo: string|null }} `signo` es lo leido
+ *   cuando ha habido que convertirlo
+ */
+function nacionalidadDelMedio(valor) {
+  if (typeof valor !== 'string') return { pais: null, signo: null };
+  const limpio = valor.trim().toUpperCase().replace(/\.$/, '');
+  if (SIGNO_DISTINTIVO_A_ISO[limpio]) return { pais: SIGNO_DISTINTIVO_A_ISO[limpio], signo: limpio };
+  return { pais: /^[A-Z]{2}$/.test(limpio) ? limpio : null, signo: null };
+}
+
+// ---- Numero IMO del buque -----------------------------------------------------------
+
+/**
+ * Numero IMO de identificacion del buque: siete cifras, la ultima de control
+ * (suma de las seis primeras por 7, 6, 5, 4, 3 y 2, modulo 10). Resolucion
+ * OMI A.1117(30), «Sistema de asignacion de un numero OMI de identificacion
+ * del buque». Admite el prefijo «IMO».
+ *
+ * @param {*} valor
+ * @returns {{ numero: string, digitoCorrecto: boolean } | null}
+ */
+function numeroImo(valor) {
+  if (valor === null || valor === undefined || typeof valor === 'object') return null;
+  const limpio = String(valor).toUpperCase().replace(/^\s*IMO[\s.:#-]*/, '').replace(/\s/g, '');
+  if (!/^\d{7}$/.test(limpio)) return null;
+  const suma = [...limpio.slice(0, 6)].reduce((total, cifra, i) => total + Number(cifra) * (7 - i), 0);
+  return { numero: limpio, digitoCorrecto: suma % 10 === Number(limpio[6]) };
+}
+
+// ---- MRN ---------------------------------------------------------------------------
+
+// MRN: año (2), pais (2), identificador (12), procedimiento (1) y digito de
+// control (1). Reglamento de Ejecucion (UE) 2015/2447, anexo B, titulo II; el
+// digito de control se calcula como el de ISO 6346 (comprobado con MRN reales
+// de la AEAT: 26ES002801501092J0, 26ESH7A000067965R5).
+const FORMATO_MRN = /^\d{2}[A-Z]{2}[A-Z0-9]{14}$/;
+
+/**
+ * MRN leido en un documento (con espacios o guiones), o null si no tiene la
+ * forma de un MRN.
+ *
+ * @param {*} valor
+ * @returns {{ numero: string, digitoCorrecto: boolean } | null}
+ */
+function mrnLeido(valor) {
+  if (valor === null || valor === undefined || typeof valor === 'object') return null;
+  const limpio = String(valor).toUpperCase().replace(/[\s.\-/]/g, '');
+  if (!FORMATO_MRN.test(limpio)) return null;
+  return { numero: limpio, digitoCorrecto: String(digitoControlIso6346(limpio.slice(0, 17))) === limpio[17] };
+}
+
 module.exports = {
   digitoControlIso6346,
   matriculaIso6346,
   separarContenedoresYPrecintos,
   deducirTipoCarga,
   ciudadSinEstado,
-  vueloPrincipal
+  vueloPrincipal,
+  nacionalidadDelMedio,
+  numeroImo,
+  mrnLeido
 };

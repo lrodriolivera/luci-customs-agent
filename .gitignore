@@ -40,6 +40,8 @@ Thumbs.db
 # Uploads (user data)
 uploads/
 *.pdf
+# Ejemplos sinteticos (SPECIMEN) para probar la lectura de documentos
+!backend/tests/fixtures/documentos/*.pdf
 *.jpg
 *.jpeg
 *.png

@@ -56,7 +56,7 @@ export const partidaVacia = () => ({
 
 /** Datos del transporte que el alta no pedia y que traen el BL, el AWB o el CMR. */
 export const transporteVacio = () => ({
-  documentType: '', documentNumber: '', vehicleId: '', departurePort: '', arrivalPort: '', containers: ''
+  documentType: '', documentNumber: '', vehicleId: '', vehicleNationality: '', departurePort: '', arrivalPort: '', containers: ''
 })
 
 const vacio = (v) => v === '' || v === null || v === undefined
@@ -258,6 +258,11 @@ export function prerrellenarAlta(formData, extraccion, { tipoDocumento, fijados 
     proponer('documentNumber', detalle, 'documentNumber', tra.numeroDocumento)
   }
   proponer('vehicleId', detalle, 'vehicleId', tra.medio)
+  // Nacionalidad del medio activo en frontera (H1): de un BL, AWB o CMR solo si
+  // es del modo del alta (un CMR del tramo interior trae la matricula del
+  // camion, no la bandera del buque); el T1 la da para el medio en frontera.
+  const esDelModo = modo ? next.transportMode === modo : tipoDocumento === 'transit_document'
+  if (esDelModo) proponer('vehicleNationality', detalle, 'vehicleNationality', tra.nacionalidadMedio)
   proponer('departurePort', detalle, 'departurePort', tra.puertoCarga)
   proponer('arrivalPort', detalle, 'arrivalPort', tra.puertoDescarga)
   proponer('containers', detalle, 'containers', (tra.contenedores || []).join(', '))
@@ -277,6 +282,7 @@ export function transporteParaAlta(formData) {
     ...(formData.transportMode === 'SEA' && formData.loadType ? { loadType: formData.loadType } : {}),
     ...(d.documentNumber ? { documentNumber: d.documentNumber.trim(), ...(d.documentType ? { documentType: d.documentType } : {}) } : {}),
     ...(d.vehicleId ? { vehicleId: d.vehicleId.trim() } : {}),
+    ...(/^[A-Za-z]{2}$/.test(String(d.vehicleNationality || '').trim()) ? { vehicleNationality: d.vehicleNationality.trim().toUpperCase() } : {}),
     ...(d.departurePort ? { departurePort: d.departurePort.trim() } : {}),
     ...(d.arrivalPort ? { arrivalPort: d.arrivalPort.trim() } : {}),
     ...(contenedores.length > 0 ? { containers: contenedores.map((number) => ({ number })) } : {})

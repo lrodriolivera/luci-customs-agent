@@ -229,7 +229,7 @@ const expeditionValidators = {
  */
 const DOCUMENT_TYPES = [
   'commercial_invoice', 'proforma_invoice', 'packing_list',
-  'bill_of_lading', 'air_waybill', 'cmr', 'certificate_origin',
+  'bill_of_lading', 'air_waybill', 'cmr', 'transit_document', 'certificate_origin',
   'eur1', 'eur_med', 'atr', 'form_a', 'sanitary_certificate',
   'phytosanitary_certificate', 'veterinary_certificate',
   'fumigation_certificate', 'insurance_certificate',

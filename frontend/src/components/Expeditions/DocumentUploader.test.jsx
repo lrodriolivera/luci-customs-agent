@@ -26,11 +26,12 @@ describe('DocumentUploader', () => {
     vi.clearAllMocks()
   })
 
-  test('ofrece los 22 tipos de documento que acepta el backend', () => {
+  test('ofrece los 23 tipos de documento que acepta el backend', () => {
     render(<DocumentUploader expeditionId="exp123" onUploaded={vi.fn()} />)
 
-    expect(DOCUMENT_TYPES).toHaveLength(22)
-    expect(screen.getByLabelText('expeditions.uploadDocumentType').querySelectorAll('option')).toHaveLength(22)
+    expect(DOCUMENT_TYPES).toHaveLength(23)
+    expect(DOCUMENT_TYPES).toContain('transit_document')
+    expect(screen.getByLabelText('expeditions.uploadDocumentType').querySelectorAll('option')).toHaveLength(23)
   })
 
   test('sube el fichero con el expediente y el tipo elegidos y avisa al padre', async () => {

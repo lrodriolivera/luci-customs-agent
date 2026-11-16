@@ -17,9 +17,11 @@
  */
 
 const logger = require('../../config/logger');
-const { separarContenedoresYPrecintos, deducirTipoCarga, ciudadSinEstado, vueloPrincipal } = require('./datosTransporte');
+const {
+  separarContenedoresYPrecintos, deducirTipoCarga, ciudadSinEstado, vueloPrincipal, nacionalidadDelMedio, numeroImo, mrnLeido
+} = require('./datosTransporte');
 
-const SYSTEM_PROMPT = `Eres un lector de documentos de comercio exterior (facturas comerciales, packing lists, conocimientos de embarque, cartas de porte aereo, CMR, certificados).
+const SYSTEM_PROMPT = `Eres un lector de documentos de comercio exterior (facturas comerciales, packing lists, conocimientos de embarque, cartas de porte aereo, CMR, documentos de acompañamiento de transito T1/T2, certificados).
 
 Tu unica tarea es TRANSCRIBIR los datos que figuran en el documento adjunto. Reglas:
 - Escribe solo lo que se lee con certeza en el documento. Si un dato no esta, o no se lee bien, usa null. Nunca deduzcas, completes ni corrijas un valor.
@@ -35,20 +37,25 @@ Tu unica tarea es TRANSCRIBIR los datos que figuran en el documento adjunto. Reg
 - "confianza" es un entero de 0 a 100: cuanto de completo y legible esta el documento.
 - "legible": false si el documento esta en blanco, es ilegible o no es un documento de comercio exterior. En ese caso explica el motivo en "notas".
 - "cantidad" es el numero de unidades de la linea (columnas Qty, Quantity, Cantidad, Uds, Pcs). "unidad" es la unidad que figura junto a ella (PCE, PCS, KG...); si la columna no lleva unidad, null. El numero de bultos (packages, cartons, pallets: «54 PACKAGES») va en "bultos" y "tipoBulto"; los bultos NUNCA son la "cantidad": si el documento no da unidades de mercancia, "cantidad" y "unidad" son null.
-- "factura" es solo para facturas. Un documento de transporte (BL, AWB, CMR) no es una factura: no rellenes con el numero, la fecha ni el importe de "factura" (la fecha de emision del BL o del AWB no es la de una factura); la moneda y el incoterm que figuren si pueden ir.
+- "nacionalidadMedio" es el pais de la bandera o de matriculacion del medio de transporte, SOLO si el documento lo escribe: casillas «Flag», «Vessel flag», «Bandera», «Nationality», «Nacionalidad»; en un CMR, el pais o el signo distintivo que acompaña a la matricula de la tractora («E», «D», «PL», «TR»). Codigo ISO de dos letras o el signo distintivo tal cual figura. NUNCA la deduzcas del nombre del buque, de la naviera, del numero IMO, del puerto ni de la matricula sin signo: si no esta escrita, null.
+- "imo" es el numero IMO del buque (siete cifras, «IMO 9839284») si figura; si no, null.
+- En un CMR (convenio CMR): "numeroDocumento" es el numero del CMR; "exportador" es el remitente (casilla 1) e "importador" el destinatario (casilla 2); "puertoCarga" es el lugar de carga (casilla 4) y "puertoDescarga" el lugar de entrega (casilla 3); "medio" es la matricula de la tractora o camion (casilla del transportista, 16, o «Matricula»/«Kennzeichen»/«Registration»); "remolque" es la matricula del remolque o semirremolque si figura aparte; las partidas salen de las casillas 6 a 11 (marcas, bultos, embalaje, naturaleza, numero estadistico y peso bruto).
+- Un documento de acompañamiento de transito (DAT/TAD, T1, T2, NCTS) es "transit_document". En el: "transito.mrn" es el MRN del transito (18 caracteres); "transito.oficinaPartida" y "transito.oficinaDestino" son los codigos de las aduanas de partida y de destino (dos letras y seis caracteres, «ES004611»); "transito.garantia" es el numero de referencia de la garantia (GRN); "medio" es la identificacion del medio de transporte a la partida (matricula); "nacionalidadMedio" es SOLO la nacionalidad del medio de transporte ACTIVO en la frontera si figura (no la del medio a la partida); "numeroDocumento" es null. En cualquier otro documento "transito" va con todo a null.
+- "factura" es solo para facturas. Un documento de transporte (BL, AWB, CMR) o de transito (T1) no es una factura: no rellenes con el numero, la fecha ni el importe de "factura" (la fecha de emision del BL o del AWB no es la de una factura); la moneda y el incoterm que figuren si pueden ir.
 - "telefono" y "email" de cada parte, tal como aparecen; si no figuran, null.
 - "notas": incidencias que el agente de aduanas deba conocer (dato dudoso, totales que no cuadran dentro del propio documento, paginas que faltan). Frases cortas. NO es una incidencia que falte un dato opcional: no anotes que el incoterm no lleva lugar, que no hay peso neto, peso o bultos por linea, ni que falta el telefono o el correo. Tampoco es una incidencia la forma normal de un documento: que un packing list totalice los bultos sin detallarlos uno a uno (una linea y un total de 12 bultos NO es una discrepancia), ni que una descripcion aparezca abreviada o cortada. Solo es incidencia de totales cuando dos cifras del propio documento se contradicen. Si no hay incidencias, [].
 
 Responde UNICAMENTE con un JSON con esta forma exacta:
 {
   "legible": true,
-  "tipoDetectado": "commercial_invoice | proforma_invoice | packing_list | bill_of_lading | air_waybill | cmr | certificate_origin | other",
+  "tipoDetectado": "commercial_invoice | proforma_invoice | packing_list | bill_of_lading | air_waybill | cmr | transit_document | certificate_origin | other",
   "confianza": 0,
   "notas": [],
   "exportador": { "nombre": null, "direccion": null, "ciudad": null, "codigoPostal": null, "pais": null, "telefono": null, "email": null },
   "importador": { "nombre": null, "identificacionFiscal": null, "direccion": null, "ciudad": null, "codigoPostal": null, "pais": null, "telefono": null, "email": null },
   "factura": { "numero": null, "fecha": null, "moneda": null, "importeTotal": null, "incoterm": null, "lugarIncoterm": null },
-  "transporte": { "numeroDocumento": null, "medio": null, "puertoCarga": null, "puertoDescarga": null, "contenedores": [], "precintos": [], "documentoHijo": null, "tipoCarga": null, "indicacionesCarga": [] },
+  "transporte": { "numeroDocumento": null, "medio": null, "puertoCarga": null, "puertoDescarga": null, "contenedores": [], "precintos": [], "documentoHijo": null, "tipoCarga": null, "indicacionesCarga": [], "nacionalidadMedio": null, "imo": null, "remolque": null },
+  "transito": { "mrn": null, "oficinaPartida": null, "oficinaDestino": null, "garantia": null },
   "partidas": [ { "descripcion": null, "codigoMercancia": null, "paisOrigen": null, "cantidad": null, "unidad": null, "bultos": null, "tipoBulto": null, "pesoBrutoKg": null, "pesoNetoKg": null, "importe": null } ],
   "totales": { "bultos": null, "pesoBrutoKg": null, "pesoNetoKg": null }
 }`;
@@ -61,7 +68,7 @@ const construirPrompt = (document) =>
 
 const TIPOS_DOCUMENTO = [
   'commercial_invoice', 'proforma_invoice', 'packing_list', 'bill_of_lading',
-  'air_waybill', 'cmr', 'certificate_origin', 'other'
+  'air_waybill', 'cmr', 'transit_document', 'certificate_origin', 'other'
 ];
 // Tipos de bulto UN/ECE Rec. 21 que ofrece la aplicacion.
 const TIPOS_BULTO = ['CT', 'PX', 'BX', 'PK', 'BG', 'DR', 'CR', 'NE'];
@@ -75,8 +82,9 @@ const TIPOS_BULTO_POR_TEXTO = {
 const MAX_TEXTO = 500;
 const MAX_PARTIDAS = 200;
 const MAX_NOTAS = 20;
-// Documentos de transporte: no rellenan los datos de la factura.
-const TIPOS_TRANSPORTE = ['bill_of_lading', 'air_waybill', 'cmr'];
+// Documentos de transporte y de transito: no rellenan los datos de la
+// factura y son los unicos que aportan el medio y su nacionalidad.
+const TIPOS_TRANSPORTE = ['bill_of_lading', 'air_waybill', 'cmr', 'transit_document'];
 
 const texto = (valor) => {
   if (valor === null || valor === undefined) return null;
@@ -195,6 +203,23 @@ const notaCifrasDeMas = ({ leido, numero, digitoCorrecto }) =>
   `El documento trae el contenedor ${leido} con cifras de más: se ha tomado ${numero} (4 letras y 7 cifras, ISO 6346); ` +
   (digitoCorrecto ? 'su dígito de control cuadra.' : 'su dígito de control no cuadra: compruébalo con el documento.');
 
+const notasDelMedio = ({ nacionalidad, imo, remolque, mrn, transito }) => [
+  ...(nacionalidad.signo ? [`Nacionalidad del medio leída del signo distintivo «${nacionalidad.signo}» de la matrícula: ${nacionalidad.pais}.`] : []),
+  ...(imo ? [imo.digitoCorrecto
+    ? `Buque con número IMO ${imo.numero}.`
+    : `Comprueba el número IMO ${imo.numero}: su dígito de control no cuadra.`] : []),
+  ...(remolque ? [`Remolque o semirremolque: ${remolque}.`] : []),
+  ...(mrn ? [`MRN del tránsito (T1): ${mrn.numero}` +
+    (transito.oficinaPartida || transito.oficinaDestino ? `, de ${transito.oficinaPartida || '?'} a ${transito.oficinaDestino || '?'}` : '') +
+    (mrn.digitoCorrecto ? '.' : '. Su dígito de control no cuadra: compruébalo con el documento.')] : [])
+];
+
+// Codigo de una aduana (lista de oficinas de la UE): pais y seis caracteres.
+const oficinaAduana = (valor) => {
+  const t = (texto(valor) || '').toUpperCase().replace(/\s/g, '');
+  return /^[A-Z]{2}[A-Z0-9]{6}$/.test(t) ? t : null;
+};
+
 const notasDeTransporte = ({ precintos, digitoIncorrecto, cifrasDeMas, documentoHijo, otrosVuelos, tipo, notaTipoCarga }) => [
   ...(precintos.length > 0 ? [`Precintos (no son contenedores): ${precintos.join(', ')}.`] : []),
   ...cifrasDeMas.map(notaCifrasDeMas),
@@ -228,6 +253,7 @@ function normalizarExtraccion(bruto, { tipoDeclarado } = {}) {
   const fac = objeto(r.factura);
   const tra = objeto(r.transporte);
   const tot = objeto(r.totales);
+  const tran = objeto(r.transito);
   const incoterm = texto(fac.incoterm);
   const tipoDetectado = TIPOS_DOCUMENTO.includes(r.tipoDetectado) ? r.tipoDetectado : null;
   const tipo = tipoDetectado && tipoDetectado !== 'other' ? tipoDetectado : tipoDeclarado;
@@ -245,9 +271,21 @@ function normalizarExtraccion(bruto, { tipoDeclarado } = {}) {
   const numeroDocumento = texto(tra.numeroDocumento);
   const hijo = texto(tra.documentoHijo);
   const documentoHijo = hijo && hijo !== numeroDocumento ? hijo : null;
+  const nacionalidad = nacionalidadDelMedio(tra.nacionalidadMedio);
+  const imo = numeroImo(tra.imo);
+  const remolque = texto(tra.remolque);
+  const mrn = mrnLeido(tran.mrn);
+  const transito = {
+    mrn: mrn ? mrn.numero : null,
+    oficinaPartida: oficinaAduana(tran.oficinaPartida),
+    oficinaDestino: oficinaAduana(tran.oficinaDestino),
+    garantia: texto(tran.garantia)
+  };
   const notasModelo = lista(r.notas).map(texto).filter(Boolean).slice(0, MAX_NOTAS);
-  const notasNuevas = notasDeTransporte({ precintos, digitoIncorrecto, cifrasDeMas, documentoHijo, otrosVuelos, tipo, notaTipoCarga })
-    .filter(n => !notasModelo.includes(n));
+  const notasNuevas = [
+    ...notasDeTransporte({ precintos, digitoIncorrecto, cifrasDeMas, documentoHijo, otrosVuelos, tipo, notaTipoCarga }),
+    ...notasDelMedio({ nacionalidad, imo, remolque, mrn, transito })
+  ].filter(n => !notasModelo.includes(n));
 
   return {
     legible: r.legible !== false,
@@ -276,8 +314,10 @@ function normalizarExtraccion(bruto, { tipoDeclarado } = {}) {
     transporte: {
       numeroDocumento, documentoHijo, medio: vuelo,
       puertoCarga: texto(tra.puertoCarga), puertoDescarga: texto(tra.puertoDescarga),
-      contenedores, precintos, tipoCarga
+      contenedores, precintos, tipoCarga,
+      nacionalidadMedio: nacionalidad.pais, imo: imo ? imo.numero : null, remolque
     },
+    transito,
     partidas: lista(r.partidas).slice(0, MAX_PARTIDAS).map(objeto).map(p => partidaNormalizada(p, esTransporte)),
     totales: { bultos: numero(tot.bultos), pesoBrutoKg: numero(tot.pesoBrutoKg), pesoNetoKg: numero(tot.pesoNetoKg) }
   };
@@ -375,6 +415,11 @@ function proponerCambios(expedition, datos, tipoDocumento) {
     proponer('transport.documentNumber', 'transporte', 'documentNumber', transport.documentNumber, datos.transporte.numeroDocumento);
   }
   proponer('transport.vehicleId', 'transporte', 'vehicleId', transport.vehicleId, datos.transporte.medio);
+  // Nacionalidad del medio activo en frontera (H1 CAU, ActiveBorderTransportMeans):
+  // solo de un documento de transporte o de transito que la escribe (UAT 17/Nov/2026).
+  if (TIPOS_TRANSPORTE.includes(tipoDocumento)) {
+    proponer('transport.vehicleNationality', 'transporte', 'vehicleNationality', transport.vehicleNationality, datos.transporte.nacionalidadMedio);
+  }
   proponer('transport.departurePort', 'transporte', 'departurePort', transport.departurePort, datos.transporte.puertoCarga);
   proponer('transport.arrivalPort', 'transporte', 'arrivalPort', transport.arrivalPort, datos.transporte.puertoDescarga);
   if (MODOS_MARITIMOS.includes(String(expedition.transportMode || '').toLowerCase())) {
@@ -458,6 +503,17 @@ function aplicarCambios(expedition, datos, tipoDocumento, claves) {
 const CLAVES_H1 = ['invoiceNumber', 'exporter.postalCode', 'exporter.address', 'exporter.city', 'exporter.country'];
 const CLAVES_H1_TRANSPORTE = ['transport.loadType', 'transport.containers'];
 
+// La nacionalidad del medio solo se rellena sola si el documento es del modo
+// del expediente: un CMR del tramo interior de una importacion maritima trae
+// la matricula del camion, no la bandera del buque que cruzo la frontera
+// (H1: nacionalidad del medio de transporte ACTIVO en frontera). En ese caso
+// queda como propuesta. El T1 la da expresamente para el medio en frontera.
+const MODOS_DEL_DOCUMENTO = { bill_of_lading: ['maritime', 'sea'], air_waybill: ['air'], cmr: ['road'] };
+const nacionalidadDelModo = (expedition, tipoDocumento) => {
+  if (tipoDocumento === 'transit_document') return true;
+  return (MODOS_DEL_DOCUMENTO[tipoDocumento] || []).includes(String(expedition.transportMode || '').toLowerCase());
+};
+
 /**
  * Rellena con lo leido los campos VACIOS del expediente que pide el H1. Nunca
  * cambia un dato ya escrito: solo se aplican cambios de la propuesta cuyo
@@ -469,7 +525,11 @@ const CLAVES_H1_TRANSPORTE = ['transport.loadType', 'transport.containers'];
  * @returns {Array<object>} cambios aplicados
  */
 function rellenarHuecosH1(expedition, datos, tipoDocumento) {
-  const permitidas = TIPO_TRANSPORTE[tipoDocumento] ? [...CLAVES_H1, ...CLAVES_H1_TRANSPORTE] : CLAVES_H1;
+  const permitidas = [
+    ...CLAVES_H1,
+    ...(TIPOS_TRANSPORTE.includes(tipoDocumento) ? CLAVES_H1_TRANSPORTE : []),
+    ...(nacionalidadDelModo(expedition, tipoDocumento) ? ['transport.vehicleNationality'] : [])
+  ];
   const claves = proponerCambios(expedition, datos, tipoDocumento)
     .filter(c => c.actual === null && permitidas.includes(c.clave))
     .map(c => c.clave);
