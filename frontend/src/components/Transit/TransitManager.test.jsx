@@ -30,6 +30,9 @@ vi.mock('../../services/api', () => ({
     recordControl: vi.fn(),
     releaseGoods: vi.fn(),
     complete: vi.fn(),
+    presentGoods: vi.fn(),
+    amend: vi.fn(),
+    invalidate: vi.fn(),
     aiAutoComplete: vi.fn(),
     aiValidateRoute: vi.fn(),
     aiPredictIncidents: vi.fn(),
@@ -2278,12 +2281,17 @@ describe('<TransitManager /> estados: cobertura completa del enum del backend', 
     expect(chipDeFila('Borrador')).toHaveLength(0)
   })
 
-  test('el filtro de estado ofrece los 15 estados del enum del backend', async () => {
+  test('una predeclaracion se etiqueta "Predeclarado", no "Borrador"', async () => {
+    await conEstado('prelodged')
+    expect(chipDeFila('Predeclarado').length).toBeGreaterThan(0)
+  })
+
+  test('el filtro de estado ofrece los 16 estados del enum del backend', async () => {
     await conEstado('draft')
     const selectEstado = screen.getAllByRole('combobox')[1]
     const valores = [...selectEstado.options].map(o => o.value)
     for (const estado of [
-      'draft', 'submitted', 'accepted', 'released', 'in_transit', 'arrived',
+      'draft', 'submitted', 'prelodged', 'accepted', 'released', 'in_transit', 'arrived',
       'unloaded', 'control_requested', 'goods_released', 'discrepancy',
       'enquiry', 'recovered', 'written_off', 'cancelled', 'completed'
     ]) {
@@ -2641,5 +2649,88 @@ describe('<TransitManager /> registrar resultado de control (IE143)', () => {
     fireEvent.change(screen.getByLabelText(/Resultado del control/i), { target: { value: 'A1' } })
     fireEvent.click(screen.getByRole('button', { name: /Registrar Resultado/i }))
     expect(await screen.findByText(/debe haber llegado/i)).toBeInTheDocument()
+  })
+})
+
+// ============================================================================
+// Mensajes del operador en la aduana de partida (guia NCTS6 v1.21, tabla 4.3):
+// CC170C y CC013C solo en PA (prelodged); CC014C en PA o PG.
+// ============================================================================
+describe('<TransitManager /> predeclaracion: presentar, modificar y anular ante la AEAT', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    transitAPI.getStats.mockResolvedValue({ data: { success: true, data: {} } })
+    transitAPI.getOverdue.mockResolvedValue({ data: { success: true, data: [] } })
+  })
+
+  const abrirFicha = async (extra) => {
+    transitAPI.list.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          transits: [{
+            _id: 'pre1', mrn: '26ES002801501441J7', lrn: 'LRNPRE', status: 'prelodged', transitType: 'T1',
+            principal: {}, departureOffice: { code: 'ES002801' }, destinationOffice: { code: 'ES002901' },
+            locationAuthorisationNumber: '2801AAAAAA',
+            goodsItems: [{ description: 'Ropa', taricCode: '6302100000', grossWeight: 25, packages: { count: 2 } }],
+            transport: { seals: [] }, totals: {}, dates: {}, deadlines: {}, ncts: { estado: 'PA' },
+            ...extra
+          }],
+          pagination: { total: 1, page: 1, limit: 20, pages: 1 }
+        }
+      }
+    })
+    render(<MemoryRouter><TransitManager /></MemoryRouter>)
+    await waitFor(() => expect(screen.getByText('26ES002801501441J7')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('26ES002801501441J7'))
+  }
+
+  test('en prelodged ofrece las tres acciones y ninguna de liberar', async () => {
+    await abrirFicha()
+    expect(await screen.findByText('Presentar Mercancia (CC170)')).toBeInTheDocument()
+    expect(screen.getByText('Modificar Predeclaracion (CC013)')).toBeInTheDocument()
+    expect(screen.getByText('Anular en AEAT (CC014)')).toBeInTheDocument()
+    expect(screen.queryByText('Liberar en Partida')).not.toBeInTheDocument()
+  })
+
+  test('aceptada con garantia extranjera pendiente (PG): se puede anular', async () => {
+    await abrirFicha({ status: 'accepted', ncts: { estado: 'PG' } })
+    expect(await screen.findByText('Anular en AEAT (CC014)')).toBeInTheDocument()
+    expect(screen.queryByText('Presentar Mercancia (CC170)')).not.toBeInTheDocument()
+  })
+
+  test('aceptada y despachada (DE): no se ofrece anular por servicio web', async () => {
+    await abrirFicha({ status: 'accepted', ncts: { estado: 'DE' } })
+    expect(await screen.findByText('Liberar en Partida')).toBeInTheDocument()
+    expect(screen.queryByText('Anular en AEAT (CC014)')).not.toBeInTheDocument()
+  })
+
+  test('anular abre la confirmacion y solo envia tras confirmar; luego recarga', async () => {
+    transitAPI.invalidate.mockResolvedValue({ data: { success: true, data: {} } })
+    await abrirFicha()
+    fireEvent.click(await screen.findByText('Anular en AEAT (CC014)'))
+    const boton = await screen.findByRole('button', { name: /Anular en la AEAT/i })
+    expect(boton).toBeDisabled()
+    fireEvent.change(screen.getByLabelText(/Motivo de la anulación/i), { target: { value: 'Error' } })
+    fireEvent.click(screen.getByLabelText(/definitiva/i))
+    fireEvent.click(boton)
+    await waitFor(() => expect(transitAPI.invalidate).toHaveBeenCalledWith('pre1', { motivo: 'Error' }))
+    await waitFor(() => expect(transitAPI.list).toHaveBeenCalledTimes(2))
+  })
+
+  test('presentar abre el formulario con la ubicacion del transito', async () => {
+    await abrirFicha()
+    fireEvent.click(await screen.findByText('Presentar Mercancia (CC170)'))
+    expect(await screen.findByLabelText(/Ubicación de la mercancía/i)).toHaveValue('2801AAAAAA')
+  })
+
+  test('el alta puede marcarse como predeclaracion (D)', async () => {
+    transitAPI.create.mockResolvedValue({ data: { success: true, data: {} } })
+    await abrirFicha()
+    fireEvent.click(screen.getByText('transit.newTransit'))
+    const marca = await screen.findByLabelText(/Predeclaración: la mercancía aún no está/i)
+    expect(marca).not.toBeChecked()
+    fireEvent.click(marca)
+    expect(marca).toBeChecked()
   })
 })

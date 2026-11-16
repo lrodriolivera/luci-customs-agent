@@ -200,11 +200,12 @@ describe('HouseConsignment y consignatario por partida', () => {
     expect(xml).toContain('<ent:goodsItemNumber>1</ent:goodsItemNumber>');
   });
 
-  test('un TARIC sin los ultimos digitos cae al CN por defecto 00', () => {
-    const xml = buildNCTSTransitXML(base({
+  // Antes caia a un CN '00' inventado. La guia NCTS6 v1.21 exige el CN («Es 'R'»)
+  // y que SA+NC exista en el TARIC: ahora es un error de validacion previo.
+  test('un TARIC sin los ultimos digitos no se completa con 00: error de validacion', () => {
+    expect(() => buildNCTSTransitXML(base({
       consignment: { goodsItems: [item({ taricCode: '842952' })] }
-    }));
-    expect(xml).toContain('<ent:combinedNomenclatureCode>00</ent:combinedNomenclatureCode>');
+    }))).toThrow(/Partida 1.*842952/);
   });
 
   test('con EORI de consignatario emite identificationNumber, sin name', () => {

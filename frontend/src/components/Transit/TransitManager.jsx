@@ -41,6 +41,7 @@ import {
   avisoResultadoIncoherente,
   construirPayloadControl
 } from './transitControl'
+import { accionesNctsOperador, FormularioNctsOperador } from './TransitOperadorNcts'
 
 const TRANSIT_TYPES = {
   T1: { label: 'T1 - No Union', color: 'blue', description: 'Mercancias no comunitarias' },
@@ -52,6 +53,9 @@ const TRANSIT_TYPES = {
 const STATUS_CONFIG = {
   draft: { label: 'Borrador', color: 'gray', icon: DocumentTextIcon },
   submitted: { label: 'Enviado', color: 'blue', icon: ArrowPathIcon },
+  // Predeclaracion admitida (NCTS PA): la mercancia aun no se ha presentado
+  // en la aduana de partida (CC170C); se puede modificar (CC013C) o anular (CC014C).
+  prelodged: { label: 'Predeclarado', color: 'teal', icon: ClockIcon },
   accepted: { label: 'Aceptado', color: 'indigo', icon: CheckCircleIcon },
   released: { label: 'Liberado', color: 'cyan', icon: TruckIcon },
   in_transit: { label: 'En Transito', color: 'orange', icon: TruckIcon },
@@ -820,6 +824,8 @@ export default function TransitManager() {
   // directo porque el resultado exige elegir una calificacion aduanera y anotar
   // el estado de cada precinto: no hay valor por defecto honesto.
   const [showControlForm, setShowControlForm] = useState(null) // transit object or null
+  // Formulario de un mensaje NCTS del operador (CC170C/CC013C/CC014C): { tipo, transit }
+  const [formularioNcts, setFormularioNcts] = useState(null)
 
   useEffect(() => {
     loadData()
@@ -956,7 +962,8 @@ export default function TransitManager() {
         break
     }
 
-    return actions
+    // Presentar/modificar/anular ante la AEAT segun el estado NCTS (PA, PG).
+    return [...actions, ...accionesNctsOperador(transit)]
   }
 
   const formatDate = (date) => {
@@ -1249,7 +1256,8 @@ export default function TransitManager() {
                                   // Las acciones con `form` no se ejecutan al
                                   // pulsar: abren el formulario que recoge los
                                   // datos que el mensaje necesita.
-                                  if (action.form) setShowControlForm(transit)
+                                  if (action.form === true) setShowControlForm(transit)
+                                  else if (action.form) setFormularioNcts({ tipo: action.form, transit })
                                   else handleAction(transit._id, action.key)
                                 }}
                                 disabled={actionLoading === `${transit._id}-${action.key}`}
@@ -1377,6 +1385,19 @@ export default function TransitManager() {
           transit={showAIPanel}
           onClose={() => setShowAIPanel(null)}
           onApplySuggestion={loadData}
+        />
+      )}
+
+      {/* Mensajes NCTS del operador: CC170C, CC013C, CC014C */}
+      {formularioNcts && (
+        <FormularioNctsOperador
+          tipo={formularioNcts.tipo}
+          transit={formularioNcts.transit}
+          onClose={() => setFormularioNcts(null)}
+          onHecho={() => {
+            setFormularioNcts(null)
+            loadData()
+          }}
         />
       )}
 
@@ -1590,6 +1611,8 @@ function TransitCreateForm({ onClose, onCreated }) {
     seals: [{ number: '', sealType: 'customs', affixedBy: '' }],
     guarantee: { type: '1', grn: '' },
     route: { countries: [] },
+    // 'D' = predeclaracion: se presenta antes que la mercancia (CC170C despues).
+    additionalDeclarationType: 'A',
     // `prevDocType` / `prevDocRef` son campos de formulario: handleSubmit los
     // convierte en `previousDocuments` (el formato del modelo) y los descarta.
     goodsItems: [{ itemNumber: 1, description: '', taricCode: '', grossWeight: 0, packages: { count: 1, type: 'CT' }, prevDocType: 'N337', prevDocRef: '' }]
@@ -1807,6 +1830,19 @@ function TransitCreateForm({ onClose, onCreated }) {
               </select>
             </div>
           </div>
+
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={formData.additionalDeclarationType === 'D'}
+              onChange={(e) => setFormData(f => ({ ...f, additionalDeclarationType: e.target.checked ? 'D' : 'A' }))}
+              className="mt-1"
+            />
+            <span>
+              Predeclaración: la mercancía aún no está en la aduana de partida. Se presenta después
+              (CC170) y hasta entonces se puede modificar o anular.
+            </span>
+          </label>
 
           {/* Principal */}
           <div>

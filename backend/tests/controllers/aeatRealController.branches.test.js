@@ -36,7 +36,6 @@ const mockXadesService = {
 
 const mockAeatRealService = {
   submitH1Declaration: jest.fn(),
-  submitH7Declaration: jest.fn(),
   submitAESDeclaration: jest.fn(),
   submitNCTSDeclaration: jest.fn(),
   submitENSDeclaration: jest.fn(),
@@ -368,54 +367,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
   });
 
   // ============================================
-  // RAMAS: submitH7/AES/NCTS - tracking condicional (líneas análogas)
+  // RAMAS: submitAES/NCTS - tracking condicional (líneas análogas)
   // ============================================
-  describe('submitH7Declaration - tracking condicional', () => {
-    test('NO trackea cuando success=true pero sin mrn', async () => {
-      const exp = await crearExpedicion();
-
-      mockAeatRealService.submitH7Declaration.mockResolvedValue({
-        success: true,
-        mrn: null
-      });
-
-      await request(app(aeatRealController.submitH7Declaration))
-        .post('/r')
-        .send({
-          expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX',
-          password: 'clave-real'
-        });
-
-      expect(mockStatusMonitor.trackDeclaration).not.toHaveBeenCalled();
-    });
-
-    test('usa description de error cuando result.success=false (líneas 469-471)', async () => {
-      const exp = await crearExpedicion();
-
-      mockAeatRealService.submitH7Declaration.mockResolvedValue({
-        success: false,
-        error: 'AEAT rechazó: código 2214',
-        mrn: null
-      });
-
-      await request(app(aeatRealController.submitH7Declaration))
-        .post('/r')
-        .send({
-          expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX',
-          password: 'clave-real'
-        });
-
-      const expActualizado = await Expedition.findById(exp._id);
-
-      // Líneas 463, 469-471: cuando result.success=false
-      expect(expActualizado.declaration.status).toBe('submission_error');
-      expect(expActualizado.timeline[0].description).toContain('Error enviando H7');
-      expect(expActualizado.timeline[0].description).toContain('código 2214');
-    });
-  });
-
   describe('submitAESDeclaration - tracking condicional', () => {
     test('NO trackea cuando success=true pero sin mrn', async () => {
       const exp = await crearExpedicion({ operationType: 'export' });
@@ -1459,39 +1412,6 @@ describe('aeatRealController - ramas sin cubrir', () => {
   });
 
   // ============================================
-  // RAMAS: submitH7Declaration - performedBy con fallback
-  // Línea 473
-  // ============================================
-  describe('submitH7Declaration - performedBy con fallback', () => {
-    test('usa "Sistema" cuando req.user.name es undefined', async () => {
-      const exp = await crearExpedicion();
-
-      mockAeatRealService.submitH7Declaration.mockResolvedValue({
-        success: true,
-        mrn: '26ES987654321098765'
-      });
-
-      const userSinNombre = {
-        _id: new mongoose.Types.ObjectId(),
-        email: 'test@example.com',
-        tenantId: TENANT_A
-      };
-
-      await request(app(aeatRealController.submitH7Declaration, 'post', '/r', userSinNombre))
-        .post('/r')
-        .send({
-          expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX',
-          password: 'clave-real'
-        });
-
-      const expActualizado = await Expedition.findById(exp._id);
-
-      expect(expActualizado.timeline[0].performedBy).toBe('Sistema');
-    });
-  });
-
-  // ============================================
   // RAMAS: submitAESDeclaration - performedBy con fallback
   // Línea 535
   // ============================================
@@ -1708,23 +1628,6 @@ describe('aeatRealController - ramas sin cubrir', () => {
 
       expect(res.status).toBe(500);
       expect(res.body.error).toBe('Error enviando declaración a AEAT');
-    });
-
-    test('submitH7Declaration - error sin message (línea 496)', async () => {
-      const exp = await crearExpedicion();
-
-      mockAeatRealService.submitH7Declaration.mockRejectedValue({});
-
-      const res = await request(app(aeatRealController.submitH7Declaration))
-        .post('/r')
-        .send({
-          expeditionId: exp._id.toString(),
-          certificateAlias: 'CERT-X',
-          password: 'clave-real'
-        });
-
-      expect(res.status).toBe(500);
-      expect(res.body.error).toBe('Error enviando H7');
     });
 
     test('submitAESDeclaration - error sin message (línea 556)', async () => {
@@ -1995,36 +1898,6 @@ describe('aeatRealController - ramas sin cubrir', () => {
       // Si useSandbox es false → useSandbox: false
       expect(mockAeatRealService.submitH1Declaration).toHaveBeenCalledWith(
         '<H1>Test declaration</H1>',
-        'FNMT-STRIX',
-        'clave-real',
-        { useSandbox: false }
-      );
-    });
-  });
-
-  // ============================================
-  // RAMAS: Otros handlers - useSandbox false explícito
-  // ============================================
-  describe('submitH7Declaration - useSandbox explícito', () => {
-    test('respeta useSandbox=false', async () => {
-      const exp = await crearExpedicion();
-
-      mockAeatRealService.submitH7Declaration.mockResolvedValue({
-        success: true,
-        mrn: '26ES987'
-      });
-
-      await request(app(aeatRealController.submitH7Declaration))
-        .post('/r')
-        .send({
-          expeditionId: exp._id.toString(),
-          certificateAlias: 'FNMT-STRIX',
-          password: 'clave-real',
-          useSandbox: false
-        });
-
-      expect(mockAeatRealService.submitH7Declaration).toHaveBeenCalledWith(
-        expect.any(String),
         'FNMT-STRIX',
         'clave-real',
         { useSandbox: false }

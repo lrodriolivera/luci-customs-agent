@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="51.8.0">
+	<!--================================================================================-->
+	<!--===== IE014: E_DEC_INV                                                          -->
+	<!--===== DECLARATION INVALIDATION REQUEST                                          -->
+	<!--===== NCTS P5 Phase Definition                                                  -->
+	<!--===== XSD Version 51.8.0                                                        -->
+	<!--================================================================================-->
+	<!--================================================================================-->
+	<!--===== Includes                                                                  -->
+	<!--================================================================================-->
+	<xs:include schemaLocation="ES_ctypes_v515.xsd"/>
+	<!--================================================================================-->
+	<!--===== Root Element                                                              -->
+	<!--================================================================================-->
+	<xs:element name="CC014C" type="CC014CType"/>
+	<!--================================================================================-->
+	<!--===== Root Element Content                                                      -->
+	<!--================================================================================-->
+	<xs:complexType name="CC014CType">
+		<xs:sequence>
+			<xs:group ref="MESSAGE"/>
+			<xs:element name="TransitOperation" type="TransitOperationType05"/>
+			<xs:element name="Invalidation" type="InvalidationType02"/>
+			<xs:element name="CustomsOfficeOfDeparture" type="CustomsOfficeOfDepartureType03"/>
+			<xs:element name="HolderOfTheTransitProcedure" type="HolderOfTheTransitProcedureType02"/>
+		</xs:sequence>
+		<xs:attribute name="PhaseID" type="phaseIDtype"/>
+	</xs:complexType>
+</xs:schema>

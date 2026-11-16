@@ -618,6 +618,10 @@ export const transitAPI = {
   recordTransitOffice: (id, data) => api.post(`/api/transit/${seg(id)}/transit-office`, data),
   notifyArrival: (id, data) => api.post(`/api/transit/${seg(id)}/arrival`, data),
   notifyUnloading: (id, data) => api.post(`/api/transit/${seg(id)}/unloading`, data),
+  // Mensajes del operador en la aduana de partida (NCTS6)
+  presentGoods: (id, data) => api.post(`/api/transit/${seg(id)}/present`, data),
+  amend: (id, data) => api.post(`/api/transit/${seg(id)}/amend`, data),
+  invalidate: (id, data) => api.post(`/api/transit/${seg(id)}/invalidate`, data),
   recordControl: (id, data) => api.post(`/api/transit/${seg(id)}/control`, data),
   releaseGoods: (id) => api.post(`/api/transit/${seg(id)}/release-goods`),
   complete: (id) => api.post(`/api/transit/${seg(id)}/complete`),
@@ -873,7 +877,6 @@ export const aeatRealAPI = {
   // Declarations
   declarations: {
     submitH1: (data) => api.post('/api/aeat-real/declarations/h1/submit', data),
-    submitH7: (data) => api.post('/api/aeat-real/declarations/h7/submit', data),
     submitAES: (data) => api.post('/api/aeat-real/declarations/aes/submit', data),
     submitNCTS: (data) => api.post('/api/aeat-real/declarations/ncts/submit', data),
     submitICS2: (data) => api.post('/api/aeat-real/declarations/ics2/submit', data),

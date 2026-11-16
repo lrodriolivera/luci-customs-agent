@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC014CV1Ent.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC014CV1Ent.xsd" elementFormDefault="qualified">
+	<xs:include schemaLocation="ES_CC014C_v515.xsd"/>
+	<xs:element name="CC014CV1Ent" type="CC014CV1Ent"/>
+	<xs:complexType name="CC014CV1Ent">
+		<xs:sequence>
+			<xs:element name="CC014C" type="CC014CType"/>
+		</xs:sequence>
+		<xs:attribute name="Id" use="required">
+			<xs:annotation>
+				<xs:documentation>Identificador de transacción</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="40"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+</xs:schema>
