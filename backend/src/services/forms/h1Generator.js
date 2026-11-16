@@ -14,6 +14,15 @@ const { v4: uuidv4 } = require('uuid');
 const { eoriDe, exigirEori, declarantePara, formaRepresentacionDe } = require('./identificadorAduanero');
 const { CAMBIO_EUR, cambioObligatorio, aEuros } = require('../divisas/cambioDelExpediente');
 const { gastoDe, gastosHastaLaFrontera } = require('./gastosHastaLaFrontera');
+const { ajustesDelValor } = require('./ajustesDelValor');
+const { lugarDeEntrega } = require('./lugarDeEntrega');
+
+// Ajustes de la CL265 (ver ajustesDelValor.js) -> campo de la valoracion del generador.
+const CAMPO_DEL_AJUSTE = Object.freeze({
+  AB: 'commissions', AD: 'packing', AE: 'materials', AF: 'tools', AG: 'consumed', AH: 'engineering', AI: 'royalties',
+  AJ: 'resaleProceeds', AL: 'indirectPayments',
+  BA: 'freightAfterImport', BB: 'constructionCharges', BC: 'customsDuties', BD: 'interestCharges', BE: 'reproductionRights', BF: 'buyingCommissions'
+});
 
 /**
  * Codigos de regimen aduanero
@@ -385,11 +394,8 @@ class H1Generator {
       })) || [],
 
       // Incoterm
-      deliveryTerms: {
-        code: expedition.incoterm?.code || 'CIF',
-        location: expedition.incoterm?.place,
-        country: expedition.incoterm?.country || 'ES'
-      },
+      // El pais del lugar convenido, con la misma regla que el mensaje CAU (FOB -> expedicion, C/D -> ES).
+      deliveryTerms: this.deliveryTermsDe(expedition),
 
       // Valores comerciales
       totalInvoicedAmount: expedition.goodsSummary?.totalValue || 0,
@@ -414,6 +420,23 @@ class H1Generator {
     };
   }
 
+  deliveryTermsDe(expedition) {
+    const entrega = lugarDeEntrega(expedition, expedition.exporter?.country || expedition.goods?.[0]?.originCountry);
+    if (!entrega) return { code: 'CIF', location: expedition.incoterm?.place, country: 'ES' };
+    return { code: entrega.incoterm, location: entrega.lugar || undefined, country: entrega.pais || undefined };
+  }
+
+  /**
+   * Ajustes del expediente (BA y opcionales) por campo de la valoracion, en
+   * euros. El AK (flete y seguro) va aparte en freightToEU/insuranceToEU.
+   */
+  ajustesPorCampo(expedition, cambios) {
+    const { ajustes } = ajustesDelValor(expedition, { cambios });
+    return ajustes.reduce((acc, a) => (CAMPO_DEL_AJUSTE[a.codigo]
+      ? { ...acc, [CAMPO_DEL_AJUSTE[a.codigo]]: (acc[CAMPO_DEL_AJUSTE[a.codigo]] || 0) + a.importe }
+      : acc), {});
+  }
+
   /**
    * Construir valoracion aduanera (Grupo 4 - CRITICO)
    */
@@ -427,19 +450,23 @@ class H1Generator {
     const gastos = gastosHastaLaFrontera(expedition, { cambios: { ...aiData.cambiosGastos, [cambio.divisa]: cambio } });
     const freight = gastos.flete;
     const insurance = gastos.seguro;
+    // Transporte tras la entrada (BA) y ajustes opcionales, como en el mensaje CAU.
+    const delExpediente = this.ajustesPorCampo(expedition, { ...aiData.cambiosGastos, [cambio.divisa]: cambio });
+    const valor = (campo) => (expedition.valuation?.[campo] || 0) + (delExpediente[campo] || 0);
 
     // Calcular adiciones al precio (4/9)
     const additions = {
-      commissions: expedition.valuation?.commissions || 0,
-      brokerage: expedition.valuation?.brokerage || 0,
-      containers: expedition.valuation?.containers || 0,
-      packing: expedition.valuation?.packing || 0,
-      materials: expedition.valuation?.materials || 0,
-      tools: expedition.valuation?.tools || 0,
-      consumed: expedition.valuation?.consumed || 0,
-      engineering: expedition.valuation?.engineering || 0,
-      royalties: expedition.valuation?.royalties || 0,
-      resaleProceeds: expedition.valuation?.resaleProceeds || 0,
+      commissions: valor('commissions'),
+      brokerage: valor('brokerage'),
+      containers: valor('containers'),
+      packing: valor('packing'),
+      materials: valor('materials'),
+      tools: valor('tools'),
+      consumed: valor('consumed'),
+      engineering: valor('engineering'),
+      royalties: valor('royalties'),
+      resaleProceeds: valor('resaleProceeds'),
+      indirectPayments: valor('indirectPayments'),
       freightToEU: freight,
       insuranceToEU: insurance
     };
@@ -448,14 +475,15 @@ class H1Generator {
 
     // Calcular deducciones (4/10)
     const deductions = {
-      freightAfterImport: expedition.valuation?.freightAfterImport || 0,
-      installationCharges: expedition.valuation?.installationCharges || 0,
-      customsDuties: expedition.valuation?.customsDuties || 0,
-      interestCharges: expedition.valuation?.interestCharges || 0,
-      buyingCommissions: expedition.valuation?.buyingCommissions || 0,
-      postImportTransport: expedition.valuation?.postImportTransport || 0,
-      constructionCharges: expedition.valuation?.constructionCharges || 0,
-      otherDeductions: expedition.valuation?.otherDeductions || 0
+      freightAfterImport: valor('freightAfterImport'),
+      installationCharges: valor('installationCharges'),
+      customsDuties: valor('customsDuties'),
+      interestCharges: valor('interestCharges'),
+      buyingCommissions: valor('buyingCommissions'),
+      postImportTransport: valor('postImportTransport'),
+      constructionCharges: valor('constructionCharges'),
+      reproductionRights: valor('reproductionRights'),
+      otherDeductions: valor('otherDeductions')
     };
 
     const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + (val || 0), 0);

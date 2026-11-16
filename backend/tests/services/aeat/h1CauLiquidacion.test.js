@@ -69,3 +69,36 @@ describe('LUCI frente a la AEAT', () => {
     expect(compararLiquidacion(luci, { totalAPagar: 10 })).toBeNull();
   });
 });
+
+describe('liquidación declarada de un H1 DAP con deducción BA', () => {
+  const { expeditionToH1CauData } = require('../../../src/services/aeat/h1CauData');
+  const { buildH1CauXML } = require('../../../src/services/aeat/h1CauXmlBuilder');
+
+  test('las bases que LUCI declara (y compara con la AEAT) ya tienen restado el transporte interior', () => {
+    const expedition = {
+      expeditionId: 'EXP-2026-BA000001', transportMode: 'maritime',
+      client: { companyName: 'Importadora SL', eori: 'ESB12345674', address: { postalCode: '28001', country: 'ES' } },
+      exporter: { companyName: 'Exportador', eori: 'CN123456789012', country: 'CN' },
+      representative: { representationType: 'indirect' },
+      incoterm: { code: 'DAP', place: 'Madrid' },
+      costs: { freightAfterEntry: { amount: 1000, currency: 'EUR' } },
+      transport: {
+        vehicleNationality: 'PA', documentType: 'BL', documentNumber: 'BL1',
+        summaryDeclaration: { item: '1', aeat: { mrn: '26ES00280180000014', location: '2801AAAAAA' } }
+      },
+      declaration: { lrn: 'LRN1', invoiceNumber: 'F1' },
+      goods: [{ taricCode: '6302100000', originCountry: 'CN', grossWeight: 995, netWeight: 900, invoiceValue: 10000, currency: 'EUR', dutyRate: 12, vatRate: 21, packages: { quantity: 90, type: 'CT' } }]
+    };
+    const datos = expeditionToH1CauData(expedition, {
+      declarante: { eori: 'ESB22477020', representationType: 'indirect', contact: { name: 'A', phone: '1', email: 'a@b.es' } }, mensajeId: 'M1'
+    });
+    const declarada = liquidacionDeclarada(buildH1CauXML(datos));
+
+    // 10.000 − 1.000 = 9.000; arancel 12 % = 1.080; IVA 21 % de 10.080 = 2.116,80.
+    expect(declarada.partidas[0].tributos).toEqual([
+      { tipo: 'A00', base: 9000, cuota: 1080 },
+      { tipo: 'B00', base: 10080, cuota: 2116.8 }
+    ]);
+    expect(declarada.total).toBe(3196.8);
+  });
+});

@@ -133,3 +133,57 @@ describe('vista previa con una divisa que el BCE no cotiza', () => {
     expect(vista.goodsItems[0].customsValue).toBe(8901.55);
   });
 });
+
+describe('vista previa: incoterm y valor en aduana iguales a los del mensaje', () => {
+  const conIncoterm = {
+    ...VISTA,
+    goodsShipment: { ...VISTA.goodsShipment, deliveryTerms: { code: 'FOB', location: 'Shanghai', country: 'ES' } },
+    valuation: { valuationMethod: '1', customsValue: 8901.55 },
+    dutyTaxFee: {
+      ...VISTA.dutyTaxFee,
+      importDuty: { type: 'A00', rate: 12, baseAmount: 8901.55, payableAmount: 1068.19 },
+      vat: { type: 'B00', rate: 21, baseAmount: 9969.74, payableAmount: 2093.65 },
+      totalDuty: 3161.84
+    }
+  };
+  const tributos = (base, cuota, baseIva, cuotaIva) => [
+    { tipo: 'A00', medioDePago: 'A', bases: [{ tipoImpositivo: 12, importe: base, cuota }] },
+    { tipo: 'B00', medioDePago: 'A', bases: [{ tipoImpositivo: 21, importe: baseIva, cuota: cuotaIva }] }
+  ];
+
+  test('el país del incoterm es el que va en el XML (FOB Shanghai → CN), no ES por defecto', () => {
+    const vista = aplicarCauAVistaPrevia(conIncoterm, { ...CAU, envio: { ...CAU.envio, entrega: { incoterm: 'FOB', lugar: 'Shanghai', pais: 'CN' } } });
+    expect(vista.goodsShipment.deliveryTerms).toEqual({ code: 'FOB', location: 'Shanghai', country: 'CN' });
+  });
+
+  test('DAP con BA: valor en aduana, ajustes y liquidación de la partida son los del mensaje', () => {
+    const partida = {
+      ...CAU.envio.partidas[0],
+      valoracion: { metodo: '1', ajustes: [{ codigo: 'BA', importe: 1000 }] },
+      tributos: tributos(7901.55, 948.19, 8849.74, 1858.45)
+    };
+    const vista = aplicarCauAVistaPrevia(conIncoterm, {
+      ...CAU, envio: { ...CAU.envio, entrega: { incoterm: 'DAP', lugar: 'Madrid', pais: 'ES' }, partidas: [partida] }
+    });
+
+    expect(vista.goodsShipment.deliveryTerms).toEqual({ code: 'DAP', location: 'Madrid', country: 'ES' });
+    expect(vista.goodsItems[0]).toMatchObject({ customsValue: 7901.55, valuationAdjustments: [{ code: 'BA', amount: 1000 }] });
+    expect(vista.valuation.customsValue).toBe(7901.55);
+    expect(vista.dutyTaxFee.importDuty).toMatchObject({ rate: 12, baseAmount: 7901.55, payableAmount: 948.19 });
+    expect(vista.dutyTaxFee.vat).toMatchObject({ rate: 21, baseAmount: 8849.74, payableAmount: 1858.45 });
+    expect(vista.dutyTaxFee.totalDuty).toBe(2806.64);
+  });
+
+  test('varias partidas: suma las bases y las cuotas de todas', () => {
+    const partidas = [
+      { ...CAU.envio.partidas[0], valoracion: { metodo: '1', ajustes: [] }, tributos: tributos(100, 12, 112, 23.52) },
+      { ...CAU.envio.partidas[0], valoracion: { metodo: '1', ajustes: [{ codigo: 'AK', importe: 5 }] }, tributos: tributos(200, 24, 224, 47.04) }
+    ];
+    const vista = aplicarCauAVistaPrevia({ ...conIncoterm, goodsItems: [VISTA.goodsItems[0], VISTA.goodsItems[0]] }, { ...CAU, envio: { ...CAU.envio, partidas } });
+    expect(vista.valuation.customsValue).toBe(300);
+    expect(vista.dutyTaxFee.importDuty).toMatchObject({ baseAmount: 300, payableAmount: 36 });
+    expect(vista.dutyTaxFee.vat).toMatchObject({ baseAmount: 336, payableAmount: 70.56 });
+    expect(vista.dutyTaxFee.totalDuty).toBe(106.56);
+    expect(vista.goodsItems.map((i) => i.valuationAdjustments)).toEqual([[], [{ code: 'AK', amount: 5 }]]);
+  });
+});

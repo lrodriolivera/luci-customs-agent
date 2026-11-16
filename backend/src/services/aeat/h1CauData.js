@@ -11,6 +11,7 @@
  */
 const { ErrorValidacion, eoriDe, formaRepresentacionDe } = require('../forms/identificadorAduanero');
 const { cambioObligatorio, aEuros } = require('../divisas/cambioDelExpediente');
+const { lugarDeEntrega } = require('../forms/lugarDeEntrega');
 const { ajustesDelValor, ajustesDeLaPartida, valorConAjustes } = require('../forms/ajustesDelValor');
 const { sinCodigoPostal } = require('./paisesSinCodigoPostal');
 const { MODOS_ACTIVACION } = require('./h1CauActivacion');
@@ -23,8 +24,6 @@ const MODO_FRONTERA = { sea: '1', maritime: '1', rail: '2', road: '3', air: '4' 
 // Tipo de identificacion del medio de llegada segun el modo (lista de la UE).
 const TIPO_MEDIO_LLEGADA = { sea: '11', maritime: '11', rail: '21', road: '30', air: '40' };
 const DOCUMENTO_TRANSPORTE = { BL: 'N705', AWB: 'N740', CMR: 'N730', CIM: 'N720' };
-// Incoterms en los que el lugar convenido esta en destino.
-const INCOTERMS_EN_DESTINO = new Set(['CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP']);
 const AMBITOS_AUTORIZACION = { global: null, OCRE: 'OCRE', OSRE: 'OSRE' };
 const DOCUMENTO_DIVISA_SIN_BCE = '1017';
 
@@ -152,15 +151,10 @@ function garantiasDe(pago, faltan) {
 }
 
 function entregaDe(expedition, paisExpedicion, faltan) {
-  const incoterm = typeof expedition.incoterm === 'object' ? expedition.incoterm : { code: expedition.incoterm };
-  const codigo = texto(incoterm?.code);
-  if (!codigo) { faltan.push('incoterm'); return null; }
-  const enDestino = INCOTERMS_EN_DESTINO.has(codigo.toUpperCase());
-  const lugar = texto(incoterm.place) || texto(enDestino ? expedition.transport?.arrivalPort : expedition.transport?.departurePort);
-  // El pais del lugar convenido: el de destino o el de expedicion, segun el incoterm.
-  const pais = texto(incoterm.country) || (enDestino ? 'ES' : paisExpedicion);
-  if (!lugar) faltan.push('lugar del incoterm');
-  return { incoterm: codigo.toUpperCase(), lugar: lugar ? lugar.slice(0, 35) : null, pais };
+  const entrega = lugarDeEntrega(expedition, paisExpedicion);
+  if (!entrega) { faltan.push('incoterm'); return null; }
+  if (!entrega.lugar) faltan.push('lugar del incoterm');
+  return entrega;
 }
 
 function expedicionDe(expedition, numerosDePartida, faltan) {
