@@ -222,6 +222,27 @@ describe('sin valores ficticios: 422 con la lista de lo que falta y dónde', () 
     expect(xml).toContain('<ent:typeOfPackages>CT</ent:typeOfPackages>');
   });
 
+  test('factura en USD: divisa USD, total en USD y valor estadístico en euros obligatorio', () => {
+    const goods = [{ ...expedienteAes().goods[0], currency: 'USD', invoiceValue: 1100 }];
+    expect(faltanDe(expedienteAes({ goods })).join(' ')).toMatch(/valor estadístico en euros \(la factura va en USD\)/);
+    const conEstadistico = [{ ...goods[0], statisticalValue: 1000 }];
+    const xml = buildAESExportXML(expeditionToAesData(expedienteAes({ goods: conEstadistico }), { tenant: TENANT_AGENTE }));
+    expect(xml).toContain('<ent:invoiceCurrency>USD</ent:invoiceCurrency>');
+    expect(xml).toContain('<ent:totalAmountInvoiced>1100.00</ent:totalAmountInvoiced>');
+    expect(xml).toContain('<ent:statisticalValue>1000.00</ent:statisticalValue>');
+  });
+
+  test('partidas en divisas distintas: 422', () => {
+    const g = expedienteAes().goods[0];
+    const goods = [{ ...g, currency: 'USD', statisticalValue: 900 }, { ...g, currency: 'EUR' }];
+    expect(faltanDe(expedienteAes({ goods })).join(' ')).toMatch(/una sola divisa de factura \(hay USD, EUR\)/);
+  });
+
+  test('modo de transporte sin tipo de medio conocido (correo con medio): pide el tipo, no inventa 30', () => {
+    const faltan = faltanDe(expedienteAes({ transportMode: 'postal' }));
+    expect(faltan.join(' ')).toMatch(/tipo de identificación del medio de transporte para el modo 5/);
+  });
+
   test('sin EORI del exportador: 422 del cliente (antes de la lista)', () => {
     expect(() => expeditionToAesData(expedienteAes({ client: { companyName: 'X' } }), { tenant: TENANT_AGENTE }))
       .toThrow(/Falta el EORI del cliente/);

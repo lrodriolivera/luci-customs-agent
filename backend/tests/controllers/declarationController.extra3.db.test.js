@@ -474,6 +474,20 @@ describe('updateDeclaration: rama tipo AES (else del H1)', () => {
     expect(updated.declaration.goodsLocation).toBe('2801AAAAAC');
   });
 
+  test('AES: guarda la aduana de salida aunque la vista previa no se pueda regenerar (422 del generador)', async () => {
+    const { ErrorValidacion } = require('../../src/services/forms/identificadorAduanero');
+    aesGenerator.generate.mockImplementationOnce(() => { throw new ErrorValidacion('Falta el EORI del cliente', { quien: 'cliente' }); });
+    const user = usuario();
+    const exp = await expedienteExportacion(user, { declaration: { type: 'AES', status: 'draft', xmlContent: '<AES/>' } });
+    const res = crearRes();
+
+    await ctrl.updateDeclaration({ params: { expeditionId: exp._id }, body: { officeOfExit: 'ES004601' }, user }, res);
+
+    expect(res.statusCode).toBe(200);
+    const updated = await Expedition.findById(exp._id);
+    expect(updated.declaration.officeOfExit).toBe('ES004601');
+  });
+
   test('AES: rechaza (400) una aduana de salida o ubicacion con formato no valido', async () => {
     const user = usuario();
     const exp = await expedienteExportacion(user, { declaration: { type: 'AES', status: 'draft', xmlContent: '<AES/>' } });

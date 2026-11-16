@@ -782,12 +782,19 @@ const updateDeclaration = async (req, res) => {
         }, { tenant, cambio: await cambioDelExpediente(expedition), cambiosGastos: await cambiosDeLosGastos(expedition) });
         expedition.declaration.xmlContent = h1Declaration.xml;
       } else if (expedition.declaration.type === 'AES') {
-        const aesDeclaration = aesGenerator.generate(expedition, {
-          ...expedition.declaration,
-          ...updates,
-          exitOffice: expedition.declaration.officeOfExit
-        }, { tenant });
-        expedition.declaration.xmlContent = aesDeclaration.xml;
+        // La vista previa no impide guardar: si aun falta algo (p. ej. el EORI
+        // del cliente), se guardan los datos y la presentacion dira que falta.
+        try {
+          const aesDeclaration = aesGenerator.generate(expedition, {
+            ...expedition.declaration,
+            ...updates,
+            exitOffice: expedition.declaration.officeOfExit
+          }, { tenant });
+          expedition.declaration.xmlContent = aesDeclaration.xml;
+        } catch (error) {
+          if (!(error instanceof ErrorValidacion)) throw error;
+          logger.warn(`Vista previa del AES sin regenerar: ${error.message}`);
+        }
       }
     }
 

@@ -198,6 +198,11 @@ function transporteDe(expedition, directa, faltan) {
   if (pideMedio && !medio) faltan.push(falta('identificación del medio de transporte (matrícula, buque o vuelo)', DONDE.transporte));
   if (pideMedio && !nacionalidad) faltan.push(falta('nacionalidad del medio de transporte', DONDE.transporte));
 
+  // Tipo de identificacion del medio: solo se deduce para mar, ferrocarril, carretera y aire.
+  const modoSinTipo = (conMedioActivo || medio) && !TIPO_MEDIO[modoFrontera] ? modoFrontera
+    : (!directa && !TIPO_MEDIO[modoInterior] ? modoInterior : null);
+  if (modoSinTipo) faltan.push(falta(`tipo de identificación del medio de transporte para el modo ${modoSinTipo}: LUCI solo lo deduce para mar, ferrocarril, carretera y aire`, DONDE.transporte));
+
   const tipoDoc = DOCUMENTO_TRANSPORTE[String(t.documentType || '').toUpperCase()] || texto(decl.transportDocType) || DOCUMENTO_POR_MODO[modoFrontera];
   const numeroDoc = texto(t.documentNumber) || texto(decl.transportDocRef);
   if (!tipoDoc || !numeroDoc) faltan.push(falta('documento de transporte (tipo y número)', DONDE.transporte));
@@ -205,8 +210,8 @@ function transporteDe(expedition, directa, faltan) {
   return {
     modoFrontera,
     modoInterior: directa ? null : modoInterior,
-    medioActivo: conMedioActivo || medio ? { tipo: TIPO_MEDIO[modoFrontera] || '30', id: medio ? medio.toUpperCase() : null, pais: nacionalidad ? nacionalidad.toUpperCase() : null } : null,
-    medioSalida: directa ? null : { tipo: TIPO_MEDIO[modoInterior] || TIPO_MEDIO[modoFrontera] || '30', id: medio ? medio.toUpperCase() : null, pais: nacionalidad ? nacionalidad.toUpperCase() : null },
+    medioActivo: conMedioActivo || medio ? { tipo: TIPO_MEDIO[modoFrontera], id: medio ? medio.toUpperCase() : null, pais: nacionalidad ? nacionalidad.toUpperCase() : null } : null,
+    medioSalida: directa ? null : { tipo: TIPO_MEDIO[modoInterior], id: medio ? medio.toUpperCase() : null, pais: nacionalidad ? nacionalidad.toUpperCase() : null },
     documento: { tipo: tipoDoc || null, referencia: numeroDoc }
   };
 }
@@ -234,8 +239,13 @@ function partidaDe(expedition, g, i, contexto, faltan) {
   const neto = numero(g.netWeight);
   if (!(bruto > 0)) faltan.push(falta('peso bruto', donde));
   if (!(neto > 0)) faltan.push(falta('peso neto', donde));
-  const valor = numero(g.statisticalValue) ?? numero(g.invoiceValue) ?? numero(g.value);
+  // Valor facturado en la divisa de la factura; el valor estadistico, siempre en euros.
+  const valor = numero(g.invoiceValue) ?? numero(g.value);
   if (!(valor > 0)) faltan.push(falta('valor de la mercancía', donde));
+  const estadistico = numero(g.statisticalValue) ?? (contexto.divisa === 'EUR' ? valor : null);
+  if (contexto.divisa !== 'EUR' && !(estadistico > 0)) {
+    faltan.push(falta(`valor estadístico en euros (la factura va en ${contexto.divisa})`, donde));
+  }
   const bultos = bultosDe(g, contexto.unaPartida, expedition);
   if (!bultos.cantidad) faltan.push(falta('número de bultos', donde));
   if (!/^[A-Z0-9]{2}$/.test(bultos.tipo)) faltan.push(falta(`tipo de bulto «${bultos.tipo}»: debe ser un código de dos caracteres`, donde));
@@ -247,7 +257,7 @@ function partidaDe(expedition, g, i, contexto, faltan) {
     grossWeight: bruto || 0,
     netWeight: neto || 0,
     value: valor || 0,
-    statisticalValue: valor || 0,
+    statisticalValue: estadistico || 0,
     packages: bultos.cantidad,
     packageType: bultos.tipo,
     shippingMarks: bultos.marcas,
@@ -306,7 +316,11 @@ function expeditionToAesData(expedition, { tenant, isPRE = true } = {}) {
   const region = provinciaDe(client.address);
   const goods = exp.goods || [];
   if (goods.length === 0) faltan.push(falta('al menos una partida de mercancía', DONDE.mercancias));
-  const partidas = goods.map((g, i) => partidaDe(exp, g, i, { unaPartida: goods.length === 1, region, factura }, faltan));
+  // Divisa de la factura: la de las partidas (EUR por defecto); todas iguales.
+  const divisas = [...new Set(goods.map((g) => (texto(g.currency) || 'EUR').toUpperCase()))];
+  if (divisas.length > 1) faltan.push(falta(`una sola divisa de factura (hay ${divisas.join(', ')})`, DONDE.mercancias));
+  const divisa = divisas[0] || 'EUR';
+  const partidas = goods.map((g, i) => partidaDe(exp, g, i, { unaPartida: goods.length === 1, region, factura, divisa }, faltan));
   if (partidas.some((p) => !p.regionOfDispatch)) {
     faltan.push(falta('provincia de expedición: código postal español del exportador', DONDE.cliente));
   }
@@ -326,6 +340,7 @@ function expeditionToAesData(expedition, { tenant, isPRE = true } = {}) {
     messageSender: personas.remitente,
     formaRepresentacion: personas.forma,
     lrn: texto(decl.lrn) || '',
+    invoiceCurrency: divisa,
     directExport: directa,
     customsOfficeExport: oficinaExportacion,
     customsOfficeExit: oficinaSalida,
