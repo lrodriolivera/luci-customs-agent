@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import TenantSettings from './TenantSettings'
 import api, { tenantEoriAPI } from '../../services/api'
 
@@ -106,5 +106,27 @@ describe('Ajustes › General', () => {
     expect(screen.getByLabelText('common.city')).toHaveAttribute('readonly')
     expect(screen.queryByRole('button', { name: /settings\.saveChanges/ })).not.toBeInTheDocument()
     expect(screen.getByText('settings.generalReadOnly')).toBeInTheDocument()
+  })
+
+  test('un error tras un guardado correcto no lo borra el aviso de «guardado» anterior', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      api.put
+        .mockResolvedValueOnce({ data: { success: true, data: tenant } })
+        .mockRejectedValueOnce({ response: { data: { error: 'Fallo del segundo guardado' } } })
+      await abrir()
+      const guardar = screen.getByRole('button', { name: /settings\.saveChanges/ })
+
+      fireEvent.click(guardar)
+      expect(await screen.findByText('settings.saved')).toBeInTheDocument()
+      vi.advanceTimersByTime(2000)
+      fireEvent.click(guardar)
+      expect(await screen.findByText('Fallo del segundo guardado')).toBeInTheDocument()
+
+      await act(async () => { vi.advanceTimersByTime(2000) })
+      expect(screen.getByText('Fallo del segundo guardado')).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

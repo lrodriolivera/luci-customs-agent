@@ -433,6 +433,8 @@ function cambiosGenerales(body) {
 /**
  * PUT /api/tenant/general
  * Body: { name?, rea?, address?: { street, city, province, postalCode, country } }
+ * La direccion se guarda COMPLETA: un campo que no llega queda vacio (el
+ * formulario de Ajustes manda siempre los cinco).
  *
  * Acotado al tenant del token (req.tenantId lo resuelve extractTenant desde el
  * usuario autenticado, nunca desde X-Tenant-ID salvo super_admin).
@@ -444,6 +446,10 @@ router.put('/tenant/general', auth, extractTenant({ required: false }), requireT
     if (errores.length > 0) return res.status(400).json({ success: false, error: errores.join('. '), errors: errores });
     if (Object.keys(cambios).length === 0) {
       return res.status(400).json({ success: false, error: 'No hay cambios que guardar' });
+    }
+
+    if (!require('mongoose').Types.ObjectId.isValid(String(req.tenantId))) {
+      return res.status(400).json({ success: false, error: 'Tenant no valido' });
     }
 
     // Update directo con $set de rutas concretas: no pasa por el pre('save')

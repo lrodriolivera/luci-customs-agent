@@ -127,4 +127,35 @@ describe('repartoPorCanal: canal real de la respuesta de la AEAT', () => {
 
     expect(r.porcentajes).toEqual({ green: 75, yellow: 0, orange: 0, red: 25 });
   });
+
+  test('un H7 anulado no cuenta', async () => {
+    await H7Declaration.collection.insertOne(h7(A, 'green', { status: 'cancelled' }));
+
+    expect((await repartoPorCanal(A, RANGO)).conCanalAsignado).toBe(0);
+  });
+
+  test('un H7 enlazado a un expediente borrado o anulado sí cuenta (el expediente no lo hace)', async () => {
+    const borrado = new mongoose.Types.ObjectId();
+    const anulado = new mongoose.Types.ObjectId();
+    await Expedition.collection.insertMany([
+      { ...exp(A, { _id: borrado, declaration: { type: 'H7', channel: 'yellow', submittedAt: hace(1) } }), deletedAt: hace(1) },
+      exp(A, { _id: anulado, declaration: { type: 'H7', channel: 'yellow', submittedAt: hace(1), cancelledAt: hace(1) } })
+    ]);
+    await H7Declaration.collection.insertMany([
+      h7(A, 'yellow', { expedition: borrado }),
+      h7(A, 'yellow', { expedition: anulado })
+    ]);
+
+    expect((await repartoPorCanal(A, RANGO)).canales.yellow).toBe(2);
+  });
+
+  test('un H7 enlazado a un expediente de otro tenant no se descarta por él', async () => {
+    const ajeno = new mongoose.Types.ObjectId();
+    await Expedition.collection.insertOne(
+      exp(B, { _id: ajeno, declaration: { type: 'H7', channel: 'yellow', submittedAt: hace(1) } })
+    );
+    await H7Declaration.collection.insertOne(h7(A, 'yellow', { expedition: ajeno }));
+
+    expect((await repartoPorCanal(A, RANGO)).canales.yellow).toBe(1);
+  });
 });

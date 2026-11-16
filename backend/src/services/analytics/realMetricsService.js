@@ -306,7 +306,8 @@ const CANAL_POR_STATUS = {
  * el expediente pasa a levante o completed.
  *
  * NCTS (Transit) no tiene canal de la AEAT: no entra.
- * Un H7 enlazado a un expediente que ya cuenta su canal no se cuenta dos veces.
+ * Un H7 enlazado a un expediente que ya cuenta su canal (mismo tenant, sin
+ * borrar ni anular) no se cuenta dos veces. Los H7 anulados no cuentan.
  * El periodo se mide por la presentacion (submittedAt), no por la apertura del
  * expediente. Las declaraciones anuladas no cuentan.
  */
@@ -338,26 +339,34 @@ async function repartoPorCanal(tenantId, { desde, hasta } = {}) {
       { $group: { _id: '$_canal', n: { $sum: 1 } } }
     ]),
     H7Declaration.aggregate([
-      { $match: _filtro(tenantId, { deletedAt: null, channel: { $in: CANALES } }) },
+      { $match: _filtro(tenantId, { deletedAt: null, status: { $ne: 'cancelled' }, channel: { $in: CANALES } }) },
       { $addFields: { _fecha: { $ifNull: ['$submittedAt', '$createdAt'] } } },
       { $match: _conRango({}, desde, hasta, '_fecha') },
+      // Expediente enlazado que YA cuenta su canal en la rama de expedientes:
+      // mismo tenant, sin borrar, sin anular y con canal (en la declaracion o
+      // en el status). Si lo hay, el H7 no se suma otra vez.
       {
         $lookup: {
           from: Expedition.collection?.name || 'expeditions',
-          localField: 'expedition',
-          foreignField: '_id',
-          as: '_expediente'
+          let: { idExpediente: '$expedition', tenantH7: '$tenantId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $and: [{ $eq: ['$_id', '$$idExpediente'] }, { $eq: ['$tenantId', '$$tenantH7'] }] },
+                deletedAt: null,
+                'declaration.cancelledAt': null,
+                $or: [
+                  { 'declaration.channel': { $in: CANALES } },
+                  { status: { $in: Object.keys(CANAL_POR_STATUS) } }
+                ]
+              }
+            },
+            { $project: { _id: 1 } }
+          ],
+          as: '_expedienteConCanal'
         }
       },
-      // Fuera los que ya cuenta su expediente (canal en la declaracion o en el status).
-      {
-        $match: {
-          $nor: [
-            { '_expediente.declaration.channel': { $in: CANALES } },
-            { '_expediente.status': { $in: Object.keys(CANAL_POR_STATUS) } }
-          ]
-        }
-      },
+      { $match: { _expedienteConCanal: { $size: 0 } } },
       { $group: { _id: '$channel', n: { $sum: 1 } } }
     ])
   ]);

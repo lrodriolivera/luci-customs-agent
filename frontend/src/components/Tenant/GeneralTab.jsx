@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowPathIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import api from '../../services/api'
@@ -49,6 +49,10 @@ export default function GeneralTab({ tenant, canEdit, onSaved, onGoToCustoms }) 
   const [form, setForm] = useState(() => formularioDesde(tenant))
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState(null)
+  // Temporizador que borra el «guardado»: se cancela antes de otro guardado
+  // (para que no borre un error posterior) y al desmontar.
+  const temporizador = useRef(null)
+  useEffect(() => () => clearTimeout(temporizador.current), [])
 
   const cambiarDireccion = (campo, valor) =>
     setForm(prev => ({ ...prev, address: { ...prev.address, [campo]: valor } }))
@@ -57,13 +61,15 @@ export default function GeneralTab({ tenant, canEdit, onSaved, onGoToCustoms }) 
     e.preventDefault()
     setIsSaving(true)
     setMessage(null)
+    clearTimeout(temporizador.current)
     try {
       const res = await api.put('/api/tenant/general', form)
-      const actualizado = res.data.data
+      const actualizado = res.data?.data
+      if (!actualizado) throw new Error('Respuesta sin datos del tenant')
       onSaved(actualizado)
       setForm(formularioDesde(actualizado))
       setMessage({ type: 'success', text: t('settings.saved') })
-      setTimeout(() => setMessage(null), MS_MENSAJE_GUARDADO)
+      temporizador.current = setTimeout(() => setMessage(null), MS_MENSAJE_GUARDADO)
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.error || t('settings.saveError') })
     } finally {
@@ -89,7 +95,7 @@ export default function GeneralTab({ tenant, canEdit, onSaved, onGoToCustoms }) 
             disabled={isSaving}
             className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2"
           >
-            {isSaving && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
+            {isSaving && <ArrowPathIcon className="h-4 w-4 animate-spin" aria-hidden="true" />}
             {t('settings.saveChanges')}
           </button>
         )}
@@ -107,8 +113,8 @@ export default function GeneralTab({ tenant, canEdit, onSaved, onGoToCustoms }) 
           }`}
         >
           {message.type === 'success'
-            ? <CheckCircleIcon className="h-5 w-5" />
-            : <ExclamationCircleIcon className="h-5 w-5" />}
+            ? <CheckCircleIcon className="h-5 w-5" aria-hidden="true" />
+            : <ExclamationCircleIcon className="h-5 w-5" aria-hidden="true" />}
           {message.text}
         </div>
       )}

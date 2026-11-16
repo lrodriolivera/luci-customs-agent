@@ -1110,7 +1110,7 @@ export default function AnalyticsDashboard() {
                       <div className="w-full bg-gray-200 rounded-full h-3">
                         <div
                           className={`h-3 rounded-full ${getChannelColor(channel)}`}
-                          style={{ width: `${value}%` }}
+                          style={{ width: `${Math.min(100, Math.max(0, Number(value) || 0))}%` }}
                         ></div>
                       </div>
                     </div>

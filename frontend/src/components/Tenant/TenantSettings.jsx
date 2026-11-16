@@ -231,6 +231,7 @@ const TenantSettings = () => {
         {/* General Tab */}
         {activeTab === 'general' && (
           <GeneralTab
+            key={tenant?.id || tenant?._id}
             tenant={tenant}
             canEdit={isAdmin}
             onSaved={setTenant}

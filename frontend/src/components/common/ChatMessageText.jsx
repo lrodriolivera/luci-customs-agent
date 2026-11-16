@@ -37,7 +37,14 @@ const COMPONENTES = {
 export default function ChatMessageText({ content, className = '' }) {
   return (
     <div className={`chat-message-text break-words ${className}`}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={COMPONENTES}>
+      {/* Sin imágenes: un ![](https://externo/pixel.png) cargaría un recurso
+          remoto y filtraría la IP de quien lee el chat. */}
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={COMPONENTES}
+        disallowedElements={['img']}
+        unwrapDisallowed
+      >
         {content || ''}
       </ReactMarkdown>
     </div>

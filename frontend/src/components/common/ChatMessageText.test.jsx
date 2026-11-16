@@ -78,4 +78,10 @@ describe('ChatMessageText', () => {
     const enlaces = Array.from(container.querySelectorAll('a'))
     expect(enlaces.some(a => (a.getAttribute('href') || '').startsWith('javascript:'))).toBe(false)
   })
+
+  test('no carga imágenes remotas (píxeles de seguimiento)', () => {
+    const { container } = render(<ChatMessageText content={'Mira ![x](https://externo.example/pixel.png)'} />)
+
+    expect(container.querySelector('img')).toBeNull()
+  })
 })
