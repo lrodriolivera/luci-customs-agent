@@ -460,6 +460,49 @@ describe('updateDeclaration: rama tipo AES (else del H1)', () => {
     expect(updated.declaration.regime).toBe('20');
   });
 
+  test('AES: guarda la aduana de salida y la ubicacion en mayusculas', async () => {
+    const user = usuario();
+    const exp = await expedienteExportacion(user, { declaration: { type: 'AES', status: 'draft', xmlContent: '<AES/>' } });
+    const req = { params: { expeditionId: exp._id }, body: { officeOfExit: 'es004601', goodsLocation: ' 2801aaaaac ' }, user };
+    const res = crearRes();
+
+    await ctrl.updateDeclaration(req, res);
+
+    expect(res.statusCode).toBe(200);
+    const updated = await Expedition.findById(exp._id);
+    expect(updated.declaration.officeOfExit).toBe('ES004601');
+    expect(updated.declaration.goodsLocation).toBe('2801AAAAAC');
+  });
+
+  test('AES: guarda la aduana de salida aunque la vista previa no se pueda regenerar (422 del generador)', async () => {
+    const { ErrorValidacion } = require('../../src/services/forms/identificadorAduanero');
+    aesGenerator.generate.mockImplementationOnce(() => { throw new ErrorValidacion('Falta el EORI del cliente', { quien: 'cliente' }); });
+    const user = usuario();
+    const exp = await expedienteExportacion(user, { declaration: { type: 'AES', status: 'draft', xmlContent: '<AES/>' } });
+    const res = crearRes();
+
+    await ctrl.updateDeclaration({ params: { expeditionId: exp._id }, body: { officeOfExit: 'ES004601' }, user }, res);
+
+    expect(res.statusCode).toBe(200);
+    const updated = await Expedition.findById(exp._id);
+    expect(updated.declaration.officeOfExit).toBe('ES004601');
+  });
+
+  test('AES: rechaza (400) una aduana de salida o ubicacion con formato no valido', async () => {
+    const user = usuario();
+    const exp = await expedienteExportacion(user, { declaration: { type: 'AES', status: 'draft', xmlContent: '<AES/>' } });
+    const req = { params: { expeditionId: exp._id }, body: { officeOfExit: 'Valencia', goodsLocation: 'X' }, user };
+    const res = crearRes();
+
+    await ctrl.updateDeclaration(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(/aduana de salida/);
+    expect(res.body.error).toMatch(/ubicación/);
+    const updated = await Expedition.findById(exp._id);
+    expect(updated.declaration.officeOfExit).toBeUndefined();
+  });
+
   test('regenera XML con h1Generator cuando tipo es H1', async () => {
     const user = usuario();
     const exp = await expedienteImportacion(user, {
@@ -562,6 +605,25 @@ describe('submitDeclaration: multi-country path (country !== ES)', () => {
 
     expect(res.statusCode).toBe(200);
     expect(aeatSubmitService.submitAES).toHaveBeenCalled();
+  });
+
+  test('AES con datos que faltan: 422 con la lista (faltan) y sin tocar la declaracion', async () => {
+    const { ErrorValidacion } = require('../../src/services/forms/identificadorAduanero');
+    const err = new ErrorValidacion('Faltan datos para presentar el AES: aduana de salida (expediente › declaración AES)', { code: 'DATOS_AES_FALTANTES' });
+    err.faltan = ['aduana de salida (expediente › declaración AES)'];
+    aeatSubmitService.submitAES.mockRejectedValueOnce(err);
+    const user = usuario();
+    await Tenant.create({ _id: user.tenantId, name: 'ES Exp 422', slug: 'es-exp-422', customsConfig: { country: 'ES' }, primaryContact: { name: 'A', email: 'a@es.com' } });
+    const exp = await expedienteExportacion(user, { declaration: { type: 'AES', status: 'draft', xmlContent: '<AES>ok</AES>', lrn: 'LRN-AES-2' } });
+    const res = crearRes();
+
+    await ctrl.submitDeclaration({ params: { expeditionId: exp._id }, user }, res);
+
+    expect(res.statusCode).toBe(422);
+    expect(res.body.code).toBe('DATOS_AES_FALTANTES');
+    expect(res.body.faltan).toEqual(['aduana de salida (expediente › declaración AES)']);
+    const updated = await Expedition.findById(exp._id);
+    expect(updated.declaration.status).toBe('draft');
   });
 });
 

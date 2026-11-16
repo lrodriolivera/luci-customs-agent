@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="51.6.0">
+	<!--================================================================================-->
+	<!--===== IE515: E_EXP_DAT                                                          -->
+	<!--===== EXPORT DECLARATION                                                        -->
+	<!--===== AES P1 Phase Definition                                                   -->
+	<!--===== XSD Version 51.6.0                                                        -->
+	<!--================================================================================-->
+	<!--==========================================================-->
+	<!--===== Includes                                            -->
+	<!--==========================================================-->
+	<xs:include schemaLocation="ES_ctypes_v514.xsd"/>
+	<!--================================================================================-->
+	<!--===== Root Element                                                              -->
+	<!--================================================================================-->
+	<xs:element name="CC515C" type="CC515CType"/>
+	<!--================================================================================-->
+	<!--===== Root Element Content                                                      -->
+	<!--================================================================================-->
+	<xs:complexType name="CC515CType">
+		<xs:sequence>
+			<xs:group ref="MESSAGE"/>
+			<xs:element name="ExportOperation" type="ExportOperationType09">
+				<xs:annotation>
+					<xs:documentation>
+						<description value="EXPORT OPERATION"/>
+						<optionality value="R"/>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Authorisation" type="AuthorisationType03" minOccurs="0" maxOccurs="9">
+				<xs:annotation>
+					<xs:documentation>
+						<description value="AUTHORISATION"/>
+						<optionality value="O"/>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CustomsOfficeOfPresentation" type="CustomsOfficeOfPresentationType01" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						<description value="CUSTOMS OFFICE OF PRESENTATION"/>
+						<optionality value="O"/>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CustomsOfficeOfExport" type="CustomsOfficeOfExportType01">
+				<xs:annotation>
+					<xs:documentation>
+						<description value="CUSTOMS OFFICE OF EXPORT"/>
+						<optionality value="R"/>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CustomsOfficeOfExitDeclared" type="CustomsOfficeOfExitDeclaredType02">
+				<xs:annotation>
+					<xs:documentation>
+						<description value="CUSTOMS OFFICE OF EXIT (DECLARED)"/>
+						<optionality value="R"/>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Exporter" type="ExporterType03">
+				<xs:annotation>
+					<xs:documentation>
+						<description value="EXPORTER"/>
+						<optionality value="R"/>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Declarant" type="DeclarantType06">
+				<xs:annotation>
+					<xs:documentation>
+						<description value="DECLARANT"/>
+						<optionality value="R"/>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Representative" type="RepresentativeType03" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						<description value="REPRESENTATIVE"/>
+						<optionality value="O"/>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CurrencyExchange" type="CurrencyExchangeType01" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						<description value="CURRENCY EXCHANGE"/>
+						<optionality value="O"/>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DeferredPayment" type="DeferredPaymentType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						<description value="DEFERRED PAYMENT"/>
+						<optionality value="D"/>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="GoodsShipment" type="GoodsShipmentType04">
+				<xs:annotation>
+					<xs:documentation>
+						<description value="GOODS SHIPMENT"/>
+						<optionality value="R"/>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="PhaseID" type="phaseIDtype"/>
+	</xs:complexType>
+</xs:schema>
