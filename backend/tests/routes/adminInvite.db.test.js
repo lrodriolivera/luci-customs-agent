@@ -48,6 +48,18 @@ async function crearUsuario({ role, tenantId, email, password = 'Password123!' }
   return user;
 }
 
+// req.audit escribe la auditoria sin esperar (fire-and-forget): la entrada puede
+// llegar despues de la respuesta, e incluso caer en la prueba siguiente. Se espera
+// a la entrada concreta (filtro por email o resourceId) en vez de contar todas.
+async function esperarAuditoria(filtro, plazoMs = 3000) {
+  const limite = Date.now() + plazoMs;
+  for (;;) {
+    const entradas = await AuditLog.find(filtro).lean();
+    if (entradas.length > 0 || Date.now() > limite) return entradas;
+    await new Promise((r) => setTimeout(r, 25));
+  }
+}
+
 beforeEach(async () => {
   const sufijo = `${Date.now()}-${Math.round(performance.now() * 1000)}`;
   // status: 'active' explicito -- el default del esquema es 'pending', y un
@@ -124,7 +136,7 @@ describe('creacion dentro del propio tenant', () => {
 
     expect(res.status).toBe(201);
 
-    const entradas = await AuditLog.find({ action: 'admin_invite' }).lean();
+    const entradas = await esperarAuditoria({ action: 'admin_invite', 'metadata.email': 'invitado2@t-a.es' });
     expect(entradas).toHaveLength(1);
     expect(entradas[0].metadata).toMatchObject({ email: 'invitado2@t-a.es', role: 'supervisor' });
     expect(JSON.stringify(entradas[0])).not.toContain(res.body.data.temporaryPassword);
@@ -199,7 +211,7 @@ describe('el tenant del usuario nuevo es siempre el del admin autenticado', () =
     const creado = await User.findOne({ email: 'elegido@t-b.es' });
     expect(String(creado.tenantId)).toBe(String(tenantB._id));
 
-    const entrada = await AuditLog.findOne({ action: 'admin_invite', resourceId: String(creado._id) }).lean();
+    const [entrada] = await esperarAuditoria({ action: 'admin_invite', resourceId: String(creado._id) });
     expect(entrada.metadata.tenantOverride).toBe(true);
   });
 
