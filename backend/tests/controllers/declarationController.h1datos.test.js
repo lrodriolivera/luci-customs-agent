@@ -79,10 +79,9 @@ describe('requisitos del H1', () => {
         freightAmount: null, freightCurrency: 'EUR', insuranceAmount: null, insuranceCurrency: 'EUR',
         transporteTrasLaEntrada: null, freightAfterEntryAmount: null, freightAfterEntryCurrency: 'EUR',
         otherAdjustments: [], codigosDeAjuste: expect.objectContaining({ AB: expect.any(String), AI: expect.any(String), BF: expect.any(String) }),
+        vatAdditions: [], conceptosBaseIva: expect.objectContaining({ THC: expect.any(String), T3: expect.any(String) }),
         invoiceCurrency: 'EUR', invoiceCurrencyWithoutBce: false, appliedExchangeRate: null,
         procedure: '4000', additionalProcedure: ''
-        vatAdditions: [], conceptosBaseIva: expect.objectContaining({ THC: expect.any(String), T3: expect.any(String) }),
-        invoiceCurrency: 'EUR', invoiceCurrencyWithoutBce: false, appliedExchangeRate: null
       },
       anulacion: { presentada: false, anulable: false },
       liquidacionAeat: null,
