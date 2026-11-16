@@ -1,0 +1,2539 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- editado con XMLSpy v2019 sp1 (x64) (http://www.altova.com) por PUESTO DE TRABAJO (Agencia Estatal de Administracion Tributaria ((AEAT))) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="51.6.0">
+	<xs:include schemaLocation="ES_htypes_v514.xsd"/>
+	<!--================================================================================-->
+	<!--===== Data Group Types                                                          -->
+	<!--================================================================================-->
+	<!--================================================================================-->
+	<!--===== ActiveBorderTransportMeans                                                -->
+	<!--================================================================================-->
+	<xs:complexType name="ActiveBorderTransportMeansType01">
+		<xs:sequence>
+			<xs:element name="typeOfIdentification" type="TypeOfIdentificationContentType"/>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType01"/>
+			<xs:element name="nationality" type="NationalityContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ActiveBorderTransportMeansType02">
+		<xs:sequence>
+			<xs:element name="typeOfIdentification" type="TypeOfIdentificationContentType" minOccurs="0"/>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType01" minOccurs="0"/>
+			<xs:element name="nationality" type="NationalityContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== AdditionalInformation                                                     -->
+	<!--================================================================================-->
+	<xs:complexType name="AdditionalInformationType">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="code" type="CodeContentType02"/>
+			<xs:element name="text" type="TextContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== AdditionalProcedure                                                       -->
+	<!--================================================================================-->
+	<xs:complexType name="AdditionalProcedureType">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="additionalProcedure" type="AdditionalProcedureContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== AdditionalReference                                                       -->
+	<!--================================================================================-->
+	<xs:complexType name="AdditionalReferenceType01">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== AdditionalSupplyChainActor                                                -->
+	<!--================================================================================-->
+	<xs:complexType name="AdditionalSupplyChainActorType">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="role" type="RoleContentType02"/>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Address                                                                   -->
+	<!--================================================================================-->
+	<xs:complexType name="AddressType01">
+		<xs:sequence>
+			<xs:element name="streetAndNumber" type="StreetAndNumberContentType"/>
+			<xs:element name="postcode" type="PostcodeContentType" minOccurs="0"/>
+			<xs:element name="city" type="CityContentType"/>
+			<xs:element name="country" type="CountryContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AddressType02">
+		<xs:sequence>
+			<xs:element name="streetAndNumber" type="StreetAndNumberContentType"/>
+			<xs:element name="postcode" type="PostcodeContentType" minOccurs="0"/>
+			<xs:element name="city" type="CityContentType"/>
+			<xs:element name="country" type="CountryContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== AlternativeEvidence                                                       -->
+	<!--================================================================================-->
+	<xs:complexType name="AlternativeEvidenceType03">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType02"/>
+			<xs:element name="TransportDocument" type="TransportDocumentType01" minOccurs="0" maxOccurs="99"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Authorisation                                                             -->
+	<!--================================================================================-->
+	<xs:complexType name="AuthorisationType01">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType04"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType02"/>
+			<xs:element name="holderOfAuthorisation" type="HolderOfAuthorisationContentType01" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AuthorisationType02">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType04"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType02"/>
+			<xs:element name="holderOfAuthorisation" type="HolderOfAuthorisationContentType02"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AuthorisationType03">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType04"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType02"/>
+			<xs:element name="holderOfAuthorisation" type="HolderOfAuthorisationContentType02" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== CalculationOfTaxes                                                        -->
+	<!--================================================================================-->
+	<xs:complexType name="CalculationOfTaxesType02">
+		<xs:sequence>
+			<xs:element name="totalDutiesAndTaxesAmount" type="TotalDutiesAndTaxesAmountContentType"/>
+			<xs:element name="DutiesAndTaxes" type="DutiesAndTaxesType" maxOccurs="99"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Carrier                                                                   -->
+	<!--================================================================================-->
+	<xs:complexType name="CarrierType01">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== CombinedNomenclatureCodeCrossCheckResult                                  -->
+	<!--================================================================================-->
+	<xs:complexType name="CombinedNomenclatureCodeCrossCheckResultType">
+		<xs:sequence>
+			<xs:element name="validationResult" type="Flag"/>
+			<xs:element name="rejectionReason" type="RejectionReasonContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== CommodityCode                                                             -->
+	<!--================================================================================-->
+	<xs:complexType name="CommodityCodeType04">
+		<xs:sequence>
+			<xs:element name="harmonizedSystemSubHeadingCode" type="HarmonizedSystemSubHeadingCodeContentType"/>
+			<xs:element name="combinedNomenclatureCode" type="CombinedNomenclatureCodeContentType"/>
+			<xs:element name="TARICAdditionalCode" type="TARICAdditionalCodeType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="NationalAdditionalCode" type="NationalAdditionalCodeType" minOccurs="0" maxOccurs="99"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Commodity                                                                 -->
+	<!--================================================================================-->
+	<xs:complexType name="CommodityType02">
+		<xs:sequence>
+			<xs:element name="descriptionOfGoods" type="DescriptionOfGoodsContentType"/>
+			<xs:element name="cusCode" type="CusCodeContentType" minOccurs="0"/>
+			<xs:element name="CommodityCode" type="CommodityCodeType04"/>
+			<xs:element name="DangerousGoods" type="DangerousGoodsType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="GoodsMeasure" type="GoodsMeasureType07"/>
+			<xs:element name="CalculationOfTaxes" type="CalculationOfTaxesType02" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CommodityType03">
+		<xs:sequence>
+			<xs:element name="descriptionOfGoods" type="DescriptionOfGoodsContentType"/>
+			<xs:element name="cusCode" type="CusCodeContentType" minOccurs="0"/>
+			<xs:element name="CommodityCode" type="CommodityCodeType04"/>
+			<xs:element name="DangerousGoods" type="DangerousGoodsType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="GoodsMeasure" type="GoodsMeasureType02"/>
+			<xs:element name="CalculationOfTaxes" type="CalculationOfTaxesType02" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CommodityType06">
+		<xs:sequence>
+			<xs:element name="GoodsMeasure" type="GoodsMeasureType08" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Consignee                                                                 -->
+	<!--================================================================================-->
+	<xs:complexType name="ConsigneeType03">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03" minOccurs="0"/>
+			<xs:element name="name" type="NameContentType" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType02" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Consignment                                                               -->
+	<!--================================================================================-->
+	<xs:complexType name="ConsignmentType02">
+		<xs:sequence>
+			<xs:element name="modeOfTransportAtTheBorder" type="ModeOfTransportAtTheBorderContentType" minOccurs="0"/>
+			<xs:element name="referenceNumberUCR" type="ReferenceNumberUCRContentType01" minOccurs="0"/>
+			<xs:element name="ExitCarrier" type="ExitCarrierType02"/>
+			<xs:element name="TransportEquipment" type="TransportEquipmentType05" minOccurs="0" maxOccurs="9999"/>
+			<xs:element name="LocationOfGoods" type="LocationOfGoodsType02" maxOccurs="9"/>
+			<xs:element name="ActiveBorderTransportMeans" type="ActiveBorderTransportMeansType02" minOccurs="0"/>
+			<xs:element name="TransportDocument" type="TransportDocumentType03" minOccurs="0" maxOccurs="99"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ConsignmentType03">
+		<xs:sequence>
+			<xs:element name="containerIndicator" type="Flag" minOccurs="0"/>
+			<xs:element name="inlandModeOfTransport" type="InlandModeOfTransportContentType" minOccurs="0"/>
+			<xs:element name="TransportEquipment" type="TransportEquipmentType03" minOccurs="0" maxOccurs="9999"/>
+			<xs:element name="LocationOfGoods" type="LocationOfGoodsType03"/>
+			<xs:element name="DepartureTransportMeans" type="DepartureTransportMeansType02" minOccurs="0" maxOccurs="999"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ConsignmentType15">
+		<xs:sequence>
+			<xs:element name="containerIndicator" type="Flag" minOccurs="0"/>
+			<xs:element name="inlandModeOfTransport" type="InlandModeOfTransportContentType" minOccurs="0"/>
+			<xs:element name="modeOfTransportAtTheBorder" type="ModeOfTransportAtTheBorderContentType" minOccurs="0"/>
+			<xs:element name="grossMass" type="GrossMassContentType" minOccurs="0"/>
+			<xs:element name="referenceNumberUCR" type="ReferenceNumberUCRContentType01" minOccurs="0"/>
+			<xs:element name="Carrier" type="CarrierType01" minOccurs="0"/>
+			<xs:element name="Consignor" type="ConsignorType03" minOccurs="0"/>
+			<xs:element name="Consignee" type="ConsigneeType03" minOccurs="0"/>
+			<xs:element name="TransportEquipment" type="TransportEquipmentType03" minOccurs="0" maxOccurs="9999"/>
+			<xs:element name="LocationOfGoods" type="LocationOfGoodsType04" minOccurs="0"/>
+			<xs:element name="DepartureTransportMeans" type="DepartureTransportMeansType04" minOccurs="0" maxOccurs="999"/>
+			<xs:element name="CountryOfRoutingOfConsignment" type="CountryOfRoutingOfConsignmentType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="ActiveBorderTransportMeans" type="ActiveBorderTransportMeansType01" minOccurs="0"/>
+			<xs:element name="TransportDocument" type="TransportDocumentType02" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="TransportCharges" type="TransportChargesType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Consignor                                                                 -->
+	<!--================================================================================-->
+	<xs:complexType name="ConsignorType03">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03" minOccurs="0"/>
+			<xs:element name="name" type="NameContentType" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType02" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== ContactPerson                                                             -->
+	<!--================================================================================-->
+	<xs:complexType name="ContactPersonType01">
+		<xs:sequence>
+			<xs:element name="name" type="NameContentType"/>
+			<xs:element name="phoneNumber" type="PhoneNumberContentType"/>
+			<xs:element name="eMailAddress" type="EMailAddressContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ContactPersonType02">
+		<xs:sequence>
+			<xs:element name="name" type="NameContentType"/>
+			<xs:element name="phoneNumber" type="PhoneNumberContentType"/>
+			<xs:element name="eMailAddress" type="EMailAddressContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== CountryOfRoutingOfConsignment                                             -->
+	<!--================================================================================-->
+	<xs:complexType name="CountryOfRoutingOfConsignmentType01">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="country" type="CountryContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== CurrencyExchange                                                          -->
+	<!--================================================================================-->
+	<xs:complexType name="CurrencyExchangeType01">
+		<xs:sequence>
+			<xs:element name="internalCurrencyUnit" type="InternalCurrencyUnitContentType" minOccurs="0"/>
+			<xs:element name="exchangeRate" type="ExchangeRateContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== CustomsOfficeOfExitActual                                                 -->
+	<!--================================================================================-->
+	<xs:complexType name="CustomsOfficeOfExitActualType02">
+		<xs:sequence>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CustomsOfficeOfExitActualType03">
+		<xs:sequence>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== CustomsOfficeOfExitDeclared                                               -->
+	<!--================================================================================-->
+	<xs:complexType name="CustomsOfficeOfExitDeclaredType02">
+		<xs:sequence>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== CustomsOfficeOfExport                                                     -->
+	<!--================================================================================-->
+	<xs:complexType name="CustomsOfficeOfExportType01">
+		<xs:sequence>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CustomsOfficeOfExportType04">
+		<xs:sequence>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== CustomsOfficeOfPresentation                                               -->
+	<!--================================================================================-->
+	<xs:complexType name="CustomsOfficeOfPresentationType01">
+		<xs:sequence>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== CustomsOffice                                                             -->
+	<!--================================================================================-->
+	<xs:complexType name="CustomsOfficeType02">
+		<xs:sequence>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== DangerousGoods                                                            -->
+	<!--================================================================================-->
+	<xs:complexType name="DangerousGoodsType01">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="UNNumber" type="UNNumberContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Declarant                                                                 -->
+	<!--================================================================================-->
+	<xs:complexType name="DeclarantType06">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType02"/>
+			<xs:element name="name" type="NameContentType" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType02" minOccurs="0"/>
+			<xs:element name="ContactPerson" type="ContactPersonType02" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== DeferredPayment                                                           -->
+	<!--================================================================================-->
+	<xs:complexType name="DeferredPaymentType">
+		<xs:sequence>
+			<xs:element name="deferredPayment" type="DeferredPaymentContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== DeliveryTerms                                                             -->
+	<!--================================================================================-->
+	<xs:complexType name="DeliveryTermsType02">
+		<xs:sequence>
+			<xs:element name="incotermCode" type="IncotermCodeContentType"/>
+			<xs:element name="UNLocode" type="UNLocodeContentType" minOccurs="0"/>
+			<xs:element name="location" type="LocationContentType" minOccurs="0"/>
+			<xs:element name="country" type="CountryContentType" minOccurs="0"/>
+			<xs:element name="text" type="TextContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== DepartureTransportMeans                                                   -->
+	<!--================================================================================-->
+	<xs:complexType name="DepartureTransportMeansType02">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="typeOfIdentification" type="TypeOfIdentificationContentType"/>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType01"/>
+			<xs:element name="nationality" type="NationalityContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DepartureTransportMeansType04">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="typeOfIdentification" type="TypeOfIdentificationContentType" minOccurs="0"/>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType01"/>
+			<xs:element name="nationality" type="NationalityContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== DutiesAndTaxes                                                            -->
+	<!--================================================================================-->
+	<xs:complexType name="DutiesAndTaxesType">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="taxType" type="TaxTypeContentType"/>
+			<xs:element name="payableTaxAmount" type="PayableTaxAmountContentType"/>
+			<xs:element name="methodOfPayment" type="MethodOfPaymentContentType"/>
+			<xs:element name="TaxBase" type="TaxBaseType" maxOccurs="99"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== EconomicOperator                                                          -->
+	<!--================================================================================-->
+	<xs:complexType name="EconomicOperatorType">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== ExitCarrier                                                               -->
+	<!--================================================================================-->
+	<xs:complexType name="ExitCarrierType02">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03" minOccurs="0"/>
+			<xs:element name="name" type="NameContentType" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType02" minOccurs="0"/>
+			<xs:element name="ContactPerson" type="ContactPersonType02" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExitCarrierType03">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03" minOccurs="0"/>
+			<xs:element name="name" type="NameContentType" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType02" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== ExportOperation                                                           -->
+	<!--================================================================================-->
+	<xs:complexType name="ExportOperationType05">
+		<xs:sequence>
+			<xs:element name="MRN" type="MrnContentType04"/>
+			<xs:element name="arrivalNotificationDateAndTime" type="ArrivalNotificationDateAndTimeContentType"/>
+			<xs:element name="arrivalNotificationPlace" type="ArrivalNotificationPlaceContentType" minOccurs="0"/>
+			<xs:element name="storingFlag" type="Flag"/>
+			<xs:element name="discrepanciesExist" type="Flag"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExportOperationType07">
+		<xs:sequence>
+			<xs:element name="LRN" type="LrnContentType02" minOccurs="0"/>
+			<xs:element name="MRN" type="MrnContentType04" minOccurs="0"/>
+			<xs:element name="declarationType" type="DeclarationTypeContentType"/>
+			<xs:element name="additionalDeclarationType" type="AdditionalDeclarationTypeContentType"/>
+			<xs:element name="presentationOfTheGoodsDateAndTime" type="PresentationOfTheGoodsDateAndTimeContentType" minOccurs="0"/>
+			<xs:element name="security" type="SecurityContentType" minOccurs="0"/>
+			<xs:element name="specificCircumstanceIndicator" type="SpecificCircumstanceIndicatorContentType" minOccurs="0"/>
+			<xs:element name="totalAmountInvoiced" type="TotalAmountInvoicedContentType" minOccurs="0"/>
+			<xs:element name="invoiceCurrency" type="InvoiceCurrencyContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExportOperationType08">
+		<xs:sequence>
+			<xs:element name="LRN" type="LrnContentType02" minOccurs="0"/>
+			<xs:element name="MRN" type="MrnContentType04" minOccurs="0"/>
+			<xs:element name="invalidationRequestDateAndTime" type="InvalidationRequestDateAndTimeContentType"/>
+			<xs:element name="invalidationReason" type="InvalidationReasonContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExportOperationType09">
+		<xs:sequence>
+			<xs:element name="LRN" type="LrnContentType02"/>
+			<xs:element name="declarationType" type="DeclarationTypeContentType"/>
+			<xs:element name="additionalDeclarationType" type="AdditionalDeclarationTypeContentType"/>
+			<xs:element name="presentationOfTheGoodsDateAndTime" type="PresentationOfTheGoodsDateAndTimeContentType" minOccurs="0"/>
+			<xs:element name="security" type="SecurityContentType" minOccurs="0"/>
+			<xs:element name="specificCircumstanceIndicator" type="SpecificCircumstanceIndicatorContentType" minOccurs="0"/>
+			<xs:element name="totalAmountInvoiced" type="TotalAmountInvoicedContentType" minOccurs="0"/>
+			<xs:element name="invoiceCurrency" type="InvoiceCurrencyContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExportOperationType26">
+		<xs:sequence>
+			<xs:element name="MRN" type="MrnContentType04"/>
+			<xs:element name="exitDate" type="ExitDateContentType" minOccurs="0"/>
+			<xs:element name="enquiryInformationCode" type="EnquiryInformationCodeContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExportOperationType51">
+		<xs:sequence>
+			<xs:element name="LRN" type="LrnContentType02"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Exporter                                                                  -->
+	<!--================================================================================-->
+	<xs:complexType name="ExporterType03">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType02"/>
+			<xs:element name="name" type="NameContentType" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType02" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== FunctionalError                                                           -->
+	<!--================================================================================-->
+	<xs:complexType name="FunctionalErrorType01">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="errorPointer" type="ErrorPointerContentType"/>
+			<xs:element name="errorCode" type="AesNctsP5FunctionalErrorCodes"/>
+			<xs:element name="errorReason" type="ErrorReasonContentType"/>
+			<xs:element name="originalAttributeValue" type="OriginalAttributeValueContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FunctionalErrorType02">
+		<xs:sequence>
+			<xs:element name="errorPointer" type="ErrorPointerContentType"/>
+			<xs:element name="errorCode" type="AesNctsP5FunctionalErrorCodes"/>
+			<xs:element name="errorReason" type="ErrorReasonContentType"/>
+			<xs:element name="originalAttributeValue" type="OriginalAttributeValueContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FunctionalErrorType03">
+		<xs:sequence>
+			<xs:element name="errorPointer" type="ErrorPointerContentType"/>
+			<xs:element name="errorCode" type="AesNctsP5FunctionalErrorCodes"/>
+			<xs:element name="errorReason" type="ErrorReasonContentType" minOccurs="0"/>
+			<xs:element name="originalAttributeValue" type="OriginalAttributeValueContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FunctionalErrorType04">
+		<xs:sequence>
+			<xs:element name="errorPointer" type="ErrorPointerContentType"/>
+			<xs:element name="errorCode" type="AesNctsP5FunctionalErrorCodes"/>
+			<xs:element name="errorReason" type="ErrorReasonContentType"/>
+			<xs:element name="originalAttributeValue" type="OriginalAttributeValueContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== GNSS                                                                      -->
+	<!--================================================================================-->
+	<xs:complexType name="GNSSType">
+		<xs:sequence>
+			<xs:element name="latitude" type="LatitudeContentType"/>
+			<xs:element name="longitude" type="LongitudeContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== GoodsItem                                                                 -->
+	<!--================================================================================-->
+	<xs:complexType name="GoodsItemType01">
+		<xs:sequence>
+			<xs:element name="declarationGoodsItemNumber" type="DeclarationGoodsItemNumberContentType"/>
+			<xs:element name="referenceNumberUCR" type="ReferenceNumberUCRContentType01" minOccurs="0"/>
+			<xs:element name="Authorisation" type="AuthorisationType01" minOccurs="0" maxOccurs="9"/>
+			<xs:element name="Commodity" type="CommodityType06" minOccurs="0"/>
+			<xs:element name="Packaging" type="PackagingType04" minOccurs="0" maxOccurs="99"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsItemType02">
+		<xs:sequence>
+			<xs:element name="declarationGoodsItemNumber" type="DeclarationGoodsItemNumberContentType"/>
+			<xs:element name="statisticalValue" type="StatisticalValueContentType" minOccurs="0"/>
+			<xs:element name="natureOfTransaction" type="NatureOfTransactionContentType" minOccurs="0"/>
+			<xs:element name="countryOfExport" type="CountryOfExportContentType" minOccurs="0"/>
+			<xs:element name="countryOfDestination" type="CountryOfDestinationContentType" minOccurs="0"/>
+			<xs:element name="referenceNumberUCR" type="ReferenceNumberUCRContentType01" minOccurs="0"/>
+			<xs:element name="Authorisation" type="AuthorisationType02" minOccurs="0" maxOccurs="9"/>
+			<xs:element name="Procedure" type="ProcedureType"/>
+			<xs:element name="Consignor" type="ConsignorType03" minOccurs="0"/>
+			<xs:element name="Consignee" type="ConsigneeType03" minOccurs="0"/>
+			<xs:element name="AdditionalSupplyChainActor" type="AdditionalSupplyChainActorType" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="Origin" type="OriginType" minOccurs="0"/>
+			<xs:element name="Commodity" type="CommodityType02"/>
+			<xs:element name="Packaging" type="PackagingType01" maxOccurs="99"/>
+			<xs:element name="PreviousDocument" type="PreviousDocumentType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="SupportingDocument" type="SupportingDocumentType04" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="TransportDocument" type="TransportDocumentType02" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalReference" type="AdditionalReferenceType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalInformation" type="AdditionalInformationType" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="TransportCharges" type="TransportChargesType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsItemType03">
+		<xs:sequence>
+			<xs:element name="declarationGoodsItemNumber" type="DeclarationGoodsItemNumberContentType"/>
+			<xs:element name="statisticalValue" type="StatisticalValueContentType" minOccurs="0"/>
+			<xs:element name="natureOfTransaction" type="NatureOfTransactionContentType" minOccurs="0"/>
+			<xs:element name="countryOfExport" type="CountryOfExportContentType" minOccurs="0"/>
+			<xs:element name="countryOfDestination" type="CountryOfDestinationContentType" minOccurs="0"/>
+			<xs:element name="referenceNumberUCR" type="ReferenceNumberUCRContentType01" minOccurs="0"/>
+			<xs:element name="Authorisation" type="AuthorisationType02" minOccurs="0" maxOccurs="9"/>
+			<xs:element name="Procedure" type="ProcedureType"/>
+			<xs:element name="Consignor" type="ConsignorType03" minOccurs="0"/>
+			<xs:element name="Consignee" type="ConsigneeType03" minOccurs="0"/>
+			<xs:element name="AdditionalSupplyChainActor" type="AdditionalSupplyChainActorType" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="Origin" type="OriginType" minOccurs="0"/>
+			<xs:element name="Commodity" type="CommodityType03"/>
+			<xs:element name="Packaging" type="PackagingType01" maxOccurs="99"/>
+			<xs:element name="PreviousDocument" type="PreviousDocumentType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="SupportingDocument" type="SupportingDocumentType04" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="TransportDocument" type="TransportDocumentType02" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalReference" type="AdditionalReferenceType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalInformation" type="AdditionalInformationType" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="TransportCharges" type="TransportChargesType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsItemType507">
+		<xs:sequence>
+			<xs:element name="declarationGoodsItemNumber" type="DeclarationGoodsItemNumberContentType"/>
+			<xs:element name="referenceNumberUCR" type="ReferenceNumberUCRContentType01" minOccurs="0"/>
+			<xs:element name="Authorisation" type="AuthorisationType01" minOccurs="0" maxOccurs="9"/>
+			<xs:element name="Commodity" type="CommodityType06" minOccurs="0"/>
+			<xs:element name="Packaging" type="PackagingType04" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="TransportDocument" type="TransportDocumentType03" minOccurs="0" maxOccurs="99"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsItemType513">
+		<xs:sequence>
+			<xs:element name="declarationGoodsItemNumber" type="DeclarationGoodsItemNumberContentType"/>
+			<xs:element name="statisticalValue" type="StatisticalValueContentType" minOccurs="0"/>
+			<xs:element name="natureOfTransaction" type="NatureOfTransactionContentType" minOccurs="0"/>
+			<xs:element name="countryOfExport" type="CountryOfExportContentType" minOccurs="0"/>
+			<xs:element name="countryOfDestination" type="CountryOfDestinationContentType" minOccurs="0"/>
+			<xs:element name="referenceNumberUCR" type="ReferenceNumberUCRContentType01" minOccurs="0"/>
+			<xs:element name="Authorisation" type="AuthorisationType02" minOccurs="0" maxOccurs="9"/>
+			<xs:element name="Procedure" type="ProcedureType"/>
+			<xs:element name="Consignor" type="ConsignorType03" minOccurs="0"/>
+			<xs:element name="Consignee" type="ConsigneeType03" minOccurs="0"/>
+			<xs:element name="AdditionalSupplyChainActor" type="AdditionalSupplyChainActorType" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="Origin" type="OriginType" minOccurs="0"/>
+			<xs:element name="Commodity" type="CommodityType03"/>
+			<xs:element name="Packaging" type="PackagingType01" maxOccurs="99"/>
+			<xs:element name="PreviousDocument" type="PreviousDocumentType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="SupportingDocument" type="SupportingDocumentType04" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="TransportDocument" type="TransportDocumentType02" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalReference" type="AdditionalReferenceType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalInformation" type="AdditionalInformationType" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="TransportCharges" type="TransportChargesType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== GoodsMeasure                                                              -->
+	<!--================================================================================-->
+	<xs:complexType name="GoodsMeasureType02">
+		<xs:sequence>
+			<xs:element name="grossMass" type="GrossMassContentType" minOccurs="0"/>
+			<xs:element name="netMass" type="NetMassContentType"/>
+			<xs:element name="supplementaryUnits" type="SupplementaryUnitsContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsMeasureType07">
+		<xs:sequence>
+			<xs:element name="grossMass" type="GrossMassContentType" minOccurs="0"/>
+			<xs:element name="netMass" type="NetMassContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsMeasureType08">
+		<xs:sequence>
+			<xs:element name="grossMass" type="GrossMassContentType" minOccurs="0"/>
+			<xs:element name="netMass" type="NetMassContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== GoodsReference                                                            -->
+	<!--================================================================================-->
+	<xs:complexType name="GoodsReferenceType02">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="declarationGoodsItemNumber" type="DeclarationGoodsItemNumberContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsReferenceType04">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="declarationGoodsItemNumber" type="DeclarationGoodsItemNumberContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== GoodsShipment                                                             -->
+	<!--================================================================================-->
+	<xs:complexType name="GoodsShipmentType01">
+		<xs:sequence>
+			<xs:element name="Consignment" type="ConsignmentType02"/>
+			<xs:element name="GoodsItem" type="GoodsItemType01" minOccurs="0" maxOccurs="999"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsShipmentType02">
+		<xs:sequence>
+			<xs:element name="Consignment" type="ConsignmentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsShipmentType03">
+		<xs:sequence>
+			<xs:element name="natureOfTransaction" type="NatureOfTransactionContentType" minOccurs="0"/>
+			<xs:element name="countryOfExport" type="CountryOfExportContentType" minOccurs="0"/>
+			<xs:element name="countryOfDestination" type="CountryOfDestinationContentType" minOccurs="0"/>
+			<xs:element name="AdditionalSupplyChainActor" type="AdditionalSupplyChainActorType" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="DeliveryTerms" type="DeliveryTermsType02" minOccurs="0"/>
+			<xs:element name="Warehouse" type="WarehouseType" minOccurs="0"/>
+			<xs:element name="PreviousDocument" type="PreviousDocumentType02" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="SupportingDocument" type="SupportingDocumentType05" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalReference" type="AdditionalReferenceType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalInformation" type="AdditionalInformationType" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="Consignment" type="ConsignmentType15"/>
+			<xs:element name="GoodsItem" type="GoodsItemType02" maxOccurs="999"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsShipmentType04">
+		<xs:sequence>
+			<xs:element name="natureOfTransaction" type="NatureOfTransactionContentType" minOccurs="0"/>
+			<xs:element name="countryOfExport" type="CountryOfExportContentType" minOccurs="0"/>
+			<xs:element name="countryOfDestination" type="CountryOfDestinationContentType" minOccurs="0"/>
+			<xs:element name="AdditionalSupplyChainActor" type="AdditionalSupplyChainActorType" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="DeliveryTerms" type="DeliveryTermsType02" minOccurs="0"/>
+			<xs:element name="Warehouse" type="WarehouseType" minOccurs="0"/>
+			<xs:element name="PreviousDocument" type="PreviousDocumentType02" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="SupportingDocument" type="SupportingDocumentType05" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalReference" type="AdditionalReferenceType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalInformation" type="AdditionalInformationType" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="Consignment" type="ConsignmentType15"/>
+			<xs:element name="GoodsItem" type="GoodsItemType03" maxOccurs="999"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsShipmentType507">
+		<xs:sequence>
+			<xs:element name="Consignment" type="ConsignmentType02"/>
+			<xs:element name="GoodsItem" type="GoodsItemType507" minOccurs="0" maxOccurs="999"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsShipmentType513">
+		<xs:sequence>
+			<xs:element name="natureOfTransaction" type="NatureOfTransactionContentType" minOccurs="0"/>
+			<xs:element name="countryOfExport" type="CountryOfExportContentType" minOccurs="0"/>
+			<xs:element name="countryOfDestination" type="CountryOfDestinationContentType" minOccurs="0"/>
+			<xs:element name="AdditionalSupplyChainActor" type="AdditionalSupplyChainActorType" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="DeliveryTerms" type="DeliveryTermsType02" minOccurs="0"/>
+			<xs:element name="Warehouse" type="WarehouseType" minOccurs="0"/>
+			<xs:element name="PreviousDocument" type="PreviousDocumentType02" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="SupportingDocument" type="SupportingDocumentType05" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalReference" type="AdditionalReferenceType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalInformation" type="AdditionalInformationType" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="Consignment" type="ConsignmentType15"/>
+			<xs:element name="GoodsItem" type="GoodsItemType513" maxOccurs="999"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Header                                                                    -->
+	<!--================================================================================-->
+	<xs:complexType name="HeaderType01">
+		<xs:sequence>
+			<xs:element name="LRN" type="LrnContentType02" minOccurs="0"/>
+			<xs:element name="MRN" type="MrnContentType04" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="HeaderType02">
+		<xs:sequence>
+			<xs:element name="LRN" type="LRNContentType01" minOccurs="0"/>
+			<xs:element name="MRN" type="MRNContentType01" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="HeaderType03">
+		<xs:sequence>
+			<xs:element name="MRN" type="MrnContentType04"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="HeaderType04">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="HeaderType05">
+		<xs:sequence>
+			<xs:element name="MRN" type="MrnContentType04"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="HeaderType06">
+		<xs:sequence>
+			<xs:element name="MRN" type="MrnContentType04"/>
+			<xs:element name="status" type="StatusContentType02"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== LocationOfGoods                                                           -->
+	<!--================================================================================-->
+	<xs:complexType name="LocationOfGoodsType02">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="typeOfLocation" type="TypeOfLocationContentType"/>
+			<xs:element name="qualifierOfIdentification" type="QualifierOfIdentificationContentType"/>
+			<xs:element name="authorisationNumber" type="AuthorisationNumberContentType" minOccurs="0"/>
+			<xs:element name="additionalIdentifier" type="AdditionalIdentifierContentType" minOccurs="0"/>
+			<xs:element name="UNLocode" type="UNLocodeContentType" minOccurs="0"/>
+			<xs:element name="CustomsOffice" type="CustomsOfficeType02" minOccurs="0"/>
+			<xs:element name="GNSS" type="GNSSType" minOccurs="0"/>
+			<xs:element name="EconomicOperator" type="EconomicOperatorType" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType01" minOccurs="0"/>
+			<xs:element name="PostcodeAddress" type="PostcodeAddressType" minOccurs="0"/>
+			<xs:element name="ContactPerson" type="ContactPersonType01" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="LocationOfGoodsType03">
+		<xs:sequence>
+			<xs:element name="typeOfLocation" type="TypeOfLocationContentType"/>
+			<xs:element name="qualifierOfIdentification" type="QualifierOfIdentificationContentType"/>
+			<xs:element name="authorisationNumber" type="AuthorisationNumberContentType" minOccurs="0"/>
+			<xs:element name="additionalIdentifier" type="AdditionalIdentifierContentType" minOccurs="0"/>
+			<xs:element name="UNLocode" type="UNLocodeContentType" minOccurs="0"/>
+			<xs:element name="CustomsOffice" type="CustomsOfficeType02" minOccurs="0"/>
+			<xs:element name="GNSS" type="GNSSType" minOccurs="0"/>
+			<xs:element name="EconomicOperator" type="EconomicOperatorType" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType01" minOccurs="0"/>
+			<xs:element name="PostcodeAddress" type="PostcodeAddressType" minOccurs="0"/>
+			<xs:element name="ContactPerson" type="ContactPersonType01" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="LocationOfGoodsType04">
+		<xs:sequence>
+			<xs:element name="typeOfLocation" type="TypeOfLocationContentType"/>
+			<xs:element name="qualifierOfIdentification" type="QualifierOfIdentificationContentType"/>
+			<xs:element name="authorisationNumber" type="AuthorisationNumberContentType" minOccurs="0"/>
+			<xs:element name="additionalIdentifier" type="AdditionalIdentifierContentType" minOccurs="0"/>
+			<xs:element name="UNLocode" type="UNLocodeContentType" minOccurs="0"/>
+			<xs:element name="CustomsOffice" type="CustomsOfficeType02" minOccurs="0"/>
+			<xs:element name="GNSS" type="GNSSType" minOccurs="0"/>
+			<xs:element name="EconomicOperator" type="EconomicOperatorType" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType01" minOccurs="0"/>
+			<xs:element name="PostcodeAddress" type="PostcodeAddressType" minOccurs="0"/>
+			<xs:element name="ContactPerson" type="ContactPersonType01" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== NationalAdditionalCode                                                    -->
+	<!--================================================================================-->
+	<xs:complexType name="NationalAdditionalCodeType">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="nationalAdditionalCode" type="NationalAdditionalCodeContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Origin                                                                    -->
+	<!--================================================================================-->
+	<xs:complexType name="OriginType">
+		<xs:sequence>
+			<xs:element name="countryOfOrigin" type="CountryOfOriginContentType" minOccurs="0"/>
+			<xs:element name="regionOfDispatch" type="RegionOfDispatchContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Packaging                                                                 -->
+	<!--================================================================================-->
+	<xs:complexType name="PackagingType01">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="typeOfPackages" type="TypeOfPackagesContentType"/>
+			<xs:element name="numberOfPackages" type="NumberOfPackagesContentType" minOccurs="0"/>
+			<xs:element name="shippingMarks" type="ShippingMarksContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PackagingType04">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="typeOfPackages" type="TypeOfPackagesContentType" minOccurs="0"/>
+			<xs:element name="numberOfPackages" type="NumberOfPackagesContentType" minOccurs="0"/>
+			<xs:element name="shippingMarks" type="ShippingMarksContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== PostcodeAddress                                                           -->
+	<!--================================================================================-->
+	<xs:complexType name="PostcodeAddressType">
+		<xs:sequence>
+			<xs:element name="houseNumber" type="HouseNumberContentType" minOccurs="0"/>
+			<xs:element name="postcode" type="PostcodeContentType"/>
+			<xs:element name="country" type="CountryContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== PreviousDocument                                                          -->
+	<!--================================================================================-->
+	<xs:complexType name="PreviousDocumentType01">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01"/>
+			<xs:element name="goodsItemNumber" type="GoodsItemNumberContentType" minOccurs="0"/>
+			<xs:element name="typeOfPackages" type="TypeOfPackagesContentType" minOccurs="0"/>
+			<xs:element name="numberOfPackages" type="NumberOfPackagesContentType" minOccurs="0"/>
+			<xs:element name="measurementUnitAndQualifier" type="MeasurementUnitAndQualifierContentType" minOccurs="0"/>
+			<xs:element name="quantity" type="QuantityContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PreviousDocumentType02">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Procedure                                                                 -->
+	<!--================================================================================-->
+	<xs:complexType name="ProcedureType">
+		<xs:sequence>
+			<xs:element name="requestedProcedure" type="RequestedProcedureContentType"/>
+			<xs:element name="previousProcedure" type="PreviousProcedureContentType"/>
+			<xs:element name="AdditionalProcedure" type="AdditionalProcedureType" minOccurs="0" maxOccurs="99"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Representative                                                            -->
+	<!--================================================================================-->
+	<xs:complexType name="RepresentativeType03">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03"/>
+			<xs:element name="status" type="StatusContentType01"/>
+			<xs:element name="ContactPerson" type="ContactPersonType02" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Seal                                                                      -->
+	<!--================================================================================-->
+	<xs:complexType name="SealType01">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="identifier" type="IdentifierContentType01"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SealType02">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="identifier" type="IdentifierContentType01" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== SupportingDocument                                                        -->
+	<!--================================================================================-->
+	<xs:complexType name="SupportingDocumentType04">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01"/>
+			<xs:element name="documentLineItemNumber" type="DocumentLineItemNumberContentType" minOccurs="0"/>
+			<xs:element name="issuingAuthorityName" type="IssuingAuthorityNameContentType" minOccurs="0"/>
+			<xs:element name="validityDate" type="ValidityDateContentType" minOccurs="0"/>
+			<xs:element name="measurementUnitAndQualifier" type="MeasurementUnitAndQualifierContentType" minOccurs="0"/>
+			<xs:element name="quantity" type="QuantityContentType" minOccurs="0"/>
+			<xs:element name="currency" type="CurrencyContentType" minOccurs="0"/>
+			<xs:element name="amount" type="AmountContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SupportingDocumentType05">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01"/>
+			<xs:element name="documentLineItemNumber" type="DocumentLineItemNumberContentType" minOccurs="0"/>
+			<xs:element name="issuingAuthorityName" type="IssuingAuthorityNameContentType" minOccurs="0"/>
+			<xs:element name="validityDate" type="ValidityDateContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== TARICAdditionalCode                                                       -->
+	<!--================================================================================-->
+	<xs:complexType name="TARICAdditionalCodeType01">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="taricAdditionalCode" type="TaricAdditionalCodeContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TARICAdditionalCodeType02">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="taricAdditionalCode" type="TaricAdditionalCodeContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== TaxBase                                                                   -->
+	<!--================================================================================-->
+	<xs:complexType name="TaxBaseType">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="taxRate" type="TaxRateContentType"/>
+			<xs:element name="measurementUnitAndQualifier" type="MeasurementUnitAndQualifierContentType" minOccurs="0"/>
+			<xs:element name="quantity" type="QuantityContentType" minOccurs="0"/>
+			<xs:element name="amount" type="AmountContentType" minOccurs="0"/>
+			<xs:element name="taxAmount" type="TaxAmountContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== TransportCharges                                                          -->
+	<!--================================================================================-->
+	<xs:complexType name="TransportChargesType">
+		<xs:sequence>
+			<xs:element name="methodOfPayment" type="MethodOfPaymentContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== TransportDocument                                                         -->
+	<!--================================================================================-->
+	<xs:complexType name="TransportDocumentType01">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TransportDocumentType02">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TransportDocumentType03">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01" minOccurs="0"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== TransportEquipment                                                        -->
+	<!--================================================================================-->
+	<xs:complexType name="TransportEquipmentType03">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="containerIdentificationNumber" type="ContainerIdentificationNumberContentType" minOccurs="0"/>
+			<xs:element name="numberOfSeals" type="NumberOfSealsContentType"/>
+			<xs:element name="Seal" type="SealType01" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="GoodsReference" type="GoodsReferenceType02" minOccurs="0" maxOccurs="999"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TransportEquipmentType05">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="containerIdentificationNumber" type="ContainerIdentificationNumberContentType" minOccurs="0"/>
+			<xs:element name="numberOfSeals" type="NumberOfSealsContentType" minOccurs="0"/>
+			<xs:element name="Seal" type="SealType02" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="GoodsReference" type="GoodsReferenceType04" minOccurs="0" maxOccurs="999"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== Warehouse                                                                 -->
+	<!--================================================================================-->
+	<xs:complexType name="WarehouseType">
+		<xs:sequence>
+			<xs:element name="type" type="TypeContentType05"/>
+			<xs:element name="identifier" type="IdentifierContentType02"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--================================================================================-->
+	<!--===== XMLError                                                                  -->
+	<!--================================================================================-->
+	<xs:complexType name="XMLErrorType">
+		<xs:sequence>
+			<xs:element name="errorLineNumber" type="ErrorLineNumberContentType"/>
+			<xs:element name="errorColumnNumber" type="ErrorColumnNumberContentType"/>
+			<xs:element name="errorPointer" type="ErrorPointerContentType" minOccurs="0"/>
+			<xs:element name="errorCode" type="XmlErrorCodes"/>
+			<xs:element name="errorText" type="ErrorTextContentType"/>
+			<xs:element name="originalAttributeValue" type="OriginalAttributeValueContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--==========================================================-->
+	<!--===== OTROS                                         -->
+	<!--==========================================================-->
+	<xs:complexType name="ExportOperationTypeDOC">
+		<xs:sequence>
+			<xs:element name="MRN" type="MrnContentType04"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SolicitudDespachoTypeDOC">
+		<xs:sequence>
+			<xs:element name="finAnexos">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DocumentoDigitalizadoTypeDOC">
+		<xs:sequence>
+			<xs:element name="descripcion">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="35"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="numeroReferencia">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="35"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="contenido" type="xs:base64Binary"/>
+			<xs:element name="extension">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="tipoDocumentoSolicitado" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExportOperationType507">
+		<xs:sequence>
+			<xs:element name="MRN" type="MrnContentType04"/>
+			<xs:element name="arrivalNotificationDateAndTime" type="ArrivalNotificationDateAndTimeContentType" minOccurs="0"/>
+			<xs:element name="arrivalNotificationPlace" type="ArrivalNotificationPlaceContentType" minOccurs="0"/>
+			<xs:element name="storingFlag" type="Flag"/>
+			<xs:element name="discrepanciesExist" type="Flag"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExportOperationType514">
+		<xs:sequence>
+			<xs:element name="LRN" type="LrnContentType02" minOccurs="0"/>
+			<xs:element name="MRN" type="MrnContentType04" minOccurs="0"/>
+			<xs:element name="invalidationRequestDateAndTime" type="InvalidationRequestDateAndTimeContentType" minOccurs="0"/>
+			<xs:element name="invalidationReason" type="InvalidationReasonContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ConsignmentType80">
+		<xs:sequence>
+			<xs:element name="inlandModeOfTransport" type="InlandModeOfTransportContentType" minOccurs="0"/>
+			<xs:element name="modeOfTransportAtTheBorder" type="ModeOfTransportAtTheBorderContentType"/>
+			<xs:element name="ActiveBorderTransportMeans" type="ActiveBorderTransportMeansType80" minOccurs="0"/>
+			<xs:element name="TransportCharges" type="TransportChargesType80" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DeclarantType80">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType01"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DeliveryTermsType80">
+		<xs:sequence>
+			<xs:element name="incotermCode" type="IncotermCodeContentType"/>
+			<xs:element name="UNLocode" type="UNLocodeContentType" minOccurs="0"/>
+			<xs:element name="location" type="LocationContentType" minOccurs="0"/>
+			<xs:element name="country" type="CountryContentType" minOccurs="0"/>
+			<xs:element name="text" type="TextContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExportOperationType80">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="additionalDeclarationType" type="AdditionalDeclarationTypeContentType"/>
+			<xs:element name="totalAmountInvoiced" type="TotalAmountInvoicedContentType"/>
+			<xs:element name="invoiceCurrency" type="InvoiceCurrencyContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsItemType80">
+		<xs:sequence>
+			<xs:element name="declarationGoodsItemNumber" type="DeclarationGoodsItemNumberContentType"/>
+			<xs:element name="statisticalValue" type="StatisticalValueContentType"/>
+			<xs:element name="Origin" type="OriginType80" minOccurs="0"/>
+			<xs:element name="Commodity" type="CommodityType80" minOccurs="0"/>
+			<xs:element name="PreviousDocument" type="PreviousDocumentType80" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="SupportingDocument" type="SupportingDocumentType80" minOccurs="0" maxOccurs="99"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ActiveBorderTransportMeansType80">
+		<xs:sequence>
+			<xs:element name="typeOfIdentification" type="TypeOfIdentificationContentType"/>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType02"/>
+			<xs:element name="nationality" type="NationalityContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsMeasureType80">
+		<xs:sequence>
+			<xs:element name="grossMass" type="GrossMassContentType"/>
+			<xs:element name="netMass" type="NetMassContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsShipmentType80">
+		<xs:sequence>
+			<xs:element name="natureOfTransaction" type="NatureOfTransactionContentType"/>
+			<xs:element name="DeliveryTerms" type="DeliveryTermsType80" minOccurs="0"/>
+			<xs:element name="Warehouse" type="WarehouseType80" minOccurs="0"/>
+			<xs:element name="Consignment" type="ConsignmentType80"/>
+			<xs:element name="GoodsItem" type="GoodsItemType80" maxOccurs="999"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="OriginType80">
+		<xs:sequence>
+			<xs:element name="countryOfOrigin" type="CountryOfOriginContentType" minOccurs="0"/>
+			<xs:element name="regionOfDispatch" type="RegionOfDispatchContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CommodityType80">
+		<xs:sequence>
+			<xs:element name="GoodsMeasure" type="GoodsMeasureType80"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PreviousDocumentType80">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01"/>
+			<xs:element name="goodsItemNumber" type="GoodsItemNumberContentType" minOccurs="0"/>
+			<xs:element name="typeOfPackages" type="TypeOfPackagesContentType" minOccurs="0"/>
+			<xs:element name="numberOfPackages" type="NumberOfPackagesContentType" minOccurs="0"/>
+			<xs:element name="measurementUnitAndQualifier" type="MeasurementUnitAndQualifierContentType" minOccurs="0"/>
+			<xs:element name="quantity" type="QuantityContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RepresentativeType80">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType01"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SupportingDocumentType80">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01"/>
+			<xs:element name="documentLineItemNumber" type="DocumentLineItemNumberContentType" minOccurs="0"/>
+			<xs:element name="issuingAuthorityName" type="IssuingAuthorityNameContentType" minOccurs="0"/>
+			<xs:element name="validityDate" type="ValidityDateContentType" minOccurs="0"/>
+			<xs:element name="measurementUnitAndQualifier" type="MeasurementUnitAndQualifierContentType" minOccurs="0"/>
+			<xs:element name="quantity" type="QuantityContentType" minOccurs="0"/>
+			<xs:element name="currency" type="CurrencyContentType" minOccurs="0"/>
+			<xs:element name="amount" type="AmountContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TransportChargesType80">
+		<xs:sequence>
+			<xs:element name="methodOfPayment" type="MethodOfPaymentContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="WarehouseType80">
+		<xs:sequence>
+			<xs:element name="type" type="TypeContentType05"/>
+			<xs:element name="identifier" type="IdentifierContentType01"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ConsultaExportacionType">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosRespuestaCorrectaType513C">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="CSVDeclaracionElectronica">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosRespuestaCorrectaType514C">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="fechaInvalidacion" type="DateType" minOccurs="0"/>
+			<xs:element name="fechaHoraSolicitudInvalidacion" type="DateTimeType"/>
+			<xs:element name="CSVDeclaracionElectronica">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosRespuestaCorrectaType507C">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="fechaLlegada" type="DateType"/>
+			<xs:element name="circuitoLlegada" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaLevanteSalida" type="DateType" minOccurs="0"/>
+			<xs:element name="CSVDeclaracionElectronica">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVLevanteSalida" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosRespuestaCorrectaType511C">
+		<xs:sequence>
+			<xs:element name="LRN" type="LrnContentType02"/>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="fechaAdmision" type="DateType"/>
+			<xs:element name="additionalDeclarationType" type="AdditionalDeclarationTypeContentType"/>
+			<xs:element name="circuitoAEAT" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="circuitoATC" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaLevante" type="DateType" minOccurs="0"/>
+			<xs:element name="CSVDeclaracionElectronica">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVLevanteExportacion" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVDocumentoT2L" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="flagDirectaIndirecta" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosRespuestaCorrectaType515X">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="CSVDeclaracionElectronica">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="complementariaFueraPlazo">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosRespuestaCorrectaType515C">
+		<xs:sequence>
+			<xs:element name="LRN" type="LrnContentType02"/>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="fechaHoraAlta" type="DateTimeType"/>
+			<xs:element name="fechaAdmision" type="DateType"/>
+			<xs:element name="circuitoAEAT" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="circuitoATC" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaLevante" type="DateType" minOccurs="0"/>
+			<xs:element name="CSVDeclaracionElectronica">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVLevanteExportacion" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVDocumentoT2L" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="flagDirectaIndirecta" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ControlRespuestaType">
+		<xs:sequence>
+			<xs:element name="tipoRespuesta">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="codigoRespuesta" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FunctionalErrorType">
+		<xs:sequence>
+			<xs:element name="errorPointer" type="ErrorPointerContentType"/>
+			<xs:element name="errorCode" type="ErrorCodeContentType"/>
+			<xs:element name="errorReason" type="ErrorReasonContentType"/>
+			<xs:element name="errorDescription" type="ErrorPointerContentType"/>
+			<xs:element name="originalAttributeValue" type="OriginalAttributeValueContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ComunicaInvalidacionType">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="fechaInvalidacion" type="DateType"/>
+			<xs:element name="fechaHoraSolicitudInvalidacion" type="DateTimeType" minOccurs="0"/>
+			<xs:element name="invalidacionIniciadaPorLaAduana" type="Flag"/>
+			<xs:element name="justificacionDeLaInvalidacion" type="OtherThingsToReportContentType" minOccurs="0"/>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosComunicacionType">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="fechaLevante" type="DateType"/>
+			<xs:element name="CSVLevanteExportacion">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVDocumentoT2L" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="flagDirectaIndirecta" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosComunicacionLevanteSalidaType">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="fechaLevanteSalida" type="DateType"/>
+			<xs:element name="CSVLevanteSalida">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosComunicacionResulSalidaType">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="fechaSalidaEfectiva" type="DateType" minOccurs="0"/>
+			<xs:element name="resultadoSalida" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaParadaAduanaSalida" type="DateType" minOccurs="0"/>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosComunicacionControlesCCEType">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="fechaNotificacionControl" type="DateType"/>
+			<xs:element name="tipoNotificacion">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TipoControlType">
+		<xs:sequence>
+			<xs:element name="numeroSecuencia">
+				<xs:simpleType>
+					<xs:restriction base="xs:positiveInteger">
+						<xs:totalDigits value="5"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="tipo" type="xs:string"/>
+			<xs:element name="texto" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="512"/>
+						<xs:minLength value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DocumentoSolicitadoType">
+		<xs:sequence>
+			<xs:element name="numeroSecuencia">
+				<xs:simpleType>
+					<xs:restriction base="xs:positiveInteger">
+						<xs:totalDigits value="5"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="tipoDocumento">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="descripcion" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="512"/>
+						<xs:minLength value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosComunicacionDisconformeExporType">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="otrasCosasAInformar" type="OtherThingsToReportContentType" minOccurs="0"/>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosComunicacionDisconformeSalidaType">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="fechaDisconformeSalida" type="DateType"/>
+			<xs:element name="otrasCosasAInformar" type="OtherThingsToReportContentType" minOccurs="0"/>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--==========================================================-->
+	<!--===== Respuesta CCAESConsulta (alias CC700C)                                        -->
+	<!--==========================================================-->
+	<xs:complexType name="DatosRespuestaCorrectaType70">
+		<xs:sequence>
+			<xs:element name="ExportOperation" type="ExportOperationType70"/>
+			<xs:element name="AESDatosGestion" type="AESDatosGestion70"/>
+			<xs:element name="Authorisation" type="AuthorisationType70" minOccurs="0" maxOccurs="9"/>
+			<xs:element name="CustomsOfficeOfPresentation" type="CustomsOfficeType70" minOccurs="0"/>
+			<xs:element name="CustomsOfficeOfExport" type="CustomsOfficeType70" minOccurs="0"/>
+			<xs:element name="CustomsOfficeOfExitDeclared" type="CustomsOfficeType70" minOccurs="0"/>
+			<xs:element name="CustomsOfficeOfExitActual" type="CustomsOfficeType70" minOccurs="0"/>
+			<xs:element name="CustomsOfficeOfDestination" type="CustomsOfficeType70" minOccurs="0"/>
+			<xs:element name="Exporter" type="ExporterType70" minOccurs="0"/>
+			<xs:element name="Declarant" type="DeclarantType70" minOccurs="0"/>
+			<xs:element name="Representative" type="RepresentativeType70" minOccurs="0"/>
+			<xs:element name="RequestedDocuments" type="RequestedDocumentType70" minOccurs="0"/>
+			<xs:element name="DeferredPayment" type="DeferredPaymentType70" minOccurs="0"/>
+			<xs:element name="ExitControlResult" type="ExitControlResultType70" minOccurs="0"/>
+			<xs:element name="GoodsShipment" type="GoodsShipmentType70" minOccurs="0"/>
+			<xs:element name="GoodsShipmentDiscrep507" type="GoodsShipmentType75" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DatosRespuestaCorrectaType71">
+		<xs:sequence>
+			<xs:element name="ExportOperation" type="ExportOperationType70"/>
+			<xs:element name="AESDatosGestion" type="AESDatosGestion71"/>
+			<xs:element name="Authorisation" type="AuthorisationType70" minOccurs="0" maxOccurs="9"/>
+			<xs:element name="CustomsOfficeOfPresentation" type="CustomsOfficeType70" minOccurs="0"/>
+			<xs:element name="CustomsOfficeOfExport" type="CustomsOfficeType70" minOccurs="0"/>
+			<xs:element name="CustomsOfficeOfExitDeclared" type="CustomsOfficeType70" minOccurs="0"/>
+			<xs:element name="CustomsOfficeOfExitActual" type="CustomsOfficeType70" minOccurs="0"/>
+			<xs:element name="CustomsOfficeOfDestination" type="CustomsOfficeType70" minOccurs="0"/>
+			<xs:element name="Exporter" type="ExporterType70" minOccurs="0"/>
+			<xs:element name="Declarant" type="DeclarantType70" minOccurs="0"/>
+			<xs:element name="Representative" type="RepresentativeType70" minOccurs="0"/>
+			<xs:element name="RequestedDocuments" type="RequestedDocumentType70" minOccurs="0"/>
+			<xs:element name="DeferredPayment" type="DeferredPaymentType70" minOccurs="0"/>
+			<xs:element name="ExitControlResult" type="ExitControlResultType70" minOccurs="0"/>
+			<xs:element name="GoodsShipment" type="GoodsShipmentType70" minOccurs="0"/>
+			<xs:element name="GoodsShipmentDiscrep507" type="GoodsShipmentType75" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExportOperationType70">
+		<xs:sequence>
+			<xs:element name="MRN" type="MrnContentType04"/>
+			<xs:element name="LRN" type="LrnContentType02" minOccurs="0"/>
+			<xs:element name="declarationType" type="DeclarationTypeContentType" minOccurs="0"/>
+			<xs:element name="additionalDeclarationType" type="AdditionalDeclarationTypeContentType" minOccurs="0"/>
+			<xs:element name="security" type="SecurityContentType" minOccurs="0"/>
+			<xs:element name="specificCircumstanceIndicator" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="3"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="totalAmountInvoiced" type="TotalAmountInvoicedContentType" minOccurs="0"/>
+			<xs:element name="invoiceCurrency" type="InvoiceCurrencyContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AESDatosGestion70">
+		<xs:sequence>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaHoraAlta" type="DeclarationSubmissionDateAndTimeContentType" minOccurs="0"/>
+			<xs:element name="fechaAdmision" type="DeclarationAcceptanceDateContentType" minOccurs="0"/>
+			<xs:element name="fechaLevante" type="ReleaseDateContentType" minOccurs="0"/>
+			<xs:element name="circuitoAEAT" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="circuitoATC" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVLevanteExportacion" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVDocumentoT2L" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="flagDirectaIndirecta" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaInvalidacion" type="InvalidationDateContentType" minOccurs="0"/>
+			<xs:element name="invalidacionIniciadaPorLaAduana" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaLlegada" type="DateType" minOccurs="0"/>
+			<xs:element name="ubicacionLlegada" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="10"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="circuitoLlegada" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaLevanteSalida" type="ReleaseDateContentType" minOccurs="0"/>
+			<xs:element name="CSVLevanteSalida" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaSalidaEfectiva" type="ExitDateContentType" minOccurs="0"/>
+			<xs:element name="resultadoSalida" type="CodeContentType01" minOccurs="0"/>
+			<xs:element name="CSVCertificadoSalida" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaParadaAduanaSalida" type="ExitStoppedDateContentType" minOccurs="0"/>
+			<xs:element name="faseAES" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="transit" type="Flag" minOccurs="0"/>
+			<xs:element name="transitoMrn" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="18"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="importaMRN" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="18"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="esExportadorParticular" type="Flag" minOccurs="0"/>
+			<xs:element name="estatutoAduanero" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AESDatosGestion71">
+		<xs:sequence>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaHoraAlta" type="DeclarationSubmissionDateAndTimeContentType" minOccurs="0"/>
+			<xs:element name="fechaAdmision" type="DeclarationAcceptanceDateContentType" minOccurs="0"/>
+			<xs:element name="fechaLevante" type="ReleaseDateContentType" minOccurs="0"/>
+			<xs:element name="circuitoAEAT" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="circuitoATC" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVLevanteExportacion" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVDocumentoT2L" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVDae" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="flagDirectaIndirecta" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaInvalidacion" type="InvalidationDateContentType" minOccurs="0"/>
+			<xs:element name="invalidacionIniciadaPorLaAduana" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaLlegada" type="DateType" minOccurs="0"/>
+			<xs:element name="ubicacionLlegada" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="10"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="circuitoLlegada" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaLevanteSalida" type="ReleaseDateContentType" minOccurs="0"/>
+			<xs:element name="CSVLevanteSalida" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaSalidaEfectiva" type="ExitDateContentType" minOccurs="0"/>
+			<xs:element name="resultadoSalida" type="CodeContentType01" minOccurs="0"/>
+			<xs:element name="CSVCertificadoSalida" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="fechaParadaAduanaSalida" type="ExitStoppedDateContentType" minOccurs="0"/>
+			<xs:element name="faseAES" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="transit" type="Flag" minOccurs="0"/>
+			<xs:element name="transitoMrn" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="18"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="importaMRN" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="18"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="esExportadorParticular" type="Flag" minOccurs="0"/>
+			<xs:element name="estatutoAduanero" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AuthorisationType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType04"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType02"/>
+			<xs:element name="holderOfAuthorisation" type="HolderOfAuthorisationContentType01" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CustomsOfficeType70">
+		<xs:sequence>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExporterType70">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType02"/>
+			<xs:element name="name" type="NameContentType" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType70" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AddressType70">
+		<xs:sequence>
+			<xs:element name="streetAndNumber" type="StreetAndNumberContentType"/>
+			<xs:element name="postcode" type="PostcodeContentType" minOccurs="0"/>
+			<xs:element name="city" type="CityContentType"/>
+			<xs:element name="country" type="CountryContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DeclarantType70">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType02"/>
+			<xs:element name="name" type="NameContentType" minOccurs="0"/>
+			<xs:element name="caracterRepresentacion" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="tipoAutDespacho" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:length value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Address" type="AddressType70" minOccurs="0"/>
+			<xs:element name="ContactPerson" type="ContactPersonType70" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ContactPersonType70">
+		<xs:sequence>
+			<xs:element name="name" type="NameContentType" minOccurs="0"/>
+			<xs:element name="phoneNumber" type="PhoneNumberContentType" minOccurs="0"/>
+			<xs:element name="eMailAddress" type="EMailAddressContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RepresentativeType70">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03"/>
+			<xs:element name="status" type="StatusContentType01"/>
+			<xs:element name="ContactPerson" type="ContactPersonType70" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RequestedDocumentType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="documentType" type="DocumentTypeContentType"/>
+			<xs:element name="description" type="DescriptionContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DeferredPaymentType70">
+		<xs:sequence>
+			<xs:element name="deferredPayment" type="DeferredPaymentContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExitControlResultType70">
+		<xs:sequence>
+			<xs:element name="code" type="CodeContentType01"/>
+			<xs:element name="exitDate" type="ExitDateContentType" minOccurs="0"/>
+			<xs:element name="exitStoppedDate" type="ExitStoppedDateContentType" minOccurs="0"/>
+			<xs:element name="stateOfSeals" type="Flag" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsShipmentType70">
+		<xs:sequence>
+			<xs:element name="natureOfTransaction" type="NatureOfTransactionContentType" minOccurs="0"/>
+			<xs:element name="countryOfExport" type="CountryOfExportContentType" minOccurs="0"/>
+			<xs:element name="countryOfDestination" type="CountryOfDestinationContentType" minOccurs="0"/>
+			<xs:element name="AdditionalSupplyChainActor" type="AdditionalSupplyChainActorType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="DeliveryTerms" type="DeliveryTermsType70" minOccurs="0"/>
+			<xs:element name="Warehouse" type="WarehouseType70" minOccurs="0"/>
+			<xs:element name="PreviousDocument" type="PreviousDocumentType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="SupportingDocument" type="SupportingDocumentType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalReference" type="AdditionalReferenceType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalInformation" type="AdditionalInformationType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="Consignment" type="ConsignmentType70"/>
+			<xs:element name="GoodsItem" type="GoodsItemType70" maxOccurs="999"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AdditionalSupplyChainActorType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="role" type="RoleContentType02"/>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DeliveryTermsType70">
+		<xs:sequence>
+			<xs:element name="incotermCode" type="IncotermCodeContentType"/>
+			<xs:element name="UNLocode" type="UNLocodeContentType" minOccurs="0"/>
+			<xs:element name="location" type="LocationContentType" minOccurs="0"/>
+			<xs:element name="country" type="CountryContentType" minOccurs="0"/>
+			<xs:element name="text" type="TextContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="WarehouseType70">
+		<xs:sequence>
+			<xs:element name="type" type="TypeContentType05"/>
+			<xs:element name="identifier" type="IdentifierContentType02"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PreviousDocumentType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PreviousDocumentType71">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01"/>
+			<xs:element name="goodsItemNumber" type="GoodsItemNumberContentType" minOccurs="0"/>
+			<xs:element name="typeOfPackages" type="TypeOfPackagesContentType" minOccurs="0"/>
+			<xs:element name="numberOfPackages" type="NumberOfPackagesContentType" minOccurs="0"/>
+			<xs:element name="measurementUnitAndQualifier" type="MeasurementUnitAndQualifierContentType" minOccurs="0"/>
+			<xs:element name="quantity" type="QuantityContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SupportingDocumentType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01"/>
+			<xs:element name="documentLineItemNumber" type="DocumentLineItemNumberContentType" minOccurs="0"/>
+			<xs:element name="issuingAuthorityName" type="IssuingAuthorityNameContentType" minOccurs="0"/>
+			<xs:element name="validityDate" type="ValidityDateContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SupportingDocumentType71">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01"/>
+			<xs:element name="documentLineItemNumber" type="DocumentLineItemNumberContentType" minOccurs="0"/>
+			<xs:element name="issuingAuthorityName" type="IssuingAuthorityNameContentType" minOccurs="0"/>
+			<xs:element name="validityDate" type="ValidityDateContentType" minOccurs="0"/>
+			<xs:element name="measurementUnitAndQualifier" type="MeasurementUnitAndQualifierContentType" minOccurs="0"/>
+			<xs:element name="quantity" type="QuantityContentType" minOccurs="0"/>
+			<xs:element name="currency" type="CurrencyContentType" minOccurs="0"/>
+			<xs:element name="amount" type="AmountContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AdditionalReferenceType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AdditionalInformationType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="code" type="CodeContentType02"/>
+			<xs:element name="text" type="TextContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ConsignmentType70">
+		<xs:sequence>
+			<xs:element name="containerIndicator" type="Flag" minOccurs="0"/>
+			<xs:element name="inlandModeOfTransport" type="InlandModeOfTransportContentType" minOccurs="0"/>
+			<xs:element name="modeOfTransportAtTheBorder" type="ModeOfTransportAtTheBorderContentType" minOccurs="0"/>
+			<xs:element name="grossMass" type="GrossMassContentType" minOccurs="0"/>
+			<xs:element name="referenceNumberUCR" type="ReferenceNumberUCRContentType01" minOccurs="0"/>
+			<xs:element name="Carrier" type="CarrierType70" minOccurs="0"/>
+			<xs:element name="ExitCarrier" type="ExitCarrierType70" minOccurs="0"/>
+			<xs:element name="Consignor" type="ConsignorType70" minOccurs="0"/>
+			<xs:element name="Consignee" type="ConsigneeType70" minOccurs="0"/>
+			<xs:element name="TransportEquipment" type="TransportEquipmentType70" minOccurs="0" maxOccurs="9999"/>
+			<xs:element name="LocationOfGoods" type="LocationOfGoodsType70" minOccurs="0"/>
+			<xs:element name="DepartureTransportMeans" type="DepartureTransportMeansType70" minOccurs="0" maxOccurs="999"/>
+			<xs:element name="CountryOfRoutingOfConsignment" type="CountryOfRoutingOfConsignmentType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="ActiveBorderTransportMeans" type="ActiveBorderTransportMeansType70" minOccurs="0"/>
+			<xs:element name="TransportDocument" type="TransportDocumentType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="TransportCharges" type="TransportChargesType70" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsItemType70">
+		<xs:sequence>
+			<xs:element name="declarationGoodsItemNumber" type="DeclarationGoodsItemNumberContentType"/>
+			<xs:element name="statisticalValue" type="StatisticalValueContentType" minOccurs="0"/>
+			<xs:element name="natureOfTransaction" type="NatureOfTransactionContentType" minOccurs="0"/>
+			<xs:element name="countryOfExport" type="CountryOfExportContentType" minOccurs="0"/>
+			<xs:element name="countryOfDestination" type="CountryOfDestinationContentType" minOccurs="0"/>
+			<xs:element name="referenceNumberUCR" type="ReferenceNumberUCRContentType01" minOccurs="0"/>
+			<xs:element name="Authorisation" type="AuthorisationType70" minOccurs="0" maxOccurs="9"/>
+			<xs:element name="Procedure" type="ProcedureType70"/>
+			<xs:element name="Consignor" type="ConsignorType70" minOccurs="0"/>
+			<xs:element name="Consignee" type="ConsigneeType70" minOccurs="0"/>
+			<xs:element name="AdditionalSupplyChainActor" type="AdditionalSupplyChainActorType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="Origin" type="OriginType70" minOccurs="0"/>
+			<xs:element name="Commodity" type="CommodityType70"/>
+			<xs:element name="Packaging" type="PackagingType70" maxOccurs="99"/>
+			<xs:element name="PreviousDocument" type="PreviousDocumentType71" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="SupportingDocument" type="SupportingDocumentType71" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="TransportDocument" type="TransportDocumentType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalReference" type="AdditionalReferenceType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="AdditionalInformation" type="AdditionalInformationType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="TransportCharges" type="TransportChargesType70" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CarrierType70">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExitCarrierType70">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03" minOccurs="0"/>
+			<xs:element name="name" type="NameContentType" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType70" minOccurs="0"/>
+			<xs:element name="ContactPerson" type="ContactPersonType70" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ProcedureType70">
+		<xs:sequence>
+			<xs:element name="requestedProcedure" type="RequestedProcedureContentType"/>
+			<xs:element name="previousProcedure" type="PreviousProcedureContentType"/>
+			<xs:element name="AdditionalProcedure" type="AdditionalProcedureType70" minOccurs="0" maxOccurs="99"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AdditionalProcedureType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="additionalProcedure" type="AdditionalProcedureContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ConsignorType70">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03" minOccurs="0"/>
+			<xs:element name="name" type="NameContentType" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType70" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ConsigneeType70">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03" minOccurs="0"/>
+			<xs:element name="name" type="NameContentType" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType70" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TransportEquipmentType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="containerIdentificationNumber" type="ContainerIdentificationNumberContentType" minOccurs="0"/>
+			<xs:element name="numberOfSeals" type="NumberOfSealsContentType"/>
+			<xs:element name="Seal" type="SealType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="GoodsReference" type="GoodsReferenceType70" minOccurs="0" maxOccurs="999"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="LocationOfGoodsType70">
+		<xs:sequence>
+			<xs:element name="typeOfLocation" type="TypeOfLocationContentType"/>
+			<xs:element name="qualifierOfIdentification" type="QualifierOfIdentificationContentType"/>
+			<xs:element name="authorisationNumber" type="AuthorisationNumberContentType" minOccurs="0"/>
+			<xs:element name="additionalIdentifier" type="AdditionalIdentifierContentType" minOccurs="0"/>
+			<xs:element name="UNLocode" type="UNLocodeContentType" minOccurs="0"/>
+			<xs:element name="CustomsOffice" type="CustomsOfficeType70" minOccurs="0"/>
+			<xs:element name="GNSS" type="GNSSType70" minOccurs="0"/>
+			<xs:element name="EconomicOperator" type="EconomicOperatorType70" minOccurs="0"/>
+			<xs:element name="Address" type="AddressType70" minOccurs="0"/>
+			<xs:element name="PostcodeAddress" type="PostcodeAddressType70" minOccurs="0"/>
+			<xs:element name="ContactPerson" type="ContactPersonType70" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GNSSType70">
+		<xs:sequence>
+			<xs:element name="latitude" type="LatitudeContentType"/>
+			<xs:element name="longitude" type="LongitudeContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="EconomicOperatorType70">
+		<xs:sequence>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType03"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PostcodeAddressType70">
+		<xs:sequence>
+			<xs:element name="houseNumber" type="HouseNumberContentType" minOccurs="0"/>
+			<xs:element name="postcode" type="PostcodeContentType"/>
+			<xs:element name="country" type="CountryContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DepartureTransportMeansType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="typeOfIdentification" type="TypeOfIdentificationContentType" minOccurs="0"/>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType01"/>
+			<xs:element name="nationality" type="NationalityContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CountryOfRoutingOfConsignmentType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="country" type="CountryContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ActiveBorderTransportMeansType70">
+		<xs:sequence>
+			<xs:element name="typeOfIdentification" type="TypeOfIdentificationContentType" minOccurs="0"/>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType01"/>
+			<xs:element name="nationality" type="NationalityContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TransportDocumentType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TransportChargesType70">
+		<xs:sequence>
+			<xs:element name="methodOfPayment" type="MethodOfPaymentContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="OriginType70">
+		<xs:sequence>
+			<xs:element name="countryOfOrigin" type="CountryOfOriginContentType" minOccurs="0"/>
+			<xs:element name="regionOfDispatch" type="RegionOfDispatchContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CommodityType70">
+		<xs:sequence>
+			<xs:element name="descriptionOfGoods" type="DescriptionOfGoodsContentType"/>
+			<xs:element name="cusCode" type="CusCodeContentType" minOccurs="0"/>
+			<xs:element name="CommodityCode" type="CommodityCodeType70"/>
+			<xs:element name="DangerousGoods" type="DangerousGoodsType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="GoodsMeasure" type="GoodsMeasureType70"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CommodityCodeType70">
+		<xs:sequence>
+			<xs:element name="harmonizedSystemSubHeadingCode" type="HarmonizedSystemSubHeadingCodeContentType"/>
+			<xs:element name="combinedNomenclatureCode" type="CombinedNomenclatureCodeContentType"/>
+			<xs:element name="TARICAdditionalCode" type="TARICAdditionalCodeType70" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="NationalAdditionalCode" type="NationalAdditionalCodeType70" minOccurs="0" maxOccurs="99"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DangerousGoodsType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="UNNumber" type="UNNumberContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsMeasureType70">
+		<xs:sequence>
+			<xs:element name="grossMass" type="GrossMassContentType" minOccurs="0"/>
+			<xs:element name="netMass" type="NetMassContentType"/>
+			<xs:element name="supplementaryUnits" type="SupplementaryUnitsContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TARICAdditionalCodeType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="taricAdditionalCode" type="TaricAdditionalCodeContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="NationalAdditionalCodeType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="nationalAdditionalCode" type="NationalAdditionalCodeContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PackagingType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="typeOfPackages" type="TypeOfPackagesContentType"/>
+			<xs:element name="numberOfPackages" type="NumberOfPackagesContentType" minOccurs="0"/>
+			<xs:element name="shippingMarks" type="ShippingMarksContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SealType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="identifier" type="IdentifierContentType01"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsReferenceType70">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="declarationGoodsItemNumber" type="DeclarationGoodsItemNumberContentType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--===== DISCREPANCIAS		Respuesta CCAESConsulta (alias CC700C)         -->
+	<xs:complexType name="GoodsShipmentType75">
+		<xs:sequence>
+			<xs:element name="Consignment" type="ConsignmentType75" minOccurs="0"/>
+			<xs:element name="GoodsItem" type="GoodsItemType75" minOccurs="0" maxOccurs="999"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ConsignmentType75">
+		<xs:sequence>
+			<xs:element name="modeOfTransportAtTheBorder" type="ModeOfTransportAtTheBorderContentType" minOccurs="0"/>
+			<xs:element name="referenceNumberUCR" type="ReferenceNumberUCRContentType01" minOccurs="0"/>
+			<xs:element name="TransportEquipment" type="TransportEquipmentType75" minOccurs="0" maxOccurs="9999"/>
+			<xs:element name="ActiveBorderTransportMeans" type="ActiveBorderTransportMeansType75" minOccurs="0"/>
+			<xs:element name="TransportDocument" type="TransportDocumentType75" minOccurs="0" maxOccurs="99"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TransportEquipmentType75">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="containerIdentificationNumber" type="ContainerIdentificationNumberContentType" minOccurs="0"/>
+			<xs:element name="numberOfSeals" type="NumberOfSealsContentType" minOccurs="0"/>
+			<xs:element name="Seal" type="SealType75" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="GoodsReference" type="GoodsReferenceType75" minOccurs="0" maxOccurs="999"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SealType75">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="identifier" type="IdentifierContentType01" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsReferenceType75">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="declarationGoodsItemNumber" type="DeclarationGoodsItemNumberContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ActiveBorderTransportMeansType75">
+		<xs:sequence>
+			<xs:element name="typeOfIdentification" type="TypeOfIdentificationContentType" minOccurs="0"/>
+			<xs:element name="identificationNumber" type="IdentificationNumberContentType01" minOccurs="0"/>
+			<xs:element name="nationality" type="NationalityContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TransportDocumentType75">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="type" type="TypeContentType01" minOccurs="0"/>
+			<xs:element name="referenceNumber" type="ReferenceNumberContentType01" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsItemType75">
+		<xs:sequence>
+			<xs:element name="declarationGoodsItemNumber" type="DeclarationGoodsItemNumberContentType"/>
+			<xs:element name="referenceNumberUCR" type="ReferenceNumberUCRContentType01" minOccurs="0"/>
+			<xs:element name="Commodity" type="CommodityType75" minOccurs="0"/>
+			<xs:element name="Packaging" type="PackagingType75" minOccurs="0" maxOccurs="99"/>
+			<xs:element name="TransportDocument" type="TransportDocumentType75" minOccurs="0" maxOccurs="99"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CommodityType75">
+		<xs:sequence>
+			<xs:element name="GoodsMeasure" type="GoodsMeasureType75" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoodsMeasureType75">
+		<xs:sequence>
+			<xs:element name="grossMass" type="GrossMassContentType" minOccurs="0"/>
+			<xs:element name="netMass" type="NetMassContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PackagingType75">
+		<xs:sequence>
+			<xs:element name="sequenceNumber" type="SequenceNumberContentType"/>
+			<xs:element name="typeOfPackages" type="TypeOfPackagesContentType" minOccurs="0"/>
+			<xs:element name="numberOfPackages" type="NumberOfPackagesContentType" minOccurs="0"/>
+			<xs:element name="shippingMarks" type="ShippingMarksContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--==========================================================-->
+	<!--===== Respuesta CCCSEC					                  -->
+	<!--==========================================================-->
+	<xs:complexType name="DatosRespuestaCorrectaTypeCSEC">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="CSVCertificadoSalida">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVDeclaracionElectronica">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--==========================================================-->
+	<!--===== Respuesta CCDOCC										                                     -->
+	<!--==========================================================-->
+	<xs:complexType name="DatosRespuestaCorrectaTypeDOC">
+		<xs:sequence>
+			<xs:element name="MRN" type="MRNContentType01"/>
+			<xs:element name="CSVDeclaracionElectronica">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="estadoAES">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVDocumentos" type="CSVDocumentosDOC" maxOccurs="9"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CSVDocumentosDOC">
+		<xs:sequence>
+			<xs:element name="numeroReferencia">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="35"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="CSVDocumentoDigitalizado">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="25"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

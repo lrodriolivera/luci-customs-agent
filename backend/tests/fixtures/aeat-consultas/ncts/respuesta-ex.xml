@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><CCTRACV2Sal xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CCTRACV2Sal.xsd" Id="20261116081351051033">
+	<messageSender>NTA.ES</messageSender>
+	<messageRecipient></messageRecipient>
+	<preparationDateAndTime>2026-11-16T08:13:51</preparationDateAndTime>
+	<messageIdentification>20261116081351051033</messageIdentification>
+	<messageType>RETRAC</messageType>
+	<ControlRespuesta>
+		<tipoRespuesta>EX</tipoRespuesta>
+	</ControlRespuesta>
+	<XMLError>
+		<errorLineNumber>1</errorLineNumber>
+		<errorColumnNumber>1</errorColumnNumber>
+		<errorPointer>0</errorPointer>
+		<errorCode>18</errorCode>
+		<errorText>103 - No se ha encontrado la etiqueta de inicio. NameSpace:https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CCTRACV2Ent.xsd - LocalPart:CCTRACV2Ent</errorText>
+	</XMLError>
+</CCTRACV2Sal>
+
+</env:Body></env:Envelope>

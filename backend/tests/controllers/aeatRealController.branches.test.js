@@ -545,27 +545,23 @@ describe('aeatRealController - ramas sin cubrir', () => {
       expect(res.status).toBe(200);
       expect(res.body.data.success).toBe(false);
 
-      // Línea 684: if (result.success) → false, no se llama a _analyzeStatusWithLuci
-      expect(mockStatusMonitor._analyzeStatusWithLuci).not.toHaveBeenCalled();
+      expect(res.body.data.error).toBe('MRN no encontrado en AEAT');
     });
 
-    test('SÍ analiza con LUCI cuando result.success=true', async () => {
+    test('devuelve el análisis LUCI que ya trae la consulta (no llama a un método inexistente del monitor)', async () => {
       mockAeatRealService.queryDeclarationStatus.mockResolvedValue({
-        success: true,
-        data: { status: 'accepted', mrn: '26ES123' }
-      });
-
-      mockStatusMonitor._analyzeStatusWithLuci.mockResolvedValue({
-        message: 'Todo OK'
+        success: true, status: 'RELEASED', channel: 'green', luciAnalysis: { status: 'RELEASED' }, rawResponse: '<CCAESCV1Sal/>'
       });
 
       const res = await request(app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
-        .get('/r/26ES123')
-        .query({ certificateAlias: 'FNMT-STRIX' });
+        .get('/r/26ES002801100321B8')
+        .query({ certificateAlias: 'FNMT-STRIX', declarationType: 'AES' });
 
       expect(res.status).toBe(200);
-      expect(mockStatusMonitor._analyzeStatusWithLuci).toHaveBeenCalled();
-      expect(res.body.data.luciAnalysis.message).toBe('Todo OK');
+      expect(mockStatusMonitor._analyzeStatusWithLuci).not.toHaveBeenCalled();
+      expect(res.body.data.status).toBe('RELEASED');
+      expect(res.body.data.luciAnalysis.status).toBe('RELEASED');
+      expect(res.body.data).not.toHaveProperty('rawResponse');
     });
   });
 
@@ -959,25 +955,20 @@ describe('aeatRealController - ramas sin cubrir', () => {
   // Línea 680
   // ============================================
   describe('getDeclarationStatus - declarationType por defecto', () => {
-    test('usa H1 como declarationType por defecto cuando no se pasa', async () => {
-      mockAeatRealService.queryDeclarationStatus.mockResolvedValue({
-        success: true,
-        data: { status: 'accepted' }
-      });
-
-      mockStatusMonitor._analyzeStatusWithLuci.mockResolvedValue({
-        message: 'OK'
-      });
+    test('usa H1 como declarationType por defecto y pasa los argumentos en su orden', async () => {
+      mockAeatRealService.queryDeclarationStatus.mockResolvedValue({ success: true, status: 'ACCEPTED' });
 
       await request(app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
         .get('/r/26ES123')
         .query({ certificateAlias: 'FNMT-STRIX' });
 
-      // Línea 680: declarationType || 'H1'
+      // queryDeclarationStatus(mrn, declarationType, certificateId, password, opciones)
       expect(mockAeatRealService.queryDeclarationStatus).toHaveBeenCalledWith(
         '26ES123',
+        'H1',
         'FNMT-STRIX',
-        'H1'
+        undefined,
+        { tenantId: String(USER_A.tenantId) }
       );
     });
   });

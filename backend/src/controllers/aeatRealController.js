@@ -775,24 +775,23 @@ const getDeclarationStatus = async (req, res) => {
       });
     }
 
+    // Firma: (mrn, declarationType, certificateId, password, opciones). Antes se
+    // pasaba el alias como tipo y ninguna consulta llegaba a la AEAT. El tenant
+    // da el remitente de las consultas oficiales AES/NCTS. El análisis LUCI ya
+    // viene en el resultado (el monitor no tiene _analyzeStatusWithLuci).
     const result = await aeatRealService.queryDeclarationStatus(
       mrn,
+      declarationType || 'H1',
       certificateAlias,
-      declarationType || 'H1'
+      undefined,
+      { tenantId: req.user?.tenantId ? String(req.user.tenantId) : null }
     );
-
-    // Análisis inteligente del estado con LUCI
-    if (result.success) {
-      const luciAnalysis = await aeatStatusMonitorService._analyzeStatusWithLuci(
-        mrn,
-        result.data
-      );
-      result.luciAnalysis = luciAnalysis;
-    }
+    // La respuesta cruda de la AEAT se queda en el servidor (logs de aeatTransport).
+    const { rawResponse, ...data } = result || {};
 
     res.json({
       success: true,
-      data: result
+      data
     });
 
   } catch (error) {

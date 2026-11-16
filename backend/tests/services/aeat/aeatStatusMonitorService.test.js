@@ -426,6 +426,55 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
       expect(r.error).toBe('timeout AEAT');
     });
 
+    test('pasa el tenant del seguimiento a la consulta (remitente AES/NCTS)', async () => {
+      await svc.trackDeclaration('26ES002801100321B8', 'AES', { tenantId: 'tenant-7' });
+      aeatRealService.queryDeclarationStatus.mockResolvedValue({
+        success: true, status: 'RELEASED', channel: 'green', messages: ['DS: Despachada directa']
+      });
+      await svc.refreshDeclarationStatus('26ES002801100321B8', 'cert', 'pass', 'tenant-7');
+      expect(aeatRealService.queryDeclarationStatus).toHaveBeenCalledWith(
+        '26ES002801100321B8', 'AES', 'cert', 'pass', { tenantId: 'tenant-7' }
+      );
+    });
+
+    test('guarda el detalle oficial de la AEAT (estado, circuito, fechas, CSV)', async () => {
+      await svc.trackDeclaration('26ES002801501441J7', 'NCTS', { tenantId: 'tenant-7' });
+      aeatRealService.queryDeclarationStatus.mockResolvedValue({
+        success: true, status: 'RELEASED', channel: 'green', messages: [],
+        estado: 'DE', estadoTexto: 'Despachado', circuito: 'V', csv: 'CSV1',
+        fechas: { levante: '2026-11-16', limiteLlegada: '2026-11-22' }, rawResponse: '<xml/>'
+      });
+      const r = await svc.refreshDeclarationStatus('26ES002801501441J7', 'cert', 'pass', 'tenant-7');
+      expect(r.tracking.currentStatus).toBe('RELEASED');
+      expect(r.tracking.aeat).toEqual({
+        estado: 'DE', estadoTexto: 'Despachado', circuito: 'V', csv: 'CSV1', final: false,
+        fechas: { levante: '2026-11-16', limiteLlegada: '2026-11-22' }
+      });
+      expect(JSON.stringify(r.tracking)).not.toContain('<xml/>');
+    });
+
+    test('una exportación con levante pero sin salida sigue en el polling; con salida efectiva, no', async () => {
+      aeatRealService.queryDeclarationStatus.mockResolvedValue({
+        success: true, status: 'RELEASED', channel: 'green', messages: [], estado: 'DS', final: false, fechas: {}
+      });
+      await svc.trackDeclaration('26ES002801100321B8', 'AES', {});
+      await svc.refreshDeclarationStatus('26ES002801100321B8', 'cert', 'pass');
+      svc.pollingConfig.enabled = true;
+      svc._delay = jest.fn().mockResolvedValue();
+      aeatRealService.queryDeclarationStatus.mockClear();
+      await svc._pollAllDeclarations();
+      expect(aeatRealService.queryDeclarationStatus).toHaveBeenCalledTimes(1);
+
+      aeatRealService.queryDeclarationStatus.mockResolvedValue({
+        success: true, status: 'RELEASED', channel: 'green', messages: [], estado: 'SA', final: true, fechas: {}
+      });
+      await svc.refreshDeclarationStatus('26ES002801100321B8', 'cert', 'pass');
+      aeatRealService.queryDeclarationStatus.mockClear();
+      await svc._pollAllDeclarations();
+      expect(aeatRealService.queryDeclarationStatus).not.toHaveBeenCalled();
+      svc.pollingConfig.enabled = false;
+    });
+
     test('captura excepciones del servicio real', async () => {
       await svc.trackDeclaration('MRN-THROW', 'H1', {});
       aeatRealService.queryDeclarationStatus.mockRejectedValue(new Error('conexion caida'));

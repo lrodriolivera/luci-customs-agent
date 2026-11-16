@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CCTRACV2Ent.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CCTRACV2Ent.xsd" targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CCTRACV2Ent.xsd" elementFormDefault="qualified">
+	<xs:include schemaLocation="ES_CCTRAC_v515.xsd"/>
+	<xs:element name="CCTRACV2Ent" type="CCTRACV2Ent"/>
+	<xs:complexType name="CCTRACV2Ent">
+		<xs:sequence>
+			<xs:element name="CCTRAC" type="CCTRACType"/>
+		</xs:sequence>
+		<xs:attribute name="Id" use="required">
+			<xs:annotation>
+				<xs:documentation>Identificador de transacción		</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="40"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+</xs:schema>

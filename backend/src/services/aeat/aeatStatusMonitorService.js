@@ -357,12 +357,14 @@ class AEATStatusMonitorService extends EventEmitter {
     try {
       logger.info(`StatusMonitor: Actualizando estado de ${mrn}`);
 
-      // Consultar estado en AEAT
+      // Consultar estado en AEAT. El tenant del seguimiento da el remitente de
+      // las consultas oficiales AES/NCTS (messageSender = NIF del firmante).
       const result = await aeatRealService.queryDeclarationStatus(
         mrn,
         tracking.type,
         certificateId,
-        password
+        password,
+        { tenantId: tracking.tenantId || tenantId || null }
       );
 
       if (result.success) {
@@ -373,6 +375,17 @@ class AEATStatusMonitorService extends EventEmitter {
         tracking.lastChecked = new Date().toISOString();
         tracking.currentStatus = result.status;
         tracking.channel = result.channel || tracking.channel;
+        // Detalle de la consulta oficial (AES/NCTS), sin la respuesta cruda.
+        if (result.estado !== undefined) {
+          tracking.aeat = {
+            estado: result.estado,
+            estadoTexto: result.estadoTexto || null,
+            circuito: result.circuito || null,
+            csv: result.csv || null,
+            final: result.final === true,
+            fechas: result.fechas || {}
+          };
+        }
 
         // Agregar al historial
         tracking.statusHistory.push({
@@ -863,8 +876,13 @@ class AEATStatusMonitorService extends EventEmitter {
     logger.info(`StatusMonitor: Polling ${declarations.length} declaraciones`);
 
     for (const tracking of declarations) {
-      // No consultar declaraciones completadas
-      if (tracking.currentStatus === 'RELEASED' || tracking.currentStatus === 'REJECTED') {
+      // No consultar declaraciones completadas. Con la consulta oficial (AES/NCTS)
+      // manda `aeat.final`: un levante (DE/DS) es RELEASED pero aun puede acabar
+      // en salida efectiva, salida parada o no levante.
+      const completada = tracking.aeat
+        ? tracking.aeat.final === true
+        : (tracking.currentStatus === 'RELEASED' || tracking.currentStatus === 'REJECTED');
+      if (completada) {
         continue;
       }
 

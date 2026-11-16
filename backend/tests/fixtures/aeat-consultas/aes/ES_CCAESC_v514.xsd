@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="51.6.0">
+	<!--==========================================================-->
+	<!--===== Includes                                            -->
+	<!--==========================================================-->
+	<xs:include schemaLocation="ES_ctypes_v514.xsd"/>
+	<!--==========================================================-->
+	<!--===== Root Element                                        -->
+	<!--==========================================================-->
+	<xs:element name="CCAESC" type="CCAESCType"/>
+	<!--==========================================================-->
+	<!--===== Root Element Content                                -->
+	<!--==========================================================-->
+	<xs:complexType name="CCAESCType">
+		<xs:sequence>
+			<xs:group ref="MESSAGE"/>
+			<xs:element name="ExportOperation" type="ConsultaExportacionType"/>
+		</xs:sequence>
+		<xs:attribute name="PhaseID" type="phaseIDtype"/>
+	</xs:complexType>
+</xs:schema>
