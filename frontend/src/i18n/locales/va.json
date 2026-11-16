@@ -562,6 +562,7 @@
       "export_license": "Llicència d'exportació",
       "ce_certificate": "Certificat CE",
       "quality_certificate": "Certificat de qualitat",
+      "customs_payment_receipt": "Justificant de pagament (model 031)",
       "other": "Altre"
     },
     "descriptionTooShort": "La descripció ha de tenir almenys {{min}} caràcters per classificar-la",
@@ -2043,8 +2044,18 @@
       "howToPay": "Paga amb el model 031 en la Seu de l'AEAT i puja'ns el justificant en Documents.",
       "payLink": "Com pagar en la Seu de l'AEAT",
       "waiting": "Quedem a l'espera del justificant de pagament per a obtindre l'alçament.",
-      "error": "No s'ha pogut guardar la forma de pagament"
-    }
+      "error": "No s'ha pogut guardar la forma de pagament",
+      "form031": "Dades per a pagar amb el model 031",
+      "reference": "Referència del deute (MRN)",
+      "amount": "Import",
+      "importerNif": "NIF de l'importador",
+      "deadline": "Data límit de pagament",
+      "downloadH1": "Descarregar l'H1 definitiu (PDF)",
+      "downloadError": "No s'ha pogut descarregar l'H1 definitiu",
+      "uploadReceipt": "Pujar el justificant de pagament",
+      "receiptReceived": "Justificant de pagament rebut el {{fecha}}. Quedem a l'espera de l'alçament."
+    },
+    "docPaymentReceipt031": "Justificant de pagament (model 031)"
   },
   "landing": {
     "features": "Funcions",

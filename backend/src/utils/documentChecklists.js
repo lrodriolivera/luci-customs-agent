@@ -137,6 +137,13 @@ const DOCUMENT_DEFINITIONS = {
     description: 'Certificacion de calidad del producto',
     requiredFor: [],
     conditions: 'Segun requisitos del cliente'
+  },
+
+  // Pago de los tributos
+  customs_payment_receipt: {
+    name: 'Justificante de pago (modelo 031)',
+    description: 'Pago previo al levante de los tributos del H1',
+    requiredFor: []
   }
 };
 

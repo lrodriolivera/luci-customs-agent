@@ -562,6 +562,7 @@
       "export_license": "Licencia de exportación",
       "ce_certificate": "Certificado CE",
       "quality_certificate": "Certificado de calidad",
+      "customs_payment_receipt": "Justificante de pago (modelo 031)",
       "other": "Otro"
     },
     "descriptionTooShort": "La descripción debe tener al menos {{min}} caracteres para clasificarla",
@@ -2044,8 +2045,18 @@
       "howToPay": "Paga con el modelo 031 en la Sede de la AEAT y súbenos el justificante en Documentos.",
       "payLink": "Cómo pagar en la Sede de la AEAT",
       "waiting": "Quedamos a la espera del justificante de pago para la obtención del levante.",
-      "error": "No se pudo guardar la forma de pago"
-    }
+      "error": "No se pudo guardar la forma de pago",
+      "form031": "Datos para pagar con el modelo 031",
+      "reference": "Referencia de la deuda (MRN)",
+      "amount": "Importe",
+      "importerNif": "NIF del importador",
+      "deadline": "Fecha límite de pago",
+      "downloadH1": "Descargar el H1 definitivo (PDF)",
+      "downloadError": "No se pudo descargar el H1 definitivo",
+      "uploadReceipt": "Subir el justificante de pago",
+      "receiptReceived": "Justificante de pago recibido el {{fecha}}. Quedamos a la espera del levante."
+    },
+    "docPaymentReceipt031": "Justificante de pago (modelo 031)"
   },
   "landing": {
     "features": "Funciones",

@@ -562,6 +562,7 @@
       "export_license": "Licenza di esportazione",
       "ce_certificate": "Certificato CE",
       "quality_certificate": "Certificato di qualità",
+      "customs_payment_receipt": "Ricevuta di pagamento (modello 031)",
       "other": "Altro"
     },
     "descriptionTooShort": "La descrizione deve avere almeno {{min}} caratteri per essere classificata",
@@ -2043,8 +2044,18 @@
       "howToPay": "Paga con il modello 031 sulla sede dell'AEAT e caricaci la ricevuta in Documenti.",
       "payLink": "Come pagare sulla sede dell'AEAT",
       "waiting": "Restiamo in attesa della ricevuta di pagamento per ottenere lo svincolo.",
-      "error": "Impossibile salvare la modalità di pagamento"
-    }
+      "error": "Impossibile salvare la modalità di pagamento",
+      "form031": "Dati per pagare con il modello 031",
+      "reference": "Riferimento del debito (MRN)",
+      "amount": "Importo",
+      "importerNif": "NIF dell'importatore",
+      "deadline": "Data limite di pagamento",
+      "downloadH1": "Scarica l'H1 definitivo (PDF)",
+      "downloadError": "Impossibile scaricare l'H1 definitivo",
+      "uploadReceipt": "Carica la ricevuta di pagamento",
+      "receiptReceived": "Ricevuta di pagamento ricevuta il {{fecha}}. Siamo in attesa dello svincolo."
+    },
+    "docPaymentReceipt031": "Ricevuta di pagamento (modello 031)"
   },
   "landing": {
     "features": "Funzionalita",

@@ -1,15 +1,34 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { portalAPI } from '../../services/api'
 import { hrefSeguro } from '../../utils/url'
 
 const euros = (v) => Number(v).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const fecha = (v) => {
+  const d = new Date(v)
+  return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleDateString('es-ES')
+}
+
+/** Guarda en el equipo del cliente el PDF que devuelve el portal. */
+function guardarPdf(blob, nombre) {
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = nombre
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  window.URL.revokeObjectURL(url)
+}
 
 /**
  * Pago de los tributos de aduana del H1, en el portal del cliente (UAT
  * 16/Nov/2026). Antes de presentar, el cliente elige: R (pago aplazado con la
  * garantia de su agente de aduanas) o A (pago previo al levante con el modelo
- * 031). Con A y el H1 admitido, ve el importe que liquido la AEAT y como pagarlo.
+ * 031). Con A y el H1 admitido, ve el importe que liquido la AEAT, descarga el
+ * H1 definitivo, tiene los datos para rellenar el 031 y sube el justificante de
+ * pago, que la agente necesita para obtener el levante.
  *
  * @param {{ token: string, pago: object|null }} props - `pago` es `expedition.pagoTributos`
  */
@@ -18,7 +37,21 @@ export default function PortalPagoTributos({ token, pago }) {
   const [estado, setEstado] = useState(pago)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
+  const [descargando, setDescargando] = useState(false)
   if (!estado) return null
+
+  const descargarH1 = async () => {
+    setDescargando(true)
+    setError(null)
+    try {
+      const respuesta = await portalAPI.downloadH1Definitivo(token)
+      guardarPdf(new Blob([respuesta.data], { type: 'application/pdf' }), `H1_${estado.mrn || 'definitivo'}.pdf`)
+    } catch (e) {
+      setError(t('portal.taxPayment.downloadError'))
+    } finally {
+      setDescargando(false)
+    }
+  }
 
   const elegir = async (paymentMethod) => {
     setGuardando(true)
@@ -80,6 +113,51 @@ export default function PortalPagoTributos({ token, pago }) {
             {t('portal.taxPayment.payLink')}
           </a>
           <p className="mt-2">{t('portal.taxPayment.waiting')}</p>
+        </div>
+      )}
+
+      {estado.modelo031 && (
+        <div role="group" aria-label={t('portal.taxPayment.form031')} className="mt-3 rounded-lg border border-gray-200 p-3 text-sm">
+          <p className="font-medium text-gray-900 mb-2">{t('portal.taxPayment.form031')}</p>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+            <div>
+              <dt className="text-xs text-gray-500">{t('portal.taxPayment.reference')}</dt>
+              <dd className="font-mono text-gray-900 break-all">{estado.modelo031.referencia}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-gray-500">{t('portal.taxPayment.amount')}</dt>
+              <dd className="text-gray-900">{euros(estado.modelo031.importe)} €</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-gray-500">{t('portal.taxPayment.importerNif')}</dt>
+              <dd className="text-gray-900">{estado.modelo031.nifImportador || '—'}</dd>
+            </div>
+            {estado.modelo031.limiteDePago && (
+              <div>
+                <dt className="text-xs text-gray-500">{t('portal.taxPayment.deadline')}</dt>
+                <dd className="text-gray-900">{fecha(estado.modelo031.limiteDePago)}</dd>
+              </div>
+            )}
+          </dl>
+        </div>
+      )}
+
+      {(estado.h1Definitivo || estado.pendientePago) && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+          {estado.h1Definitivo && (
+            <button type="button" onClick={descargarH1} disabled={descargando} className="btn-secondary">
+              {t('portal.taxPayment.downloadH1')}
+            </button>
+          )}
+          {estado.pendientePago && (estado.justificante ? (
+            <p className="text-green-700">
+              {t('portal.taxPayment.receiptReceived', { fecha: estado.justificante.subidoEn ? fecha(estado.justificante.subidoEn) : '—' })}
+            </p>
+          ) : (
+            <Link to={`/portal/${encodeURIComponent(token)}/documents?tipo=customs_payment_receipt`} className="btn-primary">
+              {t('portal.taxPayment.uploadReceipt')}
+            </Link>
+          ))}
         </div>
       )}
 

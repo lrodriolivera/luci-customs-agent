@@ -15,8 +15,10 @@ vi.mock('react-i18next', () => ({
 }))
 
 let outletContext = {}
+let busqueda = ''
 vi.mock('react-router-dom', () => ({
-  useOutletContext: () => outletContext
+  useOutletContext: () => outletContext,
+  useSearchParams: () => [new URLSearchParams(busqueda)]
 }))
 
 // Capturamos el onDrop real que PortalDocuments pasa a useDropzone para
@@ -42,6 +44,7 @@ import { portalAPI } from '../../services/api'
 describe('PortalDocuments', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    busqueda = ''
   })
 
   it('anuncia una importacion como importacion', () => {
@@ -139,5 +142,42 @@ describe('PortalDocuments', () => {
     const [, formDataEnviado] = portalAPI.uploadDocument.mock.calls[0]
     expect(formDataEnviado.get('file')).toBe(file)
     expect(formDataEnviado.get('document')).toBeNull()
+  })
+
+  // UAT 16/Nov/2026: con pago previo al levante (A) y el H1 presentado, el
+  // cliente sube aqui el justificante de pago del modelo 031.
+  describe('justificante de pago del modelo 031', () => {
+    const conPagoPrevio = { operationType: 'import', pagoTributos: { paymentMethod: 'A', mrn: '26ES1', pendientePago: true } }
+
+    it('solo se ofrece con pago previo al levante y el H1 presentado', () => {
+      outletContext = { expedition: { operationType: 'import', pagoTributos: { paymentMethod: 'R', mrn: '26ES1' } }, token: 'tok' }
+      const { unmount } = render(<PortalDocuments />)
+      expect(screen.queryByRole('button', { name: 'portal.docPaymentReceipt031' })).not.toBeInTheDocument()
+      unmount()
+
+      outletContext = { expedition: conPagoPrevio, token: 'tok' }
+      render(<PortalDocuments />)
+      expect(screen.getByRole('button', { name: 'portal.docPaymentReceipt031' })).toBeInTheDocument()
+    })
+
+    it('llegando desde la sección de pago (?tipo=) ya viene elegido y se sube con ese tipo', async () => {
+      outletContext = { expedition: conPagoPrevio, token: 'tok' }
+      busqueda = 'tipo=customs_payment_receipt'
+      portalAPI.uploadDocument.mockResolvedValue({ data: { success: true } })
+
+      render(<PortalDocuments />)
+      expect(screen.getByRole('button', { name: 'portal.docPaymentReceipt031' }).className).toContain('border-luci')
+
+      const file = new File(['pago'], 'justificante.pdf', { type: 'application/pdf' })
+      await act(async () => { await capturedOnDrop([file]) })
+      expect(portalAPI.uploadDocument.mock.calls[0][1].get('documentType')).toBe('customs_payment_receipt')
+    })
+
+    it('un ?tipo= que no está en la lista no preselecciona nada', () => {
+      outletContext = { expedition: { operationType: 'import' }, token: 'tok' }
+      busqueda = 'tipo=customs_payment_receipt'
+      render(<PortalDocuments />)
+      expect(screen.getByText('portal.selectFirst')).toBeInTheDocument()
+    })
   })
 })

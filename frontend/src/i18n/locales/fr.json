@@ -562,6 +562,7 @@
       "export_license": "Licence d'exportation",
       "ce_certificate": "Certificat CE",
       "quality_certificate": "Certificat de qualité",
+      "customs_payment_receipt": "Justificatif de paiement (modèle 031)",
       "other": "Autre"
     },
     "descriptionTooShort": "La description doit comporter au moins {{min}} caractères pour être classée",
@@ -2043,8 +2044,18 @@
       "howToPay": "Payez avec le formulaire 031 sur le site de l'AEAT et déposez le justificatif dans Documents.",
       "payLink": "Comment payer sur le site de l'AEAT",
       "waiting": "Nous attendons le justificatif de paiement pour obtenir la mainlevée.",
-      "error": "Impossible d'enregistrer le mode de paiement"
-    }
+      "error": "Impossible d'enregistrer le mode de paiement",
+      "form031": "Données pour payer avec le modèle 031",
+      "reference": "Référence de la dette (MRN)",
+      "amount": "Montant",
+      "importerNif": "NIF de l'importateur",
+      "deadline": "Date limite de paiement",
+      "downloadH1": "Télécharger le H1 définitif (PDF)",
+      "downloadError": "Impossible de télécharger le H1 définitif",
+      "uploadReceipt": "Envoyer le justificatif de paiement",
+      "receiptReceived": "Justificatif de paiement reçu le {{fecha}}. Nous attendons la mainlevée."
+    },
+    "docPaymentReceipt031": "Justificatif de paiement (modèle 031)"
   },
   "landing": {
     "features": "Fonctionnalites",

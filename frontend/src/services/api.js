@@ -358,6 +358,8 @@ export const portalAPI = {
   access: (token) => api.get(`/api/portal/${seg(token)}`),
   // El cliente elige como paga los tributos del H1 (R garantia del agente / A modelo 031).
   setPaymentMethod: (token, paymentMethod) => api.put(`/api/portal/${seg(token)}/forma-de-pago`, { paymentMethod }),
+  // H1 admitido por la AEAT con su liquidacion y los datos del modelo 031 (PDF).
+  downloadH1Definitivo: (token) => api.get(`/api/portal/${seg(token)}/h1-definitivo`, { responseType: 'blob' }),
   uploadDocument: (token, formData) => api.post(
     `/api/portal/${seg(token)}/documents`,
     formData,
