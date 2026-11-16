@@ -742,4 +742,31 @@ describe('H7DeclarationDetail', () => {
     expect(screen.getAllByText('0.00 €').length).toBeGreaterThan(0)
     expect(screen.getAllByText('0.00 kg').length).toBeGreaterThan(0)
   })
+
+  test('muestra los identificadores del producto (AEAT) y en borrador permite completarlos', async () => {
+    h7API.get.mockResolvedValue({ data: { data: mockDeclaration } })
+    render(<H7DeclarationDetail />)
+    await screen.findByText('H7-2026-001')
+    expect(screen.getByText('h7.productIds.sectionTitle')).toBeDefined()
+    expect(screen.getByText('h7.productIds.missingBanner')).toBeDefined()
+    expect(screen.getAllByRole('button', { name: 'h7.productIds.save' }).length).toBe(1)
+  })
+
+  test('muestra la liquidacion de la AEAT (A00, F00, B00) cuando la hay', async () => {
+    h7API.get.mockResolvedValue({ data: { data: {
+      ...mockDeclaration,
+      status: 'released',
+      duties: {
+        tariff: { rate: 0, amount: 3 }, vat: { rate: 21, amount: 3.57 }, totalDue: 8.57,
+        aeatTaxes: [{ taxType: 'A00', amount: 3 }, { taxType: 'F00', amount: 2 }, { taxType: 'B00', amount: 3.57 }],
+        aeatTotal: 8.57
+      }
+    } } })
+    render(<H7DeclarationDetail />)
+    await screen.findByText('H7-2026-001')
+    expect(screen.getByText('h7.aeatTaxes.F00')).toBeDefined()
+    expect(screen.getByText('2.00 €')).toBeDefined()
+    expect(screen.getByText('h7.aeatTaxes.liquidatedByAeat')).toBeDefined()
+    expect(screen.getByText('8.57 €')).toBeDefined()
+  })
 })

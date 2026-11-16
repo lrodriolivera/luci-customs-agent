@@ -266,6 +266,7 @@ export default function ManifestUploader({ onClose, onCreated }) {
                   <div>
                     <p className="text-sm font-medium text-gray-700">Plantilla CSV</p>
                     <p className="text-xs text-gray-500">Descarga la plantilla con las columnas esperadas</p>
+                    <p className="text-xs text-gray-500">{t('h7.productIds.manifestHint', 'Para presentar el H7, la AEAT exige por articulo las columnas sku (C127) y ref_fabricante (C128); ean (C129) es opcional.')}</p>
                   </div>
                 </div>
                 <button

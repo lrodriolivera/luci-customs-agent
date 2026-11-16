@@ -1300,7 +1300,39 @@
     "statusDraftLabel": "Borrador",
     "statusSubmittedLabel": "Enviada",
     "iossPaidLabel": "IOSS pagado",
-    "searchLabel": "Buscar"
+    "searchLabel": "Buscar",
+    "productIds": {
+      "sectionTitle": "Identificadores del producto (AEAT)",
+      "taricLabel": "Código NC/TARIC (8 o 10 cifras) *",
+      "commercialId": "Identificador comercial (C127) *",
+      "manufacturerRef": "Referencia del fabricante (C128) *",
+      "gtin": "Código EAN/GTIN (C129)",
+      "gtinHelp": "Opcional. Si el producto no tiene código EAN/GTIN, LUCI declara Y081 (no existe identificador normalizado del fabricante).",
+      "y081": "Y081 (sin EAN/GTIN)",
+      "errorTaric8": "Artículo {{n}}: el código NC/TARIC debe tener 8 o 10 cifras",
+      "errorMissingIds": "Artículo {{n}}: falta el identificador comercial (C127) o la referencia del fabricante (C128)",
+      "errorGtin": "Artículo {{n}}: el EAN/GTIN debe tener 8, 12, 13 o 14 cifras",
+      "missingBanner": "Faltan identificadores del producto: la AEAT rechaza el H7 sin el identificador comercial (C127) y la referencia del fabricante (C128) en cada partida.",
+      "save": "Guardar identificadores",
+      "saved": "Identificadores guardados",
+      "saveError": "No se pudieron guardar los identificadores",
+      "manifestHint": "Para presentar el H7, la AEAT exige por artículo las columnas sku (C127) y ref_fabricante (C128); ean (C129) es opcional.",
+      "taricCode": "Código NC/TARIC"
+    },
+    "ioss": {
+      "title": "Autorización IOSS",
+      "authRef": "Autorización esporádica IOSS (documento 1014)",
+      "authWarning": "Sin autorización global de la AEAT para usar este IOSS (relación H7DEIO), indica el documento 1014 de autorización esporádica. En representación directa solo vale la autorización global.",
+      "save": "Guardar autorización",
+      "saved": "Autorización IOSS guardada",
+      "saveError": "No se pudo guardar la autorización IOSS"
+    },
+    "aeatTaxes": {
+      "liquidatedByAeat": "Liquidado por la AEAT",
+      "A00": "A00 · Derecho de aduana",
+      "F00": "F00 · Tasa de la Unión (UHF)",
+      "B00": "B00 · IVA"
+    }
   },
   "channels": {
     "title": "Dashboard de Circuitos",

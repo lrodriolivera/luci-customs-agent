@@ -90,3 +90,76 @@ describe('buildAltaH7V1XML — esquema oficial AltaH7V1Ent', () => {
     expect(xml).toMatch(/<declarationGoodsItemNumber>2<\/declarationGoodsItemNumber>/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Rechazos reales de la AEAT en PRE (16/Nov/2026), guía H7 v3.23
+// ---------------------------------------------------------------------------
+describe('buildAltaH7V1XML — commodityCode de 8 cifras (error 2101)', () => {
+  it('recorta un TARIC de 10 cifras a las 8 de la NC', () => {
+    const xml = buildAltaH7V1XML(minimalData({ partidas: [
+      { descripcion: 'Libro', taricCode: '4901990000', valorFactura: 10, pesobruto: 0.3, bultos: 1,
+        identificadorComercial: 'SKU-1', referenciaFabricante: 'REF-1' }
+    ]}));
+    expect(xml).toMatch(/<commodityCode>49019900<\/commodityCode>/);
+  });
+
+  it('lanza un error claro si el código tiene menos de 8 cifras', () => {
+    expect(() => buildAltaH7V1XML(minimalData({ partidas: [
+      { descripcion: 'Libro', taricCode: '490199', valorFactura: 10, pesobruto: 0.3 }
+    ]}))).toThrow(/Partida 1.*8 cifras/);
+  });
+});
+
+describe('buildAltaH7V1XML — identificadores de producto por partida (error 1353)', () => {
+  const conIds = (extra = {}) => minimalData({ additionalProcedureCode: 'F53', partidas: [{
+    descripcion: 'Libro', taricCode: '49019900', valorFactura: 10, pesobruto: 0.3, bultos: 1,
+    identificadorComercial: 'SKU-LIBRO-1', referenciaFabricante: 'EDT-77', ...extra
+  }]});
+  const goodsItem = (xml) => xml.match(/<GoodsItem>[\s\S]*<\/GoodsItem>/)[0];
+
+  it('emite C127 y C128 como SupportingDocument de la partida, tras numberOfPackages', () => {
+    const gi = goodsItem(buildAltaH7V1XML(conIds()));
+    expect(gi).toMatch(/<numberOfPackages>1<\/numberOfPackages>\s*<SupportingDocument>\s*<suppDoctype>C127<\/suppDoctype>\s*<suppDoctRefNum>SKU-LIBRO-1<\/suppDoctRefNum>\s*<\/SupportingDocument>\s*<SupportingDocument>\s*<suppDoctype>C128<\/suppDoctype>\s*<suppDoctRefNum>EDT-77<\/suppDoctRefNum>/);
+  });
+
+  it('sin C129 envía Y081 como AdditionalReference (con addRefNum) después de los documentos', () => {
+    const gi = goodsItem(buildAltaH7V1XML(conIds()));
+    expect(gi).not.toMatch(/C129/);
+    expect(gi).toMatch(/<\/SupportingDocument>\s*<AdditionalReference>\s*<addRefType>Y081<\/addRefType>\s*<addRefNum>[^<]+<\/addRefNum>\s*<\/AdditionalReference>\s*<\/GoodsItem>/);
+  });
+
+  it('con C129 lo envía como SupportingDocument y no envía Y081', () => {
+    const gi = goodsItem(buildAltaH7V1XML(conIds({ codigoNormalizado: '9788420412146' })));
+    expect(gi).toMatch(/<suppDoctype>C129<\/suppDoctype>\s*<suppDoctRefNum>9788420412146<\/suppDoctRefNum>/);
+    expect(gi).not.toMatch(/Y081/);
+    expect(gi).not.toMatch(/AdditionalReference/);
+  });
+
+  it('no declara C127/C128/C129/Y081 en cabecera (C321, desde 15/03/2027 prohibido)', () => {
+    const xml = buildAltaH7V1XML(conIds());
+    const cabecera = xml.split('<GoodsItem>')[0];
+    expect(cabecera).not.toMatch(/C127|C128|C129|Y081/);
+  });
+
+  it('solo C129 (sin C127/C128) no emite Y081 aunque un valor contenga "C127"', () => {
+    const gi = goodsItem(buildAltaH7V1XML(conIds({ identificadorComercial: '', referenciaFabricante: '', codigoNormalizado: 'C127' })));
+    expect(gi).not.toMatch(/Y081/);
+  });
+
+  it('escapa los caracteres especiales de los identificadores', () => {
+    const gi = goodsItem(buildAltaH7V1XML(conIds({ identificadorComercial: 'A&B<1>' })));
+    expect(gi).toMatch(/<suppDoctRefNum>A&amp;B&lt;1&gt;<\/suppDoctRefNum>/);
+  });
+});
+
+describe('buildAltaH7V1XML — IOSS (F48, error 1306)', () => {
+  it('emite AdditionalFiscalRef con VATId y después Role, entre referenceNumberUCR y AdditionalProcedure', () => {
+    const xml = buildAltaH7V1XML(minimalData({ iossNumber: 'IM1234567890' }));
+    expect(xml).not.toMatch(/AdditionalFiscalReference/);
+    expect(xml).toMatch(/<\/referenceNumberUCR>\s*<AdditionalFiscalRef>\s*<additionalFiscalRefVATId>IM1234567890<\/additionalFiscalRefVATId>\s*<additionalFiscalRefRole>FR5<\/additionalFiscalRefRole>\s*<\/AdditionalFiscalRef>\s*<AdditionalProcedure>/);
+  });
+
+  it('sin IOSS no emite AdditionalFiscalRef', () => {
+    expect(buildAltaH7V1XML(minimalData())).not.toMatch(/AdditionalFiscalRef/);
+  });
+});

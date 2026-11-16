@@ -1299,7 +1299,39 @@
     "statusDraftLabel": "Bozza",
     "statusSubmittedLabel": "Inviata",
     "iossPaidLabel": "IOSS pagato",
-    "searchLabel": "Cerca"
+    "searchLabel": "Cerca",
+    "productIds": {
+      "sectionTitle": "Identificativi del prodotto (AEAT)",
+      "taricLabel": "Codice NC/TARIC (8 o 10 cifre) *",
+      "commercialId": "Identificativo commerciale (C127) *",
+      "manufacturerRef": "Riferimento del fabbricante (C128) *",
+      "gtin": "Codice EAN/GTIN (C129)",
+      "gtinHelp": "Facoltativo. Se il prodotto non ha codice EAN/GTIN, LUCI dichiara Y081 (non esiste un identificativo standard del fabbricante).",
+      "y081": "Y081 (senza EAN/GTIN)",
+      "errorTaric8": "Articolo {{n}}: il codice NC/TARIC deve avere 8 o 10 cifre",
+      "errorMissingIds": "Articolo {{n}}: manca l'identificativo commerciale (C127) o il riferimento del fabbricante (C128)",
+      "errorGtin": "Articolo {{n}}: l'EAN/GTIN deve avere 8, 12, 13 o 14 cifre",
+      "missingBanner": "Mancano gli identificativi del prodotto: l'AEAT respinge l'H7 senza l'identificativo commerciale (C127) e il riferimento del fabbricante (C128) per ogni articolo.",
+      "save": "Salva identificativi",
+      "saved": "Identificativi salvati",
+      "saveError": "Impossibile salvare gli identificativi",
+      "manifestHint": "Per presentare l'H7, l'AEAT richiede per ogni articolo le colonne sku (C127) e ref_fabricante (C128); ean (C129) è facoltativo.",
+      "taricCode": "Codice NC/TARIC"
+    },
+    "ioss": {
+      "title": "Autorizzazione IOSS",
+      "authRef": "Autorizzazione IOSS occasionale (documento 1014)",
+      "authWarning": "Senza un'autorizzazione globale dell'AEAT per usare questo IOSS (elenco H7DEIO), indica il documento 1014 di autorizzazione occasionale. In rappresentanza diretta vale solo l'autorizzazione globale.",
+      "save": "Salva autorizzazione",
+      "saved": "Autorizzazione IOSS salvata",
+      "saveError": "Impossibile salvare l'autorizzazione IOSS"
+    },
+    "aeatTaxes": {
+      "liquidatedByAeat": "Liquidato dall'AEAT",
+      "A00": "A00 · Dazio doganale",
+      "F00": "F00 · Tassa dell'Unione (UHF)",
+      "B00": "B00 · IVA"
+    }
   },
   "channels": {
     "title": "Dashboard dei Circuiti",

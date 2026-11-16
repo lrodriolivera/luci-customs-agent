@@ -51,8 +51,12 @@ function fillMinimalValidForm(container) {
   const itemDescription = screen.getByPlaceholderText('Ej: Funda movil silicona')
   fireEvent.change(itemDescription, { target: { value: 'Product description' } })
 
-  const itemTaric = screen.getByPlaceholderText('392690')
-  fireEvent.change(itemTaric, { target: { value: '392690' } })
+  const itemTaric = screen.getByPlaceholderText('39269097')
+  fireEvent.change(itemTaric, { target: { value: '39269097' } })
+
+  // Identificadores del producto exigidos por la AEAT (C127, C128)
+  fireEvent.change(screen.getByPlaceholderText('SKU-12345'), { target: { value: 'SKU-1' } })
+  fireEvent.change(screen.getByPlaceholderText('REF-FAB-001'), { target: { value: 'FAB-1' } })
 
   // netWeight (step="0.001")
   const itemNetWeight = container.querySelector('input[type="number"][step="0.001"]')
@@ -272,7 +276,7 @@ describe('H7DirectForm', () => {
 
     it('actualiza taricCode de un item correctamente', () => {
       render(<H7DirectForm />)
-      const input = screen.getByPlaceholderText('392690')
+      const input = screen.getByPlaceholderText('39269097')
       fireEvent.change(input, { target: { value: '123456' } })
       expect(input.value).toBe('123456')
     })
@@ -375,7 +379,7 @@ describe('H7DirectForm', () => {
       const itemDescription = screen.getByPlaceholderText('Ej: Funda movil silicona')
       fireEvent.change(itemDescription, { target: { value: 'Item' } })
 
-      const itemTaric = screen.getByPlaceholderText('392690')
+      const itemTaric = screen.getByPlaceholderText('39269097')
       fireEvent.change(itemTaric, { target: { value: '123456' } })
 
       const itemNetWeight = container.querySelector('input[type="number"][step="0.001"]')
@@ -411,7 +415,7 @@ describe('H7DirectForm', () => {
       const itemDescription = screen.getByPlaceholderText('Ej: Funda movil silicona')
       fireEvent.change(itemDescription, { target: { value: 'Item' } })
 
-      const itemTaric = screen.getByPlaceholderText('392690')
+      const itemTaric = screen.getByPlaceholderText('39269097')
       fireEvent.change(itemTaric, { target: { value: '123456' } })
 
       const itemNetWeight = container.querySelector('input[type="number"][step="0.001"]')
@@ -446,7 +450,7 @@ describe('H7DirectForm', () => {
       const itemDescription = screen.getByPlaceholderText('Ej: Funda movil silicona')
       fireEvent.change(itemDescription, { target: { value: 'Item' } })
 
-      const itemTaric = screen.getByPlaceholderText('392690')
+      const itemTaric = screen.getByPlaceholderText('39269097')
       fireEvent.change(itemTaric, { target: { value: '123456' } })
 
       const itemNetWeight = container.querySelector('input[type="number"][step="0.001"]')
@@ -481,7 +485,7 @@ describe('H7DirectForm', () => {
       const itemDescription = screen.getByPlaceholderText('Ej: Funda movil silicona')
       fireEvent.change(itemDescription, { target: { value: 'Item' } })
 
-      const itemTaric = screen.getByPlaceholderText('392690')
+      const itemTaric = screen.getByPlaceholderText('39269097')
       fireEvent.change(itemTaric, { target: { value: '123456' } })
 
       const itemNetWeight = container.querySelector('input[type="number"][step="0.001"]')
@@ -517,7 +521,7 @@ describe('H7DirectForm', () => {
       fireEvent.change(recipientStreetInput, { target: { value: 'Street' } })
 
       // Item sin description
-      const itemTaric = screen.getByPlaceholderText('392690')
+      const itemTaric = screen.getByPlaceholderText('39269097')
       fireEvent.change(itemTaric, { target: { value: '123456' } })
 
       const itemNetWeight = container.querySelector('input[type="number"][step="0.001"]')
@@ -569,7 +573,7 @@ describe('H7DirectForm', () => {
       const itemDescription = screen.getByPlaceholderText('Ej: Funda movil silicona')
       fireEvent.change(itemDescription, { target: { value: 'Item' } })
 
-      const itemTaric = screen.getByPlaceholderText('392690')
+      const itemTaric = screen.getByPlaceholderText('39269097')
       fireEvent.change(itemTaric, { target: { value: '123456' } })
 
       const itemNetWeight = container.querySelector('input[type="number"][step="0.001"]')
@@ -613,7 +617,10 @@ describe('H7DirectForm', () => {
       expect(payload.recipient.address.street).toBe('Main St 123')
       expect(payload.items.length).toBe(1)
       expect(payload.items[0].description).toBe('Product description')
-      expect(payload.items[0].taricCode).toBe('392690')
+      expect(payload.items[0].taricCode).toBe('39269097')
+      expect(payload.items[0].commercialId).toBe('SKU-1')
+      expect(payload.items[0].manufacturerRef).toBe('FAB-1')
+      expect(payload.items[0].gtin).toBeUndefined()
 
       await waitFor(() => {
         expect(toast.success).toHaveBeenCalledWith('H7 creada correctamente')
@@ -902,6 +909,104 @@ describe('H7DirectForm', () => {
 
       const submitButton = screen.getByRole('button', { name: /Crear declaracion H7/i })
       expect(submitButton.disabled).toBe(false)
+    })
+  })
+
+  describe('Reglas AEAT de la partida (NC de 8 cifras, C127/C128/C129)', () => {
+    it('rechaza un código de menos de 8 cifras sin llamar a la API', async () => {
+      const { container } = render(<H7DirectForm />)
+      fillMinimalValidForm(container)
+      fireEvent.change(screen.getByPlaceholderText('39269097'), { target: { value: '392690' } })
+      fireEvent.submit(container.querySelector('form'))
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('h7.productIds.errorTaric8')
+      })
+      expect(h7API.create).not.toHaveBeenCalled()
+    })
+
+    it('exige el identificador comercial (C127)', async () => {
+      const { container } = render(<H7DirectForm />)
+      fillMinimalValidForm(container)
+      fireEvent.change(screen.getByPlaceholderText('SKU-12345'), { target: { value: '  ' } })
+      fireEvent.submit(container.querySelector('form'))
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('h7.productIds.errorMissingIds')
+      })
+      expect(h7API.create).not.toHaveBeenCalled()
+    })
+
+    it('exige la referencia del fabricante (C128)', async () => {
+      const { container } = render(<H7DirectForm />)
+      fillMinimalValidForm(container)
+      fireEvent.change(screen.getByPlaceholderText('REF-FAB-001'), { target: { value: '' } })
+      fireEvent.submit(container.querySelector('form'))
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('h7.productIds.errorMissingIds')
+      })
+      expect(h7API.create).not.toHaveBeenCalled()
+    })
+
+    it('rechaza un EAN/GTIN con formato inválido', async () => {
+      const { container } = render(<H7DirectForm />)
+      fillMinimalValidForm(container)
+      fireEvent.change(screen.getByPlaceholderText('8412345678905'), { target: { value: '12AB' } })
+      fireEvent.submit(container.querySelector('form'))
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('h7.productIds.errorGtin')
+      })
+      expect(h7API.create).not.toHaveBeenCalled()
+    })
+
+    it('envía el EAN/GTIN si se informa', async () => {
+      h7API.create.mockResolvedValue({ data: { success: true, data: { _id: 'h7-9' } } })
+      const { container } = render(<H7DirectForm />)
+      fillMinimalValidForm(container)
+      fireEvent.change(screen.getByPlaceholderText('8412345678905'), { target: { value: '8412345678905' } })
+      fireEvent.submit(container.querySelector('form'))
+      await waitFor(() => expect(h7API.create).toHaveBeenCalledTimes(1))
+      expect(h7API.create.mock.calls[0][0].items[0].gtin).toBe('8412345678905')
+    })
+
+    it('explica que sin EAN/GTIN se declara Y081', () => {
+      render(<H7DirectForm />)
+      expect(screen.getByText('h7.productIds.gtinHelp')).toBeDefined()
+    })
+  })
+
+  describe('IOSS: autorizacion esporadica (1014)', () => {
+    it('sin IOSS no muestra el campo ni el aviso', () => {
+      render(<H7DirectForm />)
+      expect(screen.queryByText('h7.ioss.authWarning')).toBeNull()
+    })
+
+    it('con IOSS y sin 1014 avisa de que hace falta la autorizacion global o el 1014', () => {
+      const { container } = render(<H7DirectForm />)
+      fireEvent.change(container.querySelector('input[name="iossNumber"]'), { target: { value: 'IM1234567890' } })
+      expect(screen.getByText('h7.ioss.authWarning')).toBeDefined()
+      fireEvent.change(container.querySelector('input[name="iossAuthorizationRef"]'), { target: { value: 'ESIOSS2026000001' } })
+      expect(screen.queryByText('h7.ioss.authWarning')).toBeNull()
+    })
+
+    it('envia la referencia del 1014 junto al IOSS', async () => {
+      h7API.create.mockResolvedValue({ data: { success: true, data: { _id: 'h7-io' } } })
+      const { container } = render(<H7DirectForm />)
+      fillMinimalValidForm(container)
+      fireEvent.change(container.querySelector('input[name="iossNumber"]'), { target: { value: 'IM1234567890' } })
+      fireEvent.change(container.querySelector('input[name="iossAuthorizationRef"]'), { target: { value: ' ESIOSS2026000001 ' } })
+      fireEvent.submit(container.querySelector('form'))
+      await waitFor(() => expect(h7API.create).toHaveBeenCalledTimes(1))
+      const payload = h7API.create.mock.calls[0][0]
+      expect(payload.iossNumber).toBe('IM1234567890')
+      expect(payload.iossAuthorizationRef).toBe('ESIOSS2026000001')
+    })
+
+    it('sin IOSS no envia referencia 1014', async () => {
+      h7API.create.mockResolvedValue({ data: { success: true, data: { _id: 'h7-x' } } })
+      const { container } = render(<H7DirectForm />)
+      fillMinimalValidForm(container)
+      fireEvent.submit(container.querySelector('form'))
+      await waitFor(() => expect(h7API.create).toHaveBeenCalledTimes(1))
+      expect(h7API.create.mock.calls[0][0].iossAuthorizationRef).toBeUndefined()
     })
   })
 })

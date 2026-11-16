@@ -1300,7 +1300,39 @@
     "statusDraftLabel": "Draft",
     "statusSubmittedLabel": "Submitted",
     "iossPaidLabel": "IOSS paid",
-    "searchLabel": "Search"
+    "searchLabel": "Search",
+    "productIds": {
+      "sectionTitle": "Product identifiers (AEAT)",
+      "taricLabel": "CN/TARIC code (8 or 10 digits) *",
+      "commercialId": "Commercial product ID (C127) *",
+      "manufacturerRef": "Manufacturer reference (C128) *",
+      "gtin": "EAN/GTIN code (C129)",
+      "gtinHelp": "Optional. If the product has no EAN/GTIN code, LUCI declares Y081 (no standard manufacturer identifier exists).",
+      "y081": "Y081 (no EAN/GTIN)",
+      "errorTaric8": "Item {{n}}: the CN/TARIC code must have 8 or 10 digits",
+      "errorMissingIds": "Item {{n}}: the commercial product ID (C127) or the manufacturer reference (C128) is missing",
+      "errorGtin": "Item {{n}}: the EAN/GTIN must have 8, 12, 13 or 14 digits",
+      "missingBanner": "Product identifiers are missing: AEAT rejects the H7 without the commercial product ID (C127) and the manufacturer reference (C128) on every item.",
+      "save": "Save identifiers",
+      "saved": "Identifiers saved",
+      "saveError": "The identifiers could not be saved",
+      "manifestHint": "To lodge the H7, AEAT requires the sku (C127) and ref_fabricante (C128) columns for each item; ean (C129) is optional.",
+      "taricCode": "CN/TARIC code"
+    },
+    "ioss": {
+      "title": "IOSS authorisation",
+      "authRef": "Sporadic IOSS authorisation (document 1014)",
+      "authWarning": "Without a global AEAT authorisation to use this IOSS (H7DEIO list), enter document 1014 for a sporadic authorisation. Under direct representation only the global authorisation is valid.",
+      "save": "Save authorisation",
+      "saved": "IOSS authorisation saved",
+      "saveError": "The IOSS authorisation could not be saved"
+    },
+    "aeatTaxes": {
+      "liquidatedByAeat": "Assessed by AEAT",
+      "A00": "A00 · Customs duty",
+      "F00": "F00 · Union handling fee (UHF)",
+      "B00": "B00 · VAT"
+    }
   },
   "channels": {
     "title": "Channel Dashboard",

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { h7API } from '../../services/api'
 import toast from 'react-hot-toast'
 import EU2026382Banner from './EU2026382Banner'
+import { errorDePartidasAeat } from './h7AeatRules'
 import {
   PlusIcon,
   TrashIcon,
@@ -49,7 +50,11 @@ const EMPTY_ITEM = {
   unitValue: '',
   totalValue: '',
   netWeight: '',
-  countryOfOrigin: 'CN'
+  countryOfOrigin: 'CN',
+  // Identificadores del producto que la AEAT exige por partida (guia H7 v3.23, R23 nota [4])
+  commercialId: '',     // C127 (obligatorio)
+  manufacturerRef: '',  // C128 (obligatorio)
+  gtin: ''              // C129 EAN/GTIN (opcional; si falta se declara Y081)
 }
 
 export default function H7DirectForm() {
@@ -70,6 +75,7 @@ export default function H7DirectForm() {
     garantiaGRN: '',
     // IOSS
     iossNumber: '',
+    iossAuthorizationRef: '', // documento 1014 (autorizacion esporadica IOSS)
     ecommercePlatform: '',
     // Remitente
     senderName: '',
@@ -138,6 +144,8 @@ export default function H7DirectForm() {
     if (items.some(i => !i.description || !i.taricCode || !i.netWeight)) return toast.error('Complete todos los campos de los articulos')
     if (intrinsicValue > 150) return toast.error('Valor intrinseco excede 150 EUR (usar H1)')
     if (intrinsicValue <= 0) return toast.error('El valor debe ser mayor que 0')
+    const errorAeat = errorDePartidasAeat(items, t)
+    if (errorAeat) return toast.error(errorAeat)
 
     setSubmitting(true)
     try {
@@ -158,6 +166,7 @@ export default function H7DirectForm() {
         },
         garantiaGRN: form.garantiaGRN || undefined,
         iossNumber: form.iossNumber || undefined,
+        iossAuthorizationRef: (form.iossNumber && form.iossAuthorizationRef.trim()) || undefined,
         vatPrepaid: !!form.iossNumber,
         ecommercePlatform: form.ecommercePlatform || undefined,
         sender: {
@@ -190,7 +199,10 @@ export default function H7DirectForm() {
           unitValue: parseFloat(item.unitValue) || 0,
           totalValue: parseFloat(item.totalValue) || 0,
           netWeight: parseFloat(item.netWeight) || 0,
-          countryOfOrigin: item.countryOfOrigin || 'CN'
+          countryOfOrigin: item.countryOfOrigin || 'CN',
+          commercialId: item.commercialId.trim(),
+          manufacturerRef: item.manufacturerRef.trim(),
+          gtin: item.gtin.trim() || undefined
         })),
         totals: {
           intrinsicValue: parseFloat(intrinsicValue.toFixed(2)),
@@ -280,6 +292,12 @@ export default function H7DirectForm() {
               <label className={labelClass}>IOSS (si aplica)</label>
               <input name="iossNumber" value={form.iossNumber} onChange={handleChange} className={inputClass} placeholder="IM1234567890" />
             </div>
+            {form.iossNumber && (
+              <div>
+                <label htmlFor="h7-ioss-auth-ref" className={labelClass}>{t('h7.ioss.authRef', 'Autorizacion esporadica IOSS (documento 1014)')}</label>
+                <input id="h7-ioss-auth-ref" name="iossAuthorizationRef" value={form.iossAuthorizationRef} onChange={handleChange} className={inputClass} placeholder="ESIOSS2026000001" maxLength={70} />
+              </div>
+            )}
             <div>
               <label className={labelClass}>Plataforma e-commerce</label>
               <select name="ecommercePlatform" value={form.ecommercePlatform} onChange={handleChange} className={inputClass}>
@@ -294,6 +312,12 @@ export default function H7DirectForm() {
               </select>
             </div>
           </div>
+
+          {form.iossNumber && !form.iossAuthorizationRef.trim() && (
+            <p role="alert" className="mt-3 text-xs rounded-lg border border-amber-200 bg-amber-50 text-amber-800 p-2">
+              {t('h7.ioss.authWarning', 'Sin autorizacion global de la AEAT para usar este IOSS (relacion H7DEIO), indica el documento 1014 de autorizacion esporadica. En representacion directa solo vale la autorizacion global.')}
+            </p>
+          )}
 
           {/* N337 */}
           <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
@@ -430,8 +454,8 @@ export default function H7DirectForm() {
                   <input value={item.description} onChange={e => handleItemChange(idx, 'description', e.target.value)} className={inputClass} placeholder="Ej: Funda movil silicona" required />
                 </div>
                 <div>
-                  <label className={labelClass}>Codigo TARIC (6 dig) *</label>
-                  <input value={item.taricCode} onChange={e => handleItemChange(idx, 'taricCode', e.target.value)} className={inputClass} placeholder="392690" maxLength={10} required />
+                  <label className={labelClass}>{t('h7.productIds.taricLabel', 'Codigo NC/TARIC (8 o 10 cifras) *')}</label>
+                  <input value={item.taricCode} onChange={e => handleItemChange(idx, 'taricCode', e.target.value)} className={inputClass} placeholder="39269097" inputMode="numeric" minLength={8} maxLength={10} required />
                 </div>
                 <div>
                   <label className={labelClass}>Pais origen *</label>
@@ -454,6 +478,26 @@ export default function H7DirectForm() {
                   <input type="number" step="0.001" value={item.netWeight} onChange={e => handleItemChange(idx, 'netWeight', e.target.value)} className={inputClass} min={0} required />
                 </div>
               </div>
+              <fieldset className="mt-3 pt-3 border-t border-gray-200">
+                <legend className="text-xs font-semibold text-gray-700">{t('h7.productIds.sectionTitle', 'Identificadores del producto (AEAT)')}</legend>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-1">
+                  <div>
+                    <label htmlFor={`h7-item-${idx}-commercialId`} className={labelClass}>{t('h7.productIds.commercialId', 'Identificador comercial (C127) *')}</label>
+                    <input id={`h7-item-${idx}-commercialId`} value={item.commercialId} onChange={e => handleItemChange(idx, 'commercialId', e.target.value)} className={inputClass} placeholder="SKU-12345" maxLength={70} required />
+                  </div>
+                  <div>
+                    <label htmlFor={`h7-item-${idx}-manufacturerRef`} className={labelClass}>{t('h7.productIds.manufacturerRef', 'Referencia del fabricante (C128) *')}</label>
+                    <input id={`h7-item-${idx}-manufacturerRef`} value={item.manufacturerRef} onChange={e => handleItemChange(idx, 'manufacturerRef', e.target.value)} className={inputClass} placeholder="REF-FAB-001" maxLength={70} required />
+                  </div>
+                  <div>
+                    <label htmlFor={`h7-item-${idx}-gtin`} className={labelClass}>{t('h7.productIds.gtin', 'Codigo EAN/GTIN (C129)')}</label>
+                    <input id={`h7-item-${idx}-gtin`} value={item.gtin} onChange={e => handleItemChange(idx, 'gtin', e.target.value)} className={inputClass} placeholder="8412345678905" inputMode="numeric" maxLength={14} />
+                  </div>
+                </div>
+                {idx === 0 && (
+                  <p className="text-xs text-gray-500 mt-2">{t('h7.productIds.gtinHelp', 'Opcional. Si el producto no tiene codigo EAN/GTIN, LUCI declara Y081 (no existe identificador normalizado del fabricante).')}</p>
+                )}
+              </fieldset>
             </div>
           ))}
         </div>

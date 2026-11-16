@@ -1299,7 +1299,39 @@
     "statusDraftLabel": "Esborrany",
     "statusSubmittedLabel": "Enviada",
     "iossPaidLabel": "IOSS pagat",
-    "searchLabel": "Cercar"
+    "searchLabel": "Cercar",
+    "productIds": {
+      "sectionTitle": "Identificadors del producte (AEAT)",
+      "taricLabel": "Codi NC/TARIC (8 o 10 xifres) *",
+      "commercialId": "Identificador comercial (C127) *",
+      "manufacturerRef": "Referència del fabricant (C128) *",
+      "gtin": "Codi EAN/GTIN (C129)",
+      "gtinHelp": "Opcional. Si el producte no té codi EAN/GTIN, LUCI declara Y081 (no existeix identificador normalitzat del fabricant).",
+      "y081": "Y081 (sense EAN/GTIN)",
+      "errorTaric8": "Article {{n}}: el codi NC/TARIC ha de tenir 8 o 10 xifres",
+      "errorMissingIds": "Article {{n}}: falta l'identificador comercial (C127) o la referència del fabricant (C128)",
+      "errorGtin": "Article {{n}}: l'EAN/GTIN ha de tenir 8, 12, 13 o 14 xifres",
+      "missingBanner": "Falten identificadors del producte: l'AEAT rebutja l'H7 sense l'identificador comercial (C127) i la referència del fabricant (C128) a cada partida.",
+      "save": "Desa els identificadors",
+      "saved": "Identificadors desats",
+      "saveError": "No s'han pogut desar els identificadors",
+      "manifestHint": "Per presentar l'H7, l'AEAT exigeix per article les columnes sku (C127) i ref_fabricante (C128); ean (C129) és opcional.",
+      "taricCode": "Codi NC/TARIC"
+    },
+    "ioss": {
+      "title": "Autorització IOSS",
+      "authRef": "Autorització esporàdica IOSS (document 1014)",
+      "authWarning": "Sense autorització global de l'AEAT per utilitzar aquest IOSS (relació H7DEIO), indica el document 1014 d'autorització esporàdica. En representació directa només val l'autorització global.",
+      "save": "Desa l'autorització",
+      "saved": "Autorització IOSS desada",
+      "saveError": "No s'ha pogut desar l'autorització IOSS"
+    },
+    "aeatTaxes": {
+      "liquidatedByAeat": "Liquidat per l'AEAT",
+      "A00": "A00 · Dret de duana",
+      "F00": "F00 · Taxa de la Unió (UHF)",
+      "B00": "B00 · IVA"
+    }
   },
   "channels": {
     "title": "Dashboard de Circuits",

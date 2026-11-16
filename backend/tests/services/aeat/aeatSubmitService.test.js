@@ -88,7 +88,10 @@ function h7({ recipientTaxId = 'B99999999', ...rest } = {}) {
       email: 'imp@ejemplo.es',
       address: { street: 'Calle 1', city: 'Madrid', postalCode: '28001' }
     },
-    items: [{ description: 'Camiseta', taricCode: '6109100010', countryOfOrigin: 'CN', totalValue: 25 }],
+    items: [{
+      description: 'Camiseta', taricCode: '6109100010', countryOfOrigin: 'CN', totalValue: 25,
+      commercialId: 'SKU-CAM-1', manufacturerRef: 'FAB-CAM-1'
+    }],
     ...rest
   };
 }
@@ -602,10 +605,11 @@ describe('submitH7', () => {
     });
   });
 
-  describe('items opcionales', () => {
-    test('tolera declaracion sin items', async () => {
-      const r = await submitService.submitH7(h7({ items: undefined }), TENANT_STRIX);
-      expect(r.success).toBe(true);
+  describe('items', () => {
+    test('sin items no envia nada: 422 (la AEAT exige al menos un GoodsItem)', async () => {
+      await expect(submitService.submitH7(h7({ items: undefined }), TENANT_STRIX))
+        .rejects.toMatchObject({ status: 422, code: 'H7_DATOS_AEAT' });
+      expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
     });
 
     test('usa documentos explicitos de la partida si vienen', async () => {
@@ -613,6 +617,131 @@ describe('submitH7', () => {
       d.items[0].documentos = [{ tipo: 'N337', referencia: 'G4-123' }];
       const r = await submitService.submitH7(d, TENANT_STRIX);
       expect(r.success).toBe(true);
+    });
+  });
+
+  describe('reglas AEAT de la partida (rechazos 2101 y 1353 en PRE)', () => {
+    test('commodityCode con las 8 cifras de la NC', async () => {
+      await submitService.submitH7(h7(), TENANT_STRIX);
+      expect(soapEnviado()).toMatch(/<commodityCode>61091000<\/commodityCode>/);
+    });
+
+    test('lleva C127 y C128 de la partida y Y081 si no hay EAN/GTIN', async () => {
+      await submitService.submitH7(h7(), TENANT_STRIX);
+      const gi = soapEnviado().match(/<GoodsItem>[\s\S]*<\/GoodsItem>/)[0];
+      expect(gi).toMatch(/<suppDoctype>C127<\/suppDoctype>\s*<suppDoctRefNum>SKU-CAM-1</);
+      expect(gi).toMatch(/<suppDoctype>C128<\/suppDoctype>\s*<suppDoctRefNum>FAB-CAM-1</);
+      expect(gi).toMatch(/<addRefType>Y081<\/addRefType>/);
+    });
+
+    test('con EAN/GTIN envia C129 y no Y081', async () => {
+      const d = h7();
+      d.items[0].gtin = '8412345678905';
+      await submitService.submitH7(d, TENANT_STRIX);
+      expect(soapEnviado()).toMatch(/<suppDoctype>C129<\/suppDoctype>\s*<suppDoctRefNum>8412345678905</);
+      expect(soapEnviado()).not.toMatch(/Y081/);
+    });
+
+    test('sin C127/C128 no envia nada y dice que partida y que falta (422)', async () => {
+      const d = h7();
+      d.items[0].commercialId = '';
+      const err = await submitService.submitH7(d, TENANT_STRIX).catch(e => e);
+      expect(err).toMatchObject({ status: 422, code: 'H7_DATOS_AEAT' });
+      expect(err.message).toMatch(/Partida 1/);
+      expect(err.message).toMatch(/C127/);
+      expect(err.errors[0].code).toBe('H7_FALTA_C127');
+      expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
+    });
+
+    test('TARIC de 6 cifras: 422 sin enviar', async () => {
+      const d = h7();
+      d.items[0].taricCode = '610910';
+      await expect(submitService.submitH7(d, TENANT_STRIX)).rejects.toMatchObject({ status: 422 });
+      expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
+    });
+
+    test('F48 (IOSS) lleva AdditionalFiscalRef con el IOSS', async () => {
+      await submitService.submitH7(h7({ vatPrepaid: true, iossNumber: 'IM1234567890' }), TENANT_STRIX);
+      expect(soapEnviado()).toMatch(/<additionalProcedureCode>F48<\/additionalProcedureCode>/);
+      expect(soapEnviado()).toMatch(/<AdditionalFiscalRef>\s*<additionalFiscalRefVATId>IM1234567890</);
+    });
+
+    test('F48 indirecta con autorizacion esporadica: SupportingDocument 1014 en cabecera', async () => {
+      await submitService.submitH7(h7({ vatPrepaid: true, iossNumber: 'IM1234567890', iossAuthorizationRef: 'ESIOSS2026000001' }), TENANT_STRIX);
+      const cabecera = soapEnviado().split('<GoodsItem>')[0];
+      expect(cabecera).toMatch(/<Representative>\s*<status>3<\/status>/);
+      expect(cabecera).toMatch(/<SupportingDocument>\s*<suppDoctype>1014<\/suppDoctype>\s*<suppDoctRefNum>ESIOSS2026000001<\/suppDoctRefNum>/);
+    });
+
+    test('F48 en representacion directa nunca envia 1014 (la AEAT no lo admite)', async () => {
+      await submitService.submitH7(h7({
+        recipientTaxId: 'B22477020', vatPrepaid: true, iossNumber: 'IM1234567890', iossAuthorizationRef: 'ESIOSS2026000001'
+      }), TENANT_STRIX);
+      expect(soapEnviado()).toMatch(/<status>2<\/status>/);
+      expect(soapEnviado()).not.toMatch(/1014/);
+    });
+
+    test('F48 indirecta sin 1014 se envia igual (puede haber autorizacion global H7DEIO)', async () => {
+      const r = await submitService.submitH7(h7({ vatPrepaid: true, iossNumber: 'IM1234567890' }), TENANT_STRIX);
+      expect(r.success).toBe(true);
+      expect(soapEnviado()).not.toMatch(/<suppDoctype>1014</);
+    });
+
+    test('F53 no envia 1014 aunque haya referencia', async () => {
+      await submitService.submitH7(h7({ iossAuthorizationRef: 'ESIOSS2026000001' }), TENANT_STRIX);
+      expect(soapEnviado()).not.toMatch(/1014/);
+    });
+
+    test('F53 no lleva AdditionalFiscalRef', async () => {
+      await submitService.submitH7(h7(), TENANT_STRIX);
+      expect(soapEnviado()).not.toMatch(/AdditionalFiscalRef/);
+    });
+  });
+
+  describe('respuesta AltaH7V1Sal: liquidacion de la AEAT', () => {
+    const SAL = (impuestos) => `<env:Envelope><env:Body><h7:AltaH7V1Sal xmlns:h7="x">
+      <Response><responseCode>A</responseCode><operationCode>0</operationCode></Response>
+      <MRN>26ESH7A000072339R8</MRN><documentationRequired>N</documentationRequired>
+      <edeclarationCSVId>CSV123</edeclarationCSVId>${impuestos}</h7:AltaH7V1Sal></env:Body></env:Envelope>`;
+
+    test('recoge A00, F00 (tasa UHF) y B00 de CalculationOfTaxes y su total', async () => {
+      conRespuesta(SAL(`<CalculationOfTaxes><currencyCode>EUR</currencyCode>
+        <Tax><taxType>B00</taxType><payableTaxAmount>3.57</payableTaxAmount><taxBase>17</taxBase></Tax>
+        <Tax><taxType>A00</taxType><payableTaxAmount>3</payableTaxAmount><taxBase>1</taxBase></Tax>
+        <Tax><taxType>F00</taxType><payableTaxAmount>2</payableTaxAmount></Tax>
+        </CalculationOfTaxes><GoodsItem><declarationGoodsItemNumber>00001</declarationGoodsItemNumber>
+        <Tax><taxType>F00</taxType><ItemPayableTaxAmount><amount>2</amount></ItemPayableTaxAmount></Tax></GoodsItem>`));
+      const r = await submitService.submitH7(h7(), TENANT_STRIX);
+      expect(r.success).toBe(true);
+      expect(r.mrn).toBe('26ESH7A000072339R8');
+      expect(r.liquidacion).toEqual({
+        moneda: 'EUR',
+        tributos: [
+          { tipo: 'B00', importe: 3.57, base: 17 },
+          { tipo: 'A00', importe: 3, base: 1 },
+          { tipo: 'F00', importe: 2, base: null }
+        ],
+        total: 8.57
+      });
+    });
+
+    test('sin CalculationOfTaxes suma los Tax de las partidas por tipo', async () => {
+      conRespuesta(SAL(`<GoodsItem><Tax><taxType>F00</taxType><ItemTaxBase><amount>1</amount></ItemTaxBase>
+        <ItemPayableTaxAmount><amount>2</amount></ItemPayableTaxAmount></Tax>
+        <Tax><taxType>B00</taxType><ItemPayableTaxAmount><amount>0.17</amount></ItemPayableTaxAmount></Tax></GoodsItem>
+        <GoodsItem><Tax><taxType>B00</taxType><ItemPayableTaxAmount><amount>0.17</amount></ItemPayableTaxAmount></Tax></GoodsItem>`));
+      const r = await submitService.submitH7(h7(), TENANT_STRIX);
+      expect(r.liquidacion.tributos).toEqual([
+        { tipo: 'F00', importe: 2, base: 1 },
+        { tipo: 'B00', importe: 0.34, base: null }
+      ]);
+      expect(r.liquidacion.total).toBe(2.34);
+    });
+
+    test('sin tributos en la respuesta: liquidacion null', async () => {
+      conRespuesta(SAL(''));
+      const r = await submitService.submitH7(h7(), TENANT_STRIX);
+      expect(r.liquidacion).toBeNull();
     });
   });
 

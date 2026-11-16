@@ -195,7 +195,7 @@ describe('processManifest', () => {
     expect(r.h7Declarations).toHaveLength(1);
     const h7 = r.h7Declarations[0];
     expect(h7.trackingNumber).toBe('AA1');
-    expect(h7.items[0].taricCode).toBe('610910'); // hsCode recortado a 6
+    expect(h7.items[0].taricCode).toBe('61091000'); // NC de 8 cifras (la AEAT exige 8 en el H7)
     expect(h7.recipient.name).toBe('Juan Perez');
     expect(h7.sender.name).toBe('REMITENTE DESCONOCIDO'); // default
     expect(h7.sender.address.country).toBe('CN');         // default
@@ -267,5 +267,45 @@ describe('processManifest', () => {
                 'CC3,Camisa,30,';
     const r = await manifestService.processManifest(buf(csv));
     expect(r.summary).toMatchObject({ totalRows: 3, h7Ready: 1, h1Required: 1, errors: 1 });
+  });
+});
+
+describe('identificadores del producto (H7: C127, C128, C129)', () => {
+  test('mapea las columnas sku, ref_fabricante y ean a la partida', async () => {
+    fakeCallClaude.mockResolvedValue({ content: iaOk([{ line: 1, hsCode: '4901990000', eligible_h7: true }]) });
+    const csv = 'tracking,description,value,recipient,sku,ref_fabricante,ean\nAA1,Libro,12,Juan,SKU-1,EDT-77,9788420412146';
+    const r = await manifestService.processManifest(buf(csv));
+    expect(r.h7Declarations[0].items[0]).toMatchObject({
+      taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'EDT-77', gtin: '9788420412146'
+    });
+  });
+
+  test('reconoce gtin, mpn e identificador_comercial', () => {
+    const m = manifestService._mapHeaders(['gtin', 'mpn', 'identificador_comercial', 'referencia_fabricante']);
+    expect(m).toEqual({
+      gtin: 'gtin', mpn: 'manufacturerRef', identificador_comercial: 'commercialId', referencia_fabricante: 'manufacturerRef'
+    });
+  });
+
+  test('un codigo HS de 6 cifras se conserva tal cual (la presentacion pedira 8)', async () => {
+    fakeCallClaude.mockResolvedValue({ content: iaOk([{ line: 1, hsCode: '610910', eligible_h7: true }]) });
+    const r = await manifestService.processManifest(buf('tracking,description,value,recipient\nAA1,Camiseta,50,Juan'));
+    expect(r.h7Declarations[0].items[0].taricCode).toBe('610910');
+  });
+
+  test('el prompt de la IA pide el codigo NC de 8 cifras', async () => {
+    fakeCallClaude.mockResolvedValue({ content: iaOk([{ line: 1, hsCode: '61091000', eligible_h7: true }]) });
+    await manifestService.classifyWithAI([{ description: 'Camiseta', value: '10' }]);
+    expect(fakeCallClaude.mock.calls[0][2]).toMatch(/8 cifras/);
+  });
+
+  test('normaliza el EAN (Excel quita formato) y descarta uno inválido (irá Y081)', async () => {
+    fakeCallClaude.mockResolvedValue({ content: iaOk([
+      { line: 1, hsCode: '49019900', eligible_h7: true }, { line: 2, hsCode: '49019900', eligible_h7: true }
+    ]) });
+    const csv = 'tracking,description,value,recipient,ean\nAA1,Libro,12,Juan,978-8420-412146\nAA2,Libro,12,Ana,6.9012E+12';
+    const r = await manifestService.processManifest(buf(csv));
+    expect(r.h7Declarations[0].items[0].gtin).toBe('9788420412146');
+    expect(r.h7Declarations[1].items[0].gtin).toBeUndefined();
   });
 });

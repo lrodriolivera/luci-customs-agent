@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const manifestService = require('../services/manifestService');
+const { normalizarGtin } = require('../services/aeat/h7Identificadores');
 const { auth } = require('../middleware/auth');
 
 const upload = multer({
@@ -137,7 +138,11 @@ router.post('/create-h7-batch', async (req, res) => {
             },
             items: (decl.items || []).map(item => ({
               description: item.description || 'Mercancia general',
-              taricCode: (item.taricCode || '000000').padEnd(6, '0').substring(0, 6),
+              // Hasta 10 cifras: recortar a 6 dejaba el H7 sin el codigo NC de 8 que exige la AEAT.
+              taricCode: String(item.taricCode || '').replace(/\D/g, '').padEnd(6, '0').substring(0, 10),
+              commercialId: item.commercialId || undefined,
+              manufacturerRef: item.manufacturerRef || undefined,
+              gtin: normalizarGtin(item.gtin),
               quantity: parseInt(item.quantity) || 1,
               unitValue: parseFloat(item.unitValue) || 0,
               totalValue: parseFloat(item.totalValue) || parseFloat(item.unitValue) || 0,
@@ -186,9 +191,10 @@ router.post('/create-h7-batch', async (req, res) => {
 
 // GET /api/manifest/template - Download CSV template
 router.get('/template', (req, res) => {
-  const template = 'tracking,sender_name,sender_country,recipient_name,recipient_id,recipient_address,recipient_city,recipient_postal,description,quantity,value,weight\n';
-  const example = 'AWB-001,Shenzhen Electronics Ltd,CN,Juan Garcia,12345678A,Calle Mayor 10,Madrid,28001,Funda movil silicona,2,15.99,0.3\n';
-  const example2 = 'AWB-002,Tokyo Fashion Co,JP,Maria Lopez,87654321B,Av Diagonal 100,Barcelona,08001,Camiseta algodon estampada,1,29.99,0.2\n';
+  // sku (C127) y ref_fabricante (C128) son obligatorios para presentar el H7; ean (C129) es opcional.
+  const template = 'tracking,sender_name,sender_country,recipient_name,recipient_id,recipient_address,recipient_city,recipient_postal,description,quantity,value,weight,sku,ref_fabricante,ean\n';
+  const example = 'AWB-001,Shenzhen Electronics Ltd,CN,Juan Garcia,12345678A,Calle Mayor 10,Madrid,28001,Funda movil silicona,2,15.99,0.3,SZ-CASE-001,FM-SIL-22,6901234567892\n';
+  const example2 = 'AWB-002,Tokyo Fashion Co,JP,Maria Lopez,87654321B,Av Diagonal 100,Barcelona,08001,Camiseta algodon estampada,1,29.99,0.2,TF-TEE-778,TK-2026-T1,\n';
 
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="plantilla_manifiesto_h7.csv"');

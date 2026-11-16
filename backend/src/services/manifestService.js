@@ -3,6 +3,7 @@
  * Reads a cargo manifest (CSV/Excel), uses AI to classify goods,
  * and generates H7 declarations for each line item.
  */
+const { normalizarGtin } = require('./aeat/h7Identificadores');
 const { FAST } = require('../config/bedrockModels');
 const logger = require('../config/logger');
 
@@ -173,6 +174,17 @@ class ManifestService {
       'cod_arancel': 'hsCode', 'hs': 'hsCode', 'sa': 'hsCode',
       'nomenclatura': 'hsCode', 'cod_nc': 'hsCode',
 
+      // Identificadores del producto que la AEAT exige por partida en el H7
+      // (guia H7 v3.23, R23 nota [4]): C127 comercial, C128 fabricante, C129 EAN/GTIN.
+      'sku': 'commercialId', 'identificador_comercial': 'commercialId', 'id_comercial': 'commercialId',
+      'product_id': 'commercialId', 'id_producto': 'commercialId', 'seller_sku': 'commercialId',
+      'referencia_vendedor': 'commercialId', 'c127': 'commercialId',
+      'ref_fabricante': 'manufacturerRef', 'referencia_fabricante': 'manufacturerRef',
+      'manufacturer_ref': 'manufacturerRef', 'manufacturer_part_number': 'manufacturerRef',
+      'mpn': 'manufacturerRef', 'c128': 'manufacturerRef',
+      'ean': 'gtin', 'gtin': 'gtin', 'ean13': 'gtin', 'upc': 'gtin', 'codigo_barras': 'gtin',
+      'barcode': 'gtin', 'c129': 'gtin',
+
       // IOSS
       'ioss': 'iossNumber', 'ioss_number': 'iossNumber', 'numero_ioss': 'iossNumber',
       'ioss_id': 'iossNumber', 'cod_ioss': 'iossNumber',
@@ -249,11 +261,12 @@ class ManifestService {
         `${i + idx + 1}. "${r.description}" (origen: ${r.senderCountry || 'desconocido'}, valor: ${r.value || '?'} EUR)`
       ).join('\n');
 
-      const prompt = `Clasifica estas mercancias con codigo HS 6 digitos. Responde SOLO JSON array, sin markdown ni explicaciones.
+      // El H7 ante la AEAT exige el codigo NC de 8 cifras (commodityCode, error 2101 con 6 o 10).
+      const prompt = `Clasifica estas mercancias con su codigo de la Nomenclatura Combinada (NC) de 8 cifras. Responde SOLO JSON array, sin markdown ni explicaciones.
 
 ${descriptions}
 
-Formato exacto: [{"line":1,"hsCode":"610910","description_normalized":"Camisetas algodon","eligible_h7":true,"reason":""}]
+Formato exacto: [{"line":1,"hsCode":"61091000","description_normalized":"Camisetas algodon","eligible_h7":true,"reason":""}]
 Si valor>150EUR: eligible_h7=false, reason="Valor supera 150 EUR". Si restringida: eligible_h7=false con razon.`;
 
       try {
@@ -391,7 +404,11 @@ Si valor>150EUR: eligible_h7=false, reason="Valor supera 150 EUR". Si restringid
         },
         items: [{
           description: classification.description_normalized || row.description,
-          taricCode: (classification.hsCode || '000000').substring(0, 6),
+          // Hasta 10 cifras (TARIC); antes se recortaba a 6 y el H7 nunca llegaba a las 8 de la NC.
+          taricCode: (String(classification.hsCode || '').replace(/\D/g, '') || '000000').substring(0, 10),
+          commercialId: (row.commercialId || '').trim() || undefined,
+          manufacturerRef: (row.manufacturerRef || '').trim() || undefined,
+          gtin: normalizarGtin(row.gtin),
           quantity: parseInt(row.quantity) || 1,
           unitValue: value,
           totalValue: value,

@@ -1588,7 +1588,7 @@ const submitH7 = async (req, res) => {
     // Este envio NO esta conectado con la AEAT. Antes fabricaba un MRN al azar,
     // asignaba canal y concedia el levante sin haber presentado nada: un
     // despacho que no existe. Se rechaza sin tocar el expediente; el H7 se
-    // presenta por el servicio real (/api/aeat-real/declarations/h7/submit).
+    // presenta desde la pantalla del H7 (POST /api/h7/:id/submit -> AltaH7V1).
     logger.warn(`Envio de H7 desde el expediente rechazado: no conectado con la AEAT (${expedition.expeditionId})`);
     return res.status(501).json({
       success: false,
