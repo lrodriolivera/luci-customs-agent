@@ -188,8 +188,11 @@ const DeclarationSchema = new mongoose.Schema({
   declarationType: String, // A, B, C, D, E, F, X, Y, Z, U, V
   mrn: String, // Movement Reference Number
   lrn: String, // Local Reference Number
-  regime: String, // 40, 42, 44, 51, 53, etc.
-  additionalProcedure: String,
+  regime: String, // regimen solicitado (D.E. 1/10): 40, 42, 44, 51, 53, etc.
+  // Regimen precedente (D.E. 1/10, 2 cifras: 00, 51, 53, 71, 78...). Sin el, 00:
+  // los expedientes anteriores siguen como 40 + 00. Catalogo en config/regimenesH1.
+  previousRegime: { type: String, match: /^\d{2}$/ },
+  additionalProcedure: String, // regimen adicional (D.E. 1/11), 3 caracteres; '000' = ninguno
   preference: String, // 100, 200, 300, 400
   customsOffice: String,
   // Forma de pago del H1 de este expediente (A pago previo al levante, R pago

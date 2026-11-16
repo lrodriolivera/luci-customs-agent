@@ -79,7 +79,8 @@ describe('requisitos del H1', () => {
         freightAmount: null, freightCurrency: 'EUR', insuranceAmount: null, insuranceCurrency: 'EUR',
         transporteTrasLaEntrada: null, freightAfterEntryAmount: null, freightAfterEntryCurrency: 'EUR',
         otherAdjustments: [], codigosDeAjuste: expect.objectContaining({ AB: expect.any(String), AI: expect.any(String), BF: expect.any(String) }),
-        invoiceCurrency: 'EUR', invoiceCurrencyWithoutBce: false, appliedExchangeRate: null
+        invoiceCurrency: 'EUR', invoiceCurrencyWithoutBce: false, appliedExchangeRate: null,
+        procedure: '4000', additionalProcedure: ''
       },
       anulacion: { presentada: false, anulable: false },
       liquidacionAeat: null,
@@ -150,6 +151,75 @@ describe('datos del H1 en el expediente', () => {
     expect(res.body.error).toContain('dos letras');
     expect(res.body.error).toContain('autorización de despacho');
     expect(exp.save).not.toHaveBeenCalled();
+  });
+});
+
+describe('régimen y régimen adicional del H1 (catálogo oficial)', () => {
+  test('guarda una combinación con precedente: 40.71 queda como 40 + 71', async () => {
+    const exp = expediente({ declaration: { regime: '40', additionalProcedure: '000' } });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).put('/api/declarations/e1/h1/datos').send({ procedure: '40.71' });
+
+    expect(res.status).toBe(200);
+    expect(exp.declaration).toMatchObject({ regime: '40', previousRegime: '71' });
+    expect(res.body.data).toMatchObject({ procedure: '4071', additionalProcedure: '' });
+  });
+
+  test('lo guardado antes (solo «40») se lee como 40.00', async () => {
+    mockPreparar.mockResolvedValue({ requestXML: '<x/>' });
+    mockExpedition.findById.mockResolvedValue(expediente({ declaration: { regime: '40', additionalProcedure: '000' } }));
+
+    const res = await request(app()).get('/api/declarations/e1/h1/requisitos');
+
+    expect(res.body.data.datos).toMatchObject({ procedure: '4000', additionalProcedure: '' });
+  });
+
+  test('guarda un régimen adicional del catálogo en mayúsculas; vacío lo quita', async () => {
+    const exp = expediente({ declaration: { regime: '40' } });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).put('/api/declarations/e1/h1/datos').send({ additionalProcedure: 'c08' });
+    expect(res.status).toBe(200);
+    expect(exp.declaration.additionalProcedure).toBe('C08');
+    expect(res.body.data.additionalProcedure).toBe('C08');
+
+    await request(app()).put('/api/declarations/e1/h1/datos').send({ additionalProcedure: '' });
+    expect(exp.declaration.additionalProcedure).toBe('000');
+  });
+
+  test('rechaza con 400 un régimen o un adicional que no está en el catálogo, sin guardar', async () => {
+    const exp = expediente({ declaration: { regime: '40' } });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).put('/api/declarations/e1/h1/datos').send({ procedure: '4099', additionalProcedure: 'ZZZ' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/40\.99 no está entre las combinaciones admitidas en el H1/);
+    expect(res.body.error).toMatch(/ZZZ no está en la lista oficial/);
+    expect(exp.save).not.toHaveBeenCalled();
+    expect(exp.declaration).toEqual({ regime: '40' });
+  });
+
+  test('rechaza un régimen que no es texto', async () => {
+    mockExpedition.findById.mockResolvedValue(expediente());
+    const res = await request(app()).put('/api/declarations/e1/h1/datos').send({ procedure: { $gt: '' } });
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('catálogo del régimen para el H1 (solo lectura)', () => {
+  test('devuelve combinaciones, adicionales y fuentes', async () => {
+    const a = express();
+    a.get('/api/declarations/h1/catalogo-regimenes', declarationController.getH1RegimeCatalog);
+
+    const res = await request(a).get('/api/declarations/h1/catalogo-regimenes');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.combinaciones).toEqual(expect.arrayContaining([
+      expect.objectContaining({ codigo: '4000', descripcion: 'Despacho a libre práctica con despacho simultáneo a consumo de mercancías' })
+    ]));
+    expect(res.body.data.adicionales.length).toBeGreaterThan(100);
   });
 });
 

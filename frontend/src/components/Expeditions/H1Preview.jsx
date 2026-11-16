@@ -13,11 +13,18 @@ const isEmpty = (value) => value === undefined || value === null || value === ''
 
 const joinParts = (...parts) => parts.filter((p) => !isEmpty(p)).join(', ')
 
-/** «40.00», y « · adicional X» si hay un adicional distinto de 000/00. */
+/**
+ * «40.00 – Despacho a libre práctica…» (solicitado.precedente con la descripción
+ * oficial que pone el backend) y « · adicional X – …» si hay un adicional
+ * distinto de 000/00. Un H1 generado antes, sin descripción, muestra solo «40.00».
+ */
 const regimenComoTexto = (item) => {
-  const base = [item.requestedProcedure, item.previousProcedure].filter((p) => !isEmpty(p)).join('.')
+  const codigo = [item.requestedProcedure, item.previousProcedure].filter((p) => !isEmpty(p)).join('.')
+  const base = codigo && item.procedureDescription ? `${codigo} – ${item.procedureDescription}` : codigo
   const adicional = String(item.additionalProcedure || '').trim()
-  return adicional && !/^0+$/.test(adicional) ? `${base} · adicional ${adicional}` : base || undefined
+  if (!adicional || /^0+$/.test(adicional)) return base || undefined
+  const textoAdicional = item.additionalProcedureDescription ? `${adicional} – ${item.additionalProcedureDescription}` : adicional
+  return `${base} · adicional ${textoAdicional}`
 }
 
 const formatMass = (value) => (isEmpty(value) ? value : `${Number(value).toLocaleString('es-ES')} kg`)

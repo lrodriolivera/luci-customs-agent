@@ -7,8 +7,10 @@ const updateH1Data = vi.fn()
 const getH1Status = vi.fn()
 const cancelH1 = vi.fn()
 const activateH1 = vi.fn()
+const getH1RegimeCatalog = vi.fn()
 vi.mock('../../services/api', () => ({
   declarationsAPI: {
+    getH1RegimeCatalog: (...a) => getH1RegimeCatalog(...a),
     getH1Requirements: (...a) => getH1Requirements(...a), updateH1Data: (...a) => updateH1Data(...a),
     getH1Status: (...a) => getH1Status(...a), cancelH1: (...a) => cancelH1(...a), activateH1: (...a) => activateH1(...a)
   }
@@ -16,6 +18,22 @@ vi.mock('../../services/api', () => ({
 vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }))
 
 import H1DataCard from './H1DataCard'
+import { olvidarCatalogoRegimenesH1 } from './RegimenH1Campos'
+
+const CATALOGO = {
+  combinaciones: [
+    { codigo: '4000', solicitado: '40', precedente: '00', grupo: 'Despacho a libre práctica (columna H1 de la UE)', descripcion: 'Despacho a libre práctica con despacho simultáneo a consumo de mercancías', fuente: 'UE' },
+    { codigo: '4200', solicitado: '42', precedente: '00', grupo: 'Despacho a libre práctica (columna H1 de la UE)', descripcion: 'Despacho a consumo y a libre práctica de mercancías objeto de entrega exenta del IVA a otro Estado miembro', fuente: 'UE' },
+    { codigo: '4071', solicitado: '40', precedente: '71', grupo: 'Procedente de otro régimen', descripcion: 'Despacho a libre práctica con despacho simultáneo a consumo de mercancías · procedente de depósito aduanero', fuente: 'AEAT' },
+    { codigo: '7100', solicitado: '71', precedente: '00', grupo: 'Solo con destino Gibraltar', descripcion: 'Inclusión de mercancías en el régimen de depósito aduanero', fuente: 'AEAT', nota: 'La AEAT solo admite el 71 en el H1 con destino Gibraltar.' }
+  ],
+  adicionales: [
+    { codigo: 'C08', grupo: 'UE · Franquicias', descripcion: 'Envíos de particular a particular.', fuente: 'UE' },
+    { codigo: 'F48', grupo: 'UE · Otros', descripcion: 'Importación en el marco del régimen especial para las ventas a distancia.', fuente: 'UE' },
+    { codigo: '9OR', grupo: 'España · Pendencias (separata 37)', descripcion: 'Despacho provisional pendiente de presentar el certificado de origen', fuente: 'AEAT', nota: 'Genera una pendencia.' }
+  ],
+  fuentes: { regimen: 'Reglamento de Ejecución (UE) 2015/2447', adicionales: 'UE y AEAT' }
+}
 
 const respuesta = (extra = {}) => ({
   data: { data: {
@@ -31,6 +49,67 @@ describe('<H1DataCard />', () => {
     getH1Status.mockReset()
     cancelH1.mockReset()
     activateH1.mockReset()
+    getH1RegimeCatalog.mockReset()
+    getH1RegimeCatalog.mockResolvedValue({ data: { data: CATALOGO } })
+    olvidarCatalogoRegimenesH1()
+  })
+
+  test('régimen: desplegable con las combinaciones oficiales agrupadas y guarda 40.71', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ datos: { invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'global', procedure: '4000', additionalProcedure: '' } }))
+    updateH1Data.mockResolvedValue({ data: { success: true } })
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+
+    const regimen = await screen.findByLabelText('Régimen solicitado y precedente (casilla 37.1)')
+    await waitFor(() => expect(regimen).toHaveValue('4000'))
+    expect([...regimen.querySelectorAll('optgroup')].map((g) => g.label)).toEqual([
+      'Despacho a libre práctica (columna H1 de la UE)', 'Procedente de otro régimen', 'Solo con destino Gibraltar'
+    ])
+    expect(screen.getByRole('option', { name: '40.00 – Despacho a libre práctica con despacho simultáneo a consumo de mercancías' })).toBeInTheDocument()
+
+    fireEvent.change(regimen, { target: { value: '4071' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await waitFor(() => expect(updateH1Data).toHaveBeenCalledWith('e1', { procedure: '4071' }))
+  })
+
+  test('régimen: avisa de la nota oficial de la combinación elegida (71 solo Gibraltar)', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ datos: { dispatchAuthorizationScope: 'global', procedure: '7100', additionalProcedure: '' } }))
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+
+    expect(await screen.findByText('La AEAT solo admite el 71 en el H1 con destino Gibraltar.')).toBeInTheDocument()
+  })
+
+  test('régimen adicional: se busca por código o texto y se guarda', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ datos: { dispatchAuthorizationScope: 'global', procedure: '4000', additionalProcedure: '' } }))
+    updateH1Data.mockResolvedValue({ data: { success: true } })
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+
+    const adicional = await screen.findByLabelText('Régimen adicional (casilla 37.2)')
+    expect(adicional).toHaveValue('')
+    fireEvent.change(screen.getByLabelText('Buscar régimen adicional'), { target: { value: 'particular' } })
+    expect([...adicional.options].map((o) => o.value)).toEqual(['', 'C08'])
+
+    fireEvent.change(adicional, { target: { value: 'C08' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await waitFor(() => expect(updateH1Data).toHaveBeenCalledWith('e1', { additionalProcedure: 'C08' }))
+  })
+
+  test('un régimen guardado que no está en el catálogo se muestra tal cual, sin perderlo', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ datos: { dispatchAuthorizationScope: 'global', procedure: '4099', additionalProcedure: '' } }))
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+
+    const regimen = await screen.findByLabelText('Régimen solicitado y precedente (casilla 37.1)')
+    await waitFor(() => expect(regimen).toHaveValue('4099'))
+    expect(screen.getByRole('option', { name: '40.99 – no está en el catálogo oficial' })).toBeInTheDocument()
+  })
+
+  test('sin catálogo (fallo de red) la tarjeta sigue funcionando sin los desplegables', async () => {
+    getH1RegimeCatalog.mockRejectedValue(new Error('red'))
+    getH1Requirements.mockResolvedValue(respuesta())
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+
+    expect(await screen.findByText('Faltan datos para presentar el H1:')).toBeInTheDocument()
+    expect(await screen.findByText('No se pudo cargar la lista oficial de regímenes.')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Régimen solicitado y precedente (casilla 37.1)')).not.toBeInTheDocument()
   })
 
   test('muestra lo que falta para presentar el H1', async () => {

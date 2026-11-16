@@ -9,6 +9,7 @@
  * rellenaba huecos con valores fijos (matricula «ABC1234», provincia «28»,
  * un CMR con el numero del expediente) que la AEAT ya no debe recibir.
  */
+const { regimenDelExpediente } = require('../../config/regimenesH1');
 const { ErrorValidacion, eoriDe, formaRepresentacionDe } = require('../forms/identificadorAduanero');
 const { cambioObligatorio, aEuros } = require('../divisas/cambioDelExpediente');
 const { lugarDeEntrega } = require('../forms/lugarDeEntrega');
@@ -266,7 +267,9 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     // El valor estadistico va siempre en euros y es el valor en la frontera de la UE (CIF).
     valorEstadistico: good.statisticalValue && good.statisticalValue !== valor ? good.statisticalValue : valorFrontera,
     regimen: {
-      solicitado: String(expedition.declaration?.regime || '40'), precedente: '00',
+      // D.E. 1/10: solicitado + precedente del catalogo (config/regimenesH1); lo guardado antes es 40 + 00.
+      solicitado: regimenDelExpediente(expedition.declaration).slice(0, 2),
+      precedente: regimenDelExpediente(expedition.declaration).slice(2, 4),
       adicionales: [
         ...(/^[A-Z0-9]{3}$/i.test(adicional) && adicional !== '000' ? [adicional.toUpperCase()] : []),
         ...plastico.adicionales

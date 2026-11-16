@@ -17,6 +17,7 @@ const { gastoDe, gastosHastaLaFrontera } = require('./gastosHastaLaFrontera');
 const { ajustesDelValor } = require('./ajustesDelValor');
 const { lugarDeEntrega } = require('./lugarDeEntrega');
 const { nombresPorCodigo, aduanaPorLugar } = require('../../config/aduanasOficiales');
+const { descripcionDe, adicionalH1 } = require('../../config/regimenesH1');
 
 // Ajustes de la CL265 (ver ajustesDelValor.js) -> campo de la valoracion del generador.
 const CAMPO_DEL_AJUSTE = Object.freeze({
@@ -670,10 +671,37 @@ class H1Generator {
   }
 
   /**
+   * Regimen de la declaracion: el pedido al generar o el del expediente, con el
+   * precedente elegido en «Datos para presentar el H1» (sin el, 00).
+   */
+  regimenDeLaDeclaracion(expedition, aiData) {
+    const guardado = expedition.declaration || {};
+    const solicitado = aiData.regime || guardado.regime || '40';
+    // El precedente guardado solo vale para el regimen con el que se eligio.
+    const precedente = aiData.previousRegime || (solicitado === guardado.regime ? guardado.previousRegime : null) || '00';
+    const adicional = aiData.additionalProcedure && aiData.additionalProcedure !== '000'
+      ? aiData.additionalProcedure : guardado.additionalProcedure || aiData.additionalProcedure || '000';
+    return { pedido: aiData.regime || null, solicitado, precedente, adicional };
+  }
+
+  /** Regimen de una partida con sus descripciones (el pedido al generar manda sobre el de la partida). */
+  regimenDeLaPartida(good, regimen) {
+    const requestedProcedure = regimen.pedido || good.regime || regimen.solicitado;
+    const previousProcedure = good.previousProcedure || regimen.precedente;
+    const additionalProcedure = good.additionalProcedure || regimen.adicional;
+    return {
+      requestedProcedure, previousProcedure, additionalProcedure,
+      procedureDescription: descripcionDe(requestedProcedure, previousProcedure),
+      additionalProcedureDescription: adicionalH1(additionalProcedure)?.descripcion || null
+    };
+  }
+
+  /**
    * Construir partidas de mercancias (SI12)
    */
   buildGoodsItems(expedition, aiData) {
     const valuation = this.buildValuation(expedition, aiData);
+    const regimen = this.regimenDeLaDeclaracion(expedition, aiData);
 
     return expedition.goods.map((good, index) => {
       // Calcular valor proporcional de la partida
@@ -701,10 +729,8 @@ class H1Generator {
         goodsDescription: good.description,
         descriptionOfGoods: good.descriptionEs || good.description,
 
-        // Regimen
-        requestedProcedure: aiData.regime || good.regime || '40',
-        previousProcedure: good.previousProcedure || '00',
-        additionalProcedure: good.additionalProcedure || aiData.additionalProcedure || '000',
+        // Regimen (D.E. 1/10 y 1/11) con la descripcion del catalogo oficial
+        ...this.regimenDeLaPartida(good, regimen),
 
         // Origen y preferencia
         countryOfOrigin: good.originCountry || expedition.exporter?.country,

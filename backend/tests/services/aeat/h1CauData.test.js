@@ -552,3 +552,21 @@ describe('H1 CAU: plástico exento y reciclado (AEAT IMPORT_IEPNR, comprobado en
   });
 });
 
+
+describe('H1 CAU: régimen solicitado y precedente (D.E. 1/10)', () => {
+  test('lo guardado antes, solo «40», va como 40 + 00', () => {
+    expect(datos().envio.partidas[0].regimen).toMatchObject({ solicitado: '40', precedente: '00', adicionales: [] });
+  });
+
+  test('con precedente elegido (40.71) se declara el precedente, no 00', () => {
+    const exp = expediente();
+    exp.declaration = { ...exp.declaration, regime: '40', previousRegime: '71' };
+    expect(datos(exp).envio.partidas[0].regimen).toMatchObject({ solicitado: '40', precedente: '71' });
+  });
+
+  test('el régimen adicional elegido va en additionalProcedure', () => {
+    const exp = expediente();
+    exp.declaration = { ...exp.declaration, additionalProcedure: 'C08' };
+    expect(datos(exp).envio.partidas[0].regimen.adicionales).toEqual(['C08']);
+  });
+});
