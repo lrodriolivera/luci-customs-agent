@@ -350,9 +350,6 @@ describe('AEAT Real Service', () => {
       expect(typeof aeatRealService._processSubmissionResponse).toBe('function');
     });
 
-    test('should have query response processor', () => {
-      expect(typeof aeatRealService._processQueryResponse).toBe('function');
-    });
   });
 
   describe('LUCI Analysis Methods', () => {
@@ -641,64 +638,14 @@ describe('AEAT Real Service', () => {
     });
   });
 
+  // Consultas H1/H7/ENS: aeatRealService.consultaH1H7Ens.test.js; AES/NCTS: consultaAesNcts.
   describe('queryDeclarationStatus', () => {
-    test('should query H1 declaration status successfully', async () => {
-      mockAxiosPost.mockResolvedValueOnce({
-        status: 200,
-        data: `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-  <soapenv:Body>
-    <aeat:QueryResponse>
-      <aeat:Estado>ACCEPTED</aeat:Estado>
-      <aeat:Canal>GREEN</aeat:Canal>
-      <aeat:FechaActualizacion>2026-08-05T10:00:00Z</aeat:FechaActualizacion>
-    </aeat:QueryResponse>
-  </soapenv:Body>
-</soapenv:Envelope>`
-      });
-
-      const result = await aeatRealService.queryDeclarationStatus(
-        '26ES1234567890ABCD',
-        'H1',
-        'cert-id',
-        'password'
-      );
-
-      expect(result.success).toBe(true);
-      expect(result.status).toBe('ACCEPTED');
-      expect(result.declarationType).toBe('H1');
-      expect(certificateService.validateCertificateForOperation).toHaveBeenCalledWith('cert-id', 'H1');
-    });
-
     test('should return error for unsupported declaration type', async () => {
-      const result = await aeatRealService.queryDeclarationStatus(
-        '26ES1234567890ABCD',
-        'INVALID_TYPE',
-        'cert-id',
-        'password'
-      );
+      const result = await aeatRealService.queryDeclarationStatus('26ES1234567890ABCD', 'INVALID_TYPE');
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('no soportado');
       expect(result.luciAnalysis).toHaveProperty('validTypes');
-    });
-
-    test('queryENSStatus should delegate to queryDeclarationStatus with ENS type', async () => {
-      mockAxiosPost.mockResolvedValueOnce({
-        status: 200,
-        data: `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-<soapenv:Body><aeat:QueryResponse><aeat:Estado>PENDING</aeat:Estado></aeat:QueryResponse></soapenv:Body>
-</soapenv:Envelope>`
-      });
-
-      const result = await aeatRealService.queryENSStatus(
-        '26ES1234567890ABCD',
-        'cert-id',
-        'password'
-      );
-
-      expect(result).toHaveProperty('declarationType');
-      expect(certificateService.validateCertificateForOperation).toHaveBeenCalledWith('cert-id', 'ENS');
     });
   });
 
@@ -1134,22 +1081,6 @@ describe('AEAT Real Service', () => {
   });
 
   describe('Additional Coverage - Error Paths', () => {
-    test('queryDeclarationStatus should handle signature failure', async () => {
-      xadesSignatureService.signForAEAT.mockResolvedValueOnce({
-        success: false,
-        error: 'Signature failed'
-      });
-
-      const result = await aeatRealService.queryDeclarationStatus(
-        '26ES111',
-        'H1',
-        'cert-id',
-        'password'
-      );
-
-      expect(result.success).toBe(false);
-      expect(mockAxiosPost).not.toHaveBeenCalled();
-    });
 
     test('getInbox should handle network error', async () => {
       const networkError = new Error('Network timeout');
@@ -1276,20 +1207,6 @@ describe('AEAT Real Service', () => {
       expect(diffDays).toBeLessThanOrEqual(31);
     });
 
-    test('_extractMessages should extract multiple messages from XML', () => {
-      const xml = `<root>
-        <aeat:Mensaje>Mensaje 1</aeat:Mensaje>
-        <aeat:Mensaje>Mensaje 2</aeat:Mensaje>
-        <aeat:Mensaje>Mensaje 3</aeat:Mensaje>
-      </root>`;
-
-      const messages = aeatRealService._extractMessages(xml);
-
-      expect(messages).toHaveLength(3);
-      expect(messages).toContain('Mensaje 1');
-      expect(messages).toContain('Mensaje 2');
-      expect(messages).toContain('Mensaje 3');
-    });
 
     test('_generateMRN should generate valid MRN format', () => {
       const mrn1 = aeatRealService._generateMRN('H1_SUBMIT');

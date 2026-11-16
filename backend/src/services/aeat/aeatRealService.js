@@ -21,12 +21,54 @@ const {
   buildConsultaAesXML, buildConsultaNctsXML, interpretarConsultaAes, interpretarConsultaNcts,
   idMensajeConsulta, nifRemitente, ENDPOINT_AES, ENDPOINT_NCTS
 } = require('./aesNctsConsulta');
+const { buildConsultaH1CauXML, interpretarConsultaH1Cau, normalizarConsultaH1Cau, ENDPOINT_CONSULTA: ENDPOINT_H1 } = require('./h1CauConsulta');
+const { buildConsultaH7XML, interpretarConsultaH7, ENDPOINT_CONSULTA_H7 } = require('./h7Consulta');
 const { representanteDelTenant, exigirEori } = require('../forms/identificadorAduanero');
 
-// Consultas de estado que ya usan el servicio oficial (aesNctsConsulta.js).
+/**
+ * Consultas de estado por los servicios oficiales de la AEAT. Todas van por el
+ * transporte mTLS de los envios (aeatTransport.sendSoap, certificado de LUCI)
+ * y sin firma XAdES. `conRemitente`: el mensaje lleva el NIF del firmante
+ * (messageSender), que sale del tenant de la declaracion.
+ *  - AES  CCAESCV1  y NCTS CCTRACV2 (aesNctsConsulta.js)
+ *  - H1   ConsultaImportacionV3 (h1CauConsulta.js)
+ *  - H7   ConsultaH7V1 (h7Consulta.js)
+ */
 const CONSULTAS_OFICIALES = {
-  AES: { build: buildConsultaAesXML, interpretar: interpretarConsultaAes, endpoint: ENDPOINT_AES },
-  NCTS: { build: buildConsultaNctsXML, interpretar: interpretarConsultaNcts, endpoint: ENDPOINT_NCTS }
+  AES: { conRemitente: true, build: buildConsultaAesXML, interpretar: interpretarConsultaAes, endpoint: ENDPOINT_AES },
+  NCTS: { conRemitente: true, build: buildConsultaNctsXML, interpretar: interpretarConsultaNcts, endpoint: ENDPOINT_NCTS },
+  H1: {
+    build: ({ mensajeId, mrn }) => buildConsultaH1CauXML({ mensajeId, mrn }),
+    interpretar: (cuerpo, esperado) => normalizarConsultaH1Cau(interpretarConsultaH1Cau(cuerpo), esperado),
+    endpoint: ENDPOINT_H1
+  },
+  H7: {
+    // En PRE, mensaje de pruebas como el alta (AltaH7V1): ES.AEAT.PRUEBAS + testIndicator S.
+    build: ({ mensajeId, mrn }) => buildConsultaH7XML({ mensajeId, mrn, test: process.env.AEAT_ENVIRONMENT !== 'production' }),
+    interpretar: interpretarConsultaH7,
+    endpoint: ENDPOINT_CONSULTA_H7
+  }
+};
+
+/**
+ * Tipos que no tienen consulta de estado que LUCI pueda hacer: se responde
+ * sin enviar nada a la AEAT.
+ *
+ * ENS: el ICS1 (servicio ConsENSV3 de la AEAT) ya no admite ENS desde la
+ * implantacion completa de ICS2 (cierre del ICS1 el 01/01/2026). En ICS2 la ENS
+ * se declara y se consulta en el punto central de la Comision Europea, el STI
+ * (Shared Trader Interface): sistema a sistema (S2S, AS4 con un Party ID dado
+ * de alta en la UE) o a mano en el portal STI-STP del GTP
+ * (https://customs.ec.europa.eu/gtp). La AEAT no publica ningun servicio web
+ * de consulta de ENS de ICS2 en su pagina de servicios web. Fuentes: «Guia
+ * basica de acceso al STI-STP» (AEAT) y la pagina «Declaraciones sumarias. Las
+ * ENS y EXS» de la sede.
+ */
+const CONSULTAS_NO_DISPONIBLES = {
+  ENS: {
+    motivo: 'Consulta no disponible: en ICS2 la ENS se declara y se consulta en el STI de la Comisión Europea (sistema a sistema o portal STI-STP), no en un servicio web de la AEAT; el servicio ConsENSV3 era del ICS1, cerrado.',
+    fuente: 'https://sede.agenciatributaria.gob.es/static_files/Sede/Tema/Aduanas/ICS2/cont_relacionado/Guia_acceso_STI-STP.pdf'
+  }
 };
 
 const { escapeRegex } = require('../../utils/escapeRegex');
@@ -75,11 +117,11 @@ class AEATRealService {
       },
       H1_QUERY: {
         code: 'H1_QUERY',
-        name: 'Consulta DUA Importación',
-        path: '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.ConsultaImportacionV2SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adip/ws/ConsultaImportacionV2.wsdl',
-        operation: 'ConsultaImportacionV2',
-        description: 'Consulta estado de declaracion H1'
+        name: 'Consulta DUA Importación (CAU)',
+        path: ENDPOINT_H1,
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ConsultaImportacionV3.wsdl',
+        operation: 'ConsultaImportacionV3',
+        description: 'Consulta estado de declaracion H1 (CAU); ver h1CauConsulta.js'
       },
       H1_SIMPLIFIED: {
         code: 'H1_SIMPLIFIED',
@@ -111,7 +153,7 @@ class AEATRealService {
       AES_QUERY: {
         code: 'AES_QUERY',
         name: 'Consulta Exportación',
-        path: '/wlpl/ADEX-JDIT/ws/aes/CCAESCV1SOAP',
+        path: ENDPOINT_AES,
         wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/CCAESCV1.wsdl',
         operation: 'CCAESCV1',
         description: 'Consulta estado declaracion exportacion'
@@ -148,7 +190,7 @@ class AEATRealService {
       NCTS_QUERY: {
         code: 'NCTS_QUERY',
         name: 'Consulta Tránsito',
-        path: '/wlpl/ADTR-JDIT/ws/ncts5/CCTRACV2SOAP',
+        path: ENDPOINT_NCTS,
         wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CCTRACV2.wsdl',
         operation: 'CCTRACV2',
         description: 'Consulta estado de transito'
@@ -172,14 +214,6 @@ class AEATRealService {
         operation: 'IE313V5',
         messageType: 'IE313',
         description: 'Rectificacion de declaracion sumaria de entrada'
-      },
-      ICS2_ENS_QUERY: {
-        code: 'ICS2_ENS_QUERY',
-        name: 'Consulta ENS ICS2',
-        path: '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.ConsENSV3SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/aden/enswsv5/ConsENSV3.wsdl',
-        operation: 'ConsENSV3',
-        description: 'Consulta estado de declaracion ENS'
       },
       ICS2_ENS_ARRIVAL: {
         code: 'ICS2_ENS_ARRIVAL',
@@ -213,10 +247,10 @@ class AEATRealService {
       H7_QUERY: {
         code: 'H7_QUERY',
         name: 'Consulta DUA H7',
-        path: '/wlpl/inwinvoc/es.aeat.dit.adu.adh7.ws.H7QueryV1SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adh7/ws/H7QueryV1.wsdl',
-        operation: 'H7QueryV1',
-        description: 'Consulta estado de declaracion H7'
+        path: ENDPOINT_CONSULTA_H7,
+        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/h7/ConsultaH7V1.wsdl',
+        operation: 'ConsultaH7V1',
+        description: 'Consulta estado de declaracion H7; ver h7Consulta.js'
       },
 
       // === SOIVRE ===
@@ -560,130 +594,88 @@ class AEATRealService {
   }
 
   /**
-   * Consultar estado de ENS
+   * Consultar estado de ENS (ver CONSULTAS_NO_DISPONIBLES: no se envía nada).
    */
-  async queryENSStatus(mrn, certificateId, password) {
-    return this.queryDeclarationStatus(mrn, 'ENS', certificateId, password);
+  async queryENSStatus(mrn, opciones = {}) {
+    return this.queryDeclarationStatus(mrn, 'ENS', opciones);
   }
 
   /**
-   * Consultar estado de declaración
+   * Consultar estado de declaración por el servicio oficial de la AEAT
+   * (CONSULTAS_OFICIALES). Nunca lanza: devuelve { success: false, tipo, error }
+   * si el tipo no se puede consultar, falta el remitente, el MRN no vale, falla
+   * la red o la AEAT rechaza la consulta.
    *
-   * AES y NCTS van por la consulta oficial (CCAESC / CCTRAC) con el transporte
-   * mTLS de los envíos; `certificateId` y `password` no se usan para ellas y
-   * el remitente sale de `opciones` ({ sender } o { tenant } o { tenantId }).
-   * H1, H7 y ENS siguen por el camino antiguo (ver _buildQueryRequest).
+   * `tipo` en los fallos: 'no_soportado' y 'peticion' (no se envió nada por un
+   * dato de LUCI), 'no_disponible' (no hay consulta para ese tipo), 'red'
+   * (no hubo respuesta), 'fault'/'desconocida' (respuesta inservible) y
+   * 'error_xml'/'error_funcional' (la AEAT rechazó la consulta).
+   *
+   * @param {string} mrn
+   * @param {'H1'|'H7'|'AES'|'NCTS'|'ENS'} declarationType
+   * @param {{ sender?: string, tenant?: object, tenantId?: string }} [opciones]
+   *   remitente de las consultas que lo llevan (AES/NCTS)
    */
-  async queryDeclarationStatus(mrn, declarationType, certificateId, password, opciones = {}) {
-    const tipoOficial = String(declarationType || '').trim().toUpperCase();
-    if (Object.hasOwn(CONSULTAS_OFICIALES, tipoOficial)) {
-      return this._consultarEstadoOficial(mrn, tipoOficial, opciones);
+  async queryDeclarationStatus(mrn, declarationType, opciones = {}) {
+    const tipo = String(declarationType || '').trim().toUpperCase();
+    if (Object.hasOwn(CONSULTAS_NO_DISPONIBLES, tipo)) {
+      const { motivo, fuente } = CONSULTAS_NO_DISPONIBLES[tipo];
+      return { success: false, tipo: 'no_disponible', declarationType: tipo, mrn, error: motivo, fuente };
     }
-
-    const serviceMap = {
-      'H1': this.SERVICES.H1_QUERY,
-      'H7': this.SERVICES.H7_QUERY,
-      'AES': this.SERVICES.AES_QUERY,
-      'NCTS': this.SERVICES.NCTS_QUERY,
-      'ENS': this.SERVICES.ICS2_ENS_QUERY
-    };
-
-    const service = Object.hasOwn(serviceMap, declarationType) ? serviceMap[declarationType] : null;
-    if (!service) {
+    if (!Object.hasOwn(CONSULTAS_OFICIALES, tipo)) {
       return {
         success: false,
+        tipo: 'no_soportado',
+        declarationType,
         error: `Tipo de declaración no soportado: ${declarationType}`,
         luciAnalysis: this._generateInvalidTypeAnalysis(declarationType)
       };
     }
-
-    try {
-      logger.info(`AEATReal: Consultando estado ${declarationType} MRN: ${mrn}`);
-
-      // Validar certificado
-      const certValidation = await certificateService.validateCertificateForOperation(
-        certificateId,
-        declarationType
-      );
-
-      if (!certValidation.valid) {
-        return {
-          success: false,
-          error: 'Certificado no válido para esta operación',
-          luciAnalysis: certValidation.luciAnalysis
-        };
-      }
-
-      // Construir petición de consulta
-      const queryXML = this._buildQueryRequest(mrn, declarationType);
-
-      // Firmar petición
-      const signResult = await xadesSignatureService.signForAEAT(
-        queryXML,
-        certificateId,
-        password,
-        { operationType: declarationType }
-      );
-
-      if (!signResult.success) {
-        return signResult;
-      }
-
-      // Enviar consulta
-      const response = await this._sendSOAPRequest(service, signResult.signedXML);
-
-      // Procesar respuesta
-      const result = this._processQueryResponse(response, declarationType);
-
-      // Análisis LUCI del estado
-      result.luciAnalysis = await this._luciStatusAnalysis(result, declarationType);
-
-      return result;
-
-    } catch (error) {
-      logger.error(`AEATReal: Error consultando ${declarationType}`, { error: error.message });
-      return {
-        success: false,
-        error: error.message,
-        luciAnalysis: this._generateQueryErrorAnalysis(error, declarationType)
-      };
-    }
+    return this._consultarEstadoOficial(mrn, tipo, opciones);
   }
 
-  /**
-   * Consulta de estado AES/NCTS por el servicio oficial. Nunca lanza: devuelve
-   * { success: false, error } si falta el remitente, el MRN no vale, falla la
-   * red o la AEAT responde EX/EF.
-   */
+  /** Hay consulta oficial de estado para el tipo (H1, H7, AES, NCTS; no ENS). */
+  puedeConsultarEstado(declarationType) {
+    return Object.hasOwn(CONSULTAS_OFICIALES, String(declarationType || '').trim().toUpperCase());
+  }
+
   async _consultarEstadoOficial(mrn, declarationType, opciones = {}) {
     const consulta = CONSULTAS_OFICIALES[declarationType];
-    try {
-      const sender = await this._remitenteConsulta(opciones);
-      const soapXML = consulta.build({ mensajeId: idMensajeConsulta(), mrn, sender });
-      logger.info(`AEATReal: Consultando estado ${declarationType} MRN: ${mrn}`);
-      const response = await aeatTransport.sendSoap(soapXML, consulta.endpoint);
-      const resultado = consulta.interpretar(response?.data, { mrn });
+    const fallo = (tipo, error, extra = {}) => ({
+      success: false, tipo, declarationType, error, ...extra,
+      luciAnalysis: this._generateQueryErrorAnalysis(new Error(error), declarationType)
+    });
 
+    let soapXML;
+    try {
+      const sender = consulta.conRemitente ? await this._remitenteConsulta(opciones) : undefined;
+      soapXML = consulta.build({ mensajeId: idMensajeConsulta(), mrn, sender });
+    } catch (error) {
+      logger.warn(`AEATReal: Consulta ${declarationType} no enviada`, { error: error.message });
+      return fallo('peticion', error.message);
+    }
+
+    let response;
+    try {
+      logger.info(`AEATReal: Consultando estado ${declarationType} MRN: ${mrn}`);
+      response = await aeatTransport.sendSoap(soapXML, consulta.endpoint);
+    } catch (error) {
+      // El detalle (host, certificado, código del sistema) solo en el log.
+      logger.error(`AEATReal: Error consultando ${declarationType}`, { error: error.message });
+      return fallo('red', 'La AEAT no respondió a la consulta');
+    }
+
+    try {
+      const resultado = consulta.interpretar(response?.data, { mrn });
       if (!resultado.success) {
         logger.warn(`AEATReal: Consulta ${declarationType} ${mrn} sin éxito`, { tipo: resultado.tipo, error: resultado.error });
-        return {
-          ...resultado,
-          declarationType,
-          httpStatus: response?.status,
-          luciAnalysis: this._generateQueryErrorAnalysis(new Error(resultado.error), declarationType)
-        };
+        return { ...fallo(resultado.tipo || 'desconocida', resultado.error), ...resultado, declarationType, httpStatus: response?.status };
       }
-
       const result = { ...resultado, declarationType, lastUpdate: new Date().toISOString() };
       return { ...result, luciAnalysis: await this._luciStatusAnalysis(result, declarationType) };
     } catch (error) {
-      logger.error(`AEATReal: Error consultando ${declarationType}`, { error: error.message });
-      return {
-        success: false,
-        declarationType,
-        error: error.message,
-        luciAnalysis: this._generateQueryErrorAnalysis(error, declarationType)
-      };
+      logger.error(`AEATReal: Respuesta de ${declarationType} ilegible`, { error: error.message });
+      return fallo('desconocida', 'No se pudo interpretar la respuesta de la AEAT');
     }
   }
 
@@ -1210,35 +1202,6 @@ class AEATRealService {
   }
 
   /**
-   * Construir petición de consulta
-   */
-  _buildQueryRequest(mrn, declarationType) {
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<aeat:ConsultaDeclaracion xmlns:aeat="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas">
-  <aeat:MRN>${mrn}</aeat:MRN>
-  <aeat:TipoDeclaracion>${declarationType}</aeat:TipoDeclaracion>
-  <aeat:FechaConsulta>${new Date().toISOString()}</aeat:FechaConsulta>
-</aeat:ConsultaDeclaracion>`;
-  }
-
-  /**
-   * Procesar respuesta de consulta
-   */
-  _processQueryResponse(response, declarationType) {
-    // Implementación simplificada - parsear XML de respuesta
-    const body = response.body;
-
-    return {
-      success: true,
-      declarationType,
-      status: this._extractField(body, 'Estado') || 'UNKNOWN',
-      channel: this._extractField(body, 'Canal'),
-      lastUpdate: this._extractField(body, 'FechaActualizacion'),
-      messages: this._extractMessages(body)
-    };
-  }
-
-  /**
    * Construir petición de bandeja
    */
   _buildInboxRequest(filters) {
@@ -1598,21 +1561,6 @@ class AEATRealService {
 
   _delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  _extractField(xml, fieldName) {
-    const match = xml.match(new RegExp(`<aeat:${escapeRegex(fieldName)}>([^<]+)<\/aeat:${escapeRegex(fieldName)}>`));
-    return match ? match[1] : null;
-  }
-
-  _extractMessages(xml) {
-    const messages = [];
-    const regex = /<aeat:Mensaje[^>]*>([^<]+)<\/aeat:Mensaje>/g;
-    let match;
-    while ((match = regex.exec(xml)) !== null) {
-      messages.push(match[1]);
-    }
-    return messages;
   }
 
   _parseInboxResponse(response) {

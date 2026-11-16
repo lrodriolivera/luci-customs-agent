@@ -78,7 +78,7 @@ describe('api.js — valores interpolados en la ruta', () => {
   it('el valor hostil se codifica en las rutas que el informe señala', async () => {
     const { aeatRealAPI, authAPI, portalAPI } = apiModule
 
-    await aeatRealAPI.monitoring.refresh(HOSTIL, 'alias')
+    await aeatRealAPI.monitoring.refresh(HOSTIL)
     await authAPI.resetPassword(HOSTIL, 'nueva')
     await aeatRealAPI.certificates.delete(HOSTIL)
     await aeatRealAPI.certificates.get(HOSTIL)

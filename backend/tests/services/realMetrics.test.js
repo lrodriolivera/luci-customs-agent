@@ -168,26 +168,23 @@ describe('derechosLiquidados', () => {
 });
 
 describe('repartoPorCanal', () => {
-  test('el porcentaje se calcula sobre los que TIENEN canal', async () => {
-    // Sobre el total de expedientes saldria falseado: los que aun no han
-    // llegado a canal no son "canal verde".
-    mockAgregar.mockResolvedValue([
-      { _id: 'green_channel', n: 2 },
-      { _id: 'orange_channel', n: 3 },
-      { _id: 'red_channel', n: 3 },
-      { _id: 'draft', n: 17 }          // sin canal todavia
-    ]);
+  // Dos agregaciones: expedientes (declaration.channel o status de canal) y
+  // H7 del manifiesto (H7Declaration.channel). Cada una devuelve { _id: canal, n }.
+  // Los casos contra Mongo real estan en analytics/canalReal.db.test.js.
+  test('el porcentaje se calcula sobre los que TIENEN canal y suma los H7', async () => {
+    mockAgregar
+      .mockResolvedValueOnce([{ _id: 'green', n: 2 }, { _id: 'orange', n: 3 }, { _id: 'red', n: 1 }])
+      .mockResolvedValueOnce([{ _id: 'red', n: 2 }]);
 
     const r = await metricas.repartoPorCanal(TENANT);
 
     expect(r.conCanalAsignado).toBe(8);
-    expect(r.porcentajes.green).toBe(25);      // 2/8, no 2/25
+    expect(r.canales).toEqual({ green: 2, yellow: 0, orange: 3, red: 3 });
+    expect(r.porcentajes.green).toBe(25);      // 2/8
     expect(r.porcentajes.orange).toBe(37.5);
   });
 
   test('sin ningun canal asignado no divide entre cero', async () => {
-    mockAgregar.mockResolvedValue([{ _id: 'draft', n: 5 }]);
-
     const r = await metricas.repartoPorCanal(TENANT);
 
     expect(r.porcentajes.green).toBe(0);

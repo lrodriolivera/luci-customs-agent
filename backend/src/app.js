@@ -405,6 +405,14 @@ try {
   logger.warn('taricSyncWorker not started', { error: err.message });
 }
 
+// Consulta automatica del estado de las declaraciones en la AEAT
+// (AEAT_POLLING_ENABLED, AEAT_POLLING_INTERVAL_MIN; nunca en tests)
+try {
+  require('./workers/aeatStatusPollingWorker').start();
+} catch (err) {
+  logger.warn('aeatStatusPollingWorker not started', { error: err.message });
+}
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   logger.error(`Error: ${err.message}`, { stack: err.stack, url: req.originalUrl, method: req.method, userId: req.user?._id });

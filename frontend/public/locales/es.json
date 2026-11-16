@@ -1704,7 +1704,14 @@
     "integrations": "Integraciones",
     "generalInfo": "Información General",
     "notificationPrefs": "Preferencias de Notificaciones",
-    "securityConfig": "Configuración de Seguridad"
+    "securityConfig": "Configuración de Seguridad",
+    "generalReadOnly": "Solo un administrador de la organización puede cambiar estos datos.",
+    "nifReadOnly": "El NIF no se cambia desde Ajustes: contacta con soporte.",
+    "manageInCustoms": "Se gestiona en Ajustes › Aduanas",
+    "usersCount_one": "{{count}} usuario",
+    "usersCount_other": "{{count}} usuarios",
+    "usersCountUnavailable": "No se ha podido obtener el número de usuarios por rol.",
+    "usersCount": "{{count}} usuarios"
   },
   "portal": {
     "welcome": "Bienvenido,",

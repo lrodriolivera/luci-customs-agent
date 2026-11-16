@@ -139,4 +139,91 @@ function interpretarConsultaH1Cau(cuerpo) {
   };
 }
 
-module.exports = { buildConsultaH1CauXML, interpretarConsultaH1Cau, ENDPOINT_CONSULTA, NS_CONSULTA };
+// ---------- traduccion al monitor de seguimiento ----------
+//
+// Criterio (codigos de h1CauCodigos.js; guias «Consulta de Importacion adaptado
+// al CAU» v4.1 e «Informacion complementaria H1» v3.26, Separata 30):
+//  - final + REJECTED: anulada (goodsReleaseStatus A, operationRegistered 40/43)
+//    o sin levante definitivo (operationRegistered 41).
+//  - final + RELEASED: despachada con levante (goodsReleaseStatus L u
+//    operationRegistered 96). El pago posterior no cambia el despacho.
+//  - CONTROL: intencion de control (42) o pendiente de despacho (P) con
+//    circuito naranja/rojo o con la aduana teniendola bajo control.
+//  - ACCEPTED: admitida (0, 62, 64, o con fecha de admision) o despachada sin
+//    levante (D, p. ej. pendiente de pago o garantia).
+//  - PENDING: el resto (predeclaraciones, pendientes de validar o de activar:
+//    1-3, 60, 61, 63, 65, 66, 90, 91) y codigos que no estan en las guias.
+const ANULADA = new Set(['40', '43']);
+const SIN_LEVANTE = '41';
+const LEVANTADA = '96';
+const INTENCION_CONTROL = '42';
+const ADMITIDA = new Set(['0', '62', '64']);
+const TEXTO_CIRCUITO_H1 = {
+  V: 'Verde: levante automático',
+  A: 'Amarillo: control documental previo al despacho',
+  N: 'Naranja: control documental',
+  R: 'Rojo: control físico'
+};
+
+/** { status, final } del monitor para el bloque `estado` de interpretarConsultaH1Cau. */
+function estadoMonitorH1Cau(estado) {
+  const op = estado?.operacionRegistrada ?? null;
+  const levante = estado?.levante ?? null;
+  if (levante === 'A' || ANULADA.has(op)) return { status: 'REJECTED', final: true };
+  if (op === SIN_LEVANTE) return { status: 'REJECTED', final: true };
+  if (levante === 'L' || op === LEVANTADA) return { status: 'RELEASED', final: true };
+  const bajoControl = op === INTENCION_CONTROL || ['N', 'R'].includes(estado?.circuito) || Boolean(estado?.bajoControl && estado.bajoControl !== '0');
+  if (bajoControl && levante !== 'D') return { status: 'CONTROL', final: false };
+  if (levante === 'D' || ADMITIDA.has(op) || estado?.fechaAdmision) return { status: 'ACCEPTED', final: false };
+  return { status: 'PENDING', final: false };
+}
+
+/**
+ * Resultado de interpretarConsultaH1Cau -> misma forma que las consultas
+ * AES/NCTS (status, channel, estado, circuito, fechas, csv, final), sin perder
+ * el detalle del H1 (pago, documentos pedidos, liquidacion...).
+ * @param {object} r  salida de interpretarConsultaH1Cau
+ * @param {{ mrn?: string }} [esperado]  MRN consultado: si la respuesta es de otro, no vale
+ */
+function normalizarConsultaH1Cau(r, esperado = {}) {
+  const base = { success: false, tipo: r?.tipo || 'desconocida', mrn: r?.mrn || null, status: null, channel: null, rawResponse: r?.rawResponse || '' };
+  if (!r?.success) return { ...r, ...base, error: r?.error || 'La AEAT rechazó la consulta' };
+
+  const mrnPedido = esperado.mrn ? String(esperado.mrn).trim().toUpperCase() : null;
+  if (mrnPedido && r.mrn !== mrnPedido) {
+    return { ...base, error: `La AEAT respondió con otro MRN (${r.mrn}) al consultar ${mrnPedido}` };
+  }
+
+  const e = r.estado || {};
+  const { status, final } = estadoMonitorH1Cau(e);
+  const estadoTexto = [e.textos?.operacionRegistrada, e.textos?.levante].filter(Boolean).join(' · ') || null;
+  return {
+    ...base,
+    success: true,
+    tipo: 'encontrada',
+    mrn: r.mrn,
+    numeroRegistro: r.numeroRegistro || null,
+    // Codigo principal: situacion de la declaracion (operationRegistered).
+    estado: e.operacionRegistrada,
+    estadoTexto,
+    status,
+    final,
+    circuito: e.circuito,
+    circuitoTexto: TEXTO_CIRCUITO_H1[e.circuito] || null,
+    channel: e.channel,
+    fechas: { alta: e.fechaRegistro, admision: e.fechaAdmision, levante: e.fechaLevante, limiteDePago: e.limiteDePago },
+    csv: e.csvLevante,
+    detalle: {
+      levante: e.levante, pago: e.pago, pendencias: e.pendencias, bajoControl: e.bajoControl,
+      documentacionPendiente: e.documentacionPendiente, certificadosRequeridos: e.certificadosRequeridos,
+      csvCertificacion: e.csvCertificacion, textos: e.textos
+    },
+    liquidacion: r.liquidacion,
+    documentosSolicitados: r.documentosSolicitados,
+    notificaciones: r.notificaciones,
+    resultadoControl: r.resultadoControl,
+    messages: [estadoTexto, TEXTO_CIRCUITO_H1[e.circuito]].filter(Boolean)
+  };
+}
+
+module.exports = { buildConsultaH1CauXML, interpretarConsultaH1Cau, normalizarConsultaH1Cau, estadoMonitorH1Cau, ENDPOINT_CONSULTA, NS_CONSULTA };

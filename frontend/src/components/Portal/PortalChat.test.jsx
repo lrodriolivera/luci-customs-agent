@@ -99,4 +99,17 @@ describe('PortalChat', () => {
 
     expect(await screen.findByText('portal.chatError')).toBeInTheDocument()
   })
+
+  it('pinta en Markdown las respuestas del asistente (listas), no el texto del cliente', async () => {
+    portalAPI.aiEnhancedChat.mockResolvedValue({
+      data: { success: true, data: { response: { message: 'Documentos:\n\n- Factura\n- Albarán' } } }
+    })
+    await escribirYEnviar('- no es lista')
+
+    const item = await screen.findByText('Factura')
+    expect(item.tagName).toBe('LI')
+    expect(item.closest('ul')).toHaveClass('list-disc')
+    // Lo que escribe el cliente se pinta tal cual
+    expect(screen.getByText('- no es lista')).toBeInTheDocument()
+  })
 })

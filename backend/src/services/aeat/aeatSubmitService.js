@@ -254,12 +254,13 @@ async function submitH1(expedition, ctx = {}) {
 
 /**
  * Servicio con el que se presenta el H1 de un tenant: el que tenga configurado
- * o, si no, el de la variable AEAT_H1_SERVICE. Mientras el expediente no
- * recoja todos los datos que exige el CAU, por defecto sigue el anterior.
+ * o, si no, el de la variable AEAT_H1_SERVICE. Por defecto el CAU (CC415AV1):
+ * el DUA anterior (ImportacionCompletaV1) esta cerrado para altas en produccion
+ * desde el 14/10/2025, asi que solo se usa si se elige expresamente.
  */
 function servicioH1(tenant) {
   const elegido = tenant?.customsConfig?.h1Service || process.env.AEAT_H1_SERVICE;
-  return elegido === 'cau' ? 'cau' : 'precau';
+  return elegido === 'precau' ? 'precau' : 'cau';
 }
 
 /** Identificador unico de hasta 19 caracteres, sin blancos: sirve de LRN y de base del mensaje. */

@@ -136,13 +136,6 @@ class AEATStatusMonitorService extends EventEmitter {
       ttlSeconds: 30 * 24 * 3600
     });
 
-    // Configuración de polling
-    this.pollingConfig = {
-      intervalMs: parseInt(process.env.AEAT_POLLING_INTERVAL) || 60000, // 1 minuto
-      maxRetries: 3,
-      enabled: false
-    };
-
     // Historial de estados para análisis
     this.statusHistory = new Map();
 
@@ -162,8 +155,6 @@ class AEATStatusMonitorService extends EventEmitter {
       rectificationDeadline: 3,
       temporaryStorageMax: 90
     };
-
-    this.pollingInterval = null;
   }
 
   // ============== SEGUIMIENTO DE DECLARACIONES ==============
@@ -294,65 +285,22 @@ class AEATStatusMonitorService extends EventEmitter {
   }
 
   // ============== POLLING Y ACTUALIZACIÓN ==============
+  //
+  // El temporizador, el candado entre réplicas y la configuración por entorno
+  // están en workers/aeatStatusPollingWorker.js; aquí solo la pasada.
 
   /**
-   * Iniciar polling automático
+   * Actualizar estado de una declaración específica. Las consultas van por los
+   * servicios oficiales con el certificado de LUCI (aeatRealService): no hace
+   * falta certificado ni contraseña del usuario.
+   * @param {string} mrn
+   * @param {string|null} [tenantId]  tenant del usuario (clave del seguimiento)
    */
-  startPolling(certificateId, password) {
-    if (this.pollingInterval) {
-      logger.warn('StatusMonitor: Polling ya está activo');
-      return { success: false, message: 'Polling ya está activo' };
-    }
+  async refreshDeclarationStatus(mrn, tenantId = null) {
+    const clave = this._clave(mrn, tenantId);
+    const tracking = await this.trackedDeclarations.get(clave);
 
-    this.pollingConfig.enabled = true;
-    this.pollingConfig.certificateId = certificateId;
-    this.pollingConfig.password = password;
-
-    this.pollingInterval = setInterval(
-      () => this._pollAllDeclarations(),
-      this.pollingConfig.intervalMs
-    );
-
-    logger.info('StatusMonitor: Polling iniciado', {
-      interval: this.pollingConfig.intervalMs
-    });
-
-    return {
-      success: true,
-      message: 'Polling iniciado',
-      intervalMs: this.pollingConfig.intervalMs
-    };
-  }
-
-  /**
-   * Detener polling
-   */
-  stopPolling() {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
-      this.pollingInterval = null;
-      this.pollingConfig.enabled = false;
-
-      logger.info('StatusMonitor: Polling detenido');
-
-      return { success: true, message: 'Polling detenido' };
-    }
-
-    return { success: false, message: 'Polling no estaba activo' };
-  }
-
-  /**
-   * Actualizar estado de una declaración específica
-   */
-  async refreshDeclarationStatus(mrn, certificateId, password, tenantId = null) {
-    const tracking = await this.trackedDeclarations.get(this._clave(mrn, tenantId));
-
-    if (!tracking) {
-      return {
-        success: false,
-        error: 'Declaración no encontrada en seguimiento'
-      };
-    }
+    if (!tracking) return this._noEncontrada();
 
     try {
       logger.info(`StatusMonitor: Actualizando estado de ${mrn}`);
@@ -362,79 +310,162 @@ class AEATStatusMonitorService extends EventEmitter {
       const result = await aeatRealService.queryDeclarationStatus(
         mrn,
         tracking.type,
-        certificateId,
-        password,
         { tenantId: tracking.tenantId || tenantId || null }
       );
 
-      if (result.success) {
-        const previousStatus = tracking.currentStatus;
-        const previousChannel = tracking.channel;
+      if (!result.success) {
+        // Se anota el intento para que la siguiente pasada empiece por otras.
+        const at = new Date().toISOString();
+        await this._guardarSobreActual(clave, () => ({
+          lastChecked: at,
+          lastError: { tipo: result.tipo || null, error: result.error || null, at }
+        }));
+        return result;
+      }
 
-        // Actualizar tracking
-        tracking.lastChecked = new Date().toISOString();
-        tracking.currentStatus = result.status;
-        tracking.channel = result.channel || tracking.channel;
-        // Detalle de la consulta oficial (AES/NCTS), sin la respuesta cruda.
-        if (result.estado !== undefined) {
-          tracking.aeat = {
-            estado: result.estado,
-            estadoTexto: result.estadoTexto || null,
-            circuito: result.circuito || null,
-            csv: result.csv || null,
-            final: result.final === true,
-            fechas: result.fechas || {}
-          };
-        }
+      const previousStatus = tracking.currentStatus;
+      const previousChannel = tracking.channel;
+      const alertasNuevas = [];
 
-        // Agregar al historial
-        tracking.statusHistory.push({
-          timestamp: tracking.lastChecked,
-          status: result.status,
-          channel: result.channel,
-          messages: result.messages
-        });
-
-        // Detectar cambios y generar alertas
-        if (previousStatus !== result.status || previousChannel !== result.channel) {
-          const changeAnalysis = await this._analyzeStatusChange(
-            tracking,
-            previousStatus,
-            result.status,
-            previousChannel,
-            result.channel
-          );
-
-          if (changeAnalysis.alerts.length > 0) {
-            tracking.alerts.push(...changeAnalysis.alerts);
-            this.emit('statusChange', { mrn, tracking, changeAnalysis });
-          }
-        }
-
-        // Actualizar predicciones LUCI
-        tracking.luciPredictions = await this._updatePredictions(tracking, result);
-
-        // Persistir cambios en Redis
-        await this.trackedDeclarations.set(this._clave(mrn, tenantId), tracking);
-
-        return {
-          success: true,
-          mrn,
-          tracking,
-          changed: previousStatus !== result.status || previousChannel !== result.channel,
-          luciAnalysis: tracking.luciPredictions
+      // Actualizar tracking
+      tracking.lastChecked = new Date().toISOString();
+      tracking.lastError = null;
+      tracking.currentStatus = result.status;
+      tracking.channel = result.channel || tracking.channel;
+      // Detalle de la consulta oficial, sin la respuesta cruda.
+      if (result.estado !== undefined) {
+        tracking.aeat = {
+          estado: result.estado,
+          estadoTexto: result.estadoTexto || null,
+          circuito: result.circuito || null,
+          csv: result.csv || null,
+          final: result.final === true,
+          fechas: result.fechas || {}
         };
       }
 
-      return result;
+      // Agregar al historial
+      tracking.statusHistory.push({
+        timestamp: tracking.lastChecked,
+        status: result.status,
+        channel: result.channel,
+        messages: result.messages
+      });
+
+      // Detectar cambios y generar alertas
+      if (previousStatus !== result.status || previousChannel !== result.channel) {
+        const changeAnalysis = await this._analyzeStatusChange(
+          tracking,
+          previousStatus,
+          result.status,
+          previousChannel,
+          result.channel
+        );
+
+        if (changeAnalysis.alerts.length > 0) {
+          alertasNuevas.push(...changeAnalysis.alerts);
+          tracking.alerts.push(...changeAnalysis.alerts);
+        }
+      }
+
+      // Actualizar predicciones LUCI
+      tracking.luciPredictions = await this._updatePredictions(tracking, result);
+
+      // Persistir solo lo que trae la consulta sobre la versión actual: la
+      // consulta tarda segundos y entretanto pueden haber dejado de seguirla o
+      // confirmado una alerta.
+      const guardado = await this._guardarSobreActual(clave, (actual) => ({
+        lastChecked: tracking.lastChecked,
+        lastError: null,
+        currentStatus: tracking.currentStatus,
+        channel: tracking.channel,
+        ...(tracking.aeat ? { aeat: tracking.aeat } : {}),
+        statusHistory: [...(actual.statusHistory || []), tracking.statusHistory[tracking.statusHistory.length - 1]],
+        alerts: [...(actual.alerts || []), ...alertasNuevas],
+        luciPredictions: tracking.luciPredictions
+      }));
+      if (!guardado) return this._noEncontrada();
+
+      if (alertasNuevas.length > 0) {
+        this.emit('statusChange', { mrn, tracking: guardado, changeAnalysis: { alerts: alertasNuevas } });
+      }
+
+      return {
+        success: true,
+        mrn,
+        tracking: guardado,
+        changed: previousStatus !== result.status || previousChannel !== result.channel,
+        luciAnalysis: guardado.luciPredictions
+      };
 
     } catch (error) {
+      // El detalle (puede llevar hosts o rutas internas) se queda en el log.
       logger.error(`StatusMonitor: Error actualizando ${mrn}`, { error: error.message });
       return {
         success: false,
-        error: error.message
+        tipo: 'interno',
+        error: 'No se pudo actualizar el estado de la declaración'
       };
     }
+  }
+
+  _noEncontrada() {
+    return { success: false, tipo: 'no_encontrada', error: 'Declaración no encontrada en seguimiento' };
+  }
+
+  /**
+   * Vuelve a leer el seguimiento y guarda encima los campos que devuelve
+   * `cambios(actual)`. Si entretanto lo han quitado del seguimiento, no lo
+   * resucita y devuelve null.
+   */
+  async _guardarSobreActual(clave, cambios) {
+    const actual = await this.trackedDeclarations.get(clave);
+    if (!actual) return null;
+    const nuevo = { ...actual, ...cambios(actual) };
+    await this.trackedDeclarations.set(clave, nuevo);
+    return nuevo;
+  }
+
+  /**
+   * La AEAT ya no cambiará la declaración. Con la consulta oficial manda
+   * `aeat.final` (un levante de AES aún puede acabar en salida o no levante);
+   * seguimientos anteriores sin ese dato: RELEASED o REJECTED.
+   */
+  _completada(tracking) {
+    return tracking.aeat
+      ? tracking.aeat.final === true
+      : (tracking.currentStatus === 'RELEASED' || tracking.currentStatus === 'REJECTED');
+  }
+
+  /**
+   * Una pasada de consulta automática: solo seguimientos no finales de tipos
+   * con consulta oficial, empezando por los que llevan más tiempo sin
+   * consultarse, hasta `limite`. Un error en una declaración no corta la pasada.
+   * @param {{ limite?: number }} [opciones]
+   * @returns {Promise<{ consultadas: number, conError: number, restantes: number, omitidas: number }>}
+   */
+  async pollOnce({ limite = 50 } = {}) {
+    const declarations = await this.trackedDeclarations.values();
+    const vivas = declarations.filter(t => !this._completada(t) && aeatRealService.puedeConsultarEstado(t.type));
+    const omitidas = declarations.length - vivas.length;
+    // Nunca consultadas primero; luego por antigüedad de la última consulta.
+    const ordenadas = [...vivas].sort((a, b) => new Date(a.lastChecked || 0) - new Date(b.lastChecked || 0));
+    const lote = ordenadas.slice(0, Math.max(0, limite));
+
+    let conError = 0;
+    for (const tracking of lote) {
+      try {
+        const r = await this.refreshDeclarationStatus(tracking.mrn, tracking.tenantId || null);
+        if (!r.success) conError += 1;
+      } catch (error) {
+        conError += 1;
+        logger.error('StatusMonitor: Error en la pasada de consulta', { error: error.message });
+      }
+      // Pequeño respiro entre consultas para no saturar a la AEAT.
+      await this._delay(500);
+    }
+
+    return { consultadas: lote.length, conError, restantes: ordenadas.length - lote.length, omitidas };
   }
 
   // ============== ANÁLISIS LUCI ==============
@@ -867,42 +898,6 @@ class AEATStatusMonitorService extends EventEmitter {
 
   // ============== UTILIDADES ==============
 
-  async _pollAllDeclarations() {
-    if (!this.pollingConfig.enabled) return;
-
-    const declarations = await this.trackedDeclarations.values();
-    if (declarations.length === 0) return;
-
-    logger.info(`StatusMonitor: Polling ${declarations.length} declaraciones`);
-
-    for (const tracking of declarations) {
-      // No consultar declaraciones completadas. Con la consulta oficial (AES/NCTS)
-      // manda `aeat.final`: un levante (DE/DS) es RELEASED pero aun puede acabar
-      // en salida efectiva, salida parada o no levante.
-      const completada = tracking.aeat
-        ? tracking.aeat.final === true
-        : (tracking.currentStatus === 'RELEASED' || tracking.currentStatus === 'REJECTED');
-      if (completada) {
-        continue;
-      }
-
-      try {
-        await this.refreshDeclarationStatus(
-          tracking.mrn,
-          this.pollingConfig.certificateId,
-          this.pollingConfig.password,
-          tracking.tenantId || null
-        );
-
-        // Pequeño delay entre consultas para no saturar AEAT
-        await this._delay(500);
-
-      } catch (error) {
-        logger.error(`StatusMonitor: Error polling ${tracking.mrn}`, { error: error.message });
-      }
-    }
-  }
-
   _calculateDeadline(days) {
     const deadline = new Date();
     deadline.setDate(deadline.getDate() + days);
@@ -929,8 +924,9 @@ class AEATStatusMonitorService extends EventEmitter {
     return {
       service: 'AEAT Status Monitor Service',
       version: '6.1.0',
-      pollingEnabled: this.pollingConfig.enabled,
-      pollingInterval: this.pollingConfig.intervalMs,
+      // Lazy: el worker requiere este servicio.
+      pollingEnabled: require('../../workers/aeatStatusPollingWorker').activo(),
+      pollingInterval: require('../../workers/aeatStatusPollingWorker').configuracion().intervaloMs,
       trackedDeclarations: trackedCount,
       features: [
         'Seguimiento automático de declaraciones',

@@ -554,76 +554,11 @@ describe('aeatRealService - Cobertura de RAMAS', () => {
   // ============================================================================
   // RAMA: queryDeclarationStatus
   // ============================================================================
+  // Las consultas por tipo (servicios oficiales) están en
+  // aeatRealService.consultaAesNcts.test.js y consultaH1H7Ens.test.js.
   describe('RAMA: queryDeclarationStatus', () => {
-    test('tipo válido H1 hace petición correcta', async () => {
-      mockAxiosPost.mockResolvedValueOnce({
-        status: 200,
-        data: `<soapenv:Envelope><soapenv:Body>
-          <aeat:QueryResponse>
-            <aeat:Estado>ACCEPTED</aeat:Estado>
-            <aeat:Canal>GREEN</aeat:Canal>
-            <aeat:FechaActualizacion>2026-08-05T10:00:00Z</aeat:FechaActualizacion>
-          </aeat:QueryResponse>
-        </soapenv:Body></soapenv:Envelope>`
-      });
-
-      const result = await aeatRealService.queryDeclarationStatus('26ES111', 'H1', 'cert-id', 'pass');
-
-      expect(result.success).toBe(true);
-      expect(result.status).toBe('ACCEPTED');
-      expect(result.declarationType).toBe('H1');
-    });
-
-    test('tipo válido H7', async () => {
-      mockAxiosPost.mockResolvedValueOnce({
-        status: 200,
-        data: `<soapenv:Envelope><soapenv:Body>
-          <aeat:QueryResponse><aeat:Estado>PENDING</aeat:Estado></aeat:QueryResponse>
-        </soapenv:Body></soapenv:Envelope>`
-      });
-
-      const result = await aeatRealService.queryDeclarationStatus('26ES222', 'H7', 'cert-id', 'pass');
-      expect(result).toHaveProperty('declarationType');
-    });
-
-    test('tipo válido AES', async () => {
-      mockAxiosPost.mockResolvedValueOnce({
-        status: 200,
-        data: `<soapenv:Envelope><soapenv:Body>
-          <aeat:QueryResponse><aeat:Estado>RELEASED</aeat:Estado></aeat:QueryResponse>
-        </soapenv:Body></soapenv:Envelope>`
-      });
-
-      const result = await aeatRealService.queryDeclarationStatus('26ES333', 'AES', 'cert-id', 'pass');
-      expect(result).toHaveProperty('declarationType');
-    });
-
-    test('tipo válido NCTS', async () => {
-      mockAxiosPost.mockResolvedValueOnce({
-        status: 200,
-        data: `<soapenv:Envelope><soapenv:Body>
-          <aeat:QueryResponse><aeat:Estado>CONTROL</aeat:Estado></aeat:QueryResponse>
-        </soapenv:Body></soapenv:Envelope>`
-      });
-
-      const result = await aeatRealService.queryDeclarationStatus('26ES444', 'NCTS', 'cert-id', 'pass');
-      expect(result).toHaveProperty('declarationType');
-    });
-
-    test('tipo válido ENS', async () => {
-      mockAxiosPost.mockResolvedValueOnce({
-        status: 200,
-        data: `<soapenv:Envelope><soapenv:Body>
-          <aeat:QueryResponse><aeat:Estado>REJECTED</aeat:Estado></aeat:QueryResponse>
-        </soapenv:Body></soapenv:Envelope>`
-      });
-
-      const result = await aeatRealService.queryDeclarationStatus('26ES555', 'ENS', 'cert-id', 'pass');
-      expect(result).toHaveProperty('declarationType');
-    });
-
     test('tipo inválido INVALID_TYPE rechaza con luciAnalysis', async () => {
-      const result = await aeatRealService.queryDeclarationStatus('26ES666', 'INVALID_TYPE', 'cert-id', 'pass');
+      const result = await aeatRealService.queryDeclarationStatus('26ES666', 'INVALID_TYPE');
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('no soportado');
@@ -631,50 +566,12 @@ describe('aeatRealService - Cobertura de RAMAS', () => {
       expect(mockAxiosPost).not.toHaveBeenCalled();
     });
 
-    test('queryENSStatus delega a queryDeclarationStatus con tipo ENS', async () => {
-      mockAxiosPost.mockResolvedValueOnce({
-        status: 200,
-        data: `<soapenv:Envelope><soapenv:Body>
-          <aeat:QueryResponse><aeat:Estado>PENDING</aeat:Estado></aeat:QueryResponse>
-        </soapenv:Body></soapenv:Envelope>`
-      });
-
-      const result = await aeatRealService.queryENSStatus('26ES777', 'cert-id', 'pass');
-      expect(mockValidateCertificateForOperation).toHaveBeenCalledWith('cert-id', 'ENS');
-    });
-
-    test('queryDeclarationStatus rechaza cuando certificado es inválido', async () => {
-      mockValidateCertificateForOperation.mockResolvedValueOnce({
-        valid: false,
-        luciAnalysis: { issue: 'Cert expirado' }
-      });
-
-      const result = await aeatRealService.queryDeclarationStatus('26ES888', 'H1', 'cert-id', 'pass');
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Certificado no válido para esta operación');
+    test('ENS: no disponible, sin certificado del almacén, sin firma y sin envío', async () => {
+      const result = await aeatRealService.queryENSStatus('26ES777');
+      expect(result).toMatchObject({ success: false, tipo: 'no_disponible' });
+      expect(mockValidateCertificateForOperation).not.toHaveBeenCalled();
+      expect(mockSignForAEAT).not.toHaveBeenCalled();
       expect(mockAxiosPost).not.toHaveBeenCalled();
-    });
-
-    test('queryDeclarationStatus rechaza cuando firma falla', async () => {
-      mockSignForAEAT.mockResolvedValueOnce({
-        success: false,
-        error: 'Signature failed'
-      });
-
-      const result = await aeatRealService.queryDeclarationStatus('26ES999', 'H1', 'cert-id', 'pass');
-
-      expect(result.success).toBe(false);
-      expect(mockAxiosPost).not.toHaveBeenCalled();
-    });
-
-    test('queryDeclarationStatus maneja error de red', async () => {
-      mockAxiosPost.mockRejectedValue(new Error('Network timeout'));
-
-      const result = await aeatRealService.queryDeclarationStatus('26ESAAA', 'H1', 'cert-id', 'pass');
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Network timeout');
     });
   });
 
@@ -1098,29 +995,8 @@ describe('aeatRealService - Cobertura de RAMAS', () => {
       expect(diffDays).toBeLessThanOrEqual(31);
     });
 
-    test('_extractMessages extrae múltiples mensajes', () => {
-      const xml = `<root>
-        <aeat:Mensaje>Mensaje 1</aeat:Mensaje>
-        <aeat:Mensaje>Mensaje 2</aeat:Mensaje>
-        <aeat:Mensaje>Mensaje 3</aeat:Mensaje>
-      </root>`;
 
-      const messages = aeatRealService._extractMessages(xml);
-      expect(messages).toHaveLength(3);
-      expect(messages).toContain('Mensaje 1');
-    });
 
-    test('_extractField extrae campo del XML', () => {
-      const xml = '<root><aeat:Estado>ACCEPTED</aeat:Estado></root>';
-      const field = aeatRealService._extractField(xml, 'Estado');
-      expect(field).toBe('ACCEPTED');
-    });
-
-    test('_extractField retorna null si no encuentra campo', () => {
-      const xml = '<root></root>';
-      const field = aeatRealService._extractField(xml, 'NoExiste');
-      expect(field).toBeNull();
-    });
   });
 
   // ============================================================================

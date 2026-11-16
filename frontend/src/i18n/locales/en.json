@@ -1704,7 +1704,14 @@
     "integrations": "Integrations",
     "generalInfo": "General Information",
     "notificationPrefs": "Notification Preferences",
-    "securityConfig": "Security Configuration"
+    "securityConfig": "Security Configuration",
+    "generalReadOnly": "Only an organization administrator can change these details.",
+    "nifReadOnly": "The tax ID cannot be changed from Settings: contact support.",
+    "manageInCustoms": "Managed in Settings › Customs",
+    "usersCount_one": "{{count}} user",
+    "usersCount_other": "{{count}} users",
+    "usersCountUnavailable": "The number of users per role could not be retrieved.",
+    "usersCount": "{{count}} users"
   },
   "portal": {
     "welcome": "Welcome,",
