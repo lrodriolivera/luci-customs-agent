@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="51.6.0">
+	<!--==========================================================-->
+	<!--===== Includes                                            -->
+	<!--==========================================================-->
+	<xs:include schemaLocation="ES_ctypes_v515.xsd"/>
+	<!--================================================================================-->
+	<!--===== Root Element                                                              -->
+	<!--================================================================================-->
+	<xs:element name="CCTRAC" type="CCTRACType"/>
+	<!--================================================================================-->
+	<!--===== Root Element Content                                                      -->
+	<!--================================================================================-->
+	<xs:complexType name="CCTRACType">
+		<xs:sequence>
+			<xs:group ref="MESSAGE"/>
+			<xs:element name="TransitOperation" type="TransitOperationTypeTRAC"/>
+		</xs:sequence>
+		<xs:attribute name="PhaseID" type="phaseIDtype"/>
+	</xs:complexType>
+</xs:schema>

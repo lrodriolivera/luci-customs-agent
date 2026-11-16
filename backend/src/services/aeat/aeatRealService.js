@@ -16,6 +16,18 @@ const forge = require('node-forge');
 const logger = require('../../config/logger');
 const certificateService = require('./certificateService');
 const xadesSignatureService = require('./xadesSignatureService');
+const aeatTransport = require('./aeatTransport');
+const {
+  buildConsultaAesXML, buildConsultaNctsXML, interpretarConsultaAes, interpretarConsultaNcts,
+  idMensajeConsulta, nifRemitente, ENDPOINT_AES, ENDPOINT_NCTS
+} = require('./aesNctsConsulta');
+const { representanteDelTenant, exigirEori } = require('../forms/identificadorAduanero');
+
+// Consultas de estado que ya usan el servicio oficial (aesNctsConsulta.js).
+const CONSULTAS_OFICIALES = {
+  AES: { build: buildConsultaAesXML, interpretar: interpretarConsultaAes, endpoint: ENDPOINT_AES },
+  NCTS: { build: buildConsultaNctsXML, interpretar: interpretarConsultaNcts, endpoint: ENDPOINT_NCTS }
+};
 
 const { escapeRegex } = require('../../utils/escapeRegex');
 class AEATRealService {
@@ -556,8 +568,17 @@ class AEATRealService {
 
   /**
    * Consultar estado de declaración
+   *
+   * AES y NCTS van por la consulta oficial (CCAESC / CCTRAC) con el transporte
+   * mTLS de los envíos; `certificateId` y `password` no se usan para ellas y
+   * el remitente sale de `opciones` ({ sender } o { tenant } o { tenantId }).
+   * H1, H7 y ENS siguen por el camino antiguo (ver _buildQueryRequest).
    */
-  async queryDeclarationStatus(mrn, declarationType, certificateId, password) {
+  async queryDeclarationStatus(mrn, declarationType, certificateId, password, opciones = {}) {
+    if (CONSULTAS_OFICIALES[declarationType]) {
+      return this._consultarEstadoOficial(mrn, declarationType, opciones);
+    }
+
     const serviceMap = {
       'H1': this.SERVICES.H1_QUERY,
       'H7': this.SERVICES.H7_QUERY,
@@ -626,6 +647,60 @@ class AEATRealService {
         luciAnalysis: this._generateQueryErrorAnalysis(error, declarationType)
       };
     }
+  }
+
+  /**
+   * Consulta de estado AES/NCTS por el servicio oficial. Nunca lanza: devuelve
+   * { success: false, error } si falta el remitente, el MRN no vale, falla la
+   * red o la AEAT responde EX/EF.
+   */
+  async _consultarEstadoOficial(mrn, declarationType, opciones = {}) {
+    const consulta = CONSULTAS_OFICIALES[declarationType];
+    try {
+      const sender = await this._remitenteConsulta(opciones);
+      const soapXML = consulta.build({ mensajeId: idMensajeConsulta(), mrn, sender });
+      logger.info(`AEATReal: Consultando estado ${declarationType} MRN: ${mrn}`);
+      const response = await aeatTransport.sendSoap(soapXML, consulta.endpoint);
+      const resultado = consulta.interpretar(response?.data);
+
+      if (!resultado.success) {
+        logger.warn(`AEATReal: Consulta ${declarationType} ${mrn} sin éxito`, { tipo: resultado.tipo, error: resultado.error });
+        return {
+          ...resultado,
+          declarationType,
+          httpStatus: response?.status,
+          luciAnalysis: this._generateQueryErrorAnalysis(new Error(resultado.error), declarationType)
+        };
+      }
+
+      const result = { ...resultado, declarationType, lastUpdate: new Date().toISOString() };
+      return { ...result, luciAnalysis: await this._luciStatusAnalysis(result, declarationType) };
+    } catch (error) {
+      logger.error(`AEATReal: Error consultando ${declarationType}`, { error: error.message });
+      return {
+        success: false,
+        declarationType,
+        error: error.message,
+        luciAnalysis: this._generateQueryErrorAnalysis(error, declarationType)
+      };
+    }
+  }
+
+  /**
+   * NIF con el que se firma la consulta (messageSender): el explícito o el del
+   * representante del tenant (Ajustes > Aduanas), como en los envíos.
+   */
+  async _remitenteConsulta({ sender, tenant, tenantId } = {}) {
+    if (sender) return nifRemitente(sender);
+    let datosTenant = tenant || null;
+    if (!datosTenant && tenantId) {
+      const Tenant = require('../../models/Tenant');
+      datosTenant = await Tenant.findById(tenantId).lean();
+    }
+    if (!datosTenant) {
+      throw new Error('No se puede consultar: falta el tenant (remitente) de la declaración');
+    }
+    return nifRemitente(exigirEori(representanteDelTenant(datosTenant).eori, 'representante'));
   }
 
   /**

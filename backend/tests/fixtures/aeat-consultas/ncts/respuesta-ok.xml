@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><CCTRACV2Sal xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CCTRACV2Sal.xsd" Id="20261116081351288033">
+	<messageSender>NTA.ES</messageSender>
+	<messageRecipient>B22477020</messageRecipient>
+	<preparationDateAndTime>2026-11-16T08:13:51</preparationDateAndTime>
+	<messageIdentification>20261116081351288033</messageIdentification>
+	<messageType>RETRAC</messageType>
+	<correlationIdentifier>LUCIQ261116071351165</correlationIdentifier>
+	<ControlRespuesta>
+		<tipoRespuesta>OK</tipoRespuesta>
+	</ControlRespuesta>
+	<DatosRespuestaCorrecta>
+		<TransitOperation>
+			<MRN>26ES002801501441J7</MRN>
+			<LRN>LRNMWIXGE5GQA</LRN>
+			<declarationType>T1</declarationType>
+			<additionalDeclarationType>A</additionalDeclarationType>
+			<security>0</security>
+			<reducedDatasetIndicator>0</reducedDatasetIndicator>
+			<bindingItinerary>0</bindingItinerary>
+		</TransitOperation>
+		<Ncts5DatosGestion>
+			<estado>DE</estado>
+			<fechaHoraAlta>2026-11-16T08:13:48</fechaHoraAlta>
+			<fechaAdmision>2026-11-16</fechaAdmision>
+			<fechaLevante>2026-11-16</fechaLevante>
+			<circuitoExpedicion>V</circuitoExpedicion>
+			<CSVdeDAT>BLQPJ8N8YFWG6ZJJ</CSVdeDAT>
+			<fechaLimiteLlegada>2026-11-22</fechaLimiteLlegada>
+			<faseOrigen>P5</faseOrigen>
+		</Ncts5DatosGestion>
+		<Authorisation>
+			<sequenceNumber>1</sequenceNumber>
+			<type>C521</type>
+			<referenceNumber>ESACR02026000002</referenceNumber>
+		</Authorisation>
+		<CustomsOfficeOfDeparture>
+			<referenceNumber>ES002801</referenceNumber>
+		</CustomsOfficeOfDeparture>
+		<CustomsOfficeOfDestinationDeclared>
+			<referenceNumber>ES002901</referenceNumber>
+		</CustomsOfficeOfDestinationDeclared>
+		<CustomsOfficeOfDestinationActual>
+			<referenceNumber>ES002901</referenceNumber>
+		</CustomsOfficeOfDestinationActual>
+		<HolderOfTheTransitProcedure>
+			<identificationNumber>ESB22477020</identificationNumber>
+			<name>STRIX AI PIONEER SOLUTIONS SL</name>
+			<Address>
+				<streetAndNumber>AVDA  MALICIOSA 34     IZD 1</streetAndNumber>
+				<postcode>28760</postcode>
+				<city>TRES CANTOS</city>
+				<country>ES</country>
+			</Address>
+			<ContactPerson>
+				<name>STRIX AI SL - Testing</name>
+				<phoneNumber>+34976000000</phoneNumber>
+				<eMailAddress>despacho@strixai.ai</eMailAddress>
+			</ContactPerson>
+		</HolderOfTheTransitProcedure>
+		<Guarantee>
+			<sequenceNumber>1</sequenceNumber>
+			<guaranteeType>1</guaranteeType>
+			<GuaranteeReference>
+				<sequenceNumber>1</sequenceNumber>
+				<GRN>26ES0002800000010</GRN>
+				<accessCode>0000</accessCode>
+				<amountToBeCovered>250</amountToBeCovered>
+			</GuaranteeReference>
+		</Guarantee>
+		<Consignment>
+			<containerIndicator>0</containerIndicator>
+			<grossMass>25</grossMass>
+			<referenceNumberUCR>LRNMWIXGE5GQA</referenceNumberUCR>
+			<LocationOfGoods>
+				<typeOfLocation>B</typeOfLocation>
+				<qualifierOfIdentification>Y</qualifierOfIdentification>
+				<authorisationNumber>2801AAAAAA</authorisationNumber>
+			</LocationOfGoods>
+			<PlaceOfLoading>
+				<country>ES</country>
+				<location>Madrid</location>
+			</PlaceOfLoading>
+			<HouseConsignment>
+				<sequenceNumber>1</sequenceNumber>
+				<grossMass>25</grossMass>
+				<Consignee>
+					<identificationNumber>ESB22477020</identificationNumber>
+					<name>STRIX AI PIONEER SOLUTIONS SL</name>
+					<Address>
+						<streetAndNumber>AVDA  MALICIOSA 34     IZD 1</streetAndNumber>
+						<postcode>28760</postcode>
+						<city>TRES CANTOS</city>
+						<country>ES</country>
+					</Address>
+				</Consignee>
+				<ConsignmentItem>
+					<goodsItemNumber>1</goodsItemNumber>
+					<declarationGoodsItemNumber>1</declarationGoodsItemNumber>
+					<countryOfDispatch>ES</countryOfDispatch>
+					<countryOfDestination>ES</countryOfDestination>
+					<Commodity>
+						<descriptionOfGoods>QA-CLAUDE Ropa de cama de punto de algodon</descriptionOfGoods>
+						<CommodityCode>
+							<harmonizedSystemSubHeadingCode>630210</harmonizedSystemSubHeadingCode>
+							<combinedNomenclatureCode>00</combinedNomenclatureCode>
+						</CommodityCode>
+						<GoodsMeasure>
+							<grossMass>25</grossMass>
+							<netMass>20</netMass>
+						</GoodsMeasure>
+					</Commodity>
+					<Packaging>
+						<sequenceNumber>1</sequenceNumber>
+						<typeOfPackages>CT</typeOfPackages>
+						<numberOfPackages>2</numberOfPackages>
+						<shippingMarks>N/M</shippingMarks>
+					</Packaging>
+					<PreviousDocument>
+						<sequenceNumber>1</sequenceNumber>
+						<type>N337</type>
+						<referenceNumber>28016000001</referenceNumber>
+						<goodsItemNumber>1</goodsItemNumber>
+					</PreviousDocument>
+				</ConsignmentItem>
+			</HouseConsignment>
+		</Consignment>
+	</DatosRespuestaCorrecta>
+</CCTRACV2Sal>
+
+</env:Body></env:Envelope>

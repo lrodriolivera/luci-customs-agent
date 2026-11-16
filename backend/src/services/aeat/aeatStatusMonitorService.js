@@ -357,12 +357,14 @@ class AEATStatusMonitorService extends EventEmitter {
     try {
       logger.info(`StatusMonitor: Actualizando estado de ${mrn}`);
 
-      // Consultar estado en AEAT
+      // Consultar estado en AEAT. El tenant del seguimiento da el remitente de
+      // las consultas oficiales AES/NCTS (messageSender = NIF del firmante).
       const result = await aeatRealService.queryDeclarationStatus(
         mrn,
         tracking.type,
         certificateId,
-        password
+        password,
+        { tenantId: tracking.tenantId || tenantId || null }
       );
 
       if (result.success) {
@@ -373,6 +375,16 @@ class AEATStatusMonitorService extends EventEmitter {
         tracking.lastChecked = new Date().toISOString();
         tracking.currentStatus = result.status;
         tracking.channel = result.channel || tracking.channel;
+        // Detalle de la consulta oficial (AES/NCTS), sin la respuesta cruda.
+        if (result.estado !== undefined) {
+          tracking.aeat = {
+            estado: result.estado,
+            estadoTexto: result.estadoTexto || null,
+            circuito: result.circuito || null,
+            csv: result.csv || null,
+            fechas: result.fechas || {}
+          };
+        }
 
         // Agregar al historial
         tracking.statusHistory.push({

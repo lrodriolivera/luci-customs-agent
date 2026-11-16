@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="51.8.0">
+	<!--=======================================================-->
+	<!--============= Message Header Definition  ==============-->
+	<!--=======================================================-->
+	<xs:include schemaLocation="ES_stypes_v515.xsd"/>
+	<xs:group name="MESSAGE">
+		<xs:sequence>
+			<xs:element name="messageSender" type="MessageSenderContentType"/>
+			<xs:element name="messageRecipient" type="MessageRecipientContentType"/>
+			<xs:element name="preparationDateAndTime" type="PreparationDateAndTimeContentType"/>
+			<xs:element name="messageIdentification" type="MessageIdentificationContentType"/>
+			<xs:element name="messageType" type="MessageTypeContentType"/>
+			<xs:element name="correlationIdentifier" type="CorrelationIdentifierContentType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:group>
+	<!--================================================================================-->
+	<!--===== MessageIdentification                                                     -->
+	<!--================================================================================-->
+	<xs:simpleType name="MessageIdentificationContentType">
+		<xs:restriction base="xs:token">
+			<xs:pattern value=".{1,35}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!--================================================================================-->
+	<!--===== MessageRecipient                                                          -->
+	<!--================================================================================-->
+	<xs:simpleType name="MessageRecipientContentType">
+		<xs:restriction base="xs:token">
+			<xs:pattern value=".{1,35}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!--================================================================================-->
+	<!--===== MessageSender                                                             -->
+	<!--================================================================================-->
+	<xs:simpleType name="MessageSenderContentType">
+		<xs:restriction base="xs:token">
+			<xs:pattern value=".{1,35}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!--================================================================================-->
+	<!--===== CorrelationIdentifier                                                     -->
+	<!--================================================================================-->
+	<xs:simpleType name="CorrelationIdentifierContentType">
+		<xs:restriction base="xs:token">
+			<xs:pattern value=".{1,35}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!--================================================================================-->
+	<!--===== PreparationDateAndTime                                                    -->
+	<!--================================================================================-->
+	<xs:simpleType name="PreparationDateAndTimeContentType">
+		<xs:restriction base="xs:dateTime">
+			<xs:pattern value="\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

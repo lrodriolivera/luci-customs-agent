@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><CCAESCV1Sal xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/CCAESCV1Sal.xsd" Id="20261116081151366197">
+	<messageSender>NECA.ES</messageSender>
+	<messageRecipient>B22477020</messageRecipient>
+	<preparationDateAndTime>2026-11-16T08:11:51</preparationDateAndTime>
+	<messageIdentification>20261116081151366197</messageIdentification>
+	<messageType>REAESC</messageType>
+	<ControlRespuesta>
+		<tipoRespuesta>EX</tipoRespuesta>
+	</ControlRespuesta>
+	<XMLError>
+		<errorLineNumber>1</errorLineNumber>
+		<errorColumnNumber>1</errorColumnNumber>
+		<errorPointer>0</errorPointer>
+		<errorCode>18</errorCode>
+		<errorText>103 - No se ha encontrado la etiqueta de inicio. NameSpace:https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/CCAESCV1Ent.xsd - LocalPart:CCAESCV1Ent</errorText>
+	</XMLError>
+</CCAESCV1Sal>
+
+</env:Body></env:Envelope>

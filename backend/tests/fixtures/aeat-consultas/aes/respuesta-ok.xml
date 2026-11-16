@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><CCAESCV1Sal xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/CCAESCV1Sal.xsd" Id="20261116081151563197">
+	<messageSender>NECA.ES</messageSender>
+	<messageRecipient>B22477020</messageRecipient>
+	<preparationDateAndTime>2026-11-16T08:11:51</preparationDateAndTime>
+	<messageIdentification>20261116081151563197</messageIdentification>
+	<messageType>REAESC</messageType>
+	<correlationIdentifier>LUCIQ261116071151465</correlationIdentifier>
+	<ControlRespuesta>
+		<tipoRespuesta>OK</tipoRespuesta>
+	</ControlRespuesta>
+	<DatosRespuestaCorrecta>
+		<ExportOperation>
+			<MRN>26ES002801100321B8</MRN>
+			<LRN>LUCIAES261116071147399</LRN>
+			<declarationType>EX</declarationType>
+			<additionalDeclarationType>A</additionalDeclarationType>
+			<security>2</security>
+			<totalAmountInvoiced>1000</totalAmountInvoiced>
+			<invoiceCurrency>EUR</invoiceCurrency>
+		</ExportOperation>
+		<AESDatosGestion>
+			<estadoAES>DS</estadoAES>
+			<fechaHoraAlta>2026-11-16T08:11:47</fechaHoraAlta>
+			<fechaAdmision>2026-11-16</fechaAdmision>
+			<fechaLevante>2026-11-16</fechaLevante>
+			<circuitoAEAT>V</circuitoAEAT>
+			<CSVLevanteExportacion>VTURE98JFHDK65CX</CSVLevanteExportacion>
+			<flagDirectaIndirecta>D</flagDirectaIndirecta>
+			<faseAES>A1</faseAES>
+			<esExportadorParticular>0</esExportadorParticular>
+		</AESDatosGestion>
+		<CustomsOfficeOfExport>
+			<referenceNumber>ES002801</referenceNumber>
+		</CustomsOfficeOfExport>
+		<CustomsOfficeOfExitDeclared>
+			<referenceNumber>ES002801</referenceNumber>
+		</CustomsOfficeOfExitDeclared>
+		<CustomsOfficeOfExitActual>
+			<referenceNumber>ES002801</referenceNumber>
+		</CustomsOfficeOfExitActual>
+		<Exporter>
+			<identificationNumber>ESB22477020</identificationNumber>
+			<name>STRIX AI PIONEER SOLUTIONS SL</name>
+			<Address>
+				<streetAndNumber>AVDA  MALICIOSA 34     IZD 1</streetAndNumber>
+				<postcode>28760</postcode>
+				<city>TRES CANTOS</city>
+				<country>ES</country>
+			</Address>
+		</Exporter>
+		<Declarant>
+			<identificationNumber>ESB22477020</identificationNumber>
+			<name>STRIX AI PIONEER SOLUTIONS SL</name>
+			<caracterRepresentacion>1</caracterRepresentacion>
+			<Address>
+				<streetAndNumber>AVDA  MALICIOSA 34     IZD 1</streetAndNumber>
+				<postcode>28760</postcode>
+				<city>TRES CANTOS</city>
+				<country>ES</country>
+			</Address>
+			<ContactPerson>
+				<name>STRIX AI SL - Testing</name>
+				<phoneNumber>+34976000000</phoneNumber>
+				<eMailAddress>despacho@strixai.ai</eMailAddress>
+			</ContactPerson>
+		</Declarant>
+		<GoodsShipment>
+			<natureOfTransaction>11</natureOfTransaction>
+			<countryOfExport>ES</countryOfExport>
+			<countryOfDestination>US</countryOfDestination>
+			<DeliveryTerms>
+				<incotermCode>FOB</incotermCode>
+				<location>Madrid</location>
+				<country>ES</country>
+			</DeliveryTerms>
+			<Consignment>
+				<containerIndicator>0</containerIndicator>
+				<modeOfTransportAtTheBorder>3</modeOfTransportAtTheBorder>
+				<grossMass>25</grossMass>
+				<Consignee>
+					<identificationNumber>ES89890010F</identificationNumber>
+					<name>ADUANERO ADUANERO, JUAN</name>
+					<Address>
+						<streetAndNumber>CALLE SANTA MARIA MAGDALENA 16</streetAndNumber>
+						<postcode>28016</postcode>
+						<city>MADRID</city>
+						<country>ES</country>
+					</Address>
+				</Consignee>
+				<LocationOfGoods>
+					<typeOfLocation>B</typeOfLocation>
+					<qualifierOfIdentification>Y</qualifierOfIdentification>
+					<authorisationNumber>2801AAAAAC</authorisationNumber>
+				</LocationOfGoods>
+				<CountryOfRoutingOfConsignment>
+					<sequenceNumber>1</sequenceNumber>
+					<country>ES</country>
+				</CountryOfRoutingOfConsignment>
+				<CountryOfRoutingOfConsignment>
+					<sequenceNumber>2</sequenceNumber>
+					<country>US</country>
+				</CountryOfRoutingOfConsignment>
+				<ActiveBorderTransportMeans>
+					<typeOfIdentification>30</typeOfIdentification>
+					<identificationNumber>1234ABC</identificationNumber>
+					<nationality>ES</nationality>
+				</ActiveBorderTransportMeans>
+				<TransportDocument>
+					<sequenceNumber>1</sequenceNumber>
+					<type>N730</type>
+					<referenceNumber>QA-TD-147399</referenceNumber>
+				</TransportDocument>
+			</Consignment>
+			<GoodsItem>
+				<declarationGoodsItemNumber>1</declarationGoodsItemNumber>
+				<statisticalValue>1000</statisticalValue>
+				<Procedure>
+					<requestedProcedure>10</requestedProcedure>
+					<previousProcedure>00</previousProcedure>
+				</Procedure>
+				<Origin>
+					<countryOfOrigin>ES</countryOfOrigin>
+					<regionOfDispatch>28</regionOfDispatch>
+				</Origin>
+				<Commodity>
+					<descriptionOfGoods>QA-CLAUDE Ropa de cama de punto de algodon</descriptionOfGoods>
+					<CommodityCode>
+						<harmonizedSystemSubHeadingCode>630210</harmonizedSystemSubHeadingCode>
+						<combinedNomenclatureCode>00</combinedNomenclatureCode>
+					</CommodityCode>
+					<GoodsMeasure>
+						<grossMass>25</grossMass>
+						<netMass>20</netMass>
+					</GoodsMeasure>
+				</Commodity>
+				<Packaging>
+					<sequenceNumber>1</sequenceNumber>
+					<typeOfPackages>PK</typeOfPackages>
+					<numberOfPackages>2</numberOfPackages>
+					<shippingMarks>N/M</shippingMarks>
+				</Packaging>
+				<SupportingDocument>
+					<sequenceNumber>1</sequenceNumber>
+					<type>N380</type>
+					<referenceNumber>QA-FAC-AES-0001</referenceNumber>
+				</SupportingDocument>
+			</GoodsItem>
+		</GoodsShipment>
+	</DatosRespuestaCorrecta>
+</CCAESCV1Sal>
+
+</env:Body></env:Envelope>
