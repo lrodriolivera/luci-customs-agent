@@ -563,7 +563,8 @@
       "ce_certificate": "Certificato CE",
       "quality_certificate": "Certificato di qualità",
       "customs_payment_receipt": "Ricevuta di pagamento (modello 031)",
-      "other": "Altro"
+      "other": "Altro",
+      "plastic_recycled_certificate": "Certificato di plastica riciclata"
     },
     "descriptionTooShort": "La descrizione deve avere almeno {{min}} caratteri per essere classificata",
     "valueWillBeSaved": "Verrà salvato come {{amount}}",
@@ -2069,7 +2070,8 @@
       "uploadReceipt": "Carica la ricevuta di pagamento",
       "receiptReceived": "Ricevuta di pagamento ricevuta il {{fecha}}. Siamo in attesa dello svincolo."
     },
-    "docPaymentReceipt031": "Ricevuta di pagamento (modello 031)"
+    "docPaymentReceipt031": "Ricevuta di pagamento (modello 031)",
+    "docPlasticRecycledCertificate": "Certificato di plastica riciclata"
   },
   "landing": {
     "features": "Funzionalita",

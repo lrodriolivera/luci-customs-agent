@@ -438,6 +438,12 @@ const update = async (req, res) => {
     }
 
     Object.assign(expedition, updates);
+    // Plastico reciclado declarado en una partida: se pide su certificado (1135).
+    if (Array.isArray(updates.goods)) {
+      const actual = expedition.documentChecklist.map((c) => (c.toObject ? c.toObject() : c));
+      const conCertificado = documentChecklists.conCertificadoPlastico(actual, expedition.goods, expedition.documents);
+      if (conCertificado.length !== actual.length) expedition.documentChecklist = conCertificado;
+    }
     await expedition.save();
 
     logger.info(`Expediente actualizado: ${expedition.expeditionId}`);

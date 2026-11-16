@@ -144,8 +144,45 @@ const DOCUMENT_DEFINITIONS = {
     name: 'Justificante de pago (modelo 031)',
     description: 'Pago previo al levante de los tributos del H1',
     requiredFor: []
+  },
+
+  // Impuesto sobre envases de plastico: el plastico reciclado no paga si se
+  // acredita con el certificado 1135 (AEAT, IMPORT_IEPNR.pdf pag. 12).
+  plastic_recycled_certificate: {
+    name: 'Certificado de plástico reciclado',
+    description: 'Certificado de la planta recicladora o de una entidad acreditada con los kg de plástico reciclado de los envases',
+    requiredFor: []
   }
 };
+
+const TIPO_CERTIFICADO_PLASTICO = 'plastic_recycled_certificate';
+
+/**
+ * Si alguna partida declara plastico reciclado, el expediente necesita el
+ * certificado: se añade a la lista de documentos (sin repetirlo). Devuelve
+ * una lista nueva; no modifica la recibida.
+ *
+ * @param {Array<object>} checklist
+ * @param {Array<object>} goods
+ * @param {Array<object>} [documents] - documentos ya subidos (para marcarlo recibido)
+ * @returns {Array<object>}
+ */
+function conCertificadoPlastico(checklist = [], goods = [], documents = []) {
+  const kg = goods.reduce((s, g) => s + (Number(g?.impuestoPlastico?.kgReciclado) || 0), 0);
+  if (!(kg > 0) || checklist.some((c) => c.documentType === TIPO_CERTIFICADO_PLASTICO)) return checklist;
+  const subido = documents.find((d) => d.type === TIPO_CERTIFICADO_PLASTICO);
+  const def = DOCUMENT_DEFINITIONS[TIPO_CERTIFICADO_PLASTICO];
+  return [...checklist, {
+    documentType: TIPO_CERTIFICADO_PLASTICO,
+    documentName: def.name,
+    description: def.description,
+    required: true,
+    conditional: false,
+    received: Boolean(subido),
+    ...(subido ? { documentId: subido._id } : {}),
+    notes: `${Math.round(kg * 1000) / 1000} kg de plástico reciclado declarados`
+  }];
+}
 
 // Categorias de productos que requieren certificados especiales
 const PRODUCT_CATEGORIES = {
@@ -262,7 +299,7 @@ function getChecklist(operationType, transportMode, goods = []) {
     }
   });
 
-  return checklist;
+  return conCertificadoPlastico(checklist, goods);
 }
 
 /**
@@ -300,6 +337,7 @@ function isDocumentRequired(documentType, operationType, transportMode) {
 
 module.exports = {
   getChecklist,
+  conCertificadoPlastico,
   getDocumentDefinition,
   getAllDocumentTypes,
   isDocumentRequired,

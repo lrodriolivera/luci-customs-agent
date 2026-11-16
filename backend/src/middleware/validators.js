@@ -234,7 +234,7 @@ const DOCUMENT_TYPES = [
   'phytosanitary_certificate', 'veterinary_certificate',
   'fumigation_certificate', 'insurance_certificate',
   'dispatch_authorization', 'import_license', 'export_license',
-  'ce_certificate', 'quality_certificate', 'customs_payment_receipt', 'other'
+  'ce_certificate', 'quality_certificate', 'customs_payment_receipt', 'plastic_recycled_certificate', 'other'
 ];
 
 const documentValidators = {

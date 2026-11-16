@@ -69,6 +69,17 @@ describe('PortalDocuments', () => {
     expect(screen.getByRole('button', { name: 'portal.docInsurance' })).toBeInTheDocument()
   })
 
+  it('ofrece el certificado de plástico reciclado solo si el expediente lo pide', () => {
+    outletContext = { expedition: { operationType: 'import', documentChecklist: [{ documentType: 'plastic_recycled_certificate' }] }, token: 'tok-abc' }
+    const { unmount } = render(<PortalDocuments />)
+    expect(screen.getByRole('button', { name: 'portal.docPlasticRecycledCertificate' })).toBeInTheDocument()
+    unmount()
+
+    outletContext = { expedition: { operationType: 'import', documentChecklist: [] }, token: 'tok-abc' }
+    render(<PortalDocuments />)
+    expect(screen.queryByRole('button', { name: 'portal.docPlasticRecycledCertificate' })).not.toBeInTheDocument()
+  })
+
   it('al elegir la autorizacion de despacho pide su fecha; con otro tipo no', () => {
     outletContext = { expedition: { operationType: 'import' }, token: 'tok-abc' }
     render(<PortalDocuments />)

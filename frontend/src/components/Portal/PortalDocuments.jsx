@@ -16,6 +16,8 @@ import { esImportacion } from '../../utils/expedition'
 
 // Justificante de pago del modelo 031 (pago previo al levante).
 const TIPO_JUSTIFICANTE_031 = 'customs_payment_receipt'
+// Certificado de plastico reciclado (casilla 44, 1135).
+const TIPO_CERTIFICADO_PLASTICO = 'plastic_recycled_certificate'
 
 export default function PortalDocuments() {
   const { t } = useTranslation()
@@ -25,6 +27,7 @@ export default function PortalDocuments() {
   const [uploadedFiles, setUploadedFiles] = useState([])
   const pago = expedition?.pagoTributos
   const admiteJustificante031 = pago?.paymentMethod === 'A' && Boolean(pago?.mrn)
+  const pideCertificadoPlastico = (expedition?.documentChecklist || []).some((c) => c.documentType === TIPO_CERTIFICADO_PLASTICO)
 
   const documentTypes = [
     { value: 'commercial_invoice', label: t('portal.docCommercialInvoice') },
@@ -41,6 +44,8 @@ export default function PortalDocuments() {
     { value: 'insurance_certificate', label: t('portal.docInsurance') },
     // Solo con pago previo al levante y el H1 ya presentado (UAT 16/Nov/2026).
     ...(admiteJustificante031 ? [{ value: TIPO_JUSTIFICANTE_031, label: t('portal.docPaymentReceipt031') }] : []),
+    // Solo si alguna partida declara plastico reciclado (impuesto al plastico).
+    ...(pideCertificadoPlastico ? [{ value: TIPO_CERTIFICADO_PLASTICO, label: t('portal.docPlasticRecycledCertificate') }] : []),
     { value: 'other', label: t('portal.docOther') }
   ]
 

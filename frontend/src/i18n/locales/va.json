@@ -563,7 +563,8 @@
       "ce_certificate": "Certificat CE",
       "quality_certificate": "Certificat de qualitat",
       "customs_payment_receipt": "Justificant de pagament (model 031)",
-      "other": "Altre"
+      "other": "Altre",
+      "plastic_recycled_certificate": "Certificat de plàstic reciclat"
     },
     "descriptionTooShort": "La descripció ha de tenir almenys {{min}} caràcters per classificar-la",
     "valueWillBeSaved": "Es desarà com a {{amount}}",
@@ -2069,7 +2070,8 @@
       "uploadReceipt": "Pujar el justificant de pagament",
       "receiptReceived": "Justificant de pagament rebut el {{fecha}}. Quedem a l'espera de l'alçament."
     },
-    "docPaymentReceipt031": "Justificant de pagament (model 031)"
+    "docPaymentReceipt031": "Justificant de pagament (model 031)",
+    "docPlasticRecycledCertificate": "Certificat de plàstic reciclat"
   },
   "landing": {
     "features": "Funcions",

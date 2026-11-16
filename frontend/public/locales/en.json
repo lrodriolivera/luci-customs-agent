@@ -563,7 +563,8 @@
       "ce_certificate": "CE certificate",
       "quality_certificate": "Quality certificate",
       "customs_payment_receipt": "Proof of payment (form 031)",
-      "other": "Other"
+      "other": "Other",
+      "plastic_recycled_certificate": "Recycled plastic certificate"
     },
     "descriptionTooShort": "The description needs at least {{min}} characters to be classified",
     "valueWillBeSaved": "It will be saved as {{amount}}",
@@ -2070,7 +2071,8 @@
       "uploadReceipt": "Upload the proof of payment",
       "receiptReceived": "Proof of payment received on {{fecha}}. We are now waiting for the release."
     },
-    "docPaymentReceipt031": "Proof of payment (form 031)"
+    "docPaymentReceipt031": "Proof of payment (form 031)",
+    "docPlasticRecycledCertificate": "Recycled plastic certificate"
   },
   "landing": {
     "features": "Features",
