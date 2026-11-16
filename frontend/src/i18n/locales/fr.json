@@ -1299,7 +1299,25 @@
     "statusDraftLabel": "Brouillon",
     "statusSubmittedLabel": "Enviada",
     "iossPaidLabel": "IOSS pagado",
-    "searchLabel": "Rechercher"
+    "searchLabel": "Rechercher",
+    "productIds": {
+      "sectionTitle": "Identifiants du produit (AEAT)",
+      "taricLabel": "Code NC/TARIC (8 ou 10 chiffres) *",
+      "commercialId": "Identifiant commercial (C127) *",
+      "manufacturerRef": "Référence du fabricant (C128) *",
+      "gtin": "Code EAN/GTIN (C129)",
+      "gtinHelp": "Facultatif. Si le produit n'a pas de code EAN/GTIN, LUCI déclare Y081 (aucun identifiant normalisé du fabricant).",
+      "y081": "Y081 (sans EAN/GTIN)",
+      "errorTaric8": "Article {{n}} : le code NC/TARIC doit comporter 8 ou 10 chiffres",
+      "errorMissingIds": "Article {{n}} : l'identifiant commercial (C127) ou la référence du fabricant (C128) est manquant",
+      "errorGtin": "Article {{n}} : l'EAN/GTIN doit comporter 8, 12, 13 ou 14 chiffres",
+      "missingBanner": "Identifiants du produit manquants : l'AEAT rejette le H7 sans l'identifiant commercial (C127) et la référence du fabricant (C128) pour chaque article.",
+      "save": "Enregistrer les identifiants",
+      "saved": "Identifiants enregistrés",
+      "saveError": "Impossible d'enregistrer les identifiants",
+      "manifestHint": "Pour déposer le H7, l'AEAT exige pour chaque article les colonnes sku (C127) et ref_fabricante (C128) ; ean (C129) est facultatif.",
+      "taricCode": "Code NC/TARIC"
+    }
   },
   "channels": {
     "title": "Tableau de Bord des Circuits",

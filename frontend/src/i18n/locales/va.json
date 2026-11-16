@@ -1299,7 +1299,25 @@
     "statusDraftLabel": "Esborrany",
     "statusSubmittedLabel": "Enviada",
     "iossPaidLabel": "IOSS pagat",
-    "searchLabel": "Buscar"
+    "searchLabel": "Buscar",
+    "productIds": {
+      "sectionTitle": "Identificadors del producte (AEAT)",
+      "taricLabel": "Codi NC/TARIC (8 o 10 xifres) *",
+      "commercialId": "Identificador comercial (C127) *",
+      "manufacturerRef": "Referència del fabricant (C128) *",
+      "gtin": "Codi EAN/GTIN (C129)",
+      "gtinHelp": "Opcional. Si el producte no té codi EAN/GTIN, LUCI declara Y081 (no existix identificador normalitzat del fabricant).",
+      "y081": "Y081 (sense EAN/GTIN)",
+      "errorTaric8": "Article {{n}}: el codi NC/TARIC ha de tindre 8 o 10 xifres",
+      "errorMissingIds": "Article {{n}}: falta l'identificador comercial (C127) o la referència del fabricant (C128)",
+      "errorGtin": "Article {{n}}: l'EAN/GTIN ha de tindre 8, 12, 13 o 14 xifres",
+      "missingBanner": "Falten identificadors del producte: l'AEAT rebutja l'H7 sense l'identificador comercial (C127) i la referència del fabricant (C128) en cada partida.",
+      "save": "Guarda els identificadors",
+      "saved": "Identificadors guardats",
+      "saveError": "No s'han pogut guardar els identificadors",
+      "manifestHint": "Per a presentar l'H7, l'AEAT exigix per article les columnes sku (C127) i ref_fabricante (C128); ean (C129) és opcional.",
+      "taricCode": "Codi NC/TARIC"
+    }
   },
   "channels": {
     "title": "Dashboard de Circuits",

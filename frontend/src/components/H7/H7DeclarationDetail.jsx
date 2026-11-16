@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router-dom'
 import { h7API } from '../../services/api'
 import toast from 'react-hot-toast'
+import H7ProductIdsEditor from './H7ProductIdsEditor'
 import {
   ArrowLeftIcon,
   PaperAirplaneIcon,
@@ -392,6 +393,11 @@ export default function H7DeclarationDetail() {
           </table>
         </div>
       </div>
+
+      {/* Identificadores del producto por partida (AEAT: C127, C128, C129/Y081) */}
+      {d.items?.length > 0 && (
+        <H7ProductIdsEditor key={d.updatedAt || d._id} declaration={d} onSaved={loadDeclaration} />
+      )}
 
       {/* Totales y Derechos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

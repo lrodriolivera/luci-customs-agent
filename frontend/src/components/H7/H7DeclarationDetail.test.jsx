@@ -742,4 +742,13 @@ describe('H7DeclarationDetail', () => {
     expect(screen.getAllByText('0.00 €').length).toBeGreaterThan(0)
     expect(screen.getAllByText('0.00 kg').length).toBeGreaterThan(0)
   })
+
+  test('muestra los identificadores del producto (AEAT) y en borrador permite completarlos', async () => {
+    h7API.get.mockResolvedValue({ data: { data: mockDeclaration } })
+    render(<H7DeclarationDetail />)
+    await screen.findByText('H7-2026-001')
+    expect(screen.getByText('h7.productIds.sectionTitle')).toBeDefined()
+    expect(screen.getByText('h7.productIds.missingBanner')).toBeDefined()
+    expect(screen.getAllByRole('button', { name: 'h7.productIds.save' }).length).toBe(1)
+  })
 })
