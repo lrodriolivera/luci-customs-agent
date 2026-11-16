@@ -95,6 +95,7 @@ describe('<PreferencesCalculator />', () => {
           },
           agreements: [{ name: 'CETA', certificate: 'EUR.1', conditions: [] }],
           savings: 125,
+          aeatAvailable: true,
           requirements: ['Certificado EUR.1'],
           warnings: []
         }
@@ -143,6 +144,7 @@ describe('<PreferencesCalculator />', () => {
           recommended: { name: 'CETA', certificate: 'EUR.1', conditions: [] },
           agreements: [{ name: 'CETA', certificate: 'EUR.1', conditions: [] }],
           savings: 0, // arancel NMF ya es 0%: el acuerdo no ahorra nada
+          aeatAvailable: true, standardRate: 0,
           requirements: [], warnings: []
         }
       }
@@ -258,6 +260,7 @@ describe('<PreferencesCalculator />', () => {
             conditions: [{ type: 'preferential', rate: 0.05 }]
           },
           savings: 150,
+          aeatAvailable: true, standardRate: 12.5, preferentialRate: 5,
           agreements: []
         }
       }
@@ -285,6 +288,7 @@ describe('<PreferencesCalculator />', () => {
             conditions: [{ type: 'preferential', rate: 0 }]
           },
           savings: 154.32,
+          aeatAvailable: true,
           agreements: []
         }
       }
@@ -298,6 +302,87 @@ describe('<PreferencesCalculator />', () => {
 
     await waitFor(() => expect(preferencesAPI.checkEligibility).toHaveBeenCalled())
     await waitFor(() => expect(screen.getByText(/154\.32 EUR/i)).toBeInTheDocument())
+  })
+
+  /**
+   * UAT 16/Nov/2026: Japon y Chile aparecian con EUR.1 y el tipo preferencial era un
+   * 0 % fijo. Ahora la prueba de origen viene del backend (declaracion del exportador)
+   * y los tipos son los del Arancel Integrado de la AEAT.
+   */
+  const respuestaJapon = (extra = {}) => ({
+    data: {
+      success: true,
+      data: {
+        eligible: true,
+        recommended: {
+          name: 'EU-Japan Economic Partnership Agreement',
+          certificate: 'Declaración de origen (statement on origin, Anexo 3-D) o conocimiento del importador',
+          proofKind: 'exporter_declaration',
+          conditions: []
+        },
+        agreements: [],
+        savings: 650,
+        aeatAvailable: true,
+        standardRate: 6.5,
+        preferentialRate: 0,
+        preferenceMeasure: '142-PREF',
+        requirements: [],
+        warnings: [],
+        ...extra
+      }
+    }
+  })
+
+  test('Japon: prueba de origen sin EUR.1 y tipos reales de la AEAT', async () => {
+    preferencesAPI.checkEligibility.mockResolvedValue(respuestaJapon())
+
+    render(<PreferencesCalculator />)
+    fireEvent.change(getTaricInput(), { target: { value: '8703239000' } })
+    fireEvent.change(getValueInput(), { target: { value: '10000' } })
+    fireEvent.submit(screen.getByText('Datos del Producto').closest('form'))
+
+    await waitFor(() => expect(screen.getByText('Preferencia Disponible')).toBeInTheDocument())
+    expect(screen.getByText('preferencesCalc.proofOfOrigin:')).toBeInTheDocument()
+    expect(screen.getAllByText(/conocimiento del importador/).length).toBeGreaterThan(0)
+    expect(screen.getByText('preferencesCalc.noEur1')).toBeInTheDocument()
+    // Ni el aviso de "EUR.1 emitido por aduanas" de mas de 6.000 EUR ni el de validez
+    expect(screen.queryByText(/necesita EUR\.1 emitido por aduanas/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/emitido por autoridad aduanera/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/máximo 10 meses/)).not.toBeInTheDocument()
+    expect(screen.getByText('6.5%')).toBeInTheDocument()
+    expect(screen.getByText('0%')).toBeInTheDocument()
+    expect(screen.getByText(/650\.00 EUR/)).toBeInTheDocument()
+    expect(screen.getByText(/preferencesCalc\.ratesSource \(142-PREF\)/)).toBeInTheDocument()
+  })
+
+  test('si la AEAT no responde lo dice y no pinta tipos ni ahorro', async () => {
+    preferencesAPI.checkEligibility.mockResolvedValue(respuestaJapon({
+      aeatAvailable: false, savings: null, standardRate: null, preferentialRate: null, preferenceMeasure: null,
+      warnings: [{ code: 'AEAT_NO_DISPONIBLE', message: 'timeout' }]
+    }))
+
+    render(<PreferencesCalculator />)
+    fireEvent.change(getTaricInput(), { target: { value: '8703239000' } })
+    fireEvent.change(getValueInput(), { target: { value: '10000' } })
+    fireEvent.submit(screen.getByText('Datos del Producto').closest('form'))
+
+    await waitFor(() => expect(screen.getByTestId('aeat-no-disponible')).toBeInTheDocument())
+    expect(screen.queryByText('Ahorro Total:')).not.toBeInTheDocument()
+    expect(screen.queryByText(/0\.00 EUR/)).not.toBeInTheDocument()
+  })
+
+  test('sin preferencia en la AEAT para el codigo y origen lo explica', async () => {
+    preferencesAPI.checkEligibility.mockResolvedValue(respuestaJapon({
+      eligible: false, savings: 0, preferentialRate: null, preferenceMeasure: null,
+      warnings: [{ code: 'SIN_PREFERENCIA_AEAT', message: 'sin preferencia' }]
+    }))
+
+    render(<PreferencesCalculator />)
+    fireEvent.change(getTaricInput(), { target: { value: '8703239000' } })
+    fireEvent.submit(screen.getByText('Datos del Producto').closest('form'))
+
+    await waitFor(() => expect(screen.getByText('No Elegible')).toBeInTheDocument())
+    expect(screen.getByTestId('sin-preferencia-aeat')).toHaveTextContent('preferencesCalc.noAeatPreference')
   })
 
   test('reglas de origen con RVC', async () => {

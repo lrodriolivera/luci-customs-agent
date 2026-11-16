@@ -2350,7 +2350,12 @@
     "tolerance": "Tolerancia",
     "rvc": "Conteudo de Valor Regional (RVC)",
     "accumulationPermitted": "Acumulacao Permitida",
-    "requiredDocumentation": "Documentacao Necessaria"
+    "requiredDocumentation": "Documentacao Necessaria",
+    "proofOfOrigin": "Prova de origem",
+    "aeatUnavailable": "Não foi possível consultar a Pauta Integrada da AEAT: não são mostradas taxas nem poupança. Tente mais tarde.",
+    "noAeatPreference": "A AEAT não prevê preferência pautal para este código e esta origem: aplica-se o direito de países terceiros.",
+    "ratesSource": "Taxas da Pauta Integrada da AEAT para este código e esta origem",
+    "noEur1": "Não é necessário EUR.1: a prova de origem é emitida pelo exportador (ou, se o acordo o permitir, baseia-se no conhecimento do importador)."
   },
   "excise": {
     "title": "Calculadora de Impostos Especiais (SILICIE)",

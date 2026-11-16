@@ -130,7 +130,8 @@ exports.getByCountry = async (req, res) => {
           name: a.name,
           type: a.type,
           certificate: a.certificate,
-          preferentialRate: a.preferentialRate,
+          proofKind: a.proofKind,
+          legalBasis: a.legalBasis,
           originRules: a.originRules
         }))
       }

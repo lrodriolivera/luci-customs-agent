@@ -23,7 +23,8 @@ const FTA_AGREEMENTS = {
   'EU-Cameroon':      { countries: ['CM'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
   'CETA':             { countries: ['CA'], type: 'fta', proofImport: 'DeclaracionOrigen', proofExport: 'REX', origin_rules: 'product_specific', note: 'Business number del exportador' },
   'EU-CeutaMelilla':  { countries: ['XC', 'XL'], type: 'bilateral', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
-  'EU-Chile':         { countries: ['CL'], type: 'fta', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
+  // Acuerdo Interino de Comercio UE-Chile en vigor el 1-2-2025: declaracion de origen, no EUR.1
+  'EU-Chile':         { countries: ['CL'], type: 'fta', proofImport: 'DeclaracionOrigen', proofExport: 'DeclaracionOrigen', origin_rules: 'product_specific' },
   'EU-Colombia':      { countries: ['CO'], type: 'fta', proofImport: 'EUR.1', proofExport: 'EUR.1', origin_rules: 'product_specific' },
   'EU-Korea':         { countries: ['KR'], type: 'fta', proofImport: 'DeclaracionOrigen', proofExport: 'DeclaracionOrigen', origin_rules: 'product_specific' },
   'EU-CoteDIvoire':   { countries: ['CI'], type: 'bilateral', proofImport: 'REX', proofExport: 'REX', origin_rules: 'product_specific' },
@@ -238,7 +239,8 @@ class RulesEngine {
             agreements: eligibility.agreements,
             recommended: eligibility.recommended,
             certificate: eligibility.recommended?.certificate || (eligibility.agreements[0]?.certificate),
-            preferential: 0,
+            // Tipo preferencial real de la AEAT (null si no se pudo consultar)
+            preferential: eligibility.preferentialRate ?? null,
             savings: eligibility.savings || 0,
             requirements: eligibility.requirements || [],
             warnings: eligibility.warnings || []

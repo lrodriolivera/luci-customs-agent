@@ -69,13 +69,21 @@ export default function PreferencesCalculator() {
           available: eligibility.eligible,
           agreement: eligibility.recommended?.name || (eligibility.agreements[0]?.name),
           certificate: eligibility.recommended?.certificate || (eligibility.agreements[0]?.certificate),
+          // 'exporter_declaration' (CETA, Japon, Chile...): la prueba es una declaracion
+          // del exportador y no hay EUR.1 que pedir a la aduana del pais de origen.
+          proofKind: eligibility.recommended?.proofKind || eligibility.agreements[0]?.proofKind || 'certificate',
           // El arancel NMF y el preferencial vienen del backend o no se muestran. Aqui
           // habia `standard: 0.125` fijo ("Default standard rate"): un arancel del 12,5%
           // INVENTADO, igual para toda mercancia, con el que se calculaba y presentaba un
           // "Ahorro Total" que no existia (p.ej. 6.250 EUR sobre 50.000 para un TARIC con
           // arancel real del 0% y `savings: 0` devuelto por el backend).
+          // Ambos tipos son los del Arancel Integrado de la AEAT para el codigo y el
+          // origen (antes el preferencial era un 0 % fijo por acuerdo).
           standard: eligibility.standardRate ?? null,
-          preferential: eligibility.recommended?.conditions?.find(c => c.type === 'preferential')?.rate ?? null,
+          preferential: eligibility.preferentialRate ?? null,
+          preferenceMeasure: eligibility.preferenceMeasure ?? null,
+          aeatAvailable: eligibility.aeatAvailable === true,
+          noAeatPreference: (eligibility.warnings || []).some(w => w.code === 'SIN_PREFERENCIA_AEAT'),
           originRules: eligibility.agreements[0]?.conditions?.find(c => c.type === 'rvc') ?
             { regionalValueContent: 0.45, tolerance: 0.10 } :
             { general: 'Product-specific rules', tolerance: 0.10, regionalValueContent: 0.45 },
@@ -368,7 +376,7 @@ export default function PreferencesCalculator() {
               </div>
             )}
 
-            {formData.exporterType === 'normal' && parseFloat(formData.customsValue) > 6000 && (
+            {formData.exporterType === 'normal' && parseFloat(formData.customsValue) > 6000 && result?.proofKind !== 'exporter_declaration' && (
               <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                 <div className="flex items-start gap-2">
                   <ExclamationTriangleIcon className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
@@ -409,8 +417,8 @@ export default function PreferencesCalculator() {
                 <p className="font-medium mb-1">Acuerdos Implementados:</p>
                 <ul className="list-disc list-inside space-y-1 text-xs">
                   <li>CETA (Canadá), JEFTA (Japón), EU-UK</li>
-                  <li>EU-MERCOSUR, EU-MEXICO, EU-CHILE, EU-KOREA, EU-VIETNAM</li>
-                  <li>GSP, GSP+, EBA, Pan-Euro-Med</li>
+                  <li>EU-MEXICO, EU-CHILE, EU-KOREA, EU-VIETNAM</li>
+                  <li>GSP, GSP+, EBA, Pan-Euro-Med, Unión Aduanera UE-Turquía</li>
                 </ul>
               </div>
             </div>
@@ -454,14 +462,26 @@ export default function PreferencesCalculator() {
 
                 {result.certificate && (
                   <div className="bg-white rounded-md p-4">
-                    <p className="text-sm text-gray-600 mb-1">Certificado Requerido:</p>
+                    <p className="text-sm text-gray-600 mb-1">{t('preferencesCalc.proofOfOrigin')}:</p>
                     <p className="text-lg font-semibold text-gray-900">{result.certificate}</p>
                   </div>
+                )}
+
+                {result.noAeatPreference && (
+                  <p className="mt-4 text-sm text-red-800" data-testid="sin-preferencia-aeat">
+                    {t('preferencesCalc.noAeatPreference')}
+                  </p>
+                )}
+
+                {!result.aeatAvailable && (
+                  <p className="mt-4 text-sm text-yellow-800 bg-yellow-50 border border-yellow-200 rounded-md p-3" data-testid="aeat-no-disponible">
+                    {t('preferencesCalc.aeatUnavailable')}
+                  </p>
                 )}
               </div>
 
               {/* Ahorros */}
-              {result.available && formData.customsValue && (
+              {result.available && result.aeatAvailable && formData.customsValue && (
                 <div className="bg-white rounded-lg shadow-md p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                     <CurrencyEuroIcon className="h-6 w-6 mr-2 text-green-600" />
@@ -492,7 +512,10 @@ export default function PreferencesCalculator() {
                         {Number(result.savings || 0).toFixed(2)} EUR
                       </span>
                     </div>
-                    {!result.savings && (
+                    <p className="text-xs text-gray-500">
+                      {t('preferencesCalc.ratesSource')}{result.preferenceMeasure ? ` (${result.preferenceMeasure})` : ''}
+                    </p>
+                    {!result.savings && result.standard === 0 && (
                       <p className="text-sm text-gray-500">
                         Este producto ya tiene arancel cero sin preferencia, por lo que el
                         acuerdo no supone ahorro arancelario.
@@ -545,7 +568,18 @@ export default function PreferencesCalculator() {
                     Documentacion Necesaria
                   </h3>
                   <ul className="space-y-2">
-                    {formData.exporterType === 'rex' ? (
+                    {result.proofKind === 'exporter_declaration' ? (
+                      <>
+                        <li className="flex items-start">
+                          <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
+                          <span className="text-sm text-gray-700"><strong>{result.certificate}</strong></span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-blue-600 mr-2 flex-shrink-0">i</span>
+                          <span className="text-sm text-gray-500">{t('preferencesCalc.noEur1')}</span>
+                        </li>
+                      </>
+                    ) : formData.exporterType === 'rex' ? (
                       <>
                         <li className="flex items-start">
                           <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
@@ -614,7 +648,9 @@ export default function PreferencesCalculator() {
                   <p className="text-sm font-medium text-yellow-900 mb-2">Recomendaciones:</p>
                   <ul className="text-sm text-yellow-800 space-y-1">
                     <li>• Solicitar {result.certificate} al exportador antes del despacho</li>
-                    <li>• Verificar validez del certificado (máximo 10 meses desde emisión)</li>
+                    {result.proofKind !== 'exporter_declaration' && (
+                      <li>• Verificar validez del certificado (máximo 10 meses desde emisión)</li>
+                    )}
                     <li>• Conservar documentación durante 3 años</li>
                     <li>• Indicar código de preferencia en casilla 36 del DUA</li>
                   </ul>
