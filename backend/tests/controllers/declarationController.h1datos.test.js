@@ -77,6 +77,8 @@ describe('requisitos del H1', () => {
         invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE',
         incoterm: '', gastosASumar: null,
         freightAmount: null, freightCurrency: 'EUR', insuranceAmount: null, insuranceCurrency: 'EUR',
+        transporteTrasLaEntrada: null, freightAfterEntryAmount: null, freightAfterEntryCurrency: 'EUR',
+        otherAdjustments: [], codigosDeAjuste: expect.objectContaining({ AB: expect.any(String), AI: expect.any(String), BF: expect.any(String) }),
         invoiceCurrency: 'EUR', invoiceCurrencyWithoutBce: false, appliedExchangeRate: null
       },
       anulacion: { presentada: false, anulable: false },
@@ -189,6 +191,62 @@ describe('flete y seguro hasta la entrada en la UE', () => {
     expect(res.body.error).toContain('flete');
     expect(res.body.error).toContain('seguro');
     expect(res.body.error).toContain('divisa');
+    expect(exp.save).not.toHaveBeenCalled();
+  });
+});
+
+describe('transporte después de la entrada en la UE (BA) y otros ajustes', () => {
+  test('DAP: guarda el transporte interior y dice que es obligatorio', async () => {
+    const exp = expediente({ incoterm: { code: 'DAP', place: 'Madrid' } });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).put('/api/declarations/e1/h1/datos').send({ freightAfterEntryAmount: '350,5', freightAfterEntryCurrency: 'usd' });
+
+    expect(res.status).toBe(200);
+    expect(exp.costs).toEqual({ freightAfterEntry: { amount: 350.5, currency: 'USD' } });
+    expect(res.body.data).toMatchObject({ incoterm: 'DAP', transporteTrasLaEntrada: 'exigir', freightAfterEntryAmount: 350.5, freightAfterEntryCurrency: 'USD' });
+  });
+
+  test('un importe sin divisa se guarda en euros', async () => {
+    const exp = expediente({ incoterm: { code: 'CPT' } });
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).put('/api/declarations/e1/h1/datos').send({ freightAfterEntryAmount: 0 });
+
+    expect(res.status).toBe(200);
+    expect(exp.costs.freightAfterEntry).toEqual({ amount: 0, currency: 'EUR' });
+    expect(res.body.data.transporteTrasLaEntrada).toBe('admitir');
+  });
+
+  test('guarda los ajustes opcionales (código, importe y divisa) y los devuelve', async () => {
+    const exp = expediente();
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).put('/api/declarations/e1/h1/datos')
+      .send({ otherAdjustments: [{ code: 'ai', amount: '1200', currency: 'usd' }, { code: 'BF', amount: 50 }] });
+
+    expect(res.status).toBe(200);
+    expect(exp.costs.otherAdjustments).toEqual([{ code: 'AI', amount: 1200, currency: 'USD' }, { code: 'BF', amount: 50, currency: 'EUR' }]);
+    expect(res.body.data.otherAdjustments).toEqual([{ code: 'AI', amount: 1200, currency: 'USD' }, { code: 'BF', amount: 50, currency: 'EUR' }]);
+  });
+
+  test('rechaza códigos que LUCI calcula o que no existen, importes malos y listas enormes', async () => {
+    const exp = expediente();
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const malos = [
+      { otherAdjustments: [{ code: 'BA', amount: 1 }] },
+      { otherAdjustments: [{ code: 'ZZ', amount: 1 }] },
+      { otherAdjustments: [{ code: 'AB', amount: -1 }] },
+      { otherAdjustments: [{ code: 'AB', amount: 1, currency: 'DOLAR' }] },
+      { otherAdjustments: 'AB' },
+      { otherAdjustments: Array.from({ length: 100 }, () => ({ code: 'AB', amount: 1 })) },
+      { freightAfterEntryAmount: 'mucho' }
+    ];
+    for (const body of malos) {
+      const res = await request(app()).put('/api/declarations/e1/h1/datos').send(body);
+      expect(res.status).toBe(400);
+    }
     expect(exp.save).not.toHaveBeenCalled();
   });
 });

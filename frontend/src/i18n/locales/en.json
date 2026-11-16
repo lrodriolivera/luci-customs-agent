@@ -3684,6 +3684,7 @@
     "itemInvoiceValue": "Invoice value",
     "customsValue": "Customs value",
     "statisticalValue": "Statistical value",
+    "valuationAdjustments": "Value adjustments (A adds, B deducts)",
     "documents": "Documents",
     "valuationMethod": "Valuation method",
     "totalCustomsValue": "Total customs value",

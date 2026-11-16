@@ -196,4 +196,20 @@ describe('H1Preview', () => {
       expect(screen.queryByText('h1Preview.representative')).not.toBeInTheDocument()
     })
   })
+
+  test('incoterm con su lugar y el país que va en el XML, y ajustes del valor de la partida', () => {
+    render(<H1Preview h1Data={{
+      ...h1Data,
+      goodsShipment: { ...h1Data.goodsShipment, deliveryTerms: { code: 'FOB', location: 'Shanghai', country: 'CN' } },
+      goodsItems: [{ ...h1Data.goodsItems[0], valuationAdjustments: [{ code: 'AK', amount: 1050 }, { code: 'BA', amount: 1000 }] }]
+    }} />)
+
+    expect(valorDe('h1Preview.incoterm')).toHaveTextContent('FOB, Shanghai, CN')
+    expect(valorDe('h1Preview.valuationAdjustments')).toHaveTextContent('AK +1.050,00 EUR · BA −1.000,00 EUR')
+  })
+
+  test('sin ajustes no muestra la casilla', () => {
+    render(<H1Preview h1Data={h1Data} />)
+    expect(screen.queryByText('h1Preview.valuationAdjustments')).not.toBeInTheDocument()
+  })
 })

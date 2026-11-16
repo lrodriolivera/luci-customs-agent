@@ -16,6 +16,7 @@ const { avisoAduanaDistinta } = require('../services/aeat/h1CauData');
 const { liquidacionDeclarada, compararLiquidacion } = require('../services/aeat/h1CauLiquidacion');
 const { MODOS_ACTIVACION } = require('../services/aeat/h1CauActivacion');
 const { gastosQueSeSuman, gastoDe, cambiosDeLosGastos } = require('../services/forms/gastosHastaLaFrontera');
+const { transporteTrasLaEntrada, CODIGOS_OPCIONALES } = require('../services/forms/ajustesDelValor');
 const { verificarSumariaConAeat, esGrupaje, CODIGO_ERROR: CODIGO_GRUPAJE } = require('../services/forms/grupajeLcl');
 
 /** Sin grupaje y sin sumaria registrada no hay nada que comprobar ni que consultar. */
@@ -172,6 +173,7 @@ const datosH1De = (expedition, factura = { divisa: 'EUR', sinTipoBce: false }) =
   const incoterm = String(expedition.incoterm?.code || '').toUpperCase();
   const flete = gastoDe(expedition, 'freight');
   const seguro = gastoDe(expedition, 'insurance');
+  const trasLaEntrada = gastoDe(expedition, 'freightAfterEntry');
   return {
     invoiceNumber: expedition.invoiceNumber || '',
     exporterPostalCode: expedition.exporter?.postalCode || '',
@@ -184,6 +186,14 @@ const datosH1De = (expedition, factura = { divisa: 'EUR', sinTipoBce: false }) =
     freightCurrency: flete?.divisa || expedition.costs?.freight?.currency || 'EUR',
     insuranceAmount: seguro ? seguro.importe : null,
     insuranceCurrency: seguro?.divisa || expedition.costs?.insurance?.currency || 'EUR',
+    // Transporte desde la entrada en la UE incluido en el precio (deduccion BA):
+    // 'exigir' con DAP/DPU/DDP, 'admitir' con los C, null con E y F.
+    transporteTrasLaEntrada: transporteTrasLaEntrada(incoterm),
+    freightAfterEntryAmount: trasLaEntrada ? trasLaEntrada.importe : null,
+    freightAfterEntryCurrency: trasLaEntrada?.divisa || expedition.costs?.freightAfterEntry?.currency || 'EUR',
+    // Otros ajustes del valor (CL265) y los codigos que se admiten.
+    otherAdjustments: (expedition.costs?.otherAdjustments || []).map((a) => ({ code: a.code, amount: a.amount, currency: a.currency || 'EUR' })),
+    codigosDeAjuste: CODIGOS_OPCIONALES,
     // Divisa que el BCE no cotiza: se declara en euros con el cambio que indique el usuario (1017).
     invoiceCurrency: factura.divisa,
     invoiceCurrencyWithoutBce: factura.sinTipoBce,
@@ -210,7 +220,8 @@ function gastosRecibidos(body) {
   const cambios = {};
   const pares = [
     ['freight', 'flete', body.freightAmount, body.freightCurrency],
-    ['insurance', 'seguro', body.insuranceAmount, body.insuranceCurrency]
+    ['insurance', 'seguro', body.insuranceAmount, body.insuranceCurrency],
+    ['freightAfterEntry', 'transporte desde la entrada en la UE', body.freightAfterEntryAmount, body.freightAfterEntryCurrency]
   ];
   for (const [campo, nombre, importe, divisa] of pares) {
     const leido = importeRecibido(importe);
@@ -222,7 +233,32 @@ function gastosRecibidos(body) {
       else cambios[`costs.${campo}.currency`] = codigo;
     }
   }
+  const ajustes = ajustesRecibidos(body.otherAdjustments);
+  errores.push(...ajustes.errores);
+  if (ajustes.lista) cambios['costs.otherAdjustments'] = ajustes.lista;
   return { errores, cambios };
+}
+
+const MAXIMO_AJUSTES = 99; // AdditionsAndDeductions 0:99 por partida (guia CAU v3.20, pag. 73)
+
+/** Ajustes opcionales del valor recibidos: lista de { code, amount, currency } con codigos de la CL265. */
+function ajustesRecibidos(lista) {
+  if (lista === undefined) return { errores: [] };
+  if (lista === null) return { errores: [], lista: [] };
+  if (!Array.isArray(lista) || lista.length > MAXIMO_AJUSTES) {
+    return { errores: [`Los otros ajustes del valor son una lista de hasta ${MAXIMO_AJUSTES}`] };
+  }
+  const errores = [];
+  const leidos = lista.map((a) => {
+    const code = String(a?.code || '').trim().toUpperCase();
+    if (!CODIGOS_OPCIONALES[code]) errores.push(`Código de ajuste no admitido: ${code.slice(0, 4) || '(vacío)'}`);
+    const importe = importeRecibido(a?.amount);
+    if (!importe.ok || importe.valor === null || importe.valor === undefined) errores.push(`El importe del ajuste ${code.slice(0, 4)} debe ser un número igual o mayor que 0`);
+    const currency = a?.currency === undefined || a?.currency === null || a?.currency === '' ? 'EUR' : String(a.currency).trim().toUpperCase();
+    if (!DIVISA.test(currency)) errores.push(`La divisa del ajuste ${code.slice(0, 4)} es un código de tres letras (EUR, USD…)`);
+    return { code, amount: importe.valor, currency };
+  });
+  return errores.length > 0 ? { errores } : { errores: [], lista: leidos };
 }
 
 /**
@@ -343,7 +379,7 @@ const updateH1Data = async (req, res) => {
     if (cambio.valor === null) expedition.set('appliedExchangeRate', null);
     else if (cambio.valor !== undefined) expedition.set('appliedExchangeRate', { currency: factura.divisa, rate: cambio.valor });
     // Un importe sin divisa se entiende en euros.
-    for (const campo of ['freight', 'insurance']) {
+    for (const campo of ['freight', 'insurance', 'freightAfterEntry']) {
       if (expedition.costs?.[campo] && !expedition.costs[campo].currency) expedition.set(`costs.${campo}.currency`, 'EUR');
     }
     await expedition.save();
