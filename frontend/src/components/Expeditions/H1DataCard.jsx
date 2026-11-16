@@ -97,6 +97,7 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
 
   useEffect(() => { cargar() }, [cargar])
 
+  const ajustesCambiados = Boolean(estado) && ajustesComoTexto(form.otherAdjustments) !== ajustesComoTexto(estado.datos.otherAdjustments)
   const cambiar = (campo) => (e) => setForm((previo) => ({ ...previo, [campo]: e.target.value }))
 
   const guardar = async (e) => {
@@ -175,7 +176,6 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
     }
   }
 
-  const ajustesCambiados = Boolean(estado) && ajustesComoTexto(form.otherAdjustments) !== ajustesComoTexto(estado.datos.otherAdjustments)
   const sinCambios = estado && !ajustesCambiados && CAMPOS.every((campo) => comoTexto(form[campo]) === comoTexto(estado.datos[campo]))
   const ajustes = form.otherAdjustments || []
   const cambiarAjuste = (i, campo) => (e) => setForm((previo) => ({

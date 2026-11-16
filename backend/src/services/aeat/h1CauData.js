@@ -12,7 +12,8 @@
 const { ErrorValidacion, eoriDe, formaRepresentacionDe } = require('../forms/identificadorAduanero');
 const { cambioObligatorio, aEuros } = require('../divisas/cambioDelExpediente');
 const { lugarDeEntrega } = require('../forms/lugarDeEntrega');
-const { ajustesDelValor, ajustesDeLaPartida, valorConAjustes } = require('../forms/ajustesDelValor');
+const { ajustesDelValor, ajustesDeLaPartida, valorConAjustes, CODIGO_TRANSPORTE_TRAS_LA_ENTRADA } = require('../forms/ajustesDelValor');
+const { CODIGO_AJUSTE } = require('../forms/gastosHastaLaFrontera');
 const { sinCodigoPostal } = require('./paisesSinCodigoPostal');
 const { MODOS_ACTIVACION } = require('./h1CauActivacion');
 
@@ -226,9 +227,17 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     const deducido = ajustes.filter((a) => a.codigo.startsWith('B')).reduce((s, a) => s + a.importe, 0);
     faltan.push(`deducciones de la partida ${n} que no superen su valor (${deducido.toFixed(2)} EUR deducidos sobre ${valorEuros.toFixed(2)} EUR): el valor en aduana no puede ser negativo`);
   }
+  const importeDe = (codigo) => ajustes.filter((a) => a.codigo === codigo).reduce((s, a) => s + a.importe, 0);
+  // Transporte hasta el primer lugar de destino en el interior de la UE: no es
+  // valor en aduana (BA) pero si base del IVA a la importacion (art. 83.Dos.2º LIVA).
+  const transporteInterior = importeDe(CODIGO_TRANSPORTE_TRAS_LA_ENTRADA);
+  // Valor estadistico: el de la frontera de la UE (factura + flete y seguro hasta
+  // la UE − transporte posterior), sin los demas ajustes (canones, comisiones…).
+  const valorFrontera = redondear(valorEuros + importeDe(CODIGO_AJUSTE) - transporteInterior);
   const tipoArancel = good.dutyRate || 0;
   const tipoIva = good.vatRate ?? 21;
   const arancel = redondear(valorAduana * tipoArancel / 100);
+  const baseIva = redondear(valorAduana + arancel + transporteInterior);
   const tipoBulto = String(good.packages?.type || '').toUpperCase();
   if (!/^[A-Z0-9]{2}$/.test(tipoBulto)) faltan.push(`tipo de bulto (código de dos letras) de la partida ${n}`);
   if (!(good.packages?.quantity > 0)) faltan.push(`número de bultos de la partida ${n}`);
@@ -239,7 +248,7 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
   return {
     numero: n,
     // El valor estadistico va siempre en euros y es el valor en la frontera de la UE (CIF).
-    valorEstadistico: good.statisticalValue && good.statisticalValue !== valor ? good.statisticalValue : valorAduana,
+    valorEstadistico: good.statisticalValue && good.statisticalValue !== valor ? good.statisticalValue : valorFrontera,
     regimen: {
       solicitado: String(expedition.declaration?.regime || '40'), precedente: '00',
       adicionales: /^[A-Z0-9]{3}$/i.test(adicional) && adicional !== '000' ? [adicional.toUpperCase()] : []
@@ -255,7 +264,7 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     preferencia: String(expedition.declaration?.preference || '100'),
     tributos: [
       { tipo: 'A00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoArancel, importe: valorAduana, cuota: arancel }] },
-      { tipo: 'B00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoIva, importe: redondear(valorAduana + arancel), cuota: redondear((valorAduana + arancel) * tipoIva / 100) }] }
+      { tipo: 'B00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoIva, importe: baseIva, cuota: redondear(baseIva * tipoIva / 100) }] }
     ],
     bultos: [{ tipo: tipoBulto, numero: good.packages?.quantity, marcas: texto(good.packages?.marks) || 'S/M' }],
     documentosPrevios: documentoPrevio(expedition, good, faltan),

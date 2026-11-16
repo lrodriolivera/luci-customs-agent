@@ -74,7 +74,7 @@ describe('liquidación declarada de un H1 DAP con deducción BA', () => {
   const { expeditionToH1CauData } = require('../../../src/services/aeat/h1CauData');
   const { buildH1CauXML } = require('../../../src/services/aeat/h1CauXmlBuilder');
 
-  test('las bases que LUCI declara (y compara con la AEAT) ya tienen restado el transporte interior', () => {
+  test('la base del arancel lleva restado el transporte interior y la del IVA lo incluye', () => {
     const expedition = {
       expeditionId: 'EXP-2026-BA000001', transportMode: 'maritime',
       client: { companyName: 'Importadora SL', eori: 'ESB12345674', address: { postalCode: '28001', country: 'ES' } },
@@ -94,11 +94,12 @@ describe('liquidación declarada de un H1 DAP con deducción BA', () => {
     });
     const declarada = liquidacionDeclarada(buildH1CauXML(datos));
 
-    // 10.000 − 1.000 = 9.000; arancel 12 % = 1.080; IVA 21 % de 10.080 = 2.116,80.
+    // Arancel: 10.000 − 1.000 = 9.000 al 12 % = 1.080. IVA (art. 83 LIVA): 9.000 + 1.080 + 1.000
+    // de transporte hasta el primer destino = 11.080 al 21 % = 2.326,80.
     expect(declarada.partidas[0].tributos).toEqual([
       { tipo: 'A00', base: 9000, cuota: 1080 },
-      { tipo: 'B00', base: 10080, cuota: 2116.8 }
+      { tipo: 'B00', base: 11080, cuota: 2326.8 }
     ]);
-    expect(declarada.total).toBe(3196.8);
+    expect(declarada.total).toBe(3406.8);
   });
 });
