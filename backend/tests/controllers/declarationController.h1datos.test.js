@@ -79,6 +79,7 @@ describe('requisitos del H1', () => {
         freightAmount: null, freightCurrency: 'EUR', insuranceAmount: null, insuranceCurrency: 'EUR',
         transporteTrasLaEntrada: null, freightAfterEntryAmount: null, freightAfterEntryCurrency: 'EUR',
         otherAdjustments: [], codigosDeAjuste: expect.objectContaining({ AB: expect.any(String), AI: expect.any(String), BF: expect.any(String) }),
+        vatAdditions: [], conceptosBaseIva: expect.objectContaining({ THC: expect.any(String), T3: expect.any(String) }),
         invoiceCurrency: 'EUR', invoiceCurrencyWithoutBce: false, appliedExchangeRate: null
       },
       anulacion: { presentada: false, anulable: false },
@@ -466,3 +467,24 @@ describe('estado del H1 en la AEAT', () => {
     expect(mockConsultar).not.toHaveBeenCalled();
   });
 });
+
+describe('gastos a añadir a la base del IVA (THC, T3)', () => {
+  test('guarda la lista y la devuelve con los conceptos admitidos', async () => {
+    const exp = expediente();
+    mockExpedition.findById.mockResolvedValue(exp);
+    const res = await request(app()).put('/api/declarations/e1/h1/datos')
+      .send({ vatAdditions: [{ concept: 'thc', amount: '200.5', currency: 'eur' }, { concept: 'T3', amount: 100 }] });
+    expect(res.status).toBe(200);
+    expect(exp.costs.vatAdditions).toEqual([{ concept: 'THC', amount: 200.5, currency: 'EUR' }, { concept: 'T3', amount: 100, currency: 'EUR' }]);
+    expect(Object.keys(res.body.data.conceptosBaseIva)).toEqual(['THC', 'T3', 'OTHER']);
+  });
+
+  test('concepto o importe no válidos: 400 y no guarda', async () => {
+    const exp = expediente();
+    mockExpedition.findById.mockResolvedValue(exp);
+    const res = await request(app()).put('/api/declarations/e1/h1/datos').send({ vatAdditions: [{ concept: 'ZZ', amount: -1 }] });
+    expect(res.status).toBe(400);
+    expect(exp.save).not.toHaveBeenCalled();
+  });
+});
+

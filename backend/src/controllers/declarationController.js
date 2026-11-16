@@ -16,7 +16,7 @@ const { avisoAduanaDistinta } = require('../services/aeat/h1CauData');
 const { liquidacionDeclarada, compararLiquidacion } = require('../services/aeat/h1CauLiquidacion');
 const { MODOS_ACTIVACION } = require('../services/aeat/h1CauActivacion');
 const { gastosQueSeSuman, gastoDe, cambiosDeLosGastos } = require('../services/forms/gastosHastaLaFrontera');
-const { transporteTrasLaEntrada, CODIGOS_OPCIONALES } = require('../services/forms/ajustesDelValor');
+const { transporteTrasLaEntrada, CODIGOS_OPCIONALES, CONCEPTOS_BASE_IVA } = require('../services/forms/ajustesDelValor');
 const { verificarSumariaConAeat, esGrupaje, CODIGO_ERROR: CODIGO_GRUPAJE } = require('../services/forms/grupajeLcl');
 
 /** Sin grupaje y sin sumaria registrada no hay nada que comprobar ni que consultar. */
@@ -197,6 +197,9 @@ const datosH1De = (expedition, factura = { divisa: 'EUR', sinTipoBce: false }) =
     // Otros ajustes del valor (CL265) y los codigos que se admiten.
     otherAdjustments: (expedition.costs?.otherAdjustments || []).map((a) => ({ code: a.code, amount: a.amount, currency: a.currency || 'EUR' })),
     codigosDeAjuste: CODIGOS_OPCIONALES,
+    // Gastos a añadir a la base del IVA (THC, T3…; codigo CA) y sus conceptos.
+    vatAdditions: (expedition.costs?.vatAdditions || []).map((a) => ({ concept: a.concept, amount: a.amount, currency: a.currency || 'EUR' })),
+    conceptosBaseIva: CONCEPTOS_BASE_IVA,
     // Divisa que el BCE no cotiza: se declara en euros con el cambio que indique el usuario (1017).
     invoiceCurrency: factura.divisa,
     invoiceCurrencyWithoutBce: factura.sinTipoBce,
@@ -239,7 +242,32 @@ function gastosRecibidos(body) {
   const ajustes = ajustesRecibidos(body.otherAdjustments);
   errores.push(...ajustes.errores);
   if (ajustes.lista) cambios['costs.otherAdjustments'] = ajustes.lista;
+  const baseIva = adicionesBaseIvaRecibidas(body.vatAdditions);
+  errores.push(...baseIva.errores);
+  if (baseIva.lista) cambios['costs.vatAdditions'] = baseIva.lista;
   return { errores, cambios };
+}
+
+const MAXIMO_GASTOS_BASE_IVA = 20;
+
+/** Gastos a añadir a la base del IVA recibidos: lista de { concept, amount, currency }. */
+function adicionesBaseIvaRecibidas(lista) {
+  if (lista === undefined) return { errores: [] };
+  if (lista === null) return { errores: [], lista: [] };
+  if (!Array.isArray(lista) || lista.length > MAXIMO_GASTOS_BASE_IVA) {
+    return { errores: [`Los gastos de la base del IVA son una lista de hasta ${MAXIMO_GASTOS_BASE_IVA}`] };
+  }
+  const errores = [];
+  const leidos = lista.map((g) => {
+    const concept = String(g?.concept || '').trim().toUpperCase();
+    if (!CONCEPTOS_BASE_IVA[concept]) errores.push(`Concepto de la base del IVA no admitido: ${concept.slice(0, 6) || '(vacío)'}`);
+    const importe = importeRecibido(g?.amount);
+    if (!importe.ok || importe.valor === null || importe.valor === undefined) errores.push(`El importe del gasto ${concept.slice(0, 6)} debe ser un número igual o mayor que 0`);
+    const currency = g?.currency === undefined || g?.currency === null || g?.currency === '' ? 'EUR' : String(g.currency).trim().toUpperCase();
+    if (!DIVISA.test(currency)) errores.push(`La divisa del gasto ${concept.slice(0, 6)} es un código de tres letras (EUR, USD…)`);
+    return { concept, amount: importe.valor, currency };
+  });
+  return errores.length > 0 ? { errores } : { errores: [], lista: leidos };
 }
 
 const MAXIMO_AJUSTES = 99; // AdditionsAndDeductions 0:99 por partida (guia CAU v3.20, pag. 73)

@@ -114,3 +114,29 @@ describe('reparto por partidas y valor en aduana', () => {
     expect(valorConAjustes(100, [])).toBe(100);
   });
 });
+
+describe('gastos a añadir a la base del IVA (CA: THC, T3; AEAT novedad 11/06/2025, PRE 17/11/2026)', () => {
+  const mod = require('../../../src/services/forms/ajustesDelValor');
+  const exp = (vatAdditions) => ({ ...expediente('CIF', cero), goods: [{ invoiceValue: 4800, currency: 'EUR' }], costs: { ...cero, vatAdditions } });
+
+  test('THC y T3 suman en un único CA en euros', () => {
+    const r = mod.ajustesDelValor(exp([{ concept: 'THC', amount: 200, currency: 'EUR' }, { concept: 'T3', amount: 100, currency: 'EUR' }]));
+    expect(r.ajustes).toContainEqual({ codigo: 'CA', importe: 300 });
+    expect(r.faltan).toEqual([]);
+  });
+
+  test('en otra divisa se convierte con el tipo oficial y su divisa entra en las que hay que consultar', () => {
+    const e = exp([{ concept: 'THC', amount: 112.34, currency: 'USD' }]);
+    expect(divisasDeLosGastos(e)).toContain('USD');
+    expect(mod.ajustesDelValor(e, { cambios: { USD } }).ajustes.find((a) => a.codigo === 'CA').importe).toBeCloseTo(100, 2);
+  });
+
+  test('CA no cambia el valor en aduana (solo A suma y B resta)', () => {
+    expect(mod.valorConAjustes(4800, [{ codigo: 'CA', importe: 300 }, { codigo: 'AK', importe: 100 }, { codigo: 'BA', importe: 50 }])).toBe(4850);
+  });
+
+  test('concepto desconocido: lo pide', () => {
+    expect(mod.ajustesDelValor(exp([{ concept: 'XX', amount: 5, currency: 'EUR' }])).faltan.join(' ')).toMatch(/base del IVA/);
+  });
+});
+
