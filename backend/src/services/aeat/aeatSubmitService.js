@@ -70,8 +70,14 @@ function _tenantEsLaParte(tenant) {
  */
 function _erroresAltaH7(body) {
   // Admite prefijo de namespace y atributos (<h7:Error xmlns:h7="...">), como el resto del parser.
+  const ETIQUETAS = {
+    errorCode: /<(?:\w+:)?errorCode\b[^>]*>([^<]+)</,
+    errorReason: /<(?:\w+:)?errorReason\b[^>]*>([^<]+)</,
+    errorPointerTag: /<(?:\w+:)?errorPointerTag\b[^>]*>([^<]+)</,
+    errorPointer: /<(?:\w+:)?errorPointer\b[^>]*>([^<]+)</
+  };
   const etiqueta = (b, nombre) => {
-    const m = b.match(new RegExp(`<(?:\\w+:)?${nombre}\\b[^>]*>([^<]+)<`));
+    const m = b.match(ETIQUETAS[nombre]);
     return m ? _decodificarEntidades(m[1]) : undefined;
   };
   const bloques = [...body.matchAll(/<(?:\w+:)?Error\b[^>]*>([\s\S]*?)<\/(?:\w+:)?Error>/g)].map(m => m[1]);

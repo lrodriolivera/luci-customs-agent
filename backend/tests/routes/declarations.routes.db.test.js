@@ -380,6 +380,7 @@ describe('routes/declarations.js - handlers inline', () => {
     test('sin circuito en la respuesta no se supone canal verde', async () => {
       mockSubmitDeclaration.mockResolvedValue({ success: true, mrn: 'MRN124', channel: null, code: '0000' });
       const exp = await crearExpediente(TENANT_A, { declaration: { type: 'H1', status: 'draft' } });
+      mockContexto = contexto(TENANT_A, { tenant: { customsConfig: { country: 'NL' } } });
       const res = await request(app).post(`/api/declarations/${exp._id}/submit-v2`).send({});
       expect(res.status).toBe(200);
       const actualizado = await Expedition.findById(exp._id);
@@ -389,6 +390,7 @@ describe('routes/declarations.js - handlers inline', () => {
     test('una respuesta "aceptada" sin MRN no se guarda como aceptada', async () => {
       mockSubmitDeclaration.mockResolvedValue({ success: true, mrn: null, channel: 'green' });
       const exp = await crearExpediente(TENANT_A, { declaration: { type: 'H1', status: 'draft' } });
+      mockContexto = contexto(TENANT_A, { tenant: { customsConfig: { country: 'NL' } } });
       const res = await request(app).post(`/api/declarations/${exp._id}/submit-v2`).send({});
       expect(res.status).toBe(502);
       const actualizado = await Expedition.findById(exp._id);
