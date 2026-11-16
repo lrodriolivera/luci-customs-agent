@@ -280,6 +280,8 @@ describe('<ClassificationTool />', () => {
     // Solo el código real se puede validar; el inventado no muestra su 20 %.
     expect(screen.getAllByText('classification.validate')).toHaveLength(1)
     expect(screen.queryByText('20%')).not.toBeInTheDocument()
+    // La consulta a la AEAT solo se ofrece para el código que existe.
+    expect(screen.getAllByRole('button', { name: 'classification.aeat.consult' })).toHaveLength(1)
 
     const aviso = screen.getByRole('alert')
     const copiar = within(aviso).getAllByRole('button', { name: /classification\.copy/ })

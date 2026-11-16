@@ -774,7 +774,21 @@
     "foundPlural": "encontrados",
     "codeVerified": "Código verificado no catálogo TARIC: existe e é declarável.",
     "codeNotVerified": "Este código não existe na TARIC como código declarável: não pode ser declarado. Utilize um dos códigos reais da subposição.",
-    "codeAlternatives": "Códigos declaráveis da mesma subposição:"
+    "codeAlternatives": "Códigos declaráveis da mesma subposição:",
+    "aeat": {
+      "consult": "Consultar a AEAT",
+      "loading": "A consultar a AEAT…",
+      "title": "Pauta Integrada da AEAT",
+      "meta": "Consulta de {{fecha}} · origem: {{origen}}",
+      "ergaOmnes": "todos os países terceiros",
+      "notFound": "A AEAT não tem este código na data da consulta.",
+      "groupTax": "IVA e IGIC",
+      "groupNational": "Controlos e medidas nacionais",
+      "groupUe": "Direitos e medidas da UE",
+      "exclusions": "Exclusões",
+      "openAeat": "Abrir no site da AEAT",
+      "error": "Não foi possível consultar a AEAT"
+    }
   },
   "declarations": {
     "title": "Gerador de Declaracoes",

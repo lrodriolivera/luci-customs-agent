@@ -774,7 +774,21 @@
     "foundPlural": "trobats",
     "codeVerified": "Codi comprovat al catàleg TARIC: existeix i és declarable.",
     "codeNotVerified": "Este codi no existix en el TARIC com a codi declarable: no es pot declarar. Utilitza un dels codis reals de la subpartida.",
-    "codeAlternatives": "Codis declarables de la mateixa subpartida:"
+    "codeAlternatives": "Codis declarables de la mateixa subpartida:",
+    "aeat": {
+      "consult": "Consultar en l'AEAT",
+      "loading": "Consultant l'AEAT…",
+      "title": "Aranzel Integrat de l'AEAT",
+      "meta": "Consulta del {{fecha}} · origen: {{origen}}",
+      "ergaOmnes": "tots els tercers països",
+      "notFound": "L'AEAT no té este codi en la data de la consulta.",
+      "groupTax": "IVA i IGIC",
+      "groupNational": "Controls i mesures nacionals",
+      "groupUe": "Aranzels i mesures de la UE",
+      "exclusions": "Exclusions",
+      "openAeat": "Obrir en la seu de l'AEAT",
+      "error": "No s'ha pogut consultar l'AEAT"
+    }
   },
   "declarations": {
     "title": "Generador de Declaracions",

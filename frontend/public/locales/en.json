@@ -774,7 +774,21 @@
     "foundPlural": "found",
     "codeVerified": "Code checked against the TARIC catalogue: it exists and can be declared.",
     "codeNotVerified": "This code does not exist in TARIC as a declarable code and cannot be declared. Use one of the real codes under the subheading.",
-    "codeAlternatives": "Declarable codes under the same subheading:"
+    "codeAlternatives": "Declarable codes under the same subheading:",
+    "aeat": {
+      "consult": "Check with the AEAT",
+      "loading": "Checking with the AEAT…",
+      "title": "AEAT Integrated Tariff",
+      "meta": "Checked on {{fecha}} · origin: {{origen}}",
+      "ergaOmnes": "all third countries",
+      "notFound": "The AEAT does not have this code on the date checked.",
+      "groupTax": "VAT and IGIC",
+      "groupNational": "National controls and measures",
+      "groupUe": "EU tariffs and measures",
+      "exclusions": "Exclusions",
+      "openAeat": "Open on the AEAT website",
+      "error": "Could not check with the AEAT"
+    }
   },
   "declarations": {
     "title": "Declaration Generator",

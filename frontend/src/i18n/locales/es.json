@@ -774,7 +774,21 @@
     "foundPlural": "encontrados",
     "codeVerified": "Código comprobado en el catálogo TARIC: existe y es declarable.",
     "codeNotVerified": "Este código no existe en el TARIC como código declarable: no se puede declarar. Usa uno de los códigos reales de la subpartida.",
-    "codeAlternatives": "Códigos declarables de la misma subpartida:"
+    "codeAlternatives": "Códigos declarables de la misma subpartida:",
+    "aeat": {
+      "consult": "Consultar en la AEAT",
+      "loading": "Consultando la AEAT…",
+      "title": "Arancel Integrado de la AEAT",
+      "meta": "Consulta del {{fecha}} · origen: {{origen}}",
+      "ergaOmnes": "todos los terceros países",
+      "notFound": "La AEAT no tiene este código en la fecha de la consulta.",
+      "groupTax": "IVA e IGIC",
+      "groupNational": "Controles y medidas nacionales",
+      "groupUe": "Aranceles y medidas de la UE",
+      "exclusions": "Exclusiones",
+      "openAeat": "Abrir en la sede de la AEAT",
+      "error": "No se pudo consultar la AEAT"
+    }
   },
   "declarations": {
     "title": "Generador de Declaraciones",

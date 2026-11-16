@@ -187,6 +187,8 @@ export const classificationAPI = {
   getTreeData: (parent) => api.get('/api/classification/tree', { params: parent ? { parent } : {} }),
   calculateDuties: (data) => api.post('/api/classification/calculate-duties', data),
   getRequiredDocuments: (code, origin) => api.get(`/api/classification/required-documents/${seg(code)}`, { params: { origin } }),
+  // Arancel Integrado de la AEAT: IVA, impuestos especiales y controles nacionales.
+  aeatTariff: (code, origin) => api.get('/api/classification/aeat-tariff', { params: { code, origin: origin || undefined } }),
   getPreferences: (origin) => api.get(`/api/classification/preferences/${seg(origin)}`),
   applyClassification: (data) => api.post('/api/classification/apply', data),
 

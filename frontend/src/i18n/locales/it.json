@@ -774,7 +774,21 @@
     "foundPlural": "trovati",
     "codeVerified": "Codice verificato nel catalogo TARIC: esiste ed è dichiarabile.",
     "codeNotVerified": "Questo codice non esiste nel TARIC come codice dichiarabile: non può essere dichiarato. Usa uno dei codici reali della sottovoce.",
-    "codeAlternatives": "Codici dichiarabili della stessa sottovoce:"
+    "codeAlternatives": "Codici dichiarabili della stessa sottovoce:",
+    "aeat": {
+      "consult": "Consulta l'AEAT",
+      "loading": "Consultazione dell'AEAT…",
+      "title": "Tariffa integrata dell'AEAT",
+      "meta": "Consultato il {{fecha}} · origine: {{origen}}",
+      "ergaOmnes": "tutti i paesi terzi",
+      "notFound": "L'AEAT non ha questo codice alla data consultata.",
+      "groupTax": "IVA e IGIC",
+      "groupNational": "Controlli e misure nazionali",
+      "groupUe": "Dazi e misure dell'UE",
+      "exclusions": "Esclusioni",
+      "openAeat": "Apri sul sito dell'AEAT",
+      "error": "Impossibile consultare l'AEAT"
+    }
   },
   "declarations": {
     "title": "Generatore di Dichiarazioni",
