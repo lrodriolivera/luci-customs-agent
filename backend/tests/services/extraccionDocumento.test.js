@@ -11,7 +11,7 @@ const {
 
 const LECTURA_FACTURA = {
   legible: true, tipoDetectado: 'commercial_invoice', confianza: 0.95, notas: ['El codigo HS aparece enmascarado.'],
-  exportador: { nombre: 'Shanghai Hongtai Import & Export Co., Ltd.', direccion: 'No. 1288 Pudong Ave', ciudad: 'Shanghai', pais: 'CN' },
+  exportador: { nombre: 'Shanghai Hongtai Import & Export Co., Ltd.', direccion: 'No. 1288 Pudong Ave', ciudad: 'Shanghai', codigoPostal: '200120', pais: 'CN' },
   factura: { numero: 'INV-H1-01', fecha: '04/03/2026', moneda: 'usd', importeTotal: 184800, incoterm: 'fob', lugarIncoterm: 'Shanghai' },
   transporte: { numeroDocumento: null, medio: 'Maritimo', contenedores: [], tipoCarga: null },
   partidas: [{ descripcion: 'Ordenadores portatiles', codigoMercancia: '8471.30', paisOrigen: 'cn', cantidad: 480, unidad: 'PCE', importe: 184800 }],
@@ -194,13 +194,22 @@ describe('extraccionDocumento', () => {
   });
 
   describe('proponerCambios', () => {
-    test('una factura propone moneda, incoterm, origen y exportador; nunca el importe que ya coincide', () => {
+    // UAT 16/Nov/2026 (Patricia, EXP-2026-908AB910): la factura se leia bien pero
+    // no rellenaba la tarjeta «Datos del H1»: numero de factura y CP del exportador,
+    // ni la cantidad/unidad de la partida (quedaba en KG con una factura en PCE).
+    test('una factura propone numero de factura, moneda, cantidad y unidad, incoterm, origen y exportador completo; nunca el importe que ya coincide', () => {
       const cambios = proponerCambios(expediente(), normalizarExtraccion(LECTURA_FACTURA), 'commercial_invoice');
 
       expect(claves(cambios)).toEqual([
-        'goods.0.originCountry', 'goods.0.currency', 'incoterm.code', 'incoterm.place',
-        'exporter.companyName', 'exporter.country', 'exporter.city'
+        'goods.0.originCountry', 'goods.0.currency', 'goods.0.quantity', 'goods.0.unit', 'incoterm.code', 'incoterm.place',
+        'invoiceNumber',
+        'exporter.companyName', 'exporter.country', 'exporter.city', 'exporter.postalCode', 'exporter.address'
       ]);
+      expect(cambios.find(c => c.clave === 'invoiceNumber')).toMatchObject({ actual: null, nuevo: 'INV-H1-01', grupo: 'condiciones', campo: 'invoiceNumber' });
+      expect(cambios.find(c => c.clave === 'exporter.postalCode')).toMatchObject({ nuevo: '200120', grupo: 'exportador', campo: 'exporterPostalCode' });
+      // PCE en la factura = PCS (piezas), el mismo codigo que ofrece el alta.
+      expect(cambios.find(c => c.clave === 'goods.0.unit')).toMatchObject({ nuevo: 'PCS', partida: 1, campo: 'unit' });
+      expect(cambios.find(c => c.clave === 'goods.0.quantity')).toMatchObject({ nuevo: 480, partida: 1, campo: 'quantity' });
       expect(cambios.find(c => c.clave === 'incoterm.code')).toMatchObject({ actual: 'CIF', nuevo: 'FOB', grupo: 'condiciones' });
       expect(cambios.find(c => c.clave === 'goods.0.originCountry')).toMatchObject({ actual: null, nuevo: 'CN', partida: 1 });
     });
@@ -263,9 +272,10 @@ describe('extraccionDocumento', () => {
 
     test('lo que ya coincide no se propone, sin distinguir mayusculas ni tipo', () => {
       const exp = expediente({
-        goods: [{ taricCode: '8471300000', originCountry: 'cn', currency: 'usd', invoiceValue: '184800', packages: {} }],
+        goods: [{ taricCode: '8471300000', originCountry: 'cn', currency: 'usd', invoiceValue: '184800', quantity: 480, unit: 'pcs', packages: {} }],
         incoterm: { code: 'fob', place: 'SHANGHAI' },
-        exporter: { companyName: 'shanghai hongtai import & export co., ltd.', country: 'CN', city: 'Shanghai' }
+        invoiceNumber: 'INV-H1-01',
+        exporter: { companyName: 'shanghai hongtai import & export co., ltd.', country: 'CN', city: 'Shanghai', postalCode: '200120', address: 'No. 1288 Pudong Ave' }
       });
 
       expect(proponerCambios(exp, normalizarExtraccion(LECTURA_FACTURA), 'commercial_invoice')).toEqual([]);
