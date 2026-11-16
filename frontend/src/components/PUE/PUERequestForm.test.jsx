@@ -1335,7 +1335,7 @@ describe('<PUERequestForm />', () => {
     expect(certificadosTexts.length).toBeGreaterThan(2) // Al menos COM, ROHS y RAEE de certificados
   })
 
-  test('paso 1: muestra "(auto-rellenado)" cuando hay h1AutoFill', async () => {
+  test('paso 1: con h1AutoFill el operador sale en una línea, sin el bloque editable (UAT 16/Nov/2026)', async () => {
     pueAPI.lookupMRN.mockResolvedValue({
       data: {
         success: true,
@@ -1373,7 +1373,9 @@ describe('<PUERequestForm />', () => {
 
     await waitFor(() => expect(screen.getByLabelText(/Correo electronico de contacto/i)).toBeInTheDocument())
 
-    expect(screen.getByText('Datos del Operador (auto-rellenado)')).toBeInTheDocument()
+    expect(screen.getByText('Operador (del H1): Empresa Test SL · NIF B12345678 · EORI ESB12345678')).toBeInTheDocument()
+    expect(screen.queryByText(/Datos del Operador/)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Nombre\/Razon Social/)).not.toBeInTheDocument()
   })
 
   test('paso 5: revisión muestra chips de documentos en flujo SOIVRE', async () => {
