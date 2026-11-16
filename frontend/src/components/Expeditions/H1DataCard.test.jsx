@@ -268,6 +268,27 @@ describe('<H1DataCard />', () => {
     })))
   })
 
+  test('gastos de la base del IVA: añade THC y T3 con el aviso de la naviera y los guarda', async () => {
+    getH1Requirements.mockResolvedValue(conDeduccion('CIF', 'admitir', {
+      vatAdditions: [], conceptosBaseIva: { THC: 'THC · manipulación en la terminal de destino', T3: 'T3 · tasa portuaria de la mercancía', OTHER: 'Otros gastos' }
+    }))
+    updateH1Data.mockResolvedValue({ data: { success: true } })
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+
+    expect(screen.getByText('Si la naviera factura estos gastos con IVA, no los incluyas aquí.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir THC' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir T3' }))
+    fireEvent.change(screen.getByLabelText('Importe del gasto 1 de la base del IVA'), { target: { value: '200' } })
+    fireEvent.change(screen.getByLabelText('Importe del gasto 2 de la base del IVA'), { target: { value: '100' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(updateH1Data).toHaveBeenCalledWith('e1', expect.objectContaining({
+      vatAdditions: [{ concept: 'THC', amount: '200', currency: 'EUR' }, { concept: 'T3', amount: '100', currency: 'EUR' }]
+    })))
+    expect(updateH1Data.mock.calls[0][1].otherAdjustments).toBeUndefined()
+  })
+
   // UAT 16/Nov/2026: la tarjeta guardaba con los valores de cuando se abrio la
   // pagina y borraba lo aplicado desde la factura (numero y CP del exportador).
   test('solo envia los campos cambiados: no pisa lo que otra tarjeta relleno', async () => {

@@ -40,6 +40,7 @@ function explicacionTrasLaEntrada(incoterm, regla) {
 
 /** Ajustes con importes como texto, para comparar lo editado con lo guardado. */
 const ajustesComoTexto = (lista) => JSON.stringify((lista || []).map((a) => [a.code || '', comoTexto(a.amount), a.currency || 'EUR']))
+const gastosIvaComoTexto = (lista) => JSON.stringify((lista || []).map((a) => [a.concept || '', comoTexto(a.amount), a.currency || 'EUR']))
 
 /** Importe y divisa de un gasto (flete o seguro). */
 function CampoGasto({ id, etiqueta, nombreDivisa, importe, divisa, onImporte, onDivisa }) {
@@ -91,6 +92,7 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
   const divisaSinBce = estado?.datos?.invoiceCurrencyWithoutBce ? estado.datos.invoiceCurrency : null
   const reglaTrasLaEntrada = estado?.datos?.transporteTrasLaEntrada || null
   const codigosDeAjuste = estado?.datos?.codigosDeAjuste || {}
+  const conceptosBaseIva = estado?.datos?.conceptosBaseIva || {}
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
   const regimenes = useCatalogoRegimenesH1()
@@ -113,6 +115,7 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
   useEffect(() => { if (!hayCambiosSinGuardar.current) cargar() }, [cargar, expedition.updatedAt])
 
   const ajustesCambiados = Boolean(estado) && ajustesComoTexto(form.otherAdjustments) !== ajustesComoTexto(estado.datos.otherAdjustments)
+  const gastosIvaCambiados = Boolean(estado) && gastosIvaComoTexto(form.vatAdditions) !== gastosIvaComoTexto(estado.datos.vatAdditions)
   const cambiar = (campo) => (e) => setForm((previo) => ({ ...previo, [campo]: e.target.value }))
 
   const guardar = async (e) => {
@@ -136,6 +139,7 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
         if (importe in datos && !(divisa in datos) && form[divisa] !== undefined && !omitir.has(divisa)) datos[divisa] = form[divisa] || 'EUR'
       }
       if (ajustesCambiados) datos.otherAdjustments = (form.otherAdjustments || []).map((a) => ({ code: a.code, amount: comoTexto(a.amount), currency: a.currency || 'EUR' }))
+      if (gastosIvaCambiados) datos.vatAdditions = (form.vatAdditions || []).map((a) => ({ concept: a.concept, amount: comoTexto(a.amount), currency: a.currency || 'EUR' }))
       await declarationsAPI.updateH1Data(expedition._id, datos)
       toast.success('Datos del H1 guardados')
       hayCambiosSinGuardar.current = false
@@ -201,7 +205,7 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
     }
   }
 
-  const sinCambios = estado && !ajustesCambiados && CAMPOS.every((campo) => comoTexto(form[campo]) === comoTexto(estado.datos[campo]))
+  const sinCambios = estado && !ajustesCambiados && !gastosIvaCambiados && CAMPOS.every((campo) => comoTexto(form[campo]) === comoTexto(estado.datos[campo]))
   hayCambiosSinGuardar.current = Boolean(estado) && !sinCambios
   const ajustes = form.otherAdjustments || []
   const cambiarAjuste = (i, campo) => (e) => setForm((previo) => ({
@@ -211,6 +215,14 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
     ...previo, otherAdjustments: [...(previo.otherAdjustments || []), { code: Object.keys(codigosDeAjuste)[0] || '', amount: '', currency: 'EUR' }]
   }))
   const quitarAjuste = (i) => setForm((previo) => ({ ...previo, otherAdjustments: (previo.otherAdjustments || []).filter((_, j) => j !== i) }))
+  const gastosIva = form.vatAdditions || []
+  const cambiarGastoIva = (i, campo) => (e) => setForm((previo) => ({
+    ...previo, vatAdditions: (previo.vatAdditions || []).map((a, j) => (j === i ? { ...a, [campo]: e.target.value } : a))
+  }))
+  const anadirGastoIva = (concepto) => setForm((previo) => ({
+    ...previo, vatAdditions: [...(previo.vatAdditions || []), { concept: concepto, amount: '', currency: 'EUR' }]
+  }))
+  const quitarGastoIva = (i) => setForm((previo) => ({ ...previo, vatAdditions: (previo.vatAdditions || []).filter((_, j) => j !== i) }))
 
   return (
     <div className="card">
@@ -323,6 +335,36 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
               </div>
             ))}
             <button type="button" className="btn-secondary mt-2" onClick={anadirAjuste}>Añadir ajuste</button>
+          </fieldset>
+        )}
+        {Object.keys(conceptosBaseIva).length > 0 && (
+          <fieldset className="sm:col-span-2 rounded-lg border border-gray-200 p-3">
+            <legend className="px-1 text-sm font-medium">Gastos a añadir a la base del IVA (opcional)</legend>
+            <p className="text-xs text-gray-600">
+              THC (manipulación en la terminal), T3 (tasa de la mercancía) y otros gastos hasta el primer lugar de destino en la UE (art. 83 de la Ley del IVA).
+              Suben la base del IVA, no el valor en aduana: se declaran con el código CA en cada partida, repartidos por su valor.
+            </p>
+            <p className="mt-1 text-xs font-medium text-amber-800">Si la naviera factura estos gastos con IVA, no los incluyas aquí.</p>
+            {gastosIva.map((a, i) => (
+              <div key={i} className="mt-2 flex flex-wrap gap-2">
+                <select aria-label={`Concepto del gasto ${i + 1} de la base del IVA`} className="input sm:w-80" value={a.concept || ''} onChange={cambiarGastoIva(i, 'concept')}>
+                  {Object.entries(conceptosBaseIva).map(([codigo, texto]) => <option key={codigo} value={codigo}>{texto}</option>)}
+                </select>
+                <input
+                  aria-label={`Importe del gasto ${i + 1} de la base del IVA`} className="input w-36" type="number" min="0" step="0.01" inputMode="decimal"
+                  value={comoTexto(a.amount)} onChange={cambiarGastoIva(i, 'amount')}
+                />
+                <select aria-label={`Divisa del gasto ${i + 1} de la base del IVA`} className="input w-28" value={a.currency || 'EUR'} onChange={cambiarGastoIva(i, 'currency')}>
+                  {MONEDAS_ALTA.map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <button type="button" className="btn-secondary" aria-label={`Quitar el gasto ${i + 1} de la base del IVA`} onClick={() => quitarGastoIva(i)}>Quitar</button>
+              </div>
+            ))}
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button type="button" className="btn-secondary" onClick={() => anadirGastoIva('THC')}>Añadir THC</button>
+              <button type="button" className="btn-secondary" onClick={() => anadirGastoIva('T3')}>Añadir T3</button>
+              <button type="button" className="btn-secondary" onClick={() => anadirGastoIva('OTHER')}>Añadir otro gasto</button>
+            </div>
           </fieldset>
         )}
         <div className="sm:col-span-2 flex justify-end">

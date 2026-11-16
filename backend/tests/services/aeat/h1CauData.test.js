@@ -570,3 +570,16 @@ describe('H1 CAU: régimen solicitado y precedente (D.E. 1/10)', () => {
     expect(datos(exp).envio.partidas[0].regimen.adicionales).toEqual(['C08']);
   });
 });
+describe('H1 CAU: gastos a añadir a la base del IVA (código CA)', () => {
+  test('CA por partida: no cambia el valor en aduana ni el arancel y sube la base del IVA', () => {
+    const base = expediente({ goods: [{ ...expediente().goods[0], currency: 'EUR', invoiceValue: 4800 }] });
+    const sin = datos(base).envio.partidas[0];
+    const con = datos({ ...base, costs: { ...(base.costs || {}), vatAdditions: [{ concept: 'THC', amount: 200, currency: 'EUR' }, { concept: 'T3', amount: 100, currency: 'EUR' }] } }).envio.partidas[0];
+    const a00 = (p) => p.tributos.find((t) => t.tipo === 'A00').bases[0];
+    const b00 = (p) => p.tributos.find((t) => t.tipo === 'B00').bases[0];
+    expect(a00(con)).toEqual(a00(sin));
+    expect(b00(con).importe).toBeCloseTo(b00(sin).importe + 300, 2);
+    expect(con.valoracion.ajustes).toContainEqual({ codigo: 'CA', importe: 300 });
+  });
+});
+

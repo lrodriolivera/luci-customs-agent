@@ -537,6 +537,14 @@ const ExpeditionSchema = new mongoose.Schema({
     freightAfterEntry: { amount: { type: Number, min: 0 }, currency: { type: String, uppercase: true, trim: true } },
     // Otros ajustes del valor en aduana (CL265: AB comisiones, AI canones, BF
     // comisiones de compra…), cada uno en su divisa. Ver services/forms/ajustesDelValor.js.
+    // Gastos que se suman a la base del IVA pero no al valor en aduana (art.
+    // 83.Dos LIVA): THC, tasa T3, otros hasta el primer destino. Codigo CA.
+    vatAdditions: [{
+      _id: false,
+      concept: { type: String, enum: ['THC', 'T3', 'OTHER'] },
+      amount: { type: Number, min: 0 },
+      currency: { type: String, uppercase: true, trim: true }
+    }],
     otherAdjustments: [{
       _id: false,
       code: { type: String, uppercase: true, trim: true },

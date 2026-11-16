@@ -13,7 +13,7 @@ const { regimenDelExpediente } = require('../../config/regimenesH1');
 const { ErrorValidacion, eoriDe, formaRepresentacionDe } = require('../forms/identificadorAduanero');
 const { cambioObligatorio, aEuros } = require('../divisas/cambioDelExpediente');
 const { lugarDeEntrega } = require('../forms/lugarDeEntrega');
-const { ajustesDelValor, ajustesDeLaPartida, valorConAjustes, CODIGO_TRANSPORTE_TRAS_LA_ENTRADA } = require('../forms/ajustesDelValor');
+const { ajustesDelValor, ajustesDeLaPartida, valorConAjustes, CODIGO_TRANSPORTE_TRAS_LA_ENTRADA, CODIGO_BASE_IVA } = require('../forms/ajustesDelValor');
 const { CODIGO_AJUSTE } = require('../forms/gastosHastaLaFrontera');
 const { sinCodigoPostal } = require('./paisesSinCodigoPostal');
 const { MODOS_ACTIVACION } = require('./h1CauActivacion');
@@ -254,7 +254,8 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
   // (10 kg: 1PL 4,50 y B00 sobre 5.380,50; MRN 26ES002801I01BRAR7; con otro
   // tipo, error 2878 «El tipo correcto es: 0.45»).
   const plastico = plasticoEnH1(good, contexto.medioDePago, n, faltan);
-  const baseIva = redondear(valorAduana + arancel + ie.cuota + plastico.cuota);
+  // Gastos a añadir a la base del IVA (THC, T3…; codigo CA): no son valor en aduana.
+  const baseIva = redondear(valorAduana + arancel + ie.cuota + plastico.cuota + importeDe(CODIGO_BASE_IVA));
   const tipoBulto = String(good.packages?.type || '').toUpperCase();
   if (!/^[A-Z0-9]{2}$/.test(tipoBulto)) faltan.push(`tipo de bulto (código de dos letras) de la partida ${n}`);
   if (!(good.packages?.quantity > 0)) faltan.push(`número de bultos de la partida ${n}`);
