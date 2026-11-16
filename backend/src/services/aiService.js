@@ -30,6 +30,7 @@ const MAX_RUTA_CANDIDATO = 600;
 // verdad: cuando estaban repartidos por el codigo, una migracion de modelo
 // dejo tres llamadas apuntando a un modelo inexistente.
 const { OPUS: OPUS_MODEL, SONNET: SONNET_MODEL, FAST: FAST_MODEL, labelFor } = require('../config/bedrockModels');
+const { crearClienteAnthropic, enviarConAnthropic } = require('./anthropicProvider');
 
 // Mapa de idiomas para instrucciones al modelo
 const LANGUAGE_INSTRUCTIONS = {
@@ -270,6 +271,11 @@ class AIService {
       this.fallbackClient = null;
     }
 
+    // Proveedor principal desde el 16/11/2026: la API de Anthropic. Bedrock
+    // (arriba) queda de respaldo si la API falla o no admite un formato.
+    this.anthropic = crearClienteAnthropic();
+    if (this.anthropic) logger.info('IA: API de Anthropic como proveedor principal; Bedrock de respaldo');
+
     // Cache compartida (Redis en produccion, memoria como respaldo) para no
     // reclasificar el mismo articulo en cada expediente.
     this.classificationCache = getCache();
@@ -503,7 +509,7 @@ class AIService {
    * Llamada base a Claude via Bedrock Converse API
    */
   async callClaude(model, systemPrompt, userMessage, options = {}) {
-    if (!this.client) {
+    if (!this.client && !this.anthropic) {
       return this.mockResponse(userMessage);
     }
 
@@ -536,7 +542,7 @@ class AIService {
    * archivo real en vez de que se le pida "simular" un resultado plausible.
    */
   async callClaudeWithDocument(model, systemPrompt, userMessage, contentBlock, options = {}) {
-    if (!this.client) {
+    if (!this.client && !this.anthropic) {
       return this.mockResponse(userMessage);
     }
 
@@ -561,6 +567,19 @@ class AIService {
    * logica de reintentos.
    */
   async _enviarConverse(command, model) {
+    // 1) API de Anthropic. Si falla (o el formato no lo admite, p. ej. Word o
+    //    Excel), se sigue con Bedrock con la misma peticion.
+    if (this.anthropic) {
+      try {
+        return await enviarConAnthropic(this.anthropic, command.input);
+      } catch (error) {
+        logger.warn(`IA: la API de Anthropic falló (${error.name || 'Error'}: ${error.message}); se usa Bedrock`);
+        if (!this.client) {
+          logger.error('Error llamando a la API de Anthropic sin Bedrock de respaldo:', error.message);
+          throw new Error('Error en servicio de IA');
+        }
+      }
+    }
     try {
       // Un intento = probar la cuenta principal y, si falla a nivel de cuenta,
       // la de fallback. Devuelve la respuesta o lanza el error mas relevante.

@@ -46,6 +46,9 @@ describe('IDs de modelo Bedrock en el codigo fuente', () => {
 
   beforeAll(() => {
     for (const file of listJsFiles(SRC)) {
+      // Los IDs de la API de Anthropic van sin prefijo por diseno y solo
+      // pueden vivir en su fichero de configuracion.
+      if (path.relative(SRC, file) === path.join('config', 'anthropicModels.js')) continue;
       const lines = fs.readFileSync(file, 'utf8').split('\n');
       lines.forEach((line, i) => {
         if (/^\s*(\/\/|\*)/.test(line)) return; // comentarios
