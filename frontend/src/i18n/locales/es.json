@@ -633,7 +633,18 @@
       "referenceRequired": "Falta el número del documento (solo los códigos Y van sin número).",
       "isAuthorisation": "Es una autorización, no un documento de la partida: la AEAT lo rechaza aquí.",
       "saved": "Documentos de la casilla 44 guardados",
-      "error": "No se pudieron guardar los documentos de la casilla 44"
+      "error": "No se pudieron guardar los documentos de la casilla 44",
+      "required": "La AEAT exige {{count}} documento(s) para esta partida: escribe el número y añádelo.",
+      "requiredList": "Documentos que exige la AEAT",
+      "numberFor": "Número del {{tipo}}",
+      "addRequired": "Añadir {{tipo}}",
+      "conditional": "Otros {{count}} documento(s) posibles que no aplican a un H1 normal",
+      "reason_soloH7": "solo en envíos de escaso valor o ventas a distancia (H7)",
+      "reason_siSeSolicita": "solo si se solicita la suspensión o el destino especial",
+      "reason_siPreferencia": "solo si se aplica la preferencia de este origen",
+      "reason_aeatExige": "lo exige la AEAT",
+      "reason_medida": "lo pide la medida",
+      "reason_preferenciaElegida": "prueba de la preferencia aplicada"
     },
     "excise": {
       "title": "Impuesto especial",

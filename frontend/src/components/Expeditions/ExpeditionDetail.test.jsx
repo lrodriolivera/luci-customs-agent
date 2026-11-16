@@ -1340,9 +1340,9 @@ describe('<ExpeditionDetail /> · casilla 44 de la partida', () => {
     expeditionsAPI.setDocumentosC44.mockResolvedValue({ data: { data: { ...exp, goods: [{ ...partida, documentosC44: [{ tipo: '1310', referencia: 'ES-1' }] }] } } })
     renderExpeditionDetail()
 
-    fireEvent.click(await screen.findByRole('button', { name: /1310/ }))
-    fireEvent.change(screen.getByLabelText('expeditions.c44.reference'), { target: { value: 'ES-1' } })
-    fireEvent.click(screen.getByRole('button', { name: 'expeditions.c44.add' }))
+    // Lo exigido por la AEAT aparece solo, sin pulsar nada: se escribe el número y se añade.
+    fireEvent.change(await screen.findByLabelText('expeditions.c44.numberFor'), { target: { value: 'ES-1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'expeditions.c44.addRequired' }))
 
     await waitFor(() => expect(expeditionsAPI.setDocumentosC44).toHaveBeenCalledWith('exp123', GOOD_ID, [{ tipo: '1310', referencia: 'ES-1' }]))
     expect(toast.success).toHaveBeenCalledWith('expeditions.c44.saved')

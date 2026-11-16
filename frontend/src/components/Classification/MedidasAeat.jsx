@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BuildingLibraryIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 import { classificationAPI } from '../../services/api'
@@ -112,27 +112,35 @@ function Medida({ medida, t }) {
  *
  * @param {{ code: string, origin?: string, compare?: { dutyRate?: number, vatRate?: number }, onApply?: Function, applying?: boolean, className?: string }} props
  */
-export default function MedidasAeat({ code, origin, compare, onApply, onLoaded, applying = false, className = 'mt-3 pl-9' }) {
+export default function MedidasAeat({ code, origin, compare, onApply, onLoaded, autoLoad = false, applying = false, className = 'mt-3 pl-9' }) {
   const { t } = useTranslation()
-  const [estado, setEstado] = useState({ cargando: false, datos: null, error: null })
+  const [estado, setEstado] = useState({ cargando: false, datos: null, error: null, automatica: false })
 
-  const consultar = async () => {
-    setEstado({ cargando: true, datos: null, error: null })
+  const consultar = async (automatica = false) => {
+    setEstado({ cargando: true, datos: null, error: null, automatica })
     try {
       // El origen del expediente se escribe a mano: solo se envia si es un
       // codigo ISO de dos letras; si no, se consulta para todos los paises.
       const origen = /^[A-Za-z]{2}$/.test(String(origin || '').trim()) ? origin.trim().toUpperCase() : undefined
       const respuesta = await classificationAPI.aeatTariff(code, origen)
-      setEstado({ cargando: false, datos: respuesta.data?.data, error: null })
+      setEstado({ cargando: false, datos: respuesta.data?.data, error: null, automatica })
       onLoaded?.(respuesta.data?.data)
     } catch (error) {
       setEstado({
         cargando: false,
         datos: null,
-        error: error.response?.data?.error || t('classification.aeat.error')
+        error: error.response?.data?.error || t('classification.aeat.error'),
+        automatica
       })
     }
   }
+
+  // En el expediente se consulta sola al abrirlo (pocas partidas; la sede
+  // tiene cache de 24 h), para proponer documentos sin que haya que pulsar.
+  useEffect(() => {
+    if (autoLoad) consultar(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoLoad, code, origin])
 
   const { cargando, datos, error } = estado
   const contraste = contrastar(datos, compare)
@@ -157,7 +165,7 @@ export default function MedidasAeat({ code, origin, compare, onApply, onLoaded, 
     <div className={className}>
       <button
         type="button"
-        onClick={consultar}
+        onClick={() => consultar(false)}
         disabled={cargando}
         className="btn-secondary text-sm inline-flex items-center gap-1.5"
       >
@@ -165,8 +173,10 @@ export default function MedidasAeat({ code, origin, compare, onApply, onLoaded, 
         {cargando ? t('classification.aeat.loading') : t('classification.aeat.consult')}
       </button>
 
+      {/* Un fallo de la consulta automatica no salta como alerta: se informa
+          y la agente puede reintentar con el boton. */}
       {error && (
-        <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>
+        <p role={estado.automatica ? undefined : 'alert'} className="mt-2 text-sm text-red-700">{error}</p>
       )}
 
       {datos && (

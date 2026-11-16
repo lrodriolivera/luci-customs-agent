@@ -22,7 +22,37 @@ const esY = (tipo) => /^Y/.test(tipo)
  *   saving?: boolean
  * }} props
  */
-export default function DocumentosC44({ documentos = [], sugerencias = [], onSave, saving = false }) {
+/** Una propuesta exigida: con su numero (o sin el si es Y) se anade de un clic. */
+function Exigido({ doc, onAdd, saving, t }) {
+  const [numero, setNumero] = useState('')
+  const sinNumero = esY(doc.tipo)
+  return (
+    <li className="flex flex-wrap items-center gap-2 text-sm">
+      <span className="font-mono font-semibold">{doc.tipo}</span>
+      <span className="text-gray-700 flex-1 min-w-[10rem]">{doc.descripcion}</span>
+      {!sinNumero && (
+        <input
+          value={numero}
+          onChange={(e) => setNumero(e.target.value)}
+          maxLength={70}
+          className="input w-44 font-mono text-xs"
+          aria-label={t('expeditions.c44.numberFor', { tipo: doc.tipo })}
+        />
+      )}
+      <button
+        type="button"
+        disabled={saving || (!sinNumero && !numero.trim())}
+        onClick={() => onAdd({ tipo: doc.tipo, ...(numero.trim() ? { referencia: numero.trim() } : {}), ...(doc.medida ? { medida: doc.medida } : {}) })}
+        className="btn-secondary text-xs"
+        aria-label={t('expeditions.c44.addRequired', { tipo: doc.tipo })}
+      >
+        {t('expeditions.c44.add')}
+      </button>
+    </li>
+  )
+}
+
+export default function DocumentosC44({ documentos = [], sugerencias = [], exigidos = [], condicionales = [], onSave, saving = false }) {
   const { t } = useTranslation()
   const [tipo, setTipo] = useState('')
   const [referencia, setReferencia] = useState('')
@@ -30,7 +60,7 @@ export default function DocumentosC44({ documentos = [], sugerencias = [], onSav
   const [error, setError] = useState(null)
   const tituloId = useId()
 
-  const yaEstan = new Set(documentos.map((d) => d.tipo))
+  const yaEstan = new Set([...documentos, ...exigidos, ...condicionales].map((d) => d.tipo))
   const ofrecidas = sugerencias
     .filter((s) => !AUTORIZACIONES.has(s.tipo) && !yaEstan.has(s.tipo))
     .filter((s, i, todas) => todas.findIndex((o) => o.tipo === s.tipo) === i)
@@ -55,6 +85,7 @@ export default function DocumentosC44({ documentos = [], sugerencias = [], onSav
   }
 
   const quitar = (indice) => onSave(documentos.filter((_, i) => i !== indice))
+  const anadirExigido = (doc) => onSave([...documentos, doc])
 
   return (
     <section className="mt-3 rounded-lg border border-gray-200 bg-white p-3" aria-labelledby={tituloId}>
@@ -88,6 +119,29 @@ export default function DocumentosC44({ documentos = [], sugerencias = [], onSav
 
       {onSave && (
         <>
+          {exigidos.length > 0 && (
+            <div className="mt-2 rounded border border-amber-200 bg-amber-50 p-2">
+              <p role="status" className="text-xs font-medium text-amber-900">{t('expeditions.c44.required', { count: exigidos.length })}</p>
+              <ul aria-label={t('expeditions.c44.requiredList')} className="mt-1 space-y-1">
+                {exigidos.map((doc) => <Exigido key={doc.tipo} doc={doc} onAdd={anadirExigido} saving={saving} t={t} />)}
+              </ul>
+            </div>
+          )}
+
+          {condicionales.length > 0 && (
+            <details className="mt-2">
+              <summary className="cursor-pointer text-xs text-gray-600">{t('expeditions.c44.conditional', { count: condicionales.length })}</summary>
+              <ul className="mt-1 space-y-0.5">
+                {condicionales.map((doc) => (
+                  <li key={doc.tipo} className="text-xs text-gray-600">
+                    <button type="button" onClick={() => elegir(doc)} className="font-mono font-semibold hover:text-blue-700">{doc.tipo}</button>
+                    {' '}{doc.descripcion} — <em>{t(`expeditions.c44.reason_${doc.motivo}`)}</em>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+
           {ofrecidas.length > 0 && (
             <div className="mt-2">
               <p className="text-xs text-gray-600">{t('expeditions.c44.suggested')}</p>

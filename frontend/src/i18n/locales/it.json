@@ -633,7 +633,18 @@
       "referenceRequired": "Manca il numero del documento (solo i codici Y ne sono privi).",
       "isAuthorisation": "È un'autorizzazione, non un documento della voce: l'AEAT la rifiuta qui.",
       "saved": "Documenti della casella 44 salvati",
-      "error": "Impossibile salvare i documenti della casella 44"
+      "error": "Impossibile salvare i documenti della casella 44",
+      "required": "L'AEAT richiede {{count}} documento/i per questa voce: scrivi il numero e aggiungilo.",
+      "requiredList": "Documenti richiesti dall'AEAT",
+      "numberFor": "Numero del {{tipo}}",
+      "addRequired": "Aggiungi {{tipo}}",
+      "conditional": "Altri {{count}} documento/i possibili che non si applicano a un H1 normale",
+      "reason_soloH7": "solo per spedizioni di modico valore o vendite a distanza (H7)",
+      "reason_siSeSolicita": "solo se si richiede la sospensione o la destinazione particolare",
+      "reason_siPreferencia": "solo se si applica la preferenza di questa origine",
+      "reason_aeatExige": "richiesto dall'AEAT",
+      "reason_medida": "richiesto dalla misura",
+      "reason_preferenciaElegida": "prova della preferenza applicata"
     },
     "excise": {
       "title": "Accisa",
