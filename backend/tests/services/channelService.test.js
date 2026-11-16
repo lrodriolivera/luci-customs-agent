@@ -87,8 +87,12 @@ describe('Canal Verde — levante automatico', () => {
 
     expect(r.channel).toBe('green');
     expect(r.success).toBe(true);
-    expect(r.levanteNumber).toMatch(/^LEV\d{4}[A-Z0-9]{6}$/);
+    // Referencia interna de LUCI: no es un numero ni un documento de la AEAT.
+    expect(r.levanteNumber).toMatch(/^LUCI-LEV\d{4}[A-Z0-9]{6}$/);
     expect(r.levanteDocument.mrn).toBe('26ES00281212345678');
+    expect(r.levanteDocument.interno).toBe(true);
+    expect(r.levanteDocument.aviso).toMatch(/no es un documento de la AEAT/i);
+    expect(JSON.stringify(r.levanteDocument)).not.toMatch(/Agencia Estatal/i);
     expect(r.actions).toContain('Levante generado');
 
     // Persistio el estado y el canal
@@ -220,7 +224,7 @@ describe('reevaluateYellowChannel', () => {
     const guardado = await Expedition.findById(exp._id);
     expect(guardado.declaration.channel).toBe('green');
     expect(guardado.status).toBe('green_channel');
-    expect(guardado.declaration.levanteNumber).toMatch(/^LEV/);
+    expect(guardado.declaration.levanteNumber).toMatch(/^LUCI-LEV/);
     expect(guardado.timeline.some(t => t.action === 'channel_upgraded')).toBe(true);
   });
 

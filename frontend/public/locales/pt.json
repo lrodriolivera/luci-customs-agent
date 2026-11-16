@@ -1372,7 +1372,7 @@
     "viewAll": "Ver todos",
     "loadingError": "Erro ao carregar estado do canal",
     "levanteAuthorized": "Autorizacao de Saida",
-    "levanteNumber": "Numero de Autorizacao",
+    "levanteNumber": "Referência interna LUCI",
     "levanteDate": "Data de Autorizacao",
     "downloadLevante": "Descarregar Autorizacao",
     "levanteCanWithdraw": "A mercadoria pode ser levantada do recinto aduaneiro",

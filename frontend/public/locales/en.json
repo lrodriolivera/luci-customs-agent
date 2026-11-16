@@ -1373,7 +1373,7 @@
     "viewAll": "View all",
     "loadingError": "Error loading channel status",
     "levanteAuthorized": "Release Authorized",
-    "levanteNumber": "Release Number",
+    "levanteNumber": "LUCI internal reference",
     "levanteDate": "Release Date",
     "downloadLevante": "Download Release",
     "levanteCanWithdraw": "Goods may be collected from the customs enclosure",

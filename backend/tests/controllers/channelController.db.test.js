@@ -292,6 +292,9 @@ describe('getLevante', () => {
     expect(res.body.data.importer.nif).toBe('B12345678');
     expect(res.body.data.goods).toHaveLength(1);
     expect(res.body.data.goods[0].description).toBe('Zapatos');
+    // Es un resumen interno de LUCI, no un documento de la AEAT.
+    expect(res.body.data.interno).toBe(true);
+    expect(res.body.data.aviso).toMatch(/no es un documento de la AEAT/i);
   });
 });
 

@@ -1372,7 +1372,7 @@
     "viewAll": "Vore tots",
     "loadingError": "Error en carregar estat del canal",
     "levanteAuthorized": "Allevantament Autoritzat",
-    "levanteNumber": "Numero Allevantament",
+    "levanteNumber": "Referència interna LUCI",
     "levanteDate": "Data Allevantament",
     "downloadLevante": "Descarregar Allevantament",
     "levanteCanWithdraw": "La mercaderia pot retirar-se del recinte duaner",
