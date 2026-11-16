@@ -134,7 +134,7 @@ export default function H1Preview({ h1Data }) {
                 ? (shipment.containers || []).map((c) => (typeof c === 'string' ? c : (c?.containerNumber || c?.number || ''))).filter(Boolean).join(', ') || t('h1Preview.containersYes')
                 : t('h1Preview.containersNo'))}
               {field('goodsLocation', joinParts(shipment.goodsLocation?.typeOfLocation, shipment.goodsLocation?.qualifierOfIdentification, shipment.placeOfUnloading?.location))}
-              {field('incoterm', joinParts(shipment.deliveryTerms?.code, shipment.deliveryTerms?.country))}
+              {field('incoterm', joinParts(shipment.deliveryTerms?.code, shipment.deliveryTerms?.location, shipment.deliveryTerms?.country))}
               {field('invoiceTotal', formatearImporte(shipment.totalInvoicedAmount, currency))}
               {field('exchangeRate', shipment.exchangeRate)}
               {field('freight', formatearImporte(shipment.transportCharges?.freightAmount, shipment.transportCharges?.freightCurrency || currency))}
@@ -166,6 +166,8 @@ export default function H1Preview({ h1Data }) {
                     {field('itemInvoiceValue', formatearImporte(item.invoiceValue, currency))}
                     {field('customsValue', formatearImporte(item.customsValue, 'EUR'))}
                     {field('statisticalValue', formatearImporte(item.statisticalValue, 'EUR'))}
+                    {item.valuationAdjustments?.length > 0 && field('valuationAdjustments', item.valuationAdjustments
+                      .map((a) => `${a.code} ${a.code.startsWith('B') ? '−' : '+'}${formatearImporte(a.amount, 'EUR')}`).join(' · '))}
                     {field('documents', (item.supportingDocuments || [])
                       .map((d) => joinParts(d.type || d.code, d.reference || d.referenceNumber)).join(' · '))}
                   </dl>

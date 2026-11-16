@@ -3675,6 +3675,7 @@
     "itemInvoiceValue": "Valor da fatura",
     "customsValue": "Valor aduaneiro",
     "statisticalValue": "Valor estatístico",
+    "valuationAdjustments": "Ajustamentos do valor (A soma, B deduz)",
     "documents": "Documentos",
     "valuationMethod": "Método de avaliação",
     "totalCustomsValue": "Valor aduaneiro total",

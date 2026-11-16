@@ -10,3 +10,7 @@ con permiso expreso): `predeclaracion-alta-…` (estado 63, número de registro)
 `predeclaracion-activacion-rechazo-…` (error 80118: no se admite `ContactPerson` en la activación),
 `predeclaracion-activacion-respuesta-…` (estado 90, activada) y `predeclaracion-anulacion-respuesta-…`
 (`CC410A`, anulada). El teléfono de contacto se ha sustituido por uno de relleno.
+
+`dap-ba-respuesta-real-002801.xml`: respuesta real de la preproducción (aduana 002801, modo test, 16/11/2026) a un
+H1 DAP de 10.000 EUR con deducción BA de 1.000 EUR (MRN 26ES002801I01BQ0R1): la AEAT liquida A00 9.000/1.080 y
+B00 10.080/2.116,80, es decir, la base del IVA es valor en aduana + arancel, sin volver a sumar el BA.

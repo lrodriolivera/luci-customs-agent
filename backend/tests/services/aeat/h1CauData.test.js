@@ -204,6 +204,75 @@ describe('H1 CAU: flete y seguro hasta la entrada en la UE (valor CIF)', () => {
   siHayXmllint('el XML con el ajuste valida contra el XSD oficial', () => {
     expect(validar(datos(expediente({ ...FOB, costs: gastos })))).toBeNull();
   });
+
+  test('FOB: el lugar de entrega está en el país de expedición, no en España', () => {
+    expect(datos(expediente({ ...FOB, costs: gastos })).envio.entrega).toEqual({ incoterm: 'FOB', lugar: 'Shanghai', pais: 'CN' });
+  });
+});
+
+describe('H1 CAU: transporte después de la entrada en la UE (deducción BA, art. 72.a CAU)', () => {
+  const DAP = { incoterm: { code: 'DAP', place: 'Madrid' } };
+
+  test('DAP: el transporte interior va como deducción BA y sale de la base del arancel y de la del IVA', () => {
+    const d = datos(expediente({ ...DAP, costs: { freightAfterEntry: { amount: 1123.4, currency: 'USD' } } }));
+    const [p] = d.envio.partidas;
+
+    // 10.000 USD / 1,1234 = 8.901,55 EUR; transporte Valencia-Madrid 1.123,40 USD = 1.000 EUR.
+    expect(p.valoracion).toEqual({ metodo: '1', ajustes: [{ codigo: 'BA', importe: 1000 }] });
+    expect(p.valorEstadistico).toBe(7901.55);
+    expect(p.tributos[0].bases[0]).toEqual({ tipoImpositivo: 12, importe: 7901.55, cuota: 948.19 });
+    // IVA: valor en aduana 7.901,55 + arancel 948,19 = 8.849,74 (así liquida la AEAT en PRE, 16/11/2026).
+    expect(p.tributos[1].bases[0]).toEqual({ tipoImpositivo: 21, importe: 8849.74, cuota: 1858.45 });
+    expect(p.importeFactura).toBe(10000);
+    expect(d.envio.entrega).toEqual({ incoterm: 'DAP', lugar: 'Madrid', pais: 'ES' });
+  });
+
+  test('DAP sin el dato: no se presenta y dice qué falta', () => {
+    expect.assertions(2);
+    try { datos(expediente(DAP)); } catch (e) {
+      expect(e.code).toBe('DATOS_H1_FALTANTES');
+      expect(e.faltan).toContain('transporte desde la entrada en la UE hasta el lugar de entrega (Madrid) incluido en el precio: con DAP no forma parte del valor en aduana (0 si se entrega en el punto de entrada)');
+    }
+  });
+
+  test('DDP con 0: sin deducción', () => {
+    const [p] = datos(expediente({ incoterm: { code: 'DDP', place: 'Valencia' }, costs: { freightAfterEntry: { amount: 0, currency: 'EUR' } } })).envio.partidas;
+    expect(p.valoracion.ajustes).toEqual([]);
+    expect(p.tributos[0].bases[0].importe).toBe(8901.55);
+  });
+
+  test('con varias partidas la deducción se reparte por valor', () => {
+    const goods = [{ ...expediente().goods[0], invoiceValue: 6000 }, { ...expediente().goods[0], invoiceValue: 4000 }];
+    const d = datos(expediente({ ...DAP, goods, costs: { freightAfterEntry: { amount: 500, currency: 'EUR' } } }));
+    expect(d.envio.partidas.map((p) => p.valoracion.ajustes)).toEqual([[{ codigo: 'BA', importe: 300 }], [{ codigo: 'BA', importe: 200 }]]);
+  });
+
+  test('deducciones mayores que el valor: no se presenta (el valor en aduana no puede ser negativo)', () => {
+    expect.assertions(1);
+    try { datos(expediente({ ...DAP, costs: { freightAfterEntry: { amount: 9000, currency: 'EUR' } } })); } catch (e) {
+      expect(e.faltan).toContain('deducciones de la partida 1 que no superen su valor (9000.00 EUR deducidos sobre 8901.55 EUR): el valor en aduana no puede ser negativo');
+    }
+  });
+
+  test('ajustes opcionales del expediente: cánones (AI) suman, comisiones de compra (BF) restan', () => {
+    const costs = { freightAfterEntry: { amount: 100, currency: 'EUR' }, otherAdjustments: [{ code: 'AI', amount: 300, currency: 'EUR' }, { code: 'BF', amount: 1.55, currency: 'EUR' }] };
+    const [p] = datos(expediente({ ...DAP, costs })).envio.partidas;
+    expect(p.valoracion.ajustes).toEqual([{ codigo: 'BA', importe: 100 }, { codigo: 'AI', importe: 300 }, { codigo: 'BF', importe: 1.55 }]);
+    expect(p.tributos[0].bases[0].importe).toBe(9100);
+    // El valor estadístico es el de la frontera (factura + AK − BA): sin cánones ni comisiones.
+    expect(p.valorEstadistico).toBe(8801.55);
+  });
+
+  siHayXmllint('el XML con BA (y AK, AI) valida contra el XSD oficial y lleva el código y el importe', () => {
+    const d = datos(expediente({ ...DAP, costs: { freightAfterEntry: { amount: 1123.4, currency: 'USD' }, otherAdjustments: [{ code: 'AI', amount: 10, currency: 'EUR' }] } }));
+    expect(validar(d)).toBeNull();
+    const xml = buildH1CauXML(d);
+    expect(xml).toContain('<AdditionsAndDeductions><sequenceNumber>1</sequenceNumber><code>BA</code><amount>1000.00</amount></AdditionsAndDeductions>');
+    expect(xml).toContain('<code>AI</code><amount>10.00</amount>');
+    const cpt = datos(expediente({ incoterm: { code: 'CPT', place: 'Madrid' }, costs: { insurance: { amount: 50, currency: 'EUR' }, freightAfterEntry: { amount: 200, currency: 'EUR' } } }));
+    expect(cpt.envio.partidas[0].valoracion.ajustes).toEqual([{ codigo: 'AK', importe: 50 }, { codigo: 'BA', importe: 200 }]);
+    expect(validar(cpt)).toBeNull();
+  });
 });
 
 describe('H1 CAU: factura en una divisa que el BCE no cotiza', () => {

@@ -3675,6 +3675,7 @@
     "itemInvoiceValue": "Valor de factura",
     "customsValue": "Valor a la duana",
     "statisticalValue": "Valor estadístic",
+    "valuationAdjustments": "Ajustos del valor (A suma, B resta)",
     "documents": "Documents",
     "valuationMethod": "Mètode de valoració",
     "totalCustomsValue": "Valor a la duana total",

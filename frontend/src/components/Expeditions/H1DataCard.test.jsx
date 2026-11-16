@@ -124,6 +124,52 @@ describe('<H1DataCard />', () => {
     expect(screen.queryByLabelText(/Cambio aplicado/)).not.toBeInTheDocument()
   })
 
+  const CODIGOS = { AB: 'Comisiones y gastos de corretaje, salvo comisiones de compra', AI: 'Cánones y derechos de licencia', BF: 'Comisiones de compra' }
+  const conDeduccion = (incoterm, regla, extra = {}) => conIncoterm(incoterm, { flete: false, seguro: false }, {
+    transporteTrasLaEntrada: regla, freightAfterEntryAmount: null, freightAfterEntryCurrency: 'EUR', otherAdjustments: [], codigosDeAjuste: CODIGOS, ...extra
+  })
+
+  test('DAP: pide el transporte desde la entrada en la UE (deducción BA) y lo guarda', async () => {
+    getH1Requirements.mockResolvedValue(conDeduccion('DAP', 'exigir'))
+    updateH1Data.mockResolvedValue({ data: { success: true } })
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+
+    expect(screen.getByText(/Con DAP el precio incluye el transporte desde la entrada en la UE/)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Transporte desde la entrada en la UE'), { target: { value: '350' } })
+    fireEvent.change(screen.getByLabelText('Divisa del transporte desde la entrada en la UE'), { target: { value: 'USD' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(updateH1Data).toHaveBeenCalledWith('e1', expect.objectContaining({ freightAfterEntryAmount: '350', freightAfterEntryCurrency: 'USD' })))
+    expect(updateH1Data.mock.calls[0][1].otherAdjustments).toBeUndefined()
+  })
+
+  test('FOB: no pide el transporte posterior a la entrada', async () => {
+    getH1Requirements.mockResolvedValue(conDeduccion('FOB', null))
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+
+    expect(screen.queryByLabelText('Transporte desde la entrada en la UE')).not.toBeInTheDocument()
+  })
+
+  test('otros ajustes del valor: añade uno, elige código e importe, y los guarda; también se pueden quitar', async () => {
+    getH1Requirements.mockResolvedValue(conDeduccion('CIF', 'admitir', { otherAdjustments: [{ code: 'BF', amount: 50, currency: 'EUR' }] }))
+    updateH1Data.mockResolvedValue({ data: { success: true } })
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir ajuste' }))
+    fireEvent.change(screen.getByLabelText('Código del ajuste 2'), { target: { value: 'AI' } })
+    fireEvent.change(screen.getByLabelText('Importe del ajuste 2'), { target: { value: '1200' } })
+    fireEvent.change(screen.getByLabelText('Divisa del ajuste 2'), { target: { value: 'USD' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar el ajuste 1' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(updateH1Data).toHaveBeenCalledWith('e1', expect.objectContaining({
+      otherAdjustments: [{ code: 'AI', amount: '1200', currency: 'USD' }]
+    })))
+  })
+
   test('sin cambios no deja guardar', async () => {
     getH1Requirements.mockResolvedValue(respuesta())
     render(<H1DataCard expedition={{ _id: 'e1' }} />)

@@ -16,7 +16,8 @@ const fecha = (iso) => {
 
 const CAMPOS = [
   'invoiceNumber', 'exporterPostalCode', 'vehicleNationality', 'dispatchAuthorizationScope',
-  'freightAmount', 'freightCurrency', 'insuranceAmount', 'insuranceCurrency', 'appliedExchangeRate'
+  'freightAmount', 'freightCurrency', 'insuranceAmount', 'insuranceCurrency', 'appliedExchangeRate',
+  'freightAfterEntryAmount', 'freightAfterEntryCurrency'
 ]
 // El backend exige un motivo de al menos cinco caracteres.
 const MOTIVO_MINIMO = 5
@@ -29,6 +30,15 @@ function explicacionGastos(incoterm, sumar) {
   if (sumar.seguro) return `Con ${incoterm} el precio incluye el flete, no el seguro: el seguro hasta la entrada en la UE se suma al valor en aduana. Escribe 0 si no hubo.`
   return `Con ${incoterm} el precio ya incluye el flete y el seguro hasta la entrada en la UE: no se suma nada.`
 }
+
+/** Qué dice el incoterm sobre el transporte desde la entrada en la UE hasta el lugar de entrega (deducción BA). */
+function explicacionTrasLaEntrada(incoterm, regla) {
+  if (regla === 'exigir') return `Con ${incoterm} el precio incluye el transporte desde la entrada en la UE hasta el lugar de entrega: no forma parte del valor en aduana y se resta (código BA). Escribe 0 si se entrega en el punto de entrada.`
+  return `Con ${incoterm}, si el lugar convenido es interior (o hay transbordo en otro puerto de la UE), el precio incluye ese transporte dentro de la UE: escríbelo y se resta del valor en aduana (código BA). Si no, déjalo vacío.`
+}
+
+/** Ajustes con importes como texto, para comparar lo editado con lo guardado. */
+const ajustesComoTexto = (lista) => JSON.stringify((lista || []).map((a) => [a.code || '', comoTexto(a.amount), a.currency || 'EUR']))
 
 /** Importe y divisa de un gasto (flete o seguro). */
 function CampoGasto({ id, etiqueta, nombreDivisa, importe, divisa, onImporte, onDivisa }) {
@@ -69,6 +79,8 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
   const pideFlete = !sumar || sumar.flete
   const pideSeguro = !sumar || sumar.seguro
   const divisaSinBce = estado?.datos?.invoiceCurrencyWithoutBce ? estado.datos.invoiceCurrency : null
+  const reglaTrasLaEntrada = estado?.datos?.transporteTrasLaEntrada || null
+  const codigosDeAjuste = estado?.datos?.codigosDeAjuste || {}
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
 
@@ -85,6 +97,7 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
 
   useEffect(() => { cargar() }, [cargar])
 
+  const ajustesCambiados = Boolean(estado) && ajustesComoTexto(form.otherAdjustments) !== ajustesComoTexto(estado.datos.otherAdjustments)
   const cambiar = (campo) => (e) => setForm((previo) => ({ ...previo, [campo]: e.target.value }))
 
   const guardar = async (e) => {
@@ -95,9 +108,11 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
       const omitir = new Set([
         ...(pideFlete ? [] : ['freightAmount', 'freightCurrency']),
         ...(pideSeguro ? [] : ['insuranceAmount', 'insuranceCurrency']),
-        ...(divisaSinBce ? [] : ['appliedExchangeRate'])
+        ...(divisaSinBce ? [] : ['appliedExchangeRate']),
+        ...(reglaTrasLaEntrada ? [] : ['freightAfterEntryAmount', 'freightAfterEntryCurrency'])
       ])
       const datos = Object.fromEntries(CAMPOS.filter((c) => form[c] !== undefined && !omitir.has(c)).map((c) => [c, form[c] === null ? '' : form[c]]))
+      if (ajustesCambiados) datos.otherAdjustments = (form.otherAdjustments || []).map((a) => ({ code: a.code, amount: comoTexto(a.amount), currency: a.currency || 'EUR' }))
       await declarationsAPI.updateH1Data(expedition._id, datos)
       toast.success('Datos del H1 guardados')
       await cargar()
@@ -161,7 +176,15 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
     }
   }
 
-  const sinCambios = estado && CAMPOS.every((campo) => comoTexto(form[campo]) === comoTexto(estado.datos[campo]))
+  const sinCambios = estado && !ajustesCambiados && CAMPOS.every((campo) => comoTexto(form[campo]) === comoTexto(estado.datos[campo]))
+  const ajustes = form.otherAdjustments || []
+  const cambiarAjuste = (i, campo) => (e) => setForm((previo) => ({
+    ...previo, otherAdjustments: (previo.otherAdjustments || []).map((a, j) => (j === i ? { ...a, [campo]: e.target.value } : a))
+  }))
+  const anadirAjuste = () => setForm((previo) => ({
+    ...previo, otherAdjustments: [...(previo.otherAdjustments || []), { code: Object.keys(codigosDeAjuste)[0] || '', amount: '', currency: 'EUR' }]
+  }))
+  const quitarAjuste = (i) => setForm((previo) => ({ ...previo, otherAdjustments: (previo.otherAdjustments || []).filter((_, j) => j !== i) }))
 
   return (
     <div className="card">
@@ -225,6 +248,41 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
             />
           )}
         </fieldset>
+        {reglaTrasLaEntrada && (
+          <fieldset className="sm:col-span-2 grid gap-3 sm:grid-cols-2 rounded-lg border border-gray-200 p-3">
+            <legend className="px-1 text-sm font-medium">Transporte dentro de la UE incluido en el precio</legend>
+            <p className="sm:col-span-2 text-xs text-gray-600">{explicacionTrasLaEntrada(estado?.datos?.incoterm, reglaTrasLaEntrada)}</p>
+            <CampoGasto
+              id="h1-freight-after-entry" etiqueta="Transporte desde la entrada en la UE" nombreDivisa="Divisa del transporte desde la entrada en la UE"
+              importe={form.freightAfterEntryAmount} divisa={form.freightAfterEntryCurrency}
+              onImporte={cambiar('freightAfterEntryAmount')} onDivisa={cambiar('freightAfterEntryCurrency')}
+            />
+          </fieldset>
+        )}
+        {Object.keys(codigosDeAjuste).length > 0 && (
+          <fieldset className="sm:col-span-2 rounded-lg border border-gray-200 p-3">
+            <legend className="px-1 text-sm font-medium">Otros ajustes del valor en aduana (opcional)</legend>
+            <p className="text-xs text-gray-600">
+              Comisiones, cánones, comisiones de compra… que la factura no recoge o que no forman parte del valor. Los códigos A se suman y los B se restan.
+            </p>
+            {ajustes.map((a, i) => (
+              <div key={i} className="mt-2 flex flex-wrap gap-2">
+                <select aria-label={`Código del ajuste ${i + 1}`} className="input sm:w-80" value={a.code || ''} onChange={cambiarAjuste(i, 'code')}>
+                  {Object.entries(codigosDeAjuste).map(([codigo, texto]) => <option key={codigo} value={codigo}>{`${codigo} — ${texto}`}</option>)}
+                </select>
+                <input
+                  aria-label={`Importe del ajuste ${i + 1}`} className="input w-36" type="number" min="0" step="0.01" inputMode="decimal"
+                  value={comoTexto(a.amount)} onChange={cambiarAjuste(i, 'amount')}
+                />
+                <select aria-label={`Divisa del ajuste ${i + 1}`} className="input w-28" value={a.currency || 'EUR'} onChange={cambiarAjuste(i, 'currency')}>
+                  {MONEDAS_ALTA.map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <button type="button" className="btn-secondary" aria-label={`Quitar el ajuste ${i + 1}`} onClick={() => quitarAjuste(i)}>Quitar</button>
+              </div>
+            ))}
+            <button type="button" className="btn-secondary mt-2" onClick={anadirAjuste}>Añadir ajuste</button>
+          </fieldset>
+        )}
         <div className="sm:col-span-2 flex justify-end">
           <button type="submit" className="btn-primary" disabled={guardando || !estado || sinCambios}>
             {guardando ? 'Guardando...' : 'Guardar'}

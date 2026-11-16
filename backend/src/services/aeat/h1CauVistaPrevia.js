@@ -36,9 +36,55 @@ function enEurosSiSeDeclaraEnEuros(h1Data, envio) {
   };
 }
 
+const redondear = (n) => Math.round(n * 100) / 100;
+
+/** Base y cuota declaradas de un tributo (A00, B00) sumando todas las partidas; null si no hay bases. */
+function tributoDeclarado(partidas, tipo) {
+  const bases = partidas.flatMap((p) => (p.tributos || []).filter((t) => t.tipo === tipo).flatMap((t) => t.bases || []));
+  if (bases.length === 0) return null;
+  return { base: redondear(bases.reduce((s, b) => s + (b.importe || 0), 0)), cuota: redondear(bases.reduce((s, b) => s + (b.cuota || 0), 0)) };
+}
+
+/** Base del arancel (A00) de una partida: su valor en aduana. */
+const valorAduanaDe = (partida) => tributoDeclarado([partida], 'A00')?.base ?? null;
+
+/**
+ * Valor en aduana y liquidacion tal como van en el mensaje: el valor de cada
+ * partida es la base de su A00 (factura en euros + ajustes A* − B*, ver
+ * `ajustesDelValor.js`), con sus ajustes; la liquidacion, la suma de las bases
+ * y cuotas declaradas. Sin bases en los datos se deja lo del generador.
+ */
+function valoracionDelMensaje(h1Data, partidas) {
+  const arancel = tributoDeclarado(partidas, 'A00');
+  const iva = tributoDeclarado(partidas, 'B00');
+  if (!arancel) return h1Data;
+  const tributos = h1Data.dutyTaxFee || {};
+  const otros = ['antidumpingDuty', 'exciseDuty'].reduce((s, k) => s + (tributos[k]?.payableAmount || 0), 0);
+  return {
+    ...h1Data,
+    valuation: { ...h1Data.valuation, customsValue: arancel.base },
+    dutyTaxFee: {
+      ...tributos,
+      importDuty: { ...tributos.importDuty, baseAmount: arancel.base, payableAmount: arancel.cuota },
+      vat: iva ? { ...tributos.vat, baseAmount: iva.base, payableAmount: iva.cuota } : tributos.vat,
+      totalDuty: redondear(arancel.cuota + (iva?.cuota || 0) + otros)
+    },
+    goodsItems: (h1Data.goodsItems || []).map((item, i) => {
+      const partida = partidas[i];
+      if (!partida || valorAduanaDe(partida) === null) return item;
+      return {
+        ...item,
+        customsValue: valorAduanaDe(partida),
+        valuationAdjustments: (partida.valoracion?.ajustes || []).map((a) => ({ code: a.codigo, amount: a.importe }))
+      };
+    })
+  };
+}
+
 function aplicarCauAVistaPrevia(vistaGenerada, datos) {
   const envio = datos.envio || {};
-  const h1Data = enEurosSiSeDeclaraEnEuros(vistaGenerada, envio);
+  const h1Data = valoracionDelMensaje(enEurosSiSeDeclaraEnEuros(vistaGenerada, envio), envio.partidas || []);
+  const entrega = envio.entrega;
   const ubicacion = envio.expedicion?.ubicacion;
   const transporte = envio.expedicion?.documentosTransporte?.[0];
   const shipment = h1Data.goodsShipment || {};
@@ -81,7 +127,13 @@ function aplicarCauAVistaPrevia(vistaGenerada, datos) {
         ? { ...shipment.goodsLocation, typeOfLocation: ubicacion.tipo, qualifierOfIdentification: ubicacion.calificador }
         : shipment.goodsLocation,
       placeOfUnloading: ubicacion ? { ...shipment.placeOfUnloading, location: ubicacion.autorizacion } : shipment.placeOfUnloading,
-      transportDocument: transporte ? { type: transporte.tipo, reference: transporte.referencia } : shipment.transportDocument
+      transportDocument: transporte ? { type: transporte.tipo, reference: transporte.referencia } : shipment.transportDocument,
+      // Incoterm, lugar y pais del lugar tal como van en DeliveryTerms (guia CAU
+      // v3.20 pag. 52; regla C0596: location + country). El generador ponia ES
+      // por defecto aunque con FOB el lugar este en el pais de expedicion.
+      deliveryTerms: entrega
+        ? { ...shipment.deliveryTerms, code: entrega.incoterm, location: entrega.lugar, country: entrega.pais }
+        : shipment.deliveryTerms
     },
     goodsItems: (h1Data.goodsItems || []).map((item, i) => (
       envio.partidas?.[i] ? { ...item, supportingDocuments: documentosDe(envio.partidas[i], envio) } : item

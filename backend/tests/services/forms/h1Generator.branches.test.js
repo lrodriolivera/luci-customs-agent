@@ -1489,7 +1489,7 @@ describe('h1Generator - Cobertura de Ramas', () => {
       expect(deliveryTermsBlock).toContain('<CountryCode>CN</CountryCode>');
     });
 
-    test('debe NO incluir CountryCode en DeliveryTerms cuando ausente (línea 953 condicional false)', () => {
+    test('sin país en el incoterm, EXW toma el país de expedición (el lugar está en origen), no ES', () => {
       const expedition = {
         ...baseExpedition,
         incoterm: {
@@ -1505,8 +1505,8 @@ describe('h1Generator - Cobertura de Ramas', () => {
         result.xml.indexOf('<DeliveryTerms>'),
         result.xml.indexOf('</DeliveryTerms>')
       );
-      // La línea 352 usa country || 'ES', así que SIEMPRE tendrá valor
-      expect(deliveryTermsBlock).toContain('<CountryCode>ES</CountryCode>');
+      // Mismo criterio que el mensaje CAU (lugarDeEntrega.js): E/F -> país de expedición.
+      expect(deliveryTermsBlock).toContain('<CountryCode>CN</CountryCode>');
     });
   });
 

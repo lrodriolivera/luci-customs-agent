@@ -3675,6 +3675,7 @@
     "itemInvoiceValue": "Valore di fattura",
     "customsValue": "Valore in dogana",
     "statisticalValue": "Valore statistico",
+    "valuationAdjustments": "Rettifiche del valore (A aggiunge, B deduce)",
     "documents": "Documenti",
     "valuationMethod": "Metodo di valutazione",
     "totalCustomsValue": "Valore in dogana totale",
