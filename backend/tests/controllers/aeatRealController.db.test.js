@@ -644,28 +644,26 @@ describe('aeatRealController con Mongo real', () => {
       expect(mockAeatRealService.queryDeclarationStatus).not.toHaveBeenCalled();
     });
 
-    test('camino feliz: delega a aeatRealService y analiza con LUCI', async () => {
+    test('camino feliz: delega a aeatRealService con los argumentos en su orden y el tenant', async () => {
       mockAeatRealService.queryDeclarationStatus.mockResolvedValue({
-        success: true,
-        data: { status: 'accepted', mrn: '26ES123456789012345' }
-      });
-
-      mockStatusMonitor._analyzeStatusWithLuci.mockResolvedValue({
-        message: 'Declaración aceptada sin incidencias'
+        success: true, status: 'RELEASED', channel: 'green', luciAnalysis: { interpretation: 'Mercancía despachada' }
       });
 
       const res = await request(await app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
-        .get('/r/26ES123456789012345')
-        .query({ certificateAlias: 'FNMT-STRIX', declarationType: 'H1' });
+        .get('/r/26ES002801501441J7')
+        .query({ certificateAlias: 'FNMT-STRIX', declarationType: 'NCTS' });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.luciAnalysis.message).toContain('aceptada');
+      expect(res.body.data.luciAnalysis.interpretation).toContain('despachada');
+      expect(mockStatusMonitor._analyzeStatusWithLuci).not.toHaveBeenCalled();
 
       expect(mockAeatRealService.queryDeclarationStatus).toHaveBeenCalledWith(
-        '26ES123456789012345',
+        '26ES002801501441J7',
+        'NCTS',
         'FNMT-STRIX',
-        'H1'
+        undefined,
+        { tenantId: String(USER_A.tenantId) }
       );
     });
 
