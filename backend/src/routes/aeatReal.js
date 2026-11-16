@@ -75,12 +75,6 @@ router.post('/declarations/h1/submit',
   aeatRealController.submitH1Declaration
 );
 
-// Enviar declaración H7 (bajo valor)
-router.post('/declarations/h7/submit',
-  requirePermission('canApproveDeclarations'),
-  aeatRealController.submitH7Declaration
-);
-
 // Enviar declaración AES (exportación)
 router.post('/declarations/aes/submit',
   requirePermission('canApproveDeclarations'),

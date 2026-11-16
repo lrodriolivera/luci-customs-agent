@@ -209,41 +209,6 @@ function buildTestH1() {
   });
 }
 
-function buildTestH7() {
-  const { buildH7ImportXML } = require('../src/services/aeat/h7XmlBuilder');
-  return buildH7ImportXML({
-    test: true,
-    aduanaDespacho: ADUANA_TEST,
-    // Remitente: STRIX como remitente para PRE (solo STRIX esta dado de alta)
-    remitenteNIF: STRIX.eori,
-    remitenteNombre: STRIX.nombre,
-    remitentePais: STRIX.pais,
-    // Destinatario/Importador: STRIX (unico EORI valido en PRE)
-    destinatarioNIF: STRIX.eori,
-    destinatarioNombre: STRIX.nombre,
-    destinatarioDireccion: STRIX.direccion,
-    destinatarioPoblacion: STRIX.poblacion,
-    destinatarioCP: STRIX.cp,
-    destinatarioPais: 'ES',
-    // Declarante - EORI format, representacion directa (declarante=importador)
-    declaranteNIF: STRIX.eori,
-    declaranteNombre: STRIX.nombre,
-    formaRepresentacion: '1',
-    emailDespacho: STRIX.email,
-    // Partidas (bajo valor < 150 EUR)
-    partidas: [{
-      descripcion: 'Funda protectora para telefono movil',
-      taricCode: '3926909790',
-      paisOrigen: 'CN',
-      pesobruto: 0.200,
-      pesoneto: 0.150,
-      bultos: 1,
-      tipoBulto: 'PK',
-      valorFactura: 12.50
-    }]
-  });
-}
-
 function buildTestAES() {
   const { buildAESExportXML } = require('../src/services/aeat/aesXmlBuilder');
   const transId = generateTransactionId();
@@ -451,11 +416,6 @@ async function main() {
       name: 'H1 - Importacion Completa',
       builder: buildTestH1,
       endpoint: '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.ImportacionCompletaV1SOAP'
-    },
-    {
-      name: 'H7 - Importacion Simplificada',
-      builder: buildTestH7,
-      endpoint: '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.DeclaSimpliImporV1SOAP'
     },
     {
       name: 'AES - Exportacion',

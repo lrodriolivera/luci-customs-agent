@@ -2,7 +2,6 @@
  * Customs Service Factory
  * Returns the appropriate customs service based on country code
  */
-const SpainCustomsService = require('./spain/spainCustomsService');
 const NetherlandsCustomsService = require('./netherlands/netherlandsCustomsService');
 const logger = require('../../config/logger');
 
@@ -27,9 +26,10 @@ class CustomsServiceFactory {
     let service;
 
     switch (countryCode.toUpperCase()) {
+      // ES no pasa por la factoría: las declaraciones españolas se presentan
+      // con aeatSubmitService (POST /api/declarations/:id/submit y /api/h7).
       case 'ES':
-        service = new SpainCustomsService(config);
-        break;
+        throw new Error('Spain is not served by CustomsServiceFactory: use aeatSubmitService (POST /api/declarations/:id/submit)');
       case 'NL':
         service = new NetherlandsCustomsService(config);
         break;
@@ -38,7 +38,7 @@ class CustomsServiceFactory {
       // case 'DE': service = new GermanyCustomsService(config); break;
       // case 'FR': service = new FranceCustomsService(config); break;
       default:
-        throw new Error(`Customs service not available for country: ${countryCode}. Supported: ES, NL`);
+        throw new Error(`Customs service not available for country: ${countryCode}. Supported: NL`);
     }
 
     serviceCache.set(cacheKey, service);

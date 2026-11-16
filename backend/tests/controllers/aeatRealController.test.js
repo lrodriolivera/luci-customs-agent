@@ -28,7 +28,6 @@ const mockXadesService = {
 const mockAeatReal = {
   submitDeclaration: jest.fn(),
   submitH1Declaration: jest.fn(),
-  submitH7Declaration: jest.fn(),
   submitAESDeclaration: jest.fn(),
   submitNCTSDeclaration: jest.fn(),
   submitENSDeclaration: jest.fn()
@@ -647,42 +646,6 @@ describe('aeatRealController.submitH1Declaration', () => {
       { useSandbox: true }
     );
     expect(expedition.declaration.mrn).toBe('26ES00280130003MQ2');
-  });
-});
-
-describe('aeatRealController.submitH7Declaration', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockCertService.getCertificateIdByAlias.mockReturnValue('cert-id-real-1');
-  });
-
-  test('400 sin certificado o contraseña', async () => {
-    const res = await request(app(aeatRealController.submitH7Declaration))
-      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX' }); // falta password
-
-    expect(res.status).toBe(400);
-    expect(mockExpedition.findById).not.toHaveBeenCalled();
-  });
-
-  test('camino feliz: resuelve certId y pasa password a aeatRealService.submitH7Declaration', async () => {
-    const expedition = {
-      _id: 'e1', tenantId: 't1',
-      declaration: { xmlContent: '<ent:DeclaSimpliImporV1Ent/>' },
-      timeline: [], save: jest.fn().mockResolvedValue()
-    };
-    mockExpedition.findById.mockReturnValue({ populate: jest.fn().mockResolvedValue(expedition) });
-    mockAeatReal.submitH7Declaration.mockResolvedValue({ success: true, mrn: '26ES00H7' });
-
-    const res = await request(app(aeatRealController.submitH7Declaration))
-      .post('/r').send({ expeditionId: 'e1', certificateAlias: 'FNMT-STRIX', password: 'clave-real' });
-
-    expect(res.status).toBe(200);
-    expect(mockAeatReal.submitH7Declaration).toHaveBeenCalledWith(
-      '<ent:DeclaSimpliImporV1Ent/>',
-      'cert-id-real-1',
-      'clave-real',
-      { useSandbox: true }
-    );
   });
 });
 

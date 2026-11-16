@@ -55,7 +55,7 @@ router.use(auth);
  * /api/declarations/{id}/submit-v2:
  *   post:
  *     tags: [declarations]
- *     summary: Envío multi-país (ES/NL) con routing automático por tenant.country
+ *     summary: Envío multi-país (NL) por tenant.country; España responde 400 ES_USA_ENVIO_AEAT (usa /{id}/submit)
  */
 // GET /api/declarations/supported-countries
 router.get('/supported-countries', (req, res) => {
@@ -309,6 +309,23 @@ router.post('/:expeditionId/ai/apply-regime', declarationController.applyRegimeS
 // ===========================================
 
 /**
+ * España no usa el envío multi-país: sus declaraciones se presentan con
+ * POST /api/declarations/:expeditionId/submit (aeatSubmitService: H1 CAU o
+ * anterior según Ajustes, AES, comprobación de sumaria) y el H7 desde /api/h7.
+ * El país se resuelve igual que en CustomsServiceFactory.getServiceForTenant.
+ */
+function rechazarEspanaEnV2(res, tenant) {
+  const pais = String(tenant.customsConfig?.country || tenant.businessInfo?.country || 'ES').toUpperCase();
+  if (pais !== 'ES') return false;
+  res.status(400).json({
+    success: false,
+    code: 'ES_USA_ENVIO_AEAT',
+    error: 'Las declaraciones de España se presentan con POST /api/declarations/:expeditionId/submit, no por el envío multi-país.'
+  });
+  return true;
+}
+
+/**
  * @route POST /api/declarations/:expeditionId/submit-v2
  * @desc Multi-country aware submission - uses tenant's country config
  * Uses CustomsServiceFactory pattern to route to the correct country service
@@ -334,6 +351,7 @@ router.post('/:expeditionId/submit-v2', requirePermission('canApproveDeclaration
     const tenant = req.tenant || {};
     const country = tenant.customsConfig?.country || 'ES';
     const declarationType = expedition.declaration?.type || 'H1';
+    if (rechazarEspanaEnV2(res, tenant)) return;
 
     // Get the right customs service via factory
     const customsService = CustomsServiceFactory.getServiceForTenant(tenant);
@@ -400,6 +418,7 @@ router.post('/:expeditionId/validate-v2', async (req, res) => {
     const tenant = req.tenant || {};
     const country = tenant.customsConfig?.country || 'ES';
     const declarationType = expedition.declaration?.type || req.body.declarationType || 'H1';
+    if (rechazarEspanaEnV2(res, tenant)) return;
 
     const customsService = CustomsServiceFactory.getServiceForTenant(tenant);
 

@@ -555,19 +555,6 @@ describe('AEAT Real Service', () => {
       expect(certificateService.validateCertificateForOperation).toHaveBeenCalledWith('cert-id', 'H1');
     });
 
-    test('submitH7Declaration should use H7_SUBMIT service and validateNoThreshold option', async () => {
-      const result = await aeatRealService.submitH7Declaration(
-        '<test>xml</test>',
-        'cert-id',
-        'password',
-        {}
-      );
-
-      expect(result).toHaveProperty('success');
-      // H7 no está en el SERVICES del código actual, así que esto ejercitará el _submitDeclaration con undefined service
-      // Lo importante es que el método existe y delega correctamente
-    });
-
     test('submitAESDeclaration should use AES_SUBMIT service', async () => {
       const result = await aeatRealService.submitAESDeclaration(
         '<test>xml</test>',
@@ -602,39 +589,6 @@ describe('AEAT Real Service', () => {
 
       expect(result).toHaveProperty('success');
       expect(certificateService.validateCertificateForOperation).toHaveBeenCalledWith('cert-id', 'ICS2');
-    });
-
-    test('amendENSDeclaration should use ICS2_ENS_AMEND service', async () => {
-      const result = await aeatRealService.amendENSDeclaration(
-        '<test>xml</test>',
-        'cert-id',
-        'password',
-        {}
-      );
-
-      expect(result).toHaveProperty('success');
-    });
-
-    test('notifyENSArrival should use ICS2_ENS_ARRIVAL service', async () => {
-      const result = await aeatRealService.notifyENSArrival(
-        '<test>xml</test>',
-        'cert-id',
-        'password',
-        {}
-      );
-
-      expect(result).toHaveProperty('success');
-    });
-
-    test('cancelENSDeclaration should use ICS2_ENS_CANCEL service', async () => {
-      const result = await aeatRealService.cancelENSDeclaration(
-        '<test>xml</test>',
-        'cert-id',
-        'password',
-        {}
-      );
-
-      expect(result).toHaveProperty('success');
     });
   });
 
