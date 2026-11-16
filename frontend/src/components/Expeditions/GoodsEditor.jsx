@@ -21,6 +21,9 @@ const asInput = (value) => (value === undefined || value === null ? '' : String(
  *   onCancel: () => void
  * }} props
  */
+// Exenciones del impuesto al plastico (art. 75 Ley 7/2022), casilla 37.2.
+const PLASTIC_EXEMPTIONS = ['1P1', '1P2', '1P3', '1P4', '1P5']
+
 export default function GoodsEditor({ item, index, isSaving, onSave, onCancel }) {
   const { t } = useTranslation()
   const [form, setForm] = useState({
@@ -32,7 +35,10 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
     // El importe guardado se muestra con coma decimal para que el campo, que
     // lee formato español, no tome un decimal de tres cifras por millares.
     invoiceValue: asInput(item.invoiceValue).replace('.', ','),
-    plasticoKg: asInput(item.impuestoPlastico?.kg)
+    plasticoKg: asInput(item.impuestoPlastico?.kg),
+    plasticoExencion: item.impuestoPlastico?.exencion || '',
+    plasticoKgReciclado: asInput(item.impuestoPlastico?.kgReciclado),
+    plasticoCertificado: item.impuestoPlastico?.certificadoReciclado || ''
   })
   const [error, setError] = useState(null)
 
@@ -53,8 +59,15 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
     const invoiceValue = interpretarImporte(form.invoiceValue)
     if (!(invoiceValue > 0)) return t('expeditions.editGoodsValueInvalid')
 
-    const negativo = [form.netWeight, form.grossWeight, form.plasticoKg].some((v) => toNumberOrUndefined(v) < 0)
+    const negativo = [form.netWeight, form.grossWeight, form.plasticoKg, form.plasticoKgReciclado].some((v) => toNumberOrUndefined(v) < 0)
     if (negativo) return t('expeditions.editGoodsWeightInvalid')
+
+    if (toNumberOrUndefined(form.plasticoKgReciclado) > 0 && !form.plasticoCertificado.trim()) {
+      return t('expeditions.plasticCertificateRequired')
+    }
+    if (form.plasticoExencion && !(toNumberOrUndefined(form.plasticoKg) > 0)) {
+      return t('expeditions.plasticExemptionNeedsKg')
+    }
 
     return null
   }
@@ -80,7 +93,12 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
         type: packagesQuantity ? form.packagesType : item.packages?.type
       },
       // Impuesto sobre envases de plastico no reutilizables (1PL, 0,45 EUR/kg).
-      impuestoPlastico: { kg: toNumberOrUndefined(form.plasticoKg) || 0 }
+      impuestoPlastico: {
+        kg: toNumberOrUndefined(form.plasticoKg) || 0,
+        exencion: form.plasticoExencion || undefined,
+        kgReciclado: toNumberOrUndefined(form.plasticoKgReciclado) || 0,
+        certificadoReciclado: form.plasticoCertificado.trim() || undefined
+      }
     })
   }
 
@@ -173,6 +191,44 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
             className="input"
           />
           <p className="mt-1 text-xs text-gray-500">{t('expeditions.plasticHelp')}</p>
+        </div>
+        <div>
+          <label className="label" htmlFor={fieldId('plasticExemption')}>{t('expeditions.plasticExemption')}</label>
+          <select
+            id={fieldId('plasticExemption')}
+            value={form.plasticoExencion}
+            onChange={handleChange('plasticoExencion')}
+            className="input"
+          >
+            <option value="">{t('expeditions.plasticExemptionNone')}</option>
+            {PLASTIC_EXEMPTIONS.map((code) => (
+              <option key={code} value={code}>{code} · {t(`expeditions.plasticExemptions.${code}`)}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="label" htmlFor={fieldId('plasticRecycled')}>{t('expeditions.plasticRecycledKg')}</label>
+          <input
+            id={fieldId('plasticRecycled')}
+            type="number"
+            min="0"
+            step="0.001"
+            value={form.plasticoKgReciclado}
+            onChange={handleChange('plasticoKgReciclado')}
+            className="input"
+          />
+        </div>
+        <div>
+          <label className="label" htmlFor={fieldId('plasticCertificate')}>{t('expeditions.plasticCertificate')}</label>
+          <input
+            id={fieldId('plasticCertificate')}
+            type="text"
+            maxLength={70}
+            value={form.plasticoCertificado}
+            onChange={handleChange('plasticoCertificado')}
+            className="input"
+          />
+          <p className="mt-1 text-xs text-gray-500">{t('expeditions.plasticRecycledHelp')}</p>
         </div>
       </div>
 

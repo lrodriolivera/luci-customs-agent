@@ -514,3 +514,41 @@ describe('H1 CAU: impuesto sobre envases de plástico no reutilizables (1PL)', (
   });
 });
 
+describe('H1 CAU: plástico exento y reciclado (AEAT IMPORT_IEPNR, comprobado en PRE el 17/11/2026)', () => {
+  const conPlastico = (impuestoPlastico, extra = {}) => expediente({ goods: [{ ...expediente().goods[0], currency: 'EUR', invoiceValue: 4800, impuestoPlastico, ...extra }] });
+  const faltanDe = (exp) => { try { datos(exp); return []; } catch (e) { return e.details?.faltan || e.faltan || [e.message]; } };
+
+  test('exento 1P1: código en el procedimiento adicional y 1PL con los kg y cuota cero; no suma al IVA', () => {
+    const p = datos(conPlastico({ kg: 10, exencion: '1P1' })).envio.partidas[0];
+    expect(p.regimen.adicionales).toContain('1P1');
+    expect(p.tributos.find((t) => t.tipo === '1PL').bases[0]).toMatchObject({ cantidad: 10, tipoImpositivo: 0.45, cuota: 0 });
+    const a00 = p.tributos.find((t) => t.tipo === 'A00').bases[0];
+    expect(p.tributos.find((t) => t.tipo === 'B00').bases[0].importe).toBeCloseTo(a00.importe + a00.cuota, 2);
+  });
+
+  test('reciclado parcial: certificado 1135 con los kg reciclados y 1PL solo por los no reciclados', () => {
+    const p = datos(conPlastico({ kg: 6, kgReciclado: 4, certificadoReciclado: 'CERT-001' })).envio.partidas[0];
+    expect(p.documentosJustificativos).toContainEqual({ tipo: '1135', referencia: 'CERT-001', unidad: 'KGM', cantidad: 4 });
+    expect(p.tributos.find((t) => t.tipo === '1PL').bases[0]).toMatchObject({ cantidad: 6, cuota: 2.7 });
+  });
+
+  test('todo reciclado: solo el 1135, sin tributo 1PL', () => {
+    const p = datos(conPlastico({ kg: 0, kgReciclado: 10, certificadoReciclado: 'CERT-001' })).envio.partidas[0];
+    expect(p.tributos.map((t) => t.tipo)).toEqual(['A00', 'B00']);
+    expect(p.documentosJustificativos.map((d) => d.tipo)).toContain('1135');
+  });
+
+  test('kg reciclados sin número de certificado: pide el certificado', () => {
+    expect(faltanDe(conPlastico({ kgReciclado: 4 })).join(' ')).toMatch(/certificado de plástico reciclado \(1135\)/);
+  });
+
+  test('1P4 con más de 5 kg en la declaración: la AEAT lo rechazaría, LUCI lo pide antes', () => {
+    expect(faltanDe(conPlastico({ kg: 6, exencion: '1P4' })).join(' ')).toMatch(/1P4/);
+    expect(faltanDe(conPlastico({ kg: 4, exencion: '1P4' }))).toEqual([]);
+  });
+
+  siHayXmllint('exento y reciclado cumplen el XSD', () => {
+    expect(validar(datos(conPlastico({ kg: 6, exencion: '1P1', kgReciclado: 4, certificadoReciclado: 'CERT-001' })))).toBeNull();
+  });
+});
+

@@ -114,7 +114,11 @@ function partida(p) {
       el('quantity', cantidad(d.cantidad)),
       el('goodsItemIdentifier', d.partida)
     ]),
-    ...lista('SupportingDocument', p.documentosJustificativos, (d) => [...documento(d), el('documentLineItemNumber', d.linea)]),
+    // unidad y cantidad: p. ej. los kg de plastico reciclado del certificado 1135 (AEAT, IMPORT_IEPNR).
+    ...lista('SupportingDocument', p.documentosJustificativos, (d) => [
+      ...documento(d), el('documentLineItemNumber', d.linea),
+      el('measurementUnitAndQualifier', d.unidad), el('quantity', cantidad(d.cantidad))
+    ]),
     ...lista('TransportDocument', p.documentosTransporte, (d) => [el('type', d.tipo), el('referenceNumber', d.referencia)]),
     ...lista('AdditionalReference', p.referenciasAdicionales, documento),
     ...lista('AdditionalInformation', p.informacionAdicional, (i) => [el('code', i.codigo), el('text', i.texto)]),

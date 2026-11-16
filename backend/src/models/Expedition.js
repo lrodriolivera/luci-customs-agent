@@ -79,7 +79,13 @@ const GoodsItemSchema = new mongoose.Schema({
   // Impuesto especial sobre envases de plastico no reutilizables (Ley 7/2022):
   // kilos de plastico no reutilizable de la partida. Va como tributo 1PL.
   impuestoPlastico: {
-    kg: { type: Number, min: 0 }
+    // kg de plastico NO reciclado (tributo 1PL).
+    kg: { type: Number, min: 0 },
+    // Exencion del art. 75 (casilla 37.2): 1PL con cuota cero.
+    exencion: { type: String, enum: ['1P1', '1P2', '1P3', '1P4', '1P5'] },
+    // kg de plastico reciclado y numero del certificado (casilla 44, 1135).
+    kgReciclado: { type: Number, min: 0 },
+    certificadoReciclado: { type: String, trim: true, maxlength: 70 }
   },
   // Documentos de la casilla 44 de la partida (certificados, licencias,
   // declaraciones Y) que la agente añade segun el Arancel Integrado de la AEAT.
