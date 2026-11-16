@@ -590,39 +590,6 @@ describe('AEAT Real Service', () => {
       expect(result).toHaveProperty('success');
       expect(certificateService.validateCertificateForOperation).toHaveBeenCalledWith('cert-id', 'ICS2');
     });
-
-    test('amendENSDeclaration should use ICS2_ENS_AMEND service', async () => {
-      const result = await aeatRealService.amendENSDeclaration(
-        '<test>xml</test>',
-        'cert-id',
-        'password',
-        {}
-      );
-
-      expect(result).toHaveProperty('success');
-    });
-
-    test('notifyENSArrival should use ICS2_ENS_ARRIVAL service', async () => {
-      const result = await aeatRealService.notifyENSArrival(
-        '<test>xml</test>',
-        'cert-id',
-        'password',
-        {}
-      );
-
-      expect(result).toHaveProperty('success');
-    });
-
-    test('cancelENSDeclaration should use ICS2_ENS_CANCEL service', async () => {
-      const result = await aeatRealService.cancelENSDeclaration(
-        '<test>xml</test>',
-        'cert-id',
-        'password',
-        {}
-      );
-
-      expect(result).toHaveProperty('success');
-    });
   });
 
   // Consultas H1/H7/ENS: aeatRealService.consultaH1H7Ens.test.js; AES/NCTS: consultaAesNcts.

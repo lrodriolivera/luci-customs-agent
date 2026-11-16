@@ -131,11 +131,6 @@ describe('queryDeclarationStatus ENS', () => {
     sinCaminoAntiguo();
   });
 
-  test('queryENSStatus da el mismo resultado', async () => {
-    const r = await aeatRealService.queryENSStatus('26ES0028010000001A');
-    expect(r.tipo).toBe('no_disponible');
-    expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
-  });
 });
 
 describe('tipos y camino antiguo', () => {

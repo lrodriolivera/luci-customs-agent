@@ -521,21 +521,6 @@ describe('aeatRealService - Cobertura de RAMAS', () => {
       const result = await aeatRealService.submitENSDeclaration('<test>xml</test>', 'cert-id', 'pass', {});
       expect(mockValidateCertificateForOperation).toHaveBeenCalledWith('cert-id', 'ICS2');
     });
-
-    test('amendENSDeclaration usa ICS2_ENS_AMEND', async () => {
-      const result = await aeatRealService.amendENSDeclaration('<test>xml</test>', 'cert-id', 'pass', {});
-      expect(result).toHaveProperty('success');
-    });
-
-    test('notifyENSArrival usa ICS2_ENS_ARRIVAL', async () => {
-      const result = await aeatRealService.notifyENSArrival('<test>xml</test>', 'cert-id', 'pass', {});
-      expect(result).toHaveProperty('success');
-    });
-
-    test('cancelENSDeclaration usa ICS2_ENS_CANCEL', async () => {
-      const result = await aeatRealService.cancelENSDeclaration('<test>xml</test>', 'cert-id', 'pass', {});
-      expect(result).toHaveProperty('success');
-    });
   });
 
   // ============================================================================
@@ -554,7 +539,7 @@ describe('aeatRealService - Cobertura de RAMAS', () => {
     });
 
     test('ENS: no disponible, sin certificado del almacén, sin firma y sin envío', async () => {
-      const result = await aeatRealService.queryENSStatus('26ES777');
+      const result = await aeatRealService.queryDeclarationStatus('26ES777', 'ENS');
       expect(result).toMatchObject({ success: false, tipo: 'no_disponible' });
       expect(mockValidateCertificateForOperation).not.toHaveBeenCalled();
       expect(mockSignForAEAT).not.toHaveBeenCalled();
