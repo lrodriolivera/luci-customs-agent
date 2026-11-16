@@ -3668,6 +3668,7 @@
     "itemInvoiceValue": "Valeur facturée",
     "customsValue": "Valeur en douane",
     "statisticalValue": "Valeur statistique",
+    "valuationAdjustments": "Ajustements de la valeur (A ajoute, B déduit)",
     "documents": "Documents",
     "valuationMethod": "Méthode d'évaluation",
     "totalCustomsValue": "Valeur en douane totale",
