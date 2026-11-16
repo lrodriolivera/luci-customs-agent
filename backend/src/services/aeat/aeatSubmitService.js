@@ -17,6 +17,7 @@ const { buildH1CauXML, ENDPOINT_CC415A } = require('./h1CauXmlBuilder');
 const { interpretarRespuestaH1Cau } = require('./h1CauResponse');
 const { buildConsultaH1CauXML, interpretarConsultaH1Cau, ENDPOINT_CONSULTA } = require('./h1CauConsulta');
 const { buildH7ImportXML, buildAltaH7V1XML } = require('./h7XmlBuilder');
+const { codigoAdicionalH7, validarPartidasH7ParaAeat } = require('./h7Identificadores');
 const { aplicaDerechoFijo2026 } = require('../../config/reg2026382');
 const { buildAESExportXML } = require('./aesXmlBuilder');
 const { buildNCTSTransitXML } = require('./nctsXmlBuilder');
@@ -409,11 +410,20 @@ async function submitH7(h7Declaration, tenant) {
   const representanteStatus = h7Declaration.formaRepresentacion ||
     (declaranteNIF && declaranteNIF.replace(/^ES/, '') === importadorNID.replace(/^ES/, '') ? '2' : '3');
 
-  // Codigo adicional segun modalidad de IVA (Guia H7 V3.17, apdo. 12):
+  // Codigo adicional segun modalidad de IVA (Guia H7 v3.23, apdo. 12):
   //   F48 = IOSS | F49 = acuerdos especiales (SA) | F53 = IVA estandar (tradicional) | C08 = entre particulares.
   // Nuestro caso habitual (particular, IVA a la importacion, sin IOSS) es F53.
-  const additionalProcedureCode = h7Declaration.additionalProcedureCode ||
-    (h7Declaration.vatPrepaid && /^IM\d{10}$/.test(h7Declaration.iossNumber || '') ? 'F48' : 'F53');
+  const additionalProcedureCode = codigoAdicionalH7(h7Declaration);
+
+  // Reglas de la partida que la AEAT comprueba (codigo NC de 8 cifras, error 2101;
+  // identificadores C127/C128/C129-Y081, error 1353). Si fallan no se envia nada.
+  const erroresPartidas = validarPartidasH7ParaAeat(h7Declaration.items, additionalProcedureCode);
+  if (erroresPartidas.length > 0) {
+    throw new ErrorValidacion(
+      `El H7 no se puede presentar: ${erroresPartidas.map(e => e.message).join(' ')}`,
+      { code: 'H7_DATOS_AEAT', errors: erroresPartidas }
+    );
+  }
 
   // Documentos de soporte a nivel de declaracion: factura (N380), documento previo
   // G4 (N337) si aplica. El derecho fijo A00 y el IVA los liquida la AEAT (no van en la entrada).
@@ -460,8 +470,10 @@ async function submitH7(h7Declaration, tenant) {
       // naturalPerson 'S' si es un particular (sin NIF de empresa)
       naturalPerson: h7Declaration.operationType === 'B2C' || !importadorNID ? 'S' : 'N'
     },
-    // Codigo adicional de procedimiento: F48 (estandar) / F49 (IOSS) / F53.
+    // Codigo adicional de procedimiento: F48 (IOSS) / F49 (acuerdos especiales) / F53 (IVA a la importacion).
     additionalProcedureCode,
+    // Numero IOSS (AdditionalFiscalRef, rol FR5): solo en F48.
+    iossNumber: additionalProcedureCode === 'F48' ? h7Declaration.iossNumber : undefined,
     // Documento de transporte (obligatorio): documento previo G4 (5025/N337) de activacion del (Pre)H7.
     transporte: (docPrevioTipo && docPrevioRef)
       ? { tipo: docPrevioTipo === 'N337' ? '5025' : docPrevioTipo, referencia: docPrevioRef }
@@ -472,7 +484,10 @@ async function submitH7(h7Declaration, tenant) {
       taricCode: it.taricCode,
       pesobruto: it.netWeight || 0.1,
       bultos: 1,
-      valorFactura: it.totalValue || it.unitValue || 0
+      valorFactura: it.totalValue || it.unitValue || 0,
+      identificadorComercial: it.commercialId,
+      referenciaFabricante: it.manufacturerRef,
+      codigoNormalizado: it.gtin
     }))
   });
   return _sendToAEAT(soapXML, '/wlpl/ADIP-JDIT/ws/AltaH7V1SOAP');

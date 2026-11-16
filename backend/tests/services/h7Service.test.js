@@ -422,6 +422,7 @@ describe('H7 Service', () => {
         reference: 'H7-2024-001',
         status: 'draft',
         calculateDuties: jest.fn(),
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         save: jest.fn().mockResolvedValue(true)
       };
@@ -499,6 +500,7 @@ describe('H7 Service', () => {
         totals: { customsValue: 50 },
         vatPrepaid: false,
         duties: { totalDue: 10.50 },
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         calculateDuties: jest.fn(),
         statusHistory: [],
@@ -521,6 +523,7 @@ describe('H7 Service', () => {
         totals: { customsValue: 15 }, // Below 22 EUR
         vatPrepaid: false,
         duties: { totalDue: 3.15 },
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         calculateDuties: jest.fn(),
         statusHistory: [],
@@ -540,6 +543,7 @@ describe('H7 Service', () => {
         totals: { customsValue: 100 },
         vatPrepaid: true, // VAT already paid via IOSS
         duties: { totalDue: 0 },
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         calculateDuties: jest.fn(),
         statusHistory: [],
@@ -551,6 +555,33 @@ describe('H7 Service', () => {
       await h7Service.submitToAEAT('h7-123', 'user123');
 
       expect(mockDeclaration.status).toBe('released');
+    });
+
+    test('no envia a la AEAT si una partida no cumple sus reglas y dice cual y que falta', async () => {
+      const mockDeclaration = {
+        status: 'draft',
+        totals: { customsValue: 20 },
+        vatPrepaid: false,
+        duties: { totalDue: 4 },
+        items: [
+          { description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' },
+          { description: 'Funda', taricCode: '392690', commercialId: '', manufacturerRef: 'REF-2' }
+        ],
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        calculateDuties: jest.fn(),
+        statusHistory: [],
+        save: jest.fn()
+      };
+      H7Declaration.findById.mockResolvedValue(mockDeclaration);
+
+      const result = await h7Service.submitToAEAT('h7-123', 'user123');
+
+      expect(result.success).toBe(false);
+      expect(result.errors.map(e => e.code)).toEqual(['H7_NC_8_CIFRAS', 'H7_FALTA_C127']);
+      expect(result.errors.every(e => /^Partida 2:/.test(e.message))).toBe(true);
+      expect(result.error).toMatch(/Partida 2/);
+      expect(aeatSubmitService.submitH7).not.toHaveBeenCalled();
+      expect(mockDeclaration.save).not.toHaveBeenCalled();
     });
 
     test('should not submit already submitted declaration', async () => {
@@ -683,6 +714,7 @@ describe('H7 Service', () => {
         return {
           reference: `H7-BATCH-00${callCount}`,
           calculateDuties: jest.fn(),
+          items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
           validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
           save: jest.fn().mockResolvedValue(true)
         };
@@ -760,12 +792,14 @@ describe('H7 Service', () => {
           return {
             reference: 'H7-BATCH-OK',
             calculateDuties: jest.fn(),
+            items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
             validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
             save: jest.fn().mockResolvedValue(true)
           };
         } else {
           return {
             calculateDuties: jest.fn(),
+            items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
             validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
             save: jest.fn().mockRejectedValue(new Error('Unexpected database error'))
           };
@@ -796,6 +830,19 @@ TRACK002,UPS,China Shop,Maria Lopez,87654321X,T-shirt,6109100000,25,0.3`;
       expect(declarations[0].carrier.code).toBe('DHL');
       expect(declarations[0].items[0].totalValue).toBe(15);
       expect(declarations[1].trackingNumber).toBe('TRACK002');
+    });
+
+    test('lee los identificadores del producto (sku, ref_fabricante, ean)', () => {
+      const csvData = `tracking,description,taric,valor,sku,ref_fabricante,ean
+TRACK001,Libro,4901990000,12,SKU-1,EDT-77,9788420412146`;
+      const [d] = h7Service.parseCSVBatch(csvData);
+      expect(d.items[0]).toMatchObject({ commercialId: 'SKU-1', manufacturerRef: 'EDT-77', gtin: '9788420412146' });
+    });
+
+    test('descarta un EAN inválido en lugar de romper el alta', () => {
+      const [d] = h7Service.parseCSVBatch(`tracking,taric,valor,sku,ref_fabricante,ean
+T1,4901990000,12,S,R,12AB`);
+      expect(d.items[0].gtin).toBeUndefined();
     });
 
     test('should handle CSV with missing optional fields', () => {
@@ -847,6 +894,7 @@ TRACK002,30`;
 
       const mockH7 = {
         calculateDuties: jest.fn(),
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         save: jest.fn().mockResolvedValue(true)
       };
@@ -924,6 +972,7 @@ TRACK002,30`;
 
       const mockH7 = {
         calculateDuties: jest.fn(),
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         save: jest.fn().mockResolvedValue(true)
       };
@@ -959,6 +1008,7 @@ TRACK002,30`;
 
       const mockH7 = {
         calculateDuties: jest.fn(),
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         save: jest.fn().mockResolvedValue(true)
       };
@@ -1009,6 +1059,7 @@ TRACK002,30`;
         totals: { customsValue: 50 },
         vatPrepaid: false,
         duties: { totalDue: 10.50 },
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         calculateDuties: jest.fn(),
         statusHistory: [],
@@ -1030,6 +1081,7 @@ TRACK002,30`;
         totals: { customsValue: 50 },
         vatPrepaid: false,
         duties: { totalDue: 10.50 },
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         calculateDuties: jest.fn(),
         statusHistory: [],
@@ -1051,6 +1103,7 @@ TRACK002,30`;
         totals: { customsValue: 50 },
         vatPrepaid: false,
         duties: { totalDue: 10.50 },
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         calculateDuties: jest.fn(),
         statusHistory: [],
@@ -1186,6 +1239,7 @@ TRACK002,30`;
         totals: { customsValue: 50 },
         vatPrepaid: false,
         duties: { totalDue: 10.50 },
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         calculateDuties: jest.fn(),
         statusHistory: [],
@@ -1223,6 +1277,7 @@ TRACK002,30`;
         totals: { customsValue: 50 },
         vatPrepaid: false,
         duties: { totalDue: 10.50 },
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         calculateDuties: jest.fn(),
         statusHistory: [],
@@ -1255,6 +1310,7 @@ TRACK002,30`;
 
       const mockDeclaration = {
         status: 'draft',
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         calculateDuties: jest.fn(),
         save: jest.fn()
@@ -1346,6 +1402,7 @@ TRACK002,30`;
         totals: { customsValue: 50 },
         vatPrepaid: false,
         duties: { totalDue: 10.50 },
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
         validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
         calculateDuties: jest.fn(),
         statusHistory: [],

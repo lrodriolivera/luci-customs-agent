@@ -16,6 +16,7 @@ class ErrorValidacion extends Error {
     this.status = 422;
     this.code = extra.code || 'EORI_FALTANTE';
     if (extra.quien) this.quien = extra.quien;
+    if (Array.isArray(extra.errors)) this.errors = extra.errors;
   }
 }
 

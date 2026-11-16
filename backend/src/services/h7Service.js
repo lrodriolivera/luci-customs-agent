@@ -34,6 +34,7 @@ async function _loadOwnedExpedition(expeditionId, userId) {
 }
 
 const aeatSubmitService = require('./aeat/aeatSubmitService');
+const { codigoAdicionalH7, validarPartidasH7ParaAeat, normalizarGtin } = require('./aeat/h7Identificadores');
 const logger = require('../config/logger');
 
 /**
@@ -507,6 +508,17 @@ class H7Service {
 
     let aeatResult;
     if (country === 'ES') {
+      // Reglas de la AEAT para las partidas (codigo NC de 8 cifras; identificadores
+      // C127/C128 y C129 o Y081). Se comprueban antes de enviar para decir que
+      // partida y que dato falta, en vez de esperar el rechazo 2101/1353 de la AEAT.
+      const erroresAeat = validarPartidasH7ParaAeat(declaration.items, codigoAdicionalH7(declaration));
+      if (erroresAeat.length > 0) {
+        return {
+          success: false,
+          error: `El H7 no se puede presentar: ${erroresAeat.map(e => e.message).join(' ')}`,
+          errors: erroresAeat
+        };
+      }
       // Existing AEAT flow - pass tenant for declarant info
       aeatResult = await aeatSubmitService.submitH7(declaration, tenant);
     } else {
@@ -828,7 +840,11 @@ class H7Service {
           unitValue: parseFloat(row.unit_value || row.valor_unitario) || 0,
           totalValue: parseFloat(row.total_value || row.valor) || 0,
           netWeight: parseFloat(row.weight || row.peso) || 0.1,
-          countryOfOrigin: row.origin || row.origen || 'CN'
+          countryOfOrigin: row.origin || row.origen || 'CN',
+          // Identificadores del producto exigidos por la AEAT (C127, C128; C129 opcional)
+          commercialId: row.sku || row.identificador_comercial || undefined,
+          manufacturerRef: row.ref_fabricante || row.mpn || undefined,
+          gtin: normalizarGtin(row.ean || row.gtin)
         }],
         totals: {
           intrinsicValue: parseFloat(row.total_value || row.valor) || 0,

@@ -16,6 +16,7 @@
  */
 
 const { generateTransactionId } = require('./queryXmlBuilder');
+const { codigoNC8, Y081_REF_NUM } = require('./h7Identificadores');
 const NS_ENT = 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/adip/ws/DeclaSimpliImporV1Ent.xsd';
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 
@@ -214,6 +215,44 @@ function esc(v) {
 }
 
 /**
+ * commodityCode del AltaH7V1: XSD alfaNum8Td (exactamente 8). Se envian las 8
+ * cifras de la NC; con menos de 8 no hay codigo valido y se corta el envio
+ * (antes salia el TARIC de 10 y la AEAT respondia 2101).
+ */
+function _commodityCode(p, i) {
+  const nc = codigoNC8(p.taricCode);
+  if (!nc) {
+    throw new Error(`Partida ${i + 1}: el código "${p.taricCode || ''}" no vale para la AEAT; el H7 exige el código NC de 8 cifras.`);
+  }
+  return nc;
+}
+
+/**
+ * Identificadores del producto de la partida (guia H7 v3.23, R23 nota [4], R232, C321):
+ * C127 y C128 (y C129 si lo hay) como SupportingDocument; sin C129, Y081 como
+ * AdditionalReference. Solo en la partida: desde el 15/03/2027 no se admiten en cabecera.
+ * Orden del XSD (goodsItemTd2): ...numberOfPackages, SupportingDocument*, AdditionalReference*.
+ */
+function _identificadoresDePartidaXML(p) {
+  const docs = [['C127', p.identificadorComercial], ['C128', p.referenciaFabricante], ['C129', p.codigoNormalizado]]
+    .filter(([, valor]) => valor != null && String(valor).trim() !== '')
+    .map(([tipo, valor]) => `      <SupportingDocument>
+        <suppDoctype>${tipo}</suppDoctype>
+        <suppDoctRefNum>${esc(String(valor).trim())}</suppDoctRefNum>
+      </SupportingDocument>
+`).join('');
+  const conValor = (v) => v != null && String(v).trim() !== '';
+  const tieneC127oC128 = conValor(p.identificadorComercial) || conValor(p.referenciaFabricante);
+  const tieneC129 = conValor(p.codigoNormalizado);
+  const y081 = tieneC127oC128 && !tieneC129 ? `      <AdditionalReference>
+        <addRefType>Y081</addRefType>
+        <addRefNum>${esc(Y081_REF_NUM)}</addRefNum>
+      </AdditionalReference>
+` : '';
+  return docs + y081;
+}
+
+/**
  * Construir el XML SOAP de alta de declaracion H7 (AltaH7V1Ent) para la AEAT.
  */
 function buildAltaH7V1XML(data) {
@@ -258,13 +297,13 @@ function buildAltaH7V1XML(data) {
       </Value>
       <Commodity>
         <descriptionOfGoods>${esc((p.descripcion || '').substring(0, 250))}</descriptionOfGoods>
-        <commodityCode>${esc(p.taricCode)}</commodityCode>
+        <commodityCode>${_commodityCode(p, i)}</commodityCode>
       </Commodity>
       <GoodsMeasure>
         <grossMass>${Number(p.pesobruto || p.pesoneto || 0).toFixed(4)}</grossMass>
       </GoodsMeasure>
       <numberOfPackages>${p.bultos || 1}</numberOfPackages>
-    </GoodsItem>`).join('\n');
+${_identificadoresDePartidaXML(p)}    </GoodsItem>`).join('\n');
 
   const importadorNidXML = importador.nid
     ? `      <identificationNumber>${esc(importador.nid)}</identificationNumber>\n`
@@ -324,14 +363,14 @@ ${docsXML ? docsXML + '\n' : ''}${transporteXML}        <TranspCostToDest>
           <amount>${Number(data.transportCost || 0)}</amount>
           <currencyCode>EUR</currencyCode>
         </TranspCostToDest>
-        <referenceNumberUCR>${esc(data.referenceNumberUCR || 'V')}</referenceNumberUCR>
+        <referenceNumberUCR>${esc(data.referenceNumberUCR || 'V')}</referenceNumberUCR>${data.iossNumber ? `
+        <AdditionalFiscalRef>
+          <additionalFiscalRefVATId>${esc(data.iossNumber)}</additionalFiscalRefVATId>
+          <additionalFiscalRefRole>FR5</additionalFiscalRefRole>
+        </AdditionalFiscalRef>` : ''}
         <AdditionalProcedure>
           <additionalProcedureCode>${esc(additionalProcedureCode)}</additionalProcedureCode>
-        </AdditionalProcedure>${data.iossNumber ? `
-        <AdditionalFiscalReference>
-          <additionalFiscalRefRole>FR5</additionalFiscalRefRole>
-          <additionalFiscalRefVATId>${esc(data.iossNumber)}</additionalFiscalRefVATId>
-        </AdditionalFiscalReference>` : ''}
+        </AdditionalProcedure>
 ${partidasXML}
       </Declaration>
     </n1:AltaH7V1Ent>

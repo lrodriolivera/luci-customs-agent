@@ -88,7 +88,10 @@ function h7({ recipientTaxId = 'B99999999', ...rest } = {}) {
       email: 'imp@ejemplo.es',
       address: { street: 'Calle 1', city: 'Madrid', postalCode: '28001' }
     },
-    items: [{ description: 'Camiseta', taricCode: '6109100010', countryOfOrigin: 'CN', totalValue: 25 }],
+    items: [{
+      description: 'Camiseta', taricCode: '6109100010', countryOfOrigin: 'CN', totalValue: 25,
+      commercialId: 'SKU-CAM-1', manufacturerRef: 'FAB-CAM-1'
+    }],
     ...rest
   };
 }
@@ -602,10 +605,11 @@ describe('submitH7', () => {
     });
   });
 
-  describe('items opcionales', () => {
-    test('tolera declaracion sin items', async () => {
-      const r = await submitService.submitH7(h7({ items: undefined }), TENANT_STRIX);
-      expect(r.success).toBe(true);
+  describe('items', () => {
+    test('sin items no envia nada: 422 (la AEAT exige al menos un GoodsItem)', async () => {
+      await expect(submitService.submitH7(h7({ items: undefined }), TENANT_STRIX))
+        .rejects.toMatchObject({ status: 422, code: 'H7_DATOS_AEAT' });
+      expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
     });
 
     test('usa documentos explicitos de la partida si vienen', async () => {
@@ -613,6 +617,58 @@ describe('submitH7', () => {
       d.items[0].documentos = [{ tipo: 'N337', referencia: 'G4-123' }];
       const r = await submitService.submitH7(d, TENANT_STRIX);
       expect(r.success).toBe(true);
+    });
+  });
+
+  describe('reglas AEAT de la partida (rechazos 2101 y 1353 en PRE)', () => {
+    test('commodityCode con las 8 cifras de la NC', async () => {
+      await submitService.submitH7(h7(), TENANT_STRIX);
+      expect(soapEnviado()).toMatch(/<commodityCode>61091000<\/commodityCode>/);
+    });
+
+    test('lleva C127 y C128 de la partida y Y081 si no hay EAN/GTIN', async () => {
+      await submitService.submitH7(h7(), TENANT_STRIX);
+      const gi = soapEnviado().match(/<GoodsItem>[\s\S]*<\/GoodsItem>/)[0];
+      expect(gi).toMatch(/<suppDoctype>C127<\/suppDoctype>\s*<suppDoctRefNum>SKU-CAM-1</);
+      expect(gi).toMatch(/<suppDoctype>C128<\/suppDoctype>\s*<suppDoctRefNum>FAB-CAM-1</);
+      expect(gi).toMatch(/<addRefType>Y081<\/addRefType>/);
+    });
+
+    test('con EAN/GTIN envia C129 y no Y081', async () => {
+      const d = h7();
+      d.items[0].gtin = '8412345678905';
+      await submitService.submitH7(d, TENANT_STRIX);
+      expect(soapEnviado()).toMatch(/<suppDoctype>C129<\/suppDoctype>\s*<suppDoctRefNum>8412345678905</);
+      expect(soapEnviado()).not.toMatch(/Y081/);
+    });
+
+    test('sin C127/C128 no envia nada y dice que partida y que falta (422)', async () => {
+      const d = h7();
+      d.items[0].commercialId = '';
+      const err = await submitService.submitH7(d, TENANT_STRIX).catch(e => e);
+      expect(err).toMatchObject({ status: 422, code: 'H7_DATOS_AEAT' });
+      expect(err.message).toMatch(/Partida 1/);
+      expect(err.message).toMatch(/C127/);
+      expect(err.errors[0].code).toBe('H7_FALTA_C127');
+      expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
+    });
+
+    test('TARIC de 6 cifras: 422 sin enviar', async () => {
+      const d = h7();
+      d.items[0].taricCode = '610910';
+      await expect(submitService.submitH7(d, TENANT_STRIX)).rejects.toMatchObject({ status: 422 });
+      expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
+    });
+
+    test('F48 (IOSS) lleva AdditionalFiscalRef con el IOSS', async () => {
+      await submitService.submitH7(h7({ vatPrepaid: true, iossNumber: 'IM1234567890' }), TENANT_STRIX);
+      expect(soapEnviado()).toMatch(/<additionalProcedureCode>F48<\/additionalProcedureCode>/);
+      expect(soapEnviado()).toMatch(/<AdditionalFiscalRef>\s*<additionalFiscalRefVATId>IM1234567890</);
+    });
+
+    test('F53 no lleva AdditionalFiscalRef', async () => {
+      await submitService.submitH7(h7(), TENANT_STRIX);
+      expect(soapEnviado()).not.toMatch(/AdditionalFiscalRef/);
     });
   });
 

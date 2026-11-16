@@ -14,6 +14,7 @@ const mongoose = require('mongoose');
 const { REG_2026_382, aplicaDerechoFijo2026 } = require('../config/reg2026382');
 
 const { escapeRegex } = require('../utils/escapeRegex');
+const { codigoAdicionalH7, validarPartidasH7ParaAeat } = require('../services/aeat/h7Identificadores');
 // Esquema de articulo individual en el envio
 const H7ItemSchema = new mongoose.Schema({
   // Descripcion del articulo
@@ -76,7 +77,19 @@ const H7ItemSchema = new mongoose.Schema({
   productUrl: String,
 
   // SKU o referencia del vendedor
-  sellerSku: String
+  sellerSku: String,
+
+  // Identificadores del producto que la AEAT exige por partida en el H7 con
+  // F48/F49/F53 (guia H7 v3.23, R23 nota [4], R232, C321). No son obligatorios
+  // al guardar (borradores, manifiestos): se exigen al presentar
+  // (validateAeatSubmission / h7Identificadores.validarPartidasH7ParaAeat).
+  // C127 - Identificador del producto comercial (p. ej. referencia/SKU del vendedor)
+  commercialId: { type: String, trim: true, maxlength: 70 },
+  // C128 - Identificador de producto no normalizado del fabricante
+  manufacturerRef: { type: String, trim: true, maxlength: 70 },
+  // C129 - Identificador normalizado del fabricante (EAN/GTIN). Opcional: si
+  // falta se declara Y081 («no existe identificador normalizado»).
+  gtin: { type: String, trim: true, match: /^(\d{8}|\d{12}|\d{13}|\d{14})?$/ }
 });
 
 // Esquema principal H7
@@ -607,6 +620,13 @@ H7DeclarationSchema.methods.validateH7Eligibility = function() {
     eligible: errors.length === 0,
     errors
   };
+};
+
+// Reglas de la AEAT para las partidas antes de presentar el H7: codigo NC de 8
+// cifras e identificadores C127/C128 (y C129 o Y081). Mensajes por partida.
+H7DeclarationSchema.methods.validateAeatSubmission = function() {
+  const errors = validarPartidasH7ParaAeat(this.items, codigoAdicionalH7(this));
+  return { valid: errors.length === 0, errors };
 };
 
 // Metodos estaticos
