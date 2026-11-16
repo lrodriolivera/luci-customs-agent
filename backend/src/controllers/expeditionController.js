@@ -14,6 +14,7 @@ const { TaricCode } = require('../models');
 const { consultarArancelIntegrado } = require('../services/aeat/arancelIntegrado');
 const { tiposParaAplicar } = require('../services/aeat/contrasteArancel');
 const { normalizarDocumentosC44, ErrorDocumentosC44 } = require('../services/aeat/documentosC44');
+const { impuestoEspecialPara, ErrorImpuestoEspecial } = require('../services/aeat/impuestoEspecial');
 
 const TARIC_10 = /^\d{10}$/;
 
@@ -39,7 +40,8 @@ async function recalcularArancelSiCambiaTaric(anteriores, nuevas) {
     const cambiaTaric = anterior && codigo !== String(anterior.taricCode || '');
     const cambiaOrigen = anterior && String(nueva?.originCountry || '') !== String(anterior.originCountry || '');
     if (!cambiaTaric && !cambiaOrigen) return nueva;
-    const resto = { ...nueva, aeatTariff: undefined };
+    // El impuesto especial depende del codigo: si cambia el TARIC, se quita.
+    const resto = { ...nueva, aeatTariff: undefined, ...(cambiaTaric ? { impuestoEspecial: undefined } : {}) };
     return cambiaTaric ? { ...resto, dutyRate: await arancelDelCatalogo(codigo) } : resto;
   }));
 }
@@ -1232,7 +1234,68 @@ const setDocumentosC44 = async (req, res) => {
   }
 };
 
+/**
+ * Impuesto especial de una partida (cerveza, alcohol...). El tipo y la unidad
+ * fiscal salen del Arancel Integrado de la AEAT; la agente elige el epigrafe
+ * entre los de la AEAT y da la cantidad. DELETE lo quita.
+ * POST /api/expeditions/:id/goods/:goodId/impuesto-especial  body: { medida, cantidad, clave? }
+ */
+const setImpuestoEspecial = async (req, res) => {
+  try {
+    if (!/^[a-f0-9]{24}$/i.test(String(req.params.goodId || ''))) {
+      return res.status(400).json({ success: false, error: 'Identificador de partida no válido' });
+    }
+    const expedition = await Expedition.findById(req.params.id);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+    const partida = expedition.goods.id(req.params.goodId);
+    if (!partida) return res.status(404).json({ success: false, error: 'Partida no encontrada' });
+
+    if (req.method === 'DELETE') {
+      partida.impuestoEspecial = undefined;
+      expedition.timeline.push({
+        action: 'excise_removed', description: `Partida ${partida.itemNumber}: impuesto especial quitado`,
+        userId: req.user?._id, performedBy: req.user?.name, metadata: { goodId: String(partida._id) }
+      });
+      await expedition.save();
+      return res.json({ success: true, data: expedition });
+    }
+
+    if (!TARIC_10.test(String(partida.taricCode || ''))) {
+      return res.status(400).json({ success: false, error: 'La partida no tiene un código TARIC de 10 dígitos' });
+    }
+    let resultado;
+    try {
+      resultado = await consultarArancelIntegrado({ codigo: partida.taricCode, origen: partida.originCountry });
+    } catch (error) {
+      logger.error(`Arancel Integrado no disponible para ${expedition.expeditionId}: ${error.message}`);
+      return res.status(502).json({ success: false, error: 'No se pudo consultar el Arancel Integrado de la AEAT' });
+    }
+    let impuesto;
+    try {
+      impuesto = impuestoEspecialPara(resultado, { medida: req.body?.medida, cantidad: req.body?.cantidad, clave: req.body?.clave });
+    } catch (error) {
+      if (error instanceof ErrorImpuestoEspecial) return res.status(422).json({ success: false, error: error.message, code: error.codigo });
+      throw error;
+    }
+
+    partida.impuestoEspecial = { ...impuesto, fechaConsulta: resultado.fechaConsulta, appliedBy: req.user?.name };
+    delete partida.impuestoEspecial.cuota;
+    expedition.timeline.push({
+      action: 'excise_set',
+      description: `Partida ${partida.itemNumber}: impuesto especial ${impuesto.epigrafe}${impuesto.clave} (${impuesto.descripcion}) ${impuesto.cantidad} ${impuesto.unidadAeat} × ${impuesto.tipo} EUR = ${impuesto.cuota} EUR según la AEAT`,
+      userId: req.user?._id, performedBy: req.user?.name,
+      metadata: { goodId: String(partida._id), ...impuesto }
+    });
+    await expedition.save();
+    res.json({ success: true, data: expedition });
+  } catch (error) {
+    logger.error('Error guardando el impuesto especial:', error);
+    res.status(500).json({ success: false, error: 'Error al guardar el impuesto especial' });
+  }
+};
+
 module.exports = {
+  setImpuestoEspecial,
   setDocumentosC44,
   applyAeatRates,
   create,

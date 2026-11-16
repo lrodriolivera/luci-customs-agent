@@ -17,6 +17,7 @@ const { CODIGO_AJUSTE } = require('../forms/gastosHastaLaFrontera');
 const { sinCodigoPostal } = require('./paisesSinCodigoPostal');
 const { MODOS_ACTIVACION } = require('./h1CauActivacion');
 const { separarDocumentosC44 } = require('./documentosC44');
+const { impuestoEspecialEnH1 } = require('./impuestoEspecial');
 
 // Medios de pago que obligan a declarar garantia con regimen 40 (regla C0616).
 const PAGOS_CON_GARANTIA = new Set(['O', 'R', 'S', 'T', 'U', 'V', 'G']);
@@ -239,7 +240,11 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
   // deducido NO se vuelve a sumar: asi liquida la AEAT. Comprobado en PRE el
   // 16/11/2026 (DAP 10.000 EUR, BA 1.000: B00 10.080 / 2.116,80; MRN
   // 26ES002801I01BQ0R1, fixture dap-ba-respuesta-real-002801.xml).
-  const baseIva = redondear(valorAduana + arancel);
+  // Impuesto especial (cerveza, alcohol...): codigo nacional adicional y, si
+  // se devenga, su tributo; su cuota forma parte de la base del IVA (art. 83
+  // LIVA). Comprobado en PRE el 16/11/2026 (MRN 26ES002801I01BQYR8).
+  const ie = impuestoEspecialEnH1(good, contexto.medioDePago);
+  const baseIva = redondear(valorAduana + arancel + ie.cuota);
   const tipoBulto = String(good.packages?.type || '').toUpperCase();
   if (!/^[A-Z0-9]{2}$/.test(tipoBulto)) faltan.push(`tipo de bulto (código de dos letras) de la partida ${n}`);
   if (!(good.packages?.quantity > 0)) faltan.push(`número de bultos de la partida ${n}`);
@@ -257,7 +262,10 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     },
     origen: texto(good.originCountry)?.toUpperCase(),
     descripcion: texto(good.descriptionEs) || texto(good.description),
-    codigo: { sa6: codigo.slice(0, 6), nc2: codigo.slice(6, 8), taric2: codigo.slice(8, 10) },
+    codigo: {
+      sa6: codigo.slice(0, 6), nc2: codigo.slice(6, 8), taric2: codigo.slice(8, 10),
+      ...(ie.adicionalesNacionales.length > 0 ? { adicionalesNacionales: ie.adicionalesNacionales } : {})
+    },
     masaBruta: good.grossWeight, masaNeta: good.netWeight,
     unidadesSuplementarias: good.supplementaryUnits || null,
     // El importe de factura va en la divisa de la factura; las bases, en euros.
@@ -266,6 +274,7 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     preferencia: String(expedition.declaration?.preference || '100'),
     tributos: [
       { tipo: 'A00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoArancel, importe: valorAduana, cuota: arancel }] },
+      ...(ie.tributo ? [ie.tributo] : []),
       { tipo: 'B00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoIva, importe: baseIva, cuota: redondear(baseIva * tipoIva / 100) }] }
     ],
     bultos: [{ tipo: tipoBulto, numero: good.packages?.quantity, marcas: texto(good.packages?.marks) || 'S/M' }],

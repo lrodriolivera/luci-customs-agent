@@ -124,3 +124,29 @@ describe('H1: contraste con el Arancel Integrado antes de presentar', () => {
     expect(mockEnviar).toHaveBeenCalled();
   });
 });
+
+describe('H1: impuesto especial que exige la AEAT', () => {
+  const CERVEZA = { existe: true, areaGeografica: 'MX', medidas: [
+    { codigo: '103-APPL', tipo: 'ue', areaGeografica: 'TODOS ERGA OMNES', derecho: '0%', documentos: [] },
+    { codigo: 'IA3-IC.A3', tipo: 'nacional', areaGeografica: 'TODOS ERGA OMNES', descripcion: 'Cerveza', derecho: '7,480 EUR / HL', documentos: [] },
+    { codigo: 'IVA-IVA', tipo: 'iva', areaGeografica: 'TODOS ERGA OMNES', derecho: '21,000%', documentos: [] }
+  ] };
+
+  test('sin el epígrafe se piden los datos (422) y no se envía', async () => {
+    mockExpedition.findById.mockResolvedValue(conPartidas([{ itemNumber: 1, taricCode: '2203000100', originCountry: 'MX', dutyRate: 0, vatRate: 21 }]));
+    mockConsultar.mockResolvedValue(CERVEZA);
+
+    const res = await enviar();
+
+    expect(res.status).toBe(422);
+    expect(res.body.faltan).toEqual(['impuesto especial de la partida 1 (la AEAT exige uno de estos epígrafes: 0A3)']);
+    expect(mockEnviar).not.toHaveBeenCalled();
+  });
+
+  test('con el epígrafe declarado se presenta', async () => {
+    mockExpedition.findById.mockResolvedValue(conPartidas([{ itemNumber: 1, taricCode: '2203000100', originCountry: 'MX', dutyRate: 0, vatRate: 21, impuestoEspecial: { epigrafe: '0A3', clave: '0' } }]));
+    mockConsultar.mockResolvedValue(CERVEZA);
+    expect((await enviar()).status).toBe(200);
+  });
+});
+

@@ -24,7 +24,9 @@ vi.mock('../../services/api', () => ({
     aiDetectInconsistencies: vi.fn(),
     aiFullAnalysis: vi.fn(),
     applyAeatRates: vi.fn(),
-    setDocumentosC44: vi.fn()
+    setDocumentosC44: vi.fn(),
+    setImpuestoEspecial: vi.fn(),
+    removeImpuestoEspecial: vi.fn()
   },
   documentsAPI: { upload: vi.fn(), read: vi.fn(), proposal: vi.fn(), apply: vi.fn(), download: vi.fn() },
   classificationAPI: { aeatTariff: vi.fn() },
@@ -1344,6 +1346,33 @@ describe('<ExpeditionDetail /> · casilla 44 de la partida', () => {
 
     await waitFor(() => expect(expeditionsAPI.setDocumentosC44).toHaveBeenCalledWith('exp123', GOOD_ID, [{ tipo: '1310', referencia: 'ES-1' }]))
     expect(toast.success).toHaveBeenCalledWith('expeditions.c44.saved')
+  })
+})
+
+describe('<ExpeditionDetail /> · impuesto especial de la partida', () => {
+  const GOOD_ID = '6af5800367ef2239ebbc9a03'
+  beforeEach(() => {
+    vi.clearAllMocks()
+    expeditionsAPI.getChecklist?.mockResolvedValue?.({ data: { data: [] } })
+  })
+
+  test('tras consultar la AEAT se elige el epígrafe y se guarda con la cantidad', async () => {
+    const partida = { ...mockExpedition.goods[1], _id: GOOD_ID, taricCode: '2203000100', originCountry: 'MX', itemNumber: 1 }
+    expeditionsAPI.get.mockResolvedValue({ data: { data: { ...mockExpedition, goods: [partida] } } })
+    classificationAPI.aeatTariff.mockResolvedValue({ data: { success: true, data: {
+      existe: true, codigo: '2203000100', areaGeografica: 'MX', fechaConsulta: '16-11-2026', url: 'https://aeat',
+      medidas: [{ codigo: 'IA3-IC.A3', tipo: 'nacional', areaGeografica: 'TODOS ERGA OMNES', descripcion: 'Cerveza grado plato < 11', derecho: '7,480 EUR / HL', documentos: [] }]
+    } } })
+    expeditionsAPI.setImpuestoEspecial.mockResolvedValue({ data: { data: { ...mockExpedition, goods: [partida] } } })
+    renderExpeditionDetail()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'classification.aeat.consult' }))
+    fireEvent.change(await screen.findByLabelText('expeditions.excise.measure'), { target: { value: 'IA3' } })
+    fireEvent.change(screen.getByLabelText('expeditions.excise.quantity'), { target: { value: '8' } })
+    fireEvent.click(screen.getByRole('button', { name: 'expeditions.excise.save' }))
+
+    await waitFor(() => expect(expeditionsAPI.setImpuestoEspecial).toHaveBeenCalledWith('exp123', GOOD_ID, { medida: 'IA3', cantidad: 8 }))
+    expect(toast.success).toHaveBeenCalledWith('expeditions.excise.saved')
   })
 })
 

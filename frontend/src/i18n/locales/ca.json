@@ -634,6 +634,20 @@
       "isAuthorisation": "És una autorització, no un document de la partida: l'AEAT el rebutja aquí.",
       "saved": "Documents de la casella 44 desats",
       "error": "No s'han pogut desar els documents de la casella 44"
+    },
+    "excise": {
+      "title": "Impost especial",
+      "required": "L'AEAT aplica impostos especials a aquest codi: tria l'epígraf i la quantitat (sense ell, l'AEAT rebutja l'H1).",
+      "measure": "Epígraf segons l'AEAT",
+      "quantity": "Quantitat ({{unidad}})",
+      "save": "Desar",
+      "remove": "Treure",
+      "help": "Per a la cervesa indica també el grau Plato a la descripció de la mercaderia. Només es declara la importació amb pagament (clau 0).",
+      "chooseMeasure": "Tria l'epígraf",
+      "quantityRequired": "Indica la quantitat en {{unidad}}",
+      "saved": "Impost especial desat",
+      "removed": "Impost especial tret",
+      "error": "No s'ha pogut desar l'impost especial"
     }
   },
   "classification": {

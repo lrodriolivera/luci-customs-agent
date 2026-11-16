@@ -634,6 +634,20 @@
       "isAuthorisation": "Es una autorización, no un documento de la partida: la AEAT lo rechaza aquí.",
       "saved": "Documentos de la casilla 44 guardados",
       "error": "No se pudieron guardar los documentos de la casilla 44"
+    },
+    "excise": {
+      "title": "Impuesto especial",
+      "required": "La AEAT aplica impuestos especiales a este código: elige el epígrafe y la cantidad (sin él, la AEAT rechaza el H1).",
+      "measure": "Epígrafe según la AEAT",
+      "quantity": "Cantidad ({{unidad}})",
+      "save": "Guardar",
+      "remove": "Quitar",
+      "help": "Para la cerveza indica también el grado Plato en la descripción de la mercancía. Solo se declara la importación con pago (clave 0).",
+      "chooseMeasure": "Elige el epígrafe",
+      "quantityRequired": "Indica la cantidad en {{unidad}}",
+      "saved": "Impuesto especial guardado",
+      "removed": "Impuesto especial quitado",
+      "error": "No se pudo guardar el impuesto especial"
     }
   },
   "classification": {

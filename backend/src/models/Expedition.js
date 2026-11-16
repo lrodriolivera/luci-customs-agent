@@ -62,6 +62,20 @@ const GoodsItemSchema = new mongoose.Schema({
   // Ultima vez que se aplicaron a la partida el arancel y el IVA del Arancel
   // Integrado de la AEAT ("Usar los datos de la AEAT"). Se borra si cambia
   // el TARIC o el origen, porque deja de corresponder.
+  // Impuesto especial de la partida (epigrafe del Arancel Integrado de la
+  // AEAT, clave, tipo y unidad fiscal de la AEAT y cantidad de la agente).
+  impuestoEspecial: {
+    medida: String,
+    epigrafe: { type: String, match: /^0[A-Z0-9]{2}$/ },
+    clave: { type: String, enum: ['0', 'S', 'E', 'B', 'N', 'D'] },
+    descripcion: String,
+    tipo: Number,
+    unidad: String,
+    unidadAeat: String,
+    cantidad: Number,
+    fechaConsulta: String,
+    appliedBy: String
+  },
   // Documentos de la casilla 44 de la partida (certificados, licencias,
   // declaraciones Y) que la agente añade segun el Arancel Integrado de la AEAT.
   documentosC44: [{
