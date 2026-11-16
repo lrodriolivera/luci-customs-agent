@@ -1706,7 +1706,11 @@
     "securityConfig": "Configuracio de seguretat",
     "generalReadOnly": "Només un administrador de l'organització pot canviar estes dades.",
     "nifReadOnly": "El NIF no es canvia des d'Ajustos: contacta amb suport.",
-    "manageInCustoms": "Es gestiona en Ajustos › Duanes"
+    "manageInCustoms": "Es gestiona en Ajustos › Duanes",
+    "usersCount_one": "{{count}} usuari",
+    "usersCount_other": "{{count}} usuaris",
+    "usersCountUnavailable": "No s'ha pogut obtindre el nombre d'usuaris per rol.",
+    "usersCount": "{{count}} usuaris"
   },
   "portal": {
     "welcome": "Benvingut,",

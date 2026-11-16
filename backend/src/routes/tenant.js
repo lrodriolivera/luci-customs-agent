@@ -459,6 +459,54 @@ router.put('/tenant/general', auth, extractTenant({ required: false }), requireT
 });
 
 /**
+ * Quien ve los recuentos de usuarios por rol: los que ven Ajustes › Roles con
+ * capacidad de gestion o supervision. Un agente o un consultor no necesita
+ * saber cuantos usuarios hay en la organizacion.
+ */
+const ROLES_QUE_VEN_RECUENTOS = [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPERVISOR];
+
+/**
+ * GET /api/tenant/users/role-counts
+ * Usuarios ACTIVOS del tenant por rol: { counts: { admin, supervisor, agent, viewer }, total }.
+ *
+ * Acotado al tenant del token (req.tenantId). Solo los roles de tenant
+ * (DE_TENANT): super_admin es de plataforma y no se lista como rol de la
+ * organizacion. aggregate() no castea a ObjectId como find(): se castea aqui.
+ */
+router.get('/tenant/users/role-counts', auth, extractTenant({ required: false }), requireTenant, async (req, res) => {
+  try {
+    if (!ROLES_QUE_VEN_RECUENTOS.includes(req.user?.role)) {
+      return res.status(403).json({ success: false, error: 'No tienes permisos para esta accion.' });
+    }
+    const mongoose = require('mongoose');
+    const User = require('../models/User');
+    const { DE_TENANT } = require('../constants/roles');
+    if (!mongoose.Types.ObjectId.isValid(String(req.tenantId))) {
+      return res.status(400).json({ success: false, error: 'Tenant no valido' });
+    }
+
+    const filas = await User.aggregate([
+      {
+        $match: {
+          tenantId: new mongoose.Types.ObjectId(String(req.tenantId)),
+          isActive: { $ne: false },
+          role: { $in: [...DE_TENANT] }
+        }
+      },
+      { $group: { _id: '$role', n: { $sum: 1 } } }
+    ]);
+
+    const counts = Object.fromEntries(DE_TENANT.map(rol => [rol, 0]));
+    for (const fila of filas) counts[fila._id] = fila.n;
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
+    res.json({ success: true, data: { counts, total } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
  * GET /api/tenant/eori
  * EORI por pais del tenant.
  */

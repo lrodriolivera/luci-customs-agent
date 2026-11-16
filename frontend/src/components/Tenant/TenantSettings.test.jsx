@@ -161,12 +161,7 @@ describe('<TenantSettings />', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /settings\.roles/i }))
     expect(screen.getByText('settings.rolesPermissions')).toBeInTheDocument()
-    // Verifica que los 5 roles hardcodeados se renderizan
-    expect(screen.getByText('Administrador')).toBeInTheDocument()
-    expect(screen.getByText('Gestor')).toBeInTheDocument()
-    expect(screen.getByText('Agente Aduanero')).toBeInTheDocument()
-    expect(screen.getByText('Operador')).toBeInTheDocument()
-    expect(screen.getByText('Visualizador')).toBeInTheDocument()
+    expect(screen.getByText('settings.roleAdmin')).toBeInTheDocument()
   })
 
   test('cambia a tab customs (Aduanas)', async () => {
@@ -445,32 +440,18 @@ describe('<TenantSettings />', () => {
   })
 
   // ================== TAB ROLES ==================
-  test('tab roles muestra tabla con los 5 roles hardcodeados', async () => {
+  // Roles y recuentos reales: TenantSettingsRoles.test.jsx
+  test('tab roles muestra los 4 roles de LUCI con su botón de permisos', async () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
     fireEvent.click(await screen.findByRole('button', { name: /settings\.roles/i }))
 
-    expect(screen.getByText('Administrador')).toBeInTheDocument()
-    expect(screen.getByText('Gestor')).toBeInTheDocument()
-    expect(screen.getByText('Agente Aduanero')).toBeInTheDocument()
-    expect(screen.getByText('Operador')).toBeInTheDocument()
-    expect(screen.getByText('Visualizador')).toBeInTheDocument()
-
-    // Verifica counts
-    expect(screen.getByText('2 usuarios')).toBeInTheDocument() // tenant_admin
-    expect(screen.getByText('5 usuarios')).toBeInTheDocument() // manager
-    expect(screen.getByText('12 usuarios')).toBeInTheDocument() // agent
-  })
-
-  test('tab roles muestra botones de acción por rol', async () => {
-    render(<TenantSettings />)
-    await waitFor(() => expect(api.get).toHaveBeenCalled())
-
-    fireEvent.click(await screen.findByRole('button', { name: /settings\.roles/i }))
-
-    const viewPermButtons = screen.getAllByText('settings.viewPermissions')
-    expect(viewPermButtons.length).toBe(5)
+    expect(screen.getByText('settings.roleAdmin')).toBeInTheDocument()
+    expect(screen.getByText('settings.roleSupervisor')).toBeInTheDocument()
+    expect(screen.getByText('settings.roleAgent')).toBeInTheDocument()
+    expect(screen.getByText('settings.roleViewer')).toBeInTheDocument()
+    expect(screen.getAllByText('settings.viewPermissions')).toHaveLength(4)
   })
 
   // ================== TAB INTEGRATIONS ==================
@@ -1040,32 +1021,12 @@ describe('<TenantSettings />', () => {
     })
   })
 
-  test('tab roles muestra botón delete solo para roles custom', async () => {
+  test('tab roles no ofrece borrar roles: todos son los predefinidos de LUCI', async () => {
     render(<TenantSettings />)
     await waitFor(() => expect(api.get).toHaveBeenCalled())
 
     fireEvent.click(await screen.findByRole('button', { name: /settings\.roles/i }))
 
-    // Todos los roles en el mock son built-in, no debe haber botón delete
-    expect(screen.queryByText('common.delete')).not.toBeInTheDocument()
-  })
-
-  test('tab roles renderiza botón delete para rol custom', async () => {
-    // Mockear con un rol custom para ejercitar la rama !isBuiltIn
-    render(<TenantSettings />)
-    await waitFor(() => expect(api.get).toHaveBeenCalled())
-
-    fireEvent.click(await screen.findByRole('button', { name: /settings\.roles/i }))
-
-    // Forzar un rol custom inyectando en el state (hack: usar el contenido renderizado)
-    // Como los roles están hardcodeados en loadData, voy a verificar que con roles custom SÍ aparece
-    // En este caso, como todos son built-in, simplemente verifico que el queryByText falla.
-    // Para cubrir la rama, necesitaría modificar el mock de loadData, pero eso rompe otros tests.
-    // ALTERNATIVA: acepto que esta rama (líneas 643-646) no se cubre porque requiere datos custom
-    // que no se pueden inyectar sin modificar el componente. Esto es un problema de diseño del componente
-    // (roles hardcodeados en vez de venir del backend).
-
-    // Por ahora, este test documenta que la rama existe pero no se ejercita con los datos actuales.
     expect(screen.queryByText('common.delete')).not.toBeInTheDocument()
   })
 })
