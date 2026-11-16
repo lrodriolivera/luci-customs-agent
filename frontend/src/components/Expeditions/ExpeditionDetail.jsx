@@ -31,6 +31,7 @@ import { formatearImporte } from '../../utils/importe'
 import { textoEvento } from '../../utils/historialExpediente'
 import GoodsEditor from './GoodsEditor'
 import MedidasAeat from '../Classification/MedidasAeat'
+import DocumentosC44 from './DocumentosC44'
 import H1Preview from './H1Preview'
 import GroupageCard, { isMaritime } from './GroupageCard'
 import AeatSumariaLinks from './AeatSumariaLinks'
@@ -591,6 +592,10 @@ export default function ExpeditionDetail() {
   const [editingGoodsIndex, setEditingGoodsIndex] = useState(null)
   const [savingGoods, setSavingGoods] = useState(false)
   const [applyingAeat, setApplyingAeat] = useState(null)
+  const [savingC44, setSavingC44] = useState(null)
+  // Ultima consulta al Arancel Integrado por partida: sus documentos se
+  // proponen para la casilla 44.
+  const [medidasAeatPorPartida, setMedidasAeatPorPartida] = useState({})
   const [savingTransport, setSavingTransport] = useState(false)
   // Documento recien subido que LUCI debe leer en cuanto aparezca en la lista.
   const [documentToRead, setDocumentToRead] = useState(null)
@@ -661,6 +666,34 @@ export default function ExpeditionDetail() {
     } finally {
       setApplyingAeat(null)
     }
+  }
+
+  const handleSaveDocumentosC44 = async (goodId, documentos) => {
+    setSavingC44(goodId)
+    try {
+      const response = await expeditionsAPI.setDocumentosC44(id, goodId, documentos)
+      setExpedition(response.data?.data || response.data)
+      toast.success(t('expeditions.c44.saved'))
+    } catch (error) {
+      toast.error(error.response?.data?.error || t('expeditions.c44.error'))
+    } finally {
+      setSavingC44(null)
+    }
+  }
+
+  // Documentos que se proponen para la casilla 44 de una partida: los
+  // certificados que exigio la AEAT al presentar (por organismo) y los que
+  // piden las medidas del Arancel Integrado consultado.
+  const sugerenciasC44 = (item) => {
+    const r = expedition?.declaration?.aeatResponse || {}
+    const certificados = (r.consulta?.certificados && !Array.isArray(r.consulta.certificados) ? r.consulta.certificados : null) || r.certificados
+    const deLaAeat = (certificados?.partidas || [])
+      .filter((p) => Number(p.numero) === Number(item.itemNumber))
+      .flatMap((p) => (p.organismos || []).flatMap((o) => (o.medidas || []).flatMap((m) =>
+        (m.documentos || []).map((codigo) => ({ tipo: codigo, descripcion: `${o.nombre || o.organismo} (${m.medida})`, fuente: 'aeat' })))))
+    const delArancel = (medidasAeatPorPartida[item._id]?.medidas || []).flatMap((m) =>
+      (m.documentos || []).map((d) => ({ tipo: d.codigo, descripcion: d.descripcion, medida: m.codigo, fuente: 'arancel' })))
+    return [...deLaAeat, ...delArancel]
   }
 
   const handleSaveGroupage = async (changes) => {
@@ -1052,7 +1085,16 @@ export default function ExpeditionDetail() {
                       compare={{ dutyRate: item.dutyRate, vatRate: item.vatRate }}
                       onApply={canEditGoods && item._id ? (medida) => handleApplyAeatRates(item._id, medida) : undefined}
                       applying={applyingAeat === item._id}
+                      onLoaded={(datos) => setMedidasAeatPorPartida((prev) => ({ ...prev, [item._id]: datos }))}
                       className="mt-3"
+                    />
+                  )}
+                  {/^\d{10}$/.test(item.taricCode || '') && (
+                    <DocumentosC44
+                      documentos={item.documentosC44 || []}
+                      sugerencias={sugerenciasC44(item)}
+                      onSave={canEditGoods && item._id ? (documentos) => handleSaveDocumentosC44(item._id, documentos) : undefined}
+                      saving={savingC44 === item._id}
                     />
                   )}
                   {editingGoodsIndex === index && (

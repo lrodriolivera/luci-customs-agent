@@ -619,7 +619,22 @@
     "aeatField_arancel": "duty",
     "aeatField_iva": "VAT",
     "aeatDifferencesConfirm": "The duty or VAT of some item does not match the AEAT Integrated Tariff. Submit anyway?",
-    "aeatDifferencesCancelled": "Submission cancelled: review the items and use the AEAT data if appropriate"
+    "aeatDifferencesCancelled": "Submission cancelled: review the items and use the AEAT data if appropriate",
+    "c44": {
+      "title": "Box 44 · item documents",
+      "help": "Certificates, licences and declarations required by the AEAT. They go in this item's H1. Y codes have no number; the AEAT checks SOIVRE/PUE certificate numbers.",
+      "current": "Box 44 documents",
+      "suggested": "Suggested by the AEAT (pick the ones that apply):",
+      "code": "Code",
+      "reference": "Document number",
+      "add": "Add",
+      "remove": "Remove {{tipo}}",
+      "codeInvalid": "The code must have 4 letters or digits (e.g. N003, 1310, Y081).",
+      "referenceRequired": "The document number is missing (only Y codes have no number).",
+      "isAuthorisation": "This is an authorisation, not an item document: the AEAT rejects it here.",
+      "saved": "Box 44 documents saved",
+      "error": "Could not save the box 44 documents"
+    }
   },
   "classification": {
     "title": "TARIC Classification",

@@ -433,3 +433,29 @@ describe('H1 CAU: aviso cuando la aduana elegida no es la del recinto', () => {
     expect(avisoAduanaDistinta({})).toBeNull();
   });
 });
+
+describe('H1 CAU: documentos de la casilla 44 de la partida (Arancel Integrado)', () => {
+  const conDocumentos = () => expediente({
+    goods: [{ ...expediente().goods[0], documentosC44: [{ tipo: 'N003', referencia: 'CAL-2026-77', medida: 'COM-COMER' }, { tipo: 'Y081' }] }]
+  });
+
+  test('los documentos van tras la factura y los Y como referencia adicional', () => {
+    const p = datos(conDocumentos()).envio.partidas[0];
+    expect(p.documentosJustificativos).toEqual([{ tipo: 'N380', referencia: 'FAC-2026-118' }, { tipo: 'N003', referencia: 'CAL-2026-77' }]);
+    expect(p.referenciasAdicionales).toEqual([{ tipo: 'Y081' }]);
+  });
+
+  test('no se repite la factura si la agente la añadió también', () => {
+    const exp = expediente({ goods: [{ ...expediente().goods[0], documentosC44: [{ tipo: 'N380', referencia: 'FAC-2026-118' }] }] });
+    expect(datos(exp).envio.partidas[0].documentosJustificativos).toEqual([{ tipo: 'N380', referencia: 'FAC-2026-118' }]);
+  });
+
+  test('sin documentos no cambia nada', () => {
+    expect(datos().envio.partidas[0].referenciasAdicionales).toEqual([]);
+  });
+
+  siHayXmllint('el mensaje con documentos y referencias adicionales cumple el XSD', () => {
+    expect(validar(datos(conDocumentos()))).toBeNull();
+  });
+});
+

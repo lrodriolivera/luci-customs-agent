@@ -112,7 +112,7 @@ function Medida({ medida, t }) {
  *
  * @param {{ code: string, origin?: string, compare?: { dutyRate?: number, vatRate?: number }, onApply?: Function, applying?: boolean, className?: string }} props
  */
-export default function MedidasAeat({ code, origin, compare, onApply, applying = false, className = 'mt-3 pl-9' }) {
+export default function MedidasAeat({ code, origin, compare, onApply, onLoaded, applying = false, className = 'mt-3 pl-9' }) {
   const { t } = useTranslation()
   const [estado, setEstado] = useState({ cargando: false, datos: null, error: null })
 
@@ -124,6 +124,7 @@ export default function MedidasAeat({ code, origin, compare, onApply, applying =
       const origen = /^[A-Za-z]{2}$/.test(String(origin || '').trim()) ? origin.trim().toUpperCase() : undefined
       const respuesta = await classificationAPI.aeatTariff(code, origen)
       setEstado({ cargando: false, datos: respuesta.data?.data, error: null })
+      onLoaded?.(respuesta.data?.data)
     } catch (error) {
       setEstado({
         cargando: false,

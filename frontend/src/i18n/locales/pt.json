@@ -619,7 +619,22 @@
     "aeatField_arancel": "direito",
     "aeatField_iva": "IVA",
     "aeatDifferencesConfirm": "O direito ou o IVA de alguma adição não coincide com a Pauta Integrada da AEAT. Apresentar mesmo assim?",
-    "aeatDifferencesCancelled": "Apresentação cancelada: reveja as adições e use os dados da AEAT se for o caso"
+    "aeatDifferencesCancelled": "Apresentação cancelada: reveja as adições e use os dados da AEAT se for o caso",
+    "c44": {
+      "title": "Casa 44 · documentos da adição",
+      "help": "Certificados, licenças e declarações exigidos pela AEAT. Vão no H1 desta adição. Os códigos Y não têm número; a AEAT verifica o número dos certificados SOIVRE/PUE.",
+      "current": "Documentos da casa 44",
+      "suggested": "Propostos pela AEAT (escolha os que se aplicam):",
+      "code": "Código",
+      "reference": "Número do documento",
+      "add": "Adicionar",
+      "remove": "Remover {{tipo}}",
+      "codeInvalid": "O código deve ter 4 letras ou algarismos (p. ex. N003, 1310, Y081).",
+      "referenceRequired": "Falta o número do documento (só os códigos Y não têm número).",
+      "isAuthorisation": "É uma autorização, não um documento da adição: a AEAT rejeita-a aqui.",
+      "saved": "Documentos da casa 44 guardados",
+      "error": "Não foi possível guardar os documentos da casa 44"
+    }
   },
   "classification": {
     "title": "Classificacao TARIC",

@@ -167,3 +167,50 @@ describe('update: el arancel sigue al TARIC', () => {
     expect(guardado.goods[0].aeatTariff?.medidaArancel).toBeUndefined();
   });
 });
+
+describe('setDocumentosC44', () => {
+  const guardarDocs = (user, exp, documentos, goodId = String(exp.goods[0]._id)) => {
+    const res = crearRes();
+    return ctrl.setDocumentosC44({ params: { id: String(exp._id), goodId }, body: { documentos }, user, tenantId: user.tenantId }, res).then(() => res);
+  };
+
+  test('guarda los documentos de la partida y lo deja en el historial', async () => {
+    const user = usuario();
+    const exp = await crearExpediente(user);
+
+    const res = await guardarDocs(user, exp, [{ tipo: 'n003', referencia: 'CAL-1', medida: 'COM-COMER' }, { tipo: 'Y081' }]);
+
+    expect(res.statusCode).toBe(200);
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.goods[0].documentosC44.map((d) => ({ tipo: d.tipo, referencia: d.referencia }))).toEqual([
+      { tipo: 'N003', referencia: 'CAL-1' }, { tipo: 'Y081', referencia: undefined }
+    ]);
+    expect(guardado.timeline.find((t) => t.action === 'c44_documents_updated').description)
+      .toBe('Partida 1: documentos de la casilla 44 ninguno → N003, Y081');
+  });
+
+  test('400 si un documento no es válido, sin tocar la partida', async () => {
+    const user = usuario();
+    const exp = await crearExpediente(user);
+    const res = await guardarDocs(user, exp, [{ tipo: 'N003' }]);
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(/falta el número/);
+    expect((await Expedition.findById(exp._id)).goods[0].documentosC44).toHaveLength(0);
+  });
+
+  test('una lista vacía borra los documentos', async () => {
+    const user = usuario();
+    const exp = await crearExpediente(user, { documentosC44: [{ tipo: 'N003', referencia: 'CAL-1' }] });
+    await guardarDocs(user, exp, []);
+    expect((await Expedition.findById(exp._id)).goods[0].documentosC44).toHaveLength(0);
+  });
+
+  test('partida inexistente, identificador no válido y otro tenant', async () => {
+    const user = usuario();
+    const exp = await crearExpediente(user);
+    expect((await guardarDocs(user, exp, [], String(new mongoose.Types.ObjectId()))).statusCode).toBe(404);
+    expect((await guardarDocs(user, exp, [], 'x')).statusCode).toBe(400);
+    expect((await guardarDocs(usuario(), exp, [])).statusCode).toBe(404);
+  });
+});
+

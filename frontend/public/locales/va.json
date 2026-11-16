@@ -619,7 +619,22 @@
     "aeatField_arancel": "aranzel",
     "aeatField_iva": "IVA",
     "aeatDifferencesConfirm": "L'aranzel o l'IVA d'alguna partida no coincidix amb l'Aranzel Integrat de l'AEAT. Vols presentar igualment?",
-    "aeatDifferencesCancelled": "Presentació cancel·lada: revisa les partides i utilitza les dades de l'AEAT si cal"
+    "aeatDifferencesCancelled": "Presentació cancel·lada: revisa les partides i utilitza les dades de l'AEAT si cal",
+    "c44": {
+      "title": "Casella 44 · documents de la partida",
+      "help": "Certificats, llicències i declaracions que exigix l'AEAT. Van en l'H1 d'esta partida. Els codis Y no porten número; l'AEAT comprova el número dels certificats SOIVRE/PUE.",
+      "current": "Documents de la casella 44",
+      "suggested": "Proposats per l'AEAT (tria els que s'apliquen):",
+      "code": "Codi",
+      "reference": "Número del document",
+      "add": "Afegir",
+      "remove": "Llevar {{tipo}}",
+      "codeInvalid": "El codi ha de tindre 4 lletres o xifres (p. ex. N003, 1310, Y081).",
+      "referenceRequired": "Falta el número del document (només els codis Y van sense número).",
+      "isAuthorisation": "És una autorització, no un document de la partida: l'AEAT el rebutja ací.",
+      "saved": "Documents de la casella 44 guardats",
+      "error": "No s'han pogut guardar els documents de la casella 44"
+    }
   },
   "classification": {
     "title": "Classificacio TARIC",

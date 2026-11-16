@@ -13,6 +13,7 @@ const { escapeRegex } = require('../utils/escapeRegex');
 const { TaricCode } = require('../models');
 const { consultarArancelIntegrado } = require('../services/aeat/arancelIntegrado');
 const { tiposParaAplicar } = require('../services/aeat/contrasteArancel');
+const { normalizarDocumentosC44, ErrorDocumentosC44 } = require('../services/aeat/documentosC44');
 
 const TARIC_10 = /^\d{10}$/;
 
@@ -1188,7 +1189,51 @@ const applyAeatRates = async (req, res) => {
   }
 };
 
+/**
+ * Documentos de la casilla 44 de una partida (certificados, licencias,
+ * declaraciones Y) que exige el Arancel Integrado de la AEAT y elige la agente.
+ * Sustituye la lista entera. Van en el H1 de esa partida.
+ * PUT /api/expeditions/:id/goods/:goodId/documentos-c44   body: { documentos: [{ tipo, referencia?, medida? }] }
+ */
+const setDocumentosC44 = async (req, res) => {
+  try {
+    if (!/^[a-f0-9]{24}$/i.test(String(req.params.goodId || ''))) {
+      return res.status(400).json({ success: false, error: 'Identificador de partida no válido' });
+    }
+    let documentos;
+    try {
+      documentos = normalizarDocumentosC44(req.body?.documentos);
+    } catch (error) {
+      if (error instanceof ErrorDocumentosC44) return res.status(400).json({ success: false, error: error.message });
+      throw error;
+    }
+
+    const expedition = await Expedition.findById(req.params.id);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+    const partida = expedition.goods.id(req.params.goodId);
+    if (!partida) {
+      return res.status(404).json({ success: false, error: 'Partida no encontrada' });
+    }
+
+    const antes = (partida.documentosC44 || []).map((d) => d.tipo).join(', ') || 'ninguno';
+    partida.documentosC44 = documentos;
+    expedition.timeline.push({
+      action: 'c44_documents_updated',
+      description: `Partida ${partida.itemNumber}: documentos de la casilla 44 ${antes} → ${documentos.map((d) => d.tipo).join(', ') || 'ninguno'}`,
+      userId: req.user?._id,
+      performedBy: req.user?.name,
+      metadata: { goodId: String(partida._id), documentos }
+    });
+    await expedition.save();
+    res.json({ success: true, data: expedition });
+  } catch (error) {
+    logger.error('Error guardando los documentos de la casilla 44:', error);
+    res.status(500).json({ success: false, error: 'Error al guardar los documentos de la casilla 44' });
+  }
+};
+
 module.exports = {
+  setDocumentosC44,
   applyAeatRates,
   create,
   list,

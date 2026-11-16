@@ -23,7 +23,8 @@ vi.mock('../../services/api', () => ({
     aiAnalyzeRisk: vi.fn(),
     aiDetectInconsistencies: vi.fn(),
     aiFullAnalysis: vi.fn(),
-    applyAeatRates: vi.fn()
+    applyAeatRates: vi.fn(),
+    setDocumentosC44: vi.fn()
   },
   documentsAPI: { upload: vi.fn(), read: vi.fn(), proposal: vi.fn(), apply: vi.fn(), download: vi.fn() },
   classificationAPI: { aeatTariff: vi.fn() },
@@ -1318,3 +1319,31 @@ describe('<ExpeditionDetail /> · usar los datos de la AEAT y confirmar antes de
     confirmar.mockRestore()
   })
 })
+
+describe('<ExpeditionDetail /> · casilla 44 de la partida', () => {
+  const GOOD_ID = '6af5800367ef2239ebbc9a02'
+  beforeEach(() => {
+    vi.clearAllMocks()
+    expeditionsAPI.getChecklist?.mockResolvedValue?.({ data: { data: [] } })
+  })
+
+  test('propone los certificados que exigió la AEAT y guarda el elegido con su número', async () => {
+    const partida = { ...mockExpedition.goods[1], _id: GOOD_ID, itemNumber: 1, documentosC44: [] }
+    const exp = {
+      ...mockExpedition,
+      goods: [partida],
+      declaration: { aeatResponse: { certificados: { requeridos: 'S', partidas: [{ numero: 1, organismos: [{ organismo: 'SIF01', nombre: 'SOIVRE Mº Comercio', medidas: [{ medida: 'COM', documentos: ['1310'] }] }] }] } } }
+    }
+    expeditionsAPI.get.mockResolvedValue({ data: { data: exp } })
+    expeditionsAPI.setDocumentosC44.mockResolvedValue({ data: { data: { ...exp, goods: [{ ...partida, documentosC44: [{ tipo: '1310', referencia: 'ES-1' }] }] } } })
+    renderExpeditionDetail()
+
+    fireEvent.click(await screen.findByRole('button', { name: /1310/ }))
+    fireEvent.change(screen.getByLabelText('expeditions.c44.reference'), { target: { value: 'ES-1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'expeditions.c44.add' }))
+
+    await waitFor(() => expect(expeditionsAPI.setDocumentosC44).toHaveBeenCalledWith('exp123', GOOD_ID, [{ tipo: '1310', referencia: 'ES-1' }]))
+    expect(toast.success).toHaveBeenCalledWith('expeditions.c44.saved')
+  })
+})
+
