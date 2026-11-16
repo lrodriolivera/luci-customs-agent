@@ -78,12 +78,12 @@ const products = [
 
 // Puertos y aduanas
 const customsOffices = [
-  { code: 'ES002801', name: 'Aduana de Barcelona Puerto' },
-  { code: 'ES002804', name: 'Aduana de Barcelona Aeropuerto' },
-  { code: 'ES004601', name: 'Aduana de Valencia Puerto' },
-  { code: 'ES002901', name: 'Aduana de Madrid Aeropuerto' },
-  { code: 'ES004101', name: 'Aduana de Algeciras Puerto' },
-  { code: 'ES004801', name: 'Aduana de Bilbao Puerto' }
+  { code: 'ES000811', name: 'Aduana de Barcelona Marítima' },
+  { code: 'ES000801', name: 'Aduana de Barcelona Aeropuerto' },
+  { code: 'ES004611', name: 'Aduana de Valencia Marítima' },
+  { code: 'ES002801', name: 'Aduana de Madrid Aeropuerto' },
+  { code: 'ES001131', name: 'Aduana de Algeciras Marítima' },
+  { code: 'ES004811', name: 'Aduana de Bilbao Marítima' }
 ];
 
 // ==================== Seed Functions ====================
@@ -638,9 +638,9 @@ async function seedTransits(demoUserId, tenantId) {
   // Los estados en los que la UI ofrece notificar llegada/descarga necesitan
   // destino espanol para ser demostrables.
   const destinationOfficesES = [
-    { code: 'ES002901', name: 'Aduana de Malaga', country: 'ES' },
-    { code: 'ES004801', name: 'Aduana de Bilbao', country: 'ES' },
-    { code: 'ES002801', name: 'Aduana de Madrid', country: 'ES' }
+    { code: 'ES002901', name: 'Aduana de Málaga Aeropuerto', country: 'ES' },
+    { code: 'ES004801', name: 'Aduana de Bilbao Aeropuerto', country: 'ES' },
+    { code: 'ES002801', name: 'Aduana de Madrid Aeropuerto', country: 'ES' }
   ];
 
   const destinationOfficesUE = [

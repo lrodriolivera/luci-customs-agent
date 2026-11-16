@@ -6,6 +6,7 @@
 
 const { v4: uuidv4 } = require('uuid');
 const { eoriDe, exigirEori, declarantePara, formaRepresentacionDe } = require('./identificadorAduanero');
+const { aduanaPorLugar } = require('../../config/aduanasOficiales');
 
 /**
  * Tipos de exportacion
@@ -663,14 +664,14 @@ class AESGenerator {
    * Determinar aduana de exportacion
    */
   determineExportOffice(expedition) {
-    const port = expedition.transport?.loadingPlace?.toUpperCase() || '';
-
-    if (port.includes('BCN') || port.includes('BARCELONA')) return 'ES002801';
-    if (port.includes('VLC') || port.includes('VALENCIA')) return 'ES004601';
-    if (port.includes('MAD') || port.includes('BARAJAS')) return 'ES002101';
-    if (port.includes('ALG') || port.includes('ALGECIRAS')) return 'ES003001';
-
-    return 'ES002801';
+    // Lista oficial (config/aduanasOficiales.js): Barcelona maritima tiene
+    // recinto propio de exportacion (ES000812).
+    const aduana = aduanaPorLugar(expedition?.transport?.loadingPlace, {
+      modo: expedition?.transportMode,
+      sentido: 'export'
+    });
+    // Sin plaza reconocida: Madrid aeropuerto (recinto de las pruebas de PRE).
+    return aduana || 'ES002801';
   }
 
   /**

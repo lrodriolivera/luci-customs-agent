@@ -15,21 +15,12 @@ import {
   BuildingOfficeIcon,
   ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline'
+import { ADUANAS_DESPACHO } from '../../constants/aduanasDespacho'
 
 // --- Constants ---
 
-const CUSTOMS_OFFICES_ES = [
-  { code: 'ES002801', name: 'Madrid - Barajas' },
-  { code: 'ES000801', name: 'Barcelona' },
-  { code: 'ES000101', name: 'Valencia' },
-  { code: 'ES004601', name: 'Sevilla' },
-  { code: 'ES003001', name: 'Las Palmas' },
-  { code: 'ES004801', name: 'Bilbao' },
-  { code: 'ES003601', name: 'Malaga' },
-  { code: 'ES000301', name: 'Alicante' },
-  { code: 'ES004101', name: 'Vigo' },
-  { code: 'ES001101', name: 'Cadiz' }
-]
+// Codigos de la lista oficial de aduanas (constants/aduanasDespacho.js).
+const CUSTOMS_OFFICES_ES = ADUANAS_DESPACHO
 
 const INCOTERMS = ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP']
 

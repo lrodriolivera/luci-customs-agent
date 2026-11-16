@@ -13,6 +13,7 @@
 
 const { v4: uuidv4 } = require('uuid');
 const { declarantePara } = require('./identificadorAduanero');
+const { nombresPorCodigo } = require('../../config/aduanasOficiales');
 
 /**
  * Limite de valor para H7
@@ -32,13 +33,8 @@ const H7_TYPES = {
  * Codigos de aduana para H7 (centros de despacho expres)
  */
 const H7_CUSTOMS_OFFICES = {
-  'ES002801': 'Barcelona - Puerto',
-  'ES002805': 'Barcelona - Aeropuerto El Prat',
-  'ES002101': 'Madrid - Barajas',
-  'ES004601': 'Valencia - Puerto',
-  'ES003001': 'Algeciras',
-  'ES003501': 'Las Palmas',
-  'ES003801': 'Tenerife'
+  ...nombresPorCodigo(),
+  'ES009999': 'PRE Pruebas Peninsula'
 };
 
 /**
@@ -557,17 +553,25 @@ class H7Generator {
     const postalCode = expedition.client?.address?.postalCode || '';
     const prefix = postalCode.substring(0, 2);
 
-    // Mapear por codigo postal
+    // Mapear por codigo postal al aeropuerto de la provincia (el H7 es envio
+    // de bajo valor, casi siempre aereo/courier). Codigos de la lista oficial
+    // (config/aduanasOficiales.js); donde la provincia no tiene aeropuerto en
+    // la lista se usa su maritima.
     const postalToOffice = {
-      '08': 'ES002805', // Barcelona
-      '28': 'ES002101', // Madrid
-      '46': 'ES004601', // Valencia
-      '35': 'ES003501', // Las Palmas
-      '38': 'ES003801', // Tenerife
-      '11': 'ES003001'  // Algeciras/Cadiz
+      '08': 'ES000801', // Barcelona - Aeropuerto
+      '28': 'ES002801', // Madrid - Aeropuerto
+      '46': 'ES004601', // Valencia - Aeropuerto
+      '48': 'ES004801', // Bilbao - Aeropuerto
+      '29': 'ES002901', // Malaga - Aeropuerto
+      '41': 'ES004101', // Sevilla - Aeropuerto
+      '36': 'ES003601', // Vigo - Aeropuerto
+      '12': 'ES001201', // Castellon - Aeropuerto
+      '01': 'ES000101', // Alava - Aeropuerto
+      '20': 'ES002001', // Irun - Aeropuerto
+      '11': 'ES001131'  // Algeciras - Maritima
     };
 
-    return postalToOffice[prefix] || 'ES002101'; // Madrid por defecto
+    return postalToOffice[prefix] || 'ES002801'; // Madrid - Aeropuerto por defecto
   }
 
   /**

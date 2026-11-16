@@ -33,7 +33,7 @@ describe('validacion de la aduana de entrada', () => {
   test('una aduana maritima con transporte SEA no genera aviso', async () => {
     const r = await ens.preValidate(datos({
       transportMode: 'SEA',
-      entryOffice: { code: 'ES002801', expectedArrival: enHoras(48) }
+      entryOffice: { code: 'ES001131', expectedArrival: enHoras(48) } // Algeciras maritima
     }));
     expect(avisoAduana(r)).toBeUndefined();
     expect(errorAduana(r)).toBeUndefined();
@@ -42,10 +42,10 @@ describe('validacion de la aduana de entrada', () => {
   test('una aduana aerea con transporte SEA genera aviso de coherencia', async () => {
     const r = await ens.preValidate(datos({
       transportMode: 'SEA',
-      entryOffice: { code: 'ES002101', expectedArrival: enHoras(48) }
+      entryOffice: { code: 'ES002801', expectedArrival: enHoras(48) } // Madrid aeropuerto
     }));
     expect(avisoAduana(r)).toBeDefined();
-    expect(avisoAduana(r).message).toMatch(/ES002101|Barajas/i);
+    expect(avisoAduana(r).message).toMatch(/ES002801|Madrid - Aeropuerto/i);
   });
 
   /**
@@ -74,15 +74,16 @@ describe('validacion de la aduana de entrada', () => {
   test('una aduana terrestre admite RAIL sin avisar', async () => {
     const r = await ens.preValidate(datos({
       transportMode: 'RAIL',
-      entryOffice: { code: 'ES001701', expectedArrival: enHoras(48) }
+      entryOffice: { code: 'ES000881', expectedArrival: enHoras(48) } // Barcelona FF.CC. Morrot
     }));
+    expect(errorAduana(r)).toBeUndefined();
     expect(avisoAduana(r)).toBeUndefined();
   });
 
   test('un puerto NO admite RAIL: avisa de la incoherencia', async () => {
     const r = await ens.preValidate(datos({
       transportMode: 'RAIL',
-      entryOffice: { code: 'ES003501', expectedArrival: enHoras(48) }
+      entryOffice: { code: 'ES004611', expectedArrival: enHoras(48) } // Valencia maritima
     }));
     expect(avisoAduana(r)).toBeDefined();
   });

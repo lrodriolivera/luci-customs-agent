@@ -15,9 +15,8 @@
  * modo/aduana no se disparaba NUNCA (buscaba la aduana, no la encontraba y
  * pasaba de largo). Las 8 ENS aceptadas por AEAT PRE se presentaron asi.
  *
- * Se toma como base el catalogo de aeatConfig porque es el que ya alimenta los
- * builders H1/H7/AES/NCTS. El cotejo de los codigos contra el censo oficial de
- * aduanas de AEAT sigue PENDIENTE: aqui no se inventa ninguno.
+ * Desde el 16/11/2026 los codigos salen de la lista oficial de aduanas
+ * (config/aduanasOficiales.js); ver tests/config/aduanasOficiales.test.js.
  */
 
 const {
@@ -122,5 +121,38 @@ describe('isValidEntryOffice', () => {
    */
   test('todos los codigos del catalogo se validan a si mismos', () => {
     expect(ENTRY_OFFICES.every(o => isValidEntryOffice(o.code))).toBe(true);
+  });
+});
+
+describe('codigos cotejados con la lista oficial', () => {
+  const { getAduanaOficial } = require('../../src/config/aduanasOficiales');
+
+  test('toda aduana real del catalogo esta en la lista oficial', () => {
+    for (const o of ENTRY_OFFICES.filter(x => !x.test)) {
+      expect(getAduanaOficial(o.code)).toBeDefined();
+    }
+  });
+
+  test.each([
+    ['ES002801', /madrid.*aeropuerto/i, ['AIR']],
+    ['ES004601', /valencia.*aeropuerto/i, ['AIR']],
+    ['ES004611', /valencia.*mar/i, ['SEA']],
+    ['ES001131', /algeciras.*mar/i, ['SEA']],
+    ['ES000811', /barcelona.*mar/i, ['SEA']],
+    ['ES000801', /barcelona.*aeropuerto/i, ['AIR']]
+  ])('%s es la aduana correcta', (code, nombre, modos) => {
+    const o = getEntryOffice(code);
+    expect(o.name).toMatch(nombre);
+    expect(o.modes).toEqual(expect.arrayContaining(modos));
+  });
+
+  test('los codigos equivocados del catalogo anterior ya no existen', () => {
+    for (const code of ['ES003001', 'ES002101', 'ES002805', 'ES001501', 'ES003501', 'ES003801']) {
+      expect(isValidEntryOffice(code)).toBe(false);
+    }
+  });
+
+  test('la maritima de solo exportacion no es aduana de entrada', () => {
+    expect(isValidEntryOffice('ES000812')).toBe(false);
   });
 });

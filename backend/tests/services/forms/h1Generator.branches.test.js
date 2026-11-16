@@ -3493,77 +3493,40 @@ describe('h1Generator - Cobertura de Ramas', () => {
     });
   });
 
-  describe('determineCustomsOffice - ramas por puerto', () => {
-    test('debe detectar BARCELONA (línea 1270)', () => {
-      const expedition = { transport: { arrivalPort: 'BARCELONA' } };
-      const result = h1Generator.determineCustomsOffice(expedition);
-      expect(result).toBe('ES002801');
+  // Codigos de la lista oficial de aduanas (config/aduanasOficiales.js).
+  describe('determineCustomsOffice - ramas por puerto (lista oficial)', () => {
+    test.each([
+      ['BARCELONA', 'ES000811'],        // Barcelona maritima importacion
+      ['BCN', 'ES000811'],
+      ['Aeropuerto de Barcelona', 'ES000801'],
+      ['VALENCIA', 'ES004611'],         // Valencia maritima
+      ['VLC', 'ES004611'],
+      ['MAD-BARAJAS', 'ES002801'],      // Madrid aeropuerto
+      ['ALGECIRAS', 'ES001131'],        // Algeciras maritima
+      ['Puerto de Algeciras', 'ES001131'],
+      ['BILBAO', 'ES004811'],
+      ['MALAGA', 'ES002911']
+    ])('%s -> %s', (puerto, oficina) => {
+      expect(h1Generator.determineCustomsOffice({ transport: { arrivalPort: puerto } })).toBe(oficina);
     });
 
-    test('debe detectar BCN (línea 1270)', () => {
-      const expedition = { transport: { arrivalPort: 'BCN' } };
-      const result = h1Generator.determineCustomsOffice(expedition);
-      expect(result).toBe('ES002801');
+    test('el modo aereo del expediente elige el aeropuerto de la plaza', () => {
+      const expedition = { transportMode: 'air', transport: { arrivalPort: 'VALENCIA' } };
+      expect(h1Generator.determineCustomsOffice(expedition)).toBe('ES004601');
     });
 
-    test('debe detectar VALENCIA (línea 1271)', () => {
-      const expedition = { transport: { arrivalPort: 'VALENCIA' } };
-      const result = h1Generator.determineCustomsOffice(expedition);
-      expect(result).toBe('ES004601');
+    test('plazas que no estan en la lista oficial (Canarias) caen al defecto', () => {
+      expect(h1Generator.determineCustomsOffice({ transport: { arrivalPort: 'LPA' } })).toBe('ES002801');
+      expect(h1Generator.determineCustomsOffice({ transport: { arrivalPort: 'TENERIFE' } })).toBe('ES002801');
     });
 
-    test('debe detectar VLC (línea 1271)', () => {
-      const expedition = { transport: { arrivalPort: 'VLC' } };
-      const result = h1Generator.determineCustomsOffice(expedition);
-      expect(result).toBe('ES004601');
-    });
-
-    test('debe detectar MADRID/BARAJAS (línea 1272)', () => {
-      const expedition = { transport: { arrivalPort: 'MAD-BARAJAS' } };
-      const result = h1Generator.determineCustomsOffice(expedition);
-      expect(result).toBe('ES002101');
-    });
-
-    test('debe detectar ALGECIRAS (línea 1273)', () => {
-      const expedition = { transport: { arrivalPort: 'ALGECIRAS' } };
-      const result = h1Generator.determineCustomsOffice(expedition);
-      expect(result).toBe('ES003001');
-    });
-
-    test('debe detectar BILBAO (línea 1274)', () => {
-      const expedition = { transport: { arrivalPort: 'BILBAO' } };
-      const result = h1Generator.determineCustomsOffice(expedition);
-      expect(result).toBe('ES004801');
-    });
-
-    test('debe detectar LAS PALMAS (línea 1275)', () => {
-      const expedition = { transport: { arrivalPort: 'LPA' } };
-      const result = h1Generator.determineCustomsOffice(expedition);
-      expect(result).toBe('ES003501');
-    });
-
-    test('debe detectar TENERIFE (línea 1276)', () => {
-      const expedition = { transport: { arrivalPort: 'TENERIFE' } };
-      const result = h1Generator.determineCustomsOffice(expedition);
-      expect(result).toBe('ES003801');
-    });
-
-    test('debe detectar MALAGA (línea 1277)', () => {
-      const expedition = { transport: { arrivalPort: 'MALAGA' } };
-      const result = h1Generator.determineCustomsOffice(expedition);
-      expect(result).toBe('ES002901');
-    });
-
-    test('debe usar default ES002801 cuando puerto desconocido (línea 1279)', () => {
+    test('debe usar default ES002801 cuando puerto desconocido', () => {
       const expedition = { transport: { arrivalPort: 'UNKNOWN-PORT' } };
-      const result = h1Generator.determineCustomsOffice(expedition);
-      expect(result).toBe('ES002801');
+      expect(h1Generator.determineCustomsOffice(expedition)).toBe('ES002801');
     });
 
-    test('debe usar default ES002801 cuando arrivalPort ausente (línea 1279)', () => {
-      const expedition = { transport: {} };
-      const result = h1Generator.determineCustomsOffice(expedition);
-      expect(result).toBe('ES002801');
+    test('debe usar default ES002801 cuando arrivalPort ausente', () => {
+      expect(h1Generator.determineCustomsOffice({ transport: {} })).toBe('ES002801');
     });
   });
 
@@ -4024,8 +3987,8 @@ describe('h1Generator - Cobertura de Ramas', () => {
 
       const result = h1Generator.generate(expedition);
 
-      // determineCustomsOffice('BCN') → ES002801
-      expect(result.summary.customsOffice).toBe('ES002801');
+      // determineCustomsOffice('BCN') → ES000811 (Barcelona maritima importacion)
+      expect(result.summary.customsOffice).toBe('ES000811');
       expect(result.summary.customsOfficeName).toContain('Barcelona');
     });
 

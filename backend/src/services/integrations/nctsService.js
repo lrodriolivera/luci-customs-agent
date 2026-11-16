@@ -152,13 +152,14 @@ const NCTS_CONFIG = {
   // Aduanas de tránsito españolas
   transitOffices: {
     departure: [
-      { code: 'ES002801', name: 'Barcelona Puerto', type: 'departure' },
-      { code: 'ES004601', name: 'Valencia Puerto', type: 'departure' },
-      { code: 'ES001101', name: 'Algeciras Puerto', type: 'departure' },
-      { code: 'ES002811', name: 'Barcelona Aeropuerto', type: 'departure' },
-      { code: 'ES002801A', name: 'Madrid Barajas', type: 'departure' },
-      { code: 'ES003101', name: 'Irún', type: 'departure' },
-      { code: 'ES001701', name: 'La Junquera', type: 'departure' }
+      // Codigos de la lista oficial (config/aduanasOficiales.js). Irun (ES003101),
+      // La Junquera (ES001701) y "ES002801A" no estan en ella y se han quitado.
+      { code: 'ES002801', name: 'Madrid - Aeropuerto', type: 'departure' },
+      { code: 'ES000811', name: 'Barcelona - Marítima Importación', type: 'departure' },
+      { code: 'ES004611', name: 'Valencia - Marítima', type: 'departure' },
+      { code: 'ES001131', name: 'Algeciras - Marítima (Tránsito)', type: 'departure' },
+      { code: 'ES000801', name: 'Barcelona - Aeropuerto', type: 'departure' },
+      { code: 'ES004811', name: 'Bilbao - Marítima', type: 'departure' }
     ],
     destination: [
       { code: 'FR000001', name: 'Francia - Perpignan', type: 'destination', country: 'FR' },

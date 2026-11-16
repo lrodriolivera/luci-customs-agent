@@ -16,6 +16,7 @@ const { CAMBIO_EUR, cambioObligatorio, aEuros } = require('../divisas/cambioDelE
 const { gastoDe, gastosHastaLaFrontera } = require('./gastosHastaLaFrontera');
 const { ajustesDelValor } = require('./ajustesDelValor');
 const { lugarDeEntrega } = require('./lugarDeEntrega');
+const { nombresPorCodigo, aduanaPorLugar } = require('../../config/aduanasOficiales');
 
 // Ajustes de la CL265 (ver ajustesDelValor.js) -> campo de la valoracion del generador.
 const CAMPO_DEL_AJUSTE = Object.freeze({
@@ -91,18 +92,12 @@ const DUTY_TYPES = {
 };
 
 /**
- * Aduanas principales de Espana
+ * Aduanas de Espana (codigo -> nombre), de la lista oficial
+ * (config/aduanasOficiales.js). La de pruebas de PRE se anade aparte.
  */
 const CUSTOMS_OFFICES = {
-  'ES002801': 'Barcelona - Puerto',
-  'ES002805': 'Barcelona - Aeropuerto',
-  'ES004601': 'Valencia - Puerto',
-  'ES002101': 'Madrid - Barajas',
-  'ES002901': 'Malaga',
-  'ES003001': 'Algeciras',
-  'ES004801': 'Bilbao',
-  'ES003501': 'Las Palmas',
-  'ES003801': 'Tenerife'
+  ...nombresPorCodigo(),
+  'ES009999': 'PRE Pruebas Peninsula'
 };
 
 /**
@@ -1372,18 +1367,14 @@ class H1Generator {
    * Determinar aduana segun puerto/aeropuerto de entrada
    */
   determineCustomsOffice(expedition) {
-    const port = expedition.transport?.arrivalPort?.toUpperCase() || '';
-
-    if (port.includes('BCN') || port.includes('BARCELONA')) return 'ES002801';
-    if (port.includes('VLC') || port.includes('VALENCIA')) return 'ES004601';
-    if (port.includes('MAD') || port.includes('BARAJAS')) return 'ES002101';
-    if (port.includes('ALG') || port.includes('ALGECIRAS')) return 'ES003001';
-    if (port.includes('BIO') || port.includes('BILBAO')) return 'ES004801';
-    if (port.includes('LPA') || port.includes('PALMAS')) return 'ES003501';
-    if (port.includes('TFN') || port.includes('TENERIFE')) return 'ES003801';
-    if (port.includes('MAL') || port.includes('MALAGA')) return 'ES002901';
-
-    return 'ES002801'; // Barcelona por defecto
+    // Lista oficial: "Puerto de Algeciras" -> ES001131, "BCN" -> ES000811
+    // (Barcelona maritima importacion), "Barajas" -> ES002801 (Madrid aeropuerto).
+    const aduana = aduanaPorLugar(expedition?.transport?.arrivalPort, {
+      modo: expedition?.transportMode
+    });
+    // Sin plaza reconocida: Madrid aeropuerto, que es ademas el recinto de la
+    // sumaria de pruebas de PRE (28016000001).
+    return aduana || 'ES002801';
   }
 
   /**

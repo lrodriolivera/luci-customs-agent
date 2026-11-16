@@ -111,9 +111,12 @@ const predefinedLocations = [
   { code: 'LEMD', name: 'Aeropuerto Madrid-Barajas', city: 'Madrid', type: 'airport' },
   { code: 'LEBL', name: 'Aeropuerto Barcelona-El Prat', city: 'Barcelona', type: 'airport' },
   { code: 'LEZG', name: 'Aeropuerto Zaragoza', city: 'Zaragoza', type: 'airport' },
-  { code: 'ES002801', name: 'Aduana de Madrid', city: 'Madrid', type: 'customs_office' },
-  { code: 'ES000801', name: 'Aduana de Barcelona', city: 'Barcelona', type: 'customs_office' },
-  { code: 'ES004601', name: 'Aduana de Valencia', city: 'Valencia', type: 'customs_office' }
+  { code: 'ES002801', name: 'Aduana de Madrid - Aeropuerto', city: 'Madrid', type: 'customs_office' },
+  { code: 'ES000801', name: 'Aduana de Barcelona - Aeropuerto', city: 'Barcelona', type: 'customs_office' },
+  { code: 'ES004601', name: 'Aduana de Valencia - Aeropuerto', city: 'Valencia', type: 'customs_office' },
+  { code: 'ES000811', name: 'Aduana de Barcelona - Marítima', city: 'Barcelona', type: 'customs_office' },
+  { code: 'ES004611', name: 'Aduana de Valencia - Marítima', city: 'Valencia', type: 'customs_office' },
+  { code: 'ES001131', name: 'Aduana de Algeciras - Marítima', city: 'Algeciras', type: 'customs_office' }
 ]
 
 export default function InspectionManager() {
