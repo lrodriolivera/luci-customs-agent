@@ -1,6 +1,6 @@
 /**
  * Preferential Tariffs Service
- * Gestión de preferencias arancelarias: EUR.1, Form A, ATR, acumulación origen
+ * Gestión de preferencias arancelarias: EUR.1, declaraciones de origen (REX), ATR, acumulación origen
  *
  * STRIX AI - LUCI Customs Agent
  */
@@ -12,6 +12,11 @@ const { tiposAeat } = require('./aeat/contrasteArancel');
 /** Importe en euros redondeado a centimos. */
 const redondear = (n) => Math.round(n * 100) / 100;
 
+// Prueba de origen comun a SPG, SPG+ y EBA (fuentes en la entrada 'GSP').
+const SPG_PROOF = 'Comunicación sobre el origen extendida por un exportador registrado (REX); cualquier exportador si el envío no supera 6.000 EUR. El Form A ya no se acepta';
+const SPG_LEGAL_BASIS = 'Reglamento (UE) 978/2012 (DOUE L 303 de 31-10-2012); Reglamento de Ejecución (UE) 2015/2447, arts. 78, 79 y 92 y anexo 22-07';
+const SPG_PROOF_VALIDITY = '12 meses desde su extensión';
+
 // Base de datos de acuerdos preferenciales (simplificada para demo)
 const PREFERENTIAL_AGREEMENTS = {
   // Acuerdos de Libre Comercio (FTA)
@@ -19,8 +24,16 @@ const PREFERENTIAL_AGREEMENTS = {
     name: 'EU-UK Trade and Cooperation Agreement',
     type: 'FTA',
     countries: ['GB'],
-    certificate: 'Statement on Origin',
+    // ACC UE-RU (DOUE L 149 de 30-4-2021), art. 54.2: la solicitud se basa en a) una
+    // comunicacion sobre el origen del exportador o b) el conocimiento del importador.
+    // Art. 56 y anexo 7: texto en factura u otro documento con el numero de referencia
+    // del exportador; validez 12 meses (hasta 24 si lo fija la Parte importadora).
+    // Comision, «Compendium on rules of origin Q&A» (taxation-customs.ec.europa.eu,
+    // 03/2021): el exportador britanico pone su EORI GB; el RU no usa REX. No hay EUR.1.
+    certificate: 'Comunicación sobre el origen del exportador en factura u otro documento (exportador británico: su número EORI GB) o conocimiento del importador',
     proofKind: 'exporter_declaration',
+    legalBasis: 'Acuerdo de Comercio y Cooperación UE-Reino Unido (DOUE L 149 de 30-4-2021), arts. 54 y 56 y anexo 7',
+    proofValidity: '12 meses desde su extensión (hasta 24 si lo fija la Parte importadora)',
     originRules: {
       general: 'Product-specific rules',
       tolerance: 0.10, // 10% tolerance
@@ -75,8 +88,13 @@ const PREFERENTIAL_AGREEMENTS = {
     name: 'EU-Mexico Free Trade Agreement (Decision 2/2000)',
     type: 'FTA',
     countries: ['MX'],
-    certificate: 'EUR.1 / Statement on Origin',
+    // Access2Markets (UE-Mexico) y AEAT (Acuerdos_UE.pdf, Mexico): Decision 2/2000, anexo III, titulo V: EUR.1 o
+    // declaracion en factura (exportador autorizado, o cualquiera hasta 6.000 EUR);
+    // la prueba vale 10 meses. No existe «Statement on Origin» en este acuerdo.
+    certificate: 'Certificado EUR.1 o declaración en factura (exportador autorizado, o cualquier exportador si el envío no supera 6.000 EUR)',
     proofKind: 'certificate',
+    legalBasis: 'Decisión 2/2000 del Consejo Conjunto CE-México, anexo III, título V (DO L 245 de 29-9-2000, según Acuerdos_UE.pdf de la AEAT), modificada por la Decisión 1/2020 (DOUE L 259 de 10-8-2020)',
+    proofValidity: '10 meses desde su expedición',
     originRules: {
       general: 'Product-specific rules',
       tolerance: 0.10,
@@ -91,8 +109,14 @@ const PREFERENTIAL_AGREEMENTS = {
     name: 'EU-South Korea Free Trade Agreement',
     type: 'FTA',
     countries: ['KR'],
-    certificate: 'EUR.1 / Invoice Declaration',
-    proofKind: 'certificate',
+    // Protocolo de origen del ALC UE-Corea (DOUE L 127 de 14-5-2011, p. 1344), arts.
+    // 15-17: la unica prueba es la declaracion de origen del exportador en factura;
+    // por encima de 6.000 EUR solo puede extenderla un exportador autorizado. El
+    // Protocolo no preve EUR.1. Art. 18: validez de 12 meses.
+    certificate: 'Declaración de origen del exportador en factura u otro documento comercial (exportador autorizado si el envío supera 6.000 EUR)',
+    proofKind: 'exporter_declaration',
+    legalBasis: 'ALC UE-Corea (DOUE L 127 de 14-5-2011), Protocolo relativo a la definición de «productos originarios», arts. 15-18',
+    proofValidity: '12 meses desde su expedición',
     originRules: {
       general: 'Product-specific rules (Annex II)',
       tolerance: 0.10,
@@ -140,13 +164,27 @@ const PREFERENTIAL_AGREEMENTS = {
     documentRequired: true
   },
 
-  // Sistema de Preferencias Generalizadas (GSP)
+  // Sistema de Preferencias Generalizadas (SPG): Reglamento (UE) 978/2012. Paises segun
+  // la version consolidada en EUR-Lex a 1-1-2025 (02012R0978-20250101), la vigente a
+  // nov-2026 (hay otra prevista para 1-1-2027 que habra que revisar).
+  // Prueba de origen (RE 2015/2447): art. 78, el SPG se aplica a mercancias de un
+  // exportador registrado (REX) o, en envios de hasta 6.000 EUR, de cualquier
+  // exportador; art. 79, registro REX en los beneficiarios desde 2017; art. 92 y
+  // anexo 22-07, comunicacion sobre el origen. Access2Markets (SPG): desde el
+  // 30-6-2020 (31-12-2020 por la COVID, Rgto. 2020/750) ya no se acepta el Form A;
+  // la comunicacion vale 12 meses desde su extension (art. 99 RE 2015/2447).
   'GSP': {
     name: 'Generalized System of Preferences',
     type: 'GSP',
-    countries: ['IN', 'PK', 'TH', 'ID', 'MA', 'TN', 'EG', 'NG', 'GH', 'KE'],
-    certificate: 'Form A',
-    proofKind: 'certificate',
+    // Anexo II (regimen general) sin los paises del anexo III (SPG+) ni del IV (EBA),
+    // que se recogen en sus propias entradas, y sin los marcados con la nota (*1)
+    // («sera retirado un año despues de la entrada en vigor»): CN, EC, MV, TH.
+    // Kenia sigue en el anexo II consolidado; falta confirmar si su AAE con la UE la retira.
+    countries: ['CG', 'CK', 'FM', 'ID', 'IN', 'KE', 'NG', 'NU', 'SY', 'TJ', 'VU'],
+    certificate: SPG_PROOF,
+    proofKind: 'exporter_declaration',
+    legalBasis: SPG_LEGAL_BASIS,
+    proofValidity: SPG_PROOF_VALIDITY,
     originRules: {
       general: 'Value-added 50% minimum',
       tolerance: 0.15,
@@ -160,9 +198,12 @@ const PREFERENTIAL_AGREEMENTS = {
   'GSP_PLUS': {
     name: 'GSP+ (Special incentive arrangement)',
     type: 'GSP+',
-    countries: ['PK', 'BD', 'LK', 'PH', 'KH', 'BO', 'KG', 'AM'],
-    certificate: 'Form A',
-    proofKind: 'certificate',
+    // Anexo III vigente. Bangladés y Camboya son EBA; Armenia ya no figura en él.
+    countries: ['BO', 'CV', 'KG', 'LK', 'MN', 'PH', 'PK', 'UZ'],
+    certificate: SPG_PROOF,
+    proofKind: 'exporter_declaration',
+    legalBasis: SPG_LEGAL_BASIS,
+    proofValidity: SPG_PROOF_VALIDITY,
     originRules: {
       general: 'Value-added 50% minimum',
       tolerance: 0.15,
@@ -176,9 +217,18 @@ const PREFERENTIAL_AGREEMENTS = {
   'EBA': {
     name: 'Everything But Arms (EBA)',
     type: 'EBA',
-    countries: ['BD', 'KH', 'LA', 'MM', 'NP', 'AF', 'YE', 'SD', 'ET', 'UG'],
-    certificate: 'Form A',
-    proofKind: 'certificate',
+    // Anexo IV vigente: 46 paises menos adelantados. Camboya tiene retiradas las
+    // preferencias para parte de sus productos (anexo IV, segunda parte).
+    countries: [
+      'AF', 'AO', 'BD', 'BF', 'BI', 'BJ', 'BT', 'CD', 'CF', 'DJ', 'ER', 'ET',
+      'GM', 'GN', 'GW', 'HT', 'KH', 'KI', 'KM', 'LA', 'LR', 'LS', 'MG', 'ML',
+      'MM', 'MR', 'MW', 'MZ', 'NE', 'NP', 'RW', 'SB', 'SD', 'SL', 'SN', 'SO',
+      'SS', 'ST', 'TD', 'TG', 'TL', 'TV', 'TZ', 'UG', 'YE', 'ZM'
+    ],
+    certificate: SPG_PROOF,
+    proofKind: 'exporter_declaration',
+    legalBasis: SPG_LEGAL_BASIS,
+    proofValidity: SPG_PROOF_VALIDITY,
     originRules: {
       general: 'Value-added 50% minimum',
       tolerance: 0.15,
@@ -330,6 +380,7 @@ class PreferencesService {
             certificate: agreement.certificate,
             proofKind: agreement.proofKind || 'certificate',
             legalBasis: agreement.legalBasis || null,
+            proofValidity: agreement.proofValidity || null,
             savings: evaluation.savings,
             qualifies: true,
             conditions: evaluation.conditions
@@ -604,7 +655,9 @@ class PreferencesService {
       name: agreement.certificate,
       description: `Prueba de origen: ${agreement.certificate}`,
       mandatory: true,
-      validityPeriod: '10 meses desde emisión'
+      // Validez de la prueba segun el acuerdo cuando esta verificada (p. ej. 12 meses
+      // en SPG, Corea y Reino Unido); si no, el texto de siempre.
+      validityPeriod: agreement.proofValidity || '10 meses desde emisión'
     });
 
     // Factura

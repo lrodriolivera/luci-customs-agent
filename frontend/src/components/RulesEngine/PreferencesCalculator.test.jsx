@@ -385,6 +385,53 @@ describe('<PreferencesCalculator />', () => {
     expect(screen.getByTestId('sin-preferencia-aeat')).toHaveTextContent('preferencesCalc.noAeatPreference')
   })
 
+  /**
+   * SPG/SPG+/EBA: la prueba es la comunicacion sobre el origen del exportador REX
+   * (RE 2015/2447, arts. 78-79, 92 y 99), con 12 meses de validez; el Form A ya no.
+   */
+  test('SPG: comunicacion sobre el origen REX, sin EUR.1 y con la validez del acuerdo', async () => {
+    preferencesAPI.checkEligibility.mockResolvedValue(respuestaJapon({
+      recommended: {
+        name: 'Everything But Arms (EBA)',
+        certificate: 'Comunicación sobre el origen extendida por un exportador registrado (REX); cualquier exportador si el envío no supera 6.000 EUR. El Form A ya no se acepta',
+        proofKind: 'exporter_declaration',
+        proofValidity: '12 meses desde su extensión',
+        conditions: []
+      }
+    }))
+
+    render(<PreferencesCalculator />)
+    fireEvent.change(getTaricInput(), { target: { value: '6109100010' } })
+    fireEvent.change(getValueInput(), { target: { value: '10000' } })
+    fireEvent.submit(screen.getByText('Datos del Producto').closest('form'))
+
+    await waitFor(() => expect(screen.getByText('Preferencia Disponible')).toBeInTheDocument())
+    expect(screen.getByText('preferencesCalc.noEur1')).toBeInTheDocument()
+    expect(screen.queryByText(/necesita EUR\.1 emitido por aduanas/)).not.toBeInTheDocument()
+    expect(screen.getByText(/Verificar validez de la prueba de origen \(12 meses desde su extensión\)/)).toBeInTheDocument()
+    expect(screen.queryByText(/máximo 10 meses/)).not.toBeInTheDocument()
+  })
+
+  test('con EUR.1 y validez del acuerdo se muestra esa validez, no la generica', async () => {
+    preferencesAPI.checkEligibility.mockResolvedValue(respuestaJapon({
+      recommended: {
+        name: 'EU-Mexico Free Trade Agreement (Decision 2/2000)',
+        certificate: 'Certificado EUR.1 o declaración en factura',
+        proofKind: 'certificate',
+        proofValidity: '10 meses desde su expedición',
+        conditions: []
+      }
+    }))
+
+    render(<PreferencesCalculator />)
+    fireEvent.change(getTaricInput(), { target: { value: '8703239000' } })
+    fireEvent.submit(screen.getByText('Datos del Producto').closest('form'))
+
+    await waitFor(() => expect(screen.getByText('Preferencia Disponible')).toBeInTheDocument())
+    expect(screen.getByText(/Verificar validez de la prueba de origen \(10 meses desde su expedición\)/)).toBeInTheDocument()
+    expect(screen.queryByText(/máximo 10 meses/)).not.toBeInTheDocument()
+  })
+
   test('reglas de origen con RVC', async () => {
     preferencesAPI.checkEligibility.mockResolvedValue({
       data: {
