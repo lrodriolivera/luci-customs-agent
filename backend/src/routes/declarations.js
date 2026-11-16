@@ -315,7 +315,7 @@ router.post('/:expeditionId/ai/apply-regime', declarationController.applyRegimeS
  * El país se resuelve igual que en CustomsServiceFactory.getServiceForTenant.
  */
 function rechazarEspanaEnV2(res, tenant) {
-  const pais = tenant.customsConfig?.country || tenant.businessInfo?.country || 'ES';
+  const pais = String(tenant.customsConfig?.country || tenant.businessInfo?.country || 'ES').toUpperCase();
   if (pais !== 'ES') return false;
   res.status(400).json({
     success: false,
