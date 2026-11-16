@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/ComunicaControlesCCEV1Sal.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/ComunicaControlesCCEV1Sal.xsd" elementFormDefault="qualified">
+	<xs:include schemaLocation="ES_ctypes_v514.xsd"/>
+	<xs:element name="ComunicaControlesCCEV1Sal" type="ComunicaControlesCCEV1Sal"/>
+	<xs:complexType name="ComunicaControlesCCEV1Sal">
+		<xs:sequence>
+			<xs:group ref="MESSAGE"/>
+			<xs:element name="DatosComunicacion" type="DatosComunicacionControlesCCEType"/>
+			<xs:element name="TipoDeControl" type="TipoControlType" maxOccurs="99"/>
+			<xs:element name="DocumentoSolicitado" type="DocumentoSolicitadoType" minOccurs="0" maxOccurs="99"/>
+		</xs:sequence>
+		<xs:attribute name="Id" use="required">
+			<xs:annotation>
+				<xs:documentation>Identificador de transacción</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="40"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+</xs:schema>

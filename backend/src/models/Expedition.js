@@ -197,7 +197,23 @@ const DeclarationSchema = new mongoose.Schema({
   predeclaracion: mongoose.Schema.Types.Mixed,
   aeatResponse: mongoose.Schema.Types.Mixed,
   levanteNumber: String,
-  cancelledAt: Date
+  cancelledAt: Date,
+  // AES: avisos de la bandeja de entrada de la AEAT (services/aesBandejaProceso.js).
+  //  - exitConfirmedAt: salida efectiva de la UE (aviso ComunicaResulSalida, SA).
+  //  - aesSalida: estado AES del último aviso y lo que trae cada uno (levantes,
+  //    resultado de la salida, disconformidad, invalidación, controles).
+  //  - aesAvisos: avisos aplicados (por su Id, para no aplicarlos dos veces).
+  exitConfirmedAt: Date,
+  aesSalida: mongoose.Schema.Types.Mixed,
+  aesAvisos: [new mongoose.Schema({
+    id: String,
+    clave: String,
+    tipo: String,
+    texto: String,
+    estadoAES: String,
+    fecha: String,
+    recibidoEn: Date
+  }, { _id: false })]
 }, { _id: false, suppressReservedKeysWarning: true });
 
 const CalculationsSchema = new mongoose.Schema({

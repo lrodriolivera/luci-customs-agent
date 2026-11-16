@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" 
+	xmlns:ListaDecV4Ent="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adht/band/ws/li/ListaDecV4Ent.xsd" 
+	targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adht/band/ws/li/ListaDecV4Ent.xsd" 
+	elementFormDefault="qualified">
+	<annotation>
+		<documentation>
+    		Esquema para solicitar a la Bandeja de Entrada la LISTA DE LAS RESPUESTAS pendientes de leer.
+    	</documentation>
+	</annotation>
+	<element name="ListaDecV4Ent" type="ListaDecV4Ent:ListaDecV4Ent"/>
+	<complexType name="ListaDecV4Ent">
+		<sequence>
+			<element name="declarante" type="ListaDecV4Ent:declaranteType" minOccurs="1" maxOccurs="1"/>
+		</sequence>
+		<attribute name="tipoRespuesta" type="string" use="optional"/>
+	</complexType>
+	<complexType name="declaranteType">
+		<annotation>
+			<documentation>
+    		declaranteType: Información del declarante, de la persona en cuyo nombre se presenta la declaración.
+    		NifDeclarante: Nif del declarante
+    		NombreDeclarante: Nombre del declarante
+    	</documentation>
+		</annotation>
+		<sequence>
+			<element name="NifDeclarante" type="string" minOccurs="1" maxOccurs="1"/>
+			<element name="NombreDeclarante" type="string" minOccurs="1" maxOccurs="1"/>
+			<element name="Inicio" type="dateTime" minOccurs="0" maxOccurs="1"/>
+			<element name="Fin" type="dateTime" minOccurs="0" maxOccurs="1"/>
+		</sequence>
+	</complexType>
+</schema>
