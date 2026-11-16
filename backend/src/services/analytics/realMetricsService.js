@@ -86,12 +86,71 @@ function _conRango(filtro, desde, hasta, campo = 'createdAt') {
 const ESTADO_PENDIENTE_DE_ACTIVAR = '63';
 
 /**
+ * MRN con la estructura de la UE: 18 caracteres = ano (2 cifras) + pais (2
+ * letras) + identificador unico (12) + identificador de procedimiento (1 letra,
+ * posicion 17) + digito de control (1).
+ *
+ * Fuente: Reglamento de Ejecucion (UE) 2015/2447, anexo B, estructura del MRN
+ * (campo 4, «identificador de procedimiento»). Ejemplos de la AEAT en los
+ * fixtures: 26ES009999I00270R1 (importacion, R), 26ES002801100321B8
+ * (exportacion, B), 26ES002801500473J5 (transito, J).
+ */
+const FORMATO_MRN_UE = /^\d{2}[A-Z]{2}[A-Z0-9]{12}[A-Z][A-Z0-9]$/;
+
+/** Letras de procedimiento del MRN: R/S declaracion de importacion, A/B exportacion. */
+const PROCEDIMIENTO_IMPORTACION = ['R', 'S'];
+const PROCEDIMIENTO_EXPORTACION = ['A', 'B'];
+
+/**
+ * Tipo de un expediente antiguo sin declaration.type, deducido en la consulta
+ * (no se modifican datos). Conservador: solo H1 o AES cuando la letra del MRN
+ * y el expediente cuentan lo mismo; si no, null y no se cuenta.
+ *  - R/S (importacion) -> H1, salvo expediente de exportacion o con datos de
+ *    H7 (el H7 tambien es importacion: su MRN lleva R).
+ *  - A/B (exportacion) -> AES, salvo expediente de importacion.
+ *  - cualquier otra letra (transito J/K/L, sumarias...) -> null.
+ */
+function _tipoDeducidoDelMrn() {
+  const letra = { $substrCP: [{ $ifNull: ['$declaration.mrn', ''] }, 16, 1] };
+  const operacion = { $ifNull: ['$operationType', null] };
+  return {
+    $switch: {
+      branches: [
+        {
+          case: {
+            $and: [
+              { $in: [letra, PROCEDIMIENTO_IMPORTACION] },
+              { $in: [operacion, ['import', null]] },
+              { $eq: [{ $ifNull: ['$declaration.h7Data', null] }, null] }
+            ]
+          },
+          then: 'H1'
+        },
+        {
+          case: {
+            $and: [
+              { $in: [letra, PROCEDIMIENTO_EXPORTACION] },
+              { $in: [operacion, ['export', null]] }
+            ]
+          },
+          then: 'AES'
+        }
+      ],
+      default: null
+    }
+  };
+}
+
+/**
  * Resumen de H1 y AES presentados en el rango.
  *
  * H1 y AES no tienen coleccion propia (a diferencia de H7Declaration o
  * Transit): viven en expedition.declaration, y se cuentan por la fecha de
  * presentacion (declaration.submittedAt), no por expedition.createdAt (que es
  * cuando se abrio el expediente, no cuando se presento la declaracion).
+ *
+ * Los expedientes antiguos con MRN pero sin declaration.type tambien cuentan:
+ * su tipo se deduce del MRN (ver _tipoDeducidoDelMrn).
  *
  * No cuentan como presentadas:
  *  - las anuladas (declaration.cancelledAt)
@@ -107,18 +166,32 @@ const ESTADO_PENDIENTE_DE_ACTIVAR = '63';
  * liquidado, igual que para H7 lo liquidado y lo calculado pueden diferir.
  */
 async function _resumenH1AES(tenantId, { desde, hasta } = {}) {
-  const filtro = _conRango(
-    _filtro(tenantId, {
-      deletedAt: null,
-      'declaration.type': { $in: ['H1', 'AES'] },
-      'declaration.submittedAt': { $ne: null },
-      'declaration.cancelledAt': null
-    }),
-    desde, hasta, 'declaration.submittedAt'
-  );
+  const filtroBase = _filtro(tenantId, {
+    deletedAt: null,
+    'declaration.cancelledAt': null,
+    $or: [
+      { 'declaration.type': { $in: ['H1', 'AES'] }, 'declaration.submittedAt': { $ne: null } },
+      // Expedientes antiguos sin tipo: candidatos si su MRN tiene la forma de la UE.
+      { 'declaration.type': null, 'declaration.mrn': FORMATO_MRN_UE }
+    ]
+  });
 
   const filas = await Expedition.aggregate([
-    { $match: filtro },
+    { $match: filtroBase },
+    {
+      $addFields: {
+        _tipo: { $ifNull: ['$declaration.type', _tipoDeducidoDelMrn()] },
+        // Fecha de presentacion. Los antiguos sin submittedAt caen a la de la
+        // respuesta de la AEAT y, si tampoco esta, a la apertura del expediente.
+        _presentadoEn: {
+          $ifNull: [
+            '$declaration.submittedAt',
+            { $ifNull: ['$declaration.aeatResponse.timestamp', '$createdAt'] }
+          ]
+        }
+      }
+    },
+    { $match: _conRango({ _tipo: { $in: ['H1', 'AES'] } }, desde, hasta, '_presentadoEn') },
     {
       // Excluye la predeclaracion pendiente de activar: estado 63 y sin
       // activadaEn. $expr porque la condicion combina varios campos opcionales.
@@ -144,7 +217,7 @@ async function _resumenH1AES(tenantId, { desde, hasta } = {}) {
     },
     {
       $group: {
-        _id: '$declaration.type',
+        _id: '$_tipo',
         n: { $sum: 1 },
         customsValue: { $sum: { $ifNull: ['$calculations.customsValue', 0] } },
         totalDuties: { $sum: { $ifNull: ['$calculations.totalDuties', 0] } },
@@ -210,25 +283,89 @@ async function volumenDeclaraciones(tenantId, { desde, hasta } = {}) {
   };
 }
 
+/** Canales (circuitos) que asigna la AEAT. 'yellow' es el propio del H7 (bajo valor). */
+const CANALES = ['green', 'yellow', 'orange', 'red'];
+
+/** Status de expediente que codifican el canal (expedientes antiguos sin declaration.channel). */
+const CANAL_POR_STATUS = {
+  green_channel: 'green',
+  yellow_channel: 'yellow',
+  orange_channel: 'orange',
+  red_channel: 'red'
+};
+
 /**
- * Reparto de expedientes por canal aduanero.
+ * Reparto por canal aduanero (circuito verde/amarillo/naranja/rojo).
  *
- * El canal vive en el status del expediente (green_channel, orange_channel,
- * red_channel). 'levante' implica que ya paso el canal y se despacho.
+ * Sale del canal que devolvio la AEAT y LUCI guardo:
+ *  - expedition.declaration.channel: H1, H1 CAU, AES y H7 de expediente
+ *    (declarationController al presentar y al consultar el estado).
+ *  - H7Declaration.channel: H7 del manifiesto (h7Service).
+ * Los expedientes antiguos sin declaration.channel caen a su status
+ * (green_channel...). Antes SOLO se miraba el status, que se pierde en cuanto
+ * el expediente pasa a levante o completed.
+ *
+ * NCTS (Transit) no tiene canal de la AEAT: no entra.
+ * Un H7 enlazado a un expediente que ya cuenta su canal no se cuenta dos veces.
+ * El periodo se mide por la presentacion (submittedAt), no por la apertura del
+ * expediente. Las declaraciones anuladas no cuentan.
  */
 async function repartoPorCanal(tenantId, { desde, hasta } = {}) {
-  const filas = await Expedition.aggregate([
-    { $match: _conRango(_filtro(tenantId, { deletedAt: null }), desde, hasta) },
-    { $group: { _id: '$status', n: { $sum: 1 } } }
+  const canalDelStatus = {
+    $switch: {
+      branches: Object.entries(CANAL_POR_STATUS).map(([status, canal]) => ({
+        case: { $eq: ['$status', status] }, then: canal
+      })),
+      default: null
+    }
+  };
+
+  const [deExpedientes, deH7] = await Promise.all([
+    Expedition.aggregate([
+      { $match: _filtro(tenantId, { deletedAt: null, 'declaration.cancelledAt': null }) },
+      {
+        $addFields: {
+          _canal: { $ifNull: ['$declaration.channel', canalDelStatus] },
+          _fecha: {
+            $ifNull: [
+              '$declaration.submittedAt',
+              { $ifNull: ['$declaration.channelAssignedAt', '$createdAt'] }
+            ]
+          }
+        }
+      },
+      { $match: _conRango({ _canal: { $in: CANALES } }, desde, hasta, '_fecha') },
+      { $group: { _id: '$_canal', n: { $sum: 1 } } }
+    ]),
+    H7Declaration.aggregate([
+      { $match: _filtro(tenantId, { deletedAt: null, channel: { $in: CANALES } }) },
+      { $addFields: { _fecha: { $ifNull: ['$submittedAt', '$createdAt'] } } },
+      { $match: _conRango({}, desde, hasta, '_fecha') },
+      {
+        $lookup: {
+          from: Expedition.collection?.name || 'expeditions',
+          localField: 'expedition',
+          foreignField: '_id',
+          as: '_expediente'
+        }
+      },
+      // Fuera los que ya cuenta su expediente (canal en la declaracion o en el status).
+      {
+        $match: {
+          $nor: [
+            { '_expediente.declaration.channel': { $in: CANALES } },
+            { '_expediente.status': { $in: Object.keys(CANAL_POR_STATUS) } }
+          ]
+        }
+      },
+      { $group: { _id: '$channel', n: { $sum: 1 } } }
+    ])
   ]);
 
-  const porEstado = Object.fromEntries(filas.map(f => [f._id || 'sin_estado', f.n]));
-  const canales = {
-    green: porEstado.green_channel || 0,
-    orange: porEstado.orange_channel || 0,
-    red: porEstado.red_channel || 0,
-    yellow: porEstado.yellow_channel || 0
-  };
+  const canales = Object.fromEntries(CANALES.map(c => [c, 0]));
+  for (const fila of [...deExpedientes, ...deH7]) {
+    if (CANALES.includes(fila._id)) canales[fila._id] += fila.n;
+  }
   const conCanal = Object.values(canales).reduce((a, b) => a + b, 0);
 
   return {
@@ -236,11 +373,9 @@ async function repartoPorCanal(tenantId, { desde, hasta } = {}) {
     conCanalAsignado: conCanal,
     // El porcentaje se calcula sobre los que TIENEN canal, no sobre el total de
     // expedientes: incluir los que aun no han llegado a canal lo falsearia.
-    porcentajes: conCanal === 0
-      ? { green: 0, orange: 0, red: 0, yellow: 0 }
-      : Object.fromEntries(
-          Object.entries(canales).map(([k, v]) => [k, Math.round((v / conCanal) * 1000) / 10])
-        )
+    porcentajes: Object.fromEntries(
+      CANALES.map(c => [c, conCanal === 0 ? 0 : Math.round((canales[c] / conCanal) * 1000) / 10])
+    )
   };
 }
 

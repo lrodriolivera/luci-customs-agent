@@ -697,6 +697,10 @@ const TIME_PERIODS = [
   { value: 'this_year', labelKey: 'analyticsPage.thisYear' }
 ]
 
+/** Orden de los circuitos de la AEAT en «Distribucion por Canal». */
+const ORDEN_CANALES = ['green', 'yellow', 'orange', 'red']
+const ETIQUETA_CANAL = { green: 'Verde', yellow: 'Amarillo', orange: 'Naranja', red: 'Rojo' }
+
 export default function AnalyticsDashboard() {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
@@ -1091,20 +1095,27 @@ export default function AnalyticsDashboard() {
             <div className="card">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Distribucion por Canal</h3>
               <div className="space-y-4">
-                {dashboardData.channels && Object.entries(dashboardData.channels).map(([channel, value]) => (
-                  <div key={channel} className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="capitalize font-medium">{channel === 'green' ? 'Verde' : channel === 'orange' ? 'Naranja' : channel === 'red' ? 'Rojo' : 'Amarillo'}</span>
-                      <span className="text-gray-600">{value}%</span>
+                {dashboardData.channels ? ORDEN_CANALES.filter(c => dashboardData.channels[c] != null).map((channel) => {
+                  const value = dashboardData.channels[channel]
+                  const n = dashboardData.channelCounts?.[channel]
+                  return (
+                    <div key={channel} className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="capitalize font-medium">{ETIQUETA_CANAL[channel]}</span>
+                        <span className="text-gray-600">
+                          <span>{value}%</span>
+                          {n != null && <span className="ml-1 text-gray-400">({n})</span>}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div
+                          className={`h-3 rounded-full ${getChannelColor(channel)}`}
+                          style={{ width: `${value}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className={`h-3 rounded-full ${getChannelColor(channel)}`}
-                        style={{ width: `${value}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+                  )
+                }) : sinDatosEl()}
               </div>
             </div>
 
