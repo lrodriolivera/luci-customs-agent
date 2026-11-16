@@ -157,33 +157,45 @@ describe('list', () => {
   // El filtro Desde/Hasta de la UI se lee junto a la unica fecha que muestra la tabla,
   // "Llegada Prevista", pero filtraba por createdAt: buscar noviembre/2026 descartaba
   // las llegadas de noviembre y devolvia las creadas hoy. Se filtra por la llegada.
+  // Las llegadas tienen que ser futuras (createDeclaration rechaza las pasadas): el
+  // rango es siempre un mes futuro, para que el test no caduque con el calendario.
+  const mesFuturo = (() => {
+    const hoy = new Date();
+    const anio = hoy.getUTCFullYear();
+    const mes = hoy.getUTCMonth() + 2; // dentro de dos meses: siempre en el futuro
+    const dia = (d, hora = '10:00:00') => new Date(Date.UTC(anio, mes, d, ...hora.split(':').map(Number)));
+    const ultimo = new Date(Date.UTC(anio, mes + 1, 0)).getUTCDate();
+    const iso = (d) => d.toISOString().slice(0, 10);
+    return { dia, ultimo, desde: iso(dia(1)), hasta: iso(dia(ultimo)), siguienteMes: dia(ultimo + 20) };
+  })();
+
   test('el rango de fechas filtra por la llegada prevista, no por createdAt', async () => {
     const enRango = await sembrarENS(operadorUser, {
-      entryOffice: { code: 'ES002801', name: 'Algeciras', expectedArrival: new Date('2026-11-15T10:00:00Z') }
+      entryOffice: { code: 'ES002801', name: 'Algeciras', expectedArrival: mesFuturo.dia(15) }
     });
     await sembrarENS(operadorUser, {
-      entryOffice: { code: 'ES002801', name: 'Algeciras', expectedArrival: new Date('2026-12-20T10:00:00Z') }
+      entryOffice: { code: 'ES002801', name: 'Algeciras', expectedArrival: mesFuturo.siguienteMes }
     });
 
     const res = mockRes();
     await ensController.list(mockReq({
       user: operadorUser,
-      query: { startDate: '2026-11-01', endDate: '2026-11-30' }
+      query: { startDate: mesFuturo.desde, endDate: mesFuturo.hasta }
     }), res);
 
     expect(res.body.data.map(d => d.reference)).toEqual([enRango.reference]);
   });
 
-  // new Date('2026-11-30') es medianoche: con $lte se perdia todo el dia 30.
+  // new Date('AAAA-MM-DD') es medianoche: con $lte se perdia todo el ultimo dia.
   test('el dia final del rango entra completo', async () => {
     const ultimoDia = await sembrarENS(operadorUser, {
-      entryOffice: { code: 'ES002801', name: 'Algeciras', expectedArrival: new Date('2026-11-30T23:30:00Z') }
+      entryOffice: { code: 'ES002801', name: 'Algeciras', expectedArrival: mesFuturo.dia(mesFuturo.ultimo, '23:30:00') }
     });
 
     const res = mockRes();
     await ensController.list(mockReq({
       user: operadorUser,
-      query: { startDate: '2026-11-01', endDate: '2026-11-30' }
+      query: { startDate: mesFuturo.desde, endDate: mesFuturo.hasta }
     }), res);
 
     expect(res.body.data.map(d => d.reference)).toContain(ultimoDia.reference);
