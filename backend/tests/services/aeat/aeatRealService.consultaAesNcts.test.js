@@ -31,7 +31,7 @@ describe('queryDeclarationStatus AES', () => {
   test('envía CCAESC por mTLS al endpoint oficial y devuelve estado y canal para el monitor', async () => {
     aeatTransport.sendSoap.mockResolvedValue({ status: 200, data: leer('aes/respuesta-ok.xml') });
 
-    const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'AES', 'cert-x', 'pw', { tenantId: 't1' });
+    const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'AES', { tenantId: 't1' });
 
     expect(aeatTransport.sendSoap).toHaveBeenCalledTimes(1);
     const [xml, endpoint] = aeatTransport.sendSoap.mock.calls[0];
@@ -56,7 +56,7 @@ describe('queryDeclarationStatus AES', () => {
 
   test('un EX de la AEAT vuelve como fallo con el texto del error', async () => {
     aeatTransport.sendSoap.mockResolvedValue({ status: 200, data: leer('aes/respuesta-ex.xml') });
-    const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'AES', null, null, { tenantId: 't1' });
+    const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'AES', { tenantId: 't1' });
     expect(r.success).toBe(false);
     expect(r.declarationType).toBe('AES');
     expect(r.tipo).toBe('error_xml');
@@ -66,28 +66,29 @@ describe('queryDeclarationStatus AES', () => {
 
   test('acepta el remitente explícito sin buscar el tenant', async () => {
     aeatTransport.sendSoap.mockResolvedValue({ status: 200, data: leer('aes/respuesta-ok.xml') });
-    await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'AES', null, null, { sender: 'ESB22477020' });
+    await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'AES', { sender: 'ESB22477020' });
     expect(mockFindById).not.toHaveBeenCalled();
     expect(aeatTransport.sendSoap.mock.calls[0][0]).toContain('<c:messageSender>B22477020</c:messageSender>');
   });
 
   test('sin tenant ni remitente no se envía nada', async () => {
-    const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'AES', 'cert', 'pw');
+    const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'AES');
     expect(r.success).toBe(false);
     expect(r.error).toMatch(/tenant|remitente/i);
+    expect(r.tipo).toBe('peticion');
     expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
   });
 
   test('tenant sin EORI configurado: 422 de identificación, sin envío', async () => {
     mockFindById.mockReturnValue({ lean: () => Promise.resolve({ _id: 't1', companyName: 'X' }) });
-    const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'AES', null, null, { tenantId: 't1' });
+    const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'AES', { tenantId: 't1' });
     expect(r.success).toBe(false);
     expect(r.error).toContain('EORI');
     expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
   });
 
   test('MRN mal formado: fallo sin envío', async () => {
-    const r = await aeatRealService.queryDeclarationStatus('123', 'AES', null, null, { sender: 'B22477020' });
+    const r = await aeatRealService.queryDeclarationStatus('123', 'AES', { sender: 'B22477020' });
     expect(r.success).toBe(false);
     expect(r.error).toContain('MRN');
     expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
@@ -95,31 +96,32 @@ describe('queryDeclarationStatus AES', () => {
 
   test('el tipo se normaliza y un nombre heredado de Object no se toma por servicio', async () => {
     aeatTransport.sendSoap.mockResolvedValue({ status: 200, data: leer('aes/respuesta-ok.xml') });
-    const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'aes', null, null, { sender: 'B22477020' });
+    const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'aes', { sender: 'B22477020' });
     expect(r).toMatchObject({ success: true, declarationType: 'AES' });
-    const raro = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'constructor', null, null, {});
+    const raro = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'constructor', {});
     expect(raro.success).toBe(false);
     expect(raro.error).toContain('no soportado');
   });
 
   test('si la AEAT contesta con otro MRN, la consulta falla', async () => {
     aeatTransport.sendSoap.mockResolvedValue({ status: 200, data: leer('aes/respuesta-ok.xml') });
-    const r = await aeatRealService.queryDeclarationStatus('26ES002801100999X1', 'AES', null, null, { sender: 'B22477020' });
+    const r = await aeatRealService.queryDeclarationStatus('26ES002801100999X1', 'AES', { sender: 'B22477020' });
     expect(r.success).toBe(false);
     expect(r.error).toContain('otro MRN');
   });
 
-  test('un fallo de red se devuelve como error, no se lanza', async () => {
-    aeatTransport.sendSoap.mockRejectedValue(new Error('socket hang up'));
-    const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'AES', null, null, { sender: 'B22477020' });
-    expect(r).toMatchObject({ success: false, declarationType: 'AES', error: 'socket hang up' });
+  test('un fallo de red se devuelve como error genérico (el detalle solo en el log), no se lanza', async () => {
+    aeatTransport.sendSoap.mockRejectedValue(new Error('socket hang up 10.1.2.3:443 /certs/luci.p12'));
+    const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'AES', { sender: 'B22477020' });
+    expect(r).toMatchObject({ success: false, tipo: 'red', declarationType: 'AES', error: 'La AEAT no respondió a la consulta' });
+    expect(JSON.stringify(r)).not.toMatch(/10\.1\.2\.3|luci\.p12/);
   });
 });
 
 describe('queryDeclarationStatus NCTS', () => {
   test('envía CCTRAC al endpoint oficial e interpreta la respuesta real', async () => {
     aeatTransport.sendSoap.mockResolvedValue({ status: 200, data: leer('ncts/respuesta-ok.xml') });
-    const r = await aeatRealService.queryDeclarationStatus('26ES002801501441J7', 'NCTS', null, null, { tenant: TENANT });
+    const r = await aeatRealService.queryDeclarationStatus('26ES002801501441J7', 'NCTS', { tenant: TENANT });
     const [xml, endpoint] = aeatTransport.sendSoap.mock.calls[0];
     expect(endpoint).toBe('/wlpl/ADTR-JDIT/ws/ncts5/CCTRACV2SOAP');
     expect(xml).toContain('<c:CCTRAC>');
@@ -133,7 +135,7 @@ describe('queryDeclarationStatus NCTS', () => {
 
   test('un EX de NCTS vuelve como fallo', async () => {
     aeatTransport.sendSoap.mockResolvedValue({ status: 200, data: leer('ncts/respuesta-ex.xml') });
-    const r = await aeatRealService.queryDeclarationStatus('26ES002801501441J7', 'NCTS', null, null, { tenant: TENANT });
+    const r = await aeatRealService.queryDeclarationStatus('26ES002801501441J7', 'NCTS', { tenant: TENANT });
     expect(r).toMatchObject({ success: false, tipo: 'error_xml', declarationType: 'NCTS' });
   });
 });
