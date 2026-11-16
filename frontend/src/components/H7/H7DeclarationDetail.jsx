@@ -5,6 +5,7 @@ import { h7API } from '../../services/api'
 import toast from 'react-hot-toast'
 import H7ProductIdsEditor from './H7ProductIdsEditor'
 import H7IossAuthorization from './H7IossAuthorization'
+import H7AeatErrors from './H7AeatErrors'
 import {
   ArrowLeftIcon,
   PaperAirplaneIcon,
@@ -21,6 +22,9 @@ import {
   XMarkIcon,
   ShieldCheckIcon
 } from '@heroicons/react/24/outline'
+
+// Estados desde los que se presenta; una rechazada se corrige y se vuelve a presentar.
+const ESTADOS_PRESENTABLES = ['draft', 'pending', 'rejected']
 
 const statusConfig = {
   draft: { label: 'Borrador', color: 'bg-gray-100 text-gray-800', icon: DocumentTextIcon },
@@ -69,6 +73,8 @@ export default function H7DeclarationDetail() {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error al enviar a AEAT')
+      // El rechazo (o el error sin respuesta) queda guardado: se recarga para verlo.
+      loadDeclaration()
     } finally {
       setSubmitting(false)
     }
@@ -115,7 +121,7 @@ export default function H7DeclarationDetail() {
           </span>
         </div>
         <div className="flex gap-3">
-          {(d.status === 'draft' || d.status === 'pending') && (
+          {ESTADOS_PRESENTABLES.includes(d.status) && (
             <button
               onClick={handleSubmit}
               disabled={submitting}
@@ -126,11 +132,22 @@ export default function H7DeclarationDetail() {
               ) : (
                 <PaperAirplaneIcon className="h-4 w-4" />
               )}
-              {submitting ? 'Enviando...' : 'Enviar a AEAT'}
+              {submitting ? 'Enviando...' : (d.status === 'rejected' ? 'Volver a presentar' : 'Enviar a AEAT')}
             </button>
           )}
         </div>
       </div>
+
+      {/* Presentacion simulada: ni el MRN ni el circuito son de la aduana */}
+      {d.simulado && (
+        <div role="alert" className="bg-amber-50 border-2 border-amber-400 rounded-xl p-4 flex items-center gap-3">
+          <ExclamationTriangleIcon className="h-6 w-6 text-amber-600 flex-shrink-0" />
+          <p className="font-bold text-amber-900">SIMULADO — no presentada ante la aduana. El MRN y el circuito no son reales.</p>
+        </div>
+      )}
+
+      {/* Rechazo de la AEAT o error sin respuesta: codigos y motivos literales */}
+      <H7AeatErrors declaration={d} />
 
       {/* MRN Banner */}
       {d.mrn && (

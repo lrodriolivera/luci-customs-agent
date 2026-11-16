@@ -24,7 +24,8 @@ const idsDe = (items = []) => items.map(it => ({
 export default function H7ProductIdsEditor({ declaration, onSaved }) {
   const { t } = useTranslation()
   const items = declaration.items || []
-  const editable = declaration.status === 'draft'
+  // Una H7 rechazada por la AEAT se corrige y se vuelve a presentar.
+  const editable = declaration.status === 'draft' || declaration.status === 'rejected'
   const [ids, setIds] = useState(() => idsDe(items))
   const [saving, setSaving] = useState(false)
 

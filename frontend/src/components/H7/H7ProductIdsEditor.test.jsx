@@ -23,6 +23,12 @@ describe('H7ProductIdsEditor', () => {
     expect(screen.getByLabelText('h7.productIds.commercialId 1')).toBeDefined()
   })
 
+  it('una H7 rechazada por la AEAT se puede corregir', () => {
+    render(<H7ProductIdsEditor declaration={decl({ status: 'rejected' })} onSaved={vi.fn()} />)
+    expect(screen.getByLabelText('h7.productIds.commercialId 1')).toBeDefined()
+    expect(screen.getByRole('button', { name: 'h7.productIds.save' })).toBeDefined()
+  })
+
   it('guarda los identificadores conservando el resto de la partida', async () => {
     const onSaved = vi.fn()
     h7API.update.mockResolvedValue({ data: { success: true, data: decl() } })
