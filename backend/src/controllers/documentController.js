@@ -4,7 +4,7 @@ const logger = require('../config/logger');
 const aiService = require('../services/aiService');
 const { fileUtils } = require('../middleware/upload');
 const { ensureSameTenant } = require('../utils/tenantGuard');
-const { proponerCambios, aplicarCambios } = require('../services/documentos/extraccionDocumento');
+const { proponerCambios, aplicarCambios, rellenarHuecosH1 } = require('../services/documentos/extraccionDocumento');
 const borradores = require('../services/documentos/borradoresDocumento');
 
 /**
@@ -503,6 +503,20 @@ const extractDocument = async (req, res) => {
       performedBy: req.user.name,
       metadata: { documentType: document.type, confidence: datos.confianza }
     });
+    // Los huecos de «Datos del H1» (factura, CP y direccion del exportador,
+    // tipo de carga, contenedores) se rellenan solos con lo leido; lo que la
+    // agente ya escribio no se toca y el resto queda como propuesta.
+    const puedeRellenar = leido && datos.legible !== false && !ESTADOS_SIN_CAMBIOS.includes(expedition.status);
+    const rellenados = puedeRellenar ? rellenarHuecosH1(expedition, datos, document.type) : [];
+    if (rellenados.length > 0) {
+      expedition.timeline.push({
+        action: 'document_data_applied',
+        description: `Rellenados ${rellenados.length} dato(s) vacios del H1 con lo leido en ${document.originalName}`,
+        userId: req.user._id,
+        performedBy: req.user.name,
+        metadata: { documentType: document.type, fields: rellenados.map(c => c.clave), automatic: true }
+      });
+    }
     await expedition.save();
 
     res.json({
@@ -510,7 +524,9 @@ const extractDocument = async (req, res) => {
       data: {
         document,
         extraction: document.extractedData,
-        proposal: proponerCambios(expedition, datos, document.type)
+        proposal: proponerCambios(expedition, datos, document.type),
+        autoApplied: rellenados,
+        ...(rellenados.length > 0 ? { expedition } : {})
       }
     });
   } catch (error) {

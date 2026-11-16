@@ -49,6 +49,27 @@ describe('DocumentReader', () => {
     expect(onRead).toHaveBeenCalled()
   })
 
+  test('si al leer el servidor rellena huecos del H1, avisa y entrega el expediente actualizado', async () => {
+    const actualizado = { _id: 'exp1', invoiceNumber: 'INV-H1-01-2026-8198800' }
+    documentsAPI.read.mockResolvedValue({
+      data: { data: { extraction: extraccion, proposal: [], autoApplied: [{ clave: 'invoiceNumber' }, { clave: 'exporter.postalCode' }], expedition: actualizado } }
+    })
+    const { onApplied } = renderReader()
+    fireEvent.click(screen.getByText('docReading.read'))
+
+    await waitFor(() => expect(onApplied).toHaveBeenCalledWith(actualizado))
+    expect(toast.success).toHaveBeenCalledWith('docReading.applied:{"count":2}')
+  })
+
+  test('si la lectura no rellena nada, no toca el expediente', async () => {
+    const { onApplied, onRead } = renderReader()
+    fireEvent.click(screen.getByText('docReading.read'))
+
+    await waitFor(() => expect(onRead).toHaveBeenCalled())
+    expect(onApplied).not.toHaveBeenCalled()
+    expect(toast.success).not.toHaveBeenCalled()
+  })
+
   test('muestra las notas y la propuesta: marca lo que rellena un hueco, no lo que cambia un dato', async () => {
     renderReader()
     fireEvent.click(screen.getByText('docReading.read'))

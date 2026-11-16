@@ -11,10 +11,11 @@ const CAMPOS_PESO = ['grossWeight', 'netWeight']
 /**
  * Lectura de un documento del expediente con IA y aplicacion de lo leido.
  *
- * LUCI solo PROPONE: lista los campos en los que el documento aporta un dato
+ * LUCI PROPONE: lista los campos en los que el documento aporta un dato
  * distinto del que tiene el expediente y el agente marca cuales aplicar. Los
  * que rellenan un campo vacio vienen marcados; los que cambiarian un dato ya
- * escrito, no.
+ * escrito, no. Excepcion: los huecos de «Datos del H1» los rellena el
+ * servidor al leer (nunca pisa lo escrito) y aqui solo se refresca.
  *
  * @param {{
  *   expeditionId: string,
@@ -52,6 +53,12 @@ export default function DocumentReader({ expeditionId, document, autoRead = fals
       setExtraction(data.extraction || null)
       cargarPropuesta(data.proposal || [])
       setIsOpen(true)
+      // El servidor rellena solo los huecos de «Datos del H1» (factura, CP del
+      // exportador, tipo de carga, contenedores): se refresca el expediente.
+      if (data.expedition && (data.autoApplied || []).length > 0) {
+        toast.success(t('docReading.applied', { count: data.autoApplied.length }))
+        onApplied(data.expedition)
+      }
       if (onRead) onRead()
     } catch (error) {
       toast.error(error.response?.data?.error || t('docReading.readError'))

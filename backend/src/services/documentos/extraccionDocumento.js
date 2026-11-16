@@ -17,7 +17,7 @@
  */
 
 const logger = require('../../config/logger');
-const { separarContenedoresYPrecintos, ciudadSinEstado, vueloPrincipal } = require('./datosTransporte');
+const { separarContenedoresYPrecintos, deducirTipoCarga, ciudadSinEstado, vueloPrincipal } = require('./datosTransporte');
 
 const SYSTEM_PROMPT = `Eres un lector de documentos de comercio exterior (facturas comerciales, packing lists, conocimientos de embarque, cartas de porte aereo, CMR, certificados).
 
@@ -27,7 +27,8 @@ Tu unica tarea es TRANSCRIBIR los datos que figuran en el documento adjunto. Reg
 - Los paises van con su codigo ISO de dos letras SOLO si el documento lo permite saber sin duda (nombre del pais o codigo); si no, null.
 - "ciudad" es solo el nombre de la localidad (y la provincia, si figura). El codigo postal va aparte, en "codigoPostal", tal como aparece; nunca dentro de "ciudad" ni de "direccion". En las direcciones de EE. UU., Mexico o Canada la ciudad va seguida del codigo del estado («SOLON OH 44139», «MADERO CMX 07918»): ese codigo del estado NO es la ciudad ni forma parte de ella («SOLON», «MADERO»).
 - "codigoMercancia" es el codigo arancelario tal como aparece (HS, NC o TARIC), solo digitos.
-- "tipoCarga": "FCL" SOLO si el documento lleva escrito FCL, FCL/FCL o CY/CY; "LCL" SOLO si lleva escrito LCL, LCL/LCL, CFS/CFS, groupage, grupaje o consolidated. Si no aparece ninguna de esas expresiones literales, null. Esta PROHIBIDO deducirlo del numero o del tipo de contenedores, del peso o de cualquier otro dato: un contenedor de 40 pies puede ir en grupaje.
+- "tipoCarga": "FCL" o "LCL" SOLO si el documento lleva escrita literalmente una de esas siglas (o FCL/FCL, LCL/LCL, CY/CY, CFS/CFS); si no, null. No lo deduzcas tu.
+- "indicacionesCarga": transcribe tal cual las expresiones del documento que indiquen como va la carga: terminos de servicio (CY/CY, CFS/CFS, FCL/FCL, LCL), clausulas («SHIPPER'S LOAD, COUNT AND SEAL», «SLAC», «CONSOLIDATED», «GROUPAGE», «PART OF CONTAINER») y el tipo y tamaño de cada contenedor (20GP, 40HC, 45G1). Si no hay ninguna, [].
 - "medio" es el NOMBRE del medio de transporte: nombre del buque, numero de vuelo o matricula del camion. El modo (maritimo, aereo, carretera) NO es un medio: en ese caso, null. En una carta de porte aereo (AWB) el medio es el numero del PRIMER vuelo (casillas Flight/Date, «5X 1441/23» -> "5X 1441", sin el dia); si hay mas vuelos, anotalos en "notas".
 - "numeroDocumento" es el numero del documento de transporte principal (BL o AWB master, MAWB). "documentoHijo" es el del documento hijo si figura: HAWB («HAWB No», «House AWB») en un AWB o HBL en un BL; si no hay hijo, null.
 - "contenedores" son SOLO matriculas de contenedor ISO 6346: cuatro letras (la cuarta U, J o Z) y siete cifras («MAGU5599236»), sin el tipo (40HQ, 20GP). Los numeros de precinto (Seal No., precinto, sello) van en "precintos", nunca en "contenedores": en la casilla «Container No. / Seal No.» de un BL suelen ir alternados.
@@ -47,7 +48,7 @@ Responde UNICAMENTE con un JSON con esta forma exacta:
   "exportador": { "nombre": null, "direccion": null, "ciudad": null, "codigoPostal": null, "pais": null, "telefono": null, "email": null },
   "importador": { "nombre": null, "identificacionFiscal": null, "direccion": null, "ciudad": null, "codigoPostal": null, "pais": null, "telefono": null, "email": null },
   "factura": { "numero": null, "fecha": null, "moneda": null, "importeTotal": null, "incoterm": null, "lugarIncoterm": null },
-  "transporte": { "numeroDocumento": null, "medio": null, "puertoCarga": null, "puertoDescarga": null, "contenedores": [], "precintos": [], "documentoHijo": null, "tipoCarga": null },
+  "transporte": { "numeroDocumento": null, "medio": null, "puertoCarga": null, "puertoDescarga": null, "contenedores": [], "precintos": [], "documentoHijo": null, "tipoCarga": null, "indicacionesCarga": [] },
   "partidas": [ { "descripcion": null, "codigoMercancia": null, "paisOrigen": null, "cantidad": null, "unidad": null, "bultos": null, "tipoBulto": null, "pesoBrutoKg": null, "pesoNetoKg": null, "importe": null } ],
   "totales": { "bultos": null, "pesoBrutoKg": null, "pesoNetoKg": null }
 }`;
@@ -190,9 +191,15 @@ const NOMBRE_HIJO = { air_waybill: 'AWB hija (HAWB)', bill_of_lading: 'BL hijo (
 
 // Avisos que se añaden a las notas del modelo: lo que la lectura ha separado
 // o no tiene sitio en el expediente, para que el agente lo vea.
-const notasDeTransporte = ({ precintos, digitoIncorrecto, documentoHijo, otrosVuelos, tipo }) => [
+const notaCifrasDeMas = ({ leido, numero, digitoCorrecto }) =>
+  `El documento trae el contenedor ${leido} con cifras de más: se ha tomado ${numero} (4 letras y 7 cifras, ISO 6346); ` +
+  (digitoCorrecto ? 'su dígito de control cuadra.' : 'su dígito de control no cuadra: compruébalo con el documento.');
+
+const notasDeTransporte = ({ precintos, digitoIncorrecto, cifrasDeMas, documentoHijo, otrosVuelos, tipo, notaTipoCarga }) => [
   ...(precintos.length > 0 ? [`Precintos (no son contenedores): ${precintos.join(', ')}.`] : []),
+  ...cifrasDeMas.map(notaCifrasDeMas),
   ...digitoIncorrecto.map(c => `Comprueba el contenedor ${c}: su dígito de control no cuadra (ISO 6346).`),
+  ...(notaTipoCarga ? [notaTipoCarga] : []),
   ...(documentoHijo ? [`${NOMBRE_HIJO[tipo] || 'Documento hijo'}: ${documentoHijo}.`] : []),
   ...(otrosVuelos.length > 0 ? [`Otros vuelos: ${otrosVuelos.join(', ')}.`] : [])
 ];
@@ -222,18 +229,24 @@ function normalizarExtraccion(bruto, { tipoDeclarado } = {}) {
   const tra = objeto(r.transporte);
   const tot = objeto(r.totales);
   const incoterm = texto(fac.incoterm);
-  const tipoCarga = texto(tra.tipoCarga);
   const tipoDetectado = TIPOS_DOCUMENTO.includes(r.tipoDetectado) ? r.tipoDetectado : null;
   const tipo = tipoDetectado && tipoDetectado !== 'other' ? tipoDetectado : tipoDeclarado;
   const esTransporte = TIPOS_TRANSPORTE.includes(tipo);
-  const { contenedores, precintos, digitoIncorrecto } = separarContenedoresYPrecintos(tra.contenedores, tra.precintos);
+  const { contenedores, precintos, digitoIncorrecto, cifrasDeMas } = separarContenedoresYPrecintos(tra.contenedores, tra.precintos);
+  const { tipoCarga, nota: notaTipoCarga } = deducirTipoCarga({
+    literal: texto(tra.tipoCarga),
+    indicaciones: tra.indicacionesCarga,
+    leidosContenedor: [...lista(tra.contenedores), ...lista(tra.precintos)],
+    contenedores,
+    tipo
+  });
   const medio = medioDeTransporte(tra.medio);
   const { vuelo, otros: otrosVuelos } = tipo === 'air_waybill' ? vueloPrincipal(medio) : { vuelo: medio, otros: [] };
   const numeroDocumento = texto(tra.numeroDocumento);
   const hijo = texto(tra.documentoHijo);
   const documentoHijo = hijo && hijo !== numeroDocumento ? hijo : null;
   const notasModelo = lista(r.notas).map(texto).filter(Boolean).slice(0, MAX_NOTAS);
-  const notasNuevas = notasDeTransporte({ precintos, digitoIncorrecto, documentoHijo, otrosVuelos, tipo })
+  const notasNuevas = notasDeTransporte({ precintos, digitoIncorrecto, cifrasDeMas, documentoHijo, otrosVuelos, tipo, notaTipoCarga })
     .filter(n => !notasModelo.includes(n));
 
   return {
@@ -263,8 +276,7 @@ function normalizarExtraccion(bruto, { tipoDeclarado } = {}) {
     transporte: {
       numeroDocumento, documentoHijo, medio: vuelo,
       puertoCarga: texto(tra.puertoCarga), puertoDescarga: texto(tra.puertoDescarga),
-      contenedores, precintos,
-      tipoCarga: tipoCarga && ['FCL', 'LCL'].includes(tipoCarga.toUpperCase()) ? tipoCarga.toUpperCase() : null
+      contenedores, precintos, tipoCarga
     },
     partidas: lista(r.partidas).slice(0, MAX_PARTIDAS).map(objeto).map(p => partidaNormalizada(p, esTransporte)),
     totales: { bultos: numero(tot.bultos), pesoBrutoKg: numero(tot.pesoBrutoKg), pesoNetoKg: numero(tot.pesoNetoKg) }
@@ -438,10 +450,37 @@ function aplicarCambios(expedition, datos, tipoDocumento, claves) {
   });
 }
 
+// Campos que alimentan «Datos para presentar el H1». Al leer un documento
+// subido en el detalle del expediente se rellenan solos si estan vacios; el
+// resto de la propuesta sigue esperando a que el agente la aplique. El tipo de
+// carga y los contenedores, solo desde un documento de transporte.
+// Origen: UAT 16/Nov/2026, EXP-2026-74AEEBBC (documentos subidos despues del alta).
+const CLAVES_H1 = ['invoiceNumber', 'exporter.postalCode', 'exporter.address', 'exporter.city', 'exporter.country'];
+const CLAVES_H1_TRANSPORTE = ['transport.loadType', 'transport.containers'];
+
+/**
+ * Rellena con lo leido los campos VACIOS del expediente que pide el H1. Nunca
+ * cambia un dato ya escrito: solo se aplican cambios de la propuesta cuyo
+ * valor actual es null.
+ *
+ * @param {object} expedition documento Mongoose del expediente
+ * @param {object} datos extraccion normalizada
+ * @param {string} tipoDocumento tipo con el que se subio el documento
+ * @returns {Array<object>} cambios aplicados
+ */
+function rellenarHuecosH1(expedition, datos, tipoDocumento) {
+  const permitidas = TIPO_TRANSPORTE[tipoDocumento] ? [...CLAVES_H1, ...CLAVES_H1_TRANSPORTE] : CLAVES_H1;
+  const claves = proponerCambios(expedition, datos, tipoDocumento)
+    .filter(c => c.actual === null && permitidas.includes(c.clave))
+    .map(c => c.clave);
+  return claves.length > 0 ? aplicarCambios(expedition, datos, tipoDocumento, claves) : [];
+}
+
 module.exports = {
   SYSTEM_PROMPT,
   construirPrompt,
   normalizarExtraccion,
   proponerCambios,
-  aplicarCambios
+  aplicarCambios,
+  rellenarHuecosH1
 };
