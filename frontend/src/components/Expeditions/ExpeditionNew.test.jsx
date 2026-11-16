@@ -345,6 +345,65 @@ describe('<ExpeditionNew />', () => {
       expect(screen.getByText('expeditions.taricNotVerified')).toBeInTheDocument()
     })
 
+    test('un código que no existe no se puede aplicar; se aplican los reales de su subpartida (UAT 16/Nov/2026)', async () => {
+      classificationAPI.classify.mockResolvedValue({
+        data: {
+          success: true,
+          data: {
+            suggestions: [
+              { code: '6302100000', confidence: 88, verified: true, taricInfo: null },
+              {
+                code: '6302219000',
+                confidence: 20,
+                verified: false,
+                alternatives: [
+                  { code: '6302210029', description: 'Las demás (telares manuales)' },
+                  { code: '6302210089', description: 'Las demás' }
+                ]
+              }
+            ]
+          }
+        }
+      })
+      renderComponent()
+      fireEvent.click(screen.getByText('common.next'))
+      fireEvent.change(screen.getAllByPlaceholderText('expeditions.descriptionPlaceholder')[0], {
+        target: { value: 'Juego de sábanas de algodón estampadas' }
+      })
+      fireEvent.click(screen.getAllByText('IA')[0].closest('button'))
+
+      await waitFor(() => expect(screen.getByText('expeditions.taricRealCodes')).toBeInTheDocument())
+      expect(screen.queryByText('20%')).not.toBeInTheDocument()
+      // Dos botones «Aplicar»: los dos códigos reales; ninguno para el inventado.
+      const aplicar = screen.getAllByRole('button', { name: 'expeditions.apply' })
+      expect(aplicar).toHaveLength(2)
+      fireEvent.click(aplicar[1])
+      expect(screen.getByPlaceholderText('expeditions.tenDigits')).toHaveValue('6302210089')
+    })
+
+    test('si ninguna sugerencia existe en el catálogo no se rellena el TARIC solo', async () => {
+      classificationAPI.classify.mockResolvedValue({
+        data: {
+          success: true,
+          data: {
+            suggestions: [
+              { code: '6302219000', confidence: 60, verified: false, alternatives: [{ code: '6302210089', description: 'Las demás' }] }
+            ]
+          }
+        }
+      })
+      renderComponent()
+      fireEvent.click(screen.getByText('common.next'))
+      fireEvent.change(screen.getAllByPlaceholderText('expeditions.descriptionPlaceholder')[0], {
+        target: { value: 'Juego de sábanas de algodón estampadas' }
+      })
+      fireEvent.click(screen.getAllByText('IA')[0].closest('button'))
+
+      await waitFor(() => expect(screen.getByText('expeditions.taricRealCodes')).toBeInTheDocument())
+      expect(screen.getByPlaceholderText('expeditions.tenDigits')).toHaveValue('')
+      expect(toast).toHaveBeenCalledWith('expeditions.couldNotDetermine', expect.anything())
+    })
+
     test('el punto del importe se toma como separador de millares, a la española', () => {
       renderComponent()
       fireEvent.click(screen.getByText('common.next'))

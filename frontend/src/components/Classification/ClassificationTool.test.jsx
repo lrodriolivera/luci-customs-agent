@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import ClassificationTool from './ClassificationTool'
 import { classificationAPI, expeditionsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
@@ -243,6 +243,50 @@ describe('<ClassificationTool />', () => {
     expect(aviso).toHaveTextContent('classification.codeNotVerified')
     expect(aviso).toHaveTextContent('8544429090')
     expect(aviso).toHaveTextContent('Los demás')
+  })
+
+  test('un código que no existe no se ofrece para validar ni copiar; sí los reales de su subpartida (UAT 16/Nov/2026)', async () => {
+    // La IA propuso 6302219000, que no existe; la pantalla lo enseñaba con su
+    // porcentaje y sus botones como si fuera una sugerencia más.
+    classificationAPI.classify.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          suggestions: [
+            { code: '6302100000', confidence: 88, verified: true },
+            {
+              code: '6302219000',
+              confidence: 20,
+              verified: false,
+              alternatives: [
+                { code: '6302210029', description: 'Las demás (tejidos en telares manuales)' },
+                { code: '6302210089', description: 'Las demás' }
+              ]
+            }
+          ]
+        }
+      }
+    })
+    const writeText = vi.fn()
+    Object.assign(navigator, { clipboard: { writeText } })
+
+    renderComponent()
+    fireEvent.change(screen.getByPlaceholderText('classification.productPlaceholder'), {
+      target: { value: 'Juego de sábanas de algodón estampadas' }
+    })
+    fireEvent.submit(document.querySelector('form'))
+
+    await waitFor(() => expect(screen.getByText('6302100000')).toBeInTheDocument())
+    // Solo el código real se puede validar; el inventado no muestra su 20 %.
+    expect(screen.getAllByText('classification.validate')).toHaveLength(1)
+    expect(screen.queryByText('20%')).not.toBeInTheDocument()
+
+    const aviso = screen.getByRole('alert')
+    const copiar = within(aviso).getAllByRole('button', { name: /classification\.copy/ })
+    expect(copiar).toHaveLength(2)
+    fireEvent.click(copiar[1])
+    expect(writeText).toHaveBeenCalledWith('6302210089')
+    expect(writeText).not.toHaveBeenCalledWith('6302219000')
   })
 
   test('clasificación básica: envía campos y recibe sugerencias', async () => {
