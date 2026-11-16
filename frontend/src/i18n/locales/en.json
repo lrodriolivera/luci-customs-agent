@@ -1318,6 +1318,20 @@
       "saveError": "The identifiers could not be saved",
       "manifestHint": "To lodge the H7, AEAT requires the sku (C127) and ref_fabricante (C128) columns for each item; ean (C129) is optional.",
       "taricCode": "CN/TARIC code"
+    },
+    "ioss": {
+      "title": "IOSS authorisation",
+      "authRef": "Sporadic IOSS authorisation (document 1014)",
+      "authWarning": "Without a global AEAT authorisation to use this IOSS (H7DEIO list), enter document 1014 for a sporadic authorisation. Under direct representation only the global authorisation is valid.",
+      "save": "Save authorisation",
+      "saved": "IOSS authorisation saved",
+      "saveError": "The IOSS authorisation could not be saved"
+    },
+    "aeatTaxes": {
+      "liquidatedByAeat": "Assessed by AEAT",
+      "A00": "A00 · Customs duty",
+      "F00": "F00 · Union handling fee (UHF)",
+      "B00": "B00 · VAT"
     }
   },
   "channels": {

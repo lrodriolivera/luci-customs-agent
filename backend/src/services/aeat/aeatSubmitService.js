@@ -18,6 +18,7 @@ const { interpretarRespuestaH1Cau } = require('./h1CauResponse');
 const { buildConsultaH1CauXML, interpretarConsultaH1Cau, ENDPOINT_CONSULTA } = require('./h1CauConsulta');
 const { buildH7ImportXML, buildAltaH7V1XML } = require('./h7XmlBuilder');
 const { codigoAdicionalH7, validarPartidasH7ParaAeat } = require('./h7Identificadores');
+const { interpretarLiquidacionH7 } = require('./h7Liquidacion');
 const { aplicaDerechoFijo2026 } = require('../../config/reg2026382');
 const { buildAESExportXML } = require('./aesXmlBuilder');
 const { buildNCTSTransitXML } = require('./nctsXmlBuilder');
@@ -167,6 +168,8 @@ function _parseAEATResponse(responseData) {
       channel: (body.match(/<documentationRequired>S</) ? 'orange' : 'green'),
       estado: aceptada ? 'Aceptada' : 'Rechazada',
       error: aceptada ? null : (altaH7Error || 'Declaracion H7 rechazada por AEAT'),
+      // Tributos que liquida la AEAT (A00, F00 tasa UHF, B00...). En la entrada no se declaran.
+      liquidacion: aceptada ? interpretarLiquidacionH7(body) : null,
       rawResponse: body
     };
   }
@@ -436,6 +439,16 @@ async function submitH7(h7Declaration, tenant) {
   // 1018 (autorizacion del declarante) en supportingDocuments. En F53 se comprueba a posteriori.
   if (additionalProcedureCode === 'F48' && representanteStatus !== '1') {
     documentos.push({ tipo: '1018', referencia: h7Declaration.mandatoRef || docPrevioRef || 'MANDATO-001' });
+  }
+  // IOSS (guia H7 v3.23, apdo. [3] y lista de documentos): para declarar el IOSS de
+  // una plataforma el declarante necesita autorizacion global (relacion H7DEIO en la
+  // AEAT) o esporadica, que se acredita con el documento 1014 en cabecera. En
+  // representacion directa (status 2 o 5) la AEAT NO admite el 1014: solo vale la
+  // global. Sin 1014 no se bloquea: el declarante puede tener la global (si no, la
+  // AEAT responde 2366).
+  const representacionDirecta = ['2', '5'].includes(String(representanteStatus));
+  if (additionalProcedureCode === 'F48' && !representacionDirecta && h7Declaration.iossAuthorizationRef) {
+    documentos.push({ tipo: '1014', referencia: String(h7Declaration.iossAuthorizationRef).trim() });
   }
 
   const soapXML = buildAltaH7V1XML({

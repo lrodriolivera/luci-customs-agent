@@ -242,7 +242,8 @@ exports.update = async (req, res) => {
     // Campos actualizables
     const allowedFields = [
       'trackingNumber', 'carrier', 'iossNumber', 'sender', 'recipient',
-      'items', 'totals', 'documents', 'operationType', 'ecommercePlatform'
+      'items', 'totals', 'documents', 'operationType', 'ecommercePlatform',
+      'iossAuthorizationRef'
     ];
 
     for (const field of allowedFields) {

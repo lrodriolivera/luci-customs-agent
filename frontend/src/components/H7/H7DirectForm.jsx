@@ -75,6 +75,7 @@ export default function H7DirectForm() {
     garantiaGRN: '',
     // IOSS
     iossNumber: '',
+    iossAuthorizationRef: '', // documento 1014 (autorizacion esporadica IOSS)
     ecommercePlatform: '',
     // Remitente
     senderName: '',
@@ -165,6 +166,7 @@ export default function H7DirectForm() {
         },
         garantiaGRN: form.garantiaGRN || undefined,
         iossNumber: form.iossNumber || undefined,
+        iossAuthorizationRef: (form.iossNumber && form.iossAuthorizationRef.trim()) || undefined,
         vatPrepaid: !!form.iossNumber,
         ecommercePlatform: form.ecommercePlatform || undefined,
         sender: {
@@ -290,6 +292,12 @@ export default function H7DirectForm() {
               <label className={labelClass}>IOSS (si aplica)</label>
               <input name="iossNumber" value={form.iossNumber} onChange={handleChange} className={inputClass} placeholder="IM1234567890" />
             </div>
+            {form.iossNumber && (
+              <div>
+                <label htmlFor="h7-ioss-auth-ref" className={labelClass}>{t('h7.ioss.authRef', 'Autorizacion esporadica IOSS (documento 1014)')}</label>
+                <input id="h7-ioss-auth-ref" name="iossAuthorizationRef" value={form.iossAuthorizationRef} onChange={handleChange} className={inputClass} placeholder="ESIOSS2026000001" maxLength={70} />
+              </div>
+            )}
             <div>
               <label className={labelClass}>Plataforma e-commerce</label>
               <select name="ecommercePlatform" value={form.ecommercePlatform} onChange={handleChange} className={inputClass}>
@@ -304,6 +312,12 @@ export default function H7DirectForm() {
               </select>
             </div>
           </div>
+
+          {form.iossNumber && !form.iossAuthorizationRef.trim() && (
+            <p role="alert" className="mt-3 text-xs rounded-lg border border-amber-200 bg-amber-50 text-amber-800 p-2">
+              {t('h7.ioss.authWarning', 'Sin autorizacion global de la AEAT para usar este IOSS (relacion H7DEIO), indica el documento 1014 de autorizacion esporadica. En representacion directa solo vale la autorizacion global.')}
+            </p>
+          )}
 
           {/* N337 */}
           <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">

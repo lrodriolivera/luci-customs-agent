@@ -197,6 +197,24 @@ describe('update: solo en draft y solo el creador', () => {
     expect(guardada.carrier.code).toBe('DHL');
   });
 
+  test('guarda la referencia de la autorizacion esporadica IOSS (1014) y los identificadores de la partida', async () => {
+    const user = usuario();
+    const h7 = await crearH7({ user });
+    const res = crearRes();
+    const items = h7.toObject().items.map(it => ({ ...it, commercialId: 'SKU-1', manufacturerRef: 'REF-1' }));
+
+    await ctrl.update({
+      params: { id: h7._id },
+      body: { iossAuthorizationRef: 'ESIOSS2026000001', items },
+      user
+    }, res);
+
+    expect(res.statusCode).toBe(200);
+    const guardada = await H7Declaration.findById(h7._id);
+    expect(guardada.iossAuthorizationRef).toBe('ESIOSS2026000001');
+    expect(guardada.items[0].commercialId).toBe('SKU-1');
+  });
+
   test('no se puede modificar una H7 que no esta en draft (400)', async () => {
     const user = usuario();
     const h7 = await crearH7({ user, status: 'cancelled' });

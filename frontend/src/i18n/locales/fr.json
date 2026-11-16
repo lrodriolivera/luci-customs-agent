@@ -1317,6 +1317,20 @@
       "saveError": "Impossible d'enregistrer les identifiants",
       "manifestHint": "Pour déposer le H7, l'AEAT exige pour chaque article les colonnes sku (C127) et ref_fabricante (C128) ; ean (C129) est facultatif.",
       "taricCode": "Code NC/TARIC"
+    },
+    "ioss": {
+      "title": "Autorisation IOSS",
+      "authRef": "Autorisation IOSS ponctuelle (document 1014)",
+      "authWarning": "Sans autorisation globale de l'AEAT pour utiliser cet IOSS (liste H7DEIO), indiquez le document 1014 d'autorisation ponctuelle. En représentation directe, seule l'autorisation globale est valable.",
+      "save": "Enregistrer l'autorisation",
+      "saved": "Autorisation IOSS enregistrée",
+      "saveError": "Impossible d'enregistrer l'autorisation IOSS"
+    },
+    "aeatTaxes": {
+      "liquidatedByAeat": "Liquidé par l'AEAT",
+      "A00": "A00 · Droit de douane",
+      "F00": "F00 · Taxe de l'Union (UHF)",
+      "B00": "B00 · TVA"
     }
   },
   "channels": {

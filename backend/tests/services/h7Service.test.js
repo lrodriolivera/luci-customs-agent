@@ -557,6 +557,48 @@ describe('H7 Service', () => {
       expect(mockDeclaration.status).toBe('released');
     });
 
+    test('guarda la liquidacion de la AEAT (A00, F00, B00) y el total a pagar incluye la tasa UHF', async () => {
+      aeatSubmitService.submitH7.mockResolvedValue({
+        success: true, mrn: '26ESH7A000072339R8', channel: 'green', code: 'A', estado: 'Aceptada', csv: 'CSV1',
+        liquidacion: {
+          moneda: 'EUR',
+          tributos: [{ tipo: 'B00', importe: 3.57, base: 17 }, { tipo: 'A00', importe: 3, base: 1 }, { tipo: 'F00', importe: 2, base: null }],
+          total: 8.57
+        }
+      });
+      const mockDeclaration = {
+        status: 'draft', totals: { customsValue: 14 }, vatPrepaid: false,
+        duties: { totalDue: 6.57, handlingFee: 0.5 },
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        calculateDuties: jest.fn(), statusHistory: [], save: jest.fn().mockResolvedValue(true)
+      };
+      H7Declaration.findById.mockResolvedValue(mockDeclaration);
+
+      const result = await h7Service.submitToAEAT('h7-123', 'user123');
+
+      expect(result.success).toBe(true);
+      expect(mockDeclaration.duties.aeatTaxes).toEqual([
+        { taxType: 'B00', amount: 3.57, base: 17 }, { taxType: 'A00', amount: 3, base: 1 }, { taxType: 'F00', amount: 2, base: null }
+      ]);
+      expect(mockDeclaration.duties.aeatTotal).toBe(8.57);
+      expect(mockDeclaration.duties.totalDue).toBe(9.07); // 8.57 AEAT + 0.50 tasa de gestion
+      expect(result.data.dutiesPayable).toBe(9.07);
+    });
+
+    test('sin liquidacion en la respuesta conserva el calculo de LUCI', async () => {
+      const mockDeclaration = {
+        status: 'draft', totals: { customsValue: 14 }, vatPrepaid: false, duties: { totalDue: 6.57 },
+        items: [{ description: 'Libro', taricCode: '4901990000', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }],
+        validateH7Eligibility: jest.fn().mockReturnValue({ eligible: true }),
+        calculateDuties: jest.fn(), statusHistory: [], save: jest.fn().mockResolvedValue(true)
+      };
+      H7Declaration.findById.mockResolvedValue(mockDeclaration);
+      await h7Service.submitToAEAT('h7-123', 'user123');
+      expect(mockDeclaration.duties.totalDue).toBe(6.57);
+      expect(mockDeclaration.duties.aeatTaxes).toBeUndefined();
+    });
+
     test('no envia a la AEAT si una partida no cumple sus reglas y dice cual y que falta', async () => {
       const mockDeclaration = {
         status: 'draft',

@@ -972,4 +972,41 @@ describe('H7DirectForm', () => {
       expect(screen.getByText('h7.productIds.gtinHelp')).toBeDefined()
     })
   })
+
+  describe('IOSS: autorizacion esporadica (1014)', () => {
+    it('sin IOSS no muestra el campo ni el aviso', () => {
+      render(<H7DirectForm />)
+      expect(screen.queryByText('h7.ioss.authWarning')).toBeNull()
+    })
+
+    it('con IOSS y sin 1014 avisa de que hace falta la autorizacion global o el 1014', () => {
+      const { container } = render(<H7DirectForm />)
+      fireEvent.change(container.querySelector('input[name="iossNumber"]'), { target: { value: 'IM1234567890' } })
+      expect(screen.getByText('h7.ioss.authWarning')).toBeDefined()
+      fireEvent.change(container.querySelector('input[name="iossAuthorizationRef"]'), { target: { value: 'ESIOSS2026000001' } })
+      expect(screen.queryByText('h7.ioss.authWarning')).toBeNull()
+    })
+
+    it('envia la referencia del 1014 junto al IOSS', async () => {
+      h7API.create.mockResolvedValue({ data: { success: true, data: { _id: 'h7-io' } } })
+      const { container } = render(<H7DirectForm />)
+      fillMinimalValidForm(container)
+      fireEvent.change(container.querySelector('input[name="iossNumber"]'), { target: { value: 'IM1234567890' } })
+      fireEvent.change(container.querySelector('input[name="iossAuthorizationRef"]'), { target: { value: ' ESIOSS2026000001 ' } })
+      fireEvent.submit(container.querySelector('form'))
+      await waitFor(() => expect(h7API.create).toHaveBeenCalledTimes(1))
+      const payload = h7API.create.mock.calls[0][0]
+      expect(payload.iossNumber).toBe('IM1234567890')
+      expect(payload.iossAuthorizationRef).toBe('ESIOSS2026000001')
+    })
+
+    it('sin IOSS no envia referencia 1014', async () => {
+      h7API.create.mockResolvedValue({ data: { success: true, data: { _id: 'h7-x' } } })
+      const { container } = render(<H7DirectForm />)
+      fillMinimalValidForm(container)
+      fireEvent.submit(container.querySelector('form'))
+      await waitFor(() => expect(h7API.create).toHaveBeenCalledTimes(1))
+      expect(h7API.create.mock.calls[0][0].iossAuthorizationRef).toBeUndefined()
+    })
+  })
 })

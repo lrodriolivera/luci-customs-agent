@@ -118,6 +118,12 @@ const H7DeclarationSchema = new mongoose.Schema({
     descripcion: { type: String, default: '' },                        // Descripcion libre
   },
 
+  // === IOSS: autorizacion esporadica (documento 1014) ===
+  // Para declarar el IOSS de una plataforma el declarante necesita autorizacion
+  // global de la AEAT (relacion H7DEIO) o esporadica (1014). El 1014 solo se envia
+  // en representacion indirecta; en directa la AEAT no lo admite (guia H7 v3.23).
+  iossAuthorizationRef: { type: String, trim: true, maxlength: 70 },
+
   // === GARANTIA ===
   garantiaGRN: { type: String, default: '' },  // Jose Antonio: 26ESAGL2800000054
 
@@ -355,11 +361,25 @@ const H7DeclarationSchema = new mongoose.Schema({
       default: 0
     },
 
-    // Total a pagar
+    // Total a pagar. Tras la aceptacion del H7 es lo que liquida la AEAT
+    // (aeatTotal) mas la tasa de gestion; antes, el calculo estimado de LUCI.
     totalDue: {
       type: Number,
       default: 0
-    }
+    },
+
+    // Tributos que liquida la AEAT en la respuesta del alta (AltaH7V1Sal):
+    // A00 derecho fijo, F00 tasa de la Union UHF, B00 IVA... sin lista cerrada.
+    aeatTaxes: {
+      type: [{
+        _id: false,
+        taxType: String,
+        amount: Number,
+        base: { type: Number, default: null }
+      }],
+      default: undefined
+    },
+    aeatTotal: Number
   },
 
   // === ESTADO Y PROCESO ===

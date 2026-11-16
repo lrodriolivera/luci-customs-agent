@@ -573,6 +573,15 @@ class H7Service {
     };
     declaration.channel = aeatResult.channel;
 
+    // Lo que liquida la AEAT (A00, F00 tasa UHF, B00...) sustituye a la estimacion
+    // de LUCI en el total a pagar; la tasa de gestion del transportista se suma aparte.
+    if (aeatResult.liquidacion && aeatResult.liquidacion.tributos.length > 0) {
+      const { tributos, total } = aeatResult.liquidacion;
+      declaration.duties.aeatTaxes = tributos.map(t => ({ taxType: t.tipo, amount: t.importe, base: t.base }));
+      declaration.duties.aeatTotal = total;
+      declaration.duties.totalDue = Math.round((total + (declaration.duties.handlingFee || 0)) * 100) / 100;
+    }
+
     // En H7, el levante suele ser automatico si canal verde o si el IVA esta prepagado (IOSS).
     // El antiguo umbral de 22 EUR (minimis de IVA) fue derogado en 2021 y ya no exime.
     if (aeatResult.channel === 'green' || declaration.vatPrepaid) {

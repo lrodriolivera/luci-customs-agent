@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { h7API } from '../../services/api'
 import toast from 'react-hot-toast'
 import H7ProductIdsEditor from './H7ProductIdsEditor'
+import H7IossAuthorization from './H7IossAuthorization'
 import {
   ArrowLeftIcon,
   PaperAirplaneIcon,
@@ -399,6 +400,9 @@ export default function H7DeclarationDetail() {
         <H7ProductIdsEditor key={d.updatedAt || d._id} declaration={d} onSaved={loadDeclaration} />
       )}
 
+      {/* Autorizacion IOSS (global H7DEIO o esporadica 1014) */}
+      <H7IossAuthorization key={`ioss-${d.updatedAt || d._id}`} declaration={d} onSaved={loadDeclaration} />
+
       {/* Totales y Derechos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border p-5 space-y-3">
@@ -420,8 +424,22 @@ export default function H7DeclarationDetail() {
             Derechos
           </h3>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-gray-500">Arancel ({d.duties?.tariff?.rate || 0}%)</span><span className="font-medium">{Number(d.duties?.tariff?.amount || 0).toFixed(2)} €</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">IVA ({d.duties?.vat?.rate || 21}%)</span><span className="font-medium">{Number(d.duties?.vat?.amount || 0).toFixed(2)} €</span></div>
+            {d.duties?.aeatTaxes?.length > 0 ? (
+              <>
+                <p className="text-xs text-gray-500">{t('h7.aeatTaxes.liquidatedByAeat', 'Liquidado por la AEAT')}</p>
+                {d.duties.aeatTaxes.map(tax => (
+                  <div key={tax.taxType} className="flex justify-between">
+                    <span className="text-gray-500">{t(`h7.aeatTaxes.${tax.taxType}`, tax.taxType)}</span>
+                    <span className="font-medium">{Number(tax.amount || 0).toFixed(2)} €</span>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between"><span className="text-gray-500">Arancel ({d.duties?.tariff?.rate || 0}%)</span><span className="font-medium">{Number(d.duties?.tariff?.amount || 0).toFixed(2)} €</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">IVA ({d.duties?.vat?.rate || 21}%)</span><span className="font-medium">{Number(d.duties?.vat?.amount || 0).toFixed(2)} €</span></div>
+              </>
+            )}
             <div className="flex justify-between border-t pt-2"><span className="font-semibold">Total a pagar</span><span className="font-bold text-lg">{Number(d.duties?.totalDue || 0).toFixed(2)} €</span></div>
           </div>
         </div>

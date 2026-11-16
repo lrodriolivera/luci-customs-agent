@@ -51,9 +51,13 @@ function validar(xml) {
   test('F53 con C129', () => {
     expect(validar(cuerpo({ additionalProcedureCode: 'F53' }, { codigoNormalizado: '9788420412146' }))).toBe('');
   });
-  test('F48 con IOSS (AdditionalFiscalRef)', () => {
-    const xml = cuerpo({ additionalProcedureCode: 'F48', iossNumber: 'IM1234567890' });
+  test('F48 con IOSS (AdditionalFiscalRef) y autorizacion esporadica 1014', () => {
+    const xml = cuerpo({
+      additionalProcedureCode: 'F48', iossNumber: 'IM1234567890',
+      documentos: [{ tipo: 'N380', referencia: 'F-1' }, { tipo: '1018', referencia: 'M-1' }, { tipo: '1014', referencia: 'ESIOSS2026000001' }]
+    });
     expect(xml).toContain('<AdditionalFiscalRef>');
+    expect(xml).toContain('<suppDoctype>1014</suppDoctype>');
     expect(validar(xml)).toBe('');
   });
 });

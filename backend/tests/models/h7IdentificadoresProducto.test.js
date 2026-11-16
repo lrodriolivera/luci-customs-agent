@@ -61,3 +61,18 @@ describe('H7Declaration.validateAeatSubmission', () => {
       .toEqual({ valid: true, errors: [] });
   });
 });
+
+describe('H7Declaration — IOSS y liquidacion de la AEAT', () => {
+  test('guarda la referencia de la autorizacion esporadica IOSS (1014)', () => {
+    const d = nuevaH7({}, { iossNumber: 'IM1234567890', iossAuthorizationRef: ' ESIOSS2026000001 ' });
+    expect(d.iossAuthorizationRef).toBe('ESIOSS2026000001');
+    expect(nuevaH7({}, { iossAuthorizationRef: 'x'.repeat(71) }).validateSync().errors.iossAuthorizationRef).toBeDefined();
+  });
+
+  test('guarda los tributos liquidados por la AEAT y su total', () => {
+    const d = nuevaH7({}, { duties: { aeatTaxes: [{ taxType: 'F00', amount: 2, base: null }], aeatTotal: 2 } });
+    expect(d.duties.aeatTaxes[0].taxType).toBe('F00');
+    expect(d.duties.aeatTaxes[0].amount).toBe(2);
+    expect(d.duties.aeatTotal).toBe(2);
+  });
+});
