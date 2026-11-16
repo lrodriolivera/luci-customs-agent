@@ -365,6 +365,31 @@ describe('routes/declarations.js - handlers inline', () => {
       expect(actualizado.declaration.status).toBe('accepted');
     });
 
+    test('sin circuito en la respuesta no se supone canal verde', async () => {
+      mockSubmitDeclaration.mockResolvedValue({ success: true, mrn: 'MRN124', channel: null, code: '0000' });
+      const exp = await crearExpediente(TENANT_A, { declaration: { type: 'H1', status: 'draft' } });
+      const res = await request(app).post(`/api/declarations/${exp._id}/submit-v2`).send({});
+      expect(res.status).toBe(200);
+      const actualizado = await Expedition.findById(exp._id);
+      expect(actualizado.declaration.channel).toBeUndefined();
+    });
+
+    test('una respuesta simulada sin AEAT_SIMULATE no se guarda como aceptada', async () => {
+      const antes = process.env.AEAT_SIMULATE;
+      delete process.env.AEAT_SIMULATE;
+      mockSubmitDeclaration.mockResolvedValue({ success: true, mrn: '26NL0003000000000001', channel: 'green', simulated: true });
+      const exp = await crearExpediente(TENANT_A, { declaration: { type: 'H1', status: 'draft' } });
+      mockContexto = contexto(TENANT_A, { tenant: { customsConfig: { country: 'NL' } } });
+      const res = await request(app).post(`/api/declarations/${exp._id}/submit-v2`).send({});
+      if (antes !== undefined) process.env.AEAT_SIMULATE = antes;
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toMatch(/SIMULAD/);
+      const actualizado = await Expedition.findById(exp._id);
+      expect(actualizado.declaration.mrn).toBeUndefined();
+      expect(actualizado.declaration.status).toBe('draft');
+    });
+
     test('system=DMS 4.0 para NL con declaracion H1', async () => {
       const exp = await crearExpediente(TENANT_A, { declaration: { type: 'H1', status: 'draft' } });
       mockContexto = contexto(TENANT_A, { tenant: { customsConfig: { country: 'NL' } } });
