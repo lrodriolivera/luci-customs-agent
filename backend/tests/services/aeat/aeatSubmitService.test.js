@@ -759,81 +759,88 @@ describe('submitH7', () => {
 // submitAES
 // ==========================================================================
 describe('submitAES', () => {
-  function expedition(overrides = {}) {
-    return {
-      client: { companyName: 'Exportador SL', eori: 'ESB22477020', address: { street: 'C1', city: 'Valencia', postalCode: '46001' } },
-      consignee: { companyName: 'US Corp', eori: '', address: { street: 'Main St', city: 'NY', postalCode: '10001', country: 'US' } },
-      declaration: { lrn: 'LRN-AES-1', customsOffice: 'ES002801', incoterm: 'FOB' },
-      transport: { mode: '3' },
-      goods: [{ description: 'Vino', taricCode: '2204210000', grossWeight: 100, netWeight: 90, invoiceValue: 500, quantity: 10 }],
-      ...overrides
-    };
-  }
+  const { ErrorValidacion } = require('../../../src/services/forms/identificadorAduanero');
+  const { TENANT_AGENTE, expedienteAes } = require('../../fixtures/aeat-aes/expedienteAes');
+  const enviar = (exp) => submitServiceReal.submitAES(exp, { tenant: TENANT_AGENTE });
 
-  test('postea al endpoint AES CC515C', async () => {
-    await submitService.submitAES(expedition());
-    expect(endpointLlamado()).toContain('CC515CV1SOAP');
-  });
-
-  test('exportacion directa cuando oficina de exportacion == salida', async () => {
-    const r = await submitService.submitAES(expedition({
-      declaration: { customsOffice: 'ES002801', officeOfExit: 'ES002801' }
-    }));
+  test('postea al endpoint AES CC515C con Representative (directa) y remitente = NIF del tenant', async () => {
+    const r = await enviar(expedienteAes());
     expect(r.success).toBe(true);
+    expect(endpointLlamado()).toContain('CC515CV1SOAP');
+    const xml = soapEnviado();
+    expect(xml).toContain('<ent:messageSender>B22477020</ent:messageSender>');
+    expect(xml).toContain('<ent:Representative>');
+    expect(xml).toContain('<ent:status>2</ent:status>');
   });
 
   test('exportacion indirecta cuando oficinas difieren', async () => {
-    const r = await submitService.submitAES(expedition({
-      declaration: { customsOffice: 'ES002801', officeOfExit: 'ES004601' }
-    }));
-    expect(r.success).toBe(true);
+    const declaration = { ...expedienteAes().declaration, officeOfExit: 'ES004601' };
+    await enviar(expedienteAes({ declaration }));
+    expect(soapEnviado()).toContain('<ent:DepartureTransportMeans>');
   });
 
   test('respeta directExport explicito por encima del calculo', async () => {
-    const r = await submitService.submitAES(expedition({
-      declaration: { customsOffice: 'ES002801', officeOfExit: 'ES004601', directExport: true }
-    }));
-    expect(r.success).toBe(true);
+    const declaration = { ...expedienteAes().declaration, officeOfExit: 'ES004601', directExport: true };
+    await enviar(expedienteAes({ declaration }));
+    expect(soapEnviado()).not.toContain('<ent:DepartureTransportMeans>');
   });
 
   test('resuelve pais destino desde consignee.country legacy', async () => {
-    const r = await submitService.submitAES(expedition({
-      consignee: { companyName: 'X', country: 'MX', address: {} }
-    }));
-    expect(r.success).toBe(true);
+    await enviar(expedienteAes({ consignee: { companyName: 'X', country: 'MX', address: { street: 'C', city: 'Mexico', postalCode: '01000' } } }));
+    expect(soapEnviado()).toContain('<ent:countryOfDestination>MX</ent:countryOfDestination>');
   });
 
-  test('cae a US como destino por defecto sin pais', async () => {
-    const r = await submitService.submitAES(expedition({
-      consignee: { companyName: 'X', address: {} },
-      destination: undefined
-    }));
-    expect(r.success).toBe(true);
+  test('sin pais de destino: 422 y no se llama a la AEAT (antes caia a US)', async () => {
+    const err = await enviar(expedienteAes({ consignee: { companyName: 'X', address: { street: 'C', city: 'Y', postalCode: '1', country: '' } } }))
+      .catch((e) => e);
+    expect(err).toBeInstanceOf(ErrorValidacion);
+    expect(err.status).toBe(422);
+    expect(err.code).toBe('DATOS_AES_FALTANTES');
+    expect(err.faltan).toContain('país de destino (expediente › destinatario)');
+    expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
+  });
+
+  test('sin datos de envio: 422 con la lista y sin matricula, factura ni documento inventados', async () => {
+    const err = await enviar(expedienteAes({ transport: {}, invoiceNumber: undefined, declaration: { type: 'AES', customsOffice: 'ES002801' } }))
+      .catch((e) => e);
+    expect(err.faltan).toEqual(expect.arrayContaining([
+      'aduana de salida (expediente › declaración AES)',
+      'número de la factura comercial (expediente › número de factura)',
+      'documento de transporte (tipo y número) (expediente › transporte)'
+    ]));
+    expect(err.message).toMatch(/^Faltan datos para presentar el AES: /);
+    expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
   });
 
   test('goods sin quantity no envia supplementaryUnits', async () => {
-    const r = await submitService.submitAES(expedition({
-      goods: [{ description: 'X', taricCode: '2204210000', invoiceValue: 10 }]
-    }));
-    expect(r.success).toBe(true);
+    const goods = [{ ...expedienteAes().goods[0], quantity: undefined }];
+    await enviar(expedienteAes({ goods }));
+    expect(soapEnviado()).not.toContain('<ent:supplementaryUnits>');
   });
 
   test('supplementaryUnits explicito manda sobre quantity', async () => {
-    const r = await submitService.submitAES(expedition({
-      goods: [{ description: 'X', taricCode: '2204210000', invoiceValue: 10, supplementaryUnits: 5, quantity: 99 }]
-    }));
-    expect(r.success).toBe(true);
+    const goods = [{ ...expedienteAes().goods[0], supplementaryUnits: 5, quantity: 99 }];
+    await enviar(expedienteAes({ goods }));
+    expect(soapEnviado()).toContain('<ent:supplementaryUnits>5</ent:supplementaryUnits>');
   });
 
-  test('tolera expedition sin colecciones (client/goods/declaration ausentes)', async () => {
-    const r = await submitService.submitAES({});
-    expect(r.success).toBe(true);
+  test('expediente sin colecciones: 422 (antes se enviaba con datos inventados)', async () => {
+    await expect(submitServiceReal.submitAES({}, { tenant: TENANT_TEST })).rejects.toThrow(ErrorValidacion);
+    expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
   });
 
-  test('en produccion no aplica ubicacion verde PRE por defecto', async () => {
+  test('en produccion: sin PhaseID y sin ubicacion verde PRE por defecto (422)', async () => {
     process.env.AEAT_ENVIRONMENT = 'production';
-    const r = await submitService.submitAES(expedition());
-    expect(r.success).toBe(true);
+    const err = await enviar(expedienteAes()).catch((e) => e);
+    expect(err.faltan.join(' ')).toMatch(/ubicación de las mercancías/);
+    const declaration = { ...expedienteAes().declaration, goodsLocation: '2801AAAAAC' };
+    await enviar(expedienteAes({ declaration }));
+    expect(soapEnviado()).not.toContain('PhaseID');
+  });
+
+  test('en PRE: PhaseID AES1.1', async () => {
+    await enviar(expedienteAes());
+    expect(soapEnviado()).toContain('PhaseID="AES1.1"');
   });
 });
 
@@ -1131,7 +1138,11 @@ describe('envio sin identificadores de respaldo', () => {
   });
 
   test('AES: el declarante es el del tenant y la variable DECLARANTE_EORI ya no se usa', async () => {
-    await submitServiceReal.submitAES(exportacion({ companyName: 'Exp SL', eori: 'ESC00000001' }), { tenant: AGENTE });
+    const { expedienteAes } = require('../../fixtures/aeat-aes/expedienteAes');
+    const agente = { ...AGENTE, primaryContact: { name: 'A', phone: '1', email: 'a@x.es' } };
+    await submitServiceReal.submitAES(expedienteAes({
+      client: { ...expedienteAes().client, companyName: 'Exp SL', eori: 'ESC00000001' }, representative: undefined
+    }), { tenant: agente });
     const xml = soapEnviado();
     expect(xml).toContain('ESG00000001');
     expect(xml).toContain('ESC00000001');
@@ -1139,7 +1150,9 @@ describe('envio sin identificadores de respaldo', () => {
   });
 
   test('AES: si el tenant ES el exportador, su EORI sirve de respaldo', async () => {
-    await submitServiceReal.submitAES(exportacion({ companyName: '' }), { tenant: TENANT_TEST });
+    const { expedienteAes } = require('../../fixtures/aeat-aes/expedienteAes');
+    const tenant = { ...TENANT_TEST, primaryContact: { name: 'A', phone: '1', email: 'a@x.es' } };
+    await submitServiceReal.submitAES(expedienteAes({ client: { companyName: '', address: expedienteAes().client.address } }), { tenant });
     expect(soapEnviado()).toContain('ESA00000001');
   });
 

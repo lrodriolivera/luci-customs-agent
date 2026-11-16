@@ -13,7 +13,7 @@ const {
   aeatRealService,
   aeatStatusMonitorService
 } = require('../services/aeat');
-const { Expedition } = require('../models');
+const { Expedition, H7Declaration } = require('../models');
 const aiService = require('../services/aiService');
 const { ensureSameTenant, ambitoTenant } = require('../utils/tenantGuard');
 const { esMRNValido } = require('../utils/mrnFormat');
@@ -759,40 +759,81 @@ const submitICS2Declaration = async (req, res) => {
 // CONSULTA DE ESTADO
 // ============================================
 
+// Tipos con ruta de consulta de estado (ENS responde 501: ver aeatRealService).
+const TIPOS_CONSULTA_ESTADO = new Set(['H1', 'H7', 'AES', 'NCTS', 'ENS']);
+
+/**
+ * Código HTTP de una consulta de estado fallida, según su `tipo`
+ * (aeatRealService.queryDeclarationStatus / aeatStatusMonitorService):
+ * 404 no está en seguimiento, 501 no hay consulta para ese tipo, 422 dato de
+ * LUCI que impide preguntar o la AEAT rechaza la consulta, 400 tipo no
+ * soportado, 502 la AEAT no responde o responde algo inservible.
+ */
+const HTTP_CONSULTA_FALLIDA = {
+  no_encontrada: 404,
+  no_disponible: 501,
+  no_soportado: 400,
+  peticion: 422,
+  error_funcional: 422,
+  interno: 500
+};
+
+/**
+ * La consulta sale con el certificado de LUCI, así que solo se permite sobre
+ * MRN del tenant del usuario: en su seguimiento, en un expediente suyo o en un
+ * H7 suyo. El super admin de plataforma sin tenant no está acotado.
+ */
+async function mrnDelTenant(mrn, user) {
+  const tenantId = ambitoTenant(user);
+  if (tenantId === undefined) return true;
+  if (!tenantId) return false;
+  if (await aeatStatusMonitorService.getTrackedDeclaration(mrn, tenantId)) return true;
+  if (await Expedition.exists({ tenantId, 'declaration.mrn': mrn })) return true;
+  return Boolean(await H7Declaration.exists({ tenantId, mrn }));
+}
+
+/** Responde una consulta de estado: 200 si fue bien; si no, el código de su tipo. */
+function responderConsulta(res, result) {
+  // La respuesta cruda de la AEAT se queda en el servidor (logs de aeatTransport).
+  const { rawResponse, ...data } = result || {};
+  if (data.success) return res.json({ success: true, data });
+  return res.status(HTTP_CONSULTA_FALLIDA[data.tipo] || 502).json({
+    success: false,
+    error: data.error || 'La consulta a la AEAT no se pudo completar',
+    tipo: data.tipo || null,
+    data
+  });
+}
+
 /**
  * Consultar estado de declaración en AEAT
- * GET /api/aeat-real/declarations/:mrn/status
+ * GET /api/aeat-real/declarations/:mrn/status?declarationType=H1|H7|AES|NCTS|ENS
+ *
+ * Va por el servicio oficial con el certificado de LUCI: no pide alias de
+ * certificado. El tenant da el remitente de las consultas AES/NCTS.
  */
 const getDeclarationStatus = async (req, res) => {
   try {
     const { mrn } = req.params;
-    const { certificateAlias, declarationType } = req.query;
+    const declarationType = String(req.query.declarationType || 'H1').trim().toUpperCase();
 
-    if (!certificateAlias) {
-      return res.status(400).json({
-        success: false,
-        error: 'Se requiere alias de certificado'
-      });
+    if (!esMRNValido(mrn)) {
+      return res.status(400).json({ success: false, error: 'MRN con formato no válido' });
+    }
+    if (!TIPOS_CONSULTA_ESTADO.has(declarationType)) {
+      return res.status(400).json({ success: false, error: 'Tipo de declaración no válido (H1, H7, AES, NCTS o ENS)' });
+    }
+    // 404 y no 403: no se revela si el MRN existe en otro tenant.
+    if (!(await mrnDelTenant(mrn, req.user))) {
+      return res.status(404).json({ success: false, error: 'Declaración no encontrada' });
     }
 
-    // Firma: (mrn, declarationType, certificateId, password, opciones). Antes se
-    // pasaba el alias como tipo y ninguna consulta llegaba a la AEAT. El tenant
-    // da el remitente de las consultas oficiales AES/NCTS. El análisis LUCI ya
-    // viene en el resultado (el monitor no tiene _analyzeStatusWithLuci).
     const result = await aeatRealService.queryDeclarationStatus(
       mrn,
-      declarationType || 'H1',
-      certificateAlias,
-      undefined,
+      declarationType,
       { tenantId: req.user?.tenantId ? String(req.user.tenantId) : null }
     );
-    // La respuesta cruda de la AEAT se queda en el servidor (logs de aeatTransport).
-    const { rawResponse, ...data } = result || {};
-
-    res.json({
-      success: true,
-      data
-    });
+    return responderConsulta(res, result);
 
   } catch (error) {
     logger.error('Error consultando estado:', error);
@@ -917,7 +958,6 @@ const getTrackedDeclarations = async (req, res) => {
 const refreshDeclarationStatus = async (req, res) => {
   try {
     const { mrn } = req.params;
-    const { certificateAlias } = req.body;
 
     if (!esMRNValido(mrn)) {
       return res.status(400).json({
@@ -926,24 +966,12 @@ const refreshDeclarationStatus = async (req, res) => {
       });
     }
 
-    if (!certificateAlias) {
-      return res.status(400).json({
-        success: false,
-        error: 'Se requiere alias de certificado'
-      });
-    }
-
+    // Sin alias de certificado: la consulta va con el certificado de LUCI.
     const result = await aeatStatusMonitorService.refreshDeclarationStatus(
       mrn,
-      certificateAlias,
-      undefined,
       req.user?.tenantId ? String(req.user.tenantId) : null
     );
-
-    res.json({
-      success: true,
-      data: result
-    });
+    return responderConsulta(res, result);
 
   } catch (error) {
     logger.error('Error refrescando estado:', error);

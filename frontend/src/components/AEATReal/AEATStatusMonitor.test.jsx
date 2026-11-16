@@ -271,7 +271,7 @@ describe('AEATStatusMonitor', () => {
     fireEvent.click(refreshButtons[0])
 
     await waitFor(() => {
-      expect(aeatRealAPI.monitoring.refresh).toHaveBeenCalledWith('26ES111', 'cert1')
+      expect(aeatRealAPI.monitoring.refresh).toHaveBeenCalledWith('26ES111')
     })
 
     expect(toast.success).toHaveBeenCalledWith('Estado actualizado')
@@ -299,6 +299,31 @@ describe('AEATStatusMonitor', () => {
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith('Error al actualizar estado')
+    })
+  })
+
+  it('handleRefreshStatus muestra el motivo que da el servidor (p. ej. consulta no disponible)', async () => {
+    const mockDeclarations = [
+      { mrn: '26ES333', declarationType: 'ENS', status: 'submitted', channel: null, lastChecked: new Date().toISOString() }
+    ]
+
+    aeatRealAPI.monitoring.getTracked.mockResolvedValue({ data: { success: true, data: { declarations: mockDeclarations } } })
+    aeatRealAPI.monitoring.getAlerts.mockResolvedValue({ data: { success: true, data: { alerts: [] } } })
+    aeatRealAPI.getServiceStatus.mockResolvedValue({ data: { success: true, data: null } })
+    const fallo = new Error('Request failed with status code 501')
+    fallo.response = { status: 501, data: { success: false, error: 'Consulta no disponible: ENS de ICS2' } }
+    aeatRealAPI.monitoring.refresh.mockRejectedValue(fallo)
+
+    render(<AEATStatusMonitor />)
+
+    await waitFor(() => {
+      expect(screen.getByText('26ES333')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getAllByTitle('Actualizar')[0])
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Consulta no disponible: ENS de ICS2')
     })
   })
 

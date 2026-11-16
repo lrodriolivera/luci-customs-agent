@@ -100,10 +100,52 @@ describe('regla 1289/1290: EORI excluye name/Address', () => {
     expect(decl).toContain('<ent:identificationNumber>ESB1</ent:identificationNumber>');
   });
 
-  test('los contactos del declarante caen a valores por defecto de STRIX', () => {
+  test('sin contacto no inventa uno (antes caia a los datos fijos de STRIX)', () => {
     const xml = buildAESExportXML({ goodsItems: [item()] });
-    expect(xml).toContain('<ent:eMailAddress>despacho@strixai.ai</ent:eMailAddress>');
-    expect(xml).toContain('<ent:name>Despacho</ent:name>');
+    expect(xml).not.toContain('despacho@strixai.ai');
+    expect(xml).not.toContain('<ent:ContactPerson>');
+  });
+
+  test('con contacto del declarante lo emite dentro de Declarant', () => {
+    const xml = buildAESExportXML({
+      declarantEORI: 'ESB22477020', declarantContact: { name: 'Ana', phone: '600', email: 'a@x.es' }, goodsItems: [item()]
+    });
+    const decl = xml.slice(xml.indexOf('<ent:Declarant>'), xml.indexOf('</ent:Declarant>'));
+    expect(decl).toContain('<ent:name>Ana</ent:name>');
+    expect(decl).toContain('<ent:eMailAddress>a@x.es</ent:eMailAddress>');
+  });
+
+  test('con representante: grupo Representative con status y contacto; Declarant sin contacto', () => {
+    const xml = buildAESExportXML({
+      exporterEORI: 'ES89890010F', declarantEORI: 'ES89890010F', declarantContact: { name: 'No', phone: '1' },
+      representative: { id: 'ESB22477020', status: '2', contact: { name: 'Ana', phone: '600', email: 'a@x.es' } },
+      messageSender: 'B22477020', goodsItems: [item()]
+    });
+    const decl = xml.slice(xml.indexOf('<ent:Declarant>'), xml.indexOf('</ent:Declarant>'));
+    expect(decl).not.toContain('<ent:ContactPerson>');
+    const rep = xml.slice(xml.indexOf('<ent:Representative>'), xml.indexOf('</ent:Representative>'));
+    expect(rep).toContain('<ent:identificationNumber>ESB22477020</ent:identificationNumber>');
+    expect(rep).toContain('<ent:status>2</ent:status>');
+    expect(rep).toContain('<ent:name>Ana</ent:name>');
+    expect(xml.indexOf('</ent:Declarant>')).toBeLessThan(xml.indexOf('<ent:Representative>'));
+    expect(xml).toContain('<ent:messageSender>B22477020</ent:messageSender>');
+  });
+
+  test('sin messageSender explicito usa el NIF (sin ES) del declarante, no el EORI del exportador', () => {
+    const xml = buildAESExportXML({ exporterEORI: 'ES89890010F', declarantEORI: 'ESB22477020', goodsItems: [item()] });
+    expect(xml).toContain('<ent:messageSender>B22477020</ent:messageSender>');
+  });
+
+  test('PhaseID solo cuando se pide', () => {
+    expect(buildAESExportXML({ phaseId: 'AES1.1', goodsItems: [item()] })).toContain('<ent:CC515C PhaseID="AES1.1">');
+    expect(buildAESExportXML({ goodsItems: [item()] })).toContain('<ent:CC515C>');
+  });
+
+  test('destinatario sin identificador: no emite identificationNumber vacio', () => {
+    const xml = buildAESExportXML({ consigneeName: 'US Corp', consigneeCountry: 'US', goodsItems: [item()] });
+    const c = xml.slice(xml.indexOf('<ent:Consignee>'), xml.indexOf('</ent:Consignee>'));
+    expect(c).not.toContain('<ent:identificationNumber>');
+    expect(c).not.toContain('<ent:postcode>');
   });
 });
 
@@ -116,11 +158,11 @@ describe('DeliveryTerms: UNLocode XOR location+country', () => {
     expect(dt).not.toContain('<ent:location>');
   });
 
-  test('sin UNLocode emite location + country (con defaults)', () => {
-    const xml = buildAESExportXML({ incotermCode: 'DAP', destinationCountry: 'MA', goodsItems: [item()] });
+  test('sin UNLocode emite location + country (pais de destino si no se da otro)', () => {
+    const xml = buildAESExportXML({ incotermCode: 'DAP', incotermLocation: 'Casablanca', destinationCountry: 'MA', goodsItems: [item()] });
 
     const dt = xml.slice(xml.indexOf('<ent:DeliveryTerms>'), xml.indexOf('</ent:DeliveryTerms>'));
-    expect(dt).toContain('<ent:location>Destino</ent:location>');
+    expect(dt).toContain('<ent:location>Casablanca</ent:location>');
     expect(dt).toContain('<ent:country>MA</ent:country>');
   });
 });

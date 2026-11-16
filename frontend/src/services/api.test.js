@@ -1232,10 +1232,11 @@ describe('api.js — aeatRealAPI', () => {
   it('aeatRealAPI.declarations.getStatus llama a GET con params', async () => {
     const api = await import('./api.js')
 
-    await api.aeatRealAPI.declarations.getStatus('26ES000000000F000001', 'cert-fnmt', 'H7')
+    await api.aeatRealAPI.declarations.getStatus('26ES000000000F000001', 'H7')
 
+    // Sin alias de certificado: la consulta va con el certificado de LUCI.
     expect(mockApi.get).toHaveBeenCalledWith('/api/aeat-real/declarations/26ES000000000F000001/status', {
-      params: { certificateAlias: 'cert-fnmt', declarationType: 'H7' }
+      params: { declarationType: 'H7' }
     })
   })
 

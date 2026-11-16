@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { portalAPI } from '../../services/api'
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid'
+import ChatMessageText from '../common/ChatMessageText'
 
 export default function PortalChat() {
   const { t } = useTranslation()
@@ -182,9 +183,12 @@ export default function PortalChat() {
                         ? 'bg-luci text-white rounded-tr-none'
                         : 'bg-luci-light rounded-tl-none'
                     }`}>
-                      <p className={msg.sender === 'client' ? 'text-white' : 'text-gray-800'}>
-                        {msg.content}
-                      </p>
+                      {/* Las respuestas de LUCI vienen en Markdown; lo que escribe el cliente se pinta tal cual. */}
+                      {msg.sender === 'client' ? (
+                        <p className="text-white whitespace-pre-line">{msg.content}</p>
+                      ) : (
+                        <ChatMessageText content={msg.content} className="text-gray-800" />
+                      )}
                     </div>
                     <p className={`text-xs text-gray-400 mt-1 ${msg.sender === 'client' ? 'text-right' : ''}`}>
                       {new Date(msg.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}

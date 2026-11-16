@@ -71,7 +71,7 @@ describe('F4 — monitoring/track valida el MRN', () => {
   test('refresh con un mrn de ruta invalido -> 400', async () => {
     const res = crearRes();
     await aeatRealController.refreshDeclarationStatus(
-      { user: usuario(TENANT_A), params: { mrn: '../../x' }, body: { certificateAlias: 'c1' } }, res);
+      { user: usuario(TENANT_A), params: { mrn: '../../x' }, body: {} }, res);
     expect(res.statusCode).toBe(400);
   });
 });
@@ -100,9 +100,10 @@ describe('F4 — el seguimiento esta acotado por tenant', () => {
     await seguir(TENANT_A, MRN_A);
     const res = crearRes();
     await aeatRealController.refreshDeclarationStatus(
-      { user: usuario(TENANT_B), params: { mrn: MRN_A }, body: { certificateAlias: 'c1' } }, res);
+      { user: usuario(TENANT_B), params: { mrn: MRN_A }, body: {} }, res);
 
-    expect(res.body.data.success).toBe(false);
+    expect(res.statusCode).toBe(404);
+    expect(res.body.success).toBe(false);
     expect(require('../../src/services/aeat/aeatRealService').queryDeclarationStatus).not.toHaveBeenCalled();
   });
 

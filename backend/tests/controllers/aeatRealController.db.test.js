@@ -59,6 +59,7 @@ const mockStatusMonitor = {
   trackDeclaration: jest.fn(),
   listTrackedDeclarations: jest.fn(),
   refreshDeclarationStatus: jest.fn(),
+  getTrackedDeclaration: jest.fn(),
   getActiveAlerts: jest.fn(),
   acknowledgeAlert: jest.fn(),
   predictInspectionChannel: jest.fn(),
@@ -89,6 +90,12 @@ jest.mock('../../src/config/logger', () => mockLogger, { virtual: false });
 
 // NO mockear Expedition ni tenantGuard — usar los reales
 const aeatRealController = require('../../src/controllers/aeatRealController');
+
+// La consulta de estado solo se permite sobre MRN del tenant: aquí, en su
+// seguimiento (el control de acceso se prueba en aeatRealController.consultaEstado.test.js).
+beforeEach(() => {
+  mockStatusMonitor.getTrackedDeclaration.mockResolvedValue({ tracked: true });
+});
 
 const TENANT_A = new mongoose.Types.ObjectId();
 const TENANT_B = new mongoose.Types.ObjectId();
@@ -634,13 +641,13 @@ describe('aeatRealController con Mongo real', () => {
   // getDeclarationStatus
   // ============================================
   describe('getDeclarationStatus', () => {
-    test('400 si falta certificateAlias', async () => {
-      const res = await request(await app(aeatRealController.getDeclarationStatus, 'get', '/r/26ES123456789012345'))
+    test('400 si el MRN no tiene el formato oficial', async () => {
+      const res = await request(await app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
         .get('/r/26ES123456789012345')
         .query({});
 
       expect(res.status).toBe(400);
-      expect(res.body.error).toMatch(/certificado/i);
+      expect(res.body.error).toMatch(/MRN/);
       expect(mockAeatRealService.queryDeclarationStatus).not.toHaveBeenCalled();
     });
 
@@ -651,7 +658,7 @@ describe('aeatRealController con Mongo real', () => {
 
       const res = await request(await app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
         .get('/r/26ES002801501441J7')
-        .query({ certificateAlias: 'FNMT-STRIX', declarationType: 'NCTS' });
+        .query({ declarationType: 'NCTS' });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -661,8 +668,6 @@ describe('aeatRealController con Mongo real', () => {
       expect(mockAeatRealService.queryDeclarationStatus).toHaveBeenCalledWith(
         '26ES002801501441J7',
         'NCTS',
-        'FNMT-STRIX',
-        undefined,
         { tenantId: String(USER_A.tenantId) }
       );
     });
@@ -673,8 +678,8 @@ describe('aeatRealController con Mongo real', () => {
       );
 
       const res = await request(await app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
-        .get('/r/26ES123456789012345')
-        .query({ certificateAlias: 'FNMT-STRIX' });
+        .get('/r/26ES1234567890123A')
+        .query({});
 
       expect(res.status).toBe(500);
       expect(res.body.error).toContain('AEAT no responde');
@@ -785,27 +790,29 @@ describe('aeatRealController con Mongo real', () => {
   // refreshDeclarationStatus
   // ============================================
   describe('refreshDeclarationStatus', () => {
-    test('400 sin certificateAlias', async () => {
+    test('400 con un MRN mal formado', async () => {
       const res = await request(await app(aeatRealController.refreshDeclarationStatus, 'post', '/r/:mrn/refresh'))
-        .post('/r/26ES12345678901234/refresh')
+        .post('/r/26ES123/refresh')
         .send({});
 
       expect(res.status).toBe(400);
       expect(mockStatusMonitor.refreshDeclarationStatus).not.toHaveBeenCalled();
     });
 
-    test('camino feliz: refresca y devuelve nuevo estado', async () => {
+    test('camino feliz sin alias de certificado: refresca y devuelve nuevo estado', async () => {
       mockStatusMonitor.refreshDeclarationStatus.mockResolvedValue({
+        success: true,
         status: 'accepted',
         updatedAt: new Date()
       });
 
       const res = await request(await app(aeatRealController.refreshDeclarationStatus, 'post', '/r/:mrn/refresh'))
         .post('/r/26ES12345678901234/refresh')
-        .send({ certificateAlias: 'FNMT-STRIX' });
+        .send({});
 
       expect(res.status).toBe(200);
       expect(res.body.data.status).toBe('accepted');
+      expect(mockStatusMonitor.refreshDeclarationStatus).toHaveBeenCalledWith('26ES12345678901234', String(USER_A.tenantId));
     });
 
     test('500 si el monitor lanza', async () => {
@@ -815,7 +822,7 @@ describe('aeatRealController con Mongo real', () => {
 
       const res = await request(await app(aeatRealController.refreshDeclarationStatus, 'post', '/r/:mrn/refresh'))
         .post('/r/26ES12345678901234/refresh')
-        .send({ certificateAlias: 'FNMT-STRIX' });
+        .send({});
 
       expect(res.status).toBe(500);
       expect(res.body.error).toContain('Refresh failed');

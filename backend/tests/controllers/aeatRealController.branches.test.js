@@ -60,6 +60,7 @@ const mockStatusMonitor = {
   trackDeclaration: jest.fn(),
   listTrackedDeclarations: jest.fn(),
   refreshDeclarationStatus: jest.fn(),
+  getTrackedDeclaration: jest.fn(),
   getActiveAlerts: jest.fn(),
   acknowledgeAlert: jest.fn(),
   predictInspectionChannel: jest.fn(),
@@ -89,6 +90,12 @@ jest.mock('../../src/services/aiService', () => mockAiService, { virtual: false 
 jest.mock('../../src/config/logger', () => mockLogger, { virtual: false });
 
 const aeatRealController = require('../../src/controllers/aeatRealController');
+
+// La consulta de estado solo se permite sobre MRN del tenant: aquí, en su
+// seguimiento (el control de acceso se prueba en aeatRealController.consultaEstado.test.js).
+beforeEach(() => {
+  mockStatusMonitor.getTrackedDeclaration.mockResolvedValue({ tracked: true });
+});
 
 const TENANT_A = new mongoose.Types.ObjectId();
 const USER_A = {
@@ -539,13 +546,13 @@ describe('aeatRealController - ramas sin cubrir', () => {
       });
 
       const res = await request(app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
-        .get('/r/26ES999999999999999')
-        .query({ certificateAlias: 'FNMT-STRIX', declarationType: 'H1' });
+        .get('/r/26ES99999999999999')
+        .query({ declarationType: 'H1' });
 
-      expect(res.status).toBe(200);
-      expect(res.body.data.success).toBe(false);
-
-      expect(res.body.data.error).toBe('MRN no encontrado en AEAT');
+      // Ya no es 200 con el error dentro de data: la consulta falló.
+      expect(res.status).toBe(502);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toBe('MRN no encontrado en AEAT');
     });
 
     test('devuelve el análisis LUCI que ya trae la consulta (no llama a un método inexistente del monitor)', async () => {
@@ -555,7 +562,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
 
       const res = await request(app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
         .get('/r/26ES002801100321B8')
-        .query({ certificateAlias: 'FNMT-STRIX', declarationType: 'AES' });
+        .query({ declarationType: 'AES' });
 
       expect(res.status).toBe(200);
       expect(mockStatusMonitor._analyzeStatusWithLuci).not.toHaveBeenCalled();
@@ -959,15 +966,13 @@ describe('aeatRealController - ramas sin cubrir', () => {
       mockAeatRealService.queryDeclarationStatus.mockResolvedValue({ success: true, status: 'ACCEPTED' });
 
       await request(app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
-        .get('/r/26ES123')
-        .query({ certificateAlias: 'FNMT-STRIX' });
+        .get('/r/26ES123456789012AB')
+        .query({});
 
-      // queryDeclarationStatus(mrn, declarationType, certificateId, password, opciones)
+      // queryDeclarationStatus(mrn, declarationType, opciones): sin certificado del usuario.
       expect(mockAeatRealService.queryDeclarationStatus).toHaveBeenCalledWith(
-        '26ES123',
+        '26ES123456789012AB',
         'H1',
-        'FNMT-STRIX',
-        undefined,
         { tenantId: String(USER_A.tenantId) }
       );
     });
@@ -1777,8 +1782,8 @@ describe('aeatRealController - ramas sin cubrir', () => {
       mockAeatRealService.queryDeclarationStatus.mockRejectedValue({});
 
       const res = await request(app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
-        .get('/r/26ES123')
-        .query({ certificateAlias: 'CERT-X' });
+        .get('/r/26ES123456789012AB')
+        .query({});
 
       expect(res.status).toBe(500);
       expect(res.body.error).toBe('Error consultando estado');

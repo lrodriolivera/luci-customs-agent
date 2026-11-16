@@ -1703,7 +1703,14 @@
     "integrations": "Integrazioni",
     "generalInfo": "Informazione General",
     "notificationPrefs": "Preferencias de Notifiche",
-    "securityConfig": "Configurazione de Sicurezza"
+    "securityConfig": "Configurazione de Sicurezza",
+    "generalReadOnly": "Solo un amministratore dell'organizzazione può modificare questi dati.",
+    "nifReadOnly": "Il NIF non si modifica dalle Impostazioni: contatta l'assistenza.",
+    "manageInCustoms": "Si gestisce in Impostazioni › Dogane",
+    "usersCount_one": "{{count}} utente",
+    "usersCount_other": "{{count}} utenti",
+    "usersCountUnavailable": "Non è stato possibile ottenere il numero di utenti per ruolo.",
+    "usersCount": "{{count}} utenti"
   },
   "portal": {
     "welcome": "Benvenuto,",

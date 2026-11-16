@@ -31,6 +31,12 @@ vi.mock('../../services/api', () => ({
   }
 }))
 
+// Usuario autenticado: admin salvo en las pruebas de rol.
+const usuarioActual = { current: { role: 'admin' } }
+vi.mock('../../context/AuthContext', () => ({
+  useAuth: () => ({ user: usuarioActual.current })
+}))
+
 global.window.confirm = vi.fn()
 Object.assign(navigator, {
   clipboard: {
@@ -110,7 +116,45 @@ const mockAuditStats = {
 describe('<AdminPanel />', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    usuarioActual.current = { role: 'admin' }
     window.confirm.mockReturnValue(true)
+  })
+
+  // ================== ACCIONES SOBRE USUARIOS SEGUN ROL ==================
+  // El servidor solo deja dar de alta, editar, restablecer o borrar usuarios
+  // al admin (403 para los demas): no se ofrecen botones que van a fallar.
+  const abrirUsuarios = async () => {
+    api.get
+      .mockResolvedValueOnce({ data: mockDashboardStats })
+      .mockResolvedValueOnce({ data: { users: mockUsers } })
+      .mockResolvedValueOnce({ data: { roles: mockRoles } })
+    render(
+      <MemoryRouter>
+        <AdminPanel />
+      </MemoryRouter>
+    )
+    fireEvent.click(screen.getByText('admin.users'))
+    await waitFor(() => expect(screen.getByText('Alice Admin')).toBeInTheDocument())
+  }
+
+  test.each(['supervisor', 'agent', 'viewer'])('un %s no ve alta, edición, restablecer ni borrado de usuarios', async (role) => {
+    usuarioActual.current = { role }
+    await abrirUsuarios()
+
+    expect(screen.queryByText('admin.newUser')).not.toBeInTheDocument()
+    expect(screen.queryByTitle('Editar')).not.toBeInTheDocument()
+    expect(screen.queryByTitle('Restablecer contraseña')).not.toBeInTheDocument()
+    expect(screen.queryByTitle('Eliminar')).not.toBeInTheDocument()
+  })
+
+  test.each(['admin', 'super_admin'])('un %s ve las acciones sobre usuarios', async (role) => {
+    usuarioActual.current = { role }
+    await abrirUsuarios()
+
+    expect(screen.getByText('admin.newUser')).toBeInTheDocument()
+    expect(screen.getAllByTitle('Editar')).toHaveLength(2)
+    expect(screen.getAllByTitle('Restablecer contraseña')).toHaveLength(2)
+    expect(screen.getAllByTitle('Eliminar')).toHaveLength(2)
   })
 
   // El reset/delete abren un modal de confirmación (no confirm() nativo).
