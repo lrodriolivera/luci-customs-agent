@@ -66,16 +66,17 @@ export default function AEATStatusMonitor() {
     return () => clearInterval(interval)
   }, [loadData])
 
-  const handleRefreshStatus = async (mrn, certificateAlias) => {
+  const handleRefreshStatus = async (mrn) => {
     setRefreshing(true)
     try {
-      const response = await aeatRealAPI.monitoring.refresh(mrn, certificateAlias)
+      const response = await aeatRealAPI.monitoring.refresh(mrn)
       if (response.data.success) {
         toast.success('Estado actualizado')
         loadData()
       }
     } catch (error) {
-      toast.error('Error al actualizar estado')
+      // El servidor explica el motivo (consulta no disponible, AEAT sin respuesta...).
+      toast.error(error.response?.data?.error || 'Error al actualizar estado')
     } finally {
       setRefreshing(false)
     }
@@ -339,7 +340,7 @@ export default function AEATStatusMonitor() {
                       <EyeIcon className="h-5 w-5" />
                     </button>
                     <button
-                      onClick={() => handleRefreshStatus(decl.mrn, decl.certificateAlias)}
+                      onClick={() => handleRefreshStatus(decl.mrn)}
                       disabled={refreshing}
                       className="text-green-600 hover:text-green-900"
                       title="Actualizar"

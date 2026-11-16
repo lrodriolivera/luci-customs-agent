@@ -877,8 +877,9 @@ export const aeatRealAPI = {
     submitAES: (data) => api.post('/api/aeat-real/declarations/aes/submit', data),
     submitNCTS: (data) => api.post('/api/aeat-real/declarations/ncts/submit', data),
     submitICS2: (data) => api.post('/api/aeat-real/declarations/ics2/submit', data),
-    getStatus: (mrn, certificateAlias, declarationType) =>
-      api.get(`/api/aeat-real/declarations/${seg(mrn)}/status`, { params: { certificateAlias, declarationType } }),
+    // Sin alias de certificado: la consulta va con el certificado de LUCI.
+    getStatus: (mrn, declarationType) =>
+      api.get(`/api/aeat-real/declarations/${seg(mrn)}/status`, { params: { declarationType } }),
     getInbox: (params) => api.get('/api/aeat-real/inbox', { params })
   },
 
@@ -886,7 +887,7 @@ export const aeatRealAPI = {
   monitoring: {
     track: (data) => api.post('/api/aeat-real/monitoring/track', data),
     getTracked: () => api.get('/api/aeat-real/monitoring/tracked'),
-    refresh: (mrn, certificateAlias) => api.post(`/api/aeat-real/monitoring/${seg(mrn)}/refresh`, { certificateAlias }),
+    refresh: (mrn) => api.post(`/api/aeat-real/monitoring/${seg(mrn)}/refresh`),
     getAlerts: (params) => api.get('/api/aeat-real/monitoring/alerts', { params }),
     acknowledgeAlert: (alertId) => api.post(`/api/aeat-real/monitoring/alerts/${seg(alertId)}/acknowledge`),
     predictChannel: (data) => api.post('/api/aeat-real/monitoring/predict-channel', data)
