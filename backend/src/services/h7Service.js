@@ -41,6 +41,9 @@ const { simulacionPermitida, MENSAJE_SIMULACION_NO_PERMITIDA } = require('../uti
 
 // Estados desde los que se puede (re)presentar: un H7 rechazado se corrige y se vuelve a enviar.
 const ESTADOS_PRESENTABLES = ['draft', 'pending', 'rejected'];
+// Intentos cuyo resultado en la AEAT se desconoce (pudo registrarla): reenviar
+// sin comprobarlo crearia una declaracion duplicada.
+const CODIGOS_RESULTADO_DESCONOCIDO = ['SIN_RESPUESTA', 'SIN_MRN'];
 
 /**
  * Carga el documento comprobando que pertenece a quien lo pide.
@@ -94,6 +97,21 @@ async function _registrarRechazo(declaration, userId, aeatResult) {
     errors: errores,
     rawResponse: aeatResult.rawResponse?.substring(0, 500)
   };
+}
+
+/**
+ * Guarda una aceptacion de la AEAT. Si el MRN no casa con el formato del
+ * modelo, se guarda igualmente sin validar: perder un MRN real dejaria la H7
+ * como no presentada y se podria duplicar ante la AEAT.
+ */
+async function _guardarAceptacion(declaration, mrn) {
+  try {
+    await declaration.save();
+  } catch (error) {
+    if (error?.name !== 'ValidationError') throw error;
+    logger.error(`[H7-SUBMIT] ${declaration.reference}: aceptada por la AEAT con MRN ${mrn}, pero no pasa la validacion del modelo (${error.message}). Se guarda sin validar.`);
+    await declaration.save({ validateBeforeSave: false });
+  }
 }
 
 /**
@@ -538,11 +556,21 @@ class H7Service {
   /**
    * Enviar declaracion a AEAT
    */
-  async submitToAEAT(declarationId, userId) {
+  async submitToAEAT(declarationId, userId, { confirmarReenvio = false } = {}) {
     const declaration = await _loadOwnedH7(declarationId, userId);
 
     if (!ESTADOS_PRESENTABLES.includes(declaration.status)) {
       throw new Error(`No se puede enviar declaracion en estado ${declaration.status}`);
+    }
+
+    if (CODIGOS_RESULTADO_DESCONOCIDO.includes(declaration.aeatResponse?.code) && !confirmarReenvio) {
+      return {
+        success: false,
+        requiereConfirmacion: true,
+        aeatCode: declaration.aeatResponse.code,
+        error: 'El último envío no obtuvo una respuesta válida de la AEAT y pudo quedar registrado. '
+          + 'Compruebe en la sede de la AEAT que no consta antes de volver a presentarla.'
+      };
     }
 
     // Validar antes de enviar
@@ -610,7 +638,7 @@ class H7Service {
 
     // Una aceptacion sin MRN no es una aceptacion que se pueda acreditar.
     if (!aeatResult.mrn) {
-      return _registrarSinRespuesta(declaration, userId, 'La AEAT respondió sin MRN: la declaración no consta como aceptada. Compruébela en la sede de la AEAT antes de volver a presentarla.', aeatResult.code || 'SIN_MRN');
+      return _registrarSinRespuesta(declaration, userId, `La AEAT respondió sin MRN (código ${aeatResult.code || 'sin código'}): la declaración no consta como aceptada. Compruébela en la sede de la AEAT antes de volver a presentarla.`, 'SIN_MRN');
     }
 
     declaration.status = 'submitted';
@@ -655,7 +683,7 @@ class H7Service {
       });
     }
 
-    await declaration.save();
+    await _guardarAceptacion(declaration, aeatResult.mrn);
 
     logger.info(`H7 ${declaration.reference} submitted: MRN ${aeatResult.mrn}`);
 

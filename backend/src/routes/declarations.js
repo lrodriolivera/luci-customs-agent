@@ -349,6 +349,10 @@ router.post('/:expeditionId/submit-v2', requirePermission('canApproveDeclaration
       return res.status(400).json({ success: false, error: MENSAJE_SIMULACION_NO_PERMITIDA, code: 'SIMULACION_NO_PERMITIDA' });
     }
 
+    if (result.success && !result.mrn) {
+      return res.status(502).json({ success: false, error: 'La aduana respondió sin MRN: la declaración no consta como aceptada. Compruébela antes de volver a presentarla.' });
+    }
+
     if (result.success) {
       // Update expedition with result
       expedition.declaration = expedition.declaration || {};

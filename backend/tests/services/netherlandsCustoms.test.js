@@ -587,7 +587,7 @@ describe('NetherlandsCustomsService', () => {
       const result = service._parseDigipoortResponse(xml);
       expect(result.success).toBe(true);
       expect(result.mrn).toBe('26NL000312345678');
-      expect(result.channel).toBe('green');
+      expect(result.channel).toBeNull(); // sin canal en la respuesta no se supone verde
     });
 
     test('should parse response with StatusCode format', () => {

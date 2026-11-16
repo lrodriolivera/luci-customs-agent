@@ -248,3 +248,52 @@ describe('respuestas simuladas (otro pais sin certificado)', () => {
     expect(d.mrn).toBeUndefined();
   });
 });
+
+describe('revision: duplicados y MRN perdidos', () => {
+  test('tras un error sin respuesta no se vuelve a presentar sin confirmar que no consta en la AEAT', async () => {
+    const d = declaracion({ aeatResponse: { code: 'SIN_RESPUESTA', message: 'timeout', errors: [] } });
+    H7Declaration.findById.mockResolvedValue(d);
+
+    const r = await h7Service.submitToAEAT('h7-1', 'u1');
+
+    expect(r.success).toBe(false);
+    expect(r.requiereConfirmacion).toBe(true);
+    expect(aeatSubmitService.submitH7).not.toHaveBeenCalled();
+  });
+
+  test('con confirmarReenvio se vuelve a presentar', async () => {
+    aeatSubmitService.submitH7.mockResolvedValue({ success: true, code: 'A', mrn: '26ESH7A000067962R8', channel: 'green', estado: 'Aceptada' });
+    const d = declaracion({ aeatResponse: { code: 'SIN_MRN', message: 'sin MRN', errors: [] } });
+    H7Declaration.findById.mockResolvedValue(d);
+
+    const r = await h7Service.submitToAEAT('h7-1', 'u1', { confirmarReenvio: true });
+
+    expect(r.success).toBe(true);
+    expect(aeatSubmitService.submitH7).toHaveBeenCalled();
+  });
+
+  test('una aceptacion sin MRN deja codigo SIN_MRN (pide confirmacion al reenviar)', async () => {
+    aeatSubmitService.submitH7.mockResolvedValue({ success: true, code: 'A', mrn: null });
+    const d = declaracion();
+    H7Declaration.findById.mockResolvedValue(d);
+
+    await h7Service.submitToAEAT('h7-1', 'u1');
+
+    expect(d.aeatResponse.code).toBe('SIN_MRN');
+  });
+
+  test('si el MRN aceptado no pasa la validacion del modelo se guarda igualmente (no se pierde)', async () => {
+    aeatSubmitService.submitH7.mockResolvedValue({ success: true, code: 'A', mrn: '26ESH7A00006796', channel: 'green', estado: 'Aceptada' });
+    const errorValidacion = Object.assign(new Error('mrn: Path `mrn` is invalid'), { name: 'ValidationError' });
+    const save = jest.fn().mockRejectedValueOnce(errorValidacion).mockResolvedValue(true);
+    const d = declaracion({ save });
+    H7Declaration.findById.mockResolvedValue(d);
+
+    const r = await h7Service.submitToAEAT('h7-1', 'u1');
+
+    expect(r.success).toBe(true);
+    expect(d.mrn).toBe('26ESH7A00006796');
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(save).toHaveBeenLastCalledWith({ validateBeforeSave: false });
+  });
+});

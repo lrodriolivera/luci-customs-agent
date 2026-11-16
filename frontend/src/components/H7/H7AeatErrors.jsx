@@ -34,7 +34,7 @@ export default function H7AeatErrors({ declaration }) {
       className={`rounded-xl border p-4 ${rechazada ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}
     >
       <div className="flex items-start gap-3">
-        <Icono className={`h-6 w-6 flex-shrink-0 ${rechazada ? 'text-red-600' : 'text-amber-600'}`} />
+        <Icono aria-hidden="true" className={`h-6 w-6 flex-shrink-0 ${rechazada ? 'text-red-600' : 'text-amber-600'}`} />
         <div className="space-y-2 min-w-0">
           <h2 id="h7-aeat-errores" className={`font-semibold ${rechazada ? 'text-red-800' : 'text-amber-900'}`}>{titulo}</h2>
           {errores.length > 0 ? (

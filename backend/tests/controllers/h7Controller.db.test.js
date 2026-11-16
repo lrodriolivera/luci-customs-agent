@@ -312,6 +312,8 @@ describe('submit: un rechazo de la AEAT queda rechazado en la BD (sin MRN invent
     expect(guardada.channel).toBeUndefined();
     expect(guardada.aeatResponse.code).toBe('R');
     expect(guardada.aeatResponse.errors[0]).toMatchObject({ code: '1040', field: 'Importer.identificationNumber' });
+    // Una sola entrada «rejected» en el historial (el hook del modelo no la duplica).
+    expect(guardada.statusHistory.filter(h => h.status === 'rejected')).toHaveLength(1);
   });
 
   test('una H7 rechazada se puede corregir (update) y cancelar', async () => {

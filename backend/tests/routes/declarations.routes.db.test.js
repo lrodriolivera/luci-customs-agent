@@ -374,6 +374,15 @@ describe('routes/declarations.js - handlers inline', () => {
       expect(actualizado.declaration.channel).toBeUndefined();
     });
 
+    test('una respuesta "aceptada" sin MRN no se guarda como aceptada', async () => {
+      mockSubmitDeclaration.mockResolvedValue({ success: true, mrn: null, channel: 'green' });
+      const exp = await crearExpediente(TENANT_A, { declaration: { type: 'H1', status: 'draft' } });
+      const res = await request(app).post(`/api/declarations/${exp._id}/submit-v2`).send({});
+      expect(res.status).toBe(502);
+      const actualizado = await Expedition.findById(exp._id);
+      expect(actualizado.declaration.status).toBe('draft');
+    });
+
     test('una respuesta simulada sin AEAT_SIMULATE no se guarda como aceptada', async () => {
       const antes = process.env.AEAT_SIMULATE;
       delete process.env.AEAT_SIMULATE;

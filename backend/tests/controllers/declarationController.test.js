@@ -179,6 +179,19 @@ describe('declarationController.submitDeclaration', () => {
       expect(exp.status).toBe('declaration_submitted');
     });
 
+    test('una respuesta "aceptada" sin MRN no se guarda como presentada', async () => {
+      mockSubmitH1.mockResolvedValue({ success: true, mrn: null, channel: 'green', code: '0' });
+      const exp = expedienteListo();
+      mockExpedition.findById.mockResolvedValue(exp);
+
+      const res = await request(app()).post('/api/declarations/e1/submit');
+
+      expect(res.status).toBe(502);
+      expect(res.body.error).toMatch(/sin MRN/i);
+      expect(exp.declaration.status).toBe('draft');
+      expect(exp.save).not.toHaveBeenCalled();
+    });
+
     test('AES aceptada sin circuito tampoco queda en canal verde', async () => {
       mockSubmitAES.mockResolvedValue({ success: true, mrn: '26ES00280100000001', channel: null, code: 'OK' });
       const exp = expedienteListo({ declaration: { type: 'AES', xmlContent: '<xml/>', status: 'draft' } });

@@ -210,6 +210,14 @@ describe('_parseAEATResponse (a traves de queryStatus)', () => {
       expect(r.error).toBe('1040: El NIF no esta identificado (Importer.identificationNumber) | 301: Nif no valido');
     });
 
+    test('AltaH7V1Sal con <Error> con prefijo o atributos tambien conserva los codigos', async () => {
+      conRespuesta('<h7:AltaH7V1Sal xmlns:h7="x"><Response><responseCode>R</responseCode></Response>'
+        + '<h7:Error xmlns:h7="x"><h7:errorCode>1040</h7:errorCode><h7:errorReason>NIF &quot;X&quot; no identificado</h7:errorReason></h7:Error>'
+        + '</h7:AltaH7V1Sal>');
+      const r = await submitService.queryStatus('MRN');
+      expect(r.errores).toEqual([{ code: '1040', message: 'NIF "X" no identificado' }]);
+    });
+
     test('AltaH7V1Sal aceptada sin documentationRequired no supone canal verde', async () => {
       conRespuesta('<h7:AltaH7V1Sal xmlns:h7="x"><Response><responseCode>A</responseCode></Response><MRN>26ESH7A000067962R8</MRN></h7:AltaH7V1Sal>');
       const r = await submitService.queryStatus('MRN');

@@ -969,6 +969,16 @@ const submitDeclaration = async (req, res) => {
       });
     }
 
+    // Una "aceptacion" sin MRN (ni numero de registro) no se puede acreditar: no se guarda.
+    if (!aeatResult.mrn && !aeatResult.numeroRegistro) {
+      logger.error(`Respuesta de la AEAT sin MRN para ${expedition.expeditionId}: code=${aeatResult.code}`);
+      return res.status(502).json({
+        success: false,
+        error: 'La AEAT respondió sin MRN: la declaración no consta como presentada. Compruébela en la sede de la AEAT antes de volver a presentarla.',
+        aeatResponse: { code: aeatResult.code, estado: aeatResult.estado }
+      });
+    }
+
     // Normalizar respuesta para compatibilidad
     // En el CAU la fecha de admision y el circuito los da la AEAT. Sin analisis
     // de riesgos no hay circuito: no se supone verde.

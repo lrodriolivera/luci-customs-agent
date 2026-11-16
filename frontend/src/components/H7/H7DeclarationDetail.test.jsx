@@ -172,6 +172,24 @@ describe('H7DeclarationDetail', () => {
       expect(screen.getByText('No se obtuvo respuesta de la AEAT: timeout')).toBeInTheDocument()
     })
 
+    test('tras un envio sin respuesta, volver a presentar exige confirmar que no consta en la AEAT', async () => {
+      h7API.get.mockResolvedValue({ data: { data: {
+        ...mockDeclaration,
+        aeatResponse: { code: 'SIN_RESPUESTA', message: 'No se obtuvo respuesta de la AEAT: timeout', errors: [] }
+      } } })
+      h7API.submit.mockResolvedValue({ data: { success: true, data: { mrn: '26ESH7A000067962R8' } } })
+      const user = userEvent.setup()
+      render(<H7DeclarationDetail />)
+
+      await screen.findByText('H7-2026-001')
+      expect(screen.queryByText('Enviar a AEAT')).not.toBeInTheDocument()
+      await user.click(screen.getByText('He comprobado en la AEAT: presentar de nuevo'))
+
+      await waitFor(() => {
+        expect(h7API.submit).toHaveBeenCalledWith('test-id-123', { confirmarReenvio: true })
+      })
+    })
+
     test('una presentacion simulada se rotula SIMULADO', async () => {
       h7API.get.mockResolvedValue({ data: { data: {
         ...mockDeclaration, status: 'submitted', simulado: true, mrn: '26ESH7A000000001R1', aeatResponse: { message: 'SIMULADO - Aceptada' }

@@ -66,14 +66,23 @@ function _tenantEsLaParte(tenant) {
  * Admite respuestas antiguas con solo <errorReason> (sin codigo).
  */
 function _erroresAltaH7(body) {
-  const bloques = [...body.matchAll(/<Error>([\s\S]*?)<\/Error>/g)].map(m => m[1]);
+  // Admite prefijo de namespace y atributos (<h7:Error xmlns:h7="...">), como el resto del parser.
+  const etiqueta = (b, nombre) => {
+    const m = b.match(new RegExp(`<(?:\\w+:)?${nombre}\\b[^>]*>([^<]+)<`));
+    return m ? _decodificarEntidades(m[1]) : undefined;
+  };
+  const bloques = [...body.matchAll(/<(?:\w+:)?Error\b[^>]*>([\s\S]*?)<\/(?:\w+:)?Error>/g)].map(m => m[1]);
   return bloques.map((b) => {
-    const code = (b.match(/<errorCode>([^<]+)</) || [])[1];
-    const message = (b.match(/<errorReason>([^<]+)</) || [])[1];
-    const field = (b.match(/<errorPointerTag>([^<]+)</) || b.match(/<errorPointer>([^<]+)</) || [])[1];
+    const code = etiqueta(b, 'errorCode');
+    const message = etiqueta(b, 'errorReason');
+    const field = etiqueta(b, 'errorPointerTag') || etiqueta(b, 'errorPointer');
     if (!code && !message) return null;
     return { ...(code ? { code } : {}), message: message || '', ...(field ? { field } : {}) };
   }).filter(Boolean);
+}
+
+function _decodificarEntidades(texto) {
+  return texto.replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 }
 
 /** "1040: motivo (campo) | 301: motivo" con los textos tal cual. */

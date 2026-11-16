@@ -25,6 +25,14 @@ import {
 
 // Estados desde los que se presenta; una rechazada se corrige y se vuelve a presentar.
 const ESTADOS_PRESENTABLES = ['draft', 'pending', 'rejected']
+// Envios cuyo resultado en la AEAT se desconoce: reenviar exige confirmar que no consta.
+const CODIGOS_RESULTADO_DESCONOCIDO = ['SIN_RESPUESTA', 'SIN_MRN']
+
+function textoBotonEnvio(d, submitting) {
+  if (submitting) return 'Enviando...'
+  if (CODIGOS_RESULTADO_DESCONOCIDO.includes(d.aeatResponse?.code)) return 'He comprobado en la AEAT: presentar de nuevo'
+  return d.status === 'rejected' ? 'Volver a presentar' : 'Enviar a AEAT'
+}
 
 const statusConfig = {
   draft: { label: 'Borrador', color: 'bg-gray-100 text-gray-800', icon: DocumentTextIcon },
@@ -64,7 +72,10 @@ export default function H7DeclarationDetail() {
   const handleSubmit = async () => {
     try {
       setSubmitting(true)
-      const res = await h7API.submit(id)
+      const resultadoDesconocido = CODIGOS_RESULTADO_DESCONOCIDO.includes(declaration?.aeatResponse?.code)
+      const res = resultadoDesconocido
+        ? await h7API.submit(id, { confirmarReenvio: true })
+        : await h7API.submit(id)
       if (res.data.success) {
         toast.success(`Declaración enviada - MRN: ${res.data.data?.mrn || 'Pendiente'}`)
         loadDeclaration()
@@ -132,7 +143,7 @@ export default function H7DeclarationDetail() {
               ) : (
                 <PaperAirplaneIcon className="h-4 w-4" />
               )}
-              {submitting ? 'Enviando...' : (d.status === 'rejected' ? 'Volver a presentar' : 'Enviar a AEAT')}
+              {textoBotonEnvio(d, submitting)}
             </button>
           )}
         </div>
@@ -141,7 +152,7 @@ export default function H7DeclarationDetail() {
       {/* Presentacion simulada: ni el MRN ni el circuito son de la aduana */}
       {d.simulado && (
         <div role="alert" className="bg-amber-50 border-2 border-amber-400 rounded-xl p-4 flex items-center gap-3">
-          <ExclamationTriangleIcon className="h-6 w-6 text-amber-600 flex-shrink-0" />
+          <ExclamationTriangleIcon aria-hidden="true" className="h-6 w-6 text-amber-600 flex-shrink-0" />
           <p className="font-bold text-amber-900">SIMULADO — no presentada ante la aduana. El MRN y el circuito no son reales.</p>
         </div>
       )}

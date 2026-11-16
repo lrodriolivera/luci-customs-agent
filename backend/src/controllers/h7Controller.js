@@ -353,16 +353,19 @@ exports.validateIOSS = async (req, res) => {
  */
 exports.submit = async (req, res) => {
   try {
-    const result = await h7Service.submitToAEAT(req.params.id, req.user._id);
+    const result = await h7Service.submitToAEAT(req.params.id, req.user._id, {
+      confirmarReenvio: req.body?.confirmarReenvio === true
+    });
 
     if (!result.success) {
-      return res.status(400).json({
+      return res.status(result.requiereConfirmacion ? 409 : 400).json({
         success: false,
         message: result.error || 'Error al enviar declaracion',
         errors: result.errors,
         aeatCode: result.aeatCode,
         // true si la AEAT la ha rechazado (estado `rejected`); false/ausente si no hubo respuesta.
-        rejected: result.rejected === true
+        rejected: result.rejected === true,
+        requiereConfirmacion: result.requiereConfirmacion === true
       });
     }
 
