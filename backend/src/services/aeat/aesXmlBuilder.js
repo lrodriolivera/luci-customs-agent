@@ -8,6 +8,11 @@
  * - Si EORI presente, NO enviar name/Address (reglas 1289/1290)
  * - Si additionalDeclarationType A: invoiceCurrency + totalAmountInvoiced obligatorios en ExportOperation
  * - Si no hay Representative, ContactPerson es obligatorio en Declarant
+ * - Representative solo en representacion directa (status 2, Declarant = Exporter);
+ *   en indirecta Declarant = agente y sin Representative (guia V1.25, p. 46 y 76-79)
+ * - messageSender = NIF del firmante, sin prefijo ES (guia V1.25, p. 69)
+ * - PhaseID solo en pruebas (guia V1.25, §25.5)
+ * - Este builder no rellena huecos: los datos obligatorios los valida aesData.js
  * - security=2 obligatorio para destinos fuera UE con additionalDeclarationType A
  * - DeliveryTerms: UNLocode O (location+country) - no ambos
  * - LocationOfGoods qualifier Y: usa authorisationNumber, NO CustomsOffice
@@ -32,9 +37,13 @@ function buildAESExportXML(data) {
     customsOfficeExport = '', customsOfficeExit = '',
     // Exportador
     exporterEORI = '', exporterName = '', exporterStreet = '', exporterCity = '', exporterPostcode = '', exporterCountry = 'ES',
-    // Declarante
+    // Declarante (contacto obligatorio si no hay representante) y representante
+    // (solo en representacion directa: { id, status: '2', contact })
     declarantEORI = '', declarantName = '',
     declarantContactName = '', declarantContactPhone = '', declarantContactEmail = '',
+    declarantContact = null, representative = null,
+    // Remitente: NIF del firmante (sin prefijo ES). PhaseID: solo en pruebas.
+    messageSender = '', phaseId = null,
     // Consignatario
     consigneeEORI = '', consigneeName = '', consigneeStreet = '', consigneeCity = '', consigneePostcode = '', consigneeCountry = '',
     // Envio
@@ -46,6 +55,8 @@ function buildAESExportXML(data) {
     // Transport means
     departureTransportType = '30', departureTransportId = '', departureTransportCountry = '',
     activeBorderTransportType = '30', activeBorderTransportId = '', activeBorderTransportCountry = '',
+    // Alternativa agrupada: { tipo, id, pais } (aesData.js)
+    departureTransport = null, activeBorderTransport = null,
     // Condiciones entrega - opcion 1: UNLocode; opcion 2: location+country
     incotermCode = 'DAP', incotermUNLocode = '', incotermLocation = '', incotermCountry = '',
     // Localizacion
@@ -57,6 +68,21 @@ function buildAESExportXML(data) {
   } = data;
 
   const transId = generateTransactionId();
+  const declarantId = declarantEORI || exporterEORI;
+  const sender = String(messageSender || declarantId || '').trim().toUpperCase().replace(/^ES/, '');
+  const contacto = declarantContact || (declarantContactName || declarantName
+    ? { name: declarantContactName || declarantName, phone: declarantContactPhone, email: declarantContactEmail }
+    : null);
+  const salida = departureTransport || { tipo: departureTransportType, id: departureTransportId, pais: departureTransportCountry || countryOfExport };
+  const activo = activeBorderTransport || ((activeBorderTransportId || departureTransportId)
+    ? { tipo: activeBorderTransportType || departureTransportType, id: activeBorderTransportId || departureTransportId, pais: activeBorderTransportCountry || departureTransportCountry || countryOfExport }
+    : null);
+  const contactXML = (c, sangria) => (c && c.name && c.phone ? xml`
+${sangria}<ent:ContactPerson>
+${sangria}  <ent:name>${c.name}</ent:name>
+${sangria}  <ent:phoneNumber>${c.phone}</ent:phoneNumber>${c.email ? xml`
+${sangria}  <ent:eMailAddress>${c.email}</ent:eMailAddress>` : ''}
+${sangria}</ent:ContactPerson>` : '');
   const totalGross = goodsItems.reduce((s, g) => s + (g.grossWeight || 0), 0);
   const totalInvoiced = totalAmountInvoiced || goodsItems.reduce((s, g) => s + (g.value || g.statisticalValue || 0), 0);
 
@@ -67,10 +93,10 @@ function buildAESExportXML(data) {
           <ent:Procedure>
             <ent:requestedProcedure>10</ent:requestedProcedure>
             <ent:previousProcedure>00</ent:previousProcedure>
-          </ent:Procedure>${g.countryOfOrigin ? xml`
-          <ent:Origin>
-            <ent:countryOfOrigin>${g.countryOfOrigin}</ent:countryOfOrigin>${countryOfExport === 'ES' ? xml`
-            <ent:regionOfDispatch>${g.regionOfDispatch || data.provinciaExport || '28'}</ent:regionOfDispatch>` : ''}
+          </ent:Procedure>${(g.countryOfOrigin || (countryOfExport === 'ES' && g.regionOfDispatch)) ? xml`
+          <ent:Origin>${g.countryOfOrigin ? xml`
+            <ent:countryOfOrigin>${g.countryOfOrigin}</ent:countryOfOrigin>` : ''}${countryOfExport === 'ES' && g.regionOfDispatch ? xml`
+            <ent:regionOfDispatch>${g.regionOfDispatch}</ent:regionOfDispatch>` : ''}
           </ent:Origin>` : ''}
           <ent:Commodity>
             <ent:descriptionOfGoods>${(g.description || '').substring(0, 512)}</ent:descriptionOfGoods>
@@ -87,13 +113,13 @@ function buildAESExportXML(data) {
           <ent:Packaging>
             <ent:sequenceNumber>1</ent:sequenceNumber>
             <ent:typeOfPackages>${g.packageType || 'PK'}</ent:typeOfPackages>
-            <ent:numberOfPackages>${g.packages || 1}</ent:numberOfPackages>
+            <ent:numberOfPackages>${g.packages}</ent:numberOfPackages>
             <ent:shippingMarks>${g.shippingMarks || 'N/M'}</ent:shippingMarks>
           </ent:Packaging>
           <ent:SupportingDocument>
             <ent:sequenceNumber>1</ent:sequenceNumber>
             <ent:type>N380</ent:type>
-            <ent:referenceNumber>${g.invoiceRef || 'INV-001'}</ent:referenceNumber>
+            <ent:referenceNumber>${g.invoiceRef}</ent:referenceNumber>
           </ent:SupportingDocument>
         </ent:GoodsItem>`);
 
@@ -105,7 +131,7 @@ function buildAESExportXML(data) {
           </ent:DeliveryTerms>`
     : xml`<ent:DeliveryTerms>
             <ent:incotermCode>${incotermCode}</ent:incotermCode>
-            <ent:location>${incotermLocation || 'Destino'}</ent:location>
+            <ent:location>${incotermLocation}</ent:location>
             <ent:country>${incotermCountry || destinationCountry}</ent:country>
           </ent:DeliveryTerms>`;
 
@@ -113,8 +139,8 @@ function buildAESExportXML(data) {
 <soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
   <soapenv:Body>
     <ent:CC515CV1Ent xmlns:ent="${NS_ENT}" Id="${transId}">
-      <ent:CC515C>
-        <ent:messageSender>${exporterEORI}</ent:messageSender>
+      <ent:CC515C${phaseId ? xml` PhaseID="${phaseId}"` : ''}>
+        <ent:messageSender>${sender}</ent:messageSender>
         <ent:messageRecipient>NECA.ES</ent:messageRecipient>
         <ent:preparationDateAndTime>${new Date().toISOString().substring(0, 19)}</ent:preparationDateAndTime>
         <ent:messageIdentification>${transId.substring(0, 14)}</ent:messageIdentification>
@@ -144,13 +170,12 @@ function buildAESExportXML(data) {
           </ent:Address>` : ''}
         </ent:Exporter>
         <ent:Declarant>
-          <ent:identificationNumber>${declarantEORI || exporterEORI}</ent:identificationNumber>
-          <ent:ContactPerson>
-            <ent:name>${declarantContactName || declarantName || 'Despacho'}</ent:name>
-            <ent:phoneNumber>${declarantContactPhone || '+34976000000'}</ent:phoneNumber>
-            <ent:eMailAddress>${declarantContactEmail || 'despacho@strixai.ai'}</ent:eMailAddress>
-          </ent:ContactPerson>
-        </ent:Declarant>
+          <ent:identificationNumber>${declarantId}</ent:identificationNumber>${representative ? '' : contactXML(contacto, '          ')}
+        </ent:Declarant>${representative ? xml`
+        <ent:Representative>
+          <ent:identificationNumber>${representative.id}</ent:identificationNumber>
+          <ent:status>${representative.status || '2'}</ent:status>${contactXML(representative.contact, '          ')}
+        </ent:Representative>` : ''}
         <ent:GoodsShipment>
           <ent:natureOfTransaction>${natureOfTransaction}</ent:natureOfTransaction>
           <ent:countryOfExport>${countryOfExport}</ent:countryOfExport>
@@ -161,15 +186,15 @@ function buildAESExportXML(data) {
             <ent:inlandModeOfTransport>${inlandModeOfTransport}</ent:inlandModeOfTransport>` : ''}
             <ent:modeOfTransportAtTheBorder>${modeOfTransportAtBorder}</ent:modeOfTransportAtTheBorder>
             <ent:grossMass>${totalGross.toFixed(3)}</ent:grossMass>
-            <ent:Consignee>
-              <ent:identificationNumber>${consigneeEORI}</ent:identificationNumber>${!consigneeEORI ? xml`
+            <ent:Consignee>${consigneeEORI ? xml`
+              <ent:identificationNumber>${consigneeEORI}</ent:identificationNumber>` : xml`
               <ent:name>${consigneeName}</ent:name>
               <ent:Address>
-                <ent:streetAndNumber>${consigneeStreet}</ent:streetAndNumber>
-                <ent:postcode>${consigneePostcode}</ent:postcode>
+                <ent:streetAndNumber>${consigneeStreet}</ent:streetAndNumber>${consigneePostcode ? xml`
+                <ent:postcode>${consigneePostcode}</ent:postcode>` : ''}
                 <ent:city>${consigneeCity}</ent:city>
                 <ent:country>${consigneeCountry || destinationCountry}</ent:country>
-              </ent:Address>` : ''}
+              </ent:Address>`}
             </ent:Consignee>
             <ent:LocationOfGoods>
               <ent:typeOfLocation>${locationOfGoodsType}</ent:typeOfLocation>
@@ -178,9 +203,9 @@ function buildAESExportXML(data) {
             </ent:LocationOfGoods>
 ${!data.directExport ? xml`            <ent:DepartureTransportMeans>
               <ent:sequenceNumber>1</ent:sequenceNumber>
-              <ent:typeOfIdentification>${departureTransportType}</ent:typeOfIdentification>
-              <ent:identificationNumber>${departureTransportId || 'UNKNOWN'}</ent:identificationNumber>
-              <ent:nationality>${departureTransportCountry || countryOfExport}</ent:nationality>
+              <ent:typeOfIdentification>${salida.tipo}</ent:typeOfIdentification>
+              <ent:identificationNumber>${salida.id}</ent:identificationNumber>
+              <ent:nationality>${salida.pais}</ent:nationality>
             </ent:DepartureTransportMeans>` : ''}${security === '2' ? xml`
             <ent:CountryOfRoutingOfConsignment>
               <ent:sequenceNumber>1</ent:sequenceNumber>
@@ -189,16 +214,16 @@ ${!data.directExport ? xml`            <ent:DepartureTransportMeans>
             <ent:CountryOfRoutingOfConsignment>
               <ent:sequenceNumber>2</ent:sequenceNumber>
               <ent:country>${destinationCountry}</ent:country>
-            </ent:CountryOfRoutingOfConsignment>` : ''}
+            </ent:CountryOfRoutingOfConsignment>` : ''}${activo ? xml`
             <ent:ActiveBorderTransportMeans>
-              <ent:typeOfIdentification>${activeBorderTransportType || departureTransportType}</ent:typeOfIdentification>
-              <ent:identificationNumber>${activeBorderTransportId || departureTransportId || 'UNKNOWN'}</ent:identificationNumber>
-              <ent:nationality>${activeBorderTransportCountry || departureTransportCountry || countryOfExport}</ent:nationality>
-            </ent:ActiveBorderTransportMeans>
+              <ent:typeOfIdentification>${activo.tipo}</ent:typeOfIdentification>
+              <ent:identificationNumber>${activo.id}</ent:identificationNumber>
+              <ent:nationality>${activo.pais}</ent:nationality>
+            </ent:ActiveBorderTransportMeans>` : ''}
             <ent:TransportDocument>
               <ent:sequenceNumber>1</ent:sequenceNumber>
               <ent:type>${transportDocType}</ent:type>
-              <ent:referenceNumber>${transportDocRef || 'TD-' + transId.substring(0, 8)}</ent:referenceNumber>
+              <ent:referenceNumber>${transportDocRef}</ent:referenceNumber>
             </ent:TransportDocument>
           </ent:Consignment>${itemsXML}
         </ent:GoodsShipment>

@@ -718,6 +718,22 @@ const getXML = async (req, res) => {
 };
 
 /**
+ * Formato de la aduana de salida («ES» + 6) y de la ubicacion de las mercancias
+ * (10 caracteres de la AEAT o «ES00» + 10). Vacio = borrar el dato.
+ */
+function erroresDeAduanaYUbicacion(updates) {
+  const errores = [];
+  const { officeOfExit, goodsLocation } = updates || {};
+  if (officeOfExit !== undefined && officeOfExit !== '' && !/^[A-Z]{2}\d{6}$/i.test(String(officeOfExit).trim())) {
+    errores.push('La aduana de salida es un código de 8 caracteres (p. ej. ES004601)');
+  }
+  if (goodsLocation !== undefined && goodsLocation !== '' && !/^(ES00)?[A-Z0-9]{10}$/i.test(String(goodsLocation).trim())) {
+    errores.push('La ubicación de las mercancías es el código de 10 caracteres de la AEAT (p. ej. 2801AAAAAC)');
+  }
+  return errores;
+}
+
+/**
  * Actualizar declaracion manualmente
  * PUT /api/declarations/:expeditionId
  */
@@ -740,12 +756,19 @@ const updateDeclaration = async (req, res) => {
     // Campos actualizables
     const allowedFields = [
       'regime', 'additionalProcedure', 'preference', 'customsOffice',
-      'declarationType'
+      'declarationType', 'officeOfExit', 'goodsLocation'
     ];
+    const erroresFormato = erroresDeAduanaYUbicacion(updates);
+    if (erroresFormato.length > 0) {
+      return res.status(400).json({ success: false, error: erroresFormato.join('. ') });
+    }
 
     allowedFields.forEach(field => {
       if (updates[field] !== undefined) {
-        expedition.declaration[field] = updates[field];
+        const valor = ['officeOfExit', 'goodsLocation'].includes(field)
+          ? String(updates[field]).trim().toUpperCase()
+          : updates[field];
+        expedition.declaration[field] = valor;
       }
     });
 
@@ -761,7 +784,8 @@ const updateDeclaration = async (req, res) => {
       } else if (expedition.declaration.type === 'AES') {
         const aesDeclaration = aesGenerator.generate(expedition, {
           ...expedition.declaration,
-          ...updates
+          ...updates,
+          exitOffice: expedition.declaration.officeOfExit
         }, { tenant });
         expedition.declaration.xmlContent = aesDeclaration.xml;
       }

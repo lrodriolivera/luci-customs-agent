@@ -144,6 +144,11 @@ const DeclarationSchema = new mongoose.Schema({
   additionalProcedure: String,
   preference: String, // 100, 200, 300, 400
   customsOffice: String,
+  // AES: aduana de salida declarada (CUSTOMS OFFICE OF EXIT, obligatoria) y
+  // ubicacion de las mercancias (codigo de 10 caracteres de la AEAT o «ES00» +
+  // esos 10). Sin declararlos, el subdocumento estricto los descartaba.
+  officeOfExit: String,
+  goodsLocation: String,
   declarationDate: Date,
   acceptanceDate: Date,
   submittedAt: Date,

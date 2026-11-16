@@ -21,6 +21,7 @@ const { codigoAdicionalH7, validarPartidasH7ParaAeat } = require('./h7Identifica
 const { interpretarLiquidacionH7 } = require('./h7Liquidacion');
 const { aplicaDerechoFijo2026 } = require('../../config/reg2026382');
 const { buildAESExportXML } = require('./aesXmlBuilder');
+const { expeditionToAesData } = require('./aesData');
 const { buildNCTSTransitXML } = require('./nctsXmlBuilder');
 const { buildENSDeclarationXML } = require('./ensXmlBuilder');
 const { buildSOIVREAltaXML } = require('./soivreXmlBuilder');
@@ -507,93 +508,16 @@ async function submitH7(h7Declaration, tenant) {
 }
 
 /**
- * Enviar declaracion AES exportacion
+ * Enviar declaracion AES exportacion (CC515CV1).
+ *
+ * Los datos salen del expediente (`aesData.js`); si falta alguno obligatorio
+ * se lanza ErrorValidacion 422 con la lista (`faltan`) y no se llama a la AEAT.
  */
 async function submitAES(expedition, ctx = {}) {
   const tenant = await _tenantDe(expedition, ctx);
-  const declarante = declarantePara(expedition, tenant);
-  const client = expedition.client || {};
-  // Exportador: la parte del expediente; si falta, el tenant solo cuando el
-  // tenant es el exportador; si tampoco, 422 (antes salia un NIF fijo).
-  const exporterEORI = exigirEori(
-    eoriDe(client) || (_tenantEsLaParte(tenant) ? representanteDelTenant(tenant).eori : null),
-    'cliente'
-  );
-  const exporterName = client.companyName || (_tenantEsLaParte(tenant) ? representanteDelTenant(tenant).companyName : '') || '';
-  const goods = expedition.goods || [];
-  const decl = expedition.declaration || {};
-  const transport = expedition.transport || {};
   const isPRE = process.env.AEAT_ENVIRONMENT !== 'production';
-  // AEAT PRE registrada por Jose Antonio (2/Mar/2026): ubicacion verde H1/AES
-  // '2801AAAAAC' (10 chars, sin prefijo ES). El recinto 'ES002801' NO existe en la
-  // tabla de autorizaciones PRE (error 5026 "recinto indicado NO existe").
-  const aesLocationDefault = isPRE ? '2801AAAAAC' : '';
-  // Resolver pais destino: address.country > country (legacy) > 'US' (export por defecto fuera UE)
-  const consigneeCountry = expedition.consignee?.address?.country
-    || expedition.consignee?.country
-    || '';
-  const destCountry = expedition.destination?.country || consigneeCountry || 'US';
-
-  const officeExport = decl.customsOffice || 'ES002801';
-  const officeExit = decl.officeOfExit || officeExport;
-  // Exportacion directa: misma oficina exportacion y salida (AEAT prohibe
-  // DepartureTransportMeans en ese caso, regla 1293).
-  const directExport = decl.directExport !== undefined
-    ? Boolean(decl.directExport)
-    : (officeExport === officeExit);
-
-  const soapXML = buildAESExportXML({
-    test: isPRE,
-    lrn: decl.lrn || '',
-    directExport,
-    customsOfficeExport: officeExport,
-    customsOfficeExit: officeExit,
-    exporterEORI,
-    exporterName,
-    exporterStreet: client.address?.street || '',
-    exporterCity: client.address?.city || '',
-    exporterPostcode: client.address?.postalCode || '',
-    declarantEORI: declarante.eori,
-    declarantName: declarante.companyName,
-    consigneeEORI: expedition.consignee?.eori || '',
-    consigneeName: expedition.consignee?.companyName || '',
-    consigneeStreet: expedition.consignee?.address?.street || '',
-    consigneeCity: expedition.consignee?.address?.city || '',
-    consigneePostcode: expedition.consignee?.address?.postalCode || '00000',
-    consigneeCountry: consigneeCountry || destCountry,
-    destinationCountry: destCountry,
-    incotermCode: decl.incoterm || 'FOB',
-    incotermLocation: decl.incotermLocation || client.address?.city || 'Valencia',
-    incotermCountry: decl.incotermCountry || 'ES',
-    modeOfTransportAtBorder: String(transport.mode || '3'),
-    inlandModeOfTransport: String(transport.mode || '3'),
-    departureTransportType: transport.transportType || '30',
-    departureTransportId: transport.vehicleId || transport.plateNumber || 'TRANSPORT-AES',
-    departureTransportCountry: transport.country || 'ES',
-    activeBorderTransportType: transport.transportType || '30',
-    activeBorderTransportId: transport.vehicleId || transport.plateNumber || 'TRANSPORT-AES',
-    activeBorderTransportCountry: transport.country || 'ES',
-    transportDocType: decl.transportDocType || 'N730',
-    transportDocRef: decl.transportDocRef || ('TD-' + Date.now().toString().slice(-10)),
-    locationAuthorisationNumber: decl.locationAuthorisationNumber || aesLocationDefault,
-    goodsItems: goods.map(g => ({
-      description: g.description,
-      taricCode: g.taricCode,
-      grossWeight: g.grossWeight || 0,
-      netWeight: g.netWeight || 0,
-      packages: g.numberOfPackages || 1,
-      value: g.invoiceValue || g.value || 0,
-      statisticalValue: g.statisticalValue || g.invoiceValue || 0,
-      countryOfOrigin: g.countryOfOrigin || g.originCountry || 'ES',
-      regionOfDispatch: g.regionOfDispatch || '28',
-      invoiceRef: g.invoiceRef || decl.invoiceRef || 'INV-AES-001',
-      // AEAT error 2149: Taric exige supplementaryUnits para algunos codigos (p.ej. 8471*).
-      // Enviar siempre que exista cantidad (>0), AEAT lo valida por TARIC.
-      supplementaryUnits: g.supplementaryUnits != null
-        ? g.supplementaryUnits
-        : (g.quantity > 0 ? Number(g.quantity) : undefined)
-    }))
-  });
+  const datos = expeditionToAesData(expedition, { tenant, isPRE });
+  const soapXML = buildAESExportXML(datos);
   return _sendToAEAT(soapXML, '/wlpl/ADEX-JDIT/ws/aes/CC515CV1SOAP');
 }
 
