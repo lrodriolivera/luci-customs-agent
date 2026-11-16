@@ -426,7 +426,8 @@ class PUEService {
         };
       }
 
-      request.pueReference = aeatResult.mrn || aeatResult.csv || `PUE-${Date.now()}`;
+      // La referencia la da la AEAT; si no la da, se deja vacia (no se fabrica una).
+      request.pueReference = aeatResult.mrn || aeatResult.csv || undefined;
       request.status = 'pending_inspection';
       request.submittedAt = new Date();
       request.aeatResponse = {
@@ -1179,22 +1180,6 @@ class PUEService {
   // ============================================
   // METODOS PRIVADOS - SIMULACION
   // ============================================
-
-  _simulateAEATSubmission(request) {
-    const pueReference = `PUE${new Date().getFullYear()}${request.pueType}${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
-    const needsInspection = Math.random() < (this.config.types[request.pueType]?.inspectionRate || 0.1);
-
-    return {
-      success: true,
-      pueReference,
-      code: needsInspection ? 'PUE_INSPECTION_REQUIRED' : 'PUE_ACCEPTED',
-      message: needsInspection
-        ? 'Solicitud admitida - Requiere inspeccion fisica'
-        : 'Solicitud admitida a tramite',
-      status: needsInspection ? 'pending_inspection' : 'registered',
-      correlationId: crypto.randomUUID()
-    };
-  }
 
   _simulateRIIValidation(nif) {
     // Simular consulta al Ministerio de Industria y Turismo

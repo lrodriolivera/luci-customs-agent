@@ -424,6 +424,10 @@ const H7DeclarationSchema = new mongoose.Schema({
     enum: ['green', 'yellow', 'orange', 'red']
   },
 
+  // true solo si la respuesta la genero una simulacion (AEAT_SIMULATE=true, nunca
+  // en produccion): ni el MRN ni el canal son de la aduana. La pantalla lo rotula.
+  simulado: { type: Boolean, default: false },
+
   // Respuesta de AEAT
   aeatResponse: {
     code: String,
@@ -543,7 +547,9 @@ H7DeclarationSchema.pre('save', async function(next) {
   }
 
   // Registrar cambio de estado
-  if (this.isModified('status')) {
+  // Si el servicio ya anoto este cambio (con usuario y motivo), no se duplica.
+  const ultimo = this.statusHistory[this.statusHistory.length - 1];
+  if (this.isModified('status') && ultimo?.status !== this.status) {
     this.statusHistory.push({
       status: this.status,
       timestamp: new Date()

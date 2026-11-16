@@ -359,12 +359,25 @@ router.post('/:expeditionId/submit-v2', requirePermission('canApproveDeclaration
     // Submit via the country-specific service
     const result = await customsService.submitDeclaration(expedition, declarationType);
 
+    // Una respuesta simulada (sin certificado) no es una presentacion: solo se
+    // admite con la simulacion activada a proposito y queda marcada como tal.
+    const { simulacionPermitida, MENSAJE_SIMULACION_NO_PERMITIDA } = require('../utils/simulacionAduanas');
+    const simulada = result?.simulated === true;
+    if (simulada && !simulacionPermitida()) {
+      return res.status(400).json({ success: false, error: MENSAJE_SIMULACION_NO_PERMITIDA, code: 'SIMULACION_NO_PERMITIDA' });
+    }
+
+    if (result.success && !result.mrn) {
+      return res.status(502).json({ success: false, error: 'La aduana respondió sin MRN: la declaración no consta como aceptada. Compruébela antes de volver a presentarla.' });
+    }
+
     if (result.success) {
       // Update expedition with result
       expedition.declaration = expedition.declaration || {};
       expedition.declaration.mrn = result.mrn;
       expedition.declaration.status = 'accepted';
-      expedition.declaration.channel = result.channel || 'green';
+      // Sin circuito en la respuesta no se supone verde.
+      expedition.declaration.channel = result.channel || undefined;
       expedition.declaration.submittedAt = new Date();
       expedition.declaration.aeatResponse = {
         code: result.code,
@@ -372,7 +385,7 @@ router.post('/:expeditionId/submit-v2', requirePermission('canApproveDeclaration
         timestamp: new Date(),
         country: country,
         system: country === 'NL' ? 'DECO' : 'AEAT',
-        simulated: result.simulated || false
+        simulated: simulada
       };
 
       await expedition.save();
@@ -386,7 +399,7 @@ router.post('/:expeditionId/submit-v2', requirePermission('canApproveDeclaration
         channel: result.channel,
         country: country,
         system: country === 'NL' ? (declarationType === 'H7' ? 'DECO' : 'DMS 4.0') : 'AEAT',
-        simulated: result.simulated || false,
+        simulated: simulada,
       },
       error: result.error
     });

@@ -232,7 +232,8 @@ exports.update = async (req, res) => {
       });
     }
 
-    if (declaration.status !== 'draft') {
+    // Una H7 rechazada por la AEAT se corrige aqui y se vuelve a presentar.
+    if (!['draft', 'rejected'].includes(declaration.status)) {
       return res.status(400).json({
         success: false,
         message: `No se puede modificar declaracion en estado ${declaration.status}`
@@ -352,14 +353,19 @@ exports.validateIOSS = async (req, res) => {
  */
 exports.submit = async (req, res) => {
   try {
-    const result = await h7Service.submitToAEAT(req.params.id, req.user._id);
+    const result = await h7Service.submitToAEAT(req.params.id, req.user._id, {
+      confirmarReenvio: req.body?.confirmarReenvio === true
+    });
 
     if (!result.success) {
-      return res.status(400).json({
+      return res.status(result.requiereConfirmacion ? 409 : 400).json({
         success: false,
         message: result.error || 'Error al enviar declaracion',
         errors: result.errors,
-        aeatCode: result.aeatCode
+        aeatCode: result.aeatCode,
+        // true si la AEAT la ha rechazado (estado `rejected`); false/ausente si no hubo respuesta.
+        rejected: result.rejected === true,
+        requiereConfirmacion: result.requiereConfirmacion === true
       });
     }
 
@@ -367,7 +373,9 @@ exports.submit = async (req, res) => {
       success: true,
       // Presentacion REAL ante AEAT (entorno segun AEAT_ENVIRONMENT): el MRN
       // devuelto es autentico. No rotular como demo/simulacion.
-      message: 'Declaracion H7 enviada a AEAT',
+      message: result.data?.simulado
+        ? 'SIMULADO: la declaracion H7 NO se ha presentado ante la aduana'
+        : 'Declaracion H7 enviada a AEAT',
       data: result.data
     });
 
@@ -526,7 +534,7 @@ exports.cancel = async (req, res) => {
       });
     }
 
-    const cancellableStatuses = ['draft', 'pending', 'validating'];
+    const cancellableStatuses = ['draft', 'pending', 'validating', 'rejected'];
     if (!cancellableStatuses.includes(declaration.status)) {
       return res.status(400).json({
         success: false,

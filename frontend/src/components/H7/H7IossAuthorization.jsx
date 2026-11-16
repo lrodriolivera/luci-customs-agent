@@ -17,7 +17,8 @@ export default function H7IossAuthorization({ declaration, onSaved }) {
   const [saving, setSaving] = useState(false)
 
   if (!declaration.iossNumber) return null
-  const editable = declaration.status === 'draft'
+  // Una H7 rechazada por la AEAT se corrige y se vuelve a presentar.
+  const editable = declaration.status === 'draft' || declaration.status === 'rejected'
   const faltaRef = !String(declaration.iossAuthorizationRef || '').trim()
 
   const guardar = async () => {

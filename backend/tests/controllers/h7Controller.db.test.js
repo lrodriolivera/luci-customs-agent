@@ -285,6 +285,50 @@ describe('submit: el envio a AEAT es real, no una simulacion', () => {
   });
 });
 
+describe('submit: un rechazo de la AEAT queda rechazado en la BD (sin MRN inventado)', () => {
+  test('rechazo por NIF en PRE: 400 con el motivo literal, estado rejected y sin MRN ni canal', async () => {
+    delete process.env.AEAT_ENVIRONMENT;
+    const aeatSubmitService = require('../../src/services/aeat/aeatSubmitService');
+    aeatSubmitService.submitH7.mockResolvedValue({
+      success: false, code: 'R', mrn: null, channel: null,
+      error: '1040: El NIF no esta identificado (Importer.identificationNumber)',
+      errores: [{ code: '1040', message: 'El NIF no esta identificado', field: 'Importer.identificationNumber' }]
+    });
+    const user = usuario();
+    const h7 = await crearH7({
+      user,
+      extra: { items: [{ description: 'Auriculares', taricCode: '85183000', quantity: 1, unitValue: 30, totalValue: 30, netWeight: 0.2, countryOfOrigin: 'CN', commercialId: 'SKU-1', manufacturerRef: 'REF-1' }] }
+    });
+    const res = crearRes();
+
+    await ctrl.submit({ params: { id: h7._id }, body: {}, user }, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toContain('1040');
+    expect(res.body.rejected).toBe(true);
+    const guardada = await H7Declaration.findById(h7._id);
+    expect(guardada.status).toBe('rejected');
+    expect(guardada.mrn).toBeUndefined();
+    expect(guardada.channel).toBeUndefined();
+    expect(guardada.aeatResponse.code).toBe('R');
+    expect(guardada.aeatResponse.errors[0]).toMatchObject({ code: '1040', field: 'Importer.identificationNumber' });
+    // Una sola entrada «rejected» en el historial (el hook del modelo no la duplica).
+    expect(guardada.statusHistory.filter(h => h.status === 'rejected')).toHaveLength(1);
+  });
+
+  test('una H7 rechazada se puede corregir (update) y cancelar', async () => {
+    const user = usuario();
+    const h7 = await crearH7({ user, status: 'rejected' });
+    const res = crearRes();
+    await ctrl.update({ params: { id: h7._id }, body: { carrier: { code: 'DHL', name: 'DHL' } }, user }, res);
+    expect(res.statusCode).toBe(200);
+
+    const res2 = crearRes();
+    await ctrl.cancel({ params: { id: h7._id }, body: { reason: 'No se presenta' }, user }, res2);
+    expect(res2.statusCode).toBe(200);
+  });
+});
+
 describe('addDocument', () => {
   test('agrega un documento a la H7 del creador', async () => {
     const user = usuario();

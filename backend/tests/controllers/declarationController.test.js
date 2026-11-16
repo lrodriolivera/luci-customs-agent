@@ -166,6 +166,43 @@ describe('declarationController.submitDeclaration', () => {
       expect(evento.userId).toBe('u1');
     });
 
+    test('sin circuito en la respuesta de la AEAT no se supone canal verde', async () => {
+      // Antes: `aeatResult.channel || 'green'` daba levante verde que la AEAT no habia dado.
+      mockSubmitH1.mockResolvedValue({ success: true, mrn: '26ES00280112345678', channel: null, code: '0' });
+      const exp = expedienteListo();
+      mockExpedition.findById.mockResolvedValue(exp);
+
+      const res = await request(app()).post('/api/declarations/e1/submit');
+
+      expect(res.status).toBe(200);
+      expect(exp.declaration.channel).toBeUndefined();
+      expect(exp.status).toBe('declaration_submitted');
+    });
+
+    test('una respuesta "aceptada" sin MRN no se guarda como presentada', async () => {
+      mockSubmitH1.mockResolvedValue({ success: true, mrn: null, channel: 'green', code: '0' });
+      const exp = expedienteListo();
+      mockExpedition.findById.mockResolvedValue(exp);
+
+      const res = await request(app()).post('/api/declarations/e1/submit');
+
+      expect(res.status).toBe(502);
+      expect(res.body.error).toMatch(/sin MRN/i);
+      expect(exp.declaration.status).toBe('draft');
+      expect(exp.save).not.toHaveBeenCalled();
+    });
+
+    test('AES aceptada sin circuito tampoco queda en canal verde', async () => {
+      mockSubmitAES.mockResolvedValue({ success: true, mrn: '26ES00280100000001', channel: null, code: 'OK' });
+      const exp = expedienteListo({ declaration: { type: 'AES', xmlContent: '<xml/>', status: 'draft' } });
+      mockExpedition.findById.mockResolvedValue(exp);
+
+      await request(app()).post('/api/declarations/e1/submit');
+
+      expect(exp.declaration.channel).toBeUndefined();
+      expect(exp.status).not.toBe('green_channel');
+    });
+
     test('usa el builder AES cuando el tipo es AES', async () => {
       mockSubmitAES.mockResolvedValue({ success: true, mrn: 'AES1', channel: 'green', code: '0' });
       mockExpedition.findById.mockResolvedValue(expedienteListo({
@@ -300,5 +337,48 @@ describe('declarationController.cancelDeclaration', () => {
     expect(res.status).toBe(500);
     expect(res.body.error).toBe('Error al anular la declaracion');
     expect(JSON.stringify(res.body)).not.toMatch(/ECONNREFUSED|aeat\.es/);
+  });
+});
+
+describe('declarationController.submitDeclaration: respuestas simuladas (otro pais sin certificado)', () => {
+  const { CustomsServiceFactory } = require('../../src/services/customs');
+  const ENV = { ...process.env };
+  const SIMULADA = { success: true, mrn: '26NL0003000000000001', channel: 'green', code: '0', simulated: true };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env = { ...ENV };
+    delete process.env.AEAT_SIMULATE;
+    delete process.env.AEAT_FORCE_SIMULATION;
+    delete process.env.AEAT_ENVIRONMENT;
+    mockTenant.findById.mockResolvedValue({ customsConfig: { country: 'NL' } });
+    CustomsServiceFactory.getServiceForTenant.mockReturnValue({ submitDeclaration: jest.fn().mockResolvedValue(SIMULADA) });
+  });
+  afterAll(() => { process.env = ENV; });
+
+  test('sin la simulacion activada no se guarda nada como presentado', async () => {
+    const exp = expedienteListo();
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).post('/api/declarations/e1/submit');
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/SIMULAD/);
+    expect(exp.declaration.mrn).toBeUndefined();
+    expect(exp.declaration.status).toBe('draft');
+    expect(exp.save).not.toHaveBeenCalled();
+  });
+
+  test('con AEAT_SIMULATE=true se guarda marcada como simulada y el mensaje dice SIMULADO', async () => {
+    process.env.AEAT_SIMULATE = 'true';
+    const exp = expedienteListo();
+    mockExpedition.findById.mockResolvedValue(exp);
+
+    const res = await request(app()).post('/api/declarations/e1/submit');
+
+    expect(res.status).toBe(200);
+    expect(exp.declaration.aeatResponse.simulated).toBe(true);
+    expect(res.body.data.simulated).toBe(true);
+    expect(res.body.data.message).toMatch(/SIMULADO/);
   });
 });

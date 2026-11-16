@@ -471,7 +471,7 @@ describe('NetherlandsCustomsService (cobertura extra)', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(result.mrn).toBe('26NL0003ABCDEF');
-      expect(result.channel).toBe('green'); // fallback green por isSuccess
+      expect(result.channel).toBeNull(); // sin canal en la respuesta no se supone verde
     });
 
     test('canal H2 mapea a orange', () => {
