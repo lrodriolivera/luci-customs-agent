@@ -129,4 +129,47 @@ describe('MedidasAeat', () => {
       expect(screen.queryByText('classification.aeat.ratesMatch')).not.toBeInTheDocument()
     })
   })
+
+  describe('usar los datos de la AEAT en la partida', () => {
+    test('con diferencias ofrece usar el arancel general y el IVA de la AEAT', async () => {
+      classificationAPI.aeatTariff.mockResolvedValue({ data: { success: true, data: RESPUESTA } })
+      const onApply = vi.fn()
+      render(<MedidasAeat code="6302210089" origin="CN" compare={{ dutyRate: 8, vatRate: 21 }} onApply={onApply} />)
+      consultar()
+
+      fireEvent.click(await screen.findByRole('button', { name: 'classification.aeat.useAeat:{"arancel":12,"iva":21}' }))
+      expect(onApply).toHaveBeenCalledWith(undefined)
+    })
+
+    test('ofrece la preferencia del origen como opción aparte', async () => {
+      const conPreferencia = {
+        ...RESPUESTA,
+        areaGeografica: 'VN',
+        medidas: [...RESPUESTA.medidas, { codigo: '142-PREF', tipo: 'ue', areaGeografica: 'VN Vietnam', descripcion: 'Preferencias', derecho: '0%', documentos: [] }]
+      }
+      classificationAPI.aeatTariff.mockResolvedValue({ data: { success: true, data: conPreferencia } })
+      const onApply = vi.fn()
+      render(<MedidasAeat code="6302210089" origin="VN" compare={{ dutyRate: 12, vatRate: 21 }} onApply={onApply} />)
+      consultar()
+
+      fireEvent.click(await screen.findByRole('button', { name: 'classification.aeat.usePreference:{"medida":"142-PREF","arancel":0}' }))
+      expect(onApply).toHaveBeenCalledWith('142-PREF')
+    })
+
+    test('si ya coinciden y no hay preferencia no ofrece nada', async () => {
+      classificationAPI.aeatTariff.mockResolvedValue({ data: { success: true, data: RESPUESTA } })
+      render(<MedidasAeat code="6302210089" origin="CN" compare={{ dutyRate: 12, vatRate: 21 }} onApply={vi.fn()} />)
+      consultar()
+      await screen.findByText('classification.aeat.ratesMatch')
+      expect(screen.queryByRole('button', { name: /useAeat|usePreference/ })).not.toBeInTheDocument()
+    })
+
+    test('sin onApply (Clasificación TARIC) no hay botones de usar', async () => {
+      classificationAPI.aeatTariff.mockResolvedValue({ data: { success: true, data: RESPUESTA } })
+      render(<MedidasAeat code="6302210089" origin="CN" compare={{ dutyRate: 8, vatRate: 21 }} />)
+      consultar()
+      await screen.findAllByRole('status')
+      expect(screen.queryByRole('button', { name: /useAeat/ })).not.toBeInTheDocument()
+    })
+  })
 })

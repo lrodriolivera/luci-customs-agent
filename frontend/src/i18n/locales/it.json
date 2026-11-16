@@ -612,7 +612,14 @@
       "requirement_resolved": "Richiesta risolta",
       "note_added": "Nota aggiunta",
       "payment_received": "Pagamento ricevuto"
-    }
+    },
+    "aeatRatesApplied": "Dazio e IVA della voce aggiornati con quelli dell'AEAT",
+    "aeatRatesError": "Impossibile applicare i dati dell'AEAT",
+    "aeatDifference": "Voce {{partida}}: {{campo}} {{expediente}}% nella pratica, {{aeat}}% secondo l'AEAT",
+    "aeatField_arancel": "dazio",
+    "aeatField_iva": "IVA",
+    "aeatDifferencesConfirm": "Il dazio o l'IVA di qualche voce non coincide con la tariffa integrata dell'AEAT. Presentare comunque?",
+    "aeatDifferencesCancelled": "Presentazione annullata: controlla le voci e usa i dati dell'AEAT se opportuno"
   },
   "classification": {
     "title": "Classificazione TARIC",
@@ -791,7 +798,9 @@
       "dutyMismatch": "Il dazio della pratica ({{expediente}}%) non coincide con quello dell'AEAT per i paesi terzi ({{aeat}}%).",
       "vatMismatch": "L'IVA della pratica ({{expediente}}%) non coincide con quella dell'AEAT ({{aeat}}%).",
       "dutyPreference": "Il dazio della pratica ({{aeat}}%) è una preferenza per questa origine; quello generale è {{general}}%. Serve la prova dell'origine.",
-      "ratesMatch": "Il dazio e l'IVA della pratica coincidono con quelli dell'AEAT."
+      "ratesMatch": "Il dazio e l'IVA della pratica coincidono con quelli dell'AEAT.",
+      "useAeat": "Usa i dati dell'AEAT (dazio {{arancel}}%, IVA {{iva}}%)",
+      "usePreference": "Usa la preferenza {{medida}} ({{arancel}}%): serve la prova dell'origine"
     }
   },
   "declarations": {

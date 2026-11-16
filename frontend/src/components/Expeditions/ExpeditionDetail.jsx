@@ -590,6 +590,7 @@ export default function ExpeditionDetail() {
   const [showAIPanel, setShowAIPanel] = useState(false)
   const [editingGoodsIndex, setEditingGoodsIndex] = useState(null)
   const [savingGoods, setSavingGoods] = useState(false)
+  const [applyingAeat, setApplyingAeat] = useState(null)
   const [savingTransport, setSavingTransport] = useState(false)
   // Documento recien subido que LUCI debe leer en cuanto aparezca en la lista.
   const [documentToRead, setDocumentToRead] = useState(null)
@@ -644,6 +645,21 @@ export default function ExpeditionDetail() {
       toast.error(error.response?.data?.error || t('expeditions.editGoodsError'))
     } finally {
       setSavingGoods(false)
+    }
+  }
+
+  // «Usar los datos de la AEAT»: el servidor vuelve a consultar la AEAT y
+  // guarda en la partida su arancel e IVA (no se envian desde aqui).
+  const handleApplyAeatRates = async (goodId, medida) => {
+    setApplyingAeat(goodId)
+    try {
+      const response = await expeditionsAPI.applyAeatRates(id, goodId, medida)
+      setExpedition(response.data?.data || response.data)
+      toast.success(t('expeditions.aeatRatesApplied'))
+    } catch (error) {
+      toast.error(error.response?.data?.error || t('expeditions.aeatRatesError'))
+    } finally {
+      setApplyingAeat(null)
     }
   }
 
@@ -758,7 +774,7 @@ export default function ExpeditionDetail() {
     }
   }
 
-  const handleSubmitToAEAT = async () => {
+  const handleSubmitToAEAT = async (opciones = {}) => {
     if (!expedition.declaration?.xmlContent) {
       toast.error(t('expeditions.generateFirstH1'))
       return
@@ -768,7 +784,10 @@ export default function ExpeditionDetail() {
     setAeatResult(null)
     setFaltanPresentar(null)
     try {
-      const response = await declarationsAPI.submit(id, expedition.declaration?.type === 'AES' ? '' : modoPresentacion)
+      const modo = expedition.declaration?.type === 'AES' ? '' : modoPresentacion
+      const response = opciones.confirmarDiferenciasAeat
+        ? await declarationsAPI.submit(id, modo, opciones)
+        : await declarationsAPI.submit(id, modo)
       const resultData = response.data?.data || response.data
       setAeatResult(resultData)
 
@@ -794,6 +813,20 @@ export default function ExpeditionDetail() {
       }
     } catch (error) {
       const datos = error.response?.data
+      // El arancel o el IVA de alguna partida no coincide con la AEAT: se
+      // pregunta antes de presentar (se puede corregir con «Usar los datos de
+      // la AEAT» en la partida).
+      if (error.response?.status === 409 && datos?.code === 'ARANCEL_AEAT_DISTINTO') {
+        const lista = (datos.diferencias || []).map((d) => t('expeditions.aeatDifference', {
+          partida: d.partida, campo: t(`expeditions.aeatField_${d.campo}`), expediente: d.expediente, aeat: d.aeat
+        })).join('\n')
+        if (window.confirm(`${t('expeditions.aeatDifferencesConfirm')}\n\n${lista}`)) {
+          setSubmittingToAEAT(false)
+          return handleSubmitToAEAT({ confirmarDiferenciasAeat: true })
+        }
+        toast.error(t('expeditions.aeatDifferencesCancelled'))
+        return
+      }
       if (error.response?.status === 422 && Array.isArray(datos?.faltan) && datos.faltan.length > 0) {
         const tipo = expedition.declaration?.type || 'H1'
         setFaltanPresentar({ tipo, faltan: datos.faltan })
@@ -1017,6 +1050,8 @@ export default function ExpeditionDetail() {
                       code={item.taricCode}
                       origin={item.originCountry}
                       compare={{ dutyRate: item.dutyRate, vatRate: item.vatRate }}
+                      onApply={canEditGoods && item._id ? (medida) => handleApplyAeatRates(item._id, medida) : undefined}
+                      applying={applyingAeat === item._id}
                       className="mt-3"
                     />
                   )}
@@ -1284,7 +1319,7 @@ export default function ExpeditionDetail() {
                     />
                   )}
                   <button
-                    onClick={handleSubmitToAEAT}
+                    onClick={() => handleSubmitToAEAT()}
                     disabled={submittingToAEAT}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                   >

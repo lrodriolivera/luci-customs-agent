@@ -10,6 +10,38 @@ const { autorizacionVigente, aplicarAutorizacionVigente } = require('../services
 const { DOCUMENT_TYPES } = require('../middleware/validators');
 
 const { escapeRegex } = require('../utils/escapeRegex');
+const { TaricCode } = require('../models');
+const { consultarArancelIntegrado } = require('../services/aeat/arancelIntegrado');
+const { tiposParaAplicar } = require('../services/aeat/contrasteArancel');
+
+const TARIC_10 = /^\d{10}$/;
+
+/** Arancel a terceros paises del catalogo TARIC de LUCI, o undefined si no consta. */
+async function arancelDelCatalogo(codigo) {
+  if (!TARIC_10.test(String(codigo || ''))) return undefined;
+  const taric = await TaricCode.findOne({ code: codigo }).lean();
+  const tipo = taric?.duties?.thirdCountry;
+  return typeof tipo === 'number' ? tipo : undefined;
+}
+
+/**
+ * Al guardar las partidas, si cambia el TARIC de una (o su origen), el arancel
+ * guardado ya no le corresponde: se recalcula desde el catalogo y se borra la
+ * marca de "datos de la AEAT aplicados". Antes se quedaba el del codigo
+ * anterior y el H1 se liquidaba con el (UAT 16/Nov/2026).
+ */
+async function recalcularArancelSiCambiaTaric(anteriores, nuevas) {
+  const porId = new Map((anteriores || []).map((g) => [String(g._id), g]));
+  return Promise.all((nuevas || []).map(async (nueva, i) => {
+    const anterior = (nueva?._id && porId.get(String(nueva._id))) || anteriores?.[i];
+    const codigo = String(nueva?.taricCode || '').replace(/[\s.]/g, '');
+    const cambiaTaric = anterior && codigo !== String(anterior.taricCode || '');
+    const cambiaOrigen = anterior && String(nueva?.originCountry || '') !== String(anterior.originCountry || '');
+    if (!cambiaTaric && !cambiaOrigen) return nueva;
+    const resto = { ...nueva, aeatTariff: undefined };
+    return cambiaTaric ? { ...resto, dutyRate: await arancelDelCatalogo(codigo) } : resto;
+  }));
+}
 
 // Unidad de la cantidad que envia el alta (quantityUnit) -> unidad del expediente (unit).
 const UNIDAD_DEL_ALTA = { KGM: 'KG', PCS: 'PCS', MTR: 'MTR', LTR: 'LTR' };
@@ -372,6 +404,11 @@ const update = async (req, res) => {
         updates[field] = req.body[field];
       }
     });
+
+    if (Array.isArray(updates.goods)) {
+      const anteriores = expedition.goods.map((g) => (g.toObject ? g.toObject() : g));
+      updates.goods = await recalcularArancelSiCambiaTaric(anteriores, updates.goods);
+    }
 
     // Si cambia el status, agregar al timeline
     if (updates.status && updates.status !== expedition.status) {
@@ -1030,7 +1067,11 @@ const applyTaricSuggestion = async (req, res) => {
       });
     }
 
-    // Actualizar código TARIC
+    // Actualizar código TARIC y, con el, el arancel del catalogo
+    if (expedition.goods[index].taricCode !== taricCode) {
+      expedition.goods[index].dutyRate = await arancelDelCatalogo(taricCode);
+      expedition.goods[index].aeatTariff = undefined;
+    }
     expedition.goods[index].taricCode = taricCode;
     if (hsCode) {
       expedition.goods[index].hsCode = hsCode;
@@ -1072,7 +1113,83 @@ const applyTaricSuggestion = async (req, res) => {
   }
 };
 
+/**
+ * Usar en una partida el arancel y el IVA del Arancel Integrado de la AEAT.
+ * Los tipos los obtiene el servidor de la AEAT (no se aceptan del cliente).
+ * POST /api/expeditions/:id/goods/:goodId/aeat-rates   body: { medida? }
+ * `medida`: codigo de una preferencia del origen (p. ej. 142-PREF); sin ella,
+ * el derecho general de terceros paises (103).
+ */
+const applyAeatRates = async (req, res) => {
+  try {
+    const expedition = await Expedition.findById(req.params.id);
+    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
+
+    if (!/^[a-f0-9]{24}$/i.test(String(req.params.goodId || ''))) {
+      return res.status(400).json({ success: false, error: 'Identificador de partida no válido' });
+    }
+    const partida = expedition.goods.id(req.params.goodId);
+    if (!partida) {
+      return res.status(404).json({ success: false, error: 'Partida no encontrada' });
+    }
+    if (!TARIC_10.test(String(partida.taricCode || ''))) {
+      return res.status(400).json({ success: false, error: 'La partida no tiene un código TARIC de 10 dígitos' });
+    }
+    const medida = req.body?.medida;
+    if (medida !== undefined && !/^1\d\d-[A-Za-z]+$/.test(String(medida))) {
+      return res.status(400).json({ success: false, error: 'Medida preferencial no válida' });
+    }
+
+    let resultado;
+    try {
+      resultado = await consultarArancelIntegrado({ codigo: partida.taricCode, origen: partida.originCountry });
+    } catch (error) {
+      logger.error(`Arancel Integrado no disponible para ${expedition.expeditionId}: ${error.message}`);
+      return res.status(502).json({ success: false, error: 'No se pudo consultar el Arancel Integrado de la AEAT' });
+    }
+    if (!resultado.existe) {
+      return res.status(422).json({ success: false, error: 'La AEAT no tiene este código TARIC en la fecha de hoy' });
+    }
+
+    let tipos;
+    try {
+      tipos = tiposParaAplicar(resultado, medida);
+    } catch (error) {
+      return res.status(422).json({ success: false, error: error.message, code: error.codigo });
+    }
+
+    const antes = { dutyRate: partida.dutyRate, vatRate: partida.vatRate };
+    partida.dutyRate = tipos.dutyRate;
+    if (tipos.vatRate !== null) partida.vatRate = tipos.vatRate;
+    partida.aeatTariff = {
+      fechaConsulta: resultado.fechaConsulta,
+      areaGeografica: resultado.areaGeografica,
+      medidaArancel: tipos.medidaArancel,
+      dutyRate: tipos.dutyRate,
+      vatRate: tipos.vatRate ?? undefined,
+      appliedAt: new Date(),
+      appliedBy: req.user?.name
+    };
+
+    expedition.timeline.push({
+      action: 'aeat_rates_applied',
+      description: `Partida ${partida.itemNumber}: arancel ${antes.dutyRate ?? '—'} % → ${tipos.dutyRate} % (${tipos.medidaArancel}) e IVA ${antes.vatRate ?? '—'} % → ${partida.vatRate} % según el Arancel Integrado de la AEAT`,
+      userId: req.user?._id,
+      performedBy: req.user?.name,
+      metadata: { goodId: String(partida._id), antes, despues: { dutyRate: partida.dutyRate, vatRate: partida.vatRate }, medida: tipos.medidaArancel, fechaConsulta: resultado.fechaConsulta }
+    });
+
+    await expedition.save();
+    logger.info(`Arancel de la AEAT aplicado: ${expedition.expeditionId} partida ${partida.itemNumber} (${tipos.medidaArancel})`);
+    res.json({ success: true, data: expedition });
+  } catch (error) {
+    logger.error('Error aplicando el arancel de la AEAT:', error);
+    res.status(500).json({ success: false, error: 'Error al aplicar los datos de la AEAT' });
+  }
+};
+
 module.exports = {
+  applyAeatRates,
   create,
   list,
   getById,

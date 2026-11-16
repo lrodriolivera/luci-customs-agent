@@ -58,7 +58,19 @@ const GoodsItemSchema = new mongoose.Schema({
   vatRate: { type: Number, default: 21 },
   vatAmount: Number,
   specialTaxRate: Number,
-  specialTaxAmount: Number
+  specialTaxAmount: Number,
+  // Ultima vez que se aplicaron a la partida el arancel y el IVA del Arancel
+  // Integrado de la AEAT ("Usar los datos de la AEAT"). Se borra si cambia
+  // el TARIC o el origen, porque deja de corresponder.
+  aeatTariff: {
+    fechaConsulta: String,
+    areaGeografica: String,
+    medidaArancel: String,
+    dutyRate: Number,
+    vatRate: Number,
+    appliedAt: Date,
+    appliedBy: String
+  }
 }, { _id: true });
 
 const DocumentSchema = new mongoose.Schema({
