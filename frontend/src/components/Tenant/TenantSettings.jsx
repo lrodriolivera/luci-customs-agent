@@ -20,13 +20,17 @@ import {
 } from '@heroicons/react/24/outline';
 import api, { tenantEoriAPI } from '../../services/api';
 import H1PresentationSettings from './H1PresentationSettings';
+import GeneralTab from './GeneralTab';
+import { useAuth } from '../../context/AuthContext';
+import { esAdministradorDelTenant } from '../../utils/roles';
 import { PasswordModal } from '../Admin/AdminPanel';
 import { PAISES_ADUANEROS, codigosHabilitados, eoriPorPais } from '../../constants/paisesAduaneros';
 
 const TenantSettings = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isAdmin = esAdministradorDelTenant(user);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [settings, setSettings] = useState(null);
   const [tenant, setTenant] = useState(null);
@@ -112,20 +116,6 @@ const TenantSettings = () => {
     }
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      // API call to save settings
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setMessage({ type: 'success', text: t('settings.saved') });
-      setTimeout(() => setMessage(null), 3000);
-    } catch (error) {
-      setMessage({ type: 'error', text: t('settings.saveError') });
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleInviteUser = async (datosInvitacion) => {
     setInviteSubmitting(true);
     setInviteError(null);
@@ -184,14 +174,6 @@ const TenantSettings = () => {
             {t('settings.subtitle')} {tenant?.name}
           </p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2"
-        >
-          {saving && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
-          {t('settings.saveChanges')}
-        </button>
       </div>
 
       {/* Message */}
@@ -232,141 +214,12 @@ const TenantSettings = () => {
       <div className="bg-white rounded-lg shadow p-6">
         {/* General Tab */}
         {activeTab === 'general' && (
-          <div className="space-y-6">
-            <h2 className="text-lg font-medium text-gray-900">{t('settings.generalInfo')}</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('settings.orgName')}
-                </label>
-                <input
-                  type="text"
-                  value={tenant?.name || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  readOnly
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('settings.slug')}
-                </label>
-                <input
-                  type="text"
-                  value={tenant?.slug || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50"
-                  readOnly
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('settings.nifCif')}
-                </label>
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.nif || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  EORI
-                </label>
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.eori || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  REA
-                </label>
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.rea || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('settings.orgType')}
-                </label>
-                <select
-                  value={tenant?.businessInfo?.type || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                >
-                  <option value="customs_agent">{t('settings.typeAgent')}</option>
-                  <option value="importer">{t('settings.typeImporter')}</option>
-                  <option value="exporter">{t('settings.typeExporter')}</option>
-                  <option value="carrier">{t('settings.typeCarrier')}</option>
-                  <option value="other">{t('settings.typeOther')}</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('common.address')}
-              </label>
-              <input
-                type="text"
-                value={tenant?.businessInfo?.address?.street || ''}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
-                placeholder="Calle y numero"
-              />
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.address?.city || ''}
-                  className="border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Ciudad"
-                />
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.address?.province || ''}
-                  className="border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Provincia"
-                />
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.address?.postalCode || ''}
-                  className="border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Codigo Postal"
-                />
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.address?.country || 'ES'}
-                  className="border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Pais"
-                />
-              </div>
-            </div>
-
-            {/* Status */}
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-sm font-medium text-gray-700">{t('settings.accountStatus')}</span>
-                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                    tenant?.status === 'active'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {tenant?.status === 'active' ? t('common.active') : tenant?.status}
-                  </span>
-                </div>
-                <div className="text-sm text-gray-500">
-                  Plan: <span className="font-medium capitalize">{tenant?.subscription?.plan}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <GeneralTab
+            tenant={tenant}
+            canEdit={isAdmin}
+            onSaved={setTenant}
+            onGoToCustoms={() => setActiveTab('customs')}
+          />
         )}
 
         {/* Branding Tab */}

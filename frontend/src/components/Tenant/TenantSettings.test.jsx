@@ -8,6 +8,11 @@ vi.mock('react-i18next', () => ({
 }))
 
 // La sección «Presentación del H1» tiene sus propias pruebas (H1PresentationSettings.test.jsx).
+// Usuario autenticado: admin por defecto (las pruebas de rol van en
+// TenantSettingsGeneral.test.jsx y TenantSettingsRoles.test.jsx).
+vi.mock('../../context/AuthContext', () => ({
+  useAuth: () => ({ user: { role: 'admin' } })
+}))
 vi.mock('./H1PresentationSettings', () => ({ default: () => null }))
 vi.mock('../../services/api', () => ({
   default: {
@@ -480,43 +485,10 @@ describe('<TenantSettings />', () => {
     expect(screen.getByText('settings.webhooks')).toBeInTheDocument()
   })
 
-  // ================== SAVE HANDLER ==================
-  test('handleSave muestra mensaje de éxito', async () => {
-    render(<TenantSettings />)
-    await waitFor(() => expect(api.get).toHaveBeenCalled())
-
-    const saveButton = await screen.findByRole('button', { name: /settings\.saveChanges/i })
-    fireEvent.click(saveButton)
-
-    await waitFor(() => {
-      expect(screen.getByText('settings.saved')).toBeInTheDocument()
-    })
-  })
-
-  test('mensaje de éxito desaparece tras 3 segundos', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
-
-    render(<TenantSettings />)
-    await waitFor(() => expect(api.get).toHaveBeenCalled())
-
-    const saveButton = await screen.findByRole('button', { name: /settings\.saveChanges/i })
-    fireEvent.click(saveButton)
-
-    // El handleSave hace un setTimeout de 1000ms antes de mostrar el mensaje
-    vi.advanceTimersByTime(1000)
-
-    await waitFor(() => {
-      expect(screen.getByText('settings.saved')).toBeInTheDocument()
-    })
-
-    vi.advanceTimersByTime(3000)
-
-    await waitFor(() => {
-      expect(screen.queryByText('settings.saved')).not.toBeInTheDocument()
-    })
-
-    vi.useRealTimers()
-  })
+  // ================== GUARDAR ==================
+  // Guardar Ajustes › General (PUT /api/tenant/general) se prueba en
+  // TenantSettingsGeneral.test.jsx: antes aqui se probaba un setTimeout que
+  // solo mostraba «guardado» sin llamar a ningun endpoint.
 
   // ================== TAB CUSTOMS (CustomsTab subcomponente) ==================
   test('tab customs renderiza el subcomponente CustomsTab', async () => {

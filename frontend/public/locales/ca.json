@@ -1703,7 +1703,10 @@
     "generalInfo": "Informació general",
     "integrations": "Integracions",
     "notificationPrefs": "Preferències de notificacions",
-    "securityConfig": "Configuració de seguretat"
+    "securityConfig": "Configuració de seguretat",
+    "generalReadOnly": "Només un administrador de l'organització pot canviar aquestes dades.",
+    "nifReadOnly": "El NIF no es canvia des d'Ajustos: contacta amb suport.",
+    "manageInCustoms": "Es gestiona a Ajustos › Duanes"
   },
   "portal": {
     "welcome": "Benvingut,",

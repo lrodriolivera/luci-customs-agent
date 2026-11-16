@@ -1704,7 +1704,10 @@
     "integrations": "Integrations",
     "generalInfo": "General Information",
     "notificationPrefs": "Notification Preferences",
-    "securityConfig": "Security Configuration"
+    "securityConfig": "Security Configuration",
+    "generalReadOnly": "Only an organization administrator can change these details.",
+    "nifReadOnly": "The tax ID cannot be changed from Settings: contact support.",
+    "manageInCustoms": "Managed in Settings › Customs"
   },
   "portal": {
     "welcome": "Welcome,",

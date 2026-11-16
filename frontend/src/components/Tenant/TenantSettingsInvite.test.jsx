@@ -12,6 +12,11 @@ import api from '../../services/api'
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key) => key })
 }))
+// Usuario autenticado: admin por defecto (las pruebas de rol van en
+// TenantSettingsGeneral.test.jsx y TenantSettingsRoles.test.jsx).
+vi.mock('../../context/AuthContext', () => ({
+  useAuth: () => ({ user: { role: 'admin' } })
+}))
 vi.mock('./H1PresentationSettings', () => ({ default: () => null }))
 vi.mock('../Admin/AdminPanel', () => ({
   // Mock liviano: solo lo que InviteUserModal/TenantSettings necesitan de PasswordModal.

@@ -1704,7 +1704,10 @@
     "integrations": "Integraciones",
     "generalInfo": "Información General",
     "notificationPrefs": "Preferencias de Notificaciones",
-    "securityConfig": "Configuración de Seguridad"
+    "securityConfig": "Configuración de Seguridad",
+    "generalReadOnly": "Solo un administrador de la organización puede cambiar estos datos.",
+    "nifReadOnly": "El NIF no se cambia desde Ajustes: contacta con soporte.",
+    "manageInCustoms": "Se gestiona en Ajustes › Aduanas"
   },
   "portal": {
     "welcome": "Bienvenido,",
