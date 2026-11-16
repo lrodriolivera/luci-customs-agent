@@ -619,7 +619,22 @@
     "aeatField_arancel": "arancel",
     "aeatField_iva": "IVA",
     "aeatDifferencesConfirm": "El arancel o el IVA de alguna partida no coincide con el Arancel Integrado de la AEAT. ¿Presentar igualmente?",
-    "aeatDifferencesCancelled": "Presentación cancelada: revisa las partidas y usa los datos de la AEAT si corresponde"
+    "aeatDifferencesCancelled": "Presentación cancelada: revisa las partidas y usa los datos de la AEAT si corresponde",
+    "c44": {
+      "title": "Casilla 44 · documentos de la partida",
+      "help": "Certificados, licencias y declaraciones que exige la AEAT. Van en el H1 de esta partida. Los códigos Y no llevan número; el número de los certificados SOIVRE/PUE lo comprueba la AEAT.",
+      "current": "Documentos de la casilla 44",
+      "suggested": "Propuestos por la AEAT (elige los que apliquen):",
+      "code": "Código",
+      "reference": "Número del documento",
+      "add": "Añadir",
+      "remove": "Quitar {{tipo}}",
+      "codeInvalid": "El código debe tener 4 letras o cifras (p. ej. N003, 1310, Y081).",
+      "referenceRequired": "Falta el número del documento (solo los códigos Y van sin número).",
+      "isAuthorisation": "Es una autorización, no un documento de la partida: la AEAT lo rechaza aquí.",
+      "saved": "Documentos de la casilla 44 guardados",
+      "error": "No se pudieron guardar los documentos de la casilla 44"
+    }
   },
   "classification": {
     "title": "Clasificación TARIC",

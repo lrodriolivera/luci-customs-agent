@@ -619,7 +619,22 @@
     "aeatField_arancel": "dazio",
     "aeatField_iva": "IVA",
     "aeatDifferencesConfirm": "Il dazio o l'IVA di qualche voce non coincide con la tariffa integrata dell'AEAT. Presentare comunque?",
-    "aeatDifferencesCancelled": "Presentazione annullata: controlla le voci e usa i dati dell'AEAT se opportuno"
+    "aeatDifferencesCancelled": "Presentazione annullata: controlla le voci e usa i dati dell'AEAT se opportuno",
+    "c44": {
+      "title": "Casella 44 · documenti della voce",
+      "help": "Certificati, licenze e dichiarazioni richiesti dall'AEAT. Vanno nell'H1 di questa voce. I codici Y non hanno numero; l'AEAT verifica il numero dei certificati SOIVRE/PUE.",
+      "current": "Documenti della casella 44",
+      "suggested": "Proposti dall'AEAT (scegli quelli applicabili):",
+      "code": "Codice",
+      "reference": "Numero del documento",
+      "add": "Aggiungi",
+      "remove": "Rimuovi {{tipo}}",
+      "codeInvalid": "Il codice deve avere 4 lettere o cifre (es. N003, 1310, Y081).",
+      "referenceRequired": "Manca il numero del documento (solo i codici Y ne sono privi).",
+      "isAuthorisation": "È un'autorizzazione, non un documento della voce: l'AEAT la rifiuta qui.",
+      "saved": "Documenti della casella 44 salvati",
+      "error": "Impossibile salvare i documenti della casella 44"
+    }
   },
   "classification": {
     "title": "Classificazione TARIC",

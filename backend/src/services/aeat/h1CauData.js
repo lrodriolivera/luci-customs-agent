@@ -16,6 +16,7 @@ const { ajustesDelValor, ajustesDeLaPartida, valorConAjustes, CODIGO_TRANSPORTE_
 const { CODIGO_AJUSTE } = require('../forms/gastosHastaLaFrontera');
 const { sinCodigoPostal } = require('./paisesSinCodigoPostal');
 const { MODOS_ACTIVACION } = require('./h1CauActivacion');
+const { separarDocumentosC44 } = require('./documentosC44');
 
 // Medios de pago que obligan a declarar garantia con regimen 40 (regla C0616).
 const PAGOS_CON_GARANTIA = new Set(['O', 'R', 'S', 'T', 'U', 'V', 'G']);
@@ -269,7 +270,14 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     ],
     bultos: [{ tipo: tipoBulto, numero: good.packages?.quantity, marcas: texto(good.packages?.marks) || 'S/M' }],
     documentosPrevios: documentoPrevio(expedition, good, faltan),
-    documentosJustificativos: contexto.factura ? [{ tipo: 'N380', referencia: contexto.factura }] : [],
+    // Factura (N380) y los documentos de la casilla 44 que la agente ha
+    // añadido a la partida a partir del Arancel Integrado de la AEAT.
+    documentosJustificativos: [
+      ...(contexto.factura ? [{ tipo: 'N380', referencia: contexto.factura }] : []),
+      ...separarDocumentosC44(good.documentosC44).justificativos
+        .filter((d) => !(d.tipo === 'N380' && d.referencia === contexto.factura))
+    ],
+    referenciasAdicionales: separarDocumentosC44(good.documentosC44).referencias,
     valoracion: {
       metodo: String(expedition.valuation?.method || '1'),
       // Guia CAU v3.20 pag. 73: AdditionsAndDeductions (code CSRDC791, amount) solo por partida.

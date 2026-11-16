@@ -51,6 +51,8 @@ router.get('/:id', expeditionValidators.getById, expeditionController.getById);
 router.put('/:id', expeditionValidators.update, expeditionController.update);
 // Arancel e IVA de la partida segun el Arancel Integrado de la AEAT.
 router.post('/:id/goods/:goodId/aeat-rates', expeditionValidators.getById, expeditionController.applyAeatRates);
+// Documentos de la casilla 44 de la partida segun el Arancel Integrado de la AEAT.
+router.put('/:id/goods/:goodId/documentos-c44', expeditionValidators.getById, expeditionController.setDocumentosC44);
 router.delete('/:id', requirePermission('canDeleteExpeditions'), expeditionValidators.getById, expeditionController.remove);
 
 // Acciones especiales

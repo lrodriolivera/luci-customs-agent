@@ -619,7 +619,22 @@
     "aeatField_arancel": "droit",
     "aeatField_iva": "TVA",
     "aeatDifferencesConfirm": "Le droit ou la TVA d'un article ne correspond pas au tarif intégré de l'AEAT. Déposer quand même ?",
-    "aeatDifferencesCancelled": "Dépôt annulé : vérifiez les articles et utilisez les données de l'AEAT si nécessaire"
+    "aeatDifferencesCancelled": "Dépôt annulé : vérifiez les articles et utilisez les données de l'AEAT si nécessaire",
+    "c44": {
+      "title": "Case 44 · documents de l'article",
+      "help": "Certificats, licences et déclarations exigés par l'AEAT. Ils figurent dans le H1 de cet article. Les codes Y n'ont pas de numéro ; l'AEAT vérifie les numéros des certificats SOIVRE/PUE.",
+      "current": "Documents de la case 44",
+      "suggested": "Proposés par l'AEAT (choisissez ceux qui s'appliquent) :",
+      "code": "Code",
+      "reference": "Numéro du document",
+      "add": "Ajouter",
+      "remove": "Retirer {{tipo}}",
+      "codeInvalid": "Le code doit comporter 4 lettres ou chiffres (p. ex. N003, 1310, Y081).",
+      "referenceRequired": "Le numéro du document manque (seuls les codes Y n'en ont pas).",
+      "isAuthorisation": "C'est une autorisation, pas un document de l'article : l'AEAT la rejette ici.",
+      "saved": "Documents de la case 44 enregistrés",
+      "error": "Impossible d'enregistrer les documents de la case 44"
+    }
   },
   "classification": {
     "title": "Classification TARIC",
