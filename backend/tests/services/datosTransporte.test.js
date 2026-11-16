@@ -9,6 +9,7 @@ const {
   digitoControlIso6346,
   matriculaIso6346,
   separarContenedoresYPrecintos,
+  deducirTipoCarga,
   ciudadSinEstado,
   vueloPrincipal
 } = require('../../src/services/documentos/datosTransporte');
@@ -37,7 +38,6 @@ describe('datosTransporte', () => {
     test('sin cuatro letras (la cuarta U, J o Z) y siete cifras no es una matricula de contenedor', () => {
       expect(matriculaIso6346('TSB2716891')).toBeNull();
       expect(matriculaIso6346('MSCA1150584')).toBeNull();
-      expect(matriculaIso6346('MSCU1150584400')).toBeNull();
       expect(matriculaIso6346('SL264686400')).toBeNull();
       expect(matriculaIso6346(null)).toBeNull();
     });
@@ -68,7 +68,66 @@ describe('datosTransporte', () => {
     test('lo que no lleva ninguna cifra no es ni contenedor ni precinto', () => {
       const r = separarContenedoresYPrecintos(['sin numero', null, '', 'N/A', { x: 1 }], 'no es lista');
 
-      expect(r).toEqual({ contenedores: [], precintos: [], digitoIncorrecto: [] });
+      expect(r).toEqual({ contenedores: [], precintos: [], digitoIncorrecto: [], cifrasDeMas: [] });
+    });
+
+    // UAT 16/Nov/2026 (EXP-2026-74AEEBBC): el BL traia «MSCU1150584400 40HC /
+    // Seal SL264686400» y el contenedor acabo entre los precintos.
+    test('una matricula con cifras de mas se toma por sus 11 primeros caracteres y se señala', () => {
+      const r = separarContenedoresYPrecintos([], ['MSCU1150584400', 'SL264686400', '40HC']);
+
+      expect(r.contenedores).toEqual(['MSCU1150584']);
+      // El tamaño del contenedor no es un precinto.
+      expect(r.precintos).toEqual(['SL264686400']);
+      expect(r.cifrasDeMas).toEqual([{ leido: 'MSCU1150584400', numero: 'MSCU1150584', digitoCorrecto: false }]);
+      // Su digito se avisa en la nota de cifras de mas, no por duplicado.
+      expect(r.digitoIncorrecto).toEqual([]);
+    });
+
+    test('con cifras de mas y el digito de control correcto tambien se señala', () => {
+      expect(matriculaIso6346('MAGU5599236400 40HC')).toEqual({ numero: 'MAGU5599236', digitoCorrecto: true, cifrasDeMas: 'MAGU5599236400' });
+      // El tipo pegado tras un espacio no son cifras de mas.
+      expect(matriculaIso6346('MAGU5599236 40HC')).toEqual({ numero: 'MAGU5599236', digitoCorrecto: true });
+    });
+  });
+
+  describe('deducirTipoCarga', () => {
+    const BL = { tipo: 'bill_of_lading', contenedores: ['MSCU1150584'] };
+
+    test('lo que el documento dice literalmente manda', () => {
+      expect(deducirTipoCarga({ literal: 'fcl/fcl' })).toEqual({ tipoCarga: 'FCL', nota: null });
+      expect(deducirTipoCarga({ literal: 'CFS/CFS' })).toEqual({ tipoCarga: 'LCL', nota: null });
+      expect(deducirTipoCarga({ ...BL, literal: 'LCL', indicaciones: ['40HC'] }).tipoCarga).toBe('LCL');
+    });
+
+    test('CY/CY, FCL y «Shipper\'s load, count and seal» son contenedor completo', () => {
+      expect(deducirTipoCarga({ indicaciones: ['CY/CY'] }).tipoCarga).toBe('FCL');
+      expect(deducirTipoCarga({ indicaciones: ["SHIPPER'S LOAD, COUNT AND SEAL"] })).toEqual({
+        tipoCarga: 'FCL', nota: "Tipo de carga FCL deducido de: SHIPPER'S LOAD, COUNT AND SEAL."
+      });
+    });
+
+    test('CFS, consolidated o groupage son grupaje, aunque el contenedor lleve tamaño', () => {
+      expect(deducirTipoCarga({ indicaciones: ['CFS/CFS'] }).tipoCarga).toBe('LCL');
+      expect(deducirTipoCarga({ ...BL, indicaciones: ['Consolidated cargo', '40HC'] }).tipoCarga).toBe('LCL');
+      expect(deducirTipoCarga({ indicaciones: ['GROUPAGE'] }).tipoCarga).toBe('LCL');
+    });
+
+    test('en un BL, un contenedor completo con su tamaño es FCL y se explica', () => {
+      const r = deducirTipoCarga({ ...BL, indicaciones: [], leidosContenedor: ['MSCU1150584400 40HC'] });
+      expect(r.tipoCarga).toBe('FCL');
+      expect(r.nota).toContain('MSCU1150584 40HC');
+    });
+
+    test('sin señales, o con señales contradictorias, no se decide', () => {
+      expect(deducirTipoCarga({})).toEqual({ tipoCarga: null, nota: null });
+      // Un tamaño sin contenedor, o fuera de un BL, no basta.
+      expect(deducirTipoCarga({ tipo: 'bill_of_lading', contenedores: [], indicaciones: ['40HC'] }).tipoCarga).toBeNull();
+      expect(deducirTipoCarga({ tipo: 'packing_list', contenedores: ['MSCU1150584'], indicaciones: ['40HC'] }).tipoCarga).toBeNull();
+      const contradictorio = deducirTipoCarga({ indicaciones: ['CY/CY', 'CONSOLIDATED'] });
+      expect(contradictorio.tipoCarga).toBeNull();
+      expect(contradictorio.nota).toContain('elige el tipo de carga');
+      expect(deducirTipoCarga({ literal: 'contenedor completo' }).tipoCarga).toBeNull();
     });
   });
 

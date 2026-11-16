@@ -127,10 +127,30 @@ describe('extraccionDocumento', () => {
     });
 
     test('lo que no cumple el formato ISO no es un contenedor: pasa a los precintos y se anota (BL real, 13/Nov/2026)', () => {
-      const d = normalizarExtraccion({ transporte: { contenedores: ['MSCU1150584400 (40HC, PRECINTO SL264686400)', 'TGHU 88422-170 / 20GP', 'sin numero'] } });
+      const d = normalizarExtraccion({ transporte: { contenedores: ['TSB2716891', 'sin numero'] } });
       expect(d.transporte.contenedores).toEqual([]);
-      expect(d.transporte.precintos).toEqual(['MSCU1150584400', 'TGHU88422170']);
-      expect(d.notas).toEqual(['Precintos (no son contenedores): MSCU1150584400, TGHU88422170.']);
+      expect(d.transporte.precintos).toEqual(['TSB2716891']);
+      expect(d.notas).toEqual(['Precintos (no son contenedores): TSB2716891.']);
+    });
+
+    // UAT 16/Nov/2026 (EXP-2026-74AEEBBC): «Container No. / Seal: MSCU1150584400
+    // 40HC / Seal SL264686400». El contenedor acababa en precintos y el tipo de carga en null.
+    test('BL con el contenedor con cifras de mas y su tamaño: contenedor de 11 caracteres, nota y FCL', () => {
+      const d = normalizarExtraccion({
+        tipoDetectado: 'bill_of_lading',
+        transporte: { contenedores: [], precintos: ['MSCU1150584400', 'SL264686400'], tipoCarga: null, indicacionesCarga: ['40HC'] }
+      });
+      expect(d.transporte).toMatchObject({ contenedores: ['MSCU1150584'], precintos: ['SL264686400'], tipoCarga: 'FCL' });
+      expect(d.notas).toEqual([
+        'Precintos (no son contenedores): SL264686400.',
+        'El documento trae el contenedor MSCU1150584400 con cifras de más: se ha tomado MSCU1150584 (4 letras y 7 cifras, ISO 6346); su dígito de control no cuadra: compruébalo con el documento.',
+        'Tipo de carga FCL deducido del contenedor completo con su tamaño (MSCU1150584 40HC); si es grupaje, cámbialo a LCL.'
+      ]);
+    });
+
+    test('sin ninguna señal el tipo de carga queda en null', () => {
+      const d = normalizarExtraccion({ tipoDetectado: 'bill_of_lading', transporte: { contenedores: ['MAGU5599236'] } });
+      expect(d.transporte.tipoCarga).toBeNull();
     });
 
     // Texto que ve el agente: debe llevar tilde ("dígito"), no "digito".
@@ -146,8 +166,8 @@ describe('extraccionDocumento', () => {
 
       expect(cont(['TGHU8842217 (40HC)', 'tghu 884221-7', 'Container MSCU1150584 / seal 99'])).toEqual(['TGHU8842217', 'MSCU1150584']);
       // El mismo contenedor leido dos veces es uno solo.
-      // Sin una matricula valida no es un contenedor (va a los precintos, y a las notas).
-      expect(cont(['MSCU1150584400'])).toEqual([]);
+      // Con cifras de mas se toman los 11 primeros caracteres (y se anota).
+      expect(cont(['MSCU1150584400'])).toEqual(['MSCU1150584']);
       expect(cont([null, '', 'N/A'])).toEqual([]);
     });
 
@@ -340,7 +360,8 @@ describe('extraccionDocumento', () => {
 
   describe('prompt', () => {
     test('prohibe deducir el tipo de carga y pide null para lo que no se lee', () => {
-      expect(SYSTEM_PROMPT).toContain('PROHIBIDO deducirlo');
+      expect(SYSTEM_PROMPT).toContain('No lo deduzcas tu.');
+      expect(SYSTEM_PROMPT).toContain('"indicacionesCarga": []');
       // UAT 11/Nov/2026: la falta de un dato opcional no es una incidencia.
       expect(SYSTEM_PROMPT).toContain('NO es una incidencia que falte un dato opcional');
       expect(SYSTEM_PROMPT).toContain('que el incoterm no lleva lugar');

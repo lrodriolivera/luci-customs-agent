@@ -45,21 +45,41 @@ function digitoControlIso6346(diezCaracteres) {
 // Cuatro letras (la cuarta es la categoria: U contenedor, J equipo
 // desmontable, Z remolque) y siete cifras, la ultima el digito de control.
 const MATRICULA_ISO = /[A-Z]{3}[UJZ]\d{7}(?!\d)/;
+const MATRICULA_EXACTA = /^[A-Z]{3}[UJZ]\d{7}(?!\d)/;
+// Matricula seguida de cifras de mas («MSCU1150584400»): el documento pega
+// otra cifra (o el precinto) al numero del contenedor.
+const MATRICULA_CON_CIFRAS_DE_MAS = /^([A-Z]{3}[UJZ]\d{7})\d+/;
+
+const conDigito = (numero, extra = {}) => ({
+  numero,
+  digitoCorrecto: digitoControlIso6346(numero.slice(0, 10)) === Number(numero[10]),
+  ...extra
+});
 
 /**
  * Matricula de contenedor contenida en un texto leido («MAGU5599236/40HQ»,
- * «tghu 884221-7»), o null si no hay ninguna con el formato ISO 6346.
+ * «tghu 884221-7», «MSCU1234567 40HC»), o null si no hay ninguna con el
+ * formato ISO 6346.
+ *
+ * Si una palabra empieza por una matricula y sigue con mas cifras
+ * («MSCU1150584400»), se toman los 11 primeros caracteres y se marca
+ * `cifrasDeMas` con lo leido, para avisar al agente (UAT 16/Nov/2026: el BL
+ * traia «MSCU1150584400» y acabo entre los precintos).
  *
  * @param {*} valor
- * @returns {{ numero: string, digitoCorrecto: boolean } | null}
+ * @returns {{ numero: string, digitoCorrecto: boolean, cifrasDeMas?: string } | null}
  */
 function matriculaIso6346(valor) {
   if (typeof valor !== 'string' && typeof valor !== 'number') return null;
-  const compacto = String(valor).toUpperCase().replace(/[\s-]/g, '');
-  const hallada = MATRICULA_ISO.exec(compacto);
-  if (!hallada) return null;
-  const numero = hallada[0];
-  return { numero, digitoCorrecto: digitoControlIso6346(numero.slice(0, 10)) === Number(numero[10]) };
+  const mayusculas = String(valor).toUpperCase();
+  const hallada = MATRICULA_ISO.exec(mayusculas.replace(/[\s-]/g, ''));
+  if (hallada) return conDigito(hallada[0]);
+  // Palabra a palabra: el tipo o el precinto pueden ir pegados tras un espacio.
+  const palabras = mayusculas.split(/[\s/,;()]+/).map(p => p.replace(/-/g, '')).filter(Boolean);
+  const exacta = palabras.map(p => MATRICULA_EXACTA.exec(p)).find(Boolean);
+  if (exacta) return conDigito(exacta[0]);
+  const larga = [...palabras, mayusculas.replace(/[\s-]/g, '')].map(p => MATRICULA_CON_CIFRAS_DE_MAS.exec(p)).find(Boolean);
+  return larga ? conDigito(larga[1], { cifrasDeMas: larga[0] }) : null;
 }
 
 // Un precinto se guarda como se leyo, en mayusculas y sin espacios ni lo que
@@ -84,7 +104,8 @@ const sinRepetir = (lista) => [...new Set(lista)];
  *
  * @param {Array<*>} contenedoresLeidos
  * @param {Array<*>} [precintosLeidos]
- * @returns {{ contenedores: string[], precintos: string[], digitoIncorrecto: string[] }}
+ * @returns {{ contenedores: string[], precintos: string[], digitoIncorrecto: string[],
+ *   cifrasDeMas: Array<{ leido: string, numero: string, digitoCorrecto: boolean }> }}
  */
 function separarContenedoresYPrecintos(contenedoresLeidos, precintosLeidos = []) {
   const todos = [
@@ -93,13 +114,80 @@ function separarContenedoresYPrecintos(contenedoresLeidos, precintosLeidos = [])
   ];
   const matriculas = todos.map(valor => ({ valor, matricula: matriculaIso6346(valor) }));
   const contenedores = matriculas.filter(m => m.matricula).map(m => m.matricula);
-  const precintos = matriculas.filter(m => !m.matricula).map(m => numeroPrecinto(m.valor)).filter(Boolean);
+  // El tamaño del contenedor (40HC) tiene cifras pero no es un precinto.
+  const precintos = matriculas.filter(m => !m.matricula).map(m => numeroPrecinto(m.valor))
+    .filter(p => p && !TAMANO_CONTENEDOR.test(p.replace(/['’]/g, '')));
 
+  const largas = contenedores.filter(c => c.cifrasDeMas);
   return {
     contenedores: sinRepetir(contenedores.map(c => c.numero)).slice(0, MAX_ELEMENTOS),
     precintos: sinRepetir(precintos).slice(0, MAX_ELEMENTOS),
-    digitoIncorrecto: sinRepetir(contenedores.filter(c => !c.digitoCorrecto).map(c => c.numero))
+    // Los de cifras de mas ya avisan del digito en su propia nota.
+    digitoIncorrecto: sinRepetir(contenedores.filter(c => !c.digitoCorrecto && !c.cifrasDeMas).map(c => c.numero)),
+    cifrasDeMas: largas.filter((c, i) => largas.findIndex(o => o.cifrasDeMas === c.cifrasDeMas) === i)
+      .map(c => ({ leido: c.cifrasDeMas, numero: c.numero, digitoCorrecto: c.digitoCorrecto }))
   };
+}
+
+// ---- Tipo de carga (FCL / LCL) ----------------------------------------------------
+
+// Expresiones de grupaje y de contenedor completo que se leen en un BL. La IA
+// las transcribe tal cual en `indicacionesCarga`; la decision se toma aqui,
+// en codigo, para que sea siempre la misma y se pueda probar.
+const SENALES_LCL = /\bLCL\b|\bCFS\b|CONSOLIDAT|GROUPAGE|GRUPAJE|PART\s+OF\s+(?:A\s+)?CONTAINER|PARTE\s+DEL?\s+CONTENEDOR/;
+const SENALES_FCL = /\bFCL\b|\bCY\s*\/\s*CY\b|SHIPPER['’]?S?\s+LOAD\b|\bSLA?C\b|\bSLCS\b/;
+// Tipo y tamaño de un contenedor: 20GP, 40HC, 40'HQ, 1X40HC o el codigo ISO 6346 (22G1, 45G1, L5G1).
+const TAMANO_CONTENEDOR = /^(?:\d{1,2}X)?(?:(?:20|40|45)(?:GP|HC|HQ|DV|DC|ST|SD|RF|RH|OT|FR|NOR|PW|TK)|[24L][025][GRUPTHB]\d)$/;
+const TIPOS_CARGA_LITERALES = { FCL: 'FCL', 'FCL/FCL': 'FCL', 'CY/CY': 'FCL', LCL: 'LCL', 'LCL/LCL': 'LCL', 'CFS/CFS': 'LCL' };
+
+const textosLeidos = (lista) => (Array.isArray(lista) ? lista : [])
+  .filter(v => typeof v === 'string' || typeof v === 'number')
+  .map(v => String(v).toUpperCase().trim().slice(0, MAX_TEXTO))
+  .filter(Boolean);
+
+/** Tamaños de contenedor que aparecen en los textos leidos («MAGU5599236/40HQ» -> 40HQ). */
+const tamanosDeContenedor = (textos) => sinRepetir(textos
+  .flatMap(t => t.split(/[\s/,;()]+/))
+  .map(p => p.replace(/['’-]/g, ''))
+  .filter(p => TAMANO_CONTENEDOR.test(p)));
+
+/**
+ * Tipo de carga de un documento de transporte. Por orden:
+ *  1. Lo que el documento dice literalmente (FCL, LCL, CY/CY, CFS/CFS).
+ *  2. Expresiones de grupaje (CFS, LCL, consolidated, groupage, part of
+ *     container) -> LCL; de contenedor completo (FCL, CY/CY, «Shipper's load,
+ *     count and seal») -> FCL. Si hay de las dos, no se decide.
+ *  3. En un BL, un contenedor con su matricula y su tamaño (40HC) y sin
+ *     ninguna señal de grupaje -> FCL.
+ * Sin señales, null: lo elige el agente. Si se deduce, se explica en una nota.
+ *
+ * @param {{ literal?: *, indicaciones?: Array<*>, leidosContenedor?: Array<*>, contenedores?: string[], tipo?: string }} datos
+ * @returns {{ tipoCarga: 'FCL'|'LCL'|null, nota: string|null }}
+ */
+function deducirTipoCarga({ literal, indicaciones, leidosContenedor, contenedores = [], tipo } = {}) {
+  const directo = TIPOS_CARGA_LITERALES[String(literal ?? '').toUpperCase().replace(/\s/g, '')];
+  if (directo) return { tipoCarga: directo, nota: null };
+
+  const textos = textosLeidos(indicaciones);
+  const lcl = textos.filter(t => SENALES_LCL.test(t));
+  const fcl = textos.filter(t => SENALES_FCL.test(t));
+  if (lcl.length > 0 && fcl.length > 0) {
+    return {
+      tipoCarga: null,
+      nota: `El documento trae señales de grupaje (${lcl.join(', ')}) y de contenedor completo (${fcl.join(', ')}): elige el tipo de carga.`
+    };
+  }
+  if (lcl.length > 0) return { tipoCarga: 'LCL', nota: `Tipo de carga LCL deducido de: ${lcl.join(', ')}.` };
+  if (fcl.length > 0) return { tipoCarga: 'FCL', nota: `Tipo de carga FCL deducido de: ${fcl.join(', ')}.` };
+
+  const tamanos = tamanosDeContenedor([...textos, ...textosLeidos(leidosContenedor)]);
+  if (tipo === 'bill_of_lading' && contenedores.length > 0 && tamanos.length > 0) {
+    return {
+      tipoCarga: 'FCL',
+      nota: `Tipo de carga FCL deducido del contenedor completo con su tamaño (${contenedores.join(', ')} ${tamanos.join(', ')}); si es grupaje, cámbialo a LCL.`
+    };
+  }
+  return { tipoCarga: null, nota: null };
 }
 
 // ---- Ciudad sin el codigo de estado ------------------------------------------------
@@ -171,6 +259,7 @@ module.exports = {
   digitoControlIso6346,
   matriculaIso6346,
   separarContenedoresYPrecintos,
+  deducirTipoCarga,
   ciudadSinEstado,
   vueloPrincipal
 };

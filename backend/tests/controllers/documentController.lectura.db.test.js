@@ -122,6 +122,104 @@ describe('extractDocument', () => {
   });
 });
 
+// UAT 16/Nov/2026, EXP-2026-74AEEBBC: el expediente se creo sin documentos y
+// despues se subieron factura, packing list y BL en el detalle. Las lecturas
+// salieron bien pero «Datos para presentar el H1» quedo vacio.
+describe('extractDocument rellena los huecos del H1', () => {
+  const LECTURA_FACTURA = () => ({
+    ...normalizarExtraccion({
+      legible: true, tipoDetectado: 'commercial_invoice', confianza: 90,
+      exportador: { nombre: 'Shanghai Hongtai Ltd', direccion: 'No. 88 Pudong Road', ciudad: 'Shanghai', codigoPostal: '200120', pais: 'CN' },
+      factura: { numero: 'INV-H1-01-2026-8198800', moneda: 'USD', importeTotal: 184800, incoterm: 'FOB' }
+    }),
+    leido: true
+  });
+  const LECTURA_BL = () => ({
+    ...normalizarExtraccion({
+      legible: true, tipoDetectado: 'bill_of_lading', confianza: 85,
+      transporte: { numeroDocumento: 'MEDU8198800', contenedores: [], precintos: ['MSCU1150584400', 'SL264686400'], indicacionesCarga: ['40HC'] }
+    }),
+    leido: true
+  });
+  const conTipo = (user, type) => ({
+    documents: [{ type, fileName: 'a.pdf', originalName: `${type}.pdf`, filePath: '/tmp/a.pdf', mimeType: 'application/pdf', uploadedBy: user._id }]
+  });
+
+  test('la factura rellena el numero de factura y el CP, direccion y pais del exportador vacios, sin pisar lo escrito', async () => {
+    aiService.extractDocumentData.mockResolvedValue(LECTURA_FACTURA());
+    const user = usuario();
+    const { exp, docId } = await expedienteConDocumento(user, {
+      ...conTipo(user, 'commercial_invoice'),
+      exporter: { companyName: 'Nombre escrito por la agente', city: 'Ciudad escrita por la agente' }
+    });
+    const res = crearRes();
+
+    await ctrl.extractDocument({ params: { expeditionId: exp._id, docId }, user }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.autoApplied.map(c => c.clave).sort()).toEqual(
+      ['exporter.address', 'exporter.country', 'exporter.postalCode', 'invoiceNumber']
+    );
+    expect(res.body.data.expedition).toBeDefined();
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.invoiceNumber).toBe('INV-H1-01-2026-8198800');
+    expect(guardado.exporter).toMatchObject({
+      postalCode: '200120', address: 'No. 88 Pudong Road', country: 'CN',
+      // Lo que la agente ya escribio no se toca: queda como propuesta.
+      companyName: 'Nombre escrito por la agente', city: 'Ciudad escrita por la agente'
+    });
+    expect(res.body.data.proposal.map(c => c.clave)).toEqual(expect.arrayContaining(['exporter.companyName', 'exporter.city']));
+    expect(res.body.data.proposal.map(c => c.clave)).not.toContain('invoiceNumber');
+    // Las partidas no se tocan solas.
+    expect(guardado.goods[0].invoiceValue).toBe(184800);
+    const evento = guardado.timeline.find(t => t.action === 'document_data_applied');
+    expect(evento.description).toContain('commercial_invoice.pdf');
+    expect(evento.metadata).toMatchObject({ automatic: true });
+  });
+
+  test('un numero de factura ya escrito por la agente no se cambia', async () => {
+    aiService.extractDocumentData.mockResolvedValue(LECTURA_FACTURA());
+    const user = usuario();
+    const { exp, docId } = await expedienteConDocumento(user, { ...conTipo(user, 'commercial_invoice'), invoiceNumber: 'F-AGENTE-1' });
+    const res = crearRes();
+
+    await ctrl.extractDocument({ params: { expeditionId: exp._id, docId }, user }, res);
+
+    expect((await Expedition.findById(exp._id)).invoiceNumber).toBe('F-AGENTE-1');
+    expect(res.body.data.autoApplied.map(c => c.clave)).not.toContain('invoiceNumber');
+    expect(res.body.data.proposal.find(c => c.clave === 'invoiceNumber')).toMatchObject({ actual: 'F-AGENTE-1', nuevo: 'INV-H1-01-2026-8198800' });
+  });
+
+  test('el BL rellena el tipo de carga y el contenedor vacios', async () => {
+    aiService.extractDocumentData.mockResolvedValue(LECTURA_BL());
+    const user = usuario();
+    const { exp, docId } = await expedienteConDocumento(user, conTipo(user, 'bill_of_lading'));
+    const res = crearRes();
+
+    await ctrl.extractDocument({ params: { expeditionId: exp._id, docId }, user }, res);
+
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.transport.loadType).toBe('FCL');
+    expect(guardado.transport.containers.map(c => c.number)).toEqual(['MSCU1150584']);
+    // El numero del BL no es un dato del H1: sigue como propuesta.
+    expect(guardado.transport.documentNumber).toBeUndefined();
+    expect(res.body.data.proposal.map(c => c.clave)).toContain('transport.documentNumber');
+  });
+
+  test('con la declaracion presentada no se rellena nada', async () => {
+    aiService.extractDocumentData.mockResolvedValue(LECTURA_FACTURA());
+    const user = usuario();
+    const { exp, docId } = await expedienteConDocumento(user, { ...conTipo(user, 'commercial_invoice'), status: 'declaration_submitted' });
+    const res = crearRes();
+
+    await ctrl.extractDocument({ params: { expeditionId: exp._id, docId }, user }, res);
+
+    expect(res.body.data.autoApplied).toEqual([]);
+    expect(res.body.data.expedition).toBeUndefined();
+    expect((await Expedition.findById(exp._id)).invoiceNumber).toBeUndefined();
+  });
+});
+
 describe('getProposal', () => {
   test('devuelve la propuesta de un documento ya leido sin volver a llamar a la IA', async () => {
     const user = usuario();
@@ -152,9 +250,16 @@ describe('getProposal', () => {
 });
 
 describe('applyExtraction', () => {
+  // La lectura se guarda sin pasar por extractDocument: aqui se prueba solo
+  // el aplicar (extractDocument ya rellena solo los huecos del H1).
   const leer = async (user, extra) => {
     const creado = await expedienteConDocumento(user, extra);
-    await ctrl.extractDocument({ params: { expeditionId: creado.exp._id, docId: creado.docId }, user }, crearRes());
+    const { leido, modelo, ...datos } = await aiService.extractDocumentData();
+    await Expedition.updateOne(
+      { _id: creado.exp._id, 'documents._id': creado.docId },
+      { $set: { 'documents.$.extractedData': { ...datos, leido, modelo: modelo || null, leidoEn: new Date() } } }
+    );
+    aiService.extractDocumentData.mockClear();
     return creado;
   };
 
