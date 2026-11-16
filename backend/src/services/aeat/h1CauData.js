@@ -11,7 +11,7 @@
  */
 const { ErrorValidacion, eoriDe, formaRepresentacionDe } = require('../forms/identificadorAduanero');
 const { cambioObligatorio, aEuros } = require('../divisas/cambioDelExpediente');
-const { CODIGO_AJUSTE, gastosHastaLaFrontera, repartirPorValor } = require('../forms/gastosHastaLaFrontera');
+const { ajustesDelValor, ajustesDeLaPartida, valorConAjustes } = require('../forms/ajustesDelValor');
 const { sinCodigoPostal } = require('./paisesSinCodigoPostal');
 const { MODOS_ACTIVACION } = require('./h1CauActivacion');
 
@@ -207,12 +207,15 @@ function documentoPrevio(expedition, good, faltan) {
 
 const valorEnEuros = (good, cambio) => (cambio.tipo === 1 ? good.invoiceValue || 0 : aEuros(good.invoiceValue || 0, cambio.tipo));
 
-/** Flete y seguro hasta la UE repartidos entre las partidas por su valor en euros. */
-function ajustesDeGastos(expedition, cambio, cambiosGastos, faltan) {
-  const gastos = gastosHastaLaFrontera(expedition, { cambios: { ...cambiosGastos, [cambio.divisa]: cambio } });
-  faltan.push(...gastos.faltan);
-  const goods = expedition.goods || [];
-  return repartirPorValor(gastos.total, goods.map((g) => valorEnEuros(g, cambio)));
+/**
+ * Ajustes del valor en aduana de cada partida, en euros y repartidos por su
+ * valor: AK (flete y seguro hasta la UE fuera del precio), BA (transporte en
+ * la UE dentro del precio) y los opcionales del expediente. Ver `ajustesDelValor.js`.
+ */
+function ajustesPorPartida(expedition, cambio, cambiosGastos, faltan) {
+  const { ajustes, faltan: deLosAjustes } = ajustesDelValor(expedition, { cambios: { ...cambiosGastos, [cambio.divisa]: cambio } });
+  faltan.push(...deLosAjustes);
+  return ajustesDeLaPartida(ajustes, (expedition.goods || []).map((g) => valorEnEuros(g, cambio)));
 }
 
 function partidaDe(expedition, good, indice, contexto, faltan) {
@@ -221,9 +224,14 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
   if (codigo.length !== 10) faltan.push(`código TARIC de 10 dígitos de la partida ${n}`);
   const valor = good.invoiceValue || 0;
   const valorEuros = valorEnEuros(good, contexto.cambio);
-  // Flete y seguro hasta la entrada en la UE que no van en el precio (ajuste AK, en euros).
-  const ajusteGastos = contexto.ajustesGastos[indice] || 0;
-  const valorAduana = redondear(valorEuros + ajusteGastos);
+  // Ajustes A* suman y B* restan; el valor en aduana no puede ser negativo
+  // (Informacion complementaria H1 v3.26, punto 5, pag. 63).
+  const ajustes = contexto.ajustes[indice] || [];
+  const valorAduana = valorConAjustes(valorEuros, ajustes);
+  if (valorAduana < 0) {
+    const deducido = ajustes.filter((a) => a.codigo.startsWith('B')).reduce((s, a) => s + a.importe, 0);
+    faltan.push(`deducciones de la partida ${n} que no superen su valor (${deducido.toFixed(2)} EUR deducidos sobre ${valorEuros.toFixed(2)} EUR): el valor en aduana no puede ser negativo`);
+  }
   const tipoArancel = good.dutyRate || 0;
   const tipoIva = good.vatRate ?? 21;
   const arancel = redondear(valorAduana * tipoArancel / 100);
@@ -260,7 +268,8 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     documentosJustificativos: contexto.factura ? [{ tipo: 'N380', referencia: contexto.factura }] : [],
     valoracion: {
       metodo: String(expedition.valuation?.method || '1'),
-      ajustes: ajusteGastos > 0 ? [{ codigo: CODIGO_AJUSTE, importe: ajusteGastos }] : []
+      // Guia CAU v3.20 pag. 73: AdditionsAndDeductions (code CSRDC791, amount) solo por partida.
+      ajustes
     },
     indicadoresValoracion: '0000'
   };
@@ -313,7 +322,7 @@ function expeditionToH1CauData(expedition, { declarante, cambio, cambiosGastos =
   if (personas.forma !== '1' && !(ambito in AMBITOS_AUTORIZACION)) faltan.push('tipo de autorización de despacho (global, OCRE u OSRE)');
 
   const numeros = goods.map((_, i) => i + 1);
-  const contexto = { cambio: tipoCambio, medioDePago, factura, ajustesGastos: ajustesDeGastos(expedition, tipoCambio, cambiosGastos, faltan) };
+  const contexto = { cambio: tipoCambio, medioDePago, factura, ajustes: ajustesPorPartida(expedition, tipoCambio, cambiosGastos, faltan) };
   const datos = {
     mensaje: { id: mensajeId, fecha, test },
     operacion: 'A',

@@ -452,7 +452,19 @@ const ExpeditionSchema = new mongoose.Schema({
   // un dato («no hubo»).
   costs: {
     freight: { amount: { type: Number, min: 0 }, currency: { type: String, uppercase: true, trim: true } },
-    insurance: { amount: { type: Number, min: 0 }, currency: { type: String, uppercase: true, trim: true } }
+    insurance: { amount: { type: Number, min: 0 }, currency: { type: String, uppercase: true, trim: true } },
+    // Transporte desde la entrada en la UE hasta el lugar de entrega que SI va
+    // en el precio (incoterms D, y C con destino interior): se deduce con el
+    // codigo BA (art. 72.a del CAU). Con DAP/DPU/DDP es obligatorio para el H1.
+    freightAfterEntry: { amount: { type: Number, min: 0 }, currency: { type: String, uppercase: true, trim: true } },
+    // Otros ajustes del valor en aduana (CL265: AB comisiones, AI canones, BF
+    // comisiones de compra…), cada uno en su divisa. Ver services/forms/ajustesDelValor.js.
+    otherAdjustments: [{
+      _id: false,
+      code: { type: String, uppercase: true, trim: true },
+      amount: { type: Number, min: 0 },
+      currency: { type: String, uppercase: true, trim: true }
+    }]
   },
 
   // Documents

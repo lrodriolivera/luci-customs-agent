@@ -30,6 +30,15 @@ const SE_SUMAN = Object.freeze({
   DPU: { flete: false, seguro: false },
   DDP: { flete: false, seguro: false }
 });
+// Transporte DESPUES de la entrada en la UE incluido en el precio (art. 72.a
+// del CAU): con los D el vendedor entrega en destino, asi que el precio lo
+// lleva siempre (hay que informarlo, 0 si se entrega en el punto de entrada);
+// con los C solo si el lugar convenido es interior (CPT/CIP Madrid) o hay
+// transbordo en otro puerto de la UE: dato opcional. E y F: nunca.
+const TRANSPORTE_TRAS_LA_ENTRADA = Object.freeze({
+  DAP: 'exigir', DPU: 'exigir', DDP: 'exigir',
+  CPT: 'admitir', CIP: 'admitir', CFR: 'admitir', CIF: 'admitir'
+});
 const LISTA_INCOTERMS = 'EXW, FCA, FAS, FOB, CFR, CIF, CPT, CIP, DAP, DPU o DDP';
 const CODIGO_AJUSTE = 'AK';
 const GASTOS = [
@@ -54,7 +63,11 @@ function gastosQueSeSuman(incoterm) {
  * `null` significa que no se ha informado (un 0 si es un dato).
  */
 function gastoDe(expedition, campo) {
-  const valor = expedition?.costs?.[campo];
+  return importeConDivisa(expedition?.costs?.[campo]);
+}
+
+/** `{ importe, divisa }` de un `{ amount, currency }` (o numero en euros); null si no hay importe. */
+function importeConDivisa(valor) {
   if (typeof valor === 'number') return Number.isFinite(valor) ? { importe: valor, divisa: 'EUR' } : null;
   const importe = valor?.amount;
   if (importe === null || importe === undefined || importe === '' || !Number.isFinite(Number(importe))) return null;
@@ -113,13 +126,18 @@ function repartirPorValor(total, valores) {
   return [...partes.slice(0, -1), resto];
 }
 
-/** Divisas distintas del euro de los gastos que hay que sumar. */
+/**
+ * Divisas distintas del euro de los gastos y ajustes que cuentan para el valor
+ * en aduana: flete y seguro que se suman, transporte posterior a la entrada
+ * que se deduce y ajustes opcionales del expediente (`ajustesDelValor.js`).
+ */
 function divisasDeLosGastos(expedition) {
-  const { sumar } = gastosQueCuentan(expedition);
-  if (!sumar) return [];
-  const divisas = GASTOS
-    .filter(({ clave }) => sumar[clave])
-    .map(({ campo }) => gastoDe(expedition, campo)?.divisa)
+  const { sumar, codigo } = gastosQueCuentan(expedition);
+  const aSumar = sumar ? GASTOS.filter(({ clave }) => sumar[clave]).map(({ campo }) => gastoDe(expedition, campo)) : [];
+  const trasLaEntrada = TRANSPORTE_TRAS_LA_ENTRADA[codigo] ? [gastoDe(expedition, 'freightAfterEntry')] : [];
+  const otros = (Array.isArray(expedition?.costs?.otherAdjustments) ? expedition.costs.otherAdjustments : []).map(importeConDivisa);
+  const divisas = [...aSumar, ...trasLaEntrada, ...otros]
+    .map((g) => g?.divisa)
     .filter((d) => d && d !== 'EUR');
   return [...new Set(divisas)];
 }
@@ -136,5 +154,5 @@ async function cambiosDeLosGastos(expedition, { tipoOficial, ...opciones } = {})
 }
 
 module.exports = {
-  CODIGO_AJUSTE, gastosQueSeSuman, gastoDe, gastosHastaLaFrontera, repartirPorValor, divisasDeLosGastos, cambiosDeLosGastos
+  CODIGO_AJUSTE, TRANSPORTE_TRAS_LA_ENTRADA, incotermDe, importeConDivisa, gastosQueSeSuman, gastoDe, gastosHastaLaFrontera, repartirPorValor, divisasDeLosGastos, cambiosDeLosGastos
 };
