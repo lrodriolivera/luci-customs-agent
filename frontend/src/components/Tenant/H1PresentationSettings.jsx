@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { tenantH1API } from '../../services/api'
 
-const VACIO = { h1Service: 'precau', medioDePago: 'A', garantiaGRN: '', contacto: { name: '', phone: '', email: '' } }
+const VACIO = { h1Service: 'cau', medioDePago: 'A', garantiaGRN: '', contacto: { name: '', phone: '', email: '' } }
 
 /**
  * Ajustes > Aduanas: cómo presenta la agencia el H1. Servicio de la AEAT,
@@ -55,8 +55,8 @@ export default function H1PresentationSettings() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="h1-servicio">Servicio de la AEAT</label>
           <select id="h1-servicio" className="w-full px-3 py-2 border rounded-lg" value={datos.h1Service} onChange={cambiar('h1Service')}>
-            <option value="precau">DUA anterior (cerrado para declaraciones reales)</option>
             <option value="cau">H1 adaptado al CAU (CC415A)</option>
+            <option value="precau">DUA anterior (cerrado para declaraciones reales)</option>
           </select>
         </div>
         <div>

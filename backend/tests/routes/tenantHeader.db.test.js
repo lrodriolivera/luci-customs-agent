@@ -236,11 +236,11 @@ describe('GET/PUT /api/tenant/h1 (cómo se presenta el H1)', () => {
   const CONTACTO = { name: 'Ana Ruiz', phone: '+34 910000000', email: 'aduanas@agencia.es' };
   const put = (cuerpo, usuario = 'adminA') => request(crearApp()).put('/api/tenant/h1').set('x-test-user', usuario).send(cuerpo);
 
-  test('sin configurar devuelve el servicio anterior, pago previo y sin garantía', async () => {
+  test('sin configurar devuelve el servicio CAU, pago previo y sin garantía', async () => {
     const res = await request(crearApp()).get('/api/tenant/h1').set('x-test-user', 'adminA');
 
     expect(res.status).toBe(200);
-    expect(res.body.data).toEqual({ h1Service: 'precau', medioDePago: 'A', garantiaGRN: '', contacto: { name: '', phone: '', email: '' } });
+    expect(res.body.data).toEqual({ h1Service: 'cau', medioDePago: 'A', garantiaGRN: '', contacto: { name: '', phone: '', email: '' } });
   });
 
   test('guarda servicio, pago, garantía y contacto en el propio tenant, no en el de la cabecera', async () => {
