@@ -14,6 +14,26 @@ const cuadro = (over = {}) => ({
 });
 
 describe('adaptarCuadro', () => {
+  // «Distribución por Canal»: el panel lee dashboardData.channels y el
+  // adaptador no lo pasaba, así que la tarjeta salía vacía.
+  it('pasa al panel el reparto por canal (porcentajes y recuentos)', () => {
+    const canales = {
+      canales: { green: 3, yellow: 0, orange: 0, red: 1 },
+      conCanalAsignado: 4,
+      porcentajes: { green: 75, yellow: 0, orange: 0, red: 25 }
+    };
+    const r = adaptarCuadro(cuadro({ canales }), null);
+    expect(r.channels).toEqual({ green: 75, yellow: 0, orange: 0, red: 25 });
+    expect(r.channelCounts).toEqual({ green: 3, yellow: 0, orange: 0, red: 1 });
+  });
+
+  it('sin ningún canal asignado, channels es null (el panel pinta «Sin datos»), no ceros', () => {
+    const canales = { canales: { green: 0, yellow: 0, orange: 0, red: 0 }, conCanalAsignado: 0, porcentajes: { green: 0, yellow: 0, orange: 0, red: 0 } };
+    const r = adaptarCuadro(cuadro({ canales }), null);
+    expect(r.channels).toBeNull();
+    expect(r.channelCounts).toBeNull();
+  });
+
   it('mapea el cuadro real a operations/financial/compliance', () => {
     const r = adaptarCuadro(cuadro(), cuadro(), { activeExpeditions: 7 });
     expect(r.simulated).toBe(false);

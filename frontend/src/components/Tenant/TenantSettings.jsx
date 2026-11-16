@@ -20,17 +20,34 @@ import {
 } from '@heroicons/react/24/outline';
 import api, { tenantEoriAPI } from '../../services/api';
 import H1PresentationSettings from './H1PresentationSettings';
+import GeneralTab from './GeneralTab';
+import { useAuth } from '../../context/AuthContext';
+import { esAdministradorDelTenant } from '../../utils/roles';
 import { PasswordModal } from '../Admin/AdminPanel';
 import { PAISES_ADUANEROS, codigosHabilitados, eoriPorPais } from '../../constants/paisesAduaneros';
 
+/**
+ * Roles de usuario de LUCI (User.role, ver backend/src/constants/roles.js
+ * DE_TENANT). super_admin es de plataforma y no se lista aqui.
+ */
+const ROLES_DE_LUCI = [
+  { id: 'admin', etiqueta: 'settings.roleAdmin' },
+  { id: 'supervisor', etiqueta: 'settings.roleSupervisor' },
+  { id: 'agent', etiqueta: 'settings.roleAgent' },
+  { id: 'viewer', etiqueta: 'settings.roleViewer' }
+];
+
 const TenantSettings = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isAdmin = esAdministradorDelTenant(user);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [settings, setSettings] = useState(null);
   const [tenant, setTenant] = useState(null);
-  const [roles, setRoles] = useState([]);
+  // Usuarios activos del tenant por rol (GET /api/tenant/users/role-counts).
+  // null = aun no cargados; 'error' = el servidor no los dio: no se inventan.
+  const [recuentosRoles, setRecuentosRoles] = useState(null);
   const [message, setMessage] = useState(null);
   // Certificate upload state
   const [certFile, setCertFile] = useState(null);
@@ -51,6 +68,15 @@ const TenantSettings = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  const cargarRecuentosDeRoles = async () => {
+    try {
+      const res = await api.get('/api/tenant/users/role-counts');
+      setRecuentosRoles(res.data?.data?.counts || 'error');
+    } catch (error) {
+      setRecuentosRoles('error');
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -96,33 +122,13 @@ const TenantSettings = () => {
         }
       });
 
-      setRoles([
-        { id: 'tenant_admin', name: 'Administrador', usersCount: 2, isBuiltIn: true },
-        { id: 'manager', name: 'Gestor', usersCount: 5, isBuiltIn: true },
-        { id: 'agent', name: 'Agente Aduanero', usersCount: 12, isBuiltIn: true },
-        { id: 'operator', name: 'Operador', usersCount: 8, isBuiltIn: true },
-        { id: 'viewer', name: 'Visualizador', usersCount: 3, isBuiltIn: true }
-      ]);
+      cargarRecuentosDeRoles();
 
     } catch (error) {
       console.error('Error loading settings:', error);
       setMessage({ type: 'error', text: t('settings.loadError') });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      // API call to save settings
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setMessage({ type: 'success', text: t('settings.saved') });
-      setTimeout(() => setMessage(null), 3000);
-    } catch (error) {
-      setMessage({ type: 'error', text: t('settings.saveError') });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -184,14 +190,6 @@ const TenantSettings = () => {
             {t('settings.subtitle')} {tenant?.name}
           </p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2"
-        >
-          {saving && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
-          {t('settings.saveChanges')}
-        </button>
       </div>
 
       {/* Message */}
@@ -232,141 +230,13 @@ const TenantSettings = () => {
       <div className="bg-white rounded-lg shadow p-6">
         {/* General Tab */}
         {activeTab === 'general' && (
-          <div className="space-y-6">
-            <h2 className="text-lg font-medium text-gray-900">{t('settings.generalInfo')}</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('settings.orgName')}
-                </label>
-                <input
-                  type="text"
-                  value={tenant?.name || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  readOnly
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('settings.slug')}
-                </label>
-                <input
-                  type="text"
-                  value={tenant?.slug || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50"
-                  readOnly
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('settings.nifCif')}
-                </label>
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.nif || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  EORI
-                </label>
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.eori || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  REA
-                </label>
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.rea || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('settings.orgType')}
-                </label>
-                <select
-                  value={tenant?.businessInfo?.type || ''}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                >
-                  <option value="customs_agent">{t('settings.typeAgent')}</option>
-                  <option value="importer">{t('settings.typeImporter')}</option>
-                  <option value="exporter">{t('settings.typeExporter')}</option>
-                  <option value="carrier">{t('settings.typeCarrier')}</option>
-                  <option value="other">{t('settings.typeOther')}</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('common.address')}
-              </label>
-              <input
-                type="text"
-                value={tenant?.businessInfo?.address?.street || ''}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
-                placeholder="Calle y numero"
-              />
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.address?.city || ''}
-                  className="border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Ciudad"
-                />
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.address?.province || ''}
-                  className="border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Provincia"
-                />
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.address?.postalCode || ''}
-                  className="border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Codigo Postal"
-                />
-                <input
-                  type="text"
-                  value={tenant?.businessInfo?.address?.country || 'ES'}
-                  className="border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Pais"
-                />
-              </div>
-            </div>
-
-            {/* Status */}
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-sm font-medium text-gray-700">{t('settings.accountStatus')}</span>
-                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                    tenant?.status === 'active'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {tenant?.status === 'active' ? t('common.active') : tenant?.status}
-                  </span>
-                </div>
-                <div className="text-sm text-gray-500">
-                  Plan: <span className="font-medium capitalize">{tenant?.subscription?.plan}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <GeneralTab
+            key={tenant?.id || tenant?._id}
+            tenant={tenant}
+            canEdit={isAdmin}
+            onSaved={setTenant}
+            onGoToCustoms={() => setActiveTab('customs')}
+          />
         )}
 
         {/* Branding Tab */}
@@ -636,18 +506,21 @@ const TenantSettings = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-medium text-gray-900">{t('settings.rolesPermissions')}</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => { setInviteError(null); setShowInviteModal(true); }}
-                  className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
-                >
-                  <UserPlusIcon className="h-5 w-5" />
-                  {t('settings.inviteUser')}
-                </button>
-                <button className="px-4 py-2 bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200">
-                  {t('settings.createCustomRole')}
-                </button>
-              </div>
+              {/* Invitar y crear roles: solo admin/super_admin (el servidor responde 403 a los demás). */}
+              {isAdmin && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setInviteError(null); setShowInviteModal(true); }}
+                    className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
+                  >
+                    <UserPlusIcon className="h-5 w-5" />
+                    {t('settings.inviteUser')}
+                  </button>
+                  <button className="px-4 py-2 bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200">
+                    {t('settings.createCustomRole')}
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="overflow-x-auto">
@@ -661,39 +534,37 @@ const TenantSettings = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {roles.map(role => (
+                  {ROLES_DE_LUCI.map(role => (
                     <tr key={role.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <UserGroupIcon className="h-5 w-5 text-gray-400" />
-                          <span className="font-medium text-gray-900">{role.name}</span>
+                          <span className="font-medium text-gray-900">{t(role.etiqueta)}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          role.isBuiltIn ? 'bg-gray-100 text-gray-600' : 'bg-violet-100 text-violet-600'
-                        }`}>
-                          {role.isBuiltIn ? t('settings.predefined') : t('settings.custom')}
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                          {t('settings.predefined')}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                        {role.usersCount} usuarios
+                        {recuentosRoles && recuentosRoles !== 'error'
+                          ? t('settings.usersCount', { count: recuentosRoles[role.id] ?? 0 })
+                          : '—'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <button className="text-violet-600 hover:text-violet-800 mr-3">
+                        <button className="text-violet-600 hover:text-violet-800">
                           {t('settings.viewPermissions')}
                         </button>
-                        {!role.isBuiltIn && (
-                          <button className="text-red-600 hover:text-red-800">
-                            {t('common.delete')}
-                          </button>
-                        )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            {recuentosRoles === 'error' && (
+              <p className="text-sm text-gray-500">{t('settings.usersCountUnavailable')}</p>
+            )}
           </div>
         )}
 

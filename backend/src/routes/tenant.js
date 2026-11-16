@@ -316,11 +316,33 @@ router.get(
 // =====================================================
 
 const Tenant = require('../models/Tenant');
+const { ROLES } = require('../constants/roles');
 
 /**
- * GET /api/tenant/eori
- * Get EORI numbers for all countries
+ * Vista del tenant que consume Ajustes (GET /tenant/me y PUT /tenant/general).
+ *
+ * nif/eori pueden venir cifrados (formato v1: de piiCrypto). El hook del
+ * modelo ya los descifra en lecturas normales, pero se descifra aqui de forma
+ * explicita para no depender solo de ese efecto implicito: en pantalla nunca
+ * debe verse un valor cifrado.
  */
+function vistaDelTenant(tenant) {
+  const { decrypt } = require('../utils/piiCrypto');
+  const businessInfo = { ...(tenant.businessInfo || {}) };
+  if (businessInfo.nif) businessInfo.nif = decrypt(businessInfo.nif);
+  if (businessInfo.eori) businessInfo.eori = decrypt(businessInfo.eori);
+  return {
+    id: String(tenant._id),
+    name: tenant.name,
+    slug: tenant.slug,
+    status: tenant.status,
+    businessInfo,
+    subscription: tenant.subscription || {},
+    customsConfig: tenant.customsConfig || {},
+    settings: tenant.settings || {}
+  };
+}
+
 /**
  * GET /api/tenant/me
  * Devuelve el tenant del usuario autenticado leído de MongoDB (no del Map demo).
@@ -329,34 +351,171 @@ router.get('/tenant/me', auth, extractTenant({ required: false }), requireTenant
   try {
     const tenant = await Tenant.findById(req.tenantId).lean();
     if (!tenant) return res.status(404).json({ success: false, error: 'Tenant no encontrado' });
-
-    // nif/eori pueden venir cifrados (formato v1: de piiCrypto). El hook del
-    // modelo ya los descifra en lecturas normales, pero se descifra aqui de
-    // forma explicita para no depender solo de ese efecto implicito: en
-    // pantalla nunca debe verse un valor cifrado.
-    const { decrypt } = require('../utils/piiCrypto');
-    const businessInfo = { ...(tenant.businessInfo || {}) };
-    if (businessInfo.nif) businessInfo.nif = decrypt(businessInfo.nif);
-    if (businessInfo.eori) businessInfo.eori = decrypt(businessInfo.eori);
-
-    res.json({
-      success: true,
-      data: {
-        id: String(tenant._id),
-        name: tenant.name,
-        slug: tenant.slug,
-        status: tenant.status,
-        businessInfo,
-        subscription: tenant.subscription || {},
-        customsConfig: tenant.customsConfig || {},
-        settings: tenant.settings || {}
-      }
-    });
+    res.json({ success: true, data: vistaDelTenant(tenant) });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
+/**
+ * Solo el administrador del tenant (o el super_admin de plataforma) cambia los
+ * datos de la empresa o da de alta usuarios. Es el mismo criterio que
+ * POST /api/auth/admin/invite. adminOnly no sirve aqui: deja pasar tambien al
+ * supervisor.
+ */
+const soloAdministradorDelTenant = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ success: false, error: 'No autenticado.' });
+  if (![ROLES.ADMIN, ROLES.SUPER_ADMIN].includes(req.user.role)) {
+    return res.status(403).json({ success: false, error: 'Solo un administrador de la organización puede cambiar estos datos.' });
+  }
+  next();
+};
+
+/**
+ * Campos de Ajustes › General que se guardan, con su longitud maxima. Las
+ * longitudes de la direccion son las del declarante en los mensajes de la AEAT
+ * (calle 70, ciudad 35, codigo postal 17): el H7 toma de aqui la direccion del
+ * declarante.
+ *
+ * NO se editan aqui:
+ *  - businessInfo.eori: tiene su pantalla (Ajustes › Aduanas, PUT /tenant/eori).
+ *  - businessInfo.nif: dato fiscal, cifrado en la BD y con hash para busquedas;
+ *    cambiarlo es una operacion de soporte, no un ajuste.
+ *  - businessInfo.type: decide si el tenant actua como parte o como
+ *    representante ante la AEAT (aeatSubmitService._tenantEsLaParte).
+ *  - slug: identifica al tenant.
+ */
+const CAMPOS_GENERALES = ['name', 'rea', 'address'];
+const MAX_DIRECCION = { street: 70, city: 35, province: 35, postalCode: 17 };
+const MAX_NOMBRE = 70;
+const MAX_REA = 35;
+
+/** Texto recortado, o undefined si no es una cadena (un objeto, un numero...). */
+const texto = (valor) => (typeof valor === 'string' ? valor.trim() : undefined);
+
+/** Valida el body de PUT /tenant/general y lo traduce a un $set. */
+function cambiosGenerales(body) {
+  const errores = [];
+  const cambios = {};
+  const noEditables = Object.keys(body).filter(k => !CAMPOS_GENERALES.includes(k));
+  if (noEditables.length > 0) {
+    errores.push(`Estos campos no se editan desde Ajustes › General: ${noEditables.join(', ')}`);
+  }
+
+  if (body.name !== undefined) {
+    const nombre = texto(body.name);
+    if (!nombre || nombre.length > MAX_NOMBRE) errores.push(`El nombre de la organización es obligatorio (hasta ${MAX_NOMBRE} caracteres)`);
+    else cambios.name = nombre;
+  }
+  if (body.rea !== undefined) {
+    const rea = texto(body.rea);
+    if (rea === undefined || rea.length > MAX_REA) errores.push(`El REA no es válido (hasta ${MAX_REA} caracteres)`);
+    else cambios['businessInfo.rea'] = rea;
+  }
+  if (body.address !== undefined) {
+    const dir = body.address;
+    if (!dir || typeof dir !== 'object' || Array.isArray(dir)) {
+      errores.push('La dirección no es válida');
+    } else {
+      for (const [campo, max] of Object.entries(MAX_DIRECCION)) {
+        const valor = dir[campo] === undefined || dir[campo] === null ? '' : texto(dir[campo]);
+        if (valor === undefined || valor.length > max) errores.push(`La dirección (${campo}) no es válida (hasta ${max} caracteres)`);
+        else cambios[`businessInfo.address.${campo}`] = valor;
+      }
+      const pais = (texto(dir.country) || '').toUpperCase();
+      if (!/^[A-Z]{2}$/.test(pais)) errores.push('El país de la dirección ha de ser un código ISO de dos letras (p. ej. ES)');
+      else cambios['businessInfo.address.country'] = pais;
+    }
+  }
+  return { errores, cambios };
+}
+
+/**
+ * PUT /api/tenant/general
+ * Body: { name?, rea?, address?: { street, city, province, postalCode, country } }
+ * La direccion se guarda COMPLETA: un campo que no llega queda vacio (el
+ * formulario de Ajustes manda siempre los cinco).
+ *
+ * Acotado al tenant del token (req.tenantId lo resuelve extractTenant desde el
+ * usuario autenticado, nunca desde X-Tenant-ID salvo super_admin).
+ */
+router.put('/tenant/general', auth, extractTenant({ required: false }), requireTenant, soloAdministradorDelTenant, async (req, res) => {
+  try {
+    const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
+    const { errores, cambios } = cambiosGenerales(body);
+    if (errores.length > 0) return res.status(400).json({ success: false, error: errores.join('. '), errors: errores });
+    if (Object.keys(cambios).length === 0) {
+      return res.status(400).json({ success: false, error: 'No hay cambios que guardar' });
+    }
+
+    if (!require('mongoose').Types.ObjectId.isValid(String(req.tenantId))) {
+      return res.status(400).json({ success: false, error: 'Tenant no valido' });
+    }
+
+    // Update directo con $set de rutas concretas: no pasa por el pre('save')
+    // (no recifra ni recalcula hashes) y no toca nif/eori, que siguen como
+    // esten guardados, cifrados o no.
+    const r = await Tenant.updateOne({ _id: req.tenantId }, { $set: cambios }, { runValidators: false });
+    if (r.matchedCount === 0) return res.status(404).json({ success: false, error: 'Tenant no encontrado' });
+
+    res.json({ success: true, data: vistaDelTenant(await Tenant.findById(req.tenantId).lean()) });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * Quien ve los recuentos de usuarios por rol: los que ven Ajustes › Roles con
+ * capacidad de gestion o supervision. Un agente o un consultor no necesita
+ * saber cuantos usuarios hay en la organizacion.
+ */
+const ROLES_QUE_VEN_RECUENTOS = [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPERVISOR];
+
+/**
+ * GET /api/tenant/users/role-counts
+ * Usuarios ACTIVOS del tenant por rol: { counts: { admin, supervisor, agent, viewer }, total }.
+ *
+ * Acotado al tenant del token (req.tenantId). Solo los roles de tenant
+ * (DE_TENANT): super_admin es de plataforma y no se lista como rol de la
+ * organizacion. aggregate() no castea a ObjectId como find(): se castea aqui.
+ */
+router.get('/tenant/users/role-counts', auth, extractTenant({ required: false }), requireTenant, async (req, res) => {
+  try {
+    if (!ROLES_QUE_VEN_RECUENTOS.includes(req.user?.role)) {
+      return res.status(403).json({ success: false, error: 'No tienes permisos para esta accion.' });
+    }
+    const mongoose = require('mongoose');
+    const User = require('../models/User');
+    const { DE_TENANT } = require('../constants/roles');
+    if (!mongoose.Types.ObjectId.isValid(String(req.tenantId))) {
+      return res.status(400).json({ success: false, error: 'Tenant no valido' });
+    }
+
+    const filas = await User.aggregate([
+      {
+        $match: {
+          tenantId: new mongoose.Types.ObjectId(String(req.tenantId)),
+          isActive: { $ne: false },
+          role: { $in: [...DE_TENANT] }
+        }
+      },
+      { $group: { _id: '$role', n: { $sum: 1 } } }
+    ]);
+
+    const counts = Object.fromEntries(DE_TENANT.map(rol => [rol, 0]));
+    for (const fila of filas) counts[fila._id] = fila.n;
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
+    res.json({ success: true, data: { counts, total } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/tenant/eori
+ * EORI por pais del tenant.
+ */
 router.get('/tenant/eori', auth, extractTenant({ required: false }), requireTenant, async (req, res) => {
   try {
     const tenant = await Tenant.findById(req.tenantId);
@@ -379,7 +538,7 @@ const MEDIOS_DE_PAGO_H1 = ['A', 'R', 'J'];
 const FORMATO_GRN = /^\d{2}[A-Z]{2}[A-Z0-9]{12}\d([A-Z]\d{6})?$/;
 
 const presentacionH1De = (tenant) => ({
-  h1Service: tenant.customsConfig?.h1Service || 'precau',
+  h1Service: tenant.customsConfig?.h1Service || 'cau',
   medioDePago: tenant.customsConfig?.medioDePago || 'A',
   garantiaGRN: tenant.customsConfig?.garantiaGRN || '',
   contacto: {

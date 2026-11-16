@@ -220,6 +220,38 @@ describe('<AnalyticsDashboard />', () => {
     expect(screen.getByText('8%')).toBeInTheDocument()
   })
 
+  // El backend manda channels: null cuando ningún expediente tiene canal en el
+  // periodo: la tarjeta lo dice, no queda en blanco.
+  test('distribución por canal sin datos muestra «Sin datos»', async () => {
+    analyticsAPI.getDashboard.mockResolvedValue({
+      data: { success: true, data: { ...mockDashboardData, channels: null, channelCounts: null } }
+    })
+    render(<AnalyticsDashboard />)
+
+    const tarjeta = (await screen.findByText('Distribucion por Canal')).closest('.card')
+    expect(within(tarjeta).getByText('analyticsPage.kpiSinDatos')).toBeInTheDocument()
+  })
+
+  test('distribución por canal: orden verde, amarillo, naranja, rojo y número de declaraciones', async () => {
+    analyticsAPI.getDashboard.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          ...mockDashboardData,
+          channels: { red: 25, green: 75, orange: 0, yellow: 0 },
+          channelCounts: { red: 1, green: 3, orange: 0, yellow: 0 }
+        }
+      }
+    })
+    render(<AnalyticsDashboard />)
+
+    const tarjeta = (await screen.findByText('Distribucion por Canal')).closest('.card')
+    const etiquetas = within(tarjeta).getAllByText(/^(Verde|Amarillo|Naranja|Rojo)$/).map(e => e.textContent)
+    expect(etiquetas).toEqual(['Verde', 'Amarillo', 'Naranja', 'Rojo'])
+    expect(within(tarjeta).getByText('(3)')).toBeInTheDocument()
+    expect(within(tarjeta).getByText('(1)')).toBeInTheDocument()
+  })
+
   test('muestra distribución por canal con porcentajes correctos', async () => {
     render(<AnalyticsDashboard />)
 
