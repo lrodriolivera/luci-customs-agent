@@ -169,6 +169,13 @@ async function divisaDeLaFactura(expedition) {
   }
 }
 
+/** Campos de `declaration` que elige la agente y que generar el H1 no debe borrar. */
+const CAMPOS_DE_LA_AGENTE = ['paymentMethod', 'guaranteeGRN'];
+function datosDeLaAgente(declaration) {
+  const previa = declaration?.toObject ? declaration.toObject() : (declaration || {});
+  return Object.fromEntries(CAMPOS_DE_LA_AGENTE.filter((c) => previa[c]).map((c) => [c, previa[c]]));
+}
+
 /** Datos del expediente que solo existen para presentar el H1. */
 const datosH1De = (expedition, factura = { divisa: 'EUR', sinTipoBce: false }) => {
   const incoterm = String(expedition.incoterm?.code || '').toUpperCase();
@@ -632,6 +639,9 @@ const generateH1 = async (req, res) => {
 
     // Actualizar expediente
     expedition.declaration = {
+      // Lo que la agente eligio para este expediente (forma de pago, GRN) no
+      // lo genera el H1: se conserva (antes se perdia al generar, 17/Nov/2026).
+      ...datosDeLaAgente(expedition.declaration),
       type: 'H1',
       declarationType: h1Data.declarationType || 'A',
       lrn: h1Declaration.lrn,
@@ -1455,6 +1465,9 @@ const generateH1Direct = async (req, res) => {
 
     // Actualizar expediente
     expedition.declaration = {
+      // Lo que la agente eligio para este expediente (forma de pago, GRN) no
+      // lo genera el H1: se conserva (antes se perdia al generar, 17/Nov/2026).
+      ...datosDeLaAgente(expedition.declaration),
       type: 'H1',
       declarationType: body.declarationAdditional || 'A',
       lrn: h1Declaration.lrn,

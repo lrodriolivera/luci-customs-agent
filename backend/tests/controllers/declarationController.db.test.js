@@ -116,6 +116,22 @@ describe('generateH1: validaciones antes de generar', () => {
     expect(guardado.declaration.xmlContent).toBe('<H1>ok</H1>');
   });
 
+  // Prueba e2e del 17/Nov/2026: la forma de pago A elegida en «Datos para
+  // presentar el H1» se perdia al generar, y el H1 salia con la de Ajustes.
+  test('generar el H1 conserva la forma de pago y el GRN que eligió la agente', async () => {
+    const user = usuario();
+    const exp = await expedienteImportacion(user);
+    exp.declaration = { paymentMethod: 'A', guaranteeGRN: '26ES000000000000X1' };
+    await exp.save();
+    const res = crearRes();
+
+    await ctrl.generateH1({ body: { expeditionId: exp._id }, user }, res);
+
+    expect(res.statusCode).toBe(200);
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.declaration).toMatchObject({ type: 'H1', paymentMethod: 'A', guaranteeGRN: '26ES000000000000X1' });
+  });
+
   test('rechaza el H1 sobre una exportacion', async () => {
     const user = usuario();
     const exp = await expedienteImportacion(user, { operationType: 'export' });
