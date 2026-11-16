@@ -288,9 +288,20 @@ TaricCodeSchema.methods.getChildren = function() {
 };
 
 // Statics
+// En $text de MongoDB "..." es una frase obligatoria y -termino excluye: en una
+// descripcion comercial (pantalla 14", modelo "ProBook X14") vaciaban la
+// busqueda y la IA clasificaba sin candidatos (medido el 17/Nov/2026: 4 de 60
+// descripciones de prueba sin ningun resultado). Se buscan como palabras sueltas.
+const terminosDeBusqueda = (query) => String(query || '')
+  .replace(/["“”«»]/g, ' ')
+  .replace(/(^|\s)-+/g, '$1')
+  .trim();
+
 TaricCodeSchema.statics.search = function(query, limit = 20) {
+  const terminos = terminosDeBusqueda(query);
+  if (!terminos) return Promise.resolve([]);
   return this.find(
-    { $text: { $search: query }, isActive: true, isLeaf: true },
+    { $text: { $search: terminos }, isActive: true, isLeaf: true },
     { score: { $meta: 'textScore' } }
   )
     .sort({ score: { $meta: 'textScore' } })
