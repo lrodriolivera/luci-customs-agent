@@ -9,6 +9,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { esImportacion } from '../../utils/expedition'
 import { pasoDelPortal, progresoDelPortal, documentosPendientes } from '../../utils/portalEstado'
+import PortalPagoTributos from './PortalPagoTributos'
 
 export default function PortalHome() {
   const { t } = useTranslation()
@@ -41,6 +42,9 @@ export default function PortalHome() {
           {esImportacion(expedition) ? t('portal.importExpedition') : t('portal.exportExpedition')}: {expedition?.expeditionId}
         </p>
       </div>
+
+      {/* Pago de los tributos de aduana (solo importacion) */}
+      {expedition?.pagoTributos && <PortalPagoTributos token={token} pago={expedition.pagoTributos} />}
 
       {/* Progress */}
       <div className="card">

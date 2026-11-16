@@ -14,6 +14,7 @@ const logger = require('../config/logger');
  */
 const EVENTOS_VISIBLES_CLIENTE = [
   'expedition_created',
+  'payment_method_chosen',
   'created',
   'document_uploaded',
   'document_deleted',
@@ -43,6 +44,70 @@ const { autorizacionVigente, aplicarAutorizacionVigente } = require('../services
  * Obtener expediente por token del portal
  * GET /api/portal/:token
  */
+// Pagina de la Sede de la AEAT para pagar deudas de comercio exterior
+// (modelo 031) que enlazaron las agentes (UAT 16/Nov/2026).
+const URL_PAGO_AEAT = 'https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/presentacion-declaraciones-ayuda-tecnica/pago-consultas-comercio-exterior/realizar-pago-telematicamente.html';
+const FORMAS_DE_PAGO_CLIENTE = ['A', 'R'];
+
+/**
+ * Lo que ve el cliente sobre el pago de los tributos del H1: la forma de pago
+ * elegida, si aun puede cambiarla (antes de presentar) y, con pago previo al
+ * levante y el H1 admitido, el importe que liquido la AEAT y como pagarlo.
+ */
+function pagoTributosDe(expedition) {
+  if (expedition.operationType === 'export') return null;
+  const decl = expedition.declaration || {};
+  const metodo = decl.paymentMethod || null;
+  const presentado = Boolean(decl.mrn);
+  const liquidacion = decl.aeatResponse?.liquidacion;
+  const conLevante = Boolean(decl.levanteDate) || expedition.status === 'levante';
+  return {
+    paymentMethod: metodo,
+    editable: !presentado,
+    mrn: decl.mrn || null,
+    totalAPagar: presentado && typeof liquidacion?.totalAPagar === 'number' ? liquidacion.totalAPagar : null,
+    pendientePago: presentado && metodo === 'A' && !conLevante,
+    urlPago: URL_PAGO_AEAT
+  };
+}
+
+/**
+ * El cliente elige como paga los tributos del H1: R (pago aplazado con la
+ * garantia de su agente) o A (pago previo al levante con el modelo 031).
+ * Solo antes de presentar la declaracion.
+ * PUT /api/portal/:token/forma-de-pago   body: { paymentMethod }
+ */
+const setPaymentMethod = async (req, res) => {
+  try {
+    const metodo = req.body?.paymentMethod;
+    if (!FORMAS_DE_PAGO_CLIENTE.includes(metodo)) {
+      return res.status(400).json({ success: false, error: 'Elige pago aplazado con garantía (R) o pago previo al levante (A)' });
+    }
+    const expedition = await Expedition.findByPortalToken(req.params.token);
+    if (!expedition) {
+      return res.status(404).json({ success: false, error: 'Expediente no encontrado o link expirado' });
+    }
+    if (expedition.declaration?.mrn) {
+      return res.status(409).json({ success: false, error: 'La declaración ya está presentada: la forma de pago ya no se puede cambiar' });
+    }
+    if (!expedition.declaration) expedition.declaration = {};
+    expedition.declaration.paymentMethod = metodo;
+    expedition.timeline.push({
+      action: 'payment_method_chosen',
+      description: metodo === 'R'
+        ? 'El cliente elige pago aplazado con la garantía de su agente'
+        : 'El cliente elige pago previo al levante (modelo 031)',
+      performedBy: 'Cliente (portal)',
+      metadata: { paymentMethod: metodo }
+    });
+    await expedition.save();
+    res.json({ success: true, data: pagoTributosDe(expedition) });
+  } catch (error) {
+    logger.error('Error guardando la forma de pago desde el portal:', error);
+    res.status(500).json({ success: false, error: 'No se pudo guardar la forma de pago' });
+  }
+};
+
 const getByToken = async (req, res) => {
   try {
     const { token } = req.params;
@@ -123,7 +188,8 @@ const getByToken = async (req, res) => {
           description: evento.description,
           timestamp: evento.timestamp
         })),
-      createdAt: expedition.createdAt
+      createdAt: expedition.createdAt,
+      pagoTributos: pagoTributosDe(expedition)
     };
 
     res.json({
@@ -752,6 +818,7 @@ const aiFullAnalysis = async (req, res) => {
 
 module.exports = {
   getByToken,
+  setPaymentMethod,
   getChatHistory,
   sendMessage,
   uploadDocument,

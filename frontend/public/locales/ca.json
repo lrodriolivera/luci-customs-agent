@@ -659,7 +659,24 @@
       "saved": "Impost especial desat",
       "removed": "Impost especial tret",
       "error": "No s'ha pogut desar l'impost especial"
-    }
+    },
+    "parties": {
+      "title": "Parts de l'expedient",
+      "supplier": "Exportador (proveïdor)",
+      "address": "Adreça",
+      "city": "Ciutat",
+      "postalCode": "Codi postal",
+      "country": "País (2 lletres)",
+      "email": "Correu electrònic",
+      "eoriAuto": "Si el deixes buit, ES + NIF",
+      "required": "L'importador necessita raó social i NIF.",
+      "countryInvalid": "El país de l'exportador és un codi de dues lletres (p. ex. CN).",
+      "regenerateHint": "Si ja has generat l'H1, torna'l a generar perquè porti aquestes dades.",
+      "saved": "Dades de les parts desades",
+      "error": "No s'han pogut desar les dades de les parts"
+    },
+    "plasticKg": "Plàstic no reutilitzable (kg)",
+    "plasticHelp": "Impost sobre envasos de plàstic no reutilitzables: 0,45 €/kg (1PL a la liquidació). Sol venir a la factura o a la declaració de l'importador. 0 si no n'hi ha."
   },
   "classification": {
     "title": "Classificació TARIC",
@@ -2013,7 +2030,21 @@
     "docsInfoVerify": "Per a documents amb signatura digital, verifiqueu la seva autenticitat a la seu electrònica de l'AEAT",
     "errorLoadingSignedDocs": "Error en carregar documents signats",
     "errorDownloading": "Error en descarregar el document",
-    "loading": "Carregant..."
+    "loading": "Carregant...",
+    "taxPayment": {
+      "title": "Pagament dels tributs de duana",
+      "choose": "Tria com vols pagar l'aranzel i l'IVA de la importació:",
+      "optionR": "Pagament ajornat amb la garantia del teu agent de duanes",
+      "optionRHelp": "El teu agent avança el pagament amb la seva garantia; després te'l factura.",
+      "optionA": "Pagament previ a l'aixecament (model 031)",
+      "optionAHelp": "Pagues tu els tributs a l'AEAT amb el model 031 abans que s'alliberi la mercaderia.",
+      "byAgent": "Ho decideix el teu agent de duanes.",
+      "amountDue": "Import a pagar a l'AEAT: {{importe}} €",
+      "howToPay": "Paga amb el model 031 a la Seu de l'AEAT i puja'ns el justificant a Documents.",
+      "payLink": "Com pagar a la Seu de l'AEAT",
+      "waiting": "Quedem a l'espera del justificant de pagament per obtenir l'aixecament.",
+      "error": "No s'ha pogut desar la forma de pagament"
+    }
   },
   "landing": {
     "features": "Funcions",
@@ -3792,11 +3823,12 @@
     "aeatMaster": "És una partida màster: correspon a la càrrega agrupada, no a aquesta mercaderia.",
     "aeatDiffers": "No coincideix amb l'expedient ({{packages}} embalums i {{weight}} kg). No impedeix generar ni presentar l'H1: comprova-ho i, si cal, corregeix l'expedient o la documentació.",
     "aeatBillOfLading": "Coneixement: {{value}}",
-    "aeatLocation": "Ubicació: {{value}}"
+    "aeatLocation": "Ubicació: {{value}}",
+    "verifyHelp": "Consulta la sumària a l'AEAT amb el certificat de l'empresa i omple bultos, quilos, saldo i ubicació. No cal entrar a la Seu."
   },
   "aeatSumariaLinks": {
-    "title": "Cercar la sumària a la Seu de l'AEAT",
-    "certificateWarning": "Aquests enllaços requereixen el teu certificat digital: LUCI no els pot consultar per tu.",
+    "title": "Consultar la sumària tu mateix a la Seu de l'AEAT",
+    "certificateWarning": "LUCI ja consulta la sumària a l'AEAT amb el certificat de l'empresa: és el botó «Consultar a l'AEAT» de la targeta de càrrega i sumària, que porta bultos, quilos i saldo. Aquests enllaços són per veure-la tu a la Seu, amb el teu certificat digital, si necessites més detall.",
     "highlighted": "Recomanat per a aquest expedient",
     "g4Title": "G4: sumàries aèries i terrestres",
     "g4Description": "Per a declaracions sumàries G4, tant de transport aeri com terrestre.",

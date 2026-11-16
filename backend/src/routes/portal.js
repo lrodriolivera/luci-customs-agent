@@ -68,6 +68,9 @@ router.get('/:token/ai/full-analysis', portalValidators.getByToken, portalContro
 router.post('/self-service/expeditions', authenticate, clientPortalController.createExpedition);
 
 // Update expedition from portal
+// El cliente elige como paga los tributos del H1 (R garantia del agente / A modelo 031).
+router.put('/:token/forma-de-pago', portalValidators.getByToken, portalController.setPaymentMethod);
+
 router.put('/:token/expedition', portalValidators.getByToken, clientPortalController.updateExpedition);
 
 // Submit expedition for processing

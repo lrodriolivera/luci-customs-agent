@@ -408,6 +408,19 @@ const update = async (req, res) => {
       }
     });
 
+    // Importador editado desde el detalle (UAT 16/Nov/2026: habia que rehacer
+    // el expediente para cambiar el NIF). Se normaliza como al crearlo: NIF en
+    // mayusculas y EORI propio o derivado del NIF.
+    if (updates.client && typeof updates.client === 'object') {
+      const nif = String(updates.client.nif || '').trim().toUpperCase();
+      const nombre = String(updates.client.companyName || '').trim();
+      if (!nombre || !nif) {
+        return res.status(400).json({ success: false, error: 'El importador necesita razón social y NIF' });
+      }
+      const eoriEscrito = String(updates.client.eori || '').trim().toUpperCase();
+      updates.client = { ...updates.client, companyName: nombre, nif, eori: eoriEscrito || eoriDe({ ...updates.client, nif, eori: '' }) || '' };
+    }
+
     if (Array.isArray(updates.goods)) {
       const anteriores = expedition.goods.map((g) => (g.toObject ? g.toObject() : g));
       updates.goods = await recalcularArancelSiCambiaTaric(anteriores, updates.goods);

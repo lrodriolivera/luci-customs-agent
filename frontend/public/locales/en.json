@@ -659,7 +659,24 @@
       "saved": "Excise duty saved",
       "removed": "Excise duty removed",
       "error": "Could not save the excise duty"
-    }
+    },
+    "parties": {
+      "title": "Parties to the file",
+      "supplier": "Exporter (supplier)",
+      "address": "Address",
+      "city": "City",
+      "postalCode": "Postcode",
+      "country": "Country (2 letters)",
+      "email": "Email",
+      "eoriAuto": "Leave empty for ES + tax ID",
+      "required": "The importer needs a company name and tax ID.",
+      "countryInvalid": "The exporter's country is a two-letter code (e.g. CN).",
+      "regenerateHint": "If you already generated the H1, generate it again so it carries these details.",
+      "saved": "Party details saved",
+      "error": "Could not save the party details"
+    },
+    "plasticKg": "Non-reusable plastic (kg)",
+    "plasticHelp": "Tax on non-reusable plastic packaging: €0.45/kg (1PL in the liquidation). Usually on the invoice or the importer's declaration. 0 if none."
   },
   "classification": {
     "title": "TARIC Classification",
@@ -2014,7 +2031,21 @@
     "docsInfoVerify": "For digitally signed documents, verify their authenticity on the AEAT electronic office",
     "errorLoadingSignedDocs": "Error loading signed documents",
     "errorDownloading": "Error downloading document",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "taxPayment": {
+      "title": "Payment of customs duties and taxes",
+      "choose": "Choose how you want to pay the import duty and VAT:",
+      "optionR": "Deferred payment with your customs agent's guarantee",
+      "optionRHelp": "Your agent pays with their guarantee and invoices you afterwards.",
+      "optionA": "Payment before release (form 031)",
+      "optionAHelp": "You pay the taxes to the AEAT with form 031 before the goods are released.",
+      "byAgent": "Your customs agent decides.",
+      "amountDue": "Amount payable to the AEAT: €{{importe}}",
+      "howToPay": "Pay with form 031 on the AEAT website and upload the receipt in Documents.",
+      "payLink": "How to pay on the AEAT website",
+      "waiting": "We are waiting for the payment receipt to obtain the release.",
+      "error": "Could not save the payment method"
+    }
   },
   "landing": {
     "features": "Features",
@@ -3808,11 +3839,12 @@
     "aeatMaster": "This is a master item: it covers the consolidated cargo, not these goods.",
     "aeatDiffers": "It does not match the file ({{packages}} packages and {{weight}} kg). This does not prevent generating or lodging the H1: check it and, if needed, correct the file or the documents.",
     "aeatBillOfLading": "Bill of lading: {{value}}",
-    "aeatLocation": "Location: {{value}}"
+    "aeatLocation": "Location: {{value}}",
+    "verifyHelp": "Checks the summary declaration with the AEAT using the company certificate and fills in packages, weight, balance and location. No need to log in to the AEAT website."
   },
   "aeatSumariaLinks": {
-    "title": "Search for the summary declaration in the AEAT e-office",
-    "certificateWarning": "These links require your digital certificate: LUCI cannot query them on your behalf.",
+    "title": "Check the summary declaration yourself on the AEAT website",
+    "certificateWarning": "LUCI already checks the summary declaration with the AEAT using the company certificate: that is the «Check with the AEAT» button on the cargo and summary card, which brings packages, weight and balance. These links are for viewing it yourself on the AEAT website with your own digital certificate, if you need more detail.",
     "highlighted": "Recommended for this shipment",
     "g4Title": "G4: air and land summary declarations",
     "g4Description": "For G4 summary declarations, for both air and land transport.",

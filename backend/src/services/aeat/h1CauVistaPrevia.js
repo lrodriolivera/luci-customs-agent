@@ -7,6 +7,8 @@
  * documento de transporte y documentos de cada partida. Asi lo que se revisa
  * antes de presentar es lo que se presenta.
  */
+
+const { MEDIOS_DE_PAGO } = require('./h1CauCodigos');
 const documentosDe = (partida, envio) => [
   ...(partida.documentosPrevios || []),
   ...(partida.documentosJustificativos || []),
@@ -106,8 +108,10 @@ function aplicarCauAVistaPrevia(vistaGenerada, datos) {
     lrn: null,
     // Solo se declara garantia con pago aplazado; con pago previo al levante, ninguna.
     guarantee: garantia ? { guaranteeType: garantia.tipo, grn: garantia.referencias?.[0]?.grn || null } : null,
-    dutyTaxFee: h1Data.dutyTaxFee && medioDePago && medioDePago !== h1Data.dutyTaxFee.paymentMethod
-      ? { ...h1Data.dutyTaxFee, paymentMethod: medioDePago, paymentMethodDescription: undefined }
+    // La forma de pago es la que va en el mensaje CAU, con su nombre CAU
+    // (la tabla del generador anterior decia «Pago al contado»).
+    dutyTaxFee: h1Data.dutyTaxFee && medioDePago
+      ? { ...h1Data.dutyTaxFee, paymentMethod: medioDePago, paymentMethodDescription: MEDIOS_DE_PAGO[medioDePago] }
       : h1Data.dutyTaxFee,
     declarationHeader: {
       ...cabecera,

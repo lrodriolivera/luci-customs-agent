@@ -359,3 +359,47 @@ describe('endpoints IA', () => {
     expect(res.body.data.analysis).toBe('completo');
   });
 });
+
+describe('forma de pago de los tributos desde el portal (UAT 16/Nov/2026)', () => {
+  const llamar = async (token, paymentMethod) => {
+    const res = mockRes();
+    await portalController.setPaymentMethod(mockReq({ params: { token }, body: { paymentMethod } }), res);
+    return res;
+  };
+
+  test('el cliente elige R antes de presentar; queda en el expediente y en su seguimiento', async () => {
+    const exp = await sembrarExp({});
+    const token = exp.clientPortal.token;
+
+    const res = await llamar(token, 'R');
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data).toMatchObject({ paymentMethod: 'R', editable: true, pendientePago: false });
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.declaration.paymentMethod).toBe('R');
+    expect(guardado.timeline.map((t) => t.action)).toContain('payment_method_chosen');
+  });
+
+  test('una forma de pago que no es A ni R se rechaza', async () => {
+    const exp = await sembrarExp({});
+    expect((await llamar(exp.clientPortal.token, 'X')).statusCode).toBe(400);
+  });
+
+  test('presentada la declaración ya no se puede cambiar (409)', async () => {
+    const exp = await sembrarExp({ declaration: { type: 'H1', mrn: '26ES002801I01BR6R0', paymentMethod: 'A' } });
+    expect((await llamar(exp.clientPortal.token, 'R')).statusCode).toBe(409);
+  });
+
+  test('admitido con pago previo al levante: el portal muestra el total de la AEAT y cómo pagarlo', async () => {
+    const exp = await sembrarExp({ declaration: { type: 'H1', mrn: '26ES002801I01BR6R0', paymentMethod: 'A', aeatResponse: { liquidacion: { totalAPagar: 1704.96 } } } });
+    const res = mockRes();
+    await portalController.getByToken(mockReq({ params: { token: exp.clientPortal.token } }), res);
+    expect(res.body.data.pagoTributos).toMatchObject({ paymentMethod: 'A', editable: false, totalAPagar: 1704.96, pendientePago: true });
+    expect(res.body.data.pagoTributos.urlPago).toMatch(/^https:\/\/sede\.agenciatributaria\.gob\.es\//);
+  });
+
+  test('404 con un token que no existe', async () => {
+    expect((await llamar(TOKEN_INEXISTENTE, 'R')).statusCode).toBe(404);
+  });
+});
+

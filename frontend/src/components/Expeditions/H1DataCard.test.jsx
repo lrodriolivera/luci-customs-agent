@@ -60,6 +60,25 @@ describe('<H1DataCard />', () => {
     expect(await screen.findByText('El expediente tiene todos los datos que exige el H1.')).toBeInTheDocument()
   })
 
+  test('la autorización global va primera y se elige la forma de pago (UAT 16/Nov/2026)', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ datos: { invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'global', paymentMethod: '' } }))
+    updateH1Data.mockResolvedValue({ data: { success: true } })
+    render(<H1DataCard expedition={{ _id: 'e1' }} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+
+    const autorizacion = screen.getByLabelText('Autorización de despacho del representante')
+    expect(autorizacion).toHaveValue('global')
+    expect(autorizacion.options[0].value).toBe('global')
+
+    const pago = screen.getByLabelText('Forma de pago')
+    expect([...pago.options].map((o) => o.textContent)).toEqual([
+      'La configurada en Ajustes de la agencia', 'A · Pago previo al levante (modelo 031)', 'R · Pago aplazado con garantía del agente'
+    ])
+    fireEvent.change(pago, { target: { value: 'R' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await waitFor(() => expect(updateH1Data).toHaveBeenCalledWith('e1', { paymentMethod: 'R' }))
+  })
+
   const conIncoterm = (incoterm, gastosASumar, extra = {}) => respuesta({ datos: {
     invoiceNumber: 'FAC-1', exporterPostalCode: '200000', vehicleNationality: 'PA', dispatchAuthorizationScope: 'OSRE',
     incoterm, gastosASumar, freightAmount: null, freightCurrency: 'EUR', insuranceAmount: null, insuranceCurrency: 'EUR', ...extra

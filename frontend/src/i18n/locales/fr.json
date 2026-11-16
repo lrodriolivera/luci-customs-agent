@@ -659,7 +659,24 @@
       "saved": "Accise enregistrée",
       "removed": "Accise retirée",
       "error": "Impossible d'enregistrer l'accise"
-    }
+    },
+    "parties": {
+      "title": "Parties du dossier",
+      "supplier": "Exportateur (fournisseur)",
+      "address": "Adresse",
+      "city": "Ville",
+      "postalCode": "Code postal",
+      "country": "Pays (2 lettres)",
+      "email": "E-mail",
+      "eoriAuto": "Vide : ES + NIF",
+      "required": "L'importateur doit avoir une raison sociale et un NIF.",
+      "countryInvalid": "Le pays de l'exportateur est un code à deux lettres (ex. CN).",
+      "regenerateHint": "Si vous avez déjà généré le H1, générez-le à nouveau pour qu'il reprenne ces données.",
+      "saved": "Données des parties enregistrées",
+      "error": "Impossible d'enregistrer les données des parties"
+    },
+    "plasticKg": "Plastique non réutilisable (kg)",
+    "plasticHelp": "Taxe sur les emballages plastiques non réutilisables : 0,45 €/kg (1PL dans la liquidation). Figure souvent sur la facture ou la déclaration de l'importateur. 0 s'il n'y en a pas."
   },
   "classification": {
     "title": "Classification TARIC",
@@ -2013,7 +2030,21 @@
     "docsInfoVerify": "Para documents con firma digital, verifique su autenticidad en la sede electronica de la AEAT",
     "errorLoadingSignedDocs": "Erreur lors de cargar documents firmados",
     "errorDownloading": "Erreur lors de descargar el documento",
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "taxPayment": {
+      "title": "Paiement des droits et taxes de douane",
+      "choose": "Choisissez comment payer les droits et la TVA à l'importation :",
+      "optionR": "Paiement différé avec la garantie de votre agent en douane",
+      "optionRHelp": "Votre agent avance le paiement avec sa garantie puis vous le facture.",
+      "optionA": "Paiement avant mainlevée (formulaire 031)",
+      "optionAHelp": "Vous payez les taxes à l'AEAT avec le formulaire 031 avant la mainlevée.",
+      "byAgent": "Votre agent en douane décide.",
+      "amountDue": "Montant à payer à l'AEAT : {{importe}} €",
+      "howToPay": "Payez avec le formulaire 031 sur le site de l'AEAT et déposez le justificatif dans Documents.",
+      "payLink": "Comment payer sur le site de l'AEAT",
+      "waiting": "Nous attendons le justificatif de paiement pour obtenir la mainlevée.",
+      "error": "Impossible d'enregistrer le mode de paiement"
+    }
   },
   "landing": {
     "features": "Fonctionnalites",
@@ -3792,11 +3823,12 @@
     "aeatMaster": "C'est un article maître : il correspond au chargement groupé, pas à cette marchandise.",
     "aeatDiffers": "Ne correspond pas au dossier ({{packages}} colis et {{weight}} kg). Cela n'empêche pas de générer ni de déposer le H1 : vérifiez-le et, si nécessaire, corrigez le dossier ou les documents.",
     "aeatBillOfLading": "Connaissement : {{value}}",
-    "aeatLocation": "Emplacement : {{value}}"
+    "aeatLocation": "Emplacement : {{value}}",
+    "verifyHelp": "Consulte la déclaration sommaire auprès de l'AEAT avec le certificat de l'entreprise et remplit colis, poids, solde et emplacement. Inutile de se connecter au site de l'AEAT."
   },
   "aeatSumariaLinks": {
-    "title": "Rechercher la déclaration sommaire sur le portail de l'AEAT",
-    "certificateWarning": "Ces liens nécessitent votre certificat numérique : LUCI ne peut pas les consulter à votre place.",
+    "title": "Consulter vous-même la déclaration sommaire sur le site de l'AEAT",
+    "certificateWarning": "LUCI consulte déjà la déclaration sommaire auprès de l'AEAT avec le certificat de l'entreprise : c'est le bouton « Consulter l'AEAT » de la carte chargement et sommaire, qui récupère colis, poids et solde. Ces liens servent à la voir vous-même sur le site de l'AEAT, avec votre propre certificat, si vous avez besoin de plus de détails.",
     "highlighted": "Recommandé pour cette expédition",
     "g4Title": "G4 : déclarations sommaires aériennes et terrestres",
     "g4Description": "Pour les déclarations sommaires G4, transport aérien et terrestre.",

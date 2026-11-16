@@ -19,6 +19,9 @@ const { MODOS_ACTIVACION } = require('./h1CauActivacion');
 const { separarDocumentosC44 } = require('./documentosC44');
 const { impuestoEspecialEnH1 } = require('./impuestoEspecial');
 
+// Ley 7/2022, art. 82: 0,45 EUR por kilo de plastico no reutilizable.
+const TIPO_PLASTICO = 0.45;
+
 // Medios de pago que obligan a declarar garantia con regimen 40 (regla C0616).
 const PAGOS_CON_GARANTIA = new Set(['O', 'R', 'S', 'T', 'U', 'V', 'G']);
 // Tipos de garantia que llevan GRN (regla C0648).
@@ -145,7 +148,9 @@ function partes(expedition, declarante, faltan) {
 /** Garantia segun el medio de pago: solo es obligatoria con pago aplazado (C0616). */
 function garantiasDe(pago, faltan) {
   const { medio, grn, tipoGarantia = '1' } = pago;
-  if (!PAGOS_CON_GARANTIA.has(medio) && !grn) return [];
+  // Con pago previo al levante (A) no se declara garantia aunque la agencia
+  // tenga una configurada: se mostraba «A» junto a una garantia (UAT 16/Nov/2026).
+  if (!PAGOS_CON_GARANTIA.has(medio)) return [];
   if (GARANTIAS_CON_GRN.has(String(tipoGarantia)) && !texto(grn)) {
     faltan.push(`número de garantía (GRN): es obligatorio con el medio de pago «${medio}»`);
     return [];
@@ -244,7 +249,13 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
   // se devenga, su tributo; su cuota forma parte de la base del IVA (art. 83
   // LIVA). Comprobado en PRE el 16/11/2026 (MRN 26ES002801I01BQYR8).
   const ie = impuestoEspecialEnH1(good, contexto.medioDePago);
-  const baseIva = redondear(valorAduana + arancel + ie.cuota);
+  // Impuesto sobre envases de plastico no reutilizables: tributo 1PL a 0,45
+  // EUR/kg; entra en la base del IVA. Comprobado en PRE el 16/11/2026 (10 kg:
+  // 1PL 4,50 y B00 sobre 5.380,50; MRN 26ES002801I01BRAR7; con otro tipo,
+  // error 2878 «El tipo correcto es: 0.45»).
+  const kgPlastico = Number(good.impuestoPlastico?.kg) || 0;
+  const cuotaPlastico = kgPlastico > 0 ? redondear(kgPlastico * TIPO_PLASTICO) : 0;
+  const baseIva = redondear(valorAduana + arancel + ie.cuota + cuotaPlastico);
   const tipoBulto = String(good.packages?.type || '').toUpperCase();
   if (!/^[A-Z0-9]{2}$/.test(tipoBulto)) faltan.push(`tipo de bulto (código de dos letras) de la partida ${n}`);
   if (!(good.packages?.quantity > 0)) faltan.push(`número de bultos de la partida ${n}`);
@@ -275,6 +286,7 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     tributos: [
       { tipo: 'A00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoArancel, importe: valorAduana, cuota: arancel }] },
       ...(ie.tributo ? [ie.tributo] : []),
+      ...(kgPlastico > 0 ? [{ tipo: '1PL', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: TIPO_PLASTICO, unidad: 'KGM', cantidad: kgPlastico, cuota: cuotaPlastico }] }] : []),
       { tipo: 'B00', medioDePago: contexto.medioDePago, bases: [{ tipoImpositivo: tipoIva, importe: baseIva, cuota: redondear(baseIva * tipoIva / 100) }] }
     ],
     bultos: [{ tipo: tipoBulto, numero: good.packages?.quantity, marcas: texto(good.packages?.marks) || 'S/M' }],
@@ -338,7 +350,9 @@ function expeditionToH1CauData(expedition, { declarante, cambio, cambiosGastos =
 
   // Autorizacion de despacho (Separata 19, ESR0009): sin representacion o con
   // autorizacion global no se declara nada; por operacion, documento 1005.
-  const ambito = texto(expedition.representative?.dispatchAuthorizationScope) || 'OSRE';
+  // La mas habitual es la global registrada en la AEAT (UAT 16/Nov/2026): es
+  // la que se asume si el expediente no dice otra.
+  const ambito = texto(expedition.representative?.dispatchAuthorizationScope) || 'global';
   const referenciaAutorizacion = personas.forma === '1' ? null : AMBITOS_AUTORIZACION[ambito];
   if (personas.forma !== '1' && !(ambito in AMBITOS_AUTORIZACION)) faltan.push('tipo de autorización de despacho (global, OCRE u OSRE)');
 

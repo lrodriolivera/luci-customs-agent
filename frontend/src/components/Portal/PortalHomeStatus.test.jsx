@@ -8,7 +8,9 @@ import PortalStatus from './PortalStatus'
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key, opts) => (opts && Object.prototype.hasOwnProperty.call(opts, 'defaultValue') ? `${key}|${opts.defaultValue}` : key)
-  })
+  }),
+  // PortalHome monta la seccion de pago, que importa services/api -> i18n.
+  initReactI18next: { type: '3rdParty', init: () => {} }
 }))
 
 // Lo que devuelve GET /api/portal/:token para el expediente de la UAT del

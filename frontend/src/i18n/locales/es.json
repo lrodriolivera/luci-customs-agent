@@ -659,7 +659,24 @@
       "saved": "Impuesto especial guardado",
       "removed": "Impuesto especial quitado",
       "error": "No se pudo guardar el impuesto especial"
-    }
+    },
+    "parties": {
+      "title": "Partes del expediente",
+      "supplier": "Exportador (proveedor)",
+      "address": "Dirección",
+      "city": "Ciudad",
+      "postalCode": "Código postal",
+      "country": "País (2 letras)",
+      "email": "Correo electrónico",
+      "eoriAuto": "Si lo dejas vacío, ES + NIF",
+      "required": "El importador necesita razón social y NIF.",
+      "countryInvalid": "El país del exportador es un código de dos letras (p. ej. CN).",
+      "regenerateHint": "Si ya generaste el H1, vuelve a generarlo para que lleve estos datos.",
+      "saved": "Datos de las partes guardados",
+      "error": "No se pudieron guardar los datos de las partes"
+    },
+    "plasticKg": "Plástico no reutilizable (kg)",
+    "plasticHelp": "Impuesto sobre envases de plástico no reutilizables: 0,45 €/kg (1PL en la liquidación). Suele venir en la factura o en la declaración del importador. 0 si no hay."
   },
   "classification": {
     "title": "Clasificación TARIC",
@@ -2014,7 +2031,21 @@
     "docsInfoVerify": "Para documentos con firma digital, verifique su autenticidad en la sede electrónica de la AEAT",
     "errorLoadingSignedDocs": "Error al cargar documentos firmados",
     "errorDownloading": "Error al descargar el documento",
-    "loading": "Cargando..."
+    "loading": "Cargando...",
+    "taxPayment": {
+      "title": "Pago de los tributos de aduana",
+      "choose": "Elige cómo quieres pagar el arancel y el IVA de la importación:",
+      "optionR": "Pago aplazado con la garantía de tu agente de aduanas",
+      "optionRHelp": "Tu agente adelanta el pago con su garantía; después te lo factura.",
+      "optionA": "Pago previo al levante (modelo 031)",
+      "optionAHelp": "Pagas tú los tributos a la AEAT con el modelo 031 antes de que se libere la mercancía.",
+      "byAgent": "Lo decide tu agente de aduanas.",
+      "amountDue": "Importe a pagar a la AEAT: {{importe}} €",
+      "howToPay": "Paga con el modelo 031 en la Sede de la AEAT y súbenos el justificante en Documentos.",
+      "payLink": "Cómo pagar en la Sede de la AEAT",
+      "waiting": "Quedamos a la espera del justificante de pago para la obtención del levante.",
+      "error": "No se pudo guardar la forma de pago"
+    }
   },
   "landing": {
     "features": "Funciones",
@@ -3808,11 +3839,12 @@
     "aeatMaster": "Es una partida máster: corresponde a la carga agrupada, no a esta mercancía.",
     "aeatDiffers": "No coincide con el expediente ({{packages}} bultos y {{weight}} kg). No impide generar ni presentar el H1: compruébalo y, si hace falta, corrige el expediente o la documentación.",
     "aeatBillOfLading": "Conocimiento: {{value}}",
-    "aeatLocation": "Ubicación: {{value}}"
+    "aeatLocation": "Ubicación: {{value}}",
+    "verifyHelp": "Consulta la sumaria en la AEAT con el certificado de la empresa y rellena bultos, kilos, saldo y ubicación. No hace falta entrar en la Sede."
   },
   "aeatSumariaLinks": {
-    "title": "Buscar la sumaria en la Sede de la AEAT",
-    "certificateWarning": "Estos enlaces requieren tu certificado digital: LUCI no puede consultarlos por ti.",
+    "title": "Consultar la sumaria tú mismo en la Sede de la AEAT",
+    "certificateWarning": "LUCI ya consulta la sumaria en la AEAT con el certificado de la empresa: es el botón «Consultar en la AEAT» de la tarjeta de carga y sumaria, que trae bultos, kilos y saldo. Estos enlaces son para verla tú en la Sede, con tu propio certificado digital, si necesitas más detalle.",
     "highlighted": "Recomendado para este expediente",
     "g4Title": "G4: sumaria aérea y terrestre",
     "g4Description": "Para declaraciones sumarias G4, tanto de transporte aéreo como terrestre.",

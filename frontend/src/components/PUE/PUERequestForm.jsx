@@ -548,39 +548,52 @@ const PUERequestForm = ({ open, onClose, onSuccess, initialType, editData }) => 
         />
       </Grid>
 
-      {/* Operator info (auto-filled but editable) */}
-      <Grid item xs={12}>
-        <Divider sx={{ my: 1 }} />
-        <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-          Datos del Operador {formData.h1AutoFill ? '(auto-rellenado)' : ''}
-        </Typography>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <TextField
-          fullWidth
-          required
-          label="Nombre/Razon Social"
-          value={formData.operator.name}
-          onChange={(e) => handleFieldChange('operator.name', e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <TextField
-          fullWidth
-          label="NIF/CIF"
-          value={formData.operator.nif}
-          onChange={(e) => handleFieldChange('operator.nif', e.target.value)}
-        />
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <TextField
-          fullWidth
-          label="EORI"
-          value={formData.operator.eori}
-          onChange={(e) => handleFieldChange('operator.eori', e.target.value)}
-          placeholder="ES12345678A"
-        />
-      </Grid>
+      {/* Operador: lo rellena el H1 (importador) al consultar el MRN. Las
+          agentes piden no ver este bloque (UAT 16/Nov/2026): con H1 solo se
+          muestra en una linea; sin H1 hay que escribirlo (la PUE lo exige). */}
+      {formData.h1AutoFill && formData.operator.name ? (
+        <Grid item xs={12}>
+          <Typography variant="body2" color="text.secondary">
+            Operador (del H1): {formData.operator.name}{formData.operator.nif ? ` · NIF ${formData.operator.nif}` : ''}{formData.operator.eori ? ` · EORI ${formData.operator.eori}` : ''}
+          </Typography>
+        </Grid>
+      ) : (
+        <>
+        <Grid item xs={12}>
+          <Divider sx={{ my: 1 }} />
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            Datos del Operador {formData.h1AutoFill ? '(auto-rellenado)' : ''}
+          </Typography>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <TextField
+            fullWidth
+            required
+            label="Nombre/Razon Social"
+            value={formData.operator.name}
+            onChange={(e) => handleFieldChange('operator.name', e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <TextField
+            fullWidth
+            label="NIF/CIF"
+            value={formData.operator.nif}
+            onChange={(e) => handleFieldChange('operator.nif', e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <TextField
+            fullWidth
+            label="EORI"
+            value={formData.operator.eori}
+            onChange={(e) => handleFieldChange('operator.eori', e.target.value)}
+            placeholder="ES12345678A"
+          />
+        </Grid>
+
+        </>
+      )}
     </Grid>
   )
 

@@ -31,7 +31,8 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
     grossWeight: asInput(item.grossWeight),
     // El importe guardado se muestra con coma decimal para que el campo, que
     // lee formato español, no tome un decimal de tres cifras por millares.
-    invoiceValue: asInput(item.invoiceValue).replace('.', ',')
+    invoiceValue: asInput(item.invoiceValue).replace('.', ','),
+    plasticoKg: asInput(item.impuestoPlastico?.kg)
   })
   const [error, setError] = useState(null)
 
@@ -52,7 +53,7 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
     const invoiceValue = interpretarImporte(form.invoiceValue)
     if (!(invoiceValue > 0)) return t('expeditions.editGoodsValueInvalid')
 
-    const negativo = [form.netWeight, form.grossWeight].some((v) => toNumberOrUndefined(v) < 0)
+    const negativo = [form.netWeight, form.grossWeight, form.plasticoKg].some((v) => toNumberOrUndefined(v) < 0)
     if (negativo) return t('expeditions.editGoodsWeightInvalid')
 
     return null
@@ -77,7 +78,9 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
         ...item.packages,
         quantity: packagesQuantity,
         type: packagesQuantity ? form.packagesType : item.packages?.type
-      }
+      },
+      // Impuesto sobre envases de plastico no reutilizables (1PL, 0,45 EUR/kg).
+      impuestoPlastico: { kg: toNumberOrUndefined(form.plasticoKg) || 0 }
     })
   }
 
@@ -157,6 +160,19 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
             currency={item.currency || 'EUR'}
             onChange={(texto) => setForm((prev) => ({ ...prev, invoiceValue: texto }))}
           />
+        </div>
+        <div>
+          <label className="label" htmlFor={fieldId('plastic')}>{t('expeditions.plasticKg')}</label>
+          <input
+            id={fieldId('plastic')}
+            type="number"
+            min="0"
+            step="0.001"
+            value={form.plasticoKg}
+            onChange={handleChange('plasticoKg')}
+            className="input"
+          />
+          <p className="mt-1 text-xs text-gray-500">{t('expeditions.plasticHelp')}</p>
         </div>
       </div>
 

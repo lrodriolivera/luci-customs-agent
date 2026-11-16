@@ -115,7 +115,7 @@ describe('H1Preview', () => {
     const partida = screen.getByText(/h1Preview\.item:\{"number":1\}/).closest('div')
     expect(within(partida).getByText('8471300000')).toBeInTheDocument()
     expect(within(partida).getByText('h1Preview.packages').nextElementSibling).toHaveTextContent('12, CT, N/M')
-    expect(within(partida).getByText('h1Preview.procedure').nextElementSibling).toHaveTextContent('40, 00')
+    expect(within(partida).getByText('h1Preview.procedure').nextElementSibling).toHaveTextContent('40.00')
     expect(within(partida).getByText('h1Preview.documents').nextElementSibling).toHaveTextContent('N380, INV-2026-001')
   })
 

@@ -76,6 +76,11 @@ const GoodsItemSchema = new mongoose.Schema({
     fechaConsulta: String,
     appliedBy: String
   },
+  // Impuesto especial sobre envases de plastico no reutilizables (Ley 7/2022):
+  // kilos de plastico no reutilizable de la partida. Va como tributo 1PL.
+  impuestoPlastico: {
+    kg: { type: Number, min: 0 }
+  },
   // Documentos de la casilla 44 de la partida (certificados, licencias,
   // declaraciones Y) que la agente añade segun el Arancel Integrado de la AEAT.
   documentosC44: [{
@@ -178,6 +183,10 @@ const DeclarationSchema = new mongoose.Schema({
   additionalProcedure: String,
   preference: String, // 100, 200, 300, 400
   customsOffice: String,
+  // Forma de pago del H1 de este expediente (A pago previo al levante, R pago
+  // aplazado con garantia). Sin ella, la de Ajustes de la agencia.
+  paymentMethod: { type: String, enum: ['A', 'R'] },
+  guaranteeGRN: String,
   // AES: aduana de salida declarada (CUSTOMS OFFICE OF EXIT, obligatoria) y
   // ubicacion de las mercancias (codigo de 10 caracteres de la AEAT o «ES00» +
   // esos 10). Sin declararlos, el subdocumento estricto los descartaba.

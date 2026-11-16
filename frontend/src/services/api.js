@@ -356,6 +356,8 @@ export const calculationsAPI = {
 export const portalAPI = {
   // Basic access
   access: (token) => api.get(`/api/portal/${seg(token)}`),
+  // El cliente elige como paga los tributos del H1 (R garantia del agente / A modelo 031).
+  setPaymentMethod: (token, paymentMethod) => api.put(`/api/portal/${seg(token)}/forma-de-pago`, { paymentMethod }),
   uploadDocument: (token, formData) => api.post(
     `/api/portal/${seg(token)}/documents`,
     formData,
