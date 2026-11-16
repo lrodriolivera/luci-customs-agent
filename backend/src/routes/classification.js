@@ -83,6 +83,9 @@ router.post('/seed', auth, requireRole('admin'), classificationController.seedTa
  *       - { in: query, name: origin, required: true, schema: { type: string, example: BR } }
  */
 router.get('/controls', auth, classificationController.getOfficialControls);
+// Arancel Integrado de la AEAT (IVA, impuestos especiales, controles nacionales).
+// Consulta la sede con el certificado de la empresa: solo usuarios autenticados.
+router.get('/aeat-tariff', auth, classificationController.getAeatTariff);
 
 // Estado de la sincronizacion del catalogo con el TARIC oficial (ultimas ejecuciones)
 router.get('/sync-status', auth, requireRole('admin'), classificationController.getTaricSyncStatus);

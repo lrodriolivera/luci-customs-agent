@@ -10,6 +10,7 @@ const { ensureSameTenant, filtroTenantOPlataforma } = require('../utils/tenantGu
 const { escapeRegex } = require('../utils/escapeRegex');
 const { tipoOficial, aEuros } = require('../services/divisas/tiposCambioOficiales');
 const { controlesPara } = require('../services/taric/controles/controlesOficiales');
+const { consultarArancelIntegrado, ArancelIntegradoError } = require('../services/aeat/arancelIntegrado');
 const { estadoDiario } = require('../services/taric/diario/sincronizacionDiaria');
 /**
  * Sugerir codigo TARIC basado en descripcion
@@ -719,6 +720,33 @@ const calculateDuties = async (req, res) => {
       success: false,
       error: 'Error al calcular derechos de importacion'
     });
+  }
+};
+
+/**
+ * Medidas del Arancel Integrado de la AEAT (capa nacional espanola: IVA,
+ * impuestos especiales, controles e inspecciones, ademas de las de la UE) para
+ * un codigo y un origen. Se consulta la sede con el certificado de la empresa.
+ * GET /api/classification/aeat-tariff?code=6302210089&origin=CN
+ */
+const getAeatTariff = async (req, res) => {
+  const code = String(req.query.code || '').replace(/[\s.]/g, '');
+  const origin = String(req.query.origin || '').trim().toUpperCase();
+  if (!/^\d{10}$/.test(code)) {
+    return res.status(400).json({ success: false, error: 'Código TARIC no válido (10 dígitos)' });
+  }
+  if (origin && !/^[A-Z]{2}$/.test(origin)) {
+    return res.status(400).json({ success: false, error: 'País de origen no válido (código ISO de dos letras)' });
+  }
+  try {
+    const data = await consultarArancelIntegrado({ codigo: code, origen: origin || undefined });
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error(`Error consultando el Arancel Integrado de la AEAT (${code}, ${origin || 'erga omnes'}): ${error.message}`);
+    const motivo = error instanceof ArancelIntegradoError && error.codigo === 'FORMATO'
+      ? 'La AEAT ha cambiado el formato de su consulta del Arancel Integrado'
+      : 'No se pudo consultar el Arancel Integrado de la AEAT';
+    res.status(502).json({ success: false, error: motivo });
   }
 };
 
@@ -1479,6 +1507,7 @@ const getTaricSyncStatus = async (req, res) => {
 module.exports = {
   getTaricSyncStatus,
   getOfficialControls,
+  getAeatTariff,
   suggestTaricCode,
   getTaricInfo,
   searchTaric,

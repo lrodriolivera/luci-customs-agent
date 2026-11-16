@@ -1,0 +1,144 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { BuildingLibraryIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
+import { classificationAPI } from '../../services/api'
+
+// Codigo de la AEAT para "todos los terceros paises" (erga omnes).
+const AREA_ERGA_OMNES = '1011'
+
+// Orden en que se presentan: lo que mas pesa en la liquidacion y en el
+// despacho (IVA, controles nacionales) antes que el detalle de la UE.
+const GRUPOS = [
+  { clave: 'groupTax', tipos: ['iva', 'igic'] },
+  { clave: 'groupNational', tipos: ['nacional'] },
+  { clave: 'groupUe', tipos: ['ue'] }
+]
+
+/**
+ * Una medida del Arancel Integrado: codigo, descripcion, derecho, exclusiones
+ * y documentos que exige.
+ * @param {{ medida: object, t: Function }} props
+ */
+function Medida({ medida, t }) {
+  return (
+    <li className="py-2 border-t border-gray-100 first:border-t-0">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm text-gray-800">
+          <span className="font-mono text-xs text-gray-500 mr-2">{medida.codigo}</span>
+          {medida.descripcion}
+        </p>
+        {medida.derecho && (
+          <span className="shrink-0 font-mono text-sm font-semibold text-gray-900">{medida.derecho}</span>
+        )}
+      </div>
+      {medida.areaGeografica && !/ERGA OMNES/.test(medida.areaGeografica) && (
+        <p className="text-xs text-gray-500 mt-0.5">{medida.areaGeografica}</p>
+      )}
+      {medida.exclusiones && (
+        <p className="text-xs text-gray-600 mt-0.5">
+          {t('classification.aeat.exclusions')}: <span>{medida.exclusiones}</span>
+        </p>
+      )}
+      {medida.documentos?.length > 0 && (
+        <ul className="mt-1 space-y-0.5">
+          {medida.documentos.map((doc) => (
+            <li key={doc.codigo} className="text-xs text-gray-600">
+              <span className="font-mono font-semibold">{doc.codigo}</span> — {doc.descripcion}
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
+  )
+}
+
+/**
+ * Consulta bajo demanda del Arancel Integrado de la AEAT para un codigo TARIC:
+ * la capa nacional espanola (IVA, impuestos especiales, controles e
+ * inspecciones) que el catalogo TARIC de la UE no trae. UAT 16/Nov/2026.
+ *
+ * @param {{ code: string, origin?: string }} props
+ */
+export default function MedidasAeat({ code, origin }) {
+  const { t } = useTranslation()
+  const [estado, setEstado] = useState({ cargando: false, datos: null, error: null })
+
+  const consultar = async () => {
+    setEstado({ cargando: true, datos: null, error: null })
+    try {
+      const respuesta = await classificationAPI.aeatTariff(code, origin)
+      setEstado({ cargando: false, datos: respuesta.data?.data, error: null })
+    } catch (error) {
+      setEstado({
+        cargando: false,
+        datos: null,
+        error: error.response?.data?.error || t('classification.aeat.error')
+      })
+    }
+  }
+
+  const { cargando, datos, error } = estado
+  const origenTexto = !datos || datos.areaGeografica === AREA_ERGA_OMNES
+    ? t('classification.aeat.ergaOmnes')
+    : datos.areaGeografica
+
+  return (
+    <div className="mt-3 pl-9">
+      <button
+        type="button"
+        onClick={consultar}
+        disabled={cargando}
+        className="btn-secondary text-sm inline-flex items-center gap-1.5"
+      >
+        <BuildingLibraryIcon className="w-4 h-4" aria-hidden="true" />
+        {cargando ? t('classification.aeat.loading') : t('classification.aeat.consult')}
+      </button>
+
+      {error && (
+        <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>
+      )}
+
+      {datos && (
+        <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50/40 p-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-sm font-semibold text-gray-900">{t('classification.aeat.title')}</p>
+            <a
+              href={datos.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-700 hover:underline inline-flex items-center gap-1"
+            >
+              {t('classification.aeat.openAeat')}
+              <ArrowTopRightOnSquareIcon className="w-3 h-3" aria-hidden="true" />
+            </a>
+          </div>
+          <p className="text-xs text-gray-600 mt-0.5">
+            {t('classification.aeat.meta', { fecha: datos.fechaConsulta, origen: origenTexto })}
+          </p>
+
+          {!datos.existe && (
+            <p className="mt-2 text-sm text-amber-800">{t('classification.aeat.notFound')}</p>
+          )}
+
+          {datos.existe && GRUPOS.map(({ clave, tipos }) => {
+            const medidas = (datos.medidas || []).filter((m) => tipos.includes(m.tipo))
+            if (medidas.length === 0) return null
+            const id = `aeat-${code}-${clave}`
+            return (
+              <section key={clave} aria-labelledby={id} className="mt-3">
+                <h4 id={id} className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  {t(`classification.aeat.${clave}`)}
+                </h4>
+                <ul className="mt-1">
+                  {medidas.map((medida) => (
+                    <Medida key={`${medida.codigo}-${medida.areaGeografica}`} medida={medida} t={t} />
+                  ))}
+                </ul>
+              </section>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { classificationAPI, expeditionsAPI } from '../../services/api'
+import MedidasAeat from './MedidasAeat'
 import toast from 'react-hot-toast'
 import TaricTreeBrowser from './TaricTreeBrowser'
 import TARIC_CHAPTERS from '../../data/taricChapters'
@@ -1036,6 +1037,12 @@ export default function ClassificationTool() {
                         {t('classification.copy')}
                       </button>
                     </div>
+                    )}
+
+                    {/* Capa nacional espanola (IVA, impuestos especiales,
+                        controles): solo para codigos que existen. */}
+                    {suggestion.verified !== false && (
+                      <MedidasAeat code={suggestion.code} origin={additionalInfo.origin} />
                     )}
                   </div>
                 ))}

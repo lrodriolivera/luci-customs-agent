@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang='es'><head>
+<meta name='COPYRIGHT' content='Prohibida la reproduccion sin autorizacion expresa de la A.E.A.T.' />
+<meta name='DESCRIPTION' content='Agencia Estatal Administracion Tributaria' />
+<meta name="viewport" title="AEATviewport" content="width=device-width, initial-scale=1.0" />
+<link type='text/css' rel='stylesheet' href='/static_files/common/css/xzhtcs06.css' />
+<title>DetalleInt Nomenclaturas</title>
+<meta name="site" content="Sede" />
+<script src='/static_files/common/internet/script/sede06.js' charset="UTF-8"></script>
+<script>
+host_dirrec='/static_files/common/internet/dep/aduanas/';
+</script>
+<script src='/static_files/common/dep/aduanas/script/basicos/basicos_internet05.min.js' charset='iso-8859-15'></script>
+<script src='/static_files/common/dep/dit/script/framework.desktop.js'></script>
+</head>
+<body onload='crearListaElementos(); initHorizontalTabs(); '>
+<noscript><div tabindex="-1" role="dialog" class="ui-dialog ui-corner-all ui-widget ui-widget-content ui-front ui-dialog-buttons ui-draggable noscript" aria-describedby="title-avisoCookiesDesactivadas"><div class="ui-dialog-titlebar ui-corner-all ui-widget-header ui-helper-clearfix ui-draggable-handle"><span id="title-avisoCookiesDesactivadas" class="ui-dialog-title">Aviso: Javascript no habilitado</span></div><div id="avisoCookiesDesactivadas" class="ui-dialog-content ui-widget-content noscript"><div class='AEAT_bloque_errores'><p>Para el correcto funcionamiento de la sede Electr&oacute;nica es necesario que su navegador permita la utilizaci&oacute;n de cookies y tenga habilitado el uso de javascript.</p><p>Si no sabe como hacerlo puede consultarlo en el siguiente enlace:</p><p><a class='enlace_no_decorado negrita' href='https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/comprobaciones-tecnicas/requisitos-tecnicos-realizar-tramites-sede-electronica.html' target='blank'>Requisitos t&eacute;cnicos para realizar tr&aacute;mites en la Sede Electr&oacute;nica</a></p><p>Para mas informaci&oacute;n sobre las cookies visite la <a class='enlace_no_decorado negrita' href='https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/aviso-legal.html' target='blank'>pol&iacute;tica de privacidad</a>.</p></div></div></div><div class="ui-widget-overlay ui-front"></div></noscript>
+<header id="AEAT_header" class="header_aeat d-print-none d-app-none">
+    <!-- CABECERA -->
+    <!--googleoff: index-->
+    <a class="focus-only" href="#acc-main">Saltar al contenido principal</a>
+    <div class="header-sup_aeat w-100 ">
+        <div class="container">
+            <div class="row">
+                <!-- CABECERA IZQUIERDA-->
+                <div id="topIzquierda" class="col pl-0 overflow-hidden">
+                    <nav class="header-contLogos_aeat">
+                        <a href="https://sede.agenciatributaria.gob.es/Sede/inicio.html" title="P&aacute;gina de inicio"
+                            class="header-logosPrincipales_aeat">
+                            <span class="logoGobierno Sede">Logotipo del Gobierno de España</span>
+                            <span class="logoAEAT logoSite logoSede mx-1">Logotipo de la Agencia Tributaria</span>
+                        </a>
+                    </nav>
+                </div>
+                <!-- CABECERA IZQUIERDA FIN -->
+                <!-- CABECERA DERECHA-->
+                <div id="topDerecha" class="d-flex align-items-center justify-content-end pr-2 pl-1">
+                    <a href="https://sede.agenciatributaria.gob.es/Sede/Calendario_fecha_y_hora_oficial.html"
+                        class="mr-2 mr-sm-4 text-secondary small">
+                        <span class="js-reloj-movil d-xs-none" data-toggle="tooltip" data-placement="bottom" title=""
+                            data-original-title="">
+                            <i class="aeat-ico fa-ico-reloj-sm ico-size-2 pointer-events-none"
+                                title="Icono Calendario, fecha y hora oficial" aria-hidden="true"
+                                role="presentation"></i>
+                        </span>
+                        <span class="js-reloj d-none d-xs-inline" data-toggle="tooltip" data-placement="bottom"></span>
+                        <span class="sr-only">Hora oficial</span>
+                    </a>
+                    <div id="link-personal" class="aeat--user d-none">
+                        <a class="cursor-pointer btn btn-primary mr-1 mr-sm-2 px-3 shadow-sm d-flex align-items-center"
+                            data-original-title="ÁREA PERSONAL" href="https://sede.agenciatributaria.gob.es/Sede/mi-area-personal.html">
+                            <i class="aeat-ico fa-ico-usuario-sm ico-size-1 mr-2" aria-hidden="true"
+                                role="presentation"></i>
+                            <span class="aeat--username d-none d-lg-inline small font-weight-bold pr-2 py-1">ÁREA PERSONAL</span>
+                        </a>
+                    </div>
+                    <div id="aeat-jdit-user" class="dropdown aeat--user ">
+                        <button
+                            class="cursor-pointer btn btn-primary mr-1 mr-sm-2 px-3 shadow-sm d-flex align-items-center"
+                            type="button" id="dropdownUsuario" data-toggle="dropdown" aria-haspopup="true"
+                            aria-expanded="false">
+                            <i class="aeat-ico fa-ico-usuario-sm ico-size-1 mr-2" aria-hidden="true" role="presentation"></i>
+                            <span id="user-name"
+                                class="aeat--username d-none d-lg-inline small font-weight-bold pr-2 py-1 notraducir">EMPRESA DE PRUEBA SL</span>
+                            <span id="alert-notification" class="badge bg-light-blue text-primary mx-2 p-1 d-none"
+                                data-toggle="tooltip" title="">
+                                <i class="aeat-ico fa-ico-bell-sm ico-size-mini d-none d-xs-block " aria-hidden="true"
+                                    role="presentation"></i>
+                            </span>
+                            <i class="aeat-ico fa-ico-chevron-down ico-size-mini" aria-hidden="true"
+                                role="presentation"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right" aria-label="Área personal de usuario">
+                            <div class="px-4 py-2 ">
+                                <small class="d-none text-secondary">Representante</small>
+                                <span
+                                    class="aeat--username d-block small pointer-events-none mw-100 text-primary notraducir"
+                                    title="EMPRESA DE PRUEBA SL" data-original-title="EMPRESA DE PRUEBA SL">EMPRESA DE PRUEBA SL</span>
+                                <small class="d-block text-secondary">B00000000</small>
+                            </div>
+                            <div class="px-4 py-2 align-items-center d-none">
+                                <div>
+                                    <small class="d-block font-weight-bold text-secondary">En nombre propio</small>
+                                    <span
+                                        class="aeat--username-representado d-block small pointer-events-none font-weight-bold text-primary notraducir"
+                                        title="" data-original-title=""></span>
+                                    <small class="d-block text-secondary"></small>
+                                </div>
+                                <a class="btn btn-sm btn-secondary py-2 small cursor-pointer ml-2" href="">Cambiar
+                                    <span class="sr-only">usuario representado</span></a>
+                            </div>
+                            <span
+                                class="aeat--username dropdown-item d-none small font-weight-bold pointer-events-none"></span>
+                            <div class="dropdown-divider d-none"></div>
+                            <ul class="list-unstyled mb-0">
+                                <li>
+                                    <a target="_self" class="dropdown-item" href="https://sede.agenciatributaria.gob.es/Sede/mi-area-personal.html"
+                                        data-href="https://sede.agenciatributaria.gob.es/Sede/mi-area-personal.html" title="Área personal"
+                                        data-toggle="tooltip">
+                                        <i class="aeat-ico fa-ico-usuario-sm ico-size-1 mr-2" aria-hidden="true"
+                                            role="presentation"></i>
+                                        Área personal
+                                    </a>
+                                </li>
+                                <li>
+                                    <a target="_self" class="dropdown-item d-none" id="alert-link"
+                                        data-href="/wlpl/IIIC-ALER/SvObtAlertas" href="/wlpl/IIIC-ALER/SvObtAlertas"
+                                        title="" data-toggle="tooltip" data-original-title="Mis alertas">
+                                        <i class="aeat-ico fa-ico-bell-sm ico-size-1 mr-2" aria-hidden="true"
+                                            role="presentation"></i>
+                                        Mis alertas
+                                        <span class="badge bg-light-blue text-primary ml-1" data-toggle="tooltip"
+                                            title="" data-original-title=""></span>
+                                    </a>
+                                </li>
+                                                            <li>
+                                <a target="_blank" rel="noopener" class="dropdown-item" id="ultimas-conexiones-link" data-href="/wlpl/ADHT-AUTH/UltimasConexionesW" href="/wlpl/ADHT-AUTH/UltimasConexionesW" title="" data-toggle="tooltip" data-original-title="Mis últimos accesos">
+                                    <i class="aeat-ico fa-ico-candado-sm ico-size-1 mr-2" aria-hidden="true" role="presentation"></i>
+                                        Mis últimos accesos
+                                        <i class="aeat-ico fa-ico-ventana-nueva-sm ico-size-1 ml-1" role="img" title="Se abre en ventana nueva"></i>
+                                </a>
+                            </li>
+                            </ul>
+                            <div class="dropdown-divider d-none"></div>
+
+                            <a id="btn-desconectar" class="dropdown-item d-none" href="https://sede.agenciatributaria.gob.es/Sede/Desconectar.html">
+                                <i class="aeat-ico fa-ico-desconectar-sm text-danger mr-2 ico-size-1" aria-hidden="true"
+                                    role="presentation"></i>Desconectarse
+                            </a>
+                        </div>
+                    </div>
+                    <div id="idioma" class="dropdown js-dropdown-lang-app">
+                        <button class="btn btn-link text-secondary d-flex align-items-center cursor-pointer"
+                            type="button" role="button" id="dropdownIdiomas" data-toggle="dropdown" aria-haspopup="true"
+                            aria-expanded="false">
+                            <span class="js-idioma-actual" data-toggle="tooltip" title="Idioma actual">ES</span>
+                            <i class="aeat-ico fa-ico-chevron-down ico-size-mini ml-2" aria-hidden="true"
+                                role="presentation"></i>
+                        </button>
+                        <ul id="dropdown-idioma" class="dropdown-menu dropdown-menu-right" role="combobox"
+                            aria-labelledby="dropdownIdiomas">
+                            <!--AEATP1NOTRAD-->
+                            <li>
+                                <a class="dropdown-item notraducir" title="Català" data-lang="CA" lang="ca"
+                                    hreflang="ca" aria-disabled="false" tabindex="0" aria-selected="false"
+                                    href="https://www1.agenciatributaria.gob.es/wlpl/inwinvoc/es.aeat.dit.adu.adta.trans.bdm.TtCodNomAcc">
+                                    Català
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item notraducir" title="Galego" data-lang="GL" lang="gl"
+                                    hreflang="gl" aria-disabled="false" tabindex="0" aria-selected="false"
+                                    href="https://www1.agenciatributaria.gob.es/wlpl/inwinvoc/es.aeat.dit.adu.adta.trans.bdm.TtCodNomAcc">
+                                    Galego
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item notraducir" title="Valencià" data-lang="VA" lang="ca-valencia"
+                                    hreflang="ca-valencia" aria-disabled="false" tabindex="0" aria-selected="false"
+                                    href="https://www1.agenciatributaria.gob.es/wlpl/inwinvoc/es.aeat.dit.adu.adta.trans.bdm.TtCodNomAcc">
+                                    Valencià
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item notraducir" title="English" data-lang="EN" lang="en"
+                                    hreflang="en" aria-disabled="false" tabindex="0" aria-selected="false"
+                                    href="https://www1.agenciatributaria.gob.es/wlpl/inwinvoc/es.aeat.dit.adu.adta.trans.bdm.TtCodNomAcc">
+                                    English
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item notraducir active" title="Castellano" data-lang="ES" lang="es"
+                                    hreflang="es" aria-disabled="false" tabindex="0" aria-selected="false"
+                                    href="https://www1.agenciatributaria.gob.es/wlpl/inwinvoc/es.aeat.dit.adu.adta.trans.bdm.TtCodNomAcc">
+                                    Castellano
+                                </a>
+                            </li>
+                            <!--/AEATP1NOTRAD-->
+                        </ul>
+                    </div>
+                </div>
+                <!-- CABECERA DERECHA-->
+            </div>
+        </div>
+    </div>
+    <!--googleon: index-->
+    <!-- CABECERA FIN -->
+    <!-- MENU -->
+    <div class="w-100 bg-primary p-1"></div>
+    <!-- MENU FIN -->
+</header><div id="contenedor" class="js-container">
+<div id='AEAT_contenedor_Aplicacion'>
+<main id='AEAT_contenedor_Main'>
+<div class="AEAT_aplicacion" id="acc-main">
+<script>set_cookie('INT-MENSAJE','');</script>
+<div id='divMensajeRecarga'></div>
+<script type='text/javascript'>function alertDescripcion(){
+ alert('Escriba Palabras completas.\n\nPara salto de línea teclee !1!');}</script><nav role='navigation' aria-label='Acciones de aplicación'>
+<div class='AEAT_navegacion'>
+<h1>Nomenclaturas</h1>
+<div class='conborde bloque_100' >
+<h2 class='seccionSalida bloque_100'>Acciones Nomenclaturas</h2>
+<ul class='aplicacionAcciones lista_espaciada'>
+<li><a href='https://www1.agenciatributaria.gob.es/wlpl/inwinvoc/es.aeat.dit.adu.adta.trans.bdm.TtNomAscQueryIn?FECHAC=16-11-2026&CDNMC=6302210089'>Texto Completo</a>&nbsp;&nbsp;</li>
+<li><a href='https://www1.agenciatributaria.gob.es/wlpl/inwinvoc/es.aeat.dit.adu.adta.trans.bdm.TtCodNomIntQuery?CONANO=2026&amp;CONDIA=16&amp;FCHCON=20261116&amp;CONMES=11'>Query Nomenclaturas</a>&nbsp;&nbsp;</li>
+</ul>
+</div>
+<br />
+</div>
+</nav>
+<form id='Form' method='post' action="https://www1.agenciatributaria.gob.es/wlpl/inwinvoc/es.aeat.dit.adu.adta.trans.bdm.TtCodNomAcc" class="fondo_blanco">
+<ul class = 'lista_espaciada' >
+<li class='oculto'><input type='hidden' id='ACCION' name='ACCION' value='DetalleInt' />
+</li>
+<li class='oculto'><input type='hidden' id='MENU' name='MENU' value='' />
+</li>
+<li class='oculto'><input type='hidden' id='CAMPOS' name='CAMPOS' value='' />
+</li>
+</ul>
+<ul class = 'lista_espaciada' >
+<li class='oculto'><input type='hidden' id='SIDNMC' name='SIDNMC' value='00069625' />
+</li>
+<li class='oculto'><input type='hidden' id='SIDGUI' name='SIDGUI' value='00069243' />
+</li>
+<li class='oculto'><input type='hidden' id='SIDDSC' name='SIDDSC' value='00081771' />
+</li>
+</ul>
+</br><div class='conborde bloque_100'  id='Fecha_Consulta'>
+<h2 class='seccionSalida bloque_100'>Fecha Consulta</h2>
+<ul class='AEAT_form lista_espaciada'>
+<li  class='ancho_99'><strong class='azul'>Fecha Consulta:</strong>&nbsp;<span class='notraducir'>16-11-2026</span></li>
+</ul>
+</div>
+</br><div class='conborde bloque_100' >
+<h2 class='seccionSalida bloque_100'>Datos Nomenclaturas</h2>
+<ul class='AEAT_form lista_espaciada'>
+<li  class='ancho_99'><strong class='azul'>Código de Nomenclatura:</strong>&nbsp;<span class='notraducir'>6302.21.00.89</span></li>
+<li  class='ancho_99'><strong class='azul'>Descripción Larga:</strong>&nbsp;<span class='notraducir'>Las demás                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 </span></li>
+</ul>
+</div>
+</br><h2 class='seccionSalida bloque_100'>Consulta de Aranceles:</h2>
+<div class='conborde bloque_100' >
+<ul class='AEAT_form lista_espaciada'>
+<li class='ancho_99'>
+<label for='ageo'>
+<span class='obligatorio' title='Campo Obligatorio'>*</span>
+&Aacute;rea Geogr&aacute;fica 
+</label>
+<input type='text' name='ageo' id='ageo' value='CN' maxlength='4' size='4'   />
+<div class="p-0 py-1 bloque-en-linea"><a class='botonVentanaNueva notraducir' id='ageo_BTNAYUDA' href="javascript:Ventana('https://www1.agenciatributaria.gob.es/wlpl/inwinvoc/es.aeat.dit.adu.adta.trans.bdm.TtPaisesAGQuery?parForm=Form&parItem=ageo&QUE-MODO=AYUDA&fventana=S');">?</a>
+</div>
+</li>
+<ul class = 'lista_espaciada' >
+<li class='oculto'><input type='hidden' id='nomen' name='nomen' value='6302210089' />
+</li>
+<li class='oculto'><input type='hidden' id='fecha' name='fecha' value='20261116000000000000' />
+</li>
+<li class='oculto'><input type='hidden' id='accion' name='accion' value='formu' />
+</li>
+</ul>
+<input type='submit' id='Aceptar' name='Aceptar'  class='AEAT_boton_main' accesskey='A' value='Aceptar'  />
+</ul>
+</div>
+</br><div class='conborde bloque_100' >
+<h2 class='seccionSalida bloque_100'></h2>
+<ul class='AEAT_form lista_espaciada'>
+<div class='scroll_H ancho_100'>
+<table class='bloque_cen celdasConBorde ancho_90 sortable'  title='Medidas de Nomenclatura'>
+<caption><B>Medidas asociadas a una nomenclatura</B></caption><thead>
+<tr>
+<th >Medida</th>
+<th >Información</th>
+<th >Remisiones</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='texto_izq'><span class='notraducir'>103-APPL </br>A.GEO.: TODOS&nbsp;ERGA OMNES                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          </br>Reglamento: 4R9617340</span></td>
+<td class=texto_izq>Derecho terceros países                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             <br><B>Derechos:</B>&nbsp;12,000%
+<td class='texto_izq'><span class='notraducir'></span></td>
+</tr><tr class='fila_par'><td class='texto_izq'><span class='notraducir'>107-LVC  </br>A.GEO.: TODOS&nbsp;ERGA OMNES                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          </br>Reglamento: 1R2603820</span></td>
+<td class=texto_izq>Derechos de aduana para envíos de escaso valor                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <br><B>Derechos:</B>&nbsp;3,000&nbsp;EUR
+<br><B>Condiciones:</B>
+<table border=2 width=85% align=center>
+<tr align=center>
+<td class=medio align=center width=1%><B>B001</B></td>
+<td class=medio align=center width=10%>Presentación de un certificado/licencia/documento                                                                                                                                                                                                                                                                                                                                                                                                                                                                   <B>C127</B></td>
+<td class=medio align=center width=10%>Aplicar el derecho mencionado                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       </td>
+</tr>
+<td class=medio align=center width=1%><B>B009</B></td>
+<td class=medio align=center width=10%>Presentación de un certificado/licencia/documento                                                                                                                                                                                                                                                                                                                                                                                                                                                                   <B></B></td>
+<td class=medio align=center width=10%>Importación no autorizada                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           </td>
+</tr>
+<td class=medio align=center width=1%><B>C001</B></td>
+<td class=medio align=center width=10%>Presentación de un certificado/licencia/documento                                                                                                                                                                                                                                                                                                                                                                                                                                                                   <B>C128</B></td>
+<td class=medio align=center width=10%>Aplicar el derecho mencionado                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       </td>
+</tr>
+<td class=medio align=center width=1%><B>C009</B></td>
+<td class=medio align=center width=10%>Presentación de un certificado/licencia/documento                                                                                                                                                                                                                                                                                                                                                                                                                                                                   <B></B></td>
+<td class=medio align=center width=10%>Importación no autorizada                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           </td>
+</tr>
+<td class=medio align=center width=1%><B>H001</B></td>
+<td class=medio align=center width=10%>Presentación de un certificado/licencia/documento                                                                                                                                                                                                                                                                                                                                                                                                                                                                   <B>C129</B></td>
+<td class=medio align=center width=10%>Aplicar el derecho mencionado                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       </td>
+</tr>
+<td class=medio align=center width=1%><B>H005</B></td>
+<td class=medio align=center width=10%>Presentación de un certificado/licencia/documento                                                                                                                                                                                                                                                                                                                                                                                                                                                                   <B>Y081</B></td>
+<td class=medio align=center width=10%>Aplicar el derecho mencionado                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       </td>
+</tr>
+<td class=medio align=center width=1%><B>H009</B></td>
+<td class=medio align=center width=10%>Presentación de un certificado/licencia/documento                                                                                                                                                                                                                                                                                                                                                                                                                                                                   <B></B></td>
+<td class=medio align=center width=10%>Importación no autorizada                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           </td>
+</tr>
+</table>
+</br>Indicaciones especiales/Documentos presentados/Certificados y autorizaciones:
+</br><B>C127</B>&nbsp;Identificador del producto comercial,
+</br><B>C128</B>&nbsp;Identificador de producto no normalizado del fabricante,
+</br><B>C129</B>&nbsp;Identificador de producto normalizado del fabricante,
+</br><B>Y081</B>&nbsp;No existe ningún identificador de producto normalizado del fabricante para el producto declarado,
+<td class='texto_izq'><span class='notraducir'></span></td>
+</tr><tr><td class='texto_izq'><span class='notraducir'>117-SUSSH</br>A.GEO.: TODOS&nbsp;ERGA OMNES                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          </br>Reglamento: 1R8726583</span></td>
+<td class=texto_izq>Suspensión - productos destinados a ciertas clases de buques y de plataformas de perforación o de explotación                                                                                                                                                                                                                                                                                                                                                                                                       <br><B>Derechos:</B>&nbsp;0%
+<br><B>Condiciones:</B>
+<table border=2 width=85% align=center>
+<tr align=center>
+<td class=medio align=center width=1%><B>B001</B></td>
+<td class=medio align=center width=10%>Presentación de un certificado/licencia/documento                                                                                                                                                                                                                                                                                                                                                                                                                                                                   <B>C990</B></td>
+<td class=medio align=center width=10%>Aplicar el derecho mencionado                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       </td>
+</tr>
+<td class=medio align=center width=1%><B>B002</B></td>
+<td class=medio align=center width=10%>Presentación de un certificado/licencia/documento                                                                                                                                                                                                                                                                                                                                                                                                                                                                   <B></B></td>
+<td class=medio align=center width=10%>Medida no aplicable                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 </td>
+</tr>
+</table>
+</br>Indicaciones especiales/Documentos presentados/Certificados y autorizaciones:
+</br><B>C990</B>&nbsp;Autorización de destino final buques y plataformas (columna 8c del Anexo A del Reglamento Delegado (UE) 2015/2446),
+<td class='texto_izq'>
+<a href='https://www1.agenciatributaria.gob.es/wlpl/inwinvoc/es.aeat.dit.adu.adta.trans.bdm.TtCodNomAcc#remi'><B>TM&nbsp;510</B></a>
+</br>
+<a href='https://www1.agenciatributaria.gob.es/wlpl/inwinvoc/es.aeat.dit.adu.adta.trans.bdm.TtCodNomAcc#remi'><B>EU&nbsp;003</B></a>
+</br>
+</td>
+</tr><tr class='fila_par'><td class='texto_izq'><span class='notraducir'>800-Union</br>A.GEO.: TODOS&nbsp;ERGA OMNES                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          </br>Reglamento: 1R2621080</span></td>
+<td class=texto_izq>Tasa de gestión de la Unión                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         <br><B>Derechos:</B>&nbsp;2,000&nbsp;EUR
+<br><B>Condiciones:</B>
+<table border=2 width=85% align=center>
+<tr align=center>
+<td class=medio align=center width=1%><B>B001</B></td>
+<td class=medio align=center width=10%>Presentación de un certificado/licencia/documento                                                                                                                                                                                                                                                                                                                                                                                                                                                                   <B>Y126</B></td>
+<td class=medio align=center width=10%>Aplicar el derecho mencionado                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       </td>
+</tr>
+<td class=medio align=center width=1%><B>B009</B></td>
+<td class=medio align=center width=10%>Presentación de un certificado/licencia/documento                                                                                                                                                                                                                                                                                                                                                                                                                                                                   <B></B></td>
+<td class=medio align=center width=10%>Medida no aplicable                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 </td>
+</tr>
+</table>
+</br>Indicaciones especiales/Documentos presentados/Certificados y autorizaciones:
+</br><B>Y126</B>&nbsp;Mercancías vendidas en ventas a distancia,
+<td class='texto_izq'><span class='notraducir'></span></td>
+</tr><tr><td class='texto_izq'><span class='notraducir'>COM-COMER</br>A.GEO.: TODOS&nbsp;ERGA OMNES                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          </br>Reglamento: 1E0803300</span></td>
+<td class=texto_izq>DOCUMENTO DE CONTROL COMERCIO SEGURIDAD DE LOS PRODUCTOS. REAL DECRETO     330/2008 (BOE 62 de 12-03-2008).                                                                                                                                                                                                                                                                                                                                                                                                         <br><B>Exclusiones:</B> Noruega                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              (NO), Islandia                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             (IS), Liechtenstein                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        (LI), Turquía                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              (TR)
+<td class='texto_izq'><span class='notraducir'></span></td>
+</tr><tr class='fila_par'><td class='texto_izq'><span class='notraducir'>IVA-IVA  </br>A.GEO.: TODOS&nbsp;ERGA OMNES                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          </br>Reglamento: 1E9500010</span></td>
+<td class=texto_izq>Impuesto del Valor Añadido                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          <br><B>Derechos:</B>&nbsp;21,000%
+<td class='texto_izq'><span class='notraducir'></span></td>
+</tr><tr></tr>
+</tbody>
+</table>
+</div>
+</ul>
+</br></div>
+</br><ul class='AEAT_form lista_espaciada'>
+<li id='remi' class='ancho_99'><span class='notraducir'>&nbsp;</span></li>
+</ul>
+<ul class='AEAT_form lista_espaciada'>
+<div class='scroll_H ancho_100'>
+<table class='bloque_cen celdasConBorde ancho_90 sortable'  title='Remisiones'>
+<caption><B>Remisiones</B></caption><thead>
+<tr>
+<th >Remisiones</th>
+<th >Descripci&oacute;n</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='texto_izq'><span class='notraducir'><B>EU&nbsp;003</B></span></td>
+<td class='texto_izq'><span class='notraducir'>Según las disposiciones especiales de la sección II (A) (3) de las disposiciones preliminares de la nomenclatura combinada, la suspensión de los derechos de aduana para productos destinados a ciertas clases de buques y a plataformas de perforación o de explotación, estará subordinada a las condiciones previstas en las disposiciones de la Unión Europea dictadas en la materia para el control aduanero del destino de estos productos.</span></td>
+</tr><tr><td class='texto_izq'><span class='notraducir'><B>TM&nbsp;510</B></span></td>
+<td class='texto_izq'><span class='notraducir'>1.  Se suspenderá la percepción de los derechos de aduana en lo que se refiere a los productos destinados a su incorporación en los buques clasificados en los siguientes códigos NC 8901 10 10; 8901 20 10; 8901 30 10; 8901 90 10; 8902 00 10; 8903 22 10, 8903 23 10, 8903 32 10, 8903 33 10; 8904 00 10; 8904 00 91; 8905 10 10; 8905 90 10; 8906 10 00; 8906 90 10 para su construcción, reparación, mantenimiento o transformación, así como los productos destinados al armamento o al equipamiento de estos buques.<P>2.  Se suspenderá la percepción de los derechos de aduana en lo que se refiere a:<P>a) los productos que se destinen a ser incorporados a las plataformas de perforación o de explotación:<P>1) fijas, de la subpartida ex 843 0 49, instaladas dentro o fuera de las aguas territoriales de los Estados miembros,<P>2) flotantes o sumergibles, de la subpartida 8905 20, para su construcción, reparación, mantenimiento o transformación, así como los productos destinados al equipamiento de estas plataformas.<P>b) los tubos, cables y sus piezas de unión que enlacen las plataformas de perforación o de explotación con el continente.</span></td>
+</tr><tr></tr>
+</tbody>
+</table>
+</div>
+</ul>
+<br />
+</br></form>
+</div>
+</main>
+</div>
+</div>
+<footer class="bg-primary d-print-none d-app-none d-inline-block w-100" ><div id="js-pie-enlaces" class="container py-3"><div class="row"><div class="col-12 col-sm-6 col-lg-3"><h2 class="h4 mb-3 text-white js-aeat-collapse-sm">Agencia Tributaria</h2><ul class="list-unstyled"><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/accesibilidad/declaracion-accesibilidad.html" class="d-block text-white">Accesibilidad</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/aviso-seguridad.html" class="d-block text-white">Aviso de seguridad</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/aviso-legal.html" class="d-block text-white">Aviso legal</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/validacion-certificado-sede.html" class="d-block text-white">Validación del certificado de sede</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/datos-personales.html" class="d-block text-white">Protección de datos</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/politica-linguistica.html" class="d-block text-white">Política lingüística</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/condiciones-uso-sede-electronica/estructura-navegacion-sede-electronica.html" class="d-block text-white">Estructura y navegación en la sede electrónica</a></li><li class="position-relative"><a target="_blank" title="Códigos de identificación de la Agencia Tributaria (DIR3), Se abre en ventana nueva" rel="noopener" href="https://administracion.gob.es/pagFront/espanaAdmon/directorioOrganigrama/fichaUnidadOrganica.htm?codigoUnidad=EA0028512" class="d-block text-white">Códigos de identificación de la Agencia Tributaria (DIR3)<i class="aeat-ico fa-ico-ventana-nueva-sm ico-size-1 ml-1" role="img" title="Se abre en ventana nueva"></i></a></li></ul></div><div class="col-12 col-sm-6 col-lg-3"><h2 class="h4 mb-3 text-white js-aeat-collapse-sm">Contacta con nosotros</h2><ul class="list-unstyled"><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GC29.shtml" class="d-block text-white">Asistencia y Cita</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/contacta-nosotros/telefonos-interes.html" class="d-block text-white">Teléfonos de interés</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/buscador-oficinas.html" class="d-block text-white">Buscador de oficinas</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/buzones-sugerencias.html" class="d-block text-white">Buzones de sugerencias</a></li><li class="position-relative mb-2"><a target="_blank" title="Encuesta de satisfacción de usuarios, Se abre en ventana nueva" rel="noopener" href="https://forma.administracionelectronica.gob.es/form/open/corp/95fd4f0b-5c6e-4d91-a036-0717b277b7dd/RtHF/oauQDQlm" class="d-block text-white">Encuesta de satisfacción de usuarios<i class="aeat-ico fa-ico-ventana-nueva-sm ico-size-1 ml-1" role="img" title="Se abre en ventana nueva"></i></a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/colaborar-agencia-tributaria/denuncias.html" class="d-block text-white">Denuncias</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/informacion-institucional/suscripcion-rss-newsletter/newsletter.html" class="d-block text-white">Suscripción newsletter</a></li><li class="position-relative"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/informacion-institucional/suscripcion-rss-newsletter/rss.html" class="d-block text-white">Suscripción RSS</a></li></ul></div><div class="col-12 col-sm-6 col-lg-3"><h2 class="h4 mb-3 text-white js-aeat-collapse-sm">Ayuda</h2><ul class="list-unstyled"><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/search.html" class="d-block text-white">Buscar</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas.html" class="d-block text-white">Consultas informáticas</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/ayuda/contenidos-lectura-facil.html" class="d-block text-white">Contenidos en lectura fácil</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro.html" class="d-block text-white">Diseños de registro</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/ayuda/horario-interrupciones-sede-electronica.html" class="d-block text-white">Horario de interrupciones de sede</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos.html" class="d-block text-white">Manuales, vídeos y folletos</a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/ZZ08.shtml" class="d-block text-white">Simuladores</a></li><li class="position-relative"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/ayuda.html" class="d-block text-white">Todas las ayudas</a></li></ul></div><div class="col-12 col-sm-6 col-lg-3"><h2 class="h4 mb-3 text-white js-aeat-collapse-sm">Enlaces de interés</h2><ul class="list-unstyled"><li class="position-relative mb-2"><a target="_self" href="https://www.hacienda.gob.es/" class="d-block text-white">Ministerio de Hacienda</a></li><li class="position-relative mb-2"><a target="_blank" title="Fiscalidad autonómica y local, Se abre en ventana nueva" rel="noopener" href="https://www.agenciatributaria.es/AEAT.fisterritorial/InicioF.shtml" class="d-block text-white">Fiscalidad autonómica y local<i class="aeat-ico fa-ico-ventana-nueva-sm ico-size-1 ml-1" role="img" title="Se abre en ventana nueva"></i></a></li><li class="position-relative mb-2"><a target="_self" href="https://sede.tea.hacienda.gob.es/" class="d-block text-white">Tribunales Económico - Administrativos</a></li><li class="position-relative mb-2"><a target="_self" href="https://www2.agenciatributaria.gob.es/static_files/common/dep/planificacion/CDC/IFRD0001.html" class="d-block text-white">Consejo para la Defensa del Contribuyente</a></li><li class="position-relative mb-2"><a target="_blank" title="Punto de Acceso General, Se abre en ventana nueva" rel="noopener" href="https://administracion.gob.es/" class="d-block text-white">Punto de Acceso General<i class="aeat-ico fa-ico-ventana-nueva-sm ico-size-1 ml-1" role="img" title="Se abre en ventana nueva"></i></a></li><li class="position-relative mb-2"><a target="_blank" title="Portal de la transparencia, Se abre en ventana nueva" rel="noopener" href="https://transparencia.gob.es" class="d-block text-white">Portal de la transparencia<i class="aeat-ico fa-ico-ventana-nueva-sm ico-size-1 ml-1" role="img" title="Se abre en ventana nueva"></i></a></li><li class="position-relative"><a target="_self" href="https://sede.agenciatributaria.gob.es/Sede/enlaces-interes.html" class="d-block text-white">Otros enlaces de interés</a></li></ul></div></div></div></footer>
+ <div class="d-none">
+   <span class="js-responsive d-xs-block"></span>
+   <span class="js-responsive d-sm-block"></span>
+   <span class="js-responsive d-md-block"></span>
+   <span class="js-responsive d-lg-block"></span>
+   <span class="js-responsive d-xl-block"></span>
+   <span class="js-responsive d-xxl-block"></span>
+   <span class="js-responsive d-xxxl-block"></span>
+ </div>
+</body></html>
