@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import ExpeditionDetail from './ExpeditionDetail'
-import { expeditionsAPI, documentsAPI, declarationsAPI } from '../../services/api'
+import { classificationAPI, expeditionsAPI, documentsAPI, declarationsAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
 vi.mock('react-i18next', () => ({
@@ -25,6 +25,7 @@ vi.mock('../../services/api', () => ({
     aiFullAnalysis: vi.fn()
   },
   documentsAPI: { upload: vi.fn(), read: vi.fn(), proposal: vi.fn(), apply: vi.fn(), download: vi.fn() },
+  classificationAPI: { aeatTariff: vi.fn() },
   declarationsAPI: {
     generateH1: vi.fn(),
     exportXML: vi.fn(),
@@ -1217,5 +1218,36 @@ describe('<ExpeditionDetail /> — edición de mercancía y documentos por el ag
     await waitFor(() => expect(expeditionsAPI.get.mock.calls.length).toBeGreaterThan(cargasAntes))
     await waitFor(() => expect(expeditionsAPI.getChecklist.mock.calls.length).toBeGreaterThan(checklistAntes))
     expect(toast.success).toHaveBeenCalledWith('expeditions.uploadSuccess')
+  })
+})
+
+describe('<ExpeditionDetail /> · Arancel Integrado de la AEAT por partida', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    expeditionsAPI.get.mockResolvedValue({ data: { data: { ...mockExpedition, goods: [{ ...mockExpedition.goods[1], dutyRate: 0, vatRate: 21 }] } } })
+    expeditionsAPI.getChecklist?.mockResolvedValue?.({ data: { data: [] } })
+  })
+
+  test('cada partida con TARIC consulta la AEAT con su origen y contrasta arancel e IVA', async () => {
+    classificationAPI.aeatTariff.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          existe: true, codigo: '8471300000', areaGeografica: 'CN', fechaConsulta: '16-11-2026', url: 'https://aeat',
+          medidas: [
+            { codigo: '103-APPL', tipo: 'ue', areaGeografica: 'TODOS ERGA OMNES', descripcion: 'Derecho terceros países', derecho: '0%', documentos: [] },
+            { codigo: 'ROS-ROS', tipo: 'nacional', areaGeografica: 'TODOS ERGA OMNES', descripcion: 'ROSH / RAEE', documentos: [] },
+            { codigo: 'IVA-IVA', tipo: 'iva', areaGeografica: 'TODOS ERGA OMNES', descripcion: 'Impuesto del Valor Añadido', derecho: '21,000%', documentos: [] }
+          ]
+        }
+      }
+    })
+    renderExpeditionDetail()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'classification.aeat.consult' }))
+
+    expect(await screen.findByText('ROSH / RAEE')).toBeInTheDocument()
+    expect(classificationAPI.aeatTariff).toHaveBeenCalledWith('8471300000', 'CN')
+    expect(screen.getByText('classification.aeat.ratesMatch')).toBeInTheDocument()
   })
 })

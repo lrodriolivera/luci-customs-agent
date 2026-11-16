@@ -12,6 +12,7 @@ import { prerrellenarAlta, transporteParaAlta, partidaVacia, transporteVacio, IN
 import { DIVISAS_OFICIALES, DIVISAS_SIN_BCE } from '../../utils/divisas'
 import toast from 'react-hot-toast'
 import { ArrowLeftIcon, PlusIcon, TrashIcon, SparklesIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
+import MedidasAeat from '../Classification/MedidasAeat'
 
 const NL_CUSTOMS_OFFICES = [
   { code: 'NL000297', name: 'Rotterdam Haven' },
@@ -758,6 +759,15 @@ export default function ExpeditionNew() {
                         {t('expeditions.validTaric')}
                         {item.dutyRate !== undefined && ` - ${t('expeditions.tariff')}: ${item.dutyRate}%`}
                       </p>
+                    )}
+                    {/^\d{10}$/.test(item.taricCode || '') && (
+                      <MedidasAeat
+                        key={`${item.taricCode}-${item.originCountry}`}
+                        code={item.taricCode}
+                        origin={item.originCountry}
+                        compare={{ dutyRate: item.dutyRate }}
+                        className="mt-2"
+                      />
                     )}
                   </div>
 

@@ -787,7 +787,11 @@
       "groupUe": "EU tariffs and measures",
       "exclusions": "Exclusions",
       "openAeat": "Open on the AEAT website",
-      "error": "Could not check with the AEAT"
+      "error": "Could not check with the AEAT",
+      "dutyMismatch": "The file's duty ({{expediente}}%) does not match the AEAT third-country duty ({{aeat}}%).",
+      "vatMismatch": "The file's VAT ({{expediente}}%) does not match the AEAT VAT ({{aeat}}%).",
+      "dutyPreference": "The file's duty ({{aeat}}%) is a preference for this origin; the general rate is {{general}}%. Proof of origin is required.",
+      "ratesMatch": "The file's duty and VAT match the AEAT."
     }
   },
   "declarations": {

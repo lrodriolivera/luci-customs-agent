@@ -14,6 +14,46 @@ const GRUPOS = [
   { clave: 'groupUe', tipos: ['ue'] }
 ]
 
+/** "12,000%" -> 12; sin porcentaje (EUR, unidades...) -> null. */
+const porcentaje = (derecho) => {
+  const m = String(derecho || '').match(/^\s*([\d.,]+)\s*%\s*$/)
+  return m ? Number(m[1].replace(/\./g, '').replace(',', '.')) : null
+}
+
+/**
+ * Compara el arancel y el IVA del expediente con los de la AEAT.
+ * Arancel general: medida 103. Una preferencia (1xx distinta de 103) solo
+ * cuenta si su area es el origen consultado; si el expediente usa ese tipo,
+ * no es un error, pero exige prueba de origen.
+ * @returns {{ clave: string, valores: object, aviso: boolean }[]}
+ */
+function contrastar(datos, compare) {
+  if (!compare || !datos?.existe) return []
+  const medidas = datos.medidas || []
+  const resultado = []
+
+  const general = porcentaje(medidas.find((m) => m.codigo.startsWith('103'))?.derecho)
+  const preferencias = medidas
+    .filter((m) => /^1\d\d/.test(m.codigo) && !m.codigo.startsWith('103') && m.areaGeografica?.startsWith(datos.areaGeografica))
+    .map((m) => porcentaje(m.derecho))
+    .filter((p) => p !== null)
+  const arancel = typeof compare.dutyRate === 'number' ? compare.dutyRate : null
+  if (arancel !== null && general !== null) {
+    if (preferencias.includes(arancel) && arancel !== general) {
+      resultado.push({ clave: 'dutyPreference', valores: { aeat: arancel, general }, aviso: false })
+    } else if (arancel !== general) {
+      resultado.push({ clave: 'dutyMismatch', valores: { expediente: arancel, aeat: general }, aviso: true })
+    }
+  }
+
+  const ivaAeat = porcentaje(medidas.find((m) => m.tipo === 'iva')?.derecho)
+  const iva = typeof compare.vatRate === 'number' ? compare.vatRate : null
+  if (iva !== null && ivaAeat !== null && iva !== ivaAeat) {
+    resultado.push({ clave: 'vatMismatch', valores: { expediente: iva, aeat: ivaAeat }, aviso: true })
+  }
+  return resultado
+}
+
 /**
  * Una medida del Arancel Integrado: codigo, descripcion, derecho, exclusiones
  * y documentos que exige.
@@ -57,16 +97,22 @@ function Medida({ medida, t }) {
  * la capa nacional espanola (IVA, impuestos especiales, controles e
  * inspecciones) que el catalogo TARIC de la UE no trae. UAT 16/Nov/2026.
  *
- * @param {{ code: string, origin?: string }} props
+ * Con `compare` ({ dutyRate, vatRate } del expediente) avisa si el arancel o
+ * el IVA que usa LUCI no coinciden con los de la AEAT.
+ *
+ * @param {{ code: string, origin?: string, compare?: { dutyRate?: number, vatRate?: number }, className?: string }} props
  */
-export default function MedidasAeat({ code, origin }) {
+export default function MedidasAeat({ code, origin, compare, className = 'mt-3 pl-9' }) {
   const { t } = useTranslation()
   const [estado, setEstado] = useState({ cargando: false, datos: null, error: null })
 
   const consultar = async () => {
     setEstado({ cargando: true, datos: null, error: null })
     try {
-      const respuesta = await classificationAPI.aeatTariff(code, origin)
+      // El origen del expediente se escribe a mano: solo se envia si es un
+      // codigo ISO de dos letras; si no, se consulta para todos los paises.
+      const origen = /^[A-Za-z]{2}$/.test(String(origin || '').trim()) ? origin.trim().toUpperCase() : undefined
+      const respuesta = await classificationAPI.aeatTariff(code, origen)
       setEstado({ cargando: false, datos: respuesta.data?.data, error: null })
     } catch (error) {
       setEstado({
@@ -78,12 +124,13 @@ export default function MedidasAeat({ code, origin }) {
   }
 
   const { cargando, datos, error } = estado
+  const contraste = contrastar(datos, compare)
   const origenTexto = !datos || datos.areaGeografica === AREA_ERGA_OMNES
     ? t('classification.aeat.ergaOmnes')
     : datos.areaGeografica
 
   return (
-    <div className="mt-3 pl-9">
+    <div className={className}>
       <button
         type="button"
         onClick={consultar}
@@ -115,6 +162,19 @@ export default function MedidasAeat({ code, origin }) {
           <p className="text-xs text-gray-600 mt-0.5">
             {t('classification.aeat.meta', { fecha: datos.fechaConsulta, origen: origenTexto })}
           </p>
+
+          {contraste.map(({ clave, valores, aviso }) => (
+            <p
+              key={clave}
+              role="status"
+              className={`mt-2 text-sm rounded px-2 py-1 ${aviso ? 'bg-amber-100 text-amber-900' : 'bg-blue-100 text-blue-900'}`}
+            >
+              {t(`classification.aeat.${clave}`, valores)}
+            </p>
+          ))}
+          {compare && datos.existe && contraste.length === 0 && (
+            <p className="mt-2 text-sm text-green-700">{t('classification.aeat.ratesMatch')}</p>
+          )}
 
           {!datos.existe && (
             <p className="mt-2 text-sm text-amber-800">{t('classification.aeat.notFound')}</p>

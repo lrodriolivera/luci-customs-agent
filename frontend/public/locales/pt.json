@@ -787,7 +787,11 @@
       "groupUe": "Direitos e medidas da UE",
       "exclusions": "Exclusões",
       "openAeat": "Abrir no site da AEAT",
-      "error": "Não foi possível consultar a AEAT"
+      "error": "Não foi possível consultar a AEAT",
+      "dutyMismatch": "O direito do processo ({{expediente}} %) não coincide com o da AEAT para países terceiros ({{aeat}} %).",
+      "vatMismatch": "O IVA do processo ({{expediente}} %) não coincide com o da AEAT ({{aeat}} %).",
+      "dutyPreference": "O direito do processo ({{aeat}} %) é uma preferência desta origem; o geral é {{general}} %. Exige prova de origem.",
+      "ratesMatch": "O direito e o IVA do processo coincidem com os da AEAT."
     }
   },
   "declarations": {
