@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useOutletContext, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useDropzone } from 'react-dropzone'
 import { portalAPI } from '../../services/api'
@@ -14,15 +14,20 @@ import {
 } from '@heroicons/react/24/outline'
 import { esImportacion } from '../../utils/expedition'
 
+// Justificante de pago del modelo 031 (pago previo al levante).
+const TIPO_JUSTIFICANTE_031 = 'customs_payment_receipt'
+// Certificado de plastico reciclado (casilla 44, 1135).
+const TIPO_CERTIFICADO_PLASTICO = 'plastic_recycled_certificate'
+
 export default function PortalDocuments() {
   const { t } = useTranslation()
   const { expedition, token } = useOutletContext()
+  const [searchParams] = useSearchParams()
   const [uploading, setUploading] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState([])
-  const [selectedDocType, setSelectedDocType] = useState('')
-  // La autorizacion de despacho vale cuatro años desde su fecha: hay que indicarla.
-  const [documentDate, setDocumentDate] = useState('')
-  const needsDate = selectedDocType === 'dispatch_authorization'
+  const pago = expedition?.pagoTributos
+  const admiteJustificante031 = pago?.paymentMethod === 'A' && Boolean(pago?.mrn)
+  const pideCertificadoPlastico = (expedition?.documentChecklist || []).some((c) => c.documentType === TIPO_CERTIFICADO_PLASTICO)
 
   const documentTypes = [
     { value: 'commercial_invoice', label: t('portal.docCommercialInvoice') },
@@ -37,8 +42,21 @@ export default function PortalDocuments() {
     { value: 'phytosanitary_certificate', label: t('portal.docPhytoCert') },
     // 'insurance' no existe en el modelo: la subida de la poliza fallaba.
     { value: 'insurance_certificate', label: t('portal.docInsurance') },
+    // Solo con pago previo al levante y el H1 ya presentado (UAT 16/Nov/2026).
+    ...(admiteJustificante031 ? [{ value: TIPO_JUSTIFICANTE_031, label: t('portal.docPaymentReceipt031') }] : []),
+    // Solo si alguna partida declara plastico reciclado (impuesto al plastico).
+    ...(pideCertificadoPlastico ? [{ value: TIPO_CERTIFICADO_PLASTICO, label: t('portal.docPlasticRecycledCertificate') }] : []),
     { value: 'other', label: t('portal.docOther') }
   ]
+
+  // Desde la seccion de pago se llega con ?tipo=customs_payment_receipt: ya elegido.
+  const tipoPedido = searchParams.get('tipo')
+  const [selectedDocType, setSelectedDocType] = useState(
+    documentTypes.some((d) => d.value === tipoPedido) ? tipoPedido : ''
+  )
+  // La autorizacion de despacho vale cuatro años desde su fecha: hay que indicarla.
+  const [documentDate, setDocumentDate] = useState('')
+  const needsDate = selectedDocType === 'dispatch_authorization'
 
   const onDrop = useCallback(async (acceptedFiles) => {
     if (!selectedDocType) {

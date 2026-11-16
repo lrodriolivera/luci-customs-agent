@@ -131,6 +131,9 @@ const DocumentSchema = new mongoose.Schema({
       'export_license',
       'ce_certificate',
       'quality_certificate',
+      // Justificante de pago del modelo 031 (pago previo al levante).
+      'customs_payment_receipt',
+      'plastic_recycled_certificate',
       'other'
     ],
     required: true

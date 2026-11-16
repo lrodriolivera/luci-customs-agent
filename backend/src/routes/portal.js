@@ -41,6 +41,9 @@ router.post(
 );
 router.get('/:token/documents/:docId', portalController.getDocument);
 
+// H1 definitivo (admitido por la AEAT) con los datos del modelo 031.
+router.get('/:token/h1-definitivo', portalValidators.getByToken, portalController.downloadH1Definitivo);
+
 // Mensajes no leidos
 router.get('/:token/unread', portalValidators.getByToken, portalController.getUnreadCount);
 

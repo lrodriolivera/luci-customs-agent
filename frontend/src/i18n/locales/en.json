@@ -562,7 +562,9 @@
       "export_license": "Export licence",
       "ce_certificate": "CE certificate",
       "quality_certificate": "Quality certificate",
-      "other": "Other"
+      "customs_payment_receipt": "Proof of payment (form 031)",
+      "other": "Other",
+      "plastic_recycled_certificate": "Recycled plastic certificate"
     },
     "descriptionTooShort": "The description needs at least {{min}} characters to be classified",
     "valueWillBeSaved": "It will be saved as {{amount}}",
@@ -690,7 +692,18 @@
     "plasticCertificate": "Recycled plastic certificate no.",
     "plasticRecycledHelp": "Recycled plastic is not taxed: it is declared with certificate 1135 from the recycling plant or an accredited body.",
     "plasticCertificateRequired": "Enter the recycled plastic certificate number",
-    "plasticExemptionNeedsKg": "The exemption is declared with the kg of non-reusable plastic (with zero tax)"
+    "plasticExemptionNeedsKg": "The exemption is declared with the kg of non-reusable plastic (with zero tax)",
+    "pago031": {
+      "button": "Send H1 and form 031 to client",
+      "sending": "Sending…",
+      "confirmTitle": "Send the accepted H1 and form 031",
+      "confirmMessage": "An email will be sent to {{email}} with the MRN, the amount assessed by the AEAT and the portal link, where they can download the final H1 and upload the payment receipt.",
+      "noEmail": "The client has no contact email: add it under «Parties» before sending.",
+      "send": "Send",
+      "sent": "Sent to {{email}}",
+      "error": "The email could not be sent",
+      "lastSent": "Last sent: {{date}}"
+    }
   },
   "classification": {
     "title": "TARIC Classification",
@@ -2058,8 +2071,19 @@
       "howToPay": "Pay with form 031 on the AEAT website and upload the receipt in Documents.",
       "payLink": "How to pay on the AEAT website",
       "waiting": "We are waiting for the payment receipt to obtain the release.",
-      "error": "Could not save the payment method"
-    }
+      "error": "Could not save the payment method",
+      "form031": "Details to pay with form 031",
+      "reference": "Debt reference (MRN)",
+      "amount": "Amount",
+      "importerNif": "Importer tax ID (NIF)",
+      "deadline": "Payment deadline",
+      "downloadH1": "Download the final H1 (PDF)",
+      "downloadError": "The final H1 could not be downloaded",
+      "uploadReceipt": "Upload the proof of payment",
+      "receiptReceived": "Proof of payment received on {{fecha}}. We are now waiting for the release."
+    },
+    "docPaymentReceipt031": "Proof of payment (form 031)",
+    "docPlasticRecycledCertificate": "Recycled plastic certificate"
   },
   "landing": {
     "features": "Features",

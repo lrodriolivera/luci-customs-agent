@@ -562,7 +562,9 @@
       "export_license": "Licenza di esportazione",
       "ce_certificate": "Certificato CE",
       "quality_certificate": "Certificato di qualità",
-      "other": "Altro"
+      "customs_payment_receipt": "Ricevuta di pagamento (modello 031)",
+      "other": "Altro",
+      "plastic_recycled_certificate": "Certificato di plastica riciclata"
     },
     "descriptionTooShort": "La descrizione deve avere almeno {{min}} caratteri per essere classificata",
     "valueWillBeSaved": "Verrà salvato come {{amount}}",
@@ -690,7 +692,18 @@
     "plasticCertificate": "N. del certificato di plastica riciclata",
     "plasticRecycledHelp": "La plastica riciclata non paga: si dichiara con il certificato 1135 dell'impianto di riciclo o di un ente accreditato.",
     "plasticCertificateRequired": "Indica il numero del certificato di plastica riciclata",
-    "plasticExemptionNeedsKg": "L'esenzione si dichiara con i kg di plastica non riutilizzabile (imposta zero)"
+    "plasticExemptionNeedsKg": "L'esenzione si dichiara con i kg di plastica non riutilizzabile (imposta zero)",
+    "pago031": {
+      "button": "Invia al cliente l'H1 e il 031",
+      "sending": "Invio…",
+      "confirmTitle": "Invia l'H1 accettato e il modello 031",
+      "confirmMessage": "Verrà inviata a {{email}} un'e-mail con l'MRN, l'importo liquidato dall'AEAT e il link al portale, dove potrà scaricare l'H1 definitivo e caricare la ricevuta di pagamento.",
+      "noEmail": "Il cliente non ha un'e-mail di contatto: aggiungila in «Parti» prima di inviare.",
+      "send": "Invia",
+      "sent": "Inviato a {{email}}",
+      "error": "Impossibile inviare l'e-mail",
+      "lastSent": "Ultimo invio: {{date}}"
+    }
   },
   "classification": {
     "title": "Classificazione TARIC",
@@ -2057,8 +2070,19 @@
       "howToPay": "Paga con il modello 031 sulla sede dell'AEAT e caricaci la ricevuta in Documenti.",
       "payLink": "Come pagare sulla sede dell'AEAT",
       "waiting": "Restiamo in attesa della ricevuta di pagamento per ottenere lo svincolo.",
-      "error": "Impossibile salvare la modalità di pagamento"
-    }
+      "error": "Impossibile salvare la modalità di pagamento",
+      "form031": "Dati per pagare con il modello 031",
+      "reference": "Riferimento del debito (MRN)",
+      "amount": "Importo",
+      "importerNif": "NIF dell'importatore",
+      "deadline": "Data limite di pagamento",
+      "downloadH1": "Scarica l'H1 definitivo (PDF)",
+      "downloadError": "Impossibile scaricare l'H1 definitivo",
+      "uploadReceipt": "Carica la ricevuta di pagamento",
+      "receiptReceived": "Ricevuta di pagamento ricevuta il {{fecha}}. Siamo in attesa dello svincolo."
+    },
+    "docPaymentReceipt031": "Ricevuta di pagamento (modello 031)",
+    "docPlasticRecycledCertificate": "Certificato di plastica riciclata"
   },
   "landing": {
     "features": "Funzionalita",

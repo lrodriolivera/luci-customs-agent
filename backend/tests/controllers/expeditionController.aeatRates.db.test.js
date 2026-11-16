@@ -291,3 +291,31 @@ describe('update: editar el importador (UAT 16/Nov/2026)', () => {
   });
 });
 
+describe('update: plástico reciclado pide su certificado (impuesto al plástico, 1135)', () => {
+  const guardarPartidas = async (user, exp, goods) => {
+    const res = crearRes();
+    await ctrl.update({ params: { id: String(exp._id) }, body: { goods }, user, tenantId: user.tenantId }, res);
+    return res;
+  };
+
+  test('al declarar kg reciclados en una partida, la lista de documentos pide el certificado una sola vez', async () => {
+    const user = usuario();
+    const exp = await crearExpediente(user);
+    const partida = { ...exp.goods[0].toObject(), impuestoPlastico: { kg: 6, kgReciclado: 4, certificadoReciclado: 'CERT-1' } };
+
+    expect((await guardarPartidas(user, exp, [partida])).statusCode).toBe(200);
+    await guardarPartidas(user, await Expedition.findById(exp._id), [partida]);
+
+    const pedidos = (await Expedition.findById(exp._id)).documentChecklist.filter((c) => c.documentType === 'plastic_recycled_certificate');
+    expect(pedidos).toHaveLength(1);
+    expect(pedidos[0]).toMatchObject({ required: true, received: false });
+  });
+
+  test('sin plástico reciclado no lo pide', async () => {
+    const user = usuario();
+    const exp = await crearExpediente(user);
+    await guardarPartidas(user, exp, [{ ...exp.goods[0].toObject(), impuestoPlastico: { kg: 6 } }]);
+    expect((await Expedition.findById(exp._id)).documentChecklist.map((c) => c.documentType)).not.toContain('plastic_recycled_certificate');
+  });
+});
+

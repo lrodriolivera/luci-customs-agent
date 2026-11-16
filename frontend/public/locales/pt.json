@@ -562,7 +562,9 @@
       "export_license": "Licença de exportação",
       "ce_certificate": "Certificado CE",
       "quality_certificate": "Certificado de qualidade",
-      "other": "Outro"
+      "customs_payment_receipt": "Comprovativo de pagamento (modelo 031)",
+      "other": "Outro",
+      "plastic_recycled_certificate": "Certificado de plástico reciclado"
     },
     "descriptionTooShort": "A descrição deve ter pelo menos {{min}} caracteres para ser classificada",
     "valueWillBeSaved": "Será guardado como {{amount}}",
@@ -690,7 +692,18 @@
     "plasticCertificate": "N.º do certificado de plástico reciclado",
     "plasticRecycledHelp": "O plástico reciclado não paga: declara-se com o certificado 1135 da unidade de reciclagem ou de uma entidade acreditada.",
     "plasticCertificateRequired": "Indique o número do certificado de plástico reciclado",
-    "plasticExemptionNeedsKg": "A isenção declara-se com os kg de plástico não reutilizável (com quota zero)"
+    "plasticExemptionNeedsKg": "A isenção declara-se com os kg de plástico não reutilizável (com quota zero)",
+    "pago031": {
+      "button": "Enviar ao cliente o H1 e o 031",
+      "sending": "A enviar…",
+      "confirmTitle": "Enviar o H1 admitido e o modelo 031",
+      "confirmMessage": "Será enviado para {{email}} um e-mail com o MRN, o montante liquidado pela AEAT e a ligação ao portal, onde poderá descarregar o H1 definitivo e carregar o comprovativo de pagamento.",
+      "noEmail": "O cliente não tem e-mail de contacto: adicione-o em «Partes» antes de enviar.",
+      "send": "Enviar",
+      "sent": "Enviado para {{email}}",
+      "error": "Não foi possível enviar o e-mail",
+      "lastSent": "Último envio: {{date}}"
+    }
   },
   "classification": {
     "title": "Classificacao TARIC",
@@ -2057,8 +2070,19 @@
       "howToPay": "Pague com o modelo 031 na Sede da AEAT e envie-nos o comprovativo em Documentos.",
       "payLink": "Como pagar na Sede da AEAT",
       "waiting": "Ficamos a aguardar o comprovativo de pagamento para obter a autorização de saída.",
-      "error": "Não foi possível guardar a forma de pagamento"
-    }
+      "error": "Não foi possível guardar a forma de pagamento",
+      "form031": "Dados para pagar com o modelo 031",
+      "reference": "Referência da dívida (MRN)",
+      "amount": "Montante",
+      "importerNif": "NIF do importador",
+      "deadline": "Data limite de pagamento",
+      "downloadH1": "Descarregar o H1 definitivo (PDF)",
+      "downloadError": "Não foi possível descarregar o H1 definitivo",
+      "uploadReceipt": "Enviar o comprovativo de pagamento",
+      "receiptReceived": "Comprovativo de pagamento recebido em {{fecha}}. Aguardamos a autorização de saída."
+    },
+    "docPaymentReceipt031": "Comprovativo de pagamento (modelo 031)",
+    "docPlasticRecycledCertificate": "Certificado de plástico reciclado"
   },
   "landing": {
     "features": "Funcionalidades",

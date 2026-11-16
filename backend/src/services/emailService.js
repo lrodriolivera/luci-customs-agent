@@ -367,6 +367,33 @@ class EmailService {
   }
 
   /**
+   * Pago previo al levante (modelo 031): H1 admitido, importe y enlace al
+   * portal, donde el cliente descarga el H1 definitivo y sube el justificante.
+   * Lo envia la agente desde el expediente (no es automatico).
+   */
+  async sendPago031(email, { companyName, expeditionId, portalUrl, mrn, importe, limiteDePago }) {
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const euros = Number(importe).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const filaLimite = limiteDePago
+      ? `<tr><td style="font-weight:bold;color:#495057;">Fecha límite de pago</td><td style="color:#212529;">${esc(limiteDePago)}</td></tr>`
+      : '';
+    const html = this._wrapHtml(`
+      <h2 style="color:${BRAND_COLOR};margin-top:0;">Declaración de importación admitida</h2>
+      <p style="color:#495057;">Estimado/a <strong>${esc(companyName)}</strong>,</p>
+      <p style="color:#495057;">La AEAT ha admitido la declaración de importación (H1) de su expediente <strong>${esc(expeditionId)}</strong>. Ha elegido el pago previo al levante: para que la AEAT libere la mercancía hay que pagar los tributos con el modelo 031.</p>
+      <table width="100%" cellpadding="8" cellspacing="0" style="border:1px solid #dee2e6;border-radius:4px;margin:16px 0;">
+        <tr style="background-color:#f8f9fa;"><td style="font-weight:bold;color:#495057;border-bottom:1px solid #dee2e6;">Referencia (MRN)</td><td style="color:#212529;border-bottom:1px solid #dee2e6;font-family:monospace;">${esc(mrn)}</td></tr>
+        <tr><td style="font-weight:bold;color:#495057;border-bottom:1px solid #dee2e6;">Importe a pagar</td><td style="color:#212529;border-bottom:1px solid #dee2e6;"><strong>${esc(euros)} €</strong></td></tr>
+        ${filaLimite}
+      </table>
+      <p style="color:#495057;">En el portal puede descargar el H1 definitivo, ver cómo pagar el modelo 031 en la Sede de la AEAT y subirnos el justificante de pago.</p>
+      <div style="text-align:center;margin:24px 0;"><a href="${esc(portalUrl)}" style="background-color:${BRAND_COLOR};color:#ffffff;padding:12px 32px;text-decoration:none;border-radius:4px;font-weight:bold;display:inline-block;">Ir al portal</a></div>
+      <p style="color:#6c757d;font-size:13px;">Quedamos a la espera del justificante de pago para la obtención del levante.</p>
+    `);
+    return this.sendEmail(email, `[${String(expeditionId)}] H1 admitido: pago de tributos (modelo 031)`, html);
+  }
+
+  /**
    * Welcome email
    */
   async sendWelcomeEmail(email, name, companyName) {

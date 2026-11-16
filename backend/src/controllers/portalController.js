@@ -15,6 +15,7 @@ const logger = require('../config/logger');
 const EVENTOS_VISIBLES_CLIENTE = [
   'expedition_created',
   'payment_method_chosen',
+  'payment_receipt_uploaded',
   'created',
   'document_uploaded',
   'document_deleted',
@@ -39,37 +40,16 @@ const aiService = require('../services/aiService');
 const { DOCUMENT_DEFINITIONS } = require('../utils/documentChecklists');
 const { fechaDeDocumento } = require('../services/documentos/fechaDocumento');
 const { autorizacionVigente, aplicarAutorizacionVigente } = require('../services/documentos/autorizacionDespacho');
+const { DOCUMENT_TYPES } = require('../middleware/validators');
+const { pagoTributosDe, admiteJustificante031, h1DefinitivoDe, TIPO_JUSTIFICANTE_031 } = require('../services/portal/pagoTributos');
+const { generarH1DefinitivoPdf } = require('../services/portal/h1DefinitivoPdf');
+const fs = require('fs');
 
 /**
  * Obtener expediente por token del portal
  * GET /api/portal/:token
  */
-// Pagina de la Sede de la AEAT para pagar deudas de comercio exterior
-// (modelo 031) que enlazaron las agentes (UAT 16/Nov/2026).
-const URL_PAGO_AEAT = 'https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/presentacion-declaraciones-ayuda-tecnica/pago-consultas-comercio-exterior/realizar-pago-telematicamente.html';
 const FORMAS_DE_PAGO_CLIENTE = ['A', 'R'];
-
-/**
- * Lo que ve el cliente sobre el pago de los tributos del H1: la forma de pago
- * elegida, si aun puede cambiarla (antes de presentar) y, con pago previo al
- * levante y el H1 admitido, el importe que liquido la AEAT y como pagarlo.
- */
-function pagoTributosDe(expedition) {
-  if (expedition.operationType === 'export') return null;
-  const decl = expedition.declaration || {};
-  const metodo = decl.paymentMethod || null;
-  const presentado = Boolean(decl.mrn);
-  const liquidacion = decl.aeatResponse?.liquidacion;
-  const conLevante = Boolean(decl.levanteDate) || expedition.status === 'levante';
-  return {
-    paymentMethod: metodo,
-    editable: !presentado,
-    mrn: decl.mrn || null,
-    totalAPagar: presentado && typeof liquidacion?.totalAPagar === 'number' ? liquidacion.totalAPagar : null,
-    pendientePago: presentado && metodo === 'A' && !conLevante,
-    urlPago: URL_PAGO_AEAT
-  };
-}
 
 /**
  * El cliente elige como paga los tributos del H1: R (pago aplazado con la
@@ -365,8 +345,15 @@ const uploadDocument = async (req, res) => {
       });
     }
 
+    // Un tipo que no existe acababa en un ValidationError del modelo (500).
+    if (!DOCUMENT_TYPES.includes(documentType)) {
+      descartarSubida(req.file);
+      return res.status(400).json({ success: false, error: 'Tipo de documento invalido' });
+    }
+
     const { fecha: documentDate, error: errorFecha } = fechaDeDocumento(req.body.documentDate, documentType);
     if (errorFecha) {
+      descartarSubida(req.file);
       return res.status(400).json({ success: false, error: errorFecha, code: 'DOCUMENT_DATE' });
     }
 
@@ -376,6 +363,15 @@ const uploadDocument = async (req, res) => {
       return res.status(404).json({
         success: false,
         error: 'Expediente no encontrado'
+      });
+    }
+
+    const esJustificante031 = documentType === TIPO_JUSTIFICANTE_031;
+    if (esJustificante031 && !admiteJustificante031(expedition)) {
+      descartarSubida(req.file);
+      return res.status(409).json({
+        success: false,
+        error: 'El justificante de pago del modelo 031 solo se sube con pago previo al levante y la declaración ya presentada'
       });
     }
 
@@ -404,7 +400,13 @@ const uploadDocument = async (req, res) => {
     }
 
     // Timeline
-    expedition.timeline.push({
+    expedition.timeline.push(esJustificante031 ? {
+      // Hito propio: la agente lo necesita para obtener el levante.
+      action: 'payment_receipt_uploaded',
+      description: 'El cliente sube el justificante de pago del modelo 031: a la espera del levante',
+      performedBy: 'client',
+      metadata: { documentType, fileName: req.file.originalname, mrn: expedition.declaration.mrn }
+    } : {
       action: 'document_uploaded',
       description: `Documento ${documentType} subido por el cliente`,
       performedBy: 'client',
@@ -457,6 +459,39 @@ const uploadDocument = async (req, res) => {
       success: false,
       error: 'Error al subir documento'
     });
+  }
+};
+
+/** Borra el fichero que multer ya guardo de una subida rechazada. */
+function descartarSubida(file) {
+  if (!file?.path) return;
+  fs.promises.unlink(file.path).catch((e) => logger.warn(`No se pudo borrar la subida rechazada: ${e.message}`));
+}
+
+/**
+ * H1 definitivo del cliente: la declaracion admitida con la liquidacion de la
+ * AEAT y, con pago previo al levante, los datos del modelo 031.
+ * GET /api/portal/:token/h1-definitivo
+ */
+const downloadH1Definitivo = async (req, res) => {
+  try {
+    const expedition = await Expedition.findByPortalToken(req.params.token);
+    if (!expedition) {
+      return res.status(404).json({ success: false, error: 'Expediente no encontrado o link expirado' });
+    }
+    const datos = h1DefinitivoDe(expedition);
+    if (!datos) {
+      return res.status(409).json({ success: false, error: 'La declaración aún no está admitida por la AEAT' });
+    }
+    const pdf = await generarH1DefinitivoPdf(datos, { modelo031: pagoTributosDe(expedition).modelo031 });
+    // El MRN son letras y digitos: no rompe la cabecera.
+    const nombre = `H1_${String(datos.mrn).replace(/[^A-Za-z0-9]/g, '')}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
+    res.send(pdf);
+  } catch (error) {
+    logger.error('Error generando el H1 definitivo del portal:', error);
+    res.status(500).json({ success: false, error: 'No se pudo generar el H1 definitivo' });
   }
 };
 
@@ -823,6 +858,7 @@ module.exports = {
   sendMessage,
   uploadDocument,
   getDocument,
+  downloadH1Definitivo,
   getUnreadCount,
   // AI endpoints
   aiEnhancedChat,

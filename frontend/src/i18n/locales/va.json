@@ -562,7 +562,9 @@
       "export_license": "Llicència d'exportació",
       "ce_certificate": "Certificat CE",
       "quality_certificate": "Certificat de qualitat",
-      "other": "Altre"
+      "customs_payment_receipt": "Justificant de pagament (model 031)",
+      "other": "Altre",
+      "plastic_recycled_certificate": "Certificat de plàstic reciclat"
     },
     "descriptionTooShort": "La descripció ha de tenir almenys {{min}} caràcters per classificar-la",
     "valueWillBeSaved": "Es desarà com a {{amount}}",
@@ -690,7 +692,18 @@
     "plasticCertificate": "Núm. del certificat de plàstic reciclat",
     "plasticRecycledHelp": "El plàstic reciclat no paga: es declara amb el certificat 1135 de la planta recicladora o d'una entitat acreditada.",
     "plasticCertificateRequired": "Indica el número del certificat de plàstic reciclat",
-    "plasticExemptionNeedsKg": "L'exempció es declara amb els kg de plàstic no reutilitzable (amb quota zero)"
+    "plasticExemptionNeedsKg": "L'exempció es declara amb els kg de plàstic no reutilitzable (amb quota zero)",
+    "pago031": {
+      "button": "Enviar al client l'H1 i el 031",
+      "sending": "Enviant…",
+      "confirmTitle": "Enviar l'H1 admés i el model 031",
+      "confirmMessage": "S'enviarà a {{email}} un correu amb l'MRN, l'import liquidat per l'AEAT i l'enllaç al portal, on podrà descarregar l'H1 definitiu i pujar el justificant de pagament.",
+      "noEmail": "El client no té correu de contacte: afig-lo en «Parts de l'expedient» abans d'enviar-lo.",
+      "send": "Enviar",
+      "sent": "Enviat a {{email}}",
+      "error": "No s'ha pogut enviar el correu",
+      "lastSent": "Últim enviament: {{date}}"
+    }
   },
   "classification": {
     "title": "Classificacio TARIC",
@@ -2057,8 +2070,19 @@
       "howToPay": "Paga amb el model 031 en la Seu de l'AEAT i puja'ns el justificant en Documents.",
       "payLink": "Com pagar en la Seu de l'AEAT",
       "waiting": "Quedem a l'espera del justificant de pagament per a obtindre l'alçament.",
-      "error": "No s'ha pogut guardar la forma de pagament"
-    }
+      "error": "No s'ha pogut guardar la forma de pagament",
+      "form031": "Dades per a pagar amb el model 031",
+      "reference": "Referència del deute (MRN)",
+      "amount": "Import",
+      "importerNif": "NIF de l'importador",
+      "deadline": "Data límit de pagament",
+      "downloadH1": "Descarregar l'H1 definitiu (PDF)",
+      "downloadError": "No s'ha pogut descarregar l'H1 definitiu",
+      "uploadReceipt": "Pujar el justificant de pagament",
+      "receiptReceived": "Justificant de pagament rebut el {{fecha}}. Quedem a l'espera de l'alçament."
+    },
+    "docPaymentReceipt031": "Justificant de pagament (model 031)",
+    "docPlasticRecycledCertificate": "Certificat de plàstic reciclat"
   },
   "landing": {
     "features": "Funcions",
