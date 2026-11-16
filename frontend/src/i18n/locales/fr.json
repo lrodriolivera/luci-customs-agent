@@ -633,7 +633,18 @@
       "referenceRequired": "Le numéro du document manque (seuls les codes Y n'en ont pas).",
       "isAuthorisation": "C'est une autorisation, pas un document de l'article : l'AEAT la rejette ici.",
       "saved": "Documents de la case 44 enregistrés",
-      "error": "Impossible d'enregistrer les documents de la case 44"
+      "error": "Impossible d'enregistrer les documents de la case 44",
+      "required": "L'AEAT exige {{count}} document(s) pour cet article : saisissez le numéro et ajoutez-le.",
+      "requiredList": "Documents exigés par l'AEAT",
+      "numberFor": "Numéro du {{tipo}}",
+      "addRequired": "Ajouter {{tipo}}",
+      "conditional": "{{count}} autre(s) document(s) possible(s) qui ne s'appliquent pas à un H1 normal",
+      "reason_soloH7": "uniquement pour les envois de faible valeur ou les ventes à distance (H7)",
+      "reason_siSeSolicita": "uniquement si la suspension ou la destination particulière est demandée",
+      "reason_siPreferencia": "uniquement si la préférence de cette origine est appliquée",
+      "reason_aeatExige": "exigé par l'AEAT",
+      "reason_medida": "exigé par la mesure",
+      "reason_preferenciaElegida": "preuve de la préférence appliquée"
     },
     "excise": {
       "title": "Accise",

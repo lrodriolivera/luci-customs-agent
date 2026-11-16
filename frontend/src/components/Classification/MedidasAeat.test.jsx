@@ -172,4 +172,13 @@ describe('MedidasAeat', () => {
       expect(screen.queryByRole('button', { name: /useAeat/ })).not.toBeInTheDocument()
     })
   })
+
+  test('con autoLoad consulta sola al abrirse y un fallo no salta como alerta', async () => {
+    classificationAPI.aeatTariff.mockRejectedValue({ response: { data: { error: 'No se pudo consultar el Arancel Integrado de la AEAT' } } })
+    render(<MedidasAeat code="6302210089" origin="CN" autoLoad />)
+    expect(await screen.findByText('No se pudo consultar el Arancel Integrado de la AEAT')).toBeInTheDocument()
+    expect(classificationAPI.aeatTariff).toHaveBeenCalledWith('6302210089', 'CN')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
 })
+

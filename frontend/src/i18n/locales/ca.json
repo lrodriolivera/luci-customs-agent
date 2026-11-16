@@ -633,7 +633,18 @@
       "referenceRequired": "Falta el número del document (només els codis Y van sense número).",
       "isAuthorisation": "És una autorització, no un document de la partida: l'AEAT el rebutja aquí.",
       "saved": "Documents de la casella 44 desats",
-      "error": "No s'han pogut desar els documents de la casella 44"
+      "error": "No s'han pogut desar els documents de la casella 44",
+      "required": "L'AEAT exigeix {{count}} document(s) per a aquesta partida: escriu el número i afegeix-lo.",
+      "requiredList": "Documents que exigeix l'AEAT",
+      "numberFor": "Número del {{tipo}}",
+      "addRequired": "Afegir {{tipo}}",
+      "conditional": "Altres {{count}} document(s) possibles que no s'apliquen a un H1 normal",
+      "reason_soloH7": "només en enviaments de poc valor o vendes a distància (H7)",
+      "reason_siSeSolicita": "només si se sol·licita la suspensió o la destinació especial",
+      "reason_siPreferencia": "només si s'aplica la preferència d'aquest origen",
+      "reason_aeatExige": "ho exigeix l'AEAT",
+      "reason_medida": "ho demana la mesura",
+      "reason_preferenciaElegida": "prova de la preferència aplicada"
     },
     "excise": {
       "title": "Impost especial",

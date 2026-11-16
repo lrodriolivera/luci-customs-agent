@@ -633,7 +633,18 @@
       "referenceRequired": "The document number is missing (only Y codes have no number).",
       "isAuthorisation": "This is an authorisation, not an item document: the AEAT rejects it here.",
       "saved": "Box 44 documents saved",
-      "error": "Could not save the box 44 documents"
+      "error": "Could not save the box 44 documents",
+      "required": "The AEAT requires {{count}} document(s) for this item: enter the number and add it.",
+      "requiredList": "Documents required by the AEAT",
+      "numberFor": "{{tipo}} number",
+      "addRequired": "Add {{tipo}}",
+      "conditional": "{{count}} other possible document(s) that do not apply to a normal H1",
+      "reason_soloH7": "only for low-value consignments or distance sales (H7)",
+      "reason_siSeSolicita": "only if the suspension or end-use is requested",
+      "reason_siPreferencia": "only if this origin's preference is applied",
+      "reason_aeatExige": "required by the AEAT",
+      "reason_medida": "required by the measure",
+      "reason_preferenciaElegida": "proof of the applied preference"
     },
     "excise": {
       "title": "Excise duty",

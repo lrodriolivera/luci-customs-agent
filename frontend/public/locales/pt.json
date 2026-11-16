@@ -633,7 +633,18 @@
       "referenceRequired": "Falta o número do documento (só os códigos Y não têm número).",
       "isAuthorisation": "É uma autorização, não um documento da adição: a AEAT rejeita-a aqui.",
       "saved": "Documentos da casa 44 guardados",
-      "error": "Não foi possível guardar os documentos da casa 44"
+      "error": "Não foi possível guardar os documentos da casa 44",
+      "required": "A AEAT exige {{count}} documento(s) para esta adição: escreva o número e adicione-o.",
+      "requiredList": "Documentos exigidos pela AEAT",
+      "numberFor": "Número do {{tipo}}",
+      "addRequired": "Adicionar {{tipo}}",
+      "conditional": "Outros {{count}} documento(s) possíveis que não se aplicam a um H1 normal",
+      "reason_soloH7": "só em remessas de baixo valor ou vendas à distância (H7)",
+      "reason_siSeSolicita": "só se for pedida a suspensão ou o destino especial",
+      "reason_siPreferencia": "só se for aplicada a preferência desta origem",
+      "reason_aeatExige": "exigido pela AEAT",
+      "reason_medida": "exigido pela medida",
+      "reason_preferenciaElegida": "prova da preferência aplicada"
     },
     "excise": {
       "title": "Imposto especial",
