@@ -40,7 +40,7 @@ const enHoras = (h) => new Date(Date.now() + h * 60 * 60 * 1000);
 function datosENSValidos(overrides = {}) {
   return {
     transportMode: 'SEA',
-    entryOffice: { code: 'ES002801', name: 'Algeciras', expectedArrival: enHoras(48) },
+    entryOffice: { code: 'ES001131', name: 'Algeciras - Marítima (Tránsito)', expectedArrival: enHoras(48) },
     carrier: { eori: 'ESB12345678', name: 'Naviera SL' },
     transportMeans: { identification: 'IMO9999999', identificationType: 'VESSEL_IMO', modeAtBorder: '1' },
     consignment: {
@@ -73,13 +73,13 @@ describe('preValidate', () => {
   });
 
   /**
-   * ES002805 (Barcelona - Aeropuerto) admite AIR/ROAD; el transporte es SEA. Antes
+   * ES000801 (Barcelona - Aeropuerto) admite AIR/ROAD; el transporte es SEA. Antes
    * se usaba ES004600, que no esta en el catalogo unico, asi que el caso probaba en
    * realidad la rama de "aduana inexistente" (error) y no la de incoherencia.
    */
   test('aduana que no admite el modo de transporte -> sugerencia (no error)', () => {
     const r = ens.preValidate(datosENSValidos({
-      entryOffice: { code: 'ES002805', expectedArrival: enHoras(48) }
+      entryOffice: { code: 'ES000801', expectedArrival: enHoras(48) }
     }));
     expect(r.valid).toBe(true); // sugerencia, no error
     expect(r.suggestions.some(s => /admite AIR/i.test(s.message))).toBe(true);
@@ -242,7 +242,7 @@ describe('createDeclaration', () => {
     // pasa preValidate pero le falta consignment completo -> validateForSubmission falla
     const data = {
       transportMode: 'ROAD',
-      entryOffice: { code: 'ES003001', expectedArrival: enHoras(48) },
+      entryOffice: { code: 'ES002841', expectedArrival: enHoras(48) }, // Madrid carretera
       carrier: { eori: 'ESB12345678', name: 'Trans SL' },
       // sin consignment ni goods
     };
@@ -254,7 +254,7 @@ describe('createDeclaration', () => {
   test('allowDraft permite guardar aunque validateForSubmission falle', async () => {
     const data = {
       transportMode: 'ROAD',
-      entryOffice: { code: 'ES003001', expectedArrival: enHoras(48) },
+      entryOffice: { code: 'ES002841', expectedArrival: enHoras(48) }, // Madrid carretera
       carrier: { eori: 'ESB12345678', name: 'Trans SL' },
       transportMeans: { identification: 'CAM-1234', identificationType: 'VEHICLE_REGISTRATION', modeAtBorder: '3' },
       consignment: {
@@ -396,7 +396,7 @@ describe('submitToAEAT', () => {
     for (const mode of ['SEA', 'AIR', 'ROAD']) {
       aeatSubmitService.submitENS.mockClear();
       const off = mode === 'SEA'
-        ? { code: 'ES002801', name: 'Algeciras', expectedArrival: enHoras(48) }
+        ? { code: 'ES001131', name: 'Algeciras - Marítima (Tránsito)', expectedArrival: enHoras(48) }
         : { code: 'ES009999', name: 'PRE Pruebas', expectedArrival: enHoras(48) };
       const created = await ens.createDeclaration(datosENSValidos({
         transportMode: mode,

@@ -14,14 +14,22 @@
  * aduana, no la encontraba y pasaba de largo sin avisar. Las 8 ENS aceptadas en
  * PRE se presentaron por ese hueco.
  *
- * Se toma como base el catalogo de services/aeat/aeatConfig.js porque es el que
- * ya alimenta los builders H1/H7/AES/NCTS, es decir el que ya ha pasado por
- * AEAT. Los `modes` se derivan del tipo de aduana.
+ * Desde el 16/11/2026 los codigos salen de config/aduanasOficiales.js, la
+ * lista oficial que nos paso una agente de aduanas. El catalogo anterior (el de
+ * aeatConfig) tenia codigos equivocados: ES002801 figuraba como "Barcelona -
+ * Puerto" y es Madrid aeropuerto; ES004601 como "Valencia - Puerto" y es
+ * Valencia aeropuerto; ES003001 como "Algeciras - Puerto" y Algeciras maritima
+ * es ES001131. Las plazas que no estan en la lista oficial (Las Palmas,
+ * Tenerife, Alicante, Tarragona, La Junquera, Fuentes de Onoro, Coslada) se
+ * han quitado: no se adivina ningun codigo.
  *
- * PENDIENTE: cotejar los codigos contra el censo oficial de aduanas de AEAT.
- * Aqui no se inventa ninguno; el unico con respaldo empirico directo es
- * ES009999 (las 8 ENS con MRN real de PRE se presentaron con ella).
+ * Aqui solo entran los recintos por los que entra mercancia: aeropuertos,
+ * maritimas (no la de solo exportacion), carretera, ferrocarril y recintos
+ * interiores (puerto seco, zonas francas, ZAL, ZAISA). Administraciones,
+ * postales, domiciliaciones, despachos centralizados y depositos francos no.
  */
+
+const { ADUANAS_OFICIALES } = require('./aduanasOficiales');
 
 // Modos de transporte por tipo de aduana. Una aduana maritima o aerea admite
 // tambien ROAD porque la mercancia puede llegar por carretera al recinto.
@@ -32,37 +40,14 @@ const MODOS_POR_TIPO = {
   inland: ['ROAD', 'RAIL']
 };
 
-// [codigo, nombre, tipo] tal y como figuran en aeatConfig.CUSTOMS_OFFICES.
-const CATALOGO = [
-  // Puertos
-  ['ES002801', 'Barcelona - Puerto', 'maritime'],
-  ['ES004601', 'Valencia - Puerto', 'maritime'],
-  ['ES003001', 'Algeciras - Puerto', 'maritime'],
-  ['ES004801', 'Bilbao - Puerto', 'maritime'],
-  ['ES003501', 'Las Palmas', 'maritime'],
-  ['ES003801', 'Tenerife', 'maritime'],
-  ['ES000401', 'Alicante - Puerto', 'maritime'],
-  ['ES004101', 'Sevilla - Puerto', 'maritime'],
-  ['ES001501', 'Cadiz - Puerto', 'maritime'],
-  ['ES004301', 'Tarragona - Puerto', 'maritime'],
+// Tipo de la lista oficial -> tipo del catalogo de entrada. Carretera y
+// ferrocarril se agrupan en 'land' (el tipo que ya usaban backend y frontend).
+const TIPO_ENTRADA = { air: 'air', maritime: 'maritime', road: 'land', rail: 'land', inland: 'inland' };
 
-  // Aeropuertos
-  ['ES002805', 'Barcelona - Aeropuerto', 'air'],
-  ['ES002101', 'Madrid - Barajas', 'air'],
-  ['ES004605', 'Valencia - Aeropuerto', 'air'],
-  ['ES002901', 'Malaga - Aeropuerto', 'air'],
-  ['ES004105', 'Sevilla - Aeropuerto', 'air'],
-  ['ES004805', 'Bilbao - Aeropuerto', 'air'],
-
-  // Fronteras terrestres (las unicas con trafico ferroviario real)
-  ['ES001701', 'La Junquera', 'land'],
-  ['ES002001', 'Irun', 'land'],
-  ['ES000101', 'Fuentes de Onoro', 'land'],
-
-  // Aduanas interiores
-  ['ES002105', 'Madrid - Coslada', 'inland'],
-  ['ES002809', 'Barcelona - ZAL', 'inland']
-];
+// [codigo, nombre, tipo] derivados de la lista oficial.
+const CATALOGO = ADUANAS_OFICIALES
+  .filter(a => TIPO_ENTRADA[a.type] && a.sentido !== 'export')
+  .map(a => [a.code, a.name, TIPO_ENTRADA[a.type]]);
 
 /**
  * Catalogo de aduanas de entrada. `test: true` marca las de PRE, que no deben

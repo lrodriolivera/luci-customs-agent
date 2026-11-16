@@ -349,22 +349,23 @@ describe('buildAggregatedDescription', () => {
 
 describe('determineCustomsOffice', () => {
   test.each([
-    ['08001', 'ES002805'], // Barcelona
-    ['28001', 'ES002101'], // Madrid
-    ['46001', 'ES004601'], // Valencia
-    ['35001', 'ES003501'], // Las Palmas
-    ['38001', 'ES003801'], // Tenerife
-    ['11001', 'ES003001']  // Algeciras
+    // Codigos de la lista oficial (config/aduanasOficiales.js)
+    ['08001', 'ES000801'], // Barcelona - Aeropuerto
+    ['28001', 'ES002801'], // Madrid - Aeropuerto
+    ['46001', 'ES004601'], // Valencia - Aeropuerto
+    ['48001', 'ES004801'], // Bilbao - Aeropuerto
+    ['11001', 'ES001131'], // Algeciras - Maritima
+    ['35001', 'ES002801']  // Las Palmas no esta en la lista: defecto
   ])('CP %s -> aduana %s', (cp, oficina) => {
     expect(h7.determineCustomsOffice({ client: { address: { postalCode: cp } } })).toBe(oficina);
   });
 
   test('un CP desconocido cae a Madrid por defecto', () => {
-    expect(h7.determineCustomsOffice({ client: { address: { postalCode: '99999' } } })).toBe('ES002101');
+    expect(h7.determineCustomsOffice({ client: { address: { postalCode: '99999' } } })).toBe('ES002801');
   });
 
   test('sin CP cae a Madrid por defecto', () => {
-    expect(h7.determineCustomsOffice({})).toBe('ES002101');
+    expect(h7.determineCustomsOffice({})).toBe('ES002801');
   });
 });
 
@@ -411,7 +412,7 @@ describe('generateXML: estructura del mensaje', () => {
   };
 
   test('modo IOSS + B2B + multi-item: bloques presentes y sin & sin escapar', () => {
-    const r = generar(completa, { iossNumber: 'IMES1234567890', customsOffice: 'ES002805', vatRate: 0.10 });
+    const r = generar(completa, { iossNumber: 'IMES1234567890', customsOffice: 'ES000801', vatRate: 0.10 });
     const xml = r.xml;
     expect(xml).toMatch(/<IOSSRegistration>/);
     expect(xml).toMatch(/<Seller>/);
@@ -444,10 +445,10 @@ describe('calculateSummary', () => {
       goodsSummary: { totalValue: 100 },
       client: { eori: 'ES1', address: { postalCode: '08001' } },
       transportMode: 'air'
-    }, { iossNumber: 'IMES1234567890', customsOffice: 'ES002805' });
+    }, { iossNumber: 'IMES1234567890', customsOffice: 'ES000801' });
     const s = r.summary;
     expect(s.hasIOSS).toBe(true);
-    expect(s.customsOfficeName).toBe('Barcelona - Aeropuerto El Prat');
+    expect(s.customsOfficeName).toBe('Barcelona - Aeropuerto');
     expect(s.transportMode).toBe('Express'); // modo air -> codigo 4 -> no '5'
     expect(s.estimatedClearanceTime).toBe('< 1 hora');
     expect(s.isB2C).toBe(false);
@@ -462,10 +463,10 @@ describe('calculateSummary', () => {
     const s = r.summary;
     expect(s.hasIOSS).toBe(false);
     expect(s.transportMode).toBe('Postal'); // codigo '5'
-    // CP 00 no mapeado -> aduana por defecto ES002101 (Madrid - Barajas), que SI
-    // es una oficina conocida: por eso el nombre no es "Desconocido".
-    expect(s.customsOffice).toBe('ES002101');
-    expect(s.customsOfficeName).toBe('Madrid - Barajas');
+    // CP 00 no mapeado -> aduana por defecto ES002801 (Madrid - Aeropuerto), que
+    // SI es una oficina conocida: por eso el nombre no es "Desconocido".
+    expect(s.customsOffice).toBe('ES002801');
+    expect(s.customsOfficeName).toBe('Madrid - Aeropuerto');
     expect(s.estimatedClearanceTime).toBe('1-4 horas');
     expect(s.isB2C).toBe(true);
   });

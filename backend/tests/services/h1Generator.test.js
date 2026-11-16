@@ -683,13 +683,13 @@ describe('buildGoodsItems / buildSupportingDocuments: campos por partida', () =>
 
 describe('tablas de consulta: caminos por defecto', () => {
   test.each([
-    ['VLC', 'ES004601'], ['MAD', 'ES002101'], ['ALGECIRAS', 'ES003001'],
-    ['BILBAO', 'ES004801'], ['LPA', 'ES003501'], ['TENERIFE', 'ES003801'], ['MALAGA', 'ES002901']
+    ['VLC', 'ES004611'], ['MAD', 'ES002801'], ['ALGECIRAS', 'ES001131'],
+    ['BILBAO', 'ES004811'], ['LPA', 'ES002801'], ['TENERIFE', 'ES002801'], ['MALAGA', 'ES002911']
   ])('determineCustomsOffice: puerto %s -> %s', (puerto, oficina) => {
     expect(h1.determineCustomsOffice({ transport: { arrivalPort: puerto } })).toBe(oficina);
   });
 
-  test('determineCustomsOffice: puerto desconocido y sin transporte cae a Barcelona', () => {
+  test('determineCustomsOffice: puerto desconocido y sin transporte cae a Madrid aeropuerto', () => {
     expect(h1.determineCustomsOffice({ transport: { arrivalPort: 'XXX' } })).toBe('ES002801');
     expect(h1.determineCustomsOffice({})).toBe('ES002801');
   });

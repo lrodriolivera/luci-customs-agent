@@ -320,36 +320,36 @@ describe('AESGenerator - Coverage de Ramas', () => {
   });
 
   describe('buildDeclarationHeader', () => {
-    test('determina oficina Barcelona (L663)', () => {
+    test('determina oficina Barcelona maritima exportacion (lista oficial)', () => {
       const exp = buildBaseExpedition();
       exp.transport.loadingPlace = 'BCN PORT';
+      const header = aesGenerator.buildDeclarationHeader(exp, {}, 'TEST-LRN');
+
+      expect(header.customsOfficeExport).toBe('ES000812');
+    });
+
+    test('determina oficina Valencia maritima (lista oficial)', () => {
+      const exp = buildBaseExpedition();
+      exp.transport.loadingPlace = 'VALENCIA PORT';
+      const header = aesGenerator.buildDeclarationHeader(exp, {}, 'TEST-LRN');
+
+      expect(header.customsOfficeExport).toBe('ES004611');
+    });
+
+    test('determina oficina Madrid aeropuerto (lista oficial)', () => {
+      const exp = buildBaseExpedition();
+      exp.transport.loadingPlace = 'BARAJAS';
       const header = aesGenerator.buildDeclarationHeader(exp, {}, 'TEST-LRN');
 
       expect(header.customsOfficeExport).toBe('ES002801');
     });
 
-    test('determina oficina Valencia (L664)', () => {
-      const exp = buildBaseExpedition();
-      exp.transport.loadingPlace = 'VALENCIA PORT';
-      const header = aesGenerator.buildDeclarationHeader(exp, {}, 'TEST-LRN');
-
-      expect(header.customsOfficeExport).toBe('ES004601');
-    });
-
-    test('determina oficina Madrid Barajas (L665)', () => {
-      const exp = buildBaseExpedition();
-      exp.transport.loadingPlace = 'BARAJAS';
-      const header = aesGenerator.buildDeclarationHeader(exp, {}, 'TEST-LRN');
-
-      expect(header.customsOfficeExport).toBe('ES002101');
-    });
-
-    test('determina oficina Algeciras (L666)', () => {
+    test('determina oficina Algeciras maritima (lista oficial)', () => {
       const exp = buildBaseExpedition();
       exp.transport.loadingPlace = 'ALGECIRAS';
       const header = aesGenerator.buildDeclarationHeader(exp, {}, 'TEST-LRN');
 
-      expect(header.customsOfficeExport).toBe('ES003001');
+      expect(header.customsOfficeExport).toBe('ES001131');
     });
 
     test('usa oficina por defecto para puerto desconocido (L668)', () => {
@@ -1059,7 +1059,7 @@ describe('AESGenerator - Coverage de Ramas', () => {
 
       expect(result.data.consignment.transportMeans.modeAtBorder).toBe('4');
       expect(result.data.consignment.transportDocument.type).toBe('N740');
-      expect(result.summary.customsOfficeExport).toBe('ES002101');
+      expect(result.summary.customsOfficeExport).toBe('ES002801');
     });
 
     test('genera declaración con exportType 31 (reexportación)', () => {

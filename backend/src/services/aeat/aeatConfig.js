@@ -3,6 +3,8 @@
  * STRIX AI - LUCI Customs Agent
  */
 
+const { ADUANAS_OFICIALES } = require('../../config/aduanasOficiales');
+
 // Entornos disponibles
 // NOTA: NO se requiere registro de IP ante la AEAT (eliminado).
 // Solo se necesita certificado electronico cualificado para autenticacion SSL mutua.
@@ -123,37 +125,19 @@ const CUSTOMS_REGIMES = {
   '31': { description: 'Reexportacion', type: 'export' }
 };
 
-// Aduanas espanolas con informacion completa
-const CUSTOMS_OFFICES = {
-  // Puertos principales
-  'ES002801': { name: 'Barcelona - Puerto', region: 'Cataluna', type: 'maritime', code: '2801' },
-  'ES004601': { name: 'Valencia - Puerto', region: 'Comunidad Valenciana', type: 'maritime', code: '4601' },
-  'ES003001': { name: 'Algeciras - Puerto', region: 'Andalucia', type: 'maritime', code: '3001' },
-  'ES004801': { name: 'Bilbao - Puerto', region: 'Pais Vasco', type: 'maritime', code: '4801' },
-  'ES003501': { name: 'Las Palmas', region: 'Canarias', type: 'maritime', code: '3501' },
-  'ES003801': { name: 'Tenerife', region: 'Canarias', type: 'maritime', code: '3801' },
-  'ES000401': { name: 'Alicante - Puerto', region: 'Comunidad Valenciana', type: 'maritime', code: '0401' },
-  'ES004101': { name: 'Sevilla - Puerto', region: 'Andalucia', type: 'maritime', code: '4101' },
-  'ES001501': { name: 'Cadiz - Puerto', region: 'Andalucia', type: 'maritime', code: '1501' },
-  'ES004301': { name: 'Tarragona - Puerto', region: 'Cataluna', type: 'maritime', code: '4301' },
-
-  // Aeropuertos principales
-  'ES002805': { name: 'Barcelona - Aeropuerto', region: 'Cataluna', type: 'air', code: '2805' },
-  'ES002101': { name: 'Madrid - Barajas', region: 'Madrid', type: 'air', code: '2101' },
-  'ES004605': { name: 'Valencia - Aeropuerto', region: 'Comunidad Valenciana', type: 'air', code: '4605' },
-  'ES002901': { name: 'Malaga - Aeropuerto', region: 'Andalucia', type: 'air', code: '2901' },
-  'ES004105': { name: 'Sevilla - Aeropuerto', region: 'Andalucia', type: 'air', code: '4105' },
-  'ES004805': { name: 'Bilbao - Aeropuerto', region: 'Pais Vasco', type: 'air', code: '4805' },
-
-  // Fronteras terrestres
-  'ES001701': { name: 'La Junquera', region: 'Cataluna', type: 'land', code: '1701' },
-  'ES002001': { name: 'Irun', region: 'Pais Vasco', type: 'land', code: '2001' },
-  'ES000101': { name: 'Fuertes (Portugal)', region: 'Extremadura', type: 'land', code: '0101' },
-
-  // Aduanas interiores
-  'ES002105': { name: 'Madrid - Coslada', region: 'Madrid', type: 'inland', code: '2105' },
-  'ES002809': { name: 'Barcelona - ZAL', region: 'Cataluna', type: 'inland', code: '2809' }
-};
+// Aduanas espanolas: se derivan de la lista oficial (config/aduanasOficiales.js).
+// El catalogo que habia aqui tenia codigos equivocados (ES002801 como
+// "Barcelona - Puerto" cuando es Madrid aeropuerto, ES003001 como Algeciras
+// cuando Algeciras maritima es ES001131...). `type` conserva los valores de
+// siempre para los recintos de paso (maritime/air/land/inland) y usa el tipo de
+// la lista oficial para el resto (admin, postal, central...).
+const TIPO_AEAT = { road: 'land', rail: 'land' };
+const CUSTOMS_OFFICES = Object.fromEntries(ADUANAS_OFICIALES.map(a => [a.code, {
+  name: a.name,
+  region: a.region,
+  type: TIPO_AEAT[a.type] || a.type,
+  code: a.recinto
+}]));
 
 // Paises de riesgo para inspeccion adicional
 const HIGH_RISK_COUNTRIES = ['CN', 'HK', 'VN', 'BD', 'PK', 'IN', 'TR', 'AE', 'TH', 'MY'];
