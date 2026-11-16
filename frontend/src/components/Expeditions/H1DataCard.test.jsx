@@ -77,8 +77,8 @@ describe('<H1DataCard />', () => {
     fireEvent.change(screen.getByLabelText('Seguro hasta la entrada en la UE'), { target: { value: '0' } })
     fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
 
+    // Solo lo cambiado (los datos ya guardados no se reenvian); cada importe con su divisa.
     await waitFor(() => expect(updateH1Data).toHaveBeenCalledWith('e1', {
-      invoiceNumber: 'FAC-1', exporterPostalCode: '200000', vehicleNationality: 'PA', dispatchAuthorizationScope: 'OSRE',
       freightAmount: '1123.40', freightCurrency: 'USD', insuranceAmount: '0', insuranceCurrency: 'EUR'
     }))
   })
@@ -168,6 +168,48 @@ describe('<H1DataCard />', () => {
     await waitFor(() => expect(updateH1Data).toHaveBeenCalledWith('e1', expect.objectContaining({
       otherAdjustments: [{ code: 'AI', amount: '1200', currency: 'USD' }]
     })))
+  })
+
+  // UAT 16/Nov/2026: la tarjeta guardaba con los valores de cuando se abrio la
+  // pagina y borraba lo aplicado desde la factura (numero y CP del exportador).
+  test('solo envia los campos cambiados: no pisa lo que otra tarjeta relleno', async () => {
+    getH1Requirements.mockResolvedValue(respuesta({ datos: { invoiceNumber: 'FAC-9', exporterPostalCode: '315040', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE' } }))
+    updateH1Data.mockResolvedValue({ data: { success: true } })
+    const onCambio = vi.fn()
+    render(<H1DataCard expedition={{ _id: 'e1' }} onCambio={onCambio} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+
+    fireEvent.change(screen.getByLabelText('Nacionalidad del medio de transporte en frontera'), { target: { value: 'HK' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(updateH1Data).toHaveBeenCalledWith('e1', { vehicleNationality: 'HK' }))
+    await waitFor(() => expect(onCambio).toHaveBeenCalled())
+  })
+
+  test('se recarga cuando el expediente cambia en otra parte de la pantalla', async () => {
+    getH1Requirements
+      .mockResolvedValueOnce(respuesta())
+      .mockResolvedValueOnce(respuesta({ datos: { invoiceNumber: 'NBT-1', exporterPostalCode: '315040', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE' } }))
+    const { rerender } = render(<H1DataCard expedition={{ _id: 'e1', updatedAt: 't1' }} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+
+    rerender(<H1DataCard expedition={{ _id: 'e1', updatedAt: 't2' }} />)
+
+    await waitFor(() => expect(screen.getByLabelText('Número de la factura comercial')).toHaveValue('NBT-1'))
+    expect(getH1Requirements).toHaveBeenCalledTimes(2)
+  })
+
+  test('con cambios sin guardar no se recarga al cambiar el expediente', async () => {
+    getH1Requirements.mockResolvedValue(respuesta())
+    const { rerender } = render(<H1DataCard expedition={{ _id: 'e1', updatedAt: 't1' }} />)
+    await screen.findByText('Faltan datos para presentar el H1:')
+    fireEvent.change(screen.getByLabelText('Número de la factura comercial'), { target: { value: 'A-MANO' } })
+
+    rerender(<H1DataCard expedition={{ _id: 'e1', updatedAt: 't2' }} />)
+
+    await new Promise((r) => setTimeout(r, 50))
+    expect(getH1Requirements).toHaveBeenCalledTimes(1)
+    expect(screen.getByLabelText('Número de la factura comercial')).toHaveValue('A-MANO')
   })
 
   test('sin cambios no deja guardar', async () => {

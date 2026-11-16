@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { declarationsAPI } from '../../services/api'
 import { formatearImporte } from '../../utils/importe'
@@ -95,7 +95,11 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
     }
   }, [expedition._id])
 
-  useEffect(() => { cargar() }, [cargar])
+  // Se recarga cuando el expediente cambia en otra parte de la pantalla (p. ej. al
+  // aplicar lo leido de la factura), salvo que haya cambios sin guardar aqui:
+  // si no, esta tarjeta guardaba despues los valores viejos (UAT 16/Nov/2026).
+  const hayCambiosSinGuardar = useRef(false)
+  useEffect(() => { if (!hayCambiosSinGuardar.current) cargar() }, [cargar, expedition.updatedAt])
 
   const ajustesCambiados = Boolean(estado) && ajustesComoTexto(form.otherAdjustments) !== ajustesComoTexto(estado.datos.otherAdjustments)
   const cambiar = (campo) => (e) => setForm((previo) => ({ ...previo, [campo]: e.target.value }))
@@ -111,11 +115,21 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
         ...(divisaSinBce ? [] : ['appliedExchangeRate']),
         ...(reglaTrasLaEntrada ? [] : ['freightAfterEntryAmount', 'freightAfterEntryCurrency'])
       ])
-      const datos = Object.fromEntries(CAMPOS.filter((c) => form[c] !== undefined && !omitir.has(c)).map((c) => [c, form[c] === null ? '' : form[c]]))
+      // Solo lo que se ha cambiado aqui: lo demas puede haberlo rellenado otra
+      // tarjeta despues de cargar esta, y no se pisa.
+      const datos = Object.fromEntries(CAMPOS
+        .filter((c) => form[c] !== undefined && !omitir.has(c) && comoTexto(form[c]) !== comoTexto(estado?.datos?.[c]))
+        .map((c) => [c, form[c] === null ? '' : form[c]]))
+      // Un importe va siempre con su divisa (aunque la divisa no se haya tocado).
+      for (const [importe, divisa] of [['freightAmount', 'freightCurrency'], ['insuranceAmount', 'insuranceCurrency'], ['freightAfterEntryAmount', 'freightAfterEntryCurrency']]) {
+        if (importe in datos && !(divisa in datos) && form[divisa] !== undefined && !omitir.has(divisa)) datos[divisa] = form[divisa] || 'EUR'
+      }
       if (ajustesCambiados) datos.otherAdjustments = (form.otherAdjustments || []).map((a) => ({ code: a.code, amount: comoTexto(a.amount), currency: a.currency || 'EUR' }))
       await declarationsAPI.updateH1Data(expedition._id, datos)
       toast.success('Datos del H1 guardados')
+      hayCambiosSinGuardar.current = false
       await cargar()
+      onCambio?.()
     } catch (err) {
       toast.error(err.response?.data?.error || 'No se pudieron guardar los datos del H1')
     } finally {
@@ -177,6 +191,7 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
   }
 
   const sinCambios = estado && !ajustesCambiados && CAMPOS.every((campo) => comoTexto(form[campo]) === comoTexto(estado.datos[campo]))
+  hayCambiosSinGuardar.current = Boolean(estado) && !sinCambios
   const ajustes = form.otherAdjustments || []
   const cambiarAjuste = (i, campo) => (e) => setForm((previo) => ({
     ...previo, otherAdjustments: (previo.otherAdjustments || []).map((a, j) => (j === i ? { ...a, [campo]: e.target.value } : a))

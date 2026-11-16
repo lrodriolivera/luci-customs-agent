@@ -650,8 +650,12 @@ export default function ExpeditionDetail() {
     setSavingTransport(true)
     try {
       // El backend sustituye `transport` entero: se envia completo para no
-      // perder transportista, contenedores ni el resto de datos.
-      const transport = { ...expedition.transport, ...changes }
+      // perder transportista, contenedores ni el resto de datos. Se parte del
+      // expediente recien leido: otra tarjeta (p. ej. la nacionalidad del buque
+      // en «Datos para presentar el H1») puede haberlo cambiado despues de abrir
+      // la pagina, y la copia de entonces lo borraba (UAT 16/Nov/2026).
+      const actual = await expeditionsAPI.get(id).then((r) => r.data?.data || r.data).catch(() => expedition)
+      const transport = { ...(actual?.transport || expedition.transport), ...changes }
       const response = await expeditionsAPI.update(id, { transport })
       setExpedition(response.data?.data || response.data)
       setSummaryVerification(null)
