@@ -379,7 +379,7 @@ const MEDIOS_DE_PAGO_H1 = ['A', 'R', 'J'];
 const FORMATO_GRN = /^\d{2}[A-Z]{2}[A-Z0-9]{12}\d([A-Z]\d{6})?$/;
 
 const presentacionH1De = (tenant) => ({
-  h1Service: tenant.customsConfig?.h1Service || 'precau',
+  h1Service: tenant.customsConfig?.h1Service || 'cau',
   medioDePago: tenant.customsConfig?.medioDePago || 'A',
   garantiaGRN: tenant.customsConfig?.garantiaGRN || '',
   contacto: {

@@ -38,16 +38,20 @@ afterEach(() => {
 });
 
 describe('servicio del H1', () => {
-  test('por defecto sigue el DUA anterior; se activa por tenant o por entorno', () => {
+  // El DUA anterior (ImportacionCompletaV1) esta cerrado para altas en produccion
+  // desde el 14/10/2025: un tenant nuevo sin configurar no puede caer en el.
+  test('por defecto el CAU; el anterior solo si se elige expresamente', () => {
     delete process.env.AEAT_H1_SERVICE;
-    expect(servicio.servicioH1({})).toBe('precau');
-    expect(servicio.servicioH1({ customsConfig: { h1Service: 'cau' } })).toBe('cau');
-    process.env.AEAT_H1_SERVICE = 'cau';
     expect(servicio.servicioH1({})).toBe('cau');
-    // Lo configurado en el tenant manda sobre el entorno.
+    expect(servicio.servicioH1(null)).toBe('cau');
+    expect(servicio.servicioH1({ customsConfig: { h1Service: 'cau' } })).toBe('cau');
     expect(servicio.servicioH1({ customsConfig: { h1Service: 'precau' } })).toBe('precau');
-    process.env.AEAT_H1_SERVICE = 'otro';
+    process.env.AEAT_H1_SERVICE = 'precau';
     expect(servicio.servicioH1({})).toBe('precau');
+    // Lo configurado en el tenant manda sobre el entorno.
+    expect(servicio.servicioH1({ customsConfig: { h1Service: 'cau' } })).toBe('cau');
+    process.env.AEAT_H1_SERVICE = 'otro';
+    expect(servicio.servicioH1({})).toBe('cau');
   });
 });
 
