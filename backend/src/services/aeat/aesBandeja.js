@@ -70,7 +70,8 @@ const RESULTADOS_SALIDA = Object.freeze({
   B1: 'Resultado disconforme'
 });
 
-const REFERENCIA_AES = new RegExp(`^ADEX(\\d{2}[A-Z]{2}[A-Z0-9]{14})(${Object.keys(TIPOS_AVISO_AES).join('|')})([A-Z])$`);
+// Mismos códigos que TIPOS_AVISO_AES (un test lo comprueba).
+const REFERENCIA_AES = /^ADEX(\d{2}[A-Z]{2}[A-Z0-9]{14})(CLEVEX|CDISEX|CLEVSA|CDISSA|CONCCE|CINVAL|CSALID)([A-Z])$/;
 
 /** NIF de la bandeja (sin el ES del EORI); lanza si no es un NIF español. */
 function nifBandeja(valor) {

@@ -85,6 +85,12 @@ describe('referencia de un aviso AES', () => {
     expect(referenciaAes('ADEX26ES002801100326B3CDISSAD')).toEqual({ mrn: '26ES002801100326B3', codigo: 'CDISSA', resultado: 'D' });
   });
 
+  test('reconoce la referencia de los siete avisos', () => {
+    for (const codigo of Object.keys(TIPOS_AVISO_AES)) {
+      expect(referenciaAes(`ADEX26ES002801100319B6${codigo}X`)).toMatchObject({ codigo });
+    }
+  });
+
   test('otra cosa (EMCS, NCTS, código desconocido) no es un aviso AES', () => {
     expect(referenciaAes('26111609000061195ES00028A1034S')).toBeNull();
     expect(referenciaAes('ADEX26ES002801100326B3XXXXXXD')).toBeNull();
