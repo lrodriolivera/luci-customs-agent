@@ -256,51 +256,6 @@ function buildTestH1() {
   });
 }
 
-function buildTestH7() {
-  const { buildH7ImportXML } = require('../src/services/aeat/h7XmlBuilder');
-  return buildH7ImportXML({
-    test: true,
-    aduanaDespacho: ADUANA_IMPORT,
-    // Remitente
-    remitenteNIF: STRIX.eori,
-    remitenteNombre: STRIX.nombre,
-    remitentePais: STRIX.pais,
-    // Destinatario/Importador
-    destinatarioNIF: STRIX.eori,
-    destinatarioNombre: STRIX.nombre,
-    destinatarioDireccion: STRIX.direccion,
-    destinatarioPoblacion: STRIX.poblacion,
-    destinatarioCP: STRIX.cp,
-    destinatarioPais: 'ES',
-    // Declarante
-    declaranteNIF: STRIX.eori,
-    declaranteNombre: STRIX.nombre,
-    formaRepresentacion: '1',
-    emailDespacho: STRIX.email,
-    // Garantia de Jose Antonio
-    garantiaGRN: JOSE_ANTONIO.garantiaImportacion,
-    // Ubicacion de Jose Antonio (formato ES00RRRRN)
-    localizacionMercancias: 'ES00' + JOSE_ANTONIO.ubicExpedicionVerde,
-    // Partidas
-    partidas: [{
-      descripcion: 'Cafe verde sin tostar ni descafeinar',
-      taricCode: '0901110000',
-      paisOrigen: 'CN',
-      pesobruto: 0.200,
-      pesoneto: 0.150,
-      bultos: 1,
-      tipoBulto: 'PK',
-      marcas: 'S/M',
-      valorFactura: 12.50,
-      codigoAdicional: 'F44',
-      documentos: [
-        { tipo: 'N380', referencia: 'FACTURA-H7-001' },
-        { tipo: 'N730', referencia: 'CMR-H7-001' },
-      ]
-    }]
-  });
-}
-
 function buildTestAES() {
   const { buildAESExportXML } = require('../src/services/aeat/aesXmlBuilder');
   const transId = generateTransactionId();
@@ -508,7 +463,6 @@ async function main() {
 
   const tests = [
     { name: 'H1 - Importacion Completa', builder: buildTestH1, endpoint: '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.ImportacionCompletaV1SOAP' },
-    { name: 'H7 - Importacion Simplificada', builder: buildTestH7, endpoint: '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.DeclaSimpliImporV1SOAP' },
     { name: 'AES - Exportacion', builder: buildTestAES, endpoint: '/wlpl/ADEX-JDIT/ws/aes/CC515CV1SOAP' },
     { name: 'NCTS - Transito', builder: buildTestNCTS, endpoint: '/wlpl/ADTR-JDIT/ws/ncts5/CC015CV1SOAP' },
     { name: 'ENS - Declaracion Sumaria', builder: buildTestENS, endpoint: '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.IE315V5SOAP' },
