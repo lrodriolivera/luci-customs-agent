@@ -7,7 +7,7 @@ const { execFileSync, spawnSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { buildConsultaH1CauXML, interpretarConsultaH1Cau } = require('../../../src/services/aeat/h1CauConsulta');
+const { buildConsultaH1CauXML, interpretarConsultaH1Cau, normalizarConsultaH1Cau, estadoMonitorH1Cau } = require('../../../src/services/aeat/h1CauConsulta');
 
 const ESQUEMA = path.join(__dirname, '../../fixtures/aeat-cau/ConsultaImportacionV3Ent.xsd');
 const siHayXmllint = spawnSync('xmllint', ['--version']).status === 0 ? test : test.skip;
@@ -115,5 +115,54 @@ describe('consulta H1 CAU: respuesta', () => {
     expect(interpretarConsultaH1Cau('<html/>').success).toBe(false);
     expect(interpretarConsultaH1Cau(sobre('')).error).toBe('La respuesta no trae ni la declaración ni errores');
     expect(interpretarConsultaH1Cau(sobre('<CD917A><XmlError><errorText>Elemento no esperado</errorText></XmlError></CD917A>'))).toMatchObject({ tipo: 'error_xml', error: 'Elemento no esperado' });
+  });
+});
+
+describe('consulta H1 CAU: traducción al monitor de seguimiento', () => {
+  const REAL = fs.readFileSync(path.join(__dirname, '../../fixtures/aeat-cau/consulta-respuesta-real-009999.xml'), 'utf8');
+
+  test('respuesta real de PRE: misma forma que AES/NCTS (status, channel, estado, circuito, fechas, csv, final)', () => {
+    const r = normalizarConsultaH1Cau(interpretarConsultaH1Cau(REAL), { mrn: '26ES009999I0026SR0' });
+    expect(r).toMatchObject({
+      success: true, tipo: 'encontrada', mrn: '26ES009999I0026SR0',
+      estado: '64', status: 'ACCEPTED', final: false, circuito: 'A', channel: 'yellow', csv: null,
+      fechas: { alta: '2026-11-12T11:40:38', admision: '2026-11-12T11:40:38', levante: null }
+    });
+    expect(r.estadoTexto).toBe('Declaración completa activada · Pendiente de despacho');
+    expect(r.detalle).toMatchObject({ levante: 'P', pago: 'PL' });
+    expect(r.liquidacion.totalAPagar).toBe(355.2);
+    expect(r.messages.length).toBeGreaterThan(0);
+  });
+
+  test('si la AEAT responde con otro MRN, la consulta falla', () => {
+    const r = normalizarConsultaH1Cau(interpretarConsultaH1Cau(REAL), { mrn: '26ES002801300001X1' });
+    expect(r.success).toBe(false);
+    expect(r.error).toContain('otro MRN');
+  });
+
+  test('los fallos pasan tal cual, con status y channel nulos', () => {
+    const fallo = interpretarConsultaH1Cau(sobre('<CC456A><FunctionalError><errorReason>21151</errorReason><remarks>No encontrada</remarks></FunctionalError></CC456A>'));
+    expect(normalizarConsultaH1Cau(fallo, { mrn: 'X' })).toMatchObject({ success: false, tipo: 'error_funcional', status: null, channel: null, error: '21151 No encontrada' });
+    expect(normalizarConsultaH1Cau(undefined)).toMatchObject({ success: false, tipo: 'desconocida' });
+  });
+
+  test.each([
+    [{ levante: 'L', operacionRegistrada: '0' }, 'RELEASED', true],
+    [{ operacionRegistrada: '96' }, 'RELEASED', true],
+    [{ levante: 'A' }, 'REJECTED', true],
+    [{ operacionRegistrada: '40' }, 'REJECTED', true],
+    [{ operacionRegistrada: '43' }, 'REJECTED', true],
+    [{ operacionRegistrada: '41', levante: 'P' }, 'REJECTED', true],
+    [{ operacionRegistrada: '42', levante: 'P' }, 'CONTROL', false],
+    [{ operacionRegistrada: '0', levante: 'P', circuito: 'R' }, 'CONTROL', false],
+    [{ operacionRegistrada: '0', levante: 'P', bajoControl: '1' }, 'CONTROL', false],
+    [{ operacionRegistrada: '0', levante: 'D', circuito: 'N' }, 'ACCEPTED', false],
+    [{ operacionRegistrada: '0', levante: 'P', circuito: 'V', bajoControl: '0' }, 'ACCEPTED', false],
+    [{ operacionRegistrada: '2' }, 'PENDING', false],
+    [{ operacionRegistrada: '63' }, 'PENDING', false],
+    [{ operacionRegistrada: '77', fechaAdmision: '2026-11-12T10:00:00' }, 'ACCEPTED', false],
+    [{}, 'PENDING', false]
+  ])('%j -> %s (final: %s)', (estado, status, final) => {
+    expect(estadoMonitorH1Cau(estado)).toEqual({ status, final });
   });
 });

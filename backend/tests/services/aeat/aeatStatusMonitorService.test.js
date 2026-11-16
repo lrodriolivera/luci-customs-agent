@@ -13,7 +13,8 @@
  *   mockea para probar tanto el camino feliz como el fallback heuristico.
  * - Sin Mongo: este servicio no toca Mongoose, asi que NO usamos memoryDb ni
  *   fake timers junto a BD. El polling se prueba invocando el metodo de trabajo
- *   directamente (_pollAllDeclarations) sin arrancar setInterval.
+ *   directamente (pollOnce); el temporizador y el candado son del worker
+ *   (workers/aeatStatusPollingWorker.js).
  */
 
 // Mock cacheService to prevent Redis connection
@@ -46,6 +47,7 @@ jest.mock('../../../src/services/aiService', () => ({
 
 // Mock aeatRealService
 jest.mock('../../../src/services/aeat/aeatRealService', () => ({
+  puedeConsultarEstado: jest.fn((tipo) => ['H1', 'H7', 'AES', 'NCTS'].includes(tipo)),
   queryDeclarationStatus: jest.fn().mockResolvedValue({
     success: true,
     data: {
@@ -155,14 +157,10 @@ describe('AEAT Status Monitor Service', () => {
     });
   });
 
-  describe('Polling Configuration', () => {
-    test('should have polling config', () => {
-      expect(aeatStatusMonitorService.pollingConfig).toBeDefined();
-    });
-
-    test('should have start and stop polling methods', () => {
-      expect(typeof aeatStatusMonitorService.startPolling).toBe('function');
-      expect(typeof aeatStatusMonitorService.stopPolling).toBe('function');
+  describe('Polling', () => {
+    test('expone una pasada (pollOnce); el temporizador lo lleva el worker', () => {
+      expect(typeof aeatStatusMonitorService.pollOnce).toBe('function');
+      expect(aeatStatusMonitorService.startPolling).toBeUndefined();
     });
   });
 
@@ -250,11 +248,8 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     await svc.trackedDeclarations.clear();
-    svc.stopPolling();
-  });
-
-  afterEach(() => {
-    svc.stopPolling();
+    svc._delay = jest.fn().mockResolvedValue();
+    aeatRealService.puedeConsultarEstado.mockImplementation((tipo) => ['H1', 'H7', 'AES', 'NCTS'].includes(tipo));
   });
 
   // ------------------- _generateInitialPrediction (via trackDeclaration) -----
@@ -353,7 +348,7 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
   // ------------------- refreshDeclarationStatus ------------------------------
   describe('refreshDeclarationStatus', () => {
     test('devuelve error si la declaracion no esta en seguimiento', async () => {
-      const r = await svc.refreshDeclarationStatus('NO-EXISTE', 'cert', 'pass');
+      const r = await svc.refreshDeclarationStatus('NO-EXISTE');
       expect(r.success).toBe(false);
       expect(r.error).toContain('no encontrada');
     });
@@ -363,7 +358,7 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
       aeatRealService.queryDeclarationStatus.mockResolvedValue({
         success: true, status: 'PROCESSING', channel: 'green', messages: []
       });
-      const r = await svc.refreshDeclarationStatus('MRN-REF', 'cert', 'pass');
+      const r = await svc.refreshDeclarationStatus('MRN-REF');
       expect(r.success).toBe(true);
       expect(r.tracking.currentStatus).toBe('PROCESSING');
       expect(r.tracking.channel).toBe('green');
@@ -376,7 +371,7 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
         success: true, status: 'PROCESSING', channel: 'orange', messages: []
       });
       const evento = new Promise(res => svc.once('statusChange', res));
-      const r = await svc.refreshDeclarationStatus('MRN-ORANGE', 'cert', 'pass');
+      const r = await svc.refreshDeclarationStatus('MRN-ORANGE');
       expect(r.tracking.alerts.some(a => a.type === 'channel_orange')).toBe(true);
       await evento; // confirma que se emitio statusChange
     });
@@ -386,7 +381,7 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
       aeatRealService.queryDeclarationStatus.mockResolvedValue({
         success: true, status: 'INSPECTION', channel: 'red', messages: []
       });
-      const r = await svc.refreshDeclarationStatus('MRN-RED', 'cert', 'pass');
+      const r = await svc.refreshDeclarationStatus('MRN-RED');
       expect(r.tracking.alerts.some(a => a.level === 'critical' && a.type === 'channel_red')).toBe(true);
     });
 
@@ -395,7 +390,7 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
       aeatRealService.queryDeclarationStatus.mockResolvedValue({
         success: true, status: 'RELEASED', channel: 'green', messages: []
       });
-      const r = await svc.refreshDeclarationStatus('MRN-REL', 'cert', 'pass');
+      const r = await svc.refreshDeclarationStatus('MRN-REL');
       expect(r.tracking.alerts.some(a => a.type === 'released')).toBe(true);
     });
 
@@ -404,7 +399,7 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
       aeatRealService.queryDeclarationStatus.mockResolvedValue({
         success: true, status: 'REJECTED', channel: null, messages: []
       });
-      const r = await svc.refreshDeclarationStatus('MRN-REJ', 'cert', 'pass');
+      const r = await svc.refreshDeclarationStatus('MRN-REJ');
       expect(r.tracking.alerts.some(a => a.type === 'rejected')).toBe(true);
     });
 
@@ -414,14 +409,14 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
       aeatRealService.queryDeclarationStatus.mockResolvedValue({
         success: true, status: 'PENDING', channel: null, messages: []
       });
-      const r = await svc.refreshDeclarationStatus('MRN-SAME', 'cert', 'pass');
+      const r = await svc.refreshDeclarationStatus('MRN-SAME');
       expect(r.changed).toBe(false);
     });
 
     test('propaga la respuesta cuando AEAT devuelve success:false', async () => {
       await svc.trackDeclaration('MRN-FAIL', 'H1', {});
       aeatRealService.queryDeclarationStatus.mockResolvedValue({ success: false, error: 'timeout AEAT' });
-      const r = await svc.refreshDeclarationStatus('MRN-FAIL', 'cert', 'pass');
+      const r = await svc.refreshDeclarationStatus('MRN-FAIL');
       expect(r.success).toBe(false);
       expect(r.error).toBe('timeout AEAT');
     });
@@ -431,9 +426,9 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
       aeatRealService.queryDeclarationStatus.mockResolvedValue({
         success: true, status: 'RELEASED', channel: 'green', messages: ['DS: Despachada directa']
       });
-      await svc.refreshDeclarationStatus('26ES002801100321B8', 'cert', 'pass', 'tenant-7');
+      await svc.refreshDeclarationStatus('26ES002801100321B8', 'tenant-7');
       expect(aeatRealService.queryDeclarationStatus).toHaveBeenCalledWith(
-        '26ES002801100321B8', 'AES', 'cert', 'pass', { tenantId: 'tenant-7' }
+        '26ES002801100321B8', 'AES', { tenantId: 'tenant-7' }
       );
     });
 
@@ -444,7 +439,7 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
         estado: 'DE', estadoTexto: 'Despachado', circuito: 'V', csv: 'CSV1',
         fechas: { levante: '2026-11-16', limiteLlegada: '2026-11-22' }, rawResponse: '<xml/>'
       });
-      const r = await svc.refreshDeclarationStatus('26ES002801501441J7', 'cert', 'pass', 'tenant-7');
+      const r = await svc.refreshDeclarationStatus('26ES002801501441J7', 'tenant-7');
       expect(r.tracking.currentStatus).toBe('RELEASED');
       expect(r.tracking.aeat).toEqual({
         estado: 'DE', estadoTexto: 'Despachado', circuito: 'V', csv: 'CSV1', final: false,
@@ -458,29 +453,73 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
         success: true, status: 'RELEASED', channel: 'green', messages: [], estado: 'DS', final: false, fechas: {}
       });
       await svc.trackDeclaration('26ES002801100321B8', 'AES', {});
-      await svc.refreshDeclarationStatus('26ES002801100321B8', 'cert', 'pass');
-      svc.pollingConfig.enabled = true;
-      svc._delay = jest.fn().mockResolvedValue();
+      await svc.refreshDeclarationStatus('26ES002801100321B8');
       aeatRealService.queryDeclarationStatus.mockClear();
-      await svc._pollAllDeclarations();
+      await svc.pollOnce();
       expect(aeatRealService.queryDeclarationStatus).toHaveBeenCalledTimes(1);
 
       aeatRealService.queryDeclarationStatus.mockResolvedValue({
         success: true, status: 'RELEASED', channel: 'green', messages: [], estado: 'SA', final: true, fechas: {}
       });
-      await svc.refreshDeclarationStatus('26ES002801100321B8', 'cert', 'pass');
+      await svc.refreshDeclarationStatus('26ES002801100321B8');
       aeatRealService.queryDeclarationStatus.mockClear();
-      await svc._pollAllDeclarations();
+      await svc.pollOnce();
       expect(aeatRealService.queryDeclarationStatus).not.toHaveBeenCalled();
-      svc.pollingConfig.enabled = false;
+    });
+
+    test('si se deja de seguir mientras se consulta a la AEAT, no se resucita el seguimiento', async () => {
+      await svc.trackDeclaration('M-CARRERA', 'H1', {});
+      aeatRealService.queryDeclarationStatus.mockImplementation(async () => {
+        await svc.untrackDeclaration('M-CARRERA');
+        return { success: true, status: 'RELEASED', channel: 'green', messages: [] };
+      });
+      const r = await svc.refreshDeclarationStatus('M-CARRERA');
+      expect(r).toMatchObject({ success: false, tipo: 'no_encontrada' });
+      expect(await svc.getTrackedDeclaration('M-CARRERA')).toBeUndefined();
+    });
+
+    test('lo que cambió durante la consulta (p. ej. una alerta confirmada) no se pierde', async () => {
+      await svc.trackDeclaration('M-ACK', 'H1', {});
+      const inicial = await svc.getTrackedDeclaration('M-ACK');
+      await svc.trackedDeclarations.set('M-ACK', { ...inicial, alerts: [{ id: 'a1', type: 'x', acknowledged: false }] });
+      aeatRealService.queryDeclarationStatus.mockImplementation(async () => {
+        const t = await svc.getTrackedDeclaration('M-ACK');
+        await svc.trackedDeclarations.set('M-ACK', { ...t, alerts: [{ ...t.alerts[0], acknowledged: true }], metadata: { nota: 'nueva' } });
+        return { success: true, status: 'CONTROL', channel: 'red', messages: [] };
+      });
+      const r = await svc.refreshDeclarationStatus('M-ACK');
+      const guardado = await svc.getTrackedDeclaration('M-ACK');
+      expect(r.success).toBe(true);
+      expect(guardado.currentStatus).toBe('CONTROL');
+      expect(guardado.metadata).toEqual({ nota: 'nueva' });
+      expect(guardado.alerts.find(a => a.id === 'a1').acknowledged).toBe(true);
+      expect(guardado.alerts.some(a => a.type === 'channel_red')).toBe(true);
+    });
+
+    test('un fallo tampoco resucita un seguimiento borrado durante la consulta', async () => {
+      await svc.trackDeclaration('M-CARRERA2', 'H1', {});
+      aeatRealService.queryDeclarationStatus.mockImplementation(async () => {
+        await svc.untrackDeclaration('M-CARRERA2');
+        return { success: false, tipo: 'red', error: 'La AEAT no respondió a la consulta' };
+      });
+      await svc.refreshDeclarationStatus('M-CARRERA2');
+      expect(await svc.getTrackedDeclaration('M-CARRERA2')).toBeUndefined();
+    });
+
+    test('una excepción interna no se devuelve tal cual al cliente', async () => {
+      await svc.trackDeclaration('M-INT', 'H1', {});
+      aeatRealService.queryDeclarationStatus.mockRejectedValue(new Error('ECONNREFUSED 10.0.0.5:6379'));
+      const r = await svc.refreshDeclarationStatus('M-INT');
+      expect(r).toMatchObject({ success: false, tipo: 'interno' });
+      expect(r.error).not.toContain('10.0.0.5');
     });
 
     test('captura excepciones del servicio real', async () => {
       await svc.trackDeclaration('MRN-THROW', 'H1', {});
       aeatRealService.queryDeclarationStatus.mockRejectedValue(new Error('conexion caida'));
-      const r = await svc.refreshDeclarationStatus('MRN-THROW', 'cert', 'pass');
+      const r = await svc.refreshDeclarationStatus('MRN-THROW');
       expect(r.success).toBe(false);
-      expect(r.error).toBe('conexion caida');
+      expect(r.tipo).toBe('interno');
     });
   });
 
@@ -549,7 +588,7 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
     test('portfolio con declaracion en naranja recomienda gestionarla', async () => {
       await svc.trackDeclaration('MRN-P1', 'H1', {});
       aeatRealService.queryDeclarationStatus.mockResolvedValue({ success: true, status: 'PROCESSING', channel: 'orange' });
-      await svc.refreshDeclarationStatus('MRN-P1', 'c', 'p');
+      await svc.refreshDeclarationStatus('MRN-P1');
       const r = await svc.listTrackedDeclarations();
       expect(r.luciAnalysis.recommendations.some(rec => rec.action.includes('naranja'))).toBe(true);
     });
@@ -557,7 +596,7 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
     test('portfolio con declaracion en rojo genera recomendacion critical', async () => {
       await svc.trackDeclaration('MRN-P2', 'H1', {});
       aeatRealService.queryDeclarationStatus.mockResolvedValue({ success: true, status: 'INSPECTION', channel: 'red' });
-      await svc.refreshDeclarationStatus('MRN-P2', 'c', 'p');
+      await svc.refreshDeclarationStatus('MRN-P2');
       const r = await svc.listTrackedDeclarations();
       expect(r.luciAnalysis.recommendations.some(rec => rec.priority === 'critical')).toBe(true);
     });
@@ -568,10 +607,10 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
     test('ordena critical antes que warning', async () => {
       await svc.trackDeclaration('MRN-A1', 'H1', {});
       aeatRealService.queryDeclarationStatus.mockResolvedValue({ success: true, status: 'PROCESSING', channel: 'orange' });
-      await svc.refreshDeclarationStatus('MRN-A1', 'c', 'p');
+      await svc.refreshDeclarationStatus('MRN-A1');
       await svc.trackDeclaration('MRN-A2', 'H1', {});
       aeatRealService.queryDeclarationStatus.mockResolvedValue({ success: true, status: 'INSPECTION', channel: 'red' });
-      await svc.refreshDeclarationStatus('MRN-A2', 'c', 'p');
+      await svc.refreshDeclarationStatus('MRN-A2');
 
       const res = await svc.getActiveAlerts();
       expect(res.critical).toBeGreaterThanOrEqual(1);
@@ -586,59 +625,72 @@ describe('AEAT Status Monitor - analisis y ramas', () => {
     });
   });
 
-  // ------------------- polling -----------------------------------------------
-  describe('polling', () => {
-    test('startPolling arranca y stopPolling detiene', () => {
-      const start = svc.startPolling('cert', 'pass');
-      expect(start.success).toBe(true);
-      const stop = svc.stopPolling();
-      expect(stop.success).toBe(true);
-    });
+  // ------------------- polling (una pasada) ----------------------------------
+  describe('pollOnce', () => {
+    const OK = { success: true, status: 'ACCEPTED', channel: 'green', messages: [], estado: 'X', final: false, fechas: {} };
 
-    test('startPolling dos veces avisa de que ya esta activo', () => {
-      svc.startPolling('c', 'p');
-      const segundo = svc.startPolling('c', 'p');
-      expect(segundo.success).toBe(false);
-      svc.stopPolling();
-    });
-
-    test('stopPolling sin polling activo devuelve success:false', () => {
-      const r = svc.stopPolling();
-      expect(r.success).toBe(false);
-    });
-
-    test('_pollAllDeclarations no hace nada si polling deshabilitado', async () => {
-      svc.pollingConfig.enabled = false;
-      await svc.trackDeclaration('MRN-POLL', 'H1', {});
-      await svc._pollAllDeclarations();
-      expect(aeatRealService.queryDeclarationStatus).not.toHaveBeenCalled();
-    });
-
-    test('_pollAllDeclarations salta declaraciones completadas', async () => {
-      svc.pollingConfig.enabled = true;
-      svc.pollingConfig.certificateId = 'c';
-      svc.pollingConfig.password = 'p';
-      // Una RELEASED (se salta) y una PENDING (se consulta)
+    test('salta las finales y los tipos sin consulta (ENS); consulta las vivas', async () => {
       await svc.trackDeclaration('MRN-DONE', 'H1', {});
-      let done = await svc.getTrackedDeclaration('MRN-DONE');
-      done.currentStatus = 'RELEASED';
-      await svc.trackedDeclarations.set('MRN-DONE', done);
-      await svc.trackDeclaration('MRN-LIVE', 'H1', {});
-      aeatRealService.queryDeclarationStatus.mockResolvedValue({ success: true, status: 'PROCESSING', channel: 'green' });
+      const done = await svc.getTrackedDeclaration('MRN-DONE');
+      await svc.trackedDeclarations.set('MRN-DONE', { ...done, aeat: { final: true } });
+      await svc.trackDeclaration('MRN-LEGACY', 'H1', {});
+      const legacy = await svc.getTrackedDeclaration('MRN-LEGACY');
+      await svc.trackedDeclarations.set('MRN-LEGACY', { ...legacy, currentStatus: 'REJECTED' });
+      await svc.trackDeclaration('MRN-ENS', 'ENS', {});
+      await svc.trackDeclaration('MRN-LIVE', 'H7', { tenantId: 't1' });
+      aeatRealService.queryDeclarationStatus.mockResolvedValue(OK);
 
-      await svc._pollAllDeclarations();
+      const r = await svc.pollOnce();
 
-      // Solo se consulto la declaracion viva, no la RELEASED
-      const mrnsConsultados = aeatRealService.queryDeclarationStatus.mock.calls.map(c => c[0]);
-      expect(mrnsConsultados).toContain('MRN-LIVE');
-      expect(mrnsConsultados).not.toContain('MRN-DONE');
-      svc.pollingConfig.enabled = false;
+      expect(aeatRealService.queryDeclarationStatus.mock.calls.map(c => c[0])).toEqual(['MRN-LIVE']);
+      expect(aeatRealService.queryDeclarationStatus).toHaveBeenCalledWith('MRN-LIVE', 'H7', { tenantId: 't1' });
+      expect(r).toEqual({ consultadas: 1, conError: 0, restantes: 0, omitidas: 3 });
+      // Se guardó en la clave del tenant.
+      expect((await svc.getTrackedDeclaration('MRN-LIVE', 't1')).currentStatus).toBe('ACCEPTED');
     });
 
-    test('_pollAllDeclarations con lista vacia no revienta', async () => {
-      svc.pollingConfig.enabled = true;
-      await svc._pollAllDeclarations();
-      svc.pollingConfig.enabled = false;
+    test('respeta el límite y empieza por las consultadas hace más tiempo', async () => {
+      for (const [mrn, cuando] of [['M-NUEVA', '2026-11-16T10:00:00Z'], ['M-NUNCA', null], ['M-VIEJA', '2026-11-15T10:00:00Z']]) {
+        await svc.trackDeclaration(mrn, 'AES', {});
+        const t = await svc.getTrackedDeclaration(mrn);
+        await svc.trackedDeclarations.set(mrn, { ...t, lastChecked: cuando });
+      }
+      aeatRealService.queryDeclarationStatus.mockResolvedValue(OK);
+
+      const r = await svc.pollOnce({ limite: 2 });
+
+      expect(aeatRealService.queryDeclarationStatus.mock.calls.map(c => c[0])).toEqual(['M-NUNCA', 'M-VIEJA']);
+      expect(r).toMatchObject({ consultadas: 2, restantes: 1 });
+    });
+
+    test('un error de la AEAT (o una excepción) cuenta como error y no corta la pasada', async () => {
+      await svc.trackDeclaration('M-1', 'H1', {});
+      await svc.trackDeclaration('M-2', 'H1', {});
+      await svc.trackDeclaration('M-3', 'H1', {});
+      aeatRealService.queryDeclarationStatus
+        .mockRejectedValueOnce(new Error('socket hang up'))
+        .mockResolvedValueOnce({ success: false, tipo: 'red', error: 'timeout' })
+        .mockResolvedValueOnce(OK);
+
+      const r = await svc.pollOnce();
+
+      expect(aeatRealService.queryDeclarationStatus).toHaveBeenCalledTimes(3);
+      expect(r).toMatchObject({ consultadas: 3, conError: 2 });
+    });
+
+    test('un fallo marca lastChecked y el error, para no repetirlo primero en la siguiente pasada', async () => {
+      await svc.trackDeclaration('M-ERR', 'H1', {});
+      aeatRealService.queryDeclarationStatus.mockResolvedValue({ success: false, tipo: 'error_funcional', error: 'MRN no existe' });
+      await svc.pollOnce();
+      const t = await svc.getTrackedDeclaration('M-ERR');
+      expect(t.lastChecked).toBeTruthy();
+      expect(t.lastError).toMatchObject({ tipo: 'error_funcional', error: 'MRN no existe' });
+      expect(t.currentStatus).toBe('PENDING');
+    });
+
+    test('sin declaraciones no consulta nada', async () => {
+      expect(await svc.pollOnce()).toEqual({ consultadas: 0, conError: 0, restantes: 0, omitidas: 0 });
+      expect(aeatRealService.queryDeclarationStatus).not.toHaveBeenCalled();
     });
   });
 
