@@ -634,6 +634,20 @@
       "isAuthorisation": "È un'autorizzazione, non un documento della voce: l'AEAT la rifiuta qui.",
       "saved": "Documenti della casella 44 salvati",
       "error": "Impossibile salvare i documenti della casella 44"
+    },
+    "excise": {
+      "title": "Accisa",
+      "required": "L'AEAT applica accise a questo codice: scegli la voce e la quantità (senza, l'AEAT respinge l'H1).",
+      "measure": "Voce secondo l'AEAT",
+      "quantity": "Quantità ({{unidad}})",
+      "save": "Salva",
+      "remove": "Rimuovi",
+      "help": "Per la birra indica anche il grado Plato nella descrizione della merce. Si dichiara solo l'importazione con pagamento (chiave 0).",
+      "chooseMeasure": "Scegli la voce",
+      "quantityRequired": "Indica la quantità in {{unidad}}",
+      "saved": "Accisa salvata",
+      "removed": "Accisa rimossa",
+      "error": "Impossibile salvare l'accisa"
     }
   },
   "classification": {

@@ -634,6 +634,20 @@
       "isAuthorisation": "This is an authorisation, not an item document: the AEAT rejects it here.",
       "saved": "Box 44 documents saved",
       "error": "Could not save the box 44 documents"
+    },
+    "excise": {
+      "title": "Excise duty",
+      "required": "The AEAT applies excise duties to this code: choose the heading and quantity (without it the AEAT rejects the H1).",
+      "measure": "Heading per the AEAT",
+      "quantity": "Quantity ({{unidad}})",
+      "save": "Save",
+      "remove": "Remove",
+      "help": "For beer, also state the degree Plato in the goods description. Only import with payment (key 0) is declared.",
+      "chooseMeasure": "Choose the heading",
+      "quantityRequired": "Enter the quantity in {{unidad}}",
+      "saved": "Excise duty saved",
+      "removed": "Excise duty removed",
+      "error": "Could not save the excise duty"
     }
   },
   "classification": {

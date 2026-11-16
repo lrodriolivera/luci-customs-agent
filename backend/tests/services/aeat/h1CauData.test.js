@@ -459,3 +459,22 @@ describe('H1 CAU: documentos de la casilla 44 de la partida (Arancel Integrado)'
   });
 });
 
+describe('H1 CAU: impuesto especial de la partida', () => {
+  const cerveza = () => expediente({
+    goods: [{ ...expediente().goods[0], taricCode: '2203000100', currency: 'EUR', invoiceValue: 4800, dutyRate: 0,
+      impuestoEspecial: { medida: 'IA3', epigrafe: '0A3', clave: '0', tipo: 7.48, unidad: 'HLT', cantidad: 8 } }]
+  });
+
+  test('código nacional 0A30, tributo 0A3 y la cuota en la base del IVA (como liquidó la AEAT en PRE)', () => {
+    const p = datos(cerveza()).envio.partidas[0];
+    expect(p.codigo.adicionalesNacionales).toEqual(['0A30']);
+    expect(p.tributos.map((t) => t.tipo)).toEqual(['A00', '0A3', 'B00']);
+    expect(p.tributos[1].bases).toEqual([{ tipoImpositivo: 7.48, unidad: 'HLT', cantidad: 8, cuota: 59.84 }]);
+    expect(p.tributos[2].bases[0]).toMatchObject({ tipoImpositivo: 21, importe: 4859.84, cuota: 1020.57 });
+  });
+
+  siHayXmllint('el mensaje con impuesto especial cumple el XSD', () => {
+    expect(validar(datos(cerveza()))).toBeNull();
+  });
+});
+

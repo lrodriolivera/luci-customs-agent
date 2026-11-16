@@ -883,7 +883,11 @@ async function diferenciasConArancelAeat(expedition) {
   const porPartida = await Promise.all(partidas.map(async (g) => {
     try {
       const resultado = await consultarArancelIntegrado({ codigo: g.taricCode, origen: g.originCountry });
-      return diferencias(g, resultado).map((d) => ({ partida: g.itemNumber, taricCode: g.taricCode, ...d }));
+      const { medidasDeImpuestoEspecial } = require('../services/aeat/impuestoEspecial');
+      const epigrafes = medidasDeImpuestoEspecial(resultado).map((m) => m.epigrafe);
+      const faltaIiee = epigrafes.length > 0 && !g.impuestoEspecial?.epigrafe
+        ? [{ partida: g.itemNumber, taricCode: g.taricCode, campo: 'impuestoEspecial', epigrafes }] : [];
+      return [...faltaIiee, ...diferencias(g, resultado).map((d) => ({ partida: g.itemNumber, taricCode: g.taricCode, ...d }))];
     } catch (error) {
       logger.warn(`Contraste con la AEAT omitido (${expedition.expeditionId}, ${g.taricCode}): ${error.message}`);
       return [];
@@ -952,6 +956,13 @@ const submitDeclaration = async (req, res) => {
     // confirmacion (409); la agente puede corregirlos o presentar igualmente.
     if (country === 'ES' && type !== 'AES' && req.body?.confirmarDiferenciasAeat !== true) {
       const diferenciasAeat = await diferenciasConArancelAeat(expedition);
+      // Sin el epigrafe del impuesto especial la AEAT rechaza el H1 (21526):
+      // no se pregunta, se pide completarlo.
+      const sinIiee = diferenciasAeat.filter((d) => d.campo === 'impuestoEspecial');
+      if (sinIiee.length > 0) {
+        const faltan = sinIiee.map((d) => `impuesto especial de la partida ${d.partida} (la AEAT exige uno de estos epígrafes: ${d.epigrafes.join(', ')})`);
+        return res.status(422).json({ success: false, code: 'DATOS_H1_FALTANTES', error: `Faltan datos para presentar el H1: ${faltan.join('; ')}`, faltan });
+      }
       if (diferenciasAeat.length > 0) {
         return res.status(409).json({
           success: false,

@@ -32,6 +32,7 @@ import { textoEvento } from '../../utils/historialExpediente'
 import GoodsEditor from './GoodsEditor'
 import MedidasAeat from '../Classification/MedidasAeat'
 import DocumentosC44 from './DocumentosC44'
+import ImpuestoEspecial, { opcionesImpuestoEspecial } from './ImpuestoEspecial'
 import H1Preview from './H1Preview'
 import GroupageCard, { isMaritime } from './GroupageCard'
 import AeatSumariaLinks from './AeatSumariaLinks'
@@ -593,6 +594,7 @@ export default function ExpeditionDetail() {
   const [savingGoods, setSavingGoods] = useState(false)
   const [applyingAeat, setApplyingAeat] = useState(null)
   const [savingC44, setSavingC44] = useState(null)
+  const [savingIiee, setSavingIiee] = useState(null)
   // Ultima consulta al Arancel Integrado por partida: sus documentos se
   // proponen para la casilla 44.
   const [medidasAeatPorPartida, setMedidasAeatPorPartida] = useState({})
@@ -665,6 +667,22 @@ export default function ExpeditionDetail() {
       toast.error(error.response?.data?.error || t('expeditions.aeatRatesError'))
     } finally {
       setApplyingAeat(null)
+    }
+  }
+
+  // Impuesto especial: el servidor toma tipo y unidad de la AEAT.
+  const handleImpuestoEspecial = async (goodId, datos) => {
+    setSavingIiee(goodId)
+    try {
+      const response = datos
+        ? await expeditionsAPI.setImpuestoEspecial(id, goodId, datos)
+        : await expeditionsAPI.removeImpuestoEspecial(id, goodId)
+      setExpedition(response.data?.data || response.data)
+      toast.success(t(datos ? 'expeditions.excise.saved' : 'expeditions.excise.removed'))
+    } catch (error) {
+      toast.error(error.response?.data?.error || t('expeditions.excise.error'))
+    } finally {
+      setSavingIiee(null)
     }
   }
 
@@ -1087,6 +1105,15 @@ export default function ExpeditionDetail() {
                       applying={applyingAeat === item._id}
                       onLoaded={(datos) => setMedidasAeatPorPartida((prev) => ({ ...prev, [item._id]: datos }))}
                       className="mt-3"
+                    />
+                  )}
+                  {/^\d{10}$/.test(item.taricCode || '') && (
+                    <ImpuestoEspecial
+                      impuesto={item.impuestoEspecial}
+                      opciones={opcionesImpuestoEspecial(medidasAeatPorPartida[item._id])}
+                      onSave={canEditGoods && item._id ? (datos) => handleImpuestoEspecial(item._id, datos) : undefined}
+                      onRemove={canEditGoods && item._id ? () => handleImpuestoEspecial(item._id, null) : undefined}
+                      saving={savingIiee === item._id}
                     />
                   )}
                   {/^\d{10}$/.test(item.taricCode || '') && (

@@ -634,6 +634,20 @@
       "isAuthorisation": "C'est une autorisation, pas un document de l'article : l'AEAT la rejette ici.",
       "saved": "Documents de la case 44 enregistrés",
       "error": "Impossible d'enregistrer les documents de la case 44"
+    },
+    "excise": {
+      "title": "Accise",
+      "required": "L'AEAT applique des accises à ce code : choisissez la rubrique et la quantité (sinon l'AEAT rejette le H1).",
+      "measure": "Rubrique selon l'AEAT",
+      "quantity": "Quantité ({{unidad}})",
+      "save": "Enregistrer",
+      "remove": "Retirer",
+      "help": "Pour la bière, indiquez aussi le degré Plato dans la désignation. Seule l'importation avec paiement (clé 0) est déclarée.",
+      "chooseMeasure": "Choisissez la rubrique",
+      "quantityRequired": "Indiquez la quantité en {{unidad}}",
+      "saved": "Accise enregistrée",
+      "removed": "Accise retirée",
+      "error": "Impossible d'enregistrer l'accise"
     }
   },
   "classification": {

@@ -634,6 +634,20 @@
       "isAuthorisation": "É uma autorização, não um documento da adição: a AEAT rejeita-a aqui.",
       "saved": "Documentos da casa 44 guardados",
       "error": "Não foi possível guardar os documentos da casa 44"
+    },
+    "excise": {
+      "title": "Imposto especial",
+      "required": "A AEAT aplica impostos especiais a este código: escolha a epígrafe e a quantidade (sem ela, a AEAT rejeita o H1).",
+      "measure": "Epígrafe segundo a AEAT",
+      "quantity": "Quantidade ({{unidad}})",
+      "save": "Guardar",
+      "remove": "Remover",
+      "help": "Para a cerveja indique também o grau Plato na descrição da mercadoria. Só se declara a importação com pagamento (chave 0).",
+      "chooseMeasure": "Escolha a epígrafe",
+      "quantityRequired": "Indique a quantidade em {{unidad}}",
+      "saved": "Imposto especial guardado",
+      "removed": "Imposto especial removido",
+      "error": "Não foi possível guardar o imposto especial"
     }
   },
   "classification": {

@@ -99,6 +99,9 @@ export const expeditionsAPI = {
   create: (data) => api.post('/api/expeditions', data),
   update: (id, data) => api.put(`/api/expeditions/${seg(id)}`, data),
   // Arancel e IVA de una partida segun el Arancel Integrado de la AEAT.
+  // Impuesto especial de una partida (epigrafe de la AEAT y cantidad).
+  setImpuestoEspecial: (id, goodId, datos) => api.post(`/api/expeditions/${seg(id)}/goods/${seg(goodId)}/impuesto-especial`, datos),
+  removeImpuestoEspecial: (id, goodId) => api.delete(`/api/expeditions/${seg(id)}/goods/${seg(goodId)}/impuesto-especial`),
   // Documentos de la casilla 44 de una partida (sustituye la lista entera).
   setDocumentosC44: (id, goodId, documentos) => api.put(`/api/expeditions/${seg(id)}/goods/${seg(goodId)}/documentos-c44`, { documentos }),
   applyAeatRates: (id, goodId, medida) => api.post(`/api/expeditions/${seg(id)}/goods/${seg(goodId)}/aeat-rates`, medida ? { medida } : {}),

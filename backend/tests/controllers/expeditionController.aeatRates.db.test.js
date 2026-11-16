@@ -214,3 +214,56 @@ describe('setDocumentosC44', () => {
   });
 });
 
+describe('setImpuestoEspecial', () => {
+  const CERVEZA = {
+    existe: true, codigo: '2203000100', areaGeografica: 'MX', fechaConsulta: '16-11-2026',
+    medidas: [{ codigo: 'IA3-IC.A3', tipo: 'nacional', areaGeografica: 'TODOS ERGA OMNES', descripcion: 'IC.Ep.2. Cerveza grado plato < 11', derecho: '7,480 EUR / HL', documentos: [] }]
+  };
+  const llamar = (user, exp, { body = {}, method = 'POST', goodId = String(exp.goods[0]._id) } = {}) => {
+    const res = crearRes();
+    return ctrl.setImpuestoEspecial({ method, params: { id: String(exp._id), goodId }, body, user, tenantId: user.tenantId }, res).then(() => res);
+  };
+
+  test('guarda el epígrafe con el tipo y la unidad de la AEAT y lo deja en el historial', async () => {
+    const user = usuario();
+    const exp = await crearExpediente(user, { taricCode: '2203000100', originCountry: 'MX' });
+    mockConsultar.mockResolvedValue(CERVEZA);
+
+    const res = await llamar(user, exp, { body: { medida: 'IA3', cantidad: 8, tipo: 1 } });
+
+    expect(res.statusCode).toBe(200);
+    const ie = (await Expedition.findById(exp._id)).goods[0].impuestoEspecial;
+    expect(ie).toMatchObject({ medida: 'IA3', epigrafe: '0A3', clave: '0', tipo: 7.48, unidad: 'HLT', cantidad: 8, appliedBy: 'Patricia' });
+    const entrada = (await Expedition.findById(exp._id)).timeline.find((t) => t.action === 'excise_set');
+    expect(entrada.description).toContain('0A30');
+    expect(entrada.description).toContain('= 59.84 EUR');
+  });
+
+  test('422 con un epígrafe que la AEAT no tiene; 502 si la AEAT no responde', async () => {
+    const user = usuario();
+    const exp = await crearExpediente(user, { taricCode: '2203000100' });
+    mockConsultar.mockResolvedValueOnce(CERVEZA);
+    expect((await llamar(user, exp, { body: { medida: 'IZ9', cantidad: 1 } })).statusCode).toBe(422);
+    mockConsultar.mockRejectedValueOnce(new Error('timeout'));
+    expect((await llamar(user, exp, { body: { medida: 'IA3', cantidad: 1 } })).statusCode).toBe(502);
+  });
+
+  test('DELETE lo quita', async () => {
+    const user = usuario();
+    const exp = await crearExpediente(user, { impuestoEspecial: { medida: 'IA3', epigrafe: '0A3', clave: '0', tipo: 7.48, unidad: 'HLT', cantidad: 8 } });
+    expect((await llamar(user, exp, { method: 'DELETE' })).statusCode).toBe(200);
+    expect((await Expedition.findById(exp._id)).goods[0].impuestoEspecial?.epigrafe).toBeUndefined();
+    expect(mockConsultar).not.toHaveBeenCalled();
+  });
+
+  test('al cambiar el TARIC se quita el impuesto especial', async () => {
+    jest.spyOn(TaricCode, 'findOne').mockReturnValue({ lean: async () => null });
+    const user = usuario();
+    const exp = await crearExpediente(user, { impuestoEspecial: { medida: 'IA3', epigrafe: '0A3', clave: '0', tipo: 7.48, unidad: 'HLT', cantidad: 8 } });
+    const res = crearRes();
+    await ctrl.update({ params: { id: String(exp._id) }, body: { goods: [{ ...exp.goods[0].toObject(), taricCode: '2204210600' }] }, user, tenantId: user.tenantId }, res);
+    expect((await Expedition.findById(exp._id)).goods[0].impuestoEspecial?.epigrafe).toBeUndefined();
+    TaricCode.findOne.mockRestore();
+  });
+});
+
