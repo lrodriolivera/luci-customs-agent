@@ -1169,9 +1169,10 @@ describe('<ExpeditionDetail /> — edición de mercancía y documentos por el ag
       return { data: { data: actualizado } }
     })
     renderExpeditionDetail()
-    await waitFor(() => expect(screen.getAllByText('common.edit')).toHaveLength(2))
+    // Botones «Editar»: el de las partes del expediente y uno por partida.
+    await waitFor(() => expect(screen.getAllByText('common.edit')).toHaveLength(3))
 
-    fireEvent.click(screen.getAllByText('common.edit')[0])
+    fireEvent.click(screen.getAllByText('common.edit')[1])
     fireEvent.change(screen.getByLabelText('expeditions.packagesQuantity'), { target: { value: '12' } })
     fireEvent.click(within(screen.getByRole('form', { name: 'expeditions.editGoods' })).getByText('common.save'))
 
@@ -1188,9 +1189,10 @@ describe('<ExpeditionDetail /> — edición de mercancía y documentos por el ag
   test('si el guardado falla muestra el error del backend y mantiene el formulario', async () => {
     expeditionsAPI.update.mockRejectedValue({ response: { data: { error: 'Error al actualizar expediente' } } })
     renderExpeditionDetail()
-    await waitFor(() => expect(screen.getAllByText('common.edit')).toHaveLength(2))
+    // Botones «Editar»: el de las partes del expediente y uno por partida.
+    await waitFor(() => expect(screen.getAllByText('common.edit')).toHaveLength(3))
 
-    fireEvent.click(screen.getAllByText('common.edit')[0])
+    fireEvent.click(screen.getAllByText('common.edit')[1])
     fireEvent.click(within(screen.getByRole('form', { name: 'expeditions.editGoods' })).getByText('common.save'))
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Error al actualizar expediente'))

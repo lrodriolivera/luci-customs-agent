@@ -178,6 +178,10 @@ const DeclarationSchema = new mongoose.Schema({
   additionalProcedure: String,
   preference: String, // 100, 200, 300, 400
   customsOffice: String,
+  // Forma de pago del H1 de este expediente (A pago previo al levante, R pago
+  // aplazado con garantia). Sin ella, la de Ajustes de la agencia.
+  paymentMethod: { type: String, enum: ['A', 'R'] },
+  guaranteeGRN: String,
   // AES: aduana de salida declarada (CUSTOMS OFFICE OF EXIT, obligatoria) y
   // ubicacion de las mercancias (codigo de 10 caracteres de la AEAT o «ES00» +
   // esos 10). Sin declararlos, el subdocumento estricto los descartaba.

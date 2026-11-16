@@ -30,6 +30,7 @@ import { hrefSeguro } from '../../utils/url'
 import { formatearImporte } from '../../utils/importe'
 import { textoEvento } from '../../utils/historialExpediente'
 import GoodsEditor from './GoodsEditor'
+import PartiesCard from './PartiesCard'
 import MedidasAeat from '../Classification/MedidasAeat'
 import DocumentosC44 from './DocumentosC44'
 import ImpuestoEspecial, { opcionesImpuestoEspecial } from './ImpuestoEspecial'
@@ -598,6 +599,7 @@ export default function ExpeditionDetail() {
   const [savingGoods, setSavingGoods] = useState(false)
   const [applyingAeat, setApplyingAeat] = useState(null)
   const [savingC44, setSavingC44] = useState(null)
+  const [savingParties, setSavingParties] = useState(false)
   const [savingIiee, setSavingIiee] = useState(null)
   // Ultima consulta al Arancel Integrado por partida: sus documentos se
   // proponen para la casilla 44.
@@ -721,6 +723,25 @@ export default function ExpeditionDetail() {
     const delArancel = (medidasAeatPorPartida[item._id]?.medidas || []).flatMap((m) =>
       (m.documentos || []).map((d) => ({ tipo: d.codigo, descripcion: d.descripcion, medida: m.codigo, fuente: 'arancel' })))
     return [...deLaAeat, ...delArancel]
+  }
+
+  // Se parte del expediente recien leido para no pisar cambios de otras tarjetas.
+  const handleSaveParties = async ({ client, exporter }) => {
+    setSavingParties(true)
+    try {
+      const actual = await expeditionsAPI.get(id).then((r) => r.data?.data || r.data).catch(() => expedition)
+      const response = await expeditionsAPI.update(id, {
+        client: { ...(actual?.client || {}), ...client },
+        exporter: { ...(actual?.exporter || {}), ...exporter }
+      })
+      setExpedition(response.data?.data || response.data)
+      toast.success(t('expeditions.parties.saved'))
+    } catch (error) {
+      toast.error(error.response?.data?.error || t('expeditions.parties.error'))
+      throw error
+    } finally {
+      setSavingParties(false)
+    }
   }
 
   const handleSaveGroupage = async (changes) => {
@@ -1001,31 +1022,8 @@ export default function ExpeditionDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Info */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Client Info */}
-          <div className="card">
-            <h2 className="text-lg font-semibold mb-4">
-              {expedition.operationType === 'import' ? t('expeditions.importer') : t('expeditions.exporter')}
-            </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">{t('expeditions.companyName')}</p>
-                <p className="font-medium">{expedition.client?.companyName}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">{t('expeditions.nifCif')}</p>
-                <p className="font-medium">{expedition.client?.nif}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">{t('expeditions.eori')}</p>
-                <p className="font-medium">{expedition.client?.eori || 'N/A'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">{t('expeditions.contact')}</p>
-                <p className="font-medium">{expedition.client?.contact?.name || 'N/A'}</p>
-                <p className="text-xs text-gray-500">{expedition.client?.contact?.email || ''}</p>
-              </div>
-            </div>
-          </div>
+          {/* Importador y exportador, editables mientras el expediente admita cambios. */}
+          <PartiesCard expedition={expedition} onSave={canEditGoods ? handleSaveParties : undefined} isSaving={savingParties} />
 
           {canEditGoods && <RepresentationCard expedition={expedition} onSaved={setExpedition} />}
 

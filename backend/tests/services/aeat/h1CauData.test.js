@@ -74,8 +74,13 @@ describe('H1 CAU: quién declara según la representación', () => {
 });
 
 describe('H1 CAU: autorización de despacho', () => {
-  test('por defecto, por operación sin registro electrónico: documento 1005 OSRE en cabecera', () => {
-    expect(datos().envio.documentosJustificativos).toEqual([{ tipo: '1005', referencia: 'OSRE' }]);
+  test('por defecto, autorización global registrada en la AEAT: no se declara documento (UAT 16/Nov/2026)', () => {
+    expect(datos().envio.documentosJustificativos).toEqual([]);
+  });
+
+  test('por operación sin registro electrónico: documento 1005 OSRE en cabecera', () => {
+    const exp = expediente({ representative: { representationType: 'indirect', dispatchAuthorizationScope: 'OSRE' } });
+    expect(datos(exp).envio.documentosJustificativos).toEqual([{ tipo: '1005', referencia: 'OSRE' }]);
   });
 
   test('con registro electrónico, OCRE; con autorización global no se declara nada', () => {
@@ -475,6 +480,15 @@ describe('H1 CAU: impuesto especial de la partida', () => {
 
   siHayXmllint('el mensaje con impuesto especial cumple el XSD', () => {
     expect(validar(datos(cerveza()))).toBeNull();
+  });
+});
+
+describe('H1 CAU: con pago previo al levante no se declara la garantía de la agencia', () => {
+  test('A con GRN configurado en Ajustes: sin garantía; R: con ella', () => {
+    const tenant = { customsConfig: { medioDePago: 'A', garantiaGRN: '26ESAGL2800000054', tipoGarantia: '1' } };
+    expect(datos(expediente(), { tenant }).garantias).toEqual([]);
+    const conR = datos(expediente({ declaration: { ...expediente().declaration, paymentMethod: 'R' } }), { tenant });
+    expect(conR.garantias).toEqual([{ tipo: '1', referencias: [{ grn: '26ESAGL2800000054' }] }]);
   });
 });
 

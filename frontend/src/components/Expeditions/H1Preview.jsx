@@ -13,6 +13,13 @@ const isEmpty = (value) => value === undefined || value === null || value === ''
 
 const joinParts = (...parts) => parts.filter((p) => !isEmpty(p)).join(', ')
 
+/** «40.00», y « · adicional X» si hay un adicional distinto de 000/00. */
+const regimenComoTexto = (item) => {
+  const base = [item.requestedProcedure, item.previousProcedure].filter((p) => !isEmpty(p)).join('.')
+  const adicional = String(item.additionalProcedure || '').trim()
+  return adicional && !/^0+$/.test(adicional) ? `${base} · adicional ${adicional}` : base || undefined
+}
+
 const formatMass = (value) => (isEmpty(value) ? value : `${Number(value).toLocaleString('es-ES')} kg`)
 
 /** Un dato del H1. Si falta, se marca: es justo lo que el agente busca al revisar. */
@@ -101,7 +108,10 @@ export default function H1Preview({ h1Data }) {
           <Section title={t('h1Preview.sectionDeclaration')}>
             <dl className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {field('lrn', h1Data.lrn || header.lrn || (esCau ? t('h1Preview.lrnOnSubmit') : undefined))}
-              {field('declarationType', joinParts(header.declarationType, header.additionalDeclarationType))}
+              {/* «A, A» repetia el mismo codigo: si coinciden se muestra una vez. */}
+              {field('declarationType', header.declarationType === header.additionalDeclarationType
+                ? header.declarationType
+                : joinParts(header.declarationType, header.additionalDeclarationType))}
               {field('officeLodgement', header.customsOfficeLodgement)}
               {field('officePresentation', header.customsOfficePresentation)}
               {field('officeEntry', header.customsOfficeEntry)}
@@ -157,7 +167,9 @@ export default function H1Preview({ h1Data }) {
                     <div className="col-span-2 md:col-span-4">
                       {field('description', item.goodsDescription || item.descriptionOfGoods)}
                     </div>
-                    {field('procedure', joinParts(item.requestedProcedure, item.previousProcedure, item.additionalProcedure))}
+                    {/* Regimen como lo escriben las agentes: «40.00» (solicitado.precedente)
+                        y el adicional aparte solo si lo hay (UAT 16/Nov/2026). */}
+                    {field('procedure', regimenComoTexto(item))}
                     {field('origin', item.countryOfOrigin)}
                     {field('preference', item.preference)}
                     {field('packages', joinParts(item.packaging?.numberOfPackages, item.packaging?.typeOfPackages, item.packaging?.shippingMarks))}

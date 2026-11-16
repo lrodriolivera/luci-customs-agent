@@ -15,7 +15,7 @@ const fecha = (iso) => {
 }
 
 const CAMPOS = [
-  'invoiceNumber', 'exporterPostalCode', 'vehicleNationality', 'dispatchAuthorizationScope',
+  'invoiceNumber', 'exporterPostalCode', 'vehicleNationality', 'dispatchAuthorizationScope', 'paymentMethod',
   'freightAmount', 'freightCurrency', 'insuranceAmount', 'insuranceCurrency', 'appliedExchangeRate',
   'freightAfterEntryAmount', 'freightAfterEntryCurrency'
 ]
@@ -55,10 +55,19 @@ function CampoGasto({ id, etiqueta, nombreDivisa, importe, divisa, onImporte, on
   )
 }
 
+// La global registrada en la AEAT es la mas habitual: va primera y es la de
+// por defecto (UAT 16/Nov/2026).
 const AMBITOS = [
+  { valor: 'global', texto: 'Global, registrada en la AEAT' },
   { valor: 'OSRE', texto: 'Por operación, sin registro electrónico en la AEAT' },
-  { valor: 'OCRE', texto: 'Por operación, con registro electrónico en la AEAT' },
-  { valor: 'global', texto: 'Global, registrada en la AEAT' }
+  { valor: 'OCRE', texto: 'Por operación, con registro electrónico en la AEAT' }
+]
+
+// Forma de pago del H1 (methodOfPayment). Vacia: la de Ajustes de la agencia.
+const FORMAS_DE_PAGO = [
+  { valor: '', texto: 'La configurada en Ajustes de la agencia' },
+  { valor: 'A', texto: 'A · Pago previo al levante (modelo 031)' },
+  { valor: 'R', texto: 'R · Pago aplazado con garantía del agente' }
 ]
 
 /**
@@ -74,7 +83,7 @@ const AMBITOS = [
  */
 export default function H1DataCard({ expedition, soloEstado = false, onCambio }) {
   const [estado, setEstado] = useState(null)
-  const [form, setForm] = useState({ invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE' })
+  const [form, setForm] = useState({ invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'global', paymentMethod: '' })
   const sumar = estado?.datos?.gastosASumar
   const pideFlete = !sumar || sumar.flete
   const pideSeguro = !sumar || sumar.seguro
@@ -232,6 +241,15 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
             {AMBITOS.map((a) => <option key={a.valor} value={a.valor}>{a.texto}</option>)}
           </select>
           <p className="mt-1 text-xs text-gray-500">No se usa en autodespacho. Con autorización global no se declara ningún documento.</p>
+        </div>
+        <div className="sm:col-span-2">
+          <label className="label" htmlFor="h1-payment-method">Forma de pago</label>
+          <select id="h1-payment-method" className="input" value={form.paymentMethod || ''} onChange={cambiar('paymentMethod')}>
+            {FORMAS_DE_PAGO.map((f) => <option key={f.valor || 'ajustes'} value={f.valor}>{f.texto}</option>)}
+          </select>
+          <p className="mt-1 text-xs text-gray-500">
+            Con pago previo al levante el importador paga los tributos con el modelo 031 antes del levante. Con pago aplazado, el agente los garantiza con su garantía (GRN de Ajustes).
+          </p>
         </div>
         {divisaSinBce && (
           <div className="sm:col-span-2 rounded-lg border border-amber-200 bg-amber-50 p-3">

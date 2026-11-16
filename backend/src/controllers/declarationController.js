@@ -179,7 +179,9 @@ const datosH1De = (expedition, factura = { divisa: 'EUR', sinTipoBce: false }) =
     invoiceNumber: expedition.invoiceNumber || '',
     exporterPostalCode: expedition.exporter?.postalCode || '',
     vehicleNationality: expedition.transport?.vehicleNationality || '',
-    dispatchAuthorizationScope: expedition.representative?.dispatchAuthorizationScope || 'OSRE',
+    dispatchAuthorizationScope: expedition.representative?.dispatchAuthorizationScope || 'global',
+    // Forma de pago del expediente; vacia = la de Ajustes de la agencia.
+    paymentMethod: expedition.declaration?.paymentMethod || '',
     // Que gastos hasta la UE hay que sumar al valor en aduana segun el incoterm.
     incoterm,
     gastosASumar: gastosQueSeSuman(incoterm),
@@ -349,7 +351,7 @@ const updateH1Data = async (req, res) => {
     const expedition = await Expedition.findById(req.params.expeditionId);
     if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
 
-    const { invoiceNumber, vehicleNationality, dispatchAuthorizationScope, exporterPostalCode } = req.body || {};
+    const { invoiceNumber, vehicleNationality, dispatchAuthorizationScope, exporterPostalCode, paymentMethod } = req.body || {};
     const errores = [];
     if (invoiceNumber !== undefined && (typeof invoiceNumber !== 'string' || invoiceNumber.trim().length > 70)) {
       errores.push('El número de factura admite hasta 70 caracteres');
@@ -363,6 +365,9 @@ const updateH1Data = async (req, res) => {
     if (dispatchAuthorizationScope !== undefined && !AMBITOS_AUTORIZACION.includes(dispatchAuthorizationScope)) {
       errores.push('Tipo de autorización de despacho no válido');
     }
+    if (paymentMethod !== undefined && !['', 'A', 'R'].includes(paymentMethod)) {
+      errores.push('Forma de pago no válida: A (pago previo al levante) o R (pago aplazado con garantía)');
+    }
     const gastos = gastosRecibidos(req.body || {});
     errores.push(...gastos.errores);
     // Hasta cinco decimales, como el tipo de cambio del mensaje (n..12,5).
@@ -375,6 +380,7 @@ const updateH1Data = async (req, res) => {
     if (exporterPostalCode !== undefined) expedition.set('exporter.postalCode', exporterPostalCode.trim());
     if (vehicleNationality !== undefined) expedition.set('transport.vehicleNationality', String(vehicleNationality).toUpperCase());
     if (dispatchAuthorizationScope !== undefined) expedition.set('representative.dispatchAuthorizationScope', dispatchAuthorizationScope);
+    if (paymentMethod !== undefined) expedition.set('declaration.paymentMethod', paymentMethod || undefined);
     for (const [ruta, valor] of Object.entries(gastos.cambios)) expedition.set(ruta, valor);
     const factura = await divisaDeLaFactura(expedition);
     if (cambio.valor === null) expedition.set('appliedExchangeRate', null);

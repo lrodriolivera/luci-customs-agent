@@ -659,6 +659,21 @@
       "saved": "Impost especial guardat",
       "removed": "Impost especial llevat",
       "error": "No s'ha pogut guardar l'impost especial"
+    },
+    "parties": {
+      "title": "Parts de l'expedient",
+      "supplier": "Exportador (proveïdor)",
+      "address": "Adreça",
+      "city": "Ciutat",
+      "postalCode": "Codi postal",
+      "country": "País (2 lletres)",
+      "email": "Correu electrònic",
+      "eoriAuto": "Si el deixes buit, ES + NIF",
+      "required": "L'importador necessita raó social i NIF.",
+      "countryInvalid": "El país de l'exportador és un codi de dues lletres (p. ex. CN).",
+      "regenerateHint": "Si ja has generat l'H1, torna a generar-lo perquè porte estes dades.",
+      "saved": "Dades de les parts guardades",
+      "error": "No s'han pogut guardar les dades de les parts"
     }
   },
   "classification": {
@@ -3792,11 +3807,12 @@
     "aeatMaster": "És una partida màster: correspon a la càrrega agrupada, no a aquesta mercaderia.",
     "aeatDiffers": "No coincidix amb l'expedient ({{packages}} embalums i {{weight}} kg). No impedix generar ni presentar l'H1: comprova-ho i, si cal, corregix l'expedient o la documentació.",
     "aeatBillOfLading": "Coneixement: {{value}}",
-    "aeatLocation": "Ubicació: {{value}}"
+    "aeatLocation": "Ubicació: {{value}}",
+    "verifyHelp": "Consulta la sumària en l'AEAT amb el certificat de l'empresa i ompli bultos, quilos, saldo i ubicació. No cal entrar en la Seu."
   },
   "aeatSumariaLinks": {
-    "title": "Buscar la sumaria en la Seu de l'AEAT",
-    "certificateWarning": "Estos enllaços necessiten el teu certificat digital: LUCI no els pot consultar per tu.",
+    "title": "Consultar la sumària tu mateix en la Seu de l'AEAT",
+    "certificateWarning": "LUCI ja consulta la sumària en l'AEAT amb el certificat de l'empresa: és el botó «Consultar en l'AEAT» de la targeta de càrrega i sumària, que porta bultos, quilos i saldo. Estos enllaços són per a veure-la tu en la Seu, amb el teu certificat digital, si necessites més detall.",
     "highlighted": "Recomanat per a este expedient",
     "g4Title": "G4: sumaries aeries i terrestres",
     "g4Description": "Per a declaracions sumaries G4, tant de transport aeri com terrestre.",

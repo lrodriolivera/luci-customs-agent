@@ -659,6 +659,21 @@
       "saved": "Imposto especial guardado",
       "removed": "Imposto especial removido",
       "error": "Não foi possível guardar o imposto especial"
+    },
+    "parties": {
+      "title": "Partes do processo",
+      "supplier": "Exportador (fornecedor)",
+      "address": "Morada",
+      "city": "Cidade",
+      "postalCode": "Código postal",
+      "country": "País (2 letras)",
+      "email": "Correio eletrónico",
+      "eoriAuto": "Se ficar vazio, ES + NIF",
+      "required": "O importador precisa de denominação e NIF.",
+      "countryInvalid": "O país do exportador é um código de duas letras (p. ex. CN).",
+      "regenerateHint": "Se já gerou o H1, gere-o de novo para incluir estes dados.",
+      "saved": "Dados das partes guardados",
+      "error": "Não foi possível guardar os dados das partes"
     }
   },
   "classification": {
@@ -3792,11 +3807,12 @@
     "aeatMaster": "É uma adição master: corresponde à carga agrupada, não a esta mercadoria.",
     "aeatDiffers": "Não coincide com o processo ({{packages}} volumes e {{weight}} kg). Não impede gerar nem apresentar o H1: verifique e, se necessário, corrija o processo ou a documentação.",
     "aeatBillOfLading": "Conhecimento: {{value}}",
-    "aeatLocation": "Localização: {{value}}"
+    "aeatLocation": "Localização: {{value}}",
+    "verifyHelp": "Consulta a declaração sumária na AEAT com o certificado da empresa e preenche volumes, quilos, saldo e localização. Não é preciso entrar na Sede."
   },
   "aeatSumariaLinks": {
-    "title": "Pesquisar a declaração sumária na Sede da AEAT",
-    "certificateWarning": "Estes links exigem o seu certificado digital: a LUCI não pode consultá-los por si.",
+    "title": "Consultar você mesmo a declaração sumária na Sede da AEAT",
+    "certificateWarning": "O LUCI já consulta a declaração sumária na AEAT com o certificado da empresa: é o botão «Consultar na AEAT» do cartão de carga e sumária, que traz volumes, quilos e saldo. Estas ligações servem para a ver você na Sede, com o seu certificado digital, se precisar de mais detalhe.",
     "highlighted": "Recomendado para esta expedição",
     "g4Title": "G4: sumárias aéreas e terrestres",
     "g4Description": "Para declarações sumárias G4, tanto de transporte aéreo como terrestre.",

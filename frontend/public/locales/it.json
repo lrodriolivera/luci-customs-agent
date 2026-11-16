@@ -659,6 +659,21 @@
       "saved": "Accisa salvata",
       "removed": "Accisa rimossa",
       "error": "Impossibile salvare l'accisa"
+    },
+    "parties": {
+      "title": "Parti della pratica",
+      "supplier": "Esportatore (fornitore)",
+      "address": "Indirizzo",
+      "city": "Città",
+      "postalCode": "CAP",
+      "country": "Paese (2 lettere)",
+      "email": "Email",
+      "eoriAuto": "Se vuoto, ES + codice fiscale",
+      "required": "L'importatore deve avere ragione sociale e codice fiscale.",
+      "countryInvalid": "Il paese dell'esportatore è un codice di due lettere (es. CN).",
+      "regenerateHint": "Se hai già generato l'H1, generalo di nuovo perché riporti questi dati.",
+      "saved": "Dati delle parti salvati",
+      "error": "Impossibile salvare i dati delle parti"
     }
   },
   "classification": {
@@ -3792,11 +3807,12 @@
     "aeatMaster": "È un articolo master: corrisponde al carico consolidato, non a questa merce.",
     "aeatDiffers": "Non coincide con la pratica ({{packages}} colli e {{weight}} kg). Non impedisce di generare né di presentare l'H1: verificalo e, se necessario, correggi la pratica o i documenti.",
     "aeatBillOfLading": "Polizza di carico: {{value}}",
-    "aeatLocation": "Ubicazione: {{value}}"
+    "aeatLocation": "Ubicazione: {{value}}",
+    "verifyHelp": "Consulta la dichiarazione sommaria presso l'AEAT con il certificato dell'azienda e compila colli, chili, saldo e ubicazione. Non serve entrare nella sede dell'AEAT."
   },
   "aeatSumariaLinks": {
-    "title": "Cerca la dichiarazione sommaria nella Sede dell'AEAT",
-    "certificateWarning": "Questi link richiedono il tuo certificato digitale: LUCI non può consultarli per te.",
+    "title": "Consultare tu stesso la dichiarazione sommaria sulla sede dell'AEAT",
+    "certificateWarning": "LUCI consulta già la dichiarazione sommaria presso l'AEAT con il certificato dell'azienda: è il pulsante «Consulta l'AEAT» della scheda carico e sommaria, che recupera colli, chili e saldo. Questi link servono per vederla tu sulla sede dell'AEAT, con il tuo certificato digitale, se ti servono più dettagli.",
     "highlighted": "Consigliato per questa spedizione",
     "g4Title": "G4: dichiarazioni sommarie aeree e terrestri",
     "g4Description": "Per le dichiarazioni sommarie G4, sia per trasporto aereo che terrestre.",

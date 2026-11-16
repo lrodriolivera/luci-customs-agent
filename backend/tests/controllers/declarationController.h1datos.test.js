@@ -74,7 +74,7 @@ describe('requisitos del H1', () => {
     expect(res.body.data).toEqual({
       servicio: 'cau', listo: false, faltan: error.faltan,
       datos: {
-        invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'OSRE',
+        invoiceNumber: '', exporterPostalCode: '', vehicleNationality: '', dispatchAuthorizationScope: 'global', paymentMethod: '',
         incoterm: '', gastosASumar: null,
         freightAmount: null, freightCurrency: 'EUR', insuranceAmount: null, insuranceCurrency: 'EUR',
         transporteTrasLaEntrada: null, freightAfterEntryAmount: null, freightAfterEntryCurrency: 'EUR',
@@ -149,6 +149,26 @@ describe('datos del H1 en el expediente', () => {
     expect(res.status).toBe(400);
     expect(res.body.error).toContain('dos letras');
     expect(res.body.error).toContain('autorización de despacho');
+    expect(exp.save).not.toHaveBeenCalled();
+  });
+});
+
+describe('forma de pago del expediente', () => {
+  test('guarda A o R en el expediente; vacío vuelve a la de Ajustes', async () => {
+    const exp = expediente();
+    mockExpedition.findById.mockResolvedValue(exp);
+    const res = await request(app()).put('/api/declarations/e1/h1/datos').send({ paymentMethod: 'R' });
+    expect(res.status).toBe(200);
+    expect(exp.declaration.paymentMethod).toBe('R');
+    expect(res.body.data.paymentMethod).toBe('R');
+  });
+
+  test('rechaza una forma de pago que no es A ni R', async () => {
+    const exp = expediente();
+    mockExpedition.findById.mockResolvedValue(exp);
+    const res = await request(app()).put('/api/declarations/e1/h1/datos').send({ paymentMethod: 'Z' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('Forma de pago no válida');
     expect(exp.save).not.toHaveBeenCalled();
   });
 });

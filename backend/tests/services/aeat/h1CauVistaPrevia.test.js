@@ -86,7 +86,7 @@ describe('vista previa del H1 por el servicio CAU', () => {
 
   test('con pago previo al levante no se declara garantía; con pago aplazado, la del mensaje', () => {
     expect(vista.guarantee).toBeNull();
-    expect(vista.dutyTaxFee).toEqual(VISTA.dutyTaxFee);
+    expect(vista.dutyTaxFee).toEqual({ ...VISTA.dutyTaxFee, paymentMethodDescription: 'Pago previo al levante (modelo 031)' });
 
     const aplazado = aplicarCauAVistaPrevia(VISTA, {
       ...CAU, garantias: [{ tipo: '1', referencias: [{ grn: '26ESAGL2800000054' }] }],
@@ -94,7 +94,7 @@ describe('vista previa del H1 por el servicio CAU', () => {
     });
     expect(aplazado.guarantee).toEqual({ guaranteeType: '1', grn: '26ESAGL2800000054' });
     expect(aplazado.dutyTaxFee).toMatchObject({ paymentMethod: 'R', totalDuty: 3161.84 });
-    expect(aplazado.dutyTaxFee.paymentMethodDescription).toBeUndefined();
+    expect(aplazado.dutyTaxFee.paymentMethodDescription).toBe('Pago aplazado con garantía del agente');
   });
 
   test('el LRN no se muestra hasta presentar: lo asigna LUCI con cada mensaje', () => {

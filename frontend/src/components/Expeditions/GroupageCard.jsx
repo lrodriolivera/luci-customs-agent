@@ -141,6 +141,9 @@ export default function GroupageCard({ expedition, isSaving, onSave, isVerifying
           </>
         )}
 
+        {onVerify && savedSummary?.number && (
+          <p className="text-xs text-gray-500 text-right">{t('groupage.verifyHelp')}</p>
+        )}
         <div className="flex justify-end gap-2">
           {onVerify && savedSummary?.number && (
             <button type="button" onClick={onVerify} disabled={isVerifying || isSaving} className="btn-secondary">

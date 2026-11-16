@@ -145,7 +145,9 @@ function partes(expedition, declarante, faltan) {
 /** Garantia segun el medio de pago: solo es obligatoria con pago aplazado (C0616). */
 function garantiasDe(pago, faltan) {
   const { medio, grn, tipoGarantia = '1' } = pago;
-  if (!PAGOS_CON_GARANTIA.has(medio) && !grn) return [];
+  // Con pago previo al levante (A) no se declara garantia aunque la agencia
+  // tenga una configurada: se mostraba «A» junto a una garantia (UAT 16/Nov/2026).
+  if (!PAGOS_CON_GARANTIA.has(medio)) return [];
   if (GARANTIAS_CON_GRN.has(String(tipoGarantia)) && !texto(grn)) {
     faltan.push(`número de garantía (GRN): es obligatorio con el medio de pago «${medio}»`);
     return [];
@@ -338,7 +340,9 @@ function expeditionToH1CauData(expedition, { declarante, cambio, cambiosGastos =
 
   // Autorizacion de despacho (Separata 19, ESR0009): sin representacion o con
   // autorizacion global no se declara nada; por operacion, documento 1005.
-  const ambito = texto(expedition.representative?.dispatchAuthorizationScope) || 'OSRE';
+  // La mas habitual es la global registrada en la AEAT (UAT 16/Nov/2026): es
+  // la que se asume si el expediente no dice otra.
+  const ambito = texto(expedition.representative?.dispatchAuthorizationScope) || 'global';
   const referenciaAutorizacion = personas.forma === '1' ? null : AMBITOS_AUTORIZACION[ambito];
   if (personas.forma !== '1' && !(ambito in AMBITOS_AUTORIZACION)) faltan.push('tipo de autorización de despacho (global, OCRE u OSRE)');
 

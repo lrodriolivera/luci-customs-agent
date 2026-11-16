@@ -28,6 +28,14 @@ const OPERACION_REGISTRADA = {
   96: 'Declaración levantada'
 };
 
+// Forma de pago del H1 (methodOfPayment). Nombres que usan las agentes
+// (UAT 16/Nov/2026): A no es «pago al contado» sino pago previo al levante,
+// que se hace con el modelo 031; R es el pago aplazado con la garantia del agente.
+const MEDIOS_DE_PAGO = {
+  A: 'Pago previo al levante (modelo 031)',
+  R: 'Pago aplazado con garantía del agente'
+};
+
 const ESTADO_DESPACHO = {
   P: 'Pendiente de despacho',
   D: 'Despachado sin levante',
@@ -63,4 +71,5 @@ const ADUANA_RESPONSABLE = {
 
 const describir = (tabla, codigo) => (codigo === null || codigo === undefined ? null : tabla[codigo] || null);
 
-module.exports = { OPERACION_REGISTRADA, ESTADO_DESPACHO, ESTADO_CONTABLE, PENDENCIAS, ADUANA_RESPONSABLE, describir };
+module.exports = {
+  MEDIOS_DE_PAGO, OPERACION_REGISTRADA, ESTADO_DESPACHO, ESTADO_CONTABLE, PENDENCIAS, ADUANA_RESPONSABLE, describir };

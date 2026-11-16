@@ -659,6 +659,21 @@
       "saved": "Accise enregistrée",
       "removed": "Accise retirée",
       "error": "Impossible d'enregistrer l'accise"
+    },
+    "parties": {
+      "title": "Parties du dossier",
+      "supplier": "Exportateur (fournisseur)",
+      "address": "Adresse",
+      "city": "Ville",
+      "postalCode": "Code postal",
+      "country": "Pays (2 lettres)",
+      "email": "E-mail",
+      "eoriAuto": "Vide : ES + NIF",
+      "required": "L'importateur doit avoir une raison sociale et un NIF.",
+      "countryInvalid": "Le pays de l'exportateur est un code à deux lettres (ex. CN).",
+      "regenerateHint": "Si vous avez déjà généré le H1, générez-le à nouveau pour qu'il reprenne ces données.",
+      "saved": "Données des parties enregistrées",
+      "error": "Impossible d'enregistrer les données des parties"
     }
   },
   "classification": {
@@ -3792,11 +3807,12 @@
     "aeatMaster": "C'est un article maître : il correspond au chargement groupé, pas à cette marchandise.",
     "aeatDiffers": "Ne correspond pas au dossier ({{packages}} colis et {{weight}} kg). Cela n'empêche pas de générer ni de déposer le H1 : vérifiez-le et, si nécessaire, corrigez le dossier ou les documents.",
     "aeatBillOfLading": "Connaissement : {{value}}",
-    "aeatLocation": "Emplacement : {{value}}"
+    "aeatLocation": "Emplacement : {{value}}",
+    "verifyHelp": "Consulte la déclaration sommaire auprès de l'AEAT avec le certificat de l'entreprise et remplit colis, poids, solde et emplacement. Inutile de se connecter au site de l'AEAT."
   },
   "aeatSumariaLinks": {
-    "title": "Rechercher la déclaration sommaire sur le portail de l'AEAT",
-    "certificateWarning": "Ces liens nécessitent votre certificat numérique : LUCI ne peut pas les consulter à votre place.",
+    "title": "Consulter vous-même la déclaration sommaire sur le site de l'AEAT",
+    "certificateWarning": "LUCI consulte déjà la déclaration sommaire auprès de l'AEAT avec le certificat de l'entreprise : c'est le bouton « Consulter l'AEAT » de la carte chargement et sommaire, qui récupère colis, poids et solde. Ces liens servent à la voir vous-même sur le site de l'AEAT, avec votre propre certificat, si vous avez besoin de plus de détails.",
     "highlighted": "Recommandé pour cette expédition",
     "g4Title": "G4 : déclarations sommaires aériennes et terrestres",
     "g4Description": "Pour les déclarations sommaires G4, transport aérien et terrestre.",

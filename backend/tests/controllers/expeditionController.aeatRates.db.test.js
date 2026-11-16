@@ -267,3 +267,27 @@ describe('setImpuestoEspecial', () => {
   });
 });
 
+describe('update: editar el importador (UAT 16/Nov/2026)', () => {
+  const editar = async (user, exp, client) => {
+    const res = crearRes();
+    await ctrl.update({ params: { id: String(exp._id) }, body: { client }, user, tenantId: user.tenantId }, res);
+    return res;
+  };
+
+  test('NIF en mayúsculas y EORI derivado del NIF si se deja vacío', async () => {
+    const user = usuario();
+    const exp = await crearExpediente(user);
+    const res = await editar(user, exp, { companyName: ' Importador de pruebas ', nif: '89890010f', eori: '' });
+    expect(res.statusCode).toBe(200);
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.client).toMatchObject({ companyName: 'Importador de pruebas', nif: '89890010F', eori: 'ES89890010F' });
+  });
+
+  test('sin razón social o NIF responde 400 y no guarda', async () => {
+    const user = usuario();
+    const exp = await crearExpediente(user);
+    expect((await editar(user, exp, { companyName: 'X', nif: ' ' })).statusCode).toBe(400);
+    expect((await Expedition.findById(exp._id)).client.nif).toBe('B99999999');
+  });
+});
+
