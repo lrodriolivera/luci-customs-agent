@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><CC170CV1Sal xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC170CV1Sal.xsd" Id="20261116082404236005">
+ <messageSender>NTA.ES</messageSender>
+ <messageRecipient>B22477020</messageRecipient>
+ <preparationDateAndTime>2026-11-16T08:24:17</preparationDateAndTime>
+ <messageIdentification>20261116082404236005</messageIdentification>
+ <messageType>RE170C</messageType>
+ <correlationIdentifier>LUCIN2611160724040001234</correlationIdentifier>
+ <ControlRespuesta>
+  <tipoRespuesta>OK</tipoRespuesta>
+  <codigoRespuesta>B</codigoRespuesta>
+ </ControlRespuesta>
+ <DatosRespuestaCorrecta>
+  <LRN>LRNMWIXGE5GQA</LRN>
+  <MRN>26ES002801501441J7</MRN>
+  <fechaAdmision>2026-11-16</fechaAdmision>
+  <circuitoExpedicion>N</circuitoExpedicion>
+  <CSVDeclaracionElectronica>SEWXZZ64MMPQAJS9</CSVDeclaracionElectronica>
+  <estado>PD</estado>
+ </DatosRespuestaCorrecta>
+</CC170CV1Sal>
+</env:Body></env:Envelope>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="51.8.0">
+	<!--================================================================================-->
+	<!--===== IE015: E_DEC_DAT                                                          -->
+	<!--===== DECLARATION DATA                                                          -->
+	<!--===== NCTS P5 Phase Definition                                                  -->
+	<!--===== XSD Version 51.8.0                                                        -->
+	<!--================================================================================-->
+	<!--================================================================================-->
+	<!--===== Includes                                                                  -->
+	<!--================================================================================-->
+	<xs:include schemaLocation="ES_ctypes_v515.xsd"/>
+	<!--================================================================================-->
+	<!--===== Root Element                                                              -->
+	<!--================================================================================-->
+	<xs:element name="CC015C" type="CC015CType"/>
+	<!--================================================================================-->
+	<!--===== Root Element Content                                                      -->
+	<!--================================================================================-->
+	<xs:complexType name="CC015CType">
+		<xs:sequence>
+			<xs:group ref="MESSAGE"/>
+			<xs:element name="TransitOperation" type="TransitOperationType06"/>
+			<xs:element name="Authorisation" type="AuthorisationType03" minOccurs="0" maxOccurs="9"/>
+			<xs:element name="CustomsOfficeOfDeparture" type="CustomsOfficeOfDepartureType03"/>
+			<xs:element name="CustomsOfficeOfDestinationDeclared" type="CustomsOfficeOfDestinationDeclaredType01"/>
+			<xs:element name="CustomsOfficeOfTransitDeclared" type="CustomsOfficeOfTransitDeclaredType03" minOccurs="0" maxOccurs="9"/>
+			<xs:element name="CustomsOfficeOfExitForTransitDeclared" type="CustomsOfficeOfExitForTransitDeclaredType02" minOccurs="0" maxOccurs="9"/>
+			<xs:element name="HolderOfTheTransitProcedure" type="HolderOfTheTransitProcedureType14"/>
+			<xs:element name="Representative" type="RepresentativeType05" minOccurs="0"/>
+			<xs:element name="Guarantee" type="GuaranteeType02" maxOccurs="9"/>
+			<xs:element name="Consignment" type="ConsignmentType20"/>
+		</xs:sequence>
+		<xs:attribute name="PhaseID" type="phaseIDtype"/>
+	</xs:complexType>
+</xs:schema>
