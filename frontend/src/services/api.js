@@ -873,7 +873,6 @@ export const aeatRealAPI = {
   // Declarations
   declarations: {
     submitH1: (data) => api.post('/api/aeat-real/declarations/h1/submit', data),
-    submitH7: (data) => api.post('/api/aeat-real/declarations/h7/submit', data),
     submitAES: (data) => api.post('/api/aeat-real/declarations/aes/submit', data),
     submitNCTS: (data) => api.post('/api/aeat-real/declarations/ncts/submit', data),
     submitICS2: (data) => api.post('/api/aeat-real/declarations/ics2/submit', data),

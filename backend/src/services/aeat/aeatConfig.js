@@ -18,39 +18,13 @@ const ENVIRONMENTS = {
     isReal: true,
     baseUrl: 'https://prewww10.aeat.es',
     altUrls: ['https://prewww1.aeat.es', 'https://prewww2.aeat.es'],
-    description: 'Entorno de pruebas con certificado - NO requiere registro de IP',
-    paths: {
-      // Aduanas - Declaraciones
-      h1Submit: '/wlpl/ADUA-JDIT/ws/PresDecAduana',
-      h1Query: '/wlpl/ADUA-JDIT/ws/ConsultaDeclarac',
-      aesSubmit: '/wlpl/ADUA-JDIT/ws/PresDecExportacion',
-      cancel: '/wlpl/ADUA-JDIT/ws/AnulacionDeclara',
-      // H7 Bajo Valor
-      h7Submit: '/wlpl/ADUA-JDIT/ws/BajoValorH7',
-      // ENS/ICS2
-      ensSubmit: '/wlpl/ADUA-JDIT/ws/ENS_ICS2',
-      // NCTS
-      nctsSubmit: '/wlpl/ADUA-JDIT/ws/TransitoNCTS'
-    }
+    description: 'Entorno de pruebas con certificado - NO requiere registro de IP'
   },
   production: {
     name: 'Produccion AEAT',
     isReal: true,
     baseUrl: 'https://www2.agenciatributaria.gob.es',
-    description: 'Entorno de produccion - Solo certificado electronico',
-    paths: {
-      // Aduanas - Declaraciones
-      h1Submit: '/wlpl/ADUA-JDIT/ws/PresDecAduana',
-      h1Query: '/wlpl/ADUA-JDIT/ws/ConsultaDeclarac',
-      aesSubmit: '/wlpl/ADUA-JDIT/ws/PresDecExportacion',
-      cancel: '/wlpl/ADUA-JDIT/ws/AnulacionDeclara',
-      // H7 Bajo Valor
-      h7Submit: '/wlpl/ADUA-JDIT/ws/BajoValorH7',
-      // ENS/ICS2
-      ensSubmit: '/wlpl/ADUA-JDIT/ws/ENS_ICS2',
-      // NCTS
-      nctsSubmit: '/wlpl/ADUA-JDIT/ws/TransitoNCTS'
-    }
+    description: 'Entorno de produccion - Solo certificado electronico'
   }
 };
 

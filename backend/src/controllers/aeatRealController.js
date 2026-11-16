@@ -496,80 +496,6 @@ const submitH1Declaration = async (req, res) => {
 };
 
 /**
- * Enviar declaración H7 a AEAT
- * POST /api/aeat-real/declarations/h7/submit
- */
-const submitH7Declaration = async (req, res) => {
-  try {
-    const { expeditionId, certificateAlias, password, useSandbox } = req.body;
-
-    if (!expeditionId || !certificateAlias || !password) {
-      return res.status(400).json({
-        success: false,
-        error: 'Se requiere ID de expediente, certificado y contraseña'
-      });
-    }
-
-    const expedition = await Expedition.findById(expeditionId).populate('documents');
-    if (!ensureSameTenant(expedition, req, res, { resource: 'Expediente' })) return;
-
-    const certificateId = certificateService.getCertificateIdByAlias(certificateAlias, ambitoTenant(req.user));
-    if (!certificateId) {
-      return res.status(404).json({
-        success: false,
-        error: 'Certificado no encontrado para el alias indicado'
-      });
-    }
-
-    // Enviar a AEAT
-    const result = await aeatRealService.submitH7Declaration(
-      expedition.declaration.xmlContent,
-      certificateId,
-      password,
-      { useSandbox: useSandbox !== false }
-    );
-
-    // Actualizar expediente
-    expedition.declaration.status = result.success ? 'submitted' : 'submission_error';
-    expedition.declaration.mrn = result.mrn;
-    expedition.declaration.aeatResponse = result;
-
-    expedition.timeline.push({
-      action: 'h7_submitted_aeat',
-      description: result.success
-        ? `H7 enviado a AEAT. MRN: ${result.mrn}`
-        : `Error enviando H7: ${result.error}`,
-      userId: req.user?._id,
-      performedBy: req.user?.name || 'Sistema',
-      metadata: { mrn: result.mrn }
-    });
-
-    await expedition.save();
-
-    // Iniciar monitoreo
-    if (result.success && result.mrn) {
-      await aeatStatusMonitorService.trackDeclaration(result.mrn, {
-        expeditionId: expedition._id,
-        declarationType: 'H7',
-        tenantId: req.user?.tenantId
-      });
-    }
-
-    res.json({
-      success: true,
-      data: result
-    });
-
-  } catch (error) {
-    logger.error('Error enviando H7 a AEAT:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Error enviando H7'
-    });
-  }
-};
-
-/**
  * Enviar declaración AES (exportación) a AEAT
  * POST /api/aeat-real/declarations/aes/submit
  */
@@ -1349,7 +1275,6 @@ module.exports = {
 
   // Declaraciones
   submitH1Declaration,
-  submitH7Declaration,
   submitAESDeclaration,
   submitNCTSDeclaration,
   submitICS2Declaration,

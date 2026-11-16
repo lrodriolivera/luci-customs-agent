@@ -17,7 +17,6 @@ const NL_CODES = require('../../src/services/customs/netherlands/nlCodes');
 const UCCDataMapper = require('../../src/services/customs/common/uccDataMapper');
 const NetherlandsCustomsService = require('../../src/services/customs/netherlands/netherlandsCustomsService');
 const CustomsServiceFactory = require('../../src/services/customs/customsServiceFactory');
-const SpainCustomsService = require('../../src/services/customs/spain/spainCustomsService');
 
 // Helper: valid DECO data
 function validDECOData() {
@@ -720,9 +719,8 @@ describe('CustomsServiceFactory', () => {
     expect(service.getCountryCode()).toBe('NL');
   });
 
-  test('should return SpainCustomsService for ES', () => {
-    const service = CustomsServiceFactory.getService('ES');
-    expect(service).toBeInstanceOf(SpainCustomsService);
+  test('ES no se sirve por la factoría: remite a aeatSubmitService', () => {
+    expect(() => CustomsServiceFactory.getService('ES')).toThrow('aeatSubmitService');
   });
 
   test('should throw for unsupported country', () => {
@@ -744,29 +742,3 @@ describe('CustomsServiceFactory', () => {
   });
 });
 
-describe('SpainCustomsService delegation', () => {
-  beforeEach(() => {
-    CustomsServiceFactory.clearCache();
-  });
-
-  test('should support all declaration types', () => {
-    const service = CustomsServiceFactory.getService('ES');
-    const types = service.getSupportedDeclarationTypes();
-    expect(types).toContain('H1');
-    expect(types).toContain('H7');
-    expect(types).toContain('AES');
-    expect(types).toContain('ENS');
-    expect(types).toContain('NCTS');
-  });
-
-  test('should throw on unsupported declaration type', async () => {
-    const service = CustomsServiceFactory.getService('ES');
-    await expect(service.submitDeclaration({}, 'INVALID'))
-      .rejects.toThrow('Unsupported declaration type');
-  });
-
-  test('should have correct country code', () => {
-    const service = CustomsServiceFactory.getService('ES');
-    expect(service.getCountryCode()).toBe('ES');
-  });
-});
