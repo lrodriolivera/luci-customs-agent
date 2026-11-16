@@ -676,7 +676,21 @@
       "error": "No s'han pogut desar les dades de les parts"
     },
     "plasticKg": "Plàstic no reutilitzable (kg)",
-    "plasticHelp": "Impost sobre envasos de plàstic no reutilitzables: 0,45 €/kg (1PL a la liquidació). Sol venir a la factura o a la declaració de l'importador. 0 si no n'hi ha."
+    "plasticHelp": "Impost sobre envasos de plàstic no reutilitzables: 0,45 €/kg (1PL a la liquidació). Sol venir a la factura o a la declaració de l'importador. 0 si no n'hi ha.",
+    "plasticExemption": "Exempció de l'impost al plàstic",
+    "plasticExemptionNone": "Sense exempció",
+    "plasticExemptions": {
+      "1P1": "Art. 75 a) per a medicaments o productes sanitaris (acreditar destinació)",
+      "1P2": "Art. 75 b) envasos de medicaments o productes sanitaris",
+      "1P3": "Art. 75 c) rotlles per a ensitjat",
+      "1P4": "Art. 75 f) fins a 5 kg al mes",
+      "1P5": "Art. 75 g) no destinats a envasos (acreditar destinació)"
+    },
+    "plasticRecycledKg": "Plàstic reciclat (kg)",
+    "plasticCertificate": "Núm. del certificat de plàstic reciclat",
+    "plasticRecycledHelp": "El plàstic reciclat no paga: es declara amb el certificat 1135 de la planta recicladora o d'una entitat acreditada.",
+    "plasticCertificateRequired": "Indica el número del certificat de plàstic reciclat",
+    "plasticExemptionNeedsKg": "L'exempció es declara amb els kg de plàstic no reutilitzable (amb quota zero)"
   },
   "classification": {
     "title": "Classificació TARIC",

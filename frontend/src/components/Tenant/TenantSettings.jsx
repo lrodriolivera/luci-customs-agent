@@ -25,6 +25,7 @@ import { useAuth } from '../../context/AuthContext';
 import { esAdministradorDelTenant } from '../../utils/roles';
 import { PasswordModal } from '../Admin/AdminPanel';
 import { PAISES_ADUANEROS, codigosHabilitados, eoriPorPais } from '../../constants/paisesAduaneros';
+import { ADUANAS_DESPACHO } from '../../constants/aduanasDespacho';
 
 /**
  * Roles de usuario de LUCI (User.role, ver backend/src/constants/roles.js
@@ -96,7 +97,8 @@ const TenantSettings = () => {
           companyName: tenantRes.data.data?.name || tenantRes.data.name || ''
         },
         defaults: {
-          declarationOffice: 'ES004101',
+          // Lista oficial de aduanas: ES002801 (Madrid aeropuerto), la de LUCI por defecto.
+          declarationOffice: 'ES002801',
           currency: 'EUR',
           language: 'es',
           timezone: 'Europe/Madrid',
@@ -304,13 +306,15 @@ const TenantSettings = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t('settings.defaultCustoms')}
                 </label>
-                <input
-                  type="text"
+                <select
                   value={settings?.defaults?.declarationOffice || ''}
                   onChange={(e) => updateSettings('defaults', 'declarationOffice', e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  placeholder="Ej: ES004101"
-                />
+                >
+                  {ADUANAS_DESPACHO.map((a) => (
+                    <option key={a.code} value={a.code}>{a.code} · {a.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div>

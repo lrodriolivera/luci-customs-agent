@@ -270,10 +270,11 @@ describe('<TenantSettings />', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /settings\.defaults/i }))
 
-    const officeInput = screen.getByDisplayValue('ES004101')
-    fireEvent.change(officeInput, { target: { value: 'ES004102' } })
+    // Desplegable con la lista oficial; por defecto ES002801 (Madrid aeropuerto).
+    const officeSelect = screen.getByDisplayValue('ES002801 · Madrid - Aeropuerto')
+    fireEvent.change(officeSelect, { target: { value: 'ES001131' } })
 
-    expect(screen.getByDisplayValue('ES004102')).toBeInTheDocument()
+    expect(officeSelect).toHaveValue('ES001131')
   })
 
   test('tab defaults permite cambiar currency', async () => {
