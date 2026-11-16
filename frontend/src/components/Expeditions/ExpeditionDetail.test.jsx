@@ -1033,6 +1033,26 @@ describe('<ExpeditionDetail /> — edición de mercancía y documentos por el ag
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith('groupage.saved'))
   })
 
+  // UAT 16/Nov/2026: guardar la sumaria reenviaba el transporte de cuando se abrio
+  // la pagina y borraba la nacionalidad del buque guardada despues en otra tarjeta.
+  test('guardar la sumaria parte del expediente actual: no borra lo guardado en otra tarjeta', async () => {
+    const alAbrir = { ...mockExpedition, transportMode: 'SEA', transport: { carrier: 'MSC', documentNumber: 'BL-1' } }
+    const ahora = { ...alAbrir, transport: { ...alAbrir.transport, vehicleNationality: 'HK' } }
+    expeditionsAPI.get.mockResolvedValue({ data: { data: alAbrir } })
+    expeditionsAPI.update.mockResolvedValue({ data: { data: ahora } })
+    renderExpeditionDetail()
+    await waitFor(() => expect(screen.getByText('groupage.title')).toBeInTheDocument())
+    // Con la pagina ya abierta, otra tarjeta guarda la nacionalidad en el servidor.
+    expeditionsAPI.get.mockResolvedValue({ data: { data: ahora } })
+
+    fireEvent.change(screen.getByLabelText('groupage.loadType'), { target: { value: 'FCL' } })
+    fireEvent.change(screen.getByLabelText('groupage.summaryNumber'), { target: { value: '28016000001' } })
+    fireEvent.click(within(screen.getByText('groupage.title').closest('.card')).getByText('common.save'))
+
+    await waitFor(() => expect(expeditionsAPI.update).toHaveBeenCalled())
+    expect(expeditionsAPI.update.mock.calls[0][1].transport).toMatchObject({ vehicleNationality: 'HK', loadType: 'FCL', carrier: 'MSC' })
+  })
+
   test('consultar la sumaria en la AEAT muestra el motivo del bloqueo y recarga el expediente', async () => {
     const lcl = {
       ...mockExpedition,
