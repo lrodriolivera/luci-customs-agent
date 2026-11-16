@@ -837,14 +837,23 @@ export default function ClassificationTool() {
                           <span className="font-bold text-blue-800">{taricLookupResult.dutyRate}</span>
                         </div>
                       )}
+                      {/* duties trae tipos (numeros) y su procedencia (origen, un
+                          objeto): pintar el objeto como texto rompia la pagina
+                          al buscar cualquier codigo del catalogo oficial
+                          (UAT 16/Nov/2026, 852491). */}
                       {taricLookupResult.duties && (
                         <div className="space-y-2">
-                          {Object.entries(taricLookupResult.duties).map(([key, value]) => (
-                            <div key={key} className="flex justify-between text-sm">
-                              <span className="text-gray-600">{key}:</span>
-                              <span className="font-medium">{value}</span>
-                            </div>
-                          ))}
+                          {Object.entries(taricLookupResult.duties)
+                            .filter(([, value]) => typeof value === 'number' || typeof value === 'string')
+                            .map(([key, value]) => (
+                              <div key={key} className="flex justify-between text-sm">
+                                <span className="text-gray-600">{key === 'thirdCountry' ? t('classification.thirdCountryDuty') : `${key}:`}</span>
+                                <span className="font-medium">{typeof value === 'number' ? `${value} %` : value}</span>
+                              </div>
+                            ))}
+                          {taricLookupResult.duties.origen?.evidencia && (
+                            <p className="text-xs text-gray-500">{taricLookupResult.duties.origen.evidencia}</p>
+                          )}
                         </div>
                       )}
                       {taricLookupResult.measures?.length > 0 && (
@@ -861,10 +870,10 @@ export default function ClassificationTool() {
                   )}
 
                   {/* Additional Info */}
-                  {taricLookupResult.notes && (
+                  {(Array.isArray(taricLookupResult.notes) ? taricLookupResult.notes.length > 0 : taricLookupResult.notes) && (
                     <div className="card bg-yellow-50 border-yellow-200">
                       <h3 className="font-semibold text-yellow-800 mb-2">{t('classification.notes')}</h3>
-                      <p className="text-sm text-yellow-700">{taricLookupResult.notes}</p>
+                      <p className="text-sm text-yellow-700">{Array.isArray(taricLookupResult.notes) ? taricLookupResult.notes.map((n) => (typeof n === 'string' ? n : n?.text || n?.description || '')).join(' · ') : taricLookupResult.notes}</p>
                     </div>
                   )}
 

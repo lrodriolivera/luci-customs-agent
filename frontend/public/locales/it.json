@@ -841,7 +841,8 @@
       "ratesMatch": "Il dazio e l'IVA della pratica coincidono con quelli dell'AEAT.",
       "useAeat": "Usa i dati dell'AEAT (dazio {{arancel}}%, IVA {{iva}}%)",
       "usePreference": "Usa la preferenza {{medida}} ({{arancel}}%): serve la prova dell'origine"
-    }
+    },
+    "thirdCountryDuty": "Dazio paesi terzi"
   },
   "declarations": {
     "title": "Generatore di Dichiarazioni",

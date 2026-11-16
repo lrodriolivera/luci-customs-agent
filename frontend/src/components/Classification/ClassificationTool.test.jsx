@@ -1887,4 +1887,26 @@ describe('<ClassificationTool />', () => {
     // No debe haber warnings ya que no se enviaron
     expect(screen.queryByText('classification.warnings')).not.toBeInTheDocument()
   })
+
+  test('buscar código: los aranceles con su procedencia se pintan sin romper la página (UAT 16/Nov/2026, 852491)', async () => {
+    classificationAPI.getTaricInfo.mockResolvedValue({
+      data: { success: true, data: {
+        code: '8524910000', found: true, source: 'local_db', description: 'De cristal líquido',
+        duties: { thirdCountry: 0, origen: { fuente: 'taric_oficial', evidencia: '«0.000 %» (heredado de 8524000000). Comision Europea - TARIC (CIRCABC), 2026-11.' } },
+        measures: [], notes: []
+      } }
+    })
+    renderComponent()
+    fireEvent.click(screen.getByRole('button', { name: /classification.lookupCode/i }))
+    await waitFor(() => {
+      fireEvent.change(screen.getByPlaceholderText('classification.codePlaceholder'), { target: { value: '852491' } })
+    })
+    fireEvent.submit(screen.getByText('classification.searchByCode').closest('div').querySelector('form'))
+
+    expect(await screen.findByText('0 %')).toBeInTheDocument()
+    expect(screen.getByText('classification.thirdCountryDuty')).toBeInTheDocument()
+    expect(screen.getByText(/heredado de 8524000000/)).toBeInTheDocument()
+    expect(screen.queryByText('classification.notes')).not.toBeInTheDocument()
+  })
 })
+

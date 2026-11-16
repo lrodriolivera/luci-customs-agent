@@ -841,7 +841,8 @@
       "ratesMatch": "The file's duty and VAT match the AEAT.",
       "useAeat": "Use the AEAT data (duty {{arancel}}%, VAT {{iva}}%)",
       "usePreference": "Use preference {{medida}} ({{arancel}}%): proof of origin required"
-    }
+    },
+    "thirdCountryDuty": "Third-country duty"
   },
   "declarations": {
     "title": "Declaration Generator",

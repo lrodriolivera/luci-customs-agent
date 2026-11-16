@@ -2,6 +2,29 @@ import React from 'react'
 import * as Sentry from '@sentry/react'
 import i18n from '../i18n/i18n'
 
+// Tras un despliegue, una pestana ya abierta pide los ficheros de la version
+// anterior (con otro hash) al abrir una seccion nueva y no existen: el
+// navegador falla al importar el modulo. Se recarga una vez para coger la
+// version nueva (UAT 16/Nov/2026: «cada vez que abres una seccion, Algo salio mal»).
+const ERROR_DE_VERSION = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|is not a valid JavaScript MIME type|Loading chunk [\w-]+ failed|ChunkLoadError/i
+const CLAVE_RECARGA = 'luci-recarga-version'
+const MARGEN_RECARGA_MS = 60 * 1000
+
+export function esErrorDeCargaDeVersion(error) {
+  return ERROR_DE_VERSION.test(`${error?.name || ''} ${error?.message || ''}`)
+}
+
+/** Recarga una vez; si ya se recargo hace menos de un minuto, no (evita bucles). */
+function recargarUnaVez() {
+  try {
+    const ultima = Number(sessionStorage.getItem(CLAVE_RECARGA) || 0)
+    if (Date.now() - ultima < MARGEN_RECARGA_MS) return false
+    sessionStorage.setItem(CLAVE_RECARGA, String(Date.now()))
+  } catch (_) { /* sin sessionStorage se recarga igual */ }
+  window.location.reload()
+  return true
+}
+
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props)
@@ -9,6 +32,9 @@ export default class ErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
+    if (esErrorDeCargaDeVersion(error) && recargarUnaVez()) {
+      return { hasError: false, error: null, recargando: true }
+    }
     return { hasError: true, error }
   }
 
