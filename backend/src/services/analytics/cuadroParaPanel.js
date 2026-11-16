@@ -32,8 +32,10 @@ function _tendencia(actual, anterior) {
  * @param {{ activeExpeditions?: number|null }} [extra] expedientes activos (no dependen del periodo)
  */
 function adaptarCuadro(cuadro, cuadroAnterior, { activeExpeditions = null } = {}) {
-  const { declaraciones, derechos, tiempos, cumplimiento, recaudacion } = cuadro;
+  const { declaraciones, canales, derechos, tiempos, cumplimiento, recaudacion } = cuadro;
   const total = declaraciones?.total;
+  // Sin ningun canal asignado no hay reparto que pintar: null, no ceros.
+  const hayCanales = canales?.conCanalAsignado > 0;
 
   return {
     operations: {
@@ -57,6 +59,9 @@ function adaptarCuadro(cuadro, cuadroAnterior, { activeExpeditions = null } = {}
       errorRate: null,
       onTimeSubmissions: null
     },
+    // «Distribucion por Canal»: porcentajes sobre los que tienen canal, y los recuentos.
+    channels: hayCanales ? canales.porcentajes : null,
+    channelCounts: hayCanales ? canales.canales : null,
     trends: {
       operations: _tendencia(total, cuadroAnterior?.declaraciones?.total),
       financial: _tendencia(derechos?.total, cuadroAnterior?.derechos?.total),

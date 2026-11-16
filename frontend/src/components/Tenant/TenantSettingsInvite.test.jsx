@@ -12,6 +12,12 @@ import api from '../../services/api'
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key) => key })
 }))
+// Usuario autenticado: admin por defecto (las pruebas de rol van en
+// TenantSettingsGeneral.test.jsx y TenantSettingsRoles.test.jsx).
+const usuarioActual = { current: { role: 'admin' } }
+vi.mock('../../context/AuthContext', () => ({
+  useAuth: () => ({ user: usuarioActual.current })
+}))
 vi.mock('./H1PresentationSettings', () => ({ default: () => null }))
 vi.mock('../Admin/AdminPanel', () => ({
   // Mock liviano: solo lo que InviteUserModal/TenantSettings necesitan de PasswordModal.
@@ -40,7 +46,25 @@ async function irAPestanaUsuarios() {
 describe('Invitar usuario (pestaña Roles y Permisos)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    usuarioActual.current = { role: 'admin' }
     api.get.mockResolvedValue(mockTenantData)
+  })
+
+  // El servidor responde 403 a la invitación de quien no es admin/super_admin
+  // (POST /api/auth/admin/invite): no se ofrece el botón.
+  test.each(['supervisor', 'agent', 'viewer'])('un %s no ve «Invitar usuario» ni «Crear rol personalizado»', async (role) => {
+    usuarioActual.current = { role }
+    await irAPestanaUsuarios()
+
+    expect(screen.queryByText('settings.inviteUser')).not.toBeInTheDocument()
+    expect(screen.queryByText('settings.createCustomRole')).not.toBeInTheDocument()
+  })
+
+  test('un super_admin sí ve «Invitar usuario»', async () => {
+    usuarioActual.current = { role: 'super_admin' }
+    await irAPestanaUsuarios()
+
+    expect(screen.getByText('settings.inviteUser')).toBeInTheDocument()
   })
 
   test('el botón abre el formulario con correo, nombre y rol', async () => {

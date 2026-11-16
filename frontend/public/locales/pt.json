@@ -1703,7 +1703,14 @@
     "integrations": "Integracoes",
     "generalInfo": "Informacao General",
     "notificationPrefs": "Preferencias de Notificacoes",
-    "securityConfig": "Configuracao de Seguranca"
+    "securityConfig": "Configuracao de Seguranca",
+    "generalReadOnly": "Apenas um administrador da organização pode alterar estes dados.",
+    "nifReadOnly": "O NIF não se altera nas Definições: contacte o suporte.",
+    "manageInCustoms": "Gere-se em Definições › Alfândegas",
+    "usersCount_one": "{{count}} utilizador",
+    "usersCount_other": "{{count}} utilizadores",
+    "usersCountUnavailable": "Não foi possível obter o número de utilizadores por função.",
+    "usersCount": "{{count}} utilizadores"
   },
   "portal": {
     "welcome": "Bem-vindo,",

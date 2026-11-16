@@ -26,6 +26,8 @@ import {
   EyeSlashIcon
 } from '@heroicons/react/24/outline'
 import api from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
+import { esAdministradorDelTenant } from '../../utils/roles'
 
 // Misma politica que el servidor (backend/src/utils/passwordPolicy.js):
 // 10-128 caracteres, con al menos una letra y un numero.
@@ -71,6 +73,10 @@ const actionIcons = {
 }
 
 export default function AdminPanel() {
+  // Alta, edicion, restablecer y borrado de usuarios: solo admin/super_admin.
+  // El servidor responde 403 a los demas; aqui solo se evita ofrecerlo.
+  const { user: usuarioActual } = useAuth()
+  const puedeGestionarUsuarios = esAdministradorDelTenant(usuarioActual)
   const { t } = useTranslation()
   const { confirm, dialogProps } = useConfirm()
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -352,13 +358,15 @@ export default function AdminPanel() {
             <option value="active">{t('admin.activeStatus')}</option>
             <option value="inactive">{t('admin.inactiveStatus')}</option>
           </select>
-          <button
-            onClick={() => { setEditingUser(null); setShowUserModal(true) }}
-            className="flex items-center gap-2 px-4 py-2 bg-luci text-white rounded-lg hover:bg-luci-dark"
-          >
-            <UserPlusIcon className="w-5 h-5" />
-            {t('admin.newUser')}
-          </button>
+          {puedeGestionarUsuarios && (
+            <button
+              onClick={() => { setEditingUser(null); setShowUserModal(true) }}
+              className="flex items-center gap-2 px-4 py-2 bg-luci text-white rounded-lg hover:bg-luci-dark"
+            >
+              <UserPlusIcon className="w-5 h-5" />
+              {t('admin.newUser')}
+            </button>
+          )}
         </div>
       </div>
 
@@ -408,29 +416,31 @@ export default function AdminPanel() {
                   {user.lastLogin ? new Date(user.lastLogin).toLocaleString('es-ES') : t('admin.never')}
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => { setEditingUser(user); setShowUserModal(true) }}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
-                      title="Editar"
-                    >
-                      <PencilIcon className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleResetPassword(user.id, user.email)}
-                      className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg"
-                      title="Restablecer contraseña"
-                    >
-                      <KeyIcon className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteUser(user.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                      title="Eliminar"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {puedeGestionarUsuarios && (
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => { setEditingUser(user); setShowUserModal(true) }}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                        title="Editar"
+                      >
+                        <PencilIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleResetPassword(user.id, user.email)}
+                        className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg"
+                        title="Restablecer contraseña"
+                      >
+                        <KeyIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                        title="Eliminar"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
