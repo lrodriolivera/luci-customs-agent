@@ -277,6 +277,20 @@ const INCOTERMS = ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP'
 const TIPO_TRANSPORTE = { bill_of_lading: 'BL', air_waybill: 'AWB', cmr: 'CMR' };
 const MODOS_MARITIMOS = ['sea', 'maritime'];
 
+// Unidad de la cantidad con los mismos codigos que el alta (PCS, KG, MTR, LTR):
+// PCE/PCS/«pieces» son piezas; KG/KGM/KGS, kilos. Otra unidad se deja tal cual.
+const UNIDADES_EXPEDIENTE = {
+  PCE: 'PCS', PCS: 'PCS', PC: 'PCS', PCES: 'PCS', PIECE: 'PCS', PIECES: 'PCS', UNIT: 'PCS', UNITS: 'PCS', UN: 'PCS', U: 'PCS',
+  UD: 'PCS', UDS: 'PCS', UNIDAD: 'PCS', UNIDADES: 'PCS', PIEZA: 'PCS', PIEZAS: 'PCS', NAR: 'PCS',
+  KG: 'KG', KGM: 'KG', KGS: 'KG', KILO: 'KG', KILOS: 'KG',
+  M: 'MTR', MTR: 'MTR', L: 'LTR', LTR: 'LTR'
+};
+const unidadDelExpediente = (unidad) => {
+  const clave = (texto(unidad) || '').toUpperCase().replace(/[^A-Z]/g, '');
+  if (!clave) return null;
+  return UNIDADES_EXPEDIENTE[clave] || clave;
+};
+
 const iguales = (a, b) => {
   if (a === null || a === undefined || a === '') return b === null || b === undefined || b === '';
   if (typeof a === 'number' || typeof b === 'number') return Number(a) === Number(b);
@@ -334,6 +348,12 @@ function proponerCambios(expedition, datos, tipoDocumento) {
     proponer(`goods.${i}.netWeight`, 'partida', 'netWeight', good.netWeight, fuente.pesoNetoKg, n);
     proponer(`goods.${i}.invoiceValue`, 'partida', 'invoiceValue', good.invoiceValue, fuente.importe, n);
     if (fuente.importe) proponer(`goods.${i}.currency`, 'partida', 'currency', good.currency, datos.factura.moneda, n);
+    // Cantidad y su unidad (PCE, PCS, KG...): solo cuando el documento da unidades
+    // de mercancia; si no, la partida se quedaba en «KG» por defecto (UAT 16/Nov).
+    if (fuente.cantidad !== null && fuente.cantidad !== undefined) {
+      proponer(`goods.${i}.quantity`, 'partida', 'quantity', good.quantity, fuente.cantidad, n);
+      proponer(`goods.${i}.unit`, 'partida', 'unit', good.unit, unidadDelExpediente(fuente.unidad), n);
+    }
   });
 
   const transport = expedition.transport || {};
@@ -362,6 +382,8 @@ function proponerCambios(expedition, datos, tipoDocumento) {
     proponer('incoterm.code', 'condiciones', 'incotermCode', incoterm.code, datos.factura.incoterm);
   }
   proponer('incoterm.place', 'condiciones', 'incotermPlace', incoterm.place, datos.factura.lugarIncoterm);
+  // Numero de factura: lo pide la tarjeta «Datos del H1» (casilla N380 del H1 CAU).
+  proponer('invoiceNumber', 'condiciones', 'invoiceNumber', expedition.invoiceNumber, datos.factura.numero);
 
   const exporter = expedition.exporter || {};
   proponer('exporter.companyName', 'exportador', 'exporterName', exporter.companyName, datos.exportador.nombre);
@@ -369,6 +391,10 @@ function proponerCambios(expedition, datos, tipoDocumento) {
   // En el expediente el exportador guarda la ciudad en `city` (su `address` es
   // un texto, no un objeto como en el importador).
   proponer('exporter.city', 'exportador', 'exporterCity', exporter.city, datos.exportador.ciudad);
+  // CP y direccion: el H1 exige el CP del exportador en los paises de la CL505
+  // (tarjeta «Datos del H1»); se leian pero no se proponian (UAT 16/Nov).
+  proponer('exporter.postalCode', 'exportador', 'exporterPostalCode', exporter.postalCode, datos.exportador.codigoPostal);
+  proponer('exporter.address', 'exportador', 'exporterAddress', exporter.address, datos.exportador.direccion);
 
   return cambios;
 }

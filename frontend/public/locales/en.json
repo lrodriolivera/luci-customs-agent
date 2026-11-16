@@ -3795,7 +3795,12 @@
       "incotermPlace": "Incoterm place",
       "exporterName": "Exporter",
       "exporterCountry": "Exporter country",
-      "exporterCity": "Exporter city"
+      "exporterCity": "Exporter city",
+      "quantity": "Quantity",
+      "unit": "Unit",
+      "invoiceNumber": "Invoice number",
+      "exporterPostalCode": "Exporter postcode",
+      "exporterAddress": "Exporter address"
     },
     "delete": "Delete",
     "deleteConfirm": "Delete this document? This cannot be undone.",

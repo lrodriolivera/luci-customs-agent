@@ -10,6 +10,9 @@ const { autorizacionVigente, aplicarAutorizacionVigente } = require('../services
 const { DOCUMENT_TYPES } = require('../middleware/validators');
 
 const { escapeRegex } = require('../utils/escapeRegex');
+
+// Unidad de la cantidad que envia el alta (quantityUnit) -> unidad del expediente (unit).
+const UNIDAD_DEL_ALTA = { KGM: 'KG', PCS: 'PCS', MTR: 'MTR', LTR: 'LTR' };
 /**
  * Crear nuevo expediente
  * POST /api/expeditions
@@ -116,7 +119,11 @@ const create = async (req, res) => {
         invoiceValue: parseFloat(item.invoiceValue) || 0,
         netWeight: parseFloat(item.netWeight) || 0,
         grossWeight: parseFloat(item.grossWeight) || 0,
-        originCountry: item.originCountry?.toUpperCase() || ''
+        originCountry: item.originCountry?.toUpperCase() || '',
+        // El alta envia la unidad en `quantityUnit` (KGM/PCS/MTR/LTR) y el modelo
+        // la guarda en `unit`: sin esto se perdia y la partida quedaba en KG
+        // aunque se eligieran piezas (UAT 16/Nov/2026, EXP-2026-908AB910).
+        unit: item.unit || UNIDAD_DEL_ALTA[item.quantityUnit] || undefined
       }));
     }
 

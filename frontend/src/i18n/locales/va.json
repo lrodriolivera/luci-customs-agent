@@ -3779,7 +3779,12 @@
       "incotermPlace": "Lloc de l'incoterm",
       "exporterName": "Exportador",
       "exporterCountry": "País de l'exportador",
-      "exporterCity": "Ciutat de l'exportador"
+      "exporterCity": "Ciutat de l'exportador",
+      "quantity": "Quantitat",
+      "unit": "Unitat",
+      "invoiceNumber": "Número de factura",
+      "exporterPostalCode": "Codi postal de l'exportador",
+      "exporterAddress": "Adreça de l'exportador"
     },
     "delete": "Eliminar",
     "deleteConfirm": "Eliminar este document? No es pot desfer.",

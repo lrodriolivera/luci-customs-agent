@@ -127,6 +127,24 @@ describe('create', () => {
     expect(g.invoiceValue).toBe(200);
   });
 
+  // UAT 16/Nov/2026 (EXP-2026-908AB910): el alta envia la unidad en quantityUnit
+  // y se perdia; la partida quedaba en KG aunque se eligieran piezas.
+  test('guarda la unidad elegida en el alta (quantityUnit) en la partida', async () => {
+    const user = usuario();
+    const res = crearRes();
+
+    await ctrl.create({
+      body: cuerpoValido({ goods: [
+        { description: 'Portatiles', quantity: '480', invoiceValue: '184800', quantityUnit: 'PCS' },
+        { description: 'Cable', quantity: '20', invoiceValue: '50', quantityUnit: 'KGM' }
+      ] }), user
+    }, res);
+
+    const guardado = await Expedition.findById(res.body.data._id);
+    expect(guardado.goods[0].unit).toBe('PCS');
+    expect(guardado.goods[1].unit).toBe('KG');
+  });
+
   test('un cuerpo sin tipo de operacion falla la validacion con 500', async () => {
     // operationType es required en el esquema: el modelo real lo rechaza.
     const user = usuario();
