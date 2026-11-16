@@ -204,6 +204,8 @@ const DeclarationSchema = new mongoose.Schema({
   //    resultado de la salida, disconformidad, invalidación, controles).
   //  - aesAvisos: avisos aplicados (por su Id, para no aplicarlos dos veces).
   exitConfirmedAt: Date,
+  // NIF al que la AEAT manda los avisos de este AES, fijado al presentarlo.
+  aesDestinatario: String,
   aesSalida: mongoose.Schema.Types.Mixed,
   aesAvisos: [new mongoose.Schema({
     id: String,

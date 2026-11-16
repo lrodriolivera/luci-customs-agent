@@ -44,6 +44,9 @@ const LIMITE_POR_DEFECTO = 100;
 const MAX_XML = 20000;
 const DIAS_REASOCIAR = 30;
 const DIAS_TRAS_FINAL = 7;
+const MAX_INTENTOS = 5;
+// Una clave «leyendo» de una réplica caída se puede volver a reclamar pasado este tiempo.
+const RECLAMO_CADUCA_MS = 30 * 60 * 1000;
 const DIA_MS = 24 * 3600 * 1000;
 
 const nifSeguro = (valor) => {
@@ -56,6 +59,9 @@ const nifSeguro = (valor) => {
 
 /** NIF al que la AEAT manda los avisos de este AES (representante o declarante). */
 function destinatarioDe(expedition, tenant) {
+  // El que se guardó al presentar: no cambia aunque luego se edite el expediente.
+  const guardado = nifSeguro(expedition?.declaration?.aesDestinatario);
+  if (guardado) return guardado;
   try {
     const datos = expeditionToAesData(expedition, { tenant, isPRE: process.env.AEAT_ENVIRONMENT !== 'production' });
     const nif = nifSeguro(datos.representative?.id || datos.declarantEORI);
@@ -171,7 +177,7 @@ async function _aplicar(exp, aviso) {
   if (r.modifiedCount === 0) return false;
   try {
     const monitor = require('./aeat/aeatStatusMonitorService');
-    await monitor.aplicarAvisoBandeja({ mrn: aviso.mrn, tenantId: String(exp.tenantId), tipo: aviso.tipo, estado: aviso.estadoAES, fecha });
+    await monitor.aplicarAvisoBandeja({ mrn: aviso.mrn, tenantId: String(exp.tenantId), tipo: aviso.tipo, texto, estado: aviso.estadoAES, fecha });
   } catch (error) {
     logger.warn(`[AES-BANDEJA] No se pudo actualizar el seguimiento: ${error.message}`);
   }
@@ -200,7 +206,46 @@ async function _asociarYAplicar(aviso, buzon) {
   return estado;
 }
 
-/** Lee el detalle de un aviso de la lista y lo guarda. @returns aviso guardado o null */
+/**
+ * Reclama la clave antes de leer el detalle, de forma atómica: con varias
+ * réplicas (o una pasada que dura más que el candado) solo una lee cada aviso.
+ * Se reclama una clave nueva, una con error de lectura que aún no ha agotado
+ * los reintentos, o una que se quedó «leyendo» (proceso caído) hace tiempo.
+ * @returns {Promise<boolean>} true si esta pasada debe leerla
+ */
+async function _reclamar(item, nif, ahora) {
+  const base = { nif, referencia: item.referencia, tipoRespuesta: item.tipoRespuesta, tipo: item.codigo, mrn: item.mrn };
+  try {
+    await AvisoAeat.create({ clave: item.clave, ...base, estado: 'leyendo', reclamadoEn: ahora });
+    return true;
+  } catch (error) {
+    if (error?.code !== 11000) throw error;
+  }
+  const r = await AvisoAeat.findOneAndUpdate(
+    {
+      clave: item.clave,
+      $or: [
+        { estado: 'error_lectura', intentos: { $lt: MAX_INTENTOS } },
+        { estado: 'leyendo', reclamadoEn: { $lt: new Date(ahora.getTime() - RECLAMO_CADUCA_MS) } }
+      ]
+    },
+    { $set: { estado: 'leyendo', reclamadoEn: ahora } },
+    { new: true, lean: true }
+  );
+  return Boolean(r);
+}
+
+/** Guarda el aviso; si Mongo falla, lo deja en el log para no perderlo (ya está leído en la AEAT). */
+async function _guardar(clave, cambios, contexto) {
+  try {
+    return await AvisoAeat.findOneAndUpdate({ clave }, cambios, { upsert: true, new: true, lean: true });
+  } catch (error) {
+    logger.error(`[AES-BANDEJA] Aviso leído en la AEAT y NO guardado (clave ${clave}, ${contexto.tipo} ${contexto.mrn}): ${error.message}`, { xml: contexto.xml });
+    return null;
+  }
+}
+
+/** Lee el detalle de un aviso reclamado y lo guarda. @returns aviso guardado (para asociar) o null */
 async function _leer(item, nif, enviar, resumen) {
   const base = { nif, referencia: item.referencia, tipoRespuesta: item.tipoRespuesta, tipo: item.codigo, mrn: item.mrn };
   let cuerpo = '';
@@ -212,34 +257,39 @@ async function _leer(item, nif, enviar, resumen) {
   } catch (error) {
     aviso = { success: false, tipo: 'red', error: `No se pudo leer el aviso: ${error.message}` };
   }
-  if (aviso.success && aviso.destinatario && aviso.destinatario !== nif) {
-    aviso = { success: false, tipo: 'aviso', error: `El aviso es para ${aviso.destinatario}, no para ${nif}` };
-  }
+  const xml = cuerpo.slice(0, MAX_XML);
   if (!aviso.success) {
     resumen.errores += 1;
-    // Un aviso que llegó pero no se entiende ya está leído en la AEAT: no se reintenta.
-    const estado = aviso.tipo === 'aviso' ? 'no_valido' : 'error_lectura';
-    await AvisoAeat.updateOne(
-      { clave: item.clave },
-      { $set: { ...base, estado, error: aviso.error, xml: cuerpo.slice(0, MAX_XML), ...(estado === 'no_valido' ? { leidoEn: new Date() } : {}) }, $inc: { intentos: 1 } },
-      { upsert: true }
-    );
+    // Un aviso que llegó pero no se entiende ya está leído en la AEAT: no se
+    // reintenta (queda su XML). Un fallo de red o de la AEAT, sí, con tope.
+    const doc = await _guardar(item.clave, {
+      $set: { ...base, estado: aviso.tipo === 'aviso' ? 'no_valido' : 'error_lectura', error: aviso.error, xml, ...(aviso.tipo === 'aviso' ? { leidoEn: new Date() } : {}) },
+      $inc: { intentos: 1 }
+    }, { ...item, tipo: item.codigo, xml });
+    if (doc?.estado === 'error_lectura' && doc.intentos >= MAX_INTENTOS) {
+      await AvisoAeat.updateOne({ _id: doc._id }, { $set: { estado: 'no_valido' } });
+    }
     logger.warn(`[AES-BANDEJA] Aviso ${item.codigo} no leído: ${aviso.error}`);
     return null;
   }
   resumen.leidos += 1;
-  return AvisoAeat.findOneAndUpdate(
-    { clave: item.clave },
-    {
-      $set: {
-        ...base, tipo: aviso.tipo, mrn: aviso.mrn, avisoId: aviso.id || aviso.mensajeId, estadoAES: aviso.estadoAES,
-        fechaPreparacion: aviso.fechaPreparacion, datos: { ...aviso.datos, estadoTexto: aviso.estadoTexto, final: aviso.final },
-        xml: cuerpo.slice(0, MAX_XML), leidoEn: new Date(), estado: 'sin_expediente', error: null
-      },
-      $inc: { intentos: 1 }
+  // Un aviso para otro NIF que el del buzón se guarda entero pero no se aplica:
+  // no sabemos de qué tenant es. Queda para revisarlo a mano.
+  const discordante = aviso.destinatario && aviso.destinatario !== nif;
+  const doc = await _guardar(item.clave, {
+    $set: {
+      ...base, tipo: aviso.tipo, mrn: aviso.mrn, avisoId: aviso.id || aviso.mensajeId, estadoAES: aviso.estadoAES,
+      fechaPreparacion: aviso.fechaPreparacion, datos: { ...aviso.datos, estadoTexto: aviso.estadoTexto, final: aviso.final },
+      xml, leidoEn: new Date(), estado: discordante ? 'revisar' : 'sin_expediente',
+      error: discordante ? `El aviso es para ${aviso.destinatario}, no para ${nif}` : null
     },
-    { upsert: true, new: true, lean: true }
-  );
+    $inc: { intentos: 1 }
+  }, { ...item, tipo: aviso.tipo, xml });
+  if (discordante) {
+    logger.warn(`[AES-BANDEJA] Aviso ${aviso.tipo} para otro destinatario: guardado para revisar`);
+    return null;
+  }
+  return doc;
 }
 
 /** Aviso guardado -> forma que esperan _cambios/_aplicar. */
@@ -250,6 +300,7 @@ const avisoDe = (doc) => ({
 
 function _contar(resumen, estado) {
   if (estado === 'aplicado') resumen.aplicados += 1;
+  else if (estado === 'repetido') resumen.repetidos += 1;
   else if (estado === 'sin_expediente' || estado === 'ambiguo') resumen.sinExpediente += 1;
 }
 
@@ -270,7 +321,7 @@ async function procesarBandeja({ enviar = aeatTransport.sendSoap, limite = LIMIT
   const pendientes = await AvisoAeat.find({
     estado: { $in: ['sin_expediente', 'ambiguo'] }, nif: { $in: [...buzones.keys()] },
     leidoEn: { $gte: new Date(ahora.getTime() - DIAS_REASOCIAR * DIA_MS) }
-  }).limit(200).lean();
+  }).sort({ leidoEn: 1 }).limit(200).lean();
   for (const doc of pendientes) {
     const estado = await _asociarYAplicar(avisoDe(doc), buzones.get(doc.nif));
     if (estado === 'aplicado') resumen.aplicados += 1;
@@ -291,9 +342,11 @@ async function procesarBandeja({ enviar = aeatTransport.sendSoap, limite = LIMIT
       continue;
     }
 
+    const conocidas = new Map((await AvisoAeat.find({ clave: { $in: lista.avisos.map((a) => a.clave) } }).select('clave estado').lean())
+      .map((d) => [d.clave, d.estado]));
     for (const item of lista.avisos) {
-      const guardado = await AvisoAeat.findOne({ clave: item.clave }).select('estado').lean();
-      if (guardado && guardado.estado !== 'error_lectura') {
+      const estadoGuardado = conocidas.get(item.clave);
+      if (estadoGuardado && estadoGuardado !== 'error_lectura' && estadoGuardado !== 'leyendo') {
         resumen.repetidos += 1;
         continue;
       }
@@ -301,10 +354,20 @@ async function procesarBandeja({ enviar = aeatTransport.sendSoap, limite = LIMIT
         resumen.restantes += 1;
         continue;
       }
+      if (!(await _reclamar(item, nif, new Date()))) {
+        resumen.repetidos += 1;
+        continue;
+      }
       lecturas += 1;
       const doc = await _leer(item, nif, enviar, resumen);
       if (!doc) continue;
-      _contar(resumen, await _asociarYAplicar(avisoDe(doc), buzon));
+      try {
+        _contar(resumen, await _asociarYAplicar(avisoDe(doc), buzon));
+      } catch (error) {
+        // Guardado como sin_expediente: la siguiente pasada lo vuelve a intentar.
+        resumen.errores += 1;
+        logger.error(`[AES-BANDEJA] No se pudo aplicar un aviso: ${error.message}`);
+      }
     }
   }
   return resumen;

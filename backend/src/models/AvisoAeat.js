@@ -29,14 +29,15 @@ const AvisoAeatSchema = new mongoose.Schema({
   leidoEn: Date,
   estado: {
     type: String,
-    enum: ['error_lectura', 'no_valido', 'sin_expediente', 'ambiguo', 'aplicado', 'repetido'],
+    enum: ['leyendo', 'error_lectura', 'no_valido', 'revisar', 'sin_expediente', 'ambiguo', 'aplicado', 'repetido'],
     required: true
   },
   error: String,
   intentos: { type: Number, default: 0 },
   tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
   expeditionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Expedition' },
-  aplicadoEn: Date
+  aplicadoEn: Date,
+  reclamadoEn: Date
 }, { timestamps: true, collection: 'avisosaeat' });
 
 AvisoAeatSchema.index({ estado: 1, nif: 1 });

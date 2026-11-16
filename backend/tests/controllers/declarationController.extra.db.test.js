@@ -256,6 +256,20 @@ describe('submitDeclaration (path ES)', () => {
     expect(channelService.processChannelAssignment).toHaveBeenCalled();
   });
 
+  test('AES: guarda el NIF al que la AEAT mandará los avisos (bandeja de exportación)', async () => {
+    const user = usuario();
+    const Tenant = require('../../src/models/Tenant');
+    await Tenant.create({ _id: user.tenantId, name: 'STRIX', slug: 'strix-aes', email: 'a@strixai.ai', businessInfo: { type: 'customs_agent', eori: 'ESB22477020' } });
+    const exp = await expedienteExportacion(user, { declaration: { type: 'AES', status: 'draft', xmlContent: '<AES/>', lrn: 'LRN-AES' } });
+    const res = crearRes();
+
+    await ctrl.submitDeclaration({ params: { expeditionId: exp._id }, user }, res);
+
+    expect(res.statusCode).toBe(200);
+    const guardado = await Expedition.findById(exp._id).lean();
+    expect(guardado.declaration.aesDestinatario).toBe('B22477020');
+  });
+
   test('sin XML generado devuelve 400 y no llama a AEAT', async () => {
     const user = usuario();
     const exp = await expedienteImportacion(user, { declaration: { type: 'H1', status: 'draft' } });

@@ -162,6 +162,36 @@ describe('procesarBandeja', () => {
     expect(r2.aplicados).toBe(1);
   });
 
+  test('dos pasadas a la vez (réplicas): cada aviso se lee una sola vez', async () => {
+    const { enviar, llamadas } = aeatSimulada();
+    await Promise.all([procesarBandeja({ enviar }), procesarBandeja({ enviar })]);
+    const detalles = llamadas.filter(([q]) => q === 'detalle').map(([, c]) => c).sort();
+    expect(detalles).toEqual(['20261116120438659005', '20261116122652360089']);
+    expect((await Expedition.findById(expA._id).lean()).declaration.aesAvisos).toHaveLength(1);
+  });
+
+  test('aviso para otro NIF que el del buzón: se guarda entero para revisar y no se aplica', async () => {
+    const otro = leer('aviso-csalid-sa.xml').replace('<messageRecipient>ESB22477020</messageRecipient>', '<messageRecipient>ESA78587268</messageRecipient>');
+    fs.writeFileSync(path.join(FIX, '.tmp-otro.xml'), otro);
+    try {
+      const { enviar } = aeatSimulada({ detalles: { ...DETALLES, '20261116120438659005': '.tmp-otro.xml' } });
+      await procesarBandeja({ enviar });
+    } finally {
+      fs.unlinkSync(path.join(FIX, '.tmp-otro.xml'));
+    }
+    const aviso = await AvisoAeat.findOne({ clave: '20261116120438659005' }).lean();
+    expect(aviso).toMatchObject({ estado: 'revisar', estadoAES: 'SA', error: expect.stringContaining('A78587268') });
+    expect(aviso.leidoEn).toBeInstanceOf(Date);
+    expect((await Expedition.findById(expA._id).lean()).declaration.exitConfirmedAt).toBeUndefined();
+  });
+
+  test('un error de lectura se reintenta como mucho 5 veces', async () => {
+    const mala = aeatSimulada({ detalles: { ...DETALLES, '20261116120438659005': 'fault-client.xml' } });
+    for (let i = 0; i < 7; i += 1) await procesarBandeja({ enviar: mala.enviar });
+    expect(mala.llamadas.filter(([q, c]) => q === 'detalle' && c === '20261116120438659005')).toHaveLength(5);
+    expect(await AvisoAeat.findOne({ clave: '20261116120438659005' }).lean()).toMatchObject({ estado: 'no_valido', intentos: 5 });
+  });
+
   test('un fallo de la lista de un buzón no corta los demás', async () => {
     const { enviar } = aeatSimulada({ listas: { B22477020: 'fault-client.xml' } });
     const r = await procesarBandeja({ enviar });
@@ -197,6 +227,11 @@ describe('destinatarioDe', () => {
 
   test('si el expediente ya no permite rehacer los datos del AES, el NIF del tenant', () => {
     expect(destinatarioDe(expedienteAes({ goods: [] }), TENANT_AGENTE)).toBe('B22477020');
+  });
+
+  test('manda el destinatario fijado al presentar, aunque luego se edite el expediente', () => {
+    const exp = expedienteAes({ declaration: { type: 'AES', aesDestinatario: 'A78587268' } });
+    expect(destinatarioDe(exp, TENANT_AGENTE)).toBe('A78587268');
   });
 
   test('sin NIF español en ningún sitio: null', () => {

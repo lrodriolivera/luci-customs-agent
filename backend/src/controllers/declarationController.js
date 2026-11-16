@@ -976,6 +976,12 @@ const submitDeclaration = async (req, res) => {
     // Actualizar declaracion con respuesta AEAT
     expedition.declaration.status = 'submitted';
     expedition.declaration.mrn = aeatResponse.mrn;
+    // AES: NIF al que la AEAT mandará los avisos (levantes, salida efectiva),
+    // fijado ahora para que editar luego el expediente no cambie el buzón.
+    if (type === 'AES') {
+      const { destinatarioDe } = require('../services/aesBandejaProceso');
+      expedition.declaration.aesDestinatario = destinatarioDe(expedition.toObject ? expedition.toObject() : expedition, tenant) || undefined;
+    }
     expedition.declaration.submittedAt = new Date();
     expedition.declaration.acceptanceDate = fechaAdmision;
     if (usaCau) {

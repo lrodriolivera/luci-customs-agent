@@ -30,7 +30,7 @@ beforeEach(async () => {
 describe('aplicarAvisoBandeja', () => {
   test('salida efectiva (SA): seguimiento RELEASED y final; la consulta automática lo omite', async () => {
     await monitor.trackDeclaration(MRN, { declarationType: 'AES', tenantId: TENANT });
-    const ok = await monitor.aplicarAvisoBandeja({ mrn: MRN, tenantId: TENANT, tipo: 'CSALID', estado: 'SA', fecha: '2026-11-16' });
+    const ok = await monitor.aplicarAvisoBandeja({ mrn: MRN, tenantId: TENANT, tipo: 'CSALID', texto: 'Resultado de la salida', estado: 'SA', fecha: '2026-11-16' });
     expect(ok).toBe(true);
     const t = await monitor.getTrackedDeclaration(MRN, TENANT);
     expect(t.currentStatus).toBe('RELEASED');
@@ -61,5 +61,18 @@ describe('aplicarAvisoBandeja', () => {
     await monitor.trackDeclaration(MRN, { declarationType: 'AES', tenantId: 'otro-tenant' });
     expect(await monitor.aplicarAvisoBandeja({ mrn: MRN, tenantId: TENANT, tipo: 'CSALID', estado: 'SA' })).toBe(false);
     expect((await monitor.getTrackedDeclaration(MRN, 'otro-tenant')).aeat).toBeUndefined();
+  });
+
+  test('una consulta automática que devuelve un estado no final no deshace la salida confirmada por aviso', async () => {
+    await monitor.trackDeclaration(MRN, { declarationType: 'AES', tenantId: TENANT });
+    let soltar;
+    aeatRealService.queryDeclarationStatus.mockReturnValue(new Promise((r) => { soltar = r; }));
+    const consulta = monitor.refreshDeclarationStatus(MRN, TENANT);
+    await new Promise((r) => setImmediate(r));
+    await monitor.aplicarAvisoBandeja({ mrn: MRN, tenantId: TENANT, tipo: 'CSALID', estado: 'SA' });
+    soltar({ success: true, status: 'RELEASED', channel: 'green', estado: 'PS', final: false, messages: [] });
+    await consulta;
+    const t = await monitor.getTrackedDeclaration(MRN, TENANT);
+    expect(t.aeat).toMatchObject({ estado: 'SA', final: true });
   });
 });

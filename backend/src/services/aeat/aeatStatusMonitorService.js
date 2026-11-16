@@ -375,16 +375,21 @@ class AEATStatusMonitorService extends EventEmitter {
       // Persistir solo lo que trae la consulta sobre la versión actual: la
       // consulta tarda segundos y entretanto pueden haber dejado de seguirla o
       // confirmado una alerta.
-      const guardado = await this._guardarSobreActual(clave, (actual) => ({
+      const guardado = await this._guardarSobreActual(clave, (actual) => {
+        // Un aviso de la bandeja (salida efectiva o parada) pudo dejarlo final
+        // mientras se consultaba: una consulta no final no lo deshace.
+        const mantenerFinal = actual.aeat?.final === true && !(tracking.aeat?.final === true);
+        return {
         lastChecked: tracking.lastChecked,
         lastError: null,
-        currentStatus: tracking.currentStatus,
+        currentStatus: mantenerFinal ? actual.currentStatus : tracking.currentStatus,
         channel: tracking.channel,
-        ...(tracking.aeat ? { aeat: tracking.aeat } : {}),
+        ...(tracking.aeat && !mantenerFinal ? { aeat: tracking.aeat } : {}),
         statusHistory: [...(actual.statusHistory || []), tracking.statusHistory[tracking.statusHistory.length - 1]],
         alerts: [...(actual.alerts || []), ...alertasNuevas],
         luciPredictions: tracking.luciPredictions
-      }));
+        };
+      });
       if (!guardado) return this._noEncontrada();
 
       if (alertasNuevas.length > 0) {
@@ -435,11 +440,10 @@ class AEATStatusMonitorService extends EventEmitter {
    * @param {{ mrn: string, tenantId: string|null, tipo: string, estado: string|null, fecha?: string|null }} aviso
    * @returns {Promise<boolean>} true si había seguimiento de ese tenant y MRN
    */
-  async aplicarAvisoBandeja({ mrn, tenantId, tipo, estado, fecha = null }) {
+  async aplicarAvisoBandeja({ mrn, tenantId, tipo, texto = null, estado, fecha = null }) {
     const clave = this._clave(mrn, tenantId ? String(tenantId) : null);
     const at = new Date().toISOString();
-    const textoTipo = { CLEVEX: 'Levante en la aduana de exportación', CLEVSA: 'Levante en la aduana de salida', CSALID: 'Resultado de la salida',
-      CDISEX: 'Despacho disconforme en exportación', CDISSA: 'Despacho disconforme en salida', CINVAL: 'Invalidación', CONCCE: 'Controles de la aduana de presentación' }[tipo] || tipo;
+    const textoTipo = texto || tipo;
     const guardado = await this._guardarSobreActual(clave, (actual) => {
       const yaFinal = actual.aeat?.final === true;
       const usar = estado && !(yaFinal && !esFinal(ESTADOS_AES, estado));
