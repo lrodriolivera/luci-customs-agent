@@ -132,6 +132,7 @@ exports.getByCountry = async (req, res) => {
           certificate: a.certificate,
           proofKind: a.proofKind,
           legalBasis: a.legalBasis,
+          proofValidity: a.proofValidity,
           originRules: a.originRules
         }))
       }
@@ -295,7 +296,9 @@ exports.getInfo = async (req, res) => {
       certificates: [
         'EUR.1 - Movement Certificate',
         'EUR-MED - Pan-Euro-Med Certificate',
-        'Form A - GSP Certificate',
+        // SPG: comunicacion sobre el origen REX; el Form A no se acepta desde 2020
+        // (RE 2015/2447, arts. 78-79 y 92; Access2Markets)
+        'Statement on origin (REX) - GSP / GSP+ / EBA',
         'Statement on Origin - Invoice Declaration',
         'ATR - Turkey Customs Union'
       ],

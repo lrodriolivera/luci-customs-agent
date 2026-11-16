@@ -178,6 +178,26 @@ describe('Preferences Controller', () => {
       expect(preferencesService.findApplicableAgreements).toHaveBeenCalledWith('CA');
     });
 
+    test('devuelve la base legal y la validez de la prueba de origen de cada acuerdo', async () => {
+      preferencesService.findApplicableAgreements.mockReturnValue([{
+        key: 'EU-KOREA',
+        name: 'EU-South Korea Free Trade Agreement',
+        type: 'FTA',
+        certificate: 'Declaración de origen del exportador',
+        proofKind: 'exporter_declaration',
+        legalBasis: 'ALC UE-Corea (DOUE L 127 de 14-5-2011)',
+        proofValidity: '12 meses desde su expedición',
+        originRules: {}
+      }]);
+
+      const response = await request(app).get('/api/preferences/country/KR');
+
+      const [corea] = response.body.data.agreements;
+      expect(corea.proofKind).toBe('exporter_declaration');
+      expect(corea.legalBasis).toMatch(/DOUE L 127/);
+      expect(corea.proofValidity).toBe('12 meses desde su expedición');
+    });
+
     test('should return 400 for invalid country code', async () => {
       const response = await request(app)
         .get('/api/preferences/country/INVALID');
@@ -364,6 +384,14 @@ describe('Preferences Controller', () => {
       expect(response.body.data.coverage.gsp).toBeInstanceOf(Array);
       expect(response.body.data.certificates).toBeInstanceOf(Array);
       expect(response.body.data.capabilities).toBeInstanceOf(Array);
+    });
+
+    test('no presenta el Form A como prueba de origen del SPG (ya no se acepta)', async () => {
+      const response = await request(app).get('/api/preferences/info');
+
+      const certificados = response.body.data.certificates.join(' | ');
+      expect(certificados).not.toMatch(/Form A/);
+      expect(certificados).toMatch(/REX/);
     });
   });
 });

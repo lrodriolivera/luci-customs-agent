@@ -72,6 +72,9 @@ export default function PreferencesCalculator() {
           // 'exporter_declaration' (CETA, Japon, Chile...): la prueba es una declaracion
           // del exportador y no hay EUR.1 que pedir a la aduana del pais de origen.
           proofKind: eligibility.recommended?.proofKind || eligibility.agreements[0]?.proofKind || 'certificate',
+          // Validez de la prueba de origen propia del acuerdo (12 meses en SPG, Corea o
+          // Reino Unido; 10 en Mexico). Sin ella se mantiene el aviso generico.
+          proofValidity: eligibility.recommended?.proofValidity || eligibility.agreements[0]?.proofValidity || null,
           // El arancel NMF y el preferencial vienen del backend o no se muestran. Aqui
           // habia `standard: 0.125` fijo ("Default standard rate"): un arancel del 12,5%
           // INVENTADO, igual para toda mercancia, con el que se calculaba y presentaba un
@@ -648,7 +651,9 @@ export default function PreferencesCalculator() {
                   <p className="text-sm font-medium text-yellow-900 mb-2">Recomendaciones:</p>
                   <ul className="text-sm text-yellow-800 space-y-1">
                     <li>• Solicitar {result.certificate} al exportador antes del despacho</li>
-                    {result.proofKind !== 'exporter_declaration' && (
+                    {result.proofValidity ? (
+                      <li>• Verificar validez de la prueba de origen ({result.proofValidity})</li>
+                    ) : result.proofKind !== 'exporter_declaration' && (
                       <li>• Verificar validez del certificado (máximo 10 meses desde emisión)</li>
                     )}
                     <li>• Conservar documentación durante 3 años</li>
