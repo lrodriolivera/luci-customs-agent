@@ -155,6 +155,24 @@ describe('amend (CC013C)', () => {
     expect(aeat.submitNCTSAmendment).not.toHaveBeenCalled();
   });
 
+  test('un dato que el modelo no admite no sale a la AEAT', async () => {
+    const t = await predeclarado();
+    await expect(transitService.amend(t._id, { guarantee: { type: 'Z' } }, owner)).rejects.toThrow(/no es válida/);
+    expect(aeat.submitNCTSAmendment).not.toHaveBeenCalled();
+    expect((await Transit.findById(t._id)).guarantee.type).toBe('1');
+  });
+
+  test('una GRN ajena o inactiva no se cuela por la modificación', async () => {
+    const { Guarantee } = require('../../src/models');
+    await Guarantee.create({
+      owner, type: 'CGU', name: 'G', totalAmount: 1000,
+      validFrom: new Date('2026-01-01'), validUntil: new Date('2027-01-01'), status: 'draft', grn: 'GRN-INACTIVA'
+    });
+    const t = await predeclarado();
+    await expect(transitService.amend(t._id, { guarantee: { type: '1', grn: 'GRN-INACTIVA' } }, owner)).rejects.toThrow(/no esta activa/);
+    expect(aeat.submitNCTSAmendment).not.toHaveBeenCalled();
+  });
+
   test('sin cambios no hay nada que enviar', async () => {
     const t = await predeclarado();
     await expect(transitService.amend(t._id, {}, owner)).rejects.toThrow(/cambio/i);

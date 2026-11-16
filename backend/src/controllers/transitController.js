@@ -199,9 +199,12 @@ const transitController = {
       res.json({ success: true, data: transit, message });
     } catch (error) {
       console.error('Error submitting transit:', error);
-      res.status(400).json({
+      // 422 + `errors` para las validaciones previas (EORI, codigo NC...): la
+      // pantalla puede decir que partida falla.
+      res.status(error.status === 422 ? 422 : 400).json({
         success: false,
-        error: error.message
+        error: error.message,
+        ...(error.errors ? { errors: error.errors } : {})
       });
     }
   },

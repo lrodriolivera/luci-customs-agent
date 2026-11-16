@@ -180,6 +180,20 @@ function _plazoDeLlegada(transit, fecha) {
   transit.deadlines = { ...(transit.deadlines?.toObject ? transit.deadlines.toObject() : transit.deadlines || {}), arrivalDeadline: new Date(`${fecha}T23:59:59Z`) };
 }
 
+/**
+ * La GRN ha de ser una garantia propia y activa (en PRE/dev se admite una GRN
+ * sin registro local: AEAT PRE acepta una de prueba compartida).
+ */
+async function _validarGarantia(grn, userId) {
+  const isProduction = process.env.AEAT_ENVIRONMENT === 'production';
+  const guarantee = await Guarantee.findOne({ grn, owner: userId });
+  if (!guarantee) {
+    if (isProduction) throw new Error('Garantia no encontrada');
+  } else if (guarantee.status !== 'active') {
+    throw new Error('Garantia no esta activa');
+  }
+}
+
 async function _cargarPropio(id, userId) {
   const transit = await Transit.findOne({ _id: id, owner: userId });
   if (!transit) throw new Error('Transito no encontrado');
@@ -260,18 +274,7 @@ const transitService = {
     // Excepcion en entorno no-produccion (PRE/dev): permitir GRN sin registro local
     // porque AEAT PRE acepta una GRN de prueba compartida (26ES000280... de Jose Antonio).
     if (data.guarantee?.grn) {
-      const isProduction = process.env.AEAT_ENVIRONMENT === 'production';
-      const guarantee = await Guarantee.findOne({
-        grn: data.guarantee.grn,
-        owner: userId
-      });
-      if (!guarantee) {
-        if (isProduction) {
-          throw new Error('Garantia no encontrada');
-        }
-      } else if (guarantee.status !== 'active') {
-        throw new Error('Garantia no esta activa');
-      }
+      await _validarGarantia(data.guarantee.grn, userId);
     }
 
     const transit = new Transit({
@@ -531,13 +534,25 @@ const transitService = {
       throw new Error('Solo se puede modificar una predeclaración (estado NCTS PA): una declaración admitida no se modifica');
     }
     const cambios = _cambiosCC013(transit, data);
-    const propuesta = { ...transit.toObject(), ...cambios };
+    if (cambios.guarantee?.grn && cambios.guarantee.grn !== transit.guarantee?.grn) {
+      await _validarGarantia(cambios.guarantee.grn, userId);
+    }
+    // Los cambios se aplican y validan contra el modelo ANTES de enviar: si no,
+    // un dato que Mongoose no acepta saldria a la AEAT y el save posterior
+    // fallaria con la modificacion ya admitida (AEAT y LUCI desincronizados).
+    // Si algo falla, el documento se descarta sin guardar.
+    transit.set(cambios);
+    try {
+      await transit.validate();
+    } catch (e) {
+      throw new Error(`La modificación no es válida: ${e.message}`);
+    }
+    const propuesta = transit.toObject();
     this.validateForSubmission(propuesta);
 
     const r = await aeatSubmitService.submitNCTSAmendment(propuesta, await _ctxAduanero(transit, userId));
     if (!r.success) throw new Error(r.error || 'La AEAT no admitió la modificación (CC013C)');
 
-    transit.set(cambios);
     _anotarNcts(transit, { estado: r.estado, csv: r.csv });
     transit.messages.push({
       type: 'IE013', direction: 'outbound', timestamp: new Date(),
