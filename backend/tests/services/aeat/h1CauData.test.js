@@ -558,10 +558,14 @@ describe('H1 CAU: régimen solicitado y precedente (D.E. 1/10)', () => {
     expect(datos().envio.partidas[0].regimen).toMatchObject({ solicitado: '40', precedente: '00', adicionales: [] });
   });
 
-  test('con precedente elegido (40.71) se declara el precedente, no 00', () => {
+  // Con precedente la AEAT exige el documento previo (21104/21155) y LUCI lo
+  // pide antes de enviar; los datos generados llevan igualmente el precedente.
+  test('con precedente elegido (40.53) se declara el precedente, no 00, y se pide el documento previo', () => {
     const exp = expediente();
-    exp.declaration = { ...exp.declaration, regime: '40', previousRegime: '71' };
-    expect(datos(exp).envio.partidas[0].regimen).toMatchObject({ solicitado: '40', precedente: '71' });
+    exp.declaration = { ...exp.declaration, regime: '40', previousRegime: '53' };
+    let error;
+    try { datos(exp); } catch (e) { error = e; }
+    expect(error.faltan.join(' ')).toMatch(/precedente 53/);
   });
 
   test('el régimen adicional elegido va en additionalProcedure', () => {
@@ -580,6 +584,22 @@ describe('H1 CAU: gastos a añadir a la base del IVA (código CA)', () => {
     expect(a00(con)).toEqual(a00(sin));
     expect(b00(con).importe).toBeCloseTo(b00(sin).importe + 300, 2);
     expect(con.valoracion.ajustes).toContainEqual({ codigo: 'CA', importe: 300 });
+  });
+});
+
+describe('H1 CAU: regímenes que la AEAT acepta solo con datos que LUCI aún no declara (PRE 17/11/2026)', () => {
+  const faltanDe = (exp) => { try { datos(exp); return []; } catch (e) { return e.faltan || [e.message]; } };
+
+  test('adicional 9** (pendencia): avisa de la autorización C512 en vez de esperar el error 20231', () => {
+    const exp = expediente();
+    exp.declaration = { ...(exp.declaration || {}), additionalProcedure: '9OR' };
+    expect(faltanDe(exp).join(' ')).toMatch(/C512/);
+  });
+
+  test('precedente 71: avisa del documento previo NMRN en vez de esperar el error 21155', () => {
+    const exp = expediente();
+    exp.declaration = { ...(exp.declaration || {}), regime: '40', previousRegime: '71' };
+    expect(faltanDe(exp).join(' ')).toMatch(/precedente 71/);
   });
 });
 
