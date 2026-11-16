@@ -355,11 +355,23 @@ describe('routes/declarations.js - handlers inline', () => {
       expect(res.status).toBe(400);
     });
 
-    test('envia y persiste el MRN cuando el servicio responde OK (ES/AEAT)', async () => {
+    test('400 ES_USA_ENVIO_AEAT para España: no pasa por la factoría ni toca el expediente', async () => {
+      const { CustomsServiceFactory } = require('../../src/services/customs');
       const exp = await crearExpediente(TENANT_A, { declaration: { type: 'H1', status: 'draft' } });
       const res = await request(app).post(`/api/declarations/${exp._id}/submit-v2`).send({});
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('ES_USA_ENVIO_AEAT');
+      expect(CustomsServiceFactory.getServiceForTenant).not.toHaveBeenCalled();
+      expect(mockSubmitDeclaration).not.toHaveBeenCalled();
+      const actualizado = await Expedition.findById(exp._id);
+      expect(actualizado.declaration.status).toBe('draft');
+    });
+
+    test('envia y persiste el MRN cuando el servicio responde OK (NL)', async () => {
+      const exp = await crearExpediente(TENANT_A, { declaration: { type: 'H1', status: 'draft' } });
+      mockContexto = contexto(TENANT_A, { tenant: { customsConfig: { country: 'NL' } } });
+      const res = await request(app).post(`/api/declarations/${exp._id}/submit-v2`).send({});
       expect(res.status).toBe(200);
-      expect(res.body.data.system).toBe('AEAT');
       const actualizado = await Expedition.findById(exp._id);
       expect(actualizado.declaration.mrn).toBe('MRN123');
       expect(actualizado.declaration.status).toBe('accepted');
@@ -423,6 +435,7 @@ describe('routes/declarations.js - handlers inline', () => {
 
     test('500 si el servicio de aduanas lanza', async () => {
       const exp = await crearExpediente(TENANT_A, { declaration: { type: 'H1', status: 'draft' } });
+      mockContexto = contexto(TENANT_A, { tenant: { customsConfig: { country: 'NL' } } });
       mockSubmitDeclaration.mockRejectedValue(new Error('down'));
       const res = await request(app).post(`/api/declarations/${exp._id}/submit-v2`).send({});
       expect(res.status).toBe(500);
@@ -437,16 +450,26 @@ describe('routes/declarations.js - handlers inline', () => {
       expect(res.status).toBe(404);
     });
 
+    test('400 ES_USA_ENVIO_AEAT para España', async () => {
+      const exp = await crearExpediente(TENANT_A);
+      const res = await request(app).post(`/api/declarations/${exp._id}/validate-v2`).send({ declarationType: 'H7' });
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('ES_USA_ENVIO_AEAT');
+      expect(mockValidateDeclaration).not.toHaveBeenCalled();
+    });
+
     test('valida y usa declarationType del body cuando no hay declaracion', async () => {
       const exp = await crearExpediente(TENANT_A);
+      mockContexto = contexto(TENANT_A, { tenant: { customsConfig: { country: 'NL' } } });
       const res = await request(app).post(`/api/declarations/${exp._id}/validate-v2`).send({ declarationType: 'H7' });
       expect(res.status).toBe(200);
       expect(res.body.data.declarationType).toBe('H7');
-      expect(res.body.data.system).toBe('AEAT');
+      expect(res.body.data.system).toBe('DECO');
     });
 
     test('500 si la validacion lanza', async () => {
       const exp = await crearExpediente(TENANT_A);
+      mockContexto = contexto(TENANT_A, { tenant: { customsConfig: { country: 'NL' } } });
       mockValidateDeclaration.mockRejectedValue(new Error('v fail'));
       const res = await request(app).post(`/api/declarations/${exp._id}/validate-v2`).send({});
       expect(res.status).toBe(500);

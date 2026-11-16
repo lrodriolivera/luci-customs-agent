@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><CC014CV1Sal xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC014CV1Sal.xsd" Id="20261116091512562004">
+	<messageSender>NTA.ES</messageSender>
+	<messageRecipient>B22477020</messageRecipient>
+	<preparationDateAndTime>2026-11-16T09:15:12</preparationDateAndTime>
+	<messageIdentification>20261116091512562004</messageIdentification>
+	<messageType>RE014C</messageType>
+	<correlationIdentifier>LUCIN2611160815120001235</correlationIdentifier>
+	<ControlRespuesta>
+		<tipoRespuesta>EF</tipoRespuesta>
+	</ControlRespuesta>
+	<FunctionalError>
+		<errorPointer>/CC014C/TransitOperation/MRN</errorPointer>
+		<errorCode>12</errorCode>
+		<errorReason>810</errorReason>
+		<errorDescription>Estado del tránsito incorrecto para solicitar la invalidación</errorDescription>
+		<originalAttributeValue>26ES002801501441J7</originalAttributeValue>
+	</FunctionalError>
+</CC014CV1Sal>
+</env:Body>
+</env:Envelope>

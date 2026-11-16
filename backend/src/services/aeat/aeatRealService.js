@@ -110,7 +110,6 @@ class AEATRealService {
         code: 'H1_SUBMIT',
         name: 'Presentación DUA Importación H1',
         path: '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.ImportacionCompletaV1SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adip/ws/ImportacionCompletaV1.wsdl',
         operation: 'ImportacionCompletaV1',
         messageType: 'ImportacionCompletaV1Ent',
         description: 'Declaracion completa de importacion segun CAU'
@@ -119,25 +118,8 @@ class AEATRealService {
         code: 'H1_QUERY',
         name: 'Consulta DUA Importación (CAU)',
         path: ENDPOINT_H1,
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/cci/ConsultaImportacionV3.wsdl',
         operation: 'ConsultaImportacionV3',
         description: 'Consulta estado de declaracion H1 (CAU); ver h1CauConsulta.js'
-      },
-      H1_SIMPLIFIED: {
-        code: 'H1_SIMPLIFIED',
-        name: 'Declaracion Simplificada Importación',
-        path: '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.DeclaSimpliImporV1SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adip/ws/DeclaSimpliImporV1.wsdl',
-        operation: 'DeclaSimpliImporV1',
-        description: 'Declaracion simplificada de importacion'
-      },
-      H1_INVALIDATION: {
-        code: 'H1_INVALIDATION',
-        name: 'Anulación DUA Importación',
-        path: '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.AnulaImportacionV1SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adip/ws/AnulaImportacionV1.wsdl',
-        operation: 'AnulaImportacionV1',
-        description: 'Anulacion de declaracion H1'
       },
 
       // === EXPORTACIÓN AES ===
@@ -145,7 +127,6 @@ class AEATRealService {
         code: 'AES_SUBMIT',
         name: 'Presentación Declaración Exportación AES',
         path: '/wlpl/ADEX-JDIT/ws/aes/CC515CV1SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/CC515CV1.wsdl',
         operation: 'CC515CV1',
         messageType: 'CC515C',
         description: 'Declaracion de exportacion AES P1'
@@ -154,7 +135,6 @@ class AEATRealService {
         code: 'AES_QUERY',
         name: 'Consulta Exportación',
         path: ENDPOINT_AES,
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adex/jdit/ws/aes/CCAESCV1.wsdl',
         operation: 'CCAESCV1',
         description: 'Consulta estado declaracion exportacion'
       },
@@ -164,7 +144,6 @@ class AEATRealService {
         code: 'NCTS_SUBMIT',
         name: 'Presentación Tránsito NCTS',
         path: '/wlpl/ADTR-JDIT/ws/ncts5/CC015CV1SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC015CV1.wsdl',
         operation: 'CC015CV1',
         messageType: 'CC015C',
         description: 'Declaracion de transito NCTS Fase 5'
@@ -173,7 +152,6 @@ class AEATRealService {
         code: 'NCTS_ARRIVAL',
         name: 'Notificación Llegada NCTS',
         path: '/wlpl/ADTR-JDIT/ws/ncts5/CC007CV1SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC007CV1.wsdl',
         operation: 'CC007CV1',
         messageType: 'CC007C',
         description: 'Notificacion de llegada de transito'
@@ -182,7 +160,6 @@ class AEATRealService {
         code: 'NCTS_UNLOADING',
         name: 'Notificación Descarga NCTS',
         path: '/wlpl/ADTR-JDIT/ws/ncts5/CC044CV1SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC044CV1.wsdl',
         operation: 'CC044CV1',
         messageType: 'CC044C',
         description: 'Observaciones descarga de transito'
@@ -191,7 +168,6 @@ class AEATRealService {
         code: 'NCTS_QUERY',
         name: 'Consulta Tránsito',
         path: ENDPOINT_NCTS,
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CCTRACV2.wsdl',
         operation: 'CCTRACV2',
         description: 'Consulta estado de transito'
       },
@@ -201,96 +177,18 @@ class AEATRealService {
         code: 'ICS2_ENS_SUBMIT',
         name: 'Presentación ENS ICS2',
         path: '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.IE315V5SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/aden/enswsv5/IE315V5.wsdl',
         operation: 'IE315V5',
         messageType: 'IE315',
         description: 'Declaracion sumaria de entrada ICS2'
       },
-      ICS2_ENS_AMEND: {
-        code: 'ICS2_ENS_AMEND',
-        name: 'Rectificación ENS ICS2',
-        path: '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.IE313V5SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/aden/enswsv5/IE313V5.wsdl',
-        operation: 'IE313V5',
-        messageType: 'IE313',
-        description: 'Rectificacion de declaracion sumaria de entrada'
-      },
-      ICS2_ENS_ARRIVAL: {
-        code: 'ICS2_ENS_ARRIVAL',
-        name: 'Notificación Llegada ENS ICS2',
-        path: '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.IE347V5SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/aden/enswsv5/IE347V5.wsdl',
-        operation: 'IE347V5',
-        messageType: 'IE347',
-        description: 'Notificacion de llegada de declaracion sumaria de entrada'
-      },
-      ICS2_ENS_CANCEL: {
-        code: 'ICS2_ENS_CANCEL',
-        name: 'Anulación ENS ICS2',
-        path: '/wlpl/inwinvoc/es.aeat.dit.adu.aden.enswsv5.IE314V5SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/aden/enswsv5/IE314V5.wsdl',
-        operation: 'IE314V5',
-        messageType: 'IE314',
-        description: 'Anulacion de declaracion sumaria de entrada'
-      },
 
-      // === H7 (Bajo Valor - Obsoleto desde 2026, pero mantenido para referencia) ===
-      H7_SUBMIT: {
-        code: 'H7_SUBMIT',
-        name: 'Presentación DUA H7 (Bajo Valor)',
-        path: '/wlpl/inwinvoc/es.aeat.dit.adu.adh7.ws.H7SubmitV1SOAP',
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adh7/ws/H7SubmitV1.wsdl',
-        operation: 'H7SubmitV1',
-        messageType: 'H7Submit',
-        description: 'Declaracion de bajo valor H7'
-      },
+      // === H7 (consulta; el alta va por aeatSubmitService.submitH7 -> AltaH7V1) ===
       H7_QUERY: {
         code: 'H7_QUERY',
         name: 'Consulta DUA H7',
         path: ENDPOINT_CONSULTA_H7,
-        wsdlUrl: 'https://www3.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adip/jdit/ws/h7/ConsultaH7V1.wsdl',
         operation: 'ConsultaH7V1',
         description: 'Consulta estado de declaracion H7; ver h7Consulta.js'
-      },
-
-      // === SOIVRE ===
-      SOIVRE_SUBMIT: {
-        code: 'SOIVRE_SUBMIT',
-        name: 'Alta Solicitud SOIVRE',
-        path: '/L/inwinvoc/es.aeat.dit.adu.ad44.soivre.SOIVREaltaV1SOAP',
-        wsdlUrl: 'https://www2.agenciatributaria.gob.es/ADUA/internet/es/aeat/dit/adu/ad44/soivre/SOIVREaltaV1.wsdl',
-        operation: 'SOIVREaltaV1',
-        description: 'Alta de solicitud de inspeccion SOIVRE'
-      },
-
-      // === CONSULTAS ADDS-JDIT ===
-      QUERY_BY_BOL: {
-        code: 'QUERY_BY_BOL',
-        name: 'Consulta por Conocimiento',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaDeclaracV1.wsdl',
-        operation: 'consultarPorConocimiento',
-        description: 'Consulta declaraciones por número de B/L, AWB o CMR'
-      },
-      QUERY_BY_CONTAINER: {
-        code: 'QUERY_BY_CONTAINER',
-        name: 'Consulta por Contenedor',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaDeclaracV1.wsdl',
-        operation: 'consultarPorContenedor',
-        description: 'Consulta declaraciones por número de contenedor'
-      },
-      QUERY_BY_LOCATION: {
-        code: 'QUERY_BY_LOCATION',
-        name: 'Consulta por Ubicación',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaDeclaracV1.wsdl',
-        operation: 'consultarPorUbicacion',
-        description: 'Consulta declaraciones por ubicación/aduana'
-      },
-      QUERY_DOCUMENTS: {
-        code: 'QUERY_DOCUMENTS',
-        name: 'Consulta Documentos Asociados',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adht/jdit/ws/ConsultaDocumentosV1.wsdl',
-        operation: 'consultarDocumentosAsociados',
-        description: 'Consulta documentos asociados a una declaración'
       },
 
       // === BANDEJA DE ENTRADA ===
@@ -310,38 +208,6 @@ class AEATRealService {
         operation: 'enviarDocumentos',
         version: '1.7',
         description: 'Envío de documentación digitalizada adjunta'
-      },
-
-      // === SILICIE (Impuestos Especiales) ===
-      SILICIE_ALCOHOL_ALTA: {
-        code: 'SILICIE_ALCOHOL_ALTA',
-        name: 'SILICIE Alcohol - Alta',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adsi/lico/ws/v2/altas/alc/IESA1V2.wsdl',
-        operation: 'altaAsiento',
-        description: 'Alta de asiento contable SILICIE Alcohol'
-      },
-      SILICIE_HYDROCARB_ALTA: {
-        code: 'SILICIE_HYDROCARB_ALTA',
-        name: 'SILICIE Hidrocarburos - Alta',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adsi/lico/ws/v2/altas/hid/IESH1V2.wsdl',
-        operation: 'altaAsiento',
-        description: 'Alta de asiento contable SILICIE Hidrocarburos'
-      },
-      SILICIE_TOBACCO_ALTA: {
-        code: 'SILICIE_TOBACCO_ALTA',
-        name: 'SILICIE Tabaco - Alta',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/adsi/lico/ws/v2/altas/tab/IEST1V2.wsdl',
-        operation: 'altaAsiento',
-        description: 'Alta de asiento contable SILICIE Tabaco'
-      },
-
-      // === EMCS (Excise Movement Control System) ===
-      EMCS_IE815: {
-        code: 'EMCS_IE815',
-        name: 'EMCS - Documento de Acompañamiento',
-        wsdl: '/static_files/common/internet/dep/aduanas/es/aeat/dit/adu/adi1/emcssw/Ie815V4.wsdl',
-        operation: 'enviarIE815',
-        description: 'Borrador de documento de acompañamiento EMCS'
       }
     };
 
@@ -499,23 +365,6 @@ class AEATRealService {
   }
 
   /**
-   * Enviar declaración H7 (bajo valor)
-   */
-  async submitH7Declaration(declarationXML, certificateId, password, options = {}) {
-    return this._submitDeclaration(
-      this.SERVICES.H7_SUBMIT,
-      declarationXML,
-      certificateId,
-      password,
-      {
-        ...options,
-        // En 2026: sin umbral mínimo para e-commerce
-        validateNoThreshold: true
-      }
-    );
-  }
-
-  /**
    * Enviar declaración AES de exportación
    */
   async submitAESDeclaration(declarationXML, certificateId, password, options = {}) {
@@ -552,52 +401,6 @@ class AEATRealService {
       password,
       options
     );
-  }
-
-  /**
-   * Rectificar declaración ENS
-   */
-  async amendENSDeclaration(xml, certificateId, password, options = {}) {
-    return this._submitDeclaration(
-      this.SERVICES.ICS2_ENS_AMEND,
-      xml,
-      certificateId,
-      password,
-      options
-    );
-  }
-
-  /**
-   * Notificar llegada ENS
-   */
-  async notifyENSArrival(xml, certificateId, password, options = {}) {
-    return this._submitDeclaration(
-      this.SERVICES.ICS2_ENS_ARRIVAL,
-      xml,
-      certificateId,
-      password,
-      options
-    );
-  }
-
-  /**
-   * Anular declaración ENS
-   */
-  async cancelENSDeclaration(xml, certificateId, password, options = {}) {
-    return this._submitDeclaration(
-      this.SERVICES.ICS2_ENS_CANCEL,
-      xml,
-      certificateId,
-      password,
-      options
-    );
-  }
-
-  /**
-   * Consultar estado de ENS (ver CONSULTAS_NO_DISPONIBLES: no se envía nada).
-   */
-  async queryENSStatus(mrn, opciones = {}) {
-    return this.queryDeclarationStatus(mrn, 'ENS', opciones);
   }
 
   /**
@@ -1273,11 +1076,6 @@ class AEATRealService {
       }
     }
 
-    // Verificaciones específicas H7 (2026)
-    if (service.code === 'H7_SUBMIT' && options.validateNoThreshold) {
-      warnings.push('Recordatorio: Desde 2026, todos los envíos e-commerce requieren H7 sin umbral mínimo');
-    }
-
     return {
       canSubmit: issues.length === 0,
       issues,
@@ -1451,18 +1249,6 @@ class AEATRealService {
         { tag: 'Partida', name: 'Partida de mercancias', required: true },
         { tag: 'C42ValorFactura', name: 'Valor factura', required: true },
         { tag: 'C3312CodigoPosicionTaric', name: 'Codigo TARIC', required: true }
-      ],
-      // NOTA (sep/2026): existen dos builders H7 (buildH7ImportXML con tags
-      // AEAT-nativos tipo C08Importador/C14Declarante, y buildAltaH7V1XML,
-      // el esquema oficial más reciente, con Exporter/Importer/GoodsItem) y
-      // no está claro cuál es el vigente para H7_SUBMIT — el propio SERVICES
-      // lo marca "Obsoleto desde 2026". No se corrige aquí sin confirmar cuál
-      // builder es el real para no adivinar una decisión de producto.
-      'H7_SUBMIT': [
-        { tag: 'Sender', name: 'Remitente', required: true },
-        { tag: 'Recipient', name: 'Destinatario', required: true },
-        { tag: 'GoodsDescription', name: 'Descripción mercancía', required: true },
-        { tag: 'IntrinsicValue', name: 'Valor intrínseco', required: true }
       ],
       // Nombres verificados contra aesXmlBuilder.js (único builder AES, elementFormDefault="qualified").
       'AES_SUBMIT': [

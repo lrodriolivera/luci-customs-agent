@@ -63,6 +63,7 @@ const transitSchema = new mongoose.Schema({
     enum: [
       'draft',              // Borrador
       'submitted',          // Enviada a NCTS
+      'prelodged',          // Predeclaracion admitida (NCTS PA): falta presentar la mercancia (CC170C)
       'accepted',           // Aceptada, MRN asignado
       'released',           // Mercancias liberadas en partida
       'in_transit',         // En transito
@@ -78,6 +79,23 @@ const transitSchema = new mongoose.Schema({
       'completed'           // Completado
     ],
     default: 'draft'
+  },
+
+  // Tipo de declaracion adicional del CC015C: 'A' declaracion, 'D'
+  // predeclaracion (la mercancia aun no esta en la aduana de partida; se
+  // presenta despues con el CC170C, que la convierte en 'A').
+  additionalDeclarationType: { type: String, enum: ['A', 'D'], default: 'A' },
+
+  // Ultimo estado conocido en el NCTS de la AEAT (PA, PG, PD, DE, CA, IV...),
+  // tal como lo devuelven CC015C/CC013C/CC014C/CC170C. `status` es el estado de
+  // LUCI; este es el de la aduana, y de el dependen los mensajes permitidos
+  // (p. ej. el CC014C solo en PA o PG).
+  ncts: {
+    estado: String,
+    circuito: String,
+    csv: String,
+    csvDat: String,
+    actualizado: Date
   },
 
   // Principal obligado (Authorized Economic Operator)
@@ -323,6 +341,8 @@ const transitSchema = new mongoose.Schema({
     type: {
       type: String,
       enum: [
+        'IE013', // Declaration amendment (CC013C, modificacion de la predeclaracion)
+        'IE014', // Declaration invalidation request (CC014C)
         'IE015', // Declaration data
         'IE016', // Declaration rejected
         'IE028', // MRN allocated
@@ -339,6 +359,7 @@ const transitSchema = new mongoose.Schema({
         'IE142', // Information response
         'IE143', // Control results
         'IE160', // Arrival notification
+        'IE170', // Presentation notification (CC170C, presentacion de la mercancia)
         'IE906', // Functional NACK
         'IE917', // XML NACK
         'IE928'  // Positive ACK

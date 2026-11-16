@@ -16,13 +16,16 @@ const { buildActivacionH1CauXML, datosDeActivacion, ENDPOINT_CC432A } = require(
 const { buildH1CauXML, ENDPOINT_CC415A } = require('./h1CauXmlBuilder');
 const { interpretarRespuestaH1Cau } = require('./h1CauResponse');
 const { buildConsultaH1CauXML, interpretarConsultaH1Cau, ENDPOINT_CONSULTA } = require('./h1CauConsulta');
-const { buildH7ImportXML, buildAltaH7V1XML } = require('./h7XmlBuilder');
+const { buildAltaH7V1XML } = require('./h7XmlBuilder');
 const { codigoAdicionalH7, validarPartidasH7ParaAeat } = require('./h7Identificadores');
 const { interpretarLiquidacionH7 } = require('./h7Liquidacion');
 const { aplicaDerechoFijo2026 } = require('../../config/reg2026382');
 const { buildAESExportXML } = require('./aesXmlBuilder');
 const { expeditionToAesData } = require('./aesData');
-const { buildNCTSTransitXML } = require('./nctsXmlBuilder');
+const { buildNCTSTransitXML, buildCC013AmendmentXML } = require('./nctsXmlBuilder');
+const { buildCC014InvalidationXML } = require('./cc014XmlBuilder');
+const { buildCC170PresentationXML } = require('./cc170XmlBuilder');
+const { interpretarRespuestaNcts, ENDPOINTS_NCTS } = require('./nctsRespuesta');
 const { buildENSDeclarationXML } = require('./ensXmlBuilder');
 const { buildSOIVREAltaXML } = require('./soivreXmlBuilder');
 const { buildH1CancelXML } = require('./h1CancelXmlBuilder');
@@ -560,29 +563,40 @@ async function submitAES(expedition, ctx = {}) {
 }
 
 /**
- * Enviar declaracion NCTS transito
+ * EORI del titular del transito: el principal; si falta, el tenant solo cuando
+ * es el titular; si tampoco, 422 (antes salia un EORI fijo).
  */
-async function submitNCTS(transit, ctx = {}) {
-  const principal = transit.principal || {};
-  const guarantee = transit.guarantee || {};
-  const tenant = await _tenantDe(transit, ctx);
-  // Titular: el principal del transito; si falta, el tenant solo cuando es el
-  // titular; si tampoco, 422 (antes salia un EORI fijo).
-  const holderEORI = exigirEori(
-    eoriDe(principal) || (_tenantEsLaParte(tenant) ? representanteDelTenant(tenant).eori : null),
+function _titularNCTS(transit, tenant) {
+  return exigirEori(
+    eoriDe(transit.principal || {}) || (_tenantEsLaParte(tenant) ? representanteDelTenant(tenant).eori : null),
     'titular del tránsito'
   );
-  const holderNameDefault = _tenantEsLaParte(tenant) ? (representanteDelTenant(tenant).companyName || '') : '';
-  const isPRE = process.env.AEAT_ENVIRONMENT !== 'production';
-  // Datos Jose Antonio AEAT PRE (2/Mar/2026): solo aplicar en entorno test
-  // Datos Jose Antonio AEAT PRE: GRN 26ES0002800000010, autorizacion expedicion
-  // ESACR02026000002, ubicacion verde 2801AAAAAC (10 chars, sin prefijo ES).
-  const nctsGuaranteeGRNDefault = isPRE ? '26ES0002800000010' : '';
-  const nctsAuthDefault = isPRE ? 'ESACR02026000002' : '';
-  const nctsLocationDefault = isPRE ? '2801AAAAAC' : '';
+}
 
-  const soapXML = buildNCTSTransitXML({
+// Datos Jose Antonio AEAT PRE (2/Mar/2026): solo en entorno test. GRN
+// 26ES0002800000010, autorizacion de expedicion ESACR02026000002, ubicacion
+// verde 2801AAAAAC (10 chars, sin prefijo ES).
+const NCTS_PRE = { grn: '26ES0002800000010', autorizacion: 'ESACR02026000002', ubicacion: '2801AAAAAC' };
+const _esPRE = () => process.env.AEAT_ENVIRONMENT !== 'production';
+
+/**
+ * Datos de la declaracion para el builder: los mismos para el alta (CC015C) y
+ * para la modificacion (CC013C), que debe llevar la declaracion entera.
+ */
+function _datosNCTS(transit, tenant) {
+  const principal = transit.principal || {};
+  const guarantee = transit.guarantee || {};
+  const holderEORI = _titularNCTS(transit, tenant);
+  const holderNameDefault = _tenantEsLaParte(tenant) ? (representanteDelTenant(tenant).companyName || '') : '';
+  const isPRE = _esPRE();
+  const nctsGuaranteeGRNDefault = isPRE ? NCTS_PRE.grn : '';
+  const nctsAuthDefault = isPRE ? NCTS_PRE.autorizacion : '';
+  const nctsLocationDefault = isPRE ? NCTS_PRE.ubicacion : '';
+
+  return {
     test: isPRE,
+    // 'D' = predeclaracion: nace en PA y la mercancia se presenta luego con el CC170C.
+    additionalDeclarationType: transit.additionalDeclarationType === 'D' ? 'D' : 'A',
     lrn: transit.lrn || '',
     transitType: transit.transitType || 'T1',
     officeOfDeparture: transit.departureOffice?.code || 'ES002801',
@@ -629,8 +643,85 @@ async function submitNCTS(transit, ctx = {}) {
         };
       })
     }
+  };
+}
+
+/**
+ * Enviar declaracion NCTS transito (CC015C). Devuelve ademas el estado NCTS en
+ * que queda (PA predeclaracion, PG, PD o DE) cuando la respuesta es la oficial
+ * CC015CV1Sal; con otras respuestas `estadoNcts` es null.
+ */
+async function submitNCTS(transit, ctx = {}) {
+  const tenant = await _tenantDe(transit, ctx);
+  const soapXML = buildNCTSTransitXML(_datosNCTS(transit, tenant));
+  const r = await _sendToAEAT(soapXML, ENDPOINTS_NCTS.CC015C);
+  const ncts = interpretarRespuestaNcts(r.rawResponse, { mensaje: 'CC015C' });
+  return {
+    ...r,
+    estadoNcts: ncts.success ? ncts.estado : null,
+    circuitoNcts: ncts.success ? ncts.circuito : null,
+    fechaLimiteLlegada: ncts.success ? ncts.fechas.limiteLlegada : null
+  };
+}
+
+/** Envia un mensaje NCTS del operador y lee su *Sal oficial. */
+async function _enviarNcts(mensaje, soapXML, mrn) {
+  logger.info(`[AEAT] NCTS ${mensaje}${mrn ? ` MRN=${mrn}` : ''}`);
+  const response = await aeatTransport.sendSoap(soapXML, ENDPOINTS_NCTS[mensaje]);
+  return { ...interpretarRespuestaNcts(response.data, { mensaje, mrn }), requestXML: soapXML };
+}
+
+/** NIF del firmante (el tenant que presenta): remitente de CC013/CC014/CC170. */
+async function _remitenteNcts(transit, ctx) {
+  const tenant = await _tenantDe(transit, ctx);
+  return { tenant, sender: _firmanteDelTenant(tenant).eori };
+}
+
+/**
+ * Modificacion de la predeclaracion (CC013C). Solo en estado PA; lleva la
+ * declaracion entera con los datos ya cambiados en `transit`.
+ */
+async function submitNCTSAmendment(transit, ctx = {}) {
+  const { tenant, sender } = await _remitenteNcts(transit, ctx);
+  const soapXML = buildCC013AmendmentXML({
+    ..._datosNCTS(transit, tenant),
+    // Una modificacion solo existe sobre una predeclaracion, y el tipo no puede
+    // cambiar respecto del CC015C (guia 11.1).
+    additionalDeclarationType: 'D',
+    mrn: transit.mrn,
+    messageSender: sender
   });
-  return _sendToAEAT(soapXML, '/wlpl/ADTR-JDIT/ws/ncts5/CC015CV1SOAP');
+  return _enviarNcts('CC013C', soapXML, transit.mrn);
+}
+
+/** Solicitud de invalidacion (CC014C). Solo en estado PA o PG. */
+async function submitNCTSInvalidation(transit, { motivo } = {}, ctx = {}) {
+  const { tenant, sender } = await _remitenteNcts(transit, ctx);
+  const soapXML = buildCC014InvalidationXML({
+    mrn: transit.mrn,
+    officeOfDeparture: transit.departureOffice?.code,
+    holderEORI: _titularNCTS(transit, tenant),
+    motivo,
+    sender
+  });
+  return _enviarNcts('CC014C', soapXML, transit.mrn);
+}
+
+/**
+ * Presentacion de las mercancias de una predeclaracion (CC170C). Solo en PA.
+ * La ubicacion es la que se indique al presentar, la del transito o, solo en
+ * PRE, la de pruebas.
+ */
+async function submitNCTSPresentation(transit, { locationAuthorisationNumber } = {}, ctx = {}) {
+  const { tenant, sender } = await _remitenteNcts(transit, ctx);
+  const soapXML = buildCC170PresentationXML({
+    lrn: transit.lrn,
+    officeOfDeparture: transit.departureOffice?.code,
+    holderEORI: _titularNCTS(transit, tenant),
+    locationAuthorisationNumber: locationAuthorisationNumber || transit.locationAuthorisationNumber || (_esPRE() ? NCTS_PRE.ubicacion : ''),
+    sender
+  });
+  return _enviarNcts('CC170C', soapXML, transit.mrn);
 }
 
 /**
@@ -888,6 +979,9 @@ module.exports = {
   cancelH1,
   submitNCTSArrival,
   submitNCTSUnloading,
+  submitNCTSAmendment,
+  submitNCTSInvalidation,
+  submitNCTSPresentation,
   submitENSAmendment,
   submitENSCancellation
 };

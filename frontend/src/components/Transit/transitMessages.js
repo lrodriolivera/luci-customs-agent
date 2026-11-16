@@ -13,6 +13,8 @@
  */
 
 const DESCRIPCION_MENSAJE = {
+  IE013: 'Modificacion de la predeclaracion',
+  IE014: 'Solicitud de anulacion',
   IE015: 'Declaracion de transito',
   IE016: 'Declaracion rechazada',
   IE028: 'MRN asignado',
@@ -29,6 +31,7 @@ const DESCRIPCION_MENSAJE = {
   IE142: 'Respuesta de informacion',
   IE143: 'Resultados del control',
   IE160: 'Notificacion de llegada',
+  IE170: 'Presentacion de la mercancia',
   IE906: 'Rechazo funcional',
   IE917: 'Rechazo de XML',
   IE928: 'Acuse de recibo'

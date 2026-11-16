@@ -23,7 +23,6 @@ const agent = new https.Agent({ cert, key, rejectUnauthorized: false });
 // Load builders
 const { buildH1ImportXML } = require('../src/services/aeat/h1XmlBuilder');
 const { buildQueryImportXML } = require('../src/services/aeat/queryXmlBuilder');
-const { buildH7ImportXML } = require('../src/services/aeat/h7XmlBuilder');
 const { buildAESExportXML } = require('../src/services/aeat/aesXmlBuilder');
 const { buildNCTSTransitXML } = require('../src/services/aeat/nctsXmlBuilder');
 const { buildENSDeclarationXML } = require('../src/services/aeat/ensXmlBuilder');
@@ -52,18 +51,7 @@ const tests = [
     url: BASE + '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.ConsultaImportacionV2SOAP',
     xml: buildQueryImportXML('26ES0000000000000001', { test: true })
   },
-  {
-    name: '3. H7 BAJO VALOR',
-    url: BASE + '/wlpl/inwinvoc/es.aeat.dit.adu.adip.ws.DeclaSimpliImporV1SOAP',
-    xml: buildH7ImportXML({
-      aduanaDespacho: '002801', remitenteNombre: 'Amazon EU', remitentePais: 'LU',
-      destinatarioNIF: '12345678A', destinatarioNombre: 'Juan Test',
-      destinatarioDireccion: 'Calle Test 1', destinatarioPoblacion: 'Madrid', destinatarioCP: '28001',
-      emailDespacho: 'test@test.es',
-      partidas: [{ descripcion: 'Funda movil', taricCode: '39269097', paisOrigen: 'CN',
-        pesobruto: 0.5, pesoneto: 0.3, bultos: 1, valorFactura: 15 }]
-    })
-  },
+
   {
     name: '4. AES EXPORTACION',
     url: BASE + '/wlpl/ADEX-JDIT/ws/aes/CC515CV1SOAP',

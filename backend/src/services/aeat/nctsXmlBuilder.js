@@ -19,16 +19,49 @@
 
 const { xml } = require('./xmlTemplate');
 const { generateTransactionId } = require('./queryXmlBuilder');
-const NS_ENT = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC015CV1Ent.xsd';
+const { fechaHora } = require('./h1CauXmlBuilder');
+const { exigirMrn, exigirRemitente } = require('./aesNctsConsulta');
+const { ErrorValidacion } = require('../forms/identificadorAduanero');
+const NS_BASE = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5';
+const NS_ENT = `${NS_BASE}/CC015CV1Ent.xsd`;
+const NS_ENT_CC013 = `${NS_BASE}/CC013CV1Ent.xsd`;
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 
 /**
- * Construir XML de declaracion NCTS transito
+ * El NCTS exige la subpartida SA (6 cifras, tabla CSRDT152) Y el codigo NC
+ * (2 cifras): en la guia NCTS6 v1.21 el combinedNomenclatureCode es «D» con
+ * guia «Es 'R'» y «la concatenacion de Harmonized system sub-heading code y
+ * Combined nomenclature code tiene que existir en la base de TARIC». Antes, un
+ * codigo de 6 cifras salia con un «00» inventado: un codigo que puede no existir
+ * y que la AEAT rechaza con un error que no nombra la partida, o peor, que
+ * existe y no es la mercancia. Se corta antes de construir el XML.
  */
-function buildNCTSTransitXML(data) {
+function _codigoLimpio(taric) {
+  return String(taric || '').replace(/[\s.]/g, '');
+}
+
+function validarCodigosMercancia(goodsItems = []) {
+  const errores = [];
+  goodsItems.forEach((g, i) => {
+    if (!/^\d{8}/.test(_codigoLimpio(g?.taricCode))) {
+      errores.push(`Partida ${i + 1}: el código de mercancía «${g?.taricCode || ''}» no tiene las 8 cifras de la Nomenclatura Combinada `
+        + '(subpartida SA de 6 + código NC de 2); el NCTS no admite completarlo y exige que exista en el TARIC');
+    }
+  });
+  if (errores.length) {
+    throw new ErrorValidacion(`No se puede presentar el tránsito: ${errores.join('; ')}`, { code: 'CODIGO_NC_INCOMPLETO', errors: errores });
+  }
+}
+
+/**
+ * Bloques comunes a la declaracion (CC015C) y a su modificacion (CC013C): todo
+ * lo que va tras TransitOperation. El CC013C «debe ser rellenado con todos los
+ * datos de la predeclaracion, no solo con los que cambian» (guia 4.4.1), y sus
+ * reglas son las del CC015C, asi que ambos salen de aqui.
+ */
+function _cuerpoDeclaracion(data, idRespaldo) {
   const {
-    lrn = '', transitType = 'T1', securityIndicator = '0',
-    additionalDeclarationType = 'A',
+    lrn = '',
     // Aduanas
     officeOfDeparture = '', officeOfDestination = '',
     transitOffices = [],
@@ -50,7 +83,7 @@ function buildNCTSTransitXML(data) {
     test = true
   } = data;
 
-  const transId = generateTransactionId();
+  validarCodigosMercancia(consignment.goodsItems || []);
   const totalGross = (consignment.goodsItems || []).reduce((s, g) => s + (g.grossWeight || 0), 0);
   const totalItems = (consignment.goodsItems || []).length || 1;
 
@@ -84,8 +117,8 @@ function buildNCTSTransitXML(data) {
               <ent:Commodity>
                 <ent:descriptionOfGoods>${(g.description || '').substring(0, 512)}</ent:descriptionOfGoods>
                 <ent:CommodityCode>
-                  <ent:harmonizedSystemSubHeadingCode>${(g.taricCode || '').substring(0, 6)}</ent:harmonizedSystemSubHeadingCode>
-                  <ent:combinedNomenclatureCode>${(g.taricCode || '').substring(6, 8) || '00'}</ent:combinedNomenclatureCode>
+                  <ent:harmonizedSystemSubHeadingCode>${_codigoLimpio(g.taricCode).substring(0, 6)}</ent:harmonizedSystemSubHeadingCode>
+                  <ent:combinedNomenclatureCode>${_codigoLimpio(g.taricCode).substring(6, 8)}</ent:combinedNomenclatureCode>
                 </ent:CommodityCode>
                 <ent:GoodsMeasure>
                   <ent:grossMass>${Number(g.grossWeight || 0).toFixed(3)}</ent:grossMass>
@@ -113,24 +146,7 @@ function buildNCTSTransitXML(data) {
   const needsGRN = ['0', '1', '3', '4'].includes(guaranteeType);
   const needsRefNoGRN = ['2', '6', '8'].includes(guaranteeType);
 
-  return xml`<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
-  <soapenv:Body>
-    <ent:CC015CV1Ent xmlns:ent="${NS_ENT}" Id="${transId}">
-      <ent:CC015C>
-        <ent:messageSender>${holderEORI}</ent:messageSender>
-        <ent:messageRecipient>NTA.ES</ent:messageRecipient>
-        <ent:preparationDateAndTime>${new Date().toISOString().substring(0, 19)}</ent:preparationDateAndTime>
-        <ent:messageIdentification>${transId.substring(0, 14)}</ent:messageIdentification>
-        <ent:messageType>CC015C</ent:messageType>
-        <ent:TransitOperation>
-          <ent:LRN>${lrn || transId}</ent:LRN>
-          <ent:declarationType>${transitType}</ent:declarationType>
-          <ent:additionalDeclarationType>${additionalDeclarationType}</ent:additionalDeclarationType>
-          <ent:security>${securityIndicator}</ent:security>
-          <ent:reducedDatasetIndicator>0</ent:reducedDatasetIndicator>
-          <ent:bindingItinerary>0</ent:bindingItinerary>
-        </ent:TransitOperation>${data.authorisationNumber ? xml`
+  return xml`${data.authorisationNumber ? xml`
         <ent:Authorisation>
           <ent:sequenceNumber>1</ent:sequenceNumber>
           <ent:type>C521</ent:type>
@@ -174,7 +190,7 @@ function buildNCTSTransitXML(data) {
         <ent:Consignment>
           <ent:containerIndicator>0</ent:containerIndicator>
           <ent:grossMass>${totalGross.toFixed(3)}</ent:grossMass>
-          <ent:referenceNumberUCR>${data.referenceNumberUCR || lrn || transId}</ent:referenceNumberUCR>
+          <ent:referenceNumberUCR>${data.referenceNumberUCR || lrn || idRespaldo}</ent:referenceNumberUCR>
           <ent:LocationOfGoods>
             <ent:typeOfLocation>B</ent:typeOfLocation>
             <ent:qualifierOfIdentification>Y</ent:qualifierOfIdentification>
@@ -184,11 +200,88 @@ function buildNCTSTransitXML(data) {
             <ent:country>${placeOfLoadingCountry || holderCountry}</ent:country>
             <ent:location>${placeOfLoadingLocation || holderCity || 'Zaragoza'}</ent:location>
           </ent:PlaceOfLoading>${itemsXML}
-        </ent:Consignment>
+        </ent:Consignment>`;
+}
+
+/**
+ * Construir XML de declaracion NCTS transito (CC015C). Con
+ * additionalDeclarationType 'D' es una predeclaracion (estado PA).
+ */
+function buildNCTSTransitXML(data) {
+  const {
+    lrn = '', transitType = 'T1', securityIndicator = '0',
+    additionalDeclarationType = 'A', holderEORI = ''
+  } = data;
+  const transId = generateTransactionId();
+  const cuerpo = _cuerpoDeclaracion(data, transId);
+
+  return xml`<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
+  <soapenv:Body>
+    <ent:CC015CV1Ent xmlns:ent="${NS_ENT}" Id="${transId}">
+      <ent:CC015C>
+        <ent:messageSender>${holderEORI}</ent:messageSender>
+        <ent:messageRecipient>NTA.ES</ent:messageRecipient>
+        <ent:preparationDateAndTime>${new Date().toISOString().substring(0, 19)}</ent:preparationDateAndTime>
+        <ent:messageIdentification>${transId.substring(0, 14)}</ent:messageIdentification>
+        <ent:messageType>CC015C</ent:messageType>
+        <ent:TransitOperation>
+          <ent:LRN>${lrn || transId}</ent:LRN>
+          <ent:declarationType>${transitType}</ent:declarationType>
+          <ent:additionalDeclarationType>${additionalDeclarationType}</ent:additionalDeclarationType>
+          <ent:security>${securityIndicator}</ent:security>
+          <ent:reducedDatasetIndicator>0</ent:reducedDatasetIndicator>
+          <ent:bindingItinerary>0</ent:bindingItinerary>
+        </ent:TransitOperation>${cuerpo}
       </ent:CC015C>
     </ent:CC015CV1Ent>
   </soapenv:Body>
 </soapenv:Envelope>`.toString();
 }
 
-module.exports = { buildNCTSTransitXML };
+/**
+ * Modificacion de una predeclaracion (CC013C, servicio CC013CV1). Solo se admite
+ * en estado PA (guia 4.3). Lleva el MRN y no el LRN («No se puede rellenar»),
+ * amendmentTypeFlag 0 (modificacion completa) y el resto de la declaracion
+ * entera. No pueden cambiar respecto del CC015C: additionalDeclarationType,
+ * security, aduana de partida, titular y representante (guia 11.1); eso lo
+ * comprueba transitService antes de llegar aqui.
+ *
+ * @param {object} data  los del CC015C mas `mrn`, `messageSender` (NIF del
+ *   firmante; se le quita el ES), y opcionales `mensajeId` y `fecha`.
+ */
+function buildCC013AmendmentXML(data) {
+  const {
+    mrn, messageSender, mensajeId = `LUCIN${generateTransactionId()}`, fecha = new Date(),
+    transitType = 'T1', securityIndicator = '0', additionalDeclarationType = 'D'
+  } = data;
+  const mrnLimpio = exigirMrn(mrn, 'la modificación');
+  const remitente = exigirRemitente(messageSender, 'la modificación');
+  const cuerpo = _cuerpoDeclaracion(data, mensajeId);
+
+  return xml`<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="${NS_SOAP}">
+  <soapenv:Body>
+    <ent:CC013CV1Ent xmlns:ent="${NS_ENT_CC013}" Id="${mensajeId}">
+      <ent:CC013C>
+        <ent:messageSender>${remitente}</ent:messageSender>
+        <ent:messageRecipient>NTA.ES</ent:messageRecipient>
+        <ent:preparationDateAndTime>${fechaHora(fecha)}</ent:preparationDateAndTime>
+        <ent:messageIdentification>${mensajeId.substring(0, 35)}</ent:messageIdentification>
+        <ent:messageType>CC013C</ent:messageType>
+        <ent:TransitOperation>
+          <ent:MRN>${mrnLimpio}</ent:MRN>
+          <ent:declarationType>${transitType}</ent:declarationType>
+          <ent:additionalDeclarationType>${additionalDeclarationType}</ent:additionalDeclarationType>
+          <ent:security>${securityIndicator}</ent:security>
+          <ent:reducedDatasetIndicator>0</ent:reducedDatasetIndicator>
+          <ent:bindingItinerary>0</ent:bindingItinerary>
+          <ent:amendmentTypeFlag>0</ent:amendmentTypeFlag>
+        </ent:TransitOperation>${cuerpo}
+      </ent:CC013C>
+    </ent:CC013CV1Ent>
+  </soapenv:Body>
+</soapenv:Envelope>`.toString();
+}
+
+module.exports = { buildNCTSTransitXML, buildCC013AmendmentXML, validarCodigosMercancia };

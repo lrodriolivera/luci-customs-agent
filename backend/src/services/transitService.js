@@ -143,6 +143,102 @@ function _motivoMercanciaNoConforme(transit) {
   return _CODIGOS_CONTROL_NO_CONFORME[control.type] || null;
 }
 
+/**
+ * Tenant que presenta (firmante del CC013C/CC014C/CC170C): el del transito o,
+ * si el transito no lo guarda (create no lo fija), el del usuario. Sin tenant,
+ * aeatSubmitService responde 422 por falta de EORI del representante.
+ */
+async function _ctxAduanero(transit, userId) {
+  let tenantId = transit.tenantId;
+  if (!tenantId) {
+    const user = await User.findById(userId).select('tenantId').lean();
+    tenantId = user?.tenantId;
+  }
+  if (!tenantId) return {};
+  const Tenant = require('../models/Tenant');
+  const tenant = await Tenant.findById(tenantId).lean();
+  return tenant ? { tenant } : {};
+}
+
+/** Anota el estado NCTS que devuelve la AEAT (solo los campos que trae). */
+function _anotarNcts(transit, { estado, circuito, csv, csvDat } = {}) {
+  const previo = transit.ncts?.toObject ? transit.ncts.toObject() : (transit.ncts || {});
+  transit.ncts = {
+    ...previo,
+    ...(estado ? { estado } : {}),
+    ...(circuito ? { circuito } : {}),
+    ...(csv ? { csv } : {}),
+    ...(csvDat ? { csvDat } : {}),
+    actualizado: new Date()
+  };
+}
+
+/** Plazo de llegada que fija la AEAT (AAAA-MM-DD), si lo da. */
+function _plazoDeLlegada(transit, fecha) {
+  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return;
+  transit.deadlines = { ...(transit.deadlines?.toObject ? transit.deadlines.toObject() : transit.deadlines || {}), arrivalDeadline: new Date(`${fecha}T23:59:59Z`) };
+}
+
+/**
+ * La GRN ha de ser una garantia propia y activa (en PRE/dev se admite una GRN
+ * sin registro local: AEAT PRE acepta una de prueba compartida).
+ */
+async function _validarGarantia(grn, userId) {
+  const isProduction = process.env.AEAT_ENVIRONMENT === 'production';
+  const guarantee = await Guarantee.findOne({ grn, owner: userId });
+  if (!guarantee) {
+    if (isProduction) throw new Error('Garantia no encontrada');
+  } else if (guarantee.status !== 'active') {
+    throw new Error('Garantia no esta activa');
+  }
+}
+
+async function _cargarPropio(id, userId) {
+  const transit = await Transit.findOne({ _id: id, owner: userId });
+  if (!transit) throw new Error('Transito no encontrado');
+  return transit;
+}
+
+/**
+ * Campos que una modificacion (CC013C) puede cambiar. La guia NCTS6 v1.21
+ * (11.1) prohibe cambiar el tipo de declaracion adicional, la seguridad, la
+ * aduana de partida, el titular y el representante; los campos de sistema
+ * (MRN, LRN, estado, mensajes...) no son datos de la declaracion.
+ */
+const _MODIFICABLES_CC013 = [
+  'transitType', 'destinationOffice', 'transitOffices', 'guarantee', 'transport', 'goodsItems',
+  'consigneeEORI', 'consigneeName', 'consignee', 'authorisationNumber', 'locationAuthorisationNumber',
+  'placeOfLoading', 'referenceNumberUCR', 'route', 'principal', 'notes'
+];
+
+function _cambiosCC013(transit, data = {}) {
+  const prohibido = (que) => new Error(`${que} no se puede modificar en una predeclaración (guía NCTS6 11.1): si es incorrecto, anule y presente otra`);
+  if (data.additionalDeclarationType !== undefined && data.additionalDeclarationType !== transit.additionalDeclarationType) {
+    throw prohibido('El tipo de declaración adicional');
+  }
+  if (data.departureOffice?.code !== undefined && data.departureOffice.code !== transit.departureOffice?.code) {
+    throw prohibido('La aduana de partida');
+  }
+  if (data.principal?.eori !== undefined && data.principal.eori !== transit.principal?.eori) {
+    throw prohibido('El titular del tránsito (EORI)');
+  }
+  if (data.representative !== undefined || data.securityIndicator !== undefined) {
+    throw prohibido('El representante o el indicador de seguridad');
+  }
+  const cambios = {};
+  for (const campo of _MODIFICABLES_CC013) {
+    if (data[campo] !== undefined) cambios[campo] = data[campo];
+  }
+  if (cambios.principal) {
+    const actual = transit.principal?.toObject ? transit.principal.toObject() : (transit.principal || {});
+    cambios.principal = { ...actual, ...cambios.principal, eori: actual.eori };
+  }
+  if (Object.keys(cambios).length === 0) {
+    throw new Error('No hay ningún cambio que enviar en la modificación');
+  }
+  return cambios;
+}
+
 const transitService = {
   /**
    * Crear nuevo transito
@@ -177,18 +273,7 @@ const transitService = {
     // Excepcion en entorno no-produccion (PRE/dev): permitir GRN sin registro local
     // porque AEAT PRE acepta una GRN de prueba compartida (26ES000280... de Jose Antonio).
     if (data.guarantee?.grn) {
-      const isProduction = process.env.AEAT_ENVIRONMENT === 'production';
-      const guarantee = await Guarantee.findOne({
-        grn: data.guarantee.grn,
-        owner: userId
-      });
-      if (!guarantee) {
-        if (isProduction) {
-          throw new Error('Garantia no encontrada');
-        }
-      } else if (guarantee.status !== 'active') {
-        throw new Error('Garantia no esta activa');
-      }
+      await _validarGarantia(data.guarantee.grn, userId);
     }
 
     const transit = new Transit({
@@ -369,9 +454,16 @@ const transitService = {
     }
 
     transit.mrn = aeatResult.mrn;
-    transit.status = 'accepted';
+    // Una predeclaracion (D) nace en PA: no esta admitida ni data la sumaria
+    // hasta el CC170C (guia NCTS6 4.4.1). Marcarla `accepted` ofreceria liberar
+    // una mercancia que la aduana aun no ha visto.
+    const predeclaracion = aeatResult.estadoNcts === 'PA'
+      || (!aeatResult.estadoNcts && transit.additionalDeclarationType === 'D');
+    transit.status = predeclaracion ? 'prelodged' : 'accepted';
     transit.dates.declaration = new Date();
-    transit.dates.acceptance = new Date();
+    if (!predeclaracion) transit.dates.acceptance = new Date();
+    _anotarNcts(transit, { estado: aeatResult.estadoNcts, circuito: aeatResult.circuitoNcts });
+    _plazoDeLlegada(transit, aeatResult.fechaLimiteLlegada);
 
     transit.messages.push({
       type: 'IE028',
@@ -382,16 +474,129 @@ const transitService = {
     });
 
     transit.statusHistory.push({
-      status: 'accepted',
+      status: transit.status,
       timestamp: new Date(),
       user: userId,
-      reason: `MRN ${aeatResult.mrn} asignado por NCTS`
+      reason: predeclaracion
+        ? `Predeclaración admitida con MRN ${aeatResult.mrn}: falta presentar la mercancía (CC170C)`
+        : `MRN ${aeatResult.mrn} asignado por NCTS`
     });
 
     logger.info(`Transit ${transit.lrn} submitted: MRN ${aeatResult.mrn}`);
 
     await transit.save();
     transit.$locals.declaracionEnviada = true;
+    return transit;
+  },
+
+  /**
+   * Presentar la mercancia de una predeclaracion en la aduana de partida
+   * (CC170C). Solo en PA. Si la AEAT la admite, la declaracion pasa de D a A,
+   * data la sumaria y queda en PG, PD o DE: en LUCI, `accepted` con ese estado.
+   */
+  async presentGoods(id, data = {}, userId) {
+    const transit = await _cargarPropio(id, userId);
+    if (transit.status !== 'prelodged') {
+      throw new Error('Solo se presenta la mercancía de una predeclaración (estado NCTS PA)');
+    }
+    const opciones = data.locationAuthorisationNumber ? { locationAuthorisationNumber: String(data.locationAuthorisationNumber).trim().toUpperCase() } : {};
+    const r = await aeatSubmitService.submitNCTSPresentation(transit, opciones, await _ctxAduanero(transit, userId));
+    if (!r.success) throw new Error(r.error || 'La AEAT no admitió la presentación (CC170C)');
+
+    if (opciones.locationAuthorisationNumber) transit.locationAuthorisationNumber = opciones.locationAuthorisationNumber;
+    transit.additionalDeclarationType = 'A';
+    transit.status = 'accepted';
+    transit.dates.acceptance = new Date();
+    _anotarNcts(transit, { estado: r.estado, circuito: r.circuito, csv: r.csv, csvDat: r.csvDat });
+    _plazoDeLlegada(transit, r.fechas?.limiteLlegada);
+    transit.messages.push({
+      type: 'IE170', direction: 'outbound', timestamp: new Date(),
+      content: { mrn: transit.mrn, lrn: transit.lrn, estado: r.estado, circuito: r.circuito, csv: r.csv, codigo: r.codigoRespuesta }
+    });
+    transit.statusHistory.push({
+      status: 'accepted', timestamp: new Date(), user: userId, office: transit.departureOffice?.code,
+      reason: `Mercancía presentada (CC170C): estado NCTS ${r.estado || 'desconocido'}${r.circuito ? `, circuito ${r.circuito}` : ''}`
+    });
+    await transit.save();
+    logger.info(`Transit ${transit.lrn} presented (CC170C): MRN ${transit.mrn} -> ${r.estado}`);
+    return transit;
+  },
+
+  /**
+   * Modificar una predeclaracion (CC013C). Solo en PA. El mensaje lleva la
+   * declaracion entera con los cambios; el expediente solo se actualiza si la
+   * AEAT los admite.
+   */
+  async amend(id, data = {}, userId) {
+    const transit = await _cargarPropio(id, userId);
+    if (transit.status !== 'prelodged') {
+      throw new Error('Solo se puede modificar una predeclaración (estado NCTS PA): una declaración admitida no se modifica');
+    }
+    const cambios = _cambiosCC013(transit, data);
+    if (cambios.guarantee?.grn && cambios.guarantee.grn !== transit.guarantee?.grn) {
+      await _validarGarantia(cambios.guarantee.grn, userId);
+    }
+    // Los cambios se aplican y validan contra el modelo ANTES de enviar: si no,
+    // un dato que Mongoose no acepta saldria a la AEAT y el save posterior
+    // fallaria con la modificacion ya admitida (AEAT y LUCI desincronizados).
+    // Si algo falla, el documento se descarta sin guardar.
+    transit.set(cambios);
+    try {
+      await transit.validate();
+    } catch (e) {
+      throw new Error(`La modificación no es válida: ${e.message}`);
+    }
+    const propuesta = transit.toObject();
+    this.validateForSubmission(propuesta);
+
+    const r = await aeatSubmitService.submitNCTSAmendment(propuesta, await _ctxAduanero(transit, userId));
+    if (!r.success) throw new Error(r.error || 'La AEAT no admitió la modificación (CC013C)');
+
+    _anotarNcts(transit, { estado: r.estado, csv: r.csv });
+    transit.messages.push({
+      type: 'IE013', direction: 'outbound', timestamp: new Date(),
+      content: { mrn: transit.mrn, campos: Object.keys(cambios), estado: r.estado, csv: r.csv, codigo: r.codigoRespuesta }
+    });
+    transit.statusHistory.push({
+      status: transit.status, timestamp: new Date(), user: userId,
+      reason: `Predeclaración modificada (CC013C): ${Object.keys(cambios).join(', ')}`
+    });
+    await transit.save();
+    logger.info(`Transit ${transit.lrn} amended (CC013C): MRN ${transit.mrn}`);
+    return transit;
+  },
+
+  /**
+   * Solicitar la invalidacion (CC014C). Por servicio web solo en PA o PG
+   * (guia NCTS6 10.1); en PD o DE hay que pedirla en la aduana por registro.
+   */
+  async invalidate(id, data = {}, userId) {
+    const transit = await _cargarPropio(id, userId);
+    const estadoNcts = transit.ncts?.estado;
+    const admite = transit.status === 'prelodged' || (transit.status === 'accepted' && estadoNcts === 'PG');
+    if (!admite) {
+      throw new Error('La AEAT solo admite la anulación por servicio web de una predeclaración (PA) o de una declaración pendiente de '
+        + `garantía extranjera (PG)${estadoNcts ? `; este tránsito está en ${estadoNcts}` : ''}. Para anularla hay que solicitarlo `
+        + 'en la aduana de partida por registro (guía NCTS6, 4.4.2.2).');
+    }
+    const motivo = String(data.motivo ?? '').trim();
+    if (!motivo) throw new Error('Indique el motivo de la anulación: la AEAT lo exige');
+
+    const r = await aeatSubmitService.submitNCTSInvalidation(transit, { motivo }, await _ctxAduanero(transit, userId));
+    if (!r.success) throw new Error(r.error || 'La AEAT no admitió la anulación (CC014C)');
+
+    transit.status = 'cancelled';
+    _anotarNcts(transit, { estado: r.estado, csv: r.csv });
+    transit.messages.push({
+      type: 'IE014', direction: 'outbound', timestamp: new Date(),
+      content: { mrn: transit.mrn, motivo, estado: r.estado, csv: r.csv, fecha: r.fechas?.invalidacion, codigo: r.codigoRespuesta }
+    });
+    transit.statusHistory.push({
+      status: 'cancelled', timestamp: new Date(), user: userId,
+      reason: `Anulado en la AEAT (CC014C, estado ${r.estado || 'desconocido'}): ${motivo}`
+    });
+    await transit.save();
+    logger.info(`Transit ${transit.lrn} invalidated (CC014C): MRN ${transit.mrn} -> ${r.estado}`);
     return transit;
   },
 

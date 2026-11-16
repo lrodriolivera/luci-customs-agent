@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- editado con XMLSpy v2019 sp1 (x64) (http://www.altova.com) por PUESTO DE TRABAJO (Agencia Estatal de Administracion Tributaria ((AEAT))) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC117DV1Ent.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC117DV1Ent.xsd" targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC117DV1Ent.xsd" elementFormDefault="qualified">
+	<xs:include schemaLocation="ES_CC117D_v515.xsd"/>
+	<xs:element name="CC117DV1Ent" type="CC117DV1Ent"/>
+	<xs:complexType name="CC117DV1Ent">
+		<xs:sequence>
+			<xs:element name="CC117D" type="CC117DType"/>
+		</xs:sequence>
+		<xs:attribute name="Id" use="required">
+			<xs:annotation>
+				<xs:documentation>Identificador de transacción</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="40"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+</xs:schema>
