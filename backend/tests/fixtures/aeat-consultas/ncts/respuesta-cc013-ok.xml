@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+<env:Header></env:Header>
+<env:Body Id="Body"><CC013CV1Sal xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC013CV1Sal.xsd" Id="20261116083010123004">
+ <messageSender>NTA.ES</messageSender>
+ <messageRecipient>B22477020</messageRecipient>
+ <preparationDateAndTime>2026-11-16T08:30:10</preparationDateAndTime>
+ <messageIdentification>20261116083010123004</messageIdentification>
+ <messageType>RE013C</messageType>
+ <correlationIdentifier>LUCIN2611160730100001234</correlationIdentifier>
+ <ControlRespuesta>
+  <tipoRespuesta>OK</tipoRespuesta>
+  <codigoRespuesta>M</codigoRespuesta>
+ </ControlRespuesta>
+ <DatosRespuestaCorrecta>
+  <MRN>26ES002801501441J7</MRN>
+  <CSVDeclaracionElectronica>XV8DCB49KY725BYM</CSVDeclaracionElectronica>
+  <estado>PA</estado>
+ </DatosRespuestaCorrecta>
+</CC013CV1Sal>
+</env:Body></env:Envelope>

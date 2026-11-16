@@ -6,7 +6,10 @@
 const express = require('express');
 const router = express.Router();
 const transitController = require('../controllers/transitController');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireRole } = require('../middleware/auth');
+
+// Presentar algo ante la AEAT en nombre del tenant: no un `viewer`.
+const puedePresentar = requireRole('admin', 'supervisor', 'agent');
 
 // Todas las rutas requieren autenticacion
 router.use(requireAuth);
@@ -65,6 +68,13 @@ router.delete('/:id', transitController.delete);
 
 // Enviar declaracion a NCTS (IE015)
 router.post('/:id/submit', transitController.submit);
+
+// Mensajes del operador en la aduana de partida (guia NCTS6 v1.21, tabla 4.3):
+// presentacion de la predeclaracion (CC170C, solo PA), modificacion (CC013C,
+// solo PA) y anulacion (CC014C, PA o PG).
+router.post('/:id/present', puedePresentar, transitController.presentGoods);
+router.post('/:id/amend', puedePresentar, transitController.amend);
+router.post('/:id/invalidate', puedePresentar, transitController.invalidate);
 
 // Liberar mercancias en partida (IE029)
 router.post('/:id/release-departure', transitController.releaseAtDeparture);

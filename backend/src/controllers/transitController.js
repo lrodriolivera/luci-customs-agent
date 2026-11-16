@@ -8,6 +8,20 @@ const aiService = require('../services/aiService');
 const { Transit, Expedition } = require('../models');
 const { ensureSameTenant } = require('../utils/tenantGuard');
 
+/** Handler comun de los mensajes NCTS del operador (CC013C/CC014C/CC170C). */
+function _accionNcts(metodo, mensaje) {
+  return async (req, res) => {
+    try {
+      const transit = await transitService[metodo](req.params.id, req.body || {}, req.user._id);
+      res.json({ success: true, data: transit, message: mensaje });
+    } catch (error) {
+      console.error(`Error en ${metodo} (NCTS):`, error.message);
+      const status = error.message === 'Transito no encontrado' ? 404 : (error.status === 422 ? 422 : 400);
+      res.status(status).json({ success: false, error: error.message, ...(error.errors ? { errors: error.errors } : {}) });
+    }
+  };
+}
+
 const transitController = {
   /**
    * POST /api/transit
@@ -185,9 +199,12 @@ const transitController = {
       res.json({ success: true, data: transit, message });
     } catch (error) {
       console.error('Error submitting transit:', error);
-      res.status(400).json({
+      // 422 + `errors` para las validaciones previas (EORI, codigo NC...): la
+      // pantalla puede decir que partida falla.
+      res.status(error.status === 422 ? 422 : 400).json({
         success: false,
-        error: error.message
+        error: error.message,
+        ...(error.errors ? { errors: error.errors } : {})
       });
     }
   },
@@ -278,6 +295,18 @@ const transitController = {
       });
     }
   },
+
+  /**
+   * POST /api/transit/:id/present  — presentacion de la mercancia (CC170C)
+   * POST /api/transit/:id/amend    — modificacion de la predeclaracion (CC013C)
+   * POST /api/transit/:id/invalidate — solicitud de anulacion (CC014C)
+   * Solo cambian el expediente si la AEAT acepta; 404 si el transito no es del
+   * usuario, 422 si faltan datos (EORI del firmante, codigo NC...), 400 si el
+   * estado no lo permite o la AEAT rechaza.
+   */
+  presentGoods: _accionNcts('presentGoods', 'Mercancía presentada en la aduana de partida (CC170C)'),
+  amend: _accionNcts('amend', 'Modificación de la predeclaración admitida (CC013C)'),
+  invalidate: _accionNcts('invalidate', 'Tránsito anulado en la AEAT (CC014C)'),
 
   /**
    * POST /api/transit/:id/control

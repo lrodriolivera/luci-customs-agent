@@ -51,11 +51,25 @@ function nifRemitente(valor) {
   return String(valor || '').trim().toUpperCase().replace(/^ES/, '');
 }
 
-function _buildConsulta(servicio, { mensajeId, mrn, sender, fecha = new Date() }) {
+/** MRN normalizado o error con `que` (p. ej. 'la consulta'). */
+function exigirMrn(mrn, que = 'la consulta') {
   const limpio = String(mrn || '').trim().toUpperCase();
-  if (!FORMATO_MRN.test(limpio)) throw new Error('MRN no válido para la consulta');
+  if (!FORMATO_MRN.test(limpio)) throw new Error(`MRN no válido para ${que}`);
+  return limpio;
+}
+
+/** NIF del remitente (sin ES) o error: la AEAT exige el NIF del firmante (error 211). */
+function exigirRemitente(sender, que = 'la consulta') {
   const remitente = nifRemitente(sender);
-  if (EORI_EXTRANJERO.test(String(sender || '').trim().toUpperCase()) || !FORMATO_NIF.test(remitente)) throw new Error('NIF del remitente no válido para la consulta');
+  if (EORI_EXTRANJERO.test(String(sender || '').trim().toUpperCase()) || !FORMATO_NIF.test(remitente)) {
+    throw new Error(`NIF del remitente no válido para ${que}`);
+  }
+  return remitente;
+}
+
+function _buildConsulta(servicio, { mensajeId, mrn, sender, fecha = new Date() }) {
+  const limpio = exigirMrn(mrn);
+  const remitente = exigirRemitente(sender);
   const s = SERVICIOS[servicio];
   // El prefijo `c:` y el orden de MESSAGE son los del XSD (grupo MESSAGE de ES_htypes).
   return String(xml`<?xml version="1.0" encoding="UTF-8"?>
@@ -221,6 +235,13 @@ module.exports = {
   interpretarConsultaNcts,
   idMensajeConsulta,
   nifRemitente,
+  exigirMrn,
+  exigirRemitente,
+  // Lectura comun de las respuestas *Sal de AES/NCTS (la reutiliza nctsRespuesta.js).
+  leerSalida: _salidaDe,
+  erroresDe: _erroresDe,
+  hijo,
+  texto,
   ENDPOINT_AES: SERVICIOS.AES.endpoint,
   ENDPOINT_NCTS: SERVICIOS.NCTS.endpoint
 };

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- editado con XMLSpy v2019 sp1 (x64) (http://www.altova.com) por PUESTO DE TRABAJO (Agencia Estatal de Administracion Tributaria ((AEAT))) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC170CV1Sal.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat/adtr/jdit/ws/ncts5/CC170CV1Sal.xsd" elementFormDefault="qualified">
+	<xs:include schemaLocation="ES_ctypes_v515.xsd"/>
+	<xs:element name="CC170CV1Sal" type="CC170CV1Sal"/>
+	<xs:complexType name="CC170CV1Sal">
+		<xs:sequence>
+			<xs:group ref="MESSAGE"/>
+			<xs:element name="ControlRespuesta">
+				<xs:complexType>
+					<xs:complexContent>
+						<xs:extension base="ControlRespuestaType"/>
+					</xs:complexContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:choice>
+				<xs:element name="DatosRespuestaCorrecta" type="DatosRespuestaCorrectaType170C"/>
+				<xs:element name="FunctionalError" type="FunctionalErrorType" maxOccurs="999"/>
+				<xs:element name="XMLError" type="XMLErrorType" maxOccurs="9999"/>
+			</xs:choice>
+		</xs:sequence>
+		<xs:attribute name="Id" use="required">
+			<xs:annotation>
+				<xs:documentation>Identificador de transacción	</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:minLength value="1"/>
+					<xs:maxLength value="40"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+</xs:schema>
