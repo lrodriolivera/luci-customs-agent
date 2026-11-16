@@ -228,16 +228,17 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
     faltan.push(`deducciones de la partida ${n} que no superen su valor (${deducido.toFixed(2)} EUR deducidos sobre ${valorEuros.toFixed(2)} EUR): el valor en aduana no puede ser negativo`);
   }
   const importeDe = (codigo) => ajustes.filter((a) => a.codigo === codigo).reduce((s, a) => s + a.importe, 0);
-  // Transporte hasta el primer lugar de destino en el interior de la UE: no es
-  // valor en aduana (BA) pero si base del IVA a la importacion (art. 83.Dos.2º LIVA).
-  const transporteInterior = importeDe(CODIGO_TRANSPORTE_TRAS_LA_ENTRADA);
   // Valor estadistico: el de la frontera de la UE (factura + flete y seguro hasta
   // la UE − transporte posterior), sin los demas ajustes (canones, comisiones…).
-  const valorFrontera = redondear(valorEuros + importeDe(CODIGO_AJUSTE) - transporteInterior);
+  const valorFrontera = redondear(valorEuros + importeDe(CODIGO_AJUSTE) - importeDe(CODIGO_TRANSPORTE_TRAS_LA_ENTRADA));
   const tipoArancel = good.dutyRate || 0;
   const tipoIva = good.vatRate ?? 21;
   const arancel = redondear(valorAduana * tipoArancel / 100);
-  const baseIva = redondear(valorAduana + arancel + transporteInterior);
+  // Base del IVA = valor en aduana (ya sin el BA) + arancel. El transporte
+  // deducido NO se vuelve a sumar: asi liquida la AEAT. Comprobado en PRE el
+  // 16/11/2026 (DAP 10.000 EUR, BA 1.000: B00 10.080 / 2.116,80; MRN
+  // 26ES002801I01BQ0R1, fixture dap-ba-respuesta-real-002801.xml).
+  const baseIva = redondear(valorAduana + arancel);
   const tipoBulto = String(good.packages?.type || '').toUpperCase();
   if (!/^[A-Z0-9]{2}$/.test(tipoBulto)) faltan.push(`tipo de bulto (código de dos letras) de la partida ${n}`);
   if (!(good.packages?.quantity > 0)) faltan.push(`número de bultos de la partida ${n}`);

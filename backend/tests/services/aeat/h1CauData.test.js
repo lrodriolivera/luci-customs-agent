@@ -213,7 +213,7 @@ describe('H1 CAU: flete y seguro hasta la entrada en la UE (valor CIF)', () => {
 describe('H1 CAU: transporte después de la entrada en la UE (deducción BA, art. 72.a CAU)', () => {
   const DAP = { incoterm: { code: 'DAP', place: 'Madrid' } };
 
-  test('DAP: el transporte interior va como deducción BA: sale del valor en aduana pero vuelve a la base del IVA (art. 83.Dos.2º LIVA)', () => {
+  test('DAP: el transporte interior va como deducción BA y sale de la base del arancel y de la del IVA', () => {
     const d = datos(expediente({ ...DAP, costs: { freightAfterEntry: { amount: 1123.4, currency: 'USD' } } }));
     const [p] = d.envio.partidas;
 
@@ -221,8 +221,8 @@ describe('H1 CAU: transporte después de la entrada en la UE (deducción BA, art
     expect(p.valoracion).toEqual({ metodo: '1', ajustes: [{ codigo: 'BA', importe: 1000 }] });
     expect(p.valorEstadistico).toBe(7901.55);
     expect(p.tributos[0].bases[0]).toEqual({ tipoImpositivo: 12, importe: 7901.55, cuota: 948.19 });
-    // IVA: valor en aduana 7.901,55 + arancel 948,19 + transporte hasta el primer destino 1.000 = 9.849,74.
-    expect(p.tributos[1].bases[0]).toEqual({ tipoImpositivo: 21, importe: 9849.74, cuota: 2068.45 });
+    // IVA: valor en aduana 7.901,55 + arancel 948,19 = 8.849,74 (así liquida la AEAT en PRE, 16/11/2026).
+    expect(p.tributos[1].bases[0]).toEqual({ tipoImpositivo: 21, importe: 8849.74, cuota: 1858.45 });
     expect(p.importeFactura).toBe(10000);
     expect(d.envio.entrega).toEqual({ incoterm: 'DAP', lugar: 'Madrid', pais: 'ES' });
   });

@@ -70,36 +70,45 @@ describe('LUCI frente a la AEAT', () => {
   });
 });
 
-describe('liquidación declarada de un H1 DAP con deducción BA', () => {
+describe('liquidación declarada de un H1 DAP con deducción BA (caso real de PRE, 16/11/2026)', () => {
+  const fs = require('fs');
+  const path = require('path');
   const { expeditionToH1CauData } = require('../../../src/services/aeat/h1CauData');
   const { buildH1CauXML } = require('../../../src/services/aeat/h1CauXmlBuilder');
+  const { interpretarRespuestaH1Cau } = require('../../../src/services/aeat/h1CauResponse');
+  const RESPUESTA_PRE = fs.readFileSync(path.join(__dirname, '../../fixtures/aeat-cau/dap-ba-respuesta-real-002801.xml'), 'utf8');
 
-  test('la base del arancel lleva restado el transporte interior y la del IVA lo incluye', () => {
-    const expedition = {
-      expeditionId: 'EXP-2026-BA000001', transportMode: 'maritime',
-      client: { companyName: 'Importadora SL', eori: 'ESB12345674', address: { postalCode: '28001', country: 'ES' } },
-      exporter: { companyName: 'Exportador', eori: 'CN123456789012', country: 'CN' },
-      representative: { representationType: 'indirect' },
-      incoterm: { code: 'DAP', place: 'Madrid' },
-      costs: { freightAfterEntry: { amount: 1000, currency: 'EUR' } },
-      transport: {
-        vehicleNationality: 'PA', documentType: 'BL', documentNumber: 'BL1',
-        summaryDeclaration: { item: '1', aeat: { mrn: '26ES00280180000014', location: '2801AAAAAA' } }
-      },
-      declaration: { lrn: 'LRN1', invoiceNumber: 'F1' },
-      goods: [{ taricCode: '6302100000', originCountry: 'CN', grossWeight: 995, netWeight: 900, invoiceValue: 10000, currency: 'EUR', dutyRate: 12, vatRate: 21, packages: { quantity: 90, type: 'CT' } }]
-    };
-    const datos = expeditionToH1CauData(expedition, {
-      declarante: { eori: 'ESB22477020', representationType: 'indirect', contact: { name: 'A', phone: '1', email: 'a@b.es' } }, mensajeId: 'M1'
-    });
-    const declarada = liquidacionDeclarada(buildH1CauXML(datos));
+  // El expediente que se presentó en PRE (presentar-dap-ba.js): DAP Madrid, 10.000 EUR, BA 1.000 EUR, 12 % y 21 %.
+  const expedition = {
+    expeditionId: 'QA-CAU-DAP-BA', transportMode: 'maritime',
+    client: { companyName: 'Importadora SL', eori: 'ESB22477020', address: { postalCode: '28001', country: 'ES' } },
+    exporter: { companyName: 'Exportador', eori: 'ESB22477020', country: 'CN' },
+    representative: { representationType: 'indirect' },
+    incoterm: { code: 'DAP', place: 'Madrid' },
+    costs: { freightAfterEntry: { amount: 1000, currency: 'EUR' } },
+    transport: {
+      vehicleNationality: 'PA', documentType: 'BL', documentNumber: 'QACLAUDE0000001',
+      summaryDeclaration: { item: '1', aeat: { mrn: '26ES00280180000014', location: '2801AAAAAA' } }
+    },
+    declaration: { lrn: 'LUCI261116104035037', invoiceNumber: 'QA-FAC-DAP-BA' },
+    goods: [{ taricCode: '6302100000', originCountry: 'CN', grossWeight: 100, netWeight: 90, invoiceValue: 10000, currency: 'EUR', dutyRate: 12, vatRate: 21, packages: { quantity: 10, type: 'CT' } }]
+  };
+  const declarada = () => liquidacionDeclarada(buildH1CauXML(expeditionToH1CauData(expedition, {
+    declarante: { eori: 'ESB22477020', representationType: 'indirect', contact: { name: 'A', phone: '1', email: 'a@b.es' } }, mensajeId: 'LUCI261116104035037'
+  })));
 
-    // Arancel: 10.000 − 1.000 = 9.000 al 12 % = 1.080. IVA (art. 83 LIVA): 9.000 + 1.080 + 1.000
-    // de transporte hasta el primer destino = 11.080 al 21 % = 2.326,80.
-    expect(declarada.partidas[0].tributos).toEqual([
+  test('la base del arancel y la del IVA llevan restado el transporte interior, como liquida la AEAT', () => {
+    // A00: 10.000 − 1.000 = 9.000 al 12 % = 1.080. B00: 9.000 + 1.080 = 10.080 al 21 % = 2.116,80.
+    expect(declarada().partidas[0].tributos).toEqual([
       { tipo: 'A00', base: 9000, cuota: 1080 },
-      { tipo: 'B00', base: 11080, cuota: 2326.8 }
+      { tipo: 'B00', base: 10080, cuota: 2116.8 }
     ]);
-    expect(declarada.total).toBe(3406.8);
+    expect(declarada().total).toBe(3196.8);
+  });
+
+  test('cuadra con la liquidación real de la AEAT en PRE (MRN 26ES002801I01BQ0R1)', () => {
+    const aeat = interpretarRespuestaH1Cau(RESPUESTA_PRE);
+    expect(aeat.mrn).toBe('26ES002801I01BQ0R1');
+    expect(compararLiquidacion(declarada(), aeat.liquidacion)).toMatchObject({ cuadra: true, totalLuci: 3196.8, totalAeat: 3196.8, diferencia: 0 });
   });
 });

@@ -526,8 +526,6 @@ class H1Generator {
       // Valor en aduana calculado
       customsValue,
 
-      // Transporte en la UE incluido en el precio (BA del expediente): vuelve a la base del IVA.
-      transportToFirstDestination: delExpediente.freightAfterImport || 0,
 
       // Valor estadistico
       statisticalValue: customsValue
@@ -579,8 +577,8 @@ class H1Generator {
     const exciseAmount = Math.round(customsValue * exciseRate / 100 * 100) / 100;
 
     // Base para IVA = valor aduanero + derechos
-    // + transporte hasta el primer destino en la UE (BA): no es valor en aduana pero si base del IVA (art. 83.Dos.2º LIVA).
-    const vatBase = customsValue + tariffAmount + antidumpingAmount + exciseAmount + (valuation.transportToFirstDestination || 0);
+    // Sin volver a sumar el transporte deducido (BA): asi liquida la AEAT (PRE, 16/11/2026).
+    const vatBase = customsValue + tariffAmount + antidumpingAmount + exciseAmount;
     const vatAmount = Math.round(vatBase * vatRate / 100 * 100) / 100;
 
     // Total deuda aduanera

@@ -39,15 +39,15 @@ describe('h1Generator: país del lugar del incoterm', () => {
 });
 
 describe('h1Generator: transporte después de la entrada (BA)', () => {
-  test('DAP: el transporte interior se resta del valor en aduana, no de la base del IVA', () => {
+  test('DAP: el transporte interior se resta del valor en aduana y de la base del IVA', () => {
     const { data } = h1Generator.generate(
       expediente({ code: 'DAP', place: 'Madrid' }, { freightAfterEntry: { amount: 400, currency: 'EUR' } }), {}, { tenant: TENANT }
     );
     expect(data.valuation.deductions.freightAfterImport).toBe(400);
     expect(data.valuation.customsValue).toBe(9600);
     expect(data.goodsItems[0].customsValue).toBe(9600);
-    // El IVA vuelve a incluirlo: transporte hasta el primer destino (art. 83.Dos.2º LIVA).
-    expect(data.dutyTaxFee.vat.baseAmount).toBe(10000);
+    // La base del IVA tampoco lo lleva: así liquida la AEAT (PRE, 16/11/2026).
+    expect(data.dutyTaxFee.vat.baseAmount).toBe(9600);
   });
 
   test('ajustes opcionales: cánones (AI) suman y comisiones de compra (BF) restan', () => {
