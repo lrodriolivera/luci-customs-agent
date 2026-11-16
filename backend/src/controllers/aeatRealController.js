@@ -786,10 +786,12 @@ const getDeclarationStatus = async (req, res) => {
       undefined,
       { tenantId: req.user?.tenantId ? String(req.user.tenantId) : null }
     );
+    // La respuesta cruda de la AEAT se queda en el servidor (logs de aeatTransport).
+    const { rawResponse, ...data } = result || {};
 
     res.json({
       success: true,
-      data: result
+      data
     });
 
   } catch (error) {

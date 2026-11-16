@@ -48,6 +48,7 @@ describe('consulta AES (CCAESC): petición', () => {
     expect(() => buildConsultaAesXML({ mensajeId: 'X', mrn: '123', sender: 'B22477020' })).toThrow('MRN');
     expect(() => buildConsultaAesXML({ mensajeId: 'X', mrn: '26ES002801100321B8', sender: '' })).toThrow('remitente');
     expect(() => buildConsultaAesXML({ mensajeId: 'X', mrn: '26ES002801100321B8', sender: 'B2<x>' })).toThrow('remitente');
+    expect(() => buildConsultaAesXML({ mensajeId: 'X', mrn: '26ES002801100321B8', sender: 'PT123456789' })).toThrow('remitente');
   });
 
   siHayXmllint('valida contra CCAESCV1Ent.xsd', () => {
@@ -122,6 +123,21 @@ describe('consulta AES: respuesta', () => {
     expect(r.channel).toBe('orange');
   });
 
+  test('levante sin salida (DS) no es final; salida efectiva (SA) y parada (ST) sí', () => {
+    const base = leer('aes/respuesta-ok.xml');
+    expect(interpretarConsultaAes(base).final).toBe(false);
+    expect(interpretarConsultaAes(base.replace('<estadoAES>DS</estadoAES>', '<estadoAES>SA</estadoAES>'))).toMatchObject({ status: 'RELEASED', final: true });
+    expect(interpretarConsultaAes(base.replace('<estadoAES>DS</estadoAES>', '<estadoAES>ST</estadoAES>'))).toMatchObject({ status: 'REJECTED', final: true });
+    expect(interpretarConsultaAes(base.replace('<estadoAES>DS</estadoAES>', '<estadoAES>RE</estadoAES>'))).toMatchObject({ status: 'RELEASED', final: false });
+  });
+
+  test('una respuesta OK de otro MRN no se da por buena', () => {
+    const r = interpretarConsultaAes(leer('aes/respuesta-ok.xml'), { mrn: '26ES002801100999X1' });
+    expect(r.success).toBe(false);
+    expect(r.error).toContain('otro MRN');
+    expect(interpretarConsultaAes(leer('aes/respuesta-ok.xml'), { mrn: '26es002801100321b8' }).success).toBe(true);
+  });
+
   test('estado invalidada pasa a REJECTED; código desconocido con admisión, a ACCEPTED', () => {
     const base = leer('aes/respuesta-ok.xml');
     expect(interpretarConsultaAes(base.replace('<estadoAES>DS</estadoAES>', '<estadoAES>IV</estadoAES>')).status).toBe('REJECTED');
@@ -171,6 +187,13 @@ describe('consulta NCTS: respuesta', () => {
     const r = interpretarConsultaNcts(ef);
     expect(r).toMatchObject({ success: false, tipo: 'error_funcional' });
     expect(r.error).toContain('Ubicación incorrecta');
+  });
+
+  test('despachado (DE) no es final; ultimado (UL) sí', () => {
+    const base = leer('ncts/respuesta-ok.xml');
+    expect(interpretarConsultaNcts(base).final).toBe(false);
+    expect(interpretarConsultaNcts(base.replace('<estado>DE</estado>', '<estado>UL</estado>'))).toMatchObject({ status: 'RELEASED', final: true });
+    expect(interpretarConsultaNcts(base.replace('<estado>DE</estado>', '<estado>NL</estado>'))).toMatchObject({ status: 'REJECTED', final: true });
   });
 
   test('pendiente de despacho en rojo pasa a CONTROL/red', () => {

@@ -575,8 +575,9 @@ class AEATRealService {
    * H1, H7 y ENS siguen por el camino antiguo (ver _buildQueryRequest).
    */
   async queryDeclarationStatus(mrn, declarationType, certificateId, password, opciones = {}) {
-    if (CONSULTAS_OFICIALES[declarationType]) {
-      return this._consultarEstadoOficial(mrn, declarationType, opciones);
+    const tipoOficial = String(declarationType || '').trim().toUpperCase();
+    if (Object.hasOwn(CONSULTAS_OFICIALES, tipoOficial)) {
+      return this._consultarEstadoOficial(mrn, tipoOficial, opciones);
     }
 
     const serviceMap = {
@@ -587,7 +588,7 @@ class AEATRealService {
       'ENS': this.SERVICES.ICS2_ENS_QUERY
     };
 
-    const service = serviceMap[declarationType];
+    const service = Object.hasOwn(serviceMap, declarationType) ? serviceMap[declarationType] : null;
     if (!service) {
       return {
         success: false,
@@ -661,7 +662,7 @@ class AEATRealService {
       const soapXML = consulta.build({ mensajeId: idMensajeConsulta(), mrn, sender });
       logger.info(`AEATReal: Consultando estado ${declarationType} MRN: ${mrn}`);
       const response = await aeatTransport.sendSoap(soapXML, consulta.endpoint);
-      const resultado = consulta.interpretar(response?.data);
+      const resultado = consulta.interpretar(response?.data, { mrn });
 
       if (!resultado.success) {
         logger.warn(`AEATReal: Consulta ${declarationType} ${mrn} sin éxito`, { tipo: resultado.tipo, error: resultado.error });

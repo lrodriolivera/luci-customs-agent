@@ -11,16 +11,19 @@
  * de Transito (NCTS6)» v1.21, descripcion de CCTRAC. Significado de los
  * codigos y su traduccion al monitor en aesNctsCodigos.js.
  */
+const crypto = require('crypto');
 const { DOMParser } = require('@xmldom/xmldom');
 const { xml } = require('./xmlTemplate');
 const { fechaHora } = require('./h1CauXmlBuilder');
-const { CIRCUITOS, TEXTO_CIRCUITO, ESTADOS_AES, ESTADOS_NCTS, estadoMonitor } = require('./aesNctsCodigos');
+const { CIRCUITOS, TEXTO_CIRCUITO, ESTADOS_AES, ESTADOS_NCTS, estadoMonitor, esFinal } = require('./aesNctsCodigos');
 
 const NS_SOAP = 'http://schemas.xmlsoap.org/soap/envelope/';
 const BASE_NS = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aduanas/es/aeat';
 const FORMATO_MRN = /^\d{2}[A-Z]{2}[A-Z0-9]{14}$/;
 // NIF/CIF/NIE del firmante, sin el prefijo de pais del EORI (error 211 si no es el del certificado).
 const FORMATO_NIF = /^[A-Z0-9]{8,12}$/;
+// Un EORI de otro pais (PT123..., FR...) no es un NIF espanol.
+const EORI_EXTRANJERO = /^(?!ES)[A-Z]{2}\d/;
 
 const SERVICIOS = {
   AES: {
@@ -52,7 +55,7 @@ function _buildConsulta(servicio, { mensajeId, mrn, sender, fecha = new Date() }
   const limpio = String(mrn || '').trim().toUpperCase();
   if (!FORMATO_MRN.test(limpio)) throw new Error('MRN no válido para la consulta');
   const remitente = nifRemitente(sender);
-  if (!FORMATO_NIF.test(remitente)) throw new Error('NIF del remitente no válido para la consulta');
+  if (EORI_EXTRANJERO.test(String(sender || '').trim().toUpperCase()) || !FORMATO_NIF.test(remitente)) throw new Error('NIF del remitente no válido para la consulta');
   const s = SERVICIOS[servicio];
   // El prefijo `c:` y el orden de MESSAGE son los del XSD (grupo MESSAGE de ES_htypes).
   return String(xml`<?xml version="1.0" encoding="UTF-8"?>
@@ -135,8 +138,9 @@ function _erroresDe(salida, base) {
 /**
  * @param {string} cuerpo  respuesta HTTP
  * @param {object} cfg     nombres de la salida, grupos y campos del servicio
+ * @param {{ mrn?: string }} [esperado]  MRN consultado: si la respuesta es de otro, no vale
  */
-function _interpretar(cuerpo, cfg) {
+function _interpretar(cuerpo, cfg, esperado = {}) {
   const crudo = typeof cuerpo === 'string' ? cuerpo : '';
   const base = { success: false, tipo: 'desconocida', mrn: null, status: null, channel: null, error: null, rawResponse: crudo };
   const { salida, fallo } = _salidaDe(crudo, cfg.salida, base);
@@ -153,6 +157,12 @@ function _interpretar(cuerpo, cfg) {
     return { ...base, tipoRespuesta, error: 'La respuesta no trae ni la declaración ni errores' };
   }
 
+  const mrnRespuesta = texto(operacion, 'MRN');
+  const mrnPedido = esperado.mrn ? String(esperado.mrn).trim().toUpperCase() : null;
+  if (mrnPedido && mrnRespuesta !== mrnPedido) {
+    return { ...base, tipoRespuesta, mrn: mrnRespuesta, error: `La AEAT respondió con otro MRN (${mrnRespuesta}) al consultar ${mrnPedido}` };
+  }
+
   const estado = texto(gestion, cfg.campoEstado);
   const circuito = texto(gestion, cfg.campoCircuito);
   const admision = texto(gestion, 'fechaAdmision');
@@ -166,12 +176,13 @@ function _interpretar(cuerpo, cfg) {
     success: true,
     tipo: 'encontrada',
     tipoRespuesta,
-    mrn: texto(operacion, 'MRN'),
+    mrn: mrnRespuesta,
     lrn: texto(operacion, 'LRN'),
     tipoDeclaracion: texto(operacion, 'declarationType'),
     estado,
     estadoTexto,
     status,
+    final: esFinal(cfg.estados, estado),
     circuito,
     circuitoTexto: TEXTO_CIRCUITO[circuito] || null,
     channel: CIRCUITOS[circuito] || null,
@@ -183,24 +194,24 @@ function _interpretar(cuerpo, cfg) {
 }
 
 /** Respuesta CCAESCV1Sal -> objeto normalizado. */
-function interpretarConsultaAes(cuerpo) {
+function interpretarConsultaAes(cuerpo, esperado) {
   return _interpretar(cuerpo, {
     salida: 'CCAESCV1Sal', grupo: 'ExportOperation', gestion: 'AESDatosGestion', estados: ESTADOS_AES,
     campoEstado: 'estadoAES', campoCircuito: 'circuitoAEAT', campoCsv: 'CSVLevanteExportacion', campoFase: 'faseAES'
-  });
+  }, esperado);
 }
 
 /** Respuesta CCTRACV2Sal -> objeto normalizado. */
-function interpretarConsultaNcts(cuerpo) {
+function interpretarConsultaNcts(cuerpo, esperado) {
   return _interpretar(cuerpo, {
     salida: 'CCTRACV2Sal', grupo: 'TransitOperation', gestion: 'Ncts5DatosGestion', estados: ESTADOS_NCTS,
     campoEstado: 'estado', campoCircuito: 'circuitoExpedicion', campoCsv: 'CSVdeDAT', campoFase: 'faseOrigen', conLimiteLlegada: true
-  });
+  }, esperado);
 }
 
-/** Identificador de mensaje (tambien el Id del sobre): `LUCIQ` + fecha UTC + 3 cifras. */
+/** Identificador de mensaje (tambien el Id del sobre): `LUCIQ` + fecha UTC con ms + 4 cifras aleatorias. */
 function idMensajeConsulta(ahora = new Date()) {
-  return `LUCIQ${ahora.toISOString().replace(/\D/g, '').slice(2, 17)}${Math.floor(Math.random() * 900 + 100)}`;
+  return `LUCIQ${ahora.toISOString().replace(/\D/g, '').slice(2, 17)}${crypto.randomInt(1000, 10000)}`;
 }
 
 module.exports = {

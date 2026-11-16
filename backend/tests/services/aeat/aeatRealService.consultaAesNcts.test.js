@@ -93,6 +93,22 @@ describe('queryDeclarationStatus AES', () => {
     expect(aeatTransport.sendSoap).not.toHaveBeenCalled();
   });
 
+  test('el tipo se normaliza y un nombre heredado de Object no se toma por servicio', async () => {
+    aeatTransport.sendSoap.mockResolvedValue({ status: 200, data: leer('aes/respuesta-ok.xml') });
+    const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'aes', null, null, { sender: 'B22477020' });
+    expect(r).toMatchObject({ success: true, declarationType: 'AES' });
+    const raro = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'constructor', null, null, {});
+    expect(raro.success).toBe(false);
+    expect(raro.error).toContain('no soportado');
+  });
+
+  test('si la AEAT contesta con otro MRN, la consulta falla', async () => {
+    aeatTransport.sendSoap.mockResolvedValue({ status: 200, data: leer('aes/respuesta-ok.xml') });
+    const r = await aeatRealService.queryDeclarationStatus('26ES002801100999X1', 'AES', null, null, { sender: 'B22477020' });
+    expect(r.success).toBe(false);
+    expect(r.error).toContain('otro MRN');
+  });
+
   test('un fallo de red se devuelve como error, no se lanza', async () => {
     aeatTransport.sendSoap.mockRejectedValue(new Error('socket hang up'));
     const r = await aeatRealService.queryDeclarationStatus('26ES002801100321B8', 'AES', null, null, { sender: 'B22477020' });

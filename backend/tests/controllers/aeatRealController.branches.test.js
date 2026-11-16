@@ -550,7 +550,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
 
     test('devuelve el análisis LUCI que ya trae la consulta (no llama a un método inexistente del monitor)', async () => {
       mockAeatRealService.queryDeclarationStatus.mockResolvedValue({
-        success: true, status: 'RELEASED', channel: 'green', luciAnalysis: { status: 'RELEASED' }
+        success: true, status: 'RELEASED', channel: 'green', luciAnalysis: { status: 'RELEASED' }, rawResponse: '<CCAESCV1Sal/>'
       });
 
       const res = await request(app(aeatRealController.getDeclarationStatus, 'get', '/r/:mrn'))
@@ -561,6 +561,7 @@ describe('aeatRealController - ramas sin cubrir', () => {
       expect(mockStatusMonitor._analyzeStatusWithLuci).not.toHaveBeenCalled();
       expect(res.body.data.status).toBe('RELEASED');
       expect(res.body.data.luciAnalysis.status).toBe('RELEASED');
+      expect(res.body.data).not.toHaveProperty('rawResponse');
     });
   });
 

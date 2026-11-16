@@ -382,6 +382,7 @@ class AEATStatusMonitorService extends EventEmitter {
             estadoTexto: result.estadoTexto || null,
             circuito: result.circuito || null,
             csv: result.csv || null,
+            final: result.final === true,
             fechas: result.fechas || {}
           };
         }
@@ -875,8 +876,13 @@ class AEATStatusMonitorService extends EventEmitter {
     logger.info(`StatusMonitor: Polling ${declarations.length} declaraciones`);
 
     for (const tracking of declarations) {
-      // No consultar declaraciones completadas
-      if (tracking.currentStatus === 'RELEASED' || tracking.currentStatus === 'REJECTED') {
+      // No consultar declaraciones completadas. Con la consulta oficial (AES/NCTS)
+      // manda `aeat.final`: un levante (DE/DS) es RELEASED pero aun puede acabar
+      // en salida efectiva, salida parada o no levante.
+      const completada = tracking.aeat
+        ? tracking.aeat.final === true
+        : (tracking.currentStatus === 'RELEASED' || tracking.currentStatus === 'REJECTED');
+      if (completada) {
         continue;
       }
 

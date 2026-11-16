@@ -21,6 +21,9 @@
  *  - REJECTED: la declaracion ya no vale (invalidada, no levante, salida
  *    parada, recepcion rechazada). El monitor tambien deja de consultarla.
  *  - PENDING: predeclaracion o a la espera de un tercero (garantia, otro pais).
+ *  - `final`: la operacion ya no cambia (salida efectiva o parada, ultimado,
+ *    invalidada, no levante). Solo entonces deja el monitor de consultarla:
+ *    un DE/DS (levante) es RELEASED pero aun puede acabar en SA o en ST/NL.
  *  - Un codigo que no este en la tabla: ACCEPTED si la AEAT da fecha de
  *    admision, PENDING si no. Se conserva el codigo original en `estado`.
  *
@@ -48,11 +51,11 @@ const ESTADOS_AES = {
   PS: { texto: 'Con levante en la aduana de salida, pendiente de salida', monitor: 'RELEASED' },
   ET: { texto: 'Esperando tránsito', monitor: 'RELEASED' },
   GT: { texto: 'Gestionada por tránsito', monitor: 'RELEASED' },
-  SA: { texto: 'Salida efectiva: exportación realizada', monitor: 'RELEASED' },
-  ST: { texto: 'Salida parada (stopped): exportación no realizada', monitor: 'REJECTED' },
-  NL: { texto: 'No levante: invalidada por despacho disconforme', monitor: 'REJECTED' },
-  IV: { texto: 'Invalidada', monitor: 'REJECTED' },
-  RZ: { texto: 'Recepción rechazada en España', monitor: 'REJECTED' }
+  SA: { texto: 'Salida efectiva: exportación realizada', monitor: 'RELEASED', final: true },
+  ST: { texto: 'Salida parada (stopped): exportación no realizada', monitor: 'REJECTED', final: true },
+  NL: { texto: 'No levante: invalidada por despacho disconforme', monitor: 'REJECTED', final: true },
+  IV: { texto: 'Invalidada', monitor: 'REJECTED', final: true },
+  RZ: { texto: 'Recepción rechazada en España', monitor: 'REJECTED', final: true }
 };
 
 const ESTADOS_NCTS = {
@@ -65,12 +68,12 @@ const ESTADOS_NCTS = {
   ED: { texto: 'Esperando asignación de destino en Gibraltar', monitor: 'RELEASED' },
   RE: { texto: 'Recibido en la aduana de destino', monitor: 'RELEASED' },
   RD: { texto: 'Pendiente de resolver discrepancias de la descarga', monitor: 'RELEASED' },
-  UL: { texto: 'Ultimado', monitor: 'RELEASED' },
-  NL: { texto: 'No levante: invalidado por despacho disconforme', monitor: 'REJECTED' },
-  IV: { texto: 'Invalidado', monitor: 'REJECTED' },
-  CA: { texto: 'Predeclaración invalidada a petición del operador', monitor: 'REJECTED' },
-  PI: { texto: 'Predeclaración invalidada', monitor: 'REJECTED' },
-  RZ: { texto: 'Recepción rechazada', monitor: 'REJECTED' }
+  UL: { texto: 'Ultimado', monitor: 'RELEASED', final: true },
+  NL: { texto: 'No levante: invalidado por despacho disconforme', monitor: 'REJECTED', final: true },
+  IV: { texto: 'Invalidado', monitor: 'REJECTED', final: true },
+  CA: { texto: 'Predeclaración invalidada a petición del operador', monitor: 'REJECTED', final: true },
+  PI: { texto: 'Predeclaración invalidada', monitor: 'REJECTED', final: true },
+  RZ: { texto: 'Recepción rechazada', monitor: 'REJECTED', final: true }
 };
 
 /**
@@ -84,4 +87,9 @@ function estadoMonitor(tabla, codigo, admitida) {
   return admitida ? 'ACCEPTED' : 'PENDING';
 }
 
-module.exports = { CIRCUITOS, TEXTO_CIRCUITO, ESTADOS_AES, ESTADOS_NCTS, estadoMonitor };
+/** La AEAT ya no cambiara la operacion (ver `final` en las tablas). */
+function esFinal(tabla, codigo) {
+  return Boolean(codigo && tabla[codigo]?.final);
+}
+
+module.exports = { CIRCUITOS, TEXTO_CIRCUITO, ESTADOS_AES, ESTADOS_NCTS, estadoMonitor, esFinal };
