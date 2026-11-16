@@ -107,6 +107,18 @@ describe('<FormularioModificacion /> (CC013C)', () => {
     expect(transitAPI.amend).not.toHaveBeenCalled()
   })
 
+  test('una descripción vacía o un destino mal formado no se envían', async () => {
+    render(<FormularioModificacion transit={predeclaracion()} onClose={() => {}} onHecho={() => {}} />)
+    fireEvent.change(screen.getByLabelText(/Descripción partida 1/i), { target: { value: '  ' } })
+    fireEvent.click(screen.getByRole('button', { name: /Enviar modificación/i }))
+    expect(await screen.findByText(/no puede quedar vacía/i)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText(/Descripción partida 1/i), { target: { value: 'Ropa' } })
+    fireEvent.change(screen.getByLabelText(/Aduana de destino/i), { target: { value: 'ES29' } })
+    fireEvent.click(screen.getByRole('button', { name: /Enviar modificación/i }))
+    expect(await screen.findByText(/8 caracteres/i)).toBeInTheDocument()
+    expect(transitAPI.amend).not.toHaveBeenCalled()
+  })
+
   test('explica qué no se puede modificar', () => {
     render(<FormularioModificacion transit={predeclaracion()} onClose={() => {}} onHecho={() => {}} />)
     expect(screen.getByText(/aduana de partida, el titular/i)).toBeInTheDocument()
@@ -144,6 +156,26 @@ describe('<FormularioAnulacion /> (CC014C)', () => {
   test('el motivo no pasa de 512 caracteres', () => {
     render(<FormularioAnulacion transit={predeclaracion()} onClose={() => {}} onHecho={() => {}} />)
     expect(screen.getByLabelText(/Motivo de la anulación/i)).toHaveAttribute('maxLength', '512')
+  })
+
+  test('el foco va al motivo, Escape cierra y no se puede cerrar con el envío en vuelo', async () => {
+    let resolver
+    transitAPI.invalidate.mockReturnValue(new Promise((r) => { resolver = r }))
+    const onClose = vi.fn()
+    render(<FormularioAnulacion transit={predeclaracion()} onClose={onClose} onHecho={() => {}} />)
+    expect(screen.getByRole('dialog', { name: /Anular tránsito/i })).toBeInTheDocument()
+    expect(document.activeElement).toBe(screen.getByLabelText(/Motivo de la anulación/i))
+    rellenar()
+    fireEvent.click(screen.getByLabelText(/definitiva/i))
+    fireEvent.click(screen.getByRole('button', { name: /Anular en la AEAT/i }))
+    await waitFor(() => expect(screen.getByRole('button', { name: /Cancelar/i })).toBeDisabled())
+    fireEvent.keyDown(document, { key: 'Escape' })
+    fireEvent.click(screen.getByRole('button', { name: /Cerrar/i }))
+    expect(onClose).not.toHaveBeenCalled()
+    resolver({ data: { success: true } })
+    await waitFor(() => expect(screen.getByRole('button', { name: /Cancelar/i })).not.toBeDisabled())
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalled()
   })
 
   test('un error se muestra y no cierra', async () => {

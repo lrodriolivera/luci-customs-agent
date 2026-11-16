@@ -9,11 +9,12 @@
  * tránsito despachado (PD/DE) solo se anula pidiéndolo en la aduana por
  * registro, así que aquí no se ofrece.
  */
-import React, { useState } from 'react'
+import React, { useEffect, useId, useRef, useState } from 'react'
 import { transitAPI } from '../../services/api'
 
 const MAX_MOTIVO = 512
 const FORMATO_UBICACION = /^[A-Z0-9]{10}$/
+const FORMATO_ADUANA = /^[A-Z]{2}[A-Z0-9]{6}$/
 
 /** @returns {{key: string, label: string, color: string, form: string}[]} */
 export function accionesNctsOperador(transit) {
@@ -65,15 +66,56 @@ export function cambiosModificacion(transit, { destino, partidas }) {
   return cambios
 }
 
+/**
+ * Lo que impide enviar la modificacion, o null. Un campo vacio no significa
+ * «sin cambio»: el CC013C lleva la declaracion entera y la AEAT exige
+ * descripcion, peso bruto y bultos en cada partida.
+ */
+export function problemaModificacion({ destino, partidas }) {
+  if (!FORMATO_ADUANA.test(String(destino || '').trim().toUpperCase())) {
+    return 'La aduana de destino tiene 8 caracteres: país (2) + código (6), p. ej. ES002901'
+  }
+  for (const [i, p] of partidas.entries()) {
+    if (!String(p.description || '').trim()) return `Partida ${i + 1}: la descripción no puede quedar vacía`
+    if (!(Number(p.grossWeight) > 0)) return `Partida ${i + 1}: el peso bruto debe ser mayor que 0`
+    if (p.packages === '' || !(Number(p.packages) >= 0)) return `Partida ${i + 1}: indique el número de bultos`
+  }
+  return null
+}
+
 const errorDe = (err, porDefecto) => err?.response?.data?.error || err?.message || porDefecto
 
-function Modal({ titulo, children, onClose }) {
+/**
+ * Dialogo modal: foco al abrir, Escape y foco devuelto al cerrar. Mientras hay
+ * un envio en vuelo (`bloqueado`) no se cierra: el mensaje ya ha salido a la
+ * AEAT y cerrar dejaria el listado desactualizado e invitaria a reenviarlo.
+ */
+function Modal({ titulo, children, onClose, bloqueado = false }) {
+  const idTitulo = useId()
+  const ref = useRef(null)
+  const cerrar = () => { if (!bloqueado) onClose() }
+  const cerrarRef = useRef(cerrar)
+  cerrarRef.current = cerrar
+
+  useEffect(() => {
+    const anterior = document.activeElement
+    const primero = ref.current?.querySelector('input, textarea, select')
+    ;(primero || ref.current)?.focus()
+    const alPulsar = (e) => { if (e.key === 'Escape') cerrarRef.current() }
+    document.addEventListener('keydown', alPulsar)
+    return () => {
+      document.removeEventListener('keydown', alPulsar)
+      if (anterior && typeof anterior.focus === 'function') anterior.focus()
+    }
+  }, [])
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-label={titulo}>
-      <div className="bg-white rounded-lg max-w-xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={idTitulo}
+        className="bg-white rounded-lg max-w-xl w-full max-h-[90vh] overflow-y-auto focus:outline-none">
         <div className="p-5 border-b flex items-center justify-between">
-          <h2 className="text-lg font-bold">{titulo}</h2>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600" aria-label="Cerrar">✕</button>
+          <h2 id={idTitulo} className="text-lg font-bold">{titulo}</h2>
+          <button type="button" onClick={cerrar} disabled={bloqueado} className="text-gray-400 hover:text-gray-600 disabled:opacity-50" aria-label="Cerrar">✕</button>
         </div>
         <div className="p-5 space-y-4">{children}</div>
       </div>
@@ -81,9 +123,9 @@ function Modal({ titulo, children, onClose }) {
   )
 }
 
-function Error({ texto }) {
+function MensajeError({ texto, id }) {
   if (!texto) return null
-  return <p role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2">{texto}</p>
+  return <p id={id} role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2">{texto}</p>
 }
 
 /** CC170C: la mercancía de la predeclaración ya está en la aduana de partida. */
@@ -112,7 +154,7 @@ export function FormularioPresentacion({ transit, onClose, onHecho }) {
   }
 
   return (
-    <Modal titulo="Presentar mercancía en la aduana de partida (CC170)" onClose={onClose}>
+    <Modal titulo="Presentar mercancía en la aduana de partida (CC170)" onClose={onClose} bloqueado={enviando}>
       <form onSubmit={enviar} className="space-y-4">
         <p className="text-sm text-gray-600">
           Convierte la predeclaración {transit.mrn} en declaración: la AEAT la admite, data la sumaria o el
@@ -122,11 +164,12 @@ export function FormularioPresentacion({ transit, onClose, onHecho }) {
         <div>
           <label htmlFor="cc170-ubicacion" className="block text-sm font-medium mb-1">Ubicación de la mercancía</label>
           <input id="cc170-ubicacion" value={ubicacion} onChange={(e) => setUbicacion(e.target.value)}
+            aria-invalid={Boolean(error)} aria-describedby={error ? 'cc170-error' : undefined}
             maxLength={10} className="w-full border rounded-lg px-3 py-2 font-mono uppercase" placeholder="2801AAAAAA" />
         </div>
-        <Error texto={error} />
+        <MensajeError texto={error} id="cc170-error" />
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg">Cancelar</button>
+          <button type="button" onClick={onClose} disabled={enviando} className="px-4 py-2 border rounded-lg disabled:opacity-50">Cancelar</button>
           <button type="submit" disabled={enviando} className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">
             {enviando ? 'Enviando...' : 'Presentar mercancía'}
           </button>
@@ -153,6 +196,11 @@ export function FormularioModificacion({ transit, onClose, onHecho }) {
 
   const enviar = async (e) => {
     e.preventDefault()
+    const problema = problemaModificacion({ destino, partidas })
+    if (problema) {
+      setError(problema)
+      return
+    }
     const cambios = cambiosModificacion(transit, { destino, partidas })
     if (Object.keys(cambios).length === 0) {
       setError('No ha cambiado nada: no hay modificación que enviar')
@@ -171,7 +219,7 @@ export function FormularioModificacion({ transit, onClose, onHecho }) {
   }
 
   return (
-    <Modal titulo="Modificar predeclaración (CC013)" onClose={onClose}>
+    <Modal titulo="Modificar predeclaración (CC013)" onClose={onClose} bloqueado={enviando}>
       <form onSubmit={enviar} className="space-y-4">
         <p className="text-sm text-gray-600">
           Se envía la predeclaración entera con los cambios; LUCI solo los guarda si la AEAT los admite.
@@ -208,9 +256,9 @@ export function FormularioModificacion({ transit, onClose, onHecho }) {
             </div>
           </fieldset>
         ))}
-        <Error texto={error} />
+        <MensajeError texto={error} />
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg">Cancelar</button>
+          <button type="button" onClick={onClose} disabled={enviando} className="px-4 py-2 border rounded-lg disabled:opacity-50">Cancelar</button>
           <button type="submit" disabled={enviando} className="px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50">
             {enviando ? 'Enviando...' : 'Enviar modificación'}
           </button>
@@ -244,7 +292,7 @@ export function FormularioAnulacion({ transit, onClose, onHecho }) {
   }
 
   return (
-    <Modal titulo="Anular tránsito en la AEAT (CC014)" onClose={onClose}>
+    <Modal titulo="Anular tránsito en la AEAT (CC014)" onClose={onClose} bloqueado={enviando}>
       <form onSubmit={enviar} className="space-y-4">
         <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded p-2">
           Se solicita a la AEAT la invalidación del MRN {transit.mrn}. Si la admite, queda invalidado desde ese
@@ -260,9 +308,9 @@ export function FormularioAnulacion({ transit, onClose, onHecho }) {
           <input type="checkbox" checked={confirmado} onChange={(e) => setConfirmado(e.target.checked)} className="mt-1" />
           <span>Entiendo que la anulación es definitiva</span>
         </label>
-        <Error texto={error} />
+        <MensajeError texto={error} />
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg">Cancelar</button>
+          <button type="button" onClick={onClose} disabled={enviando} className="px-4 py-2 border rounded-lg disabled:opacity-50">Cancelar</button>
           <button type="submit" disabled={!listo} className="px-4 py-2 bg-red-600 text-white rounded-lg disabled:opacity-50">
             {enviando ? 'Anulando...' : 'Anular en la AEAT'}
           </button>
