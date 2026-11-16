@@ -333,7 +333,10 @@ describe('Preferences Service', () => {
 
       expect(info).toBeDefined();
       expect(info.type).toBe('GSP');
-      expect(info.certificate).toBe('Form A');
+      // Desde 2017-2020 la prueba es la comunicacion sobre el origen del exportador
+      // registrado en REX; el Form A ya no se acepta (RE 2015/2447, arts. 78-79 y 92).
+      expect(info.certificate).toMatch(/REX/);
+      expect(info.proofKind).toBe('exporter_declaration');
     });
 
     test('should return null for non-existent agreement', () => {
@@ -648,6 +651,109 @@ describe('Preferences Service', () => {
       const recommendations = await preferencesService.generateOptimizationRecommendations({
         originCountry: 'JP',
         goods: [{ taricCode: '8703239000', customsValue: 3000 }]
+      });
+      expect(recommendations.some(r => r.type === 'documentation')).toBe(false);
+    });
+  });
+
+  /**
+   * Pendiente del PR #125: SPG/SPG+/EBA seguian con «Form A», Corea con EUR.1 y el
+   * Reino Unido con un «Statement on Origin» sin base. Fuentes: EUR-Lex (Reglamento
+   * (UE) 978/2012 consolidado a 1-1-2025, anexos II-IV; RE 2015/2447; Protocolo de
+   * origen UE-Corea, DOUE L 127 de 14-5-2011; ACC UE-RU, DOUE L 149 de 30-4-2021) y
+   * Access2Markets (Mexico).
+   */
+  describe('prueba de origen: SPG, Corea, Reino Unido y Mexico', () => {
+    const acuerdo = (key) => preferencesService.getAgreementInfo(key);
+    const claves = (pais) => preferencesService.findApplicableAgreements(pais).map(a => a.key);
+
+    test.each(['GSP', 'GSP_PLUS', 'EBA'])('%s: comunicacion sobre el origen de exportador registrado REX, no Form A', (key) => {
+      const spg = acuerdo(key);
+      expect(spg.certificate).not.toMatch(/^Form A$/);
+      expect(spg.certificate).toMatch(/exportador registrado \(REX\)/);
+      expect(spg.certificate).toMatch(/6\.000 EUR/);
+      expect(spg.proofKind).toBe('exporter_declaration');
+      expect(spg.legalBasis).toMatch(/978\/2012/);
+      expect(spg.legalBasis).toMatch(/2015\/2447/);
+      expect(spg.proofValidity).toBe('12 meses desde su extensión');
+    });
+
+    test('SPG+: solo los beneficiarios del anexo III vigente', () => {
+      expect(acuerdo('GSP_PLUS').countries.slice().sort())
+        .toEqual(['BO', 'CV', 'KG', 'LK', 'MN', 'PH', 'PK', 'UZ']);
+      // Bangladés y Camboya son EBA; Armenia salió del SPG+ en 2022
+      expect(claves('BD')).not.toContain('GSP_PLUS');
+      expect(claves('KH')).not.toContain('GSP_PLUS');
+      expect(claves('AM')).toEqual([]);
+    });
+
+    test('EBA: los 46 países menos adelantados del anexo IV vigente', () => {
+      const eba = acuerdo('EBA').countries;
+      expect(eba).toHaveLength(46);
+      expect(eba).toEqual(expect.arrayContaining(['AF', 'BD', 'KH', 'MZ', 'SN', 'TZ', 'ZM']));
+      expect(new Set(eba).size).toBe(46);
+    });
+
+    test('SPG general: sin los países que ya no son beneficiarios', () => {
+      const spg = acuerdo('GSP').countries;
+      // Tailandia retirada (nota *1 del anexo II); Marruecos, Túnez, Egipto y Ghana no figuran
+      for (const fuera of ['TH', 'MA', 'TN', 'EG', 'GH']) {
+        expect(spg).not.toContain(fuera);
+      }
+      expect(spg).toEqual(expect.arrayContaining(['IN', 'ID', 'NG', 'KE', 'TJ']));
+    });
+
+    test('Corea: declaracion de origen del exportador (autorizado si pasa de 6.000 EUR), sin EUR.1', () => {
+      const corea = acuerdo('EU-KOREA');
+      expect(corea.certificate).not.toMatch(/EUR\.1/);
+      expect(corea.certificate).toMatch(/Declaración de origen del exportador/);
+      expect(corea.certificate).toMatch(/exportador autorizado/);
+      expect(corea.certificate).toMatch(/6\.000 EUR/);
+      expect(corea.proofKind).toBe('exporter_declaration');
+      expect(corea.legalBasis).toMatch(/DOUE L 127 de 14-5-2011/);
+      expect(corea.proofValidity).toBe('12 meses desde su expedición');
+    });
+
+    test('Reino Unido: comunicacion sobre el origen con el EORI del exportador o conocimiento del importador', () => {
+      const ru = acuerdo('EU-UK');
+      expect(ru.countries).toEqual(['GB']);
+      expect(ru.certificate).not.toMatch(/EUR\.1/);
+      expect(ru.certificate).toMatch(/Comunicación sobre el origen/);
+      expect(ru.certificate).toMatch(/EORI/);
+      expect(ru.certificate).toMatch(/conocimiento del importador/);
+      expect(ru.proofKind).toBe('exporter_declaration');
+      expect(ru.legalBasis).toMatch(/DOUE L 149 de 30-4-2021/);
+      expect(ru.proofValidity).toMatch(/^12 meses/);
+    });
+
+    test('Mexico: EUR.1 o declaracion en factura, no «Statement on Origin»', () => {
+      const mx = acuerdo('EU-MEXICO');
+      expect(mx.certificate).toMatch(/EUR\.1/);
+      expect(mx.certificate).toMatch(/declaración en factura/);
+      expect(mx.certificate).not.toMatch(/Statement on Origin/);
+      expect(mx.proofKind).toBe('certificate');
+      expect(mx.legalBasis).toMatch(/Decisión 2\/2000/);
+      expect(mx.proofValidity).toBe('10 meses desde su expedición');
+    });
+
+    test('el requisito de prueba de origen lleva la validez del acuerdo', async () => {
+      const result = await preferencesService.checkEligibility({
+        originCountry: 'GB',
+        goods: [{ taricCode: '8703239000', customsValue: 1000 }]
+      });
+      expect(result.recommended.proofValidity).toMatch(/^12 meses/);
+      expect(result.requirements.find(r => r.type === 'certificate').validityPeriod).toMatch(/^12 meses/);
+    });
+
+    test('sin validez verificada se mantiene el texto anterior', () => {
+      const [req] = preferencesService.getRequirements({ certificate: 'EUR.1', type: 'PEM' });
+      expect(req.validityPeriod).toBe('10 meses desde emisión');
+    });
+
+    test('un envio pequeño del SPG no sugiere «declaracion en lugar de EUR.1»', async () => {
+      const recommendations = await preferencesService.generateOptimizationRecommendations({
+        originCountry: 'IN',
+        goods: [{ taricCode: '6109100010', customsValue: 3000 }]
       });
       expect(recommendations.some(r => r.type === 'documentation')).toBe(false);
     });
