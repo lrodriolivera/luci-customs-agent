@@ -787,7 +787,11 @@
       "groupUe": "Droits et mesures de l'UE",
       "exclusions": "Exclusions",
       "openAeat": "Ouvrir sur le site de l'AEAT",
-      "error": "Impossible de consulter l'AEAT"
+      "error": "Impossible de consulter l'AEAT",
+      "dutyMismatch": "Le droit du dossier ({{expediente}} %) ne correspond pas au droit pays tiers de l'AEAT ({{aeat}} %).",
+      "vatMismatch": "La TVA du dossier ({{expediente}} %) ne correspond pas à celle de l'AEAT ({{aeat}} %).",
+      "dutyPreference": "Le droit du dossier ({{aeat}} %) est une préférence pour cette origine ; le taux général est de {{general}} %. Une preuve d'origine est requise.",
+      "ratesMatch": "Le droit et la TVA du dossier correspondent à ceux de l'AEAT."
     }
   },
   "declarations": {

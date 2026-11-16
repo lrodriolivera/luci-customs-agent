@@ -787,7 +787,11 @@
       "groupUe": "Aranceles y medidas de la UE",
       "exclusions": "Exclusiones",
       "openAeat": "Abrir en la sede de la AEAT",
-      "error": "No se pudo consultar la AEAT"
+      "error": "No se pudo consultar la AEAT",
+      "dutyMismatch": "El arancel del expediente ({{expediente}} %) no coincide con el de la AEAT para terceros países ({{aeat}} %).",
+      "vatMismatch": "El IVA del expediente ({{expediente}} %) no coincide con el de la AEAT ({{aeat}} %).",
+      "dutyPreference": "El arancel del expediente ({{aeat}} %) es una preferencia de este origen; el general es {{general}} %. Exige prueba de origen.",
+      "ratesMatch": "El arancel y el IVA del expediente coinciden con los de la AEAT."
     }
   },
   "declarations": {

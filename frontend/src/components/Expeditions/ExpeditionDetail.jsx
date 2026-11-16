@@ -30,6 +30,7 @@ import { hrefSeguro } from '../../utils/url'
 import { formatearImporte } from '../../utils/importe'
 import { textoEvento } from '../../utils/historialExpediente'
 import GoodsEditor from './GoodsEditor'
+import MedidasAeat from '../Classification/MedidasAeat'
 import H1Preview from './H1Preview'
 import GroupageCard, { isMaritime } from './GroupageCard'
 import AeatSumariaLinks from './AeatSumariaLinks'
@@ -1007,6 +1008,18 @@ export default function ExpeditionDetail() {
                       <p className="font-medium">{formatearImporte(item.invoiceValue, item.currency)}</p>
                     </div>
                   </div>
+                  {/* Capa nacional espanola de la partida (IVA, impuestos
+                      especiales, controles) segun la AEAT, contrastada con el
+                      arancel y el IVA del expediente. */}
+                  {/^\d{10}$/.test(item.taricCode || '') && (
+                    <MedidasAeat
+                      key={`${item.taricCode}-${item.originCountry}`}
+                      code={item.taricCode}
+                      origin={item.originCountry}
+                      compare={{ dutyRate: item.dutyRate, vatRate: item.vatRate }}
+                      className="mt-3"
+                    />
+                  )}
                   {editingGoodsIndex === index && (
                     <GoodsEditor
                       item={item}

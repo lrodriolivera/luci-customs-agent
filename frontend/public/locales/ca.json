@@ -787,7 +787,11 @@
       "groupUe": "Aranzels i mesures de la UE",
       "exclusions": "Exclusions",
       "openAeat": "Obrir a la seu de l'AEAT",
-      "error": "No s'ha pogut consultar l'AEAT"
+      "error": "No s'ha pogut consultar l'AEAT",
+      "dutyMismatch": "L'aranzel de l'expedient ({{expediente}} %) no coincideix amb el de l'AEAT per a tercers països ({{aeat}} %).",
+      "vatMismatch": "L'IVA de l'expedient ({{expediente}} %) no coincideix amb el de l'AEAT ({{aeat}} %).",
+      "dutyPreference": "L'aranzel de l'expedient ({{aeat}} %) és una preferència d'aquest origen; el general és {{general}} %. Cal prova d'origen.",
+      "ratesMatch": "L'aranzel i l'IVA de l'expedient coincideixen amb els de l'AEAT."
     }
   },
   "declarations": {

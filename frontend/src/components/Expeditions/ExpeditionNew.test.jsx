@@ -34,7 +34,8 @@ vi.mock('../../services/api', () => ({
     create: vi.fn()
   },
   classificationAPI: {
-    classify: vi.fn()
+    classify: vi.fn(),
+    aeatTariff: vi.fn()
   },
   // Usado por TipoCambioOficial (vía ImporteInput) cuando la moneda no es EUR.
   calculationsAPI: {
@@ -379,6 +380,28 @@ describe('<ExpeditionNew />', () => {
       expect(aplicar).toHaveLength(2)
       fireEvent.click(aplicar[1])
       expect(screen.getByPlaceholderText('expeditions.tenDigits')).toHaveValue('6302210089')
+    })
+
+    test('con el TARIC puesto se puede consultar la AEAT con el origen de la partida', async () => {
+      classificationAPI.classify.mockResolvedValue({
+        data: { success: true, data: { suggestions: [{ code: '6302100000', confidence: 88, verified: true, taricInfo: { duties: { thirdCountry: 12 } } }] } }
+      })
+      classificationAPI.aeatTariff.mockResolvedValue({
+        data: { success: true, data: { existe: true, codigo: '6302100000', areaGeografica: 'CN', fechaConsulta: '16-11-2026', url: 'https://aeat', medidas: [
+          { codigo: '103-APPL', tipo: 'ue', areaGeografica: 'TODOS ERGA OMNES', descripcion: 'Derecho terceros países', derecho: '12,000%', documentos: [] }
+        ] } }
+      })
+      renderComponent()
+      fireEvent.click(screen.getByText('common.next'))
+      fireEvent.change(screen.getAllByPlaceholderText('expeditions.descriptionPlaceholder')[0], {
+        target: { value: 'Juego de sábanas de algodón de punto' }
+      })
+      fireEvent.change(screen.getByPlaceholderText('expeditions.isoCodePlaceholderShort'), { target: { value: 'cn' } })
+      fireEvent.click(screen.getAllByText('IA')[0].closest('button'))
+
+      fireEvent.click(await screen.findByRole('button', { name: 'classification.aeat.consult' }))
+      expect(await screen.findByText('classification.aeat.ratesMatch')).toBeInTheDocument()
+      expect(classificationAPI.aeatTariff).toHaveBeenCalledWith('6302100000', 'CN')
     })
 
     test('si ninguna sugerencia existe en el catálogo no se rellena el TARIC solo', async () => {

@@ -82,4 +82,51 @@ describe('MedidasAeat', () => {
     consultar()
     expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo consultar el Arancel Integrado de la AEAT')
   })
+
+  describe('contraste con los datos del expediente', () => {
+    test('avisa si el arancel y el IVA del expediente no coinciden con la AEAT', async () => {
+      classificationAPI.aeatTariff.mockResolvedValue({ data: { success: true, data: RESPUESTA } })
+      render(<MedidasAeat code="6302210089" origin="CN" compare={{ dutyRate: 8, vatRate: 10 }} />)
+      consultar()
+
+      const avisos = await screen.findAllByRole('status')
+      expect(avisos.map((a) => a.textContent)).toEqual([
+        'classification.aeat.dutyMismatch:{"expediente":8,"aeat":12}',
+        'classification.aeat.vatMismatch:{"expediente":10,"aeat":21}'
+      ])
+    })
+
+    test('si coinciden lo confirma', async () => {
+      classificationAPI.aeatTariff.mockResolvedValue({ data: { success: true, data: RESPUESTA } })
+      render(<MedidasAeat code="6302210089" origin="CN" compare={{ dutyRate: 12, vatRate: 21 }} />)
+      consultar()
+      expect(await screen.findByText('classification.aeat.ratesMatch')).toBeInTheDocument()
+      expect(screen.queryByText(/Mismatch/)).not.toBeInTheDocument()
+    })
+
+    test('un arancel preferencial del origen no se marca como error, se explica', async () => {
+      const conPreferencia = {
+        ...RESPUESTA,
+        areaGeografica: 'VN',
+        medidas: [
+          ...RESPUESTA.medidas,
+          { codigo: '142-PREF', tipo: 'ue', areaGeografica: 'VN Vietnam', descripcion: 'Preferencias arancelarias', derecho: '0%', documentos: [] }
+        ]
+      }
+      classificationAPI.aeatTariff.mockResolvedValue({ data: { success: true, data: conPreferencia } })
+      render(<MedidasAeat code="6302210089" origin="VN" compare={{ dutyRate: 0, vatRate: 21 }} />)
+      consultar()
+      expect(await screen.findByText('classification.aeat.dutyPreference:{"aeat":0,"general":12}')).toBeInTheDocument()
+      expect(screen.queryByText(/dutyMismatch/)).not.toBeInTheDocument()
+    })
+
+    test('sin datos del expediente no compara', async () => {
+      classificationAPI.aeatTariff.mockResolvedValue({ data: { success: true, data: RESPUESTA } })
+      render(<MedidasAeat code="6302210089" origin="CN" />)
+      consultar()
+      await screen.findByRole('region', { name: 'classification.aeat.groupTax' })
+      expect(screen.queryByRole('status')).not.toBeInTheDocument()
+      expect(screen.queryByText('classification.aeat.ratesMatch')).not.toBeInTheDocument()
+    })
+  })
 })
