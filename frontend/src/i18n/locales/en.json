@@ -1020,7 +1020,9 @@
     "fillRequired": "Complete all required fields",
     "errorCalculating": "Error calculating duties",
     "confidence": "confidence",
-    "deliveryPoint": "Delivery point"
+    "deliveryPoint": "Delivery point",
+    "aeatPreferenceAvailable": "According to the AEAT, origin {{origin}} has a tariff preference for this code: {{preferential}}% instead of {{general}}% (measure {{measure}}). It requires the agreement's proof of origin.",
+    "applyAeatPreference": "Apply the preference"
   },
   "chat": {
     "title": "LUCI Assistant",

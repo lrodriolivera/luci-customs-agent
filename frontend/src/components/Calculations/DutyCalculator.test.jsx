@@ -77,6 +77,25 @@ describe('<DutyCalculator />', () => {
     )
   })
 
+  // Jenifer (UAT 17/11/2026): cerezas de Chile al 12 % aunque Chile tiene preferencia al 0 %.
+  test('si la AEAT da preferencia para el origen, la ofrece y al aplicarla recalcula con preferencia', async () => {
+    const base = { customsValue: 1000, dutyRate: 12, dutyAmount: 120, vatRate: 4, vatAmount: 44.8, totalToPay: 1164.8 }
+    calculationsAPI.calculateDuties
+      .mockResolvedValueOnce({ data: { data: { ...base, preferenciaAeat: { general: 12, preferencial: 0, medida: '142-PREF' } } } })
+      .mockResolvedValueOnce({ data: { data: { ...base, dutyRate: 0, dutyAmount: 0, preferenceApplied: { agreement: 'Preferencia AEAT' }, preferenciaAeat: { general: 12, preferencial: 0, medida: '142-PREF' } } } })
+    render(<DutyCalculator />)
+    fireEvent.change(screen.getByTestId('calc-taric'), { target: { value: '0809290000' } })
+    fireEvent.change(screen.getByTestId('calc-value'), { target: { value: '1000' } })
+    fireEvent.change(screen.getByTestId('calc-origin'), { target: { value: 'CL' } })
+    fireEvent.submit(document.querySelector('form'))
+
+    expect(await screen.findByText('calculator.aeatPreferenceAvailable')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'calculator.applyAeatPreference' }))
+
+    await waitFor(() => expect(calculationsAPI.calculateDuties).toHaveBeenLastCalledWith(expect.objectContaining({ origin: 'CL', preference: '300' })))
+    await waitFor(() => expect(screen.queryByText('calculator.aeatPreferenceAvailable')).not.toBeInTheDocument())
+  })
+
   test('resultado rico despliega el bloque de resultado con todas sus sub-secciones', async () => {
     // El estado `result` = response.data; el JSX accede a result.data.* → anidar dos niveles.
     calculationsAPI.calculateDuties.mockResolvedValue({

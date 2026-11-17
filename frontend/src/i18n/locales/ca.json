@@ -1019,7 +1019,9 @@
     "confidence": "confiança",
     "deliveryPoint": "Punt de lliurament",
     "errorCalculating": "Error en calcular drets",
-    "fillRequired": "Ompliu tots els camps obligatoris"
+    "fillRequired": "Ompliu tots els camps obligatoris",
+    "aeatPreferenceAvailable": "Segons l'AEAT, l'origen {{origin}} té preferència aranzelària per a aquest codi: {{preferential}} % en lloc de {{general}} % (mesura {{measure}}). Cal la prova d'origen de l'acord.",
+    "applyAeatPreference": "Aplicar la preferència"
   },
   "chat": {
     "title": "Assistent LUCI",

@@ -105,6 +105,12 @@ export default function DutyCalculator() {
       return
     }
 
+    await calcular(formData.preference)
+  }
+
+  // Calcula con la preferencia indicada (la del formulario o la que se aplica
+  // desde el aviso de la AEAT).
+  const calcular = async (preference) => {
     setCalculating(true)
     setResult(null)
 
@@ -113,7 +119,7 @@ export default function DutyCalculator() {
         taricCode: formData.taricCode,
         value: parseFloat(formData.value),
         origin: formData.origin,
-        preference: formData.preference,
+        preference,
         importDate: formData.importDate || null
       })
 
@@ -123,6 +129,16 @@ export default function DutyCalculator() {
     } finally {
       setCalculating(false)
     }
+  }
+
+  // Preferencia del origen segun la AEAT, disponible y aun no aplicada (UAT 17/11/2026).
+  const PREFERENCIA_ACUERDO = '300'
+  const prefAeat = result?.data?.preferenciaAeat
+  const ofrecerPreferencia = Boolean(prefAeat && prefAeat.preferencial !== null && prefAeat.preferencial < prefAeat.general &&
+    !result?.data?.preferenceApplied && formData.preference === '100')
+  const aplicarPreferencia = async () => {
+    setFormData((prev) => ({ ...prev, preference: PREFERENCIA_ACUERDO }))
+    await calcular(PREFERENCIA_ACUERDO)
   }
 
   const incoterms = ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP']
@@ -307,6 +323,15 @@ export default function DutyCalculator() {
                   )}
                 </div>
               </div>
+
+              {ofrecerPreferencia && (
+                <div role="status" className="mb-4 p-3 rounded-lg border border-green-200 bg-green-50 text-sm text-green-900">
+                  <p>{t('calculator.aeatPreferenceAvailable', { origin: formData.origin, general: prefAeat.general, preferential: prefAeat.preferencial, measure: prefAeat.medida })}</p>
+                  <button type="button" onClick={aplicarPreferencia} disabled={calculating} className="btn-primary mt-2">
+                    {t('calculator.applyAeatPreference')}
+                  </button>
+                </div>
+              )}
 
               {/* Description */}
               {result.data.description && (
