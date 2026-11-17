@@ -632,23 +632,41 @@ class ParaduaneroService {
     const rohsRaee = buscarRohsRaee(good.taricCode);
     const origenExcluido = ORIGENES_EXCLUIDOS_ROHS_RAEE.includes(String(good.originCountry || '').toUpperCase());
     if (rohsRaee && (rohsRaee.rohs || rohsRaee.raee) && !origenExcluido) {
-      const siglas = [rohsRaee.rohs && 'RoHS', rohsRaee.raee && 'RAEE'].filter(Boolean).join(' y ');
-      controles.push({
-        controlType: 'SOIVRE',
-        subType: 'rohs_raee',
-        reason: `El TARIC ${good.taricCode} figura en la lista TARIC RoHS/RAEE (prefijo ${rohsRaee.prefijo}): procede control ${siglas}`,
-        documents: this._documentosSoivreConFacturaYTransporte(
-          [rohsRaee.rohs && DOCUMENTO_ROHS, rohsRaee.raee && DOCUMENTO_RAEE].filter(Boolean),
-          transportMode
-        ),
-        inspectionRequired: false,
-        priority: this._calculatePriority('SOIVRE', good.originCountry),
-        affectedGoods: [afectada],
-        notes: [rohsRaee.nota, `Lista RoHS/RAEE: version ${VERSIONES.rohsRaee}`].filter(Boolean).join(' | ')
-      });
+      controles.push(this._controlRohsRaee(rohsRaee, good.taricCode, transportMode, good.originCountry, afectada));
     }
 
     return controles;
+  }
+
+  /**
+   * Control RoHS/RAEE segun la hoja de la lista SOIVRE en que figura la partida:
+   *  - PUE ROHS: control propio, documentos obligatorios.
+   *  - PUE COM (desde el 18/05/2026 para las partidas que dejaron PUE ROHS, a
+   *    raiz de la Orden PJC/161/2026 que modifica el anexo del RD 330/2008): el
+   *    Excel dice "Adicionalmente al control de seguridad, procede realizar
+   *    control ROHS y/o RAEE, exclusivamente para aquellos que sean AEEs". Se
+   *    pide en la PUE COM y solo si el producto es un AEE, asi que sus
+   *    documentos no se marcan obligatorios: lo decide el agente.
+   */
+  _controlRohsRaee(rohsRaee, taricCode, transportMode, originCountry, afectada) {
+    const siglas = [rohsRaee.rohs && 'RoHS', rohsRaee.raee && 'RAEE'].filter(Boolean).join(' y ');
+    const porPueCom = rohsRaee.pue === 'COM';
+    const documentos = [rohsRaee.rohs && DOCUMENTO_ROHS, rohsRaee.raee && DOCUMENTO_RAEE]
+      .filter(Boolean)
+      .map(d => (porPueCom ? { ...d, mandatory: false } : d));
+    const reason = porPueCom
+      ? `El TARIC ${taricCode} figura en la lista TARIC RoHS/RAEE de PUE COM (prefijo ${rohsRaee.prefijo}): ademas del control de seguridad, procede control ${siglas} solo si el producto es un aparato electrico o electronico (AEE); se solicita en la PUE COM`
+      : `El TARIC ${taricCode} figura en la lista TARIC RoHS/RAEE (prefijo ${rohsRaee.prefijo}): procede control ${siglas}`;
+    return {
+      controlType: 'SOIVRE',
+      subType: porPueCom ? 'rohs_raee_com' : 'rohs_raee',
+      reason,
+      documents: this._documentosSoivreConFacturaYTransporte(documentos, transportMode),
+      inspectionRequired: false,
+      priority: this._calculatePriority('SOIVRE', originCountry),
+      affectedGoods: [afectada],
+      notes: [rohsRaee.nota, `Lista RoHS/RAEE: version ${VERSIONES.rohsRaee}`].filter(Boolean).join(' | ')
+    };
   }
 
   /**

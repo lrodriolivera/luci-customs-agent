@@ -410,7 +410,7 @@ describe('Paraduanero Service', () => {
       // factura comercial y documento de transporte, sea cual sea el grupo.
       expect(controls[0].documents.map(d => d.code)).toEqual(['ROHS', 'RAEE', 'N380', 'N785']);
       expect(controls[0].reason).toContain('RoHS y RAEE');
-      expect(controls[0].notes).toContain('2023-02-09');
+      expect(controls[0].notes).toContain('2026-04-20');
     });
 
     test('RoHS/RAEE no procede para los origenes que la medida excluye (TR, NO, IS, LI)', async () => {
@@ -506,6 +506,32 @@ describe('Paraduanero Service', () => {
       expect(controls.map(c => c.subType)).toEqual(['rohs_raee']);
     });
 
+    test('una partida de la lista PUE COM: RoHS/RAEE solo si es un AEE y por PUE COM, documentos no obligatorios', async () => {
+      const controls = await analizar('6301100000');
+      const com = controls.find(c => c.subType === 'rohs_raee_com');
+
+      expect(controls.find(c => c.subType === 'rohs_raee')).toBeUndefined();
+      expect(com).toMatchObject({ controlType: 'SOIVRE', inspectionRequired: false });
+      expect(com.reason).toContain('PUE COM');
+      expect(com.reason).toContain('AEE');
+      expect(com.documents.filter(d => ['ROHS', 'RAEE'].includes(d.code)))
+        .toEqual([expect.objectContaining({ code: 'ROHS', mandatory: false }), expect.objectContaining({ code: 'RAEE', mandatory: false })]);
+      expect(com.notes).toContain('2026-04-20');
+    });
+
+    test('un AEE de PUE ROHS y otro de PUE COM en la misma expedicion no se mezclan', async () => {
+      const controls = await paraduaneroService.analyzeExpedition({
+        expeditionId: 'EXP-ROHS-COM',
+        goods: [
+          { itemNumber: 1, description: 'Portatiles', taricCode: '8471300000', originCountry: 'CN' },
+          { itemNumber: 2, description: 'Mantas electricas', taricCode: '6301100000', originCountry: 'CN' }
+        ]
+      });
+
+      expect(controls.find(c => c.subType === 'rohs_raee').affectedGoods.map(g => g.itemNumber)).toEqual([1]);
+      expect(controls.find(c => c.subType === 'rohs_raee_com').affectedGoods.map(g => g.itemNumber)).toEqual([2]);
+    });
+
     test('varias partidas con el mismo control se agrupan en uno', async () => {
       const controls = await paraduaneroService.analyzeExpedition({
         expeditionId: 'EXP-GRUPO',
@@ -522,7 +548,7 @@ describe('Paraduanero Service', () => {
     test('la nota que acota el control en la lista llega al agente', async () => {
       const { buscarRohsRaee } = require('../../src/services/paraduanero/listasOficiales');
       const rohsRaee = require('../../src/data/paraduanero/rohsRaee.json');
-      const conNota = rohsRaee.entradas.find(e => e.nota && (e.rohs || e.raee));
+      const conNota = rohsRaee.entradas.find(e => e.pue === 'ROHS' && e.nota && (e.rohs || e.raee));
 
       const controls = await analizar(conNota.prefijo.padEnd(10, '0'));
 
@@ -547,6 +573,46 @@ describe('Paraduanero Service', () => {
       expect(buscarRohsRaee('8471300000')).toMatchObject({ prefijo: '84713000', rohs: true, raee: true });
     });
 
+    test('la lista RoHS/RAEE es la de SOIVRE de 20/04/2026, con su fuente', () => {
+      const rohsRaee = require('../../src/data/paraduanero/rohsRaee.json');
+
+      expect(rohsRaee).toMatchObject({
+        version: '2026-04-20',
+        vigenteDesde: '2026-05-18',
+        documento: 'https://comerciomig2.serviciosmin.gob.es/WEBEstacice/ayuda/LISTA_TARIC_ROHS_RAEE_20_ABRIL_2026.xlsx'
+      });
+      expect(rohsRaee.sha256).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    test('altas de 2025-2026 en PUE ROHS: bobinas 8504 50 00 00 y ventiladores 9019 20 10', () => {
+      expect(buscarRohsRaee('8504500000')).toMatchObject({ prefijo: '8504500000', pue: 'ROHS', rohs: true, raee: true });
+      expect(buscarRohsRaee('9019201000')).toMatchObject({ prefijo: '90192010', pue: 'ROHS' });
+      expect(buscarRohsRaee('8501331000')).toMatchObject({ prefijo: '85013310', pue: 'ROHS' });
+    });
+
+    test('bajas: codigos desaparecidos del TARIC dejan de figurar', () => {
+      // 8504 40 85 / 86 se desglosan en 8504 40 84 / 87; 8528 71 19 pasa a 8528 71 00.
+      expect(buscarRohsRaee('8504408500')).toBeNull();
+      expect(buscarRohsRaee('8528711900')).toBeNull();
+      expect(buscarRohsRaee('8504408700')).toMatchObject({ prefijo: '85044087', pue: 'ROHS' });
+      // La bicicleta con pedaleo asistido queda cubierta por la 8711 60 90 entera.
+      expect(buscarRohsRaee('8711609010')).toMatchObject({ prefijo: '87116090', pue: 'ROHS' });
+    });
+
+    test('las partidas tachadas que pasan a PUE COM (18/05/2026) ya no son PUE ROHS', () => {
+      expect(buscarRohsRaee('6301100000')).toMatchObject({ prefijo: '63011000', pue: 'COM' });
+      expect(buscarRohsRaee('8516299100')).toMatchObject({ prefijo: '85162991', pue: 'COM' });
+      // Drones: salen de PUE ROHS (27/01/2025) y solo quedan las subdivisiones de PUE COM.
+      expect(buscarRohsRaee('8806920010')).toMatchObject({ prefijo: '8806920010', pue: 'COM' });
+      expect(buscarRohsRaee('8806920090')).toBeNull();
+    });
+
+    test('la hoja PUE COM admite partidas de 4 digitos (calzado 6403)', () => {
+      const entrada = buscarRohsRaee('6403991000');
+      expect(entrada).toMatchObject({ prefijo: '6403', pue: 'COM', rohs: true, raee: true });
+      expect(entrada.nota).toContain('exclusivamente para aquellos que sean AEEs');
+    });
+
     test('un codigo fuera de las listas devuelve null en ambas', () => {
       expect(buscarSoivreSeguridad('4011100000')).toBeNull();
       expect(buscarRohsRaee('4011100000')).toBeNull();
@@ -556,8 +622,12 @@ describe('Paraduanero Service', () => {
       const rohsRaee = require('../../src/data/paraduanero/rohsRaee.json');
       const soivre = require('../../src/data/paraduanero/soivreSeguridad.json');
 
-      expect(rohsRaee.entradas).toHaveLength(820);
-      expect(new Set(rohsRaee.entradas.map(e => e.prefijo)).size).toBe(820);
+      // LISTA_TARIC_ROHS_RAEE_20_ABRIL_2026.xlsx: 801 partidas de la hoja PUE ROHS
+      // y 84 de la hoja PUE COM (sin las filas tachadas, que son bajas).
+      expect(rohsRaee.entradas).toHaveLength(885);
+      expect(new Set(rohsRaee.entradas.map(e => e.prefijo)).size).toBe(885);
+      expect(rohsRaee.entradas.filter(e => e.pue === 'ROHS')).toHaveLength(801);
+      expect(rohsRaee.entradas.filter(e => e.pue === 'COM')).toHaveLength(84);
       expect(soivre.entradas).toHaveLength(838);
       expect(soivre.entradas.every(e => /^\d{10}$/.test(e.taric) && e.grupo)).toBe(true);
     });

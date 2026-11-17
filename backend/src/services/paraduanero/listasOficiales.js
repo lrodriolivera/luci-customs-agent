@@ -4,8 +4,12 @@
  *
  *  - Seguridad de productos (anexo del RD 330/2008): lista de TARIC de 10
  *    digitos, con su grupo de producto.
- *  - RoHS / RAEE: lista de prefijos TARIC (6, 8 o 10 digitos) con indicacion
- *    de si procede cada control y, en su caso, la nota que lo acota.
+ *  - RoHS / RAEE: lista de prefijos TARIC (4, 6, 8 o 10 digitos) con indicacion
+ *    de si procede cada control, la nota que lo acota y por que PUE se pide:
+ *    'ROHS' (hoja "LISTA TARIC ROSRAE PUE ROHS") o 'COM' (hoja "LISTA TARIC
+ *    ROHS RAEE PUE COM": control adicional al de seguridad, solo para AEE).
+ *    Version vigente: LISTA_TARIC_ROHS_RAEE_20_ABRIL_2026.xlsx, con efecto
+ *    desde el 18/05/2026 (https://estacice.comercio.es, seccion de ayuda).
  *
  * Sustituyen a las reglas por capitulo, que declaraban "control SOIVRE" para
  * capitulos enteros (todo el 84 y el 85, todo el textil): unos portatiles de la
@@ -19,7 +23,7 @@
 const rohsRaee = require('../../data/paraduanero/rohsRaee.json');
 const soivreSeguridad = require('../../data/paraduanero/soivreSeguridad.json');
 
-const LONGITUDES_PREFIJO = [10, 8, 6];
+const LONGITUDES_PREFIJO = [10, 8, 6, 4];
 
 const rohsRaeePorPrefijo = new Map(rohsRaee.entradas.map(e => [e.prefijo, e]));
 const soivrePorTaric = new Map(soivreSeguridad.entradas.map(e => [e.taric, e]));
