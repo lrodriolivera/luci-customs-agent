@@ -18,6 +18,7 @@ const { MODOS_ACTIVACION } = require('../services/aeat/h1CauActivacion');
 const { gastosQueSeSuman, gastoDe, cambiosDeLosGastos } = require('../services/forms/gastosHastaLaFrontera');
 const { transporteTrasLaEntrada, CODIGOS_OPCIONALES, CONCEPTOS_BASE_IVA } = require('../services/forms/ajustesDelValor');
 const { verificarSumariaConAeat, esGrupaje, CODIGO_ERROR: CODIGO_GRUPAJE } = require('../services/forms/grupajeLcl');
+const { combinacionH1, adicionalH1, normalizarRegimen, regimenDelExpediente, catalogoH1 } = require('../config/regimenesH1');
 
 /** Sin grupaje y sin sumaria registrada no hay nada que comprobar ni que consultar. */
 const hayQueComprobarSumaria = (expedition) =>
@@ -211,9 +212,46 @@ const datosH1De = (expedition, factura = { divisa: 'EUR', sinTipoBce: false }) =
     invoiceCurrency: factura.divisa,
     invoiceCurrencyWithoutBce: factura.sinTipoBce,
     appliedExchangeRate: factura.divisa && expedition.appliedExchangeRate?.currency === factura.divisa
-      ? Number(expedition.appliedExchangeRate.rate) || null : null
+      ? Number(expedition.appliedExchangeRate.rate) || null : null,
+    // Regimen (D.E. 1/10) como codigo de cuatro cifras: lo guardado antes es 40 + 00.
+    procedure: regimenDelExpediente(expedition.declaration),
+    additionalProcedure: adicionalGuardado(expedition.declaration?.additionalProcedure)
   };
 };
+
+/** Adicional guardado para el formulario: '000', '00' o vacio = ninguno. */
+function adicionalGuardado(valor) {
+  const codigo = String(valor || '').trim().toUpperCase();
+  return /^0*$/.test(codigo) ? '' : codigo;
+}
+
+/**
+ * Regimen (D.E. 1/10) y regimen adicional (D.E. 1/11) recibidos: solo codigos
+ * del catalogo oficial (config/regimenesH1).
+ * @returns {{ errores: string[], cambios: Object<string, string|undefined> }}
+ */
+function regimenRecibido(body) {
+  const errores = [];
+  const cambios = {};
+  if (body.procedure !== undefined) {
+    const combinacion = typeof body.procedure === 'string' ? combinacionH1(body.procedure) : null;
+    if (!combinacion) {
+      const codigo = typeof body.procedure === 'string' ? normalizarRegimen(body.procedure) : null;
+      const leido = codigo ? `${codigo.slice(0, 2)}.${codigo.slice(2)}` : 'recibido';
+      errores.push(`El régimen ${leido} no está entre las combinaciones admitidas en el H1 (régimen solicitado + precedente, p. ej. 40.00)`);
+    } else {
+      cambios['declaration.regime'] = combinacion.solicitado;
+      cambios['declaration.previousRegime'] = combinacion.precedente;
+    }
+  }
+  if (body.additionalProcedure !== undefined) {
+    const valor = typeof body.additionalProcedure === 'string' ? body.additionalProcedure.trim() : null;
+    if (valor === '') cambios['declaration.additionalProcedure'] = '000';
+    else if (valor && adicionalH1(valor)) cambios['declaration.additionalProcedure'] = adicionalH1(valor).codigo;
+    else errores.push(`El régimen adicional ${String(valor || '').slice(0, 3).toUpperCase() || 'recibido'} no está en la lista oficial de códigos del H1`);
+  }
+  return { errores, cambios };
+}
 
 /**
  * Importe recibido: '' o null lo borra; si no, numero >= 0 con `decimales`.
@@ -405,6 +443,8 @@ const updateH1Data = async (req, res) => {
     }
     const gastos = gastosRecibidos(req.body || {});
     errores.push(...gastos.errores);
+    const regimen = regimenRecibido(req.body || {});
+    errores.push(...regimen.errores);
     // Hasta cinco decimales, como el tipo de cambio del mensaje (n..12,5).
     const cambio = importeRecibido(req.body?.appliedExchangeRate, 5);
     if (!cambio.ok || cambio.valor === 0) errores.push('El cambio aplicado es un número mayor que 0 (unidades de la divisa por 1 EUR)');
@@ -417,6 +457,7 @@ const updateH1Data = async (req, res) => {
     if (dispatchAuthorizationScope !== undefined) expedition.set('representative.dispatchAuthorizationScope', dispatchAuthorizationScope);
     if (paymentMethod !== undefined) expedition.set('declaration.paymentMethod', paymentMethod || undefined);
     for (const [ruta, valor] of Object.entries(gastos.cambios)) expedition.set(ruta, valor);
+    for (const [ruta, valor] of Object.entries(regimen.cambios)) expedition.set(ruta, valor);
     const factura = await divisaDeLaFactura(expedition);
     if (cambio.valor === null) expedition.set('appliedExchangeRate', null);
     else if (cambio.valor !== undefined) expedition.set('appliedExchangeRate', { currency: factura.divisa, rate: cambio.valor });
@@ -432,6 +473,12 @@ const updateH1Data = async (req, res) => {
     res.status(500).json({ success: false, error: 'Error al guardar los datos del H1' });
   }
 };
+
+/**
+ * Catalogo oficial del regimen y del regimen adicional para el H1 (solo lectura).
+ * GET /api/declarations/h1/catalogo-regimenes
+ */
+const getH1RegimeCatalog = (_req, res) => res.json({ success: true, data: catalogoH1() });
 
 /**
  * Estado en la AEAT de un H1 presentado por el servicio CAU.
@@ -617,6 +664,10 @@ const generateH1 = async (req, res) => {
     // Grupaje (LCL): sin la sumaria de la desconsolidacion no hay H1 (422).
     if (hayQueComprobarSumaria(expedition)) await exigirSumaria(expedition, tenant);
 
+    // El precedente elegido en «Datos para presentar el H1» solo vale para su regimen.
+    const previousRegime = (regime || '40') === (expedition.declaration?.regime || '40')
+      ? expedition.declaration?.previousRegime : undefined;
+
     // Generar H1 con IA
     const h1Data = await aiService.generateH1Declaration(expedition, {
       regime: regime || '40',
@@ -646,6 +697,7 @@ const generateH1 = async (req, res) => {
       declarationType: h1Data.declarationType || 'A',
       lrn: h1Declaration.lrn,
       regime: regime || '40',
+      previousRegime,
       additionalProcedure: additionalProcedure || '000',
       preference: preference || '100',
       customsOffice: h1Data.customsOffice || expedition.transport?.entryCustomsOffice,
@@ -1407,8 +1459,9 @@ const generateH1Direct = async (req, res) => {
         declaration: {
           type: 'H1',
           declarationType: body.declarationAdditional || 'A',
+          // «4000» = regimen solicitado (40) + precedente (00), D.E. 1/10
           regime: (body.items?.[0]?.procedure || '4000').substring(0, 2),
-          additionalProcedure: (body.items?.[0]?.procedure || '4000').substring(2, 4),
+          previousRegime: (body.items?.[0]?.procedure || '4000').substring(2, 4) || '00',
           preference: body.items?.[0]?.preference || '100',
           customsOffice: body.customsOffice || 'ES002801',
           status: 'draft'
@@ -1441,8 +1494,13 @@ const generateH1Direct = async (req, res) => {
       };
     }
 
-    const regime = body.items?.[0]?.procedure?.substring(0, 2) || expedition.declaration?.regime || '40';
-    const additionalProcedure = body.items?.[0]?.procedure?.substring(2, 4) || expedition.declaration?.additionalProcedure || '00';
+    // Regimen de cuatro cifras del formulario (solicitado + precedente) o el del
+    // expediente con el precedente y el adicional elegidos en «Datos para presentar el H1».
+    const procedimiento = body.items?.[0]?.procedure;
+    const regime = procedimiento?.substring(0, 2) || expedition.declaration?.regime || '40';
+    const previousRegime = procedimiento?.substring(2, 4)
+      || (regime === expedition.declaration?.regime && expedition.declaration?.previousRegime) || '00';
+    const additionalProcedure = expedition.declaration?.additionalProcedure || '000';
     const preference = body.items?.[0]?.preference || expedition.declaration?.preference || '100';
 
     // Grupaje (LCL): sin la sumaria de la desconsolidacion no hay H1 (422).
@@ -1459,6 +1517,7 @@ const generateH1Direct = async (req, res) => {
     const tenant = await tenantDelExpediente(expedition);
     const h1Declaration = h1Generator.generate(expedition, {
       regime,
+      previousRegime,
       additionalProcedure,
       preference
     }, { tenant, cambio: await cambioDelExpediente(expedition), cambiosGastos: await cambiosDeLosGastos(expedition) });
@@ -1472,6 +1531,7 @@ const generateH1Direct = async (req, res) => {
       declarationType: body.declarationAdditional || 'A',
       lrn: h1Declaration.lrn,
       regime,
+      previousRegime,
       additionalProcedure,
       preference,
       customsOffice: h1Declaration.data.declarationHeader?.customsOfficePresentation || body.customsOffice || 'ES002801',
@@ -2135,6 +2195,8 @@ const applyRegimeSuggestion = async (req, res) => {
     }
 
     // Actualizar régimen y preferencia
+    // Otro regimen: el precedente elegido para el anterior ya no vale (D.E. 1/10).
+    if (regime && regime !== expedition.declaration.regime) expedition.declaration.previousRegime = undefined;
     if (regime) expedition.declaration.regime = regime;
     if (additionalProcedure) expedition.declaration.additionalProcedure = additionalProcedure;
     if (preference) expedition.declaration.preference = preference;
@@ -2313,6 +2375,7 @@ module.exports = {
   getH1Requirements,
   getDeclarante,
   updateH1Data,
+  getH1RegimeCatalog,
   getH1Status,
   validateH1DirectBody,
   generateAES,

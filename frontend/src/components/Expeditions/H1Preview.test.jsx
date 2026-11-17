@@ -119,6 +119,26 @@ describe('H1Preview', () => {
     expect(within(partida).getByText('h1Preview.documents').nextElementSibling).toHaveTextContent('N380, INV-2026-001')
   })
 
+  test('el régimen va con su descripción oficial y el adicional con la suya', () => {
+    const item = {
+      ...h1Data.goodsItems[0], previousProcedure: '71',
+      procedureDescription: 'Despacho a libre práctica con despacho simultáneo a consumo de mercancías · procedente de depósito aduanero',
+      additionalProcedure: 'C08', additionalProcedureDescription: 'Envíos de particular a particular.'
+    }
+    render(<H1Preview h1Data={{ ...h1Data, goodsItems: [item] }} />)
+
+    const partida = screen.getByText(/h1Preview\.item:\{"number":1\}/).closest('div')
+    expect(within(partida).getByText('h1Preview.procedure').nextElementSibling).toHaveTextContent(
+      '40.71 – Despacho a libre práctica con despacho simultáneo a consumo de mercancías · procedente de depósito aduanero · adicional C08 – Envíos de particular a particular.'
+    )
+  })
+
+  test('un H1 generado antes, sin descripción, sigue mostrando «40.00»', () => {
+    render(<H1Preview h1Data={h1Data} />)
+    const partida = screen.getByText(/h1Preview\.item:\{"number":1\}/).closest('div')
+    expect(within(partida).getByText('h1Preview.procedure').nextElementSibling.textContent).toBe('40.00')
+  })
+
   test('un dato que el H1 no lleva se marca como ausente en vez de dejarse en blanco', () => {
     render(<H1Preview h1Data={h1Data} />)
 

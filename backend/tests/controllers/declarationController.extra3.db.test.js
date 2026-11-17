@@ -167,6 +167,19 @@ beforeEach(() => {
   });
 });
 
+describe('generateH1: régimen precedente elegido en «Datos para presentar el H1»', () => {
+  test('con el mismo régimen se conserva el precedente; con otro, se descarta', async () => {
+    const user = usuario();
+    const exp = await expedienteImportacion(user, { declaration: { type: 'H1', regime: '40', previousRegime: '71' } });
+
+    await ctrl.generateH1({ body: { expeditionId: exp._id, regime: '40' }, user }, crearRes());
+    expect((await Expedition.findById(exp._id)).declaration.previousRegime).toBe('71');
+
+    await ctrl.generateH1({ body: { expeditionId: exp._id, regime: '42' }, user }, crearRes());
+    expect((await Expedition.findById(exp._id)).declaration.previousRegime).toBeUndefined();
+  });
+});
+
 describe('generateH1: regimenes alternativos (ramas regime/additionalProcedure/preference)', () => {
   test('acepta regime 42 (importacion temporal)', async () => {
     const user = usuario();
@@ -1351,6 +1364,33 @@ describe('ramas adicionales para incrementar cobertura', () => {
     expect(res.statusCode).toBe(200);
     const updated = await Expedition.findById(exp._id);
     expect(updated.declaration.regime).toBe('42');
+  });
+
+  test('applyRegimeSuggestion: al cambiar de régimen se descarta el precedente del anterior (40.71 -> 42.00)', async () => {
+    const user = usuario();
+    const exp = await expedienteImportacion(user, {
+      declaration: { type: 'H1', regime: '40', previousRegime: '71', status: 'draft' }
+    });
+    const res = crearRes();
+
+    await ctrl.applyRegimeSuggestion({ params: { expeditionId: exp._id }, body: { regime: '42' }, user }, res);
+
+    expect(res.statusCode).toBe(200);
+    const updated = await Expedition.findById(exp._id);
+    expect(updated.declaration.regime).toBe('42');
+    expect(updated.declaration.previousRegime).toBeUndefined();
+  });
+
+  test('applyRegimeSuggestion: el mismo régimen conserva el precedente', async () => {
+    const user = usuario();
+    const exp = await expedienteImportacion(user, {
+      declaration: { type: 'H1', regime: '40', previousRegime: '71', status: 'draft' }
+    });
+
+    await ctrl.applyRegimeSuggestion({ params: { expeditionId: exp._id }, body: { regime: '40' }, user }, crearRes());
+
+    const updated = await Expedition.findById(exp._id);
+    expect(updated.declaration.previousRegime).toBe('71');
   });
 
   test('getH7Stats sin parametros de fecha', async () => {

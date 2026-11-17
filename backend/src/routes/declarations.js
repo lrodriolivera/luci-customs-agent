@@ -69,6 +69,8 @@ router.get('/supported-countries', (req, res) => {
 // Generar declaraciones H1 (Importacion estandar)
 router.post('/h1/generate', declarationValidators.generateH1, declarationController.generateH1);
 router.post('/h1/generate-direct', declarationController.generateH1Direct);  // Modo demo sin validaciones
+// Catalogo oficial del regimen (D.E. 1/10) y del regimen adicional (D.E. 1/11) para el H1, solo lectura
+router.get('/h1/catalogo-regimenes', declarationController.getH1RegimeCatalog);
 
 // Generar declaraciones AES (Exportacion)
 router.post('/aes/generate', declarationValidators.generateAES, declarationController.generateAES);

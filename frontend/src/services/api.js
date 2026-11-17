@@ -259,6 +259,8 @@ export const declarationsAPI = {
   // H1: qué falta para presentarlo y datos que solo se usan en la presentación
   getH1Requirements: (expeditionId) => api.get(`/api/declarations/${seg(expeditionId)}/h1/requisitos`),
   updateH1Data: (expeditionId, datos) => api.put(`/api/declarations/${seg(expeditionId)}/h1/datos`, datos),
+  // Catalogo oficial del regimen (D.E. 1/10) y del regimen adicional (D.E. 1/11) para el H1
+  getH1RegimeCatalog: () => api.get('/api/declarations/h1/catalogo-regimenes'),
   // Declarante y representante (casilla 14 del DUA), calculado con la misma
   // regla que el H1 (RepresentationCard).
   getDeclarante: (expeditionId) => api.get(`/api/declarations/${seg(expeditionId)}/declarante`),

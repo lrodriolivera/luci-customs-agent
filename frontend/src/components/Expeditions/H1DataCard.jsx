@@ -4,6 +4,7 @@ import { declarationsAPI } from '../../services/api'
 import { formatearImporte } from '../../utils/importe'
 import { MONEDAS_ALTA } from '../../utils/prerrellenoAlta'
 import LiquidacionAeat from './LiquidacionAeat'
+import RegimenH1Campos, { useCatalogoRegimenesH1 } from './RegimenH1Campos'
 
 const CIRCUITOS = { V: 'Verde', A: 'Amarillo (pendiente de certificados)', N: 'Naranja (revisión documental)', R: 'Rojo (reconocimiento físico)' }
 /** Texto de la guía de la AEAT con su código; si el código no está en la guía, solo el código. */
@@ -17,7 +18,7 @@ const fecha = (iso) => {
 const CAMPOS = [
   'invoiceNumber', 'exporterPostalCode', 'vehicleNationality', 'dispatchAuthorizationScope', 'paymentMethod',
   'freightAmount', 'freightCurrency', 'insuranceAmount', 'insuranceCurrency', 'appliedExchangeRate',
-  'freightAfterEntryAmount', 'freightAfterEntryCurrency'
+  'freightAfterEntryAmount', 'freightAfterEntryCurrency', 'procedure', 'additionalProcedure'
 ]
 // El backend exige un motivo de al menos cinco caracteres.
 const MOTIVO_MINIMO = 5
@@ -94,6 +95,7 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
   const conceptosBaseIva = estado?.datos?.conceptosBaseIva || {}
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
+  const regimenes = useCatalogoRegimenesH1()
 
   const cargar = useCallback(async () => {
     try {
@@ -247,6 +249,13 @@ export default function H1DataCard({ expedition, soloEstado = false, onCambio })
           <label className="label" htmlFor="h1-exporter-postcode">Código postal del exportador</label>
           <input id="h1-exporter-postcode" className="input" maxLength={17} value={form.exporterPostalCode || ''} onChange={cambiar('exporterPostalCode')} />
         </div>
+        {regimenes.catalogo && (
+          <RegimenH1Campos
+            catalogo={regimenes.catalogo} procedure={form.procedure} additionalProcedure={form.additionalProcedure}
+            onProcedure={cambiar('procedure')} onAdditionalProcedure={cambiar('additionalProcedure')}
+          />
+        )}
+        {regimenes.error && <p role="status" className="sm:col-span-2 text-xs text-amber-800">No se pudo cargar la lista oficial de regímenes.</p>}
         <div className="sm:col-span-2">
           <label className="label" htmlFor="h1-authorization-scope">Autorización de despacho del representante</label>
           <select id="h1-authorization-scope" className="input" value={form.dispatchAuthorizationScope} onChange={cambiar('dispatchAuthorizationScope')}>

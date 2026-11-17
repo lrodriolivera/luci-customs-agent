@@ -9,6 +9,7 @@
  * rellenaba huecos con valores fijos (matricula «ABC1234», provincia «28»,
  * un CMR con el numero del expediente) que la AEAT ya no debe recibir.
  */
+const { regimenDelExpediente } = require('../../config/regimenesH1');
 const { ErrorValidacion, eoriDe, formaRepresentacionDe } = require('../forms/identificadorAduanero');
 const { cambioObligatorio, aEuros } = require('../divisas/cambioDelExpediente');
 const { lugarDeEntrega } = require('../forms/lugarDeEntrega');
@@ -218,6 +219,29 @@ function ajustesPorPartida(expedition, cambio, cambiosGastos, faltan) {
   return ajustesDeLaPartida(ajustes, (expedition.goods || []).map((g) => valorEnEuros(g, cambio)));
 }
 
+// Con un precedente distinto de 00 la AEAT exige el documento previo de ese
+// regimen (NMRN + DUA/DVD/RUN/TRS/IDA, N955, 9ZZZ). PRE, 17/11/2026: 40.71
+// -> error 21155 (71/73/78/95); 40.53 -> error 21104 (51/52/53/61/91).
+const sinPrecedente = (p) => !p || p === '00';
+
+/**
+ * Lo que la AEAT exige con algunos regimenes y adicionales y LUCI todavia no
+ * gestiona: se avisa antes de enviar en vez de esperar el rechazo.
+ *  - Adicional 9** (pendencias, separata 37): exige la autorizacion de
+ *    declaracion simplificada C512 (PRE 17/11/2026, error 20231 con 9OR).
+ *  - Precedente distinto de 00: exige el documento de la declaracion previa
+ *    (21155, 21104).
+ */
+function avisosDelRegimen(regimen, adicional, n, faltan) {
+  if (/^9/.test(String(adicional || ''))) {
+    faltan.push(`autorización de declaración simplificada (C512) para el régimen adicional ${String(adicional).toUpperCase()} de la partida ${n}: LUCI aún no la declara; usa otro adicional o presenta este H1 fuera de LUCI`);
+  }
+  const precedente = String(regimen || '').slice(2, 4);
+  if (!sinPrecedente(precedente)) {
+    faltan.push(`MRN de la declaración del régimen precedente ${precedente} (documento previo NMRN) de la partida ${n}: LUCI aún no lo declara; con este régimen presenta el H1 fuera de LUCI`);
+  }
+}
+
 function partidaDe(expedition, good, indice, contexto, faltan) {
   const n = indice + 1;
   const codigo = String(good.taricCode || '').replace(/\D/g, '');
@@ -261,13 +285,16 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
   if (!(good.netWeight > 0)) faltan.push(`masa neta de la partida ${n}`);
   if (!texto(good.originCountry)) faltan.push(`país de origen de la partida ${n}`);
   const adicional = String(expedition.declaration?.additionalProcedure || '');
+  avisosDelRegimen(regimenDelExpediente(expedition.declaration), adicional, n, faltan);
 
   return {
     numero: n,
     // El valor estadistico va siempre en euros y es el valor en la frontera de la UE (CIF).
     valorEstadistico: good.statisticalValue && good.statisticalValue !== valor ? good.statisticalValue : valorFrontera,
     regimen: {
-      solicitado: String(expedition.declaration?.regime || '40'), precedente: '00',
+      // D.E. 1/10: solicitado + precedente del catalogo (config/regimenesH1); lo guardado antes es 40 + 00.
+      solicitado: regimenDelExpediente(expedition.declaration).slice(0, 2),
+      precedente: regimenDelExpediente(expedition.declaration).slice(2, 4),
       adicionales: [
         ...(/^[A-Z0-9]{3}$/i.test(adicional) && adicional !== '000' ? [adicional.toUpperCase()] : []),
         ...plastico.adicionales

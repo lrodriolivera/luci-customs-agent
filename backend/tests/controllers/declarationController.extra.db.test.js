@@ -184,6 +184,19 @@ describe('generateH1Direct', () => {
     expect(guardado.declaration.xmlContent).toBe('<H1>ok</H1>');
   });
 
+  test('modo clasico: conserva el régimen precedente y el adicional elegidos en «Datos para presentar el H1»', async () => {
+    const user = usuario();
+    const exp = await expedienteImportacion(user, { declaration: { type: 'H1', regime: '40', previousRegime: '71', additionalProcedure: 'C08' } });
+    const res = crearRes();
+
+    await ctrl.generateH1Direct({ body: { expeditionId: exp._id }, user }, res);
+
+    expect(res.statusCode).toBe(200);
+    const guardado = await Expedition.findById(exp._id);
+    expect(guardado.toObject().declaration).toMatchObject({ regime: '40', previousRegime: '71', additionalProcedure: 'C08' });
+    expect(h1Generator.generate).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ regime: '40', previousRegime: '71', additionalProcedure: 'C08' }), expect.anything());
+  });
+
   test('modo clasico: expediente de otro tenant da 404', async () => {
     const dueno = usuario();
     const exp = await expedienteImportacion(dueno);
@@ -232,6 +245,9 @@ describe('generateH1Direct', () => {
     expect(guardado.calculations.totalDuties).toBe(75);  // A00
     expect(guardado.calculations.totalVat).toBe(220);     // B00
     expect(guardado.declaration.type).toBe('H1');
+    // «4000»: régimen 40 y precedente 00 (antes el precedente acababa en el adicional)
+    expect(guardado.toObject().declaration).toMatchObject({ regime: '40', previousRegime: '00' });
+    expect(guardado.declaration.additionalProcedure).not.toBe('00');
     expect(guardado.tenantId.toString()).toBe(user.tenantId.toString());
   });
 });
