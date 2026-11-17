@@ -12,6 +12,7 @@ const { tipoOficial, aEuros } = require('../services/divisas/tiposCambioOficiale
 const { controlesPara } = require('../services/taric/controles/controlesOficiales');
 const { consultarArancelIntegrado, ArancelIntegradoError } = require('../services/aeat/arancelIntegrado');
 const { estadoDiario } = require('../services/taric/diario/sincronizacionDiaria');
+const { rechazarNoDeclarable } = require('../services/taric/declarable');
 /**
  * Sugerir codigo TARIC basado en descripcion
  * POST /api/classification/suggest
@@ -614,6 +615,8 @@ const applyClassification = async (req, res) => {
         error: 'Item no encontrado en el expediente'
       });
     }
+
+    if (await rechazarNoDeclarable(taricCode, res)) return;
 
     // Actualizar clasificacion
     expedition.goods[itemIndex].taricCode = taricCode;

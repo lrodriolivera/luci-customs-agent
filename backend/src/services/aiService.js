@@ -3906,9 +3906,40 @@ Responde en JSON:
   }
 
   /**
+   * Comprueba contra el catalogo las sugerencias de cada mercancia (formato
+   * `taricCode` de suggestTaricClassification): marca `verified`, adjunta las
+   * alternativas declarables y pone delante las que se pueden declarar.
+   */
+  async _anclarItemsAlCatalogo(items) {
+    if (!Array.isArray(items)) return items;
+    return Promise.all(items.map(async (item) => {
+      if (!Array.isArray(item?.suggestions)) return item;
+      const verificadas = await this._verificarContraCatalogo(
+        item.suggestions.map(s => ({ ...s, code: s.taricCode }))
+      );
+      const suggestions = this._ordenarDeclarablesPrimero(verificadas)
+        .map(({ code, ...resto }) => ({ ...resto, taricCode: code }));
+      return { ...item, suggestions };
+    }));
+  }
+
+  /**
    * Sugerir clasificación TARIC para las mercancías del expediente
    */
   async suggestTaricClassification(expedition) {
+    // Mismo anclaje que classifyProduct: sin candidatos reales del catalogo el
+    // modelo inventaba los digitos 9-10 (caso preproduccion 17/Nov/2026:
+    // 8518300000, linea con subdivisiones, para unos auriculares Bluetooth).
+    const candidatosPorItem = await Promise.all((expedition.goods || []).map(g =>
+      this._candidatosCatalogo(g.description, { material: g.material, use: g.intendedUse })));
+    const bloqueCandidatos = (i) => {
+      const candidatos = candidatosPorItem[i] || [];
+      if (candidatos.length === 0) return '';
+      return 'Codigos del catalogo TARIC vigente cuya descripcion oficial coincide por texto ' +
+        '(orientativos, todos declarables):\n' +
+        candidatos.map(c => `- ${c.code}: ${c.description}${c.ruta ? `\n  Ruta: ${c.ruta}` : ''}`).join('\n') + '\n';
+    };
+
     const prompt = `Analiza las mercancías de este expediente y sugiere clasificaciones TARIC.
 
 CONTEXTO DEL EXPEDIENTE:
@@ -3928,7 +3959,7 @@ Material: ${g.material || 'No especificado'}
 Uso previsto: ${g.intendedUse || 'No especificado'}
 Valor unitario: ${g.invoiceValue && g.quantity ? (g.invoiceValue / g.quantity).toFixed(2) : 'N/A'} EUR
 Peso unitario: ${g.netWeight && g.quantity ? (g.netWeight / g.quantity).toFixed(3) : 'N/A'} kg
-`).join('\n') || 'Sin mercancías'}
+${bloqueCandidatos(i)}`).join('\n') || 'Sin mercancías'}
 
 Para cada mercancía:
 1. Analiza la descripción y contexto
@@ -3938,7 +3969,9 @@ Para cada mercancía:
 5. Proporciona 2-3 sugerencias ordenadas por confianza
 
 IMPORTANTE:
-- Los códigos TARIC tienen 10 dígitos
+- Los códigos TARIC tienen 10 dígitos y deben ser declarables (último nivel de la nomenclatura)
+- Si alguno de los códigos del catálogo de una mercancía le corresponde, usa exactamente ese código
+- No deduzcas los digitos 9 y 10 de memoria: si ninguno encaja y no conoces con certeza la subdivisión TARIC, dilo en "warnings"
 - Explica el razonamiento de clasificación
 - Indica si hay ambigüedad o se necesita más información
 - Señala si hay medidas especiales (antidumping, cuotas, etc.)
@@ -3983,8 +4016,10 @@ Responde en JSON:
       let jsonContent = result.content;
       jsonContent = this._extraerJsonString(jsonContent);
 
+      const parsed = JSON.parse(jsonContent);
       return {
-        ...JSON.parse(jsonContent),
+        ...parsed,
+        items: await this._anclarItemsAlCatalogo(parsed.items),
         model: labelFor(OPUS_MODEL),
         tokensUsed: result.tokensUsed,
         analyzedAt: new Date().toISOString()

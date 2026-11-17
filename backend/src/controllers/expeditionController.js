@@ -15,6 +15,7 @@ const { consultarArancelIntegrado } = require('../services/aeat/arancelIntegrado
 const { tiposParaAplicar } = require('../services/aeat/contrasteArancel');
 const { normalizarDocumentosC44, ErrorDocumentosC44 } = require('../services/aeat/documentosC44');
 const { impuestoEspecialPara, ErrorImpuestoEspecial } = require('../services/aeat/impuestoEspecial');
+const { rechazarNoDeclarable } = require('../services/taric/declarable');
 
 const TARIC_10 = /^\d{10}$/;
 
@@ -1088,6 +1089,8 @@ const applyTaricSuggestion = async (req, res) => {
         error: 'Índice de mercancía inválido'
       });
     }
+
+    if (await rechazarNoDeclarable(taricCode, res)) return;
 
     // Actualizar código TARIC y, con el, el arancel del catalogo
     if (expedition.goods[index].taricCode !== taricCode) {
