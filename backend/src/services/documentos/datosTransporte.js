@@ -185,18 +185,22 @@ function deducirTipoCarga({ literal, indicaciones, leidosContenedor, contenedore
   if (fcl.length > 0) return { tipoCarga: 'FCL', nota: `Tipo de carga FCL deducido de: ${fcl.join(', ')}.` };
 
   if (tipo !== 'bill_of_lading') return { tipoCarga: null, nota: null };
-  // Regla de las agentes (Jenifer, UAT 17/11/2026): si el BL trae contenedor es
-  // FCL, da igual el tamaño; el grupaje se describe en cajas (CTN) o unidades.
+  // Sin FCL/LCL escrito, el tipo de carga NO se rellena: lo confirma la agente
+  // con operaciones (Patricia, 17/11/2026). Solo se sugiere con la regla de las
+  // agentes (Jenifer, 17/11/2026): contenedor -> FCL, da igual el tamaño; cajas
+  // o unidades sin contenedor -> LCL.
+  const confirmar = 'El BL no indica FCL ni LCL: confírmalo con operaciones.';
   if (contenedores.length > 0) {
     const tamanos = tamanosDeContenedor([...textos, ...textosLeidos(leidosContenedor)]);
     return {
-      tipoCarga: 'FCL',
-      nota: `Tipo de carga FCL: el BL trae contenedor (${contenedores.join(', ')}${tamanos.length > 0 ? ` ${tamanos.join(', ')}` : ''}); si es grupaje, cámbialo a LCL.`
+      tipoCarga: null,
+      sugerencia: 'FCL',
+      nota: `${confirmar} Parece FCL: trae contenedor (${contenedores.join(', ')}${tamanos.length > 0 ? ` ${tamanos.join(', ')}` : ''}).`
     };
   }
   const enCajas = [...textosLeidos(embalajes).filter(e => EMBALAJES_DE_GRUPAJE.has(e)), ...textos.filter(t => BULTOS_DE_GRUPAJE.test(t))];
   if (enCajas.length > 0) {
-    return { tipoCarga: 'LCL', nota: `Tipo de carga LCL: el BL no trae contenedor y la mercancía va en cajas o unidades (${sinRepetir(enCajas).join(', ')}).` };
+    return { tipoCarga: null, sugerencia: 'LCL', nota: `${confirmar} Parece LCL: no trae contenedor y la mercancía va en cajas o unidades (${sinRepetir(enCajas).join(', ')}).` };
   }
   return { tipoCarga: null, nota: null };
 }

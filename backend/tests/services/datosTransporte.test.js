@@ -113,19 +113,20 @@ describe('datosTransporte', () => {
       expect(deducirTipoCarga({ indicaciones: ['GROUPAGE'] }).tipoCarga).toBe('LCL');
     });
 
-    // Regla de las agentes (Jenifer, 17/11/2026): «si pone contenedor da lo mismo
-    // el tamaño, es FCL; el grupaje estará descrito como cajas (ctn) o unidades».
-    test('en un BL, si trae contenedor es FCL aunque no diga el tamaño, y se explica', () => {
+    // Sin FCL/LCL escrito no se rellena: lo confirma la agente con operaciones
+    // (Patricia, 17/11/2026). Solo se sugiere con la regla de Jenifer: contenedor
+    // -> FCL (da igual el tamaño); cajas o unidades sin contenedor -> LCL.
+    test('en un BL con contenedor y sin FCL/LCL escrito, sugiere FCL pero no lo rellena', () => {
       const r = deducirTipoCarga({ ...BL, indicaciones: [] });
-      expect(r.tipoCarga).toBe('FCL');
+      expect(r).toMatchObject({ tipoCarga: null, sugerencia: 'FCL' });
+      expect(r.nota).toMatch(/confírmalo con operaciones/);
       expect(r.nota).toContain('MSCU1150584');
-      expect(deducirTipoCarga({ ...BL, indicaciones: [], leidosContenedor: ['MSCU1150584400 40HC'] }).tipoCarga).toBe('FCL');
     });
 
-    test('en un BL sin contenedor, la mercancía en cajas o unidades es LCL', () => {
+    test('en un BL sin contenedor y con la mercancía en cajas o unidades, sugiere LCL', () => {
       const sinContenedor = { tipo: 'bill_of_lading', contenedores: [] };
-      expect(deducirTipoCarga({ ...sinContenedor, embalajes: ['CT'] }).tipoCarga).toBe('LCL');
-      expect(deducirTipoCarga({ ...sinContenedor, indicaciones: ['10 CARTONS'] }).tipoCarga).toBe('LCL');
+      expect(deducirTipoCarga({ ...sinContenedor, embalajes: ['CT'] })).toMatchObject({ tipoCarga: null, sugerencia: 'LCL' });
+      expect(deducirTipoCarga({ ...sinContenedor, indicaciones: ['10 CARTONS'] }).sugerencia).toBe('LCL');
       expect(deducirTipoCarga({ ...sinContenedor, embalajes: ['PCS'] }).nota).toMatch(/cajas o unidades/);
     });
 

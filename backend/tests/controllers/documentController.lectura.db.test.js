@@ -190,7 +190,9 @@ describe('extractDocument rellena los huecos del H1', () => {
     expect(res.body.data.proposal.find(c => c.clave === 'invoiceNumber')).toMatchObject({ actual: 'F-AGENTE-1', nuevo: 'INV-H1-01-2026-8198800' });
   });
 
-  test('el BL rellena el tipo de carga y el contenedor vacios', async () => {
+  // El BL de esta lectura no dice FCL ni LCL: el tipo de carga no se rellena
+  // (lo confirma la agente con operaciones; Patricia, 17/11/2026).
+  test('el BL rellena el contenedor vacío; sin FCL/LCL escrito no rellena el tipo de carga', async () => {
     aiService.extractDocumentData.mockResolvedValue(LECTURA_BL());
     const user = usuario();
     const { exp, docId } = await expedienteConDocumento(user, conTipo(user, 'bill_of_lading'));
@@ -199,11 +201,22 @@ describe('extractDocument rellena los huecos del H1', () => {
     await ctrl.extractDocument({ params: { expeditionId: exp._id, docId }, user }, res);
 
     const guardado = await Expedition.findById(exp._id);
-    expect(guardado.transport.loadType).toBe('FCL');
+    expect(guardado.transport.loadType).toBeUndefined();
     expect(guardado.transport.containers.map(c => c.number)).toEqual(['MSCU1150584']);
     // El numero del BL no es un dato del H1: sigue como propuesta.
     expect(guardado.transport.documentNumber).toBeUndefined();
     expect(res.body.data.proposal.map(c => c.clave)).toContain('transport.documentNumber');
+  });
+
+  test('un BL que dice CY/CY rellena el tipo de carga FCL', async () => {
+    aiService.extractDocumentData.mockResolvedValue({
+      ...normalizarExtraccion({ legible: true, tipoDetectado: 'bill_of_lading', confianza: 85, transporte: { contenedores: ['MSCU1150584'], indicacionesCarga: ['CY/CY'] } }),
+      leido: true
+    });
+    const user = usuario();
+    const { exp, docId } = await expedienteConDocumento(user, conTipo(user, 'bill_of_lading'));
+    await ctrl.extractDocument({ params: { expeditionId: exp._id, docId }, user }, crearRes());
+    expect((await Expedition.findById(exp._id)).transport.loadType).toBe('FCL');
   });
 
   test('con la declaracion presentada no se rellena nada', async () => {

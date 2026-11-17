@@ -140,26 +140,28 @@ describe('extraccionDocumento', () => {
         tipoDetectado: 'bill_of_lading',
         transporte: { contenedores: [], precintos: ['MSCU1150584400', 'SL264686400'], tipoCarga: null, indicacionesCarga: ['40HC'] }
       });
-      expect(d.transporte).toMatchObject({ contenedores: ['MSCU1150584'], precintos: ['SL264686400'], tipoCarga: 'FCL' });
+      expect(d.transporte).toMatchObject({ contenedores: ['MSCU1150584'], precintos: ['SL264686400'], tipoCarga: null });
       expect(d.notas).toEqual([
         'Precintos (no son contenedores): SL264686400.',
         'El documento trae el contenedor MSCU1150584400 con cifras de más: se ha tomado MSCU1150584 (4 letras y 7 cifras, ISO 6346); su dígito de control no cuadra: compruébalo con el documento.',
-        'Tipo de carga FCL: el BL trae contenedor (MSCU1150584 40HC); si es grupaje, cámbialo a LCL.'
+        'El BL no indica FCL ni LCL: confírmalo con operaciones. Parece FCL: trae contenedor (MSCU1150584 40HC).'
       ]);
     });
 
     // Regla de las agentes (17/11/2026): BL con contenedor -> FCL; sin contenedor
     // y en cajas o unidades -> LCL; sin nada de eso, null.
-    test('BL con contenedor es FCL aunque no diga tamaño; sin contenedor ni bultos queda en null', () => {
+    test('BL con contenedor sin FCL/LCL escrito: no se rellena, se sugiere FCL en la nota', () => {
       const conContenedor = normalizarExtraccion({ tipoDetectado: 'bill_of_lading', transporte: { contenedores: ['MAGU5599236'] } });
-      expect(conContenedor.transporte.tipoCarga).toBe('FCL');
+      expect(conContenedor.transporte.tipoCarga).toBeNull();
+      expect(conContenedor.notas.join(' ')).toMatch(/Parece FCL/);
       const sinNada = normalizarExtraccion({ tipoDetectado: 'bill_of_lading', transporte: { contenedores: [] } });
       expect(sinNada.transporte.tipoCarga).toBeNull();
     });
 
-    test('BL sin contenedor con la mercancía en cajas es LCL', () => {
+    test('BL sin contenedor con la mercancía en cajas: no se rellena, se sugiere LCL', () => {
       const d = normalizarExtraccion({ tipoDetectado: 'bill_of_lading', transporte: { contenedores: [] }, partidas: [{ descripcion: 'Toys', bultos: 10, tipoBulto: 'CT' }] });
-      expect(d.transporte.tipoCarga).toBe('LCL');
+      expect(d.transporte.tipoCarga).toBeNull();
+      expect(d.notas.join(' ')).toMatch(/Parece LCL/);
     });
 
     // Texto que ve el agente: debe llevar tilde ("dígito"), no "digito".
