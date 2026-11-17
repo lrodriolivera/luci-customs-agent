@@ -18,6 +18,13 @@
  * - Opcionales del expediente (`costs.otherAdjustments`): el resto de la CL265
  *   salvo AN y BG, que exigen una decision del art. 71 del Reglamento de
  *   Ejecucion que LUCI no gestiona.
+ * - CA: gastos que se suman a la base del IVA pero NO al valor en aduana
+ *   (art. 83.Dos LIVA: THC, tasa T3 y demas gastos hasta el primer lugar de
+ *   destino en la UE; `costs.vatAdditions`). AEAT, novedad del 11/06/2025
+ *   («CAU-Declaracion de importacion: gastos a añadir al I.V.A.»): desde el
+ *   07/07/2025 sustituye al documento 7002; en euros, uno por partida.
+ *   Comprobado en PRE el 17/11/2026: CA 300 deja A00 en 4.800 y sube la base
+ *   del B00 de 5.376 a 5.676 (MRN 26ES002801I01BRRR0).
  *
  * Funciones puras.
  */
@@ -45,6 +52,13 @@ const CODIGOS_OPCIONALES = Object.freeze({
   BF: 'Comisiones de compra'
 });
 const CALCULADOS = new Set([CODIGO_AJUSTE, CODIGO_TRANSPORTE_TRAS_LA_ENTRADA]);
+const CODIGO_BASE_IVA = 'CA';
+// Conceptos de los gastos a añadir a la base del IVA (UAT 16/Nov/2026).
+const CONCEPTOS_BASE_IVA = Object.freeze({
+  THC: 'THC · manipulación en la terminal de destino',
+  T3: 'T3 · tasa portuaria de la mercancía',
+  OTHER: 'Otros gastos hasta el primer lugar de destino en la UE'
+});
 
 const redondear = (n) => Math.round(n * 100) / 100;
 
@@ -99,6 +113,21 @@ function ajustesOpcionales(expedition, cambios, faltan) {
   return [...porCodigo].map(([codigo, importe]) => ({ codigo, importe }));
 }
 
+/** Total en euros de los gastos a añadir a la base del IVA (codigo CA). */
+function adicionesBaseIva(expedition, cambios, faltan) {
+  const lista = Array.isArray(expedition?.costs?.vatAdditions) ? expedition.costs.vatAdditions : [];
+  let total = 0;
+  for (const gasto of lista) {
+    const concepto = String(gasto?.concept || '').trim().toUpperCase();
+    const leido = importeConDivisa(gasto);
+    if (!CONCEPTOS_BASE_IVA[concepto] || !leido) { faltan.push(`gasto a añadir a la base del IVA ${concepto || '(sin concepto)'}: concepto e importe`); continue; }
+    const r = enEuros(leido, cambios, `el gasto ${concepto} de la base del IVA`);
+    if (r.falta) { faltan.push(r.falta); continue; }
+    total += r.importe;
+  }
+  return redondear(total);
+}
+
 /**
  * Ajustes del envio en euros (totales por codigo, sin los que son 0).
  *
@@ -112,7 +141,8 @@ function ajustesDelValor(expedition, { cambios = {} } = {}) {
   const ajustes = [
     { codigo: CODIGO_AJUSTE, importe: gastos.total },
     { codigo: CODIGO_TRANSPORTE_TRAS_LA_ENTRADA, importe: deduccionBA(expedition, cambios, faltan) },
-    ...ajustesOpcionales(expedition, cambios, faltan)
+    ...ajustesOpcionales(expedition, cambios, faltan),
+    { codigo: CODIGO_BASE_IVA, importe: adicionesBaseIva(expedition, cambios, faltan) }
   ].filter((a) => a.importe > 0);
   return { ajustes, faltan };
 }
@@ -125,11 +155,15 @@ function ajustesDeLaPartida(ajustes, valores) {
     .filter((a) => a.importe > 0));
 }
 
-/** Valor en aduana: valor en euros + ajustes A* − ajustes B*. */
+/**
+ * Valor en aduana: valor en euros + ajustes A* − ajustes B*. Los demas (CA,
+ * base del IVA) no cuentan (Informacion complementaria H1 v3.26, pag. 63).
+ */
 function valorConAjustes(valorEuros, ajustes) {
-  return redondear(ajustes.reduce((s, a) => s + (a.codigo.startsWith('B') ? -a.importe : a.importe), valorEuros));
+  const signo = (codigo) => (codigo.startsWith('A') ? 1 : codigo.startsWith('B') ? -1 : 0);
+  return redondear(ajustes.reduce((s, a) => s + signo(a.codigo) * a.importe, valorEuros));
 }
 
 module.exports = {
-  CODIGO_TRANSPORTE_TRAS_LA_ENTRADA, CODIGOS_OPCIONALES, transporteTrasLaEntrada, ajustesDelValor, ajustesDeLaPartida, valorConAjustes
+  CODIGO_TRANSPORTE_TRAS_LA_ENTRADA, CODIGOS_OPCIONALES, CODIGO_BASE_IVA, CONCEPTOS_BASE_IVA, transporteTrasLaEntrada, ajustesDelValor, ajustesDeLaPartida, valorConAjustes
 };

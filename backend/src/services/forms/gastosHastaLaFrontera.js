@@ -135,8 +135,9 @@ function divisasDeLosGastos(expedition) {
   const { sumar, codigo } = gastosQueCuentan(expedition);
   const aSumar = sumar ? GASTOS.filter(({ clave }) => sumar[clave]).map(({ campo }) => gastoDe(expedition, campo)) : [];
   const trasLaEntrada = TRANSPORTE_TRAS_LA_ENTRADA[codigo] ? [gastoDe(expedition, 'freightAfterEntry')] : [];
-  const otros = (Array.isArray(expedition?.costs?.otherAdjustments) ? expedition.costs.otherAdjustments : []).map(importeConDivisa);
-  const divisas = [...aSumar, ...trasLaEntrada, ...otros]
+  const lista = (campo) => (Array.isArray(expedition?.costs?.[campo]) ? expedition.costs[campo] : []).map(importeConDivisa);
+  // otherAdjustments: ajustes del valor; vatAdditions: gastos de la base del IVA (CA).
+  const divisas = [...aSumar, ...trasLaEntrada, ...lista('otherAdjustments'), ...lista('vatAdditions')]
     .map((g) => g?.divisa)
     .filter((d) => d && d !== 'EUR');
   return [...new Set(divisas)];
