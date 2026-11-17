@@ -272,7 +272,10 @@ describe('Preferences Service', () => {
       });
 
       expect(result.savings).toBeNull();
-      expect(result.warnings.some(w => w.code === 'AEAT_NO_DISPONIBLE')).toBe(true);
+      // El aviso dice el motivo, no «inténtelo más tarde» (prueba del 17/11/2026).
+      const aviso = result.warnings.find(w => w.code === 'AEAT_NO_DISPONIBLE');
+      expect(aviso.message).toMatch(/no existe en el Arancel Integrado/);
+      expect(aviso.message).not.toMatch(/inténtelo más tarde/);
     });
 
     test('un derecho que no es porcentaje no se convierte en 0 %', async () => {

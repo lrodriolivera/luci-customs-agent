@@ -367,6 +367,8 @@ describe('<PreferencesCalculator />', () => {
     fireEvent.submit(screen.getByText('Datos del Producto').closest('form'))
 
     await waitFor(() => expect(screen.getByTestId('aeat-no-disponible')).toBeInTheDocument())
+    // Muestra el motivo que da el servidor.
+    expect(screen.getByTestId('aeat-no-disponible')).toHaveTextContent('timeout')
     expect(screen.queryByText('Ahorro Total:')).not.toBeInTheDocument()
     expect(screen.queryByText(/0\.00 EUR/)).not.toBeInTheDocument()
   })

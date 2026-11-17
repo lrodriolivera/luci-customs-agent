@@ -64,8 +64,11 @@ const VALUATION_METHODS = {
 /**
  * Metodos de pago
  */
+// A y R con los nombres del CAU (h1CauCodigos.MEDIOS_DE_PAGO); la vista previa
+// decia «A, Pago al contado» (prueba e2e del 17/11/2026; Patricia, H1-01).
+const { MEDIOS_DE_PAGO } = require('../aeat/h1CauCodigos');
 const PAYMENT_METHODS = {
-  'A': 'Pago al contado',
+  'A': MEDIOS_DE_PAGO.A,
   'B': 'Pago con tarjeta de credito',
   'C': 'Pago con cheque',
   'D': 'Otro (transferencia, etc.)',
@@ -74,7 +77,7 @@ const PAYMENT_METHODS = {
   'H': 'Transferencia electronica',
   'M': 'Garantia individual',
   'P': 'Deposito en cuenta aduanera',
-  'R': 'Garantia en metalico',
+  'R': MEDIOS_DE_PAGO.R,
   'S': 'Garantia individual con compromiso fiador',
   'T': 'Cuenta corriente tributaria'
 };
@@ -622,8 +625,10 @@ class H1Generator {
       totalDutyCurrency: 'EUR',
 
       // Metodo de pago (8/7 - CRITICO)
-      paymentMethod: aiData.paymentMethod || expedition.payment?.method || 'A',
-      paymentMethodDescription: PAYMENT_METHODS[aiData.paymentMethod || expedition.payment?.method || 'A'],
+      // Manda la forma de pago elegida en el expediente («Datos para presentar
+      // el H1»): la vista previa ponia siempre la de la IA o «A».
+      paymentMethod: expedition.declaration?.paymentMethod || aiData.paymentMethod || expedition.payment?.method || 'A',
+      paymentMethodDescription: PAYMENT_METHODS[expedition.declaration?.paymentMethod || aiData.paymentMethod || expedition.payment?.method || 'A'],
 
       // Aplazamiento de pago
       deferredPayment: expedition.payment?.deferred ? {
