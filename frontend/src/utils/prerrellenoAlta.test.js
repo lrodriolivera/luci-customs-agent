@@ -337,6 +337,21 @@ describe('prerrellenarAlta', () => {
   })
 })
 
+describe('datos que pide el H1 (prueba e2e 17/11/2026)', () => {
+  test('la factura rellena el número de factura y el código postal del exportador', () => {
+    const conCp = { ...FACTURA, exportador: { ...FACTURA.exportador, codigoPostal: '518000' } }
+    const { formData, rellenados } = prerrellenarAlta(formulario({ invoiceNumber: '' }), conCp, { tipoDocumento: 'commercial_invoice' })
+    expect(formData.invoiceNumber).toBe('INV-1')
+    expect(formData.exporter.postalCode).toBe('518000')
+    expect(rellenados.map((r) => r.campo)).toEqual(expect.arrayContaining(['invoiceNumber', 'counterpartPostalCode']))
+  })
+
+  test('no pisa un número de factura ya escrito', () => {
+    const { formData } = prerrellenarAlta(formulario({ invoiceNumber: 'FAC-PROPIA' }), FACTURA, { tipoDocumento: 'commercial_invoice' })
+    expect(formData.invoiceNumber).toBe('FAC-PROPIA')
+  })
+})
+
 describe('identificacionFiscal', () => {
   test('separa NIF y EORI', () => {
     expect(identificacionFiscal('ES B-12345674')).toEqual({ nif: 'B12345674', eori: 'ESB12345674' })

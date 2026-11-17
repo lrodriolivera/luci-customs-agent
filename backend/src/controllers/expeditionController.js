@@ -178,6 +178,9 @@ const create = async (req, res) => {
       priority: priority || 'normal',
       clientReference,
       internalNotes,
+      // Numero de la factura comercial leido en el alta (lo pide el H1).
+      ...(typeof req.body.invoiceNumber === 'string' && req.body.invoiceNumber.trim()
+        ? { invoiceNumber: req.body.invoiceNumber.trim().slice(0, 70) } : {}),
       status: 'draft',
       createdBy: req.user._id,
       assignedTo: req.user._id,

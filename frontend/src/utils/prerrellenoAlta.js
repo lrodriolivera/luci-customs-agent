@@ -74,7 +74,7 @@ const iguales = (a, b) => {
 // Direcciones y ciudades: un documento trae el codigo postal y otro no
 // («Paterna (Valencia)» / «Paterna (Valencia), 46988»). Es el mismo sitio
 // salvo que los dos traigan codigo postal y no coincida.
-const CAMPOS_DE_LUGAR = ['clientAddress', 'clientCity', 'counterpartAddress', 'counterpartCity']
+const CAMPOS_DE_LUGAR = ['clientAddress', 'clientCity', 'counterpartAddress', 'counterpartCity', 'counterpartPostalCode']
 const esCodigoPostal = (palabra) => /^\d{5,6}$/.test(palabra)
 const mismoLugar = (a, b) => {
   const [pa, pb] = [palabras(a), palabras(b)]
@@ -179,6 +179,10 @@ export function prerrellenarAlta(formData, extraccion, { tipoDocumento, fijados 
   proponer('counterpartCountry', destinoContraparte, 'country', contraparte.pais)
   proponer('counterpartCity', destinoContraparte, 'city', contraparte.ciudad)
   proponer('counterpartAddress', destinoContraparte, 'address', contraparte.direccion)
+  // CP del exportador y numero de factura: los pide el H1 y se perdian en el
+  // alta (prueba e2e 17/11/2026; Patricia, Trello H1-01, 16/11).
+  proponer('counterpartPostalCode', destinoContraparte, 'postalCode', contraparte.codigoPostal)
+  proponer('invoiceNumber', next, 'invoiceNumber', (extraccion.factura || {}).numero)
 
   // ---- Partidas ---------------------------------------------------------------
   const partidas = (extraccion.partidas || []).filter(partidaConDatos)

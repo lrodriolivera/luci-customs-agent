@@ -3994,7 +3994,9 @@
       "counterpartAddress": "Exporter / consignee address",
       "description": "Description",
       "quantity": "Quantity",
-      "transportMode": "Transport mode"
+      "transportMode": "Transport mode",
+      "counterpartPostalCode": "Exporter / consignee postal code",
+      "invoiceNumber": "Invoice number"
     },
     "summary": "{{documents}} document(s) read · {{count}} field(s) filled in by LUCI. Review them before creating the file.",
     "summaryWarnings": "{{count}} warning(s) in step 1."

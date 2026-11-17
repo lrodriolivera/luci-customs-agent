@@ -111,10 +111,13 @@ export default function ExpeditionNew() {
       email: '',
       phone: ''
     },
+    // Numero de la factura comercial: lo pide el H1 (se rellena de la factura leida).
+    invoiceNumber: '',
     exporter: {
       companyName: '',
       address: '',
       city: '',
+      postalCode: '',
       country: ''
     },
     consignee: {

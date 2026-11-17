@@ -89,6 +89,15 @@ async function crearExpediente(user, extra = {}) {
 }
 
 describe('create', () => {
+  test('guarda el número de factura leído en el alta (lo pide el H1; prueba e2e 17/11/2026)', async () => {
+    const user = usuario();
+    const res = crearRes();
+    await ctrl.create({ body: { ...cuerpoValido(), invoiceNumber: '  NBT-2026-0412 ' }, user }, res);
+    expect(res.statusCode).toBe(201);
+    const guardado = await Expedition.findById(res.body.data._id);
+    expect(guardado.invoiceNumber).toBe('NBT-2026-0412');
+  });
+
   test('persiste el expediente con el tenant y el creador del usuario', async () => {
     const user = usuario();
     const res = crearRes();
