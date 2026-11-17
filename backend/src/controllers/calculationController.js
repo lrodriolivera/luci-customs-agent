@@ -5,7 +5,6 @@ const dutyCalculationService = require('../services/dutyCalculationService');
 const { ensureSameTenant } = require('../utils/tenantGuard');
 const { tipoOficial, divisasOficiales, aEuros } = require('../services/divisas/tiposCambioOficiales');
 const { cambioAplicado } = require('../services/divisas/cambioDelExpediente');
-const { preferenciaAeatPara, aplicarPreferenciaAeat } = require('../services/aeat/preferenciaCalculadora');
 
 // Cache para tipos de cambio (se actualiza cada hora)
 let exchangeRatesCache = {
@@ -59,12 +58,10 @@ const calculateDuties = async (req, res) => {
       importDate: importDate || null
     });
 
-    // Preferencia del origen segun el Arancel Integrado de la AEAT (cerezas de
-    // Chile al 12 % en vez del 0 %, UAT 17/11/2026).
-    const preferenciaAeat = await preferenciaAeatPara(taricCode, origin);
-
     // Formatear respuesta compatible con frontend existente
-    const datos = {
+    res.json({
+      success: true,
+      data: {
         taricCode: calculation.taricCode,
         description: calculation.description,
         origin: calculation.origin,
@@ -120,10 +117,9 @@ const calculateDuties = async (req, res) => {
         // Metadata
         source: calculation.source,
         confidence: calculation.confidence,
-        calculatedAt: calculation.calculatedAt,
-        preferenciaAeat
-    };
-    res.json({ success: true, data: aplicarPreferenciaAeat(datos, preferenciaAeat, preference || '100') });
+        calculatedAt: calculation.calculatedAt
+      }
+    });
 
   } catch (error) {
     logger.error('Error calculando aranceles:', error);
