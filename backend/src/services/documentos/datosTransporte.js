@@ -138,6 +138,10 @@ const SENALES_LCL = /\bLCL\b|\bCFS\b|CONSOLIDAT|GROUPAGE|GRUPAJE|PART\s+OF\s+(?:
 const SENALES_FCL = /\bFCL\b|\bCY\s*\/\s*CY\b|SHIPPER['’]?S?\s+LOAD\b|\bSLA?C\b|\bSLCS\b/;
 // Tipo y tamaño de un contenedor: 20GP, 40HC, 40'HQ, 1X40HC o el codigo ISO 6346 (22G1, 45G1, L5G1).
 const TAMANO_CONTENEDOR = /^(?:\d{1,2}X)?(?:(?:20|40|45)(?:GP|HC|HQ|DV|DC|ST|SD|RF|RH|OT|FR|NOR|PW|TK)|[24L][025][GRUPTHB]\d)$/;
+// Embalajes de grupaje (cajas o unidades) en un BL sin contenedor: codigos de
+// tipo de bulto (Rec. 21 CEPE) y palabras habituales del BL.
+const EMBALAJES_DE_GRUPAJE = new Set(['CT', 'CTN', 'CS', 'BX', 'PK', 'PCE', 'PCS', 'NAR', 'C62']);
+const BULTOS_DE_GRUPAJE = /\b\d*\s*(?:CTNS?|CARTONS?|CAJAS?|BOX(?:ES)?|PCS|PIECES|UNITS?|UNIDADES)\b/;
 const TIPOS_CARGA_LITERALES = { FCL: 'FCL', 'FCL/FCL': 'FCL', 'CY/CY': 'FCL', LCL: 'LCL', 'LCL/LCL': 'LCL', 'CFS/CFS': 'LCL' };
 
 const textosLeidos = (lista) => (Array.isArray(lista) ? lista : [])
@@ -164,7 +168,7 @@ const tamanosDeContenedor = (textos) => sinRepetir(textos
  * @param {{ literal?: *, indicaciones?: Array<*>, leidosContenedor?: Array<*>, contenedores?: string[], tipo?: string }} datos
  * @returns {{ tipoCarga: 'FCL'|'LCL'|null, nota: string|null }}
  */
-function deducirTipoCarga({ literal, indicaciones, leidosContenedor, contenedores = [], tipo } = {}) {
+function deducirTipoCarga({ literal, indicaciones, leidosContenedor, contenedores = [], tipo, embalajes } = {}) {
   const directo = TIPOS_CARGA_LITERALES[String(literal ?? '').toUpperCase().replace(/\s/g, '')];
   if (directo) return { tipoCarga: directo, nota: null };
 
@@ -180,12 +184,19 @@ function deducirTipoCarga({ literal, indicaciones, leidosContenedor, contenedore
   if (lcl.length > 0) return { tipoCarga: 'LCL', nota: `Tipo de carga LCL deducido de: ${lcl.join(', ')}.` };
   if (fcl.length > 0) return { tipoCarga: 'FCL', nota: `Tipo de carga FCL deducido de: ${fcl.join(', ')}.` };
 
-  const tamanos = tamanosDeContenedor([...textos, ...textosLeidos(leidosContenedor)]);
-  if (tipo === 'bill_of_lading' && contenedores.length > 0 && tamanos.length > 0) {
+  if (tipo !== 'bill_of_lading') return { tipoCarga: null, nota: null };
+  // Regla de las agentes (Jenifer, UAT 17/11/2026): si el BL trae contenedor es
+  // FCL, da igual el tamaño; el grupaje se describe en cajas (CTN) o unidades.
+  if (contenedores.length > 0) {
+    const tamanos = tamanosDeContenedor([...textos, ...textosLeidos(leidosContenedor)]);
     return {
       tipoCarga: 'FCL',
-      nota: `Tipo de carga FCL deducido del contenedor completo con su tamaño (${contenedores.join(', ')} ${tamanos.join(', ')}); si es grupaje, cámbialo a LCL.`
+      nota: `Tipo de carga FCL: el BL trae contenedor (${contenedores.join(', ')}${tamanos.length > 0 ? ` ${tamanos.join(', ')}` : ''}); si es grupaje, cámbialo a LCL.`
     };
+  }
+  const enCajas = [...textosLeidos(embalajes).filter(e => EMBALAJES_DE_GRUPAJE.has(e)), ...textos.filter(t => BULTOS_DE_GRUPAJE.test(t))];
+  if (enCajas.length > 0) {
+    return { tipoCarga: 'LCL', nota: `Tipo de carga LCL: el BL no trae contenedor y la mercancía va en cajas o unidades (${sinRepetir(enCajas).join(', ')}).` };
   }
   return { tipoCarga: null, nota: null };
 }

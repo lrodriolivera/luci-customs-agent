@@ -264,7 +264,8 @@ function normalizarExtraccion(bruto, { tipoDeclarado } = {}) {
     indicaciones: tra.indicacionesCarga,
     leidosContenedor: [...lista(tra.contenedores), ...lista(tra.precintos)],
     contenedores,
-    tipo
+    tipo,
+    embalajes: lista(r.partidas).map((p) => p && p.tipoBulto)
   });
   const medio = medioDeTransporte(tra.medio);
   const { vuelo, otros: otrosVuelos } = tipo === 'air_waybill' ? vueloPrincipal(medio) : { vuelo: medio, otros: [] };
