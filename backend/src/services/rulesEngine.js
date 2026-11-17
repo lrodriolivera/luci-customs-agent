@@ -7,9 +7,6 @@
  */
 
 const logger = require('../config/logger');
-const { tiposAeatPara } = require('./aeat/preferenciaCalculadora');
-const IVA_GENERAL = 21;
-const redondear = (n) => Math.round(n * 100) / 100;
 const exciseDutiesService = require('./exciseDutiesService');
 const quotaService = require('./quotaService');
 const preferencesService = require('./preferencesService');
@@ -453,33 +450,16 @@ class RulesEngine {
       preferential: 0,
       applied: 0,
       savings: 0,
-      currency: 'EUR',
-      fuente: 'AEAT',
-      porPartida: []
+      currency: 'EUR'
     };
 
-    // Tipos del Arancel Integrado de la AEAT por partida y origen (UAT
-    // 17/11/2026: cerezas de Chile salian al 12 % e IVA 21 % con tipos fijos
-    // por capitulo). Si la AEAT no responde, el tipo estimado por capitulo, y
-    // se dice. Se aplica el general: la preferencia exige prueba de origen y se
-    // muestra como opcion.
+    // Calcular arancel estandar (simplificado)
     for (const good of operation.goods || []) {
-      const valor = Number(good.customsValue) || 0;
-      const tipos = await tiposAeatPara(good.taricCode, operation.originCountry);
-      const general = tipos ? tipos.general : this.getTariffRate(good.taricCode) * 100;
-      const preferencial = tipos && tipos.preferencial !== null ? tipos.preferencial : general;
-      if (!tipos) tariff.fuente = 'estimado';
-      tariff.standard += valor * general / 100;
-      tariff.preferential += valor * preferencial / 100;
-      tariff.porPartida.push({
-        taricCode: good.taricCode, valor, general, preferencial,
-        medida: tipos?.medida || null, iva: tipos?.iva ?? null
-      });
+      const rate = this.getTariffRate(good.taricCode);
+      const dutyAmount = (good.customsValue || 0) * rate;
+      tariff.standard += dutyAmount;
     }
 
-    tariff.standard = redondear(tariff.standard);
-    tariff.preferential = redondear(tariff.preferential);
-    tariff.savings = redondear(tariff.standard - tariff.preferential);
     tariff.applied = tariff.standard;
     return tariff;
   }
@@ -514,23 +494,13 @@ class RulesEngine {
     // Calcular impuestos especiales usando el servicio completo
     const exciseDuties = exciseDutiesService.calculateTotalExciseDuties(operation.goods || []);
 
-    // IVA de cada partida con su tipo de la AEAT (cerezas 4 %); 21 % si no se sabe.
-    const ivaDe = (arancelDe) => (tariff.porPartida || []).reduce((suma, p) => {
-      const tipo = p.iva ?? IVA_GENERAL;
-      return suma + (p.valor + p.valor * arancelDe(p) / 100) * tipo / 100;
-    }, 0);
-    const tiposIva = [...new Set((tariff.porPartida || []).map((p) => p.iva ?? IVA_GENERAL))];
-    const conPartidas = (tariff.porPartida || []).length > 0;
-    const ivaAplicado = conPartidas ? redondear(ivaDe((p) => p.general)) : redondear(taxableBase * IVA_GENERAL / 100);
-
     const taxes = {
       customsValue,
       tariff: tariff.applied,
       taxableBase,
       vat: {
-        // Fraccion (0.04) si todas las partidas llevan el mismo tipo; null si son distintos.
-        rate: tiposIva.length <= 1 ? (tiposIva[0] ?? IVA_GENERAL) / 100 : null,
-        amount: ivaAplicado
+        rate: 0.21,
+        amount: taxableBase * 0.21
       },
       excise: {
         applicable: exciseDuties.total > 0,
@@ -541,18 +511,7 @@ class RulesEngine {
       total: 0
     };
 
-    taxes.total = redondear(tariff.applied + taxes.vat.amount + taxes.excise.amount);
-    taxes.fuente = tariff.fuente;
-    // La otra opcion: con la preferencia del origen (exige prueba de origen).
-    if (conPartidas && tariff.preferential < tariff.standard) {
-      const ivaPreferencia = redondear(ivaDe((p) => p.preferencial));
-      taxes.conPreferencia = {
-        tariff: tariff.preferential,
-        vat: ivaPreferencia,
-        total: redondear(tariff.preferential + ivaPreferencia + taxes.excise.amount),
-        medidas: [...new Set(tariff.porPartida.map((p) => p.medida).filter(Boolean))]
-      };
-    }
+    taxes.total = tariff.applied + taxes.vat.amount + taxes.excise.amount;
 
     return taxes;
   }

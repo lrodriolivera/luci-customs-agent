@@ -157,24 +157,6 @@ describe('RulesEngineAnalyzer', () => {
     expect(api.post).not.toHaveBeenCalled()
   })
 
-  // Jenifer (UAT 17/11/2026): cerezas de Chile con arancel 12 % e IVA 21 % fijos.
-  it('muestra el IVA de la AEAT, la opción con preferencia y la fuente de los tipos', async () => {
-    api.post.mockResolvedValue({ data: { success: true, data: {
-      summary: { eligible: true, alerts: [], warnings: [], recommendations: [] },
-      taxes: { tariff: 120, vat: { rate: 0.04, amount: 44.8 }, total: 164.8, fuente: 'AEAT',
-        conPreferencia: { tariff: 0, vat: 40, total: 40, medidas: ['142-PREF'] } },
-      quotas: [], documentation: []
-    } } })
-    const { container } = render(<RulesEngineAnalyzer />)
-    fireEvent.change(container.querySelector('input[placeholder="Código TARIC"]'), { target: { value: '0809290000' } })
-    fireEvent.submit(container.querySelector('form'))
-
-    expect(await screen.findByText('IVA (4%):')).toBeInTheDocument()
-    expect(screen.getByTestId('con-preferencia')).toHaveTextContent('Total 40.00 EUR')
-    expect(screen.getByTestId('con-preferencia')).toHaveTextContent('142-PREF')
-    expect(screen.getByTestId('fuente-tipos')).toHaveTextContent('Arancel Integrado de la AEAT')
-  })
-
   it('realiza el análisis exitosamente con respuesta success:true', async () => {
     const mockResponse = {
       data: {

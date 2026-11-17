@@ -1020,9 +1020,7 @@
     "fillRequired": "Complete todos los campos obbligatori",
     "errorCalculating": "Errore durante calcular derechos",
     "confidence": "fiducia",
-    "deliveryPoint": "Punto de entrega",
-    "aeatPreferenceAvailable": "Secondo l'AEAT, l'origine {{origin}} ha una preferenza tariffaria per questo codice: {{preferential}} % invece di {{general}} % (misura {{measure}}). Richiede la prova dell'origine dell'accordo.",
-    "applyAeatPreference": "Applica la preferenza"
+    "deliveryPoint": "Punto de entrega"
   },
   "chat": {
     "title": "Assistente LUCI",

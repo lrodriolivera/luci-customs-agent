@@ -334,7 +334,7 @@ export default function RulesEngineAnalyzer() {
                     )}
                     {analysis.taxes.vat && (
                       <div className="flex justify-between py-2 border-b">
-                        <span className="text-gray-600">{analysis.taxes.vat.rate === null || analysis.taxes.vat.rate === undefined ? 'IVA:' : `IVA (${(analysis.taxes.vat.rate * 100).toFixed(0)}%):`}</span>
+                        <span className="text-gray-600">IVA ({(analysis.taxes.vat.rate * 100).toFixed(0)}%):</span>
                         <span className="font-semibold">{analysis.taxes.vat.amount.toFixed(2)} EUR</span>
                       </div>
                     )}
@@ -345,22 +345,9 @@ export default function RulesEngineAnalyzer() {
                       </div>
                     )}
                     <div className="flex justify-between py-3 bg-gray-50 rounded-md px-3 mt-2">
-                      <span className="font-semibold text-gray-900">{analysis.taxes.conPreferencia ? 'TOTAL sin preferencia:' : 'TOTAL:'}</span>
+                      <span className="font-semibold text-gray-900">TOTAL:</span>
                       <span className="font-bold text-xl text-indigo-600">{analysis.taxes.total.toFixed(2)} EUR</span>
                     </div>
-                    {/* Las dos opciones (Patricia, UAT 17/11/2026): con la prueba de origen
-                        del acuerdo se paga la preferencia; sin ella, el arancel general. */}
-                    {analysis.taxes.conPreferencia && (
-                      <div data-testid="con-preferencia" className="mt-3 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-900">
-                        <p className="font-semibold">Con preferencia arancelaria (exige la prueba de origen del acuerdo{analysis.taxes.conPreferencia.medidas?.length ? `, medida ${analysis.taxes.conPreferencia.medidas.join(', ')}` : ''}):</p>
-                        <p className="mt-1">Arancel {analysis.taxes.conPreferencia.tariff.toFixed(2)} EUR · IVA {analysis.taxes.conPreferencia.vat.toFixed(2)} EUR · <strong>Total {analysis.taxes.conPreferencia.total.toFixed(2)} EUR</strong></p>
-                      </div>
-                    )}
-                    <p className="mt-2 text-xs text-gray-500" data-testid="fuente-tipos">
-                      {analysis.taxes.fuente === 'estimado'
-                        ? 'Tipos estimados: no se pudo consultar el Arancel Integrado de la AEAT.'
-                        : 'Arancel, preferencia e IVA del Arancel Integrado de la AEAT para cada código y origen.'}
-                    </p>
                   </div>
                 </div>
               )}
