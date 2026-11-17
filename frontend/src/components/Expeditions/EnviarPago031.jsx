@@ -25,12 +25,18 @@ export default function EnviarPago031({ expedition, onSent }) {
   const destino = expedition.client?.contact?.email
 
   const enviar = async () => {
+    // Sin correo del cliente no hay nada que confirmar: solo se avisa (prueba
+    // e2e 17/11/2026: el dialogo ofrecia «Enviar» y no hacia nada).
+    if (!destino) {
+      toast.error(t('expeditions.pago031.noEmail'))
+      return
+    }
     const ok = await confirm({
       title: t('expeditions.pago031.confirmTitle'),
-      message: destino ? t('expeditions.pago031.confirmMessage', { email: destino }) : t('expeditions.pago031.noEmail'),
+      message: t('expeditions.pago031.confirmMessage', { email: destino }),
       confirmLabel: t('expeditions.pago031.send')
     })
-    if (!ok || !destino) return
+    if (!ok) return
     setEnviando(true)
     try {
       await expeditionsAPI.sendPago031(expedition._id)

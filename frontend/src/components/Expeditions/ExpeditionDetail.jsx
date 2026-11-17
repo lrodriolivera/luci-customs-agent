@@ -1257,7 +1257,8 @@ export default function ExpeditionDetail() {
             <div className="space-y-3">
               <div>
                 <p className="text-sm text-gray-500">{t('expeditions.modeLabel')}</p>
-                <p className="font-medium capitalize">{expedition.transportMode}</p>
+                {/* Prueba e2e 17/11/2026: salia «Maritime» sin traducir. */}
+                <p className="font-medium">{t(`expeditions.${expedition.transportMode}`, expedition.transportMode)}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">{t('expeditions.incoterm')}</p>

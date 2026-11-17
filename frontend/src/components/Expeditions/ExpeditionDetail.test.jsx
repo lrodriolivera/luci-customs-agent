@@ -160,7 +160,7 @@ describe('<ExpeditionDetail />', () => {
 
   test('renderiza información de transporte', async () => {
     renderExpeditionDetail()
-    await waitFor(() => expect(screen.getByText('sea')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/^(expeditions\.)?sea$/)).toBeInTheDocument())
     expect(screen.getByText('CIF Barcelona')).toBeInTheDocument()
     expect(screen.getByText('BL123456')).toBeInTheDocument()
     expect(screen.getByText('Maersk')).toBeInTheDocument()
