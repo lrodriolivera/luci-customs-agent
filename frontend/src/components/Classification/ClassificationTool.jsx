@@ -784,8 +784,10 @@ export default function ClassificationTool() {
                   {/* Description */}
                   <div className="card bg-gray-50">
                     <h3 className="font-semibold text-gray-900 mb-2">{t('classification.description')}</h3>
-                    <p className="text-gray-700">
-                      {getDesc(taricLookupResult.description) || taricLookupResult.descripcion || t('classification.noDescription')}
+                    {/* La descripcion que nombra la mercancia («Cerezas › Las demás»), no
+                        solo el ultimo nivel («Las demás»). UAT 17/11/2026. */}
+                    <p className="text-gray-700" data-testid="descripcion-completa">
+                      {taricLookupResult.descripcionCompleta || getDesc(taricLookupResult.description) || taricLookupResult.descripcion || t('classification.noDescription')}
                     </p>
                     {taricLookupResult.description_es && taricLookupResult.description_es !== getDesc(taricLookupResult.description) && (
                       <p className="text-gray-600 mt-2 text-sm">
@@ -794,8 +796,20 @@ export default function ClassificationTool() {
                     )}
                   </div>
 
-                  {/* Hierarchy */}
-                  {(taricLookupResult.hierarchy || taricLookupResult.chapter || taricLookupResult.heading) && (
+                  {/* Ruta oficial completa, plegada: el arbol tiene su propia pestaña. */}
+                  {taricLookupResult.ruta?.length > 0 && (
+                    <details className="card" data-testid="ruta-completa">
+                      <summary className="cursor-pointer font-semibold text-gray-900">{t('classification.fullRoute')}</summary>
+                      <ol className="mt-3 space-y-1 text-sm text-gray-700">
+                        {taricLookupResult.ruta.map((nivel, i) => (
+                          <li key={i} style={{ paddingLeft: `${i * 12}px` }}>{nivel}</li>
+                        ))}
+                      </ol>
+                    </details>
+                  )}
+
+                  {/* Hierarchy (sin ruta oficial) */}
+                  {!(taricLookupResult.ruta?.length > 0) && (taricLookupResult.hierarchy || taricLookupResult.chapter || taricLookupResult.heading) && (
                     <div className="card">
                       <h3 className="font-semibold text-gray-900 mb-3">{t('classification.hierarchy')}</h3>
                       <div className="space-y-2 text-sm">

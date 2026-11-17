@@ -1,4 +1,5 @@
 const { TaricCode, Expedition, TaricSearchHistory, TaricAICache } = require('../models');
+const { descripcionCompleta, rutaDe } = require('../services/taric/descripcionCompleta');
 const logger = require('../config/logger');
 const { textoDescripcion } = require('../utils/descripcionTaric');
 const aiService = require('../services/aiService');
@@ -170,6 +171,10 @@ const getTaricInfo = async (req, res) => {
           examples: obj.examples || [],
           keywords: obj.keywords || [],
           isLeaf: obj.isLeaf,
+          // Descripcion que nombra la mercancia y la ruta oficial completa
+          // («Las demás» sola no decia nada; UAT 17/11/2026).
+          descripcionCompleta: descripcionCompleta(obj.legalDescription, obj.description?.es),
+          ruta: rutaDe(obj.legalDescription),
           hierarchy: hierarchy.map(h => ({
             code: h.code,
             level: h.level,

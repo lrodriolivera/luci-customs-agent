@@ -889,7 +889,8 @@
       "useAeat": "Use the AEAT data (duty {{arancel}}%, VAT {{iva}}%)",
       "usePreference": "Use preference {{medida}} ({{arancel}}%): proof of origin required"
     },
-    "thirdCountryDuty": "Third-country duty"
+    "thirdCountryDuty": "Third-country duty",
+    "fullRoute": "View the full code path"
   },
   "declarations": {
     "title": "Declaration Generator",

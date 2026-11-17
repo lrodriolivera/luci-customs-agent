@@ -889,7 +889,8 @@
       "useAeat": "Fer servir les dades de l'AEAT (aranzel {{arancel}} %, IVA {{iva}} %)",
       "usePreference": "Fer servir la preferència {{medida}} ({{arancel}} %): cal prova d'origen"
     },
-    "thirdCountryDuty": "Aranzel tercers països"
+    "thirdCountryDuty": "Aranzel tercers països",
+    "fullRoute": "Veure la ruta completa del codi"
   },
   "declarations": {
     "title": "Generador de Declaracions",

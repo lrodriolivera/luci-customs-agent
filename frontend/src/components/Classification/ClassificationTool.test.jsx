@@ -1211,6 +1211,31 @@ describe('<ClassificationTool />', () => {
     })
   })
 
+  // Jenifer (UAT 17/11/2026): con 0809290000 la descripción decía solo «Las demás».
+  test('búsqueda TARIC: muestra la descripción completa y la ruta plegada', async () => {
+    classificationAPI.getTaricInfo.mockResolvedValue({
+      data: {
+        data: {
+          code: '0809290000', description: 'Las demás', found: true, source: 'local_db',
+          descripcionCompleta: 'Cerezas › Las demás',
+          ruta: ['Albaricoques, cerezas, melocotones…, frescos', 'Cerezas', 'Las demás'],
+          hierarchy: [{ code: '0809290000', level: 6, description: 'Las demás' }]
+        }
+      }
+    })
+
+    renderComponent()
+    fireEvent.click(screen.getByRole('button', { name: /classification.lookupCode/i }))
+    await waitFor(() => fireEvent.change(screen.getByPlaceholderText('classification.codePlaceholder'), { target: { value: '0809290000' } }))
+    fireEvent.submit(screen.getByText('classification.searchByCode').closest('div').querySelector('form'))
+
+    expect(await screen.findByTestId('descripcion-completa')).toHaveTextContent('Cerezas › Las demás')
+    const ruta = screen.getByTestId('ruta-completa')
+    expect(ruta.open).toBe(false)
+    expect(ruta).toHaveTextContent('classification.fullRoute')
+    expect(screen.queryByText('classification.hierarchy')).not.toBeInTheDocument()
+  })
+
   test('búsqueda TARIC: código no encontrado muestra error', async () => {
     classificationAPI.getTaricInfo.mockResolvedValue({
       data: { data: { found: false, message: 'Code not found in database' } }
