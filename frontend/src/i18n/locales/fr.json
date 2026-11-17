@@ -889,7 +889,8 @@
       "useAeat": "Utiliser les données de l'AEAT (droit {{arancel}} %, TVA {{iva}} %)",
       "usePreference": "Utiliser la préférence {{medida}} ({{arancel}} %) : preuve d'origine requise"
     },
-    "thirdCountryDuty": "Droit pays tiers"
+    "thirdCountryDuty": "Droit pays tiers",
+    "fullRoute": "Voir le chemin complet du code"
   },
   "declarations": {
     "title": "Generateur de Declarations",

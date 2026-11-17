@@ -889,7 +889,8 @@
       "useAeat": "Usar os dados da AEAT (direito {{arancel}} %, IVA {{iva}} %)",
       "usePreference": "Usar a preferência {{medida}} ({{arancel}} %): exige prova de origem"
     },
-    "thirdCountryDuty": "Direito países terceiros"
+    "thirdCountryDuty": "Direito países terceiros",
+    "fullRoute": "Ver o caminho completo do código"
   },
   "declarations": {
     "title": "Gerador de Declaracoes",
