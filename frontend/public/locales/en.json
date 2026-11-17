@@ -704,7 +704,9 @@
       "sent": "Sent to {{email}}",
       "error": "The email could not be sent",
       "lastSent": "Last sent: {{date}}"
-    }
+    },
+    "supplementaryUnits": "Supplementary units",
+    "supplementaryUnitsHelp": "Only if the TARIC code requires them (e.g. number of items). If left empty and the quantity is in pieces, LUCI uses the quantity."
   },
   "classification": {
     "title": "TARIC Classification",

@@ -603,3 +603,20 @@ describe('H1 CAU: regímenes que la AEAT acepta solo con datos que LUCI aún no 
   });
 });
 
+describe('H1 CAU: unidades suplementarias que exige el código (error 50928)', () => {
+  test('con el código en la lista de exigidos y la cantidad en piezas, va la cantidad', () => {
+    const base = expediente();
+    const exp = expediente({ goods: [{ ...base.goods[0], taricCode: '8471300000', quantity: 480, unit: 'PCS', supplementaryUnits: undefined }] });
+    const d = datos(exp, { unidadesExigidas: { '8471300000': { tipo: 'p/st', descripcion: 'Numero de articulos' } } });
+    expect(d.envio.partidas[0].unidadesSuplementarias).toBe(480);
+  });
+
+  test('si no se puede deducir, LUCI lo pide antes de enviar', () => {
+    const base = expediente();
+    const exp = expediente({ goods: [{ ...base.goods[0], taricCode: '8471300000', quantity: 864, unit: 'KG', supplementaryUnits: undefined }] });
+    let error;
+    try { datos(exp, { unidadesExigidas: { '8471300000': { tipo: 'p/st', descripcion: 'Numero de articulos' } } }); } catch (e) { error = e; }
+    expect(error.faltan.join(' ')).toMatch(/unidades suplementarias de la partida 1/);
+  });
+});
+

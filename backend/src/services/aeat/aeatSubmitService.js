@@ -11,6 +11,7 @@ const { buildH1ImportXML, expeditionToH1Data } = require('./h1XmlBuilder');
 const { cambioDelExpediente } = require('../divisas/cambioDelExpediente');
 const { cambiosDeLosGastos } = require('../forms/gastosHastaLaFrontera');
 const { expeditionToH1CauData, partes: partesH1Cau } = require('./h1CauData');
+const { exigenciasDeUnidades } = require('./unidadesSuplementariasH1');
 const { buildAnulacionH1CauXML, interpretarAnulacionH1Cau, ENDPOINT_CC414A } = require('./h1CauAnulacion');
 const { buildActivacionH1CauXML, datosDeActivacion, ENDPOINT_CC432A } = require('./h1CauActivacion');
 const { buildH1CauXML, ENDPOINT_CC415A } = require('./h1CauXmlBuilder');
@@ -348,7 +349,9 @@ async function prepararH1Cau(expedition, ctx = {}) {
     fecha: ahora,
     test: process.env.AEAT_ENVIRONMENT !== 'production',
     // Predeclaracion (tipo D): modo de activacion «Aduanas» u «Operador».
-    predeclaracion: ctx.predeclaracion || null
+    predeclaracion: ctx.predeclaracion || null,
+    // Codigos que exigen unidades suplementarias (catalogo TARIC; error 50928).
+    unidadesExigidas: await exigenciasDeUnidades(expedition.goods)
   });
   return { messageId: datos.mensaje.id, lrn: datos.declaracion.lrn, requestXML: buildH1CauXML(datos), preparedAt: ahora, datos };
 }
