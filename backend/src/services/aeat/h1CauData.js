@@ -20,6 +20,7 @@ const { MODOS_ACTIVACION } = require('./h1CauActivacion');
 const { separarDocumentosC44 } = require('./documentosC44');
 const { impuestoEspecialEnH1 } = require('./impuestoEspecial');
 const { plasticoEnH1, comprobarLimite5kg } = require('./plasticoEnH1');
+const { unidadesDeLaPartida } = require('./unidadesSuplementariasH1');
 
 // Medios de pago que obligan a declarar garantia con regimen 40 (regla C0616).
 const PAGOS_CON_GARANTIA = new Set(['O', 'R', 'S', 'T', 'U', 'V', 'G']);
@@ -307,7 +308,7 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
       ...(ie.adicionalesNacionales.length > 0 ? { adicionalesNacionales: ie.adicionalesNacionales } : {})
     },
     masaBruta: good.grossWeight, masaNeta: good.netWeight,
-    unidadesSuplementarias: good.supplementaryUnits || null,
+    unidadesSuplementarias: unidadesDeLaPartida(good, contexto.unidadesExigidas?.[codigo], n, faltan),
     // El importe de factura va en la divisa de la factura; las bases, en euros.
     // Una divisa sin tipo del BCE se declara en euros (el contravalor).
     importeFactura: contexto.cambio.sinTipoBce ? valorEuros : valor,
@@ -345,7 +346,7 @@ function partidaDe(expedition, good, indice, contexto, faltan) {
  * @returns {object} datos para `buildH1CauXML`
  * @throws {ErrorValidacion} 422 con `faltan`: lo que hay que completar
  */
-function expeditionToH1CauData(expedition, { declarante, cambio, cambiosGastos = {}, tenant, mensajeId, lrn, fecha = new Date(), test = true, predeclaracion = null } = {}) {
+function expeditionToH1CauData(expedition, { declarante, cambio, cambiosGastos = {}, tenant, mensajeId, lrn, fecha = new Date(), test = true, predeclaracion = null, unidadesExigidas = {} } = {}) {
   // Predeclaracion (tipo D): la activa la aduana cuando la sumaria este activa, o el operador con CC432A.
   if (predeclaracion && !MODOS_ACTIVACION.includes(predeclaracion)) {
     throw new ErrorValidacion(`El modo de activación de la predeclaración debe ser ${MODOS_ACTIVACION.join(' u ')}`, { code: 'MODO_ACTIVACION_NO_VALIDO' });
@@ -387,7 +388,7 @@ function expeditionToH1CauData(expedition, { declarante, cambio, cambiosGastos =
   if (personas.forma !== '1' && !(ambito in AMBITOS_AUTORIZACION)) faltan.push('tipo de autorización de despacho (global, OCRE u OSRE)');
 
   const numeros = goods.map((_, i) => i + 1);
-  const contexto = { cambio: tipoCambio, medioDePago, factura, ajustes: ajustesPorPartida(expedition, tipoCambio, cambiosGastos, faltan) };
+  const contexto = { cambio: tipoCambio, medioDePago, factura, ajustes: ajustesPorPartida(expedition, tipoCambio, cambiosGastos, faltan), unidadesExigidas };
   const datos = {
     mensaje: { id: mensajeId, fecha, test },
     operacion: 'A',

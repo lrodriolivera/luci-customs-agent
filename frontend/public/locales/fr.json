@@ -704,7 +704,9 @@
       "sent": "Envoyé à {{email}}",
       "error": "Impossible d'envoyer l'e-mail",
       "lastSent": "Dernier envoi : {{date}}"
-    }
+    },
+    "supplementaryUnits": "Unités supplémentaires",
+    "supplementaryUnitsHelp": "Seulement si le code TARIC les exige (p. ex. nombre d'articles). Laissé vide et avec une quantité en pièces, LUCI utilise la quantité."
   },
   "classification": {
     "title": "Classification TARIC",

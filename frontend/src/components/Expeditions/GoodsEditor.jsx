@@ -35,6 +35,7 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
     // El importe guardado se muestra con coma decimal para que el campo, que
     // lee formato español, no tome un decimal de tres cifras por millares.
     invoiceValue: asInput(item.invoiceValue).replace('.', ','),
+    supplementaryUnits: asInput(item.supplementaryUnits),
     plasticoKg: asInput(item.impuestoPlastico?.kg),
     plasticoExencion: item.impuestoPlastico?.exencion || '',
     plasticoKgReciclado: asInput(item.impuestoPlastico?.kgReciclado),
@@ -59,7 +60,7 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
     const invoiceValue = interpretarImporte(form.invoiceValue)
     if (!(invoiceValue > 0)) return t('expeditions.editGoodsValueInvalid')
 
-    const negativo = [form.netWeight, form.grossWeight, form.plasticoKg, form.plasticoKgReciclado].some((v) => toNumberOrUndefined(v) < 0)
+    const negativo = [form.netWeight, form.grossWeight, form.plasticoKg, form.plasticoKgReciclado, form.supplementaryUnits].some((v) => toNumberOrUndefined(v) < 0)
     if (negativo) return t('expeditions.editGoodsWeightInvalid')
 
     if (toNumberOrUndefined(form.plasticoKgReciclado) > 0 && !form.plasticoCertificado.trim()) {
@@ -87,6 +88,9 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
       netWeight: toNumberOrUndefined(form.netWeight),
       grossWeight: toNumberOrUndefined(form.grossWeight),
       invoiceValue: interpretarImporte(form.invoiceValue) ?? undefined,
+      // Unidades suplementarias (casilla 41): si se deja vacio, LUCI las toma de
+      // la cantidad cuando el codigo pide numero de articulos (error 50928).
+      supplementaryUnits: toNumberOrUndefined(form.supplementaryUnits),
       packages: {
         ...item.packages,
         quantity: packagesQuantity,
@@ -178,6 +182,19 @@ export default function GoodsEditor({ item, index, isSaving, onSave, onCancel })
             currency={item.currency || 'EUR'}
             onChange={(texto) => setForm((prev) => ({ ...prev, invoiceValue: texto }))}
           />
+        </div>
+        <div>
+          <label className="label" htmlFor={fieldId('supplementary')}>{t('expeditions.supplementaryUnits')}</label>
+          <input
+            id={fieldId('supplementary')}
+            type="number"
+            min="0"
+            step="0.001"
+            value={form.supplementaryUnits}
+            onChange={handleChange('supplementaryUnits')}
+            className="input"
+          />
+          <p className="mt-1 text-xs text-gray-500">{t('expeditions.supplementaryUnitsHelp')}</p>
         </div>
         <div>
           <label className="label" htmlFor={fieldId('plastic')}>{t('expeditions.plasticKg')}</label>

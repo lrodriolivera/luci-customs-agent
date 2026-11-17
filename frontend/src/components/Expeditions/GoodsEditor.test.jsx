@@ -43,6 +43,7 @@ describe('GoodsEditor', () => {
       grossWeight: 120,
       invoiceValue: 184800,
       packages: { quantity: 12, type: 'CT' },
+      supplementaryUnits: undefined,
       impuestoPlastico: { kg: 0, exencion: undefined, kgReciclado: 0, certificadoReciclado: undefined }
     })
   })
@@ -62,6 +63,13 @@ describe('GoodsEditor', () => {
     change('expeditions.plasticCertificate', ' CERT-9 ')
     fireEvent.click(screen.getByText('common.save'))
     expect(onSave.mock.calls[0][0].impuestoPlastico).toEqual({ kg: 3, exencion: '1P4', kgReciclado: 2, certificadoReciclado: 'CERT-9' })
+  })
+
+  test('guarda las unidades suplementarias (error 50928 de la AEAT)', () => {
+    const { onSave } = renderEditor()
+    change('expeditions.supplementaryUnits', '480')
+    fireEvent.click(screen.getByText('common.save'))
+    expect(onSave.mock.calls[0][0].supplementaryUnits).toBe(480)
   })
 
   test('kg reciclados sin certificado: no guarda y lo pide', () => {
