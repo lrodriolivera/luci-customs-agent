@@ -3978,7 +3978,9 @@
       "counterpartAddress": "Adreça de l'exportador / destinatari",
       "description": "Descripció",
       "quantity": "Quantitat",
-      "transportMode": "Mode de transport"
+      "transportMode": "Mode de transport",
+      "counterpartPostalCode": "Codi postal de l'exportador / destinatari",
+      "invoiceNumber": "Número de factura"
     },
     "summary": "{{documents}} document(s) llegits · {{count}} dada/es emplenades per LUCI. Revisa-les abans de crear l'expedient.",
     "summaryWarnings": "{{count}} avís/os al pas 1."

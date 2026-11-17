@@ -9,6 +9,13 @@ const logger = require('../config/logger');
 const { consultarArancelIntegrado } = require('./aeat/arancelIntegrado');
 const { tiposAeat } = require('./aeat/contrasteArancel');
 
+// Avisos cuando no hay tipos de la AEAT para calcular el ahorro, segun el motivo.
+const MENSAJES_AEAT = {
+  consulta: (r) => `No se pudo consultar el Arancel Integrado de la AEAT para ${r.taricCode} (${r.error}). No se calcula el ahorro; inténtelo más tarde.`,
+  codigo: (r) => `El código ${r.taricCode} no existe en el Arancel Integrado de la AEAT: revise el código TARIC.`,
+  sin_porcentaje: (r) => `La AEAT no da para ${r.taricCode} un derecho en porcentaje (derechos específicos, por precio de entrada…): LUCI no calcula el ahorro.`
+};
+
 /** Importe en euros redondeado a centimos. */
 const redondear = (n) => Math.round(n * 100) / 100;
 
@@ -438,7 +445,9 @@ class PreferencesService {
       .map(r => (r.error
         ? {
           code: 'AEAT_NO_DISPONIBLE',
-          message: `No se pudo consultar el Arancel Integrado de la AEAT para ${r.taricCode}: ${r.error}. No se calcula el ahorro.`
+          // Prueba del 17/11/2026: un código inexistente o con derechos
+          // específicos salía como «no se pudo consultar… inténtelo más tarde».
+          message: MENSAJES_AEAT[r.motivo] ? MENSAJES_AEAT[r.motivo](r) : MENSAJES_AEAT.consulta(r)
         }
         : {
           code: 'SIN_PREFERENCIA_AEAT',
@@ -476,15 +485,15 @@ class PreferencesService {
       resultado = await consultarArancelIntegrado({ codigo: good.taricCode, origen });
     } catch (error) {
       logger.warn(`[PreferencesService] Arancel Integrado AEAT no disponible para ${good.taricCode}: ${error.message}`);
-      return { ...base, error: error.message };
+      return { ...base, error: error.message, motivo: 'consulta' };
     }
     if (!resultado?.existe) {
-      return { ...base, error: 'el código no existe en el Arancel Integrado' };
+      return { ...base, error: 'el código no existe en el Arancel Integrado', motivo: 'codigo' };
     }
 
     const { general, preferencias } = tiposAeat(resultado);
     if (general === null) {
-      return { ...base, error: 'la AEAT no da un derecho de terceros países en porcentaje para este código' };
+      return { ...base, error: 'la AEAT no da un derecho de terceros países en porcentaje para este código', motivo: 'sin_porcentaje' };
     }
     // Si hay varias preferencias para el origen, la mas favorable (la agente
     // decide cual aplicar con su prueba de origen).

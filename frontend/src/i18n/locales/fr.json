@@ -3978,7 +3978,9 @@
       "counterpartAddress": "Adresse de l'exportateur / destinataire",
       "description": "Description",
       "quantity": "Quantité",
-      "transportMode": "Mode de transport"
+      "transportMode": "Mode de transport",
+      "counterpartPostalCode": "Code postal de l'exportateur / destinataire",
+      "invoiceNumber": "Numéro de facture"
     },
     "summary": "{{documents}} document(s) lu(s) · {{count}} donnée(s) remplie(s) par LUCI. Vérifiez-les avant de créer le dossier.",
     "summaryWarnings": "{{count}} avertissement(s) à l'étape 1."

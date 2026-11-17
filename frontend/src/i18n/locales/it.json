@@ -3978,7 +3978,9 @@
       "counterpartAddress": "Indirizzo dell'esportatore / destinatario",
       "description": "Descrizione",
       "quantity": "Quantità",
-      "transportMode": "Modalità di trasporto"
+      "transportMode": "Modalità di trasporto",
+      "counterpartPostalCode": "CAP dell'esportatore / destinatario",
+      "invoiceNumber": "Numero di fattura"
     },
     "summary": "{{documents}} documento/i letti · {{count}} dato/i compilati da LUCI. Controllali prima di creare la pratica.",
     "summaryWarnings": "{{count}} avviso/i nel passaggio 1."

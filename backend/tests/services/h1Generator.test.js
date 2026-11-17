@@ -781,3 +781,13 @@ describe('escapeXml: comillas', () => {
     expect(h1.escapeXml("a'b")).toBe('a&apos;b');
   });
 });
+
+describe('forma de pago en la vista previa (prueba e2e 17/11/2026)', () => {
+  test('usa la del expediente y el nombre del CAU, no «Pago al contado»', () => {
+    const conR = expedicionCompleta();
+    conR.declaration = { ...(conR.declaration || {}), paymentMethod: 'R' };
+    expect(h1.buildDutyTaxFee(conR, {})).toMatchObject({ paymentMethod: 'R', paymentMethodDescription: 'Pago aplazado con garantía del agente' });
+    expect(h1.buildDutyTaxFee(expedicionCompleta(), {}).paymentMethodDescription).toBe('Pago previo al levante (modelo 031)');
+  });
+});
+

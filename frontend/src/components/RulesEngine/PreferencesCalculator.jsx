@@ -478,7 +478,9 @@ export default function PreferencesCalculator() {
 
                 {!result.aeatAvailable && (
                   <p className="mt-4 text-sm text-yellow-800 bg-yellow-50 border border-yellow-200 rounded-md p-3" data-testid="aeat-no-disponible">
-                    {t('preferencesCalc.aeatUnavailable')}
+                    {/* El motivo concreto lo da el servidor (codigo inexistente, derecho no
+                        porcentual o AEAT sin respuesta); si no llega, el texto general. */}
+                    {(result.warnings || []).find(w => w.code === 'AEAT_NO_DISPONIBLE')?.message || t('preferencesCalc.aeatUnavailable')}
                   </p>
                 )}
               </div>
