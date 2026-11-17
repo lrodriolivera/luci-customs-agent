@@ -15,6 +15,11 @@
 
 const mockCalcDuties = jest.fn();
 
+// La calculadora consulta el Arancel Integrado de la AEAT: aqui no se sale a la red.
+jest.mock('../../src/services/aeat/preferenciaCalculadora', () => ({
+  preferenciaAeatPara: jest.fn().mockResolvedValue(null),
+  aplicarPreferenciaAeat: (datos) => datos
+}));
 jest.mock('../../src/services/dutyCalculationService', () => ({
   getDutyInfo: jest.fn(),
   calculateDutiesWithAI: (...a) => mockCalcDuties(...a),

@@ -10,6 +10,9 @@
  * preferencia arancelaria del cliente.
  */
 
+// Tipos de la AEAT: por defecto no disponibles (tipos estimados de siempre);
+// los tests de la AEAT los fijan.
+jest.mock('../../src/services/aeat/preferenciaCalculadora', () => ({ tiposAeatPara: jest.fn().mockResolvedValue(null) }));
 jest.mock('../../src/services/exciseDutiesService', () => ({
   calculateTotalExciseDuties: jest.fn(),
   detectExciseProduct: jest.fn()
@@ -747,3 +750,33 @@ describe('validateCompliance', () => {
     expect(conDocs.missing.filter(m => m.type === 'document')).toHaveLength(0);
   });
 });
+
+describe('aranceles e IVA con los tipos de la AEAT (UAT 17/11/2026: cerezas de Chile)', () => {
+  const { tiposAeatPara } = require('../../src/services/aeat/preferenciaCalculadora');
+  const exciseMock = require('../../src/services/exciseDutiesService');
+  const operacion = { type: 'import', originCountry: 'CL', goods: [{ taricCode: '0809290000', customsValue: 1000 }] };
+
+  beforeEach(() => {
+    exciseMock.calculateTotalExciseDuties.mockReturnValue({ total: 0, byCategory: {}, items: [] });
+  });
+
+  test('aplica el 12 % general con IVA 4 % y ofrece la preferencia al 0 %', async () => {
+    tiposAeatPara.mockResolvedValueOnce({ general: 12, preferencial: 0, medida: '142-PREF', iva: 4 });
+    const tariff = await rulesEngine.calculateTariff(operacion);
+    expect(tariff).toMatchObject({ standard: 120, preferential: 0, savings: 120, applied: 120, fuente: 'AEAT' });
+    const taxes = await rulesEngine.calculateTaxes(operacion, tariff);
+    expect(taxes.vat).toEqual({ rate: 0.04, amount: 44.8 });
+    expect(taxes.total).toBe(164.8);
+    expect(taxes.conPreferencia).toMatchObject({ tariff: 0, vat: 40, total: 40, medidas: ['142-PREF'] });
+  });
+
+  test('si la AEAT no responde usa el tipo estimado y lo dice', async () => {
+    tiposAeatPara.mockResolvedValueOnce(null);
+    const tariff = await rulesEngine.calculateTariff(operacion);
+    expect(tariff.fuente).toBe('estimado');
+    const taxes = await rulesEngine.calculateTaxes(operacion, tariff);
+    expect(taxes.vat.rate).toBe(0.21);
+    expect(taxes.conPreferencia).toBeUndefined();
+  });
+});
+

@@ -1019,7 +1019,9 @@
     "fillRequired": "Complete todos los campos obrigatorios",
     "errorCalculating": "Erro ao calcular direitos",
     "confidence": "confianca",
-    "deliveryPoint": "Ponto de entrega"
+    "deliveryPoint": "Ponto de entrega",
+    "aeatPreferenceAvailable": "Segundo a AEAT, a origem {{origin}} tem preferência pautal para este código: {{preferential}} % em vez de {{general}} % (medida {{measure}}). Exige a prova de origem do acordo.",
+    "applyAeatPreference": "Aplicar a preferência"
   },
   "chat": {
     "title": "Assistente LUCI",
