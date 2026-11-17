@@ -254,7 +254,15 @@ const TaricCodeSchema = new mongoose.Schema({
 });
 
 // Indexes para busqueda
-TaricCodeSchema.index({ 'description.es': 'text', 'keywords': 'text', 'examples': 'text' });
+// Indice de texto en ESPAÑOL (raices y palabras vacias del español: «de», «para»,
+// plurales). Con el idioma por defecto (ingles), «zapatos de cuero» encajaba con
+// 9.595 de 22.478 codigos. Medido el 17/11/2026 sobre las 50 descripciones con
+// referencia de para-validar-patricia.csv: subpartida correcta entre los 5
+// primeros 20 -> 25, entre los 20 primeros 26 -> 30. `idiomaIndice` evita que un
+// campo `language` de un documento cambie el idioma. Migracion:
+// scripts/migrarIndiceTaricEspanol.js (sustituye el indice existente).
+const OPCIONES_INDICE_TEXTO = Object.freeze({ default_language: 'spanish', language_override: 'idiomaIndice' });
+TaricCodeSchema.index({ 'description.es': 'text', 'keywords': 'text', 'examples': 'text' }, { ...OPCIONES_INDICE_TEXTO });
 TaricCodeSchema.index({ 'breakdown.chapter': 1 });
 TaricCodeSchema.index({ level: 1, isActive: 1 });
 
@@ -322,5 +330,7 @@ TaricCodeSchema.statics.getChapters = function() {
     isActive: true
   }).sort({ code: 1 }).select('code description');
 };
+
+TaricCodeSchema.statics.OPCIONES_INDICE_TEXTO = OPCIONES_INDICE_TEXTO;
 
 module.exports = mongoose.model('TaricCode', TaricCodeSchema);
