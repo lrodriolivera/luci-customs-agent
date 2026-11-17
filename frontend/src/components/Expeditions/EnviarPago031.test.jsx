@@ -49,6 +49,15 @@ describe('EnviarPago031', () => {
     expect(c).toBeEmptyDOMElement()
   })
 
+  test('sin correo del cliente avisa y no abre la confirmación ni envía', async () => {
+    const toast = (await import('react-hot-toast')).default
+    render(<EnviarPago031 expedition={exp({ paymentMethod: 'A', mrn: '26ES1' }, { client: {} })} />)
+    fireEvent.click(screen.getByRole('button', { name: /expeditions.pago031.button/ }))
+    expect(toast.error).toHaveBeenCalledWith('expeditions.pago031.noEmail')
+    expect(screen.queryByRole('button', { name: 'expeditions.pago031.send' })).not.toBeInTheDocument()
+    expect(expeditionsAPI.sendPago031).not.toHaveBeenCalled()
+  })
+
   test('muestra cuándo se envió por última vez', () => {
     render(<EnviarPago031 expedition={exp({ paymentMethod: 'A', mrn: '26ES1' }, { timeline: [{ action: 'payment_031_sent', timestamp: '2026-11-17T09:00:00Z' }] })} />)
     expect(screen.getByText(/expeditions.pago031.lastSent/)).toBeInTheDocument()
