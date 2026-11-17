@@ -226,7 +226,7 @@ describe('prerrellenarAlta', () => {
     expect(desdeDefecto.transportMode).toBe('SEA')
     expect(desdeDefecto.loadType).toBe('LCL')
     expect(desdeDefecto.transportDetails).toEqual({
-      documentType: 'BL', documentNumber: 'MEDUSZ123456', vehicleId: 'MSC OSCAR', departurePort: 'Yantian', arrivalPort: 'Valencia', containers: 'MSCU1150584'
+      documentType: 'BL', documentNumber: 'MEDUSZ123456', vehicleId: 'MSC OSCAR', vehicleNationality: '', departurePort: 'Yantian', arrivalPort: 'Valencia', containers: 'MSCU1150584'
     })
     expect(rellenados.length).toBeGreaterThan(0)
   })
@@ -356,5 +356,41 @@ describe('transporteParaAlta', () => {
   test('sin nada informado no envia transporte', () => {
     expect(transporteParaAlta(formulario())).toBeUndefined()
     expect(transporteParaAlta(formulario({ transportMode: 'AIR', loadType: 'LCL' }))).toBeUndefined()
+  })
+})
+
+// UAT 17/Nov/2026: la nacionalidad del medio (H1) se escribia a mano.
+describe('nacionalidad del medio de transporte', () => {
+  const CMR = lectura({ transporte: { numeroDocumento: 'EJ-CMR-000118', medio: '34 ABC 123', nacionalidadMedio: 'TR', contenedores: [] } })
+
+  test('un CMR rellena la matricula y su nacionalidad en un alta por carretera', () => {
+    const { formData, rellenados } = prerrellenarAlta(formulario(), CMR, { tipoDocumento: 'cmr' })
+
+    expect(formData.transportMode).toBe('ROAD')
+    expect(formData.transportDetails).toMatchObject({ documentType: 'CMR', vehicleId: '34 ABC 123', vehicleNationality: 'TR' })
+    expect(rellenados).toContainEqual(expect.objectContaining({ campo: 'vehicleNationality', valor: 'TR' }))
+  })
+
+  test('un CMR del tramo interior de un alta maritima no rellena la nacionalidad', () => {
+    const { formData } = prerrellenarAlta(formulario(), CMR, { tipoDocumento: 'cmr', fijados: ['transportMode'] })
+
+    expect(formData.transportMode).toBe('SEA')
+    expect(formData.transportDetails.vehicleNationality).toBe('')
+  })
+
+  test('el T1 la rellena en cualquier modo (es la del medio activo en frontera) y una factura nunca', () => {
+    const t1 = prerrellenarAlta(formulario(), CMR, { tipoDocumento: 'transit_document' }).formData
+    const factura = prerrellenarAlta(formulario(), CMR, { tipoDocumento: 'commercial_invoice' }).formData
+
+    expect(t1.transportDetails.vehicleNationality).toBe('TR')
+    expect(t1.transportDetails.documentNumber).toBe('')
+    expect(factura.transportDetails.vehicleNationality).toBe('')
+  })
+
+  test('se envia en mayusculas solo si es un codigo de dos letras', () => {
+    const conNacionalidad = (valor) => transporteParaAlta(formulario({ transportDetails: { ...transporteVacio(), vehicleNationality: valor } }))
+
+    expect(conNacionalidad(' tr ')).toEqual({ vehicleNationality: 'TR' })
+    expect(conNacionalidad('Turquia')).toBeUndefined()
   })
 })

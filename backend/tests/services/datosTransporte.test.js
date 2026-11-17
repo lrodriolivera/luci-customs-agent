@@ -176,3 +176,30 @@ describe('datosTransporte', () => {
     });
   });
 });
+
+describe('nacionalidad, IMO y MRN leidos (UAT 17/Nov/2026)', () => {
+  const { nacionalidadDelMedio, numeroImo, mrnLeido } = require('../../src/services/documentos/datosTransporte');
+
+  test('nacionalidadDelMedio admite codigo ISO o signo distintivo y nada mas', () => {
+    expect(nacionalidadDelMedio('pa')).toEqual({ pais: 'PA', signo: null });
+    expect(nacionalidadDelMedio(' E ')).toEqual({ pais: 'ES', signo: 'E' });
+    expect(nacionalidadDelMedio('IRL')).toEqual({ pais: 'IE', signo: 'IRL' });
+    expect(nacionalidadDelMedio('Panama')).toEqual({ pais: null, signo: null });
+    expect(nacionalidadDelMedio(null)).toEqual({ pais: null, signo: null });
+  });
+
+  test('numeroImo comprueba las siete cifras y el digito de control', () => {
+    expect(numeroImo('IMO 9074729')).toEqual({ numero: '9074729', digitoCorrecto: true });
+    expect(numeroImo('9074720')).toEqual({ numero: '9074720', digitoCorrecto: false });
+    expect(numeroImo('IMO 907472')).toBeNull();
+    expect(numeroImo({})).toBeNull();
+  });
+
+  test('mrnLeido valida la forma y el digito de control con MRN reales de la AEAT', () => {
+    expect(mrnLeido('26ES002801501092J0')).toEqual({ numero: '26ES002801501092J0', digitoCorrecto: true });
+    expect(mrnLeido('26esh7a000067965r5')).toEqual({ numero: '26ESH7A000067965R5', digitoCorrecto: true });
+    expect(mrnLeido('26ES002801501092J1').digitoCorrecto).toBe(false);
+    expect(mrnLeido('2026ES00782741')).toBeNull();
+    expect(mrnLeido(undefined)).toBeNull();
+  });
+});

@@ -116,6 +116,8 @@ const DocumentSchema = new mongoose.Schema({
       'bill_of_lading',
       'air_waybill',
       'cmr',
+      // Documento de acompañamiento de transito (T1/T2, NCTS).
+      'transit_document',
       'certificate_origin',
       'eur1',
       'eur_med',

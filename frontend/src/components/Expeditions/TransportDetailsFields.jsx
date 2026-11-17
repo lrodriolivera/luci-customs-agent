@@ -1,7 +1,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
-const CAMPOS = ['documentNumber', 'vehicleId', 'departurePort', 'arrivalPort']
+const CAMPOS = ['documentNumber', 'vehicleId', 'vehicleNationality', 'departurePort', 'arrivalPort']
 
 /**
  * Datos del documento de transporte en el alta: numero de BL/AWB/CMR, medio,

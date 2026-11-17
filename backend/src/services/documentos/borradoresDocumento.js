@@ -19,7 +19,7 @@ const MAX_BORRADORES_POR_ALTA = 10;
 // Tipos que el lector sabe distinguir; coinciden con los del expediente.
 const TIPOS_DETECTABLES = [
   'commercial_invoice', 'proforma_invoice', 'packing_list', 'bill_of_lading',
-  'air_waybill', 'cmr', 'certificate_origin'
+  'air_waybill', 'cmr', 'transit_document', 'certificate_origin'
 ];
 
 const esId = (valor) => typeof valor === 'string' && mongoose.Types.ObjectId.isValid(valor);
